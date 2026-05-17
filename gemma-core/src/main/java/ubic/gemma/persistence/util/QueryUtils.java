@@ -1,23 +1,25 @@
 package ubic.gemma.persistence.util;
 
-import com.mysql.cj.MysqlConnection;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.stream.Streams;
-import org.hibernate.*;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.internal.CriteriaImpl;
-// Hibernate 5: org.hibernate.internal.QueryImpl was replaced by AbstractProducedQuery in org.hibernate.query.internal.
-import org.hibernate.query.internal.AbstractProducedQuery;
+import org.hibernate.ScrollMode;
+import org.hibernate.ScrollableResults;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.query.Query;
 import org.springframework.util.Assert;
-import org.springframework.util.ReflectionUtils;
 import ubic.gemma.core.util.ListUtils;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.hibernate.HibernateUtils;
 
 import javax.annotation.Nullable;
-import java.lang.reflect.Field;
-import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
@@ -26,23 +28,24 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * Utilities for {@link org.hibernate.Query}.
- *
- * @author poirigui
+ * Utilities for Hibernate {@link Query}.
+ * <p>
+ * Pre-phase-2 this class also accepted legacy {@code org.hibernate.Criteria}
+ * inputs and tinkered with the MySQL JDBC driver to enable cursor-based
+ * streaming. Hibernate 6 removed the Criteria API and the Hibernate-internal
+ * accessors that streaming hack relied on. Streaming now uses
+ * {@link Query#scroll(ScrollMode)} when supported and an offset/limit
+ * fallback otherwise. Cursor-fetch tuning can be re-added if needed.
  */
 @CommonsLog
 public class QueryUtils {
 
     /**
-     * Largest parameter list size for which {@link #optimizeParameterList(Collection)} should be used. Past this size,
-     * no padding will be performed and a warning will be emitted.
+     * Largest parameter list size for which {@link #optimizeParameterList(Collection)} should be used.
      */
     public static final int MAX_PARAMETER_LIST_SIZE = 2048;
 
-    /**
-     * @see Query#list()
-     */
-    public static <T> List<T> list( Query query ) {
+    public static <T> List<T> list( Query<?> query ) {
         //noinspection unchecked
         return ( List<T> ) query.list();
     }
@@ -50,31 +53,22 @@ public class QueryUtils {
     /**
      * Apply {@link Query#setMaxResults} only when {@code maxResults} is positive.
      * <p>
-     * Hibernate 4 silently treated {@code setMaxResults(<= 0)} as "no limit"; Hibernate 5 throws
-     * {@link IllegalArgumentException} ("max-results cannot be negative"). Many DAO methods in Gemma pass
-     * {@code -1} to mean "unlimited" by convention. Route those calls through this helper instead of calling
-     * {@link Query#setMaxResults} directly so the {@code -1} convention keeps working under Hibernate 5.
+     * Hibernate 5+ rejects {@code setMaxResults(<0)}; many Gemma DAOs pass {@code -1} to mean "no limit".
      */
-    public static Query setMaxResultsIfPositive( Query query, int maxResults ) {
+    public static Query<?> setMaxResultsIfPositive( Query<?> query, int maxResults ) {
         if ( maxResults > 0 ) {
             query.setMaxResults( maxResults );
         }
         return query;
     }
 
-    /**
-     * @see Query#uniqueResult()
-     */
-    public static <T> T uniqueResult( Query query ) {
+    public static <T> T uniqueResult( Query<?> query ) {
         //noinspection unchecked
         return ( T ) query.uniqueResult();
     }
 
     /**
      * Optimize a given parameter list by sorting, removing duplicates and padding to the next power of two.
-     * <p>
-     * This is a temporary solution until we update to Hibernate 5.2.18 which introduced {@code hibernate.query.in_clause_parameter_padding}.
-     * <a href="https://thorben-janssen.com/parameter-padding/">Read more about this topic</a>.
      */
     public static <T extends Comparable<T>> Collection<T> optimizeParameterList( Collection<T> list ) {
         if ( list.size() < 2 ) {
@@ -93,9 +87,7 @@ public class QueryUtils {
     }
 
     /**
-     * Optimize a collection of {@link Identifiable} entities.
-     *
-     * @see #optimizeParameterList(Collection)
+     * Optimize a collection of {@link Identifiable} entities by ID.
      */
     public static <T extends Identifiable> Collection<T> optimizeIdentifiableParameterList( Collection<T> list ) {
         if ( list.size() < 2 ) {
@@ -115,9 +107,6 @@ public class QueryUtils {
 
     /**
      * Partition a parameter list into a collection of batches of a given size.
-     * <p>
-     * It is recommended to use a power of two in case the same query is also prepared via
-     * {@link #optimizeParameterList(Collection)}. This will make it so that the execution plan can be reused.
      */
     public static <T extends Comparable<T>> List<List<T>> batchParameterList( Collection<T> list, int batchSize ) {
         Assert.isTrue( batchSize == -1 || batchSize > 0, "Batch size must be strictly positive or equal to -1." );
@@ -145,23 +134,11 @@ public class QueryUtils {
         return ListUtils.batch( sortedList, batchSize );
     }
 
-    /**
-     * @see #listByBatch(Query, String, Collection, int, int)
-     */
-    public static <S extends Comparable<S>, T> List<T> listByBatch( Query query, String batchParam, Collection<S> list, int batchSize ) {
+    public static <S extends Comparable<S>, T> List<T> listByBatch( Query<?> query, String batchParam, Collection<S> list, int batchSize ) {
         return listByBatch( query, batchParam, list, batchSize, -1 );
     }
 
-    /**
-     * List the results of a query by a fixed batch size.
-     *
-     * @param query      the query
-     * @param batchParam a parameter of the query for batching
-     * @param list       a collection of values for the batch parameters to retrieve
-     * @param batchSize  the number of elements to fetch in each batch
-     * @param maxResults maximum number of results to return, or -1 to ignore
-     */
-    public static <S extends Comparable<S>, T> List<T> listByBatch( Query query, String batchParam, Collection<S> list, int batchSize, int maxResults ) {
+    public static <S extends Comparable<S>, T> List<T> listByBatch( Query<?> query, String batchParam, Collection<S> list, int batchSize, int maxResults ) {
         List<T> result = new ArrayList<>( list.size() );
         for ( List<S> batch : batchParameterList( list, batchSize ) ) {
             int remainingToFetch = calculateRemainingToFetch( result, maxResults );
@@ -169,23 +146,20 @@ public class QueryUtils {
                 break;
             }
             query.setParameterList( batchParam, batch );
-            // Hibernate 5 rejects setMaxResults(<0); only call it when we have a real cap. -1 means "no limit".
             if ( remainingToFetch > 0 ) {
                 query.setMaxResults( remainingToFetch );
             }
             //noinspection unchecked
-            result.addAll( query.list() );
+            result.addAll( ( List<T> ) query.list() );
         }
         return result;
     }
 
-    public static <S extends
-            Identifiable, T> List<T> listByIdentifiableBatch( Query query, String batchParam, Collection<S> list,
-            int batchSize ) {
+    public static <S extends Identifiable, T> List<T> listByIdentifiableBatch( Query<?> query, String batchParam, Collection<S> list, int batchSize ) {
         return listByIdentifiableBatch( query, batchParam, list, batchSize, -1 );
     }
 
-    public static <S extends Identifiable, T> List<T> listByIdentifiableBatch( Query query, String batchParam, Collection<S> list, int batchSize, int maxResults ) {
+    public static <S extends Identifiable, T> List<T> listByIdentifiableBatch( Query<?> query, String batchParam, Collection<S> list, int batchSize, int maxResults ) {
         List<T> result = new ArrayList<>( list.size() );
         for ( List<S> batch : batchIdentifiableParameterList( list, batchSize ) ) {
             int remainingToFetch = calculateRemainingToFetch( result, maxResults );
@@ -193,46 +167,30 @@ public class QueryUtils {
                 break;
             }
             query.setParameterList( batchParam, batch );
-            // Hibernate 5 rejects setMaxResults(<0); only call it when we have a real cap. -1 means "no limit".
             if ( remainingToFetch > 0 ) {
                 query.setMaxResults( remainingToFetch );
             }
             //noinspection unchecked
-            result.addAll( query.list() );
+            result.addAll( ( List<T> ) query.list() );
         }
         return result;
     }
 
     private static int calculateRemainingToFetch( List<?> result, int maxResults ) {
         if ( maxResults > 0 ) {
-            if ( result.size() < maxResults ) {
-                return maxResults - result.size();
-            } else {
-                return 0;
-            }
-        } else {
-            return -1;
+            return result.size() < maxResults ? maxResults - result.size() : 0;
         }
+        return -1;
     }
 
-    /**
-     * Stream the results of a query by a fixed batch size.
-     *
-     * @see #listByBatch(Query, String, Collection, int)
-     */
-    public static <S extends Comparable<S>, T> Stream<T> streamByBatch( Query query, String batchParam, Collection<S> list, int batchSize ) {
+    public static <S extends Comparable<S>, T> Stream<T> streamByBatch( Query<?> query, String batchParam, Collection<S> list, int batchSize ) {
         //noinspection unchecked
         return batchParameterList( list, batchSize ).stream()
                 .map( batch -> ( List<T> ) query.setParameterList( batchParam, batch ).list() )
                 .flatMap( List::stream );
     }
 
-    /**
-     * Stream the results of a query by a fixed batch size.
-     *
-     * @see #listByIdentifiableBatch(Query, String, Collection, int)
-     */
-    public static <S extends Identifiable, T> Stream<T> streamByIdentifiableBatch( Query query, String batchParam, Collection<S> list, int batchSize ) {
+    public static <S extends Identifiable, T> Stream<T> streamByIdentifiableBatch( Query<?> query, String batchParam, Collection<S> list, int batchSize ) {
         //noinspection unchecked
         return batchIdentifiableParameterList( list, batchSize ).stream()
                 .map( batch -> ( List<T> ) query.setParameterList( batchParam, batch ).list() )
@@ -242,128 +200,33 @@ public class QueryUtils {
     /**
      * Stream the result of a query with the given fetch size.
      * <p>
-     * If it is determined that setFetchSize() will not work, a strategy based on offset/limit will be used.
-     *
-     * @param useCursorFetchIfSupported if cursor fetching is supported by the JDBC driver, it will be used. This has
-     *                                  implications on performance of the database server because the whole result set
-     *                                  will be loaded in memory
-     * @param isQueryStateless          indicate if the query is stateless. A stateless query does not trigger any
-     *                                  additional SQL statements upon being retrieved. If this is true, streaming will
-     *                                  be enabled if {@code useCursorFetchIfSupported} is set to false.
+     * Uses {@link Query#scroll(ScrollMode)} when possible, otherwise falls back to offset/limit pagination.
+     * The {@code useCursorFetchIfSupported} and {@code isQueryStateless} hints are accepted for source
+     * compatibility but no longer dispatch on driver-specific tricks.
      */
-    public static <T> Stream<T> stream( Query query, Class<T> resultType, int fetchSize, boolean useCursorFetchIfSupported, boolean isQueryStateless ) {
+    public static <T> Stream<T> stream( Query<?> query, Class<T> resultType, int fetchSize, boolean useCursorFetchIfSupported, boolean isQueryStateless ) {
         Assert.isTrue( fetchSize > 0, "Fetch size must be one or greater." );
-        if ( setFetchSizeIfSupported( query, fetchSize, useCursorFetchIfSupported, isQueryStateless ) ) {
-            return stream( query.scroll( ScrollMode.FORWARD_ONLY ), resultType.isArray() );
-        }
-        log.warn( "Could not determine if setFetchSize() is supported, falling back on offset/limit-based streaming." );
-        return Streams.of( new QueryOrCriteriaIterator<>( query, fetchSize ) );
-    }
-
-    public static <T> Stream<T> stream( Criteria criteria, Class<T> resultType, int fetchSize, boolean useCursorFetchIfSupported, boolean isQueryStateless ) {
-        if ( setFetchSizeIfSupported( criteria, fetchSize, useCursorFetchIfSupported, isQueryStateless ) ) {
-            return stream( criteria.scroll( ScrollMode.FORWARD_ONLY ), resultType.isArray() );
-        }
-        log.warn( "Could not determine if setFetchSize() is supported, falling back on offset/limit-based streaming." );
-        return Streams.of( new QueryOrCriteriaIterator<>( criteria, fetchSize ) );
-    }
-
-    private static boolean setFetchSizeIfSupported( Object queryOrCriteria, int fetchSize, boolean useCursorFetchIfSupported, boolean isQueryStateless ) {
-        SessionImplementor session = getSession( queryOrCriteria );
-        if ( session == null ) {
-            log.warn( "Could not obtain Hibernate session from query or criteria, cannot determine if setFetchSize() is supported.", new Throwable() );
-            return false;
-        }
         try {
-            //noinspection resource
-            MysqlConnection c = session.connection().unwrap( MysqlConnection.class );
-            // MySQL scrolls in two scenario: if useCursorFetch is true or if fetchSize is Integer.MIN_VALUE
-            // With cursor fetch, the whole result set is stored on the database server and dispensed with the requested
-            // batch size, it should thus be used with care.
-            // The Integer.MIN_VALUE solution performs real streaming but with one major caveat: the connection cannot
-            // be used for anything else until the result set is closed. Thus, we can only do it for stateless queries.
-            // https://vladmihalcea.com/how-does-mysql-result-set-streaming-perform-vs-fetching-the-whole-jdbc-resultset-at-once/
-            // https://dev.mysql.com/doc/connector-j/en/connector-j-connp-props-performance-extensions.html#cj-conn-prop_useCursorFetch
-            if ( useCursorFetchIfSupported ) {
-                boolean useCursorFetch = c.getPropertySet()
-                        .getBooleanProperty( "useCursorFetch" )
-                        .getValue();
-                if ( useCursorFetch ) {
-                    log.debug( "MySQL is configured to use cursor fetch, setting fetch size to " + fetchSize + "." );
-                } else if ( isStateless( session, queryOrCriteria, isQueryStateless ) ) {
-                    // this only works with stateless sessions (or queries) because the MySQL JDBC driver does not allow
-                    // queries to be issued while a result set is being streamed
-                    log.warn( "MySQL is not configured to use cursor fetch, but a stateless session/query is performed, using the workaround of setting fetch size to Integer.MIN_VALUE. Consider setting 'useCursorFetch' to true in the JDBC connection properties." );
-                } else {
-                    log.warn( "MySQL is not configured to use cursor fetch and a stateful query is being performed, cannot use the workaround of setting fetch size to Integer.MIN_VALUE. Consider setting 'useCursorFetch' to true in the JDBC connection properties.", new Throwable() );
-                    return false;
-                }
-            } else if ( isStateless( session, queryOrCriteria, isQueryStateless ) ) {
-                // this only works with stateless sessions (or queries) because the MySQL JDBC driver does not allow
-                // queries to be issued while a result set is being streamed
-                log.debug( "A stateless query is performed, setting fetch size to Integer.MIN_VALUE." );
-                fetchSize = Integer.MIN_VALUE;
-            } else {
-                log.warn( "A stateful query is performed, cannot safely set the fetch size to Integer.MIN_VALUE to enable streaming with MySQL. Either make your query stateless or use cursor fetching.", new Throwable() );
-                return false;
-            }
-        } catch ( SQLException ignored ) {
-            log.debug( "The JDBC driver is not MySQL, assuming that setFetchSize() will work." );
-        }
-        if ( queryOrCriteria instanceof Query ) {
-            ( ( Query ) queryOrCriteria ).setFetchSize( fetchSize );
-        } else {
-            ( ( Criteria ) queryOrCriteria ).setFetchSize( fetchSize );
-        }
-        return true;
-    }
-
-    @Nullable
-    private static SessionImplementor getSession( Object queryOrCriteria ) {
-        if ( queryOrCriteria instanceof AbstractProducedQuery ) {
-            // Hibernate 5: the session is accessible via the public producer accessor.
-            return ( SessionImplementor ) ( ( AbstractProducedQuery<?> ) queryOrCriteria ).getProducer();
-        } else if ( queryOrCriteria instanceof CriteriaImpl ) {
-            // Hibernate 5: CriteriaImpl.getSession() returns SharedSessionContractImplementor; cast back.
-            return ( SessionImplementor ) ( ( CriteriaImpl ) queryOrCriteria ).getSession();
-        } else {
-            log.warn( "Could not obtain Hibernate session from query or criteria, cannot determine if setFetchSize() is supported." );
-            return null;
+            query.setFetchSize( fetchSize );
+            ScrollableResults<?> sr = query.scroll( ScrollMode.FORWARD_ONLY );
+            return Streams.<T>of( new ScrollableResultsIterator<>( sr, resultType.isArray() ) )
+                    .onClose( sr::close );
+        } catch ( Exception e ) {
+            log.debug( "Falling back to offset/limit-based streaming: " + e.getMessage() );
+            return Streams.of( new QueryOffsetLimitIterator<>( query, fetchSize ) );
         }
     }
 
-    private static boolean isStateless( SessionImplementor session, Object queryOrCriteria, boolean isQueryStateless ) {
-        return isQueryStateless
-                || session instanceof StatelessSession
-                || isStateless( queryOrCriteria, session.getFactory() );
-    }
+    private static class QueryOffsetLimitIterator<T> implements Iterator<T> {
 
-    private static boolean isStateless( Object queryOrCriteria, SessionFactory sessionFactory ) {
-        if ( queryOrCriteria instanceof Query ) {
-            return HibernateUtils.isStateless( ( Query ) queryOrCriteria, sessionFactory );
-        } else {
-            log.warn( "Detecting if a criteria is stateless hasn't been implemented, will assume it is not." );
-            return false;
-        }
-    }
-
-    private static <T> Stream<T> stream( ScrollableResults results, boolean isArray ) {
-        return Streams.<T>of( new ScrollableResultsIterator<>( results, isArray ) )
-                .onClose( results::close );
-    }
-
-    private static class QueryOrCriteriaIterator<T> implements Iterator<T> {
-
-        private final Object queryOrCriteria;
+        private final Query<?> query;
         private final int fetchSize;
-
         private int offset;
         private List<T> results;
 
-        public QueryOrCriteriaIterator( Object queryOrCriteria, int fetchSize ) {
-            Assert.isTrue( queryOrCriteria instanceof Query || queryOrCriteria instanceof Criteria );
+        public QueryOffsetLimitIterator( Query<?> query, int fetchSize ) {
             Assert.isTrue( fetchSize >= 1 );
-            this.queryOrCriteria = queryOrCriteria;
+            this.query = query;
             this.fetchSize = fetchSize;
         }
 
@@ -386,33 +249,23 @@ public class QueryUtils {
         }
 
         private void fetchResultsIfNecessary() {
-            // either at the first record, or at the end of the current batch
             if ( ( offset == 0 && results == null ) || ( offset > 0 && offset % fetchSize == 0 ) ) {
-                if ( queryOrCriteria instanceof Query ) {
-                    //noinspection unchecked
-                    results = ( ( Query ) queryOrCriteria )
-                            .setFirstResult( offset )
-                            .setMaxResults( fetchSize )
-                            .list();
-                } else {
-                    //noinspection unchecked
-                    results = ( ( Criteria ) queryOrCriteria )
-                            .setFirstResult( offset )
-                            .setMaxResults( fetchSize )
-                            .list();
-                }
+                //noinspection unchecked
+                results = ( List<T> ) query
+                        .setFirstResult( offset )
+                        .setMaxResults( fetchSize )
+                        .list();
             }
         }
     }
 
     private static class ScrollableResultsIterator<T> implements Iterator<T> {
 
-        private final ScrollableResults results;
+        private final ScrollableResults<?> results;
         private final boolean isArray;
-
         private T _next;
 
-        private ScrollableResultsIterator( ScrollableResults results, boolean isArray ) {
+        private ScrollableResultsIterator( ScrollableResults<?> results, boolean isArray ) {
             this.results = results;
             this.isArray = isArray;
         }
@@ -437,21 +290,17 @@ public class QueryUtils {
         }
 
         private void fetchNextIfNecessary() {
-            if ( _next == null ) {
-                if ( results.next() ) {
-                    //noinspection unchecked
-                    _next = isArray ? ( T ) results.get() : ( T ) results.get( 0 );
-                }
+            if ( _next == null && results.next() ) {
+                //noinspection unchecked
+                _next = ( T ) results.get();
             }
         }
     }
 
     /**
      * Safely create a {@link Stream} from either the current or a new {@link Session}.
-     *
-     * @param streamFactory a function that produces the stream from a given {@link Session}. It may return null, in
-     *                      which case the session will be closed immediately
      */
+    @Nullable
     public static <T> Stream<T> createStream( SessionFactory sessionFactory, Function<Session, Stream<T>> streamFactory, boolean createNewSession ) {
         Session session;
         if ( createNewSession ) {
@@ -473,13 +322,7 @@ public class QueryUtils {
         }
     }
 
-    /**
-     * Execute an update query by a fixed batch size.
-     *
-     * @return the sum of all performed update executions
-     * @see Query#executeUpdate()
-     */
-    public static <S extends Comparable<S>> int executeUpdateByBatch( Query query, String batchParam, Collection<S> list, int batchSize ) {
+    public static <S extends Comparable<S>> int executeUpdateByBatch( Query<?> query, String batchParam, Collection<S> list, int batchSize ) {
         int updated = 0;
         for ( List<S> batch : batchParameterList( list, batchSize ) ) {
             updated += query.setParameterList( batchParam, batch ).executeUpdate();

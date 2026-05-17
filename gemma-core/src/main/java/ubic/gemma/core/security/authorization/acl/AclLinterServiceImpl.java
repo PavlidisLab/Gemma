@@ -4,12 +4,8 @@ import gemma.gsec.acl.domain.AclGrantedAuthoritySid;
 import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.acl.domain.AclService;
 import lombok.extern.apachecommons.CommonsLog;
-import org.hibernate.Query;
 import org.hibernate.SessionFactory;
-import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.type.IntegerType;
+import org.hibernate.query.NativeQuery;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.security.acls.model.MutableAcl;
@@ -136,7 +132,7 @@ public class AclLinterServiceImpl implements AclLinterService {
         //noinspection unchecked
         List<AclObjectIdentity> list = sessionFactory.getCurrentSession()
                 .createQuery( "select aoi from AclObjectIdentity aoi "
-                        + "where aoi.type = :type and aoi.identifier not in (select e.id from " + sessionFactory.getClassMetadata( clazz ).getEntityName() + " e)" )
+                        + "where aoi.type = :type and aoi.identifier not in (select e.id from " + sessionFactory.getMetamodel().entity( clazz ).getName() + " e)" )
                 .setParameter( "type", clazz.getName() )
                 .setReadOnly( !config.isApplyFixes() )
                 .list();
@@ -165,7 +161,7 @@ public class AclLinterServiceImpl implements AclLinterService {
         log.info( "Linting " + clazz.getSimpleName() + " lacking ACL object identities..." );
         //noinspection unchecked
         List<Long> list = sessionFactory.getCurrentSession()
-                .createQuery( "select e.id from " + sessionFactory.getClassMetadata( clazz ).getEntityName() + " e "
+                .createQuery( "select e.id from " + sessionFactory.getMetamodel().entity( clazz ).getName() + " e "
                         + "where e.id not in (select aoi.identifier from AclObjectIdentity aoi where aoi.type = :type)" )
                 .setParameter( "type", clazz.getName() )
                 .list();
@@ -192,7 +188,7 @@ public class AclLinterServiceImpl implements AclLinterService {
      */
     private void lintSecurableLackingObjectIdentity( Class<? extends Securable> clazz, Long identifier, AclLinterConfig config, Collection<LintResult> results ) {
         Boolean hasAoi = ( Boolean ) sessionFactory.getCurrentSession()
-                .createQuery( "select count(*) > 0 from " + sessionFactory.getClassMetadata( clazz ).getEntityName() + " e "
+                .createQuery( "select count(*) > 0 from " + sessionFactory.getMetamodel().entity( clazz ).getName() + " e "
                         + "where e.id = :identifier and e.id not in (select aoi.identifier from AclObjectIdentity aoi where aoi.type = :type and aoi.identifier = :identifier)" )
                 .setParameter( "identifier", identifier )
                 .setParameter( "type", clazz.getName() )
@@ -450,13 +446,11 @@ public class AclLinterServiceImpl implements AclLinterService {
     }
 
     private void lintPermissions( Class<? extends Securable> clazz, @Nullable Long identifier, String grantedAuthority, Permission permission, @SuppressWarnings("SameParameterValue") boolean granting, AclLinterConfig config, Collection<LintResult> result ) {
-        SQLFunction bitwiseAnd = ( ( SessionFactoryImplementor ) sessionFactory )
-                .getSqlFunctionRegistry()
-                .findSQLFunction( "bitwise_and" );
-        String renderedMask = bitwiseAnd.render( new IntegerType(), Arrays.asList( "ace.MASK", permission.getMask() ),
-                ( SessionFactoryImplementor ) sessionFactory );
-        Query query = sessionFactory.getCurrentSession()
-                .createSQLQuery( "select aoi.OBJECT_CLASS, aoi.OBJECT_ID "
+        // Gemma runs on MySQL only, so we can render the bitwise-AND directly as `&`.
+        String renderedMask = "ace.MASK & " + permission.getMask();
+        @SuppressWarnings("rawtypes")
+        NativeQuery query = sessionFactory.getCurrentSession()
+                .createNativeQuery( "select aoi.OBJECT_CLASS, aoi.OBJECT_ID "
                         + "from ACLOBJECTIDENTITY aoi "
                         + "where aoi.OBJECT_CLASS = :type "
                         + ( identifier != null ? " and aoi.OBJECT_ID = :identifier " : "" )

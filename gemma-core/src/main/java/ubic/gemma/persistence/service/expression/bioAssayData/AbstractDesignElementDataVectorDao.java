@@ -21,7 +21,6 @@ package ubic.gemma.persistence.service.expression.bioAssayData;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
-import org.hibernate.metadata.ClassMetadata;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -45,10 +44,6 @@ public abstract class AbstractDesignElementDataVectorDao<T extends BulkExpressio
 
     protected AbstractDesignElementDataVectorDao( Class<T> elementClass, SessionFactory sessionFactory ) {
         super( elementClass, sessionFactory );
-    }
-
-    protected AbstractDesignElementDataVectorDao( Class<T> elementClass, SessionFactory sessionFactory, ClassMetadata classMetadata ) {
-        super( elementClass, sessionFactory, classMetadata );
     }
 
     @Override

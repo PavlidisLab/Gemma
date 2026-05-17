@@ -18,13 +18,19 @@
  */
 package ubic.gemma.persistence.service;
 
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.metamodel.EntityType;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.*;
-import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Restrictions;
-import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.Hibernate;
+import org.hibernate.ObjectNotFoundException;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.WrongClassException;
+import org.hibernate.query.Query;
 import org.springframework.util.Assert;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.hibernate.HibernateUtils;
@@ -33,18 +39,24 @@ import ubic.gemma.persistence.util.QueryUtils;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static java.util.Objects.requireNonNull;
 import static ubic.gemma.persistence.util.QueryUtils.batchParameterList;
 import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
 
 /**
- * AbstractDao can find the generic type at runtime and simplify the code implementation of the BaseDao interface
+ * AbstractDao finds the generic type at runtime and provides default
+ * BaseDao implementations on top of {@link SessionFactory}.
  *
  * @author Anton, Nicolas
  */
@@ -54,29 +66,23 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
 
     private final Class<? extends T> elementClass;
     private final SessionFactory sessionFactory;
-    private final ClassMetadata classMetadata;
+    private final String entityName;
+    private final String identifierPropertyName;
     private final int batchSize;
     private final boolean useCursorFetchIfSupported;
     private final boolean isQueryStateless;
 
     protected AbstractDao( Class<? extends T> elementClass, SessionFactory sessionFactory ) {
-        this( elementClass, sessionFactory, requireNonNull( sessionFactory.getClassMetadata( elementClass ),
-                String.format( "%s is missing from Hibernate mapping.", elementClass.getName() ) ) );
-    }
-
-    /**
-     * @param classMetadata the class metadata to use to retrieve information about {@link T}
-     */
-    protected AbstractDao( Class<? extends T> elementClass, SessionFactory sessionFactory, ClassMetadata classMetadata ) {
-        Assert.isTrue( elementClass.isAssignableFrom( ( Class<?> ) classMetadata.getMappedClass() ),
-                String.format( "The mapped class must be assignable from %s.", elementClass.getName() ) );
-        Assert.notNull( classMetadata.getIdentifierPropertyName(), String.format( "%s does not have a ID.", elementClass.getName() ) );
         this.elementClass = elementClass;
         this.sessionFactory = sessionFactory;
-        this.classMetadata = classMetadata;
-        this.batchSize = HibernateUtils.getBatchSize( classMetadata, sessionFactory );
+        EntityType<? extends T> entityType = sessionFactory.getMetamodel().entity( elementClass );
+        this.entityName = entityType.getName();
+        // single-ID entities only — composite IDs are not used in Gemma's model
+        this.identifierPropertyName = entityType.getId( entityType.getIdType().getJavaType() ).getName();
+        Assert.notNull( this.identifierPropertyName, String.format( "%s does not have an ID.", elementClass.getName() ) );
+        this.batchSize = HibernateUtils.getBatchSize( elementClass, sessionFactory );
         this.useCursorFetchIfSupported = false;
-        this.isQueryStateless = HibernateUtils.isStateless( classMetadata, sessionFactory );
+        this.isQueryStateless = HibernateUtils.isStateless( elementClass, sessionFactory );
     }
 
     @Override
@@ -85,22 +91,17 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     }
 
     protected String getEntityName() {
-        return this.classMetadata.getEntityName();
+        return this.entityName;
     }
 
     protected String getIdentifierPropertyName() {
-        return this.classMetadata.getIdentifierPropertyName();
+        return this.identifierPropertyName;
     }
 
     @Override
     public Collection<T> create( Collection<T> entities ) {
         boolean isDebugEnabled = log.isDebugEnabled();
-        StopWatch timer;
-        if ( isDebugEnabled ) {
-            timer = StopWatch.createStarted();
-        } else {
-            timer = null;
-        }
+        StopWatch timer = isDebugEnabled ? StopWatch.createStarted() : null;
         Collection<T> results = new ArrayList<>( entities.size() );
         for ( T t : entities ) {
             results.add( this.create( t ) );
@@ -125,12 +126,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     @Override
     public Collection<T> save( Collection<T> entities ) {
         boolean isDebugEnabled = log.isDebugEnabled();
-        StopWatch timer;
-        if ( isDebugEnabled ) {
-            timer = StopWatch.createStarted();
-        } else {
-            timer = null;
-        }
+        StopWatch timer = isDebugEnabled ? StopWatch.createStarted() : null;
         Collection<T> results = new ArrayList<>( entities.size() );
         for ( T entity : entities ) {
             results.add( this.save( entity ) );
@@ -156,27 +152,13 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
         }
     }
 
-    /**
-     * This implementation is temporary and attempts to best replicate the behaviour of loading entities by multiple IDs
-     * introduced in Hibernate 5. <a href="https://thorben-janssen.com/fetch-multiple-entities-id-hibernate/">Read more about this</a>.
-     */
     @Override
     public Collection<T> load( Collection<Long> ids ) {
         boolean isDebugEnabled = log.isDebugEnabled();
-
         if ( ids.isEmpty() ) {
-            if ( isDebugEnabled ) {
-                log.trace( String.format( "Loading %s with an empty collection of IDs, returning an empty collection.", elementClass.getSimpleName() ) );
-            }
             return Collections.emptyList();
         }
-        StopWatch timer;
-        if ( isDebugEnabled ) {
-            timer = StopWatch.createStarted();
-        } else {
-            timer = null;
-        }
-        String idPropertyName = classMetadata.getIdentifierPropertyName();
+        StopWatch timer = isDebugEnabled ? StopWatch.createStarted() : null;
 
         List<T> results = new ArrayList<>( ids.size() );
 
@@ -184,7 +166,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
         Set<Long> unloadedIds = new HashSet<>();
         for ( Long id : ids ) {
             //noinspection unchecked
-            T entity = ( T ) sessionFactory.getCurrentSession().load( elementClass, id );
+            T entity = ( T ) sessionFactory.getCurrentSession().getReference( elementClass, id );
             if ( Hibernate.isInitialized( entity ) ) {
                 results.add( entity );
                 sortById = true;
@@ -195,18 +177,10 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
 
         if ( batchSize != -1 && unloadedIds.size() > batchSize ) {
             for ( Collection<Long> batch : batchParameterList( unloadedIds, batchSize ) ) {
-                //noinspection unchecked
-                results.addAll( sessionFactory.getCurrentSession()
-                        .createCriteria( elementClass )
-                        .add( Restrictions.in( idPropertyName, batch ) )
-                        .list() );
+                results.addAll( loadByIds( batch ) );
             }
         } else if ( !unloadedIds.isEmpty() ) {
-            //noinspection unchecked
-            results.addAll( sessionFactory.getCurrentSession()
-                    .createCriteria( elementClass )
-                    .add( Restrictions.in( idPropertyName, optimizeParameterList( unloadedIds ) ) )
-                    .list() );
+            results.addAll( loadByIds( optimizeParameterList( unloadedIds ) ) );
         }
 
         if ( sortById ) {
@@ -220,14 +194,24 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
         return results;
     }
 
+    private List<T> loadByIds( Collection<Long> ids ) {
+        Session session = sessionFactory.getCurrentSession();
+        CriteriaBuilder cb = session.getCriteriaBuilder();
+        //noinspection unchecked
+        CriteriaQuery<T> cq = ( CriteriaQuery<T> ) cb.createQuery( elementClass );
+        //noinspection unchecked
+        Root<T> root = ( Root<T> ) cq.from( elementClass );
+        cq.select( root ).where( root.get( identifierPropertyName ).in( ids ) );
+        return session.createQuery( cq ).getResultList();
+    }
+
     @Override
     public T load( Long id ) {
         try {
-            // Don't use 'load' because if the object doesn't exist you can get an invalid proxy.
             //noinspection unchecked
             T result = ( T ) sessionFactory.getCurrentSession().get( elementClass, id );
             if ( log.isTraceEnabled() ) {
-                log.trace( String.format( String.format( "Loaded %s.", formatEntity( result ) ) ) );
+                log.trace( String.format( "Loaded %s.", formatEntity( result ) ) );
             }
             return result;
         } catch ( WrongClassException e ) {
@@ -239,14 +223,14 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     @Override
     public Collection<T> loadAll() {
         boolean isDebugEnabled = log.isDebugEnabled();
-        StopWatch timer;
-        if ( isDebugEnabled ) {
-            timer = StopWatch.createStarted();
-        } else {
-            timer = null;
-        }
+        StopWatch timer = isDebugEnabled ? StopWatch.createStarted() : null;
+        Session session = sessionFactory.getCurrentSession();
+        CriteriaBuilder cb = session.getCriteriaBuilder();
         //noinspection unchecked
-        Collection<T> results = sessionFactory.getCurrentSession().createCriteria( elementClass ).list();
+        CriteriaQuery<T> cq = ( CriteriaQuery<T> ) cb.createQuery( elementClass );
+        //noinspection unchecked
+        cq.select( ( Root<T> ) cq.from( elementClass ) );
+        List<T> results = session.createQuery( cq ).getResultList();
         if ( isDebugEnabled ) {
             log.debug( String.format( "Loaded all (%d) %s entities in %d ms.", results.size(), elementClass.getSimpleName(), timer.getTime( TimeUnit.MILLISECONDS ) ) );
         }
@@ -256,9 +240,9 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     @Override
     public Collection<T> loadReference( Collection<Long> ids ) {
         Collection<T> results = ids.stream()
-                .distinct().sorted() // this will make the output appear similar to load(Collection)
+                .distinct().sorted()
                 .map( this::loadReference )
-                .collect( Collectors.toList() ); // no HashSet here because otherwise proxies would get initialized
+                .collect( Collectors.toList() );
         if ( log.isDebugEnabled() ) {
             log.debug( String.format( "Loaded references to %d %s entities.", results.size(), elementClass.getSimpleName() ) );
         }
@@ -269,7 +253,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     @Override
     public T loadReference( Long id ) {
         //noinspection unchecked
-        T entity = ( T ) sessionFactory.getCurrentSession().load( elementClass, id );
+        T entity = ( T ) sessionFactory.getCurrentSession().getReference( elementClass, id );
         if ( log.isTraceEnabled() ) {
             log.trace( String.format( "Loaded reference to %s.", formatEntity( entity ) ) );
         }
@@ -295,7 +279,6 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     @Nonnull
     @Override
     public Collection<T> reload( Collection<T> entities ) {
-        // TODO: implement batch reloading like for #load(Collection)
         StopWatch timer = StopWatch.createStarted();
         List<T> results = entities.stream()
                 .map( this::reload )
@@ -308,9 +291,11 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
 
     @Override
     public long countAll() {
-        return ( Long ) sessionFactory.getCurrentSession().createCriteria( elementClass )
-                .setProjection( Projections.rowCount() )
-                .uniqueResult();
+        Session session = sessionFactory.getCurrentSession();
+        CriteriaBuilder cb = session.getCriteriaBuilder();
+        CriteriaQuery<Long> cq = cb.createQuery( Long.class );
+        cq.select( cb.count( cq.from( elementClass ) ) );
+        return session.createQuery( cq ).getSingleResult();
     }
 
     @Override
@@ -320,24 +305,26 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
 
     @Override
     public Stream<T> streamAll( boolean createNewSession ) {
-        //noinspection unchecked
         return QueryUtils.createStream( getSessionFactory(),
-                session -> QueryUtils.stream( session.createCriteria( elementClass ),
-                        ( Class<T> ) elementClass,
-                        batchSize,
-                        useCursorFetchIfSupported,
-                        isQueryStateless ), createNewSession );
+                session -> {
+                    CriteriaBuilder cb = session.getCriteriaBuilder();
+                    //noinspection unchecked
+                    CriteriaQuery<T> cq = ( CriteriaQuery<T> ) cb.createQuery( elementClass );
+                    //noinspection unchecked
+                    cq.select( ( Root<T> ) cq.from( elementClass ) );
+                    //noinspection unchecked
+                    return QueryUtils.stream( session.createQuery( cq ),
+                            ( Class<T> ) elementClass,
+                            batchSize,
+                            useCursorFetchIfSupported,
+                            isQueryStateless );
+                }, createNewSession );
     }
 
     /**
      * Produce a stream over a {@link Query} with a new session if desired.
-     *
-     * @param createNewSession if true, a new session is created and will be closed when the stream is closed. Be
-     *                         extremely careful with the resulting stream. Use a try-with-resources block to ensure
-     *                         the session is closed properly.
-     * @see QueryUtils#stream(Query, Class, int, boolean, boolean)
      */
-    protected <U> Stream<U> streamQuery( Function<Session, Query> queryCreator, Class<U> resultType, int fetchSize, boolean useCursorFetchIfSupported, boolean isStateless, boolean createNewSession ) {
+    protected <U> Stream<U> streamQuery( Function<Session, Query<?>> queryCreator, Class<U> resultType, int fetchSize, boolean useCursorFetchIfSupported, boolean isStateless, boolean createNewSession ) {
         if ( createNewSession ) {
             Session session = openSession();
             try {
@@ -354,16 +341,13 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
 
     /**
      * Open a session that inherits the current session's properties.
-     * <p>
-     * Be extremely careful when opening a new session because it is not managed by the session factory and will not be
-     * closed automatically.
      */
     private Session openSession() {
         Session currentSession = sessionFactory.getCurrentSession();
         Session session = sessionFactory.openSession();
         session.setDefaultReadOnly( currentSession.isDefaultReadOnly() );
         session.setCacheMode( currentSession.getCacheMode() );
-        session.setFlushMode( currentSession.getFlushMode() );
+        session.setHibernateFlushMode( currentSession.getHibernateFlushMode() );
         return session;
     }
 
@@ -382,7 +366,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     @OverridingMethodsMustInvokeSuper
     public void remove( T entity ) {
         Assert.notNull( entity.getId(), "Cannot delete a transient entity." );
-        sessionFactory.getCurrentSession().delete( entity );
+        sessionFactory.getCurrentSession().remove( entity );
         if ( log.isTraceEnabled() ) {
             log.trace( String.format( "Removed %s.", formatEntity( entity ) ) );
         }
@@ -391,12 +375,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     @Override
     public void update( Collection<T> entities ) {
         boolean isDebugEnabled = log.isDebugEnabled();
-        StopWatch timer;
-        if ( isDebugEnabled ) {
-            timer = StopWatch.createStarted();
-        } else {
-            timer = null;
-        }
+        StopWatch timer = isDebugEnabled ? StopWatch.createStarted() : null;
         for ( T entity : entities ) {
             this.update( entity );
         }
@@ -409,7 +388,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     @OverridingMethodsMustInvokeSuper
     public void update( T entity ) {
         Assert.notNull( entity.getId(), "Cannot update a transient entity." );
-        sessionFactory.getCurrentSession().update( entity );
+        sessionFactory.getCurrentSession().merge( entity );
         if ( log.isTraceEnabled() ) {
             log.trace( String.format( "Updated %s.", formatEntity( entity ) ) );
         }
@@ -420,9 +399,6 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
         if ( entity.getId() != null ) {
             return this.load( entity.getId() );
         } else {
-            if ( log.isTraceEnabled() ) {
-                log.trace( String.format( "No persistent entity found for %s, returning null.", formatEntity( entity ) ) );
-            }
             return null;
         }
     }
@@ -430,14 +406,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     @Override
     public T findOrCreate( T entity ) {
         T found = this.find( entity );
-        if ( found != null ) {
-            return found;
-        } else {
-            if ( log.isTraceEnabled() ) {
-                log.trace( String.format( "No persistent entity found for %s, creating a new one...", formatEntity( entity ) ) );
-            }
-            return this.create( entity );
-        }
+        return found != null ? found : this.create( entity );
     }
 
     protected final SessionFactory getSessionFactory() {
@@ -448,72 +417,63 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
         return batchSize;
     }
 
-    /**
-     * Retrieve one entity whose given property matches the given value.
-     * <p>
-     * Note: the property should have a unique index, otherwise a {@link org.hibernate.NonUniqueResultException} will be
-     * raised.
-     *
-     * @param propertyName  the name of property to be matched.
-     * @param propertyValue the value to look for.
-     * @return an entity whose property matched the given value
-     */
     @Nullable
     protected T findOneByProperty( String propertyName, Object propertyValue ) {
+        Session session = sessionFactory.getCurrentSession();
+        CriteriaBuilder cb = session.getCriteriaBuilder();
         //noinspection unchecked
-        return ( T ) sessionFactory.getCurrentSession()
-                .createCriteria( this.elementClass )
-                .add( Restrictions.eq( propertyName, propertyValue ) )
-                .uniqueResult();
+        CriteriaQuery<T> cq = ( CriteriaQuery<T> ) cb.createQuery( elementClass );
+        //noinspection unchecked
+        Root<T> root = ( Root<T> ) cq.from( elementClass );
+        cq.select( root ).where( cb.equal( root.get( propertyName ), propertyValue ) );
+        return session.createQuery( cq ).uniqueResult();
     }
 
     @Nullable
     protected Long findIdByProperty( String propertyName, Object propertyValue ) {
-        return ( Long ) sessionFactory.getCurrentSession()
-                .createCriteria( this.elementClass )
-                .add( Restrictions.eq( propertyName, propertyValue ) )
-                .setProjection( Projections.id() )
-                .uniqueResult();
+        Session session = sessionFactory.getCurrentSession();
+        CriteriaBuilder cb = session.getCriteriaBuilder();
+        CriteriaQuery<Long> cq = cb.createQuery( Long.class );
+        Root<?> root = cq.from( elementClass );
+        cq.select( root.get( identifierPropertyName ).as( Long.class ) )
+                .where( cb.equal( root.get( propertyName ), propertyValue ) );
+        return session.createQuery( cq ).uniqueResult();
     }
 
-    /**
-     * Does a search on given property and its value.
-     *
-     * @param propertyName  the name of property to be matched.
-     * @param propertyValue the value to look for.
-     * @return an entity whose property first matched the given value.
-     */
     protected List<T> findByProperty( String propertyName, Object propertyValue ) {
+        Session session = sessionFactory.getCurrentSession();
+        CriteriaBuilder cb = session.getCriteriaBuilder();
         //noinspection unchecked
-        return sessionFactory.getCurrentSession()
-                .createCriteria( this.elementClass )
-                .add( Restrictions.eq( propertyName, propertyValue ) )
-                .list();
+        CriteriaQuery<T> cq = ( CriteriaQuery<T> ) cb.createQuery( elementClass );
+        //noinspection unchecked
+        Root<T> root = ( Root<T> ) cq.from( elementClass );
+        cq.select( root ).where( cb.equal( root.get( propertyName ), propertyValue ) );
+        return session.createQuery( cq ).getResultList();
     }
 
-    /**
-     * Perform a search on a given property and all its possible values.
-     */
     protected List<T> findByPropertyIn( String propertyName, Collection<?> propertyValues ) {
         if ( propertyValues.isEmpty() ) {
             return Collections.emptyList();
         }
+        Session session = sessionFactory.getCurrentSession();
+        CriteriaBuilder cb = session.getCriteriaBuilder();
         //noinspection unchecked
-        return sessionFactory.getCurrentSession()
-                .createCriteria( this.elementClass )
-                .add( Restrictions.in( propertyName, propertyValues ) )
-                .list();
+        CriteriaQuery<T> cq = ( CriteriaQuery<T> ) cb.createQuery( elementClass );
+        //noinspection unchecked
+        Root<T> root = ( Root<T> ) cq.from( elementClass );
+        cq.select( root ).where( root.get( propertyName ).in( propertyValues ) );
+        return session.createQuery( cq ).getResultList();
     }
 
     private String formatEntity( @Nullable T entity ) {
         if ( entity == null ) {
             return String.format( "null %s", elementClass.getSimpleName() );
         } else if ( entity.getId() == null ) {
-            return String.format( String.format( "transient %s entity", elementClass.getSimpleName() ) );
+            return String.format( "transient %s entity", elementClass.getSimpleName() );
         } else if ( sessionFactory.getCurrentSession().contains( entity ) ) {
-            return String.format( String.format( "persistent %s entity with ID %d", elementClass.getSimpleName(), entity.getId() ) );
+            return String.format( "persistent %s entity with ID %d", elementClass.getSimpleName(), entity.getId() );
         } else {
-            return String.format( String.format( "detached %s entity with ID %d", elementClass.getSimpleName(), entity.getId() ) );
+            return String.format( "detached %s entity with ID %d", elementClass.getSimpleName(), entity.getId() );
         }
     }
 }

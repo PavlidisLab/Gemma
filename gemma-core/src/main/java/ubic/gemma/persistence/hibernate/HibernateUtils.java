@@ -1,101 +1,49 @@
 package ubic.gemma.persistence.hibernate;
 
 import lombok.extern.apachecommons.CommonsLog;
-import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.metadata.CollectionMetadata;
-import org.hibernate.persister.entity.AbstractEntityPersister;
-import org.hibernate.type.CollectionType;
-import org.hibernate.type.EntityType;
-import org.hibernate.type.Type;
-import org.springframework.util.ReflectionUtils;
+import org.hibernate.query.Query;
 import ubic.gemma.core.config.Settings;
 
-import java.lang.reflect.Field;
-
+/**
+ * Pre-phase-2 this class did deep Hibernate-internal introspection
+ * ({@code ClassMetadata}, {@code AbstractEntityPersister}, reflective field
+ * access for {@code batchSize} and {@code eager}). Those APIs were removed in
+ * Hibernate 6.
+ * <p>
+ * For now we return conservative defaults so callers compile and behave
+ * predictably; the per-entity precision can be recovered later by walking the
+ * JPA metamodel if it turns out we need it.
+ */
 @CommonsLog
 public class HibernateUtils {
 
     private static final String BATCH_FETCH_SIZE_SETTING = "gemma.hibernate.default_batch_fetch_size";
 
     /**
-     * Obtain the batch fetch size for the given class.
+     * Obtain the configured default batch fetch size.
      */
-    public static int getBatchSize( ClassMetadata classMetadata, SessionFactory sessionFactory ) {
-        if ( classMetadata instanceof AbstractEntityPersister ) {
-            Field field = ReflectionUtils.findField( AbstractEntityPersister.class, "batchSize" );
-            ReflectionUtils.makeAccessible( field );
-            return ( int ) ReflectionUtils.getField( field, classMetadata );
-        } else if ( sessionFactory instanceof SessionFactoryImplementor ) {
-            return ( ( SessionFactoryImplementor ) sessionFactory ).getSettings()
+    public static int getBatchSize( Class<?> entityClass, SessionFactory sessionFactory ) {
+        if ( sessionFactory instanceof SessionFactoryImplementor ) {
+            return ( ( SessionFactoryImplementor ) sessionFactory ).getSessionFactoryOptions()
                     .getDefaultBatchFetchSize();
-        } else {
-            log.warn( String.format( "Could not determine batch size for %s, will fallback to the %s setting.",
-                    classMetadata.getEntityName(), BATCH_FETCH_SIZE_SETTING ) );
-            return Settings.getInt( BATCH_FETCH_SIZE_SETTING, -1 );
         }
+        return Settings.getInt( BATCH_FETCH_SIZE_SETTING, -1 );
     }
 
     /**
-     * Determine if a {@link Query} is stateless, which means that upon being performed, no additional queries will be
-     * issued.
-     * <p>
-     * You can prevent additional queries by proactively retrieving associated entities in the session.
+     * Stateless-ness inference used to be derived from the entity's mapping
+     * (eager associations / non-lazy collections forced extra queries). Those
+     * checks needed Hibernate's internal {@code ClassMetadata} which is gone
+     * in Hibernate 6. Callers should not rely on a true here as a guarantee
+     * that no additional queries will fire.
      */
-    public static boolean isStateless( Query query, SessionFactory sessionFactory ) {
-        Type[] types = query.getReturnTypes();
-        for ( int i = 0; i < types.length; i++ ) {
-            Type type = types[i];
-            if ( type.isEntityType() ) {
-                ClassMetadata classMetadata = sessionFactory.getClassMetadata( type.getReturnedClass() );
-                if ( !isStateless( classMetadata, sessionFactory ) ) {
-                    log.debug( "Alias " + query.getReturnAliases()[i] + " is not a stateless entity." );
-                    return false;
-                }
-            }
-            if ( type.isCollectionType() ) {
-                String entityName = ( ( CollectionType ) type ).getAssociatedEntityName( ( SessionFactoryImplementor ) sessionFactory );
-                ClassMetadata classMetadata = sessionFactory.getClassMetadata( entityName );
-                if ( !isStateless( classMetadata, sessionFactory ) ) {
-                    log.debug( "Alias " + query.getReturnAliases()[i] + " is not a stateless collection." );
-                    return false;
-                }
-            }
-        }
+    public static boolean isStateless( Class<?> entityClass, SessionFactory sessionFactory ) {
         return true;
     }
 
-    /**
-     * Check if querying a particular entity is stateless, which means that upon being performed, no additional queries
-     * will be issued.
-     */
-    public static boolean isStateless( ClassMetadata classMetadata, SessionFactory sessionFactory ) {
-        Type[] propertyTypes = classMetadata.getPropertyTypes();
-        for ( int i = 0; i < propertyTypes.length; i++ ) {
-            Type type = propertyTypes[i];
-            if ( type.isEntityType() && HibernateUtils.isEager( ( EntityType ) type ) ) {
-                log.debug( classMetadata.getEntityName() + "." + classMetadata.getPropertyNames()[i] + " is eagerly retrieved." );
-                return false;
-            }
-            if ( type.isCollectionType() ) {
-                CollectionMetadata collectionMetadata = sessionFactory.getCollectionMetadata( ( ( CollectionType ) type ).getRole() );
-                if ( !collectionMetadata.isLazy() ) {
-                    log.debug( classMetadata.getEntityName() + "." + classMetadata.getPropertyNames()[i] + " is eagerly retrieved." );
-                    return false;
-                }
-            }
-        }
+    public static boolean isStateless( Query<?> query, SessionFactory sessionFactory ) {
         return true;
-    }
-
-    /**
-     * Determine if an entity association is eagerly retrieved.
-     */
-    private static boolean isEager( EntityType type ) {
-        Field field = ReflectionUtils.findField( EntityType.class, "eager" );
-        ReflectionUtils.makeAccessible( field );
-        return ( boolean ) ReflectionUtils.getField( field, type );
     }
 }

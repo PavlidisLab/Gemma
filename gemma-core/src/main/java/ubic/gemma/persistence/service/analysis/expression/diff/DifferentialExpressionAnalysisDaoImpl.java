@@ -89,7 +89,7 @@ class DifferentialExpressionAnalysisDaoImpl extends AbstractDao<DifferentialExpr
                 .getEntityPersister( DifferentialExpressionAnalysisResult.class.getName() );
         contrastPersister = ( ( SessionFactoryImpl ) sessionFactory )
                 .getEntityPersister( ContrastResult.class.getName() );
-        bioAssaySetBatchSize = HibernateUtils.getBatchSize( sessionFactory.getClassMetadata( BioAssaySet.class ), sessionFactory );
+        bioAssaySetBatchSize = HibernateUtils.getBatchSize( BioAssaySet.class, sessionFactory );
     }
 
     /**
