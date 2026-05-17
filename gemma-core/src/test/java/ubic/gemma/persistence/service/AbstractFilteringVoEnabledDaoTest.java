@@ -8,14 +8,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
-import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
-import org.springframework.orm.jpa.persistenceunit.PersistenceManagedTypes;
-import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.hibernate.H2Dialect;
+import ubic.gemma.persistence.hibernate.HibernateSessionFactoryBean;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
@@ -26,9 +24,8 @@ import javax.sql.DataSource;
 import jakarta.persistence.*;
 import java.util.Collection;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -45,27 +42,17 @@ public class AbstractFilteringVoEnabledDaoTest extends BaseTest {
         }
 
         @Bean
-        public LocalContainerEntityManagerFactoryBean entityManagerFactory( DataSource dataSource ) {
-            // Phase 2: JPA EMF replaces the legacy LocalSessionFactoryBean.setAnnotatedClasses path.
-            LocalContainerEntityManagerFactoryBean emf = new LocalContainerEntityManagerFactoryBean();
-            emf.setDataSource( dataSource );
-            emf.setPersistenceUnitName( "fakedao" );
-            emf.setJpaVendorAdapter( new HibernateJpaVendorAdapter() );
-            emf.setManagedTypes( PersistenceManagedTypes.of(
-                    FakeModel.class.getName(),
-                    FakeRelatedModel.class.getName() ) );
-            Map<String, Object> props = new HashMap<>();
-            props.put( "hibernate.dialect", H2Dialect.class.getName() );
-            props.put( "hibernate.hbm2ddl.auto", "create" );
-            props.put( "hibernate.cache.use_second_level_cache", "false" );
-            props.put( "hibernate.cache.use_query_cache", "false" );
-            emf.setJpaPropertyMap( props );
-            return emf;
-        }
-
-        @Bean
-        public SessionFactory sessionFactory( jakarta.persistence.EntityManagerFactory entityManagerFactory ) {
-            return entityManagerFactory.unwrap( SessionFactory.class );
+        public HibernateSessionFactoryBean sessionFactory( DataSource dataSource ) {
+            HibernateSessionFactoryBean factory = new HibernateSessionFactoryBean();
+            factory.setDataSource( dataSource );
+            factory.setAnnotatedClasses( FakeModel.class, FakeRelatedModel.class );
+            Properties props = new Properties();
+            props.setProperty( "hibernate.dialect", H2Dialect.class.getName() );
+            props.setProperty( "hibernate.hbm2ddl.auto", "create" );
+            props.setProperty( "hibernate.cache.use_second_level_cache", "false" );
+            props.setProperty( "hibernate.cache.use_query_cache", "false" );
+            factory.setHibernateProperties( props );
+            return factory;
         }
 
         @Bean

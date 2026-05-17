@@ -1,11 +1,21 @@
 # Phase 2 (Spring 6 / Hibernate 6 / jakarta) — handoff
 
-Filed 2026-05-17, refreshed at end-of-session-4 first push (still 2026-05-17).
-**Step 5a (JPA wiring) has now landed**: SessionFactory is unwrapped from a
-JPA `LocalContainerEntityManagerFactoryBean` consuming a new
-`META-INF/persistence.xml`. The legacy custom `LocalSessionFactoryBean` +
-`HibernateTransactionManager` wrappers are deleted, and the obsolete
-`hibernate.cfg.xml` is gone (its mapping list moved into `persistence.xml`).
+Filed 2026-05-17, refreshed at end-of-session-4 second push (still 2026-05-17).
+**Step 5a (Hibernate wiring) has now landed, AND first Step 7 smoke tests
+are green.** SessionFactory is built natively from `hibernate.cfg.xml` via
+a new `HibernateSessionFactoryBean`. Why not JPA? Hibernate's JPA bootstrap
+hard-codes `hibernate.current_session_context_class=jpa` regardless of what's
+in `jpaPropertyMap`, which breaks `sessionFactory.getCurrentSession()` for
+the `HibernateTransactionManager` + `SpringSessionContext` bridge that
+Gemma's DAOs rely on. (We tried the JPA EMF + unwrap pattern first; it
+bootstraps but `getCurrentSession()` returns an unmanaged non-transactional
+session.) See `HibernateSessionFactoryBean.java` javadoc for the long form.
+
+Smoke tests passing under Phase 2:
+- `ExpressionExperimentSetDaoTest` (BaseDatabaseTest subclass)
+- `AbstractFilteringVoEnabledDaoTest`
+- `UserManagerTest`
+
 All 5 modules still install + test-compile green.
 
 ```
@@ -20,7 +30,8 @@ mvn -P fast -Denforcer.skip=true install -DskipTests=true:
 ## Session-4 commits (on `phase2`)
 
 ```
-<this commit>   Phase 2 Step 5a: Spring 6 JPA migration of SessionFactory wiring
+<this commit>   Phase 2 Step 5a/7: native Hibernate bootstrap + first DAO tests green
+901effa053      Phase 2 Step 5a: Spring 6 JPA migration of SessionFactory wiring
 5ff67490aa      PHASE_2_HANDOFF.md: refresh for full mvn install green; next is Step 5a (JPA)
 ```
 
@@ -105,22 +116,61 @@ The biggest remaining offenders at session-3 end:
 
 ## TL;DR for a fresh session (next session-5)
 
-Build is compile-green and test-compile-green for all five modules.
-`mvn install -DskipTests=true` produces gemma-core jar, gemma-cli
-appassembly, and Gemma.war. **Step 5a JPA wiring is now in place** so
-app-context bootstrap should at least reach SessionFactory construction
-at runtime (untested — that's Step 7).
+Build is install-green and test-compile-green for all five modules.
+**Step 5a wiring is in place AND runtime-verified** via three smoke
+tests (a DAO test, the filtering-DAO test, and a security/user
+manager test). Several real bugs fell out of the Step 7 smoke-test
+exercise — see below; one was fixed this session, three are still
+open.
 
-What's still left:
+### Bugs found and fixed in this session
 
-1. **Step 7 — selective per-module tests.** Do NOT run the full suite
-   (Paul: ~30 min); pick a representative DAO test per module (e.g.
-   `ExpressionExperimentSetDaoTest` extends `BaseDatabaseTest`) to
-   verify the BusinessKey / JPA Criteria / TypedResultTransformer
-   migrations AND the new JPA EMF wiring work at runtime. Expect issues
-   — the JPA EMF reads `META-INF/persistence.xml` (new), the unwrap
-   from JPA → SessionFactory is new, and the `applyTo` /
-   `TypedResultTransformer` path is also new.
+- **`AbstractFilteringVoEnabledDao.registerEntity`** double-registered
+  the `@Id` attribute (JPA Metamodel's `getAttributes()` includes the
+  `@Id`, unlike the legacy Hibernate `ClassMetadata.getPropertyNames()`
+  it replaced). One-line fix in the Phase-2 rewrite.
+- **`Analysis.hbm.xml`** still had a `<subclass>` for the deleted
+  `CoexpressionAnalysis` entity (pointing at deleted
+  `CoexpCorrelationDistribution`). Removed; `SampleCoexpressionAnalysis`
+  retained.
+- **`sql/init-entities.sql`** had `ALTER TABLE` statements for the
+  retired `{HUMAN,MOUSE,RAT,OTHER}_{GENE,EXPERIMENT}_COEXPRESSION`
+  tables that Hibernate no longer creates — H2 (and any fresh MySQL)
+  failed with "table not found". Deleted those lines.
+- **`AclLinterServiceTest`** had
+  `@TestExecutionListeners(WithSecurityContextTestExecutionListener.class)`
+  without `MergeMode.MERGE_WITH_DEFAULTS`, which silently dropped the
+  default DependencyInjection listener so `@Autowired` fields stayed
+  null. Added `MERGE_WITH_DEFAULTS`. The test now runs but hits the
+  next bug.
+
+### Bugs found but not fixed (Step 7 follow-up)
+
+- **MySQL bitwise-AND `(ace.MASK & 16) <> 0` in ACL queries** doesn't
+  parse on H2 (which uses `BITAND(a, b)` instead). Surfaces in
+  `AclLinterServiceTest` after the @TestExecutionListeners fix. Either
+  use H2's MYSQL compatibility mode more aggressively (already on
+  `MODE=MYSQL` but apparently doesn't cover `&`), or route the
+  bitwise-AND through a portable HQL/JPA function. Phase 2 Step 3
+  inlined this for MySQL only — h2-only test paths were never
+  exercised in pre-Phase-2.
+- **`TransactionRequired` paths through JPA EMF** — explored and
+  rejected. Documented in `HibernateSessionFactoryBean.java` javadoc
+  and `applicationContext-hibernate.xml` comment; native Hibernate is
+  the path.
+- **Stale `.hbm.xml` files in `target/classes`** can sneak into the
+  classpath if you switch branches without `mvn clean`. Hibernate's
+  classpath scanner picked up 16 deleted-in-Step-3 coexpression hbm
+  files in such a stale build and tried to load missing Java classes.
+  Workaround: always `mvn clean test` after switching branches.
+
+### What's still left
+
+1. **Step 7 — more per-module tests.** Continue picking representative
+   DAO tests; expect more Criteria→HQL drift bugs, more JPA-Metamodel
+   vs Hibernate-Metadata differences, more h2-vs-mysql divergences.
+   Smoke set so far: `ExpressionExperimentSetDaoTest`,
+   `AbstractFilteringVoEnabledDaoTest`, `UserManagerTest`.
 2. **Steps 8–10** — bytecode 11→17 (in root pom), re-enable
    `dependencyConvergence` enforcer, update RENOVATIONS.md.
 

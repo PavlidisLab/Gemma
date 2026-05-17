@@ -230,10 +230,10 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
                 throw new IllegalArgumentException( String.format( "An entity of type %s is already registered %s.",
                         prevValue.getName(), summarizePrefix( prefix ) ) );
             }
-            if ( entityType.hasSingleIdAttribute() ) {
-                jakarta.persistence.metamodel.SingularAttribute<?, ?> idAttr = entityType.getId( entityType.getIdType().getJavaType() );
-                registerProperty( prefix + idAttr.getName(), useSubquery );
-            }
+            // Note: JPA Metamodel's entityType.getAttributes() already includes the @Id attribute,
+            // unlike the legacy Hibernate ClassMetadata.getPropertyNames() it replaced (which excluded
+            // the id and required getIdentifierPropertyName() to be called separately). So the loop
+            // below handles id registration too — no separate registerProperty call needed.
             for ( jakarta.persistence.metamodel.Attribute<?, ?> attr : entityType.getAttributes() ) {
                 String propertyName = attr.getName();
                 Class<?> javaType = attr.getJavaType();

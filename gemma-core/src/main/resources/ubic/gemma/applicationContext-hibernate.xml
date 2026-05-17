@@ -8,15 +8,16 @@
    http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cache.xsd">
 
 	<!--
-		Renovations Phase 2 wiring: Spring 6 + Hibernate 6 (jakarta).
+		Renovations Phase 2 wiring: Spring 6 + Hibernate 6.
 
-		Spring 6's org.springframework.orm.hibernate5 package was kept for source compatibility
-		with Hibernate 5 only — its LocalSessionFactoryBean/HibernateTransactionManager call into
-		hibernate-commons-annotations ReflectionManager.reset(), which no longer exists in
-		Hibernate 6. The path forward is JPA: build an EntityManagerFactory via Spring's
-		LocalContainerEntityManagerFactoryBean (consuming META-INF/persistence.xml) and expose a
-		Hibernate SessionFactory by unwrapping it, so existing SessionFactory-injected DAOs
-		continue to work without porting every DAO to JPA APIs.
+		Bootstrap path: native Hibernate Configuration via HibernateSessionFactoryBean (not JPA).
+		We tried the JPA-bootstrap approach (LocalContainerEntityManagerFactoryBean +
+		HibernateJpaVendorAdapter + factory-method="unwrap") but Hibernate's JPA bootstrap
+		hard-codes hibernate.current_session_context_class=jpa which breaks
+		SessionFactory.getCurrentSession() through Spring's SpringSessionContext bridge to
+		HibernateTransactionManager. Gemma's DAOs use getCurrentSession() throughout, so we go
+		native — HibernateSessionFactoryBean accepts the standard Hibernate properties and
+		honours the SpringSessionContext setting.
 	-->
 
 	<!-- Enable AspectJ autoproxy -->
@@ -57,51 +58,44 @@
 		<constructor-arg name="traverseCauses" value="true"/>
 	</bean>
 
-	<!-- JPA EntityManagerFactory, configured from META-INF/persistence.xml ("gemma" unit). -->
-	<bean id="entityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean"
-		  depends-on="dataSourceInitializer">
-		<property name="dataSource" ref="dataSource"/>
-		<property name="persistenceUnitName" value="gemma"/>
-		<property name="jpaVendorAdapter">
-			<bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter"/>
-		</property>
-		<property name="jpaPropertyMap">
-			<map>
-				<entry key="hibernate.hbm2ddl.auto" value="${gemma.hibernate.hbm2ddl.auto}"/>
-				<entry key="hibernate.dialect" value="ubic.gemma.persistence.hibernate.MySQL57InnoDBDialect"/>
-				<!-- L2 cache: JCache (Ehcache 3 jakarta). EhCache 2 was retired in Phase 2 Step 5b. -->
-				<entry key="hibernate.cache.region.factory_class" value="jcache"/>
-				<entry key="hibernate.javax.cache.provider" value="org.ehcache.jsr107.EhcacheCachingProvider"/>
-				<entry key="hibernate.javax.cache.missing_cache_strategy" value="create"/>
-				<entry key="hibernate.cache.use_query_cache" value="true"/>
-				<entry key="hibernate.cache.use_second_level_cache" value="true"/>
-				<!-- defaults for fetching/inserting -->
-				<entry key="hibernate.max_fetch_depth" value="3"/>
-				<entry key="hibernate.default_batch_fetch_size" value="${gemma.hibernate.default_batch_fetch_size}"/>
-				<entry key="hibernate.jdbc.batch_size" value="${gemma.hibernate.jdbc_batch_size}"/>
-				<entry key="hibernate.jdbc.batch_versioned_data" value="true"/>
-				<entry key="hibernate.order_inserts" value="true"/>
-				<entry key="hibernate.order_updates" value="true"/>
-				<!-- used for micrometer -->
-				<entry key="hibernate.generate_statistics" value="true"/>
-				<!-- debugging options -->
-				<entry key="hibernate.show_sql" value="${gemma.hibernate.show_sql}"/>
-				<entry key="hibernate.format_sql" value="${gemma.hibernate.format_sql}"/>
-			</map>
-		</property>
-	</bean>
-
-	<!-- Hibernate SessionFactory unwrapped from the JPA EntityManagerFactory so SessionFactory-injected
-		 DAOs (most of Gemma's persistence layer) continue to work. -->
-	<bean id="sessionFactory" factory-bean="entityManagerFactory" factory-method="unwrap">
-		<constructor-arg value="org.hibernate.SessionFactory"/>
-	</bean>
-
-	<bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
-		<property name="entityManagerFactory" ref="entityManagerFactory"/>
+	<bean id="transactionManager" class="org.springframework.orm.hibernate5.HibernateTransactionManager">
+		<property name="sessionFactory" ref="sessionFactory"/>
 	</bean>
 
 	<tx:annotation-driven order="3"/>
+
+	<!-- Hibernate SessionFactory, built natively from hibernate.cfg.xml. -->
+	<bean id="sessionFactory" class="ubic.gemma.persistence.hibernate.HibernateSessionFactoryBean"
+		  depends-on="dataSourceInitializer">
+		<property name="dataSource" ref="dataSource"/>
+		<property name="configLocation" value="classpath:hibernate.cfg.xml"/>
+		<property name="hibernateProperties">
+			<props>
+				<prop key="hibernate.hbm2ddl.auto">${gemma.hibernate.hbm2ddl.auto}</prop>
+				<prop key="hibernate.dialect">ubic.gemma.persistence.hibernate.MySQL57InnoDBDialect</prop>
+				<!-- Bridge sessionFactory.getCurrentSession() to Spring's HibernateTransactionManager. -->
+				<prop key="hibernate.current_session_context_class">org.springframework.orm.hibernate5.SpringSessionContext</prop>
+				<!-- L2 cache: JCache (Ehcache 3 jakarta). EhCache 2 was retired in Phase 2 Step 5b. -->
+				<prop key="hibernate.cache.region.factory_class">jcache</prop>
+				<prop key="hibernate.javax.cache.provider">org.ehcache.jsr107.EhcacheCachingProvider</prop>
+				<prop key="hibernate.javax.cache.missing_cache_strategy">create</prop>
+				<prop key="hibernate.cache.use_query_cache">true</prop>
+				<prop key="hibernate.cache.use_second_level_cache">true</prop>
+				<!-- defaults for fetching/inserting -->
+				<prop key="hibernate.max_fetch_depth">3</prop>
+				<prop key="hibernate.default_batch_fetch_size">${gemma.hibernate.default_batch_fetch_size}</prop>
+				<prop key="hibernate.jdbc.batch_size">${gemma.hibernate.jdbc_batch_size}</prop>
+				<prop key="hibernate.jdbc.batch_versioned_data">true</prop>
+				<prop key="hibernate.order_inserts">true</prop>
+				<prop key="hibernate.order_updates">true</prop>
+				<!-- used for micrometer -->
+				<prop key="hibernate.generate_statistics">true</prop>
+				<!-- debugging options -->
+				<prop key="hibernate.show_sql">${gemma.hibernate.show_sql}</prop>
+				<prop key="hibernate.format_sql">${gemma.hibernate.format_sql}</prop>
+			</props>
+		</property>
+	</bean>
 
 	<!-- enable usage of @Cacheable annotations -->
 	<cache:annotation-driven order="2"/>

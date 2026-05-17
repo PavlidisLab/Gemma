@@ -1,0 +1,97 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!DOCTYPE hibernate-configuration PUBLIC
+    "-//Hibernate/Hibernate Configuration DTD//EN"
+    "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+<!--
+  Hibernate 6 native bootstrap. Phase 2 briefly tried a JPA-based bootstrap via
+  META-INF/persistence.xml + LocalContainerEntityManagerFactoryBean, but Hibernate's JPA path
+  hard-codes hibernate.current_session_context_class=jpa which breaks SessionFactory.getCurrentSession()
+  for the HibernateTransactionManager + SpringSessionContext bridge that Gemma's DAOs rely on. So
+  we're back on hibernate.cfg.xml fed to a custom HibernateSessionFactoryBean.
+
+  Coexpression mappings deleted in Phase 2 Step 3 (subsystem retired); SampleCoexpressionMatrix
+  is the lone surviving coexpression entity (per-EE QC artifact, not gene-gene coexpression).
+-->
+<hibernate-configuration>
+    <session-factory>
+        <!-- gsec ACL mappings (loaded from the gsec jar on the classpath) -->
+        <mapping resource="gemma/gsec/model/AclEntry.hbm.xml"/>
+        <mapping resource="gemma/gsec/model/AclObjectIdentity.hbm.xml"/>
+        <mapping resource="gemma/gsec/model/AclSid.hbm.xml"/>
+
+        <!-- Gemma analysis -->
+        <mapping resource="ubic/gemma/model/analysis/Analysis.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/analysis/AnalysisResultSet.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/analysis/BlacklistedEntity.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/analysis/Investigation.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/analysis/expression/ExpressionExperimentSet.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/analysis/expression/coexpression/SampleCoexpressionMatrix.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/analysis/expression/diff/ContrastResult.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/analysis/expression/diff/DifferentialExpressionAnalysisResult.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/analysis/expression/diff/GeneDifferentialExpressionMetaAnalysisResult.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/analysis/expression/diff/HitListSize.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/analysis/expression/diff/PvalueDistribution.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/analysis/expression/pca/Eigenvalue.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/analysis/expression/pca/Eigenvector.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/analysis/expression/pca/ProbeLoading.hbm.xml"/>
+
+        <!-- Gemma association -->
+        <mapping resource="ubic/gemma/model/association/BioSequence2GeneProduct.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/association/Gene2GOAssociation.hbm.xml"/>
+
+        <!-- Common: audit and security -->
+        <mapping resource="ubic/gemma/model/common/auditAndSecurity/AuditEvent.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/common/auditAndSecurity/AuditTrail.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/common/auditAndSecurity/Contact.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/common/auditAndSecurity/GroupAuthority.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/common/auditAndSecurity/JobInfo.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/common/auditAndSecurity/UserGroup.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/common/auditAndSecurity/curation/CurationDetails.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/common/auditAndSecurity/eventType/AuditEventType.hbm.xml"/>
+
+        <!-- Common: description / measurement / protocol / quantitation -->
+        <mapping resource="ubic/gemma/model/common/description/BibRefAnnotation.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/common/description/BibliographicReference.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/common/description/Characteristic.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/common/description/DatabaseEntry.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/common/description/ExternalDatabase.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/common/measurement/Measurement.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/common/measurement/Unit.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/common/protocol/Protocol.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/common/quantitationtype/QuantitationType.hbm.xml"/>
+
+        <!-- Expression: arrays / bioassays / biomaterials -->
+        <mapping resource="ubic/gemma/model/expression/arrayDesign/AlternateName.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/expression/arrayDesign/ArrayDesign.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/expression/bioAssay/BioAssay.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/expression/bioAssayData/BioAssayDimension.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/expression/bioAssayData/CellLevelCharacteristics.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/expression/bioAssayData/MeanVarianceRelation.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/expression/bioAssayData/ProcessedExpressionDataVector.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/expression/bioAssayData/ProcessedExpressionDataVectorNumberOfCells.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/expression/bioAssayData/RawExpressionDataVector.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/expression/bioAssayData/RawExpressionDataVectorNumberOfCells.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/expression/bioAssayData/SingleCellDimension.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/expression/bioAssayData/SingleCellExpressionDataVector.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/expression/biomaterial/BioMaterial.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/expression/biomaterial/Compound.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/expression/biomaterial/Treatment.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/expression/designElement/CompositeSequence.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/expression/experiment/ExperimentalDesign.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/expression/experiment/ExperimentalFactor.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/expression/experiment/FactorValue.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/expression/experiment/Geeq.hbm.xml"/>
+
+        <!-- Genome -->
+        <mapping resource="ubic/gemma/model/genome/Chromosome.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/genome/ChromosomeFeature.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/genome/PhysicalLocation.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/genome/Taxon.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/genome/biosequence/BioSequence.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/genome/gene/GeneAlias.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/genome/gene/GeneSet.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/genome/gene/GeneSetMember.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/genome/gene/Multifunctionality.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/genome/sequenceAnalysis/SequenceSimilaritySearchResult.hbm.xml"/>
+    </session-factory>
+</hibernate-configuration>

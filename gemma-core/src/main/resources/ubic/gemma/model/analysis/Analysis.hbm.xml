@@ -64,18 +64,10 @@
                              fetch="select">
                     <column name="EXPERIMENT_ANALYZED_FK" not-null="false" sql-type="BIGINT"/>
                 </many-to-one>
-                <subclass name="ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis"
-                          discriminator-value="CoexpressionAnalysis"
-                          abstract="false">
-                    <property name="numberOfLinks" type="java.lang.Integer">
-                        <column name="NUMBER_OF_LINKS" not-null="false" unique="false" sql-type="INTEGER"/>
-                    </property>
-                    <many-to-one name="coexpCorrelationDistribution"
-                                 class="ubic.gemma.model.analysis.expression.coexpression.CoexpCorrelationDistribution"
-                                 cascade="all" lazy="proxy" fetch="select">
-                        <column name="COEXP_CORRELATION_DISTRIBUTION_FK" not-null="false" sql-type="BIGINT"/>
-                    </many-to-one>
-                </subclass>
+                <!-- Phase 2 Step 3 retired the gene-gene CoexpressionAnalysis subsystem
+                     (CoexpressionAnalysis, CoexpCorrelationDistribution, the species-specific
+                     Gene2GeneCoexpression and ExperimentCoexpressionLink subclasses, etc.).
+                     SampleCoexpressionAnalysis below is a per-EE QC artifact and stays. -->
                 <subclass name="ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionAnalysis"
                           discriminator-value="SampleCoexpressionAnalysis"
                           abstract="false">

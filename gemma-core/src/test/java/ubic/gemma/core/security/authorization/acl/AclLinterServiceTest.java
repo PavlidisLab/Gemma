@@ -23,7 +23,8 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import static org.mockito.Mockito.mock;
 
 @ContextConfiguration
-@TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
+@TestExecutionListeners(value = WithSecurityContextTestExecutionListener.class,
+        mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
 public class AclLinterServiceTest extends BaseDatabaseTest {
 
     @Configuration

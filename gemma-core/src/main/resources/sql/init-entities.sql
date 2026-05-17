@@ -32,39 +32,9 @@ alter table DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT
 alter table CONTACT
     add index fullname (NAME, LAST_NAME);
 
--- should remove the FIRST_GENE_FK and SECOND_GENE_FK indices, but they get given 'random' names.
--- Drop the second_gene_fk constraint.
--- alter table HUMAN_GENE_COEXPRESSION drop foreign key FKF9E6557F21D58F19;
--- alter table MOUSE_GENE_COEXPRESSION drop foreign key FKFC61C4F721D58F19;
--- alter table RAT_GENE_COEXPRESSION drop foreign key FKDE59FC7721D58F19;
--- alter table OTHER_GENE_COEXPRESSION drop foreign key FK74B9A3E221D58F19;
-
-alter table HUMAN_GENE_COEXPRESSION
-    add index hfgsg (FIRST_GENE_FK, SECOND_GENE_FK);
-alter table MOUSE_GENE_COEXPRESSION
-    add index mfgsg (FIRST_GENE_FK, SECOND_GENE_FK);
-alter table RAT_GENE_COEXPRESSION
-    add index rfgsg (FIRST_GENE_FK, SECOND_GENE_FK);
-alter table OTHER_GENE_COEXPRESSION
-    add index ofgsg (FIRST_GENE_FK, SECOND_GENE_FK);
-
--- same for these, should drop the key for EXPERIMENT_FK, manually
-alter table HUMAN_EXPERIMENT_COEXPRESSION
-    add index ECL1EFK (EXPERIMENT_FK, GENE1_FK, GENE2_FK);
-alter table HUMAN_EXPERIMENT_COEXPRESSION
-    add constraint ECL1EFK foreign key (EXPERIMENT_FK) references INVESTIGATION (ID);
-alter table MOUSE_EXPERIMENT_COEXPRESSION
-    add index ECL2EFK (EXPERIMENT_FK, GENE1_FK, GENE2_FK);
-alter table MOUSE_EXPERIMENT_COEXPRESSION
-    add constraint ECL2EFK foreign key (EXPERIMENT_FK) references INVESTIGATION (ID);
-alter table RAT_EXPERIMENT_COEXPRESSION
-    add index ECL3EFK (EXPERIMENT_FK, GENE1_FK, GENE2_FK);
-alter table RAT_EXPERIMENT_COEXPRESSION
-    add constraint ECL3EFK foreign key (EXPERIMENT_FK) references INVESTIGATION (ID);
-alter table OTHER_EXPERIMENT_COEXPRESSION
-    add index ECL4EFK (EXPERIMENT_FK, GENE1_FK, GENE2_FK);
-alter table OTHER_EXPERIMENT_COEXPRESSION
-    add constraint ECL4EFK foreign key (EXPERIMENT_FK) references INVESTIGATION (ID);
+-- Phase 2 Step 3 retired the gene-gene coexpression subsystem; the {HUMAN,MOUSE,RAT,OTHER}_GENE_COEXPRESSION
+-- and {HUMAN,MOUSE,RAT,OTHER}_EXPERIMENT_COEXPRESSION tables are no longer created by Hibernate's hbm2ddl, so
+-- the ALTER TABLE index/constraint statements that used to live here have been removed.
 
 -- denormalized table joining genes and compositeSequences; maintained by TableMaintenanceUtil.
 create table GENE2CS
