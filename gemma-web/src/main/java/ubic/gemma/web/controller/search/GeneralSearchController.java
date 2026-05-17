@@ -22,8 +22,6 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.StopWatch;
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.document.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
@@ -32,10 +30,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.servlet.view.RedirectView;
 import org.springframework.web.util.UriComponentsBuilder;
-import ubic.gemma.core.search.DefaultHighlighter;
 import ubic.gemma.core.search.SearchContext;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchService;
@@ -61,14 +57,12 @@ import ubic.gemma.web.controller.util.view.JsonReaderResponse;
 import ubic.gemma.web.util.WebEntityUrlBuilder;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import jakarta.servlet.http.HttpServletRequest;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
 
 /**
  * Note: do not use parametrized collections as parameters for ajax methods in this class! Type information is lost
@@ -80,11 +74,6 @@ import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
 @Controller
 @CommonsLog
 public class GeneralSearchController {
-
-    /**
-     * Maximum number of highlighted documents.
-     */
-    private static final int MAX_HIGHLIGHTED_DOCUMENTS = 500;
 
     @lombok.Value
     private static class Scope {
@@ -251,7 +240,7 @@ public class GeneralSearchController {
                                 .useFullTextIndex( useFullTextIndex )
                                 .useOntology( useOntology )
                                 .useGeneOntology( useGeneOntology )
-                                .build(), new SearchContext( new Highlighter( scope, locale ), null ) )
+                                .build(), new SearchContext( null, null ) )
                         .toList();
 
                 // an exact match for a single result
@@ -312,12 +301,11 @@ public class GeneralSearchController {
         timer.start();
 
         SearchSettings searchSettings = searchSettingsFromVo( settingsValueObject );
-        Highlighter highlighter = new Highlighter( scopeFromVo( settingsValueObject ), request.getLocale() );
 
         searchTimer.start();
         SearchService.SearchResultMap searchResults;
         try {
-            searchResults = searchService.search( searchSettings, new SearchContext( highlighter, null ) );
+            searchResults = searchService.search( searchSettings, new SearchContext( null, null ) );
         } catch ( SearchException e ) {
             throw new IllegalArgumentException( String.format( "Invalid search settings: %s.", ExceptionUtils.getRootCause( e ) ), e );
         }
@@ -537,48 +525,4 @@ public class GeneralSearchController {
         return ret;
     }
 
-    @ParametersAreNonnullByDefault
-    private class Highlighter extends DefaultHighlighter {
-
-        @Nullable
-        private final String scope;
-        private final Locale locale;
-
-        private int highlightedDocuments = 0;
-
-        private Highlighter( @Nullable String scope, Locale locale ) {
-            this.scope = scope;
-            this.locale = locale;
-        }
-
-        @Override
-        public Map<String, String> highlightTerm( @Nullable String uri, String value, String field ) {
-            // some of the incoming requests are from AJAX, so we cannot use fromRequest
-            UriComponentsBuilder builder = ServletUriComponentsBuilder.fromContextPath( request )
-                    .scheme( null ).host( null ).port( -1 )
-                    .path( "/searcher.html" )
-                    .queryParam( "query", uri != null ? uri : value );
-            if ( scope != null ) {
-                builder.queryParam( "scope", scope );
-            }
-            String searchUrl = builder.build().toUriString();
-            String matchedText = "<a href=\"" + searchUrl + "\">" + escapeHtml4( value ) + "</a> ";
-            return Collections.singletonMap( localizeField( "ExpressionExperiment", field ), matchedText );
-        }
-
-        @Override
-        public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter highlighter, Analyzer analyzer ) {
-            if ( highlightedDocuments >= MAX_HIGHLIGHTED_DOCUMENTS ) {
-                return Collections.emptyMap();
-            }
-            highlightedDocuments++;
-            return super.highlightDocument( document, highlighter, analyzer )
-                    .entrySet().stream()
-                    .collect( Collectors.toMap( e -> localizeField( StringUtils.substringAfterLast( document.get( "_hibernate_class" ), '.' ), e.getKey() ), Map.Entry::getValue, ( a, b ) -> b ) );
-        }
-
-        private String localizeField( String className, String field ) {
-            return messageSource.getMessage( className + "." + field, null, field, locale );
-        }
-    }
 }

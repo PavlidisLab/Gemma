@@ -6,7 +6,6 @@ import org.apache.commons.lang3.StringUtils;
 import ubic.basecode.ontology.model.AnnotationProperty;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.OntologyService;
-import ubic.gemma.core.search.lucene.LuceneQueryUtils;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -60,7 +59,7 @@ public class OntologyUtils {
         // EFO
         OBO_ID_SPACES.put( "efo", BASE_EFO_URI );
         // OBO Foundry ontologies
-        try ( InputStream is = LuceneQueryUtils.class.getResourceAsStream( "/ubic/gemma/core/ontology/ontology.idspaces.txt" ) ) {
+        try ( InputStream is = OntologyUtils.class.getResourceAsStream( "/ubic/gemma/core/ontology/ontology.idspaces.txt" ) ) {
             for ( String line : IOUtils.readLines( requireNonNull( is ), StandardCharsets.UTF_8 ) ) {
                 line = StringUtils.strip( line );
                 // ignore comments

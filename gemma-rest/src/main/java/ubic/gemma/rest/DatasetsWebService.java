@@ -35,8 +35,6 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.lang3.time.StopWatch;
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.document.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.security.access.SecurityConfig;
@@ -63,8 +61,6 @@ import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.analysis.service.ExpressionExperimentDataFileType;
 import ubic.gemma.core.loader.expression.singleCell.metadata.CellLevelCharacteristicsWriter;
 import ubic.gemma.core.ontology.OntologyService;
-import ubic.gemma.core.search.DefaultHighlighter;
-import ubic.gemma.core.search.lucene.SimpleMarkdownFormatter;
 import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.model.analysis.CellTypeAssignmentValueObject;
 import ubic.gemma.model.analysis.expression.diff.*;
@@ -242,40 +238,6 @@ public class DatasetsWebService {
     @Context
     private UriInfo uriInfo;
 
-    @ParametersAreNonnullByDefault
-    private class Highlighter extends DefaultHighlighter {
-
-        private final Set<Long> documentIdsToHighlight;
-
-        private Highlighter( Set<Long> documentIdsToHighlight ) {
-            super( new SimpleMarkdownFormatter() );
-            this.documentIdsToHighlight = documentIdsToHighlight;
-        }
-
-        @Override
-        public Map<String, String> highlightTerm( @Nullable String termUri, String termLabel, String field ) {
-            URI reconstructedUri = uriInfo.getBaseUriBuilder()
-                    .scheme( null ).host( null ).port( -1 )
-                    // replace the query with the term URI and only retain the filter
-                    .replaceQueryParam( "query", termUri != null ? termUri : termLabel )
-                    .replaceQueryParam( "offset" )
-                    .replaceQueryParam( "limit" )
-                    .replaceQueryParam( "sort" )
-                    .build();
-            return Collections.singletonMap( field, String.format( "**[%s](%s)**", termLabel, reconstructedUri ) );
-        }
-
-        @Override
-        public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter highlighter, Analyzer analyzer ) {
-            long id = Long.parseLong( document.get( "id" ) );
-            // TODO: maybe use a filter in the Lucene query?
-            if ( !documentIdsToHighlight.contains( id ) ) {
-                return Collections.emptyMap();
-            }
-            return super.highlightDocument( document, highlighter, analyzer );
-        }
-    }
-
     @GZIP
     @GET
     @CacheControl(maxAge = 1200)
@@ -324,7 +286,7 @@ public class DatasetsWebService {
             List<Long> idsSlice = sliceIds( ids, offset, limit );
 
             // now highlight the results in the slice
-            List<SearchResult<ExpressionExperiment>> results = datasetArgService.getResultsForSearchQuery( query, new Highlighter( new HashSet<>( idsSlice ) ), warnings );
+            List<SearchResult<ExpressionExperiment>> results = datasetArgService.getResultsForSearchQuery( query, null, warnings );
             Map<Long, SearchResult<ExpressionExperiment>> resultById = results.stream().collect( Collectors.toMap( SearchResult::getResultId, e -> e ) );
 
             List<ExpressionExperimentValueObject> vos = expressionExperimentService.loadValueObjectsByIdsWithRelationsAndCache( idsSlice );

@@ -22,7 +22,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.util.Assert;
-import ubic.gemma.core.search.SearchSource;
 import ubic.gemma.model.common.Identifiable;
 
 import javax.annotation.Nonnull;
@@ -42,7 +41,6 @@ import java.util.stream.Collectors;
  *
  * @author paul
  * @author poirigui
- * @see SearchSource
  * @see SearchResultSet
  */
 @Data

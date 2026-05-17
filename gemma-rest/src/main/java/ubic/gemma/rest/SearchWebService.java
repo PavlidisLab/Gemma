@@ -10,13 +10,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.time.DateUtils;
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.document.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.search.*;
-import ubic.gemma.core.search.lucene.SimpleMarkdownFormatter;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
@@ -43,11 +40,9 @@ import ubic.gemma.rest.util.ResponseErrorObject;
 import ubic.gemma.rest.util.args.*;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.UriInfo;
-import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -74,11 +69,6 @@ public class SearchWebService {
      */
     public static final int MAX_SEARCH_RESULTS = 2000;
 
-    /**
-     * Maximum number of highlighted documents.
-     */
-    private static final int MAX_HIGHLIGHTED_DOCUMENTS = 500;
-
     @Autowired
     private SearchService searchService;
     @Autowired
@@ -96,37 +86,6 @@ public class SearchWebService {
     private UriInfo uriInfo;
     @Autowired
     private EntityUrlBuilder entityUrlBuilder;
-
-    /**
-     * Highlights search result.
-     */
-    @ParametersAreNonnullByDefault
-    private class Highlighter extends DefaultHighlighter {
-
-        private int highlightedDocuments = 0;
-
-        public Highlighter() {
-            super( new SimpleMarkdownFormatter() );
-        }
-
-        @Override
-        public Map<String, String> highlightTerm( @Nullable String uri, String label, String field ) {
-            URI searchUrl = uriInfo.getBaseUriBuilder()
-                    .scheme( null ).host( null ).port( -1 )
-                    .replaceQueryParam( "query", uri != null ? uri : label )
-                    .build();
-            return Collections.singletonMap( field, String.format( "**[%s](%s)**", label, searchUrl ) );
-        }
-
-        @Override
-        public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter highlighter, Analyzer analyzer ) {
-            if ( highlightedDocuments >= MAX_HIGHLIGHTED_DOCUMENTS ) {
-                return Collections.emptyMap();
-            }
-            highlightedDocuments++;
-            return super.highlightDocument( document, highlighter, analyzer );
-        }
-    }
 
     /**
      * Search everything subject to taxon and platform constraints.
@@ -189,7 +148,7 @@ public class SearchWebService {
 
         List<SearchResult<?>> searchResults;
         try {
-            searchResults = searchService.search( searchSettings, new SearchContext( new Highlighter(), null ) ).toList();
+            searchResults = searchService.search( searchSettings, new SearchContext( null, null ) ).toList();
         } catch ( ParseSearchException e ) {
             throw new BadRequestException( "Invalid search query: " + e.getQuery(), e );
         } catch ( SearchTimeoutException e ) {

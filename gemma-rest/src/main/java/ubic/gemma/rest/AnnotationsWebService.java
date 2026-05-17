@@ -34,7 +34,6 @@ import org.springframework.stereotype.Service;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.*;
-import ubic.gemma.core.search.lucene.LuceneQueryUtils;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.search.SearchResult;
@@ -513,7 +512,7 @@ public class AnnotationsWebService {
         List<CharacteristicValueObject> rawHits = new ArrayList<>();
         for ( String query : arg.getValue() ) {
             query = query.trim();
-            URI uri = LuceneQueryUtils.prepareTermUriQuery( query );
+            URI uri = parseTermUriQuery( query );
             if ( uri != null ) {
                 rawHits.addAll( characteristicService.loadValueObjects( characteristicService
                         .findByUri( StringUtils.strip( query ), null, null, true, -1 ) ) );
@@ -580,5 +579,19 @@ public class AnnotationsWebService {
     public static class OntologyTermSimpleValueObject {
         String uri;
         String label;
+    }
+
+    @Nullable
+    private static URI parseTermUriQuery( String query ) {
+        if ( query == null ) return null;
+        String stripped = StringUtils.strip( query );
+        if ( stripped.startsWith( "http://" ) || stripped.startsWith( "https://" ) ) {
+            try {
+                return URI.create( stripped );
+            } catch ( IllegalArgumentException e ) {
+                return null;
+            }
+        }
+        return null;
     }
 }

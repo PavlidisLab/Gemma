@@ -48,12 +48,9 @@ import ubic.basecode.ontology.simple.OntologyPropertySimple;
 import ubic.basecode.ontology.simple.OntologyTermSimple;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.ontology.providers.OntologyServiceFactory;
-import ubic.gemma.core.search.BaseCodeOntologySearchException;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.search.SearchTimeoutException;
-import ubic.gemma.core.search.lucene.LuceneParseSearchException;
-import ubic.gemma.core.search.lucene.LuceneQueryUtils;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
@@ -223,7 +220,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         Collection<CharacteristicValueObject> characteristicFromDatabaseFreeText = new HashSet<>();
 
         // this will do like 'search%'
-        String wildcardQuery = LuceneQueryUtils.prepareDatabaseQuery( searchQuery, true );
+        String wildcardQuery = prepareDatabaseLikeQuery( searchQuery );
         if ( wildcardQuery != null ) {
             Collection<CharacteristicValueObject> characteristicsFromDatabase = CharacteristicValueObject
                     .characteristic2CharacteristicVO( this.characteristicService.findByValueLike( wildcardQuery, null, Collections.singleton( ExpressionExperiment.class ), false, maxResults ) );
@@ -1198,11 +1195,15 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     }
 
     private SearchException convertBaseCodeOntologySearchExceptionToSearchException( OntologySearchException e, String query ) {
-        ParseException pe = ExceptionUtils.throwableOfType( e, ParseException.class );
-        if ( pe != null ) {
-            return new LuceneParseSearchException( query, pe );
-        } else {
-            return new BaseCodeOntologySearchException( e );
-        }
+        return new SearchException( "Ontology search failed for query: " + query, e );
+    }
+
+    @Nullable
+    private static String prepareDatabaseLikeQuery( String query ) {
+        if ( query == null ) return null;
+        String trimmed = query.trim();
+        if ( trimmed.isEmpty() ) return null;
+        String escaped = trimmed.replace( "\\", "\\\\" ).replace( "%", "\\%" ).replace( "_", "\\_" );
+        return escaped + "%";
     }
 }
