@@ -32,7 +32,8 @@ import static ubic.gemma.cli.util.test.Assertions.assertThat;
 
 @Deprecated
 @ContextConfiguration
-@TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
+@TestExecutionListeners(value = WithSecurityContextTestExecutionListener.class,
+        mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
 public class FactorValueMigratorCLITest extends BaseCliTest {
 
     @Configuration

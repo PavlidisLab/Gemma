@@ -47,7 +47,8 @@ import static ubic.gemma.cli.util.test.Assertions.assertThat;
 @WithMockUser("bob")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @ContextConfiguration
-@TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
+@TestExecutionListeners(value = WithSecurityContextTestExecutionListener.class,
+        mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
 public class DifferentialExpressionAnalysisCliTest extends BaseTest {
 
     @Autowired

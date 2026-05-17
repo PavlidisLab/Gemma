@@ -53,7 +53,6 @@ import ubic.gemma.persistence.util.*;
 import ubic.gemma.persistence.util.Filter;
 
 import javax.annotation.Nullable;
-import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -704,7 +703,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Override
     public long countCompositeSequencesWithGenes( boolean useGene2Cs ) {
         if ( useGene2Cs ) {
-            return ( ( BigInteger ) this.getSessionFactory().getCurrentSession()
+            return ( ( Number ) this.getSessionFactory().getCurrentSession()
                     .createNativeQuery( "select count(distinct CS) from GENE2CS" )
                     .uniqueResult() ).longValue();
 
@@ -720,7 +719,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Override
     public long countGenes( boolean useGene2Cs ) {
         if ( useGene2Cs ) {
-            return ( ( BigInteger ) this.getSessionFactory().getCurrentSession()
+            return ( ( Number ) this.getSessionFactory().getCurrentSession()
                     .createNativeQuery( "select count(distinct GENE) from GENE2CS" )
                     .uniqueResult() ).longValue();
         } else {
@@ -776,7 +775,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Override
     public long countCompositeSequencesWithGenes( ArrayDesign arrayDesign, boolean useGene2Cs ) {
         if ( useGene2Cs ) {
-            return ( ( BigInteger ) getSessionFactory().getCurrentSession()
+            return ( ( Number ) getSessionFactory().getCurrentSession()
                     .createNativeQuery( "select count(distinct CS) from GENE2CS where AD = :adId" )
                     .setParameter( "adId", arrayDesign.getId() )
                     .uniqueResult() ).longValue();
@@ -793,7 +792,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Override
     public long countCompositeSequencesWithGenes( Collection<ArrayDesign> arrayDesigns, boolean useGene2Cs ) {
         if ( useGene2Cs ) {
-            return ( ( BigInteger ) getSessionFactory().getCurrentSession()
+            return ( ( Number ) getSessionFactory().getCurrentSession()
                     .createNativeQuery( "select count(distinct CS) from GENE2CS where AD in :adIds" )
                     .setParameterList( "adIds", IdentifiableUtils.getIds( arrayDesigns ) )
                     .uniqueResult() ).longValue();
@@ -810,7 +809,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Override
     public long countGenes( ArrayDesign arrayDesign, boolean useGene2Cs ) {
         if ( useGene2Cs ) {
-            return ( ( BigInteger ) getSessionFactory().getCurrentSession().createNativeQuery(
+            return ( ( Number ) getSessionFactory().getCurrentSession().createNativeQuery(
                             "select count(distinct g2cs.GENE) from GENE2CS g2cs "
                                     + "where g2cs.AD = :arrayDesignId" )
                     .setParameter( "arrayDesignId", arrayDesign.getId() )

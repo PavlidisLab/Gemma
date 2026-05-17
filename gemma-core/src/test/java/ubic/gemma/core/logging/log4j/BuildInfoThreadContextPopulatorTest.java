@@ -17,7 +17,8 @@ import ubic.gemma.core.util.test.BaseTest;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ContextConfiguration
-@TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
+@TestExecutionListeners(value = WithSecurityContextTestExecutionListener.class,
+        mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
 public class BuildInfoThreadContextPopulatorTest extends BaseTest {
 
     @Configuration

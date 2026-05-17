@@ -39,7 +39,6 @@ import ubic.gemma.persistence.util.CommonQueries;
 import ubic.gemma.persistence.util.QueryUtils;
 
 import javax.annotation.Nullable;
-import java.math.BigInteger;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -574,7 +573,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
                  * Each query tuple are the probe, result, resultsSet, qvalue, pvalue.
                  */
                 for ( Object o : queryResult ) {
-                    // Long resultSetId = ( ( BigInteger )((Object[])o)[2] ).longValue();
+                    // Long resultSetId = ( ( Number )((Object[])o)[2] ).longValue();
                     // if (!resultSetId.equals)
                     numResults += this.processResultTuple( o, resultsFromDb, cs2GeneIdMap );
                 }
@@ -714,10 +713,10 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
                                 + "WHERE c.DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK IN (:ids)" ), "ids", ids,
                 QueryUtils.MAX_PARAMETER_LIST_SIZE );
         for ( Object[] ol : results ) {
-            Long contrastId = ( ( BigInteger ) ol[0] ).longValue();
-            Long resultId = ( ( BigInteger ) ol[1] ).longValue();
-            Long factorValueId = ol[2] != null ? ( ( BigInteger ) ol[2] ).longValue() : null;
-            Long secondFactorValueId = ol[3] != null ? ( ( BigInteger ) ol[3] ).longValue() : null;
+            Long contrastId = ( ( Number ) ol[0] ).longValue();
+            Long resultId = ( ( Number ) ol[1] ).longValue();
+            Long factorValueId = ol[2] != null ? ( ( Number ) ol[2] ).longValue() : null;
+            Long secondFactorValueId = ol[3] != null ? ( ( Number ) ol[3] ).longValue() : null;
             Double logFoldChange = ( Double ) ol[4];
             Double pvalue = ( Double ) ol[5];
             ContrastVO cvo = new ContrastVO( contrastId, factorValueId, secondFactorValueId, logFoldChange, pvalue );
@@ -734,9 +733,9 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
     private int processResultTuple( Object resultRow, Map<Long, Map<Long, DiffExprGeneSearchResult>> resultsFromDb,
             Map<Long, Collection<Long>> cs2GeneIdMap ) {
         Object[] row = ( Object[] ) resultRow;
-        Long probeId = ( ( BigInteger ) row[0] ).longValue();
-        Long resultId = ( ( BigInteger ) row[1] ).longValue();
-        Long resultSetId = ( ( BigInteger ) row[2] ).longValue();
+        Long probeId = ( ( Number ) row[0] ).longValue();
+        Long resultId = ( ( Number ) row[1] ).longValue();
+        Long resultSetId = ( ( Number ) row[2] ).longValue();
         Double correctedPvalue = ( Double ) row[3];
         Double pvalue = ( Double ) row[4];
 

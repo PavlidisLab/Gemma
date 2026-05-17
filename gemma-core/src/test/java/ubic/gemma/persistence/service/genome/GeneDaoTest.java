@@ -19,7 +19,8 @@ import ubic.gemma.model.genome.gene.GeneProduct;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ContextConfiguration
-@TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
+@TestExecutionListeners(value = WithSecurityContextTestExecutionListener.class,
+        mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
 public class GeneDaoTest extends BaseDatabaseTest {
 
     @Configuration

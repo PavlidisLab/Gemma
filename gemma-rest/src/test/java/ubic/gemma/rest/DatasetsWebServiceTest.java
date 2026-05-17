@@ -85,7 +85,8 @@ import static ubic.gemma.rest.DatasetsWebService.TEXT_TAB_SEPARATED_VALUES_UTF8_
 import static ubic.gemma.rest.util.Assertions.assertThat;
 
 @ContextConfiguration
-@TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
+@TestExecutionListeners(value = WithSecurityContextTestExecutionListener.class,
+        mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
 public class DatasetsWebServiceTest extends BaseJerseyTest {
 
     @Import(JacksonConfig.class)

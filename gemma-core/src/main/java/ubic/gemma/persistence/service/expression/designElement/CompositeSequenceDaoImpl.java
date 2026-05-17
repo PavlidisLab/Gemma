@@ -42,7 +42,6 @@ import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
 import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
-import java.math.BigInteger;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -191,7 +190,7 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
                     .setMaxResults( limit )
                     .setParameter( "gene", gene.getId() )
                     .list();
-            Long totalElements = ( ( BigInteger ) getSessionFactory().getCurrentSession()
+            Long totalElements = ( ( Number ) getSessionFactory().getCurrentSession()
                     .createNativeQuery( "select count(distinct cs.ID) " + CS_BY_GENE_GENE2CS_QUERY + " and gene.ID = :gene" )
                     .setParameter( "gene", gene.getId() )
                     .uniqueResult() ).longValue();
@@ -349,7 +348,7 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
                     .setFirstResult( offset )
                     .setMaxResults( limit )
                     .list();
-            Long totalElements = ( ( BigInteger ) getSessionFactory().getCurrentSession()
+            Long totalElements = ( ( Number ) getSessionFactory().getCurrentSession()
                     .createNativeQuery( "select count(distinct gene.ID) " + CS_BY_GENE_GENE2CS_QUERY + " and cs.ID = :cs" )
                     .setParameter( "cs", compositeSequence )
                     .uniqueResult() ).longValue();

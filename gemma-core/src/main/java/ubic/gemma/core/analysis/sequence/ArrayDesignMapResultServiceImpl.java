@@ -34,7 +34,6 @@ import ubic.gemma.persistence.service.expression.designElement.CompositeSequence
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatAssociationService;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultService;
 
-import java.math.BigInteger;
 import java.util.*;
 
 /**
@@ -83,7 +82,7 @@ public class ArrayDesignMapResultServiceImpl implements ArrayDesignMapResultServ
         for ( Object o : sequenceData ) {
             Object[] row = ( Object[] ) o;
 
-            Long csId = ( ( BigInteger ) row[0] ).longValue();
+            Long csId = ( ( Number ) row[0] ).longValue();
 
             CompositeSequenceMapValueObject vo;
             if ( summary.containsKey( csId ) ) {
@@ -99,16 +98,16 @@ public class ArrayDesignMapResultServiceImpl implements ArrayDesignMapResultServ
 
             Long blatId = null;
             if ( row[4] != null ) {
-                blatId = ( ( BigInteger ) row[4] ).longValue();
+                blatId = ( ( Number ) row[4] ).longValue();
             }
 
             if ( row[10] != null ) {
                 // When viewing array designs, many will not have a gene.
-                Long geneProductId = ( ( BigInteger ) row[5] ).longValue();
+                Long geneProductId = ( ( Number ) row[5] ).longValue();
                 String geneProductName = ( String ) row[6];
                 String geneProductAccession = ( String ) row[7];
                 Object geneProductGeneId = row[8];
-                Long geneId = ( ( BigInteger ) row[9] ).longValue();
+                Long geneId = ( ( Number ) row[9] ).longValue();
                 String geneName = ( String ) row[10];
                 Integer geneAccession = ( Integer ) row[11]; // NCBI
 
@@ -121,7 +120,7 @@ public class ArrayDesignMapResultServiceImpl implements ArrayDesignMapResultServ
                     gpVo.setName( geneProductName );
                     gpVo.setNcbiId( geneProductAccession );
                     if ( geneProductGeneId != null ) {
-                        gpVo.setGeneId( ( ( BigInteger ) geneProductGeneId ).longValue() );
+                        gpVo.setGeneId( ( ( Number ) geneProductGeneId ).longValue() );
                     }
                     geneProductSet.put( geneProductId, gpVo );
                 }
@@ -137,7 +136,7 @@ public class ArrayDesignMapResultServiceImpl implements ArrayDesignMapResultServ
             }
 
             String arrayDesignShortName = ( String ) row[12];
-            Long arrayDesignId = ( ( BigInteger ) row[13] ).longValue();
+            Long arrayDesignId = ( ( Number ) row[13] ).longValue();
 
             String csDesc = ( String ) row[19];
             vo.setCompositeSequenceDescription( csDesc );
@@ -212,11 +211,11 @@ public class ArrayDesignMapResultServiceImpl implements ArrayDesignMapResultServ
     private void countBlatHits( Object[] row, Map<Long, Set<Integer>> blatResultCount, Long csId,
             CompositeSequenceMapValueObject vo ) {
 
-        Long chromId = ( ( BigInteger ) row[14] ).longValue();
-        Long targetStart = ( ( BigInteger ) row[15] ).longValue();
-        Long targetEnd = ( ( BigInteger ) row[16] ).longValue();
+        Long chromId = ( ( Number ) row[14] ).longValue();
+        Long targetStart = ( ( Number ) row[15] ).longValue();
+        Long targetEnd = ( ( Number ) row[16] ).longValue();
         String targetStarts = ( String ) row[17];
-        Long queryId = ( ( BigInteger ) row[18] ).longValue();
+        Long queryId = ( ( Number ) row[18] ).longValue();
 
         int hash = Objects.hash( chromId, targetStart, targetEnd, targetStarts, queryId );
 

@@ -20,7 +20,6 @@ import ubic.gemma.model.common.protocol.Protocol;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.Modifier;
-import java.math.BigInteger;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -446,8 +445,10 @@ public class AclLinterServiceImpl implements AclLinterService {
     }
 
     private void lintPermissions( Class<? extends Securable> clazz, @Nullable Long identifier, String grantedAuthority, Permission permission, @SuppressWarnings("SameParameterValue") boolean granting, AclLinterConfig config, Collection<LintResult> result ) {
-        // Gemma runs on MySQL only, so we can render the bitwise-AND directly as `&`.
-        String renderedMask = "ace.MASK & " + permission.getMask();
+        // Dialect-aware bitwise AND (MySQL: "ace.MASK & N", H2: "BITAND(ace.MASK, N)").
+        String renderedMask = ubic.gemma.persistence.util.BitwiseUtils.bitand(
+                ( (org.hibernate.engine.spi.SessionFactoryImplementor) sessionFactory ).getJdbcServices().getDialect(),
+                "ace.MASK", String.valueOf( permission.getMask() ) );
         @SuppressWarnings("rawtypes")
         NativeQuery query = sessionFactory.getCurrentSession()
                 .createNativeQuery( "select aoi.OBJECT_CLASS, aoi.OBJECT_ID "
@@ -464,7 +465,7 @@ public class AclLinterServiceImpl implements AclLinterService {
                         + ( identifier != null ? " and aoi2.OBJECT_ID = :identifier " : "" )
                         + "and sid.GRANTED_AUTHORITY = :grantedAuthority "
                         + "and ace.GRANTING = :granting "
-                        + "and (" + renderedMask + ") <> 0)" )
+                        + "and " + renderedMask + " <> 0)" )
                 .setParameter( "type", clazz.getName() )
                 .setParameter( "grantedAuthority", grantedAuthority )
                 .setParameter( "granting", granting );
@@ -486,7 +487,7 @@ public class AclLinterServiceImpl implements AclLinterService {
         }
         for ( Object[] row : list ) {
             String type = ( String ) row[0];
-            Long identifier_ = ( ( BigInteger ) row[1] ).longValue();
+            Long identifier_ = ( ( Number ) row[1] ).longValue();
             if ( config.isApplyFixes() ) {
                 MutableAcl acl = ( MutableAcl ) aclService.readAclById( new AclObjectIdentity( type, identifier_ ) );
                 acl.insertAce( acl.getEntries().size(), permission, new AclGrantedAuthoritySid( grantedAuthority ), granting );

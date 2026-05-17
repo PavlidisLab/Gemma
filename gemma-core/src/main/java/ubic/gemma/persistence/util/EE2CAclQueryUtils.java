@@ -28,8 +28,10 @@ public class EE2CAclQueryUtils {
 
     public static String formNativeAclRestrictionClause( SessionFactoryImplementor sessionFactoryImplementor, String anonymousMaskColumn, Permission permission ) {
         if ( SecurityUtil.isUserAnonymous() ) {
-            // MySQL bitwise AND. Hard-coded — see AclQueryUtils#formNativeAclRestrictionClause for the same trade-off.
-            return " and (" + anonymousMaskColumn + " & " + permission.getMask() + ") <> 0";
+            // Dialect-aware bitwise AND (MySQL: "(a & b)", H2: "BITAND(a, b)").
+            String renderedMask = BitwiseUtils.bitand( sessionFactoryImplementor.getJdbcServices().getDialect(),
+                    anonymousMaskColumn, String.valueOf( permission.getMask() ) );
+            return " and " + renderedMask + " <> 0";
         } else if ( SecurityUtil.isUserAdmin() ) {
             return "";
         } else {

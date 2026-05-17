@@ -11,10 +11,11 @@ Gemma's DAOs rely on. (We tried the JPA EMF + unwrap pattern first; it
 bootstraps but `getCurrentSession()` returns an unmanaged non-transactional
 session.) See `HibernateSessionFactoryBean.java` javadoc for the long form.
 
-Smoke tests passing under Phase 2:
-- `ExpressionExperimentSetDaoTest` (BaseDatabaseTest subclass)
-- `AbstractFilteringVoEnabledDaoTest`
-- `UserManagerTest`
+37 DAO/service tests passing under Phase 2 (full set: see commit
+log; representatives include `ExpressionExperimentSetDaoTest`,
+`AbstractFilteringVoEnabledDaoTest`, `UserManagerTest`,
+`CharacteristicDaoTest`, `AclLinterServiceTest`, `GeneDaoTest`,
+`AuditEventDaoTest`, `UserDaoTest`).
 
 All 5 modules still install + test-compile green.
 
@@ -30,7 +31,8 @@ mvn -P fast -Denforcer.skip=true install -DskipTests=true:
 ## Session-4 commits (on `phase2`)
 
 ```
-<this commit>   Phase 2 Step 5a/7: native Hibernate bootstrap + first DAO tests green
+<this commit>   Phase 2 Step 7 (round 2): bulk test fixes (MergeMode, BigInteger->Number, bitand, H2 bitwise)
+6a9d20654c      Phase 2 Step 5a/7: native Hibernate bootstrap; first DAO tests green
 901effa053      Phase 2 Step 5a: Spring 6 JPA migration of SessionFactory wiring
 5ff67490aa      PHASE_2_HANDOFF.md: refresh for full mvn install green; next is Step 5a (JPA)
 ```
@@ -144,25 +146,46 @@ open.
   null. Added `MERGE_WITH_DEFAULTS`. The test now runs but hits the
   next bug.
 
-### Bugs found but not fixed (Step 7 follow-up)
+### Step 7 round-2 fixes (this session, second push)
 
-- **MySQL bitwise-AND `(ace.MASK & 16) <> 0` in ACL queries** doesn't
-  parse on H2 (which uses `BITAND(a, b)` instead). Surfaces in
-  `AclLinterServiceTest` after the @TestExecutionListeners fix. Either
-  use H2's MYSQL compatibility mode more aggressively (already on
-  `MODE=MYSQL` but apparently doesn't cover `&`), or route the
-  bitwise-AND through a portable HQL/JPA function. Phase 2 Step 3
-  inlined this for MySQL only — h2-only test paths were never
-  exercised in pre-Phase-2.
-- **`TransactionRequired` paths through JPA EMF** — explored and
-  rejected. Documented in `HibernateSessionFactoryBean.java` javadoc
-  and `applicationContext-hibernate.xml` comment; native Hibernate is
-  the path.
+- **`@TestExecutionListeners(WithSecurityContextTestExecutionListener.class)`**
+  without `MergeMode.MERGE_WITH_DEFAULTS` was silently dropping the
+  default DependencyInjection listener, leaving `@Autowired` fields
+  null in **26 test classes** across all 4 modules. Bulk-fixed with a
+  Python script.
+- **MySQL bitwise-AND for H2**: new `BitwiseUtils.bitand(Dialect, a, b)`
+  emits `(a & b)` on MySQL and `BITAND(a, b)` on H2. Used in
+  `AclQueryUtils`, `EE2CAclQueryUtils`, `AclLinterServiceImpl`.
+- **`BigInteger` → `Number` casts on native query results**: Hibernate
+  6 returns `Long` (not `BigInteger`) for `BIGINT` / `COUNT(*)` columns.
+  Bulk-replaced in 6 DAO/service files (`ArrayDesignMapResultServiceImpl`,
+  `AclLinterServiceImpl`, `DifferentialExpressionResultDaoImpl`,
+  `CharacteristicDaoImpl`, `ArrayDesignDaoImpl`,
+  `CompositeSequenceDaoImpl`).
+- **HQL `bitwise_and(x, y)` → `bitand(x, y)`**: Hibernate 6's
+  built-in HQL function is `bitand`; the pre-Phase-2 `bitwise_and` name
+  was registered through the now-removed dialect SQLFunction API and is
+  no longer recognized. Affects `AclQueryUtils`.
+
+### Bugs found but not fixed (next Step 7 round)
+
+- **`AbstractCriteriaFilteringVoEnabledDao` stub** — all its
+  `loadValueObjects`/`load`/`count` methods throw
+  `UnsupportedOperationException`. Subclasses are expected to override.
+  Surfaces in `QuantitationTypeDaoTest.testLoadValueObjects`. A proper
+  JPA Criteria reimplementation of the shared filtering machinery is
+  the right fix; about a day's work.
+- **`AbstractServiceTest` and the bigger DAO/service tests** —
+  unmeasured, may surface more JPA Metamodel / Hibernate 6 drift.
 - **Stale `.hbm.xml` files in `target/classes`** can sneak into the
   classpath if you switch branches without `mvn clean`. Hibernate's
   classpath scanner picked up 16 deleted-in-Step-3 coexpression hbm
   files in such a stale build and tried to load missing Java classes.
   Workaround: always `mvn clean test` after switching branches.
+- **`TransactionRequired` paths through JPA EMF** — explored and
+  rejected in this session's first push. Documented in
+  `HibernateSessionFactoryBean.java` javadoc and the production XML.
+  Native Hibernate is the path.
 
 ### What's still left
 

@@ -60,7 +60,8 @@ import static ubic.gemma.rest.util.Assertions.assertThat;
  * @author poirigui
  */
 @ContextConfiguration
-@TestExecutionListeners({ WithSecurityContextTestExecutionListener.class })
+@TestExecutionListeners(value = WithSecurityContextTestExecutionListener.class,
+        mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
 public class AnnotationsWebServiceTest extends BaseJerseyTest {
 
     @Configuration

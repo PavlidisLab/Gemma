@@ -13,7 +13,8 @@ import ubic.gemma.core.util.test.BaseTest;
 import static org.junit.Assert.assertTrue;
 
 @ContextConfiguration
-@TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
+@TestExecutionListeners(value = WithSecurityContextTestExecutionListener.class,
+        mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
 public class SecurityUtilsTest extends BaseTest {
 
     @Configuration

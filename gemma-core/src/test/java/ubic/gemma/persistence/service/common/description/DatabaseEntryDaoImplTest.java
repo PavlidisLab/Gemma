@@ -35,7 +35,8 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author pavlidis
  */
-@TestExecutionListeners(TransactionalTestExecutionListener.class)
+@TestExecutionListeners(value = TransactionalTestExecutionListener.class,
+        mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
 public class DatabaseEntryDaoImplTest extends BaseSpringContextTest {
 
     @Autowired

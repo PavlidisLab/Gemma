@@ -38,7 +38,8 @@ import static org.mockito.Mockito.*;
 import static ubic.gemma.persistence.service.expression.experiment.RandomExperimentalDesignUtils.randomContinuousFactor;
 
 @ContextConfiguration
-@TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
+@TestExecutionListeners(value = WithSecurityContextTestExecutionListener.class,
+        mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
 public class ExperimentalDesignVisualizationServiceTest extends BaseTest {
 
     @Configuration

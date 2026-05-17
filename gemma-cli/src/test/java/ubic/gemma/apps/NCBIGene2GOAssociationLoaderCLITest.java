@@ -30,7 +30,8 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import static org.mockito.Mockito.*;
 
 @ContextConfiguration
-@TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
+@TestExecutionListeners(value = WithSecurityContextTestExecutionListener.class,
+        mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
 public class NCBIGene2GOAssociationLoaderCLITest extends BaseCliTest {
 
     @Rule

@@ -47,7 +47,6 @@ import ubic.gemma.persistence.util.IdentifiableUtils;
 import ubic.gemma.persistence.util.QueryUtils;
 
 import javax.annotation.Nullable;
-import java.math.BigInteger;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -538,12 +537,12 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
         List<Object[]> result = QueryUtils.listByBatch( query, "ids", charById.keySet(), MAX_PARAMETER_LIST_SIZE );
         Map<Characteristic, Identifiable> charToParent = new HashMap<>();
         for ( Object[] row : result ) {
-            BigInteger charId = ( BigInteger ) row[0];
+            Number charId = ( Number ) row[0];
             Characteristic c = charById.get( charId.longValue() );
             Collection<Identifiable> parentObjects = new ArrayList<>( 1 );
             for ( int i = 0; i < oe.size(); i++ ) {
                 OwningEntity owningEntity = oe.get( i );
-                BigInteger entityId = ( BigInteger ) row[i + 1];
+                Number entityId = ( Number ) row[i + 1];
                 if ( entityId != null ) {
                     parentObjects.add( ( Identifiable ) getSessionFactory().getCurrentSession()
                             .load( owningEntity.getOwningClass(), entityId.longValue() ) );

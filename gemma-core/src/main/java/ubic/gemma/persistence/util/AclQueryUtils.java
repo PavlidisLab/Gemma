@@ -137,15 +137,15 @@ public class AclQueryUtils {
         if ( !SecurityUtil.isUserAdmin() ) {
             if ( SecurityUtil.isUserAnonymous() ) {
                 //language=HQL
-                q += " and (bitwise_and(" + ACE_ALIAS + ".mask, " + permission.getMask() + ") <> 0 and " + ACE_ALIAS + ".sid in (" + ANONYMOUS_SID_HQL + "))";
+                q += " and (bitand(" + ACE_ALIAS + ".mask, " + permission.getMask() + ") <> 0 and " + ACE_ALIAS + ".sid in (" + ANONYMOUS_SID_HQL + "))";
             } else {
                 q += " and ("
                         // user own the object
                         + SID_ALIAS + ".principal = :" + USER_NAME_PARAM + " "
                         // specific rights to the object
-                        + "or (" + ACE_ALIAS + ".sid in (" + CURRENT_USER_SIDS_HQL + ") and bitwise_and(" + ACE_ALIAS + ".mask, " + permission.getMask() + ") <> 0) "
+                        + "or (" + ACE_ALIAS + ".sid in (" + CURRENT_USER_SIDS_HQL + ") and bitand(" + ACE_ALIAS + ".mask, " + permission.getMask() + ") <> 0) "
                         // publicly available
-                        + "or (" + ACE_ALIAS + ".sid in (" + ANONYMOUS_SID_HQL + ") and bitwise_and(" + ACE_ALIAS + ".mask, " + permission.getMask() + ") <> 0)"
+                        + "or (" + ACE_ALIAS + ".sid in (" + ANONYMOUS_SID_HQL + ") and bitand(" + ACE_ALIAS + ".mask, " + permission.getMask() + ") <> 0)"
                         + ")";
             }
         }
@@ -197,9 +197,9 @@ public class AclQueryUtils {
      * @see #formAclRestrictionClause(String, Permission)
      */
     public static String formNativeAclRestrictionClause( SessionFactoryImplementor sessionFactoryImplementor, Permission permission ) {
-        // MySQL bitwise AND: (a & b). Gemma is MySQL-only via MySQL57Dialect, so we hard-code it instead of
-        // routing through the dialect's SqlFunctionRegistry (whose API changed in Hibernate 6).
-        String renderedMask = "(" + ACE_ALIAS + ".MASK & " + permission.getMask() + ")";
+        // Dialect-aware bitwise AND (MySQL emits "(a & b)", H2 emits "BITAND(a, b)").
+        String renderedMask = BitwiseUtils.bitand( sessionFactoryImplementor.getJdbcServices().getDialect(),
+                ACE_ALIAS + ".MASK", String.valueOf( permission.getMask() ) );
         //language=SQL
         if ( SecurityUtil.isUserAnonymous() ) {
             return " and (" + renderedMask + " <> 0 and " + ACE_ALIAS + ".SID_FK in (" + ANONYMOUS_SID_SQL + "))";
