@@ -79,6 +79,10 @@ public abstract class BaseDatabaseTest extends AbstractTransactionalJUnit4Spring
             props.setProperty( "hibernate.search.lucene_version", "LUCENE_5_5_5" );
             // use an in-memory search index for testing
             props.setProperty( "hibernate.search.default.directory_provider", "ram" );
+            // Hibernate 5 removed Configuration.generateSchemaCreationScript(), so DatabaseSchemaPopulator's
+            // HibernateSchemaPopulator inner class is now a no-op on the renovations branch. Tell Hibernate
+            // itself to create the H2 schema on SessionFactory startup instead.
+            props.setProperty( "hibernate.hbm2ddl.auto", "create" );
             factory.setHibernateProperties( props );
             return factory;
         }
