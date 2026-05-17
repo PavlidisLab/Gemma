@@ -518,7 +518,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
 
     @Override
     public Map<Characteristic, Identifiable> getParents( Collection<Characteristic> characteristics, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents ) {
-        Assert.isTrue( parentClasses == null || OWNING_ENTITIES_CLASSES.containsAll( parentClasses ) );
+        Assert.isTrue( parentClasses == null || OWNING_ENTITIES_CLASSES.containsAll( parentClasses ) , "expected true");
 
         if ( characteristics.isEmpty() || isParentClassesEmpty( parentClasses, includeNoParents ) ) {
             return Collections.emptyMap();

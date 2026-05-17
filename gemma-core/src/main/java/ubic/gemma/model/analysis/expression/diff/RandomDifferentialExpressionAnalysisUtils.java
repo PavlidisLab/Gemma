@@ -120,7 +120,7 @@ public class RandomDifferentialExpressionAnalysisUtils {
     }
 
     private static ContrastResult randomContrastResult( ExperimentalFactor factor ) {
-        Assert.isTrue( factor.getType() == FactorType.CONTINUOUS );
+        Assert.isTrue( factor.getType() == FactorType.CONTINUOUS , "expected true");
         ContrastResult cr = new ContrastResult();
         cr.setCoefficient( normalDistribution().sample() );
         cr.setTstat( normalDistribution().sample() );

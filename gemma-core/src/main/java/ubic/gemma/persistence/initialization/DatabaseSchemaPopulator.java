@@ -24,7 +24,7 @@ import java.sql.SQLException;
 public class DatabaseSchemaPopulator extends CompositeDatabasePopulator {
 
     public DatabaseSchemaPopulator( LocalSessionFactoryBean sessionFactoryBean, String vendor ) {
-        Assert.isTrue( vendor.equals( "mysql" ) || vendor.equals( "h2" ) );
+        Assert.isTrue( vendor.equals( "mysql" ) || vendor.equals( "h2" ) , "expected true");
         Configuration configuration = sessionFactoryBean.getConfiguration();
         Dialect dialect;
         if ( configuration.getProperty( "hibernate.dialect" ) != null ) {

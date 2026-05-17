@@ -317,7 +317,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
 
     @Override
     public Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> findByGene( Gene gene, boolean useGene2Cs, boolean keepNonSpecificProbes ) {
-        Assert.notNull( gene );
+        Assert.notNull( gene , "must not be null");
         StopWatch timer = StopWatch.createStarted();
         Collection<Long> probeIds = getProbeIdsForGene( gene, useGene2Cs, keepNonSpecificProbes );
         if ( probeIds.isEmpty() ) {
@@ -345,7 +345,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
     @Override
     public Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> findByGene( Gene gene,
             boolean useGene2Cs, boolean keepNonSpecificProbes, double threshold, int limit ) {
-        Assert.notNull( gene );
+        Assert.notNull( gene , "must not be null");
         StopWatch timer = StopWatch.createStarted();
         Collection<Long> probeIds = getProbeIdsForGene( gene, useGene2Cs, keepNonSpecificProbes );
         if ( probeIds.isEmpty() ) {
@@ -376,7 +376,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
     @Override
     public Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> findByGeneAndExperimentAnalyzed( Gene gene,
             boolean useGene2Cs, boolean keepNonSpecificProbes, Collection<Long> experimentAnalyzedIds, boolean includeSubSets ) {
-        Assert.notNull( gene );
+        Assert.notNull( gene , "must not be null");
         Collection<Long> probeIds = getProbeIdsForGene( gene, useGene2Cs, keepNonSpecificProbes );
         if ( probeIds.isEmpty() ) {
             return Collections.emptyMap();

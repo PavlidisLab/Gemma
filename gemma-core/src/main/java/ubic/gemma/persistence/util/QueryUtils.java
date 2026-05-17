@@ -225,7 +225,7 @@ public class QueryUtils {
         private List<T> results;
 
         public QueryOffsetLimitIterator( Query<?> query, int fetchSize ) {
-            Assert.isTrue( fetchSize >= 1 );
+            Assert.isTrue( fetchSize >= 1 , "expected true");
             this.query = query;
             this.fetchSize = fetchSize;
         }

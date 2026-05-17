@@ -1,12 +1,24 @@
 # Phase 2 (Spring 6 / Hibernate 6 / jakarta) — handoff
 
-Filed 2026-05-17, refreshed at end-of-session-2 (still 2026-05-17).
-Session-2 landed five commits on the `phase2` branch covering Step 2
-(search subsystem), Step 5b (EhCache 2 gut), and Steps 3+4 partial
-(core DAO abstractions / Hibernate-6 API drift). Compile error count
-is bounded at ~200 across ~45 files, dominated by concrete DAOs that
-still use the dead `org.hibernate.criterion` API and by
-`BusinessKey` (777 lines, 144 Criteria refs, still untouched).
+Filed 2026-05-17, refreshed at end-of-session-3 (still 2026-05-17).
+Session-3 rewrote `BusinessKey` and 22 concrete DAOs off the
+Hibernate Criteria API (mostly to HQL, a few to JPA Criteria),
+swapped `org.hibernate.Query` for `org.hibernate.query.Query`, fixed
+Spring 6's removed single-arg `Assert.*` overloads (97 callsites
+across 49 files via a paren-balanced Python pass), and inlined a
+MySQL bitwise-AND that used to route through the dialect's
+`SqlFunctionRegistry`. **gemma-core compile errors went from 200
+(45 files) to ~100 unique (21 files).** Most of the residue is
+Hibernate-6 API drift that was masked by the earlier showstoppers
+plus a few stubbed-but-still-uncovered Criteria callsites.
+
+## Session-3 commit (on `phase2`)
+
+```
+897acb3d79 Phase 2 Step 3: rewrite BusinessKey + 22 DAOs on JPA Criteria / HQL
+```
+
+Plus the session-2 commits below.
 
 ## Session-2 commits (on `phase2`)
 
@@ -22,59 +34,116 @@ ab94b884a4 WIP: Phase 2 (Spring 6 / Hibernate 6 / jakarta) — in-progress (was 
 
 Verify with `git -C ~/Dev/eclipseworkspace/Gemma log --oneline phase2`.
 
-## Compile state at end of session-2
+## Compile state at end of session-3
 
 ```bash
 cd ~/Dev/eclipseworkspace/Gemma && git checkout phase2
 export JAVA_HOME="$HOME/Library/Java/JavaVirtualMachines/amazon-corretto-17.jdk/Contents/Home"
 export PATH="$JAVA_HOME/bin:$PATH"
-mvn -P fast -Denforcer.skip=true -pl gemma-core -am compile -DskipTests=true -q 2>&1 | grep '^\[ERROR\] /' | wc -l
-# expect: ~200 errors in ~45 files
+mvn -P fast -Denforcer.skip=true -pl gemma-core -am compile -DskipTests=true -q 2>&1 \
+  | grep '^\[ERROR\] /' | sort -u | wc -l
+# expect: ~100 unique errors in ~21 files
 ```
 
-The biggest remaining offenders at session-2 end:
+The biggest remaining offenders at session-3 end:
 
 ```
- 18 CharacteristicDaoImpl
- 12 ExpressionExperimentDaoImpl
- 12 CompositeSequenceDaoImpl
- 12 ExpressionAnalysisResultSetDaoImpl
-  8 TaxonDaoImpl, GeneDaoImpl, ArrayDesignDaoImpl, QuantitationTypeDaoImpl
-  6 BioAssayDimensionDaoImpl, BibliographicReferenceDaoImpl,
-    BlacklistedEntityDaoImpl, ExpressionExperimentSetDaoImpl,
-    GeneDiffExMetaAnalysisDaoImpl
-  4 ~6 more concrete DAOs
-  2 ~12 more concrete DAOs
+ 13 CharacteristicDaoImpl                      (createSQLQuery / NativeQuery API drift)
+ 13 CoexpressionDaoImpl                        (still has stale Criteria refs)
+ 11 QuantitationTypeDaoImpl                    (TypedResultTransformer no longer exists)
+  9 ArrayDesignDaoImpl                         (createSQLQuery / SessionFactoryImplementor drift)
+  8 AbstractPersister                          (FlushMode -> FlushModeType, Serializable -> Object)
+  6 DifferentialExpressionAnalysisDaoImpl      (Criteria conversion not yet done)
+  6 ExpressionAnalysisResultSetDaoImpl         (residue from the UOE-stubbing)
+  5 DifferentialExpressionResultDaoImpl        (Criteria conversion not yet done)
+  5 AbstractFilteringVoEnabledDao              (Criteria refs that escaped session 2)
+  4 AuditEventDaoImpl                          (createCriteria refs)
+  3 PrincipalComponentAnalysisDaoImpl, CompressedStringListType, ByteArrayType
+  2 AbstractCuratableDao, ExpressionPersister, BeanInitializationTimeMonitor
+  1 H2Dialect, AuditAdvice, AuditTrailServiceImpl, BioAssayDaoImpl,
+    ProcessedDataVectorByGeneCacheImpl
 ```
 
-Plus `BusinessKey.java` — 777 lines of Criteria — still untouched and
-called by many DAOs through `findOrCreate`/`createBusinessKey`.
-
-## TL;DR for a fresh session (next session-3)
+## TL;DR for a fresh session (next session-4)
 
 Resume on `phase2` branch. Work in this order:
 
-1. Rewrite **`BusinessKey`** on HQL — many concrete DAOs flip from
-   broken to compile-clean as a side effect.
-2. Per-DAO conversion of the 25 concrete DAOs that import
-   `org.hibernate.criterion`. Pattern: HQL via session.createQuery
-   for small queries; JPA Criteria
-   (`session.getCriteriaBuilder()` etc.) for dynamic queries; lean on
-   `AclQueryUtils` and `FilterQueryUtils` for ACL/Filters predicates.
-3. Convert **`ExpressionAnalysisResultSetDaoImpl`** and
-   **`QuantitationTypeDaoImpl`** off `AbstractCriteriaFilteringVoEnabledDao`
-   (currently UOE-stubbed); they should extend
-   `AbstractQueryFilteringVoEnabledDao` or implement filtering locally
-   with JPA Criteria.
-4. Once gemma-core compiles, run **Step 5a** (replace
+1. **Hibernate 6 `UserType` API change** — `ByteArrayType` and
+   `CompressedStringListType` need their `nullSafeGet` / `nullSafeSet`
+   signatures updated to the new
+   `nullSafeGet(ResultSet, int, SharedSessionContractImplementor, Object)`
+   shape (the `String[] names` array argument is gone). Likely the same
+   change for any class implementing `org.hibernate.usertype.UserType`.
+2. **Spring 6 `BeanFactoryPostProcessor`** — `BeanInitializationTimeMonitor`
+   overrides two methods that no longer exist on the interface. Diff
+   against Spring 6's `MergedBeanDefinitionPostProcessor` /
+   `InstantiationAwareBeanPostProcessor` and adjust signatures.
+3. **`AbstractPersister`** — six callsites pass `org.hibernate.FlushMode`
+   to APIs that now want `jakarta.persistence.FlushModeType`. There's
+   also a `cannot find symbol` for what is likely
+   `session.save(...)` returning `Object` instead of `Serializable`.
+   Mechanical fix.
+4. **The remaining concrete DAO conversions**: CharacteristicDaoImpl,
+   CoexpressionDaoImpl, QuantitationTypeDaoImpl, ArrayDesignDaoImpl,
+   AuditEventDaoImpl, DifferentialExpressionAnalysisDaoImpl,
+   DifferentialExpressionResultDaoImpl, PrincipalComponentAnalysisDaoImpl,
+   AbstractFilteringVoEnabledDao. Same pattern as session 3 — most are
+   HQL conversions, a few need JPA Criteria where the original logic is
+   genuinely dynamic. `TypedResultTransformer` (the wrapper around the
+   removed `ResultTransformer` interface) is gone; rewrite those queries
+   to return tuples and post-process.
+5. **`ExpressionAnalysisResultSetDaoImpl`** still has a partial-stub state
+   — `findByBioAssaySetInAndDatabaseEntryInLimit` throws UOE, and the
+   value-object loaders that depended on `getFilteringCriteria` need a
+   JPA-Criteria reimplementation if they're called. Either rewrite or
+   keep stubbing.
+6. Once gemma-core compiles, run **Step 5a** (replace
    `LocalSessionFactoryBean` + `HibernateTransactionManager` with
    Spring 6 JPA + unwrap pattern from gsec).
-5. **Step 6** (Jersey 3), **Step 7** (selective per-module tests —
+7. **Step 6** (Jersey 3), **Step 7** (selective per-module tests —
    do NOT run full suite, Paul: ~30 min).
-6. **Steps 8–10** (bytecode 17, enforcer, RENOVATIONS.md).
+8. **Steps 8–10** (bytecode 17, enforcer, RENOVATIONS.md).
 
-Realistic time-to-compile-green from current state: 1–2 focused
-sessions for the DAO mass-conversion, plus another for Step 5a.
+Realistic time-to-compile-green from current state: one focused
+session for the remaining ~100 errors, then another for Step 5a.
+
+## Notes on session-3 design choices
+
+* **`BusinessKey` public API**: every `addRestrictions(Criteria, X)` /
+  `createQueryObject(...)` / `attachCriteria(...)` is gone. The new
+  surface per entity type is:
+  - `BusinessKey.find(Session, X) -> X` — full single-result query.
+  - `BusinessKey.matches(CriteriaBuilder, From<?, X>, X) -> List<Predicate>`
+    — predicate-list builder for callers composing into a larger
+    JPA-Criteria query of their own.
+  - `BusinessKey.attachBioSequence` / `attachDatabaseEntry` — convenience
+    wrappers that join a parent's property and add the matching
+    predicates in one call.
+  - All `checkKey` / `checkValidKey` methods are unchanged.
+* **Spring 6 `Assert.*` single-arg removals**: Spring 6 dropped
+  `Assert.notNull(Object)`, `Assert.isTrue(boolean)`, `Assert.state(boolean)`,
+  `Assert.isNull(Object)`, `Assert.hasText(String)`, `Assert.hasLength(String)`.
+  Session 3 patched 97 callsites in 49 files with a default message via
+  `/tmp/fix_asserts.py` (paren-balanced argument parsing, default
+  messages keyed on method name like "must not be null" / "expected
+  true"). If new ones appear after this session's fixes uncover more
+  compile-down stack, the same script will pick them up — point it at
+  a fresh `/tmp/assert_errors.txt`.
+* **MySQL bitwise AND**: `AclQueryUtils` and `EE2CAclQueryUtils` no
+  longer route through `sessionFactory.getSqlFunctionRegistry()` (which
+  changed shape in Hibernate 6). The rendered SQL is just `(a & b)`
+  inlined. Gemma is MySQL-only via `MySQL57Dialect`, so the dialect
+  indirection was carrying no weight.
+* **`createSQLQuery` vs `createNativeQuery`**: `createSQLQuery` still
+  exists on Hibernate 6's `Session` (deprecated) and returns
+  `org.hibernate.query.NativeQuery`. Existing callsites compile; only
+  the return-type variable's declared type changed from `SQLQuery` to
+  `NativeQuery` (the only mechanical fix needed).
+* **`org.hibernate.metadata.ClassMetadata`** still works in Hibernate 6
+  (kept for backward compat). `sessionFactory.getClassMetadata(X)` is
+  fine. If we hit `getAllClassMetadata()` issues, swap to
+  `sessionFactory.getMetamodel().getEntities()` (already done in
+  `QuantitationTypeDaoImpl` constructor).
 
 ## TL;DR for a fresh session
 

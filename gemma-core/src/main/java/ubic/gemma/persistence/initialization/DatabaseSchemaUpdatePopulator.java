@@ -23,7 +23,7 @@ import java.sql.Connection;
 public class DatabaseSchemaUpdatePopulator implements DatabasePopulator {
 
     public DatabaseSchemaUpdatePopulator( Configuration configuration, String vendor ) {
-        Assert.isTrue( vendor.equals( "mysql" ) || vendor.equals( "h2" ) );
+        Assert.isTrue( vendor.equals( "mysql" ) || vendor.equals( "h2" ) , "expected true");
         // Configuration and vendor are accepted to preserve the constructor signature callers rely on.
     }
 
