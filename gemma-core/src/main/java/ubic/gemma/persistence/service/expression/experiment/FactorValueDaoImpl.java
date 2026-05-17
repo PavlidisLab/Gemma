@@ -139,7 +139,7 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
         //noinspection unchecked
         return query
                 .setParameter( "q", escapeLike( valuePrefix ) + "%" )
-                .setMaxResults( maxResults )
+                .setMaxResults( maxResults > 0 ? maxResults : Integer.MAX_VALUE )
                 .list();
     }
 

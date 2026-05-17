@@ -136,7 +136,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
                         + "where " + createOwningEntityConstraint( parentClasses, includeNoParents )
                         + ( category != null ? " and " + createCategoryConstraint( "C", "category", category ) : "" ) )
                 .addEntity( "C", Characteristic.class )
-                .setMaxResults( maxResults );
+                .setMaxResults( maxResults > 0 ? maxResults : Integer.MAX_VALUE );
         if ( category != null ) {
             q.setParameter( "category", category );
         }
@@ -161,7 +161,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
                         + ( parentClasses != null || !includeNoParents ? " and " + createOwningEntityConstraint( parentClasses, includeNoParents ) : "" ) )
                 .addEntity( "C", Characteristic.class )
                 .setParameter( "search", query )
-                .setMaxResults( maxResults )
+                .setMaxResults( maxResults > 0 ? maxResults : Integer.MAX_VALUE )
                 .list();
     }
 
@@ -173,7 +173,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
                         + ( parentClasses != null || !includeNoParents ? " and " + createOwningEntityConstraint( parentClasses, includeNoParents ) : "" ) )
                 .addEntity( "C", Characteristic.class )
                 .setParameter( "uri", uri )
-                .setMaxResults( maxResults )
+                .setMaxResults( maxResults > 0 ? maxResults : Integer.MAX_VALUE )
                 .list();
     }
 
@@ -363,7 +363,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
             q.setParameter( "category", category );
         }
         //noinspection unchecked
-        return q.setMaxResults( maxResults ).list();
+        return q.setMaxResults( maxResults > 0 ? maxResults : Integer.MAX_VALUE ).list();
     }
 
     @Override
@@ -445,7 +445,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
                         + "where VALUE_URI is not null "
                         + ( parentClasses != null || includeNoParents ? "and " + createOwningEntityConstraint( parentClasses, includeNoParents ) + " " : "" ) + " "
                         + "group by VALUE_URI" )
-                .setMaxResults( maxResults )
+                .setMaxResults( maxResults > 0 ? maxResults : Integer.MAX_VALUE )
                 .list();
         for ( Object[] row : result1 ) {
             result.put( ( String ) row[0], ( String ) row[1] );
@@ -457,7 +457,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
                             + "where PREDICATE_URI is not null or SECOND_PREDICATE_URI is not null "
                             + ( parentClasses != null || includeNoParents ? "and " + createOwningEntityConstraint( parentClasses, includeNoParents ) + " " : "" ) + " "
                             + "group by PREDICATE_URI, SECOND_PREDICATE_URI" )
-                    .setMaxResults( maxResults )
+                    .setMaxResults( maxResults > 0 ? maxResults : Integer.MAX_VALUE )
                     .list();
             for ( Object[] row : result2 ) {
                 if ( row[0] != null ) {
@@ -475,7 +475,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
                             + "where OBJECT_URI is not null or SECOND_OBJECT_URI is not null "
                             + ( parentClasses != null || includeNoParents ? "and " + createOwningEntityConstraint( parentClasses, includeNoParents ) + " " : "" ) + " "
                             + "group by OBJECT_URI, SECOND_OBJECT_URI" )
-                    .setMaxResults( maxResults )
+                    .setMaxResults( maxResults > 0 ? maxResults : Integer.MAX_VALUE )
                     .list();
             for ( Object[] row : result3 ) {
                 if ( row[0] != null ) {
@@ -510,7 +510,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
             q.setParameter( "category", category );
         }
         //noinspection unchecked
-        return q.setMaxResults( maxResults )
+        return q.setMaxResults( maxResults > 0 ? maxResults : Integer.MAX_VALUE )
                 .list();
     }
 

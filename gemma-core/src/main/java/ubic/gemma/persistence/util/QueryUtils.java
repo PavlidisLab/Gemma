@@ -48,6 +48,21 @@ public class QueryUtils {
     }
 
     /**
+     * Apply {@link Query#setMaxResults} only when {@code maxResults} is positive.
+     * <p>
+     * Hibernate 4 silently treated {@code setMaxResults(<= 0)} as "no limit"; Hibernate 5 throws
+     * {@link IllegalArgumentException} ("max-results cannot be negative"). Many DAO methods in Gemma pass
+     * {@code -1} to mean "unlimited" by convention. Route those calls through this helper instead of calling
+     * {@link Query#setMaxResults} directly so the {@code -1} convention keeps working under Hibernate 5.
+     */
+    public static Query setMaxResultsIfPositive( Query query, int maxResults ) {
+        if ( maxResults > 0 ) {
+            query.setMaxResults( maxResults );
+        }
+        return query;
+    }
+
+    /**
      * @see Query#uniqueResult()
      */
     public static <T> T uniqueResult( Query query ) {

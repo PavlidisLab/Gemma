@@ -647,6 +647,14 @@
 				<configuration>
 					<argLine>${testJvmOptions}</argLine>
 					<redirectTestOutputToFile>${redirectTestOutputToFile}</redirectTestOutputToFile>
+					<!-- libhdf5_java.dylib has @rpath references to libhdf5.200.dylib; java.library.path
+					     only resolves the JNI lib itself, not its dynamic-link dependencies. macOS uses
+					     DYLD_LIBRARY_PATH; Linux uses LD_LIBRARY_PATH. Both are set to hdf5.libDir so the
+					     OS can find the C library next to the JNI shim. -->
+					<environmentVariables>
+						<DYLD_LIBRARY_PATH>${hdf5.libDir}</DYLD_LIBRARY_PATH>
+						<LD_LIBRARY_PATH>${hdf5.libDir}</LD_LIBRARY_PATH>
+					</environmentVariables>
 					<includes>
 						<include>**/*Test.java</include>
 					</includes>
@@ -986,8 +994,10 @@
 		<!-- I've been running into some issues with the 1.14 series, to be investigated... -->
 		<micrometer.version>1.13.11</micrometer.version>
 		<!-- HDF5 -->
-		<!-- You may override this in ~/.m2/settings.xml -->
-		<hdf5.version>1.12.1</hdf5.version>
+		<!-- You may override these in ~/.m2/settings.xml. On macOS install with the HDF Group
+		     binary tarball (which ships libhdf5_java.dylib and jarhdf5-X.Y.Z.jar) and set
+		     hdf5.libDir to the bundled lib/ directory. -->
+		<hdf5.version>1.12.3</hdf5.version>
 		<!-- directory containing the HDF5 JNI shared library -->
 		<hdf5.libDir>/usr/lib64/hdf5</hdf5.libDir>
 		<mysql.version>8.4.0</mysql.version>

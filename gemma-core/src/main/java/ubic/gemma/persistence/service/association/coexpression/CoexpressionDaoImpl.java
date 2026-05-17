@@ -1921,7 +1921,7 @@ public class CoexpressionDaoImpl implements CoexpressionDao {
     private void populateSettings( List<CoexpressionValueObject> list, int size, int maxResults ) {
         for ( CoexpressionValueObject g2g : list ) {
             g2g.setQueryStringency( size );
-            g2g.setMaxResults( maxResults );
+            g2g.setMaxResults( maxResults > 0 ? maxResults : Integer.MAX_VALUE );
         }
     }
 

@@ -890,12 +890,12 @@ public class ExpressionExperimentDaoImpl
                 //noinspection unchecked
                 result = q
                         .setParameterList( "eeIds", optimizeParameterList( eeIds ) )
-                        .setMaxResults( maxResults )
+                        .setMaxResults( maxResults > 0 ? maxResults : Integer.MAX_VALUE )
                         .list();
             }
         } else {
             //noinspection unchecked
-            result = q.setMaxResults( maxResults ).list();
+            result = q.setMaxResults( maxResults > 0 ? maxResults : Integer.MAX_VALUE ).list();
         }
         return aggregateByCategory( result );
     }
@@ -1098,12 +1098,12 @@ public class ExpressionExperimentDaoImpl
             } else {
                 //noinspection unchecked
                 result = q.setParameterList( "eeIds", optimizeParameterList( eeIds ) )
-                        .setMaxResults( maxResults )
+                        .setMaxResults( maxResults > 0 ? maxResults : Integer.MAX_VALUE )
                         .list();
             }
         } else {
             //noinspection unchecked
-            result = q.setMaxResults( maxResults ).list();
+            result = q.setMaxResults( maxResults > 0 ? maxResults : Integer.MAX_VALUE ).list();
         }
         return aggregateByCategoryAndValue( result );
     }
@@ -1333,7 +1333,7 @@ public class ExpressionExperimentDaoImpl
         List<Object[]> result;
         //noinspection unchecked
         result = query
-                .setMaxResults( maxResults )
+                .setMaxResults( maxResults > 0 ? maxResults : Integer.MAX_VALUE )
                 .list();
         return result.stream().collect( groupingBy( row -> ( ArrayDesign ) row[0], summingLong( row -> ( Long ) row[1] ) ) );
     }
@@ -1379,7 +1379,7 @@ public class ExpressionExperimentDaoImpl
             //noinspection unchecked
             result = query
                     .setParameterList( "ids", optimizeParameterList( eeIds ) )
-                    .setMaxResults( maxResults )
+                    .setMaxResults( maxResults > 0 ? maxResults : Integer.MAX_VALUE )
                     .list()
                     .stream();
         }
