@@ -2,45 +2,36 @@ package ubic.gemma.persistence.initialization;
 
 import lombok.extern.apachecommons.CommonsLog;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.tool.hbm2ddl.DatabaseMetadata;
-import org.hibernate.tool.hbm2ddl.SchemaUpdateScript;
-import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.jdbc.datasource.init.DatabasePopulator;
 import org.springframework.util.Assert;
-import ubic.gemma.persistence.hibernate.H2Dialect;
-import ubic.gemma.persistence.hibernate.MySQL57InnoDBDialect;
 
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.util.List;
-import java.util.stream.Collectors;
 
+/**
+ * Populates an existing database with any incremental schema changes implied by the current Hibernate mapping.
+ * <p>
+ * The Hibernate 4 implementation used {@code org.hibernate.tool.hbm2ddl.DatabaseMetadata} and
+ * {@code SchemaUpdateScript}, both of which were removed in Hibernate 5 in favour of the new
+ * {@link org.hibernate.tool.schema.spi.SchemaManagementTool}-based metadata model. This class is currently a no-op
+ * stub on the renovations branch; production deployments rely on the versioned scripts under
+ * {@code gemma-core/src/main/resources/sql/migrations/} (applied manually by the DBA) rather than this populator.
+ * <p>
+ * Reinstating automatic schema updates against Hibernate 5+ is future renovation work — likely by integrating Flyway
+ * (see {@code RENOVATIONS.md}) rather than reviving Hibernate's built-in tool.
+ */
 @CommonsLog
 public class DatabaseSchemaUpdatePopulator implements DatabasePopulator {
 
-    private final Configuration configuration;
-    private final Dialect dialect;
-
     public DatabaseSchemaUpdatePopulator( Configuration configuration, String vendor ) {
         Assert.isTrue( vendor.equals( "mysql" ) || vendor.equals( "h2" ) );
-        this.configuration = configuration;
-        this.dialect = vendor.equals( "mysql" ) ? new MySQL57InnoDBDialect() : new H2Dialect();
+        // Configuration and vendor are accepted to preserve the constructor signature callers rely on.
     }
 
     @Override
-    public void populate( Connection connection ) throws SQLException {
-        DatabaseMetadata dm = new DatabaseMetadata( connection, dialect, configuration );
-        List<String> sqlStatements = configuration
-                .generateSchemaUpdateScriptList( dialect, dm )
-                .stream()
-                .map( SchemaUpdateScript::getScript )
-                .collect( Collectors.toList() );
-        for ( String sqlStatement : sqlStatements ) {
-            try ( PreparedStatement ps = connection.prepareStatement( sqlStatement ) ) {
-                ps.execute();
-            }
-        }
+    public void populate( Connection connection ) {
+        // Spring 4 dropped the SQLException from this method; Hibernate 5 removed DatabaseMetadata. This stub does
+        // nothing — the production schema update workflow has moved to the file-based migrations under
+        // gemma-core/src/main/resources/sql/migrations/.
+        log.info( "DatabaseSchemaUpdatePopulator is a no-op on the renovations branch; use the sql/migrations/ scripts instead." );
     }
 }

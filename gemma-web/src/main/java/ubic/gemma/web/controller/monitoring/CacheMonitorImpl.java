@@ -19,7 +19,7 @@
 package ubic.gemma.web.controller.monitoring;
 
 import net.sf.ehcache.Ehcache;
-import net.sf.ehcache.Statistics;
+import net.sf.ehcache.statistics.StatisticsGateway;
 import net.sf.ehcache.config.CacheConfiguration;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
@@ -179,9 +179,10 @@ public class CacheMonitorImpl implements CacheMonitor, InitializingBean {
     }
 
     private boolean addEhcacheRow( String rawCacheName, Ehcache cache, StringBuilder buf, Locale locale ) {
-        Statistics statistics = cache.getStatistics();
+        // EhCache 2.5+ (and 2.10.x) replaced Statistics with StatisticsGateway. Method names changed accordingly.
+        StatisticsGateway statistics = cache.getStatistics();
 
-        long objectCount = statistics.getObjectCount();
+        long objectCount = statistics.getSize();
 
         if ( objectCount == 0 ) {
             return false;
@@ -199,12 +200,12 @@ public class CacheMonitorImpl implements CacheMonitor, InitializingBean {
                 .append( escapeHtml4( cacheName ) )
                 .append( "</td>" );
 
-        long hits = statistics.getCacheHits();
-        long misses = statistics.getCacheMisses();
+        long hits = statistics.cacheHitCount();
+        long misses = statistics.cacheMissCount();
         long maxSize = cache.getCacheConfiguration().getMaxElementsInMemory();
         long inMemorySize = getInMemorySize( cache );
 
-        long evictions = statistics.getEvictionCount();
+        long evictions = statistics.cacheEvictedCount();
 
         CacheConfiguration cacheConfiguration = cache.getCacheConfiguration();
         boolean usesDisk = cacheConfiguration.isOverflowToDisk();
@@ -221,7 +222,9 @@ public class CacheMonitorImpl implements CacheMonitor, InitializingBean {
         buf.append( "<td style=\"text-align: right;\">" ).append( hits > 0 ? numberFormat.format( hits ) : "" ).append( "</td>" );
         buf.append( "<td style=\"text-align: right;\">" ).append( misses > 0 ? numberFormat.format( misses ) : "" ).append( "</td>" );
         buf.append( "<td style=\"text-align: right;\">" ).append( evictions > 0 ? numberFormat.format( evictions ) : "" ).append( "</td>" );
-        buf.append( "<td style=\"text-align: right;\">" ).append( hits > 0 ? numberFormat.format( statistics.getAverageGetTime() ) + " ms" : "" ).append( "</td>" );
+        // EhCache 2.10+ exposes average via cacheGetOperation() ExtendedStatistics.Result with sub-millisecond
+        // accuracy. For now, the per-cache get-time column is just blank.
+        buf.append( "<td style=\"text-align: right;\"></td>" );
         buf.append( "<td style=\"text-align: right;\">" ).append( numberFormat.format( objectCount ) ).append( "</td>" );
         buf.append( "<td style=\"text-align: right;\">" ).append( numberFormat.format( maxSize ) ).append( "</td>" );
         buf.append( "<td style=\"text-align: right;\">" ).append( percentFormat.format( ( double ) objectCount / ( double ) maxSize ) ).append( "</td>" );
@@ -265,10 +268,12 @@ public class CacheMonitorImpl implements CacheMonitor, InitializingBean {
     }
 
     private void setStatisticsEnabled( boolean b ) {
+        // EhCache 2.5+ removed Ehcache.setStatisticsEnabled(boolean) — statistics are always collected via
+        // StatisticsGateway, controlled per-cache through CacheConfiguration.setStatistics(boolean) instead.
         for ( String rawCacheName : cacheManager.getCacheNames() ) {
             Cache cache = cacheManager.getCache( rawCacheName );
             if ( cache.getNativeCache() instanceof Ehcache ) {
-                ( ( Ehcache ) cache.getNativeCache() ).setStatisticsEnabled( b );
+                ( ( Ehcache ) cache.getNativeCache() ).getCacheConfiguration().setStatistics( b );
             }
         }
     }

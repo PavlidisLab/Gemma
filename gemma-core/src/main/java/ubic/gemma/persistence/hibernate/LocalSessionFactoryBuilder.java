@@ -9,7 +9,7 @@ import javax.sql.DataSource;
  *
  * @author poirigui
  */
-public class LocalSessionFactoryBuilder extends org.springframework.orm.hibernate4.LocalSessionFactoryBuilder {
+public class LocalSessionFactoryBuilder extends org.springframework.orm.hibernate5.LocalSessionFactoryBuilder {
 
     public LocalSessionFactoryBuilder( DataSource dataSource, ResourceLoader resourceLoader ) {
         super( dataSource, resourceLoader );

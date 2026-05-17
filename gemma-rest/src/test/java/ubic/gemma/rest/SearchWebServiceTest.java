@@ -1,8 +1,8 @@
 package ubic.gemma.rest;
 
 import io.swagger.v3.oas.models.OpenAPI;
-import org.apache.lucene.queryParser.ParseException;
-import org.apache.lucene.queryParser.QueryParser;
+import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.util.Version;
 import org.hibernate.search.util.impl.PassThroughAnalyzer;
 import org.junit.After;
@@ -258,7 +258,7 @@ public class SearchWebServiceTest extends BaseJerseyTest {
     public void testSearchWithInvalidQuery() throws SearchException {
         when( searchService.search( any(), any() ) ).thenAnswer( a -> {
             try {
-                new QueryParser( Version.LUCENE_36, "", new PassThroughAnalyzer( Version.LUCENE_36 ) )
+                new QueryParser( "", PassThroughAnalyzer.INSTANCE )
                         .parse( a.getArgument( 0, SearchSettings.class ).getQuery() );
             } catch ( ParseException e ) {
                 throw new LuceneParseSearchException( "\"", e.getMessage(), e );

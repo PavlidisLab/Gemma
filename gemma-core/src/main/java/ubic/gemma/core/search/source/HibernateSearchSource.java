@@ -7,8 +7,8 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.queryParser.MultiFieldQueryParser;
-import org.apache.lucene.queryParser.QueryParser;
+import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
+import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.highlight.QueryScorer;
 import org.apache.lucene.util.Version;
@@ -237,7 +237,8 @@ public class HibernateSearchSource implements FieldAwareSearchSource, Initializi
         try {
             FullTextSession fullTextSession = Search.getFullTextSession( sessionFactory.getCurrentSession() );
             Analyzer analyzer = analyzers.get( clazz );
-            QueryParser queryParser = new MultiFieldQueryParser( Version.LUCENE_36, fields, analyzer );
+            // Lucene 5: MultiFieldQueryParser dropped the Version parameter.
+            QueryParser queryParser = new MultiFieldQueryParser( fields, analyzer );
             Query query = parseSafely( settings, queryParser, context.getIssueReporter() );
             LuceneHighlighter luceneHighlighter;
             org.apache.lucene.search.highlight.Highlighter highlighter;
@@ -276,7 +277,8 @@ public class HibernateSearchSource implements FieldAwareSearchSource, Initializi
                     log.warn( String.format( "Highlighting %d results took %d ms", results.size(), timer.getTime() ) );
                 }
             }
-        } catch ( org.hibernate.search.SearchException e ) {
+        } catch ( org.hibernate.search.exception.SearchException e ) {
+            // Hibernate Search 5: org.hibernate.search.SearchException moved to .exception.
             throw new HibernateSearchException( String.format( "Error while searching for %s.", clazz.getName() ), e );
         }
     }

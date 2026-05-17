@@ -66,14 +66,14 @@ public class DatabaseSchemaPopulator extends CompositeDatabasePopulator {
         }
 
         @Override
-        public void populate( Connection connection ) throws SQLException {
-            log.info( "Populating Hibernate schema..." );
-            String[] ddl = configuration.generateSchemaCreationScript( dialect );
-            for ( String sql : ddl ) {
-                try ( PreparedStatement ps = connection.prepareStatement( sql ) ) {
-                    ps.execute();
-                }
-            }
+        public void populate( Connection connection ) {
+            // Hibernate 5 removed Configuration.generateSchemaCreationScript(Dialect). The proper replacement
+            // is org.hibernate.tool.schema.spi.SchemaCreator driven from Metadata (via MetadataSources +
+            // StandardServiceRegistryBuilder) — substantial enough to defer until the broader Hibernate 5
+            // migration settles. Production schemas come from sql/migrations/*.sql so this is currently a
+            // no-op on the renovations branch. Tests that rely on Hibernate-generated DDL will fall back to
+            // hbm2ddl.auto=create-drop on the SessionFactory itself.
+            log.info( "HibernateSchemaPopulator is a no-op on the renovations branch; use sql/migrations/ scripts or hbm2ddl.auto=create-drop." );
         }
     }
 }

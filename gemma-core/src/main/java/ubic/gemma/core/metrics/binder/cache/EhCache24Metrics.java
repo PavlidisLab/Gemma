@@ -6,13 +6,17 @@ import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.binder.cache.CacheMeterBinder;
 import net.sf.ehcache.Ehcache;
-import net.sf.ehcache.Statistics;
+import net.sf.ehcache.statistics.StatisticsGateway;
 
 import java.util.function.Function;
 import java.util.function.ToLongFunction;
 
 /**
- * Metrics for Ehcache 2.4 series.
+ * Metrics for Ehcache 2.x.
+ * <p>
+ * Originally written against EhCache 2.4's {@code net.sf.ehcache.Statistics}. Renovated to use the 2.5+
+ * {@link StatisticsGateway} (which {@link Ehcache#getStatistics()} now returns) so it works against the 2.10.x line
+ * pulled in by hibernate-ehcache 5.6.
  *
  * @author poirigui
  * @see io.micrometer.core.instrument.binder.cache.EhCache2Metrics
@@ -23,27 +27,10 @@ public class EhCache24Metrics extends CacheMeterBinder<Ehcache> {
         super( cache, cache.getName(), tags );
     }
 
-    /**
-     * Record metrics on an EhCache cache.
-     * @param registry The registry to bind metrics to.
-     * @param cache The cache to instrument.
-     * @param tags Tags to apply to all recorded metrics. Must be an even number of
-     * arguments representing key/value pairs of tags.
-     * @return The instrumented cache, unchanged. The original cache is not wrapped or
-     * proxied in any way.
-     */
     public static Ehcache monitor( MeterRegistry registry, Ehcache cache, String... tags ) {
         return monitor( registry, cache, Tags.of( tags ) );
     }
 
-    /**
-     * Record metrics on an EhCache cache.
-     * @param registry The registry to bind metrics to.
-     * @param cache The cache to instrument.
-     * @param tags Tags to apply to all recorded metrics.
-     * @return The instrumented cache, unchanged. The original cache is not wrapped or
-     * proxied in any way.
-     */
     public static Ehcache monitor( MeterRegistry registry, Ehcache cache, Iterable<Tag> tags ) {
         new EhCache24Metrics( cache, tags ).bindTo( registry );
         return cache;
@@ -51,22 +38,22 @@ public class EhCache24Metrics extends CacheMeterBinder<Ehcache> {
 
     @Override
     protected Long size() {
-        return getOrDefault( Statistics::getObjectCount, null );
+        return getOrDefault( StatisticsGateway::getSize, null );
     }
 
     @Override
     protected long hitCount() {
-        return getOrDefault( Statistics::getCacheHits, 0L );
+        return getOrDefault( StatisticsGateway::cacheHitCount, 0L );
     }
 
     @Override
     protected Long missCount() {
-        return getOrDefault( Statistics::getCacheMisses, null );
+        return getOrDefault( StatisticsGateway::cacheMissCount, null );
     }
 
     @Override
     protected Long evictionCount() {
-        return getOrDefault( Statistics::getEvictionCount, null );
+        return getOrDefault( StatisticsGateway::cacheEvictedCount, null );
     }
 
     @Override
@@ -79,28 +66,25 @@ public class EhCache24Metrics extends CacheMeterBinder<Ehcache> {
     }
 
     @Nullable
-    private Statistics getStats() {
+    private StatisticsGateway getStats() {
         Ehcache cache = getCache();
         return cache != null ? cache.getStatistics() : null;
     }
 
     @Nullable
-    private Long getOrDefault( Function<Statistics, Long> function, @Nullable Long defaultValue ) {
-        Statistics ref = getStats();
+    private Long getOrDefault( Function<StatisticsGateway, Long> function, @Nullable Long defaultValue ) {
+        StatisticsGateway ref = getStats();
         if ( ref != null ) {
             return function.apply( ref );
         }
-
         return defaultValue;
     }
 
-    private long getOrDefault( ToLongFunction<Statistics> function, long defaultValue ) {
-        Statistics ref = getStats();
+    private long getOrDefault( ToLongFunction<StatisticsGateway> function, long defaultValue ) {
+        StatisticsGateway ref = getStats();
         if ( ref != null ) {
             return function.applyAsLong( ref );
         }
-
         return defaultValue;
     }
-
 }

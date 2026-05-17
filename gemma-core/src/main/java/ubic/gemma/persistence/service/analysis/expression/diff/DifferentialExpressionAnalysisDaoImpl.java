@@ -217,21 +217,24 @@ class DifferentialExpressionAnalysisDaoImpl extends AbstractDao<DifferentialExpr
 
     private void insertRowsAndAssignGeneratedKeys( String insertSql, PreparedStatement insertStmt, List<?> objects, EntityPersister persister, SessionImplementor session ) throws SQLException {
         statementLogger.logStatement( insertSql + String.format( " [repeated %d times]", objects.size() ) );
-        ensureExpectedRowsAreInserted( insertStmt, insertStmt.executeBatch() );
+        ensureExpectedRowsAreInserted( insertSql, insertStmt, insertStmt.executeBatch() );
         ResultSet rs = insertStmt.getGeneratedKeys();
         String idProp = persister.getIdentifierPropertyName();
         Type idType = persister.getIdentifierType();
+        // Hibernate 5: getGeneratedIdentity gained a Dialect parameter.
+        org.hibernate.dialect.Dialect dialect = session.getJdbcServices().getDialect();
         for ( Object object : objects ) {
-            Serializable id = IdentifierGeneratorHelper.getGeneratedIdentity( rs, idProp, idType );
+            Serializable id = IdentifierGeneratorHelper.getGeneratedIdentity( rs, idProp, idType, dialect );
             persister.setIdentifier( object, id, session );
         }
     }
 
-    private void ensureExpectedRowsAreInserted( PreparedStatement statement, int[] batchStatus ) throws
+    private void ensureExpectedRowsAreInserted( String insertSql, PreparedStatement statement, int[] batchStatus ) throws
             HibernateException, SQLException {
         int i = 0;
         for ( int bs : batchStatus ) {
-            Expectations.BASIC.verifyOutcome( bs, statement, i++ );
+            // Hibernate 5: verifyOutcome gained a sql String parameter.
+            Expectations.BASIC.verifyOutcome( bs, statement, i++, insertSql );
         }
     }
 

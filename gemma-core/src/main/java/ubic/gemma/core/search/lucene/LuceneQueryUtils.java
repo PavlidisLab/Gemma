@@ -3,8 +3,8 @@ package ubic.gemma.core.search.lucene;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.queryParser.ParseException;
-import org.apache.lucene.queryParser.QueryParser;
+import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.*;
 import org.apache.lucene.util.Version;
 import org.hibernate.search.util.impl.PassThroughAnalyzer;
@@ -33,7 +33,9 @@ public class LuceneQueryUtils {
     private static final Pattern LUCENE_RESERVED_CHARS = Pattern.compile( "[+\\-&|!(){}\\[\\]^\"~*?:\\\\]" );
 
     private static QueryParser createQueryParser() {
-        return new QueryParser( Version.LUCENE_36, "", new PassThroughAnalyzer( Version.LUCENE_36 ) );
+        // Lucene 5: QueryParser dropped the Version parameter. Hibernate Search 5 made PassThroughAnalyzer
+        // a singleton with no public constructor.
+        return new QueryParser( "", PassThroughAnalyzer.INSTANCE );
     }
 
     /**

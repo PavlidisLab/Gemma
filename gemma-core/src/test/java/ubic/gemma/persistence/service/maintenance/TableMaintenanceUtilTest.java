@@ -1,6 +1,6 @@
 package ubic.gemma.persistence.service.maintenance;
 
-import org.hibernate.SQLQuery;
+import org.hibernate.query.NativeQuery;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.junit.After;
@@ -101,14 +101,14 @@ public class TableMaintenanceUtilTest extends BaseTest {
 
     private Session session;
 
-    private SQLQuery query;
+    private NativeQuery query;
 
     @Before
     public void setUp() throws IOException {
         when( externalDatabaseService.findByNameWithAuditTrail( ExternalDatabases.GENE2CS ) ).thenReturn( gene2csDatabaseEntry );
-        query = mock( SQLQuery.class, RETURNS_SELF );
+        query = mock( NativeQuery.class, RETURNS_SELF );
         session = mock( Session.class );
-        when( session.createSQLQuery( any() ) ).thenReturn( query );
+        when( session.createNativeQuery( any() ) ).thenReturn( query );
         when( sessionFactory.getCurrentSession() ).thenReturn( session );
     }
 
@@ -127,7 +127,7 @@ public class TableMaintenanceUtilTest extends BaseTest {
         tableMaintenanceUtil.updateGene2CsEntries();
         // verify write to disk
         assertThat( gene2csInfoPath ).exists();
-        verify( session ).createSQLQuery( startsWith( "insert into GENE2CS" ) );
+        verify( session ).createNativeQuery( startsWith( "insert into GENE2CS" ) );
         verify( query ).addSynchronizedQuerySpace( "GENE2CS" );
         verify( query ).executeUpdate();
         verify( externalDatabaseService ).findByNameWithAuditTrail( ExternalDatabases.GENE2CS );

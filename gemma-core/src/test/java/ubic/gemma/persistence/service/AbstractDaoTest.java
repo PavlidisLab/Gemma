@@ -62,7 +62,8 @@ public class AbstractDaoTest {
         when( sessionFactory.getClassMetadata( MyEntity.class ) ).thenReturn( myEntityClassMetadata );
         when( sessionFactory.getCurrentSession() ).thenReturn( session );
         when( sessionFactory.getSettings() ).thenReturn( settings );
-        when( session.getFlushMode() ).thenReturn( FlushMode.AUTO );
+        // Hibernate 5: Session.getFlushMode() returns JPA FlushModeType; mock the Hibernate-typed variant.
+        when( session.getHibernateFlushMode() ).thenReturn( FlushMode.AUTO );
     }
 
     private static abstract class MyEntityProxy extends MyEntity implements HibernateProxy {

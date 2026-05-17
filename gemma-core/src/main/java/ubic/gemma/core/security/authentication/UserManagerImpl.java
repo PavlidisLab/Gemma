@@ -34,7 +34,11 @@ import org.springframework.security.access.vote.AuthenticatedVoter;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.AuthenticationTrustResolver;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.authentication.encoding.PasswordEncoder;
+// Spring Security 5 removed the salt-based PasswordEncoder (org.springframework.security.authentication.encoding)
+// in favour of the algorithm-internal-salt one in org.springframework.security.crypto.password. Existing user hashes
+// generated with the old encoder + username-as-salt will need a migration path (e.g., DelegatingPasswordEncoder)
+// before this can talk to a production database again — tracked as future renovation work.
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
@@ -106,7 +110,7 @@ public class UserManagerImpl implements UserManager {
 
         logger.debug( "Changing password for user '" + username + "'" );
 
-        u.setPassword( passwordEncoder.encodePassword( newPassword, username ) );
+        u.setPassword( passwordEncoder.encode( newPassword ) );
         u.setEnabled( false );
         u.setSignupToken( this.generateSignupToken( username ) );
         u.setSignupTokenDatestamp( new Date() );
@@ -134,7 +138,7 @@ public class UserManagerImpl implements UserManager {
     public UserDetailsImpl createUser( String username, String email, String password ) {
         Date now = new Date();
         String key = generateSignupToken( username );
-        String encodedPassword = passwordEncoder.encodePassword( password, username );
+        String encodedPassword = passwordEncoder.encode( password );
         UserDetailsImpl u = new UserDetailsImpl( encodedPassword, username, false, null, email, key, now );
         createUser( u );
         return u;
@@ -381,7 +385,7 @@ public class UserManagerImpl implements UserManager {
         logger.debug( "Changing password for user '" + username + "'" );
 
         User u = this.loadUser( username );
-        u.setPassword( passwordEncoder.encodePassword( newPassword, username ) );
+        u.setPassword( passwordEncoder.encode( newPassword ) );
         userService.update( u );
 
         SecurityContextHolder.getContext()

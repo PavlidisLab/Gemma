@@ -6,7 +6,8 @@ import org.apache.commons.lang3.stream.Streams;
 import org.hibernate.*;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.CriteriaImpl;
-import org.hibernate.internal.QueryImpl;
+// Hibernate 5: org.hibernate.internal.QueryImpl was replaced by AbstractProducedQuery in org.hibernate.query.internal.
+import org.hibernate.query.internal.AbstractProducedQuery;
 import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
 import ubic.gemma.core.util.ListUtils;
@@ -298,13 +299,12 @@ public class QueryUtils {
 
     @Nullable
     private static SessionImplementor getSession( Object queryOrCriteria ) {
-        if ( queryOrCriteria instanceof QueryImpl ) {
-            // it is package-private, so we have to use reflection to access it
-            Field field = ReflectionUtils.findField( QueryImpl.class, "session" );
-            ReflectionUtils.makeAccessible( field );
-            return ( SessionImplementor ) ReflectionUtils.getField( field, queryOrCriteria );
+        if ( queryOrCriteria instanceof AbstractProducedQuery ) {
+            // Hibernate 5: the session is accessible via the public producer accessor.
+            return ( SessionImplementor ) ( ( AbstractProducedQuery<?> ) queryOrCriteria ).getProducer();
         } else if ( queryOrCriteria instanceof CriteriaImpl ) {
-            return ( ( CriteriaImpl ) queryOrCriteria ).getSession();
+            // Hibernate 5: CriteriaImpl.getSession() returns SharedSessionContractImplementor; cast back.
+            return ( SessionImplementor ) ( ( CriteriaImpl ) queryOrCriteria ).getSession();
         } else {
             log.warn( "Could not obtain Hibernate session from query or criteria, cannot determine if setFetchSize() is supported." );
             return null;

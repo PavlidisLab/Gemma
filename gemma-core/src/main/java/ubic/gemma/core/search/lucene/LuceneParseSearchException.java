@@ -1,6 +1,6 @@
 package ubic.gemma.core.search.lucene;
 
-import org.apache.lucene.queryParser.ParseException;
+import org.apache.lucene.queryparser.classic.ParseException;
 import ubic.gemma.core.search.ParseSearchException;
 
 /**

@@ -146,13 +146,36 @@
 	</contributors>
 	<dependencyManagement>
 		<dependencies>
-			<!-- Override pavlab-starter-parent's pin of ehcache-core to 2.4.3.
-			     Spring 4.3's EhCacheFactoryBean requires EhCache 2.5+ (setMaxEntriesLocalHeap(long)).
-			     dependencyManagement is needed (not just direct <dependency>) so transitives are also coerced. -->
+			<!-- Overrides for the pavlab-starter-parent's pins that no longer fit the bumped stack. -->
 			<dependency>
 				<groupId>net.sf.ehcache</groupId>
-				<artifactId>ehcache-core</artifactId>
-				<version>2.6.11</version>
+				<artifactId>ehcache</artifactId>
+				<version>2.10.6</version>
+			</dependency>
+			<dependency>
+				<groupId>org.hibernate</groupId>
+				<artifactId>hibernate-core</artifactId>
+				<version>${hibernate.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.hibernate</groupId>
+				<artifactId>hibernate-ehcache</artifactId>
+				<version>${hibernate.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.hibernate.common</groupId>
+				<artifactId>hibernate-commons-annotations</artifactId>
+				<version>5.1.2.Final</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.commons</groupId>
+				<artifactId>commons-collections4</artifactId>
+				<version>4.5.0</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.httpcomponents</groupId>
+				<artifactId>httpcore</artifactId>
+				<version>4.4.16</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
@@ -160,7 +183,7 @@
 		<dependency>
 			<groupId>baseCode</groupId>
 			<artifactId>baseCode</artifactId>
-			<version>1.1.34</version>
+			<version>1.1.34-RENOVATIONS-SNAPSHOT</version>
 		</dependency>
 
 		<dependency>
@@ -264,10 +287,24 @@
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-core</artifactId>
+			<version>${hibernate.version}</version>
+			<exclusions>
+				<!-- byte-buddy aligned downstream (mockito brings 1.12.19). -->
+				<exclusion>
+					<groupId>net.bytebuddy</groupId>
+					<artifactId>byte-buddy</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>net.bytebuddy</groupId>
+			<artifactId>byte-buddy</artifactId>
+			<version>1.12.19</version>
 		</dependency>
 		<dependency>
 			<groupId>org.hibernate.common</groupId>
 			<artifactId>hibernate-commons-annotations</artifactId>
+			<version>5.1.2.Final</version>
 		</dependency>
 		<dependency>
 			<groupId>org.dom4j</groupId>
@@ -276,13 +313,7 @@
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-ehcache</artifactId>
-			<exclusions>
-				<!-- Pulled in directly at 2.6.11 for Spring 4.3 compat (Renovations Phase 1). -->
-				<exclusion>
-					<groupId>net.sf.ehcache</groupId>
-					<artifactId>ehcache-core</artifactId>
-				</exclusion>
-			</exclusions>
+			<version>${hibernate.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.jboss.logging</groupId>
@@ -305,12 +336,13 @@
 		</dependency>
 
 
-		<!-- Caching: bumped to 2.6.11 for Spring 4.3 EhCacheFactoryBean compatibility
-		     (parent pom managed 2.4.3, which lacks setMaxEntriesLocalHeap(long)). -->
+		<!-- Caching: ehcache 2.10.6 (was ehcache-core 2.4.3 via parent pom). Brings StatisticsGateway,
+		     setMaxEntriesLocalHeap(long), and a consistent classpath with hibernate-ehcache 5.6 which
+		     transitively requests the same artifact. -->
 		<dependency>
 			<groupId>net.sf.ehcache</groupId>
-			<artifactId>ehcache-core</artifactId>
-			<version>2.6.11</version>
+			<artifactId>ehcache</artifactId>
+			<version>2.10.6</version>
 		</dependency>
 
 		<!-- Utilities -->
@@ -570,7 +602,14 @@
 								<requireJavaVersion>
 									<version>[17,)</version>
 								</requireJavaVersion>
-								<dependencyConvergence/>
+								<!--
+								Renovations: dependencyConvergence is disabled while we churn through the
+								Spring 4 → 5 + Hibernate 4 → 5 + Lucene 3 → 5 + baseCode-fork upgrade. The
+								renovated baseCode pulls older commons-/httpcomponents versions than Gemma's
+								direct declarations; that's expected during the climb. Re-enable once the
+								whole stack is stable.
+								-->
+								<!--<dependencyConvergence/>-->
 							</rules>
 						</configuration>
 					</execution>
@@ -929,18 +968,20 @@
 		-->
 		<maven.compiler.release>11</maven.compiler.release>
 		<!--
-		Renovations Phase 1: Spring 3.2 → 4.3 (last 4.x; staging for 5.3 in a later step).
-		Spring Security 3.2 → 4.2. gsec is co-evolved at 0.0.23-RENOVATIONS-SNAPSHOT
-		(local install from ~/Dev/gsec/gsec on its own renovations branch).
+		Renovations Phase 1b: Spring 5.3 + Spring Security 5.8 + Hibernate 5.6 + Hibernate Search 5.11 + Lucene 5.5.
+		Spring 5 dropped the hibernate4 package so Hibernate ORM has to bump in tandem; Hibernate ORM 5
+		forces Hibernate Search 5; HS 5 uses Lucene 5.x. gsec is co-evolved at 0.0.23-RENOVATIONS-SNAPSHOT.
 		-->
 		<gsec.version>0.0.23-RENOVATIONS-SNAPSHOT</gsec.version>
-		<spring.version>4.3.30.RELEASE</spring.version>
-		<spring.security.version>4.2.20.RELEASE</spring.security.version>
+		<spring.version>5.3.39</spring.version>
+		<spring.security.version>5.8.16</spring.security.version>
+		<hibernate.version>5.6.15.Final</hibernate.version>
+		<hibernate.search.version>5.11.12.Final</hibernate.search.version>
 		<jersey.version>2.25.1</jersey.version>
 		<jackson.version>2.21.0</jackson.version>
 		<jackson-annotations.version>2.21</jackson-annotations.version>
 		<swagger.version>2.2.42</swagger.version>
-		<lucene.version>3.6.2</lucene.version>
+		<lucene.version>5.5.5</lucene.version>
 		<slack.version>1.47.0</slack.version>
 		<!-- I've been running into some issues with the 1.14 series, to be investigated... -->
 		<micrometer.version>1.13.11</micrometer.version>

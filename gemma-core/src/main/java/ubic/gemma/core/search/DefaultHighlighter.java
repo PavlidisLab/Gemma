@@ -3,7 +3,7 @@ package ubic.gemma.core.search;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Fieldable;
+import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.search.highlight.Formatter;
 import org.apache.lucene.search.highlight.InvalidTokenOffsetsException;
 import ubic.gemma.core.search.lucene.LuceneHighlighter;
@@ -46,8 +46,10 @@ public class DefaultHighlighter implements LuceneHighlighter, OntologyHighlighte
     @Override
     public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter highlighter, Analyzer analyzer ) {
         Map<String, String> highlights = new HashMap<>();
-        for ( Fieldable field : document.getFields() ) {
-            if ( !field.isTokenized() || field.isBinary() ) {
+        for ( IndexableField field : document.getFields() ) {
+            // Lucene 5: IndexableField replaces Fieldable. fieldType().tokenized() / binaryValue() != null
+            // give us the same semantics as the old isTokenized() / isBinary().
+            if ( !field.fieldType().tokenized() || field.binaryValue() != null ) {
                 continue;
             }
             try {

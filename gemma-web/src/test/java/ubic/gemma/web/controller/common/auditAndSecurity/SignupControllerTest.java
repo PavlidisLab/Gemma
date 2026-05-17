@@ -21,7 +21,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.security.authentication.encoding.PasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.annotation.DirtiesContext;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.web.controller.common.auditAndSecurity.recaptcha.ReCaptcha;
@@ -91,7 +91,7 @@ public class SignupControllerTest extends BaseWebIntegrationTest implements Init
                 .satisfies( u -> {
                     assertThat( u.getUserName() ).isEqualTo( uname );
                     assertThat( u.getEmail() ).isEqualTo( email );
-                    assertThat( u.getPassword() ).isEqualTo( passwordEncoder.encodePassword( password, uname ) );
+                    assertThat( u.getPassword() ).isEqualTo( passwordEncoder.encode( password ) );
                     assertThat( u.isEnabled() ).isFalse();
                 } );
     }
@@ -117,7 +117,7 @@ public class SignupControllerTest extends BaseWebIntegrationTest implements Init
                 .satisfies( u -> {
                     assertThat( u.getUserName() ).isEqualTo( uname );
                     assertThat( u.getEmail() ).isEqualTo( email );
-                    assertThat( u.getPassword() ).isEqualTo( passwordEncoder.encodePassword( password, uname ) );
+                    assertThat( u.getPassword() ).isEqualTo( passwordEncoder.encode( password ) );
                     assertThat( u.isEnabled() ).isFalse();
                 } );
     }

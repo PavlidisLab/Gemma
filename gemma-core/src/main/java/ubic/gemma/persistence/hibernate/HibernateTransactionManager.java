@@ -7,7 +7,7 @@ import org.hibernate.SessionFactory;
  *
  * @author poirigui
  */
-public class HibernateTransactionManager extends org.springframework.orm.hibernate4.HibernateTransactionManager {
+public class HibernateTransactionManager extends org.springframework.orm.hibernate5.HibernateTransactionManager {
 
     public HibernateTransactionManager( SessionFactory sessionFactory ) {
         super( sessionFactory );

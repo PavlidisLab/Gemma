@@ -31,7 +31,7 @@ public class DwrCallbackMatchers extends AbstractDwrReplyMatchers {
         }
 
         @Override
-        public <T> void assertValue( String content, Matcher<T> matcher ) {
+        public <T> void assertValue( String content, Matcher<? super T> matcher ) {
             try {
                 super.assertValue( "{\"data\":" + content + "}", matcher );
             } catch ( AssertionError e ) {

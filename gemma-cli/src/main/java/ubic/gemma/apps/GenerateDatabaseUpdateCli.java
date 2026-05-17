@@ -5,8 +5,9 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.tool.hbm2ddl.DatabaseMetadata;
-import org.hibernate.tool.hbm2ddl.SchemaUpdateScript;
+// Renovations: Hibernate 5 removed org.hibernate.tool.hbm2ddl.{DatabaseMetadata,SchemaUpdateScript} in favour of
+// the new org.hibernate.tool.schema.spi.* model driven from MetadataSources. doWork() below now no-ops; rewriting
+// it against the new API is deferred (production schemas come from sql/migrations/*.sql).
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.cli.util.AbstractCLI;
 import ubic.gemma.persistence.hibernate.H2Dialect;
@@ -93,24 +94,13 @@ public class GenerateDatabaseUpdateCli extends AbstractCLI {
 
     @Override
     protected void doWork() throws Exception {
-        List<String> sqlStatements;
-        if ( create ) {
-            sqlStatements = Arrays.asList( factory.getConfiguration().generateSchemaCreationScript( dialect ) );
-        } else {
-            DatabaseMetadata dm;
-            try ( Connection c = dataSource.getConnection() ) {
-                dm = new DatabaseMetadata( c, dialect, factory.getConfiguration() );
-            }
-            sqlStatements = factory.getConfiguration()
-                    .generateSchemaUpdateScriptList( dialect, dm )
-                    .stream()
-                    .map( SchemaUpdateScript::getScript )
-                    .collect( Collectors.toList() );
-        }
+        // Renovations: previously generated DDL via Configuration.generateSchemaCreationScript() and
+        // generateSchemaUpdateScriptList(), both removed in Hibernate 5. Until this is rewritten against the
+        // Hibernate 5 SchemaCreator/SchemaUpdate APIs (driven from MetadataSources), the command is a no-op.
+        // Production schemas come from gemma-core/src/main/resources/sql/migrations/*.sql.
         try ( PrintWriter writer = getWriter() ) {
-            for ( String sqlUpdate : sqlStatements ) {
-                writer.println( sqlUpdate + ";" );
-            }
+            writer.println( "-- GenerateDatabaseUpdateCli is disabled on the renovations branch." );
+            writer.println( "-- Use the versioned scripts in gemma-core/src/main/resources/sql/migrations/ instead." );
         }
     }
 

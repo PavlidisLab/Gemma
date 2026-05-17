@@ -3,7 +3,7 @@ package ubic.gemma.persistence.hibernate;
 import lombok.extern.apachecommons.CommonsLog;
 import net.sf.ehcache.Cache;
 import org.apache.commons.io.file.PathUtils;
-import org.hibernate.cache.ehcache.SingletonEhCacheRegionFactory;
+import org.hibernate.cache.ehcache.internal.SingletonEhcacheRegionFactory;
 import org.hibernate.cfg.Settings;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.metadata.ClassMetadata;
@@ -64,7 +64,7 @@ public class HibernateConfigTest extends BaseDatabaseTest {
         public LocalSessionFactoryBean sessionFactory( DataSource dataSource ) {
             LocalSessionFactoryBean factory = super.sessionFactory( dataSource );
             factory.getHibernateProperties()
-                    .setProperty( "hibernate.cache.region.factory_class", SingletonEhCacheRegionFactory.class.getName() );
+                    .setProperty( "hibernate.cache.region.factory_class", SingletonEhcacheRegionFactory.class.getName() );
             factory.getHibernateProperties()
                     .setProperty( "hibernate.cache.use_second_level_cache", "true" );
             return factory;

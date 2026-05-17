@@ -4,7 +4,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.stream.Streams;
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserType;
 import org.springframework.util.Assert;
@@ -67,7 +67,7 @@ public class CompressedStringListType implements UserType, ParameterizedType {
     }
 
     @Override
-    public List<String> nullSafeGet( ResultSet rs, String[] names, SessionImplementor session, Object owner ) throws HibernateException, SQLException {
+    public List<String> nullSafeGet( ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner ) throws HibernateException, SQLException {
         Assert.notNull( delimiter, "The 'delimiter' parameter must be set." );
         InputStream gzippedStream = rs.getBinaryStream( names[0] );
         if ( gzippedStream != null ) {
@@ -78,7 +78,7 @@ public class CompressedStringListType implements UserType, ParameterizedType {
     }
 
     @Override
-    public void nullSafeSet( PreparedStatement st, @Nullable Object value, int index, SessionImplementor session ) throws HibernateException, SQLException {
+    public void nullSafeSet( PreparedStatement st, @Nullable Object value, int index, SharedSessionContractImplementor session ) throws HibernateException, SQLException {
         Assert.notNull( delimiter, "The 'delimiter' parameter must be set." );
         if ( value != null ) {
             //noinspection unchecked

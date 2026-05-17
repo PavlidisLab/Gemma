@@ -17,14 +17,14 @@ import java.io.IOException;
 import java.util.Properties;
 
 /**
- * Reimplementation of {@link org.springframework.orm.hibernate4.LocalSessionFactoryBean} that supports resolving XSD
+ * Reimplementation of {@link org.springframework.orm.hibernate5.LocalSessionFactoryBean} that supports resolving XSD
  * schemas in the classpath.
  * <p>
  * It's been slimmed down to what we actually use in Gemma.
  *
  * @author poirigui
  * @see XSDEntityResolver
- * @see org.springframework.orm.hibernate4.LocalSessionFactoryBean
+ * @see org.springframework.orm.hibernate5.LocalSessionFactoryBean
  */
 public class LocalSessionFactoryBean
         implements FactoryBean<SessionFactory>, ResourceLoaderAware, InitializingBean, DisposableBean {
@@ -77,8 +77,12 @@ public class LocalSessionFactoryBean
     public void afterPropertiesSet() throws IOException {
         LocalSessionFactoryBuilder sfb = new LocalSessionFactoryBuilder( this.dataSource, this.resourcePatternResolver );
 
-        // this is the main difference with the original implementation
-        sfb.setEntityResolver( new XSDEntityResolver() );
+        // Hibernate 5 / Spring 5 hibernate5: setEntityResolver was removed from LocalSessionFactoryBuilder
+        // (the resolver mechanism moved into the BootstrapServiceRegistry/ServiceRegistry layer). XSDEntityResolver
+        // was originally added so hbm.xml DTDs could be resolved offline; Hibernate 5 ships its hbm XSDs in the JAR
+        // so the workaround is usually unnecessary. If offline DTD/XSD resolution becomes a real problem we'll need
+        // to plug a custom XsdLocator/SchemaLocator into MetadataBuilder.
+        // sfb.setEntityResolver( new XSDEntityResolver() );
 
         if ( this.configLocations != null ) {
             for ( Resource resource : this.configLocations ) {

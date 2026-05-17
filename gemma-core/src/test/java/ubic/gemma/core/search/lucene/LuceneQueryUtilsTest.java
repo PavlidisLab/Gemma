@@ -2,7 +2,7 @@ package ubic.gemma.core.search.lucene;
 
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.queryParser.QueryParser;
+import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
@@ -172,7 +172,7 @@ public class LuceneQueryUtilsTest {
      */
     @Test
     public void testQueryWithHyphen() throws SearchException {
-        Query query = parseSafely( SearchSettings.expressionExperimentSearch( "single-cell transcriptomics" ), new QueryParser( Version.LUCENE_36, "*", new EnglishAnalyzer( Version.LUCENE_36 ) ), null );
+        Query query = parseSafely( SearchSettings.expressionExperimentSearch( "single-cell transcriptomics" ), new QueryParser( "*", new EnglishAnalyzer() ), null );
         assertThat( query )
                 .asInstanceOf( type( BooleanQuery.class ) )
                 .extracting( BooleanQuery::clauses )

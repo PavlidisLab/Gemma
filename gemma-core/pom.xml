@@ -163,9 +163,16 @@
             <artifactId>lucene-core</artifactId>
             <version>${lucene.version}</version>
         </dependency>
+        <!-- Lucene 4+ split lucene-analyzers into per-family artifacts. -->
         <dependency>
             <groupId>org.apache.lucene</groupId>
-            <artifactId>lucene-analyzers</artifactId>
+            <artifactId>lucene-analyzers-common</artifactId>
+            <version>${lucene.version}</version>
+        </dependency>
+        <!-- Lucene 4+ split out the query parser into its own artifact (was bundled in lucene-core in 3.x). -->
+        <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-queryparser</artifactId>
             <version>${lucene.version}</version>
         </dependency>
         <dependency>
@@ -174,21 +181,11 @@
             <version>${lucene.version}</version>
         </dependency>
 
-        <!-- Hibernate Search (latest for Hibernate and Lucene) -->
+        <!-- Hibernate Search 5.11 — paired with Hibernate ORM 5.6 and Lucene 5.5. -->
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-search-orm</artifactId>
-            <version>4.4.6.Final</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.apache.avro</groupId>
-                    <artifactId>avro</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.solr</groupId>
-                    <artifactId>solr-analysis-extras</artifactId>
-                </exclusion>
-            </exclusions>
+            <version>${hibernate.search.version}</version>
         </dependency>
 
         <!-- Apache Commons -->

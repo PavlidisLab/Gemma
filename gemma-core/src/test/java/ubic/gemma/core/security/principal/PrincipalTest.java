@@ -25,7 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.authentication.encoding.PasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.core.Authentication;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
@@ -65,7 +65,7 @@ public class PrincipalTest extends BaseSpringContextTest {
         email = username + "@foo.foo";
         if ( !userManager.userExists( username ) ) {
 
-            String encodedPassword = passwordEncoder.encodePassword( pwd, username );
+            String encodedPassword = passwordEncoder.encode( pwd );
             UserDetailsImpl u = new UserDetailsImpl( encodedPassword, username, true, null, email, null, new Date() );
             userManager.createUser( u );
         }

@@ -30,6 +30,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadingAction;
+import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -161,12 +162,15 @@ public class AuditAdvice {
         // the entity being updated might not be fully initialized.
         // See https://github.com/PavlidisLab/Gemma/issues/1093 for an example of this happening.
         User user;
-        FlushMode previousFlushMode = sessionFactory.getCurrentSession().getFlushMode();
+        // Hibernate 5: Session.getFlushMode() now returns the JPA FlushModeType; getHibernateFlushMode()
+        // returns the Hibernate-typed FlushMode and setHibernateFlushMode() takes one. The old getFlushMode/
+        // setFlushMode(FlushMode) accessors were repurposed.
+        FlushMode previousFlushMode = sessionFactory.getCurrentSession().getHibernateFlushMode();
         try {
-            sessionFactory.getCurrentSession().setFlushMode( FlushMode.MANUAL );
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.MANUAL );
             user = userManager.getCurrentUser();
         } finally {
-            sessionFactory.getCurrentSession().setFlushMode( previousFlushMode );
+            sessionFactory.getCurrentSession().setHibernateFlushMode( previousFlushMode );
         }
         if ( user == null ) {
             AuditAdvice.log.info( String.format( "User could not be determined (anonymous?), audit will be skipped for %s.", signature ) );
@@ -207,7 +211,7 @@ public class AuditAdvice {
      */
     private void addCreateAuditEvent( Signature method, Auditable auditable, User user, Date date ) {
         addAuditEvent( method, auditable, AuditAction.CREATE, "", user, date );
-        cascadeAuditEvent( method, AuditAction.CREATE, auditable, user, date, CascadingAction.PERSIST );
+        cascadeAuditEvent( method, AuditAction.CREATE, auditable, user, date, CascadingActions.PERSIST );
     }
 
     private void addSaveAuditEvent( Signature method, Auditable auditable, User user, Date date ) {
@@ -215,10 +219,10 @@ public class AuditAdvice {
         CascadingAction cascadingAction;
         if ( auditable.getId() != null ) {
             auditAction = AuditAction.UPDATE;
-            cascadingAction = CascadingAction.MERGE;
+            cascadingAction = CascadingActions.MERGE;
         } else {
             auditAction = AuditAction.CREATE;
-            cascadingAction = CascadingAction.PERSIST;
+            cascadingAction = CascadingActions.PERSIST;
         }
         addAuditEvent( method, auditable, auditAction, "", user, date );
         // we only propagate a CREATE event through cascade for entities that were created in the save
@@ -241,7 +245,7 @@ public class AuditAdvice {
         addAuditEvent( method, auditable, AuditAction.UPDATE, "", user, date );
         // we only propagate a CREATE event through cascade for entities that were created in the update
         // Note: CREATE events are skipped if the audit trail already contains one
-        cascadeAuditEvent( method, AuditAction.CREATE, auditable, user, date, CascadingAction.SAVE_UPDATE );
+        cascadeAuditEvent( method, AuditAction.CREATE, auditable, user, date, CascadingActions.SAVE_UPDATE );
     }
 
     private void addDeleteAuditEvent( Signature method, Auditable auditable, User user, Date date ) {
@@ -249,7 +253,7 @@ public class AuditAdvice {
             throw new IllegalArgumentException( String.format( "Transient instance passed to delete auditing [%s on %s by %s]", method, auditable, user.getUserName() ) );
         }
         addAuditEvent( method, auditable, AuditAction.DELETE, "", user, date );
-        cascadeAuditEvent( method, AuditAction.DELETE, auditable, user, date, CascadingAction.DELETE );
+        cascadeAuditEvent( method, AuditAction.DELETE, auditable, user, date, CascadingActions.DELETE );
     }
 
     /**
