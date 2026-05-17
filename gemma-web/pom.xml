@@ -146,11 +146,12 @@
 			</exclusions>
 		</dependency>
 
-		<!-- RSS feeds (depends on spring-web version) -->
+		<!-- RSS feeds. Spring 4's AbstractRssFeedView uses com.rometools.rome (formerly rome:rome,
+		     which was relocated to com.rometools in ~2014). -->
 		<dependency>
-			<groupId>rome</groupId>
+			<groupId>com.rometools</groupId>
 			<artifactId>rome</artifactId>
-			<version>1.0</version>
+			<version>1.19.0</version>
 		</dependency>
 
 		<!-- AJAX -->

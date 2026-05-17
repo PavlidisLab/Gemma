@@ -101,9 +101,9 @@ public class CharacteristicTag extends HtmlEscapingAwareTag {
         return ( Map<String, ?> ) requireNonNull( pageContext.getAttribute( Constants.CONFIG, PageContext.APPLICATION_SCOPE ) );
     }
 
-    private String htmlEscape( @Nullable String s ) {
-        return isHtmlEscape() ? HtmlUtils.htmlEscape( s ) : s;
-    }
+    // Spring 4 added protected String htmlEscape(String) to HtmlEscapingAwareTag with equivalent
+    // logic, so the local override is removed (private methods aren't real overrides; Java
+    // rejects visibility-reduction).
 
     private String urlEncode( String s ) {
         try {

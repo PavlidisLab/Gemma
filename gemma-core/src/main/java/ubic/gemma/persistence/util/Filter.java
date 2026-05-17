@@ -100,7 +100,8 @@ public class Filter implements PropertyMapping {
                 return source -> ( T ) Enum.valueOf( targetType, source );
             }
         } );
-        conversionService.addConverter( Enum.class, String.class, ( Converter<Enum<?>, String> ) Enum::name );
+        //noinspection rawtypes
+        conversionService.addConverter( Enum.class, String.class, ( Converter<Enum, String> ) Enum::name );
     }
 
     /**

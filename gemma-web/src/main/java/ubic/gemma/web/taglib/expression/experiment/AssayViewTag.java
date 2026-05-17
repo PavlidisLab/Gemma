@@ -353,7 +353,5 @@ public class AssayViewTag extends HtmlEscapingAwareTag {
         assayToMaterial.put( "nullElement", material.getId().toString() );
     }
 
-    private String htmlEscape( String s ) {
-        return isHtmlEscape() ? HtmlUtils.htmlEscape( s ) : s;
-    }
+    // Spring 4's HtmlEscapingAwareTag now provides protected String htmlEscape(String).
 }

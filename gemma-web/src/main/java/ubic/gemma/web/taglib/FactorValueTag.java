@@ -21,7 +21,7 @@ public class FactorValueTag extends HtmlEscapingAwareTag {
             ct.setExternal( true );
             ct.setPageContext( pageContext );
             ct.setParent( getParent() );
-            ct.setHtmlEscape( isHtmlEscape() ? "true" : "false" );
+            ct.setHtmlEscape( isHtmlEscape() );
             return ct.doStartTagInternal();
         } else {
             TagWriter writer = new TagWriter( pageContext );

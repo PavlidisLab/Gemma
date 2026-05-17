@@ -28,7 +28,7 @@ import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.multipart.support.ByteArrayMultipartFileEditor;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.mvc.SimpleFormController;
+import ubic.gemma.web.compat.SimpleFormController; // FIXME: migrate to @Controller / @RequestMapping (Spring 4 removed the form-controller hierarchy)
 import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;

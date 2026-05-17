@@ -144,6 +144,18 @@
 			<name>Rachel Schwartz</name>
 		</contributor>
 	</contributors>
+	<dependencyManagement>
+		<dependencies>
+			<!-- Override pavlab-starter-parent's pin of ehcache-core to 2.4.3.
+			     Spring 4.3's EhCacheFactoryBean requires EhCache 2.5+ (setMaxEntriesLocalHeap(long)).
+			     dependencyManagement is needed (not just direct <dependency>) so transitives are also coerced. -->
+			<dependency>
+				<groupId>net.sf.ehcache</groupId>
+				<artifactId>ehcache-core</artifactId>
+				<version>2.6.11</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 	<dependencies>
 		<dependency>
 			<groupId>baseCode</groupId>
@@ -155,6 +167,13 @@
 			<groupId>pavlab</groupId>
 			<artifactId>gemma-gsec</artifactId>
 			<version>${gsec.version}</version>
+			<exclusions>
+				<!-- Force ehcache-core 2.6.11 (we declare it directly below for Spring 4.3 compat). -->
+				<exclusion>
+					<groupId>net.sf.ehcache</groupId>
+					<artifactId>ehcache-core</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<!-- Spring -->
@@ -257,6 +276,13 @@
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-ehcache</artifactId>
+			<exclusions>
+				<!-- Pulled in directly at 2.6.11 for Spring 4.3 compat (Renovations Phase 1). -->
+				<exclusion>
+					<groupId>net.sf.ehcache</groupId>
+					<artifactId>ehcache-core</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.jboss.logging</groupId>
@@ -279,10 +305,12 @@
 		</dependency>
 
 
-		<!-- Caching (version is dictated by hibernate-ehcache) -->
+		<!-- Caching: bumped to 2.6.11 for Spring 4.3 EhCacheFactoryBean compatibility
+		     (parent pom managed 2.4.3, which lacks setMaxEntriesLocalHeap(long)). -->
 		<dependency>
 			<groupId>net.sf.ehcache</groupId>
 			<artifactId>ehcache-core</artifactId>
+			<version>2.6.11</version>
 		</dependency>
 
 		<!-- Utilities -->
@@ -900,9 +928,14 @@
 		Bump this to 17 once Spring 5+ is in (Phase 1).
 		-->
 		<maven.compiler.release>11</maven.compiler.release>
-		<gsec.version>0.0.22</gsec.version>
-		<spring.version>3.2.18.RELEASE</spring.version>
-		<spring.security.version>3.2.10.RELEASE</spring.security.version>
+		<!--
+		Renovations Phase 1: Spring 3.2 → 4.3 (last 4.x; staging for 5.3 in a later step).
+		Spring Security 3.2 → 4.2. gsec is co-evolved at 0.0.23-RENOVATIONS-SNAPSHOT
+		(local install from ~/Dev/gsec/gsec on its own renovations branch).
+		-->
+		<gsec.version>0.0.23-RENOVATIONS-SNAPSHOT</gsec.version>
+		<spring.version>4.3.30.RELEASE</spring.version>
+		<spring.security.version>4.2.20.RELEASE</spring.security.version>
 		<jersey.version>2.25.1</jersey.version>
 		<jackson.version>2.21.0</jackson.version>
 		<jackson-annotations.version>2.21</jackson-annotations.version>

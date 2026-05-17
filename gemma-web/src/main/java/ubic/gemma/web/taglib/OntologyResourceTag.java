@@ -81,7 +81,5 @@ public class OntologyResourceTag extends HtmlEscapingAwareTag {
         return ontologyExternalLinks;
     }
 
-    private String htmlEscape( String s ) {
-        return isHtmlEscape() ? HtmlUtils.htmlEscape( s ) : s;
-    }
+    // Spring 4's HtmlEscapingAwareTag now provides protected String htmlEscape(String).
 }

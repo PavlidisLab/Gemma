@@ -23,7 +23,7 @@ public class OntologyHierarchyTag extends AbstractHtmlElementTag {
 
         ontologyResourceTag.setParent( this );
         ontologyResourceTag.setPageContext( this.pageContext );
-        ontologyResourceTag.setHtmlEscape( isHtmlEscape() ? "true" : "false" );
+        ontologyResourceTag.setHtmlEscape( isHtmlEscape() );
 
         // this is one of the rare case where a linked list is actually useful since we're going to be adding elements
         // in reverse.

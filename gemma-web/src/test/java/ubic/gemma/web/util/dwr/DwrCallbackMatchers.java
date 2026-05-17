@@ -21,7 +21,8 @@ public class DwrCallbackMatchers extends AbstractDwrReplyMatchers {
     private static final JsonPathExpectationsHelper jsonPathHelper = new JsonPathExpectationsHelper( "$.data" ) {
 
         @Override
-        public void assertValue( String responseContent, Object expectedValue ) throws ParseException {
+        public void assertValue( String responseContent, Object expectedValue ) {
+            // Spring 4: JsonPathExpectationsHelper.assertValue no longer declares throws ParseException.
             try {
                 super.assertValue( "{\"data\":" + responseContent + "}", expectedValue );
             } catch ( AssertionError e ) {
@@ -30,7 +31,7 @@ public class DwrCallbackMatchers extends AbstractDwrReplyMatchers {
         }
 
         @Override
-        public <T> void assertValue( String content, Matcher<T> matcher ) throws ParseException {
+        public <T> void assertValue( String content, Matcher<T> matcher ) {
             try {
                 super.assertValue( "{\"data\":" + content + "}", matcher );
             } catch ( AssertionError e ) {

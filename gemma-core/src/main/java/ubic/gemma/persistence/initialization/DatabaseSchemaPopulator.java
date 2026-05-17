@@ -39,7 +39,8 @@ public class DatabaseSchemaPopulator extends CompositeDatabasePopulator {
         }
         ResourceDatabasePopulator rdp = new ResourceDatabasePopulator() {
             @Override
-            public void populate( Connection connection ) throws SQLException {
+            public void populate( Connection connection ) {
+                // Spring 4: populate() no longer throws SQLException (uses ScriptException, unchecked).
                 log.info( "Populating ACLs, indices, additional tables, etc..." );
                 super.populate( connection );
             }
