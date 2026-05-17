@@ -11,11 +11,19 @@ Gemma's DAOs rely on. (We tried the JPA EMF + unwrap pattern first; it
 bootstraps but `getCurrentSession()` returns an unmanaged non-transactional
 session.) See `HibernateSessionFactoryBean.java` javadoc for the long form.
 
-37 DAO/service tests passing under Phase 2 (full set: see commit
-log; representatives include `ExpressionExperimentSetDaoTest`,
-`AbstractFilteringVoEnabledDaoTest`, `UserManagerTest`,
-`CharacteristicDaoTest`, `AclLinterServiceTest`, `GeneDaoTest`,
-`AuditEventDaoTest`, `UserDaoTest`).
+Tests passing under Phase 2 (this session): **~183 across the three
+exercised modules**:
+- gemma-core: 37 (DAO/service tests like `ExpressionExperimentSetDaoTest`,
+  `AbstractFilteringVoEnabledDaoTest`, `UserManagerTest`,
+  `CharacteristicDaoTest`, `AclLinterServiceTest`, `GeneDaoTest`,
+  `AuditEventDaoTest`, `UserDaoTest`)
+- gemma-cli: 41 (CLI infrastructure + Spring-context CLI tests like
+  `ProtocolAdderCliTest`, `DifferentialExpressionAnalysisCliTest`,
+  `RNASeqDataAddCliTest`, `BatchProcessingCliTest`)
+- gemma-rest: 105 / 1 fail (REST utility + Spring-context controller
+  tests like `OpenApiTest`, `AnnotationsWebServiceTest`,
+  `DatasetsWebServiceTest`, `WebApplicationExceptionMapperTest`,
+  arg-parsing tests)
 
 All 5 modules still install + test-compile green.
 
@@ -31,7 +39,8 @@ mvn -P fast -Denforcer.skip=true install -DskipTests=true:
 ## Session-4 commits (on `phase2`)
 
 ```
-<this commit>   Phase 2 Step 7 (round 2): bulk test fixes (MergeMode, BigInteger->Number, bitand, H2 bitwise)
+<this commit>   Phase 2 Step 7 (round 3): junit-vintage for gemma-rest; ~146 tests across cli+rest green
+e76e33bf4b      Phase 2 Step 7 (round 2): bulk test fixes (MergeMode, BigInteger->Number, bitand, H2 bitwise)
 6a9d20654c      Phase 2 Step 5a/7: native Hibernate bootstrap; first DAO tests green
 901effa053      Phase 2 Step 5a: Spring 6 JPA migration of SessionFactory wiring
 5ff67490aa      PHASE_2_HANDOFF.md: refresh for full mvn install green; next is Step 5a (JPA)
@@ -145,6 +154,33 @@ open.
   default DependencyInjection listener so `@Autowired` fields stayed
   null. Added `MERGE_WITH_DEFAULTS`. The test now runs but hits the
   next bug.
+
+### Step 7 round-3 fixes (this session, third push — gemma-cli + gemma-rest)
+
+- **`gemma-rest` ran 0 tests** before this push. Jersey 3's test
+  framework pulls JUnit 5 onto the classpath, so Surefire auto-picked
+  the `JUnitPlatformProvider`, but no `junit-vintage-engine` was on
+  the classpath — so JUnit 4 tests (which is what Gemma's REST tests
+  are) were invisible. Surefire silently reported `BUILD SUCCESS,
+  Tests run: 0`. Fixed by adding `org.junit.vintage:junit-vintage-engine`
+  to `gemma-rest/pom.xml` as a test dep.
+- **gemma-cli is clean**. 41 tests across `ProtocolAdderCliTest`,
+  `ProtocolDeleterCliTest`, `FactorValueMigratorServiceTest`,
+  `ArrayDesignMergeCliTest`, `ExternalDatabaseUpdaterCliTest`,
+  `NCBIGene2GOAssociationLoaderCLITest`,
+  `DifferentialExpressionAnalysisCliTest`, `FindObsoleteTermsCliTest`,
+  `ExpressionExperimentManipulatingCLITest`, `RNASeqDataAddCliTest`,
+  `BatchProcessingCliTest`, `GeoSingleCellDataDownloaderCliTest`,
+  `LoadSimpleExpressionDataCliTest`, `GeoGrabberCliTest`,
+  `FactorValueMigratorCLITest`, `MeterRegistryCliConfigurerTest` —
+  0 errors. The MergeMode bulk-fix from round 2 propagated.
+- **gemma-rest**: 105 tests, 1 failure (`DatasetsWebServiceTest` —
+  one Mockito interaction count is 2 when expected 1 in
+  `DatasetArgService.getResultsForSearchQuery`; likely a search-stub
+  side-effect from Step 2, not a Step 5a/7 regression). 0 errors.
+- **Note on CompletionGeneratorTest**: 1 test fails on macOS due to
+  bash 3.x missing `mapfile` — environmental, not Phase 2. Use
+  Homebrew bash if you need it green locally.
 
 ### Step 7 round-2 fixes (this session, second push)
 
