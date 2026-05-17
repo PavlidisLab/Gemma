@@ -24,7 +24,7 @@ public class H5Dataset implements AutoCloseable {
     private final long datasetId;
 
     private H5Dataset( long datasetId ) {
-        Assert.isTrue( datasetId != H5I_INVALID_HID );
+        Assert.isTrue( datasetId != H5I_INVALID_HID , "expected true");
         this.datasetId = datasetId;
     }
 

@@ -22,7 +22,7 @@ public class EnumArray implements Array<String> {
 
     public EnumArray( H5Dataset dataset ) {
         try ( H5Type type = dataset.getType() ) {
-            Assert.isTrue( type.getFundamentalType() == H5FundamentalType.ENUM );
+            Assert.isTrue( type.getFundamentalType() == H5FundamentalType.ENUM , "expected true");
             values = type.getMemberNames();
         }
         this.codes = dataset.toIntegerVector();

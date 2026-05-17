@@ -27,7 +27,7 @@ public class FactorValueOntologyUtils {
      * Obtain a suitable ontology ID for a given factor value.
      */
     public static String getUri( FactorValue factorValue ) {
-        Assert.notNull( factorValue.getId() );
+        Assert.notNull( factorValue.getId() , "must not be null");
         return getUri( factorValue.getId() );
     }
 
@@ -146,7 +146,7 @@ public class FactorValueOntologyUtils {
      * Create a mapping of annotation IDs to annotations for a FactorValue.
      */
     public static Map<String, Annotation> getAnnotationsById( FactorValue fv ) {
-        Assert.notNull( fv.getId() );
+        Assert.notNull( fv.getId() , "must not be null");
         Map<String, Annotation> result = new HashMap<>();
         long nextAvailableId = 1L;
         for ( Statement s : new TreeSet<>( fv.getCharacteristics() ) ) {

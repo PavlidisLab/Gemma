@@ -26,13 +26,20 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.stream.Streams;
 import org.apache.commons.lang3.time.StopWatch;
-import org.hibernate.*;
-import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Restrictions;
+import org.hibernate.CacheMode;
+import org.hibernate.NonUniqueResultException;
+import org.hibernate.FlushMode;
+import org.hibernate.Hibernate;
+import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
+import org.hibernate.ScrollableResults;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.query.NativeQuery;
+import org.hibernate.query.Query;
 import org.hibernate.type.CustomType;
-import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -226,31 +233,38 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public ExpressionExperiment find( ExpressionExperiment entity ) {
-
-        Criteria criteria = this.getSessionFactory().getCurrentSession().createCriteria( ExpressionExperiment.class );
-
+        String hql;
+        Object param;
         if ( entity.getAccession() != null ) {
-            criteria.add( Restrictions.eq( "accession", entity.getAccession() ) );
+            hql = "select ee from ExpressionExperiment ee where ee.accession = :v";
+            param = entity.getAccession();
         } else if ( entity.getShortName() != null ) {
-            criteria.add( Restrictions.eq( "shortName", entity.getShortName() ) );
+            hql = "select ee from ExpressionExperiment ee where ee.shortName = :v";
+            param = entity.getShortName();
         } else if ( entity.getName() != null ) {
-            criteria.add( Restrictions.eq( "name", entity.getName() ) );
+            hql = "select ee from ExpressionExperiment ee where ee.name = :v";
+            param = entity.getName();
         } else {
             throw new IllegalArgumentException( "At least one of accession, shortName or name must be non-null to find an ExpressionExperiment." );
         }
-
-        return ( ExpressionExperiment ) criteria.uniqueResult();
+        return ( ExpressionExperiment ) this.getSessionFactory().getCurrentSession()
+                .createQuery( hql )
+                .setParameter( "v", param )
+                .uniqueResult();
     }
 
     @Override
     public Collection<ExpressionExperiment> findByAccession( DatabaseEntry accession ) {
-        Criteria criteria = this.getSessionFactory().getCurrentSession().createCriteria( ExpressionExperiment.class );
-
         BusinessKey.checkKey( accession );
-        BusinessKey.attachCriteria( criteria, accession, "accession" );
-
         //noinspection unchecked
-        return criteria.list();
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select ee from ExpressionExperiment ee "
+                        + "join ee.accession a "
+                        + "join a.externalDatabase ed "
+                        + "where a.accession = :acc and ed.name = :dbName" )
+                .setParameter( "acc", accession.getAccession() )
+                .setParameter( "dbName", accession.getExternalDatabase().getName() )
+                .list();
     }
 
     @Override

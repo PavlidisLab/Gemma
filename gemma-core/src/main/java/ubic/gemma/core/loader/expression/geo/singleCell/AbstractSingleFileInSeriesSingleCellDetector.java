@@ -52,7 +52,7 @@ public abstract class AbstractSingleFileInSeriesSingleCellDetector extends Abstr
      */
     protected Path getDest( GeoSeries series ) {
         Assert.notNull( getDownloadDirectory(), "A download directory must be set." );
-        Assert.notNull( series.getGeoAccession() );
+        Assert.notNull( series.getGeoAccession() , "must not be null");
         return getDownloadDirectory().resolve( series.getGeoAccession() + extension );
     }
 

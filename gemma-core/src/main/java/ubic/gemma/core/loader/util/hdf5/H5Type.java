@@ -29,7 +29,7 @@ public class H5Type implements AutoCloseable {
     private final long typeId;
 
     H5Type( long typeId ) {
-        Assert.isTrue( typeId != HDF5Constants.H5I_INVALID_HID );
+        Assert.isTrue( typeId != HDF5Constants.H5I_INVALID_HID , "expected true");
         this.typeId = typeId;
     }
 
@@ -38,7 +38,7 @@ public class H5Type implements AutoCloseable {
     }
 
     public String[] getMemberNames() {
-        Assert.isTrue( H5Tget_class( typeId ) == HDF5Constants.H5T_ENUM );
+        Assert.isTrue( H5Tget_class( typeId ) == HDF5Constants.H5T_ENUM , "expected true");
         String[] members = new String[H5Tget_nmembers( typeId )];
         for ( int i = 0; i < members.length; i++ ) {
             members[i] = H5Tget_member_name( typeId, i );

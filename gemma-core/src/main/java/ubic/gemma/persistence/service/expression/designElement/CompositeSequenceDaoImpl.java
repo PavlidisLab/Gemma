@@ -21,11 +21,9 @@ package ubic.gemma.persistence.service.expression.designElement;
 
 import gemma.gsec.util.SecurityUtil;
 import org.apache.commons.lang3.time.StopWatch;
-import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.SessionFactory;
-import org.hibernate.criterion.Restrictions;
 import org.hibernate.type.StandardBasicTypes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -536,13 +534,13 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
         if ( compositeSequence.getName() == null )
             return null;
 
-        Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( CompositeSequence.class );
-
-        queryObject.add( Restrictions.eq( "name", compositeSequence.getName() ) );
-        queryObject.createCriteria( "arrayDesign" )
-                .add( Restrictions.eq( "name", compositeSequence.getArrayDesign().getName() ) );
-
-        return ( CompositeSequence ) queryObject.uniqueResult();
+        return ( CompositeSequence ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select cs from CompositeSequence cs "
+                        + "join cs.arrayDesign ad "
+                        + "where cs.name = :csName and ad.name = :adName" )
+                .setParameter( "csName", compositeSequence.getName() )
+                .setParameter( "adName", compositeSequence.getArrayDesign().getName() )
+                .uniqueResult();
     }
 
     /**

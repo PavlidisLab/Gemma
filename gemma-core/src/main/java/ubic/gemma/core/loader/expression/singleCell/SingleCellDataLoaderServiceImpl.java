@@ -75,7 +75,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     @Override
     @Transactional
     public QuantitationType load( ExpressionExperiment ee, ArrayDesign platform, SingleCellDataLoaderConfig config ) {
-        Assert.notNull( ee.getId() );
+        Assert.notNull( ee.getId() , "must not be null");
         Assert.isNull( config.getDataPath(), "An explicit path cannot be provided when detecting the data type automatically." );
         ee = expressionExperimentService.loadOrFail( ee.getId() );
         try ( SingleCellDataLoader loader = getLoader( ee, config ) ) {
@@ -88,7 +88,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     @Override
     @Transactional
     public QuantitationType load( ExpressionExperiment ee, ArrayDesign platform, SingleCellDataType dataType, SingleCellDataLoaderConfig config ) {
-        Assert.notNull( ee.getId() );
+        Assert.notNull( ee.getId() , "must not be null");
         ee = expressionExperimentService.loadOrFail( ee.getId() );
         if ( config.getDataPath() != null ) {
             log.info( "Loading single-cell data for " + ee + " from " + config.getDataPath() + "..." );
@@ -109,7 +109,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     @Override
     @Transactional
     public Collection<CellTypeAssignment> loadCellTypeAssignments( ExpressionExperiment ee, SingleCellDataLoaderConfig config ) {
-        Assert.notNull( ee.getId() );
+        Assert.notNull( ee.getId() , "must not be null");
         ee = expressionExperimentService.loadOrFail( ee.getId() );
         try ( SingleCellDataLoader loader = getLoader( ee, config ) ) {
             return loadCellTypeAssignments( loader, ee, config );
@@ -121,7 +121,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     @Override
     @Transactional
     public Collection<CellTypeAssignment> loadCellTypeAssignments( ExpressionExperiment ee, SingleCellDataType dataType, SingleCellDataLoaderConfig config ) {
-        Assert.notNull( ee.getId() );
+        Assert.notNull( ee.getId() , "must not be null");
         ee = expressionExperimentService.loadOrFail( ee.getId() );
         try ( SingleCellDataLoader loader = getLoader( ee, dataType, config ) ) {
             return loadCellTypeAssignments( loader, ee, config );
@@ -149,7 +149,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     @Override
     @Transactional
     public Collection<CellLevelCharacteristics> loadOtherCellLevelCharacteristics( ExpressionExperiment ee, SingleCellDataLoaderConfig config ) {
-        Assert.notNull( ee.getId() );
+        Assert.notNull( ee.getId() , "must not be null");
         ee = expressionExperimentService.loadOrFail( ee.getId() );
         try ( SingleCellDataLoader loader = getLoader( ee, config ) ) {
             return loadOtherCellLevelCharacteristics( loader, ee, config );
@@ -161,7 +161,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     @Override
     @Transactional
     public Collection<CellLevelCharacteristics> loadOtherCellLevelCharacteristics( ExpressionExperiment ee, SingleCellDataType dataType, SingleCellDataLoaderConfig config ) {
-        Assert.notNull( ee.getId() );
+        Assert.notNull( ee.getId() , "must not be null");
         ee = expressionExperimentService.loadOrFail( ee.getId() );
         try ( SingleCellDataLoader loader = getLoader( ee, dataType, config ) ) {
             return loadOtherCellLevelCharacteristics( loader, ee, config );
@@ -419,7 +419,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     }
 
     private Collection<CellLevelCharacteristics> loadOtherCellLevelCharacteristics( SingleCellDataLoader loader, SingleCellDimension dim, SingleCellDataLoaderConfig config ) {
-        Assert.isNull( dim.getId() );
+        Assert.isNull( dim.getId() , "must be null");
         try {
             return DescribableUtils.addAllByName( dim.getCellLevelCharacteristics(),
                     loader.getOtherCellLevelCharacteristics( dim ),

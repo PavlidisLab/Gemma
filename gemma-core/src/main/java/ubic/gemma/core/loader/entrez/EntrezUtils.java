@@ -121,8 +121,8 @@ public class EntrezUtils {
      * Replay a previous {@link #search(String, String, EntrezRetmode, String)} query.
      */
     public static URL search( String db, EntrezQuery query, EntrezRetmode retmode, int retstart, int retmax, @Nullable String apiKey ) {
-        Assert.isTrue( retstart >= 0 );
-        Assert.isTrue( retmax > 0 );
+        Assert.isTrue( retstart >= 0 , "expected true");
+        Assert.isTrue( retmax > 0 , "expected true");
         if ( retstart >= query.getTotalRecords() ) {
             throw new IndexOutOfBoundsException();
         }
@@ -140,8 +140,8 @@ public class EntrezUtils {
      * Summarize a previous {@link #search(String, String, EntrezRetmode, String)} query.
      */
     public static URL summary( String db, EntrezQuery query, EntrezRetmode retmode, int retstart, int retmax, @Nullable String apiKey ) {
-        Assert.isTrue( retstart >= 0 );
-        Assert.isTrue( retmax > 0 );
+        Assert.isTrue( retstart >= 0 , "expected true");
+        Assert.isTrue( retmax > 0 , "expected true");
         if ( retstart >= query.getTotalRecords() ) {
             throw new IndexOutOfBoundsException();
         }
@@ -169,8 +169,8 @@ public class EntrezUtils {
      * Retrieve the results of a previous {@link #search(String, String, EntrezRetmode, String)} query.
      */
     public static URL fetch( String db, EntrezQuery query, EntrezRetmode retmode, String rettype, int retstart, int retmax, @Nullable String apiKey ) {
-        Assert.isTrue( retstart >= 0 );
-        Assert.isTrue( retmax > 0 );
+        Assert.isTrue( retstart >= 0 , "expected true");
+        Assert.isTrue( retmax > 0 , "expected true");
         return createUrl( EFETCH
                 + "?db=" + urlEncode( db )
                 + "&query_key=" + urlEncode( query.getQueryId() )

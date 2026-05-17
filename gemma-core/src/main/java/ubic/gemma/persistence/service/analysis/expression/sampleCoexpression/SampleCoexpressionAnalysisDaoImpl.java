@@ -15,8 +15,6 @@
 package ubic.gemma.persistence.service.analysis.expression.sampleCoexpression;
 
 import org.hibernate.SessionFactory;
-import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionAnalysis;
@@ -55,9 +53,8 @@ class SampleCoexpressionAnalysisDaoImpl extends AbstractDao<SampleCoexpressionAn
     @Override
     public boolean existsByExperimentAnalyzed( ExpressionExperiment experimentAnalyzed ) {
         return ( Long ) getSessionFactory().getCurrentSession()
-                .createCriteria( SampleCoexpressionAnalysis.class )
-                .setProjection( Projections.rowCount() )
-                .add( Restrictions.eq( "experimentAnalyzed", experimentAnalyzed ) )
+                .createQuery( "select count(s) from SampleCoexpressionAnalysis s where s.experimentAnalyzed = :ee" )
+                .setParameter( "ee", experimentAnalyzed )
                 .uniqueResult() > 0L;
     }
 
@@ -65,8 +62,8 @@ class SampleCoexpressionAnalysisDaoImpl extends AbstractDao<SampleCoexpressionAn
     public Collection<SampleCoexpressionAnalysis> findByExperimentAnalyzed( ExpressionExperiment experimentAnalyzed ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
-                .createCriteria( SampleCoexpressionAnalysis.class )
-                .add( Restrictions.eq( "experimentAnalyzed", experimentAnalyzed ) )
+                .createQuery( "select s from SampleCoexpressionAnalysis s where s.experimentAnalyzed = :ee" )
+                .setParameter( "ee", experimentAnalyzed )
                 .list();
     }
 

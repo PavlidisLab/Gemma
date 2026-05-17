@@ -4,7 +4,7 @@ import lombok.Data;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.hibernate.CacheMode;
 import org.hibernate.NonUniqueResultException;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.BibliographicReference;

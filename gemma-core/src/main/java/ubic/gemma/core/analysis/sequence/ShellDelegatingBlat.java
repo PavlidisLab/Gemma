@@ -264,7 +264,7 @@ public class ShellDelegatingBlat implements Blat {
      * @throws IOException when there are IO problems.
      */
     public synchronized void startServer( BlattableGenome genome, boolean sensitive, boolean waitForFullInitialization ) throws IOException {
-        Assert.state( serverProcess == null || !serverProcess.isAlive() );
+        Assert.state( serverProcess == null || !serverProcess.isAlive() , "illegal state");
         if ( sensitive ) {
             // TODO: implement sensitive searches
             throw new UnsupportedOperationException( "Sensitive BLAT searches are not supported by this implementation." );

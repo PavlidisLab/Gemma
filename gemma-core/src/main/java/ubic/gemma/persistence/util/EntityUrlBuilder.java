@@ -269,7 +269,7 @@ public class EntityUrlBuilder {
         }
 
         public ExpressionExperimentWebUrl byShortName() {
-            Assert.isTrue( StringUtils.isNotBlank( entity.getShortName() ) );
+            Assert.isTrue( StringUtils.isNotBlank( entity.getShortName() ) , "expected true");
             return new ExpressionExperimentWebUrl( baseUrl, entity, entityPath, true, additionalQuery );
         }
 
@@ -530,7 +530,7 @@ public class EntityUrlBuilder {
         }
 
         public ArrayDesignWebUrl byShortName() {
-            Assert.isTrue( StringUtils.isNotBlank( entity.getShortName() ) );
+            Assert.isTrue( StringUtils.isNotBlank( entity.getShortName() ) , "expected true");
             this.byShortName = true;
             return this;
         }

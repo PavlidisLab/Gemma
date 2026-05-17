@@ -14,10 +14,8 @@
  */
 package ubic.gemma.persistence.service.common.description;
 
-import org.hibernate.Criteria;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.SessionFactory;
-import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -183,22 +181,14 @@ public class BibliographicReferenceDaoImpl
 
     @Override
     public BibliographicReference find( BibliographicReference bibliographicReference ) {
-
         BusinessKey.checkKey( bibliographicReference );
-        Criteria queryObject = this.getSessionFactory().getCurrentSession()
-                .createCriteria( BibliographicReference.class );
-
-        /*
-         * This syntax allows you to look at an association.
-         */
-        if ( bibliographicReference.getPubAccession() != null ) {
-            queryObject.createCriteria( "pubAccession" )
-                    .add( Restrictions.eq( "accession", bibliographicReference.getPubAccession().getAccession() ) );
-        } else {
+        if ( bibliographicReference.getPubAccession() == null ) {
             throw new NullPointerException( "PubAccession cannot be null" );
         }
-
-        return ( BibliographicReference ) queryObject.uniqueResult();
+        return ( BibliographicReference ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "from BibliographicReference b where b.pubAccession.accession = :acc" )
+                .setParameter( "acc", bibliographicReference.getPubAccession().getAccession() )
+                .uniqueResult();
     }
 
     @Override

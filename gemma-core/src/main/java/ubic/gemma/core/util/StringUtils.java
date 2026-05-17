@@ -159,7 +159,7 @@ public class StringUtils {
      * If the string already ends with the delimiter, the suffix is appended directly.
      */
     public static String appendWithDelimiter( @Nullable String s, String suffix, String delimiter ) {
-        Assert.notNull( suffix );
+        Assert.notNull( suffix , "must not be null");
         if ( s == null || s.isEmpty() ) {
             return suffix;
         } else if ( s.endsWith( delimiter ) ) {

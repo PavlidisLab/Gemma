@@ -23,7 +23,7 @@ import io.micrometer.core.annotation.Timed;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.io.file.PathUtils;
 import org.apache.commons.lang3.time.StopWatch;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;

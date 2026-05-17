@@ -181,7 +181,7 @@ public class SingleCellExpressionDataVectorUtils {
      * Obtain the data of a sample.
      */
     public static float[] getSampleDataAsFloats( SingleCellExpressionDataVector vector, FloatBuffer data, int sampleIndex, CellLevelCharacteristics cellLevelCharacteristics, int row ) {
-        Assert.isTrue( row >= -1 && row < cellLevelCharacteristics.getNumberOfCharacteristics() );
+        Assert.isTrue( row >= -1 && row < cellLevelCharacteristics.getNumberOfCharacteristics() , "expected true");
         int start = getSampleStart( vector, sampleIndex, 0 );
         int end = getSampleEnd( vector, sampleIndex, start );
         int[] dataIndices = vector.getDataIndices();
@@ -209,7 +209,7 @@ public class SingleCellExpressionDataVectorUtils {
      * Obtain the data of a sample.
      */
     public static double[] getSampleDataAsDoubles( SingleCellExpressionDataVector vector, DoubleBuffer data, int sampleIndex, CellLevelCharacteristics cellLevelCharacteristics, int row ) {
-        Assert.isTrue( row >= -1 && row < cellLevelCharacteristics.getNumberOfCharacteristics() );
+        Assert.isTrue( row >= -1 && row < cellLevelCharacteristics.getNumberOfCharacteristics() , "expected true");
         int start = getSampleStart( vector, sampleIndex, 0 );
         int end = getSampleEnd( vector, sampleIndex, start );
         int nnz = 0;
@@ -234,7 +234,7 @@ public class SingleCellExpressionDataVectorUtils {
     }
 
     public static int[] getSampleDataAsInts( SingleCellExpressionDataVector vector, IntBuffer data, int sampleIndex, CellLevelCharacteristics cellLevelCharacteristics, int row ) {
-        Assert.isTrue( row >= -1 && row < cellLevelCharacteristics.getNumberOfCharacteristics() );
+        Assert.isTrue( row >= -1 && row < cellLevelCharacteristics.getNumberOfCharacteristics() , "expected true");
         int start = getSampleStart( vector, sampleIndex, 0 );
         int end = getSampleEnd( vector, sampleIndex, start );
         int nnz = 0;
@@ -259,7 +259,7 @@ public class SingleCellExpressionDataVectorUtils {
     }
 
     public static long[] getSampleDataAsLongs( SingleCellExpressionDataVector vector, LongBuffer data, int sampleIndex, CellLevelCharacteristics cellLevelCharacteristics, int row ) {
-        Assert.isTrue( row >= -1 && row < cellLevelCharacteristics.getNumberOfCharacteristics() );
+        Assert.isTrue( row >= -1 && row < cellLevelCharacteristics.getNumberOfCharacteristics() , "expected true");
         int start = getSampleStart( vector, sampleIndex, 0 );
         int end = getSampleEnd( vector, sampleIndex, start );
         int nnz = 0;

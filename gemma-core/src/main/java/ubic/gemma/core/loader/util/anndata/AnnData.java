@@ -67,8 +67,8 @@ public class AnnData implements Closeable {
      */
     public List<String> getLayers() {
         if ( h5File.exists( "layers" ) ) {
-            Assert.isTrue( Objects.equals( h5File.getStringAttribute( "layers", "encoding-type" ), "dict" ) );
-            Assert.isTrue( h5File.hasAttribute( "layers", "encoding-type" ) );
+            Assert.isTrue( Objects.equals( h5File.getStringAttribute( "layers", "encoding-type" ), "dict" ) , "expected true");
+            Assert.isTrue( h5File.hasAttribute( "layers", "encoding-type" ) , "expected true");
             return h5File.getChildren( "layers" );
         } else {
             return Collections.emptyList();
@@ -79,8 +79,8 @@ public class AnnData implements Closeable {
      * Obtain a layer by name.
      */
     public Layer getLayer( String layerName ) {
-        Assert.isTrue( Objects.equals( h5File.getStringAttribute( "layers", "encoding-type" ), "dict" ) );
-        Assert.isTrue( h5File.hasAttribute( "layers", "encoding-type" ) );
+        Assert.isTrue( Objects.equals( h5File.getStringAttribute( "layers", "encoding-type" ), "dict" ) , "expected true");
+        Assert.isTrue( h5File.hasAttribute( "layers", "encoding-type" ) , "expected true");
         return new Layer( h5File, "layers/" + layerName );
     }
 

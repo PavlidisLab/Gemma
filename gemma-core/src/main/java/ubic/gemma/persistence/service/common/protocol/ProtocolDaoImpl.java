@@ -18,9 +18,7 @@
  */
 package ubic.gemma.persistence.service.common.protocol;
 
-import org.hibernate.Criteria;
 import org.hibernate.SessionFactory;
-import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.protocol.Protocol;
@@ -43,13 +41,15 @@ public class ProtocolDaoImpl extends AbstractDao<Protocol> implements ProtocolDa
 
     @Override
     public Protocol find( Protocol protocol ) {
-        Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( Protocol.class );
-        queryObject.add( Restrictions.eq( "name", protocol.getName() ) );
-
-        if ( protocol.getDescription() != null )
-            queryObject.add( Restrictions.eq( "description", protocol.getDescription() ) );
-
-        return ( Protocol ) queryObject.uniqueResult();
+        String hql = "select p from Protocol p where p.name = :name"
+                + ( protocol.getDescription() != null ? " and p.description = :desc" : "" );
+        org.hibernate.query.Query<?> q = this.getSessionFactory().getCurrentSession()
+                .createQuery( hql )
+                .setParameter( "name", protocol.getName() );
+        if ( protocol.getDescription() != null ) {
+            q.setParameter( "desc", protocol.getDescription() );
+        }
+        return ( Protocol ) q.uniqueResult();
     }
 
     @Override

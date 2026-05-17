@@ -2,8 +2,6 @@ package ubic.gemma.persistence.service.common.auditAndSecurity.curation;
 
 import gemma.gsec.util.SecurityUtil;
 import org.hibernate.SessionFactory;
-import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Restrictions;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.persister.entity.SingleTableEntityPersister;
 import org.springframework.util.Assert;
@@ -47,10 +45,9 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
     @Override
     public List<Long> loadTroubledIds() {
         //noinspection unchecked
-        return getSessionFactory().getCurrentSession().createCriteria( getElementClass() )
-                .createAlias( "curationDetails", "cd" )
-                .add( Restrictions.eq( "cd.troubled", true ) )
-                .setProjection( Projections.id() )
+        return getSessionFactory().getCurrentSession()
+                .createQuery( "select c.id from " + getElementClass().getSimpleName() + " c "
+                        + "join c.curationDetails cd where cd.troubled = true" )
                 .list();
     }
 

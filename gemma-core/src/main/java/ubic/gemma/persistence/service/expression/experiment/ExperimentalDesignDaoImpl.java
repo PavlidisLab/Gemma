@@ -19,7 +19,6 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import org.hibernate.SessionFactory;
-import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
@@ -41,8 +40,9 @@ public class ExperimentalDesignDaoImpl extends AbstractDao<ExperimentalDesign> i
 
     @Override
     public ExperimentalDesign find( ExperimentalDesign experimentalDesign ) {
-        return ( ExperimentalDesign ) this.getSessionFactory().getCurrentSession().createCriteria( ExperimentalDesign.class )
-                .add( Restrictions.eq( "name", experimentalDesign.getName() ) )
+        return ( ExperimentalDesign ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select ed from ExperimentalDesign ed where ed.name = :name" )
+                .setParameter( "name", experimentalDesign.getName() )
                 .uniqueResult();
     }
 

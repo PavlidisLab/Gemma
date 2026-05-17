@@ -294,7 +294,7 @@ public class DataVectorDescriptive {
     }
 
     public static int sum( int[] data, ScaleType scaleType ) {
-        Assert.isTrue( scaleType == ScaleType.COUNT );
+        Assert.isTrue( scaleType == ScaleType.COUNT , "expected true");
         int s = 0;
         for ( int d : data ) {
             s += d;
@@ -303,7 +303,7 @@ public class DataVectorDescriptive {
     }
 
     public static long sum( long[] data, ScaleType scaleType ) {
-        Assert.isTrue( scaleType == ScaleType.COUNT );
+        Assert.isTrue( scaleType == ScaleType.COUNT , "expected true");
         long s = 0;
         for ( long d : data ) {
             s += d;
@@ -476,14 +476,14 @@ public class DataVectorDescriptive {
     }
 
     public static double sampleVariance( int[] data, ScaleType scaleType ) {
-        Assert.isTrue( scaleType == ScaleType.COUNT );
+        Assert.isTrue( scaleType == ScaleType.COUNT , "expected true");
         DoubleArrayList d = new DoubleArrayList( int2double( data ) );
         // no need to use DescriptiveWithMissing for integer data
         return Descriptive.sampleVariance( d, Descriptive.mean( d ) );
     }
 
     public static double sampleVariance( long[] data, ScaleType scaleType ) {
-        Assert.isTrue( scaleType == ScaleType.COUNT );
+        Assert.isTrue( scaleType == ScaleType.COUNT , "expected true");
         DoubleArrayList d = new DoubleArrayList( long2double( data ) );
         // no need to use DescriptiveWithMissing for long data
         return Descriptive.sampleVariance( d, Descriptive.mean( d ) );

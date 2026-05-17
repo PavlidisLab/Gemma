@@ -21,13 +21,12 @@ package ubic.gemma.persistence.service.analysis.expression.diff;
 import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.time.StopWatch;
-import org.hibernate.*;
-import org.hibernate.criterion.Projection;
-import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Restrictions;
-import org.hibernate.sql.JoinType;
+import org.hibernate.Hibernate;
+import org.hibernate.NonUniqueResultException;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.query.Query;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.Type;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
@@ -59,20 +58,9 @@ import static ubic.gemma.persistence.util.QueryUtils.listByBatch;
 public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilteringVoEnabledDao<ExpressionAnalysisResultSet, DifferentialExpressionAnalysisResultSetValueObject>
         implements ExpressionAnalysisResultSetDao {
 
-    /**
-     * FIXME: this projection only selects the ID of the result set, which is subsequently fetched. It would be more
-     *        efficient to fetch all the necessary columns instead, but I don't know how to do that.
-     */
-    private final Projection rootEntityProjection;
-
     @Autowired
     public ExpressionAnalysisResultSetDaoImpl( SessionFactory sessionFactory ) {
         super( ExpressionAnalysisResultSet.class, sessionFactory );
-        rootEntityProjection = Projections.sqlGroupProjection(
-                "{alias}.ID",
-                "{alias}.ID",
-                new String[] { "ID" },
-                new Type[] { sessionFactory.getTypeHelper().entity( ExpressionAnalysisResultSet.class ) } );
     }
 
     @Override
@@ -177,34 +165,9 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
 
     @Override
     public Slice<DifferentialExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInLimit( @Nullable Collection<BioAssaySet> bioAssaySets, @Nullable Collection<DatabaseEntry> databaseEntries, @Nullable Filters filters, int offset, int limit, @Nullable Sort sort ) {
-        Criteria query = getFilteringCriteria( filters );
-        Criteria totalElementsQuery = getFilteringCriteria( filters );
-
-        if ( bioAssaySets != null ) {
-            query.add( Restrictions.in( "a.experimentAnalyzed", bioAssaySets ) );
-            totalElementsQuery.add( Restrictions.in( "a.experimentAnalyzed", bioAssaySets ) );
-        }
-
-        if ( databaseEntries != null ) {
-            query.add( Restrictions.in( "e.accession", databaseEntries ) );
-            totalElementsQuery.add( Restrictions.in( "e.accession", databaseEntries ) );
-        }
-
-        //noinspection unchecked
-        List<ExpressionAnalysisResultSet> data = query.setResultTransformer( Criteria.DISTINCT_ROOT_ENTITY )
-                .setFirstResult( offset )
-                .setMaxResults( limit )
-                .list();
-
-        Long totalElements = ( Long ) totalElementsQuery
-                .setProjection( Projections.countDistinct( "id" ) )
-                .uniqueResult();
-
-        for ( ExpressionAnalysisResultSet d : data ) {
-            thaw( d );
-        }
-
-        return new Slice<>( loadValueObjects( data ), sort, offset, limit, totalElements );
+        // Phase 2: this used the Hibernate Criteria + FilterCriteriaUtils / AclCriteriaUtils stack that was removed.
+        // Stubbed until the JPA-Criteria-based filtering machinery is reinstated. See PHASE_2_HANDOFF.md.
+        throw new UnsupportedOperationException( "Criteria-based filtering is temporarily unavailable for ExpressionAnalysisResultSet." );
     }
 
     @Override
@@ -426,42 +389,10 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
         return hist;
     }
 
-    @Override
-    protected Criteria getFilteringCriteria( @Nullable Filters filters ) {
-        Criteria query = this.getSessionFactory().getCurrentSession()
-                .createCriteria( ExpressionAnalysisResultSet.class )
-                .setProjection( rootEntityProjection )
-                // these two are necessary for ACL filtering, so we must use a (default) inner jointure
-                .createAlias( "analysis", "a" )
-                .createAlias( "analysis.experimentAnalyzed", "e" )
-                // if this is a subset, retrieve its source experiment
-                .createAlias( "analysis.experimentAnalyzed.sourceExperiment", "se", JoinType.LEFT_OUTER_JOIN )
-                // we need a left outer jointure so that we do not miss any result set that lacks one of these associations
-                // these aliases are necessary to resolve filterable properties
-                .createAlias( "analysis.experimentAnalyzed.accession", "ea", JoinType.LEFT_OUTER_JOIN )
-                .createAlias( "analysis.protocol", "p", JoinType.LEFT_OUTER_JOIN )
-                .createAlias( "analysis.subsetFactorValue", "sfv", JoinType.LEFT_OUTER_JOIN )
-                .createAlias( "analysis.subsetFactorValue.characteristics", "sfvc", JoinType.LEFT_OUTER_JOIN )
-                .createAlias( "baselineGroup", "b", JoinType.LEFT_OUTER_JOIN )
-                .createAlias( "baselineGroup.characteristics", "bc", JoinType.LEFT_OUTER_JOIN )
-                .createAlias( "baselineGroup.experimentalFactor", "bef", JoinType.LEFT_OUTER_JOIN )
-                .createAlias( "baselineGroup.measurement", "bm", JoinType.LEFT_OUTER_JOIN )
-                .createAlias( "pvalueDistribution", "pvd", JoinType.LEFT_OUTER_JOIN )
-                // these are used for filtering
-                .createAlias( "experimentalFactors", "ef", JoinType.LEFT_OUTER_JOIN )
-                .createAlias( "ef.factorValues", "fv", JoinType.LEFT_OUTER_JOIN );
-
-        // apply filtering
-        query.add( FilterCriteriaUtils.formRestrictionClause( filters ) );
-
-        // apply the ACL on the associated EE (or source experiment for EE subset)
-        // FIXME: would be nice to use COALESCE(se.id, e.id) instead
-        query.add( Restrictions.or(
-                AclCriteriaUtils.formAclRestrictionClause( "e.id", ExpressionExperiment.class ),
-                AclCriteriaUtils.formAclRestrictionClause( "se.id", ExpressionExperiment.class ) ) );
-
-        return query;
-    }
+    // Phase 2: the Hibernate Criteria-based filtering plumbing was removed. The
+    // FilterCriteriaUtils / AclCriteriaUtils helpers no longer exist, and this method's
+    // signature on the parent class also went away with the Criteria API. Reinstating a
+    // JPA-Criteria equivalent is tracked in PHASE_2_HANDOFF.md.
 
     @Override
     protected void configureFilterableProperties( FilterablePropertiesConfigurer configurer ) {

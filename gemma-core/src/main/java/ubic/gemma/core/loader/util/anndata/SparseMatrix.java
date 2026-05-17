@@ -34,7 +34,7 @@ public class SparseMatrix implements Matrix {
         this.shape = group.getAttribute( "shape" )
                 .map( H5Attribute::toIntegerVector )
                 .orElseThrow( () -> new IllegalArgumentException( "The sparse matrix does not have a shape attribute." ) );
-        Assert.isTrue( this.shape.length == 2 );
+        Assert.isTrue( this.shape.length == 2 , "expected true");
         this.indptr = group.getDataset( "indptr" ).toLongVector();
         int expectedIndptrLength = isCsr() ? shape[0] + 1 : shape[1] + 1;
         Assert.isTrue( indptr.length == expectedIndptrLength, "The 'indptr' dataset must contain " + expectedIndptrLength + " elements." );
@@ -42,8 +42,8 @@ public class SparseMatrix implements Matrix {
         long nnz = group.getDataset( "data" ).size();
         Assert.isTrue( indptr[expectedIndptrLength - 1] == nnz, "The last element of 'indptr' must be the number of non-zeroes." );
         Assert.isTrue( ArrayUtils.isSorted( indptr ), "The 'indptr' dataset must be sorted." );
-        Assert.isTrue( group.exists( "data" ) );
-        Assert.isTrue( group.exists( "indices" ) );
+        Assert.isTrue( group.exists( "data" ) , "expected true");
+        Assert.isTrue( group.exists( "indices" ) , "expected true");
     }
 
     /**

@@ -30,7 +30,7 @@ public class GeoMexSingleCellDataLoaderConfigurer extends AbstractMexSingleCellD
         sampleNames = new ArrayList<>();
         sampleDirs = new ArrayList<>();
         for ( GeoSample sample : series.getSamples() ) {
-            Assert.notNull( sample.getGeoAccession() );
+            Assert.notNull( sample.getGeoAccession() , "must not be null");
             Path sampleDir = mexDir.resolve( sample.getGeoAccession() );
             sampleNames.add( sample.getGeoAccession() );
             sampleDirs.add( sampleDir );

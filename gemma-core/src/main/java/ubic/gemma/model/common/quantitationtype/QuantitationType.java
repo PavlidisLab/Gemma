@@ -157,7 +157,7 @@ public class QuantitationType extends AbstractDescribable {
      * do.
      */
     public boolean isPreferred( @Nonnull Class<? extends DataVector> vectorType ) {
-        Assert.notNull( vectorType );
+        Assert.notNull( vectorType , "must not be null");
         if ( SingleCellExpressionDataVector.class.isAssignableFrom( vectorType ) ) {
             return getIsSingleCellPreferred();
         } else if ( RawExpressionDataVector.class.isAssignableFrom( vectorType ) ) {
@@ -173,7 +173,7 @@ public class QuantitationType extends AbstractDescribable {
      * Set the preferred status for a particular vector type.
      */
     public void setIsPreferred( boolean isPreferred, @Nonnull Class<? extends DataVector> vectorType ) {
-        Assert.notNull( vectorType );
+        Assert.notNull( vectorType , "must not be null");
         if ( SingleCellExpressionDataVector.class.isAssignableFrom( vectorType ) ) {
             setIsSingleCellPreferred( isPreferred );
         } else if ( RawExpressionDataVector.class.isAssignableFrom( vectorType ) ) {

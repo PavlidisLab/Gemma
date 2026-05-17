@@ -78,7 +78,7 @@ public class BatchEffectDetails {
             this.singleBatch = singleBatch;
         } else {
             // infoEvent is either null or a BatchInformationMissingEvent
-            Assert.isTrue( infoEvent == null || infoEvent instanceof BatchInformationMissingEvent );
+            Assert.isTrue( infoEvent == null || infoEvent instanceof BatchInformationMissingEvent , "expected true");
             this.hasBatchInformation = false;
             this.hasProblematicBatchInformation = false;
             this.hasSingletonBatches = false;
@@ -149,10 +149,10 @@ public class BatchEffectDetails {
      * @param variance variance explained by the component
      */
     public void setBatchEffectStatistics( double pVal, int i, double variance ) {
-        Assert.isTrue( pVal >= 0 );
-        Assert.isTrue( pVal <= 1 );
-        Assert.isTrue( i >= 1 );
-        Assert.isTrue( variance >= 0 );
+        Assert.isTrue( pVal >= 0 , "expected true");
+        Assert.isTrue( pVal <= 1 , "expected true");
+        Assert.isTrue( i >= 1 , "expected true");
+        Assert.isTrue( variance >= 0 , "expected true");
         this.hasBatchEffectStatistics = true;
         this.pvalue = pVal;
         this.component = i;

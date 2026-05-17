@@ -86,7 +86,7 @@ public class GenericMetadataSingleCellDataLoader extends AbstractDelegatingSingl
 
     public void setCellTypeAssignmentName( String cellTypeAssignmentName ) {
         Assert.notNull( cellTypeMetadataFile, "A cell type metadata file must be set to configure a name." );
-        Assert.isTrue( StringUtils.isNotBlank( cellTypeAssignmentName ) );
+        Assert.isTrue( StringUtils.isNotBlank( cellTypeAssignmentName ) , "expected true");
         this.cellTypeAssignmentName = cellTypeAssignmentName;
     }
 

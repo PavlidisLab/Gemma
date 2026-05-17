@@ -2,18 +2,14 @@ package ubic.gemma.persistence.util;
 
 import gemma.gsec.util.SecurityUtil;
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.QueryParameterException;
-import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.type.IntegerType;
 import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.security.acls.model.Permission;
 import org.springframework.util.Assert;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
-
-import java.util.Arrays;
 
 /**
  * Utilities for integrating ACL into {@link Query}.
@@ -201,8 +197,9 @@ public class AclQueryUtils {
      * @see #formAclRestrictionClause(String, Permission)
      */
     public static String formNativeAclRestrictionClause( SessionFactoryImplementor sessionFactoryImplementor, Permission permission ) {
-        SQLFunction bitwiseAnd = sessionFactoryImplementor.getSqlFunctionRegistry().findSQLFunction( "bitwise_and" );
-        String renderedMask = bitwiseAnd.render( new IntegerType(), Arrays.asList( ACE_ALIAS + ".MASK", permission.getMask() ), sessionFactoryImplementor );
+        // MySQL bitwise AND: (a & b). Gemma is MySQL-only via MySQL57Dialect, so we hard-code it instead of
+        // routing through the dialect's SqlFunctionRegistry (whose API changed in Hibernate 6).
+        String renderedMask = "(" + ACE_ALIAS + ".MASK & " + permission.getMask() + ")";
         //language=SQL
         if ( SecurityUtil.isUserAnonymous() ) {
             return " and (" + renderedMask + " <> 0 and " + ACE_ALIAS + ".SID_FK in (" + ANONYMOUS_SID_SQL + "))";

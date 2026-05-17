@@ -20,9 +20,12 @@ package ubic.gemma.persistence.service.genome;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
-import org.hibernate.Criteria;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import org.hibernate.Hibernate;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -532,14 +535,24 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     @Override
     public Gene find( Gene gene ) {
 
-        Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( Gene.class );
-
         BusinessKey.checkKey( gene );
 
-        BusinessKey.createQueryObject( queryObject, gene );
-
-        //noinspection unchecked,unchecked
-        List<Gene> results = queryObject.list();
+        org.hibernate.Session session = this.getSessionFactory().getCurrentSession();
+        CriteriaBuilder cb = session.getCriteriaBuilder();
+        CriteriaQuery<Gene> cq = cb.createQuery( Gene.class );
+        Root<Gene> root = cq.from( Gene.class );
+        List<Predicate> preds;
+        if ( gene.getId() != null ) {
+            preds = new ArrayList<>();
+            preds.add( cb.equal( root.get( "id" ), gene.getId() ) );
+        } else {
+            preds = BusinessKey.matches( cb, root, gene, true );
+        }
+        cq.select( root );
+        if ( !preds.isEmpty() ) {
+            cq.where( preds.toArray( new Predicate[0] ) );
+        }
+        List<Gene> results = session.createQuery( cq ).list();
         Gene result;
 
         if ( results.isEmpty() ) {

@@ -19,10 +19,7 @@
 
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
-import org.hibernate.Criteria;
 import org.hibernate.SessionFactory;
-import org.hibernate.criterion.CriteriaSpecification;
-import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.analysis.Investigation;
@@ -154,13 +151,10 @@ public class GeneDiffExMetaAnalysisDaoImpl extends AbstractDao<GeneDifferentialE
      */
     @Override
     public GeneDifferentialExpressionMetaAnalysisResult loadResult( Long idResult ) {
-
-        Criteria geneQueryMetaAnalysis = this.getSessionFactory().getCurrentSession()
-                .createCriteria( GeneDifferentialExpressionMetaAnalysisResult.class )
-                .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY )
-                .add( Restrictions.like( "id", idResult ) );
-
-        return ( GeneDifferentialExpressionMetaAnalysisResult ) geneQueryMetaAnalysis.list().iterator().next();
+        return ( GeneDifferentialExpressionMetaAnalysisResult ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct r from GeneDifferentialExpressionMetaAnalysisResult r where r.id = :id" )
+                .setParameter( "id", idResult )
+                .uniqueResult();
     }
 
     /**
@@ -168,13 +162,11 @@ public class GeneDiffExMetaAnalysisDaoImpl extends AbstractDao<GeneDifferentialE
      */
     @Override
     public GeneDifferentialExpressionMetaAnalysis loadWithResultId( Long idResult ) {
-
-        Criteria geneQueryMetaAnalysis = this.getSessionFactory().getCurrentSession()
-                .createCriteria( GeneDifferentialExpressionMetaAnalysis.class )
-                .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY ).createCriteria( "results" )
-                .add( Restrictions.like( "id", idResult ) );
-
-        return ( GeneDifferentialExpressionMetaAnalysis ) geneQueryMetaAnalysis.list().iterator().next();
+        return ( GeneDifferentialExpressionMetaAnalysis ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct a from GeneDifferentialExpressionMetaAnalysis a "
+                        + "join a.results r where r.id = :id" )
+                .setParameter( "id", idResult )
+                .uniqueResult();
     }
 
     @Override

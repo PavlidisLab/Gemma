@@ -188,7 +188,7 @@ class RowLevelFilter implements ExpressionDataFilter<ExpressionDataDoubleMatrix>
      * @param highCut the threshold, inclusive
      */
     public void setHighCutAsFraction( double highCut ) {
-        Assert.isTrue( Stats.isValidFraction( highCut ) );
+        Assert.isTrue( Stats.isValidFraction( highCut ) , "expected true");
         this.highCut = highCut;
         this.useHighAsFraction = true;
     }
@@ -205,7 +205,7 @@ class RowLevelFilter implements ExpressionDataFilter<ExpressionDataDoubleMatrix>
      * @param lowCut the threshold, inclusive
      */
     public void setLowCutAsFraction( double lowCut ) {
-        Assert.isTrue( Stats.isValidFraction( lowCut ) );
+        Assert.isTrue( Stats.isValidFraction( lowCut ) , "expected true");
         this.lowCut = lowCut;
         this.useLowAsFraction = true;
     }

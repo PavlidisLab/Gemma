@@ -384,7 +384,7 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
 
     public ExpressionDataDoubleMatrix( ExpressionDataDoubleMatrix sourceMatrix, @Nullable int[][] numberOfCells ) {
         super( sourceMatrix );
-        Assert.isTrue( numberOfCells == null || ( numberOfCells.length == sourceMatrix.rows() && Arrays.stream( numberOfCells ).allMatch( row -> row.length == sourceMatrix.columns() ) ) );
+        Assert.isTrue( numberOfCells == null || ( numberOfCells.length == sourceMatrix.rows() && Arrays.stream( numberOfCells ).allMatch( row -> row.length == sourceMatrix.columns() ) ) , "expected true");
         this.matrix = sourceMatrix.matrix;
         this.ranks = sourceMatrix.ranks;
         this.numberOfCells = numberOfCells;

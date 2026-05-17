@@ -18,9 +18,8 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
-import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -244,10 +243,7 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
 
     @Override
     public FactorValue find( FactorValue factorValue ) {
-        Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( FactorValue.class );
-        BusinessKey.checkKey( factorValue );
-        BusinessKey.createQueryObject( queryObject, factorValue );
-        return ( FactorValue ) queryObject.uniqueResult();
+        return BusinessKey.find( this.getSessionFactory().getCurrentSession(), factorValue );
     }
 
     @Override

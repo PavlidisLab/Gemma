@@ -89,7 +89,7 @@ public class SingleCellExpressionDataDoubleMatrix extends AbstractSingleCellExpr
                 "Number of columns in matrix must match the number of cell IDs in the single-cell dimension." );
         Assert.isTrue( matrix.numRows() == designElements.size(),
                 "Number of rows in matrix must match number of design elements." );
-        Assert.isTrue( quantitationType.getRepresentation() == PrimitiveType.DOUBLE );
+        Assert.isTrue( quantitationType.getRepresentation() == PrimitiveType.DOUBLE , "expected true");
         this.expressionExperiment = ee;
         this.quantitationType = quantitationType;
         this.singleCellDimension = dimension;

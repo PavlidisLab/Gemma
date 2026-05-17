@@ -21,9 +21,7 @@ package ubic.gemma.persistence.util;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.Criteria;
 import org.hibernate.Session;
-import org.hibernate.criterion.*;
 import org.springframework.util.Assert;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.common.Describable;
@@ -51,14 +49,25 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 
 import javax.annotation.Nullable;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.From;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 
 /**
  * Methods to test business-key-related issues on objects. The 'checkValidKey' methods can be used to check whether an
  * object has the required business key values filled in. An exception is thrown if they don't.
- * This class contains some important code that determines our rules for how entities are detected as being the same as
- * another (in queries from the database; this is on top of basic 'equals', but should be compatible).
+ * <p>
+ * Hibernate 6 port: the Criteria-based API has been replaced with JPA Criteria. Each entity type exposes a
+ * {@code matches(...)} helper that contributes predicates to a query the caller already built (so the caller stays
+ * in control of read-only/flush-mode hints), and a convenience {@code find(Session, X)} that wraps the whole thing.
+ * The {@code checkKey} / {@code checkValidKey} methods are unchanged.
  *
  * @author pavlidis
  */
@@ -66,361 +75,471 @@ public class BusinessKey {
 
     private static final Log log = LogFactory.getLog( BusinessKey.class.getName() );
 
-    public static void addRestrictions( Criteria queryObject, ArrayDesign arrayDesign ) {
+    // ===== ArrayDesign =====
 
-        /*
-         * Test whether ANY of the associated external references match any of the given external references.
-         */
+    @SuppressWarnings("unused") // public utility API
+    public static List<Predicate> matches( CriteriaBuilder cb, From<?, ArrayDesign> from, ArrayDesign arrayDesign ) {
+        List<Predicate> preds = new ArrayList<>();
         if ( arrayDesign.getPrimaryTaxon() != null && arrayDesign.getPrimaryTaxon().getId() != null ) {
-            queryObject.add( Restrictions.eq( "primaryTaxon", arrayDesign.getPrimaryTaxon() ) );
+            preds.add( cb.equal( from.get( "primaryTaxon" ), arrayDesign.getPrimaryTaxon() ) );
         }
 
-        if ( arrayDesign.getExternalReferences().size() != 0 ) {
-            Criteria externalRef = queryObject.createCriteria( "externalReferences" );
-            Disjunction disjunction = Restrictions.disjunction();
-            for ( DatabaseEntry databaseEntry : arrayDesign.getExternalReferences() ) {
-                disjunction.add( Restrictions.eq( "accession", databaseEntry.getAccession() ) );
-                // FIXME this should include the ExternalDatabase in the criteria.
+        if ( !arrayDesign.getExternalReferences().isEmpty() ) {
+            Join<ArrayDesign, DatabaseEntry> ext = from.join( "externalReferences" );
+            List<Predicate> ors = new ArrayList<>();
+            for ( DatabaseEntry de : arrayDesign.getExternalReferences() ) {
+                ors.add( cb.equal( ext.get( "accession" ), de.getAccession() ) );
             }
-            externalRef.add( disjunction );
-            return;
-        } else if ( arrayDesign.getAlternateNames().size() != 0 ) {
-            Criteria externalRef = queryObject.createCriteria( "alternateNames" );
-            Disjunction disjunction = Restrictions.disjunction();
-            for ( AlternateName alternateName : arrayDesign.getAlternateNames() ) {
-                disjunction.add( Restrictions.eq( "name", alternateName.getName() ) );
+            preds.add( cb.or( ors.toArray( new Predicate[0] ) ) );
+            // Note: original short-circuited here; we preserve that by skipping shortName/name fall-throughs
+            return preds;
+        } else if ( !arrayDesign.getAlternateNames().isEmpty() ) {
+            Join<ArrayDesign, AlternateName> alt = from.join( "alternateNames" );
+            List<Predicate> ors = new ArrayList<>();
+            for ( AlternateName an : arrayDesign.getAlternateNames() ) {
+                ors.add( cb.equal( alt.get( "name" ), an.getName() ) );
             }
-            externalRef.add( disjunction );
-            return;
+            preds.add( cb.or( ors.toArray( new Predicate[0] ) ) );
+            return preds;
         } else if ( arrayDesign.getShortName() != null ) {
-            // this might not be such a good idea, because we can edit the short name.
-            queryObject.add( Restrictions.eq( "shortName", arrayDesign.getShortName() ) );
+            preds.add( cb.equal( from.get( "shortName" ), arrayDesign.getShortName() ) );
         } else {
-            BusinessKey.addNameRestriction( queryObject, arrayDesign );
+            addNameRestriction( cb, from, arrayDesign, preds );
         }
 
-        if ( arrayDesign.getDesignProvider() != null && StringUtils
-                .isNotBlank( arrayDesign.getDesignProvider().getName() ) ) {
-            queryObject.createCriteria( "designProvider" )
-                    .add( Restrictions.eq( "name", arrayDesign.getDesignProvider().getName() ) );
+        if ( arrayDesign.getDesignProvider() != null
+                && StringUtils.isNotBlank( arrayDesign.getDesignProvider().getName() ) ) {
+            preds.add( cb.equal( from.join( "designProvider" ).get( "name" ),
+                    arrayDesign.getDesignProvider().getName() ) );
         }
-
+        return preds;
     }
 
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static void addRestrictions( Criteria queryObject, BioAssay bioAssay ) {
+    public static ArrayDesign find( Session session, ArrayDesign arrayDesign ) {
+        CriteriaBuilder cb = session.getCriteriaBuilder();
+        CriteriaQuery<ArrayDesign> cq = cb.createQuery( ArrayDesign.class );
+        Root<ArrayDesign> root = cq.from( ArrayDesign.class );
+        List<Predicate> preds = matches( cb, root, arrayDesign );
+        cq.select( root ).distinct( true );
+        if ( !preds.isEmpty() ) {
+            cq.where( preds.toArray( new Predicate[0] ) );
+        }
+        return session.createQuery( cq ).uniqueResult();
+    }
+
+    // ===== BioAssay =====
+
+    @SuppressWarnings("unused")
+    public static List<Predicate> matches( CriteriaBuilder cb, From<?, BioAssay> from, BioAssay bioAssay ) {
+        List<Predicate> preds = new ArrayList<>();
         if ( bioAssay.getId() != null ) {
-            queryObject.add( Restrictions.eq( "id", bioAssay.getId() ) );
+            preds.add( cb.equal( from.get( "id" ), bioAssay.getId() ) );
         } else if ( bioAssay.getAccession() != null ) {
-            BusinessKey.attachCriteria( queryObject, bioAssay.getAccession(), "accession" );
+            attachDatabaseEntry( cb, from.join( "accession" ), bioAssay.getAccession(), preds );
         }
-        queryObject.add( Restrictions.eq( "name", bioAssay.getName() ) );
+        preds.add( cb.equal( from.get( "name" ), bioAssay.getName() ) );
+        return preds;
     }
 
-    public static void addRestrictions( Criteria queryObject, BioMaterial bioMaterial ) {
+    public static BioAssay find( Session session, BioAssay bioAssay ) {
+        checkKey( bioAssay );
+        CriteriaBuilder cb = session.getCriteriaBuilder();
+        CriteriaQuery<BioAssay> cq = cb.createQuery( BioAssay.class );
+        Root<BioAssay> root = cq.from( BioAssay.class );
+        cq.select( root ).where( matches( cb, root, bioAssay ).toArray( new Predicate[0] ) );
+        return session.createQuery( cq ).uniqueResult();
+    }
 
+    // ===== BioMaterial =====
+
+    public static List<Predicate> matches( CriteriaBuilder cb, From<?, BioMaterial> from, BioMaterial bioMaterial ) {
+        List<Predicate> preds = new ArrayList<>();
         if ( bioMaterial.getName() != null ) {
-            queryObject.add( Restrictions.eq( "name", bioMaterial.getName() ) );
+            preds.add( cb.equal( from.get( "name" ), bioMaterial.getName() ) );
         }
-
         if ( bioMaterial.getExternalAccession() != null ) {
-            // this is not completely foolproof.
-            queryObject.createCriteria( "externalAccession" )
-                    .add( Restrictions.eq( "accession", bioMaterial.getExternalAccession().getAccession() ) );
+            preds.add( cb.equal( from.join( "externalAccession" ).get( "accession" ),
+                    bioMaterial.getExternalAccession().getAccession() ) );
         } else if ( StringUtils.isNotBlank( bioMaterial.getDescription() ) ) {
-            // The description is generally only filled in by Gemma, and contains the experiment short name.
-            queryObject.add( Restrictions.eq( "description", bioMaterial.getDescription() ) );
+            preds.add( cb.equal( from.get( "description" ), bioMaterial.getDescription() ) );
         }
-
         if ( bioMaterial.getSourceTaxon() != null ) {
-            queryObject.add( Restrictions.eq( "sourceTaxon", bioMaterial.getSourceTaxon() ) );
+            preds.add( cb.equal( from.get( "sourceTaxon" ), bioMaterial.getSourceTaxon() ) );
         }
-
+        return preds;
     }
 
-    /**
-     * Note: The finder has to do the additional checking for equality of sequence and/or database entry - we don't know
-     * until we get the sequences. Due to the following issues:
-     * <ul>
-     * <li>Sometimes the sequence in the database lacks the DatabaseEntry
-     * <li>Sometimes the old entry lacks the actual sequence (ATCG..)
-     * </ul>
-     * This means that we can't use those criteria up front. Instead we match by name and taxon. If those match, the
-     * caller has to sort through possible multiple results to find the correct one.
-     *
-     * @param bioSequence bio sequence
-     * @param queryObject query object
-     */
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static void addRestrictions( Criteria queryObject, BioSequence bioSequence ) {
+    public static BioMaterial find( Session session, BioMaterial bioMaterial ) {
+        CriteriaBuilder cb = session.getCriteriaBuilder();
+        CriteriaQuery<BioMaterial> cq = cb.createQuery( BioMaterial.class );
+        Root<BioMaterial> root = cq.from( BioMaterial.class );
+        List<Predicate> preds = matches( cb, root, bioMaterial );
+        cq.select( root );
+        if ( !preds.isEmpty() ) {
+            cq.where( preds.toArray( new Predicate[0] ) );
+        }
+        return session.createQuery( cq ).uniqueResult();
+    }
 
+    // ===== BioSequence =====
+
+    @SuppressWarnings("unused")
+    public static List<Predicate> matches( CriteriaBuilder cb, From<?, BioSequence> from, BioSequence bioSequence ) {
+        List<Predicate> preds = new ArrayList<>();
         if ( bioSequence.getId() != null ) {
-            queryObject.add( Restrictions.eq( "id", bioSequence.getId() ) );
-            return;
+            preds.add( cb.equal( from.get( "id" ), bioSequence.getId() ) );
+            return preds;
         }
-
         if ( StringUtils.isNotBlank( bioSequence.getName() ) ) {
-            BusinessKey.addNameRestriction( queryObject, bioSequence );
+            addNameRestriction( cb, from, bioSequence, preds );
         }
-
-        BusinessKey.attachCriteria( queryObject, bioSequence.getTaxon(), "taxon" );
-
+        attachTaxon( cb, from.join( "taxon" ), bioSequence.getTaxon(), preds );
+        return preds;
     }
 
-    private static Conjunction createStatementRestriction( Statement statement ) {
-        Conjunction queryObject = createCharacteristicRestriction( statement );
-
-        if ( statement.getPredicate() != null ) {
-            queryObject.add( createOntologyTermRestriction( statement.getPredicateUri(), statement.getPredicate(), "predicate" ) );
-            if ( statement.getObject() != null ) {
-                queryObject.add( createOntologyTermRestriction( statement.getObjectUri(), statement.getObject(), "object" ) );
-            }
+    public static BioSequence find( Session session, BioSequence bioSequence ) {
+        CriteriaBuilder cb = session.getCriteriaBuilder();
+        CriteriaQuery<BioSequence> cq = cb.createQuery( BioSequence.class );
+        Root<BioSequence> root = cq.from( BioSequence.class );
+        List<Predicate> preds = matches( cb, root, bioSequence );
+        cq.select( root );
+        if ( !preds.isEmpty() ) {
+            cq.where( preds.toArray( new Predicate[0] ) );
         }
-
-        if ( statement.getSecondPredicate() != null ) {
-            queryObject.add( createOntologyTermRestriction( statement.getSecondPredicateUri(), statement.getSecondPredicate(), "secondPredicate" ) );
-            if ( statement.getSecondObject() != null ) {
-                queryObject.add( createOntologyTermRestriction( statement.getSecondObjectUri(), statement.getSecondObject(), "secondObject" ) );
-            }
-        }
-
-        return queryObject;
-    }
-
-    public static Conjunction createCharacteristicRestriction( Characteristic characteristic ) {
-        Conjunction queryObject = Restrictions.conjunction();
-        if ( characteristic.getCategory() != null ) {
-            queryObject.add( createOntologyTermRestriction( characteristic.getCategoryUri(), characteristic.getCategory(), "category" ) );
-        }
-        queryObject.add( createOntologyTermRestriction( characteristic.getValueUri(), characteristic.getValue(), "value" ) );
-        return queryObject;
+        return session.createQuery( cq ).uniqueResult();
     }
 
     /**
-     * @see ubic.gemma.model.common.description.CharacteristicUtils#equals(String, String, String, String)
+     * Restricts a parent query so that property {@code propertyName} matches a BioSequence by business key.
+     * Used by e.g. BlatResult / BlatAssociation finders.
      */
-    private static Conjunction createOntologyTermRestriction( @Nullable String uri, String value, String propertyNamePrefix ) {
-        Conjunction queryObject = Restrictions.conjunction();
-        Assert.notNull( value, String.format( "An ontology term (for properties %s and %sUri) must at least have a value.",
-                propertyNamePrefix, propertyNamePrefix ) );
-        if ( uri != null ) {
-            queryObject.add( Restrictions.eq( propertyNamePrefix + "Uri", uri ) );
-        } else {
-            queryObject.add( Restrictions.eq( propertyNamePrefix, value ) );
-        }
-        return queryObject;
+    public static void attachBioSequence( CriteriaBuilder cb, From<?, ?> parent, String propertyName,
+            BioSequence bioSequence, List<Predicate> preds ) {
+        Join<?, BioSequence> j = parent.join( propertyName );
+        preds.addAll( matches( cb, j, bioSequence ) );
     }
 
-    @SuppressWarnings({ "WeakerAccess", "unused" }) // Possible external use
-    public static void addRestrictions( Criteria queryObject, Chromosome chromosome ) {
-        queryObject.add( Restrictions.eq( "name", chromosome.getName() ) );
-        BusinessKey.attachCriteria( queryObject, chromosome.getTaxon(), "taxon" );
+    // ===== Chromosome =====
+
+    @SuppressWarnings("unused")
+    public static List<Predicate> matches( CriteriaBuilder cb, From<?, Chromosome> from, Chromosome chromosome ) {
+        List<Predicate> preds = new ArrayList<>();
+        preds.add( cb.equal( from.get( "name" ), chromosome.getName() ) );
+        attachTaxon( cb, from.join( "taxon" ), chromosome.getTaxon(), preds );
         if ( chromosome.getAssemblyDatabase() != null ) {
-            BusinessKey.attachCriteria( queryObject, chromosome.getAssemblyDatabase() );
+            attachExternalDatabase( cb, from.join( "assemblyDatabase" ), chromosome.getAssemblyDatabase(), preds );
         }
         if ( chromosome.getSequence() != null ) {
-            BusinessKey.attachCriteria( queryObject, chromosome.getSequence(), "sequence" );
+            attachBioSequence( cb, from, "sequence", chromosome.getSequence(), preds );
         }
+        return preds;
     }
 
-    public static void addRestrictions( Criteria queryObject, Contact contact ) {
+    // ===== Contact =====
 
+    public static List<Predicate> matches( CriteriaBuilder cb, From<?, ? extends Contact> from, Contact contact ) {
+        List<Predicate> preds = new ArrayList<>();
         if ( contact instanceof User ) {
-            queryObject.add( Restrictions.eq( "userName", ( ( User ) contact ).getUserName() ) );
-            return;
+            preds.add( cb.equal( from.get( "userName" ), ( (User) contact ).getUserName() ) );
+            return preds;
         }
-
         if ( StringUtils.isNotBlank( contact.getEmail() ) ) {
-            // email is NOT unique.
-            queryObject.add( Restrictions.eq( "email", contact.getEmail() ) );
+            preds.add( cb.equal( from.get( "email" ), contact.getEmail() ) );
         }
-
-        if ( StringUtils.isNotBlank( contact.getName() ) )
-            queryObject.add( Restrictions.eq( "name", contact.getName() ) );
-
+        if ( StringUtils.isNotBlank( contact.getName() ) ) {
+            preds.add( cb.equal( from.get( "name" ), contact.getName() ) );
+        }
+        return preds;
     }
 
-    public static void addRestrictions( Criteria queryObject, ExperimentalFactor experimentalFactor ) {
+    public static Contact find( Session session, Contact contact ) {
+        CriteriaBuilder cb = session.getCriteriaBuilder();
+        CriteriaQuery<Contact> cq = cb.createQuery( Contact.class );
+        Root<Contact> root = cq.from( Contact.class );
+        List<Predicate> preds = matches( cb, root, contact );
+        cq.select( root );
+        if ( !preds.isEmpty() ) {
+            cq.where( preds.toArray( new Predicate[0] ) );
+        }
+        return session.createQuery( cq ).uniqueResult();
+    }
 
+    // ===== ExperimentalFactor =====
+
+    public static List<Predicate> matches( CriteriaBuilder cb, From<?, ExperimentalFactor> from,
+            ExperimentalFactor experimentalFactor ) {
+        List<Predicate> preds = new ArrayList<>();
         if ( experimentalFactor.getId() != null ) {
-            queryObject.add( Restrictions.eq( "id", experimentalFactor.getId() ) );
-            return;
+            preds.add( cb.equal( from.get( "id" ), experimentalFactor.getId() ) );
+            return preds;
         }
-
         if ( StringUtils.isNotBlank( experimentalFactor.getName() ) ) {
-            queryObject.add( Restrictions.eq( "name", experimentalFactor.getName() ) );
+            preds.add( cb.equal( from.get( "name" ), experimentalFactor.getName() ) );
         }
-
         if ( experimentalFactor.getCategory() != null ) {
-            BusinessKey.attachCriteria( queryObject, experimentalFactor.getCategory(), "category" );
+            Join<ExperimentalFactor, Characteristic> j = from.join( "category" );
+            addCharacteristicRestrictions( cb, j, experimentalFactor.getCategory(), preds );
         }
+        return preds;
     }
 
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static void addRestrictions( Criteria queryObject, Gene gene, boolean stricter ) {
-        if ( gene.getId() != null ) {
-            queryObject.add( Restrictions.eq( "id", gene.getId() ) );
-        } else if ( gene.getNcbiGeneId() != null ) {
-            /*
-             * These are unambiguous identifiers.
-             */
+    public static ExperimentalFactor find( Session session, ExperimentalFactor experimentalFactor ) {
+        CriteriaBuilder cb = session.getCriteriaBuilder();
+        CriteriaQuery<ExperimentalFactor> cq = cb.createQuery( ExperimentalFactor.class );
+        Root<ExperimentalFactor> root = cq.from( ExperimentalFactor.class );
+        List<Predicate> preds = matches( cb, root, experimentalFactor );
+        cq.select( root );
+        if ( !preds.isEmpty() ) {
+            cq.where( preds.toArray( new Predicate[0] ) );
+        }
+        return session.createQuery( cq ).uniqueResult();
+    }
 
+    // ===== FactorValue =====
+
+    public static FactorValue find( Session session, FactorValue factorValue ) {
+        checkKey( factorValue );
+        ExperimentalFactor ef = factorValue.getExperimentalFactor();
+        if ( ef == null ) {
+            throw new IllegalArgumentException( "Cannot find a factor value lacking an experimental factor." );
+        }
+        CriteriaBuilder cb = session.getCriteriaBuilder();
+        CriteriaQuery<FactorValue> cq = cb.createQuery( FactorValue.class );
+        Root<FactorValue> root = cq.from( FactorValue.class );
+        List<Predicate> preds = new ArrayList<>();
+
+        Join<FactorValue, ExperimentalFactor> efJoin = root.join( "experimentalFactor" );
+        preds.addAll( matches( cb, efJoin, ef ) );
+
+        if ( factorValue.getMeasurement() != null ) {
+            preds.add( cb.equal( root.get( "measurement" ), factorValue.getMeasurement() ) );
+        } else if ( !factorValue.getCharacteristics().isEmpty() ) {
+            preds.add( cb.equal( cb.size( root.get( "characteristics" ) ),
+                    factorValue.getCharacteristics().size() ) );
+            Join<FactorValue, Statement> stJoin = root.join( "characteristics" );
+            List<Predicate> ors = new ArrayList<>();
+            for ( Statement st : factorValue.getCharacteristics() ) {
+                ors.add( cb.and( buildStatementPredicates( cb, stJoin, st ).toArray( new Predicate[0] ) ) );
+            }
+            preds.add( cb.or( ors.toArray( new Predicate[0] ) ) );
+        } else if ( factorValue.getValue() != null ) {
+            preds.add( cb.equal( root.get( "value" ), factorValue.getValue() ) );
+        } else {
+            throw new IllegalArgumentException( "No suitable fields defined to find a matching FactorValue." );
+        }
+
+        cq.select( root ).distinct( true ).where( preds.toArray( new Predicate[0] ) );
+        return session.createQuery( cq ).uniqueResult();
+    }
+
+    // ===== Gene =====
+
+    public static List<Predicate> matches( CriteriaBuilder cb, From<?, Gene> from, Gene gene, boolean stricter ) {
+        List<Predicate> preds = new ArrayList<>();
+        if ( gene.getId() != null ) {
+            preds.add( cb.equal( from.get( "id" ), gene.getId() ) );
+        } else if ( gene.getNcbiGeneId() != null ) {
             if ( StringUtils.isNotBlank( gene.getPreviousNcbiGeneId() ) ) {
                 Collection<Integer> ncbiIds = new HashSet<>();
                 ncbiIds.add( gene.getNcbiGeneId() );
                 for ( String previousId : StringUtils.split( gene.getPreviousNcbiGeneId(), "," ) ) {
-                    /*
-                     * Check to see if the new gene used to use an id that is in the system. This is needed to deal with
-                     * the case where NCBI changes a gene id (which is common, from gene_history).
-                     */
                     try {
                         ncbiIds.add( Integer.parseInt( previousId ) );
                     } catch ( NumberFormatException e ) {
-                        BusinessKey.log.warn( "Previous Ncbi id wasn't parseable to an int: " + previousId );
+                        log.warn( "Previous Ncbi id wasn't parseable to an int: " + previousId );
                     }
                 }
-                queryObject.add( Restrictions.in( "ncbiGeneId", ncbiIds ) );
-
+                preds.add( from.get( "ncbiGeneId" ).in( ncbiIds ) );
             } else {
-                queryObject.add( Restrictions.eq( "ncbiGeneId", gene.getNcbiGeneId() ) );
+                preds.add( cb.equal( from.get( "ncbiGeneId" ), gene.getNcbiGeneId() ) );
             }
-
         } else if ( StringUtils.isNotBlank( gene.getOfficialSymbol() ) ) {
-            /*
-             * Second choice, but not unambiguous even within a taxon unless we know the physical location
-             */
-            queryObject.add( Restrictions.eq( "officialSymbol", gene.getOfficialSymbol() ) );
-
-            BusinessKey.attachCriteria( queryObject, gene.getTaxon(), "taxon" );
-
+            preds.add( cb.equal( from.get( "officialSymbol" ), gene.getOfficialSymbol() ) );
+            attachTaxon( cb, from.join( "taxon" ), gene.getTaxon(), preds );
             if ( stricter ) {
-                // Need either the official name AND the location to be unambiguous. But if we are already restricted on
-                // some other characteristic such as the gene, this causes too many false negatives. Typical case: NCBI
-                // vs. GoldenPath.
                 if ( StringUtils.isNotBlank( gene.getOfficialName() ) ) {
-                    queryObject.add( Restrictions.eq( "officialName", gene.getOfficialName() ) );
+                    preds.add( cb.equal( from.get( "officialName" ), gene.getOfficialName() ) );
                 }
-
                 if ( gene.getPhysicalLocation() != null ) {
-                    BusinessKey.attachCriteria( queryObject, gene.getPhysicalLocation(), "physicalLocation" );
+                    attachPhysicalLocation( cb, from.join( "physicalLocation" ), gene.getPhysicalLocation(), preds );
                 }
             }
         } else {
             throw new IllegalArgumentException( "No valid key " + gene );
         }
+        return preds;
     }
 
-    public static void addRestrictions( Criteria queryObject, Gene2GOAssociation gene2GOAssociation ) {
-        BusinessKey.attachCriteria( queryObject, gene2GOAssociation.getGene(), "gene" );
-        BusinessKey.attachCriteria( queryObject, gene2GOAssociation.getOntologyEntry() );
-    }
-
-    public static void addRestrictions( Criteria queryObject, Taxon taxon ) {
-        BusinessKey.checkValidKey( taxon );
-        BusinessKey.attachCriteria( queryObject, taxon );
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static void addRestrictions( DetachedCriteria queryObject, DatabaseEntry databaseEntry ) {
-        queryObject.add( Restrictions.eq( "accession", databaseEntry.getAccession() ) )
-                .createCriteria( "externalDatabase" )
-                .add( Restrictions.eq( "name", databaseEntry.getExternalDatabase().getName() ) );
-    }
-
-    /**
-     * Restricts the query to the provided BioSequence.
-     *
-     * @param bioSequence  The object used to create the criteria
-     * @param propertyName Often this will be 'bioSequence'
-     * @param queryObject  query object
-     */
-    public static void attachCriteria( Criteria queryObject, BioSequence bioSequence, String propertyName ) {
-        Criteria innerQuery = queryObject.createCriteria( propertyName );
-        BusinessKey.addRestrictions( innerQuery, bioSequence );
-    }
-
-    /**
-     * Restricts the query to the provided OntologyEntry.
-     *
-     * @param ontologyEntry The object used to create the criteria
-     * @param propertyName  Often this will be 'ontologyEntry'
-     * @param queryObject   query object
-     */
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static void attachCriteria( Criteria queryObject, Characteristic ontologyEntry, String propertyName ) {
-        Criteria queryObject1 = queryObject.createCriteria( propertyName );
-        queryObject1.add( createCharacteristicRestriction( ontologyEntry ) );
-    }
-
-    /**
-     * Restricts query to the given DatabaseEntry association
-     *
-     * @param databaseEntry to match
-     * @param propertyName  often "accession"
-     * @param queryObject   query object
-     */
-    public static void attachCriteria( Criteria queryObject, DatabaseEntry databaseEntry, String propertyName ) {
-        Criteria innerQuery = queryObject.createCriteria( propertyName );
-        BusinessKey.attachCriteria( innerQuery, databaseEntry );
-    }
-
-    /**
-     * Restricts the query to the provided Gene.
-     *
-     * @param queryObject  query object
-     * @param gene         gene
-     * @param propertyName property name
-     */
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static void attachCriteria( Criteria queryObject, Gene gene, String propertyName ) {
-        Criteria innerQuery = queryObject.createCriteria( propertyName );
-        BusinessKey.addRestrictions( innerQuery, gene, true );
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static void attachCriteria( Criteria queryObject, PhysicalLocation physicalLocation, String attributeName ) {
-        Criteria nestedCriteria = queryObject.createCriteria( attributeName );
-
-        if ( physicalLocation.getChromosome() == null ) {
-            throw new IllegalArgumentException();
-        }
-
-        if ( physicalLocation.getChromosome().getId() != null ) {
-            nestedCriteria.createCriteria( "chromosome" )
-                    .add( Restrictions.eq( "id", physicalLocation.getChromosome().getId() ) );
+    public static Gene find( Session session, Gene gene ) {
+        checkKey( gene );
+        CriteriaBuilder cb = session.getCriteriaBuilder();
+        CriteriaQuery<Gene> cq = cb.createQuery( Gene.class );
+        Root<Gene> root = cq.from( Gene.class );
+        List<Predicate> preds;
+        if ( gene.getId() != null ) {
+            preds = new ArrayList<>();
+            preds.add( cb.equal( root.get( "id" ), gene.getId() ) );
         } else {
-            // FIXME should add taxon to this.
-            nestedCriteria.createCriteria( "chromosome" )
-                    .add( Restrictions.eq( "name", physicalLocation.getChromosome().getName() ) );
+            preds = matches( cb, root, gene, true );
+        }
+        cq.select( root );
+        if ( !preds.isEmpty() ) {
+            cq.where( preds.toArray( new Predicate[0] ) );
+        }
+        return session.createQuery( cq ).uniqueResult();
+    }
+
+    // ===== Gene2GOAssociation =====
+
+    public static List<Predicate> matches( CriteriaBuilder cb, From<?, Gene2GOAssociation> from,
+            Gene2GOAssociation g2g ) {
+        List<Predicate> preds = new ArrayList<>();
+        Join<Gene2GOAssociation, Gene> geneJoin = from.join( "gene" );
+        preds.addAll( matches( cb, geneJoin, g2g.getGene(), true ) );
+        Join<Gene2GOAssociation, Characteristic> ontJoin = from.join( "ontologyEntry" );
+        addCharacteristicRestrictions( cb, ontJoin, g2g.getOntologyEntry(), preds );
+        return preds;
+    }
+
+    public static Gene2GOAssociation find( Session session, Gene2GOAssociation g2g ) {
+        checkValidKey( g2g );
+        CriteriaBuilder cb = session.getCriteriaBuilder();
+        CriteriaQuery<Gene2GOAssociation> cq = cb.createQuery( Gene2GOAssociation.class );
+        Root<Gene2GOAssociation> root = cq.from( Gene2GOAssociation.class );
+        cq.select( root ).where( matches( cb, root, g2g ).toArray( new Predicate[0] ) );
+        return session.createQuery( cq ).uniqueResult();
+    }
+
+    // ===== GeneProduct =====
+
+    public static GeneProduct find( Session session, GeneProduct geneProduct ) {
+        checkValidKey( geneProduct );
+        CriteriaBuilder cb = session.getCriteriaBuilder();
+        CriteriaQuery<GeneProduct> cq = cb.createQuery( GeneProduct.class );
+        Root<GeneProduct> root = cq.from( GeneProduct.class );
+        List<Predicate> preds = new ArrayList<>();
+
+        if ( geneProduct.getId() != null ) {
+            preds.add( cb.equal( root.get( "id" ), geneProduct.getId() ) );
+        } else if ( StringUtils.isNotBlank( geneProduct.getNcbiGi() ) ) {
+            preds.add( cb.equal( root.get( "ncbiGi" ), geneProduct.getNcbiGi() ) );
+        } else if ( StringUtils.isNotBlank( geneProduct.getName() ) ) {
+            preds.add( cb.equal( root.get( "name" ), geneProduct.getName() ) );
+            if ( geneProduct.getGene() != null ) {
+                Join<GeneProduct, Gene> geneJoin = root.join( "gene" );
+                preds.addAll( matches( cb, geneJoin, geneProduct.getGene(), false ) );
+            }
         }
 
-        if ( physicalLocation.getNucleotide() != null )
-            nestedCriteria.add( Restrictions.eq( "nucleotide", physicalLocation.getNucleotide() ) );
-
-        if ( physicalLocation.getNucleotideLength() != null )
-            nestedCriteria.add( Restrictions.eq( "nucleotideLength", physicalLocation.getNucleotideLength() ) );
-
+        cq.select( root ).distinct( true );
+        if ( !preds.isEmpty() ) {
+            cq.where( preds.toArray( new Predicate[0] ) );
+        }
+        return session.createQuery( cq ).uniqueResult();
     }
+
+    // ===== Taxon =====
+
+    public static List<Predicate> matches( CriteriaBuilder cb, From<?, Taxon> from, Taxon taxon ) {
+        checkValidKey( taxon );
+        List<Predicate> preds = new ArrayList<>();
+        attachTaxon( cb, from, taxon, preds );
+        return preds;
+    }
+
+    public static Taxon find( Session session, Taxon taxon ) {
+        checkValidKey( taxon );
+        CriteriaBuilder cb = session.getCriteriaBuilder();
+        CriteriaQuery<Taxon> cq = cb.createQuery( Taxon.class );
+        Root<Taxon> root = cq.from( Taxon.class );
+        List<Predicate> preds = new ArrayList<>();
+        attachTaxon( cb, root, taxon, preds );
+        cq.select( root );
+        if ( !preds.isEmpty() ) {
+            cq.where( preds.toArray( new Predicate[0] ) );
+        }
+        return session.createQuery( cq ).setReadOnly( true ).uniqueResult();
+    }
+
+    // ===== Characteristic =====
+
+    public static List<Predicate> matches( CriteriaBuilder cb, From<?, ? extends Characteristic> from,
+            Characteristic ontologyEntry ) {
+        List<Predicate> preds = new ArrayList<>();
+        addCharacteristicRestrictions( cb, from, ontologyEntry, preds );
+        return preds;
+    }
+
+    @SuppressWarnings("unused")
+    public static Characteristic find( Session session, Characteristic ontologyEntry ) {
+        checkKey( ontologyEntry );
+        CriteriaBuilder cb = session.getCriteriaBuilder();
+        CriteriaQuery<Characteristic> cq = cb.createQuery( Characteristic.class );
+        Root<Characteristic> root = cq.from( Characteristic.class );
+        List<Predicate> preds = new ArrayList<>();
+        addCharacteristicRestrictions( cb, root, ontologyEntry, preds );
+        cq.select( root );
+        if ( !preds.isEmpty() ) {
+            cq.where( preds.toArray( new Predicate[0] ) );
+        }
+        return session.createQuery( cq ).uniqueResult();
+    }
+
+    // ===== Unit =====
+
+    public static Unit find( Session session, Unit unit ) {
+        CriteriaBuilder cb = session.getCriteriaBuilder();
+        CriteriaQuery<Unit> cq = cb.createQuery( Unit.class );
+        Root<Unit> root = cq.from( Unit.class );
+        List<Predicate> preds = new ArrayList<>();
+        if ( unit.getId() != null ) {
+            preds.add( cb.equal( root.get( "id" ), unit.getId() ) );
+        } else if ( unit.getUnitNameCV() != null ) {
+            preds.add( cb.equal( root.get( "unitNameCV" ), unit.getUnitNameCV() ) );
+        }
+        cq.select( root );
+        if ( !preds.isEmpty() ) {
+            cq.where( preds.toArray( new Predicate[0] ) );
+        }
+        return session.createQuery( cq ).uniqueResult();
+    }
+
+    // ===== ExpressionExperimentSubSet =====
+
+    public static ExpressionExperimentSubSet find( Session session, ExpressionExperimentSubSet entity ) {
+        checkKey( entity );
+        CriteriaBuilder cb = session.getCriteriaBuilder();
+        CriteriaQuery<ExpressionExperimentSubSet> cq = cb.createQuery( ExpressionExperimentSubSet.class );
+        Root<ExpressionExperimentSubSet> root = cq.from( ExpressionExperimentSubSet.class );
+        List<Predicate> preds = new ArrayList<>();
+        preds.add( cb.equal( root.get( "sourceExperiment" ), entity.getSourceExperiment() ) );
+        preds.add( cb.equal( cb.size( root.get( "bioAssays" ) ), entity.getBioAssays().size() ) );
+        Join<ExpressionExperimentSubSet, BioAssay> baJoin = root.join( "bioAssays" );
+        preds.add( baJoin.get( "id" ).in( IdentifiableUtils.getIds( entity.getBioAssays() ) ) );
+        cq.select( root ).distinct( true ).where( preds.toArray( new Predicate[0] ) );
+        return session.createQuery( cq ).uniqueResult();
+    }
+
+    // ===== DatabaseEntry =====
 
     /**
-     * Restricts query to the given Taxon.
-     *
-     * @param propertyName often "taxon"
-     * @param queryObject  query object
-     * @param taxon        taxon
+     * Restrict a parent query so a DatabaseEntry-typed property at {@code propertyName} matches by business key.
+     * Used by callers that build a query on a different entity referencing the DatabaseEntry.
      */
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static void attachCriteria( Criteria queryObject, Taxon taxon, String propertyName ) {
-        Criteria innerQuery = queryObject.createCriteria( propertyName );
-        BusinessKey.attachCriteria( innerQuery, taxon );
+    public static void attachDatabaseEntry( CriteriaBuilder cb, From<?, ?> parent, String propertyName,
+            DatabaseEntry databaseEntry, List<Predicate> preds ) {
+        Join<?, DatabaseEntry> j = parent.join( propertyName );
+        attachDatabaseEntry( cb, j, databaseEntry, preds );
     }
 
-    @SuppressWarnings({ "WeakerAccess", "unused" }) // Possible external use
-    public static void attachCriteria( DetachedCriteria queryObject, DatabaseEntry databaseEntry,
-            String attributeName ) {
-        DetachedCriteria externalRef = queryObject.createCriteria( attributeName );
-        BusinessKey.addRestrictions( externalRef, databaseEntry );
+    private static void attachDatabaseEntry( CriteriaBuilder cb, From<?, DatabaseEntry> from,
+            DatabaseEntry databaseEntry, List<Predicate> preds ) {
+        preds.add( cb.equal( from.get( "accession" ), databaseEntry.getAccession() ) );
+        preds.add( cb.equal( from.join( "externalDatabase" ).get( "name" ),
+                databaseEntry.getExternalDatabase().getName() ) );
     }
+
+    // ===== checkKey / checkValidKey (unchanged) =====
 
     public static void checkKey( BibliographicReference bibliographicReference ) {
         if ( bibliographicReference == null || bibliographicReference.getPubAccession() == null
@@ -430,7 +549,7 @@ public class BusinessKey {
         }
     }
 
-    @SuppressWarnings("WeakerAccess") // Consistency
+    @SuppressWarnings("WeakerAccess")
     public static void checkKey( Characteristic ontologyEntry ) {
         if ( ontologyEntry.getValue() == null )
             throw new IllegalArgumentException();
@@ -449,7 +568,7 @@ public class BusinessKey {
         if ( StringUtils.isBlank( accession.getAccession() ) ) {
             throw new IllegalArgumentException( accession + " did not have an accession" );
         }
-        BusinessKey.checkKey( accession.getExternalDatabase() );
+        checkKey( accession.getExternalDatabase() );
     }
 
     public static void checkKey( DesignElementDataVector designElementDataVector ) {
@@ -460,7 +579,7 @@ public class BusinessKey {
         }
     }
 
-    @SuppressWarnings("WeakerAccess") // Consistency
+    @SuppressWarnings("WeakerAccess")
     public static void checkKey( ExternalDatabase externalDatabase ) {
         if ( externalDatabase.getId() != null )
             return;
@@ -470,7 +589,8 @@ public class BusinessKey {
     }
 
     public static void checkKey( FactorValue factorValue ) {
-        if ( factorValue.getMeasurement() == null && factorValue.getCharacteristics().isEmpty() && factorValue.getValue() == null ) {
+        if ( factorValue.getMeasurement() == null && factorValue.getCharacteristics().isEmpty()
+                && factorValue.getValue() == null ) {
             throw new IllegalArgumentException(
                     "FactorValue must have a value (or associated measurement or characteristics)." );
         }
@@ -492,9 +612,29 @@ public class BusinessKey {
         }
     }
 
+    private static void checkKey( BioAssay bioAssay ) {
+        if ( bioAssay.getId() == null && bioAssay.getAccession() == null ) {
+            throw new IllegalArgumentException( "Bioassay must have id or accession" );
+        }
+    }
+
+    public static void checkKey( ExpressionExperimentSubSet entity ) {
+        if ( entity.getBioAssays().isEmpty() ) {
+            throw new IllegalArgumentException( "Subset must have bioassays" );
+        }
+        if ( entity.getSourceExperiment() == null || entity.getSourceExperiment().getId() == null ) {
+            throw new IllegalArgumentException( "Subset must have persistent sourceExperiment" );
+        }
+        for ( BioAssay ba : entity.getBioAssays() ) {
+            if ( ba.getId() == null ) {
+                throw new IllegalArgumentException( "Subset must be made from persistent bioassays." );
+            }
+        }
+    }
+
     public static void checkValidKey( ArrayDesign arrayDesign ) {
         if ( arrayDesign == null || ( StringUtils.isBlank( arrayDesign.getName() ) && StringUtils
-                .isBlank( arrayDesign.getShortName() ) && arrayDesign.getExternalReferences().size() == 0 ) ) {
+                .isBlank( arrayDesign.getShortName() ) && arrayDesign.getExternalReferences().isEmpty() ) ) {
             throw new IllegalArgumentException( arrayDesign + " did not have a valid key" );
         }
     }
@@ -505,12 +645,12 @@ public class BusinessKey {
         }
     }
 
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
+    @SuppressWarnings({ "unused", "WeakerAccess" })
     public static void checkValidKey( Chromosome chromosome ) {
         if ( StringUtils.isBlank( chromosome.getName() ) ) {
             throw new IllegalArgumentException( "Chromosome did not have a valid key" );
         }
-        BusinessKey.checkValidKey( chromosome.getTaxon() );
+        checkValidKey( chromosome.getTaxon() );
     }
 
     public static void checkValidKey( DatabaseEntry databaseEntry ) {
@@ -526,7 +666,7 @@ public class BusinessKey {
         }
     }
 
-    @SuppressWarnings("WeakerAccess") // Consistency
+    @SuppressWarnings("WeakerAccess")
     public static void checkValidKey( Gene gene ) {
         if ( gene == null || ( gene.getNcbiGeneId() == null && ( StringUtils.isBlank( gene.getOfficialSymbol() )
                 || gene.getTaxon() == null || StringUtils.isBlank( gene.getOfficialName() ) ) ) ) {
@@ -536,26 +676,23 @@ public class BusinessKey {
     }
 
     public static void checkValidKey( Gene2GOAssociation gene2GOAssociation ) {
-        BusinessKey.checkValidKey( gene2GOAssociation.getGene() );
+        checkValidKey( gene2GOAssociation.getGene() );
     }
 
     public static void checkValidKey( GeneProduct geneProduct ) {
         if ( geneProduct.getId() != null )
             return;
 
-        boolean ok = false;
-
-        if ( StringUtils.isNotBlank( geneProduct.getNcbiGi() ) || StringUtils.isNotBlank( geneProduct.getName() ) )
-            ok = true;
+        boolean ok = StringUtils.isNotBlank( geneProduct.getNcbiGi() )
+                || StringUtils.isNotBlank( geneProduct.getName() );
 
         if ( !ok ) {
             throw new IllegalArgumentException( "GeneProduct did not have a valid key - requires name or NCBI GI" );
         }
 
         if ( geneProduct.getGene() != null ) {
-            BusinessKey.checkKey( geneProduct.getGene() );
+            checkKey( geneProduct.getGene() );
         }
-
     }
 
     public static void checkValidKey( Taxon taxon ) {
@@ -571,207 +708,109 @@ public class BusinessKey {
         }
     }
 
-    public static void createQueryObject( Criteria queryObject, FactorValue factorValue ) {
+    // ===== private helpers =====
 
-        ExperimentalFactor ef = factorValue.getExperimentalFactor();
-
-        if ( ef == null )
-            throw new IllegalArgumentException( "Cannot find a factor value lacking an experimental factor." );
-
-        Criteria innerQuery = queryObject.createCriteria( "experimentalFactor" );
-        BusinessKey.addRestrictions( innerQuery, ef );
-        if ( factorValue.getMeasurement() != null ) {
-            queryObject.add( Restrictions.eq( "measurement", factorValue.getMeasurement() ) );
-        } else if ( !factorValue.getCharacteristics().isEmpty() ) {
-            /*
-             * All the characteristics have to match ones in the result, and the result cannot have any extras. In other
-             * words there has to be a one-to-one match between the characteristics.
-             */
-
-            // this takes care of the size check
-            queryObject.add( Restrictions.sizeEq( "characteristics", factorValue.getCharacteristics().size() ) );
-
-            // now the equivalence.
-            Criteria characteristicsCriteria = queryObject.createCriteria( "characteristics" );
-
-            /*
-             * Note that this isn't exactly correct, but it should work okay: "If all the characteristics in the
-             * candidate are also in the query", along with the size restriction. The only problem would be if the same
-             * characteristic were added to an object more than once - so the sizes would be the same, but a
-             * characteristic in the query might not show up in the candidate. Multiple entries of the same
-             * characteristic shouldn't be allowed, and even if it did happen the chance of a problem is small.... but a
-             * formal possibility.
-             */
-            Disjunction vdj = Restrictions.disjunction();
-            for ( Statement characteristic : factorValue.getCharacteristics() ) {
-                vdj.add( createStatementRestriction( characteristic ) );
-            }
-            characteristicsCriteria.add( vdj );
-        } else if ( factorValue.getValue() != null ) {
-            queryObject.add( Restrictions.eq( "value", factorValue.getValue() ) );
-        } else {
-            throw new IllegalArgumentException( "No suitable fields defined to find a matching FactorValue." );
-        }
-
-        queryObject.setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY );
-    }
-
-    public static void createQueryObject( Criteria queryObject, Gene gene ) {
-        if ( gene.getId() != null ) {
-            queryObject.add( Restrictions.eq( "id", gene.getId() ) );
-        } else {
-            BusinessKey.addRestrictions( queryObject, gene, true );
-        }
-
-    }
-
-    public static void createQueryObject( Criteria queryObject, GeneProduct geneProduct ) {
-        if ( geneProduct.getId() != null ) {
-            queryObject.add( Restrictions.eq( "id", geneProduct.getId() ) );
-        } else if ( StringUtils.isNotBlank( geneProduct.getNcbiGi() ) ) {
-            queryObject.add( Restrictions.eq( "ncbiGi", geneProduct.getNcbiGi() ) );
-        } else if ( StringUtils.isNotBlank( geneProduct.getName() ) ) { // NM_XXXXX etc.
-            queryObject.add( Restrictions.eq( "name", geneProduct.getName() ) );
-            /*
-             * This can cause some problems when golden path and NCBI don't have the same information about the gene
-             */
-            if ( geneProduct.getGene() != null ) {
-                Criteria geneCrits = queryObject.createCriteria( "gene" );
-                BusinessKey.addRestrictions( geneCrits, geneProduct.getGene(), false );
-            }
+    private static <X extends Describable> void addNameRestriction( CriteriaBuilder cb, From<?, X> from,
+            X describable, List<Predicate> preds ) {
+        if ( describable.getName() != null ) {
+            preds.add( cb.equal( from.get( "name" ), describable.getName() ) );
         }
     }
 
-    @SuppressWarnings("unused") // Possible external use
-    public static Criteria createQueryObject( Session session, ArrayDesign arrayDesign ) {
-        Criteria queryObject = session.createCriteria( ArrayDesign.class );
-        BusinessKey.addRestrictions( queryObject, arrayDesign );
-        return queryObject;
-    }
-
-    public static Criteria createQueryObject( Session session, BioAssay bioAssay ) {
-        Criteria queryObject = session.createCriteria( BioAssay.class );
-        BusinessKey.checkKey( bioAssay );
-        BusinessKey.addRestrictions( queryObject, bioAssay );
-        return queryObject;
-    }
-
-    public static Criteria createQueryObject( Session session, BioSequence bioSequence ) {
-        Criteria queryObject = session.createCriteria( BioSequence.class );
-        BusinessKey.addRestrictions( queryObject, bioSequence );
-        return queryObject;
-    }
-
-    @SuppressWarnings("unused") // Possible external use
-    public static Criteria createQueryObject( Session session, Characteristic ontologyEntry ) {
-        Criteria queryObject = session.createCriteria( Characteristic.class );
-        BusinessKey.checkKey( ontologyEntry );
-        queryObject.add( createCharacteristicRestriction( ontologyEntry ) );
-        return queryObject;
-    }
-
-    public static Criteria createQueryObject( Session session, Unit unit ) {
-        Criteria queryObject = session.createCriteria( Unit.class );
-
-        if ( unit.getId() != null ) {
-            queryObject.add( Restrictions.eq( "id", unit.getId() ) );
-        } else if ( unit.getUnitNameCV() != null ) {
-            queryObject.add( Restrictions.eq( "unitNameCV", unit.getUnitNameCV() ) );
-        }
-
-        return queryObject;
-    }
-
-    private static void addNameRestriction( Criteria queryObject, Describable describable ) {
-        if ( describable.getName() != null )
-            queryObject.add( Restrictions.eq( "name", describable.getName() ) );
-    }
-
-    private static void addRestrictions( Criteria queryobject, ExternalDatabase assemblyDatabase ) {
+    private static void attachExternalDatabase( CriteriaBuilder cb, From<?, ExternalDatabase> from,
+            ExternalDatabase assemblyDatabase, List<Predicate> preds ) {
         if ( assemblyDatabase.getId() != null ) {
-            queryobject.add( Restrictions.eq( "id", assemblyDatabase.getId() ) );
+            preds.add( cb.equal( from.get( "id" ), assemblyDatabase.getId() ) );
             return;
         }
-
         if ( StringUtils.isNotBlank( assemblyDatabase.getName() ) ) {
-            BusinessKey.addNameRestriction( queryobject, assemblyDatabase );
+            preds.add( cb.equal( from.get( "name" ), assemblyDatabase.getName() ) );
         }
-
     }
 
-    private static void attachCriteria( Criteria queryObject, DatabaseEntry databaseEntry ) {
-
-        queryObject.add( Restrictions.eq( "accession", databaseEntry.getAccession() ) )
-                .createCriteria( "externalDatabase" )
-                .add( Restrictions.eq( "name", databaseEntry.getExternalDatabase().getName() ) );
-
-    }
-
-    private static void attachCriteria( Criteria queryObject, ExternalDatabase assemblyDatabase ) {
-        Criteria innerQuery = queryObject.createCriteria( "assemblyDatabase" );
-        BusinessKey.addRestrictions( innerQuery, assemblyDatabase );
-    }
-
-    private static void attachCriteria( Criteria queryObject, Taxon taxon ) {
+    private static void attachTaxon( CriteriaBuilder cb, From<?, Taxon> from, Taxon taxon, List<Predicate> preds ) {
         if ( taxon == null )
             throw new IllegalArgumentException( "Taxon was null" );
         if ( taxon.getId() != null ) {
-            queryObject.add( Restrictions.eq( "id", taxon.getId() ) );
+            preds.add( cb.equal( from.get( "id" ), taxon.getId() ) );
         } else if ( taxon.getNcbiId() != null ) {
-            Disjunction disjunction = Restrictions.disjunction();
-            disjunction.add( Restrictions.eq( "ncbiId", taxon.getNcbiId() ) );
-            disjunction.add( Restrictions.eq( "secondaryNcbiId", taxon.getNcbiId() ) );
+            List<Predicate> ors = new ArrayList<>();
+            ors.add( cb.equal( from.get( "ncbiId" ), taxon.getNcbiId() ) );
+            ors.add( cb.equal( from.get( "secondaryNcbiId" ), taxon.getNcbiId() ) );
             if ( taxon.getSecondaryNcbiId() != null ) {
-                disjunction.add( Restrictions.eq( "ncbiId", taxon.getSecondaryNcbiId() ) );
+                ors.add( cb.equal( from.get( "ncbiId" ), taxon.getSecondaryNcbiId() ) );
             }
-            queryObject.add( disjunction );
-
+            preds.add( cb.or( ors.toArray( new Predicate[0] ) ) );
         } else if ( StringUtils.isNotBlank( taxon.getScientificName() ) ) {
-            queryObject.add( Restrictions.eq( "scientificName", taxon.getScientificName() ) );
+            preds.add( cb.equal( from.get( "scientificName" ), taxon.getScientificName() ) );
         } else if ( StringUtils.isNotBlank( taxon.getCommonName() ) ) {
-            queryObject.add( Restrictions.eq( "commonName", taxon.getCommonName() ) );
+            preds.add( cb.equal( from.get( "commonName" ), taxon.getCommonName() ) );
         }
     }
 
-    private static void attachCriteria( Criteria queryObject, Characteristic ontologyEntry ) {
-        Criteria innerQuery = queryObject.createCriteria( "ontologyEntry" );
-        innerQuery.add( createCharacteristicRestriction( ontologyEntry ) );
+    private static void attachPhysicalLocation( CriteriaBuilder cb, From<?, PhysicalLocation> nested,
+            PhysicalLocation physicalLocation, List<Predicate> preds ) {
+        if ( physicalLocation.getChromosome() == null ) {
+            throw new IllegalArgumentException();
+        }
+        Join<PhysicalLocation, Chromosome> chrJoin = nested.join( "chromosome" );
+        if ( physicalLocation.getChromosome().getId() != null ) {
+            preds.add( cb.equal( chrJoin.get( "id" ), physicalLocation.getChromosome().getId() ) );
+        } else {
+            preds.add( cb.equal( chrJoin.get( "name" ), physicalLocation.getChromosome().getName() ) );
+        }
+        if ( physicalLocation.getNucleotide() != null ) {
+            preds.add( cb.equal( nested.get( "nucleotide" ), physicalLocation.getNucleotide() ) );
+        }
+        if ( physicalLocation.getNucleotideLength() != null ) {
+            preds.add( cb.equal( nested.get( "nucleotideLength" ), physicalLocation.getNucleotideLength() ) );
+        }
     }
 
-    private static void checkKey( BioAssay bioAssay ) {
-        if ( bioAssay.getId() == null && bioAssay.getAccession() == null ) {
-            throw new IllegalArgumentException( "Bioassay must have id or accession" );
+    private static void addCharacteristicRestrictions( CriteriaBuilder cb, From<?, ? extends Characteristic> from,
+            Characteristic characteristic, List<Predicate> preds ) {
+        if ( characteristic.getCategory() != null ) {
+            addOntologyTermRestrictions( cb, from, characteristic.getCategoryUri(),
+                    characteristic.getCategory(), "category", preds );
         }
-
+        addOntologyTermRestrictions( cb, from, characteristic.getValueUri(),
+                characteristic.getValue(), "value", preds );
     }
 
-    public static void checkKey( ExpressionExperimentSubSet entity ) {
-        if ( entity.getBioAssays().isEmpty() ) {
-            throw new IllegalArgumentException( "Subset must have bioassays" );
+    /**
+     * @see ubic.gemma.model.common.description.CharacteristicUtils#equals(String, String, String, String)
+     */
+    private static void addOntologyTermRestrictions( CriteriaBuilder cb, From<?, ?> from, @Nullable String uri,
+            String value, String propertyNamePrefix, List<Predicate> preds ) {
+        Assert.notNull( value, String.format( "An ontology term (for properties %s and %sUri) must at least have a value.",
+                propertyNamePrefix, propertyNamePrefix ) );
+        if ( uri != null ) {
+            preds.add( cb.equal( from.get( propertyNamePrefix + "Uri" ), uri ) );
+        } else {
+            preds.add( cb.equal( from.get( propertyNamePrefix ), value ) );
         }
+    }
 
-        if ( entity.getSourceExperiment() == null || entity.getSourceExperiment().getId() == null ) {
-            throw new IllegalArgumentException( "Subset must have persistent sourceExperiment" );
-        }
-
-        for ( BioAssay ba : entity.getBioAssays() ) {
-            if ( ba.getId() == null ) {
-                throw new IllegalArgumentException( "Subset must be made from persistent bioassays." );
+    private static List<Predicate> buildStatementPredicates( CriteriaBuilder cb,
+            From<?, ? extends Characteristic> from, Statement statement ) {
+        List<Predicate> preds = new ArrayList<>();
+        addCharacteristicRestrictions( cb, from, statement, preds );
+        if ( statement.getPredicate() != null ) {
+            addOntologyTermRestrictions( cb, from, statement.getPredicateUri(), statement.getPredicate(),
+                    "predicate", preds );
+            if ( statement.getObject() != null ) {
+                addOntologyTermRestrictions( cb, from, statement.getObjectUri(), statement.getObject(),
+                        "object", preds );
             }
         }
-    }
-
-    public static void createQueryObject( Criteria queryObject, ExpressionExperimentSubSet entity ) {
-        /*
-         * Note that we don't match on name.
-         */
-
-        queryObject.add( Restrictions.eq( "sourceExperiment", entity.getSourceExperiment() ) );
-
-        queryObject.add( Restrictions.sizeEq( "bioAssays", entity.getBioAssays().size() ) );
-
-        queryObject.createCriteria( "bioAssays" )
-                .add( Restrictions.in( "id", IdentifiableUtils.getIds( entity.getBioAssays() ) ) );
-
+        if ( statement.getSecondPredicate() != null ) {
+            addOntologyTermRestrictions( cb, from, statement.getSecondPredicateUri(), statement.getSecondPredicate(),
+                    "secondPredicate", preds );
+            if ( statement.getSecondObject() != null ) {
+                addOntologyTermRestrictions( cb, from, statement.getSecondObjectUri(), statement.getSecondObject(),
+                        "secondObject", preds );
+            }
+        }
+        return preds;
     }
 }

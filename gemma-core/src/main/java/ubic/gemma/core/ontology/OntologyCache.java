@@ -38,7 +38,7 @@ class OntologyCache {
      * Minimum size of subsets to consider when enumerating cache keys.
      */
     public void setMinSubsetSize( int minSubsetSize ) {
-        Assert.isTrue( minSubsetSize > 0 );
+        Assert.isTrue( minSubsetSize > 0 , "expected true");
         this.minSubsetSize = minSubsetSize;
     }
 

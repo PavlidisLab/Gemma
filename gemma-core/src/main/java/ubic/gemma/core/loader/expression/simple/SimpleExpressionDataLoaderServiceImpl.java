@@ -104,7 +104,7 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
 
     @Override
     public ExpressionExperiment convert( SimpleExpressionExperimentMetadata metaData, @Nullable DoubleMatrix<String, String> matrix ) {
-        Assert.notNull( metaData );
+        Assert.notNull( metaData , "must not be null");
 
         ExpressionExperiment experiment = ExpressionExperiment.Factory.newInstance();
 

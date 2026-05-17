@@ -69,7 +69,7 @@ public class OntologyExternalLinks {
     }
 
     public String getExternalLink( OntologyResource resource ) {
-        Assert.notNull( resource.getUri() );
+        Assert.notNull( resource.getUri() , "must not be null");
         if ( autoReload ) {
             try {
                 reload();

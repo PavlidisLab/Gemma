@@ -21,10 +21,7 @@ package ubic.gemma.persistence.service.common.quantitationtype;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.SessionFactory;
-import org.hibernate.criterion.Criterion;
-import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Restrictions;
-import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.query.Query;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
@@ -34,7 +31,6 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.hibernate.TypedResultTransformer;
 import ubic.gemma.persistence.service.AbstractCriteriaFilteringVoEnabledDao;
 
 import javax.annotation.Nullable;
@@ -95,32 +91,23 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
     @Override
     public QuantitationType find( QuantitationType quantitationType ) {
         // find all matching QTs; not necessarily for this experiment. This is lazy - we could go through the above to check each for a match.
-        return ( QuantitationType ) this.getSessionFactory().getCurrentSession().createCriteria( QuantitationType.class )
-                .add( createRestrictions( quantitationType ) )
-                .uniqueResult();
+        Query<QuantitationType> q = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select qt from QuantitationType qt where " + qtMatchClause( "qt" ), QuantitationType.class );
+        bindQtParams( q, quantitationType );
+        return q.uniqueResult();
     }
 
     @Override
     public QuantitationType find( QuantitationType entity, Class<? extends DataVector> dataVectorType ) {
         // find all matching QTs; not necessarily for this experiment. This is lazy - we could go through the above to check each for a match.
-        return ( QuantitationType ) getSessionFactory().getCurrentSession()
-                .createCriteria( dataVectorType )
-                .createCriteria( "quantitationType" )
-                .add( createRestrictions( entity ) )
-                .setProjection( Projections.groupProperty( "id" ) )
-                .setResultTransformer( new TypedResultTransformer<QuantitationType>() {
-                    @Override
-                    public QuantitationType transformTuple( Object[] tuple, String[] aliases ) {
-                        Long id = ( Long ) tuple[0];
-                        return ( QuantitationType ) getSessionFactory().getCurrentSession().load( QuantitationType.class, id );
-                    }
-
-                    @Override
-                    public List<QuantitationType> transformListTyped( List<QuantitationType> collection ) {
-                        return collection;
-                    }
-                } )
-                .uniqueResult();
+        Query<Long> q = getSessionFactory().getCurrentSession()
+                .createQuery( "select qt.id from " + dataVectorType.getSimpleName() + " v "
+                        + "join v.quantitationType qt where " + qtMatchClause( "qt" )
+                        + " group by qt.id", Long.class );
+        bindQtParams( q, entity );
+        Long id = q.uniqueResult();
+        if ( id == null ) return null;
+        return ( QuantitationType ) getSessionFactory().getCurrentSession().load( QuantitationType.class, id );
     }
 
     @Override
@@ -128,11 +115,10 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
         Assert.isTrue( dataVectorTypes == null || !dataVectorTypes.isEmpty(), "At lease one type of data vector must be supplied." );
 
         // find all matching QTs; not necessarily for this experiment. This is lazy - we could go through the above to check each for a match.
-        //noinspection unchecked
-        Collection<QuantitationType> qts = this.getSessionFactory().getCurrentSession()
-                .createCriteria( QuantitationType.class )
-                .add( createRestrictions( quantitationType ) )
-                .list();
+        Query<QuantitationType> qq = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select qt from QuantitationType qt where " + qtMatchClause( "qt" ), QuantitationType.class );
+        bindQtParams( qq, quantitationType );
+        Collection<QuantitationType> qts = qq.list();
 
         // find all QTs for the experiment
         //noinspection unchecked
@@ -170,9 +156,8 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
 
     @Override
     public QuantitationType findByNameAndVectorType( ExpressionExperiment ee, String name, Class<? extends DataVector> dataVectorType ) {
-        String entityName = getSessionFactory().getClassMetadata( dataVectorType ).getEntityName();
         return ( QuantitationType ) this.getSessionFactory().getCurrentSession()
-                .createQuery( "select v.quantitationType from " + entityName + " v "
+                .createQuery( "select v.quantitationType from " + dataVectorType.getSimpleName() + " v "
                         + "where v.expressionExperiment = :ee and v.quantitationType.name = :name "
                         + "group by v.quantitationType" )
                 .setParameter( "ee", ee )
@@ -184,11 +169,12 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
     public <T extends DataVector> Collection<QuantitationType> findAllByNameAndVectorType( ExpressionExperiment ee, String name, Class<? extends T> vectorType ) {
         //noinspection unchecked
         List<Long> ids = getSessionFactory().getCurrentSession()
-                .createCriteria( vectorType )
-                .add( Restrictions.eq( "expressionExperiment", ee ) )
-                .createCriteria( "quantitationType" )
-                .add( Restrictions.eq( "name", name ) )
-                .setProjection( Projections.groupProperty( "id" ) )
+                .createQuery( "select qt.id from " + vectorType.getSimpleName() + " v "
+                        + "join v.quantitationType qt "
+                        + "where v.expressionExperiment = :ee and qt.name = :name "
+                        + "group by qt.id" )
+                .setParameter( "ee", ee )
+                .setParameter( "name", name )
                 .list();
         return load( ids );
     }
@@ -327,21 +313,35 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
     }
 
     /**
-     * Create a restriction that matches the fields of a QT as per {@link QuantitationType#equals(Object)}.
+     * Build a where-clause fragment that matches the fields of a QT as per {@link QuantitationType#equals(Object)}.
+     * Use with {@link #bindQtParams(Query, QuantitationType)} which binds the parameters in matching order.
      */
-    private Criterion createRestrictions( QuantitationType quantitationType ) {
-        return Restrictions.and(
-                Restrictions.eq( "name", quantitationType.getName() ),
-                Restrictions.eq( "generalType", quantitationType.getGeneralType() ),
-                Restrictions.eq( "type", quantitationType.getType() ),
-                Restrictions.eq( "scale", quantitationType.getScale() ),
-                Restrictions.eq( "representation", quantitationType.getRepresentation() ),
-                Restrictions.eq( "isBackground", quantitationType.getIsBackground() ),
-                Restrictions.eq( "isBackgroundSubtracted", quantitationType.getIsBackgroundSubtracted() ),
-                Restrictions.eq( "isRatio", quantitationType.getIsRatio() ),
-                Restrictions.eq( "isNormalized", quantitationType.getIsNormalized() ),
-                Restrictions.eq( "isBatchCorrected", quantitationType.getIsBatchCorrected() ),
-                Restrictions.eq( "isRecomputedFromRawData", quantitationType.getIsRecomputedFromRawData() ) );
+    private String qtMatchClause( String alias ) {
+        return alias + ".name = :name "
+                + "and " + alias + ".generalType = :generalType "
+                + "and " + alias + ".type = :type "
+                + "and " + alias + ".scale = :scale "
+                + "and " + alias + ".representation = :representation "
+                + "and " + alias + ".isBackground = :isBackground "
+                + "and " + alias + ".isBackgroundSubtracted = :isBackgroundSubtracted "
+                + "and " + alias + ".isRatio = :isRatio "
+                + "and " + alias + ".isNormalized = :isNormalized "
+                + "and " + alias + ".isBatchCorrected = :isBatchCorrected "
+                + "and " + alias + ".isRecomputedFromRawData = :isRecomputedFromRawData";
+    }
+
+    private void bindQtParams( Query<?> q, QuantitationType quantitationType ) {
+        q.setParameter( "name", quantitationType.getName() );
+        q.setParameter( "generalType", quantitationType.getGeneralType() );
+        q.setParameter( "type", quantitationType.getType() );
+        q.setParameter( "scale", quantitationType.getScale() );
+        q.setParameter( "representation", quantitationType.getRepresentation() );
+        q.setParameter( "isBackground", quantitationType.getIsBackground() );
+        q.setParameter( "isBackgroundSubtracted", quantitationType.getIsBackgroundSubtracted() );
+        q.setParameter( "isRatio", quantitationType.getIsRatio() );
+        q.setParameter( "isNormalized", quantitationType.getIsNormalized() );
+        q.setParameter( "isBatchCorrected", quantitationType.getIsBatchCorrected() );
+        q.setParameter( "isRecomputedFromRawData", quantitationType.getIsRecomputedFromRawData() );
     }
 
     private void populateVectorType( Collection<QuantitationTypeValueObject> quantitationTypeValueObjects, ExpressionExperiment ee ) {
@@ -355,11 +355,13 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
         MultiValueMap<Long, Class<? extends DataVector>> vectorTypeById = new LinkedMultiValueMap<>();
         for ( Class<? extends DataVector> vectorType : dataVectorTypes ) {
             //noinspection unchecked
-            List<Long> qtIds = getSessionFactory().getCurrentSession().createCriteria( vectorType )
-                    .add( Restrictions.eq( "expressionExperiment", ee ) )
-                    .createCriteria( "quantitationType" )
-                    .add( Restrictions.in( "id", optimizeParameterList( ids ) ) )
-                    .setProjection( Projections.groupProperty( "id" ) )
+            List<Long> qtIds = getSessionFactory().getCurrentSession()
+                    .createQuery( "select qt.id from " + vectorType.getSimpleName() + " v "
+                            + "join v.quantitationType qt "
+                            + "where v.expressionExperiment = :ee and qt.id in :ids "
+                            + "group by qt.id" )
+                    .setParameter( "ee", ee )
+                    .setParameterList( "ids", optimizeParameterList( ids ) )
                     .list();
             qtIds.forEach( id -> vectorTypeById.add( id, vectorType ) );
         }

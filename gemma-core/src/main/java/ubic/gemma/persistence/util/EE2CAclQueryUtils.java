@@ -1,15 +1,11 @@
 package ubic.gemma.persistence.util;
 
 import gemma.gsec.util.SecurityUtil;
-import org.hibernate.Query;
-import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.query.Query;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.type.IntegerType;
 import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.security.acls.model.Permission;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
-
-import java.util.Arrays;
 
 /**
  * This class provides a fast-path to {@link AclQueryUtils} that uses the denormalized mask for anonymous users.
@@ -32,9 +28,8 @@ public class EE2CAclQueryUtils {
 
     public static String formNativeAclRestrictionClause( SessionFactoryImplementor sessionFactoryImplementor, String anonymousMaskColumn, Permission permission ) {
         if ( SecurityUtil.isUserAnonymous() ) {
-            SQLFunction bitwiseAnd = sessionFactoryImplementor.getSqlFunctionRegistry().findSQLFunction( "bitwise_and" );
-            String renderedMask = bitwiseAnd.render( new IntegerType(), Arrays.asList( anonymousMaskColumn, permission.getMask() ), sessionFactoryImplementor );
-            return " and " + renderedMask + " <> 0";
+            // MySQL bitwise AND. Hard-coded — see AclQueryUtils#formNativeAclRestrictionClause for the same trade-off.
+            return " and (" + anonymousMaskColumn + " & " + permission.getMask() + ") <> 0";
         } else if ( SecurityUtil.isUserAdmin() ) {
             return "";
         } else {

@@ -20,9 +20,8 @@ package ubic.gemma.persistence.service.analysis.expression;
 
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Hibernate;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.SessionFactory;
-import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -100,8 +99,9 @@ public class ExpressionExperimentSetDaoImpl
     @Override
     public Collection<ExpressionExperimentSet> loadAllExperimentSetsWithTaxon() {
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createCriteria( ExpressionExperimentSet.class )
-                .add( Restrictions.isNotNull( "taxon" ) ).list();
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select s from ExpressionExperimentSet s where s.taxon is not null" )
+                .list();
     }
 
     @Override

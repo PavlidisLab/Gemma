@@ -18,11 +18,7 @@
  */
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
-import org.apache.commons.lang3.StringUtils;
-import org.hibernate.Criteria;
 import org.hibernate.SessionFactory;
-import org.hibernate.criterion.CriteriaSpecification;
-import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
@@ -71,19 +67,23 @@ public class BioAssayDimensionDaoImpl extends AbstractVoEnabledDao<BioAssayDimen
             bioAssayIds.add( bioAssay.getId() );
         }
 
-        Criteria queryObject = this.getSessionFactory().getCurrentSession()
-                .createCriteria( BioAssayDimension.class );
-
         // same size and set of IDs, this is not guaranteeing the order though
-        queryObject.add( Restrictions.sizeEq( "bioAssays", bioAssayDimension.getBioAssays().size() ) );
+        String hql;
         if ( !bioAssayIds.isEmpty() ) {
-            queryObject.createCriteria( "bioAssays" )
-                    .add( Restrictions.in( "id", bioAssayIds ) )
-                    .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY );
+            hql = "select distinct bad from BioAssayDimension bad "
+                    + "join bad.bioAssays ba "
+                    + "where size(bad.bioAssays) = :n and ba.id in :ids";
+        } else {
+            hql = "select bad from BioAssayDimension bad where size(bad.bioAssays) = :n";
         }
-
         //noinspection unchecked
-        List<BioAssayDimension> candidates = ( List<BioAssayDimension> ) queryObject.list();
+        org.hibernate.query.Query<BioAssayDimension> q = getSessionFactory().getCurrentSession()
+                .createQuery( hql )
+                .setParameter( "n", bioAssayDimension.getBioAssays().size() );
+        if ( !bioAssayIds.isEmpty() ) {
+            q.setParameterList( "ids", bioAssayIds );
+        }
+        List<BioAssayDimension> candidates = q.list();
 
         // Now check that the bioassays and order are exactly the same.
         for ( BioAssayDimension candidate : candidates ) {

@@ -14,13 +14,18 @@
  */
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
-import org.hibernate.Criteria;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.auditAndSecurity.Person;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.BusinessKey;
+
+import java.util.List;
 
 /**
  * <p>
@@ -42,8 +47,15 @@ public class PersonDaoImpl extends AbstractDao<Person> implements PersonDao {
 
     @Override
     public Person find( Person person ) {
-        Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( Person.class );
-        BusinessKey.addRestrictions( queryObject, person );
-        return ( Person ) queryObject.uniqueResult();
+        org.hibernate.Session session = super.getSessionFactory().getCurrentSession();
+        CriteriaBuilder cb = session.getCriteriaBuilder();
+        CriteriaQuery<Person> cq = cb.createQuery( Person.class );
+        Root<Person> root = cq.from( Person.class );
+        List<Predicate> preds = BusinessKey.matches( cb, root, person );
+        cq.select( root );
+        if ( !preds.isEmpty() ) {
+            cq.where( preds.toArray( new Predicate[0] ) );
+        }
+        return session.createQuery( cq ).uniqueResult();
     }
 }

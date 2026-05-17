@@ -18,9 +18,13 @@
  */
 package ubic.gemma.persistence.service.genome.gene;
 
-import org.hibernate.Criteria;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.SessionFactory;
-import org.hibernate.criterion.CriteriaSpecification;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.genome.Gene;
@@ -31,6 +35,7 @@ import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
 import ubic.gemma.persistence.util.IdentifiableUtils;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
@@ -95,15 +100,29 @@ public class GeneProductDaoImpl extends AbstractVoEnabledDao<GeneProduct, GenePr
 
     @Override
     public GeneProduct find( GeneProduct geneProduct ) {
-        Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( GeneProduct.class )
-                .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY );
-
         BusinessKey.checkValidKey( geneProduct );
 
-        BusinessKey.createQueryObject( queryObject, geneProduct );
-
-        //noinspection unchecked
-        List<GeneProduct> results = queryObject.list();
+        org.hibernate.Session session = this.getSessionFactory().getCurrentSession();
+        CriteriaBuilder cb = session.getCriteriaBuilder();
+        CriteriaQuery<GeneProduct> cq = cb.createQuery( GeneProduct.class );
+        Root<GeneProduct> root = cq.from( GeneProduct.class );
+        List<Predicate> preds = new ArrayList<>();
+        if ( geneProduct.getId() != null ) {
+            preds.add( cb.equal( root.get( "id" ), geneProduct.getId() ) );
+        } else if ( StringUtils.isNotBlank( geneProduct.getNcbiGi() ) ) {
+            preds.add( cb.equal( root.get( "ncbiGi" ), geneProduct.getNcbiGi() ) );
+        } else if ( StringUtils.isNotBlank( geneProduct.getName() ) ) {
+            preds.add( cb.equal( root.get( "name" ), geneProduct.getName() ) );
+            if ( geneProduct.getGene() != null ) {
+                Join<GeneProduct, Gene> geneJoin = root.join( "gene" );
+                preds.addAll( BusinessKey.matches( cb, geneJoin, geneProduct.getGene(), false ) );
+            }
+        }
+        cq.select( root ).distinct( true );
+        if ( !preds.isEmpty() ) {
+            cq.where( preds.toArray( new Predicate[0] ) );
+        }
+        List<GeneProduct> results = session.createQuery( cq ).list();
         GeneProduct result = null;
         if ( results.size() > 1 ) {
 

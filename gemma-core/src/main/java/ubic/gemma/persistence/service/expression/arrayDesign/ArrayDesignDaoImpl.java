@@ -21,8 +21,14 @@ package ubic.gemma.persistence.service.expression.arrayDesign;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
-import org.hibernate.*;
+import org.hibernate.Hibernate;
+import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.NativeQuery;
+import org.hibernate.query.Query;
 import org.hibernate.type.StandardBasicTypes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -263,9 +269,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Override
     public ArrayDesign find( ArrayDesign entity ) {
         BusinessKey.checkValidKey( entity );
-        Criteria query = super.getSessionFactory().getCurrentSession().createCriteria( ArrayDesign.class );
-        BusinessKey.addRestrictions( query, entity );
-        return ( ArrayDesign ) query.uniqueResult();
+        return BusinessKey.find( super.getSessionFactory().getCurrentSession(), entity );
     }
 
     @Override

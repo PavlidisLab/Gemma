@@ -136,7 +136,7 @@ public class TabularMatrixWriter implements SingleCellExpressionDataMatrixWriter
             pwriter.write( "\tgene_id\tgene_name\tgene_ncbi_id\tgene_ensembl_id\tgene_official_symbol\tgene_official_name" );
         }
         for ( BioAssay ba : scd.getBioAssays() ) {
-            Assert.notNull( ba.getName() );
+            Assert.notNull( ba.getName() , "must not be null");
             String sampleColumnPrefix;
             if ( excludeSampleIdentifiers ) {
                 sampleColumnPrefix = constructAssayName( ba, useBioAssayIds, useRawColumnNames ) + "_";

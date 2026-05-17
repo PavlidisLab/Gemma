@@ -18,7 +18,6 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
-import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,11 +59,7 @@ public class ExpressionExperimentSubSetDaoImpl extends AbstractDao<ExpressionExp
 
     @Override
     public ExpressionExperimentSubSet find( ExpressionExperimentSubSet entity ) {
-        Criteria queryObject = this.getSessionFactory().getCurrentSession()
-                .createCriteria( ExpressionExperimentSubSet.class );
-        BusinessKey.checkKey( entity );
-        BusinessKey.createQueryObject( queryObject, entity );
-        return ( ExpressionExperimentSubSet ) queryObject.uniqueResult();
+        return BusinessKey.find( this.getSessionFactory().getCurrentSession(), entity );
     }
 
     @Nullable

@@ -48,8 +48,8 @@ public class SingleCellSparsityHeatmap implements Heatmap {
      * @param type                    the type of heatmap to generate
      */
     public SingleCellSparsityHeatmap( ExpressionExperiment expressionExperiment, SingleCellDimension singleCellDimension, BioAssayDimension dimension, Collection<ExpressionExperimentSubSet> subSets, @Nullable Map<BioAssay, Long> designElementsPerSample, @Nullable SingleCellHeatmapType type ) {
-        Assert.isTrue( expressionExperiment.getBioAssays().containsAll( singleCellDimension.getBioAssays() ) );
-        Assert.isTrue( subSets.stream().map( BioAssaySet::getBioAssays ).allMatch( dimension.getBioAssays()::containsAll ) );
+        Assert.isTrue( expressionExperiment.getBioAssays().containsAll( singleCellDimension.getBioAssays() ) , "expected true");
+        Assert.isTrue( subSets.stream().map( BioAssaySet::getBioAssays ).allMatch( dimension.getBioAssays()::containsAll ) , "expected true");
         this.expressionExperiment = expressionExperiment;
         this.samples = expressionExperiment.getBioAssays().stream()
                 .sorted( Comparator.comparing( BioAssay::getName ) )
@@ -69,7 +69,7 @@ public class SingleCellSparsityHeatmap implements Heatmap {
 
     @Override
     public BufferedImage createImage( int cellSize ) {
-        Assert.notNull( type );
+        Assert.notNull( type , "must not be null");
         DefaultHeatMapDataset d = new DefaultHeatMapDataset( subSets.size(), expressionExperiment.getBioAssays().size(), 0, 1, 0, 1 );
         for ( int i = 0; i < subSets.size(); i++ ) {
             for ( int j = 0; j < samples.size(); j++ ) {

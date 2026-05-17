@@ -57,7 +57,7 @@ public class CellBrowserTabularMatrixReader {
      */
     public SingleCellExpressionDataDoubleMatrix readMatrix( Reader reader, QuantitationType quantitationType,
             Map<String, CompositeSequence> designElementsMap, Map<String, BioAssay> cellIdToBioAssayMap ) throws IOException {
-        Assert.isTrue( quantitationType.getRepresentation() == PrimitiveType.DOUBLE );
+        Assert.isTrue( quantitationType.getRepresentation() == PrimitiveType.DOUBLE , "expected true");
         try ( CSVParser parser = CELL_BROWSER_MATRIX_FORMAT.parse( reader ) ) {
             List<String> cellIds = parser.getHeaderNames();
             cellIds = cellIds.subList( 1, cellIds.size() );

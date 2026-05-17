@@ -21,7 +21,7 @@ public class CategoricalArray<T> implements Array<T> {
 
     public CategoricalArray( H5Group group, Class<T> categoryType ) {
         checkEncoding( group, "categorical" );
-        Assert.isTrue( group.hasAttribute( "ordered" ) );
+        Assert.isTrue( group.hasAttribute( "ordered" ) , "expected true");
         this.group = group;
         if ( String.class.isAssignableFrom( categoryType ) ) {
             //noinspection unchecked

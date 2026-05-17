@@ -21,7 +21,7 @@ public abstract class H5Location {
     private final long locId;
 
     protected H5Location( long locId ) {
-        Assert.isTrue( locId != H5I_INVALID_HID );
+        Assert.isTrue( locId != H5I_INVALID_HID , "expected true");
         this.locId = locId;
     }
 

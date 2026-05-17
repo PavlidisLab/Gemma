@@ -107,7 +107,7 @@ public class SingleCellDataBoxplot {
     }
 
     public void setBioAssays( List<BioAssay> bioAssays ) {
-        Assert.isTrue( new HashSet<>( vector.getSingleCellDimension().getBioAssays() ).containsAll( bioAssays ) );
+        Assert.isTrue( new HashSet<>( vector.getSingleCellDimension().getBioAssays() ).containsAll( bioAssays ) , "expected true");
         this.bioAssays = bioAssays;
     }
 

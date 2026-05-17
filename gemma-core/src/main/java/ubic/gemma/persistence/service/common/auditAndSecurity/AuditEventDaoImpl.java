@@ -19,7 +19,7 @@
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
 import org.apache.commons.lang3.time.StopWatch;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.SessionFactory;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.persister.entity.SingleTableEntityPersister;

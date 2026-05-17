@@ -189,7 +189,7 @@ public class Dataframe<K> implements Iterable<Dataframe.Column<K, ?>>, AutoClose
                 column = new CategoricalColumn<>( columnName, getCategoricalColumn( columnName, clazz ) );
                 break;
             case "string-array":
-                Assert.isTrue( String.class.isAssignableFrom( clazz ) );
+                Assert.isTrue( String.class.isAssignableFrom( clazz ) , "expected true");
                 //noinspection unchecked
                 column = ( Column<K, T> ) new ArrayColumn<>( columnName, getStringArrayColumn( columnName ) );
                 break;
@@ -211,12 +211,12 @@ public class Dataframe<K> implements Iterable<Dataframe.Column<K, ?>>, AutoClose
                 }
                 break;
             case "nullable-integer":
-                Assert.isTrue( Integer.class.isAssignableFrom( clazz ) );
+                Assert.isTrue( Integer.class.isAssignableFrom( clazz ) , "expected true");
                 //noinspection unchecked
                 column = new ArrayColumn<>( columnName, ( T[] ) getNullableIntegerArrayColumn( columnName ) );
                 break;
             case "nullable-boolean":
-                Assert.isTrue( Boolean.class.isAssignableFrom( clazz ) );
+                Assert.isTrue( Boolean.class.isAssignableFrom( clazz ) , "expected true");
                 //noinspection unchecked
                 column = new ArrayColumn<>( columnName, ( T[] ) getNullableBooleanArrayColumn( columnName ) );
                 break;

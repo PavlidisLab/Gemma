@@ -20,12 +20,9 @@ package ubic.gemma.persistence.service.common.description;
 
 import lombok.Value;
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.Query;
-import org.hibernate.SQLQuery;
+import org.hibernate.query.Query;
+import org.hibernate.query.NativeQuery;
 import org.hibernate.SessionFactory;
-import org.hibernate.criterion.MatchMode;
-import org.hibernate.criterion.Order;
-import org.hibernate.criterion.Restrictions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.StandardBasicTypes;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,8 +51,6 @@ import java.math.BigInteger;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.hibernate.criterion.Restrictions.like;
-import static org.hibernate.criterion.Restrictions.not;
 import static ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil.EE2C_QUERY_SPACE;
 import static ubic.gemma.persistence.util.IdentifiableUtils.toIdentifiableSet;
 import static ubic.gemma.persistence.util.QueryUtils.*;
@@ -111,8 +106,9 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     @Override
     public List<Characteristic> browse( int start, int limit ) {
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createCriteria( Characteristic.class )
-                .add( not( like( "valueUri", OntologyUtils.BASE_PURL_URI + "GO_", MatchMode.START ) ) )
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select c from Characteristic c where c.valueUri not like :p" )
+                .setParameter( "p", OntologyUtils.BASE_PURL_URI + "GO_%" )
                 .setFirstResult( start )
                 .setMaxResults( limit )
                 .list();
@@ -121,9 +117,10 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     @Override
     public List<Characteristic> browse( int start, int limit, String orderField, boolean descending ) {
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createCriteria( Characteristic.class )
-                .add( not( like( "valueUri", OntologyUtils.BASE_PURL_URI + "GO_", MatchMode.START ) ) )
-                .addOrder( descending ? Order.desc( orderField ) : Order.asc( orderField ) )
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select c from Characteristic c where c.valueUri not like :p "
+                        + "order by c." + orderField + ( descending ? " desc" : " asc" ) )
+                .setParameter( "p", OntologyUtils.BASE_PURL_URI + "GO_%" )
                 .setFirstResult( start )
                 .setMaxResults( limit )
                 .list();
@@ -194,8 +191,8 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
                 .collect( Collectors.toSet() );
         //noinspection unchecked
         List<ExpressionExperiment> ees = getSessionFactory().getCurrentSession()
-                .createCriteria( ExpressionExperiment.class )
-                .add( Restrictions.in( "id", ids ) )
+                .createQuery( "select ee from ExpressionExperiment ee where ee.id in :ids", ExpressionExperiment.class )
+                .setParameterList( "ids", ids )
                 .list();
 
         Map<Long, ExpressionExperiment> eeById = IdentifiableUtils.getIdMap( ees );
@@ -533,7 +530,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
                 .filter( fk -> parentClasses == null || parentClasses.contains( fk.getOwningClass() ) )
                 .collect( Collectors.toList() );
 
-        SQLQuery query = getSessionFactory().getCurrentSession()
+        NativeQuery<?> query = getSessionFactory().getCurrentSession()
                 .createSQLQuery( "select C.ID" + createOwningEntitySelect( oe, includeNoParents ) + " from CHARACTERISTIC C "
                         + "where C.ID in :ids"
                         + ( !oe.isEmpty() || includeNoParents ? " and " + createOwningEntityConstraint( oe, includeNoParents ) : "" ) );

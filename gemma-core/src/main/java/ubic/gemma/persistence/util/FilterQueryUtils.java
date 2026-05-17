@@ -1,7 +1,7 @@
 package ubic.gemma.persistence.util;
 
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 
 import javax.annotation.Nullable;
 import java.util.Collection;

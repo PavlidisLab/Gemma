@@ -10,8 +10,6 @@
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import org.hibernate.SessionFactory;
-import org.hibernate.criterion.DetachedCriteria;
-import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -71,19 +69,20 @@ public class RawExpressionDataVectorDaoImpl extends AbstractDesignElementDataVec
 
         BusinessKey.checkKey( designElementDataVector );
 
-        DetachedCriteria crit = DetachedCriteria.forClass( RawExpressionDataVector.class );
-
-        crit.createCriteria( "designElement" )
-                .add( Restrictions.eq( "name", designElementDataVector.getDesignElement().getName() ) )
-                .createCriteria( "arrayDesign" ).add( Restrictions
-                        .eq( "name", designElementDataVector.getDesignElement().getArrayDesign().getName() ) );
-
-        crit.createCriteria( "quantitationType" )
-                .add( Restrictions.eq( "name", designElementDataVector.getQuantitationType().getName() ) );
-
-        crit.createCriteria( "expressionExperiment" )
-                .add( Restrictions.eq( "name", designElementDataVector.getExpressionExperiment().getName() ) );
-
-        return ( RawExpressionDataVector ) crit.getExecutableCriteria( getSessionFactory().getCurrentSession() ).uniqueResult();
+        return ( RawExpressionDataVector ) getSessionFactory().getCurrentSession()
+                .createQuery( "select dev from RawExpressionDataVector dev "
+                        + "join dev.designElement de "
+                        + "join de.arrayDesign ad "
+                        + "join dev.quantitationType qt "
+                        + "join dev.expressionExperiment ee "
+                        + "where de.name = :deName "
+                        + "and ad.name = :adName "
+                        + "and qt.name = :qtName "
+                        + "and ee.name = :eeName" )
+                .setParameter( "deName", designElementDataVector.getDesignElement().getName() )
+                .setParameter( "adName", designElementDataVector.getDesignElement().getArrayDesign().getName() )
+                .setParameter( "qtName", designElementDataVector.getQuantitationType().getName() )
+                .setParameter( "eeName", designElementDataVector.getExpressionExperiment().getName() )
+                .uniqueResult();
     }
 }

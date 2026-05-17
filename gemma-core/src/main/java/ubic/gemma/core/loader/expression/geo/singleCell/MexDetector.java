@@ -107,7 +107,7 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
      */
     @Override
     public boolean hasSingleCellData( GeoSeries series ) {
-        Assert.notNull( series.getGeoAccession() );
+        Assert.notNull( series.getGeoAccession() , "must not be null");
         // don't bother looking up MEX files in archives at the series-level, it's just wasteful since we cannot
         // download them
         return hasSingleCellData( series.getGeoAccession(), series.getSupplementaryFiles(), false );
@@ -117,7 +117,7 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
      * Check if a sample contains single-cell data in the context of its series.
      */
     public boolean hasSingleCellData( GeoSeries series, GeoSample sample ) {
-        Assert.notNull( sample.getGeoAccession() );
+        Assert.notNull( sample.getGeoAccession() , "must not be null");
         return hasSingleCellData( sample.getGeoAccession(), mergeSupplementaryFiles( series, sample ), true );
     }
 
@@ -132,7 +132,7 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
      * @param allowArchiveLookup allow looking into archives for MEX files
      */
     public boolean hasSingleCellData( GeoSample sample, boolean allowArchiveLookup ) {
-        Assert.notNull( sample.getGeoAccession() );
+        Assert.notNull( sample.getGeoAccession() , "must not be null");
         return hasSingleCellData( sample.getGeoAccession(), sample.getSupplementaryFiles(), allowArchiveLookup );
     }
 
@@ -273,8 +273,8 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
      * can reuse the same files.
      */
     public Path downloadSingleCellData( GeoSeries series, GeoSample sample ) throws NoSingleCellDataFoundException, IOException {
-        Assert.notNull( series.getGeoAccession() );
-        Assert.notNull( sample.getGeoAccession() );
+        Assert.notNull( series.getGeoAccession() , "must not be null");
+        Assert.notNull( sample.getGeoAccession() , "must not be null");
         try {
             // first try only with the sample-level files, ideally this is enough
             downloadSingleCellData( sample.getGeoAccession(), sample.getSupplementaryFiles() );
@@ -324,7 +324,7 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
      */
     @Override
     public Path downloadSingleCellData( GeoSample sample ) throws NoSingleCellDataFoundException, IOException {
-        Assert.notNull( sample.getGeoAccession() );
+        Assert.notNull( sample.getGeoAccession() , "must not be null");
         return downloadSingleCellData( sample.getGeoAccession(), sample.getSupplementaryFiles() );
     }
 
@@ -544,19 +544,19 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
 
     @Override
     public List<String> getAdditionalSupplementaryFiles( GeoSeries series ) {
-        Assert.notNull( series.getGeoAccession() );
+        Assert.notNull( series.getGeoAccession() , "must not be null");
         return getAdditionalSupplementaryFiles( series.getGeoAccession(), series.getSupplementaryFiles().stream().filter( f -> !f.endsWith( "_RAW.tar" ) ) );
     }
 
     @Override
     public List<String> getAdditionalSupplementaryFiles( GeoSample sample ) {
-        Assert.notNull( sample.getGeoAccession() );
+        Assert.notNull( sample.getGeoAccession() , "must not be null");
         return getAdditionalSupplementaryFiles( sample.getGeoAccession(), sample.getSupplementaryFiles().stream() );
     }
 
     @Override
     public List<String> getAdditionalSupplementaryFiles( GeoSeries series, GeoSample sample ) {
-        Assert.notNull( sample.getGeoAccession() );
+        Assert.notNull( sample.getGeoAccession() , "must not be null");
         return getAdditionalSupplementaryFiles( sample.getGeoAccession(), mergeSupplementaryFiles( series, sample ).stream() );
     }
 
@@ -612,7 +612,7 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
 
     @Override
     public SingleCellDataLoader getSingleCellDataLoader( GeoSeries series, SingleCellDataLoaderConfig config ) throws NoSingleCellDataFoundException {
-        Assert.notNull( series.getGeoAccession() );
+        Assert.notNull( series.getGeoAccession() , "must not be null");
         Assert.notNull( getDownloadDirectory(), "A download directory must be set." );
         MexSingleCellDataLoader loader = new GeoMexSingleCellDataLoaderConfigurer( getDownloadDirectory(), series, singleCellDataTransformationFactory )
                 .configureLoader( config );

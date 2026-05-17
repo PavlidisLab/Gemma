@@ -495,7 +495,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
     }
 
     private Path downloadSamplesInParallel( GeoSeries series, SingleCellDataType dataType ) throws NoSingleCellDataFoundException, IOException {
-        Assert.notNull( series.getGeoAccession() );
+        Assert.notNull( series.getGeoAccession() , "must not be null");
         Assert.notNull( downloadDirectory, "A download directory must be set." );
         Assert.isTrue( dataType.equals( SingleCellDataType.MEX ), "Only MEX data can be downloaded at the sample-level." );
         ExecutorCompletionService<Boolean> completionService = new ExecutorCompletionService<>( getExecutor() );
@@ -829,7 +829,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
      */
     public boolean hasSingleCellDataInCellXGene( GeoSeries geoSeries ) throws IOException {
         Assert.notNull( cellXGeneFetcher, "A CELLxGENE fetcher must be configured." );
-        Assert.notNull( geoSeries.getGeoAccession() );
+        Assert.notNull( geoSeries.getGeoAccession() , "must not be null");
         try {
             return cellXGeneFetcher.fetchAllCollectionMetadata().stream()
                     .map( cm1 -> {
@@ -857,7 +857,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
      */
     public boolean hasSingleCellDataInCellXGene( GeoSeries geoSeries, String collectionId ) throws IOException {
         Assert.notNull( cellXGeneFetcher, "A CELLxGENE fetcher must be configured." );
-        Assert.notNull( geoSeries.getGeoAccession() );
+        Assert.notNull( geoSeries.getGeoAccession() , "must not be null");
         CollectionMetadata cm;
         try {
             cm = fetchCollectionMetadata( collectionId );
@@ -876,7 +876,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
 
     public Path downloadSingleCellDataInCellXGene( GeoSeries geoSeries ) throws IOException, NoSingleCellDataFoundException {
         Assert.notNull( cellXGeneFetcher, "A CELLxGENE fetcher must be configured." );
-        Assert.notNull( geoSeries.getGeoAccession() );
+        Assert.notNull( geoSeries.getGeoAccession() , "must not be null");
         DatasetMetadata datasetMetadata = getDatasetMetadataFromCellXGene( geoSeries );
         String datasetId = datasetMetadata.getId();
         DatasetAsset asset = selectDatasetAsset( geoSeries, datasetMetadata );
@@ -885,7 +885,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
 
     public Map<String, Path> downloadAllSingleCellDataInCellXGene( GeoSeries geoSeries ) throws IOException, NoSingleCellDataFoundException {
         Assert.notNull( cellXGeneFetcher, "A CELLxGENE fetcher must be configured." );
-        Assert.notNull( geoSeries.getGeoAccession() );
+        Assert.notNull( geoSeries.getGeoAccession() , "must not be null");
         CollectionMetadata cm = getCollectionMetadata( geoSeries );
         assert cm.getDatasets() != null;
         Map<String, Path> result = new HashMap<>();
@@ -904,7 +904,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
      */
     public Path downloadSingleCellDataInCellXGene( GeoSeries geoSeries, String collectionId ) throws IOException, NoSingleCellDataFoundException {
         Assert.notNull( cellXGeneFetcher, "A CELLxGENE fetcher must be configured." );
-        Assert.notNull( geoSeries.getGeoAccession() );
+        Assert.notNull( geoSeries.getGeoAccession() , "must not be null");
         DatasetMetadata datasetMetadata = getDatasetMetadataFromCellXGene( geoSeries, collectionId );
         String datasetId = datasetMetadata.getId();
         DatasetAsset asset = selectDatasetAsset( geoSeries, datasetMetadata );
@@ -913,7 +913,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
 
     public Map<String, Path> downloadAllSingleCellDataInCellXGene( GeoSeries geoSeries, String collectionId ) throws IOException, NoSingleCellDataFoundException {
         Assert.notNull( cellXGeneFetcher, "A CELLxGENE fetcher must be configured." );
-        Assert.notNull( geoSeries.getGeoAccession() );
+        Assert.notNull( geoSeries.getGeoAccession() , "must not be null");
         CollectionMetadata cm = getCollectionMetadata( geoSeries, collectionId );
         assert cm.getDatasets() != null;
         Map<String, Path> result = new HashMap<>();
@@ -933,7 +933,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
      */
     public Path downloadSingleCellDataInCellXGene( GeoSeries geoSeries, String collectionId, String datasetId ) throws IOException, NoSingleCellDataFoundException {
         Assert.notNull( cellXGeneFetcher, "A CELLxGENE fetcher must be configured." );
-        Assert.notNull( geoSeries.getGeoAccession() );
+        Assert.notNull( geoSeries.getGeoAccession() , "must not be null");
         DatasetMetadata datasetMetadata = getDatasetMetadataFromCellXGene( geoSeries, collectionId, datasetId );
         DatasetAsset asset = selectDatasetAsset( geoSeries, datasetMetadata );
         return downloadSingleCellDataInCellXGeneInternal( geoSeries, datasetId, asset.getId(), true );
@@ -947,7 +947,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
      */
     public Path downloadSingleCellDataInCellXGene( GeoSeries geoSeries, String collectionId, String datasetId, String assetId ) throws IOException, NoSingleCellDataFoundException {
         Assert.notNull( cellXGeneFetcher, "A CELLxGENE fetcher must be configured." );
-        Assert.notNull( geoSeries.getGeoAccession() );
+        Assert.notNull( geoSeries.getGeoAccession() , "must not be null");
         CollectionMetadata cm;
         try {
             cm = fetchCollectionMetadata( collectionId );
@@ -1042,7 +1042,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
     }
 
     private CollectionMetadata getCollectionMetadata( GeoSeries geoSeries ) throws IOException, NoSingleCellDataFoundException {
-        Assert.notNull( cellXGeneFetcher );
+        Assert.notNull( cellXGeneFetcher , "must not be null");
         List<CollectionMetadata> matchingCollectionMetadata;
         try {
             matchingCollectionMetadata = cellXGeneFetcher.fetchAllCollectionMetadata().stream()
@@ -1123,7 +1123,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
     }
 
     private boolean hasSingleCellData( CollectionMetadata cm ) {
-        Assert.notNull( cm.getDatasets() );
+        Assert.notNull( cm.getDatasets() , "must not be null");
         return cm.getDatasets().stream()
                 .anyMatch( this::hasSingleCellData );
     }
@@ -1140,7 +1140,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
     }
 
     private CollectionMetadata fetchCollectionMetadata( String collectionId ) throws IOException {
-        Assert.notNull( cellXGeneFetcher );
+        Assert.notNull( cellXGeneFetcher , "must not be null");
         if ( cachedCollectionMetadata.isEmpty() ) {
             log.warn( "Caching CELLxGENE collection metadata, this might take a while..." );
         }
@@ -1171,7 +1171,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
     private Path downloadSingleCellDataInCellXGeneInternal( GeoSeries geoSeries, String datasetId, String assetId, boolean createSymlink ) throws
             IOException {
         Assert.notNull( cellXGeneFetcher, "A CELLxGENE fetcher must be configured." );
-        Assert.notNull( geoSeries.getGeoAccession() );
+        Assert.notNull( geoSeries.getGeoAccession() , "must not be null");
         Path path = cellXGeneFetcher.downloadDatasetAsset( datasetId, assetId, FileType.H5AD );
         if ( createSymlink ) {
             Path linkPath = downloadDirectory.resolve( geoSeries.getGeoAccession() + ".h5ad" );

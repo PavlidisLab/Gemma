@@ -19,7 +19,6 @@
 package ubic.gemma.persistence.service.analysis.expression.coexpression;
 
 import org.hibernate.SessionFactory;
-import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpCorrelationDistribution;
@@ -56,8 +55,8 @@ public class CoexpressionAnalysisDaoImpl extends AbstractDao<CoexpressionAnalysi
     public Collection<CoexpressionAnalysis> findByExperimentAnalyzed( final ExpressionExperiment experimentAnalyzed ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
-                .createCriteria( CoexpressionAnalysis.class )
-                .add( Restrictions.eq( "experimentAnalyzed", experimentAnalyzed ) )
+                .createQuery( "select c from CoexpressionAnalysis c where c.experimentAnalyzed = :ee" )
+                .setParameter( "ee", experimentAnalyzed )
                 .list();
     }
 
@@ -65,8 +64,8 @@ public class CoexpressionAnalysisDaoImpl extends AbstractDao<CoexpressionAnalysi
     public Map<ExpressionExperiment, Collection<CoexpressionAnalysis>> findByExperimentsAnalyzed( final Collection<ExpressionExperiment> experimentsAnalyzed ) {
         //noinspection unchecked
         List<CoexpressionAnalysis> results = ( List<CoexpressionAnalysis> ) this.getSessionFactory().getCurrentSession()
-                .createCriteria( CoexpressionAnalysis.class )
-                .add( Restrictions.in( "experimentAnalyzed", experimentsAnalyzed ) )
+                .createQuery( "select c from CoexpressionAnalysis c where c.experimentAnalyzed in :ees" )
+                .setParameterList( "ees", experimentsAnalyzed )
                 .list();
         return results.stream().collect( Collectors.groupingBy( CoexpressionAnalysis::getExperimentAnalyzed, Collectors.toCollection( ArrayList::new ) ) );
     }
@@ -75,11 +74,13 @@ public class CoexpressionAnalysisDaoImpl extends AbstractDao<CoexpressionAnalysi
     public Collection<CoexpressionAnalysis> findByTaxon( final Taxon taxon ) {
         //noinspection unchecked
         return ( List<CoexpressionAnalysis> ) this.getSessionFactory().getCurrentSession()
-                .createCriteria( CoexpressionAnalysis.class )
-                .createAlias( "experimentAnalyzed", "ee" )
-                .createAlias( "ee.bioAssays", "ba" )
-                .createAlias( "ba.sampleUsed", "sample" )
-                .add( Restrictions.eq( "sample.sourceTaxon", taxon ) )
+                .createQuery( "select c from CoexpressionAnalysis c "
+                        + "join c.experimentAnalyzed ee "
+                        + "join ee.bioAssays ba "
+                        + "join ba.sampleUsed sample "
+                        + "where sample.sourceTaxon = :taxon "
+                        + "group by c" )
+                .setParameter( "taxon", taxon )
                 .list();
     }
 

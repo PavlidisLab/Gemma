@@ -18,7 +18,6 @@
  */
 package ubic.gemma.persistence.service.expression.biomaterial;
 
-import org.hibernate.Criteria;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -75,16 +74,12 @@ public class BioMaterialDaoImpl extends AbstractVoEnabledDao<BioMaterial, BioMat
 
     @Override
     public BioMaterial find( BioMaterial bioMaterial ) {
-        Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( BioMaterial.class );
-
-        BusinessKey.addRestrictions( queryObject, bioMaterial );
-
         // This part is involved in a weird race condition that I could not get to a bottom of, so this is a hack-fix for now - tesarst, 2018-May-2
         BioMaterial result = null;
         int rep = 0;
         while ( result == null && rep < BioMaterialDaoImpl.MAX_REPS ) {
             try {
-                result = ( BioMaterial ) queryObject.uniqueResult();
+                result = BusinessKey.find( this.getSessionFactory().getCurrentSession(), bioMaterial );
                 rep++;
             } catch ( ObjectNotFoundException e ) {
                 log.warn( "BioMaterial query list threw: " + e.getMessage() );
