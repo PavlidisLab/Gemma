@@ -113,13 +113,15 @@ public class AclClassMetadata {
         // validate that all SecuredChild are registered
         // TODO: this should be part of the Hibernate class metadata, either via annotation of cutom XML entries if that
         //       is allowed
-        for ( ClassMetadata cm : sessionFactory.getAllClassMetadata().values() ) {
-            if ( SecuredChild.class.isAssignableFrom( cm.getMappedClass() ) ) {
-                if ( Modifier.isAbstract( cm.getMappedClass().getModifiers() ) ) {
+        // Hibernate 5: getAllClassMetadata() throws UnsupportedOperationException; use the JPA metamodel.
+        for ( javax.persistence.metamodel.EntityType<?> et : sessionFactory.getMetamodel().getEntities() ) {
+            Class<?> mappedClass = et.getJavaType();
+            if ( SecuredChild.class.isAssignableFrom( mappedClass ) ) {
+                if ( Modifier.isAbstract( mappedClass.getModifiers() ) ) {
                     continue;
                 }
                 //noinspection unchecked
-                Class<? extends SecuredChild<?>> scc = cm.getMappedClass();
+                Class<? extends SecuredChild<?>> scc = ( Class<? extends SecuredChild<?>> ) mappedClass;
                 if ( !securedChildToParentTypeMap.containsKey( scc ) ) {
                     throw new IllegalStateException( scc.getName() + " is not configured in the AclClassMetadata, it must have an entry indicating its parent type and query(ies) for resolving its parent ID." );
                 }

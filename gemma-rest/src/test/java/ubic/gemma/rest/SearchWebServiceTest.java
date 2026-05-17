@@ -4,7 +4,7 @@ import io.swagger.v3.oas.models.OpenAPI;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.util.Version;
-import org.hibernate.search.util.impl.PassThroughAnalyzer;
+import org.apache.lucene.analysis.core.KeywordAnalyzer;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -258,7 +258,7 @@ public class SearchWebServiceTest extends BaseJerseyTest {
     public void testSearchWithInvalidQuery() throws SearchException {
         when( searchService.search( any(), any() ) ).thenAnswer( a -> {
             try {
-                new QueryParser( "", PassThroughAnalyzer.INSTANCE )
+                new QueryParser( "", new KeywordAnalyzer() )
                         .parse( a.getArgument( 0, SearchSettings.class ).getQuery() );
             } catch ( ParseException e ) {
                 throw new LuceneParseSearchException( "\"", e.getMessage(), e );

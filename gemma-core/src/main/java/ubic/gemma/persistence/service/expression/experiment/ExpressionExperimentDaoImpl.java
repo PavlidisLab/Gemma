@@ -131,8 +131,10 @@ public class ExpressionExperimentDaoImpl
     public ExpressionExperimentDaoImpl( SessionFactory sessionFactory ) {
         super( ExpressionExperimentDao.OBJECT_ALIAS, ExpressionExperiment.class, sessionFactory );
         //noinspection unchecked
-        bulkDataVectorTypes = getSessionFactory().getAllClassMetadata().values().stream()
-                .map( ClassMetadata::getMappedClass )
+        // Hibernate 5: SessionFactory.getAllClassMetadata() throws UnsupportedOperationException; use the
+        // JPA metamodel.
+        bulkDataVectorTypes = getSessionFactory().getMetamodel().getEntities().stream()
+                .map( javax.persistence.metamodel.EntityType::getJavaType )
                 .filter( BulkExpressionDataVector.class::isAssignableFrom )
                 .map( clazz -> ( Class<? extends BulkExpressionDataVector> ) clazz )
                 .collect( Collectors.toSet() );

@@ -55,8 +55,9 @@ public class AclLinterServiceImpl implements AclLinterService {
     @Transactional
     public Collection<LintResult> lintAcls( AclLinterConfig config ) {
         //noinspection unchecked
-        Set<Class<? extends Securable>> classes = sessionFactory.getAllClassMetadata().values().stream()
-                .map( ClassMetadata::getMappedClass )
+        // Hibernate 5: getAllClassMetadata() throws UnsupportedOperationException; use the JPA metamodel.
+        Set<Class<? extends Securable>> classes = sessionFactory.getMetamodel().getEntities().stream()
+                .map( javax.persistence.metamodel.EntityType::getJavaType )
                 .filter( c -> !Modifier.isAbstract( c.getModifiers() ) )
                 .filter( Securable.class::isAssignableFrom )
                 .map( c -> ( Class<? extends Securable> ) c )

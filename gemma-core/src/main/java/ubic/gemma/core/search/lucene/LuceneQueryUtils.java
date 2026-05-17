@@ -7,7 +7,7 @@ import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.*;
 import org.apache.lucene.util.Version;
-import org.hibernate.search.util.impl.PassThroughAnalyzer;
+import org.apache.lucene.analysis.core.KeywordAnalyzer;
 import ubic.gemma.core.ontology.OntologyUtils;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.search.SearchSettings;
@@ -33,9 +33,12 @@ public class LuceneQueryUtils {
     private static final Pattern LUCENE_RESERVED_CHARS = Pattern.compile( "[+\\-&|!(){}\\[\\]^\"~*?:\\\\]" );
 
     private static QueryParser createQueryParser() {
-        // Lucene 5: QueryParser dropped the Version parameter. Hibernate Search 5 made PassThroughAnalyzer
-        // a singleton with no public constructor.
-        return new QueryParser( "", PassThroughAnalyzer.INSTANCE );
+        // Lucene 5: QueryParser dropped the Version parameter. We need a "pass-through" analyzer that doesn't
+        // do tokenization. Hibernate Search 5's PassThroughAnalyzer.INSTANCE is a singleton that the engine
+        // can close during context shutdown, causing AlreadyClosedException on subsequent test runs. Use
+        // Lucene's own KeywordAnalyzer instead — it emits the input as a single token, equivalent semantics,
+        // and we get a fresh instance each call so no shared-state shutdown issues.
+        return new QueryParser( "", new KeywordAnalyzer() );
     }
 
     /**

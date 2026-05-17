@@ -154,7 +154,10 @@ public class QueryUtils {
                 break;
             }
             query.setParameterList( batchParam, batch );
-            query.setMaxResults( remainingToFetch );
+            // Hibernate 5 rejects setMaxResults(<0); only call it when we have a real cap. -1 means "no limit".
+            if ( remainingToFetch > 0 ) {
+                query.setMaxResults( remainingToFetch );
+            }
             //noinspection unchecked
             result.addAll( query.list() );
         }
@@ -175,7 +178,10 @@ public class QueryUtils {
                 break;
             }
             query.setParameterList( batchParam, batch );
-            query.setMaxResults( remainingToFetch );
+            // Hibernate 5 rejects setMaxResults(<0); only call it when we have a real cap. -1 means "no limit".
+            if ( remainingToFetch > 0 ) {
+                query.setMaxResults( remainingToFetch );
+            }
             //noinspection unchecked
             result.addAll( query.list() );
         }
