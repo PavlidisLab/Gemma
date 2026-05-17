@@ -3,7 +3,7 @@ package ubic.gemma.rest.providers;
 import org.glassfish.jersey.message.GZipEncoder;
 import ubic.gemma.rest.annotations.GZIP;
 
-import javax.annotation.Priority;
+import jakarta.annotation.Priority;
 import jakarta.ws.rs.Priorities;
 import jakarta.ws.rs.ext.Provider;
 import jakarta.ws.rs.ext.WriterInterceptor;

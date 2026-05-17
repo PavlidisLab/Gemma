@@ -78,7 +78,6 @@ import ubic.gemma.core.datastructure.matrix.io.ExperimentalDesignWriter;
 import ubic.gemma.core.datastructure.matrix.io.MeanVarianceWriter;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.visualization.*;
-import ubic.gemma.model.analysis.expression.coexpression.CoexpCorrelationDistribution;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -90,7 +89,6 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
@@ -171,8 +169,6 @@ public class ExpressionExperimentQCController {
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
     @Autowired
     private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
-    @Autowired
-    private CoexpressionAnalysisService coexpressionAnalysisService;
     @Autowired
     private WebEntityUrlBuilder entityUrlBuilder;
     @Autowired
@@ -550,7 +546,7 @@ public class ExpressionExperimentQCController {
             @RequestParam(value = "cellSize", required = false) @Nullable Integer cellSize,
             @RequestParam(value = "transpose", defaultValue = "false") boolean transpose,
             HttpServletResponse response ) throws IOException {
-        Assert.isTrue( cellSize == null || cellSize > 0 );
+        Assert.isTrue( cellSize == null || cellSize > 0 , "expected true");
         ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteOrFail( id, EntityNotFoundException::new, "No dataset with ID " + id + "." );
         SingleCellExpressionExperimentService.SingleCellDimensionInitializationConfig initConfig = SingleCellExpressionExperimentService.SingleCellDimensionInitializationConfig.builder()
                 .includeBioAssays( true )
@@ -584,8 +580,8 @@ public class ExpressionExperimentQCController {
             @RequestParam(value = "cellSize", required = false) @Nullable Integer cellSize,
             @RequestParam(value = "transpose", defaultValue = "false") boolean transpose,
             HttpServletResponse response ) throws IOException {
-        Assert.isTrue( cellSize == null || cellSize > 0 );
-        Assert.isTrue( limit > 0 && limit <= 100 );
+        Assert.isTrue( cellSize == null || cellSize > 0 , "expected true");
+        Assert.isTrue( limit > 0 && limit <= 100 , "expected true");
         ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteOrFail( id, EntityNotFoundException::new, "" );
         BioAssayDimension dimension;
         if ( dimensionId != null ) {
@@ -620,8 +616,8 @@ public class ExpressionExperimentQCController {
             @RequestParam(value = "cellSize", required = false) @Nullable Integer cellSize,
             @RequestParam(value = "transpose", defaultValue = "false") boolean transpose,
             HttpServletResponse response ) throws IOException {
-        Assert.isTrue( cellSize == null || cellSize > 0 );
-        Assert.isTrue( limit > 0 && limit <= 100 );
+        Assert.isTrue( cellSize == null || cellSize > 0 , "expected true");
+        Assert.isTrue( limit > 0 && limit <= 100 , "expected true");
         ExpressionExperimentSubSet subSet = expressionExperimentSubSetService.loadWithBioAssays( id );
         if ( subSet == null ) {
             throw new EntityNotFoundException( "No subset with ID " + id );
@@ -799,29 +795,9 @@ public class ExpressionExperimentQCController {
      *         this can be removed
      */
     private XYSeries getCorrelHist( ExpressionExperiment ee ) throws IOException {
-        CoexpCorrelationDistribution coexpCorrelationDistribution = coexpressionAnalysisService
-                .getCoexpCorrelationDistribution( ee );
-
-        if ( coexpCorrelationDistribution == null ) {
-            // try to get it from the file.
-            return this.getCorrelHistFromFile( ee );
-        }
-
-        XYSeries series = new XYSeries( ee.getId(), true, true );
-
-        double[] binCounts = coexpCorrelationDistribution.getBinCounts();
-        Integer numBins = coexpCorrelationDistribution.getNumBins();
-
-        double step = 2.0 / numBins;
-
-        double lim = -1.0;
-
-        for ( double d : binCounts ) {
-            series.add( lim, d );
-            lim += step;
-        }
-        return series;
-
+        // Phase 2: the persistent CoexpCorrelationDistribution went away with the coexpression
+        // subsystem. Only the legacy on-disk file path is left.
+        return this.getCorrelHistFromFile( ee );
     }
 
     /**
@@ -857,11 +833,7 @@ public class ExpressionExperimentQCController {
                 }
             }
 
-            if ( !counts.isEmpty() ) {
-                // Backfill.
-                this.corrDistFileToPersistent( file, ee, counts );
-            }
-
+            // Phase 2: DB backfill removed with the coexpression subsystem.
             return series;
 
         }
@@ -942,28 +914,8 @@ public class ExpressionExperimentQCController {
         return analysisStoragePath.resolve( shortName + suffix );
     }
 
-    /**
-     * For conversion from legacy system.
-     */
-    private void corrDistFileToPersistent( Path file, ExpressionExperiment ee, DoubleArrayList counts ) {
-        log.info( "Converting from pvalue distribution file to persistent stored version" );
-
-        CoexpCorrelationDistribution coexpd = CoexpCorrelationDistribution.Factory.newInstance();
-        coexpd.setNumBins( counts.size() );
-        coexpd.setBinCounts( Arrays.copyOf( counts.elements(), counts.size() ) );
-
-        try {
-            coexpressionAnalysisService.addCoexpCorrelationDistribution( ee, coexpd );
-
-            if ( Files.deleteIfExists( file ) ) {
-                log.info( "Old file deleted" );
-            } else {
-                log.info( "Old file could not be deleted" );
-            }
-        } catch ( Exception e ) {
-            log.info( "Could not save the corr dist: " + e.getMessage() );
-        }
-    }
+    // Phase 2: legacy CoexpCorrelationDistribution -> DB conversion removed along with the
+    // coexpression subsystem.
 
     private void writeDetailedFactorAnalysis( ExpressionExperiment ee, int perChartSize, ChartTheme chartTheme, HttpServletResponse os ) throws Exception {
         SVDResult svdo = svdService.getSvdFactorAnalysis( ee );

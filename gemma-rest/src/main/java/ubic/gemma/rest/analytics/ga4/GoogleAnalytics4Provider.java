@@ -87,7 +87,7 @@ public class GoogleAnalytics4Provider implements AnalyticsProvider, Initializing
      * @param apiSecret     an API secret, must be non-empty if measurementId is supplied
      */
     public GoogleAnalytics4Provider( RestTemplate restTemplate, String measurementId, String apiSecret ) {
-        Assert.isTrue( StringUtils.isBlank( measurementId ) || !StringUtils.isBlank( apiSecret ) );
+        Assert.isTrue( StringUtils.isBlank( measurementId ) || !StringUtils.isBlank( apiSecret ) , "expected true");
         this.restTemplate = restTemplate;
         this.measurementId = measurementId;
         this.apiSecret = apiSecret;

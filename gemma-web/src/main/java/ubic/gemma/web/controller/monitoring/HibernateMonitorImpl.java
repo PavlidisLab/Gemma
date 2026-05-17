@@ -24,7 +24,7 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.SessionFactory;
 import org.hibernate.stat.CollectionStatistics;
 import org.hibernate.stat.EntityStatistics;
-import org.hibernate.stat.SecondLevelCacheStatistics;
+import org.hibernate.stat.CacheRegionStatistics;
 import org.hibernate.stat.Statistics;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -97,7 +97,7 @@ public class HibernateMonitorImpl implements HibernateMonitor {
             String[] regions = stats.getSecondLevelCacheRegionNames();
             Arrays.sort( regions );
             for ( String region : regions ) {
-                SecondLevelCacheStatistics secondLevelCacheStatistics = stats.getSecondLevelCacheStatistics( region );
+                CacheRegionStatistics secondLevelCacheStatistics = stats.getCacheRegionStatistics( region );
                 long hitCount = secondLevelCacheStatistics.getHitCount();
                 long missCount = secondLevelCacheStatistics.getMissCount();
                 long putCount = secondLevelCacheStatistics.getPutCount();

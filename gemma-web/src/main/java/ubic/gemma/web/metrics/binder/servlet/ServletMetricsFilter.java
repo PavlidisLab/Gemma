@@ -4,8 +4,11 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.Timer;
-import io.micrometer.core.instrument.binder.http.DefaultHttpServletRequestTagsProvider;
-import io.micrometer.core.instrument.binder.http.HttpServletRequestTagsProvider;
+// Phase 2: Micrometer's pre-jakarta http binder takes javax.servlet types; their jakarta-aware
+// replacement landed under a different package (io.micrometer.observation). Until we migrate, we
+// just don't attach the framework-provided tags - getRequestPath()/getException() below still apply.
+// import io.micrometer.core.instrument.binder.http.DefaultHttpServletRequestTagsProvider;
+// import io.micrometer.core.instrument.binder.http.HttpServletRequestTagsProvider;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
@@ -26,7 +29,7 @@ import java.io.IOException;
  */
 public class ServletMetricsFilter extends OncePerRequestFilter {
 
-    private final HttpServletRequestTagsProvider tagsProvider = new DefaultHttpServletRequestTagsProvider();
+    // Phase 2: Micrometer's pre-jakarta http binder is dropped (see import comment above).
 
     private String metricName;
 
@@ -65,9 +68,11 @@ public class ServletMetricsFilter extends OncePerRequestFilter {
     }
 
     private Iterable<Tag> getTags( HttpServletRequest request, HttpServletResponse response, Exception exception ) {
-        return Tags.of( tagsProvider.getTags( request, response ) )
-                .and( "uri", getRequestPath( request ) )
-                .and( "exception", getException( exception ) );
+        return Tags.of(
+                "method", request.getMethod(),
+                "status", String.valueOf( response.getStatus() ),
+                "uri", getRequestPath( request ),
+                "exception", getException( exception ) );
     }
 
     private static String getRequestPath( HttpServletRequest request ) {

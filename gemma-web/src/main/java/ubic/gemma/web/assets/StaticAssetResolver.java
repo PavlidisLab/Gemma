@@ -61,7 +61,7 @@ public class StaticAssetResolver implements InitializingBean {
     public String resolveUrl( String path ) {
         Assert.isTrue( Arrays.stream( allowedDirs ).anyMatch( path::startsWith ),
                 "Path for static asset must start with one of " + String.join( ",", allowedDirs ) + "." );
-        Assert.isTrue( path.startsWith( "/" ) );
+        Assert.isTrue( path.startsWith( "/" ) , "expected true");
         return staticAssetServer.getBaseUrl() + path;
     }
 }

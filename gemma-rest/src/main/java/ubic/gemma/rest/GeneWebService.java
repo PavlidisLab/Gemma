@@ -20,8 +20,6 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
-import ubic.gemma.core.analysis.expression.coexpression.CoexpressionValueObjectExt;
-import ubic.gemma.core.analysis.expression.coexpression.GeneCoexpressionSearchService;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.GeneOntologyTermValueObject;
@@ -38,7 +36,6 @@ import ubic.gemma.rest.util.args.*;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import java.util.ArrayList;
 import java.util.List;
 
 import static ubic.gemma.rest.util.Responders.paginate;
@@ -58,8 +55,6 @@ public class GeneWebService {
 
     @Autowired
     private GeneService geneService;
-    @Autowired
-    private GeneCoexpressionSearchService geneCoexpressionSearchService;
     @Autowired
     private GeneArgService geneArgService;
     @Autowired
@@ -172,27 +167,6 @@ public class GeneWebService {
         return respond( geneArgService.getGeneGoTerms( geneArg ) );
     }
 
-    /**
-     * Retrieves the coexpression of two given genes.
-     *
-     * @param geneArg    can either be the NCBI ID, Ensembl ID or official symbol. NCBI ID is most efficient (and
-     *                   guaranteed to be unique). Official symbol returns a gene homologue on a random taxon.
-     * @param with       the gene to calculate the coexpression with. Same formatting rules as with the 'geneArg' apply.
-     * @param stringency optional parameter controlling the stringency of coexpression search. Defaults to 1.
-     */
-    @GET
-    @Path("/{gene}/coexpression")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the coexpression of two given genes", hidden = true)
-    public ResponseDataObject<List<CoexpressionValueObjectExt>> getGeneGeneCoexpression( // Params:
-            @PathParam("gene") final GeneArg<?> geneArg, // Required
-            @QueryParam("with") final GeneArg<?> with, // Required
-            @QueryParam("limit") @DefaultValue("100") LimitArg limit, // Optional, default 100
-            @QueryParam("stringency") @DefaultValue("1") Integer stringency // Optional, default 1
-    ) {
-        return respond( geneCoexpressionSearchService.coexpressionSearchQuick( null, new ArrayList<Long>( 2 ) {{
-            this.add( geneArgService.getEntity( geneArg ).getId() );
-            this.add( geneArgService.getEntity( with ).getId() );
-        }}, 1, limit.getValueNoMaximum(), false ).getResults() );
-    }
+    // Phase 2: the gene-gene coexpression endpoint and the GeneCoexpressionSearchService were removed
+    // along with the rest of the coexpression subsystem.
 }

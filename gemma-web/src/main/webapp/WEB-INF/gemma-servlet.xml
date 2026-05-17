@@ -93,10 +93,9 @@
     <!-- ==================================================== -->
     <bean id="exceptionResolver" class="ubic.gemma.web.controller.util.DefaultHandlerExceptionResolver"/>
 
-    <!-- Used for file uploads. Simply defining this makes Spring use it. -->
-    <bean id="multipartResolver" class="ubic.gemma.web.controller.util.upload.CommonsMultipartMonitoredResolver">
-        <property name="maxUploadSize" value="104857600"/>
-    </bean>
+    <!-- Used for file uploads. Phase 2: Spring 6 dropped Commons FileUpload support; switched to the standard
+         Servlet 3 multipart resolver. The size limit is now configured on the &lt;multipart-config&gt; in web.xml. -->
+    <bean id="multipartResolver" class="org.springframework.web.multipart.support.StandardServletMultipartResolver"/>
     <!-- # 100 megabytes # 104857600 # 20 megabytes gemma.max.fileupload.size.bytes= -->
     <!-- View Resolver for JSPs. This means that a jsp named "myform.jsp" can be referred to as "myform" in your controller
         bean declarations. -->

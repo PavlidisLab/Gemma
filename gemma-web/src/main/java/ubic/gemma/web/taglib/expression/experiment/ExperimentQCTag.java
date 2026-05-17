@@ -147,7 +147,7 @@ public class ExperimentQCTag extends AbstractHtmlElementTag {
     }
 
     public void writeQc( TagWriter writer, String contextPath ) throws JspException {
-        Assert.notNull( staticAssetResolver );
+        Assert.notNull( staticAssetResolver , "must not be null");
 
         /*
          * check if the files are available...if not, show something intelligent.

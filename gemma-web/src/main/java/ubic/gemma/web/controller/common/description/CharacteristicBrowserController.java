@@ -269,19 +269,19 @@ public class CharacteristicBrowserController {
     }
 
     private String getBioMaterialLink( BioMaterial bm, String text ) {
-        Assert.notNull( bm.getId() );
+        Assert.notNull( bm.getId() , "must not be null");
         String link = entityUrlBuilder.fromContextPath().entity( bm ).toUriString();
         return getLink( link, linkForDescribable( bm, text, "Sample" ) );
     }
 
     private String getExperimentalDesignLink( ExperimentalDesign ed, String text ) {
-        Assert.notNull( ed.getId() );
+        Assert.notNull( ed.getId() , "must not be null");
         String link = entityUrlBuilder.fromContextPath().entity( ed ).toUriString();
         return getLink( link, linkForDescribable( ed, text, "Experimental Design" ) );
     }
 
     private String getExpressionExperimentLink( ExpressionExperiment ee, String text ) {
-        Assert.notNull( ee.getId() );
+        Assert.notNull( ee.getId() , "must not be null");
         String link = entityUrlBuilder.fromContextPath().entity( ee ).toUriString();
         return getLink( link, linkForDescribable( ee, defaultIfBlank( text, Hibernate.isInitialized( ee ) ? ee.getShortName() : null ), "Dataset" ) );
     }
