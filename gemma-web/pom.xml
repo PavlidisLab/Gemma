@@ -154,12 +154,11 @@
 			<version>1.19.0</version>
 		</dependency>
 
-		<!-- AJAX -->
-		<dependency>
-			<groupId>org.directwebremoting</groupId>
-			<artifactId>dwr</artifactId>
-			<version>2.0.11-RELEASE</version>
-		</dependency>
+		<!-- DWR removed on the renovations branch — the Spring-XML <dwr:remote> bindings are gone
+		     (see gemma-servlet.xml). The 40 controllers / 279 methods previously exposed via DWR
+		     are now dead code as far as the runtime is concerned; they'll be deleted (or migrated
+		     to REST in gemma-rest) as part of the gemma-web decommissioning. DWR 2.0 doesn't survive
+		     the Phase 2 jakarta cutover anyway. -->
 
 		<!-- Templating -->
 		<dependency>

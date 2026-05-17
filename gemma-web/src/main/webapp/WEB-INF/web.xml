@@ -215,7 +215,6 @@
     <servlet-mapping>
         <servlet-name>gemma</servlet-name>
         <url-pattern>/</url-pattern>
-        <url-pattern>/dwr/*</url-pattern>
     </servlet-mapping>
 
     <servlet-mapping>

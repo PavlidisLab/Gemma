@@ -20,7 +20,6 @@ package ubic.gemma.web.controller.common.auditAndSecurity;
 
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.text.StringEscapeUtils;
-import org.directwebremoting.WebContextFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
@@ -52,13 +51,10 @@ public class FileUploadController extends AbstractController {
     @Value("${gemma.download.path}/userUploads")
     private Path uploadDir;
 
-    public UploadInfo getUploadStatus() {
-        HttpServletRequest req = WebContextFactory.get().getHttpServletRequest();
-        if ( req.getSession().getAttribute( "uploadInfo" ) != null )
-            return ( UploadInfo ) req.getSession().getAttribute( "uploadInfo" );
-
-        return new UploadInfo();
-    }
+    // Renovations: previously a DWR-exposed method that pulled the current HttpServletRequest from
+    // DWR's WebContextFactory. DWR has been removed; if upload-progress polling is needed in the
+    // new React frontend, this should be re-implemented as a Spring MVC @RequestMapping handler that
+    // accepts HttpServletRequest as a parameter.
 
     /**
      * Ajax. DWR can handle this.
