@@ -9,9 +9,9 @@ import io.swagger.v3.oas.models.OpenAPI;
 import org.junit.Test;
 import ubic.gemma.rest.util.MalformedArgException;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.QueryParam;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.QueryParam;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;

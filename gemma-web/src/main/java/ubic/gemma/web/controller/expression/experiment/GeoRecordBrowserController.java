@@ -24,7 +24,7 @@ import org.springframework.stereotype.Controller;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowserService;
 
-import javax.servlet.ServletContext;
+import jakarta.servlet.ServletContext;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.Collection;

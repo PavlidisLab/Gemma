@@ -19,7 +19,6 @@
 
 package ubic.gemma.model.expression.experiment;
 
-import org.hibernate.search.annotations.*;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.DescribableUtils;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
@@ -27,7 +26,7 @@ import ubic.gemma.model.common.description.Category;
 import ubic.gemma.model.common.description.Characteristic;
 
 import javax.annotation.Nullable;
-import javax.persistence.Transient;
+import jakarta.persistence.Transient;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Objects;
@@ -38,7 +37,6 @@ import java.util.Set;
  *
  * @author Paul
  */
-@Indexed
 public class ExperimentalFactor extends AbstractDescribable implements SecuredChild<ExpressionExperiment> {
 
     public static Comparator<ExperimentalFactor> COMPARATOR = Comparator.comparing( ExperimentalFactor::getName )
@@ -61,19 +59,16 @@ public class ExperimentalFactor extends AbstractDescribable implements SecuredCh
     }
 
     @Override
-    @DocumentId
     public Long getId() {
         return super.getId();
     }
 
     @Override
-    @Field
     public String getName() {
         return super.getName();
     }
 
     @Override
-    @Field(store = Store.YES)
     public String getDescription() {
         return super.getDescription();
     }
@@ -107,7 +102,6 @@ public class ExperimentalFactor extends AbstractDescribable implements SecuredCh
      * @return the category or null if annotated automatically from GEO or used as a dummy.
      */
     @Nullable
-    @IndexedEmbedded
     public Characteristic getCategory() {
         return this.category;
     }
@@ -127,7 +121,6 @@ public class ExperimentalFactor extends AbstractDescribable implements SecuredCh
     /**
      * @return The pairing of BioAssay FactorValues with the ExperimentDesign ExperimentFactor.
      */
-    @IndexedEmbedded
     public Set<FactorValue> getFactorValues() {
         return this.factorValues;
     }

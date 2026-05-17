@@ -25,7 +25,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-import javax.persistence.Transient;
+import jakarta.persistence.Transient;
 import java.util.*;
 
 public class PrincipalComponentAnalysis extends SingleExperimentAnalysis<ExpressionExperiment> {

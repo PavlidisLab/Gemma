@@ -18,20 +18,14 @@
  */
 package ubic.gemma.model.genome.gene;
 
-import org.hibernate.search.annotations.Analyze;
-import org.hibernate.search.annotations.DocumentId;
-import org.hibernate.search.annotations.Field;
-import org.hibernate.search.annotations.Indexed;
 import ubic.gemma.model.common.AbstractIdentifiable;
 
 import java.util.Objects;
 
-@Indexed
 public class GeneAlias extends AbstractIdentifiable {
 
     private String alias;
 
-    @Field(analyze = Analyze.NO)
     public String getAlias() {
         return this.alias;
     }
@@ -41,7 +35,6 @@ public class GeneAlias extends AbstractIdentifiable {
     }
 
     @Override
-    @DocumentId
     public Long getId() {
         return super.getId();
     }

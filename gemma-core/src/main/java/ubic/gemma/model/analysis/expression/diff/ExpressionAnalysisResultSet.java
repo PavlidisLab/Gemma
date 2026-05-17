@@ -25,7 +25,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
 import javax.annotation.Nullable;
-import javax.persistence.Transient;
+import jakarta.persistence.Transient;
 import java.util.HashSet;
 import java.util.Set;
 

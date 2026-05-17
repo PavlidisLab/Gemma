@@ -14,7 +14,7 @@ import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.web.controller.util.DefaultHandlerExceptionResolver;
 import ubic.gemma.web.controller.util.MessageUtil;
 
-import javax.servlet.ServletContext;
+import jakarta.servlet.ServletContext;
 
 /**
  * Base class for a Web-based unit test.

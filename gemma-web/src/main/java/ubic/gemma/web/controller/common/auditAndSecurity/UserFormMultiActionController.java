@@ -40,7 +40,7 @@ import ubic.gemma.web.controller.util.JsonUtil;
 import ubic.gemma.web.controller.util.MessageUtil;
 
 import javax.annotation.Nullable;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Locale;
 import java.util.regex.Pattern;

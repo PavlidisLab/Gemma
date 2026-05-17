@@ -18,7 +18,6 @@
  */
 package ubic.gemma.model.common.description;
 
-import org.hibernate.search.annotations.*;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.expression.biomaterial.Compound;
 
@@ -26,7 +25,6 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
-@Indexed
 public class BibliographicReference extends AbstractDescribable {
 
     private String authorList;
@@ -57,7 +55,6 @@ public class BibliographicReference extends AbstractDescribable {
     private Set<Compound> chemicals = new HashSet<>();
 
     @Override
-    @DocumentId
     public Long getId() {
         return super.getId();
     }
@@ -76,12 +73,10 @@ public class BibliographicReference extends AbstractDescribable {
     }
 
     @Override
-    @Field
     public String getName() {
         return super.getName();
     }
 
-    @Field(store = Store.YES)
     public String getAbstractText() {
         return this.abstractText;
     }
@@ -113,7 +108,6 @@ public class BibliographicReference extends AbstractDescribable {
         this.annotations = annotations;
     }
 
-    @Field(store = Store.YES)
     public String getAuthorList() {
         return this.authorList;
     }
@@ -122,7 +116,6 @@ public class BibliographicReference extends AbstractDescribable {
         this.authorList = authorList;
     }
 
-    @IndexedEmbedded
     public Set<Compound> getChemicals() {
         return this.chemicals;
     }
@@ -153,7 +146,6 @@ public class BibliographicReference extends AbstractDescribable {
     /**
      * @return URI of the full text on the publisher's web site.
      */
-    @Field(analyze = Analyze.NO)
     public String getFullTextUri() {
         return this.fullTextUri;
     }
@@ -170,7 +162,6 @@ public class BibliographicReference extends AbstractDescribable {
         this.issue = issue;
     }
 
-    @IndexedEmbedded
     public Set<Keyword> getKeywords() {
         return this.keywords;
     }
@@ -179,7 +170,6 @@ public class BibliographicReference extends AbstractDescribable {
         this.keywords = keywords;
     }
 
-    @IndexedEmbedded
     public Set<MedicalSubjectHeading> getMeshTerms() {
         return this.meshTerms;
     }
@@ -196,7 +186,6 @@ public class BibliographicReference extends AbstractDescribable {
         this.pages = pages;
     }
 
-    @IndexedEmbedded
     public DatabaseEntry getPubAccession() {
         return this.pubAccession;
     }
@@ -229,7 +218,6 @@ public class BibliographicReference extends AbstractDescribable {
         this.publisher = publisher;
     }
 
-    @Field(store = Store.YES)
     public String getTitle() {
         return this.title;
     }

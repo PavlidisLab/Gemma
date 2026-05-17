@@ -22,7 +22,7 @@ import ubic.gemma.model.analysis.SingleExperimentAnalysis;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import javax.annotation.Nullable;
-import javax.persistence.Transient;
+import jakarta.persistence.Transient;
 
 /**
  * The 'analysis' in the name is a bit of a stretch here, as this object servers purely as an aggregator

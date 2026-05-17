@@ -28,7 +28,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.servlet.tags.RequestContextAwareTag;
 import ubic.gemma.core.context.EnvironmentProfiles;
 
-import javax.servlet.jsp.tagext.Tag;
+import jakarta.servlet.jsp.tagext.Tag;
 
 import static org.springframework.web.util.HtmlUtils.htmlEscape;
 

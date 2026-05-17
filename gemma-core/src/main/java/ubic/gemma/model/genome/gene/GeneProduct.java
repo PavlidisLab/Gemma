@@ -18,18 +18,16 @@ package ubic.gemma.model.genome.gene;
  *
  */
 
-import org.hibernate.search.annotations.*;
 import ubic.gemma.model.common.DescribableUtils;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.ChromosomeFeature;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 
-import javax.persistence.Transient;
+import jakarta.persistence.Transient;
 import java.util.Objects;
 import java.util.Set;
 
-@Indexed
 public class GeneProduct extends ChromosomeFeature {
 
     private String ncbiGi;
@@ -93,18 +91,15 @@ public class GeneProduct extends ChromosomeFeature {
     }
 
     @Override
-    @DocumentId
     public Long getId() {
         return super.getId();
     }
 
     @Override
-    @Field
     public String getName() {
         return super.getName();
     }
 
-    @IndexedEmbedded
     public Set<DatabaseEntry> getAccessions() {
         return this.accessions;
     }
@@ -144,7 +139,6 @@ public class GeneProduct extends ChromosomeFeature {
     /**
      * @return GI for the gene product (if available)
      */
-    @Field(analyze = Analyze.NO)
     public String getNcbiGi() {
         return this.ncbiGi;
     }

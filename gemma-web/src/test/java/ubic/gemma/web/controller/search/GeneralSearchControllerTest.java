@@ -20,7 +20,7 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.web.util.BaseWebTest;
 import ubic.gemma.web.util.WebEntityUrlBuilder;
 
-import javax.servlet.ServletContext;
+import jakarta.servlet.ServletContext;
 import java.util.Arrays;
 import java.util.Collections;
 

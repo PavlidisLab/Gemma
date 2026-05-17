@@ -19,7 +19,6 @@
 
 package ubic.gemma.model.expression.arrayDesign;
 
-import org.hibernate.search.annotations.*;
 import ubic.gemma.model.common.auditAndSecurity.AbstractAuditable;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.SecuredNotChild;
@@ -38,7 +37,6 @@ import java.util.Set;
  *
  * @author Paul
  */
-@Indexed
 public class ArrayDesign extends AbstractAuditable implements Curatable, SecuredNotChild {
 
     public static final class Factory {
@@ -78,19 +76,16 @@ public class ArrayDesign extends AbstractAuditable implements Curatable, Secured
     }
 
     @Override
-    @DocumentId
     public Long getId() {
         return super.getId();
     }
 
     @Override
-    @Field
     public String getName() {
         return super.getName();
     }
 
     @Override
-    @Field(store = Store.YES)
     public String getDescription() {
         return super.getDescription();
     }
@@ -106,7 +101,6 @@ public class ArrayDesign extends AbstractAuditable implements Curatable, Secured
         return this.advertisedNumberOfDesignElements;
     }
 
-    @IndexedEmbedded
     public Set<AlternateName> getAlternateNames() {
         return this.alternateNames;
     }
@@ -135,7 +129,6 @@ public class ArrayDesign extends AbstractAuditable implements Curatable, Secured
     /**
      * @return Accessions for this array design in other databases, e.g., GEO, ArrayExpression.
      */
-    @IndexedEmbedded
     public Set<DatabaseEntry> getExternalReferences() {
         return this.externalReferences;
     }
@@ -163,7 +156,6 @@ public class ArrayDesign extends AbstractAuditable implements Curatable, Secured
      *         we often
      *         used names like "HG-U95A".
      */
-    @Field(analyze = Analyze.NO)
     public String getShortName() {
         return this.shortName;
     }

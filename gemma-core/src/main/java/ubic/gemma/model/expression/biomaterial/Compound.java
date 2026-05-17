@@ -18,25 +18,18 @@
  */
 package ubic.gemma.model.expression.biomaterial;
 
-import org.hibernate.search.annotations.Analyze;
-import org.hibernate.search.annotations.DocumentId;
-import org.hibernate.search.annotations.Field;
-import org.hibernate.search.annotations.Indexed;
 import ubic.gemma.model.common.AbstractDescribable;
 
-@Indexed
 public class Compound extends AbstractDescribable {
 
     private String registryNumber;
 
     @Override
-    @DocumentId
     public Long getId() {
         return super.getId();
     }
 
     @Override
-    @Field
     public String getName() {
         return super.getName();
     }
@@ -44,7 +37,6 @@ public class Compound extends AbstractDescribable {
     /**
      * @return CAS registry number (see http://www.cas.org/)
      */
-    @Field(analyze = Analyze.NO)
     public String getRegistryNumber() {
         return this.registryNumber;
     }

@@ -16,7 +16,7 @@ package ubic.gemma.model.analysis.expression.coexpression;
 
 import org.apache.commons.lang3.StringUtils;
 
-import javax.persistence.Transient;
+import jakarta.persistence.Transient;
 
 /**
  * Tracks the datasets in which coexpression for a gene has been tested. Determining if two genes were tested together

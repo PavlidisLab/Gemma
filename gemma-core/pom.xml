@@ -157,36 +157,9 @@
             </exclusions>
         </dependency>
 
-        <!-- Lucene (version is synced with baseCode) -->
-        <dependency>
-            <groupId>org.apache.lucene</groupId>
-            <artifactId>lucene-core</artifactId>
-            <version>${lucene.version}</version>
-        </dependency>
-        <!-- Lucene 4+ split lucene-analyzers into per-family artifacts. -->
-        <dependency>
-            <groupId>org.apache.lucene</groupId>
-            <artifactId>lucene-analyzers-common</artifactId>
-            <version>${lucene.version}</version>
-        </dependency>
-        <!-- Lucene 4+ split out the query parser into its own artifact (was bundled in lucene-core in 3.x). -->
-        <dependency>
-            <groupId>org.apache.lucene</groupId>
-            <artifactId>lucene-queryparser</artifactId>
-            <version>${lucene.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.lucene</groupId>
-            <artifactId>lucene-highlighter</artifactId>
-            <version>${lucene.version}</version>
-        </dependency>
-
-        <!-- Hibernate Search 5.11 — paired with Hibernate ORM 5.6 and Lucene 5.5. -->
-        <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-search-orm</artifactId>
-            <version>${hibernate.search.version}</version>
-        </dependency>
+        <!-- Renovations Phase 2: Lucene + Hibernate Search removed. SearchService is stubbed to return
+             empty results; reinstating real full-text search is future work (Hibernate Search 7 +
+             Lucene 9, or external OpenSearch/Postgres FTS). -->
 
         <!-- Apache Commons -->
         <dependency>
@@ -229,10 +202,11 @@
         </dependency>
 
         <!-- Utilities -->
+        <!-- JAXB API: jakarta (4.x) namespace. Phase 2 moved off javax.xml.bind:jaxb-api:2.3.1. -->
         <dependency>
-            <groupId>javax.xml.bind</groupId>
-            <artifactId>jaxb-api</artifactId>
-            <version>2.3.1</version>
+            <groupId>jakarta.xml.bind</groupId>
+            <artifactId>jakarta.xml.bind-api</artifactId>
+            <version>4.0.2</version>
         </dependency>
         <dependency>
             <groupId>obo</groupId>
@@ -307,11 +281,11 @@
         </dependency>
 
         <!-- Testing -->
-        <!-- specifically for spring-security-test which refers to definitions from javax.servlet-api, spring-web and spring-security-web -->
+        <!-- specifically for spring-security-test which refers to definitions from jakarta.servlet-api, spring-web and spring-security-web -->
         <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
-            <version>4.0.1</version>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <version>6.0.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>

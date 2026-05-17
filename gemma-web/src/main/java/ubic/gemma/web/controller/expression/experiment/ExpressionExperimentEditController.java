@@ -65,7 +65,7 @@ import ubic.gemma.web.controller.util.MessageUtil;
 import ubic.gemma.web.service.ExpressionExperimentEditControllerHelperService;
 
 import javax.annotation.Nullable;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;

@@ -23,7 +23,7 @@ import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.GenericWebApplicationContext;
 import ubic.gemma.core.context.EnvironmentProfiles;
 
-import javax.ws.rs.core.Application;
+import jakarta.ws.rs.core.Application;
 
 /**
  * Base class for Jersey-based tests that needs a {@link WebApplicationContext} for loading and configuring or mocking

@@ -15,7 +15,6 @@
 package ubic.gemma.model.expression.experiment;
 
 import lombok.extern.apachecommons.CommonsLog;
-import org.hibernate.search.annotations.*;
 import ubic.gemma.model.common.auditAndSecurity.SecuredNotChild;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
@@ -38,7 +37,6 @@ import java.util.Set;
 /**
  * @author paul
  */
-@Indexed
 @CommonsLog
 public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild, Curatable {
 
@@ -123,49 +121,41 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     private Set<Characteristic> allCharacteristics;
 
     @Override
-    @DocumentId
     public Long getId() {
         return super.getId();
     }
 
     @Override
-    @Field(store = Store.YES)
     public String getName() {
         return super.getName();
     }
 
     @Override
-    @Field(store = Store.YES)
     public String getDescription() {
         return super.getDescription();
     }
 
     @Override
-    @IndexedEmbedded
     public Set<BioAssay> getBioAssays() {
         return super.getBioAssays();
     }
 
     @Nullable
-    @IndexedEmbedded
     public DatabaseEntry getAccession() {
         return accession;
     }
 
     @Override
-    @IndexedEmbedded
     public BibliographicReference getPrimaryPublication() {
         return super.getPrimaryPublication();
     }
 
     @Override
-    @IndexedEmbedded
     public Set<BibliographicReference> getOtherRelevantPublications() {
         return super.getOtherRelevantPublications();
     }
 
     @Override
-    @IndexedEmbedded(includePaths = { "value", "valueUri" })
     public Set<Characteristic> getCharacteristics() {
         return super.getCharacteristics();
     }
@@ -191,7 +181,6 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     }
 
     @Nullable
-    @IndexedEmbedded
     public ExperimentalDesign getExperimentalDesign() {
         return this.experimentalDesign;
     }
@@ -248,7 +237,6 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
      * we often
      * used names like "alizadeh-lymphoma".
      */
-    @Field(analyze = Analyze.NO)
     public String getShortName() {
         return this.shortName;
     }

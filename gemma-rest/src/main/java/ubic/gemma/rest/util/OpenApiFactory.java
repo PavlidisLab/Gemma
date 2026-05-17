@@ -19,7 +19,7 @@ import org.springframework.util.ReflectionUtils;
 import org.springframework.web.context.ServletConfigAware;
 import ubic.gemma.core.context.AbstractAsyncFactoryBean;
 
-import javax.servlet.ServletConfig;
+import jakarta.servlet.ServletConfig;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;

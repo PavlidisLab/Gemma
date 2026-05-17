@@ -27,8 +27,8 @@ import ubic.gemma.web.assets.StaticAssetResolver;
 import ubic.gemma.web.util.ExternalDatabaseWebUtils;
 
 import javax.annotation.Nullable;
-import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.tagext.Tag;
+import jakarta.servlet.jsp.JspException;
+import jakarta.servlet.jsp.tagext.Tag;
 
 /**
  * @author keshav

@@ -3,7 +3,7 @@ package ubic.gemma.model.common.auditAndSecurity;
 import gemma.gsec.acl.domain.AclObjectIdentity;
 
 import javax.annotation.Nullable;
-import javax.persistence.Transient;
+import jakarta.persistence.Transient;
 
 /**
  *

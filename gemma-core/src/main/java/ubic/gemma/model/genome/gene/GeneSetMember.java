@@ -18,27 +18,21 @@
  */
 package ubic.gemma.model.genome.gene;
 
-import org.hibernate.search.annotations.DocumentId;
-import org.hibernate.search.annotations.Indexed;
-import org.hibernate.search.annotations.IndexedEmbedded;
 import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.genome.Gene;
 
 import java.util.Objects;
 
-@Indexed
 public class GeneSetMember extends AbstractIdentifiable {
 
     private Double score;
     private Gene gene;
 
     @Override
-    @DocumentId
     public Long getId() {
         return super.getId();
     }
 
-    @IndexedEmbedded
     public Gene getGene() {
         return this.gene;
     }

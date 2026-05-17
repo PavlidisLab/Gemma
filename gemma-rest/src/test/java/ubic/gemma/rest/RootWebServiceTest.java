@@ -9,7 +9,7 @@ import ubic.gemma.core.util.concurrent.FutureUtils;
 import ubic.gemma.rest.util.Assertions;
 import ubic.gemma.rest.util.BaseJerseyIntegrationTest;
 
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response;
 import java.util.List;
 import java.util.concurrent.Future;
 

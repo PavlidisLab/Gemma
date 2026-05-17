@@ -18,7 +18,7 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
-import javax.persistence.Transient;
+import jakarta.persistence.Transient;
 
 /**
  *

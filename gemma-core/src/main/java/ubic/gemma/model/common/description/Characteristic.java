@@ -20,10 +20,6 @@
 package ubic.gemma.model.common.description;
 
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.search.annotations.Analyze;
-import org.hibernate.search.annotations.DocumentId;
-import org.hibernate.search.annotations.Field;
-import org.hibernate.search.annotations.Indexed;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.AbstractDescribable;
 
@@ -44,7 +40,6 @@ import static org.apache.commons.lang3.StringUtils.stripToNull;
  *
  * @author Paul
  */
-@Indexed
 public class Characteristic extends AbstractDescribable implements Comparable<Characteristic> {
 
     private static final Comparator<Characteristic> BY_CATEGORY_COMPARATOR = ( c1, c2 ) -> CharacteristicUtils.compareTerm( c1.category, c1.categoryUri, c2.category, c2.categoryUri );
@@ -117,7 +112,6 @@ public class Characteristic extends AbstractDescribable implements Comparable<Ch
     }
 
     @Override
-    @DocumentId
     public Long getId() {
         return super.getId();
     }
@@ -125,7 +119,6 @@ public class Characteristic extends AbstractDescribable implements Comparable<Ch
     /**
      * @return either the human readable form of the classUri or a free text version if no classUri exists
      */
-    @Field
     @Nullable
     public String getCategory() {
         return this.category;
@@ -149,7 +142,6 @@ public class Characteristic extends AbstractDescribable implements Comparable<Ch
      * associations with this.
      */
     @Nullable
-    @Field(analyze = Analyze.NO)
     public String getCategoryUri() {
         return this.categoryUri;
     }
@@ -181,7 +173,6 @@ public class Characteristic extends AbstractDescribable implements Comparable<Ch
     /**
      * @return The human-readable term (e.g., "OrganismPart"; "kinase")
      */
-    @Field
     public String getValue() {
         return this.value;
     }
@@ -198,7 +189,6 @@ public class Characteristic extends AbstractDescribable implements Comparable<Ch
      * abstract class.
      */
     @Nullable
-    @Field(analyze = Analyze.NO)
     public String getValueUri() {
         return this.valueUri;
     }

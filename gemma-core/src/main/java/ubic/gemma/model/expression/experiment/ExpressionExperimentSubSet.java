@@ -21,7 +21,7 @@ package ubic.gemma.model.expression.experiment;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 
-import javax.persistence.Transient;
+import jakarta.persistence.Transient;
 import java.nio.charset.StandardCharsets;
 
 import static ubic.gemma.core.util.StringUtils.abbreviateWithSuffix;

@@ -18,9 +18,7 @@
  */
 package ubic.gemma.model.common.description;
 
-import org.hibernate.search.annotations.Indexed;
 
-@Indexed
 public class Keyword extends BibRefAnnotation {
 
     public static final class Factory {

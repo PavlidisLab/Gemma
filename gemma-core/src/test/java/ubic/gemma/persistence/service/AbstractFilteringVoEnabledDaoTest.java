@@ -20,7 +20,7 @@ import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.core.context.TestComponent;
 
 import javax.annotation.Nullable;
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;

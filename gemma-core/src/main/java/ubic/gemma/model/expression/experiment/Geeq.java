@@ -21,7 +21,7 @@ package ubic.gemma.model.expression.experiment;
 
 import ubic.gemma.model.common.AbstractIdentifiable;
 
-import javax.persistence.Transient;
+import jakarta.persistence.Transient;
 
 /**
  * Represents quality information about a data set. The class name comes from the research project name, GEEQ.

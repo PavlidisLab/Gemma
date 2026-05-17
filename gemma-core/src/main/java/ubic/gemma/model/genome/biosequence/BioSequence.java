@@ -18,10 +18,6 @@
  */
 package ubic.gemma.model.genome.biosequence;
 
-import org.hibernate.search.annotations.DocumentId;
-import org.hibernate.search.annotations.Field;
-import org.hibernate.search.annotations.Indexed;
-import org.hibernate.search.annotations.IndexedEmbedded;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.DescribableUtils;
@@ -42,7 +38,6 @@ import java.util.Set;
  * physical item, and not the database entry for the sequence.
  * </p>
  */
-@Indexed
 public class BioSequence extends AbstractDescribable {
 
     private Long length;
@@ -59,13 +54,11 @@ public class BioSequence extends AbstractDescribable {
     private Set<BioSequence2GeneProduct> bioSequence2GeneProduct = new java.util.HashSet<>();
 
     @Override
-    @DocumentId
     public Long getId() {
         return super.getId();
     }
 
     @Override
-    @Field
     public String getName() {
         return super.getName();
     }
@@ -133,7 +126,6 @@ public class BioSequence extends AbstractDescribable {
         this.sequence = sequence;
     }
 
-    @IndexedEmbedded
     public DatabaseEntry getSequenceDatabaseEntry() {
         return this.sequenceDatabaseEntry;
     }

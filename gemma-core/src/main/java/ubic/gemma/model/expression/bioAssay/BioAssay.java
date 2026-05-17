@@ -18,7 +18,6 @@
  */
 package ubic.gemma.model.expression.bioAssay;
 
-import org.hibernate.search.annotations.*;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.DescribableUtils;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
@@ -28,7 +27,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import javax.annotation.Nullable;
-import javax.persistence.Transient;
+import jakarta.persistence.Transient;
 import java.util.Date;
 
 /**
@@ -36,7 +35,6 @@ import java.util.Date;
  * don't distinguish between "physical" and "computational" BioAssays, so this is a concrete class. This has several
  * slots that are used specifically to support sequence-based data, but is intended to be generic.
  */
-@Indexed
 public class BioAssay extends AbstractDescribable implements SecuredChild<ExpressionExperiment> {
 
     public static final int MAX_NAME_LENGTH = 255;
@@ -176,13 +174,11 @@ public class BioAssay extends AbstractDescribable implements SecuredChild<Expres
     }
 
     @Override
-    @DocumentId
     public Long getId() {
         return super.getId();
     }
 
     @Nullable
-    @Field
     public String getShortName() {
         return shortName;
     }
@@ -192,19 +188,16 @@ public class BioAssay extends AbstractDescribable implements SecuredChild<Expres
     }
 
     @Override
-    @Field
     public String getName() {
         return super.getName();
     }
 
     @Override
-    @Field(store = Store.YES)
     public String getDescription() {
         return super.getDescription();
     }
 
     @Nullable
-    @IndexedEmbedded
     public DatabaseEntry getAccession() {
         return this.accession;
     }
@@ -238,7 +231,6 @@ public class BioAssay extends AbstractDescribable implements SecuredChild<Expres
         this.processingDate = processingDate;
     }
 
-    @IndexedEmbedded
     public BioMaterial getSampleUsed() {
         return this.sampleUsed;
     }

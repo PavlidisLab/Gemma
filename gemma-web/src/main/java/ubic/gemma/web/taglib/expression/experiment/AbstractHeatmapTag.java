@@ -7,7 +7,7 @@ import ubic.gemma.core.visualization.ChartUtils;
 import ubic.gemma.core.visualization.Heatmap;
 import ubic.gemma.web.taglib.AbstractHtmlElementTag;
 
-import javax.servlet.jsp.JspException;
+import jakarta.servlet.jsp.JspException;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

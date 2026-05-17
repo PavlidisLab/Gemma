@@ -22,7 +22,7 @@ package ubic.gemma.web.controller.util.upload;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.multipart.support.AbstractMultipartHttpServletRequest;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * Used to allow downstream processing to figure out multipart resolution failed without throwing an exception. This

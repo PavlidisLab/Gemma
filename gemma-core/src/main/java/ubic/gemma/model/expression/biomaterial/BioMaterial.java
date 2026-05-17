@@ -19,7 +19,6 @@
 
 package ubic.gemma.model.expression.biomaterial;
 
-import org.hibernate.search.annotations.*;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.DescribableUtils;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
@@ -31,7 +30,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
 
 import javax.annotation.Nullable;
-import javax.persistence.Transient;
+import jakarta.persistence.Transient;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Set;
@@ -48,7 +47,6 @@ import static ubic.gemma.persistence.service.expression.biomaterial.BioMaterialU
  * BioMaterial can be organized in a hierarchy via {@link #getSourceBioMaterial()}. When that is the case,
  * sub-biomaterials inherit characteristics, factors and treatments from their source biomaterials.
  */
-@Indexed
 public class BioMaterial extends AbstractDescribable implements SecuredChild<ExpressionExperiment> {
 
     public static final int MAX_NAME_LENGTH = 255;
@@ -71,13 +69,11 @@ public class BioMaterial extends AbstractDescribable implements SecuredChild<Exp
     private ExpressionExperiment securityOwner;
 
     @Override
-    @DocumentId
     public Long getId() {
         return super.getId();
     }
 
     @Override
-    @Field
     public String getName() {
         return super.getName();
     }
@@ -97,7 +93,6 @@ public class BioMaterial extends AbstractDescribable implements SecuredChild<Exp
         this.sourceBioMaterial = sourceBioMaterial;
     }
 
-    @ContainedIn
     public Set<BioAssay> getBioAssaysUsedIn() {
         return this.bioAssaysUsedIn;
     }
@@ -119,7 +114,6 @@ public class BioMaterial extends AbstractDescribable implements SecuredChild<Exp
         return unmodifiableSet( assays );
     }
 
-    @IndexedEmbedded
     public Set<Characteristic> getCharacteristics() {
         return this.characteristics;
     }
@@ -149,7 +143,6 @@ public class BioMaterial extends AbstractDescribable implements SecuredChild<Exp
      * BioMaterial may reference a given external accession.
      */
     @Nullable
-    @IndexedEmbedded
     public DatabaseEntry getExternalAccession() {
         return this.externalAccession;
     }

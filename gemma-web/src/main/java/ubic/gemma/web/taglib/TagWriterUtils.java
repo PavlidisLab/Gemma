@@ -3,7 +3,7 @@ package ubic.gemma.web.taglib;
 import org.springframework.web.servlet.tags.form.TagWriter;
 import org.springframework.web.util.HtmlUtils;
 
-import javax.servlet.jsp.JspException;
+import jakarta.servlet.jsp.JspException;
 import java.util.Map;
 
 public class TagWriterUtils {

@@ -25,7 +25,7 @@ import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-import javax.persistence.Transient;
+import jakarta.persistence.Transient;
 import java.nio.*;
 import java.util.Arrays;
 import java.util.Objects;

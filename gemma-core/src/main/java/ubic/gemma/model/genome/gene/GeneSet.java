@@ -19,7 +19,6 @@
 
 package ubic.gemma.model.genome.gene;
 
-import org.hibernate.search.annotations.*;
 import ubic.gemma.model.common.auditAndSecurity.AbstractAuditable;
 import ubic.gemma.model.common.auditAndSecurity.SecuredNotChild;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -33,7 +32,6 @@ import java.util.Set;
 /**
  * A grouping of genes that share a common relationship
  */
-@Indexed
 public class GeneSet extends AbstractAuditable implements SecuredNotChild {
 
     private Set<Characteristic> characteristics = new HashSet<>();
@@ -50,24 +48,20 @@ public class GeneSet extends AbstractAuditable implements SecuredNotChild {
     }
 
     @Override
-    @DocumentId
     public Long getId() {
         return super.getId();
     }
 
     @Override
-    @Field
     public String getName() {
         return super.getName();
     }
 
     @Override
-    @Field(store = Store.YES)
     public String getDescription() {
         return super.getDescription();
     }
 
-    @IndexedEmbedded
     public Set<Characteristic> getCharacteristics() {
         return this.characteristics;
     }
@@ -77,7 +71,6 @@ public class GeneSet extends AbstractAuditable implements SecuredNotChild {
     }
 
 
-    @IndexedEmbedded
     public Set<BibliographicReference> getLiteratureSources() {
         return this.literatureSources;
     }
@@ -86,7 +79,6 @@ public class GeneSet extends AbstractAuditable implements SecuredNotChild {
         this.literatureSources = literatureSources;
     }
 
-    @IndexedEmbedded
     public Set<GeneSetMember> getMembers() {
         return this.members;
     }
@@ -95,7 +87,6 @@ public class GeneSet extends AbstractAuditable implements SecuredNotChild {
         this.members = members;
     }
 
-    @IndexedEmbedded
     public DatabaseEntry getSourceAccession() {
         return this.sourceAccession;
     }

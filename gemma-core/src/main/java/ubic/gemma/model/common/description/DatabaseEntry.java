@@ -18,10 +18,6 @@
  */
 package ubic.gemma.model.common.description;
 
-import org.hibernate.search.annotations.Analyze;
-import org.hibernate.search.annotations.DocumentId;
-import org.hibernate.search.annotations.Field;
-import org.hibernate.search.annotations.Indexed;
 import ubic.gemma.model.common.AbstractIdentifiable;
 
 import javax.annotation.Nullable;
@@ -33,7 +29,6 @@ import java.util.Objects;
  * A reference to a record in a database.
  * </p>
  */
-@Indexed
 public class DatabaseEntry extends AbstractIdentifiable {
 
     /**
@@ -65,7 +60,6 @@ public class DatabaseEntry extends AbstractIdentifiable {
     private String uri;
     private ExternalDatabase externalDatabase;
 
-    @Field(analyze = Analyze.NO)
     public String getAccession() {
         return this.accession;
     }
@@ -91,7 +85,6 @@ public class DatabaseEntry extends AbstractIdentifiable {
     }
 
     @Override
-    @DocumentId
     public Long getId() {
         return super.getId();
     }

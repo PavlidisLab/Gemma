@@ -26,7 +26,7 @@ package ubic.gemma.web.controller.util.upload;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * This is created when a multipart request is received (via the CommonsMultipartMonitoredResolver). It starts of a

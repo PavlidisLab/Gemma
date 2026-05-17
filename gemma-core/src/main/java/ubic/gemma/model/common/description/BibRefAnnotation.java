@@ -18,8 +18,6 @@
  */
 package ubic.gemma.model.common.description;
 
-import org.hibernate.search.annotations.DocumentId;
-import org.hibernate.search.annotations.Field;
 import ubic.gemma.model.common.AbstractIdentifiable;
 
 import java.util.Objects;
@@ -30,7 +28,6 @@ public abstract class BibRefAnnotation extends AbstractIdentifiable {
 
     private String term;
 
-    @DocumentId
     public Long getId() {
         return super.getId();
     }
@@ -43,7 +40,6 @@ public abstract class BibRefAnnotation extends AbstractIdentifiable {
         this.isMajorTopic = isMajorTopic;
     }
 
-    @Field
     public String getTerm() {
         return this.term;
     }

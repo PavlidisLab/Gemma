@@ -10,8 +10,8 @@ import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.web.util.Constants;
 
 import javax.annotation.Nullable;
-import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.PageContext;
+import jakarta.servlet.jsp.JspException;
+import jakarta.servlet.jsp.PageContext;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;

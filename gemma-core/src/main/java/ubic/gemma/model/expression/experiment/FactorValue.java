@@ -18,9 +18,6 @@
  */
 package ubic.gemma.model.expression.experiment;
 
-import org.hibernate.search.annotations.DocumentId;
-import org.hibernate.search.annotations.Indexed;
-import org.hibernate.search.annotations.IndexedEmbedded;
 import org.springframework.util.Assert;
 import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
@@ -29,7 +26,7 @@ import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import javax.annotation.Nullable;
-import javax.persistence.Transient;
+import jakarta.persistence.Transient;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -38,7 +35,6 @@ import java.util.stream.Collectors;
 /**
  * The value for a ExperimentalFactor, representing a specific instance of the factor, such as "10 ug/kg" or "mutant"
  */
-@Indexed
 public class FactorValue extends AbstractIdentifiable implements SecuredChild<ExpressionExperiment> {
 
     private ExperimentalFactor experimentalFactor;
@@ -58,7 +54,6 @@ public class FactorValue extends AbstractIdentifiable implements SecuredChild<Ex
     private ExpressionExperiment securityOwner = null;
 
     @Override
-    @DocumentId
     public Long getId() {
         return super.getId();
     }
@@ -114,7 +109,6 @@ public class FactorValue extends AbstractIdentifiable implements SecuredChild<Ex
     /**
      * Collection of {@link Statement} describing this factor value.
      */
-    @IndexedEmbedded
     public Set<Statement> getCharacteristics() {
         return this.characteristics;
     }

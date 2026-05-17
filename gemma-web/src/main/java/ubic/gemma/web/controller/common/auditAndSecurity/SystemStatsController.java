@@ -21,7 +21,7 @@ package ubic.gemma.web.controller.common.auditAndSecurity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.servlet.mvc.AbstractUrlViewController;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * System statistics

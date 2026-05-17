@@ -78,6 +78,9 @@ public class CellXGeneConverter {
             BioMaterial sample = BioMaterial.Factory.newInstance( sampleName, taxon );
             BioAssay assay = BioAssay.Factory.newInstance( sampleName, platform, sample );
             sample.getBioAssaysUsedIn().add( assay );
+            if (ee.getBioAssays().contains( assay )) {
+                ///  complain
+            }
             ee.getBioAssays().add( assay );
         }
         ee.setNumberOfSamples( ee.getBioAssays().size() );

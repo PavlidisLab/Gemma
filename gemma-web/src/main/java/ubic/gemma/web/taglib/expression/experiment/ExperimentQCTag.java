@@ -32,7 +32,7 @@ import ubic.gemma.web.taglib.AbstractHtmlElementTag;
 import ubic.gemma.web.util.WebEntityUrlBuilder;
 
 import javax.annotation.Nullable;
-import javax.servlet.jsp.JspException;
+import jakarta.servlet.jsp.JspException;
 
 import static org.springframework.web.util.JavaScriptUtils.javaScriptEscape;
 

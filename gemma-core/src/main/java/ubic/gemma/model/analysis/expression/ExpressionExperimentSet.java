@@ -19,7 +19,6 @@
 
 package ubic.gemma.model.analysis.expression;
 
-import org.hibernate.search.annotations.*;
 import ubic.gemma.model.common.DescribableUtils;
 import ubic.gemma.model.common.auditAndSecurity.AbstractAuditable;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
@@ -36,7 +35,6 @@ import java.util.Set;
  *
  * @author Paul
  */
-@Indexed
 public class ExpressionExperimentSet extends AbstractAuditable implements Securable {
 
     @Nullable
@@ -51,7 +49,6 @@ public class ExpressionExperimentSet extends AbstractAuditable implements Secura
     }
 
     @Override
-    @DocumentId
     public Long getId() {
         return super.getId();
     }
@@ -70,19 +67,16 @@ public class ExpressionExperimentSet extends AbstractAuditable implements Secura
     }
 
     @Override
-    @Field
     public String getName() {
         return super.getName();
     }
 
     @Override
-    @Field(store = Store.YES)
     public String getDescription() {
         return super.getDescription();
     }
 
     @Nullable
-    @IndexedEmbedded
     public DatabaseEntry getAccession() {
         return accession;
     }

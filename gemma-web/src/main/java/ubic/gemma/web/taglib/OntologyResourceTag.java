@@ -10,7 +10,7 @@ import ubic.basecode.ontology.model.OntologyResource;
 import ubic.gemma.core.ontology.OntologyExternalLinks;
 
 import javax.annotation.Nullable;
-import javax.servlet.jsp.JspException;
+import jakarta.servlet.jsp.JspException;
 
 @Setter
 public class OntologyResourceTag extends HtmlEscapingAwareTag {

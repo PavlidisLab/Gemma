@@ -5,7 +5,7 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.web.servlet.tags.form.TagWriter;
 import ubic.gemma.web.assets.StaticAssetResolver;
 
-import javax.servlet.jsp.JspException;
+import jakarta.servlet.jsp.JspException;
 
 /**
  * Base class for tags that refers to static assets.

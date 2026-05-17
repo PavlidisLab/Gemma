@@ -26,8 +26,8 @@ import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.web.assets.StaticAssetResolver;
 
 import javax.annotation.Nullable;
-import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.tagext.Tag;
+import jakarta.servlet.jsp.JspException;
+import jakarta.servlet.jsp.tagext.Tag;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;

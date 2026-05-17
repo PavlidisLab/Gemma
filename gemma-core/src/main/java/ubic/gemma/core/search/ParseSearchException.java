@@ -1,6 +1,5 @@
 package ubic.gemma.core.search;
 
-import org.apache.lucene.queryparser.classic.ParseException;
 
 import javax.annotation.Nullable;
 

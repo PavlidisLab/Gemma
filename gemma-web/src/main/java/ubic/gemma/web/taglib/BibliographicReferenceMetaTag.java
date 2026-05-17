@@ -9,8 +9,8 @@ import org.springframework.web.servlet.tags.form.TagWriter;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.ExternalDatabases;
 
-import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.tagext.TagSupport;
+import jakarta.servlet.jsp.JspException;
+import jakarta.servlet.jsp.tagext.TagSupport;
 
 import static org.springframework.web.util.HtmlUtils.htmlEscape;
 

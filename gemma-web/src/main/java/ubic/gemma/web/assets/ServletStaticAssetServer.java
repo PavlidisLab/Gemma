@@ -1,6 +1,6 @@
 package ubic.gemma.web.assets;
 
-import javax.servlet.ServletContext;
+import jakarta.servlet.ServletContext;
 
 /**
  * Serve static assets from the servlet context.

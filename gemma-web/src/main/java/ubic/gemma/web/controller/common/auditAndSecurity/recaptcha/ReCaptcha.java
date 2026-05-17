@@ -24,7 +24,7 @@ import org.json.JSONObject;
 import org.springframework.util.Assert;
 
 import javax.annotation.Nullable;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;

@@ -1,6 +1,6 @@
 package ubic.gemma.rest.annotations;
 
-import javax.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.MediaType;
 import java.lang.annotation.*;
 
 /**
@@ -19,7 +19,7 @@ public @interface GZIP {
 
     /**
      * If non-empty, only contents compatible with any of the specified media type will be compressed.
-     * @see javax.ws.rs.core.MediaType#isCompatible(MediaType)
+     * @see jakarta.ws.rs.core.MediaType#isCompatible(MediaType)
      */
     String[] mediaTypes() default {};
 

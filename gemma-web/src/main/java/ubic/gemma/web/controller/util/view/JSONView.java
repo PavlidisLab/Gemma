@@ -21,8 +21,8 @@ package ubic.gemma.web.controller.util.view;
 import org.json.JSONObject;
 import org.springframework.web.servlet.View;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.Writer;
 import java.util.Map;
 

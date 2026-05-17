@@ -15,8 +15,8 @@ import ubic.gemma.web.taglib.ImageTag;
 import ubic.gemma.web.taglib.ScriptTag;
 import ubic.gemma.web.taglib.StyleTag;
 
-import javax.servlet.ServletContext;
-import javax.servlet.jsp.JspException;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.jsp.JspException;
 import java.io.UnsupportedEncodingException;
 
 import static org.assertj.core.api.Assertions.assertThat;

@@ -16,7 +16,7 @@ package ubic.gemma.rest.util;
 
 import ubic.gemma.rest.util.args.Arg;
 
-import javax.ws.rs.BadRequestException;
+import jakarta.ws.rs.BadRequestException;
 
 /**
  * Specialized error for malformed {@link Arg}

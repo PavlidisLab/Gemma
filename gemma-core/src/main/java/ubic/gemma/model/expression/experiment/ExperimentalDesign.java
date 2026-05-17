@@ -18,16 +18,14 @@
  */
 package ubic.gemma.model.expression.experiment;
 
-import org.hibernate.search.annotations.*;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 import ubic.gemma.model.common.description.Characteristic;
 
 import javax.annotation.Nullable;
-import javax.persistence.Transient;
+import jakarta.persistence.Transient;
 import java.util.Set;
 
-@Indexed
 public class ExperimentalDesign extends AbstractDescribable implements SecuredChild<ExpressionExperiment> {
 
     private String replicateDescription;
@@ -40,19 +38,16 @@ public class ExperimentalDesign extends AbstractDescribable implements SecuredCh
     private ExpressionExperiment securityOwner;
 
     @Override
-    @DocumentId
     public Long getId() {
         return super.getId();
     }
 
     @Override
-    @Field
     public String getName() {
         return super.getName();
     }
 
     @Override
-    @Field(store = Store.YES)
     public String getDescription() {
         return super.getDescription();
     }
@@ -60,7 +55,6 @@ public class ExperimentalDesign extends AbstractDescribable implements SecuredCh
     /**
      * @return The description of the factors (TimeCourse, Dosage, etc.) that group the BioAssays.
      */
-    @IndexedEmbedded
     public Set<ExperimentalFactor> getExperimentalFactors() {
         return this.experimentalFactors;
     }

@@ -63,7 +63,7 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
         //noinspection unchecked
         // Hibernate 5: getAllClassMetadata() throws UnsupportedOperationException; use the JPA metamodel.
         dataVectorTypes = sessionFactory.getMetamodel().getEntities().stream()
-                .map( javax.persistence.metamodel.EntityType::getJavaType )
+                .map( jakarta.persistence.metamodel.EntityType::getJavaType )
                 .filter( DataVector.class::isAssignableFrom )
                 .map( clazz -> ( Class<? extends DataVector> ) clazz )
                 .collect( Collectors.toSet() );
@@ -320,7 +320,7 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
         //noinspection unchecked
         // Hibernate 5: getAllClassMetadata() throws UnsupportedOperationException; use the JPA metamodel.
         return getSessionFactory().getMetamodel().getEntities().stream()
-                .map( javax.persistence.metamodel.EntityType::getJavaType )
+                .map( jakarta.persistence.metamodel.EntityType::getJavaType )
                 .filter( vectorType::isAssignableFrom )
                 .map( clazz -> ( Class<? extends T> ) clazz )
                 .collect( Collectors.toSet() );

@@ -18,12 +18,10 @@
  */
 package ubic.gemma.model.common.description;
 
-import org.hibernate.search.annotations.Indexed;
 
 import java.util.HashSet;
 import java.util.Set;
 
-@Indexed
 public class MedicalSubjectHeading extends BibRefAnnotation {
 
     private Set<MedicalSubjectHeading> qualifiers = new HashSet<>();

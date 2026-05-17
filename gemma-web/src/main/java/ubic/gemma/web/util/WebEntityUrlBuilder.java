@@ -2,7 +2,7 @@ package ubic.gemma.web.util;
 
 import ubic.gemma.persistence.util.EntityUrlBuilder;
 
-import javax.servlet.ServletContext;
+import jakarta.servlet.ServletContext;
 
 /**
  * This builder has extras URL-generating capabilities for Web applications.

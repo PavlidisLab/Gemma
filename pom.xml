@@ -146,26 +146,11 @@
 	</contributors>
 	<dependencyManagement>
 		<dependencies>
-			<!-- Overrides for the pavlab-starter-parent's pins that no longer fit the bumped stack. -->
-			<dependency>
-				<groupId>net.sf.ehcache</groupId>
-				<artifactId>ehcache</artifactId>
-				<version>2.10.6</version>
-			</dependency>
-			<dependency>
-				<groupId>org.hibernate</groupId>
-				<artifactId>hibernate-core</artifactId>
-				<version>${hibernate.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.hibernate</groupId>
-				<artifactId>hibernate-ehcache</artifactId>
-				<version>${hibernate.version}</version>
-			</dependency>
+			<!-- Overrides for the pavlab-starter-parent's pins that no longer fit the Spring 6 / Hibernate 6 stack. -->
 			<dependency>
 				<groupId>org.hibernate.common</groupId>
 				<artifactId>hibernate-commons-annotations</artifactId>
-				<version>5.1.2.Final</version>
+				<version>6.0.6.Final</version>
 			</dependency>
 			<dependency>
 				<groupId>org.apache.commons</groupId>
@@ -285,35 +270,37 @@
 			<version>${spring.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>org.hibernate</groupId>
+			<groupId>org.hibernate.orm</groupId>
 			<artifactId>hibernate-core</artifactId>
 			<version>${hibernate.version}</version>
-			<exclusions>
-				<!-- byte-buddy aligned downstream (mockito brings 1.12.19). -->
-				<exclusion>
-					<groupId>net.bytebuddy</groupId>
-					<artifactId>byte-buddy</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>net.bytebuddy</groupId>
-			<artifactId>byte-buddy</artifactId>
-			<version>1.12.19</version>
-		</dependency>
-		<dependency>
-			<groupId>org.hibernate.common</groupId>
-			<artifactId>hibernate-commons-annotations</artifactId>
-			<version>5.1.2.Final</version>
 		</dependency>
 		<dependency>
 			<groupId>org.dom4j</groupId>
 			<artifactId>dom4j</artifactId>
 		</dependency>
+		<!-- Hibernate 6 dropped hibernate-ehcache; L2 cache via JCache + Ehcache 3 jakarta. -->
 		<dependency>
-			<groupId>org.hibernate</groupId>
-			<artifactId>hibernate-ehcache</artifactId>
+			<groupId>org.hibernate.orm</groupId>
+			<artifactId>hibernate-jcache</artifactId>
 			<version>${hibernate.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.ehcache</groupId>
+			<artifactId>ehcache</artifactId>
+			<version>3.10.8</version>
+			<classifier>jakarta</classifier>
+			<exclusions>
+				<exclusion>
+					<groupId>org.glassfish.jaxb</groupId>
+					<artifactId>jaxb-runtime</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.glassfish.jaxb</groupId>
+			<artifactId>jaxb-runtime</artifactId>
+			<version>4.0.5</version>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.jboss.logging</groupId>
@@ -336,14 +323,7 @@
 		</dependency>
 
 
-		<!-- Caching: ehcache 2.10.6 (was ehcache-core 2.4.3 via parent pom). Brings StatisticsGateway,
-		     setMaxEntriesLocalHeap(long), and a consistent classpath with hibernate-ehcache 5.6 which
-		     transitively requests the same artifact. -->
-		<dependency>
-			<groupId>net.sf.ehcache</groupId>
-			<artifactId>ehcache</artifactId>
-			<version>2.10.6</version>
-		</dependency>
+		<!-- Caching moved to JCache + Ehcache 3 above. Ehcache 2.x removed in Phase 2. -->
 
 		<!-- Utilities -->
 		<dependency>
@@ -495,15 +475,11 @@
 			<artifactId>xercesImpl</artifactId>
 			<version>2.12.2</version>
 		</dependency>
+		<!-- Renovations Phase 2: javax.xml.bind -> jakarta.xml.bind (JAXB 4.x). -->
 		<dependency>
-			<groupId>com.sun.xml.bind</groupId>
-			<artifactId>jaxb-impl</artifactId>
-			<version>2.2.11</version>
-		</dependency>
-		<dependency>
-			<groupId>com.sun.xml.bind</groupId>
-			<artifactId>jaxb-core</artifactId>
-			<version>2.2.11</version>
+			<groupId>jakarta.xml.bind</groupId>
+			<artifactId>jakarta.xml.bind-api</artifactId>
+			<version>4.0.2</version>
 		</dependency>
 
 		<!-- Logging -->
@@ -976,20 +952,21 @@
 		-->
 		<maven.compiler.release>11</maven.compiler.release>
 		<!--
-		Renovations Phase 1b: Spring 5.3 + Spring Security 5.8 + Hibernate 5.6 + Hibernate Search 5.11 + Lucene 5.5.
-		Spring 5 dropped the hibernate4 package so Hibernate ORM has to bump in tandem; Hibernate ORM 5
-		forces Hibernate Search 5; HS 5 uses Lucene 5.x. gsec is co-evolved at 0.0.23-RENOVATIONS-SNAPSHOT.
+		Renovations Phase 2: Spring 6.1 + Spring Security 6.3 + Hibernate 6.4 + jakarta everywhere.
+		Hibernate Search 5 (and its Lucene 3-era successor lineage) is gutted on this branch — the
+		HS 5 -> 7 DSL rewrite is its own multi-day project. SearchService / HibernateSearchSource
+		are stubbed to return empty; reinstating real ontology / entity full-text search is a future
+		phase (likely on HS 7 or an external engine like OpenSearch).
 		-->
 		<gsec.version>0.0.23-RENOVATIONS-SNAPSHOT</gsec.version>
-		<spring.version>5.3.39</spring.version>
-		<spring.security.version>5.8.16</spring.security.version>
-		<hibernate.version>5.6.15.Final</hibernate.version>
-		<hibernate.search.version>5.11.12.Final</hibernate.search.version>
-		<jersey.version>2.25.1</jersey.version>
+		<spring.version>6.1.20</spring.version>
+		<spring.security.version>6.3.10</spring.security.version>
+		<hibernate.version>6.4.10.Final</hibernate.version>
+		<jersey.version>3.1.10</jersey.version>
 		<jackson.version>2.21.0</jackson.version>
 		<jackson-annotations.version>2.21</jackson-annotations.version>
 		<swagger.version>2.2.42</swagger.version>
-		<lucene.version>5.5.5</lucene.version>
+		<!-- Lucene removed: Hibernate Search 5 was gutted in Phase 2; no direct Lucene deps required. -->
 		<slack.version>1.47.0</slack.version>
 		<!-- I've been running into some issues with the 1.14 series, to be investigated... -->
 		<micrometer.version>1.13.11</micrometer.version>
@@ -1001,7 +978,7 @@
 		<!-- directory containing the HDF5 JNI shared library -->
 		<hdf5.libDir>/usr/lib64/hdf5</hdf5.libDir>
 		<mysql.version>8.4.0</mysql.version>
-		<tomcat.version>9.0.115</tomcat.version>
+		<tomcat.version>10.1.34</tomcat.version>
 		<antlr4.version>4.13.2</antlr4.version>
 		<!-- 5.0.7.Final is broken due to https://github.com/ocpsoft/prettytime/issues/276 -->
 		<prettytime.version>5.0.6.Final</prettytime.version>

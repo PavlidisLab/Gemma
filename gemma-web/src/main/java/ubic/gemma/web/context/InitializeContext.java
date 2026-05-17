@@ -8,7 +8,7 @@ import org.springframework.web.context.ConfigurableWebApplicationContext;
 import ubic.gemma.core.config.Settings;
 import ubic.gemma.web.util.Constants;
 
-import javax.servlet.ServletContext;
+import jakarta.servlet.ServletContext;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;

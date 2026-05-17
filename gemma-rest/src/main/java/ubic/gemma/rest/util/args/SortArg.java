@@ -84,7 +84,7 @@ public class SortArg<O extends Identifiable> extends AbstractArg<SortArg.Sort> {
      *
      * @param s the request taxon argument
      * @return a new SortArg object representing the sort options in the given string, or a malformed SortArg that will
-     * throw a {@link javax.ws.rs.BadRequestException}, if the given string was not well-formed.
+     * throw a {@link jakarta.ws.rs.BadRequestException}, if the given string was not well-formed.
      */
     @SuppressWarnings("unused")
     public static <T extends Identifiable> SortArg<T> valueOf( final String s ) throws MalformedArgException {

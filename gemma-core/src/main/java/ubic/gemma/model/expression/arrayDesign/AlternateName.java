@@ -18,24 +18,18 @@
  */
 package ubic.gemma.model.expression.arrayDesign;
 
-import org.hibernate.search.annotations.DocumentId;
-import org.hibernate.search.annotations.Field;
-import org.hibernate.search.annotations.Indexed;
 import ubic.gemma.model.common.AbstractIdentifiable;
 
 import java.util.Objects;
 
-@Indexed
 public class AlternateName extends AbstractIdentifiable {
 
     private String name;
 
-    @DocumentId
     public Long getId() {
         return super.getId();
     }
 
-    @Field
     public String getName() {
         return this.name;
     }

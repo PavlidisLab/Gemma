@@ -22,8 +22,8 @@ import lombok.Setter;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
 import javax.annotation.Nullable;
-import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.tagext.TagSupport;
+import jakarta.servlet.jsp.JspException;
+import jakarta.servlet.jsp.tagext.TagSupport;
 import java.util.Collection;
 
 /**

@@ -3,7 +3,7 @@ package ubic.gemma.web.taglib;
 import lombok.Setter;
 import org.springframework.web.servlet.tags.form.TagWriter;
 
-import javax.servlet.jsp.JspException;
+import jakarta.servlet.jsp.JspException;
 
 /**
  * Write a {@code <style/>} tag.

@@ -5,9 +5,9 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.http.MediaType;
 import ubic.gemma.rest.annotations.GZIP;
 
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.ext.WriterInterceptor;
-import javax.ws.rs.ext.WriterInterceptorContext;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.ext.WriterInterceptor;
+import jakarta.ws.rs.ext.WriterInterceptorContext;
 import java.io.IOException;
 import java.util.Arrays;
 

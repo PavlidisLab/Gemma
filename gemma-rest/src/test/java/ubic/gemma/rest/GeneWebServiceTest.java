@@ -11,7 +11,7 @@ import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.rest.util.BaseJerseyIntegrationTest;
 
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response;
 import java.util.Random;
 
 import static ubic.gemma.rest.util.Assertions.assertThat;

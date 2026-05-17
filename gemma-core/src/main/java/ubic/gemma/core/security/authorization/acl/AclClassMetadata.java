@@ -114,7 +114,7 @@ public class AclClassMetadata {
         // TODO: this should be part of the Hibernate class metadata, either via annotation of cutom XML entries if that
         //       is allowed
         // Hibernate 5: getAllClassMetadata() throws UnsupportedOperationException; use the JPA metamodel.
-        for ( javax.persistence.metamodel.EntityType<?> et : sessionFactory.getMetamodel().getEntities() ) {
+        for ( jakarta.persistence.metamodel.EntityType<?> et : sessionFactory.getMetamodel().getEntities() ) {
             Class<?> mappedClass = et.getJavaType();
             if ( SecuredChild.class.isAssignableFrom( mappedClass ) ) {
                 if ( Modifier.isAbstract( mappedClass.getModifiers() ) ) {

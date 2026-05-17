@@ -8,9 +8,9 @@ import org.glassfish.jersey.server.monitoring.ApplicationEventListener;
 import org.glassfish.jersey.server.monitoring.RequestEvent;
 import org.glassfish.jersey.server.monitoring.RequestEventListener;
 
-import javax.ws.rs.ClientErrorException;
-import javax.ws.rs.ServiceUnavailableException;
-import javax.ws.rs.ext.Provider;
+import jakarta.ws.rs.ClientErrorException;
+import jakarta.ws.rs.ServiceUnavailableException;
+import jakarta.ws.rs.ext.Provider;
 
 @Provider
 @CommonsLog

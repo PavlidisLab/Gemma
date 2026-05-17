@@ -3,10 +3,10 @@ package ubic.gemma.rest.providers;
 import ubic.gemma.rest.annotations.GZIP;
 
 import javax.annotation.Priority;
-import javax.ws.rs.Priorities;
-import javax.ws.rs.ext.Provider;
-import javax.ws.rs.ext.WriterInterceptor;
-import javax.ws.rs.ext.WriterInterceptorContext;
+import jakarta.ws.rs.Priorities;
+import jakarta.ws.rs.ext.Provider;
+import jakarta.ws.rs.ext.WriterInterceptor;
+import jakarta.ws.rs.ext.WriterInterceptorContext;
 
 /**
  * Adds a {@code Content-Encoding: gzip} after the context has been intercepted by {@link org.glassfish.jersey.message.GZipEncoder}.

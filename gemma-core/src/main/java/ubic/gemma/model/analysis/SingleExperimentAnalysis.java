@@ -25,7 +25,7 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 
-import javax.persistence.Transient;
+import jakarta.persistence.Transient;
 
 /**
  * An analysis of a single experiment or subset.

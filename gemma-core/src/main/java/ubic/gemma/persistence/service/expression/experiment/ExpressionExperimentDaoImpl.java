@@ -134,7 +134,7 @@ public class ExpressionExperimentDaoImpl
         // Hibernate 5: SessionFactory.getAllClassMetadata() throws UnsupportedOperationException; use the
         // JPA metamodel.
         bulkDataVectorTypes = getSessionFactory().getMetamodel().getEntities().stream()
-                .map( javax.persistence.metamodel.EntityType::getJavaType )
+                .map( jakarta.persistence.metamodel.EntityType::getJavaType )
                 .filter( BulkExpressionDataVector.class::isAssignableFrom )
                 .map( clazz -> ( Class<? extends BulkExpressionDataVector> ) clazz )
                 .collect( Collectors.toSet() );
