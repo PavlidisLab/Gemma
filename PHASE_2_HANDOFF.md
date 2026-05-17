@@ -1,10 +1,80 @@
 # Phase 2 (Spring 6 / Hibernate 6 / jakarta) — handoff
 
-Filed 2026-05-17. The previous session ended mid-Phase-2 because the
-deletion-stub-fix loop went negative-progress (each delete cascading to
-2-3 more compile errors). This doc tells a fresh agent exactly where
-things stand and how to finish the job — with the user's explicit
-permissions to do the substantial rewrites that block it.
+Filed 2026-05-17, refreshed at end-of-session-2 (still 2026-05-17).
+Session-2 landed five commits on the `phase2` branch covering Step 2
+(search subsystem), Step 5b (EhCache 2 gut), and Steps 3+4 partial
+(core DAO abstractions / Hibernate-6 API drift). Compile error count
+is bounded at ~200 across ~45 files, dominated by concrete DAOs that
+still use the dead `org.hibernate.criterion` API and by
+`BusinessKey` (777 lines, 144 Criteria refs, still untouched).
+
+## Session-2 commits (on `phase2`)
+
+```
+eee579253c Add PHASE_2_HANDOFF.md (cherry-picked from renovations)
+6f12e10b74 Phase 2 Step 3/4: MySQL57 dialect + delete Criteria utils
+b465772e65 Phase 2 Step 3 (partial): rewrite filtering-DAO abstractions
+811a2fcef6 Phase 2 Step 3+4 (partial): rewrite AbstractDao / QueryUtils / HibernateUtils
+4a79164013 Phase 2 Step 5b: gut EhCache 2 cache subsystem
+ed93c2f023 Phase 2 Step 2: stub/delete search subsystem cascade
+ab94b884a4 WIP: Phase 2 (Spring 6 / Hibernate 6 / jakarta) — in-progress (was the WIP head)
+```
+
+Verify with `git -C ~/Dev/eclipseworkspace/Gemma log --oneline phase2`.
+
+## Compile state at end of session-2
+
+```bash
+cd ~/Dev/eclipseworkspace/Gemma && git checkout phase2
+export JAVA_HOME="$HOME/Library/Java/JavaVirtualMachines/amazon-corretto-17.jdk/Contents/Home"
+export PATH="$JAVA_HOME/bin:$PATH"
+mvn -P fast -Denforcer.skip=true -pl gemma-core -am compile -DskipTests=true -q 2>&1 | grep '^\[ERROR\] /' | wc -l
+# expect: ~200 errors in ~45 files
+```
+
+The biggest remaining offenders at session-2 end:
+
+```
+ 18 CharacteristicDaoImpl
+ 12 ExpressionExperimentDaoImpl
+ 12 CompositeSequenceDaoImpl
+ 12 ExpressionAnalysisResultSetDaoImpl
+  8 TaxonDaoImpl, GeneDaoImpl, ArrayDesignDaoImpl, QuantitationTypeDaoImpl
+  6 BioAssayDimensionDaoImpl, BibliographicReferenceDaoImpl,
+    BlacklistedEntityDaoImpl, ExpressionExperimentSetDaoImpl,
+    GeneDiffExMetaAnalysisDaoImpl
+  4 ~6 more concrete DAOs
+  2 ~12 more concrete DAOs
+```
+
+Plus `BusinessKey.java` — 777 lines of Criteria — still untouched and
+called by many DAOs through `findOrCreate`/`createBusinessKey`.
+
+## TL;DR for a fresh session (next session-3)
+
+Resume on `phase2` branch. Work in this order:
+
+1. Rewrite **`BusinessKey`** on HQL — many concrete DAOs flip from
+   broken to compile-clean as a side effect.
+2. Per-DAO conversion of the 25 concrete DAOs that import
+   `org.hibernate.criterion`. Pattern: HQL via session.createQuery
+   for small queries; JPA Criteria
+   (`session.getCriteriaBuilder()` etc.) for dynamic queries; lean on
+   `AclQueryUtils` and `FilterQueryUtils` for ACL/Filters predicates.
+3. Convert **`ExpressionAnalysisResultSetDaoImpl`** and
+   **`QuantitationTypeDaoImpl`** off `AbstractCriteriaFilteringVoEnabledDao`
+   (currently UOE-stubbed); they should extend
+   `AbstractQueryFilteringVoEnabledDao` or implement filtering locally
+   with JPA Criteria.
+4. Once gemma-core compiles, run **Step 5a** (replace
+   `LocalSessionFactoryBean` + `HibernateTransactionManager` with
+   Spring 6 JPA + unwrap pattern from gsec).
+5. **Step 6** (Jersey 3), **Step 7** (selective per-module tests —
+   do NOT run full suite, Paul: ~30 min).
+6. **Steps 8–10** (bytecode 17, enforcer, RENOVATIONS.md).
+
+Realistic time-to-compile-green from current state: 1–2 focused
+sessions for the DAO mass-conversion, plus another for Step 5a.
 
 ## TL;DR for a fresh session
 
