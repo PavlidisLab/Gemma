@@ -1,6 +1,22 @@
 # Phase 2 (Spring 6 / Hibernate 6 / jakarta) — handoff
 
-Filed 2026-05-17, refreshed at end-of-session-3 (still 2026-05-17).
+Filed 2026-05-17, refreshed at end-of-session-3 second push (still 2026-05-17).
+**gemma-core and gemma-cli now compile clean.** The only build blocker left
+is `org.glassfish.jersey.ext:jersey-spring3:3.1.10` which Jersey 3 stopped
+publishing — that is Step 6 (Jersey 3 migration) work. Coexpression was
+deleted in this push at the user's call ("old and fallow").
+
+## Session-3 second push (on `phase2`)
+
+```
+0cbca4df84 Phase 2 Step 3 (closeout): delete coexpression subsystem; gemma-core + gemma-cli compile clean
+```
+
+Original session-3 commits below.
+
+---
+
+Original session-3 message:
 Session-3 rewrote `BusinessKey` and 22 concrete DAOs off the
 Hibernate Criteria API (mostly to HQL, a few to JPA Criteria),
 swapped `org.hibernate.Query` for `org.hibernate.query.Query`, fixed
@@ -66,46 +82,133 @@ The biggest remaining offenders at session-3 end:
 
 ## TL;DR for a fresh session (next session-4)
 
+`gemma-core` and `gemma-cli` compile clean. `gemma-rest` fails at
+dependency resolution because Jersey 3 stopped publishing
+`org.glassfish.jersey.ext:jersey-spring3`. That's the next blocker.
+
 Resume on `phase2` branch. Work in this order:
 
-1. **Hibernate 6 `UserType` API change** — `ByteArrayType` and
-   `CompressedStringListType` need their `nullSafeGet` / `nullSafeSet`
-   signatures updated to the new
-   `nullSafeGet(ResultSet, int, SharedSessionContractImplementor, Object)`
-   shape (the `String[] names` array argument is gone). Likely the same
-   change for any class implementing `org.hibernate.usertype.UserType`.
-2. **Spring 6 `BeanFactoryPostProcessor`** — `BeanInitializationTimeMonitor`
-   overrides two methods that no longer exist on the interface. Diff
-   against Spring 6's `MergedBeanDefinitionPostProcessor` /
-   `InstantiationAwareBeanPostProcessor` and adjust signatures.
-3. **`AbstractPersister`** — six callsites pass `org.hibernate.FlushMode`
-   to APIs that now want `jakarta.persistence.FlushModeType`. There's
-   also a `cannot find symbol` for what is likely
-   `session.save(...)` returning `Object` instead of `Serializable`.
-   Mechanical fix.
-4. **The remaining concrete DAO conversions**: CharacteristicDaoImpl,
-   CoexpressionDaoImpl, QuantitationTypeDaoImpl, ArrayDesignDaoImpl,
-   AuditEventDaoImpl, DifferentialExpressionAnalysisDaoImpl,
-   DifferentialExpressionResultDaoImpl, PrincipalComponentAnalysisDaoImpl,
-   AbstractFilteringVoEnabledDao. Same pattern as session 3 — most are
-   HQL conversions, a few need JPA Criteria where the original logic is
-   genuinely dynamic. `TypedResultTransformer` (the wrapper around the
-   removed `ResultTransformer` interface) is gone; rewrite those queries
-   to return tuples and post-process.
-5. **`ExpressionAnalysisResultSetDaoImpl`** still has a partial-stub state
-   — `findByBioAssaySetInAndDatabaseEntryInLimit` throws UOE, and the
-   value-object loaders that depended on `getFilteringCriteria` need a
-   JPA-Criteria reimplementation if they're called. Either rewrite or
-   keep stubbing.
-6. Once gemma-core compiles, run **Step 5a** (replace
-   `LocalSessionFactoryBean` + `HibernateTransactionManager` with
-   Spring 6 JPA + unwrap pattern from gsec).
-7. **Step 6** (Jersey 3), **Step 7** (selective per-module tests —
-   do NOT run full suite, Paul: ~30 min).
-8. **Steps 8–10** (bytecode 17, enforcer, RENOVATIONS.md).
+1. **Step 6 — Jersey 3 migration of `gemma-rest`.** The pom needs
+   `jersey-spring3` removed and Jersey 3's Spring integration replaced
+   with either:
+   - direct `jakarta.ws.rs` + Spring's own JAX-RS adapter, OR
+   - the `jersey-spring6` artifact (recent versions), OR
+   - inversion: register Spring's `RequestMappingHandlerMapping` and
+     drop Jersey altogether for the REST layer.
+   Pavlab convention to date has been Jersey + Spring DI; check what
+   the gsec recipe uses if it has a REST module.
+   After the pom is fixed, the gemma-rest java sources may still need
+   the same `javax.* → jakarta.*` sweep + Hibernate 6 drift fixes that
+   gemma-core just went through; chase compile errors there.
+2. **Step 4b — Strip coexpression from `gemma-web`.** Session 3 deleted
+   the model + DAO + service + CLI surface, but gemma-web's
+   `CoexpressionSearchController`, `LinkAnalysisController`, and
+   `CoexSearchTaskCommand` were deleted in this push too — verify nothing
+   in `gemma-web` still imports any `coexpression` symbol (other than
+   `SampleCoexpression*` which we kept).
+3. **Step 5a — Spring 6 JPA migration.** Replace
+   `LocalSessionFactoryBean` + `HibernateTransactionManager` with Spring 6
+   JPA + the unwrap pattern from gsec. Until this lands, app context
+   bootstrap will fail at runtime even though compile is clean.
+4. **Step 7 — selective per-module tests.** Do NOT run the full suite
+   (Paul: ~30 min); pick a representative DAO test per module to verify
+   the BusinessKey / JPA Criteria / TypedResultTransformer migrations
+   work at runtime. Expect issues — the `applyTo`/`list`/`uniqueResult`
+   path through `TypedResultTransformer` is a new pattern that wasn't
+   exercised pre-Phase-2.
+5. **Steps 8–10** — bytecode 11→17 (in root pom), re-enable
+   `dependencyConvergence` enforcer, update RENOVATIONS.md.
 
-Realistic time-to-compile-green from current state: one focused
-session for the remaining ~100 errors, then another for Step 5a.
+## What this session changed (cheat sheet for grep)
+
+Hibernate 6 API replacements applied across gemma-core:
+
+| Old (gone) | New |
+|---|---|
+| `org.hibernate.SQLQuery` | `org.hibernate.query.NativeQuery<?>` |
+| `session.createSQLQuery(s)` | `session.createNativeQuery(s)` |
+| `org.hibernate.Query` (deprecated) | `org.hibernate.query.Query<T>` |
+| `query.setLong/setString/setDouble/etc` | `query.setParameter` (PreparedStatement still uses setLong) |
+| `query.setFlushMode(...)` | `query.setHibernateFlushMode(...)` |
+| `query.setResultTransformer(X)` | `X.list(query)` / `X.uniqueResult(query)` via TypedResultTransformer helpers |
+| `Restrictions.* / Projections.* / Criteria` | JPA Criteria (jakarta.persistence.criteria) or plain HQL |
+| `sessionFactory.getClassMetadata(X)` | `sessionFactory.getMetamodel().entity(X)` or `((SessionFactoryImplementor) sf).getMappingMetamodel().getEntityDescriptor(X)` |
+| `sessionFactory.getCache().evictCollection(role, id)` | `evictCollectionData(role, id)` |
+| `Dialect.registerFunction(name, fn)` | Use a `FunctionContributor`; or inline the SQL (we did the latter for `bitwise_and`) |
+| `UserType.sqlTypes() : int[]` | `UserType.getSqlType() : int` |
+| `UserType.nullSafeGet(rs, String[], session, owner)` | `UserType.nullSafeGet(rs, int position, session, owner)` |
+| `UserType` (raw) | `UserType<T>` (generic) |
+| `IdentifierGeneratorHelper.getGeneratedIdentity(rs, idProp, idType, dialect)` | `(idProp, rs, PostInsertIdentityPersister, WrapperOptions)` |
+| `Transformers.aliasToBean(X.class)` | still works in HB6 (deprecated) |
+| `setResultTransformer(...).list()` | TypedResultTransformer.list(query) |
+
+Spring 6 single-arg Assert removals:
+
+| Old | New |
+|---|---|
+| `Assert.notNull(x)` | `Assert.notNull(x, "must not be null")` |
+| `Assert.isTrue(b)` | `Assert.isTrue(b, "expected true")` |
+| `Assert.state(b)` | `Assert.state(b, "illegal state")` |
+| `Assert.isNull(x)` | `Assert.isNull(x, "must be null")` |
+| `Assert.hasText(s)` | `Assert.hasText(s, "must not be blank")` |
+| `Assert.hasLength(s)` | `Assert.hasLength(s, "must not be empty")` |
+
+Apply with `/tmp/fix_asserts.py` — point it at `/tmp/assert_errors.txt`
+(the file is just the lines of `mvn ... | grep '^\[ERROR\]' | sort -u`
+matching the relevant patterns). It does paren-balanced argument
+parsing so it handles nested calls.
+
+Spring 6 BeanPostProcessor:
+
+| Old | New |
+|---|---|
+| `postProcessPropertyValues(PropertyValues, PropertyDescriptor[], Object, String)` | `postProcessProperties(PropertyValues, Object, String)` |
+
+## Stubbed / temporarily disabled
+
+Things that compile but throw UOE or return empty — track for Step 7
+follow-up:
+
+- `ExpressionAnalysisResultSetDaoImpl#findByBioAssaySetInAndDatabaseEntryInLimit`
+  → UOE. The `getFilteringCriteria` method was deleted entirely; the
+  filtering-by-VO path needs a JPA-Criteria reimplementation.
+- `ExpressionDataFileServiceImpl#writeOrLocateCoexpressionDataFile` → UOE
+  (coexpression subsystem gone).
+- Single-cell vector streaming in EE DAO lost its per-row
+  `setResultTransformer(initializer)` call; the consumer must invoke
+  `SingleCellDataVectorInitializer.transformTuple` itself when reading
+  from the stream. (See the comment at the streamSingleCellDataVectors
+  callsite.)
+- `AbstractFilteringVoEnabledDao#registerEntity` was rewritten on JPA
+  Metamodel — the old code branched on `MaterializedBlobType`/
+  `MaterializedClobType`/`CustomType` for skip-fields; the new code
+  falls back to `log.trace` for any non-basic, non-association,
+  non-collection attribute. If anyone reports "my BLOB column shows up
+  as a filterable property", that's why.
+- All `CoexpressionAnalysis` entities, DAOs, services, caches, link
+  analysis services, GeneCoexpressionSearchService, LinkAnalysisCli,
+  CoexpressionWriter, and the species-specific
+  `Gene2GeneCoexpression`/`ExperimentCoexpressionLink` subclasses are
+  **deleted**. `SampleCoexpression*` is **kept** (it's a per-EE sample QC
+  artifact, not gene-gene coexp).
+- Some EE DAO `Initializer` classes are typed `TypedResultTransformer<Object>`
+  because they return either an entity or `Object[]` depending on a flag.
+  Callers cast the result back to the entity. Not ideal but matches the
+  pre-Phase-2 behavior.
+
+## Things I tried that wasted time
+
+- Trying to give `Query` a `setResultTransformer` extension method via a
+  wrapper — too invasive given Hibernate's API surface. The
+  `TypedResultTransformer.list(query)` / `uniqueResult(query)` helper on
+  the transformer side was much cleaner.
+- Initial Python script for `setResultTransformer` rewrite walked
+  comments incorrectly and mashed two statements onto one line in a
+  handful of cases. Fixed by hand on the few callsites that broke.
+- Sed for `setLong/setString → setParameter` was too aggressive — it
+  also swapped `PreparedStatement.setLong` (which is correct) into
+  `setParameter` (which doesn't exist on PreparedStatement). Reverted the
+  three or four PreparedStatement callsites by hand.
 
 ## Notes on session-3 design choices
 
