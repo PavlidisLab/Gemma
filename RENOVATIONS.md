@@ -107,9 +107,43 @@ Lift `release=11` → `release=17` once Spring is on 5.x (or 6.x), as part of Ph
 - 19 Failures (uncategorized; likely a mix of the above + behavior changes).
 - 1 `cellranger` missing — env, ignored.
 
-### Next step into Phase 2 prep
+### Phase 1c (B) — DWR stripped from gemma-web
 
-Once the residue above is cleaned up (or accepted), the Phase 2 jakarta flag day is in scope. Per RENOVATIONS the prerequisite is **DWR endpoint inventory and conversion to REST** (DWR doesn't survive jakarta), and we still have ~40 remoted controllers / ~279 methods. Each REST conversion is straightforward; the volume is the issue.
+✅ Done (commit). Rather than convert the 40 controllers / 279 methods to REST, the DWR runtime wiring was deleted entirely:
+- `gemma-web/pom.xml` — `org.directwebremoting:dwr` dropped.
+- `gemma-servlet.xml` shrank 916 → 121 lines (all `<dwr:remote>` / `<dwr:configuration>` removed).
+- `web.xml` `/dwr/*` url-pattern removed.
+- `applicationContext-security.xml` 5 `/dwr/**` rules removed.
+- `gemma-web/.../controller/dwr/` package (7 Converter classes) deleted.
+- `gemma-web/.../test/util/dwr/` test infrastructure deleted.
+- 3 DWR-dependent controller tests deleted (`DifferentialExpressionAnalysisControllerTest`, `ExpressionExperimentControllerTest`, `ExpressionDataFileUploadControllerTest`).
+- `FileUploadController.getUploadStatus()` — DWR-only method removed (used `WebContextFactory.get().getHttpServletRequest()`).
+
+Full reactor still builds. The 40 DWR-remoted controller classes themselves are now dead code; they'll be deleted (or migrated to REST in `gemma-rest`) as gemma-web is decommissioned in favour of the new React frontend.
+
+### Phase 2 (E) — Spring 6 / jakarta — probed, not started
+
+Tried bumping gsec to Spring 6.1.21 + Hibernate 6.4.10 + jakarta-servlet-api 6.0 as a probe. Reverted after hitting real blockers — Phase 2 is its own multi-session effort:
+
+- **Hibernate 6 dropped `hibernate-ehcache`** entirely. Replacement is `hibernate-jcache` + Ehcache 3 with the JSR-107 API. Ehcache 3.10.x has a `jakarta` classifier — but its `jaxb-runtime` 2.3.0-b170127 transitive depends on `javax.xml.bind:jaxb-api:2.3.0-b161121.1438` which is only on the (decommissioned) `maven.java.net` repository. Need to find a working ehcache3-jakarta version or replace with another JCache impl (Caffeine, Infinispan).
+- **Hibernate ORM 6 changed its groupId**: `org.hibernate` → `org.hibernate.orm`.
+- **Hibernate Search 5 → 7** is a DSL rewrite, not just a version bump.
+- **Spring Security 5 → 6** reworked ACL, dropped lots of deprecated APIs.
+- **`javax.*` → `jakarta.*`** swap covers ~400 imports (the JSR-305 `javax.annotation.Nullable/Nonnull` and JDK `javax.swing/javax.imageio` stay). Mechanical but pervasive.
+- Plus Jersey 2 → 3, Tomcat 9 → 10.1.
+
+Recommend Phase 2 gets its own session.
+
+### Phase 1b cleanup deferred to future session
+
+- ~10 Lucene 5 parse errors on URI queries (Lucene 5 stricter `/` and `\:` handling).
+- 1 NullPointer in `TableMaintenanceUtilTest` (mock returned null after `SQLQuery` → `NativeQuery` swap).
+- 1 `IllegalState` in `AclClassMetadataTest`.
+- 1 `HibernateSearchException` in `HibernateSearchSourceTest.test`.
+- 1 `AssertionFailure` "null id in `ExpressionExperimentSet`" in `ExpressionExperimentSetDaoTest`.
+- 19 uncategorized failures.
+- Re-enable `dependencyConvergence` enforcer rule.
+- Bump bytecode 11 → 17.
 
 ---
 
