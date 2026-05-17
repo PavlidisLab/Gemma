@@ -1,18 +1,33 @@
 # Phase 2 (Spring 6 / Hibernate 6 / jakarta) — handoff
 
-Filed 2026-05-17, refreshed at end-of-session-3 second push (still 2026-05-17).
-**gemma-core and gemma-cli now compile clean.** The only build blocker left
-is `org.glassfish.jersey.ext:jersey-spring3:3.1.10` which Jersey 3 stopped
-publishing — that is Step 6 (Jersey 3 migration) work. Coexpression was
-deleted in this push at the user's call ("old and fallow").
-
-## Session-3 second push (on `phase2`)
+Filed 2026-05-17, refreshed at end-of-session-3 third push (still 2026-05-17).
+**The full `mvn install -DskipTests=true` now succeeds across all five
+modules.** Test-compile is also clean (no tests run yet — that's Step 7).
+Coexpression was deleted in session 3 at the user's call ("old and fallow").
+Jersey 3 migration (Step 6) and the spring-security-test consolidation
+also landed this session.
 
 ```
+mvn -P fast -Denforcer.skip=true install -DskipTests=true:
+  Gemma .............................................. SUCCESS [  1.341 s]
+  Gemma Core ......................................... SUCCESS [  1.430 s]
+  Gemma CLI .......................................... SUCCESS [  7.849 s]
+  Gemma REST ......................................... SUCCESS [  4.968 s]
+  Gemma Web .......................................... SUCCESS [  7.646 s]
+```
+
+## Session-3 commits (on `phase2`)
+
+```
+e49f573b07 Phase 2 Step 7 prep: test-compile clean for all 5 modules
+e1a7360b48 Phase 2 Step 6: Jersey 3 migration + gemma-web compile-green; all 5 modules clean
+967b9d24ce PHASE_2_HANDOFF.md: refresh for next-session-4 (Step 6 / Jersey 3)
 0cbca4df84 Phase 2 Step 3 (closeout): delete coexpression subsystem; gemma-core + gemma-cli compile clean
+5a286be03b Phase 2 Step 3 (followup): refresh handoff + last Assert stragglers
+897acb3d79 Phase 2 Step 3: rewrite BusinessKey + 22 DAOs on JPA Criteria / HQL
 ```
 
-Original session-3 commits below.
+Original session-3 commit message starts below.
 
 ---
 
@@ -82,42 +97,82 @@ The biggest remaining offenders at session-3 end:
 
 ## TL;DR for a fresh session (next session-4)
 
-`gemma-core` and `gemma-cli` compile clean. `gemma-rest` fails at
-dependency resolution because Jersey 3 stopped publishing
-`org.glassfish.jersey.ext:jersey-spring3`. That's the next blocker.
+Build is compile-green and test-compile-green for all five modules.
+`mvn install -DskipTests=true` produces gemma-core jar, gemma-cli
+appassembly, and Gemma.war.
 
-Resume on `phase2` branch. Work in this order:
+What's still left:
 
-1. **Step 6 — Jersey 3 migration of `gemma-rest`.** The pom needs
-   `jersey-spring3` removed and Jersey 3's Spring integration replaced
-   with either:
-   - direct `jakarta.ws.rs` + Spring's own JAX-RS adapter, OR
-   - the `jersey-spring6` artifact (recent versions), OR
-   - inversion: register Spring's `RequestMappingHandlerMapping` and
-     drop Jersey altogether for the REST layer.
-   Pavlab convention to date has been Jersey + Spring DI; check what
-   the gsec recipe uses if it has a REST module.
-   After the pom is fixed, the gemma-rest java sources may still need
-   the same `javax.* → jakarta.*` sweep + Hibernate 6 drift fixes that
-   gemma-core just went through; chase compile errors there.
-2. **Step 4b — Strip coexpression from `gemma-web`.** Session 3 deleted
-   the model + DAO + service + CLI surface, but gemma-web's
-   `CoexpressionSearchController`, `LinkAnalysisController`, and
-   `CoexSearchTaskCommand` were deleted in this push too — verify nothing
-   in `gemma-web` still imports any `coexpression` symbol (other than
-   `SampleCoexpression*` which we kept).
-3. **Step 5a — Spring 6 JPA migration.** Replace
-   `LocalSessionFactoryBean` + `HibernateTransactionManager` with Spring 6
-   JPA + the unwrap pattern from gsec. Until this lands, app context
-   bootstrap will fail at runtime even though compile is clean.
-4. **Step 7 — selective per-module tests.** Do NOT run the full suite
+1. **Step 5a — Spring 6 JPA migration of the SessionFactory wiring.**
+   gsec's `testContext.xml` shows the canonical pattern: replace
+   `LocalSessionFactoryBean` + `HibernateTransactionManager` with
+   `LocalContainerEntityManagerFactoryBean` + `JpaTransactionManager`,
+   then expose a `SessionFactory` bean via `factory-method="unwrap"`.
+   Until this lands, app context bootstrap will fail at runtime even
+   though everything compiles.
+2. **Step 7 — selective per-module tests.** Do NOT run the full suite
    (Paul: ~30 min); pick a representative DAO test per module to verify
    the BusinessKey / JPA Criteria / TypedResultTransformer migrations
    work at runtime. Expect issues — the `applyTo`/`list`/`uniqueResult`
    path through `TypedResultTransformer` is a new pattern that wasn't
    exercised pre-Phase-2.
-5. **Steps 8–10** — bytecode 11→17 (in root pom), re-enable
+3. **Steps 8–10** — bytecode 11→17 (in root pom), re-enable
    `dependencyConvergence` enforcer, update RENOVATIONS.md.
+
+## Jersey 3 migration notes (Step 6)
+
+Done this session:
+
+- `org.glassfish.jersey.ext:jersey-spring3:${jersey.version}` →
+  `jersey-spring6:${jersey.version}`. The artifact is `jersey-spring6`
+  for Spring 6 integration (Jersey 3.1 dropped Spring 3 support).
+- `javax.ws.rs:javax.ws.rs-api:2.0.1` → `jakarta.ws.rs:jakarta.ws.rs-api:3.1.0`.
+- `org.hibernate:hibernate-validator` exclusion → `org.hibernate.validator:
+  hibernate-validator` (the artifact moved out of `org.hibernate` in HV 7).
+- Added `jakarta.servlet:jakarta.servlet-api:6.0.0` at `provided` scope
+  (was previously inherited via jersey-spring3).
+- Six swagger artifacts swapped to their `-jakarta` siblings:
+  `swagger-core`, `swagger-jaxrs2`, `swagger-jaxrs2-servlet-initializer-v2`,
+  `swagger-integration`, `swagger-models`, `swagger-annotations`. Swagger
+  2.2 ships them separately for jakarta.servlet/jakarta.ws.rs.
+- `javax.annotation.Priority` → `jakarta.annotation.Priority` in the four
+  provider classes.
+- `GeneWebService`: dropped `/genes/{gene}/coexpression` endpoint along
+  with the coex subsystem deletion.
+
+## gemma-web migration notes
+
+- `org.hibernate.stat.SecondLevelCacheStatistics` →
+  `org.hibernate.stat.CacheRegionStatistics`. The accessor on
+  `Statistics` is now `getCacheRegionStatistics(String)`. Used in
+  `HibernateMonitorImpl`.
+- Spring 6 dropped Commons FileUpload support, which we used via custom
+  `CommonsMultipartFile` / `CommonsMultipartMonitoredResolver` /
+  `UploadListener`. **All three deleted.** `gemma-servlet.xml` now wires
+  `org.springframework.web.multipart.support.StandardServletMultipartResolver`
+  instead. The upload-size limit moves to web.xml's `<multipart-config>`.
+  Per-upload progress monitoring is gone for now — a Servlet 3 replacement
+  would be a Filter that wraps the request's input stream.
+- Micrometer 1.13 pre-jakarta `DefaultHttpServletRequestTagsProvider`
+  takes javax.servlet types. The jakarta-aware replacement lives in
+  `io.micrometer.observation`. For now `ServletMetricsFilter` inlines
+  the tags itself (method/status/uri/exception) rather than going
+  through the provider.
+- EE QC controller no longer has the persistent
+  `CoexpCorrelationDistribution` read/backfill path. The legacy
+  on-disk correlation-histogram file is still read; just no longer
+  migrated into the DB.
+
+## spring-security-test consolidation
+
+Pre-Phase 2, `gemma-core/pom.xml` unpacked
+`spring-security-test:4.0.4.RELEASE:sources` and recompiled them under
+our classpath (excluding the MockMvc setup). Those 4.0 sources reference
+`javax.servlet` which doesn't exist in Spring 6. **Deleted the
+unpack-and-recompile plumbing** and added a regular test-scoped
+dependency on `spring-security-test:${spring.security.version}` (6.x)
+to each module that needed it: gemma-core, gemma-cli, gemma-rest,
+gemma-web.
 
 ## What this session changed (cheat sheet for grep)
 
