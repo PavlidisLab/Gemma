@@ -39,7 +39,8 @@ mvn -P fast -Denforcer.skip=true install -DskipTests=true:
 ## Session-4 commits (on `phase2`)
 
 ```
-<this commit>   Phase 2 Step 7 (round 3): junit-vintage for gemma-rest; ~146 tests across cli+rest green
+<this commit>   Phase 2 Step 7 (round 4): port AbstractCriteriaFilteringVoEnabledDao to JPA Criteria
+30aa12702c      Phase 2 Step 7 (round 3): junit-vintage for gemma-rest; CLI + REST tests green
 e76e33bf4b      Phase 2 Step 7 (round 2): bulk test fixes (MergeMode, BigInteger->Number, bitand, H2 bitwise)
 6a9d20654c      Phase 2 Step 5a/7: native Hibernate bootstrap; first DAO tests green
 901effa053      Phase 2 Step 5a: Spring 6 JPA migration of SessionFactory wiring
@@ -205,12 +206,12 @@ open.
 
 ### Bugs found but not fixed (next Step 7 round)
 
-- **`AbstractCriteriaFilteringVoEnabledDao` stub** — all its
-  `loadValueObjects`/`load`/`count` methods throw
-  `UnsupportedOperationException`. Subclasses are expected to override.
-  Surfaces in `QuantitationTypeDaoTest.testLoadValueObjects`. A proper
-  JPA Criteria reimplementation of the shared filtering machinery is
-  the right fix; about a day's work.
+- ~~**`AbstractCriteriaFilteringVoEnabledDao` stub**~~ — **DONE** in
+  session-4 round 4 (commit below). Ported to JPA Criteria; new
+  `FilterJpaUtils` is the JPA equivalent of the deleted
+  `FilterCriteriaUtils`. Subquery and `.size`-suffix filters still
+  throw UOE inside FilterJpaUtils (subclasses can override the
+  relevant load* method, or use HQL via `AbstractQueryFilteringVoEnabledDao`).
 - **`AbstractServiceTest` and the bigger DAO/service tests** —
   unmeasured, may surface more JPA Metamodel / Hibernate 6 drift.
 - **Stale `.hbm.xml` files in `target/classes`** can sneak into the
