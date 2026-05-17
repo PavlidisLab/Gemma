@@ -29,7 +29,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.loader.util.GenBankUtils;
 import ubic.gemma.model.analysis.Analysis;
-import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.ContrastResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
@@ -205,19 +204,7 @@ public class PersistentDummyObjectHelper {
 
     public Collection<Analysis> addTestAnalyses( ExpressionExperiment ee ) {
         Collection<Analysis> analyses = new ArrayList<>();
-        /*
-         * Add analyses
-         */
-        CoexpressionAnalysis pca = CoexpressionAnalysis.Factory.newInstance();
-        pca.setName( RandomStringUtils.insecure().nextNumeric( PersistentDummyObjectHelper.RANDOM_STRING_LENGTH ) );
-
-        pca.setExperimentAnalyzed( ee );
-
-        analyses.add( persisterHelper.persist( pca ) );
-
-        /*
-         * Diff
-         */
+        // Phase 2: CoexpressionAnalysis test artifact dropped along with the rest of the coex subsystem.
         DifferentialExpressionAnalysis expressionAnalysis = DifferentialExpressionAnalysis.Factory.newInstance();
         Protocol protocol = Protocol.Factory.newInstance();
         protocol.setName( "Differential expression analysis settings" );

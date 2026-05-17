@@ -15,11 +15,9 @@ import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponentAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
-import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
 import ubic.gemma.persistence.service.blacklist.BlacklistedEntityService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
@@ -140,11 +138,6 @@ public class ExpressionExperimentServiceTest extends BaseTest {
         }
 
         @Bean
-        public CoexpressionAnalysisService coexpressionAnalysisService() {
-            return mock( CoexpressionAnalysisService.class );
-        }
-
-        @Bean
         public SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService() {
             return mock( SampleCoexpressionAnalysisService.class );
         }
@@ -157,11 +150,6 @@ public class ExpressionExperimentServiceTest extends BaseTest {
         @Bean
         public AccessDecisionManager accessDecisionManager() {
             return mock( AccessDecisionManager.class );
-        }
-
-        @Bean
-        public CoexpressionService coexpressionService() {
-            return mock();
         }
 
         @Bean
@@ -185,14 +173,11 @@ public class ExpressionExperimentServiceTest extends BaseTest {
     private OntologyService ontologyService;
 
     @Autowired
-    private CoexpressionService coexpressionService;
-
-    @Autowired
     private SecurityService securityService;
 
     @After
     public void tearDown() {
-        reset( ontologyService, coexpressionService, securityService );
+        reset( ontologyService, securityService );
     }
 
     @Test
@@ -259,12 +244,6 @@ public class ExpressionExperimentServiceTest extends BaseTest {
         verifyNoMoreInteractions( expressionExperimentDao );
     }
 
-    @Test
-    public void testRemoveDatasetWithCoexpressionLinks() {
-        ExpressionExperiment ee = new ExpressionExperiment();
-        when( coexpressionService.hasLinks( ee ) ).thenReturn( true );
-        when( securityService.isEditableByCurrentUser( ee ) ).thenReturn( true );
-        assertThatThrownBy( () -> expressionExperimentService.remove( ee ) )
-                .isInstanceOf( IllegalStateException.class );
-    }
+    // Phase 2: removed testRemoveDatasetWithCoexpressionLinks — the coexpression subsystem and its
+    // pre-remove check are gone.
 }

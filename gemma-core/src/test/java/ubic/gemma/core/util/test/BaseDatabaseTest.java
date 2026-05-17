@@ -7,7 +7,6 @@ import gemma.gsec.acl.domain.AclDao;
 import gemma.gsec.acl.domain.AclDaoImpl;
 import gemma.gsec.acl.domain.AclService;
 import gemma.gsec.acl.domain.AclServiceImpl;
-import org.apache.lucene.util.Version;
 import org.h2.Driver;
 import org.hibernate.SessionFactory;
 import org.junit.After;
@@ -74,11 +73,7 @@ public abstract class BaseDatabaseTest extends AbstractTransactionalJUnit4Spring
             props.setProperty( "hibernate.order_updates", "true" );
             props.setProperty( "hibernate.show_sql", Settings.getString( "gemma.hibernate.show_sql" ) );
             props.setProperty( "hibernate.format_sql", Settings.getString( "gemma.hibernate.format_sql" ) );
-            // Lucene 5+ dropped the Version.LUCENE_36 enum. Hibernate Search 5 accepts a version string
-            // and treats unknown values as "latest known". Use the current 5.x line.
-            props.setProperty( "hibernate.search.lucene_version", "LUCENE_5_5_5" );
-            // use an in-memory search index for testing
-            props.setProperty( "hibernate.search.default.directory_provider", "ram" );
+            // Phase 2: Hibernate Search / Lucene are gone (Step 2 stubbed the search subsystem).
             // Hibernate 5 removed Configuration.generateSchemaCreationScript(), so DatabaseSchemaPopulator's
             // HibernateSchemaPopulator inner class is now a no-op on the renovations branch. Tell Hibernate
             // itself to create the H2 schema on SessionFactory startup instead.

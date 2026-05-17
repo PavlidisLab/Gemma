@@ -227,6 +227,14 @@
 			<type>test-jar</type>
 			<scope>test</scope>
 		</dependency>
+		<!-- Phase 2: spring-security-test for @WithMockUser etc. (was inherited via gemma-core's
+		     unpack-and-recompile of spring-security-test 4.0 sources, which is gone now). -->
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-test</artifactId>
+			<version>${spring.security.version}</version>
+			<scope>test</scope>
+		</dependency>
 		<!-- this is the latest version supported by Spring 3 -->
 		<dependency>
 			<groupId>com.jayway.jsonpath</groupId>

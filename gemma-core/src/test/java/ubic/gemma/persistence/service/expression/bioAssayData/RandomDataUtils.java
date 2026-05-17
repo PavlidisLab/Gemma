@@ -34,12 +34,12 @@ class RandomDataUtils {
     }
 
     public static float sampleFloat( QuantitationType qt ) {
-        Assert.isTrue( qt.getRepresentation() == PrimitiveType.FLOAT );
+        Assert.isTrue( qt.getRepresentation() == PrimitiveType.FLOAT , "expected true");
         return ( float ) sample( qt );
     }
 
     public static double sampleDouble( QuantitationType qt ) {
-        Assert.isTrue( qt.getRepresentation() == PrimitiveType.DOUBLE );
+        Assert.isTrue( qt.getRepresentation() == PrimitiveType.DOUBLE , "expected true");
         return sample( qt );
     }
 
@@ -72,7 +72,7 @@ class RandomDataUtils {
     }
 
     public static float[] sampleFloats( QuantitationType qt, int n ) {
-        Assert.isTrue( qt.getRepresentation() == PrimitiveType.FLOAT );
+        Assert.isTrue( qt.getRepresentation() == PrimitiveType.FLOAT , "expected true");
         double[] vec = sample( qt, n );
         float[] vecAsFloats = new float[vec.length];
         for ( int i = 0; i < vec.length; i++ ) {
@@ -83,7 +83,7 @@ class RandomDataUtils {
 
 
     public static double[] sampleDoubles( QuantitationType qt, int n ) {
-        Assert.isTrue( qt.getRepresentation() == PrimitiveType.DOUBLE );
+        Assert.isTrue( qt.getRepresentation() == PrimitiveType.DOUBLE , "expected true");
         return sample( qt, n );
     }
 
@@ -121,29 +121,29 @@ class RandomDataUtils {
     }
 
     public static int sampleInt( QuantitationType qt ) {
-        Assert.isTrue( qt.getType() == StandardQuantitationType.COUNT );
-        Assert.isTrue( qt.getScale() == ScaleType.COUNT );
-        Assert.isTrue( qt.getRepresentation() == PrimitiveType.INT );
+        Assert.isTrue( qt.getType() == StandardQuantitationType.COUNT , "expected true");
+        Assert.isTrue( qt.getScale() == ScaleType.COUNT , "expected true");
+        Assert.isTrue( qt.getRepresentation() == PrimitiveType.INT , "expected true");
         return countDistribution.sample();
     }
 
     public static int[] sampleInts( QuantitationType qt, int n ) {
-        Assert.isTrue( qt.getType() == StandardQuantitationType.COUNT );
-        Assert.isTrue( qt.getScale() == ScaleType.COUNT );
-        Assert.isTrue( qt.getRepresentation() == PrimitiveType.INT );
+        Assert.isTrue( qt.getType() == StandardQuantitationType.COUNT , "expected true");
+        Assert.isTrue( qt.getScale() == ScaleType.COUNT , "expected true");
+        Assert.isTrue( qt.getRepresentation() == PrimitiveType.INT , "expected true");
         return countDistribution.sample( n );
     }
 
     public static long sampleLong( QuantitationType qt ) {
-        Assert.isTrue( qt.getType() == StandardQuantitationType.COUNT );
-        Assert.isTrue( qt.getScale() == ScaleType.COUNT );
-        Assert.isTrue( qt.getRepresentation() == PrimitiveType.LONG );
+        Assert.isTrue( qt.getType() == StandardQuantitationType.COUNT , "expected true");
+        Assert.isTrue( qt.getScale() == ScaleType.COUNT , "expected true");
+        Assert.isTrue( qt.getRepresentation() == PrimitiveType.LONG , "expected true");
         return countDistribution.sample();
     }
 
     public static long[] sampleLongs( QuantitationType qt, int n ) {
-        Assert.isTrue( qt.getScale() == ScaleType.COUNT );
-        Assert.isTrue( qt.getRepresentation() == PrimitiveType.LONG );
+        Assert.isTrue( qt.getScale() == ScaleType.COUNT , "expected true");
+        Assert.isTrue( qt.getRepresentation() == PrimitiveType.LONG , "expected true");
         int[] vec = countDistribution.sample( n );
         long[] vecAsLongs = new long[vec.length];
         for ( int i = 0; i < vec.length; i++ ) {

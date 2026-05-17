@@ -40,11 +40,9 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponentAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
-import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
 import ubic.gemma.persistence.service.blacklist.BlacklistedEntityService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
@@ -160,11 +158,6 @@ public class ExpressionExperimentServiceImplTest extends BaseTest {
         }
 
         @Bean
-        public CoexpressionAnalysisService coexpressionAnalysisService() {
-            return mock( CoexpressionAnalysisService.class );
-        }
-
-        @Bean
         public SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService() {
             return mock( SampleCoexpressionAnalysisService.class );
         }
@@ -177,11 +170,6 @@ public class ExpressionExperimentServiceImplTest extends BaseTest {
         @Bean
         public AccessDecisionManager accessDecisionManager() {
             return mock( AccessDecisionManager.class );
-        }
-
-        @Bean
-        public CoexpressionService coexpressionService() {
-            return mock();
         }
 
         @Bean

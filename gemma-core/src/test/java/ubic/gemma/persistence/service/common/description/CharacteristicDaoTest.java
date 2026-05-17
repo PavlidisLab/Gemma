@@ -284,7 +284,7 @@ public class CharacteristicDaoTest extends BaseDatabaseTest {
         Characteristic c = createCharacteristic( "test", "test" );
         sessionFactory.getCurrentSession().persist( c );
         List<String> clazz = ( List<String> ) sessionFactory.getCurrentSession()
-                .createSQLQuery( "select C.class from CHARACTERISTIC C where C.ID = :id" )
+                .createNativeQuery( "select C.class from CHARACTERISTIC C where C.ID = :id" )
                 .setParameter( "id", c.getId() )
                 .list();
         assertThat( clazz )
@@ -343,16 +343,12 @@ public class CharacteristicDaoTest extends BaseDatabaseTest {
                 Gene2GOAssociation.class );
 
         // ensure that all declared entities that have a characteristic is handled in getParents()
-        for ( ClassMetadata cm : sessionFactory.getAllClassMetadata().values() ) {
-            for ( int i = 0; i < cm.getPropertyNames().length; i++ ) {
-                String propertyName = cm.getPropertyNames()[i];
-                Type propertyType = cm.getPropertyTypes()[i];
-                if ( cm.hasSubclasses() ) {
-                    continue;
-                }
-                if ( propertyType.isAssociationType() && ( ( AssociationType ) propertyType ).getAssociatedEntityName( ( SessionFactoryImplementor ) sessionFactory ).equals( Characteristic.class.getName() ) ) {
+        // Phase 2: ported off Hibernate ClassMetadata to JPA Metamodel.
+        for ( jakarta.persistence.metamodel.EntityType<?> et : sessionFactory.getMetamodel().getEntities() ) {
+            for ( jakarta.persistence.metamodel.Attribute<?, ?> attr : et.getAttributes() ) {
+                if ( attr.isAssociation() && Characteristic.class.equals( attr.getJavaType() ) ) {
                     assertThat( characteristicDao.getParentClasses() )
-                            .contains( cm.getMappedClass() );
+                            .contains( ( Class<? extends Identifiable> ) et.getJavaType() );
                 }
             }
         }

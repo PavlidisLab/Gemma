@@ -22,7 +22,6 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
@@ -100,11 +99,6 @@ public class ExpressionExperimentQCControllerTest extends BaseWebTest {
 
         @Bean
         public ExpressionAnalysisResultSetService expressionAnalysisResultSetService() {
-            return mock();
-        }
-
-        @Bean
-        public CoexpressionAnalysisService coexpressionAnalysisService() {
             return mock();
         }
 

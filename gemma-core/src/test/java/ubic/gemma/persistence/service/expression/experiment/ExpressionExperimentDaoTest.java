@@ -386,7 +386,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         c.setValueUri( valueUri );
         sessionFactory.getCurrentSession().persist( c );
         sessionFactory.getCurrentSession()
-                .createSQLQuery( "insert into EXPRESSION_EXPERIMENT2CHARACTERISTIC (ID, CATEGORY, CATEGORY_URI, `VALUE`, VALUE_URI, EXPRESSION_EXPERIMENT_FK, LEVEL) values (:id, :category, :categoryUri, :value, :valueUri, :eeId, :level)" )
+                .createNativeQuery( "insert into EXPRESSION_EXPERIMENT2CHARACTERISTIC (ID, CATEGORY, CATEGORY_URI, `VALUE`, VALUE_URI, EXPRESSION_EXPERIMENT_FK, LEVEL) values (:id, :category, :categoryUri, :value, :valueUri, :eeId, :level)" )
                 .setParameter( "id", c.getId() )
                 .setParameter( "category", c.getCategory() )
                 .setParameter( "categoryUri", c.getCategoryUri() )

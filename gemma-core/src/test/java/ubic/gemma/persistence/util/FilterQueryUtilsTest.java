@@ -1,6 +1,6 @@
 package ubic.gemma.persistence.util;
 
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.junit.Test;
 
 import java.util.Arrays;

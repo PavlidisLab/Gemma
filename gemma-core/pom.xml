@@ -76,50 +76,14 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>unpack-spring-security-test</id>
-                        <phase>generate-test-sources</phase>
-                        <goals>
-                            <goal>unpack</goal>
-                        </goals>
-                        <configuration>
-                            <artifactItems>
-                                <artifactItem>
-                                    <groupId>org.springframework.security</groupId>
-                                    <artifactId>spring-security-test</artifactId>
-                                    <version>4.0.4.RELEASE</version>
-                                    <classifier>sources</classifier>
-                                    <outputDirectory>${project.build.directory}/generated-test-sources/spring-security-test</outputDirectory>
-                                    <includes>**/*.java</includes>
-                                    <excludes>org/springframework/security/test/web/servlet/setup/**</excludes>
-                                </artifactItem>
-                            </artifactItems>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
+            <!-- Phase 2: pre-Spring-6 this unpacked spring-security-test 4.0.4 sources and recompiled
+                 them under our own classpath (the 4.x build excluded the MockMvc setup helpers). The 4.0
+                 sources reference javax.servlet which doesn't exist in Spring 6, so we now consume
+                 spring-security-test as a regular test-jar dependency. -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
                 <version>3.6.1</version>
-                <executions>
-                    <execution>
-                        <phase>generate-test-sources</phase>
-                        <goals>
-                            <goal>add-test-source</goal>
-                        </goals>
-                        <configuration>
-                            <!-- dependencies:unpack does not add a test source root -->
-                            <sources>
-                                <source>${project.build.directory}/generated-test-sources/spring-security-test</source>
-                            </sources>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>
@@ -291,6 +255,13 @@
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-web</artifactId>
+            <version>${spring.security.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- Phase 2: pull spring-security-test as a regular jar rather than unpacking 4.0 sources. -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-test</artifactId>
             <version>${spring.security.version}</version>
             <scope>test</scope>
         </dependency>

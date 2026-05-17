@@ -68,7 +68,7 @@ public class DifferentialExpressionResultDaoTest extends BaseDatabaseTest {
         cs.setArrayDesign( ad );
         sessionFactory.getCurrentSession().persist( ad );
         // Hibernate 5: JPA-style positional parameters are 1-based (were 0-based in Hibernate 4).
-        sessionFactory.getCurrentSession().createSQLQuery( "insert into GENE2CS (GENE, CS, AD) values (?, ?, ?)" )
+        sessionFactory.getCurrentSession().createNativeQuery( "insert into GENE2CS (GENE, CS, AD) values (?, ?, ?)" )
                 .setParameter( 1, gene.getId() )
                 .setParameter( 2, cs.getId() )
                 .setParameter( 3, ad.getId() )
@@ -205,7 +205,7 @@ public class DifferentialExpressionResultDaoTest extends BaseDatabaseTest {
 
     private void createProbeLink( Gene gene, CompositeSequence cs ) {
         // manually insert an entry in the GENE2CS table. Hibernate 5: 1-based positional parameters.
-        sessionFactory.getCurrentSession().createSQLQuery( "insert into GENE2CS (GENE, CS, AD) values (?, ?, ?)" )
+        sessionFactory.getCurrentSession().createNativeQuery( "insert into GENE2CS (GENE, CS, AD) values (?, ?, ?)" )
                 .setParameter( 1, gene.getId() )
                 .setParameter( 2, cs.getId() )
                 .setParameter( 3, cs.getArrayDesign().getId() )

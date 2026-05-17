@@ -1,6 +1,6 @@
 package ubic.gemma.persistence.util;
 
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -145,7 +145,7 @@ public class AclQueryUtilsTest extends BaseSpringContextTest {
 
     @Test
     public void testNative() {
-        Query q = session.createSQLQuery(
+        Query q = session.createNativeQuery(
                         "select {I.*} from INVESTIGATION {I}"
                                 + formNativeAclJoinClause( "{I}.id" ) + " "
                                 + "where {I}.class = 'ExpressionExperiment'"
@@ -159,7 +159,7 @@ public class AclQueryUtilsTest extends BaseSpringContextTest {
     @Test
     public void testNativeAsUser() {
         runAsUser( "bob" );
-        Query q = session.createSQLQuery(
+        Query q = session.createNativeQuery(
                         "select {I.*} from INVESTIGATION {I}"
                                 + formNativeAclJoinClause( "{I}.id" ) + " "
                                 + "where {I}.class = 'ExpressionExperiment'"
@@ -173,7 +173,7 @@ public class AclQueryUtilsTest extends BaseSpringContextTest {
     @Test
     public void testNativeAsAnonymous() {
         runAsAnonymous();
-        Query q = session.createSQLQuery(
+        Query q = session.createNativeQuery(
                         "select {I.*} from INVESTIGATION {I}"
                                 + formNativeAclJoinClause( "{I}.id" ) + " "
                                 + "where {I}.class = 'ExpressionExperiment'"

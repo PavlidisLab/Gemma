@@ -21,7 +21,6 @@ import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
-import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawAndProcessedExpressionDataVectorService;
@@ -104,11 +103,6 @@ public class ExpressionDataFileServiceTest extends BaseTest {
         @Bean
         public ExpressionExperimentBatchInformationService expressionExperimentBatchInformationService() {
             return mock();
-        }
-
-        @Bean
-        public CoexpressionService gene2geneCoexpressionService() {
-            return mock( CoexpressionService.class );
         }
 
         @Bean

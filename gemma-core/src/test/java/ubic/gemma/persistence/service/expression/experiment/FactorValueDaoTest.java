@@ -134,7 +134,7 @@ public class FactorValueDaoTest extends BaseDatabaseTest {
         assertThat( c2.getId() ).isNotNull();
         // make c2 an old-style characteristic
         sessionFactory.getCurrentSession()
-                .createSQLQuery( "update CHARACTERISTIC set class = null where ID = :id" )
+                .createNativeQuery( "update CHARACTERISTIC set class = null where ID = :id" )
                 .setParameter( "id", c2.getId() )
                 .executeUpdate();
         sessionFactory.getCurrentSession().flush();
