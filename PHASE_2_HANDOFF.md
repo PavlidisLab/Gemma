@@ -1,11 +1,12 @@
 # Phase 2 (Spring 6 / Hibernate 6 / jakarta) — handoff
 
-Filed 2026-05-17, refreshed at end-of-session-3 third push (still 2026-05-17).
-**The full `mvn install -DskipTests=true` now succeeds across all five
-modules.** Test-compile is also clean (no tests run yet — that's Step 7).
-Coexpression was deleted in session 3 at the user's call ("old and fallow").
-Jersey 3 migration (Step 6) and the spring-security-test consolidation
-also landed this session.
+Filed 2026-05-17, refreshed at end-of-session-4 first push (still 2026-05-17).
+**Step 5a (JPA wiring) has now landed**: SessionFactory is unwrapped from a
+JPA `LocalContainerEntityManagerFactoryBean` consuming a new
+`META-INF/persistence.xml`. The legacy custom `LocalSessionFactoryBean` +
+`HibernateTransactionManager` wrappers are deleted, and the obsolete
+`hibernate.cfg.xml` is gone (its mapping list moved into `persistence.xml`).
+All 5 modules still install + test-compile green.
 
 ```
 mvn -P fast -Denforcer.skip=true install -DskipTests=true:
@@ -14,6 +15,13 @@ mvn -P fast -Denforcer.skip=true install -DskipTests=true:
   Gemma CLI .......................................... SUCCESS [  7.849 s]
   Gemma REST ......................................... SUCCESS [  4.968 s]
   Gemma Web .......................................... SUCCESS [  7.646 s]
+```
+
+## Session-4 commits (on `phase2`)
+
+```
+<this commit>   Phase 2 Step 5a: Spring 6 JPA migration of SessionFactory wiring
+5ff67490aa      PHASE_2_HANDOFF.md: refresh for full mvn install green; next is Step 5a (JPA)
 ```
 
 ## Session-3 commits (on `phase2`)
@@ -95,29 +103,92 @@ The biggest remaining offenders at session-3 end:
     ProcessedDataVectorByGeneCacheImpl
 ```
 
-## TL;DR for a fresh session (next session-4)
+## TL;DR for a fresh session (next session-5)
 
 Build is compile-green and test-compile-green for all five modules.
 `mvn install -DskipTests=true` produces gemma-core jar, gemma-cli
-appassembly, and Gemma.war.
+appassembly, and Gemma.war. **Step 5a JPA wiring is now in place** so
+app-context bootstrap should at least reach SessionFactory construction
+at runtime (untested — that's Step 7).
 
 What's still left:
 
-1. **Step 5a — Spring 6 JPA migration of the SessionFactory wiring.**
-   gsec's `testContext.xml` shows the canonical pattern: replace
-   `LocalSessionFactoryBean` + `HibernateTransactionManager` with
-   `LocalContainerEntityManagerFactoryBean` + `JpaTransactionManager`,
-   then expose a `SessionFactory` bean via `factory-method="unwrap"`.
-   Until this lands, app context bootstrap will fail at runtime even
-   though everything compiles.
-2. **Step 7 — selective per-module tests.** Do NOT run the full suite
-   (Paul: ~30 min); pick a representative DAO test per module to verify
-   the BusinessKey / JPA Criteria / TypedResultTransformer migrations
-   work at runtime. Expect issues — the `applyTo`/`list`/`uniqueResult`
-   path through `TypedResultTransformer` is a new pattern that wasn't
-   exercised pre-Phase-2.
-3. **Steps 8–10** — bytecode 11→17 (in root pom), re-enable
+1. **Step 7 — selective per-module tests.** Do NOT run the full suite
+   (Paul: ~30 min); pick a representative DAO test per module (e.g.
+   `ExpressionExperimentSetDaoTest` extends `BaseDatabaseTest`) to
+   verify the BusinessKey / JPA Criteria / TypedResultTransformer
+   migrations AND the new JPA EMF wiring work at runtime. Expect issues
+   — the JPA EMF reads `META-INF/persistence.xml` (new), the unwrap
+   from JPA → SessionFactory is new, and the `applyTo` /
+   `TypedResultTransformer` path is also new.
+2. **Steps 8–10** — bytecode 11→17 (in root pom), re-enable
    `dependencyConvergence` enforcer, update RENOVATIONS.md.
+
+## Step 5a notes (Spring 6 JPA migration — done this session)
+
+Pattern: `LocalContainerEntityManagerFactoryBean` →
+`HibernateJpaVendorAdapter` → expose `SessionFactory` via
+`factory-bean="entityManagerFactory" factory-method="unwrap"` with
+constructor-arg `"org.hibernate.SessionFactory"`. Transaction manager
+is `org.springframework.orm.jpa.JpaTransactionManager`.
+
+Files changed:
+
+| Change | File |
+|---|---|
+| New: persistence unit "gemma" with all 64 mapping resources | `gemma-core/src/main/resources/META-INF/persistence.xml` |
+| Deleted: legacy Hibernate-native config | `gemma-core/src/main/resources/hibernate.cfg.xml` |
+| Rewritten: JPA EMF + JpaTransactionManager + unwrap | `gemma-core/src/main/resources/ubic/gemma/applicationContext-hibernate.xml` |
+| Deleted: custom `LocalSessionFactoryBean` (wrapper around hibernate5) | `gemma-core/src/main/java/.../persistence/hibernate/LocalSessionFactoryBean.java` |
+| Deleted: custom `LocalSessionFactoryBuilder` | `gemma-core/src/main/java/.../persistence/hibernate/LocalSessionFactoryBuilder.java` |
+| Deleted: custom `HibernateTransactionManager` (wrapper) | `gemma-core/src/main/java/.../persistence/hibernate/HibernateTransactionManager.java` |
+| Updated: drop Hibernate `Configuration` arg; vendor String only | `DatabaseSchemaPopulator.java`, `DatabaseSchemaUpdatePopulator.java` |
+| Updated: drop `@Autowired LocalSessionFactoryBean factory` | `InitializeDatabaseCli`, `UpdateDatabaseCli`, `GenerateDatabaseUpdateCli` |
+| Updated: drop `&sessionFactory` ref, pass vendor only | `applicationContext-dataSourceInitializer.xml` |
+| Rewritten: JPA EMF + unwrap pattern | `BaseDatabaseTest.java` |
+| Rewritten: JPA EMF with `PersistenceManagedTypes.of(...)` for test entities | `AbstractFilteringVoEnabledDaoTest.java` |
+| Updated: 7 log4j2 logger names → `org.springframework.orm.jpa.JpaTransactionManager` | log4j2 configs across all modules |
+
+Design choices:
+
+- **`persistence.xml` as the canonical mapping list**, not inline XML
+  in `applicationContext-hibernate.xml`. Reason: tests
+  (`BaseDatabaseTest`) construct their own EMF and can simply set
+  `persistenceUnitName="gemma"` to pick up the same mapping list —
+  zero duplication. The gsec test wiring inlines mappings instead;
+  both patterns work, this one has less repetition for Gemma's
+  64-entry list.
+- **Cache wiring**: dropped Spring 6's removed
+  `org.springframework.cache.ehcache.EhCacheCacheManager` bean from
+  the XML. The `EhcacheConfig` `@Bean(name="ehcache")` is now aliased
+  to `cacheManager` via `<alias>`, so the existing
+  `ConcurrentMapCacheManager` stub services any `@Autowired
+  CacheManager` injection. Proper EhCache 3 integration is a later
+  phase.
+- **L2 cache**: `hibernate.cache.region.factory_class=jcache` +
+  `hibernate.javax.cache.provider=org.ehcache.jsr107.EhcacheCachingProvider`,
+  matching the JCache + Ehcache 3 jakarta deps already in pom.xml.
+- **`SampleCoexpressionMatrix.hbm.xml`** is the lone surviving
+  coexpression mapping (per-EE QC artifact, kept per Phase 2 Step 3
+  decision). The 16 deleted-coexpression mapping refs that were still
+  in hibernate.cfg.xml are gone now that hibernate.cfg.xml is gone.
+- **`AbstractFilteringVoEnabledDaoTest`**: uses
+  `PersistenceManagedTypes.of(FakeModel.class.getName(),
+  FakeRelatedModel.class.getName())` (Spring 6.1+ API) to feed the
+  EMF the in-test `@Entity` classes — replaces the old
+  `LocalSessionFactoryBean.setAnnotatedClasses(...)` path. Provided
+  an in-memory H2 dataSource since EMF bootstrap touches the DB.
+- **`hbm2ddl.auto=create`** on the test EMF replaces the Hibernate-4
+  `Configuration.generateSchemaCreationScript()` path that
+  `DatabaseSchemaPopulator.HibernateSchemaPopulator` used to call (it
+  was already a no-op stub on phase2; now it's a no-op stub that
+  doesn't need a `Configuration` to construct).
+
+Things to validate in Step 7:
+
+- Does the production app context actually bootstrap (`mvn -P fast jetty:run` against a test DB)?
+- Do the existing `BaseDatabaseTest` subclasses pass (`AclLinterServiceTest`, `UserManagerTest`, `MexSingleCellDataLoaderPersistenceTest`, `ExpressionExperimentSetDaoTest`, etc.)?
+- Does the JCache + Ehcache 3 jakarta L2 cache wire up cleanly, or does Hibernate barf on a missing cache config?
 
 ## Jersey 3 migration notes (Step 6)
 

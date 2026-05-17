@@ -20,7 +20,7 @@
 
         <!-- Gemma -->
         <Logger name="ubic.gemma.core.security.audit.AuditLogger" level="WARN"/>
-        <Logger name="ubic.gemma.persistence.hibernate.HibernateTransactionManager" level="WARN"/>
+        <Logger name="org.springframework.orm.jpa.JpaTransactionManager" level="WARN"/>
 
         <!-- Spring -->
         <Logger name="org.springframework.web.servlet.PageNotFound" level="ERROR"/>

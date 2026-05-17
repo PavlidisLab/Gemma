@@ -126,7 +126,7 @@
         <Logger name="ubic.gemma.core.security.audit.AuditLogger" level="INFO">
             <AppenderRef ref="auditFile"/>
         </Logger>
-        <Logger name="ubic.gemma.persistence.hibernate.HibernateTransactionManager" level="WARN"/>
+        <Logger name="org.springframework.orm.jpa.JpaTransactionManager" level="WARN"/>
         <Logger name="ubic.gemma.web.controller.expression.experiment.AnnotationController" level="INFO">
             <AppenderRef ref="annotationsFile"/>
         </Logger>

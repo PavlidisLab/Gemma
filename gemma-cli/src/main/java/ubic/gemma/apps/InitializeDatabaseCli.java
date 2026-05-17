@@ -10,7 +10,6 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.jdbc.datasource.init.CompositeDatabasePopulator;
 import org.springframework.jdbc.datasource.init.DatabasePopulatorUtils;
 import ubic.gemma.cli.util.AbstractCLI;
-import ubic.gemma.persistence.hibernate.LocalSessionFactoryBean;
 import ubic.gemma.persistence.initialization.CreateDatabasePopulator;
 import ubic.gemma.persistence.initialization.DatabaseSchemaPopulator;
 import ubic.gemma.persistence.initialization.InitialDataPopulator;
@@ -30,9 +29,6 @@ public class InitializeDatabaseCli extends AbstractCLI {
 
     @Autowired
     private DataSource dataSource;
-
-    @Autowired
-    private LocalSessionFactoryBean factory;
 
     @Value("${gemma.testdb.name}")
     private String databaseName;
@@ -86,7 +82,7 @@ public class InitializeDatabaseCli extends AbstractCLI {
         }
         CompositeDatabasePopulator cdp = new CompositeDatabasePopulator();
         cdp.addPopulators(
-                new DatabaseSchemaPopulator( factory, "mysql" ),
+                new DatabaseSchemaPopulator( "mysql" ),
                 new InitialDataPopulator( false ) );
         DatabasePopulatorUtils.execute( cdp, dataSource );
     }

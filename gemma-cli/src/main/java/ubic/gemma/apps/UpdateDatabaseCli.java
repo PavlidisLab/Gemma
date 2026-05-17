@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.jdbc.datasource.init.DatabasePopulatorUtils;
 import ubic.gemma.cli.util.AbstractCLI;
-import ubic.gemma.persistence.hibernate.LocalSessionFactoryBean;
 import ubic.gemma.persistence.initialization.DatabaseSchemaUpdatePopulator;
 
 import javax.annotation.Nullable;
@@ -24,9 +23,6 @@ public class UpdateDatabaseCli extends AbstractCLI {
 
     @Autowired
     private DataSource dataSource;
-
-    @Autowired
-    private LocalSessionFactoryBean factory;
 
     private boolean force;
 
@@ -65,7 +61,7 @@ public class UpdateDatabaseCli extends AbstractCLI {
         } else {
             jdbcUrl = dataSource.toString();
         }
-        DatabaseSchemaUpdatePopulator pop = new DatabaseSchemaUpdatePopulator( factory.getConfiguration(), "mysql" );
+        DatabaseSchemaUpdatePopulator pop = new DatabaseSchemaUpdatePopulator( "mysql" );
         if ( force ) {
             log.info( "The following database will be updated: " + jdbcUrl );
         } else {

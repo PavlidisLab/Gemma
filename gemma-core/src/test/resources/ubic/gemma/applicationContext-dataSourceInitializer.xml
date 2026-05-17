@@ -25,8 +25,8 @@
                 <property name="populators">
                     <list>
                         <bean class="ubic.gemma.persistence.initialization.DatabaseSchemaPopulator">
-                            <!-- the ampersand refers to the LocalSessionFactoryBean -->
-                            <constructor-arg ref="&amp;sessionFactory"/>
+                            <!-- Phase 2: vendor only; the Hibernate-DDL branch is a no-op (schema comes from
+                                 hbm2ddl.auto on the JPA EMF for tests, or sql/migrations/ for production). -->
                             <constructor-arg value="mysql"/>
                         </bean>
                         <bean class="ubic.gemma.persistence.initialization.InitialDataPopulator">

@@ -67,7 +67,7 @@
             <AppenderRef ref="progressUpdate"/>
         </Logger>
 
-        <Logger name="ubic.gemma.persistence.hibernate.HibernateTransactionManager" level="WARN"/>
+        <Logger name="org.springframework.orm.jpa.JpaTransactionManager" level="WARN"/>
 
     </Loggers>
 </Configuration>

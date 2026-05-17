@@ -11,7 +11,6 @@ import org.hibernate.dialect.Dialect;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.cli.util.AbstractCLI;
 import ubic.gemma.persistence.hibernate.H2Dialect;
-import ubic.gemma.persistence.hibernate.LocalSessionFactoryBean;
 import ubic.gemma.persistence.hibernate.MySQL57InnoDBDialect;
 
 import javax.annotation.Nullable;
@@ -38,9 +37,6 @@ public class GenerateDatabaseUpdateCli extends AbstractCLI {
 
     @Autowired
     private DataSource dataSource;
-
-    @Autowired
-    private LocalSessionFactoryBean factory;
 
     private boolean create;
 

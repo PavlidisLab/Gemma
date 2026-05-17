@@ -1,29 +1,34 @@
 package ubic.gemma.persistence.service;
 
 import lombok.Data;
+import org.h2.Driver;
 import org.hibernate.SessionFactory;
 import org.junit.Test;
-import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.jdbc.datasource.SimpleDriverDataSource;
+import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
+import org.springframework.orm.jpa.persistenceunit.PersistenceManagedTypes;
+import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.hibernate.LocalSessionFactoryBean;
-import ubic.gemma.persistence.hibernate.MySQL57InnoDBDialect;
+import ubic.gemma.persistence.hibernate.H2Dialect;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.core.context.TestComponent;
 
 import javax.annotation.Nullable;
+import javax.sql.DataSource;
 import jakarta.persistence.*;
 import java.util.Collection;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -35,13 +40,32 @@ public class AbstractFilteringVoEnabledDaoTest extends BaseTest {
     static class AbstractFilteringVoEnabledDaoTestContextConfiguration {
 
         @Bean
-        public FactoryBean<SessionFactory> sessionFactory() {
-            LocalSessionFactoryBean factoryBean = new LocalSessionFactoryBean();
-            factoryBean.getHibernateProperties().setProperty( "hibernate.dialect", MySQL57InnoDBDialect.class.getName() );
-            factoryBean.setAnnotatedClasses(
-                    FakeModel.class, FakeEnum.class, FakeRelatedModel.class
-            );
-            return factoryBean;
+        public DataSource dataSource() {
+            return new SimpleDriverDataSource( new Driver(), "jdbc:h2:mem:fakedaotest;DB_CLOSE_DELAY=-1" );
+        }
+
+        @Bean
+        public LocalContainerEntityManagerFactoryBean entityManagerFactory( DataSource dataSource ) {
+            // Phase 2: JPA EMF replaces the legacy LocalSessionFactoryBean.setAnnotatedClasses path.
+            LocalContainerEntityManagerFactoryBean emf = new LocalContainerEntityManagerFactoryBean();
+            emf.setDataSource( dataSource );
+            emf.setPersistenceUnitName( "fakedao" );
+            emf.setJpaVendorAdapter( new HibernateJpaVendorAdapter() );
+            emf.setManagedTypes( PersistenceManagedTypes.of(
+                    FakeModel.class.getName(),
+                    FakeRelatedModel.class.getName() ) );
+            Map<String, Object> props = new HashMap<>();
+            props.put( "hibernate.dialect", H2Dialect.class.getName() );
+            props.put( "hibernate.hbm2ddl.auto", "create" );
+            props.put( "hibernate.cache.use_second_level_cache", "false" );
+            props.put( "hibernate.cache.use_query_cache", "false" );
+            emf.setJpaPropertyMap( props );
+            return emf;
+        }
+
+        @Bean
+        public SessionFactory sessionFactory( jakarta.persistence.EntityManagerFactory entityManagerFactory ) {
+            return entityManagerFactory.unwrap( SessionFactory.class );
         }
 
         @Bean
