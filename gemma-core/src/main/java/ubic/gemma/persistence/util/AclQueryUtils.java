@@ -63,18 +63,22 @@ public class AclQueryUtils {
 
     /**
      * Native SQL version of {@link #CURRENT_USER_SIDS_HQL}.
+     * <p>
+     * Targets Spring Security 6's canonical {@code acl_sid} schema where {@code principal}
+     * is a 0/1 discriminator (0 = GrantedAuthoritySid, 1 = PrincipalSid) and the SID name
+     * lives in the {@code sid} column.
      */
     //language=SQL
     static final String CURRENT_USER_SIDS_SQL =
-            "select sid.ID from USER_GROUP as UG "
+            "select sid.id from USER_GROUP as UG "
                     + "join GROUP_AUTHORITY GA on UG.ID = GA.GROUP_FK "
-                    + "join ACLSID sid on sid.GRANTED_AUTHORITY = CONCAT('GROUP_', GA.AUTHORITY) "
+                    + "join acl_sid sid on (sid.principal = 0 and sid.sid = CONCAT('GROUP_', GA.AUTHORITY)) "
                     + "join GROUP_MEMBERS GM on UG.ID = GM.USER_GROUPS_FK "
                     + "join CONTACT C on GM.GROUP_MEMBERS_FK = C.ID "
                     + "where C.USER_NAME = :" + USER_NAME_PARAM;
 
     //language=SQL
-    static final String ANONYMOUS_SID_SQL = "select sid.ID from ACLSID sid where sid.GRANTED_AUTHORITY = 'IS_AUTHENTICATED_ANONYMOUSLY'";
+    static final String ANONYMOUS_SID_SQL = "select sid.id from acl_sid sid where sid.principal = 0 and sid.sid = 'IS_AUTHENTICATED_ANONYMOUSLY'";
 
     /**
      * Indicate if the ACL query requires a {@code count(distinct ...)} clause.
@@ -169,14 +173,18 @@ public class AclQueryUtils {
         if ( StringUtils.isBlank( aoiIdColumn ) ) {
             throw new IllegalArgumentException( "Object identity column cannot be empty." );
         }
+        // Targets Spring Security 6's canonical four-table schema (acl_class, acl_sid,
+        // acl_object_identity, acl_entry). The AOI's class name lives in acl_class.class, so we
+        // join through acl_class instead of comparing a varchar OBJECT_CLASS column on the AOI.
         //language=SQL
-        String q = " join ACLOBJECTIDENTITY " + AOI_ALIAS + " on (" + AOI_ALIAS + ".OBJECT_CLASS = :" + AOI_TYPE_PARAM + " and " + AOI_ALIAS + ".OBJECT_ID = " + aoiIdColumn + ") "
-                + "join ACLSID " + SID_ALIAS + " on (" + SID_ALIAS + ".ID = " + AOI_ALIAS + ".OWNER_SID_FK)";
+        String q = " join acl_object_identity " + AOI_ALIAS + " on (" + AOI_ALIAS + ".object_id_identity = " + aoiIdColumn + ") "
+                + "join acl_class " + AOI_ALIAS + "_cls on (" + AOI_ALIAS + "_cls.id = " + AOI_ALIAS + ".object_id_class and " + AOI_ALIAS + "_cls.class = :" + AOI_TYPE_PARAM + ") "
+                + "join acl_sid " + SID_ALIAS + " on (" + SID_ALIAS + ".id = " + AOI_ALIAS + ".owner_sid)";
 
         // for non-admin, we have to include aoi.entries
         // if aoi.entries is empty, the user might still be the owner, so we use a left join
         if ( !SecurityUtil.isUserAdmin() ) {
-            q += " left join ACLENTRY " + ACE_ALIAS + " on (" + AOI_ALIAS + ".ID = " + ACE_ALIAS + ".OBJECTIDENTITY_FK)";
+            q += " left join acl_entry " + ACE_ALIAS + " on (" + AOI_ALIAS + ".id = " + ACE_ALIAS + ".acl_object_identity)";
         }
         return q;
     }
@@ -199,18 +207,20 @@ public class AclQueryUtils {
     public static String formNativeAclRestrictionClause( SessionFactoryImplementor sessionFactoryImplementor, Permission permission ) {
         // Dialect-aware bitwise AND (MySQL emits "(a & b)", H2 emits "BITAND(a, b)").
         String renderedMask = BitwiseUtils.bitand( sessionFactoryImplementor.getJdbcServices().getDialect(),
-                ACE_ALIAS + ".MASK", String.valueOf( permission.getMask() ) );
+                ACE_ALIAS + ".mask", String.valueOf( permission.getMask() ) );
         //language=SQL
         if ( SecurityUtil.isUserAnonymous() ) {
-            return " and (" + renderedMask + " <> 0 and " + ACE_ALIAS + ".SID_FK in (" + ANONYMOUS_SID_SQL + "))";
+            return " and (" + renderedMask + " <> 0 and " + ACE_ALIAS + ".sid in (" + ANONYMOUS_SID_SQL + "))";
         } else if ( !SecurityUtil.isUserAdmin() ) {
+            // sid.principal = 1 selects only AclPrincipalSid rows (so we never match the username
+            // against an AclGrantedAuthoritySid that happens to share the string).
             return " and ("
                     // user owns the object
-                    + SID_ALIAS + ".PRINCIPAL = :" + USER_NAME_PARAM + " "
+                    + "(" + SID_ALIAS + ".principal = 1 and " + SID_ALIAS + ".sid = :" + USER_NAME_PARAM + ") "
                     // specific rights to the object
-                    + "or (" + ACE_ALIAS + ".SID_FK in (" + CURRENT_USER_SIDS_SQL + ") and " + renderedMask + " <> 0) "
+                    + "or (" + ACE_ALIAS + ".sid in (" + CURRENT_USER_SIDS_SQL + ") and " + renderedMask + " <> 0) "
                     // publicly available
-                    + "or (" + ACE_ALIAS + ".SID_FK in (" + ANONYMOUS_SID_SQL + ") and " + renderedMask + " <> 0)"
+                    + "or (" + ACE_ALIAS + ".sid in (" + ANONYMOUS_SID_SQL + ") and " + renderedMask + " <> 0)"
                     + ")";
         } else {
             // For administrators, no filtering is needed, so the ACE is completely skipped from the where clause.
