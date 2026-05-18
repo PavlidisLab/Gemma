@@ -113,7 +113,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
         aclTestUtils.checkHasAces( ad );
 
         Sid owner = securityService.getOwner( ad );
-        assertEquals( "administrator", ( ( AclPrincipalSid ) owner ).getPrincipal() );
+        assertEquals( "administrator", gemma.gsec.acl.domain.Sids.principalName( owner ) );
 
         arrayDesignService.remove( ad );
 
@@ -145,10 +145,10 @@ public class AclAdviceTest extends BaseSpringContextTest {
         aclTestUtils.checkHasAces( ad );
 
         Sid owner = securityService.getOwner( ad );
-        assertEquals( userName, ( ( AclPrincipalSid ) owner ).getPrincipal() );
+        assertEquals( userName, gemma.gsec.acl.domain.Sids.principalName( owner ) );
 
         arrayDesignService.update( ad );
-        assertEquals( userName, ( ( AclPrincipalSid ) owner ).getPrincipal() );
+        assertEquals( userName, gemma.gsec.acl.domain.Sids.principalName( owner ) );
 
         arrayDesignService.remove( ad );
 
