@@ -15,6 +15,12 @@ CREATE TABLE IF NOT EXISTS acl_class (
   class  VARCHAR(255) NOT NULL UNIQUE
 );
 
+-- Spring Security's canonical acl_entry has audit_success / audit_failure columns that gsec's
+-- AclEntry domain type doesn't model. Hibernate's hbm2ddl=create therefore doesn't emit them.
+-- Add them here so JdbcMutableAclService's INSERTs (which include these columns) work.
+ALTER TABLE acl_entry ADD COLUMN audit_success BIT NOT NULL DEFAULT 0;
+ALTER TABLE acl_entry ADD COLUMN audit_failure BIT NOT NULL DEFAULT 0;
+
 -- Class lookup table -- seed only the classes used by ACL object identities below.
 -- New entity classes get their acl_class row inserted automatically on first
 -- createAcl() by JdbcMutableAclService.
