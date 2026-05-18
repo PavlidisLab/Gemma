@@ -4481,6 +4481,16 @@ public class ExpressionExperimentDaoImpl
         Assert.notNull( newQt.getId(), "Quantitation type must be persistent." );
         Assert.isTrue( newQt.getIsMaskedPreferred(), "QuantitationType must be marked as masked preferred." );
         checkVectors( ee, newQt, vectors );
+        // Hibernate 6: if the caller passes a detached EE, its PersistentSet of processedExpressionDataVectors
+        // still has a storedSnapshot with the original (about-to-be-bulk-deleted) vector references.
+        // The trailing merge() below would then iterate that snapshot and trip
+        // "EntityNotFoundException: No row with the given identifier exists" on the now-gone rows.
+        // Re-resolve the EE through the session up front so subsequent mutations + merge run against
+        // a fresh managed instance with no stale collection snapshot.
+        ExpressionExperiment managed = ( ExpressionExperiment ) getSessionFactory().getCurrentSession().get( ExpressionExperiment.class, ee.getId() );
+        if ( managed != null ) {
+            ee = managed;
+        }
         Set<BioAssayDimension> dimensions = ee.getProcessedExpressionDataVectors().stream()
                 .map( BulkExpressionDataVector::getBioAssayDimension )
                 .collect( Collectors.toSet() );
