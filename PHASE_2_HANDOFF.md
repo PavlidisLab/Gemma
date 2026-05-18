@@ -236,6 +236,21 @@ earlier partial run and reports 3 completed, 0 errors); the per-class
 
 ## What's still left for Phase 2
 
+0. ~~**Multi-context schema-drop bug (~31 SQLGrammarException errors)**~~ —
+   fixed by `99a16f5fc4` (initial guard) + `9b25eaabab` (H2 scope refinement).
+   `TestBootstrapState` adds JVM-static one-shot flags so the
+   `createDatabaseInitializer → sessionFactory(hbm2ddl=create) →
+   dataSourceInitializer` chain runs exactly once across all Spring
+   ApplicationContexts in a single Surefire/Failsafe JVM. The second-and-
+   later contexts find the gemdtest DB intact, downgrade `hbm2ddl` to
+   `none`, and skip the seed populators. H2-backed unit tests
+   (`BaseDatabaseTest`) bypass all four guards via dialect/vendor/slim
+   scoping. Targeted spot-check (8 integration test classes, 24 tests) now
+   shows 0 SQLGrammarException; the full sweep shows zero
+   "Table 'gemdtest.X' doesn't exist" test errors. Note that the full
+   integration sweep can be polluted by sibling agents running their own
+   `mvn verify` against the same shared `gemdtest` MySQL DB — verify
+   `ps aux | grep mvn` before reading sweep metrics if results look off.
 1. **The AccessDeniedException cluster (110 errors)** — in flight under
    another agent. Concentrated in test fixture bootstrap; root cause
    is the same per-test ACL grant being rejected by the new auth
