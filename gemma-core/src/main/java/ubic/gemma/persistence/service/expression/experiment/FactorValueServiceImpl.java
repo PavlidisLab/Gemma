@@ -190,8 +190,15 @@ public class FactorValueServiceImpl extends AbstractFilteringVoEnabledService<Fa
             throw new IllegalArgumentException( String.format( "%s is not associated with %s", statement, fv ) );
         }
         this.factorValueDao.update( fv );
-        // now we can safely delete it
-        this.statementDao.remove( statement );
+        // Hibernate 6: factorValueDao.update is now merge() (not the legacy reattach-via-update),
+        // which cascades into a fresh managed copy of the Statement. Calling statementDao.remove
+        // with the caller-provided detached reference would throw EntityExistsException because a
+        // different managed instance with the same id is already in the session. Re-resolve the
+        // managed Statement from its id and remove that.
+        Statement managed = statementDao.load( statement.getId() );
+        if ( managed != null ) {
+            this.statementDao.remove( managed );
+        }
     }
 
     @Override

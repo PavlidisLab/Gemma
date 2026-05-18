@@ -72,7 +72,15 @@ public class FactorValueServiceTest extends BaseDatabaseTest {
         s1 = factorValueService.createStatement( fv, s1 );
         assertNotNull( s1.getId() );
         assertTrue( fv.getCharacteristics().contains( s1 ) );
-        assertTrue( sessionFactory.getCurrentSession().contains( fv ) );
+        // Pre-Phase-2 the DAO used Session#update(), which reattached the original detached instance,
+        // so contains(fv) was true after createStatement. Hibernate 6's JPA-correct path is merge(),
+        // which returns a new managed instance and leaves the input detached. The behavioural
+        // promise of the operation is "the new Statement is persisted and linked to the FV in the
+        // DB" — verify that via a fresh load instead of an in-memory identity check.
+        FactorValue reloaded = sessionFactory.getCurrentSession().get( FactorValue.class, fv.getId() );
+        assertNotNull( reloaded );
+        Long newStatementId = s1.getId();
+        assertTrue( reloaded.getCharacteristics().stream().anyMatch( c -> c.getId().equals( newStatementId ) ) );
     }
 
     @Test
@@ -119,7 +127,15 @@ public class FactorValueServiceTest extends BaseDatabaseTest {
         fv.getCharacteristics().add( s1 );
         sessionFactory.getCurrentSession().persist( fv );
         sessionFactory.getCurrentSession().flush();
+        // The test's name promises BOTH the FV and the statement are detached. Pre-Phase-2 only fv
+        // was evicted; the pre-existing Statement reference remained managed, but Hibernate 5's
+        // Session#update() was lenient about that. Hibernate 6's merge() cascade creates a fresh
+        // managed Statement#id during merge(fv), which then collides with the already-managed s1
+        // reference at statementDao.remove() with "A different object with the same identifier".
+        // Evict s1 too so the scenario matches the test name and the merge cascade has a clean
+        // session to work with.
         sessionFactory.getCurrentSession().evict( fv );
+        sessionFactory.getCurrentSession().evict( s1 );
         factorValueService.removeStatement( fv, s1 );
     }
 

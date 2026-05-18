@@ -133,6 +133,13 @@ public class FactorValueDaoTest extends BaseDatabaseTest {
         assertThat( fv.getId() ).isNotNull();
         assertThat( c1.getId() ).isNotNull();
         assertThat( c2.getId() ).isNotNull();
+        // Hibernate 6 is stricter about pending dirty-updates: factorValueDao.create persists the
+        // FactorValue + cascade-persists the two Statements, then queues a discriminator-aware
+        // UPDATE CHARACTERISTIC ... WHERE class='Statement' to wire FACTOR_VALUE_FK. Flush that
+        // pending update *before* the native SQL flips c2's discriminator to NULL — otherwise the
+        // deferred UPDATE runs after and fails its optimistic check (row count 0, class no
+        // longer matches 'Statement').
+        sessionFactory.getCurrentSession().flush();
         // make c2 an old-style characteristic
         sessionFactory.getCurrentSession()
                 .createNativeQuery( "update CHARACTERISTIC set class = null where ID = :id" )
