@@ -174,14 +174,17 @@ public abstract class AbstractPersister implements Persister {
 
     private String formatEntity( Object entity ) {
         Class<?> elementClass = Hibernate.getClass( entity );
-        // Hibernate 6: ClassMetadata is gone; use the Session/PersistenceContext to get the id.
-        Object id = sessionFactory.getCurrentSession().getIdentifier( entity );
-        if ( id == null ) {
-            return String.format( "transient %s entity", elementClass.getSimpleName() );
-        } else if ( sessionFactory.getCurrentSession().contains( entity ) ) {
-            return String.format( "persistent %s entity with ID %s", elementClass.getSimpleName(), id );
-        } else {
-            return String.format( "detached %s entity with ID %s", elementClass.getSimpleName(), id );
+        // Hibernate 6: getIdentifier() throws TransientObjectException for any entity not in the
+        // session (HB 5 returned null). Branch on contains() first so a transient entity reports
+        // cleanly instead of throwing out of a debug-log helper. For detached entities (have an id
+        // but aren't in this session) we lose the "with ID N" detail — Hibernate 6 has no
+        // dependency-free way to read the id off a detached entity short of reflection on the
+        // @Id-annotated field, which isn't worth the complexity for a log string.
+        org.hibernate.Session session = sessionFactory.getCurrentSession();
+        if ( !session.contains( entity ) ) {
+            return String.format( "transient or detached %s entity", elementClass.getSimpleName() );
         }
+        Object id = session.getIdentifier( entity );
+        return String.format( "persistent %s entity with ID %s", elementClass.getSimpleName(), id );
     }
 }
