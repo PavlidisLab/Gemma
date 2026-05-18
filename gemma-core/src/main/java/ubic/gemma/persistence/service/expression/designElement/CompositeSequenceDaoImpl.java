@@ -340,17 +340,19 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
     public Slice<Gene> getGenes( CompositeSequence compositeSequence, int offset, int limit, boolean useGene2Cs ) {
         if ( useGene2Cs ) {
             // gets all kinds of associations, not just blat.
+            // Hibernate 6 NativeQuery can't auto-coerce an entity parameter to its identifier the way
+            // HB 5 did — bind the ID directly.
             //noinspection unchecked
             List<Gene> list = this.getSessionFactory().getCurrentSession()
-                    .createNativeQuery( "select {gene.*} " + CS_BY_GENE_GENE2CS_QUERY + " and cs.ID = :cs group by gene.ID" )
+                    .createNativeQuery( "select {gene.*} " + CS_BY_GENE_GENE2CS_QUERY + " and cs.ID = :csId group by gene.ID" )
                     .addEntity( "gene", Gene.class )
-                    .setParameter( "cs", compositeSequence )
+                    .setParameter( "csId", compositeSequence.getId() )
                     .setFirstResult( offset )
                     .setMaxResults( limit )
                     .list();
             Long totalElements = ( ( Number ) getSessionFactory().getCurrentSession()
-                    .createNativeQuery( "select count(distinct gene.ID) " + CS_BY_GENE_GENE2CS_QUERY + " and cs.ID = :cs" )
-                    .setParameter( "cs", compositeSequence )
+                    .createNativeQuery( "select count(distinct gene.ID) " + CS_BY_GENE_GENE2CS_QUERY + " and cs.ID = :csId" )
+                    .setParameter( "csId", compositeSequence.getId() )
                     .uniqueResult() ).longValue();
             return new Slice<>( list, null, offset, limit, totalElements );
         } else {

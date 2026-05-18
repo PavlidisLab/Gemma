@@ -75,11 +75,26 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     protected AbstractDao( Class<? extends T> elementClass, SessionFactory sessionFactory ) {
         this.elementClass = elementClass;
         this.sessionFactory = sessionFactory;
-        EntityType<? extends T> entityType = sessionFactory.getMetamodel().entity( elementClass );
-        this.entityName = entityType.getName();
-        // single-ID entities only — composite IDs are not used in Gemma's model
-        this.identifierPropertyName = entityType.getId( entityType.getIdType().getJavaType() ).getName();
-        Assert.notNull( this.identifierPropertyName, String.format( "%s does not have an ID.", elementClass.getName() ) );
+        // A handful of synthetic DAOs (e.g. RawAndProcessedExpressionDataVectorDaoImpl) are typed on a
+        // non-@Entity abstract supertype (BulkExpressionDataVector) so they can delegate to two real
+        // sub-DAOs through a common return type. Such classes aren't in the JPA metamodel; fall back
+        // to defaults rather than NPE. Every entity in Gemma's model uses "id" as the identifier
+        // property anyway (Identifiable interface).
+        EntityType<? extends T> entityType;
+        try {
+            entityType = sessionFactory.getMetamodel().entity( elementClass );
+        } catch ( IllegalArgumentException e ) {
+            entityType = null;
+        }
+        if ( entityType != null ) {
+            this.entityName = entityType.getName();
+            // single-ID entities only — composite IDs are not used in Gemma's model
+            this.identifierPropertyName = entityType.getId( entityType.getIdType().getJavaType() ).getName();
+            Assert.notNull( this.identifierPropertyName, String.format( "%s does not have an ID.", elementClass.getName() ) );
+        } else {
+            this.entityName = elementClass.getSimpleName();
+            this.identifierPropertyName = "id";
+        }
         this.batchSize = HibernateUtils.getBatchSize( elementClass, sessionFactory );
         this.useCursorFetchIfSupported = false;
         this.isQueryStateless = HibernateUtils.isStateless( elementClass, sessionFactory );

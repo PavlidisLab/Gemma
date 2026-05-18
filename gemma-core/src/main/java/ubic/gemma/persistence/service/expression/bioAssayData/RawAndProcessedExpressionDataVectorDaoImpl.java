@@ -7,7 +7,9 @@ import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 @Repository
@@ -43,6 +45,23 @@ public class RawAndProcessedExpressionDataVectorDaoImpl extends AbstractDesignEl
         } else {
             throw new UnsupportedOperationException( "Only raw and processed vectors can be used with this service." );
         }
+    }
+
+    @Override
+    public Collection<BulkExpressionDataVector> findByExpressionExperiment( ExpressionExperiment ee ) {
+        // BulkExpressionDataVector is not a JPA entity (the inheritance is plain Java, not <subclass/>),
+        // so the AbstractDao.findByProperty Criteria query against it fails on Hibernate 6's stricter
+        // JPA Metamodel. Issue two HQL queries against the real entities and merge.
+        Collection<BulkExpressionDataVector> result = new ArrayList<>();
+        result.addAll( this.getSessionFactory().getCurrentSession()
+                .createQuery( "from RawExpressionDataVector v where v.expressionExperiment = :ee", RawExpressionDataVector.class )
+                .setParameter( "ee", ee )
+                .list() );
+        result.addAll( this.getSessionFactory().getCurrentSession()
+                .createQuery( "from ProcessedExpressionDataVector v where v.expressionExperiment = :ee", ProcessedExpressionDataVector.class )
+                .setParameter( "ee", ee )
+                .list() );
+        return result;
     }
 
     @Override

@@ -480,7 +480,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
 
     protected final FilterablePropertyMeta getFilterablePropertyMeta( String propertyName ) {
         if ( !filterableProperties.contains( propertyName ) ) {
-            throw new IllegalArgumentException( String.format( "Unknown filterable property %s in %s.", propertyName, getEntityName() ) );
+            throw new IllegalArgumentException( String.format( "Unknown filterable property %s in %s.", propertyName, getElementClass().getName() ) );
         }
         return filterablePropertyMetaCache.computeIfAbsent( propertyName, k -> this.resolveFilterablePropertyMeta( k ).build() );
     }
