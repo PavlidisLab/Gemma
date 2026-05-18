@@ -3482,14 +3482,17 @@ public class ExpressionExperimentDaoImpl
                             ee, quantitationType, fetchSize,
                             useCursorFetchIfSupported ? " and cursor fetching" : "" ) );
                     SingleCellDataVectorInitializer initializer = new SingleCellDataVectorInitializer( ee, null, quantitationType, dimension, includeBiologicalCharacteristics, includeData, includeDataIndices );
-                    // Phase 2: per-row transformer must now be applied by the consumer rather than by
-                    // the query stream. The streaming consumer of this query is responsible for invoking
-                    // the initializer (see SingleCellDataVectorInitializer.transformTuple).
+                    // Phase 2 (sessions 5/6): the initial port left per-row transformation as a TODO
+                    // ("apply by the consumer"). Now that TypedResultTransformer extends Hibernate 6
+                    // TupleTransformer + ResultListTransformer (commit 1d01e08308), wire the
+                    // initializer into the query directly so the stream produces typed entities
+                    // instead of raw Object[] tuples.
                     return session.createQuery( initializer.createSelect( "scedv" ) + " "
                                     + "from SingleCellExpressionDataVector scedv "
                                     + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt" )
                             .setParameter( "ee", ee )
-                            .setParameter( "qt", quantitationType );
+                            .setParameter( "qt", quantitationType )
+                            .setTupleTransformer( initializer );
                 },
                 SingleCellExpressionDataVector.class,
                 fetchSize,
