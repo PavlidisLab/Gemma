@@ -121,14 +121,17 @@ Lift `release=11` → `release=17` once Spring is on 5.x (or 6.x), as part of Ph
 
 Full reactor still builds. The 40 DWR-remoted controller classes themselves are now dead code; they'll be deleted (or migrated to REST in `gemma-rest`) as gemma-web is decommissioned in favour of the new React frontend.
 
-### Phase 2 (E) — Spring 6 / Hibernate 6 / jakarta — substantially done on `phase2` branch
+### Phase 2 (E) — Spring 6 / Hibernate 6 / jakarta — substantially done; integration tier in progress
 
 Live on the `phase2` branch (5 sessions, dozens of commits). Full
 play-by-play is in `PHASE_2_HANDOFF.md`. **Build state**: all 5 modules
-install + test-compile green at **bytecode 17**; the SessionFactory
-bootstrap works (native Hibernate via JPA EMF unwrap); the shared
-JPA-Criteria filtering machinery is rebuilt; and the unit-test layer
-is broadly green across gemma-core / gemma-cli / gemma-rest. Big
+install + test-compile green at **bytecode 17 with `dependencyConvergence`
+on**; the SessionFactory bootstrap works (native Hibernate via JPA EMF
+unwrap); the shared JPA-Criteria filtering machinery is rebuilt and now
+supports subquery + `.size` filters and `Sort.NullMode`; the legacy
+SHA+username-salt password-hash migration is in production; the unit-test
+layer is broadly green across gemma-core / gemma-cli / gemma-rest; and the
+integration-test (failsafe) tier now boots a real MySQL test DB. Big
 ticket items closed:
 
 - Spring 5 → 6.1.20; Spring Security 5 → 6.3.10.
@@ -144,6 +147,8 @@ ticket items closed:
   22 DAOs + BusinessKey rewritten on HQL or JPA Criteria;
   `AbstractCriteriaFilteringVoEnabledDao` ported to JPA Criteria
   (new `FilterJpaUtils` mirrors the deleted `FilterCriteriaUtils`).
+  Tasks D + E (subquery + `.size` + null-precedence) closed in commits
+  `f14373925b`, `3d265bee86`.
 - ~400 `javax.* → jakarta.*` imports swapped.
 - Jersey 2 → 3.1.10 (incl. jersey-spring6, swagger-jakarta artifacts).
 - Tomcat 9 → 10.1.34, jakarta.servlet 6.0.0, jakarta.xml.bind-api 4.0.2.
@@ -158,31 +163,44 @@ ticket items closed:
   entities/DAOs/services/caches/link-analysis/CLI/writer); only
   `SampleCoexpression*` (per-EE sample QC) retained.
 - Bytecode 11 → 17 (Step 8, committed `94b7435766`).
-- `applicationContext-security.xml` ported to Spring Security 6's
-  stricter schema; `ShaPasswordEncoder` (removed in SS 5) swapped for
-  `BCryptPasswordEncoder`. Production password verification still
-  needs a `DelegatingPasswordEncoder` migration before the legacy
-  SHA-with-username-salt hashes will verify — flagged in the XML and
-  `UserManagerImpl` comments. Committed `175407d6b8`.
 - `dependencyConvergence` enforcer re-enabled (Step 9, committed
   `c80975d8d8`). 8 transitive-version pins added to root
   `<dependencyManagement>`. See `PHASE_2_HANDOFF.md` for the table.
+- `applicationContext-security.xml` ported to Spring Security 6's
+  stricter schema (`175407d6b8`); the legacy SHA+username-salt
+  password-hash migration (**Task C**) then landed via
+  `GemmaLegacyAwarePasswordEncoder` + `LegacyAwareDaoAuthenticationProvider`
+  (`a2db1d8ed4`). Production user-auth is no longer blocked.
+- **Step 7 integration-test bootstrap wiring** (`cc21cf6504`): Spring 6
+  `<ref local>` removal, `createDatabaseInitializer → sessionFactory →
+  dataSourceInitializer` ordering, named-column AUDIT_EVENT INSERTs.
+  Failsafe sweep is now executable; latest run on `2f9a051ac9` is
+  ~197 of 471 integration tests passing, with clear error buckets
+  (the AccessDeniedException cluster, the
+  `PersistentSet.clear()`-immutable-collection cluster, the gsec
+  `AclObjectIdentity.equals` NPE).
+- Various Hibernate-6 strictness fixes: `AbstractPersister.formatEntity`
+  transient-tolerance (`63bffbf6fc`); HQL `<plural>.size` →
+  `size(<plural>)` (`e79e9c82b2`); `BinaryFunctionContributor` for
+  `bytes_substring` / `bytes_length` on BLOB columns (`2b0028a4e5`);
+  full `TypedResultTransformer` migration to HB6 `TupleTransformer` +
+  `ResultListTransformer` (`1d01e08308`).
 
 **What's left for Phase 2** (full detail in `PHASE_2_HANDOFF.md`):
 
-- Step 7 integration tier — ~61 `@Category(IntegrationTest)` tests
-  need a real MySQL test DB + the failsafe plugin path. Untouched.
-- Broader unit-sweep cleanup — ~12 failing test classes remaining in
-  gemma-core (FactorValue Hibernate-session-state issues, the
-  SingleCellExpressionExperimentService sweep, plus a few env-pre-
-  existing ones already catalogued: file-lock OS asserts, cellranger).
-- `AbstractCriteriaFilteringVoEnabledDao` subquery and `.size`-suffix
-  filters still throw UOE (subclasses can override or use HQL).
-- Null-precedence on `Sort` — JPA Criteria ignores
-  `Sort.NullMode.FIRST/LAST`; Hibernate 6 has a vendor extension
-  not yet plumbed.
-- Production password verification — `BCryptPasswordEncoder` is a
-  placeholder; legacy hashes need a `DelegatingPasswordEncoder` shim.
+- **Step 7 integration sweep** — in progress, not done. ~197 of 471
+  pass; error buckets are catalogued in `PHASE_2_HANDOFF.md`. The
+  three biggest are the AccessDeniedException cluster (in flight under
+  another agent), the immutable-collection sweep at
+  `PersistentSet.clear()`, and the gsec `AclObjectIdentity.equals`
+  NPE (fix lives in `~/Dev/gsec/gsec`).
+- **gemma-rest / gemma-web integration sweep** — failsafe hasn't been
+  run for those modules yet; in flight under another agent.
+- **Env-pre-existing macOS failures** stay as-is: `FileLockManagerTest`,
+  `ReadWriteFileLockTest` (`/proc/locks` is Linux-only),
+  `GeoMexSingleCellDataLoaderConfigurerTest` (cellranger binary not on
+  local box), `AnnDataSingleCellDataLoaderTest` (Python `anndata`
+  module not installed).
 
 ### Phase 1b cleanup deferred to future session
 

@@ -1,51 +1,62 @@
 # Phase 2 (Spring 6 / Hibernate 6 / jakarta) — handoff
 
-Filed 2026-05-17, refreshed at end-of-session-5 (still 2026-05-17, 5
-pushes this session). **Phase 2 is essentially done**: Steps 8 and 9
-closed (bytecode 11→17, dependencyConvergence enforcer re-enabled with
-8 transitive pins); the long-standing `applicationContext-security.xml`
-schema bug is fixed; two of the broader-sweep test failures (AclClass-
-MetadataTest, DiseaseOntologyTest) are resolved. All 5 modules install
-+ test-compile clean at **bytecode 17 with `dependencyConvergence`
-on**, the SessionFactory bootstrap works, the shared JPA-Criteria
-filtering machinery is back, and the unit-test layer is broadly green
-across gemma-core / gemma-cli / gemma-rest.
+Filed 2026-05-17, refreshed at end-of-session-5 (with session-5 still in
+flight via a couple of parallel agents — refresh against `git log` if
+this is older than your HEAD). **Phase 2 is substantially done; the
+integration tier is now in flight.** Steps 8 and 9 closed (bytecode
+11→17, `dependencyConvergence` enforcer re-enabled with 8 transitive
+pins); the legacy SHA-with-username-salt password-hash migration
+landed (Task C); the JPA Criteria filter machinery now handles subquery
++ `.size` filters and `Sort.NullMode` (Tasks D + E); the failsafe
+bootstrap is wired up and now boots a real MySQL test DB; and the
+broader unit sweep across gemma-core / gemma-cli / gemma-rest is
+broadly green.
 
 ## Tests passing under Phase 2 (this session)
 
-**~340+ unit tests across 4 modules, 0 errors** (smoke set probed
-during Step 7):
+**Unit tier — broadly green across 4 modules:**
 
 | Module | Tests | Notes |
 |---|---|---|
-| gemma-core (DAO/service/util/model) | ~215 | DAO smoke set, service tests, broader unit sweep |
-| gemma-cli | 41 | CLI infra + Spring-context CLI tests |
-| gemma-rest | 105 | REST utility + Spring-context controller tests (DatasetsWebService now 36/36) |
-| gemma-web | 11 | Utility tests; legacy webapp being replaced by `~/Dev/gemma-curation-ui` (see below), so heavy investment not warranted |
+| gemma-core (DAO/service/util/model) | ~215 smoke + sweep cleanup | DAO smoke set + broader unit sweep; major Hibernate-6 session-state clusters cleared (ExpressionExperimentDaoTest 53/0/0, SingleCellExpressionExperimentServiceTest 17/0/0, FactorValue* tests green) |
+| gemma-cli | 41 (56 in latest re-run) | 0 errors; CLI infra + Spring-context CLI tests |
+| gemma-rest | 105 | 0 errors; REST utility + Spring-context controller tests (`DatasetsRestTest` now correctly excluded as `@Category({SlowTest, IntegrationTest})`) |
+| gemma-web | 11 | Legacy webapp being replaced by `~/Dev/gemma-curation-ui`, so heavy investment not warranted |
 
-Big-Spring-context tests (`BaseSpringContextTest` /
-`BaseIntegrationTest` subclasses, ~61 of them) are
-`@Category(IntegrationTest.class)` — run by failsafe with a real MySQL
-test DB, explicitly out of Step 7's unit-test scope. Untouched this
-session.
+**Integration tier — bootstrap unblocked, sweep now executable.** The
+~61 `@Category(IntegrationTest)` tests can now boot against a real
+MySQL test DB; commit `cc21cf6504` closed the bootstrap wiring (Spring
+6 `<ref local>` removal in `applicationContext-schedule.xml`,
+sessionFactory-before-data-INSERT ordering for the
+`createDatabaseInitializer` → `sessionFactory` → `dataSourceInitializer`
+chain, named-column AUDIT_EVENT INSERTs). See the **MySQL test DB
+recipe** section below for run-time invocation.
 
 ## Build state
 
-All 5 modules still install + test-compile green.
+All 5 modules install + test-compile green at **bytecode 17 with
+`dependencyConvergence` on**:
 
 ```
-mvn -P fast -Denforcer.skip=true install -DskipTests=true:
-  Gemma .............................................. SUCCESS [  1.341 s]
-  Gemma Core ......................................... SUCCESS [  1.430 s]
-  Gemma CLI .......................................... SUCCESS [  7.849 s]
-  Gemma REST ......................................... SUCCESS [  4.968 s]
-  Gemma Web .......................................... SUCCESS [  7.646 s]
+mvn -P fast install -DskipTests=true:
+  Gemma .............................................. SUCCESS
+  Gemma Core ......................................... SUCCESS
+  Gemma CLI .......................................... SUCCESS
+  Gemma REST ......................................... SUCCESS
+  Gemma Web .......................................... SUCCESS
 ```
 
 ## Session-5 commits (on `phase2`)
 
 ```
-<this commit>   PHASE_2_HANDOFF.md: refresh after Initializer wiring + detached-replace fix
+2f9a051ac9      Phase 2: ExternalDatabaseServiceTest passes mutable Set into setExternalDatabases
+a2db1d8ed4      Phase 2 Task C: legacy SHA + username-salt password-hash migration
+3d265bee86      Phase 2: honour Sort.NullMode FIRST/LAST via Hibernate 6 JpaOrder
+f14373925b      Phase 2: JPA-Criteria port supports subquery + .size filters
+e79e9c82b2      Phase 2: HQL `<plural>.size` -> `size(<plural>)` + stub deleted-coexpression query
+63bffbf6fc      Phase 2: AbstractPersister.formatEntity tolerates transient/detached entities
+cc21cf6504      Phase 2 Step 7: integration-test bootstrap wiring
+12fcea8567      PHASE_2_HANDOFF.md: refresh after Initializer wiring + detached-replace fix
 e304d1c2b3      Phase 2: re-resolve managed EE in replaceProcessedDataVectors to dodge stale PersistentSet snapshot
 764004c2ea      Phase 2: testReplaceVectors snapshots persisted vectors instead of detached
 eee9400743      Phase 2: wire SingleCellDataVectorInitializer via setTupleTransformer
@@ -93,31 +104,7 @@ e1a7360b48 Phase 2 Step 6: Jersey 3 migration + gemma-web compile-green; all 5 m
 897acb3d79 Phase 2 Step 3: rewrite BusinessKey + 22 DAOs on JPA Criteria / HQL
 ```
 
-Original session-3 commit message starts below.
-
----
-
-Original session-3 message:
-Session-3 rewrote `BusinessKey` and 22 concrete DAOs off the
-Hibernate Criteria API (mostly to HQL, a few to JPA Criteria),
-swapped `org.hibernate.Query` for `org.hibernate.query.Query`, fixed
-Spring 6's removed single-arg `Assert.*` overloads (97 callsites
-across 49 files via a paren-balanced Python pass), and inlined a
-MySQL bitwise-AND that used to route through the dialect's
-`SqlFunctionRegistry`. **gemma-core compile errors went from 200
-(45 files) to ~100 unique (21 files).** Most of the residue is
-Hibernate-6 API drift that was masked by the earlier showstoppers
-plus a few stubbed-but-still-uncovered Criteria callsites.
-
-## Session-3 commit (on `phase2`)
-
-```
-897acb3d79 Phase 2 Step 3: rewrite BusinessKey + 22 DAOs on JPA Criteria / HQL
-```
-
-Plus the session-2 commits below.
-
-## Session-2 commits (on `phase2`)
+Plus the session-2 commits.
 
 ```
 eee579253c Add PHASE_2_HANDOFF.md (cherry-picked from renovations)
@@ -131,210 +118,215 @@ ab94b884a4 WIP: Phase 2 (Spring 6 / Hibernate 6 / jakarta) — in-progress (was 
 
 Verify with `git -C ~/Dev/eclipseworkspace/Gemma log --oneline phase2`.
 
-## Compile state at end of session-3
-
-```bash
-cd ~/Dev/eclipseworkspace/Gemma && git checkout phase2
-export JAVA_HOME="$HOME/Library/Java/JavaVirtualMachines/amazon-corretto-17.jdk/Contents/Home"
-export PATH="$JAVA_HOME/bin:$PATH"
-mvn -P fast -Denforcer.skip=true -pl gemma-core -am compile -DskipTests=true -q 2>&1 \
-  | grep '^\[ERROR\] /' | sort -u | wc -l
-# expect: ~100 unique errors in ~21 files
-```
-
-The biggest remaining offenders at session-3 end:
-
-```
- 13 CharacteristicDaoImpl                      (createSQLQuery / NativeQuery API drift)
- 13 CoexpressionDaoImpl                        (still has stale Criteria refs)
- 11 QuantitationTypeDaoImpl                    (TypedResultTransformer no longer exists)
-  9 ArrayDesignDaoImpl                         (createSQLQuery / SessionFactoryImplementor drift)
-  8 AbstractPersister                          (FlushMode -> FlushModeType, Serializable -> Object)
-  6 DifferentialExpressionAnalysisDaoImpl      (Criteria conversion not yet done)
-  6 ExpressionAnalysisResultSetDaoImpl         (residue from the UOE-stubbing)
-  5 DifferentialExpressionResultDaoImpl        (Criteria conversion not yet done)
-  5 AbstractFilteringVoEnabledDao              (Criteria refs that escaped session 2)
-  4 AuditEventDaoImpl                          (createCriteria refs)
-  3 PrincipalComponentAnalysisDaoImpl, CompressedStringListType, ByteArrayType
-  2 AbstractCuratableDao, ExpressionPersister, BeanInitializationTimeMonitor
-  1 H2Dialect, AuditAdvice, AuditTrailServiceImpl, BioAssayDaoImpl,
-    ProcessedDataVectorByGeneCacheImpl
-```
-
 ## TL;DR for a fresh session (next session-6)
 
 Build is install-green and test-compile-green for all five modules
-**at bytecode 17 with `dependencyConvergence` on**. Phase 2 is in
-good shape. Session-5 closed Steps 8 and 9 plus a real-bug fix in the
-security XML and two targeted unit-test fixes — five commits total.
+**at bytecode 17 with `dependencyConvergence` on**. Phase 2 is in good
+shape. Session 5 ran ~29 commits and closed the bulk of the remaining
+work:
 
-**Step 8** (bytecode 11→17) — one-line root-pom change plus a `clean
-install` verification. Spring 6 ships ASM that handles class-file
-v61 just fine, so the runtime semantics are identical to v55 on JDK 17.
+- **Step 7 integration tier is now in flight** (was "untouched").
+  Commit `cc21cf6504` closed the bootstrap wiring; `mvn verify` now
+  boots a real MySQL test DB and runs the failsafe sweep. Latest run
+  on `2f9a051ac9`: **471 integration tests, ~197 passing, ~259 errors,
+  ~15 failures** — see "Integration sweep error buckets" below.
+- **Step 8** (bytecode 11→17) — root-pom change plus `clean install`
+  verification (commit `94b7435766`). Spring 6 ships ASM that handles
+  class-file v61 cleanly.
+- **Step 9** (`dependencyConvergence` enforcer re-enabled — commit
+  `c80975d8d8`). 8 transitive-version pins added to root
+  `<dependencyManagement>`: micrometer-commons + micrometer-observation
+  1.13.11, jaxb-runtime 4.0.5, jakarta.xml.bind-api 4.0.2,
+  javax.cache 1.1.1, jackson-core 2.21.0,
+  jackson-module-jakarta-xmlbind-annotations 2.19.2, antlr4-runtime
+  4.13.2. Full `mvn -P fast clean install` green with the rule on.
+- **Task C — legacy SHA+username-salt password migration** (commit
+  `a2db1d8ed4`). `GemmaLegacyAwarePasswordEncoder` recognizes both the
+  legacy bare-40-char-hex SHA-1 hash (computed as
+  `SHA-1(rawPassword + "{" + username + "}")` per Spring Security
+  3/4's `ShaPasswordEncoder` + `ReflectionSaltSource`) and a
+  `{bcrypt}`-prefixed BCrypt hash. Username flows in via ThreadLocal
+  that `LegacyAwareDaoAuthenticationProvider` sets/clears around each
+  auth attempt. `upgradeEncoding()` returns true on legacy hashes so
+  the next successful login transparently upgrades to bcrypt. The
+  production-blocking concern called out in earlier handoff revisions
+  is resolved.
+- **Tasks D + E — JPA Criteria subquery + `.size` + Sort null-precedence**
+  (commits `f14373925b`, `3d265bee86`). `FilterJpaUtils` now builds
+  `jakarta.persistence.criteria.Subquery<Long>` for inSubquery /
+  notInSubquery filters and uses `cb.size(...)` for `.size`-suffix
+  filters; `AbstractCriteriaFilteringVoEnabledDao.buildOrders` casts
+  to Hibernate 6's `JpaOrder` (which extends `Order`) to apply
+  `NullPrecedence.FIRST/LAST`.
+- **Various Hibernate 6 strictness fixes**:
+  - `AbstractPersister.formatEntity` now tolerates transient/detached
+    entities (commit `63bffbf6fc`). Hibernate 6's
+    `Session.getIdentifier()` now throws `TransientObjectException`
+    for unattached input; pre-Phase-2 the API was lenient and returned
+    null. This was blocking 217 of the 396-test integration sweep
+    before the fix — the persist() debug-log construction was
+    hard-failing before the actual persist could run.
+  - HQL `<plural>.size` → `size(<plural>)` function form (commit
+    `e79e9c82b2`); plus a stub of `getExpressionExperimentIdsWithCoexpression`
+    (the entity was deleted in Step 3, callers only use it to set
+    `hasCoexpressionAnalysis(false)`).
+  - `applicationContext-schedule.xml`: 10 occurrences of `<ref local="...">`
+    (the `local` attribute was deprecated in Spring 4 and removed in
+    later schemas; Spring 6's strict XML schema validation flags it).
+    Replaced with `<ref bean="...">`.
+  - `applicationContext-dataSourceInitializer.xml` + `applicationContext-hibernate.xml`
+    + `applicationContext-dataSource.xml`: reorder the bean depends-on
+    chain to `createDatabaseInitializer → sessionFactory → dataSourceInitializer`
+    so the SQL data scripts INSERT into tables that exist (Hibernate 6
+    materializes them via `hbm2ddl.auto=create`, not by the now-no-op
+    `HibernateSchemaPopulator` branch).
+  - `sql/init-data.sql`: 3 unnamed-column AUDIT_EVENT INSERTs were
+    positional and assumed hbm.xml-order columns; Hibernate 6 doesn't
+    preserve that order. Named every column explicitly.
 
-**Step 9** (re-enable `<dependencyConvergence/>` enforcer) — 8
-transitive-version pins added to root `<dependencyManagement>`:
-micrometer-commons + micrometer-observation 1.13.11, jaxb-runtime
-4.0.5, jakarta.xml.bind-api 4.0.2, javax.cache 1.1.1, jackson-core
-2.21.0, jackson-module-jakarta-xmlbind-annotations 2.19.2,
-antlr4-runtime 4.13.2. Then uncommented the enforcer rule. Full
-`mvn -P fast clean install` green with the rule on. Smoke-tested
-gemma-cli (56/0/1; macOS bash mapfile env) and gemma-rest (105/0/0)
-— matches session-4 baseline.
+## MySQL test DB recipe (for the failsafe integration sweep)
 
-**`applicationContext-security.xml`** — a real Phase-2 production-XML
-bug surfaced by the session-5 sweep: Spring Security 6's strict XML
-schema rejected `<s:password-encoder><s:salt-source/></s:password-encoder>`
-(salt-source removed at SS 4); `ShaPasswordEncoder` itself was removed
-in SS 5. Replaced with a self-closing `<s:password-encoder ref="..."/>`
-pointing at a `BCryptPasswordEncoder` bean. Production passwords are
-legacy SHA + username-as-salt and won't verify against bcrypt — a
-`DelegatingPasswordEncoder` migration is the path forward (still future
-work; flagged in the XML + `UserManagerImpl.java`).
+Local MySQL 5.7.31 on `localhost:3306` (matches `docker-compose.yml`'s
+`mysql:5.7`); root password lives in macOS Keychain under the entry
+`mysql-root`. **Neither the password nor the destructive
+`hbm2ddl.auto=create` flag is persisted to disk**; both are resolved
+at script entry.
 
-**Two broader-sweep tests** picked off (commit `8caa98fb4d`):
-`AclClassMetadataTest` (Mockito mock now uses `RETURNS_DEEP_STUBS` so
-the eager metamodel walk in `AclClassMetadata`'s constructor doesn't
-NPE); `DiseaseOntologyTest` `@Ignore`'d with a clear reason — Phase 3
-search rebuild blocker.
+```bash
+cd ~/Dev/eclipseworkspace/Gemma
+export JAVA_HOME="$HOME/Library/Java/JavaVirtualMachines/amazon-corretto-17.jdk/Contents/Home"
+export PATH="$JAVA_HOME/bin:$PATH"
+mvn -P fast verify -pl gemma-core \
+    -Dgemma.testdb.password=$(security find-generic-password -s mysql-root -w) \
+    -Dgemma.hibernate.hbm2ddl.auto=create
+```
 
-The session-5 sweep on bytecode 17 ran a far broader unit set than the
-session-4 smoke set (~987 in gemma-core vs the ~215-test smoke set, and
-116 in gemma-rest vs 105 — the extra 11 were `DatasetsRestTest`, now
-correctly excluded from surefire as `@Category({SlowTest, IntegrationTest})`).
-Failures that remained after this session's fixes are pre-existing
-issues, mostly catalogued below:
+On every run the bootstrap drops + recreates `gemdtest`, Hibernate
+materializes the schema from the hbm.xml mappings via
+`hbm2ddl=create`, then `dataSourceInitializer` runs `init-acls.sql` +
+`init-entities.sql` + `mysql/init-entities.sql` + `init-data.sql`.
 
-- ~~`AclClassMetadataTest`~~ — **fixed in session 5** (mock uses
-  `RETURNS_DEEP_STUBS`).
-- ~~`DiseaseOntologyTest`~~ — `@Ignore`'d in session 5 with a Phase-3
-  pointer (ontology search depends on baseCode's Lucene 3 indexer,
-  gutted in the renovations branch).
-- ~~`DatasetsRestTest` (11 errors)~~ — **fixed in session 5**: the
-  underlying `applicationContext-security.xml` XML bug is patched (see
-  Step 9 above), and the test now carries
-  `@Category({SlowTest.class, IntegrationTest.class})` so surefire
-  excludes it (its parent's `@Category(IntegrationTest)` was being
-  shadowed by the subclass's `@Category(SlowTest)`).
-- ~~`ArrayDesignDaoTest`~~ — **fixed** (FQN vs short-name in error
-  message; production-side change in `AbstractFilteringVoEnabledDao`).
-- ~~`CompositeSequenceDaoTest.testGetGenesWithGene2Cs`~~ — **fixed**
-  (Hibernate 6 NativeQuery no longer auto-coerces an entity parameter
-  to its identifier; bind `compositeSequence.getId()` directly).
-- ~~`RawAndProcessedExpressionDataVectorDaoTest`~~ — **fixed**.
-  `BulkExpressionDataVector` is a non-@Entity Java supertype that
-  the synthetic DAO uses for delegation; Hibernate 6's stricter JPA
-  Metamodel throws "Not an entity" on the `AbstractDao` constructor's
-  metamodel lookup. Two changes: `AbstractDao` now tolerates non-entity
-  supertypes (falls back to `getSimpleName()` + `"id"`), and the
-  synthetic DAO overrides `findByExpressionExperiment` to issue two
-  direct HQL queries against the leaf entities + merge.
-- `ExpressionExperimentDaoTest` — **partial**: `testGetRawDataVectors`
-  `@Ignore`'d with a detailed Hibernate-6-HQL-substring-on-BLOB
-  migration note. ~14 other test methods still fail with the same
-  shape of Hibernate-session-state regressions as the FactorValue /
-  SingleCellExpressionExperimentService cluster — backlogged.
-- `FactorValueDaoTest` / `FactorValueServiceTest`: `OptimisticLockException`
-  and `EntityExistsException` from Hibernate batch update — test-data
-  state issues, surface only in the broader sweep. Real Phase-2 work
-  but bigger than a one-line fix.
-- `SingleCellExpressionExperimentServiceTest`: 6 errors + 1 failure;
-  related Hibernate-session-state issues.
-- `FileLockManagerTest`, `ReadWriteFileLockTest`: OS-specific lock
-  semantics (file-system asserts; reads `/proc/locks` which doesn't
-  exist on macOS). Already catalogued as env-pre-existing in
-  `RENOVATIONS.md`.
-- `GeoMexSingleCellDataLoaderConfigurerTest.testParallelFiltering`:
-  needs `/space/opt/cellranger/bin/cellranger` (env, pre-existing).
-- `AnnDataSingleCellDataLoaderTest`: not investigated this session.
+## Integration sweep error buckets
 
-**Pinned context from the user**: `gemma-web` is being replaced by
-`~/Dev/gemma-curation-ui`. Don't invest in gemma-web test fixes or
-new features beyond a smoke check; gemma-rest IS load-bearing for the
-React port — keep it healthy.
+Latest run on `2f9a051ac9` (snapshot in
+`gemma-core/target/failsafe-reports/`): **471 tests, 259 errors,
+15 failures, ~197 passing**. The errors cluster strongly — fixing one
+root cause typically clears tens of tests at once:
 
-### What's still left for Phase 2
+| Count | Type | Notes |
+|---|---|---|
+| 110 | `AccessDeniedException` | "Access is denied" / "Authentication administrator has NO permissions to the domain object BioMaterial Id=...". Concentrated in test fixture bootstrap — possibly a per-test ACL grant that the new auth wiring is rejecting. **In flight under another agent.** |
+| 78 | `NullPointerException` | 31 of these are `AclObjectIdentity.equals` reading `this.type` null — gsec-side bug, lives in `~/Dev/gsec`. 8 are `Identifiable.getId()` on a null entity (test-fixture shape). |
+| 22 | `HibernateException` | All 22 are "identifier of an instance of `ubic.gemma.model.genome.Gene` was altered from null to N" — a test fixture is mutating an id after persist, or 2nd-level cache is handing back a stale Gene. |
+| 19 | `UnsupportedOperationException` | All 19 are at `org.hibernate.collection.spi.PersistentSet.clear` — same shape as the `ExternalDatabaseServiceTest` immutable-collection fix in `2f9a051ac9`; test fixtures pass `Collections.singleton(...)` / `Collections.unmodifiableSet(...)` into HB6's merge path which then clears() it. Mechanical sweep. |
+| 15 | `AssertionError` | Mix of real test assertions. |
+| 7 | `IllegalArgumentException` | |
+| 4 | `BatchInfoPopulationException` | Domain-specific. |
+| 3 | `IncompatibleClassChangeError` | Likely a stale-class-on-classpath or `mvn clean` needed. |
+| 3 | `TestCouldNotBeSkippedException` | JUnit runner bookkeeping. |
+| 2 | `PathElementException` | "Could not resolve attribute 'value' of `ExpressionAnalysisResultSet`" — HQL property-path drift, mechanical. |
+| 2 | `ObjectDeletedException` | |
+| 2 | `ConstraintViolationException` | |
+| 2 | `NoClassDefFoundError` | `org/quartz/impl/JobDetailImpl` — Quartz dep is missing or wrong scope. |
+| 1 each | `TransactionRequiredException`, `EntityNotFoundException`, `CannotGetJdbcConnectionException`, ... | Tail. |
 
-1. **Step 7 (integration tier)** — ~61 `BaseSpringContextTest` /
-   `BaseIntegrationTest` subclasses are `@Category(IntegrationTest.class)`
-   and need a real MySQL test DB + the failsafe plugin. Untouched.
-   Run with: a configured `testdb` profile + `mvn verify`.
-2. **Hibernate-6 session-state cluster** — the same shape of bug shows
-   up across:
-    - ~~`FactorValueDaoTest` / `FactorValueServiceTest`~~ — **fixed**
-      in session 5 (commit `1a49a43435`): flush ordering on the
-      discriminator-aware UPDATE; merge-vs-update semantics in
-      service tests; re-resolve managed Statement after merge cascade.
-    - ~~`SingleCellExpressionExperimentServiceTest`~~ — **fully green
-      (17/0/0)**. Closed via: TupleTransformer migration
-      (`1d01e08308`), BinaryFunctionContributor (`2b0028a4e5`), cellIds
-      delimiter fix (`c0719e0213`), `setTupleTransformer` wiring for
-      `SingleCellDataVectorInitializer` (`eee9400743`), and a test-side
-      snapshot of persisted vectors to dodge equals-by-EE+QT+DE when
-      ids are null (`764004c2ea`).
-    - ~~`ExpressionExperimentDaoTest`~~ — **fully green (53/0/0)**.
-      The final piece was a stale `PersistentSet` snapshot leaking
-      across the bulk-DELETE inside `replaceProcessedDataVectors` when
-      called with a detached EE — resolved by re-resolving the managed
-      EE via `session.get(...)` at the top of the method
-      (`e304d1c2b3`).
-    - `AnnDataSingleCellDataLoaderTest` (2 errors) — env-pre-existing
-      (`ModuleNotFoundError: No module named 'anndata'`). Same shape
-      as the cellranger / `/proc/locks` items already documented as
-      env-pre-existing in `RENOVATIONS.md`.
-3. ~~**HQL `substring()` / `character_length()` on BLOB**~~ — **fixed**
-   via `BinaryFunctionContributor` (`2b0028a4e5`). Two binary-aware
-   HQL functions registered via the HB6 FunctionContributor SPI:
-   `bytes_substring(b, start, length)` and `bytes_length(b)`. Three
-   call sites in `ExpressionExperimentDaoImpl` updated; un-Ignore'd
-   `testGetRawDataVectors`.
-4. **`AbstractCriteriaFilteringVoEnabledDao` extension surface**: the
-   JPA Criteria port doesn't yet handle subquery filters or
-   `.size`-suffix filters (those throw UOE inside
-   `FilterJpaUtils`). Subclasses that need them must override the
-   relevant `load*`/`count` method directly, or use HQL via
-   `AbstractQueryFilteringVoEnabledDao`. Add as needed when a test
-   actually exercises one.
-5. **Null-precedence on `Sort`**: the JPA Criteria port currently
-   ignores `Sort.NullMode.FIRST/LAST`. JPA's `Order` doesn't expose
-   it; Hibernate 6 has a vendor extension we haven't reached for yet.
-6. **Legacy password-hash migration**: production passwords are
-   SHA + username-as-salt from the deleted `ShaPasswordEncoder`. The
-   session-5 placeholder uses `BCryptPasswordEncoder` so the context
-   loads, but a `DelegatingPasswordEncoder` layered over a custom
-   `{shasalt}` legacy decoder is needed before Gemma can talk to a
-   production user table again. Flagged in
-   `applicationContext-security.xml` + `UserManagerImpl.java` comments.
-7. **Env-pre-existing macOS failures** stay as-is — already in
+The `failsafe-summary.xml` itself is stale (it was written by an
+earlier partial run and reports 3 completed, 0 errors); the per-class
+`TEST-*.xml` files have the real numbers.
+
+## What's still left for Phase 2
+
+1. **The AccessDeniedException cluster (110 errors)** — in flight under
+   another agent. Concentrated in test fixture bootstrap; root cause
+   is the same per-test ACL grant being rejected by the new auth
+   wiring, so it should resolve in one or two coherent commits.
+2. **The deeper `BaseSpringContextTest` test-fixture cluster** — the
+   78-NPE bucket (test-fixture shape: `entity` null) and the 22
+   `Gene altered from null to N` bucket point at a common test-fixture
+   helper (`PersistentDummyObjectHelper` and friends) that needs a
+   pass against Hibernate 6's stricter merge / id-assignment
+   semantics. Same shape of bug as several already-fixed cases in
+   session 5 (`FactorValueServiceImpl` re-resolve, EE `@After`
+   re-resolve, `replaceProcessedDataVectors` re-resolve).
+3. **The immutable-collection cluster (19 UOE at PersistentSet.clear)** —
+   mechanical sweep, same shape as the `ExternalDatabaseServiceTest`
+   fix in `2f9a051ac9`. Wrap `Collections.singleton(x)` /
+   `Collections.unmodifiableSet(x)` in `new HashSet<>(...)` at every
+   test-fixture call site.
+4. **gemma-rest / gemma-web integration sweep** — in flight under
+   another agent. The unit tier passes; the failsafe tier hasn't been
+   run for those modules yet (no `target/failsafe-reports/` directory
+   exists).
+5. **gsec `AclObjectIdentity.equals` NPE** — 31 of the 78 NPEs in
+   gemma-core's integration sweep come from `this.type == null` inside
+   `AclObjectIdentity.equals(Object)`. Fix is in `~/Dev/gsec/gsec`
+   (separate repo, branch `renovations`). Once fixed and re-installed,
+   those 31 errors clear.
+6. **Env-pre-existing macOS failures** stay as-is — already in
    `RENOVATIONS.md`: `FileLockManagerTest`, `ReadWriteFileLockTest`
    (`/proc/locks` is Linux-only), `GeoMexSingleCellDataLoaderConfigurerTest`
-   (cellranger binary not on the local box).
+   (cellranger binary not on the local box),
+   `AnnDataSingleCellDataLoaderTest` (Python `anndata` module not
+   installed).
 
-Done in session 5 (15 commits): Steps 8 and 9 (bytecode 17,
-`dependencyConvergence` on); `applicationContext-security.xml` schema
-+ `DatasetsRestTest` categorization; `AclClassMetadataTest`,
-`DiseaseOntologyTest`, `ArrayDesignDaoTest`, `CompositeSequenceDaoTest`,
-`RawAndProcessedExpressionDataVectorDaoTest`, `FactorValueDaoTest`,
-`FactorValueServiceTest`; full `TypedResultTransformer` migration to
-HB6 `TupleTransformer` + `ResultListTransformer`;
-`BinaryFunctionContributor` for `bytes_substring` / `bytes_length`;
-`getBioAssayDimensions` HQL rewrite to dodge a HB6 SQM AssertionError;
-`Subquery#toString` FQN restoration; `ExpressionExperimentDaoTest`
-@After re-resolve fix. ExpressionExperimentDaoTest went from ~14
-failing methods to 1; SingleCellExpressionExperimentServiceTest from
-7 failing to 2.
+### Completed in session 5 (struck through from earlier handoffs)
+
+- ~~Step 8 (bytecode 11→17)~~ — done (`94b7435766`).
+- ~~Step 9 (`dependencyConvergence` enforcer)~~ — done (`c80975d8d8`).
+- ~~`applicationContext-security.xml` Spring Security 6 schema fix~~ —
+  done (`175407d6b8`); Task C then replaced the BCrypt placeholder
+  with the real legacy-aware encoder.
+- ~~Task C: legacy SHA + username-salt password-hash migration~~ —
+  done (`a2db1d8ed4`).
+- ~~Task D: JPA Criteria subquery + `.size` filter support~~ — done
+  (`f14373925b`).
+- ~~Task E: Sort null-precedence via `JpaOrder`~~ — done (`3d265bee86`).
+- ~~`AclClassMetadataTest`~~ — fixed (`8caa98fb4d`, `RETURNS_DEEP_STUBS`).
+- ~~`DiseaseOntologyTest`~~ — `@Ignore`'d (`8caa98fb4d`, Phase 3
+  search rebuild blocker).
+- ~~`DatasetsRestTest` (11 errors)~~ — fixed (`175407d6b8`); `@Category`
+  inheritance restored.
+- ~~`ArrayDesignDaoTest`~~ — fixed (`f0337b7057`, FQN in error message).
+- ~~`CompositeSequenceDaoTest.testGetGenesWithGene2Cs`~~ — fixed
+  (`f0337b7057`, bind id not entity to NativeQuery).
+- ~~`RawAndProcessedExpressionDataVectorDaoTest`~~ — fixed (`f0337b7057`,
+  `AbstractDao` tolerates non-entity supertypes).
+- ~~`FactorValueDaoTest` / `FactorValueServiceTest`~~ — fixed
+  (`1a49a43435`).
+- ~~`ExpressionExperimentDaoTest`~~ — 53/0/0 (chain of commits ending
+  at `e304d1c2b3`); was ~14 failing methods.
+- ~~`SingleCellExpressionExperimentServiceTest`~~ — 17/0/0 (chain
+  ending at `764004c2ea`); was 7 failing.
+- ~~Full `TypedResultTransformer` migration to HB6 `TupleTransformer` +
+  `ResultListTransformer`~~ — done (`1d01e08308`).
+- ~~`BinaryFunctionContributor` (`bytes_substring` / `bytes_length`)~~ —
+  done (`2b0028a4e5`); un-Ignore'd `testGetRawDataVectors`.
+- ~~`getBioAssayDimensions` HQL rewrite~~ — done (`2b0028a4e5`, dodges
+  HB6 SQM AssertionError).
+- ~~`Subquery#toString` FQN restoration~~ — done (`5cb418b360`).
+- ~~`AbstractPersister.formatEntity` transient-tolerance~~ — done
+  (`63bffbf6fc`).
+- ~~HQL `<plural>.size` → `size(<plural>)`~~ — done (`e79e9c82b2`).
+- ~~`applicationContext-schedule.xml` `<ref local="...">` → `<ref bean="...">`~~ —
+  done (`cc21cf6504`).
+- ~~Integration-test bootstrap ordering (`createDatabaseInitializer` →
+  `sessionFactory` → `dataSourceInitializer`)~~ — done (`cc21cf6504`).
+- ~~`init-data.sql` named-column AUDIT_EVENT INSERTs~~ — done
+  (`cc21cf6504`).
+- ~~`ExternalDatabaseServiceTest` mutable-Set fix~~ — done (`2f9a051ac9`).
+
+**Pinned context from the user**: `gemma-web` is being replaced by
+`~/Dev/gemma-curation-ui`. Don't invest in gemma-web test fixes or new
+features beyond a smoke check; `gemma-rest` IS load-bearing for the
+React port — keep it healthy.
 
 ### Quick wins still open
 
-- **`DatasetsWebServiceTest`**: fixed this session (Highlighter
-  restore). Was the only failing test in gemma-rest's unit suite.
-- **`QuantitationTypeDaoTest`**: fixed this session via the
-  `AbstractCriteriaFilteringVoEnabledDao` JPA port.
-- **`CompletionGeneratorTest`** (gemma-cli): 1 environmental
-  failure on macOS — bash 3.x doesn't ship `mapfile`. Use Homebrew
-  bash if you need it green locally. Not Phase 2.
+- **`CompletionGeneratorTest`** (gemma-cli): 1 environmental failure
+  on macOS — bash 3.x doesn't ship `mapfile`. Use Homebrew bash if you
+  need it green locally. Not Phase 2.
 
-### Bugs found and fixed in this session
+### Bugs found and fixed earlier in this climb
 
 - **`AbstractFilteringVoEnabledDao.registerEntity`** double-registered
   the `@Id` attribute (JPA Metamodel's `getAttributes()` includes the
@@ -346,16 +338,14 @@ failing methods to 1; SingleCellExpressionExperimentServiceTest from
   retained.
 - **`sql/init-entities.sql`** had `ALTER TABLE` statements for the
   retired `{HUMAN,MOUSE,RAT,OTHER}_{GENE,EXPERIMENT}_COEXPRESSION`
-  tables that Hibernate no longer creates — H2 (and any fresh MySQL)
-  failed with "table not found". Deleted those lines.
+  tables that Hibernate no longer creates. Deleted those lines.
 - **`AclLinterServiceTest`** had
   `@TestExecutionListeners(WithSecurityContextTestExecutionListener.class)`
   without `MergeMode.MERGE_WITH_DEFAULTS`, which silently dropped the
   default DependencyInjection listener so `@Autowired` fields stayed
-  null. Added `MERGE_WITH_DEFAULTS`. The test now runs but hits the
-  next bug.
+  null. Added `MERGE_WITH_DEFAULTS`.
 
-### Step 7 round-3 fixes (this session, third push — gemma-cli + gemma-rest)
+### Step 7 round-3 fixes (session-4 third push — gemma-cli + gemma-rest)
 
 - **`gemma-rest` ran 0 tests** before this push. Jersey 3's test
   framework pulls JUnit 5 onto the classpath, so Surefire auto-picked
@@ -364,25 +354,8 @@ failing methods to 1; SingleCellExpressionExperimentServiceTest from
   are) were invisible. Surefire silently reported `BUILD SUCCESS,
   Tests run: 0`. Fixed by adding `org.junit.vintage:junit-vintage-engine`
   to `gemma-rest/pom.xml` as a test dep.
-- **gemma-cli is clean**. 41 tests across `ProtocolAdderCliTest`,
-  `ProtocolDeleterCliTest`, `FactorValueMigratorServiceTest`,
-  `ArrayDesignMergeCliTest`, `ExternalDatabaseUpdaterCliTest`,
-  `NCBIGene2GOAssociationLoaderCLITest`,
-  `DifferentialExpressionAnalysisCliTest`, `FindObsoleteTermsCliTest`,
-  `ExpressionExperimentManipulatingCLITest`, `RNASeqDataAddCliTest`,
-  `BatchProcessingCliTest`, `GeoSingleCellDataDownloaderCliTest`,
-  `LoadSimpleExpressionDataCliTest`, `GeoGrabberCliTest`,
-  `FactorValueMigratorCLITest`, `MeterRegistryCliConfigurerTest` —
-  0 errors. The MergeMode bulk-fix from round 2 propagated.
-- **gemma-rest**: 105 tests, 1 failure (`DatasetsWebServiceTest` —
-  one Mockito interaction count is 2 when expected 1 in
-  `DatasetArgService.getResultsForSearchQuery`; likely a search-stub
-  side-effect from Step 2, not a Step 5a/7 regression). 0 errors.
-- **Note on CompletionGeneratorTest**: 1 test fails on macOS due to
-  bash 3.x missing `mapfile` — environmental, not Phase 2. Use
-  Homebrew bash if you need it green locally.
 
-### Step 7 round-2 fixes (this session, second push)
+### Step 7 round-2 fixes (session-4 second push)
 
 - **`@TestExecutionListeners(WithSecurityContextTestExecutionListener.class)`**
   without `MergeMode.MERGE_WITH_DEFAULTS` was silently dropping the
@@ -394,38 +367,12 @@ failing methods to 1; SingleCellExpressionExperimentServiceTest from
   `AclQueryUtils`, `EE2CAclQueryUtils`, `AclLinterServiceImpl`.
 - **`BigInteger` → `Number` casts on native query results**: Hibernate
   6 returns `Long` (not `BigInteger`) for `BIGINT` / `COUNT(*)` columns.
-  Bulk-replaced in 6 DAO/service files (`ArrayDesignMapResultServiceImpl`,
-  `AclLinterServiceImpl`, `DifferentialExpressionResultDaoImpl`,
-  `CharacteristicDaoImpl`, `ArrayDesignDaoImpl`,
-  `CompositeSequenceDaoImpl`).
-- **HQL `bitwise_and(x, y)` → `bitand(x, y)`**: Hibernate 6's
-  built-in HQL function is `bitand`; the pre-Phase-2 `bitwise_and` name
-  was registered through the now-removed dialect SQLFunction API and is
-  no longer recognized. Affects `AclQueryUtils`.
+  Bulk-replaced in 6 DAO/service files.
+- **HQL `bitwise_and(x, y)` → `bitand(x, y)`**: Hibernate 6's built-in
+  HQL function is `bitand`; the pre-Phase-2 `bitwise_and` name was
+  registered through the now-removed dialect SQLFunction API.
 
-### Bugs found but not fixed (next Step 7 round)
-
-- ~~**`AbstractCriteriaFilteringVoEnabledDao` stub**~~ — **DONE** in
-  session-4 round 4 (commit below). Ported to JPA Criteria; new
-  `FilterJpaUtils` is the JPA equivalent of the deleted
-  `FilterCriteriaUtils`. Subquery and `.size`-suffix filters still
-  throw UOE inside FilterJpaUtils (subclasses can override the
-  relevant load* method, or use HQL via `AbstractQueryFilteringVoEnabledDao`).
-- **`AbstractServiceTest` and the bigger DAO/service tests** —
-  unmeasured, may surface more JPA Metamodel / Hibernate 6 drift.
-- **Stale `.hbm.xml` files in `target/classes`** can sneak into the
-  classpath if you switch branches without `mvn clean`. Hibernate's
-  classpath scanner picked up 16 deleted-in-Step-3 coexpression hbm
-  files in such a stale build and tried to load missing Java classes.
-  Workaround: always `mvn clean test` after switching branches.
-- **`TransactionRequired` paths through JPA EMF** — explored and
-  rejected in this session's first push. Documented in
-  `HibernateSessionFactoryBean.java` javadoc and the production XML.
-  Native Hibernate is the path.
-
-### (Earlier text — superseded by the new TL;DR above)
-
-## Step 5a notes (Spring 6 JPA migration — done this session)
+## Step 5a notes (Spring 6 JPA migration — done in session 4)
 
 Pattern: `LocalContainerEntityManagerFactoryBean` →
 `HibernateJpaVendorAdapter` → expose `SessionFactory` via
@@ -433,32 +380,13 @@ Pattern: `LocalContainerEntityManagerFactoryBean` →
 constructor-arg `"org.hibernate.SessionFactory"`. Transaction manager
 is `org.springframework.orm.jpa.JpaTransactionManager`.
 
-Files changed:
-
-| Change | File |
-|---|---|
-| New: persistence unit "gemma" with all 64 mapping resources | `gemma-core/src/main/resources/META-INF/persistence.xml` |
-| Deleted: legacy Hibernate-native config | `gemma-core/src/main/resources/hibernate.cfg.xml` |
-| Rewritten: JPA EMF + JpaTransactionManager + unwrap | `gemma-core/src/main/resources/ubic/gemma/applicationContext-hibernate.xml` |
-| Deleted: custom `LocalSessionFactoryBean` (wrapper around hibernate5) | `gemma-core/src/main/java/.../persistence/hibernate/LocalSessionFactoryBean.java` |
-| Deleted: custom `LocalSessionFactoryBuilder` | `gemma-core/src/main/java/.../persistence/hibernate/LocalSessionFactoryBuilder.java` |
-| Deleted: custom `HibernateTransactionManager` (wrapper) | `gemma-core/src/main/java/.../persistence/hibernate/HibernateTransactionManager.java` |
-| Updated: drop Hibernate `Configuration` arg; vendor String only | `DatabaseSchemaPopulator.java`, `DatabaseSchemaUpdatePopulator.java` |
-| Updated: drop `@Autowired LocalSessionFactoryBean factory` | `InitializeDatabaseCli`, `UpdateDatabaseCli`, `GenerateDatabaseUpdateCli` |
-| Updated: drop `&sessionFactory` ref, pass vendor only | `applicationContext-dataSourceInitializer.xml` |
-| Rewritten: JPA EMF + unwrap pattern | `BaseDatabaseTest.java` |
-| Rewritten: JPA EMF with `PersistenceManagedTypes.of(...)` for test entities | `AbstractFilteringVoEnabledDaoTest.java` |
-| Updated: 7 log4j2 logger names → `org.springframework.orm.jpa.JpaTransactionManager` | log4j2 configs across all modules |
-
 Design choices:
 
 - **`persistence.xml` as the canonical mapping list**, not inline XML
   in `applicationContext-hibernate.xml`. Reason: tests
   (`BaseDatabaseTest`) construct their own EMF and can simply set
   `persistenceUnitName="gemma"` to pick up the same mapping list —
-  zero duplication. The gsec test wiring inlines mappings instead;
-  both patterns work, this one has less repetition for Gemma's
-  64-entry list.
+  zero duplication.
 - **Cache wiring**: dropped Spring 6's removed
   `org.springframework.cache.ehcache.EhCacheCacheManager` bean from
   the XML. The `EhcacheConfig` `@Bean(name="ehcache")` is now aliased
@@ -471,44 +399,20 @@ Design choices:
   matching the JCache + Ehcache 3 jakarta deps already in pom.xml.
 - **`SampleCoexpressionMatrix.hbm.xml`** is the lone surviving
   coexpression mapping (per-EE QC artifact, kept per Phase 2 Step 3
-  decision). The 16 deleted-coexpression mapping refs that were still
-  in hibernate.cfg.xml are gone now that hibernate.cfg.xml is gone.
-- **`AbstractFilteringVoEnabledDaoTest`**: uses
-  `PersistenceManagedTypes.of(FakeModel.class.getName(),
-  FakeRelatedModel.class.getName())` (Spring 6.1+ API) to feed the
-  EMF the in-test `@Entity` classes — replaces the old
-  `LocalSessionFactoryBean.setAnnotatedClasses(...)` path. Provided
-  an in-memory H2 dataSource since EMF bootstrap touches the DB.
-- **`hbm2ddl.auto=create`** on the test EMF replaces the Hibernate-4
-  `Configuration.generateSchemaCreationScript()` path that
-  `DatabaseSchemaPopulator.HibernateSchemaPopulator` used to call (it
-  was already a no-op stub on phase2; now it's a no-op stub that
-  doesn't need a `Configuration` to construct).
-
-Things to validate in Step 7:
-
-- Does the production app context actually bootstrap (`mvn -P fast jetty:run` against a test DB)?
-- Do the existing `BaseDatabaseTest` subclasses pass (`AclLinterServiceTest`, `UserManagerTest`, `MexSingleCellDataLoaderPersistenceTest`, `ExpressionExperimentSetDaoTest`, etc.)?
-- Does the JCache + Ehcache 3 jakarta L2 cache wire up cleanly, or does Hibernate barf on a missing cache config?
+  decision).
 
 ## Jersey 3 migration notes (Step 6)
-
-Done this session:
 
 - `org.glassfish.jersey.ext:jersey-spring3:${jersey.version}` →
   `jersey-spring6:${jersey.version}`. The artifact is `jersey-spring6`
   for Spring 6 integration (Jersey 3.1 dropped Spring 3 support).
 - `javax.ws.rs:javax.ws.rs-api:2.0.1` → `jakarta.ws.rs:jakarta.ws.rs-api:3.1.0`.
-- `org.hibernate:hibernate-validator` exclusion → `org.hibernate.validator:
-  hibernate-validator` (the artifact moved out of `org.hibernate` in HV 7).
-- Added `jakarta.servlet:jakarta.servlet-api:6.0.0` at `provided` scope
-  (was previously inherited via jersey-spring3).
-- Six swagger artifacts swapped to their `-jakarta` siblings:
-  `swagger-core`, `swagger-jaxrs2`, `swagger-jaxrs2-servlet-initializer-v2`,
-  `swagger-integration`, `swagger-models`, `swagger-annotations`. Swagger
-  2.2 ships them separately for jakarta.servlet/jakarta.ws.rs.
-- `javax.annotation.Priority` → `jakarta.annotation.Priority` in the four
-  provider classes.
+- `org.hibernate:hibernate-validator` exclusion → `org.hibernate.validator:hibernate-validator`
+  (the artifact moved out of `org.hibernate` in HV 7).
+- Added `jakarta.servlet:jakarta.servlet-api:6.0.0` at `provided` scope.
+- Six swagger artifacts swapped to their `-jakarta` siblings.
+- `javax.annotation.Priority` → `jakarta.annotation.Priority` in the
+  four provider classes.
 - `GeneWebService`: dropped `/genes/{gene}/coexpression` endpoint along
   with the coex subsystem deletion.
 
@@ -522,33 +426,25 @@ Done this session:
   `CommonsMultipartFile` / `CommonsMultipartMonitoredResolver` /
   `UploadListener`. **All three deleted.** `gemma-servlet.xml` now wires
   `org.springframework.web.multipart.support.StandardServletMultipartResolver`
-  instead. The upload-size limit moves to web.xml's `<multipart-config>`.
-  Per-upload progress monitoring is gone for now — a Servlet 3 replacement
-  would be a Filter that wraps the request's input stream.
+  instead.
 - Micrometer 1.13 pre-jakarta `DefaultHttpServletRequestTagsProvider`
   takes javax.servlet types. The jakarta-aware replacement lives in
   `io.micrometer.observation`. For now `ServletMetricsFilter` inlines
-  the tags itself (method/status/uri/exception) rather than going
-  through the provider.
+  the tags itself.
 - EE QC controller no longer has the persistent
-  `CoexpCorrelationDistribution` read/backfill path. The legacy
-  on-disk correlation-histogram file is still read; just no longer
-  migrated into the DB.
+  `CoexpCorrelationDistribution` read/backfill path.
 
 ## spring-security-test consolidation
 
 Pre-Phase 2, `gemma-core/pom.xml` unpacked
 `spring-security-test:4.0.4.RELEASE:sources` and recompiled them under
-our classpath (excluding the MockMvc setup). Those 4.0 sources reference
-`javax.servlet` which doesn't exist in Spring 6. **Deleted the
-unpack-and-recompile plumbing** and added a regular test-scoped
-dependency on `spring-security-test:${spring.security.version}` (6.x)
-to each module that needed it: gemma-core, gemma-cli, gemma-rest,
-gemma-web.
+our classpath. Those 4.0 sources reference `javax.servlet` which
+doesn't exist in Spring 6. **Deleted the unpack-and-recompile
+plumbing** and added a regular test-scoped dependency on
+`spring-security-test:${spring.security.version}` (6.x) to each module
+that needed it.
 
-## What this session changed (cheat sheet for grep)
-
-Hibernate 6 API replacements applied across gemma-core:
+## Hibernate 6 API replacements (cheat sheet for grep)
 
 | Old (gone) | New |
 |---|---|
@@ -557,17 +453,17 @@ Hibernate 6 API replacements applied across gemma-core:
 | `org.hibernate.Query` (deprecated) | `org.hibernate.query.Query<T>` |
 | `query.setLong/setString/setDouble/etc` | `query.setParameter` (PreparedStatement still uses setLong) |
 | `query.setFlushMode(...)` | `query.setHibernateFlushMode(...)` |
-| `query.setResultTransformer(X)` | `X.list(query)` / `X.uniqueResult(query)` via TypedResultTransformer helpers |
+| `query.setResultTransformer(X)` | `query.setTupleTransformer(X)` + `setResultListTransformer(X)` via `TypedResultTransformer` (now extends both HB6 interfaces) |
 | `Restrictions.* / Projections.* / Criteria` | JPA Criteria (jakarta.persistence.criteria) or plain HQL |
 | `sessionFactory.getClassMetadata(X)` | `sessionFactory.getMetamodel().entity(X)` or `((SessionFactoryImplementor) sf).getMappingMetamodel().getEntityDescriptor(X)` |
 | `sessionFactory.getCache().evictCollection(role, id)` | `evictCollectionData(role, id)` |
-| `Dialect.registerFunction(name, fn)` | Use a `FunctionContributor`; or inline the SQL (we did the latter for `bitwise_and`) |
+| `Dialect.registerFunction(name, fn)` | `FunctionContributor` SPI (see `BinaryFunctionContributor`); or inline the SQL |
+| HQL `<plural>.size` | HQL `size(<plural>)` |
+| HQL `substring()` / `length()` on BLOB | HQL `bytes_substring(b,s,l)` / `bytes_length(b)` (Gemma-registered) |
 | `UserType.sqlTypes() : int[]` | `UserType.getSqlType() : int` |
 | `UserType.nullSafeGet(rs, String[], session, owner)` | `UserType.nullSafeGet(rs, int position, session, owner)` |
 | `UserType` (raw) | `UserType<T>` (generic) |
 | `IdentifierGeneratorHelper.getGeneratedIdentity(rs, idProp, idType, dialect)` | `(idProp, rs, PostInsertIdentityPersister, WrapperOptions)` |
-| `Transformers.aliasToBean(X.class)` | still works in HB6 (deprecated) |
-| `setResultTransformer(...).list()` | TypedResultTransformer.list(query) |
 
 Spring 6 single-arg Assert removals:
 
@@ -580,11 +476,6 @@ Spring 6 single-arg Assert removals:
 | `Assert.hasText(s)` | `Assert.hasText(s, "must not be blank")` |
 | `Assert.hasLength(s)` | `Assert.hasLength(s, "must not be empty")` |
 
-Apply with `/tmp/fix_asserts.py` — point it at `/tmp/assert_errors.txt`
-(the file is just the lines of `mvn ... | grep '^\[ERROR\]' | sort -u`
-matching the relevant patterns). It does paren-balanced argument
-parsing so it handles nested calls.
-
 Spring 6 BeanPostProcessor:
 
 | Old | New |
@@ -593,423 +484,44 @@ Spring 6 BeanPostProcessor:
 
 ## Stubbed / temporarily disabled
 
-Things that compile but throw UOE or return empty — track for Step 7
-follow-up:
-
 - `ExpressionAnalysisResultSetDaoImpl#findByBioAssaySetInAndDatabaseEntryInLimit`
   → UOE. The `getFilteringCriteria` method was deleted entirely; the
   filtering-by-VO path needs a JPA-Criteria reimplementation.
 - `ExpressionDataFileServiceImpl#writeOrLocateCoexpressionDataFile` → UOE
   (coexpression subsystem gone).
-- Single-cell vector streaming in EE DAO lost its per-row
-  `setResultTransformer(initializer)` call; the consumer must invoke
-  `SingleCellDataVectorInitializer.transformTuple` itself when reading
-  from the stream. (See the comment at the streamSingleCellDataVectors
-  callsite.)
+- `ExpressionExperimentDaoImpl#getExpressionExperimentIdsWithCoexpression`
+  → `Collections.emptyList()` (the `CoexpressionAnalysis` entity is
+  gone; callers only use it to set `hasCoexpressionAnalysis(false)`).
 - `AbstractFilteringVoEnabledDao#registerEntity` was rewritten on JPA
   Metamodel — the old code branched on `MaterializedBlobType`/
   `MaterializedClobType`/`CustomType` for skip-fields; the new code
   falls back to `log.trace` for any non-basic, non-association,
-  non-collection attribute. If anyone reports "my BLOB column shows up
-  as a filterable property", that's why.
+  non-collection attribute.
 - All `CoexpressionAnalysis` entities, DAOs, services, caches, link
   analysis services, GeneCoexpressionSearchService, LinkAnalysisCli,
   CoexpressionWriter, and the species-specific
   `Gene2GeneCoexpression`/`ExperimentCoexpressionLink` subclasses are
-  **deleted**. `SampleCoexpression*` is **kept** (it's a per-EE sample QC
-  artifact, not gene-gene coexp).
+  **deleted**. `SampleCoexpression*` is **kept**.
 - Some EE DAO `Initializer` classes are typed `TypedResultTransformer<Object>`
   because they return either an entity or `Object[]` depending on a flag.
-  Callers cast the result back to the entity. Not ideal but matches the
-  pre-Phase-2 behavior.
-
-## Things I tried that wasted time
-
-- Trying to give `Query` a `setResultTransformer` extension method via a
-  wrapper — too invasive given Hibernate's API surface. The
-  `TypedResultTransformer.list(query)` / `uniqueResult(query)` helper on
-  the transformer side was much cleaner.
-- Initial Python script for `setResultTransformer` rewrite walked
-  comments incorrectly and mashed two statements onto one line in a
-  handful of cases. Fixed by hand on the few callsites that broke.
-- Sed for `setLong/setString → setParameter` was too aggressive — it
-  also swapped `PreparedStatement.setLong` (which is correct) into
-  `setParameter` (which doesn't exist on PreparedStatement). Reverted the
-  three or four PreparedStatement callsites by hand.
-
-## Notes on session-3 design choices
-
-* **`BusinessKey` public API**: every `addRestrictions(Criteria, X)` /
-  `createQueryObject(...)` / `attachCriteria(...)` is gone. The new
-  surface per entity type is:
-  - `BusinessKey.find(Session, X) -> X` — full single-result query.
-  - `BusinessKey.matches(CriteriaBuilder, From<?, X>, X) -> List<Predicate>`
-    — predicate-list builder for callers composing into a larger
-    JPA-Criteria query of their own.
-  - `BusinessKey.attachBioSequence` / `attachDatabaseEntry` — convenience
-    wrappers that join a parent's property and add the matching
-    predicates in one call.
-  - All `checkKey` / `checkValidKey` methods are unchanged.
-* **Spring 6 `Assert.*` single-arg removals**: Spring 6 dropped
-  `Assert.notNull(Object)`, `Assert.isTrue(boolean)`, `Assert.state(boolean)`,
-  `Assert.isNull(Object)`, `Assert.hasText(String)`, `Assert.hasLength(String)`.
-  Session 3 patched 97 callsites in 49 files with a default message via
-  `/tmp/fix_asserts.py` (paren-balanced argument parsing, default
-  messages keyed on method name like "must not be null" / "expected
-  true"). If new ones appear after this session's fixes uncover more
-  compile-down stack, the same script will pick them up — point it at
-  a fresh `/tmp/assert_errors.txt`.
-* **MySQL bitwise AND**: `AclQueryUtils` and `EE2CAclQueryUtils` no
-  longer route through `sessionFactory.getSqlFunctionRegistry()` (which
-  changed shape in Hibernate 6). The rendered SQL is just `(a & b)`
-  inlined. Gemma is MySQL-only via `MySQL57Dialect`, so the dialect
-  indirection was carrying no weight.
-* **`createSQLQuery` vs `createNativeQuery`**: `createSQLQuery` still
-  exists on Hibernate 6's `Session` (deprecated) and returns
-  `org.hibernate.query.NativeQuery`. Existing callsites compile; only
-  the return-type variable's declared type changed from `SQLQuery` to
-  `NativeQuery` (the only mechanical fix needed).
-* **`org.hibernate.metadata.ClassMetadata`** still works in Hibernate 6
-  (kept for backward compat). `sessionFactory.getClassMetadata(X)` is
-  fine. If we hit `getAllClassMetadata()` issues, swap to
-  `sessionFactory.getMetamodel().getEntities()` (already done in
-  `QuantitationTypeDaoImpl` constructor).
-
-## TL;DR for a fresh session
-
-You're picking up a Spring/Hibernate/jakarta climb that has finished
-Phase 0 (JDK 17), Phase 1a (Spring 3 → 4), Phase 1b (Spring 4 → 5 +
-Hibernate 4 → 5 + HS 4 → 5 + Lucene 3 → 5), and Phase 1c (DWR
-stripped). Phase 2 (Spring 6 + Hibernate 6 + jakarta) is partly done
-and parked on a branch.
-
-Three repos, all local-only on `renovations` branches, **nothing
-pushed to GitHub**:
-
-| Repo | Branch | State |
-|---|---|---|
-| `~/Dev/eclipseworkspace/Gemma` | `renovations` | Phase 1c, all 5 modules compile, ~95% unit tests pass |
-| `~/Dev/eclipseworkspace/Gemma` | `phase2-wip` | Phase 2 attempt, **does not compile** — your starting point |
-| `~/Dev/gsec/gsec` | `renovations` (HEAD: `44ecead`) | Spring 6 + Hibernate 6 + jakarta, **all 25 tests pass** — the recipe |
-| `~/Dev/eclipseworkspace/baseCode` | `renovations` | Lucene + R support gutted, builds clean |
-
-Read [RENOVATIONS.md](RENOVATIONS.md) for the full phase history.
-
-## User decisions (explicit permissions granted)
-
-These are the load-bearing decisions Paul made before the previous
-session ended. You do not need to re-litigate them.
-
-1. **Hibernate Search is dead. Rewrite search completely.** The
-   existing Lucene/HS-based search subsystem (HibernateSearchSource,
-   IndexerService, the @Indexed/@Field entity annotations, the
-   /search REST endpoints) can be replaced wholesale. You decide the
-   new architecture (Lucene 9 native, OpenSearch, MySQL FULLTEXT,
-   Postgres FTS — your call). For now you may stub the search service
-   to return empty results; the rewrite is its own future phase.
-2. **Hibernate Criteria → JPA Criteria "just needs to be done."**
-   No shortcut. Convert every DAO that uses `org.hibernate.criterion`
-   to JPA Criteria (or HQL where simpler). Write more tests if you
-   need them.
-3. **Drop EhCache temporarily.** EhCache 2 → EhCache 3 + JCache
-   integration is too much surface for now. Replace caches with
-   something simpler (Caffeine via JCache, ConcurrentMapCache, or
-   no L2 cache at all). Cache stats UI (`CacheMonitorImpl`) can be
-   stubbed.
-4. **No push to GitHub.** All work stays local on `renovations`
-   branches across the three repos.
-5. **agents (`~/Dev/gemma-curation-agents/`) are still WIP.** Don't
-   build the real write-API for them yet — the Pydantic schemas are
-   in flux.
-6. **GemBrow React port** is being done by a *different* agent in
-   `~/Dev/GemBrow/` (see `~/Dev/GemBrow/REACT_PORT_HANDOFF.md`). It
-   doesn't touch Gemma. You don't touch GemBrow.
-
-## What's at `phase2-wip`
-
-```
-git -C ~/Dev/eclipseworkspace/Gemma checkout phase2-wip
-```
-
-Single commit on top of `079c79349e` (the Phase 1c head):
-
-- **pom.xml** bumped to Spring 6.1.20, Spring Security 6.3.10,
-  Hibernate 6.4.10 (`org.hibernate.orm`), Tomcat 10.1.34, Jersey
-  3.1.10, jakarta.servlet 6.0.0, jakarta.xml.bind-api 4.0.2,
-  ehcache 3.10.8 jakarta + `hibernate-jcache` + jaxb-runtime 4.0.5
-  pinned (the snapshot jaxb-runtime in ehcache's transitive is
-  excluded). Hibernate Search and Lucene deps removed entirely.
-  `dependencyManagement` includes the
-  `hibernate-commons-annotations` 6.0.6 override that the parent
-  pom otherwise pins to 4.0.5 (Hibernate 4 era — missing
-  `ReflectionManager.reset()`).
-- **`javax.* → jakarta.*` mass sed** applied across ~400 imports
-  in gemma-core/cli/rest/web. JSR-305 (`javax.annotation.Nullable`
-  etc.) and JDK `javax.*` (swing/imageio/sql/xml.xpath) left
-  alone — they don't move.
-- **209 Lucene + Hibernate Search annotation lines** stripped from
-  26 entity files via a Python script that also dropped the
-  matching imports.
-- **Search subsystem files deleted**: `core/search/lucene/` (all 5
-  files), `HibernateSearchSource`, `HibernateSearchException`,
-  `DefaultHighlighter`, `IndexerServiceImpl`,
-  `metrics/binder/cache/EhCache24Metrics`,
-  `metrics/MeterRegistryEhcacheConfigurer`. 5 search-related test
-  files also deleted.
-- **gemma-web DWR removal** carried over from Phase 1c.
-
-**The compile is currently broken at this commit** — that's the
-whole point of the handoff.
-
-## The cascade you'll need to finish
-
-These are the production files that still reference deleted search
-classes (as of last compile attempt):
-
-```
-gemma-core/src/main/java/ubic/gemma/core/ontology/OntologyUtils.java
-gemma-core/src/main/java/ubic/gemma/core/ontology/OntologyServiceImpl.java
-gemma-core/src/main/java/ubic/gemma/core/search/source/OntologySearchSource.java
-gemma-core/src/main/java/ubic/gemma/core/search/source/GeneOntologySearchSource.java
-gemma-core/src/main/java/ubic/gemma/core/search/source/DatabaseSearchSource.java
-gemma-core/src/main/java/ubic/gemma/core/search/SearchServiceImpl.java
-gemma-core/src/main/java/ubic/gemma/core/search/GeneSetSearchImpl.java
-gemma-rest/src/main/java/ubic/gemma/rest/SearchWebService.java
-gemma-rest/src/main/java/ubic/gemma/rest/DatasetsWebService.java
-gemma-rest/src/main/java/ubic/gemma/rest/AnnotationsWebService.java
-gemma-web/src/main/java/ubic/gemma/web/controller/search/GeneralSearchController.java
-gemma-web/src/main/java/ubic/gemma/web/controller/monitoring/CacheMonitorImpl.java
-```
-
-Plus untouched-by-the-Phase-2-attempt deeper issues:
-
-- Hibernate 5 → 6 Criteria removal in DAOs that still compile
-  under Phase 1c (`org.hibernate.criterion` is gone). Affects
-  multiple DAOs in gemma-core. gsec's `AclDaoImpl` already shows
-  the pattern: convert the Criteria query to HQL (the simpler
-  option) or JPA Criteria.
-- Spring 5 → 6 deprecated-API removals (probably dozens of small
-  fixes once everything else compiles).
-- Jersey 2 → 3 might surface API changes in `gemma-rest`'s
-  providers/filters (not yet probed).
-
-## Suggested playbook for the new session
-
-### Step 0 — get oriented
-
-```bash
-# Read the two docs
-cat ~/Dev/eclipseworkspace/Gemma/RENOVATIONS.md
-cat ~/Dev/eclipseworkspace/Gemma/PHASE_2_HANDOFF.md   # this file
-
-# Verify the Phase 1c baseline still works
-cd ~/Dev/eclipseworkspace/Gemma
-git status                                              # should be on renovations
-export JAVA_HOME="$HOME/Library/Java/JavaVirtualMachines/amazon-corretto-17.jdk/Contents/Home"
-export PATH="$JAVA_HOME/bin:$PATH"
-mvn -P fast -Denforcer.skip=true clean install -DskipTests=true
-# expect: BUILD SUCCESS for 5 modules (~50s)
-
-# And gsec at Spring 6 still builds in isolation
-cd ~/Dev/gsec/gsec
-git log --oneline -3   # HEAD should be 44ecead
-mvn install -Denforcer.skip=true
-# expect: 25 tests pass; jar installed
-```
-
-After Step 0 you should have a clear picture of where the boundaries
-are.
-
-### Step 1 — switch into Phase 2 working state
-
-```bash
-cd ~/Dev/eclipseworkspace/Gemma
-git checkout phase2-wip       # the WIP commit
-git checkout -b phase2         # work on a new branch named "phase2"
-
-# Reinstall gsec at Spring 6 so Gemma can consume it
-cd ~/Dev/gsec/gsec
-mvn install -Denforcer.skip=true   # this installs the Spring 6 jar
-```
-
-You're now on a `phase2` branch whose parent is the WIP commit.
-Commit your fixes incrementally so you can bisect if something
-regresses.
-
-### Step 2 — make the search subsystem compile (stubs first)
-
-Delete or stub the 11 production consumers of deleted search
-classes. Order suggested:
-
-1. `SearchServiceImpl` — stub `search()` to throw
-   `UnsupportedOperationException` or return empty
-   `SearchResultMap`. Same for `loadValueObjects`.
-2. `OntologySearchSource`, `GeneOntologySearchSource`,
-   `DatabaseSearchSource` — delete entirely; remove their
-   `@Component` registrations. `CompositeSearchSource` (if it
-   composes them) becomes a no-op.
-3. `OntologyServiceImpl` / `OntologyUtils` — delete the Lucene
-   query construction methods; leave ontology lookup methods
-   that don't use Lucene intact.
-4. `GeneSetSearchImpl` — delete or stub the methods that need
-   Lucene.
-5. `gemma-rest/.../SearchWebService.java` and `AnnotationsWebService`
-   and `DatasetsWebService` `/search` endpoints — make them
-   return 501 Not Implemented or an empty result set with a
-   header noting "search disabled on this build."
-6. `gemma-web/.../GeneralSearchController` — same treatment;
-   probably just delete the form processing.
-7. `gemma-web/.../monitoring/CacheMonitorImpl` — replace the
-   ehcache 2 introspection with a simple `cacheManager.getCacheNames()`
-   list, no statistics.
-
-After this round you should be looking at Hibernate 6 / Spring 6
-errors rather than search-cascade errors.
-
-### Step 3 — Hibernate Criteria → JPA Criteria (or HQL)
-
-For each DAO in gemma-core that uses `org.hibernate.criterion.*`
-(grep for `import org.hibernate.criterion`), convert the Criteria
-queries. gsec's `AclDaoImpl.loadAcls()` shows the HQL pattern.
-
-If a DAO's Criteria query is small, HQL is easier. For complex
-dynamic queries with conditionals, use the JPA Criteria API
-(`CriteriaBuilder` / `CriteriaQuery`) — but be prepared for it to
-be verbose.
-
-Write new unit tests for the converted DAOs. Paul has explicitly
-said "write more tests if you need to" — use that license.
-
-### Step 4 — get the rest of Hibernate 6 to compile
-
-Expect to fix small things:
-- `session.getFlushMode()` → `getHibernateFlushMode()`
-- `sessionFactory.getClassMetadata(class)` →
-  `((SessionFactoryImplementor) sf).getMappingMetamodel().getEntityDescriptor(class)`
-- `CascadingAction.X` → `CascadingActions.X`
-- `IdentifierGeneratorHelper.getGeneratedIdentity` signature gained
-  a Dialect arg
-- `Expectation.verifyOutcome` signature gained a sql String arg
-- `Configuration.generateSchemaCreationScript()` removed —
-  `DatabaseSchemaPopulator`'s inner class is already a stub on the
-  Phase 1c head; verify it's still stubbed on phase2-wip.
-- Hibernate `org.hibernate.SQLQuery` → `org.hibernate.query.NativeQuery`
-- 1-based positional parameters (was 0-based in HB 4)
-
-All of these were already done in Phase 1b/Phase 2-attempt-1 for
-some files — but the mass sed and the Hibernate-6-only bumps may
-have introduced new instances. Grep methodically.
-
-### Step 5 — Spring 6 leftovers
-
-- Spring's `org.springframework.orm.hibernate5` package was *kept*
-  in Spring 6 but only works with Hibernate 5. With Hibernate 6,
-  use Spring's JPA support: `LocalContainerEntityManagerFactoryBean`
-  +  `JpaTransactionManager`, then expose a `SessionFactory` bean
-  via `factory-method="unwrap"`. gsec's `testContext.xml` shows
-  the pattern.
-- Gemma's custom `HibernateTransactionManager` and
-  `LocalSessionFactoryBean` (which extend Spring's hibernate4/5
-  classes) need replacement. Probably delete them and use Spring's
-  JPA classes directly with the unwrap trick.
-
-### Step 6 — Jersey 2 → 3
-
-`gemma-rest/pom.xml` deps will need bumping when you get there.
-`jersey.version` in the root pom is already set to `3.1.10`.
-`@PreMatching` and other annotations should work the same way once
-the imports are jakarta.
-
-### Step 7 — run unit tests, fix runtime issues
-
-By now you should have a compiling build. The unit tests will
-surface runtime issues. Pattern from Phase 1b: ~95% pass after
-the compile is clean; the residue is small.
-
-### Step 8 — bump bytecode 11 → 17
-
-Once everything is on Spring 6 (which itself requires Java 17),
-flip `maven.compiler.release` from `11` to `17` in the root pom.
-This was a Phase 0 leftover.
-
-### Step 9 — re-enable `dependencyConvergence` enforcer
-
-Was disabled across all three repos during the climb. Re-enable
-and chase the convergence errors with explicit
-`dependencyManagement` overrides.
-
-### Step 10 — update `RENOVATIONS.md`
-
-Move Phase 2 from "deferred" to "done." Document any new stubs.
-
-## Things I tried that wasted time
-
-So you don't repeat them:
-
-- **Spring 6's `org.springframework.orm.hibernate5.LocalSessionFactoryBean`
-  with Hibernate 6** → fails at runtime with `NoSuchMethodError:
-  ReflectionManager.reset()`. The hibernate5 package was kept for
-  source compat with Hibernate 5 only; with Hibernate 6 you must
-  use Spring's JPA support.
-- **The ehcache 3.10.x jakarta classifier without a jaxb-runtime
-  override** → its transitive `jaxb-runtime 2.3.0-b170127.1453` is
-  a snapshot from the decommissioned `maven.java.net` repo. Always
-  pair with `<exclusion>` + a direct `jaxb-runtime 4.0.x` pin.
-- **Trying to align Spring framework + Spring Security to the
-  same patch version** → use `${spring.version}` 6.1.20 (one minor
-  below the latest in the line) so Spring Security 6.3.10's
-  transitive doesn't conflict. Or just disable the enforcer
-  rule during the climb.
 
 ## File system layout summary
 
 ```
 ~/Dev/eclipseworkspace/Gemma                  # main monorepo
   - renovations branch    : Phase 1c, working
-  - phase2-wip branch     : Phase 2 partial, broken
+  - phase2 branch         : Phase 2 in flight (this file)
   - RENOVATIONS.md        : full phase history
   - PHASE_2_HANDOFF.md    : this file
 
 ~/Dev/gsec                                    # Pavlab security lib
-  - renovations branch    : HEAD at 44ecead (Spring 6, all tests pass)
-                            HEAD~1 at 6bbccb3 (Spring 5, also works)
+  - renovations branch    : HEAD at 44ecead (Spring 6, 25/25 tests pass)
+                            AclObjectIdentity.equals NPE pending
 
 ~/Dev/eclipseworkspace/baseCode               # Pavlab utility lib
   - renovations branch    : 1.1.34-RENOVATIONS-SNAPSHOT (Lucene/R gutted)
 
 ~/Dev/GemBrow                                 # parallel React port (different agent)
-  - REACT_PORT_HANDOFF.md : that other agent's brief; don't touch
-
 ~/Dev/gemma-curation-agents                   # WIP, do not touch
 ~/Dev/gemma-curation-ui                       # the React app gemma-ui will grow into
 ```
-
-## Local maven state (heads up)
-
-The local maven repo (`~/maven.repository/`) currently has the
-Spring 5 gsec jar installed (so the renovations branch builds).
-When you start Phase 2:
-
-```bash
-cd ~/Dev/gsec/gsec && mvn install   # installs the Spring 6 gsec jar
-```
-
-Gemma's `renovations` branch will then fail to build (it expects
-Spring 5 gsec). That's fine — you're working on `phase2` from
-that point.
-
-## Status summary
-
-- **gsec at Spring 6**: ✅ committed `44ecead`, 25/25 tests pass.
-  Recipe is proven.
-- **Gemma compile under Spring 6**: ⏳ in `phase2-wip` branch, ~13
-  source files still failing due to deleted-search-subsystem
-  cascade. Stubbing/deleting them is straightforward Step 2 work.
-- **Gemma Hibernate 6 Criteria conversion**: ⏳ not started. The
-  user explicitly said this "just needs to be done."
-- **Gemma cache UI / Ehcache 3 integration**: ⏳ not started. The
-  user said dropping ehcache temporarily is acceptable.
-- **Gemma unit tests under Spring 6**: ⏳ unmeasured.
-
-Realistic estimate to compile-green: one focused session.
-Realistic estimate to tests-green: another session after that.
