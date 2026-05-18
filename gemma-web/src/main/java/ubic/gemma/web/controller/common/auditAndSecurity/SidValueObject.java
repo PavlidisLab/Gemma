@@ -18,8 +18,8 @@
  */
 package ubic.gemma.web.controller.common.auditAndSecurity;
 
-import gemma.gsec.acl.domain.AclGrantedAuthoritySid;
-import gemma.gsec.acl.domain.AclPrincipalSid;
+import org.springframework.security.acls.domain.GrantedAuthoritySid;
+import org.springframework.security.acls.domain.PrincipalSid;
 import org.springframework.security.acls.model.Sid;
 
 import java.io.Serializable;
@@ -41,7 +41,7 @@ public class SidValueObject implements Comparable<SidValueObject>, Serializable 
     }
 
     public SidValueObject( Sid owner ) {
-        this.principal = owner instanceof AclPrincipalSid;
+        this.principal = owner instanceof PrincipalSid;
         this.authority = this.sidToString( owner );
     }
 
@@ -105,10 +105,10 @@ public class SidValueObject implements Comparable<SidValueObject>, Serializable 
     }
 
     private String sidToString( Sid s ) {
-        if ( s instanceof AclPrincipalSid ) {
-            return ( ( AclPrincipalSid ) s ).getPrincipal();
-        } else if ( s instanceof AclGrantedAuthoritySid ) {
-            String grantedAuthority = ( ( AclGrantedAuthoritySid ) s ).getGrantedAuthority();
+        if ( s instanceof PrincipalSid ) {
+            return ( ( PrincipalSid ) s ).getPrincipal();
+        } else if ( s instanceof GrantedAuthoritySid ) {
+            String grantedAuthority = ( ( GrantedAuthoritySid ) s ).getGrantedAuthority();
             if ( !grantedAuthority.startsWith( SidValueObject.rolePrefix ) ) {
                 grantedAuthority = SidValueObject.rolePrefix + grantedAuthority;
             }
