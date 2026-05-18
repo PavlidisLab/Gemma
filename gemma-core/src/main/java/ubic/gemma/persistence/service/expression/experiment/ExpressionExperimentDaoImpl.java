@@ -1445,12 +1445,14 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment expressionExperiment ) {
+        // Original HQL was "select b from BioAssayDimension b, ExpressionExperiment e join b.bioAssays bba join e.bioAssays eb
+        // where eb = bba and e = :ee group by b" — a cross-join from two roots with set-joins from each. Hibernate 6's
+        // SemanticQueryModel-to-SQL translator hits an internal AssertionError ("at BaseSqmToSqlAstConverter.visitTableGroup")
+        // on that shape. Equivalent, friendlier form: drive from BAD with a subquery that pulls the EE's bioAssays.
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select b from BioAssayDimension b, ExpressionExperiment e "
-                        + "join b.bioAssays bba join e.bioAssays eb "
-                        + "where eb = bba and e = :ee "
-                        + "group by b" )
+                .createQuery( "select distinct b from BioAssayDimension b join b.bioAssays bba "
+                        + "where bba.id in (select eb.id from ExpressionExperiment e join e.bioAssays eb where e = :ee)" )
                 .setParameter( "ee", expressionExperiment )
                 .list();
     }
@@ -3603,7 +3605,9 @@ public class ExpressionExperimentDaoImpl
     @Override
     public long getNumberOfNonZeroes( ExpressionExperiment ee, QuantitationType qt ) {
         return ( Long ) getSessionFactory().getCurrentSession()
-                .createQuery( "select sum(length(scedv.dataIndices)) from SingleCellExpressionDataVector scedv "
+                // Hibernate 6: HQL length()/character_length() are STRING-only; use bytes_length
+                // (registered via BinaryFunctionContributor) — dataIndices is an int[] mapped to BLOB.
+                .createQuery( "select sum(bytes_length(scedv.dataIndices)) from SingleCellExpressionDataVector scedv "
                         + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt" )
                 .setParameter( "ee", ee )
                 .setParameter( "qt", qt )
@@ -4082,7 +4086,10 @@ public class ExpressionExperimentDaoImpl
         }
         String[] stuffToConcat = new String[columns.length];
         for ( int i = 0; i < columns.length; i++ ) {
-            stuffToConcat[i] = "substring(v.data, " + ( sizeInBytes * columns[i] + 1 ) + ", " + sizeInBytes + ")";
+            // Hibernate 6: HQL substring() is registered STRING-only; use Gemma's bytes_substring
+            // (registered via BinaryFunctionContributor) which renders to plain SQL substring()
+            // without arg-type checking — needed because v.data is a byte[] mapped to BLOB.
+            stuffToConcat[i] = "bytes_substring(v.data, " + ( sizeInBytes * columns[i] + 1 ) + ", " + sizeInBytes + ")";
         }
         //noinspection unchecked
         List<Object[]> result = getSessionFactory().getCurrentSession()
@@ -4344,7 +4351,10 @@ public class ExpressionExperimentDaoImpl
         }
         String[] stuffToConcat = new String[columns.length];
         for ( int i = 0; i < columns.length; i++ ) {
-            stuffToConcat[i] = "substring(v.data, " + ( sizeInBytes * columns[i] + 1 ) + ", " + sizeInBytes + ")";
+            // Hibernate 6: HQL substring() is registered STRING-only; use Gemma's bytes_substring
+            // (registered via BinaryFunctionContributor) which renders to plain SQL substring()
+            // without arg-type checking — needed because v.data is a byte[] mapped to BLOB.
+            stuffToConcat[i] = "bytes_substring(v.data, " + ( sizeInBytes * columns[i] + 1 ) + ", " + sizeInBytes + ")";
         }
         //noinspection unchecked
         List<Object[]> result = getSessionFactory().getCurrentSession()
