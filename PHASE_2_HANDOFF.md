@@ -45,7 +45,11 @@ mvn -P fast -Denforcer.skip=true install -DskipTests=true:
 ## Session-5 commits (on `phase2`)
 
 ```
-<this commit>   PHASE_2_HANDOFF.md: refresh after FactorValue + TupleTransformer batches
+<this commit>   PHASE_2_HANDOFF.md: refresh after BLOB-HQL + Subquery FQN + EE @After
+d660c34b63      Phase 2: ExpressionExperimentDaoTest @After re-resolves managed EE before remove
+5cb418b360      Phase 2: Subquery#toString uses FQN — fixes 4 EE DAO test methods
+2b0028a4e5      Phase 2: BinaryFunctionContributor + getBioAssayDimensions HQL rewrite
+bbce3024d9      PHASE_2_HANDOFF.md: refresh after FactorValue + TupleTransformer batches
 1d01e08308      Phase 2: complete TypedResultTransformer migration to Hibernate 6 TupleTransformer / ResultListTransformer
 1a49a43435      Phase 2: fix FactorValueDaoTest + FactorValueServiceTest
 8a37f8529a      PHASE_2_HANDOFF.md: refresh after sweep batches 2 + 3
@@ -255,28 +259,30 @@ React port — keep it healthy.
       in session 5 (commit `1a49a43435`): flush ordering on the
       discriminator-aware UPDATE; merge-vs-update semantics in
       service tests; re-resolve managed Statement after merge cascade.
-    - `SingleCellExpressionExperimentServiceTest` — **partially fixed**:
-      4 of 7 failures cleared by the TupleTransformer migration below.
-      Remaining: HQL `character_length()` on `int[]` BLOB (same shape
-      as item 3 below), `getSingleCellDimensionWithoutCellIds` result
-      shape (looks like a `group_concat` produced one joined string
-      instead of a 100-element list), `testReplaceVectors` data-state
-      assertion. Each is its own piece of work.
-    - `ExpressionExperimentDaoTest` (~14 test methods in the
-      replace-vector / cascade / thaw / remove paths) — not yet
-      investigated.
+    - `SingleCellExpressionExperimentServiceTest` — **5 of 7 fixed**:
+      4 via the TupleTransformer migration (`1d01e08308`), 1 via the
+      BinaryFunctionContributor (`2b0028a4e5`). Remaining:
+      `getSingleCellDimensionWithoutCellIds` result shape (looks like
+      a `group_concat` produced one joined string instead of a
+      100-element list); `testReplaceVectors` data-state assertion.
+    - ~~`ExpressionExperimentDaoTest` (~14 methods)~~ — **mostly fixed**:
+      now 55 tests, 0 failures, 1 error. The getBioAssayDimensions HQL
+      rewrite (`2b0028a4e5`) unstuck the `@After.removeFixtures` path
+      that was poisoning every test; Subquery FQN (`5cb418b360`)
+      fixed 4 filter/subquery toString tests; @After re-resolve
+      (`d660c34b63`) fixed the loadReference cluster. Only
+      `testReplaceProcessedDataVectorsWithDetachedExperiment` is left
+      — a real cascade issue in `updateWithNewVectors`.
     - `AnnDataSingleCellDataLoaderTest` (2 errors) — not yet looked at.
-    They cluster around vector replace + cascade boundaries; needs a
-    careful look at service-layer flush boundaries + Hibernate 6's
-    stricter detached-entity semantics.
-3. **HQL `substring()` / `character_length()` on BLOB** — Hibernate 6
-   type-checks these as STRING-only; the
-   `ExpressionExperimentDaoImpl.getRawData` paths (line 4085, 4347)
-   use `substring`, and `getNumberOfNonZeroes` (line 3606) uses
-   `character_length` on a `ByteArrayType` int-array BLOB. Fix is
-   either NativeQuery against the underlying table or a
-   FunctionContributor-registered binary-aware function.
-   `testGetRawDataVectors` is `@Ignore`'d for now with a pointer.
+    They cluster around vector replace + cascade boundaries; the
+    remaining items need a careful look at service-layer flush
+    boundaries + Hibernate 6's stricter detached-entity semantics.
+3. ~~**HQL `substring()` / `character_length()` on BLOB**~~ — **fixed**
+   via `BinaryFunctionContributor` (`2b0028a4e5`). Two binary-aware
+   HQL functions registered via the HB6 FunctionContributor SPI:
+   `bytes_substring(b, start, length)` and `bytes_length(b)`. Three
+   call sites in `ExpressionExperimentDaoImpl` updated; un-Ignore'd
+   `testGetRawDataVectors`.
 4. **`AbstractCriteriaFilteringVoEnabledDao` extension surface**: the
    JPA Criteria port doesn't yet handle subquery filters or
    `.size`-suffix filters (those throw UOE inside
@@ -299,20 +305,19 @@ React port — keep it healthy.
    (`/proc/locks` is Linux-only), `GeoMexSingleCellDataLoaderConfigurerTest`
    (cellranger binary not on the local box).
 
-Done in session 5 (ten commits, in order): Step 8 (bytecode 11→17),
-`applicationContext-security.xml` schema fix + `DatasetsRestTest`
-categorization, `AclClassMetadataTest` mock fix +
-`DiseaseOntologyTest` `@Ignore`, Step 9 (`dependencyConvergence`
-re-enabled with 8 transitive pins), `ArrayDesignDaoTest` /
-`CompositeSequenceDaoTest` / `RawAndProcessedExpressionDataVectorDaoTest`
-fixes, `testGetRawDataVectors` `@Ignore` with migration note,
-`FactorValueDaoTest` + `FactorValueServiceTest` fixes (3 tests
-covering optimistic-lock ordering, merge-vs-update semantics, and
-managed-instance resolution after merge cascade), and the full
-`TypedResultTransformer` → Hibernate 6 `TupleTransformer` /
-`ResultListTransformer` migration (unblocks 4 of 7
-SingleCellExpressionExperimentServiceTest failures and any other
-alias-dependent initializer).
+Done in session 5 (15 commits): Steps 8 and 9 (bytecode 17,
+`dependencyConvergence` on); `applicationContext-security.xml` schema
++ `DatasetsRestTest` categorization; `AclClassMetadataTest`,
+`DiseaseOntologyTest`, `ArrayDesignDaoTest`, `CompositeSequenceDaoTest`,
+`RawAndProcessedExpressionDataVectorDaoTest`, `FactorValueDaoTest`,
+`FactorValueServiceTest`; full `TypedResultTransformer` migration to
+HB6 `TupleTransformer` + `ResultListTransformer`;
+`BinaryFunctionContributor` for `bytes_substring` / `bytes_length`;
+`getBioAssayDimensions` HQL rewrite to dodge a HB6 SQM AssertionError;
+`Subquery#toString` FQN restoration; `ExpressionExperimentDaoTest`
+@After re-resolve fix. ExpressionExperimentDaoTest went from ~14
+failing methods to 1; SingleCellExpressionExperimentServiceTest from
+7 failing to 2.
 
 ### Quick wins still open
 
