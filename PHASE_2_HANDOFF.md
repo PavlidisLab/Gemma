@@ -45,7 +45,10 @@ mvn -P fast -Denforcer.skip=true install -DskipTests=true:
 ## Session-5 commits (on `phase2`)
 
 ```
-<this commit>   PHASE_2_HANDOFF.md: refresh after sweep batches 2 + 3
+<this commit>   PHASE_2_HANDOFF.md: refresh after FactorValue + TupleTransformer batches
+1d01e08308      Phase 2: complete TypedResultTransformer migration to Hibernate 6 TupleTransformer / ResultListTransformer
+1a49a43435      Phase 2: fix FactorValueDaoTest + FactorValueServiceTest
+8a37f8529a      PHASE_2_HANDOFF.md: refresh after sweep batches 2 + 3
 e60028feb6      Phase 2: @Ignore one BLOB-substring HQL test, document the rest
 f0337b7057      Phase 2: three more broader-sweep DAO failures
 1b0a1c9418      Phase 2 docs: session-5 closeout (Steps 8 + 9 + sweep cleanup)
@@ -248,24 +251,32 @@ React port — keep it healthy.
    Run with: a configured `testdb` profile + `mvn verify`.
 2. **Hibernate-6 session-state cluster** — the same shape of bug shows
    up across:
-    - `FactorValueDaoTest` / `FactorValueServiceTest`
-      (`OptimisticLockException` / `EntityExistsException` /
-      `assertion-failure on Statement`)
-    - `SingleCellExpressionExperimentServiceTest` (6 errors + 1 failure)
+    - ~~`FactorValueDaoTest` / `FactorValueServiceTest`~~ — **fixed**
+      in session 5 (commit `1a49a43435`): flush ordering on the
+      discriminator-aware UPDATE; merge-vs-update semantics in
+      service tests; re-resolve managed Statement after merge cascade.
+    - `SingleCellExpressionExperimentServiceTest` — **partially fixed**:
+      4 of 7 failures cleared by the TupleTransformer migration below.
+      Remaining: HQL `character_length()` on `int[]` BLOB (same shape
+      as item 3 below), `getSingleCellDimensionWithoutCellIds` result
+      shape (looks like a `group_concat` produced one joined string
+      instead of a 100-element list), `testReplaceVectors` data-state
+      assertion. Each is its own piece of work.
     - `ExpressionExperimentDaoTest` (~14 test methods in the
-      replace-vector / cascade / thaw / remove paths)
-    - `AnnDataSingleCellDataLoaderTest` (2 errors, not yet looked at)
+      replace-vector / cascade / thaw / remove paths) — not yet
+      investigated.
+    - `AnnDataSingleCellDataLoaderTest` (2 errors) — not yet looked at.
     They cluster around vector replace + cascade boundaries; needs a
     careful look at service-layer flush boundaries + Hibernate 6's
-    stricter detached-entity semantics. Real Phase-2 work, not a
-    one-line fix per test.
-3. **HQL `substring()` on BLOB** — Hibernate 6 type-checks substring()
-   as STRING-only; the `ExpressionExperimentDaoImpl.getRawData` paths
-   (line 4085, line 4347) split a BLOB by byte ranges using this HQL
-   function. Fix is either NativeQuery against
-   `RAW_EXPRESSION_DATA_VECTOR` or a FunctionContributor-registered
-   binary-substring. `testGetRawDataVectors` is `@Ignore`'d for now
-   with a pointer.
+    stricter detached-entity semantics.
+3. **HQL `substring()` / `character_length()` on BLOB** — Hibernate 6
+   type-checks these as STRING-only; the
+   `ExpressionExperimentDaoImpl.getRawData` paths (line 4085, 4347)
+   use `substring`, and `getNumberOfNonZeroes` (line 3606) uses
+   `character_length` on a `ByteArrayType` int-array BLOB. Fix is
+   either NativeQuery against the underlying table or a
+   FunctionContributor-registered binary-aware function.
+   `testGetRawDataVectors` is `@Ignore`'d for now with a pointer.
 4. **`AbstractCriteriaFilteringVoEnabledDao` extension surface**: the
    JPA Criteria port doesn't yet handle subquery filters or
    `.size`-suffix filters (those throw UOE inside
@@ -288,13 +299,20 @@ React port — keep it healthy.
    (`/proc/locks` is Linux-only), `GeoMexSingleCellDataLoaderConfigurerTest`
    (cellranger binary not on the local box).
 
-Done in session 5 (eight commits, in order): Step 8 (bytecode 11→17),
+Done in session 5 (ten commits, in order): Step 8 (bytecode 11→17),
 `applicationContext-security.xml` schema fix + `DatasetsRestTest`
 categorization, `AclClassMetadataTest` mock fix +
 `DiseaseOntologyTest` `@Ignore`, Step 9 (`dependencyConvergence`
 re-enabled with 8 transitive pins), `ArrayDesignDaoTest` /
 `CompositeSequenceDaoTest` / `RawAndProcessedExpressionDataVectorDaoTest`
-fixes, `testGetRawDataVectors` `@Ignore` with detailed migration note.
+fixes, `testGetRawDataVectors` `@Ignore` with migration note,
+`FactorValueDaoTest` + `FactorValueServiceTest` fixes (3 tests
+covering optimistic-lock ordering, merge-vs-update semantics, and
+managed-instance resolution after merge cascade), and the full
+`TypedResultTransformer` → Hibernate 6 `TupleTransformer` /
+`ResultListTransformer` migration (unblocks 4 of 7
+SingleCellExpressionExperimentServiceTest failures and any other
+alias-dependent initializer).
 
 ### Quick wins still open
 
