@@ -1,29 +1,30 @@
 # Phase 2 (Spring 6 / Hibernate 6 / jakarta) — handoff
 
-Filed 2026-05-17, refreshed at end-of-session-4 second push (still 2026-05-17).
-**Step 5a (Hibernate wiring) has now landed, AND first Step 7 smoke tests
-are green.** SessionFactory is built natively from `hibernate.cfg.xml` via
-a new `HibernateSessionFactoryBean`. Why not JPA? Hibernate's JPA bootstrap
-hard-codes `hibernate.current_session_context_class=jpa` regardless of what's
-in `jpaPropertyMap`, which breaks `sessionFactory.getCurrentSession()` for
-the `HibernateTransactionManager` + `SpringSessionContext` bridge that
-Gemma's DAOs rely on. (We tried the JPA EMF + unwrap pattern first; it
-bootstraps but `getCurrentSession()` returns an unmanaged non-transactional
-session.) See `HibernateSessionFactoryBean.java` javadoc for the long form.
+Filed 2026-05-17, refreshed at end-of-session-4 (still 2026-05-17, 5
+pushes this session). **Phase 2 is now in good shape**: all 5 modules
+install + test-compile clean, the SessionFactory bootstrap works, the
+shared JPA-Criteria filtering machinery is back, and the unit-test
+layer is broadly green across gemma-core / gemma-cli / gemma-rest.
 
-Tests passing under Phase 2 (this session): **~183 across the three
-exercised modules**:
-- gemma-core: 37 (DAO/service tests like `ExpressionExperimentSetDaoTest`,
-  `AbstractFilteringVoEnabledDaoTest`, `UserManagerTest`,
-  `CharacteristicDaoTest`, `AclLinterServiceTest`, `GeneDaoTest`,
-  `AuditEventDaoTest`, `UserDaoTest`)
-- gemma-cli: 41 (CLI infrastructure + Spring-context CLI tests like
-  `ProtocolAdderCliTest`, `DifferentialExpressionAnalysisCliTest`,
-  `RNASeqDataAddCliTest`, `BatchProcessingCliTest`)
-- gemma-rest: 105 / 1 fail (REST utility + Spring-context controller
-  tests like `OpenApiTest`, `AnnotationsWebServiceTest`,
-  `DatasetsWebServiceTest`, `WebApplicationExceptionMapperTest`,
-  arg-parsing tests)
+## Tests passing under Phase 2 (this session)
+
+**~340+ unit tests across 4 modules, 0 errors** (smoke set probed
+during Step 7):
+
+| Module | Tests | Notes |
+|---|---|---|
+| gemma-core (DAO/service/util/model) | ~215 | DAO smoke set, service tests, broader unit sweep |
+| gemma-cli | 41 | CLI infra + Spring-context CLI tests |
+| gemma-rest | 105 | REST utility + Spring-context controller tests (DatasetsWebService now 36/36) |
+| gemma-web | 11 | Utility tests; legacy webapp being replaced by `~/Dev/gemma-curation-ui` (see below), so heavy investment not warranted |
+
+Big-Spring-context tests (`BaseSpringContextTest` /
+`BaseIntegrationTest` subclasses, ~61 of them) are
+`@Category(IntegrationTest.class)` — run by failsafe with a real MySQL
+test DB, explicitly out of Step 7's unit-test scope. Untouched this
+session.
+
+## Build state
 
 All 5 modules still install + test-compile green.
 
@@ -39,7 +40,9 @@ mvn -P fast -Denforcer.skip=true install -DskipTests=true:
 ## Session-4 commits (on `phase2`)
 
 ```
-<this commit>   Phase 2 Step 7 (round 4): port AbstractCriteriaFilteringVoEnabledDao to JPA Criteria
+<this commit>   PHASE_2_HANDOFF.md: refresh after Step 7 round 5
+46820d1b42      Phase 2 Step 7 (round 5): restore Highlighter on /datasets; broader unit sweep green
+d31c268142      Phase 2 Step 7 (round 4): port AbstractCriteriaFilteringVoEnabledDao to JPA Criteria
 30aa12702c      Phase 2 Step 7 (round 3): junit-vintage for gemma-rest; CLI + REST tests green
 e76e33bf4b      Phase 2 Step 7 (round 2): bulk test fixes (MergeMode, BigInteger->Number, bitand, H2 bitwise)
 6a9d20654c      Phase 2 Step 5a/7: native Hibernate bootstrap; first DAO tests green
@@ -129,11 +132,46 @@ The biggest remaining offenders at session-3 end:
 ## TL;DR for a fresh session (next session-5)
 
 Build is install-green and test-compile-green for all five modules.
-**Step 5a wiring is in place AND runtime-verified** via three smoke
-tests (a DAO test, the filtering-DAO test, and a security/user
-manager test). Several real bugs fell out of the Step 7 smoke-test
-exercise — see below; one was fixed this session, three are still
-open.
+Phase 2 is in good shape. **Roughly 340+ unit tests now pass across
+gemma-core / gemma-cli / gemma-rest with zero errors**, up from ~5 at
+the start of this session. The infra changes (native Hibernate bootstrap,
+JPA Criteria filtering port, MergeMode fix, BigInteger→Number, bitand,
+H2 bitwise-AND, Highlighter restore, junit-vintage for gemma-rest)
+are committed.
+
+**Pinned context from the user**: `gemma-web` is being replaced by
+`~/Dev/gemma-curation-ui`. Don't invest in gemma-web test fixes or
+new features beyond a smoke check; gemma-rest IS load-bearing for the
+React port — keep it healthy.
+
+### What's still left for Phase 2
+
+1. **Step 7 (integration tier)** — ~61 `BaseSpringContextTest` /
+   `BaseIntegrationTest` subclasses are `@Category(IntegrationTest.class)`
+   and need a real MySQL test DB + the failsafe plugin. Untouched this
+   session. Run with: a configured `testdb` profile + `mvn verify`.
+2. **`AbstractCriteriaFilteringVoEnabledDao` extension surface**: the
+   JPA Criteria port doesn't yet handle subquery filters or
+   `.size`-suffix filters (those throw UOE inside
+   `FilterJpaUtils`). Subclasses that need them must override the
+   relevant `load*`/`count` method directly, or use HQL via
+   `AbstractQueryFilteringVoEnabledDao`. Add as needed when a test
+   actually exercises one.
+3. **Null-precedence on `Sort`**: the JPA Criteria port currently
+   ignores `Sort.NullMode.FIRST/LAST`. JPA's `Order` doesn't expose
+   it; Hibernate 6 has a vendor extension we haven't reached for yet.
+4. **Steps 8–10** — bytecode 11→17 (in root pom), re-enable
+   `dependencyConvergence` enforcer, update `RENOVATIONS.md`.
+
+### Quick wins still open
+
+- **`DatasetsWebServiceTest`**: fixed this session (Highlighter
+  restore). Was the only failing test in gemma-rest's unit suite.
+- **`QuantitationTypeDaoTest`**: fixed this session via the
+  `AbstractCriteriaFilteringVoEnabledDao` JPA port.
+- **`CompletionGeneratorTest`** (gemma-cli): 1 environmental
+  failure on macOS — bash 3.x doesn't ship `mapfile`. Use Homebrew
+  bash if you need it green locally. Not Phase 2.
 
 ### Bugs found and fixed in this session
 
@@ -224,15 +262,7 @@ open.
   `HibernateSessionFactoryBean.java` javadoc and the production XML.
   Native Hibernate is the path.
 
-### What's still left
-
-1. **Step 7 — more per-module tests.** Continue picking representative
-   DAO tests; expect more Criteria→HQL drift bugs, more JPA-Metamodel
-   vs Hibernate-Metadata differences, more h2-vs-mysql divergences.
-   Smoke set so far: `ExpressionExperimentSetDaoTest`,
-   `AbstractFilteringVoEnabledDaoTest`, `UserManagerTest`.
-2. **Steps 8–10** — bytecode 11→17 (in root pom), re-enable
-   `dependencyConvergence` enforcer, update RENOVATIONS.md.
+### (Earlier text — superseded by the new TL;DR above)
 
 ## Step 5a notes (Spring 6 JPA migration — done this session)
 
