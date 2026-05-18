@@ -34,8 +34,9 @@ import java.util.concurrent.TimeUnit;
  * <ul>
  *   <li>Filtering: eq / notEq (incl. null), like / notLike, lessThan / greaterThan,
  *       lessOrEq / greaterOrEq, in / notIn — see {@link FilterJpaUtils}.</li>
- *   <li>Sorting: dot-walked property paths, ASC/DESC. Null-precedence is currently ignored
- *       (JPA Criteria's {@code Order} doesn't expose it; Hibernate-specific extension TODO).</li>
+ *   <li>Sorting: dot-walked property paths, ASC/DESC, plus null-precedence
+ *       (FIRST/LAST/DEFAULT) via Hibernate 6's {@link org.hibernate.query.criteria.JpaOrder}
+ *       vendor extension on the JPA {@code Order}.</li>
  *   <li>Counting: {@code count(distinct id)} via the JPA Criteria.</li>
  *   <li>{@code .size}-suffix filters via {@link jakarta.persistence.criteria.CriteriaBuilder#size}.</li>
  *   <li>Subquery filters (inSubquery / notInSubquery) via {@link jakarta.persistence.criteria.Subquery}.</li>
