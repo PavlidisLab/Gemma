@@ -266,6 +266,18 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- Phase 3 first-wave: Flyway-managed schema versioning. Scope is `test` for now; the
+             H2 path (BaseDatabaseTest) is the only consumer of these migrations. Production
+             MySQL wiring is the follow-on session (see FLYWAY_PROD_FOLLOWUP.md) and will pull
+             flyway-core + flyway-mysql into runtime scope. H2 is supported directly by
+             flyway-core (no separate flyway-database-h2 module exists). -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+            <version>${flyway.version}</version>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
 </project>
