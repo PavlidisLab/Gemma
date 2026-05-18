@@ -30,6 +30,14 @@ public class DatabaseSchemaPopulator extends CompositeDatabasePopulator {
         ResourceDatabasePopulator rdp = new ResourceDatabasePopulator() {
             @Override
             public void populate( Connection connection ) {
+                // Phase 2 multi-context guard: index creation + ACL seed INSERTs must not re-run on
+                // the second ApplicationContext (would explode with duplicate-key / duplicate-index
+                // errors). The InitialDataPopulator that runs immediately after has the same
+                // guard, so the entire schema-extras bootstrap is a once-per-JVM affair.
+                if ( !TestBootstrapState.claimSchemaExtras() ) {
+                    log.info( "Schema extras (ACLs, indices, additional tables) already populated in this JVM; skipping." );
+                    return;
+                }
                 log.info( "Populating ACLs, indices, additional tables, etc..." );
                 super.populate( connection );
             }

@@ -1,5 +1,6 @@
 package ubic.gemma.persistence.hibernate;
 
+import lombok.extern.apachecommons.CommonsLog;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.springframework.beans.factory.DisposableBean;
@@ -7,6 +8,7 @@ import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
+import ubic.gemma.persistence.initialization.TestBootstrapState;
 
 import javax.sql.DataSource;
 import java.io.IOException;
@@ -33,6 +35,7 @@ import java.util.Properties;
  *
  * @author poirigui
  */
+@CommonsLog
 public class HibernateSessionFactoryBean
         implements FactoryBean<SessionFactory>, InitializingBean, DisposableBean {
 
@@ -82,6 +85,23 @@ public class HibernateSessionFactoryBean
             }
         }
         cfg.addProperties( this.hibernateProperties );
+        // Phase 2 multi-context guard: only the FIRST SessionFactory built in this JVM is
+        // allowed to materialize the schema via hbm2ddl.auto=create/create-drop/update. Later
+        // SessionFactories (which Spring's TestContext cache builds whenever @ContextConfiguration
+        // shape differs) would otherwise drop the schema out from under the first
+        // SessionFactory's still-cached entity persisters, manifesting as
+        // SQLGrammarException("Table 'gemdtest.X' doesn't exist") on the original context once
+        // the cache rotates. We force hbm2ddl=none on the second-and-later boot so the test DB,
+        // schema, and seed data all stay intact.
+        String requestedHbm2ddl = cfg.getProperty( "hibernate.hbm2ddl.auto" );
+        boolean wantsCreate = requestedHbm2ddl != null
+                && ( requestedHbm2ddl.startsWith( "create" ) || "update".equals( requestedHbm2ddl ) );
+        if ( wantsCreate && !TestBootstrapState.claimSchemaMaterialization() ) {
+            log.info( "Schema already materialized by an earlier ApplicationContext in this JVM; "
+                    + "downgrading hibernate.hbm2ddl.auto from '" + requestedHbm2ddl + "' to 'none' "
+                    + "for this SessionFactory to avoid wiping the live schema." );
+            cfg.setProperty( "hibernate.hbm2ddl.auto", "none" );
+        }
         this.sessionFactory = cfg.buildSessionFactory();
     }
 

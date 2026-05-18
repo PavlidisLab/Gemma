@@ -32,6 +32,14 @@ public class InitialDataPopulator extends CompositeDatabasePopulator {
 
     @Override
     public void populate( Connection connection ) throws SQLException {
+        // Phase 2 multi-context guard: every Spring ApplicationContext drags a fresh
+        // dataSourceInitializer through the bean factory, but the underlying gemdtest DB is a
+        // process-wide singleton. Seed data must be inserted exactly once per JVM or we hit
+        // primary-key collisions on the second context. See TestBootstrapState.
+        if ( !TestBootstrapState.claimDataSeeding() ) {
+            log.info( "Initial seed data already inserted by an earlier ApplicationContext in this JVM; skipping." );
+            return;
+        }
         if ( slim ) {
             log.info( "Populating initial slim data..." );
         } else {
