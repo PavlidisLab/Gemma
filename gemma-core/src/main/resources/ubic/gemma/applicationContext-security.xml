@@ -82,27 +82,23 @@
 
     <!--- global method security configuration -->
 
-    <s:global-method-security run-as-manager-ref="runAsManager" secured-annotations="enabled"
-                              pre-post-annotations="enabled" access-decision-manager-ref="accessDecisionManager"
-                              order="1">
-        <s:expression-handler ref="securityExpressionHandler"/>
-
-        <!-- these filters are declared here or in gsec's applicationContext-acl.xml -->
-        <s:after-invocation-provider ref="afterAclReadQuiet"/>
-        <s:after-invocation-provider ref="afterAclRead"/>
-        <s:after-invocation-provider ref="afterAclCollectionRead"/>
-        <s:after-invocation-provider ref="afterAclCompositeSequenceCollectionRead"/>
-        <s:after-invocation-provider ref="afterAclDataVectorCollectionRead"/>
-        <s:after-invocation-provider ref="afterAclMyDataRead"/>
-        <s:after-invocation-provider ref="afterAclMyPrivateDataRead"/>
-        <s:after-invocation-provider ref="afterAclValueObjectCollection"/>
-        <s:after-invocation-provider ref="afterAclValueObjectMap"/>
-        <s:after-invocation-provider ref="afterAclValueObject"/>
-        <s:after-invocation-provider ref="afterAclMapRead"/>
-        <s:after-invocation-provider ref="afterAclMapValuesRead"/>
-        <s:after-invocation-provider ref="afterAclStreamRead"/>
-        <s:after-invocation-provider ref="postInvocationAdviceProvider"/><!-- for @Post... -->
-    </s:global-method-security>
+    <!-- Renovations Phase 3: <s:global-method-security> moved to Java config in
+         ubic.gemma.core.security.MethodSecurityConfig (picked up by the component scan over
+         ubic.gemma.core). That class:
+           - uses @EnableGlobalMethodSecurity(securedEnabled=true, prePostEnabled=true, order=1)
+             — the legacy AccessDecisionManager + AfterInvocationManager + RunAsManager stack,
+             same shape as the deleted XML namespace.
+           - overrides createExpressionHandler() to wire AclPermissionEvaluator + RoleHierarchy
+             into the DefaultMethodSecurityExpressionHandler deterministically — the XML
+             <s:expression-handler> child was not reliably doing this, which is why
+             @PreAuthorize("hasPermission(...)") silently failed under the namespace.
+           - overrides accessDecisionManager() / runAsManager() to return the existing beans
+             (accessDecisionManager, runAsManager — defined in gsec's applicationContext-gsec.xml
+             and this file respectively).
+           - overrides afterInvocationManager() to aggregate the same 14 after-invocation
+             provider beans listed below (afterAclReadQuiet, afterAclRead, ...) via a
+             (deprecated-but-functional) AfterInvocationProviderManager. -->
+    <!-- removed: <s:global-method-security ...> with 14 <s:after-invocation-provider> children -->
 
     <!-- Enable AspectJ autoproxy -->
     <aop:aspectj-autoproxy/>

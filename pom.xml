@@ -276,11 +276,14 @@
 			<artifactId>aspectjweaver</artifactId>
 			<version>1.9.25.1</version>
 		</dependency>
+		<!-- Renovations Phase 3: scope promoted from runtime to compile so MethodSecurityConfig
+		     can transitively reach AopInfrastructureBean (implemented by
+		     GlobalMethodSecurityConfiguration's MethodInterceptor return type). Already on the
+		     runtime classpath; this is a scope adjustment, not a new dependency. -->
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-aop</artifactId>
 			<version>${spring.version}</version>
-			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
@@ -299,11 +302,14 @@
 			<artifactId>spring-security-acl</artifactId>
 			<version>${spring.security.version}</version>
 		</dependency>
+		<!-- Renovations Phase 3: scope promoted from runtime to compile so MethodSecurityConfig
+		     (Java-config replacement for <s:global-method-security>) can reference
+		     @EnableGlobalMethodSecurity and GlobalMethodSecurityConfiguration at compile time.
+		     The artifact was already on the runtime classpath for the XML namespace handler. -->
 		<dependency>
 			<groupId>org.springframework.security</groupId>
 			<artifactId>spring-security-config</artifactId>
 			<version>${spring.security.version}</version>
-			<scope>runtime</scope>
 		</dependency>
 
 		<!-- Database -->
