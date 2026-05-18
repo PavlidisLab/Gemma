@@ -45,7 +45,9 @@ mvn -P fast -Denforcer.skip=true install -DskipTests=true:
 ## Session-5 commits (on `phase2`)
 
 ```
-<this commit>   PHASE_2_HANDOFF.md: refresh after BLOB-HQL + Subquery FQN + EE @After
+<this commit>   PHASE_2_HANDOFF.md: refresh after cellIds delimiter fix
+c0719e0213      Phase 2: fix SingleCellDimension.cellIds delimiter mismatch + CompressedStringListType stream impl
+1e090a2470      PHASE_2_HANDOFF.md: refresh after BLOB-HQL + Subquery FQN + EE @After
 d660c34b63      Phase 2: ExpressionExperimentDaoTest @After re-resolves managed EE before remove
 5cb418b360      Phase 2: Subquery#toString uses FQN — fixes 4 EE DAO test methods
 2b0028a4e5      Phase 2: BinaryFunctionContributor + getBioAssayDimensions HQL rewrite
@@ -259,12 +261,21 @@ React port — keep it healthy.
       in session 5 (commit `1a49a43435`): flush ordering on the
       discriminator-aware UPDATE; merge-vs-update semantics in
       service tests; re-resolve managed Statement after merge cascade.
-    - `SingleCellExpressionExperimentServiceTest` — **5 of 7 fixed**:
-      4 via the TupleTransformer migration (`1d01e08308`), 1 via the
-      BinaryFunctionContributor (`2b0028a4e5`). Remaining:
-      `getSingleCellDimensionWithoutCellIds` result shape (looks like
-      a `group_concat` produced one joined string instead of a
-      100-element list); `testReplaceVectors` data-state assertion.
+    - `SingleCellExpressionExperimentServiceTest` — **5 of 7 fixed**;
+      remaining 2 are now deeper than the symptoms first suggested.
+      Closed via: TupleTransformer migration (`1d01e08308`),
+      BinaryFunctionContributor (`2b0028a4e5`), and the cellIds
+      delimiter fix (`c0719e0213` — Phase-2 port hardcoded `"\t"` in
+      one of two CompressedStringListType instances, where the hbm.xml
+      uses the 2-char `"\n"` literal; rewrote `decompressToStream` off
+      Apache commons-lang3 Streams.of(Scanner) which wasn't iterating
+      tokens correctly under 3.18.0). Remaining: the same test that
+      drove the delimiter fix now fails further down on
+      `streamSingleCellDataVectors` — `SingleCellDataVectorInitializer`
+      gets raw `Object[]` instead of the entity-shaped tuple it
+      expects, likely a HB6 NativeQuery + aliasToBean interaction
+      (still an Initializer / TupleTransformer alias plumbing detail).
+      `testReplaceVectors` data-state assertion is the other one.
     - ~~`ExpressionExperimentDaoTest` (~14 methods)~~ — **mostly fixed**:
       now 55 tests, 0 failures, 1 error. The getBioAssayDimensions HQL
       rewrite (`2b0028a4e5`) unstuck the `@After.removeFixtures` path
