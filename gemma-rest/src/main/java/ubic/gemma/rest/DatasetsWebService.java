@@ -286,7 +286,12 @@ public class DatasetsWebService {
             List<Long> idsSlice = sliceIds( ids, offset, limit );
 
             // now highlight the results in the slice
-            List<SearchResult<ExpressionExperiment>> results = datasetArgService.getResultsForSearchQuery( query, null, warnings );
+            // Phase 2: search subsystem is stubbed (Lucene/Hibernate Search are gone), so we pass a
+            // no-op Highlighter rather than null. Preserves the "highlighter requested" intent in the
+            // SearchContext — search-stub returns empty highlights regardless. Will be wired to a real
+            // highlighter when the search subsystem is rebuilt.
+            ubic.gemma.core.search.Highlighter highlighter = ( value, field ) -> java.util.Collections.emptyMap();
+            List<SearchResult<ExpressionExperiment>> results = datasetArgService.getResultsForSearchQuery( query, highlighter, warnings );
             Map<Long, SearchResult<ExpressionExperiment>> resultById = results.stream().collect( Collectors.toMap( SearchResult::getResultId, e -> e ) );
 
             List<ExpressionExperimentValueObject> vos = expressionExperimentService.loadValueObjectsByIdsWithRelationsAndCache( idsSlice );
