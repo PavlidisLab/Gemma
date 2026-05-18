@@ -162,6 +162,54 @@
 				<artifactId>httpcore</artifactId>
 				<version>4.4.16</version>
 			</dependency>
+
+			<!--
+			Phase 2 Step 9: dependencyConvergence pins. Hibernate 6, Spring 6, Spring Security 6,
+			Jersey 3 jakarta, swagger-jakarta and gemma each pull slightly different versions of
+			the same handful of transitives. Pin to the highest-seen version per artifact (Maven's
+			"nearest wins" default doesn't converge, hence the enforcer rule). Re-validate when
+			any of those parents bump.
+			-->
+			<dependency>
+				<groupId>io.micrometer</groupId>
+				<artifactId>micrometer-commons</artifactId>
+				<version>1.13.11</version>
+			</dependency>
+			<dependency>
+				<groupId>io.micrometer</groupId>
+				<artifactId>micrometer-observation</artifactId>
+				<version>1.13.11</version>
+			</dependency>
+			<dependency>
+				<groupId>jakarta.xml.bind</groupId>
+				<artifactId>jakarta.xml.bind-api</artifactId>
+				<version>4.0.2</version>
+			</dependency>
+			<dependency>
+				<groupId>org.glassfish.jaxb</groupId>
+				<artifactId>jaxb-runtime</artifactId>
+				<version>4.0.5</version>
+			</dependency>
+			<dependency>
+				<groupId>javax.cache</groupId>
+				<artifactId>cache-api</artifactId>
+				<version>1.1.1</version>
+			</dependency>
+			<dependency>
+				<groupId>com.fasterxml.jackson.core</groupId>
+				<artifactId>jackson-core</artifactId>
+				<version>${jackson.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.fasterxml.jackson.module</groupId>
+				<artifactId>jackson-module-jakarta-xmlbind-annotations</artifactId>
+				<version>2.19.2</version>
+			</dependency>
+			<dependency>
+				<groupId>org.antlr</groupId>
+				<artifactId>antlr4-runtime</artifactId>
+				<version>4.13.2</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 	<dependencies>
@@ -579,13 +627,14 @@
 									<version>[17,)</version>
 								</requireJavaVersion>
 								<!--
-								Renovations: dependencyConvergence is disabled while we churn through the
-								Spring 4 → 5 + Hibernate 4 → 5 + Lucene 3 → 5 + baseCode-fork upgrade. The
-								renovated baseCode pulls older commons-/httpcomponents versions than Gemma's
-								direct declarations; that's expected during the climb. Re-enable once the
-								whole stack is stable.
+								Re-enabled in Phase 2 Step 9 once the Spring 6 / Hibernate 6 / Jersey 3 /
+								jakarta climb settled. The 8 transitive-version overrides live in the
+								<dependencyManagement> block above (micrometer, jaxb, jakarta.xml.bind,
+								jackson-core, jackson-module-jakarta-xmlbind-annotations, javax.cache,
+								antlr4-runtime). Re-validate when any of Spring / Hibernate / Jersey /
+								Swagger bumps a minor version.
 								-->
-								<!--<dependencyConvergence/>-->
+								<dependencyConvergence/>
 							</rules>
 						</configuration>
 					</execution>
