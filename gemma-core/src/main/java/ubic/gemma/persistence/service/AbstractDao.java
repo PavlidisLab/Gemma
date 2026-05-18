@@ -415,15 +415,6 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     public void update( T entity ) {
         Assert.notNull( entity.getId(), "Cannot update a transient entity." );
         sessionFactory.getCurrentSession().merge( entity );
-        // Hibernate 6 made session.merge() defer cascaded inserts of new child entities until the
-        // next session flush. AclAdvice fires @AfterReturning on this DAO method (before tx
-        // commit) and walks the just-merged tree to create ACLs for each Securable; transient
-        // children that got attached to the parent will silently be skipped because their id is
-        // still null at advice time. Force a flush here so cascade-pending inserts materialize
-        // and child ids are assigned before AclAdvice runs. Paired with the idempotent
-        // create() above so that ExpressionPersister-style flows where the same entity is
-        // create()d explicitly after also being cascaded keep working.
-        sessionFactory.getCurrentSession().flush();
         if ( log.isTraceEnabled() ) {
             log.trace( String.format( "Updated %s.", formatEntity( entity ) ) );
         }
