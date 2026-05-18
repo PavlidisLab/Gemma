@@ -101,6 +101,17 @@ public class AclAdvice extends BaseAclAdvice {
         // make sure that result sets have the ACLs created and setup to inherit those from the DEA
         if ( object instanceof DifferentialExpressionAnalysis ) {
             for ( ExpressionAnalysisResultSet resultSet : ( ( DifferentialExpressionAnalysis ) object ).getResultSets() ) {
+                // Renovations Phase 3: under the AclEventListener path this special case fires
+                // during DEA's PostInsertEvent — DEA's cascaded ResultSets haven't been inserted
+                // yet so their ids are null. Skip them here; each ResultSet's own
+                // PostInsertEvent will trigger ACL creation, and the listener's
+                // locateParentAcl(SecuredChild) walks ResultSet.getSecurityOwner() back to the
+                // now-persisted DEA to set the parent inheritance correctly. The pre-renovation
+                // AOP advice path is unaffected: it fires @AfterReturning after the tx-scoped
+                // flush has assigned ids, so ResultSets reach this code with non-null ids.
+                if ( resultSet.getId() == null ) {
+                    continue;
+                }
                 ObjectIdentity rsOi = makeObjectIdentity( resultSet );
                 MutableAcl rsAcl;
                 try {
