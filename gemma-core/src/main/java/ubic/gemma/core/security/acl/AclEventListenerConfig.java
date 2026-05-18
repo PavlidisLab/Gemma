@@ -53,7 +53,7 @@ public class AclEventListenerConfig implements InitializingBean {
 
     @Override
     public void afterPropertiesSet() {
-        AclEventListener listener = new AclEventListener( aclAdvice );
+        AclEventListener listener = new AclEventListener( aclAdvice, sessionFactory );
         SessionFactoryImplementor sfi = sessionFactory.unwrap( SessionFactoryImplementor.class );
         EventListenerRegistry registry = sfi.getServiceRegistry().getService( EventListenerRegistry.class );
         if ( registry == null ) {

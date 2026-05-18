@@ -107,16 +107,12 @@
     <!-- Enable AspectJ autoproxy -->
     <aop:aspectj-autoproxy/>
 
-    <!-- Renovations Phase 3 (in progress): the Hibernate PostInsert/PostDelete event listener
-         (gemma.gsec.acl.AclEventListener, registered by AclEventListenerConfig) runs alongside
-         this AOP advice in dual-fire mode. The listener proves out the new path; the advice
-         supplies the cascade-walk-based parent ACL discovery that SecuredChildren without a
-         populated securityOwner currently rely on. Cutover to listener-only is gated on
-         populating securityOwner across all SecuredChild persistence paths (notably
-         ExpressionPersister) OR adding persister-metadata-based parent discovery to the
-         listener. Both forms call into BaseAclAdvice.addOrUpdateAcl which reads-then-updates
-         idempotently, so dual fire is safe (later fire upgrades parent reference; no duplicate
-         creates). -->
+    <!-- Renovations Phase 3 cutover (probing): the Hibernate PostInsert/PostDelete event
+         listener (gemma.gsec.acl.AclEventListener, registered by AclEventListenerConfig)
+         carries ACL maintenance on its own with a thread-local parent stash to discover
+         parent OIDs for SecuredChildren whose securityOwner isn't populated. The AOP advice
+         wiring below is commented out as a cutover probe — if regressions surface, restore
+         to dual-fire mode by uncommenting.
     <aop:config>
         <aop:aspect id="aclAspect" ref="aclAdvice" order="4">
             <aop:after-returning method="doAclAdvice"
@@ -124,6 +120,7 @@
                                  returning="retValue"/>
         </aop:aspect>
     </aop:config>
+    -->
 
 
     <!-- filters (gemma-specific) -->
