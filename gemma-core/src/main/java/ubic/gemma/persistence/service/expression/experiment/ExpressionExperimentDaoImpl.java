@@ -4162,6 +4162,7 @@ public class ExpressionExperimentDaoImpl
         Assert.isTrue( !existingNames.contains( newQt.getName() ),
                 "There is already a quantitation type named " + newQt.getName() + " in " + ee + "." );
         checkVectors( ee, newQt, newVectors );
+        ee = ensureEeInSession( ee );
         if ( newQt.getIsPreferred() ) {
             for ( QuantitationType qt : ee.getQuantitationTypes() ) {
                 if ( qt.getIsPreferred() && !qt.equals( newQt ) ) {
@@ -4187,6 +4188,7 @@ public class ExpressionExperimentDaoImpl
 
     private int removeAllRawDataVectors( ExpressionExperiment ee, boolean keepDimensions ) {
         Assert.notNull( ee.getId(), "ExpressionExperiment must be persistent." );
+        ee = ensureEeInSession( ee );
         Collection<QuantitationType> qtsToRemove;
         Collection<BioAssayDimension> dimensions;
         if ( Hibernate.isInitialized( ee.getRawExpressionDataVectors() ) ) {
@@ -4241,6 +4243,7 @@ public class ExpressionExperimentDaoImpl
     public int removeRawDataVectors( ExpressionExperiment ee, QuantitationType qt, boolean keepDimension ) {
         Assert.notNull( ee.getId(), "ExpressionExperiment must be persistent." );
         Assert.notNull( qt.getId(), "Quantitation type must be persistent" );
+        ee = ensureEeInSession( ee );
         Collection<BioAssayDimension> dimensions;
         if ( Hibernate.isInitialized( ee.getRawExpressionDataVectors() ) ) {
             Assert.isTrue( ee.getQuantitationTypes().contains( qt ) || ee.getRawExpressionDataVectors().stream().anyMatch( v -> v.getQuantitationType().equals( qt ) ),
@@ -4294,6 +4297,7 @@ public class ExpressionExperimentDaoImpl
         Assert.isTrue( ee.getQuantitationTypes().contains( qt ) || ee.getRawExpressionDataVectors().stream().anyMatch( v -> v.getQuantitationType().equals( qt ) ),
                 "The provided quantitation type must belong to at least one vector of the experiment." );
         checkVectors( ee, qt, vectors );
+        ee = ensureEeInSession( ee );
         Set<BioAssayDimension> dimensions = ee.getRawExpressionDataVectors().stream()
                 .filter( v -> v.getQuantitationType().equals( qt ) )
                 .map( BulkExpressionDataVector::getBioAssayDimension )
@@ -4403,6 +4407,7 @@ public class ExpressionExperimentDaoImpl
         Assert.notNull( qt.getId(), "Quantitation type must be persistent." );
         Assert.isTrue( qt.getIsMaskedPreferred(), "QuantitationType must be marked as masked preferred." );
         checkVectors( ee, qt, vectors );
+        ee = ensureEeInSession( ee );
         ee.getQuantitationTypes().add( qt );
         ee.getProcessedExpressionDataVectors().addAll( vectors );
         ee.setNumberOfDataVectors( vectors.size() );
@@ -4417,6 +4422,7 @@ public class ExpressionExperimentDaoImpl
 
     private int removeProcessedDataVectors( ExpressionExperiment ee, boolean keepDimensions ) {
         Assert.notNull( ee.getId(), "ExpressionExperiment must be persistent." );
+        ee = ensureEeInSession( ee );
 
         Collection<QuantitationType> qtsToRemove;
         Collection<BioAssayDimension> dimensions;
@@ -4484,16 +4490,7 @@ public class ExpressionExperimentDaoImpl
         Assert.notNull( newQt.getId(), "Quantitation type must be persistent." );
         Assert.isTrue( newQt.getIsMaskedPreferred(), "QuantitationType must be marked as masked preferred." );
         checkVectors( ee, newQt, vectors );
-        // Hibernate 6: if the caller passes a detached EE, its PersistentSet of processedExpressionDataVectors
-        // still has a storedSnapshot with the original (about-to-be-bulk-deleted) vector references.
-        // The trailing merge() below would then iterate that snapshot and trip
-        // "EntityNotFoundException: No row with the given identifier exists" on the now-gone rows.
-        // Re-resolve the EE through the session up front so subsequent mutations + merge run against
-        // a fresh managed instance with no stale collection snapshot.
-        ExpressionExperiment managed = ( ExpressionExperiment ) getSessionFactory().getCurrentSession().get( ExpressionExperiment.class, ee.getId() );
-        if ( managed != null ) {
-            ee = managed;
-        }
+        ee = ensureEeInSession( ee );
         Set<BioAssayDimension> dimensions = ee.getProcessedExpressionDataVectors().stream()
                 .map( BulkExpressionDataVector::getBioAssayDimension )
                 .collect( Collectors.toSet() );
@@ -4525,6 +4522,30 @@ public class ExpressionExperimentDaoImpl
             log.info( "Replaced " + deletedVectors + " from " + ee + " for " + newQt );
         }
         return deletedVectors;
+    }
+
+    /**
+     * Re-resolve the given ExpressionExperiment through the current Hibernate session.
+     * <p>
+     * Hibernate 6 is much stricter about merging detached aggregates. If the caller hands us
+     * a detached EE, the PersistentSet snapshots on its collections (bioAssays,
+     * rawExpressionDataVectors, processedExpressionDataVectors, quantitationTypes, ...) may
+     * reference rows that have since been bulk-deleted or otherwise changed, and the merge()
+     * underneath update() will throw EntityNotFoundException ("No row with the given identifier
+     * exists") while walking those snapshots. Re-resolving through session.get() returns the
+     * managed instance with fresh collection state attached to the active session, so subsequent
+     * mutations + merge run cleanly. Same shape as the {@link #replaceProcessedDataVectors} fix.
+     * <p>
+     * Returns the original entity unchanged if the session does not currently know about it
+     * (e.g. the EE has been removed in the same transaction); callers that need a hard guarantee
+     * should assert separately.
+     */
+    private ExpressionExperiment ensureEeInSession( ExpressionExperiment ee ) {
+        if ( ee == null || ee.getId() == null ) {
+            return ee;
+        }
+        ExpressionExperiment managed = getSessionFactory().getCurrentSession().get( ExpressionExperiment.class, ee.getId() );
+        return managed != null ? managed : ee;
     }
 
     private void removeQts( ExpressionExperiment ee, Collection<QuantitationType> qts ) {

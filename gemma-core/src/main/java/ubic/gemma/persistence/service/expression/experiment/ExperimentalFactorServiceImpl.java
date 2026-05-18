@@ -85,6 +85,24 @@ public class ExperimentalFactorServiceImpl
         if ( removedAnalysis > 0 ) {
             log.info( String.format( "Removed %d analyses associated to %d factors", removedAnalysis, experimentalFactors.size() ) );
         }
+        // detach each factor from its experimental design (mirrors the single-arg remove()):
+        // HB6 merge() on a detached EE would otherwise cascade through the design's
+        // experimentalFactors PersistentSet and trip EntityNotFoundException on the just-deleted
+        // rows. Removing now keeps the in-session collection consistent with what's about to be
+        // deleted, and parallel removals from BioMaterials are handled by per-factor cascade in
+        // the DAO layer.
+        for ( ExperimentalFactor ef : experimentalFactors ) {
+            ExperimentalDesign ed = ef.getExperimentalDesign();
+            if ( ed != null ) {
+                ed.getExperimentalFactors().remove( ef );
+            }
+            Collection<BioMaterial> bioMaterials = bioMaterialService.findByFactor( ef );
+            for ( BioMaterial bm : bioMaterials ) {
+                if ( bm.getFactorValues().removeAll( ef.getFactorValues() ) ) {
+                    log.info( "Removed factor value(s) of " + ef + " from " + bm );
+                }
+            }
+        }
         super.remove( experimentalFactors );
     }
 

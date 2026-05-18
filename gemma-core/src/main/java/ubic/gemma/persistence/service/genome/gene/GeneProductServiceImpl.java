@@ -122,6 +122,14 @@ public class GeneProductServiceImpl extends AbstractVoEnabledService<GeneProduct
                 }
             }
             gp.getAccessions().removeAll( toRelease );
+            // detach from the parent Gene's products collection. Gene.products is mapped
+            // cascade="all" so HB6 merge() on a detached Gene later in the same transaction
+            // will otherwise cascade through the snapshot of this collection and throw
+            // EntityNotFoundException on the just-deleted GeneProduct row.
+            Gene parent = gp.getGene();
+            if ( parent != null ) {
+                parent.getProducts().remove( gp );
+            }
             this.geneProductDao.remove( gp );
 
         }
