@@ -149,10 +149,15 @@ public class ExpressionExperimentDaoImpl
                 .collect( Collectors.toSet() );
         // Hibernate 6: SessionFactory.getClassMetadata is gone. The UserType is configured via XML
         // for the SingleCellDimension.cellIds property; instantiate directly with the same parameters
-        // so we can call its compress()/decompress() helpers from this DAO.
+        // so we can call its compress()/decompress() helpers from this DAO. The delimiter MUST match
+        // the one in SingleCellDimension.hbm.xml — a literal backslash-n (two characters); see the
+        // FIXME comment in that file (issue #1365). Pre-Phase-2 this was the same 2-char value; the
+        // initial Phase-2 port mistakenly hardcoded "\t" (tab), so persist (via Hibernate-managed
+        // UserType, 2-char delimiter) and read-via-DAO (1-char tab) disagreed and decompressToStream
+        // produced a single huge token instead of the expected list.
         CompressedStringListType t = new CompressedStringListType();
         Properties p = new Properties();
-        p.setProperty( "delimiter", "\t" );
+        p.setProperty( "delimiter", "\\n" );
         t.setParameterValues( p );
         cellIdsUserType = t;
     }

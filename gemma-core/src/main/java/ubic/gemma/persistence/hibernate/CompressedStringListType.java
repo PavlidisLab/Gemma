@@ -172,12 +172,16 @@ public class CompressedStringListType implements UserType<List<String>>, Paramet
     }
 
     public Stream<String> decompressToStream( InputStream gzippedStream ) {
-        try {
-            Scanner scanner = new Scanner( new InputStreamReader( new GZIPInputStream( gzippedStream ), charset ) );
-            scanner.useDelimiter( Pattern.quote( delimiter ) );
-            return Streams.of( scanner ).onClose( scanner::close );
-        } catch ( IOException e ) {
-            throw new HibernateException( e );
-        }
+        // Use decompress() then stream — same memory footprint for the only known caller
+        // (small cell-id lists ~100s of items), and avoids two subtle issues that broke
+        // SingleCellExpressionExperimentServiceTest.testGetSingleCellDimensionWithoutCellIds:
+        //   1. Apache commons-lang3 Streams.of(Scanner) was producing a single-element stream
+        //      (the whole compressed payload) on commons-lang3 3.18.0 — not splitting on the
+        //      Scanner's configured delimiter.
+        //   2. The delimiter parsed from the hbm.xml <param> is whatever Hibernate 6 hands us
+        //      (a literal backslash-n string per the existing FIXME in SingleCellDimension.hbm.xml).
+        //      Pattern.quote round-trip via Scanner has been historically fragile here.
+        // decompress() reuses String.splitByWholeSeparatorPreserveAllTokens which is unambiguous.
+        return decompress( gzippedStream ).stream();
     }
 }
