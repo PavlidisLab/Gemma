@@ -31,7 +31,7 @@ Order: 1 + 3 (design) in parallel first, then 4 against a real write-API, then 2
 | JUnit 4 → 5 | ⏳ todo | Vintage engine for coexistence |
 | hbm.xml → JPA annotations | ⏳ todo | Per-entity, distributable; foundation for Hibernate 6 |
 | Drop dead deps | ⏳ todo | |
-| Re-enable `dependencyConvergence` enforcer | ⏳ todo | Disabled during the Spring 5 climb |
+| Re-enable `dependencyConvergence` enforcer | ✅ Phase 2 Step 9 | Committed `c80975d8d8` on `phase2`; 8 transitive pins in root `<dependencyManagement>` |
 | Bytecode 11 → 17 | ✅ Phase 2 Step 8 | Committed `94b7435766` on `phase2`; Spring 6 ASM handles class file v61 cleanly |
 
 ### Java version
@@ -158,25 +158,31 @@ ticket items closed:
   entities/DAOs/services/caches/link-analysis/CLI/writer); only
   `SampleCoexpression*` (per-EE sample QC) retained.
 - Bytecode 11 → 17 (Step 8, committed `94b7435766`).
+- `applicationContext-security.xml` ported to Spring Security 6's
+  stricter schema; `ShaPasswordEncoder` (removed in SS 5) swapped for
+  `BCryptPasswordEncoder`. Production password verification still
+  needs a `DelegatingPasswordEncoder` migration before the legacy
+  SHA-with-username-salt hashes will verify — flagged in the XML and
+  `UserManagerImpl` comments. Committed `175407d6b8`.
+- `dependencyConvergence` enforcer re-enabled (Step 9, committed
+  `c80975d8d8`). 8 transitive-version pins added to root
+  `<dependencyManagement>`. See `PHASE_2_HANDOFF.md` for the table.
 
 **What's left for Phase 2** (full detail in `PHASE_2_HANDOFF.md`):
 
-- One real bug: `applicationContext-security.xml` line 34's
-  `<s:password-encoder><s:salt-source/></s:password-encoder>` is
-  rejected by Spring Security 6's stricter XML schema (salt-source
-  was removed as a child element back in SS 4).
 - Step 7 integration tier — ~61 `@Category(IntegrationTest)` tests
   need a real MySQL test DB + the failsafe plugin path. Untouched.
-- Broader unit-sweep cleanup — 14 failing test classes in gemma-core
-  that aren't in the smoke set (Mockito mock defaults, FactorValue
-  optimistic-lock, file-lock OS asserts, etc.).
+- Broader unit-sweep cleanup — ~12 failing test classes remaining in
+  gemma-core (FactorValue Hibernate-session-state issues, the
+  SingleCellExpressionExperimentService sweep, plus a few env-pre-
+  existing ones already catalogued: file-lock OS asserts, cellranger).
 - `AbstractCriteriaFilteringVoEnabledDao` subquery and `.size`-suffix
   filters still throw UOE (subclasses can override or use HQL).
 - Null-precedence on `Sort` — JPA Criteria ignores
   `Sort.NullMode.FIRST/LAST`; Hibernate 6 has a vendor extension
   not yet plumbed.
-- Step 9: re-enable `<dependencyConvergence/>` enforcer (8 conflict
-  groups catalogued in the handoff).
+- Production password verification — `BCryptPasswordEncoder` is a
+  placeholder; legacy hashes need a `DelegatingPasswordEncoder` shim.
 
 ### Phase 1b cleanup deferred to future session
 
@@ -186,7 +192,7 @@ ticket items closed:
 - 1 `HibernateSearchException` in `HibernateSearchSourceTest.test`.
 - 1 `AssertionFailure` "null id in `ExpressionExperimentSet`" in `ExpressionExperimentSetDaoTest`.
 - 19 uncategorized failures.
-- Re-enable `dependencyConvergence` enforcer rule. (Pending; Phase 2 Step 9 — see `PHASE_2_HANDOFF.md` for the conflict map.)
+- ~~Re-enable `dependencyConvergence` enforcer rule.~~ Done in Phase 2 Step 9.
 - ~~Bump bytecode 11 → 17.~~ Done in Phase 2 Step 8.
 
 ---
