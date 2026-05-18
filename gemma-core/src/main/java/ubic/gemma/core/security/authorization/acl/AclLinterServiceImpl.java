@@ -1,8 +1,8 @@
 package ubic.gemma.core.security.authorization.acl;
 
+import gemma.gsec.acl.domain.AclGrantedAuthoritySid;
 import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.acl.domain.AclService;
-import org.springframework.security.acls.domain.GrantedAuthoritySid;
 import lombok.extern.apachecommons.CommonsLog;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.NativeQuery;
@@ -493,8 +493,16 @@ public class AclLinterServiceImpl implements AclLinterService {
             Long identifier_ = ( ( Number ) row[1] ).longValue();
             if ( config.isApplyFixes() ) {
                 MutableAcl acl = ( MutableAcl ) aclService.readAclById( new AclObjectIdentity( type, identifier_ ) );
-                acl.insertAce( acl.getEntries().size(), permission, new GrantedAuthoritySid( grantedAuthority ), granting );
+                // gsec's AclImpl.insertAce downcasts the Sid to gsec's AclSid, so we must hand it a
+                // gsec-typed sid instance rather than Spring's stock GrantedAuthoritySid.
+                acl.insertAce( acl.getEntries().size(), permission, new AclGrantedAuthoritySid( grantedAuthority ), granting );
                 aclService.updateAcl( acl );
+                // gsec's AclDaoImpl.convert() mutates the managed AOI's entries collection (clear+re-add)
+                // as part of update(). Because the entries mapping has no inverse="true", Hibernate would
+                // otherwise issue UPDATEs to acl_entry.acl_object_identity on the next flush — but those
+                // rows have already been written through JdbcMutableAclService, so the UPDATEs see 0 rows
+                // and throw StaleStateException. Clearing the session drops the dirty collection state.
+                sessionFactory.getCurrentSession().clear();
                 String fixMessage = "Added missing " + aclEntryDescription + ".";
                 log.info( formatEntity( clazz, identifier_ ) + ": " + fixMessage );
                 result.add( new LintResult( clazz, identifier_, fixMessage, true ) );

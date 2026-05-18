@@ -79,10 +79,11 @@ public class AclQueryUtilsTest extends BaseSpringContextTest {
     public void testFormNativeAclJoinClause() {
         assertThat( formNativeAclJoinClause( "EE.ID" ) )
                 .startsWith( " " )
-                .contains( "join ACLOBJECTIDENTITY aoi" )
-                .contains( "aoi.OBJECT_CLASS" )
-                .contains( "aoi.OBJECT_ID = EE.ID" )
-                .doesNotContain( "join ACLENTRY ace on (aoi.ID = ace.OBJECTIDENTITY_FK)" );
+                .contains( "join acl_object_identity aoi" )
+                .contains( "join acl_class aoi_cls" )
+                .contains( "aoi_cls.class = :" )
+                .contains( "aoi.object_id_identity = EE.ID" )
+                .doesNotContain( "left join acl_entry ace" );
     }
 
     @Test
@@ -90,10 +91,11 @@ public class AclQueryUtilsTest extends BaseSpringContextTest {
         this.runAsAnonymous();
         assertThat( formNativeAclJoinClause( "EE.ID" ) )
                 .startsWith( " " )
-                .contains( "join ACLOBJECTIDENTITY aoi" )
-                .contains( "aoi.OBJECT_CLASS" )
-                .contains( "aoi.OBJECT_ID = EE.ID" )
-                .contains( "join ACLENTRY ace on (aoi.ID = ace.OBJECTIDENTITY_FK)" );
+                .contains( "join acl_object_identity aoi" )
+                .contains( "join acl_class aoi_cls" )
+                .contains( "aoi_cls.class = :" )
+                .contains( "aoi.object_id_identity = EE.ID" )
+                .contains( "left join acl_entry ace on (aoi.id = ace.acl_object_identity)" );
     }
 
     @Test
@@ -106,9 +108,9 @@ public class AclQueryUtilsTest extends BaseSpringContextTest {
         this.runAsAnonymous();
         assertThat( formNativeAclRestrictionClause( ( SessionFactoryImplementor ) sessionFactory ) )
                 .startsWith( " " )
-                .contains( "(ace.MASK & 1) <> 0" )
-                .contains( "ace.SID_FK" )
-                .contains( "select sid.ID from ACLSID sid where sid.GRANTED_AUTHORITY = 'IS_AUTHENTICATED_ANONYMOUSLY'" );
+                .contains( "(ace.mask & 1) <> 0" )
+                .contains( "ace.sid in" )
+                .contains( "select sid.id from acl_sid sid where sid.principal = 0 and sid.sid = 'IS_AUTHENTICATED_ANONYMOUSLY'" );
     }
 
     @Test

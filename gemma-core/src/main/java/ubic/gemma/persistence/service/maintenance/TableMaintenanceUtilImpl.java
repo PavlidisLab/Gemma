@@ -105,14 +105,18 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
      * <p>
      * If no ACL entries exist for the anonymous SID, 0 is returned which effectively grants no permission at all.
      */
+    // Targets Spring Security 6's canonical four-table ACL schema. The AOI's class name lives in
+    // acl_class.class (joined through acl_object_identity.object_id_class), and acl_sid uses a
+    // principal=0/1 discriminator with the SID name in the `sid` column.
     private static final String SELECT_ANONYMOUS_MASK =
-            "coalesce((select BIT_OR(ACE.MASK) "
-                    + "from ACLOBJECTIDENTITY AOI "
-                    + "join ACLENTRY ACE on ACE.OBJECTIDENTITY_FK = AOI.ID "
-                    + "where AOI.OBJECT_CLASS = 'ubic.gemma.model.expression.experiment.ExpressionExperiment' "
-                    + "and AOI.OBJECT_ID = I.ID "
-                    + "and ACE.SID_FK = (select ACLSID.ID from ACLSID where ACLSID.GRANTED_AUTHORITY = 'IS_AUTHENTICATED_ANONYMOUSLY') "
-                    + "group by AOI.ID), 0)";
+            "coalesce((select BIT_OR(ACE.mask) "
+                    + "from acl_object_identity AOI "
+                    + "join acl_class AOC on AOC.id = AOI.object_id_class "
+                    + "join acl_entry ACE on ACE.acl_object_identity = AOI.id "
+                    + "where AOC.class = 'ubic.gemma.model.expression.experiment.ExpressionExperiment' "
+                    + "and AOI.object_id_identity = I.ID "
+                    + "and ACE.sid = (select acl_sid.id from acl_sid where acl_sid.principal = 0 and acl_sid.sid = 'IS_AUTHENTICATED_ANONYMOUSLY') "
+                    + "group by AOI.id), 0)";
 
     /**
      * Clause for selecting a particular {@link ExpressionExperiment}
