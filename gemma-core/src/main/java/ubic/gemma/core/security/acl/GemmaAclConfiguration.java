@@ -194,7 +194,44 @@ public class GemmaAclConfiguration {
 
         @Override
         public MutableAcl updateAcl( MutableAcl acl ) throws NotFoundException {
+            dedupeEntries( acl );
             return delegate.updateAcl( acl );
+        }
+
+        /**
+         * Remove duplicate ACEs (same sid + permission + granting) in-place. Spring Security's
+         * {@code AclImpl.insertAce} doesn't dedupe and {@code JdbcMutableAclService.updateAcl}
+         * writes whatever it's given. gsec's pre-migration {@code AclDaoImpl.update} deduplicated
+         * implicitly via {@code Set<AclEntry>} with a content-based equals on
+         * (granting, mask, sid); business code (e.g.
+         * {@code SecurityServiceImpl.makeReadableByGroup}) relies on that behaviour to avoid
+         * compounding duplicates on repeated grants. Preserve the contract by deduping here.
+         */
+        private static void dedupeEntries( MutableAcl acl ) {
+            List<org.springframework.security.acls.model.AccessControlEntry> entries =
+                    new java.util.ArrayList<>( acl.getEntries() );
+            java.util.Set<String> seen = new java.util.HashSet<>();
+            // Walk from the end so deleteAce(i) doesn't shift indices we still need.
+            for ( int i = entries.size() - 1; i >= 0; i-- ) {
+                org.springframework.security.acls.model.AccessControlEntry ace = entries.get( i );
+                String sidKey;
+                Sid sid = ace.getSid();
+                if ( sid instanceof org.springframework.security.acls.domain.PrincipalSid ) {
+                    sidKey = "P:" + ( ( org.springframework.security.acls.domain.PrincipalSid ) sid ).getPrincipal();
+                } else if ( sid instanceof org.springframework.security.acls.domain.GrantedAuthoritySid ) {
+                    sidKey = "G:" + ( ( org.springframework.security.acls.domain.GrantedAuthoritySid ) sid ).getGrantedAuthority();
+                } else if ( sid instanceof gemma.gsec.acl.domain.AclPrincipalSid ) {
+                    sidKey = "P:" + ( ( gemma.gsec.acl.domain.AclPrincipalSid ) sid ).getPrincipal();
+                } else if ( sid instanceof gemma.gsec.acl.domain.AclGrantedAuthoritySid ) {
+                    sidKey = "G:" + ( ( gemma.gsec.acl.domain.AclGrantedAuthoritySid ) sid ).getGrantedAuthority();
+                } else {
+                    sidKey = sid == null ? "null" : sid.toString();
+                }
+                String key = sidKey + "|" + ace.getPermission().getMask() + "|" + ace.isGranting();
+                if ( !seen.add( key ) ) {
+                    acl.deleteAce( i );
+                }
+            }
         }
 
         // ---- Spring's AclService ------------------------------------------
@@ -216,13 +253,32 @@ public class GemmaAclConfiguration {
 
         @Override
         public Map<ObjectIdentity, Acl> readAclsById( List<ObjectIdentity> objects ) throws NotFoundException {
-            return delegate.readAclsById( normalize( objects ) );
+            return rekey( objects, delegate.readAclsById( normalize( objects ) ) );
         }
 
         @Override
         public Map<ObjectIdentity, Acl> readAclsById( List<ObjectIdentity> objects, List<Sid> sids )
                 throws NotFoundException, UnloadedSidException {
-            return delegate.readAclsById( normalize( objects ), sids );
+            return rekey( objects, delegate.readAclsById( normalize( objects ), sids ) );
+        }
+
+        /**
+         * Re-key the result map by the caller's original ObjectIdentity instances. Spring Security's
+         * lookup builds Map keys using {@link org.springframework.security.acls.domain.ObjectIdentityImpl}
+         * from DB rows; callers passing in gsec's {@link gemma.gsec.acl.domain.AclObjectIdentity} get
+         * back a map whose keys won't satisfy {@code result.get(originalOid)} because of the
+         * type-strict equals on both sides. Map each caller-supplied OID to the Acl that lives under
+         * its normalized counterpart in the delegate's result.
+         */
+        private Map<ObjectIdentity, Acl> rekey( List<ObjectIdentity> originals, Map<ObjectIdentity, Acl> byNormalized ) {
+            Map<ObjectIdentity, Acl> out = new java.util.LinkedHashMap<>( originals.size() );
+            for ( ObjectIdentity oid : originals ) {
+                Acl acl = byNormalized.get( normalize( oid ) );
+                if ( acl != null ) {
+                    out.put( oid, acl );
+                }
+            }
+            return out;
         }
 
         // ---- ObjectIdentity normalization ---------------------------------

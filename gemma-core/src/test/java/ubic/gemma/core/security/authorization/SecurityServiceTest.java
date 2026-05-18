@@ -300,18 +300,28 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         List<AccessControlEntry> entriesAfterDelete = aclAfterReadableAddedDuplicateRemoval.getEntries();
         assertEquals( numberOfAces, entriesAfterDelete.size() );
 
-        // also check that the right ACE check the principals
-        Collection<String> principals = new ArrayList<>();
-        principals.add( "AclGrantedAuthoritySid[GROUP_ADMIN]" );
-        principals.add( "AclGrantedAuthoritySid[GROUP_AGENT]" );
-        principals.add( "AclPrincipalSid[salmonid]" );
-        principals.add( "AclPrincipalSid[salmonid]" );
+        // also check that the right ACE check the principals. Phase 2 migration: ACE sids come back
+        // as Spring Security's PrincipalSid / GrantedAuthoritySid (loaded by BasicLookupStrategy),
+        // not gsec's AclPrincipalSid / AclGrantedAuthoritySid. Compare on the name carried by the
+        // sid via gsec.acl.domain.Sids rather than on toString() of the implementation class.
+        java.util.List<String> expectedNames = new ArrayList<>();
+        expectedNames.add( "G:GROUP_ADMIN" );
+        expectedNames.add( "G:GROUP_AGENT" );
+        expectedNames.add( "P:salmonid" );
+        expectedNames.add( "P:salmonid" );
 
         for ( AccessControlEntry accessControl : entriesAfterDelete ) {
             Sid sid = accessControl.getSid();
-            assertTrue( principals.contains( sid.toString() ) );
-            // remove it once in case found in case of duplicates
-            principals.remove( sid.toString() );
+            String key;
+            String p = gemma.gsec.acl.domain.Sids.principalName( sid );
+            if ( p != null ) {
+                key = "P:" + p;
+            } else {
+                key = "G:" + gemma.gsec.acl.domain.Sids.grantedAuthority( sid );
+            }
+            assertTrue( "Unexpected sid " + sid + " (key " + key + "), remaining expected: " + expectedNames,
+                    expectedNames.contains( key ) );
+            expectedNames.remove( key );
         }
         // clean up the groups
         this.userManager.deleteGroup( groupName );
@@ -329,8 +339,9 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         this.securityService.setOwner( ee, username );
 
         Sid owner = this.securityService.getOwner( ee );
-        assertTrue( owner instanceof AclPrincipalSid );
-        assertEquals( username, ( ( AclPrincipalSid ) owner ).getPrincipal() );
+        String ownerName = gemma.gsec.acl.domain.Sids.principalName( owner );
+        assertNotNull( "Owner sid was " + owner + " (not a principal sid)", ownerName );
+        assertEquals( username, ownerName );
 
     }
 
