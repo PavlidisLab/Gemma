@@ -943,14 +943,12 @@
 	</reporting>
 	<properties>
 		<!--
-		Renovations phase 0: target bytecode 11 (was inherited as Java 8 from pavlab-starter-parent),
-		while running on JDK 17 at build + runtime.
-		Java 17 bytecode (61) is blocked by Spring 3.2's bundled CGLIB/ASM, which cannot read class
-		files newer than ~Java 8. Tests that exercise @Configuration CGLIB proxying (e.g.
-		SearchServiceTest) fail with IllegalArgumentException from spring-asm/cglib.
-		Bump this to 17 once Spring 5+ is in (Phase 1).
+		Renovations Phase 2: target bytecode 17 (was 11 during Phase 0/1; was Java 8 from
+		pavlab-starter-parent originally). Spring 6 requires JDK 17 at build + runtime, and its
+		bundled CGLIB/ASM is class-file-version-current, so we no longer need to hold bytecode
+		below the runtime JVM. Build + runtime JDK is amazon-corretto-17 (see RENOVATIONS.md).
 		-->
-		<maven.compiler.release>11</maven.compiler.release>
+		<maven.compiler.release>17</maven.compiler.release>
 		<!--
 		Renovations Phase 2: Spring 6.1 + Spring Security 6.3 + Hibernate 6.4 + jakarta everywhere.
 		Hibernate Search 5 (and its Lucene 3-era successor lineage) is gutted on this branch — the
