@@ -15,8 +15,21 @@
             http://www.springframework.org/schema/aop
             http://www.springframework.org/schema/aop/spring-aop.xsd">
 
-    <!-- import gsec definitions -->
+    <!-- import gsec definitions (manualAuthenticationService, securityService, etc.) -->
     <import resource="classpath:gemma/gsec/applicationContext-*.xml"/>
+
+    <!-- Override gsec's Hibernate-backed ACL stack (AclServiceImpl/AclDaoImpl) with Spring
+         Security 6's stock JdbcMutableAclService, wired by GemmaAclConfiguration. The schema is
+         already Spring-canonical (migration db.1.33.0.sql for prod, init-acls.sql for test). The
+         @Bean named "aclService" overrides gsec's bean of the same id (later definitions win in
+         Spring's default bean-merge policy).
+
+         We also redefine aclCache + aclAuthorizationStrategy via the @Configuration class. The
+         gsec import contributes those beans first; the @Configuration's @Bean methods produce
+         replacements with the same ids. Permission-evaluator and after-invocation providers (also
+         in gsec's XML) keep working because they reference these bean ids and get the new
+         implementations after the override. -->
+    <bean class="ubic.gemma.core.security.acl.GemmaAclConfiguration"/>
 
     <!-- gsec expects two beans to be defined: userDetailsManager and groupManager -->
     <alias alias="userDetailsManager" name="userManager"/>

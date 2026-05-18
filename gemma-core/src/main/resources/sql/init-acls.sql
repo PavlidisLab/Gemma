@@ -1,54 +1,64 @@
--- The table for this are now created from our hibernate config for ACLs.
-
--- Base SIDs we'll need these (not all used by this script; the others would be inserted automagically when needed, but this
--- gives them predictable ids). Principal names must match init-entities script
-INSERT INTO ACLSID (ID, class, GRANTED_AUTHORITY) VALUES (1, 'GrantedAuthoritySid', 'GROUP_ADMIN');
-INSERT INTO ACLSID (ID, class, GRANTED_AUTHORITY) VALUES (2, 'GrantedAuthoritySid', 'GROUP_USER');
-INSERT INTO ACLSID (ID, class, GRANTED_AUTHORITY) VALUES (3, 'GrantedAuthoritySid', 'GROUP_AGENT');
-INSERT INTO ACLSID (ID, class, GRANTED_AUTHORITY) VALUES (4, 'GrantedAuthoritySid', 'IS_AUTHENTICATED_ANONYMOUSLY');
-INSERT INTO ACLSID (ID, class, PRINCIPAL) VALUES (5, 'PrincipalSid', 'administrator');
-INSERT INTO ACLSID (ID, class, PRINCIPAL) VALUES (6, 'PrincipalSid', 'gemmaAgent');
-
--- Add object identity (OI) for the admin user. There is no parent object, the owner = the administrator; non-inheriting.
-INSERT INTO ACLOBJECTIDENTITY (ID, OBJECT_CLASS, OBJECT_ID, OWNER_SID_FK, ENTRIES_INHERITING)
-VALUES (1, 'ubic.gemma.model.common.auditAndSecurity.User', 1, 1, 0);
-
--- OI for the Admin group (assumes id of this group=1, see init-entities.sql)
-INSERT INTO ACLOBJECTIDENTITY (ID, OBJECT_CLASS, OBJECT_ID, OWNER_SID_FK, ENTRIES_INHERITING)
-VALUES (2, 'ubic.gemma.model.common.auditAndSecurity.UserGroup', 1, 1, 0);
-
--- OI for the Agent group (assumes id of this group=2, see init-entities.sql)
-INSERT INTO ACLOBJECTIDENTITY (ID, OBJECT_CLASS, OBJECT_ID, OWNER_SID_FK, ENTRIES_INHERITING)
-VALUES (3, 'ubic.gemma.model.common.auditAndSecurity.UserGroup', 2, 1, 0);
-
--- OI for the User group (assumes id of group=3, see init-entities.sql)
-INSERT INTO ACLOBJECTIDENTITY (ID, OBJECT_CLASS, OBJECT_ID, OWNER_SID_FK, ENTRIES_INHERITING)
-VALUES (4, 'ubic.gemma.model.common.auditAndSecurity.UserGroup', 3, 1, 0);
-
--- Add object identity (OI) for the agent user. There is no parent object, the owner = the administrator; non-inheriting.
-INSERT INTO ACLOBJECTIDENTITY (ID, OBJECT_CLASS, OBJECT_ID, OWNER_SID_FK, ENTRIES_INHERITING)
-VALUES (5, 'ubic.gemma.model.common.auditAndSecurity.User', 2, 1, 0);
-
 --
--- give GROUP_ADMIN admin priv on everything - we don't need to give it to a specific user.
+-- Seed ACL data for the test database, populating Spring Security 6's canonical
+-- four-table ACL schema (acl_class, acl_sid, acl_object_identity, acl_entry).
 --
--- user 1 = administrator, grant admin to sid=1 (GROUP_ADMIN)
-INSERT INTO ACLENTRY (ID, ACE_ORDER, MASK, GRANTING, OBJECTIDENTITY_FK, SID_FK) VALUES (1, 1, 16, 1, 1, 1);
-INSERT INTO ACLENTRY (ID, ACE_ORDER, MASK, GRANTING, OBJECTIDENTITY_FK, SID_FK) VALUES (2, 1, 16, 1, 2, 1);
-INSERT INTO ACLENTRY (ID, ACE_ORDER, MASK, GRANTING, OBJECTIDENTITY_FK, SID_FK) VALUES (3, 1, 16, 1, 3, 1);
-INSERT INTO ACLENTRY (ID, ACE_ORDER, MASK, GRANTING, OBJECTIDENTITY_FK, SID_FK) VALUES (4, 1, 16, 1, 4, 1);
-INSERT INTO ACLENTRY (ID, ACE_ORDER, MASK, GRANTING, OBJECTIDENTITY_FK, SID_FK) VALUES (5, 1, 16, 1, 5, 1);
+-- Hibernate creates acl_sid, acl_object_identity, and acl_entry from gsec's HBM
+-- mappings on hbm2ddl=create. acl_class is NOT Hibernate-mapped so we create it
+-- here. In prod the equivalent migration is db.1.33.0.sql.
+--
+-- The id-numbering convention is preserved from the legacy init-acls.sql for
+-- continuity with init-entities.sql cross-references.
+--
 
--- Give GROUP_USER READ priv on user group sid=2, oi=2, perm=1. (is this necessary?)
--- insert into ACLENTRY (id, ace_order, mask, granting, audit_success, audit_failure, ACLOBJECTIDENTITY, sid) values (6, 2, 1, 1, 0, 0, 2, 2);
+CREATE TABLE IF NOT EXISTS acl_class (
+  id     BIGINT       NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  class  VARCHAR(255) NOT NULL UNIQUE
+);
 
--- give user administrator admin priv on themselves (in addition to the group privileges)
-INSERT INTO ACLENTRY (ID, ACE_ORDER, MASK, GRANTING, OBJECTIDENTITY_FK, SID_FK) VALUES (7, 2, 16, 1, 1, 5);
+-- Class lookup table -- seed only the classes used by ACL object identities below.
+-- New entity classes get their acl_class row inserted automatically on first
+-- createAcl() by JdbcMutableAclService.
+INSERT INTO acl_class (id, class) VALUES (1, 'ubic.gemma.model.common.auditAndSecurity.User');
+INSERT INTO acl_class (id, class) VALUES (2, 'ubic.gemma.model.common.auditAndSecurity.UserGroup');
 
--- give agent admin priv on himself.(sid=6). (no group privileges)
-INSERT INTO ACLENTRY (ID, ACE_ORDER, MASK, GRANTING, OBJECTIDENTITY_FK, SID_FK) VALUES (8, 2, 16, 1, 5, 6);
+-- Base SIDs. Predictable ids so init-entities.sql + tests can reference them.
+-- principal=0 -> AclGrantedAuthoritySid; principal=1 -> AclPrincipalSid.
+-- Principal names must match init-entities.sql.
+INSERT INTO acl_sid (id, principal, sid) VALUES (1, 0, 'GROUP_ADMIN');
+INSERT INTO acl_sid (id, principal, sid) VALUES (2, 0, 'GROUP_USER');
+INSERT INTO acl_sid (id, principal, sid) VALUES (3, 0, 'GROUP_AGENT');
+INSERT INTO acl_sid (id, principal, sid) VALUES (4, 0, 'IS_AUTHENTICATED_ANONYMOUSLY');
+INSERT INTO acl_sid (id, principal, sid) VALUES (5, 1, 'administrator');
+INSERT INTO acl_sid (id, principal, sid) VALUES (6, 1, 'gemmaAgent');
 
--- start our ID sequences properly.
--- insert into ACLHIBERNATESEQUENCES (sequence_name,sequence_next_hi_value) values ('ACLOBJECTIDENTITY', 1);
--- insert into ACLHIBERNATESEQUENCES (sequence_name,sequence_next_hi_value) values ('ACLENTRY', 1);
+-- Object identities for the admin user, the three baseline groups, and the agent user.
+-- entries_inheriting=0 (no parent ACL -- these are top-level entities).
+-- object_id_class FK lookup: 1 = User, 2 = UserGroup (see acl_class inserts above).
+INSERT INTO acl_object_identity (id, object_id_class, object_id_identity, parent_object, owner_sid, entries_inheriting)
+VALUES (1, 1, 1, NULL, 1, 0);  -- User (administrator, user.id=1)
+INSERT INTO acl_object_identity (id, object_id_class, object_id_identity, parent_object, owner_sid, entries_inheriting)
+VALUES (2, 2, 1, NULL, 1, 0);  -- UserGroup (admin group, group.id=1)
+INSERT INTO acl_object_identity (id, object_id_class, object_id_identity, parent_object, owner_sid, entries_inheriting)
+VALUES (3, 2, 2, NULL, 1, 0);  -- UserGroup (agent group, group.id=2)
+INSERT INTO acl_object_identity (id, object_id_class, object_id_identity, parent_object, owner_sid, entries_inheriting)
+VALUES (4, 2, 3, NULL, 1, 0);  -- UserGroup (user group, group.id=3)
+INSERT INTO acl_object_identity (id, object_id_class, object_id_identity, parent_object, owner_sid, entries_inheriting)
+VALUES (5, 1, 2, NULL, 1, 0);  -- User (gemmaAgent, user.id=2)
 
+-- Give GROUP_ADMIN (sid=1) admin permission (mask=16) on each baseline AOI. ace_order=1.
+INSERT INTO acl_entry (id, acl_object_identity, ace_order, sid, mask, granting, audit_success, audit_failure)
+VALUES (1, 1, 1, 1, 16, 1, 0, 0);
+INSERT INTO acl_entry (id, acl_object_identity, ace_order, sid, mask, granting, audit_success, audit_failure)
+VALUES (2, 2, 1, 1, 16, 1, 0, 0);
+INSERT INTO acl_entry (id, acl_object_identity, ace_order, sid, mask, granting, audit_success, audit_failure)
+VALUES (3, 3, 1, 1, 16, 1, 0, 0);
+INSERT INTO acl_entry (id, acl_object_identity, ace_order, sid, mask, granting, audit_success, audit_failure)
+VALUES (4, 4, 1, 1, 16, 1, 0, 0);
+INSERT INTO acl_entry (id, acl_object_identity, ace_order, sid, mask, granting, audit_success, audit_failure)
+VALUES (5, 5, 1, 1, 16, 1, 0, 0);
+
+-- Give administrator (sid=5) admin on themselves; gemmaAgent (sid=6) admin on themselves. ace_order=2.
+INSERT INTO acl_entry (id, acl_object_identity, ace_order, sid, mask, granting, audit_success, audit_failure)
+VALUES (7, 1, 2, 5, 16, 1, 0, 0);
+INSERT INTO acl_entry (id, acl_object_identity, ace_order, sid, mask, granting, audit_success, audit_failure)
+VALUES (8, 5, 2, 6, 16, 1, 0, 0);

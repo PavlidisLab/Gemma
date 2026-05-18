@@ -60,6 +60,13 @@
 
 	<bean id="transactionManager" class="org.springframework.orm.hibernate5.HibernateTransactionManager">
 		<property name="sessionFactory" ref="sessionFactory"/>
+		<!-- Expose the Hibernate session's JDBC connection via DataSourceUtils so that JdbcTemplate
+		     operations targeting the same DataSource participate in the current Hibernate-managed
+		     transaction. Required by the Phase 2 JDBC ACL stack (see applicationContext-security.xml
+		     and ubic.gemma.core.security.acl.GemmaJdbcAclService): ACL INSERT/UPDATE/SELECT must
+		     co-commit with the surrounding @Transactional business call, otherwise readAclById right
+		     after createAcl can't see the just-inserted row. -->
+		<property name="dataSource" ref="dataSource"/>
 	</bean>
 
 	<tx:annotation-driven order="3"/>
