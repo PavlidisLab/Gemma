@@ -6,6 +6,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.test.PersistentDummyObjectHelper;
+import ubic.gemma.core.util.test.category.IntegrationTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -30,7 +31,7 @@ import static ubic.gemma.rest.util.Assertions.assertThat;
 /**
  * @author tesarst
  */
-@Category(SlowTest.class)
+@Category({ SlowTest.class, IntegrationTest.class })
 public class DatasetsRestTest extends BaseJerseyIntegrationTest {
 
     @Autowired

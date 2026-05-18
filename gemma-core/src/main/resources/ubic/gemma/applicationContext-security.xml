@@ -29,9 +29,13 @@
 
     <s:authentication-manager alias="authenticationManager">
         <s:authentication-provider user-service-ref="userManager">
-            <s:password-encoder ref="passwordEncoder">
-                <s:salt-source user-property="username"/>
-            </s:password-encoder>
+            <!-- Spring Security 6's <password-encoder> has empty content (the nested <salt-source>
+                 was dropped in SS 4 when external-salt encoders were removed). External-salt support
+                 is gone entirely; salting is now algorithm-internal (bcrypt, pbkdf2, etc.). Legacy
+                 hashes (Gemma's existing SHA + username-as-salt) need a DelegatingPasswordEncoder
+                 migration path before Gemma can talk to a production user table again — tracked
+                 as future renovation work in PHASE_2_HANDOFF.md and UserManagerImpl.java. -->
+            <s:password-encoder ref="passwordEncoder"/>
         </s:authentication-provider>
         <s:authentication-provider ref="runAsAuthenticationProvider"/>
         <s:authentication-provider ref="anonymousAuthenticationProvider"/>
@@ -47,8 +51,14 @@
         <property name="key" value="${gemma.runas.password}"/>
     </bean>
 
-    <!-- declared separately so we can use it directly. -->
-    <bean id="passwordEncoder" class="org.springframework.security.authentication.encoding.ShaPasswordEncoder"/>
+    <!-- declared separately so we can use it directly.
+         Was org.springframework.security.authentication.encoding.ShaPasswordEncoder; that whole
+         package was removed in Spring Security 5. Using BCryptPasswordEncoder as a forward-looking
+         placeholder so the XML / context loads. Production has SHA hashes with username-as-salt
+         from the legacy encoder — a DelegatingPasswordEncoder layered over the new bcrypt encoder
+         and a "{shasalt}"-prefixed legacy decoder is the migration path; see UserManagerImpl.java
+         comment. Tracked in PHASE_2_HANDOFF.md. -->
+    <bean id="passwordEncoder" class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder"/>
 
 
     <!--- global method security configuration -->
