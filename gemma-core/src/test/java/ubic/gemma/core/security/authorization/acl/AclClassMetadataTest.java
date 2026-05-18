@@ -1,5 +1,6 @@
 package ubic.gemma.core.security.authorization.acl;
 
+import org.hibernate.SessionFactory;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 
 @ContextConfiguration
@@ -25,7 +27,12 @@ public class AclClassMetadataTest extends BaseTest {
 
         @Bean
         public AclClassMetadata aclClassMetadata() {
-            return new AclClassMetadata( mock() );
+            // Phase 2: the constructor eagerly walks sessionFactory.getMetamodel().getEntities() to
+            // validate that every @Entity implementing SecuredChild is registered. RETURNS_DEEP_STUBS
+            // makes the chain return mock-but-non-null intermediates, so the validation loop iterates
+            // an empty mock Set (Mockito's default for collection returns) — fine for this test which
+            // only exercises the static registration map.
+            return new AclClassMetadata( mock( SessionFactory.class, RETURNS_DEEP_STUBS ) );
         }
     }
 
