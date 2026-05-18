@@ -123,12 +123,42 @@ public class GemmaAclConfiguration {
     public AclService aclService( DataSource dataSource,
                                   LookupStrategy lookupStrategy,
                                   AclCache aclCache ) {
-        JdbcMutableAclService jdbc = new JdbcMutableAclService( dataSource, lookupStrategy, aclCache );
+        JdbcMutableAclService jdbc = new GsecAwareJdbcMutableAclService( dataSource, lookupStrategy, aclCache );
         // MySQL identity retrieval. Stock JdbcMutableAclService defaults to "call identity()" (H2)
         // which fails on MySQL. Override to MySQL's session-scoped LAST_INSERT_ID.
         jdbc.setClassIdentityQuery( "SELECT @@IDENTITY" );
         jdbc.setSidIdentityQuery( "SELECT @@IDENTITY" );
         return new GsecAclServiceAdapter( jdbc, dataSource );
+    }
+
+    /**
+     * Subclass that translates gsec's {@link gemma.gsec.acl.domain.AclPrincipalSid} /
+     * {@link gemma.gsec.acl.domain.AclGrantedAuthoritySid} to Spring's
+     * {@link org.springframework.security.acls.domain.PrincipalSid} /
+     * {@link org.springframework.security.acls.domain.GrantedAuthoritySid} before delegating to
+     * stock {@link JdbcMutableAclService#createOrRetrieveSidPrimaryKey(Sid, boolean)}, which only
+     * recognizes Spring's two types. gsec's {@code BaseAclAdvice} inserts ACEs using gsec Sids; on
+     * {@code updateAcl} those Sids reach JdbcMutableAclService, so the conversion must happen at
+     * the SID-PK lookup bottleneck rather than walking the ACE list (AclImpl's entry list is
+     * encapsulated and can't be mutated through the MutableAcl interface).
+     */
+    static class GsecAwareJdbcMutableAclService extends JdbcMutableAclService {
+
+        GsecAwareJdbcMutableAclService( DataSource dataSource, LookupStrategy lookupStrategy, AclCache aclCache ) {
+            super( dataSource, lookupStrategy, aclCache );
+        }
+
+        @Override
+        protected Long createOrRetrieveSidPrimaryKey( Sid sid, boolean allowCreate ) {
+            if ( sid instanceof gemma.gsec.acl.domain.AclPrincipalSid ) {
+                sid = new org.springframework.security.acls.domain.PrincipalSid(
+                        ( ( gemma.gsec.acl.domain.AclPrincipalSid ) sid ).getPrincipal() );
+            } else if ( sid instanceof gemma.gsec.acl.domain.AclGrantedAuthoritySid ) {
+                sid = new org.springframework.security.acls.domain.GrantedAuthoritySid(
+                        ( ( gemma.gsec.acl.domain.AclGrantedAuthoritySid ) sid ).getGrantedAuthority() );
+            }
+            return super.createOrRetrieveSidPrimaryKey( sid, allowCreate );
+        }
     }
 
     // -----------------------------------------------------------------------------------------
@@ -154,12 +184,12 @@ public class GemmaAclConfiguration {
 
         @Override
         public MutableAcl createAcl( ObjectIdentity objectIdentity ) {
-            return delegate.createAcl( objectIdentity );
+            return delegate.createAcl( normalize( objectIdentity ) );
         }
 
         @Override
         public void deleteAcl( ObjectIdentity objectIdentity, boolean deleteChildren ) {
-            delegate.deleteAcl( objectIdentity, deleteChildren );
+            delegate.deleteAcl( normalize( objectIdentity ), deleteChildren );
         }
 
         @Override
@@ -171,28 +201,57 @@ public class GemmaAclConfiguration {
 
         @Override
         public List<ObjectIdentity> findChildren( ObjectIdentity parentIdentity ) {
-            return delegate.findChildren( parentIdentity );
+            return delegate.findChildren( normalize( parentIdentity ) );
         }
 
         @Override
         public Acl readAclById( ObjectIdentity object ) throws NotFoundException {
-            return delegate.readAclById( object );
+            return delegate.readAclById( normalize( object ) );
         }
 
         @Override
         public Acl readAclById( ObjectIdentity object, List<Sid> sids ) throws NotFoundException {
-            return delegate.readAclById( object, sids );
+            return delegate.readAclById( normalize( object ), sids );
         }
 
         @Override
         public Map<ObjectIdentity, Acl> readAclsById( List<ObjectIdentity> objects ) throws NotFoundException {
-            return delegate.readAclsById( objects );
+            return delegate.readAclsById( normalize( objects ) );
         }
 
         @Override
         public Map<ObjectIdentity, Acl> readAclsById( List<ObjectIdentity> objects, List<Sid> sids )
                 throws NotFoundException, UnloadedSidException {
-            return delegate.readAclsById( objects, sids );
+            return delegate.readAclsById( normalize( objects ), sids );
+        }
+
+        // ---- ObjectIdentity normalization ---------------------------------
+
+        /**
+         * Spring Security's {@link org.springframework.security.acls.domain.ObjectIdentityImpl#equals}
+         * and {@code hashCode} are not symmetric with gsec's
+         * {@link gemma.gsec.acl.domain.AclObjectIdentity}: ObjectIdentityImpl#equals does an
+         * {@code instanceof ObjectIdentityImpl} check (returns false for AclObjectIdentity), and its
+         * hashCode formula (31*type + identifier) differs from AclObjectIdentity's
+         * Objects.hash(type, identifier). BasicLookupStrategy returns a
+         * {@code Map<ObjectIdentity, Acl>} keyed by ObjectIdentityImpl instances it builds from DB
+         * rows; if the caller passed in an AclObjectIdentity, {@code containsKey} fails and
+         * JdbcAclService throws NotFoundException even though the row exists. Normalize at the
+         * adapter boundary so every OID handed to JdbcMutableAclService is an ObjectIdentityImpl.
+         */
+        private static ObjectIdentity normalize( ObjectIdentity oid ) {
+            if ( oid == null || oid instanceof org.springframework.security.acls.domain.ObjectIdentityImpl ) {
+                return oid;
+            }
+            return new org.springframework.security.acls.domain.ObjectIdentityImpl( oid.getType(), oid.getIdentifier() );
+        }
+
+        private static List<ObjectIdentity> normalize( List<ObjectIdentity> oids ) {
+            List<ObjectIdentity> out = new java.util.ArrayList<>( oids.size() );
+            for ( ObjectIdentity oid : oids ) {
+                out.add( normalize( oid ) );
+            }
+            return out;
         }
 
         // ---- gsec extensions ----------------------------------------------

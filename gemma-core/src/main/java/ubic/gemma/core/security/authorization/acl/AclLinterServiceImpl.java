@@ -448,23 +448,26 @@ public class AclLinterServiceImpl implements AclLinterService {
         // Dialect-aware bitwise AND (MySQL: "ace.MASK & N", H2: "BITAND(ace.MASK, N)").
         String renderedMask = ubic.gemma.persistence.util.BitwiseUtils.bitand(
                 ( (org.hibernate.engine.spi.SessionFactoryImplementor) sessionFactory ).getJdbcServices().getDialect(),
-                "ace.MASK", String.valueOf( permission.getMask() ) );
+                "ace.mask", String.valueOf( permission.getMask() ) );
         @SuppressWarnings("rawtypes")
         NativeQuery query = sessionFactory.getCurrentSession()
-                .createNativeQuery( "select aoi.OBJECT_CLASS, aoi.OBJECT_ID "
-                        + "from ACLOBJECTIDENTITY aoi "
-                        + "where aoi.OBJECT_CLASS = :type "
-                        + ( identifier != null ? " and aoi.OBJECT_ID = :identifier " : "" )
-                        + "and aoi.ID not in "
-                        + "(select ace.OBJECTIDENTITY_FK "
-                        + "from ACLENTRY ace "
+                .createNativeQuery( "select cls.class, aoi.object_id_identity "
+                        + "from acl_object_identity aoi "
+                        + "join acl_class cls on aoi.object_id_class = cls.id "
+                        + "where cls.class = :type "
+                        + ( identifier != null ? " and aoi.object_id_identity = :identifier " : "" )
+                        + "and aoi.id not in "
+                        + "(select ace.acl_object_identity "
+                        + "from acl_entry ace "
                         // aoi2 is only there to limit the size of the subquery
-                        + "join ACLOBJECTIDENTITY aoi2 on ace.OBJECTIDENTITY_FK = aoi2.ID "
-                        + "join ACLSID sid on ace.SID_FK = sid.ID "
-                        + "where aoi2.OBJECT_CLASS = :type "
-                        + ( identifier != null ? " and aoi2.OBJECT_ID = :identifier " : "" )
-                        + "and sid.GRANTED_AUTHORITY = :grantedAuthority "
-                        + "and ace.GRANTING = :granting "
+                        + "join acl_object_identity aoi2 on ace.acl_object_identity = aoi2.id "
+                        + "join acl_class cls2 on aoi2.object_id_class = cls2.id "
+                        + "join acl_sid sid on ace.sid = sid.id "
+                        + "where cls2.class = :type "
+                        + ( identifier != null ? " and aoi2.object_id_identity = :identifier " : "" )
+                        + "and sid.sid = :grantedAuthority "
+                        + "and sid.principal = 0 "
+                        + "and ace.granting = :granting "
                         + "and " + renderedMask + " <> 0)" )
                 .setParameter( "type", clazz.getName() )
                 .setParameter( "grantedAuthority", grantedAuthority )
