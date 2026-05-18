@@ -34,8 +34,12 @@ public class BaseDatabaseAclConfig {
 
     @Bean
     public AclDao aclDao( SessionFactory sessionFactory, SidRetrievalStrategy sidRetrievalStrategy ) {
+        // The required-authority must match what test users actually carry. Gemma tests use
+        // @WithMockUser(authorities="GROUP_ADMIN") or runAsAdmin() which grants GROUP_ADMIN — the
+        // prior "ADMIN" wiring was a stale relic and made gsec's AclAuthorizationStrategyImpl
+        // reject every ACL modification because no one ever has the literal "ADMIN" authority.
         AclAuthorizationStrategy aclAuthorizationStrategy = new AclAuthorizationStrategyImpl(
-                new GrantedAuthority[] { new SimpleGrantedAuthority( "ADMIN" ), new SimpleGrantedAuthority( "ADMIN" ), new SimpleGrantedAuthority( "ADMIN" ) },
+                new GrantedAuthority[] { new SimpleGrantedAuthority( "GROUP_ADMIN" ), new SimpleGrantedAuthority( "GROUP_ADMIN" ), new SimpleGrantedAuthority( "GROUP_ADMIN" ) },
                 sidRetrievalStrategy );
         return new AclDaoImpl( sessionFactory,
                 aclAuthorizationStrategy,

@@ -106,8 +106,10 @@ public abstract class BaseDatabaseTest extends AbstractTransactionalJUnit4Spring
 
         @Bean
         public AclDao aclDao( SessionFactory sessionFactory, SidRetrievalStrategy sidRetrievalStrategy ) {
+            // Match the authority Gemma tests actually carry (@WithMockUser(authorities="GROUP_ADMIN")
+            // or runAsAdmin()) — the prior "ADMIN" string was a stale relic.
             AclAuthorizationStrategy aclAuthorizationStrategy = new AclAuthorizationStrategyImpl(
-                    new GrantedAuthority[] { new SimpleGrantedAuthority( "ADMIN" ), new SimpleGrantedAuthority( "ADMIN" ), new SimpleGrantedAuthority( "ADMIN" ) },
+                    new GrantedAuthority[] { new SimpleGrantedAuthority( "GROUP_ADMIN" ), new SimpleGrantedAuthority( "GROUP_ADMIN" ), new SimpleGrantedAuthority( "GROUP_ADMIN" ) },
                     sidRetrievalStrategy );
             return new AclDaoImpl( sessionFactory,
                     aclAuthorizationStrategy,
