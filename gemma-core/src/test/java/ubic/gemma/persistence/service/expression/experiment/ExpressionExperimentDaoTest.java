@@ -70,7 +70,17 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     @After
     public void removeFixtures() {
         if ( ee != null ) {
-            expressionExperimentDao.remove( ee );
+            // Hibernate 6: tests like testLoadReference / testLoadMultipleReferences evict the EE
+            // and then loadReference() back, putting a different managed proxy with the same id in
+            // the session. Removing the original detached reference here would throw
+            // EntityExistsException ("A different object with the same identifier value was already
+            // associated with the session"). Re-resolve from id to get the managed instance (or null
+            // if it was already deleted) before removing.
+            ExpressionExperiment managed = expressionExperimentDao.load( ee.getId() );
+            if ( managed != null ) {
+                expressionExperimentDao.remove( managed );
+            }
+            ee = null;
         }
     }
 
