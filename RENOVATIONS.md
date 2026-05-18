@@ -32,7 +32,7 @@ Order: 1 + 3 (design) in parallel first, then 4 against a real write-API, then 2
 | hbm.xml → JPA annotations | ⏳ todo | Per-entity, distributable; foundation for Hibernate 6 |
 | Drop dead deps | ⏳ todo | |
 | Re-enable `dependencyConvergence` enforcer | ⏳ todo | Disabled during the Spring 5 climb |
-| Bytecode 11 → 17 | ⏳ todo | Spring 5 unblocked it; flip when comfortable |
+| Bytecode 11 → 17 | ✅ Phase 2 Step 8 | Committed `94b7435766` on `phase2`; Spring 6 ASM handles class file v61 cleanly |
 
 ### Java version
 
@@ -121,18 +121,62 @@ Lift `release=11` → `release=17` once Spring is on 5.x (or 6.x), as part of Ph
 
 Full reactor still builds. The 40 DWR-remoted controller classes themselves are now dead code; they'll be deleted (or migrated to REST in `gemma-rest`) as gemma-web is decommissioned in favour of the new React frontend.
 
-### Phase 2 (E) — Spring 6 / jakarta — probed, not started
+### Phase 2 (E) — Spring 6 / Hibernate 6 / jakarta — substantially done on `phase2` branch
 
-Tried bumping gsec to Spring 6.1.21 + Hibernate 6.4.10 + jakarta-servlet-api 6.0 as a probe. Reverted after hitting real blockers — Phase 2 is its own multi-session effort:
+Live on the `phase2` branch (5 sessions, dozens of commits). Full
+play-by-play is in `PHASE_2_HANDOFF.md`. **Build state**: all 5 modules
+install + test-compile green at **bytecode 17**; the SessionFactory
+bootstrap works (native Hibernate via JPA EMF unwrap); the shared
+JPA-Criteria filtering machinery is rebuilt; and the unit-test layer
+is broadly green across gemma-core / gemma-cli / gemma-rest. Big
+ticket items closed:
 
-- **Hibernate 6 dropped `hibernate-ehcache`** entirely. Replacement is `hibernate-jcache` + Ehcache 3 with the JSR-107 API. Ehcache 3.10.x has a `jakarta` classifier — but its `jaxb-runtime` 2.3.0-b170127 transitive depends on `javax.xml.bind:jaxb-api:2.3.0-b161121.1438` which is only on the (decommissioned) `maven.java.net` repository. Need to find a working ehcache3-jakarta version or replace with another JCache impl (Caffeine, Infinispan).
-- **Hibernate ORM 6 changed its groupId**: `org.hibernate` → `org.hibernate.orm`.
-- **Hibernate Search 5 → 7** is a DSL rewrite, not just a version bump.
-- **Spring Security 5 → 6** reworked ACL, dropped lots of deprecated APIs.
-- **`javax.*` → `jakarta.*`** swap covers ~400 imports (the JSR-305 `javax.annotation.Nullable/Nonnull` and JDK `javax.swing/javax.imageio` stay). Mechanical but pervasive.
-- Plus Jersey 2 → 3, Tomcat 9 → 10.1.
+- Spring 5 → 6.1.20; Spring Security 5 → 6.3.10.
+- Hibernate 5 → 6.4.10 (`org.hibernate.orm` groupId).
+- Hibernate Search **gutted** — Lucene/HS deps removed entirely;
+  `SearchServiceImpl` stubs to empty results; the real HS-7 rewrite
+  is Phase 3.
+- EhCache 2 cache subsystem **gutted** — replaced with
+  `ConcurrentMapCacheManager` (no L2 cache) + `hibernate-jcache` +
+  Ehcache 3.10.8-jakarta for the L2 wiring that survives. The
+  jaxb-runtime snapshot pin is solved by an explicit 4.0.5 override.
+- All Hibernate Criteria (`org.hibernate.criterion.*`) ports done —
+  22 DAOs + BusinessKey rewritten on HQL or JPA Criteria;
+  `AbstractCriteriaFilteringVoEnabledDao` ported to JPA Criteria
+  (new `FilterJpaUtils` mirrors the deleted `FilterCriteriaUtils`).
+- ~400 `javax.* → jakarta.*` imports swapped.
+- Jersey 2 → 3.1.10 (incl. jersey-spring6, swagger-jakarta artifacts).
+- Tomcat 9 → 10.1.34, jakarta.servlet 6.0.0, jakarta.xml.bind-api 4.0.2.
+- DWR stripped (already done in Phase 1c); `CommonsMultipartFile`
+  / progress-monitored upload deleted; replaced with
+  `StandardServletMultipartResolver`.
+- gemma-web `HibernateMonitorImpl` ported off
+  `SecondLevelCacheStatistics` to `CacheRegionStatistics`.
+- spring-security-test 4.0 unpack-and-recompile plumbing **deleted**;
+  replaced with a normal test-scoped 6.x dependency.
+- Coexpression subsystem **deleted** wholesale (all `CoexpressionAnalysis`
+  entities/DAOs/services/caches/link-analysis/CLI/writer); only
+  `SampleCoexpression*` (per-EE sample QC) retained.
+- Bytecode 11 → 17 (Step 8, committed `94b7435766`).
 
-Recommend Phase 2 gets its own session.
+**What's left for Phase 2** (full detail in `PHASE_2_HANDOFF.md`):
+
+- One real bug: `applicationContext-security.xml` line 34's
+  `<s:password-encoder><s:salt-source/></s:password-encoder>` is
+  rejected by Spring Security 6's stricter XML schema (salt-source
+  was removed as a child element back in SS 4).
+- Step 7 integration tier — ~61 `@Category(IntegrationTest)` tests
+  need a real MySQL test DB + the failsafe plugin path. Untouched.
+- Broader unit-sweep cleanup — 14 failing test classes in gemma-core
+  that aren't in the smoke set (Mockito mock defaults, FactorValue
+  optimistic-lock, file-lock OS asserts, etc.).
+- `AbstractCriteriaFilteringVoEnabledDao` subquery and `.size`-suffix
+  filters still throw UOE (subclasses can override or use HQL).
+- Null-precedence on `Sort` — JPA Criteria ignores
+  `Sort.NullMode.FIRST/LAST`; Hibernate 6 has a vendor extension
+  not yet plumbed.
+- Step 9: re-enable `<dependencyConvergence/>` enforcer (8 conflict
+  groups catalogued in the handoff).
 
 ### Phase 1b cleanup deferred to future session
 
@@ -142,8 +186,8 @@ Recommend Phase 2 gets its own session.
 - 1 `HibernateSearchException` in `HibernateSearchSourceTest.test`.
 - 1 `AssertionFailure` "null id in `ExpressionExperimentSet`" in `ExpressionExperimentSetDaoTest`.
 - 19 uncategorized failures.
-- Re-enable `dependencyConvergence` enforcer rule.
-- Bump bytecode 11 → 17.
+- Re-enable `dependencyConvergence` enforcer rule. (Pending; Phase 2 Step 9 — see `PHASE_2_HANDOFF.md` for the conflict map.)
+- ~~Bump bytecode 11 → 17.~~ Done in Phase 2 Step 8.
 
 ---
 

@@ -1,10 +1,11 @@
 # Phase 2 (Spring 6 / Hibernate 6 / jakarta) — handoff
 
-Filed 2026-05-17, refreshed at end-of-session-4 (still 2026-05-17, 5
-pushes this session). **Phase 2 is now in good shape**: all 5 modules
-install + test-compile clean, the SessionFactory bootstrap works, the
-shared JPA-Criteria filtering machinery is back, and the unit-test
-layer is broadly green across gemma-core / gemma-cli / gemma-rest.
+Filed 2026-05-17, refreshed at end-of-session-5 (still 2026-05-17).
+**Phase 2 is now in good shape**: all 5 modules install + test-compile
+clean at **bytecode 17** (Step 8 closed in session 5), the
+SessionFactory bootstrap works, the shared JPA-Criteria filtering
+machinery is back, and the unit-test layer is broadly green across
+gemma-core / gemma-cli / gemma-rest.
 
 ## Tests passing under Phase 2 (this session)
 
@@ -37,10 +38,17 @@ mvn -P fast -Denforcer.skip=true install -DskipTests=true:
   Gemma Web .......................................... SUCCESS [  7.646 s]
 ```
 
+## Session-5 commits (on `phase2`)
+
+```
+<this commit>   PHASE_2_HANDOFF.md: refresh after Step 8 (bytecode 11→17)
+94b7435766      Phase 2 Step 8: bump bytecode 11 -> 17
+```
+
 ## Session-4 commits (on `phase2`)
 
 ```
-<this commit>   PHASE_2_HANDOFF.md: refresh after Step 7 round 5
+c41ba711e9      PHASE_2_HANDOFF.md: refresh after Step 7 round 5
 46820d1b42      Phase 2 Step 7 (round 5): restore Highlighter on /datasets; broader unit sweep green
 d31c268142      Phase 2 Step 7 (round 4): port AbstractCriteriaFilteringVoEnabledDao to JPA Criteria
 30aa12702c      Phase 2 Step 7 (round 3): junit-vintage for gemma-rest; CLI + REST tests green
@@ -129,15 +137,40 @@ The biggest remaining offenders at session-3 end:
     ProcessedDataVectorByGeneCacheImpl
 ```
 
-## TL;DR for a fresh session (next session-5)
+## TL;DR for a fresh session (next session-6)
 
-Build is install-green and test-compile-green for all five modules.
-Phase 2 is in good shape. **Roughly 340+ unit tests now pass across
-gemma-core / gemma-cli / gemma-rest with zero errors**, up from ~5 at
-the start of this session. The infra changes (native Hibernate bootstrap,
-JPA Criteria filtering port, MergeMode fix, BigInteger→Number, bitand,
-H2 bitwise-AND, Highlighter restore, junit-vintage for gemma-rest)
-are committed.
+Build is install-green and test-compile-green for all five modules
+**at bytecode 17**. Phase 2 is in good shape. Session-5 closed Step 8
+(bytecode 11→17) — a one-line root-pom change plus a `clean install`
+verification. Spring 6 ships ASM that handles class-file v61 just
+fine, so the runtime semantics are identical to v55 on JDK 17.
+
+The session-5 test sweep on bytecode 17 ran a far broader unit set
+than the session-4 smoke set (~987 in gemma-core vs the ~215-test
+smoke set, and 116 in gemma-rest vs 105). Failures surfaced (47/19
+in gemma-core, 11 in gemma-rest, all in `DatasetsRestTest`), but
+**every failure traced to pre-existing causes that have nothing to do
+with bytecode level**:
+
+- `AclClassMetadataTest`: Mockito's default mock returns null
+  `Metamodel`, but the Phase-2 `AclClassMetadata` constructor now
+  walks the metamodel eagerly (an NPE the test setup didn't anticipate).
+- `FactorValueDaoTest` / `FactorValueServiceTest`: `OptimisticLockException`
+  from Hibernate batch update — test-data state issue, surfaces only
+  in the broader sweep.
+- `FileLockManagerTest`, `ReadWriteFileLockTest`: OS-specific lock
+  semantics (file-system asserts).
+- `DiseaseOntologyTest`: data-driven `assertFalse` against current
+  ontology snapshot.
+- `DatasetsRestTest` (11 errors): `applicationContext-security.xml`
+  line 34 — Spring Security 6's XML schema rejects
+  `<s:password-encoder ref="…"><s:salt-source/></s:password-encoder>`.
+  Salt-source as an element was removed in Spring Security 4. The file
+  hasn't been touched since commit `ba24409af1` (pre-Phase-2). The
+  session-4 smoke set ran `DatasetsWebServiceTest` (Mock-driven, doesn't
+  load the production security XML); `DatasetsRestTest` is a
+  `WebMergedContextConfiguration` that pulls in `applicationContext-*.xml`,
+  so it boots the broken XML. **First real bug to fix in session 6.**
 
 **Pinned context from the user**: `gemma-web` is being replaced by
 `~/Dev/gemma-curation-ui`. Don't invest in gemma-web test fixes or
@@ -146,22 +179,50 @@ React port — keep it healthy.
 
 ### What's still left for Phase 2
 
-1. **Step 7 (integration tier)** — ~61 `BaseSpringContextTest` /
+1. **Fix `applicationContext-security.xml` line 34** (`<s:password-encoder>` /
+   `<s:salt-source>` Spring Security 6 schema). One-XML-block fix.
+   See the session-5 sweep notes above for the actual SAX error.
+   Unblocks `DatasetsRestTest` (11 errors → green).
+2. **Step 7 (integration tier)** — ~61 `BaseSpringContextTest` /
    `BaseIntegrationTest` subclasses are `@Category(IntegrationTest.class)`
-   and need a real MySQL test DB + the failsafe plugin. Untouched this
-   session. Run with: a configured `testdb` profile + `mvn verify`.
-2. **`AbstractCriteriaFilteringVoEnabledDao` extension surface**: the
+   and need a real MySQL test DB + the failsafe plugin. Untouched.
+   Run with: a configured `testdb` profile + `mvn verify`.
+3. **Broader unit-sweep cleanup**: 14 failing test classes in
+   gemma-core when running the full `-Dtest=!*IntegrationTest` sweep
+   (not the session-4 smoke set). Each is a single small fix —
+   Mockito mock-default returns, test-data state, OS-specific lock
+   semantics. See session-5 notes for the catalog.
+4. **`AbstractCriteriaFilteringVoEnabledDao` extension surface**: the
    JPA Criteria port doesn't yet handle subquery filters or
    `.size`-suffix filters (those throw UOE inside
    `FilterJpaUtils`). Subclasses that need them must override the
    relevant `load*`/`count` method directly, or use HQL via
    `AbstractQueryFilteringVoEnabledDao`. Add as needed when a test
    actually exercises one.
-3. **Null-precedence on `Sort`**: the JPA Criteria port currently
+5. **Null-precedence on `Sort`**: the JPA Criteria port currently
    ignores `Sort.NullMode.FIRST/LAST`. JPA's `Order` doesn't expose
    it; Hibernate 6 has a vendor extension we haven't reached for yet.
-4. **Steps 8–10** — bytecode 11→17 (in root pom), re-enable
-   `dependencyConvergence` enforcer, update `RENOVATIONS.md`.
+6. **Step 9 — re-enable `dependencyConvergence` enforcer**. Session-5
+   reconnaissance found 8 conflict groups across the reactor; all
+   resolvable with `<dependencyManagement>` pins. The map (from
+   `mvn -P fast enforcer:enforce -Drules=dependencyConvergence`):
+
+   | Artifact | Versions seen | Pin to |
+   |---|---|---|
+   | `io.micrometer:micrometer-commons` | 1.12.12 (Spring), 1.13.11 (gemma micrometer-core) | 1.13.11 |
+   | `io.micrometer:micrometer-observation` | 1.12.12 (Spring), 1.12.13 (spring-security-core), 1.13.11 (micrometer-core) | 1.13.11 |
+   | `jakarta.xml.bind:jakarta.xml.bind-api` | 4.0.0 (hibernate-core), 4.0.2 (direct) | 4.0.2 |
+   | `org.glassfish.jaxb:jaxb-runtime` | 4.0.2 (hibernate-core), 4.0.5 (gsec + direct) | 4.0.5 |
+   | `javax.cache:cache-api` | 1.0.0 (hibernate-jcache), 1.1.0 (ehcache 3.10.8-jakarta) | 1.1.1 |
+   | `com.fasterxml.jackson.core:jackson-core` | 2.19.2 (swagger transit), 2.21.0 (gemma) | 2.21.0 |
+   | `com.fasterxml.jackson.module:jackson-module-jakarta-xmlbind-annotations` | 2.18.0 (jersey-media-json-jackson), 2.19.2 (swagger jakarta-rs json provider) | 2.19.2 |
+   | `org.antlr:antlr4-runtime` | 4.13.0 (hibernate-core), 4.13.2 (gemma) | 4.13.2 |
+
+   Add to the existing `dependencyManagement` block in root pom (line
+   147–166), then uncomment `<dependencyConvergence/>` at line 588 and
+   `mvn -P fast clean install -DskipTests=true`.
+7. **Step 10 — update `RENOVATIONS.md`** to move Phase 2 from
+   "deferred" to "done."
 
 ### Quick wins still open
 
