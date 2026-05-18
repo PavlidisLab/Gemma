@@ -219,6 +219,13 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
     @Deprecated
     @CheckReturnValue
     protected O ensureInSession( O entity ) {
+        // Tolerate null so test teardown can pass possibly-already-removed references without a
+        // pre-check. Pre-Phase-2 ensureInSession was a guarded `if (entity == null) return null;`
+        // path; the rewrite during the JPA-Criteria/Metamodel refactor dropped that. Re-add it —
+        // callers that need to fail loud on null can do so explicitly via Assert.notNull.
+        if ( entity == null ) {
+            return null;
+        }
         Long id = entity.getId();
         if ( id == null )
             return entity; // transient
