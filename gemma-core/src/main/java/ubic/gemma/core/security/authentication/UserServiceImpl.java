@@ -16,8 +16,8 @@ package ubic.gemma.core.security.authentication;
 
 import gemma.gsec.AuthorityConstants;
 import gemma.gsec.SecurityService;
-import gemma.gsec.acl.domain.AclGrantedAuthoritySid;
 import gemma.gsec.acl.domain.AclService;
+import org.springframework.security.acls.domain.GrantedAuthoritySid;
 import gemma.gsec.authentication.UserExistsException;
 import gemma.gsec.util.SecurityUtil;
 import lombok.extern.apachecommons.CommonsLog;
@@ -162,7 +162,7 @@ public class UserServiceImpl implements UserService, ApplicationContextAware {
          * clean up acls that use this group...do that last!
          */
         for ( String a : authority ) {
-            aclService.deleteSid( new AclGrantedAuthoritySid( a ) );
+            aclService.deleteSid( new GrantedAuthoritySid( a ) );
         }
     }
 

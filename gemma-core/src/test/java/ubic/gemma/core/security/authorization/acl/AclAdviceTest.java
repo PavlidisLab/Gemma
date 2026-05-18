@@ -20,7 +20,6 @@ package ubic.gemma.core.security.authorization.acl;
 
 import gemma.gsec.SecurityService;
 import gemma.gsec.acl.domain.AclObjectIdentity;
-import gemma.gsec.acl.domain.AclPrincipalSid;
 import gemma.gsec.acl.domain.AclService;
 import gemma.gsec.authentication.UserDetailsImpl;
 import org.apache.commons.lang3.RandomStringUtils;

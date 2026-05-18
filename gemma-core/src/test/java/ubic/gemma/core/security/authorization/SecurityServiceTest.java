@@ -20,8 +20,8 @@ package ubic.gemma.core.security.authorization;
 
 import gemma.gsec.AuthorityConstants;
 import gemma.gsec.SecurityService;
-import gemma.gsec.acl.domain.AclGrantedAuthoritySid;
-import gemma.gsec.acl.domain.AclPrincipalSid;
+import org.springframework.security.acls.domain.GrantedAuthoritySid;
+import org.springframework.security.acls.domain.PrincipalSid;
 import gemma.gsec.authentication.UserDetailsImpl;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
@@ -288,7 +288,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         List<GrantedAuthority> groupAuthorities = this.userManager.findGroupAuthorities( groupName );
         GrantedAuthority ga = groupAuthorities.get( 0 );
         aclAfterReadableAdded.insertAce( aclAfterReadableAdded.getEntries().size(), BasePermission.READ,
-                new AclGrantedAuthoritySid( AuthorityConstants.ROLE_PREFIX + ga ), true );
+                new GrantedAuthoritySid( AuthorityConstants.ROLE_PREFIX + ga ), true );
         this.aclTestUtils.update( aclAfterReadableAdded );
         MutableAcl aclAfterReadableAddedDuplicate = aclTestUtils.getAcl( ee );
         assertEquals( numberOfAces + 1, aclAfterReadableAddedDuplicate.getEntries().size() );

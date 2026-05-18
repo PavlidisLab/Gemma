@@ -1,8 +1,8 @@
 package ubic.gemma.core.security.authorization.acl;
 
-import gemma.gsec.acl.domain.AclGrantedAuthoritySid;
 import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.acl.domain.AclService;
+import org.springframework.security.acls.domain.GrantedAuthoritySid;
 import lombok.extern.apachecommons.CommonsLog;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.NativeQuery;
@@ -493,7 +493,7 @@ public class AclLinterServiceImpl implements AclLinterService {
             Long identifier_ = ( ( Number ) row[1] ).longValue();
             if ( config.isApplyFixes() ) {
                 MutableAcl acl = ( MutableAcl ) aclService.readAclById( new AclObjectIdentity( type, identifier_ ) );
-                acl.insertAce( acl.getEntries().size(), permission, new AclGrantedAuthoritySid( grantedAuthority ), granting );
+                acl.insertAce( acl.getEntries().size(), permission, new GrantedAuthoritySid( grantedAuthority ), granting );
                 aclService.updateAcl( acl );
                 String fixMessage = "Added missing " + aclEntryDescription + ".";
                 log.info( formatEntity( clazz, identifier_ ) + ": " + fixMessage );

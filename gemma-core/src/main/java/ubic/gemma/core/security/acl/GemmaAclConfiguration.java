@@ -210,7 +210,7 @@ public class GemmaAclConfiguration {
     public AclService aclService( DataSource dataSource,
                                   LookupStrategy lookupStrategy,
                                   AclCache aclCache ) {
-        JdbcMutableAclService jdbc = new GsecAwareJdbcMutableAclService( dataSource, lookupStrategy, aclCache );
+        JdbcMutableAclService jdbc = new JdbcMutableAclService( dataSource, lookupStrategy, aclCache );
         // MySQL identity retrieval. Stock JdbcMutableAclService defaults to "call identity()" (H2)
         // which fails on MySQL. Override to MySQL's session-scoped LAST_INSERT_ID.
         jdbc.setClassIdentityQuery( "SELECT @@IDENTITY" );
@@ -218,35 +218,12 @@ public class GemmaAclConfiguration {
         return new GsecAclServiceAdapter( jdbc, dataSource );
     }
 
-    /**
-     * Subclass that translates gsec's {@link gemma.gsec.acl.domain.AclPrincipalSid} /
-     * {@link gemma.gsec.acl.domain.AclGrantedAuthoritySid} to Spring's
-     * {@link org.springframework.security.acls.domain.PrincipalSid} /
-     * {@link org.springframework.security.acls.domain.GrantedAuthoritySid} before delegating to
-     * stock {@link JdbcMutableAclService#createOrRetrieveSidPrimaryKey(Sid, boolean)}, which only
-     * recognizes Spring's two types. gsec's {@code BaseAclAdvice} inserts ACEs using gsec Sids; on
-     * {@code updateAcl} those Sids reach JdbcMutableAclService, so the conversion must happen at
-     * the SID-PK lookup bottleneck rather than walking the ACE list (AclImpl's entry list is
-     * encapsulated and can't be mutated through the MutableAcl interface).
-     */
-    static class GsecAwareJdbcMutableAclService extends JdbcMutableAclService {
-
-        GsecAwareJdbcMutableAclService( DataSource dataSource, LookupStrategy lookupStrategy, AclCache aclCache ) {
-            super( dataSource, lookupStrategy, aclCache );
-        }
-
-        @Override
-        protected Long createOrRetrieveSidPrimaryKey( Sid sid, boolean allowCreate ) {
-            if ( sid instanceof gemma.gsec.acl.domain.AclPrincipalSid ) {
-                sid = new org.springframework.security.acls.domain.PrincipalSid(
-                        ( ( gemma.gsec.acl.domain.AclPrincipalSid ) sid ).getPrincipal() );
-            } else if ( sid instanceof gemma.gsec.acl.domain.AclGrantedAuthoritySid ) {
-                sid = new org.springframework.security.acls.domain.GrantedAuthoritySid(
-                        ( ( gemma.gsec.acl.domain.AclGrantedAuthoritySid ) sid ).getGrantedAuthority() );
-            }
-            return super.createOrRetrieveSidPrimaryKey( sid, allowCreate );
-        }
-    }
+    // Renovations Phase 3: GsecAwareJdbcMutableAclService is no longer needed — the parallel
+    // gsec.acl.domain.AclPrincipalSid / AclGrantedAuthoritySid types are no longer constructed
+    // in security-path code (those classes still exist as Hibernate-mapped entities for HQL
+    // queries against acl_sid, but security code always uses Spring's stock PrincipalSid /
+    // GrantedAuthoritySid). JdbcMutableAclService therefore only ever sees Spring sids and the
+    // type-translation override in createOrRetrieveSidPrimaryKey would be a no-op.
 
     // -----------------------------------------------------------------------------------------
     // Adapter implementing gsec's AclService over Spring's JdbcMutableAclService
@@ -307,10 +284,6 @@ public class GemmaAclConfiguration {
                     sidKey = "P:" + ( ( org.springframework.security.acls.domain.PrincipalSid ) sid ).getPrincipal();
                 } else if ( sid instanceof org.springframework.security.acls.domain.GrantedAuthoritySid ) {
                     sidKey = "G:" + ( ( org.springframework.security.acls.domain.GrantedAuthoritySid ) sid ).getGrantedAuthority();
-                } else if ( sid instanceof gemma.gsec.acl.domain.AclPrincipalSid ) {
-                    sidKey = "P:" + ( ( gemma.gsec.acl.domain.AclPrincipalSid ) sid ).getPrincipal();
-                } else if ( sid instanceof gemma.gsec.acl.domain.AclGrantedAuthoritySid ) {
-                    sidKey = "G:" + ( ( gemma.gsec.acl.domain.AclGrantedAuthoritySid ) sid ).getGrantedAuthority();
                 } else {
                     sidKey = sid == null ? "null" : sid.toString();
                 }
@@ -441,13 +414,7 @@ public class GemmaAclConfiguration {
             // name; resolve to the (principal, sid) pair Spring Security uses.
             boolean isPrincipal;
             String name;
-            if ( sid instanceof gemma.gsec.acl.domain.AclPrincipalSid ) {
-                isPrincipal = true;
-                name = ( ( gemma.gsec.acl.domain.AclPrincipalSid ) sid ).getPrincipal();
-            } else if ( sid instanceof gemma.gsec.acl.domain.AclGrantedAuthoritySid ) {
-                isPrincipal = false;
-                name = ( ( gemma.gsec.acl.domain.AclGrantedAuthoritySid ) sid ).getGrantedAuthority();
-            } else if ( sid instanceof org.springframework.security.acls.domain.PrincipalSid ) {
+            if ( sid instanceof org.springframework.security.acls.domain.PrincipalSid ) {
                 isPrincipal = true;
                 name = ( ( org.springframework.security.acls.domain.PrincipalSid ) sid ).getPrincipal();
             } else if ( sid instanceof org.springframework.security.acls.domain.GrantedAuthoritySid ) {
