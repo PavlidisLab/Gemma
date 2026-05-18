@@ -27,14 +27,20 @@ public class DatabaseSchemaPopulator extends CompositeDatabasePopulator {
 
     public DatabaseSchemaPopulator( String vendor ) {
         Assert.isTrue( vendor.equals( "mysql" ) || vendor.equals( "h2" ), "expected true" );
+        // The multi-context guard only applies to the shared MySQL integration-test DB; the H2
+        // path is used by BaseDatabaseTest, where each new Spring context expects a fresh schema
+        // (the H2 datasource bean does "drop all objects" on every bootstrap) and therefore needs
+        // ACLs / indices / extras re-populated every time too.
+        final boolean shared = vendor.equals( "mysql" );
         ResourceDatabasePopulator rdp = new ResourceDatabasePopulator() {
             @Override
             public void populate( Connection connection ) {
                 // Phase 2 multi-context guard: index creation + ACL seed INSERTs must not re-run on
                 // the second ApplicationContext (would explode with duplicate-key / duplicate-index
                 // errors). The InitialDataPopulator that runs immediately after has the same
-                // guard, so the entire schema-extras bootstrap is a once-per-JVM affair.
-                if ( !TestBootstrapState.claimSchemaExtras() ) {
+                // guard, so the entire schema-extras bootstrap is a once-per-JVM affair on shared
+                // databases.
+                if ( shared && !TestBootstrapState.claimSchemaExtras() ) {
                     log.info( "Schema extras (ACLs, indices, additional tables) already populated in this JVM; skipping." );
                     return;
                 }

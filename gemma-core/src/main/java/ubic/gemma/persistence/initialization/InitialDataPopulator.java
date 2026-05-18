@@ -36,7 +36,11 @@ public class InitialDataPopulator extends CompositeDatabasePopulator {
         // dataSourceInitializer through the bean factory, but the underlying gemdtest DB is a
         // process-wide singleton. Seed data must be inserted exactly once per JVM or we hit
         // primary-key collisions on the second context. See TestBootstrapState.
-        if ( !TestBootstrapState.claimDataSeeding() ) {
+        //
+        // The guard only applies to the integration tier (full init-data.sql); the slim variant
+        // is used by BaseDatabaseTest with its own ephemeral H2 in-memory database, which is
+        // (re-)created on every Spring context and therefore needs the seed every time.
+        if ( !slim && !TestBootstrapState.claimDataSeeding() ) {
             log.info( "Initial seed data already inserted by an earlier ApplicationContext in this JVM; skipping." );
             return;
         }

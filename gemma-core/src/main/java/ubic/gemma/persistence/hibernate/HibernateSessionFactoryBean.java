@@ -85,18 +85,25 @@ public class HibernateSessionFactoryBean
             }
         }
         cfg.addProperties( this.hibernateProperties );
-        // Phase 2 multi-context guard: only the FIRST SessionFactory built in this JVM is
-        // allowed to materialize the schema via hbm2ddl.auto=create/create-drop/update. Later
-        // SessionFactories (which Spring's TestContext cache builds whenever @ContextConfiguration
-        // shape differs) would otherwise drop the schema out from under the first
-        // SessionFactory's still-cached entity persisters, manifesting as
-        // SQLGrammarException("Table 'gemdtest.X' doesn't exist") on the original context once
-        // the cache rotates. We force hbm2ddl=none on the second-and-later boot so the test DB,
-        // schema, and seed data all stay intact.
+        // Phase 2 multi-context guard: only the FIRST SessionFactory built against the *shared*
+        // MySQL integration-test database (gemdtest) in this JVM is allowed to materialize the
+        // schema via hbm2ddl.auto=create/create-drop/update. Later SessionFactories (which
+        // Spring's TestContext cache builds whenever @ContextConfiguration shape differs) would
+        // otherwise drop the schema out from under the first SessionFactory's still-cached entity
+        // persisters, manifesting as SQLGrammarException("Table 'gemdtest.X' doesn't exist") on
+        // the original context once the cache rotates. We force hbm2ddl=none on the second-and-
+        // later boot so the test DB, schema, and seed data all stay intact.
+        //
+        // The guard is dialect-scoped: H2-backed unit tests (BaseDatabaseTest) each get their own
+        // in-memory database keyed by an ephemeral name and rebuild their schema on every context,
+        // so they must NOT be affected by the guard. We detect the integration tier by dialect
+        // class — anything containing "MySQL" enables the guard; H2 and others bypass it.
         String requestedHbm2ddl = cfg.getProperty( "hibernate.hbm2ddl.auto" );
+        String dialect = cfg.getProperty( "hibernate.dialect" );
         boolean wantsCreate = requestedHbm2ddl != null
                 && ( requestedHbm2ddl.startsWith( "create" ) || "update".equals( requestedHbm2ddl ) );
-        if ( wantsCreate && !TestBootstrapState.claimSchemaMaterialization() ) {
+        boolean isSharedTestDb = dialect != null && dialect.contains( "MySQL" );
+        if ( isSharedTestDb && wantsCreate && !TestBootstrapState.claimSchemaMaterialization() ) {
             log.info( "Schema already materialized by an earlier ApplicationContext in this JVM; "
                     + "downgrading hibernate.hbm2ddl.auto from '" + requestedHbm2ddl + "' to 'none' "
                     + "for this SessionFactory to avoid wiping the live schema." );
