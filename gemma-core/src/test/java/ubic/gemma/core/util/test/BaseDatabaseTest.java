@@ -7,6 +7,7 @@ import gemma.gsec.acl.domain.AclDao;
 import gemma.gsec.acl.domain.AclDaoImpl;
 import gemma.gsec.acl.domain.AclService;
 import gemma.gsec.acl.domain.AclServiceImpl;
+import org.flywaydb.core.Flyway;
 import org.h2.Driver;
 import org.hibernate.SessionFactory;
 import org.junit.After;
@@ -15,8 +16,6 @@ import org.springframework.cache.concurrent.ConcurrentMapCache;
 import org.springframework.context.annotation.Bean;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
-import org.springframework.jdbc.datasource.init.CompositeDatabasePopulator;
-import org.springframework.jdbc.datasource.init.DataSourceInitializer;
 import org.springframework.orm.hibernate5.HibernateTransactionManager;
 import org.springframework.security.access.hierarchicalroles.NullRoleHierarchy;
 import org.springframework.security.acls.domain.AclAuthorizationStrategy;
@@ -34,8 +33,6 @@ import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.context.EnvironmentProfiles;
 import ubic.gemma.persistence.hibernate.H2Dialect;
 import ubic.gemma.persistence.hibernate.HibernateSessionFactoryBean;
-import ubic.gemma.persistence.initialization.DatabaseSchemaPopulator;
-import ubic.gemma.persistence.initialization.InitialDataPopulator;
 
 import javax.sql.DataSource;
 import java.util.Properties;
@@ -48,6 +45,13 @@ import java.util.Properties;
  * no longer works with Hibernate 6 due to a removed {@code ReflectionManager.reset()} call). We use
  * {@link HibernateTransactionManager} + {@code SpringSessionContext} so DAOs that call
  * {@code sessionFactory.getCurrentSession()} see the transactional session.
+ * <p>
+ * Phase 3 first-wave: schema and seed data come from versioned Flyway migrations under
+ * {@code db/migration/h2/} (V1__hibernate_baseline.sql, V2__schema_extras.sql, V3__seed_data.sql).
+ * The Flyway bean materializes the schema before the SessionFactory is built; Hibernate runs in
+ * {@code hbm2ddl.auto=none}. The legacy {@code DataSourceInitializer} + {@code DatabaseSchemaPopulator}
+ * + {@code InitialDataPopulator} chain is gone from the H2 path (the populators stay on disk for
+ * the MySQL integration test wiring that still uses them).
  *
  * @author poirigui
  */
@@ -62,8 +66,28 @@ public abstract class BaseDatabaseTest extends AbstractTransactionalJUnit4Spring
             return ds;
         }
 
+        /**
+         * Flyway migration runner. Bean name {@code flyway} is a Spring Boot convention; bean order
+         * matters here because {@link #sessionFactory(DataSource, Flyway)} declares a method-level
+         * dependency so Hibernate boots only after the schema + seed data are applied.
+         * <p>
+         * We pin the migration location to {@code db/migration/h2/} so the H2 path is isolated from
+         * the production MySQL migrations that will land in a sibling directory in the follow-on
+         * session. {@code baselineOnMigrate=true} lets the same Flyway bean adopt an existing
+         * (pre-Flyway) schema for any future external test fixture; in the in-memory H2 case the
+         * schema is always empty at boot so it's a no-op.
+         */
+        @Bean(initMethod = "migrate")
+        public Flyway flyway( DataSource dataSource ) {
+            return Flyway.configure()
+                    .dataSource( dataSource )
+                    .locations( "classpath:db/migration/h2" )
+                    .baselineOnMigrate( true )
+                    .load();
+        }
+
         @Bean
-        public HibernateSessionFactoryBean sessionFactory( DataSource dataSource ) {
+        public HibernateSessionFactoryBean sessionFactory( DataSource dataSource, Flyway flyway ) {
             HibernateSessionFactoryBean factory = new HibernateSessionFactoryBean();
             factory.setDataSource( dataSource );
             factory.setConfigLocation( HibernateSessionFactoryBean.defaultConfigLocation() );
@@ -80,23 +104,20 @@ public abstract class BaseDatabaseTest extends AbstractTransactionalJUnit4Spring
             props.setProperty( "hibernate.order_updates", "true" );
             props.setProperty( "hibernate.show_sql", Settings.getString( "gemma.hibernate.show_sql" ) );
             props.setProperty( "hibernate.format_sql", Settings.getString( "gemma.hibernate.format_sql" ) );
-            // Tests rely on Hibernate-generated DDL; the DatabaseSchemaPopulator Hibernate branch is a no-op.
-            props.setProperty( "hibernate.hbm2ddl.auto", "create" );
+            // Phase 3: Flyway is the schema source of truth. We tried `validate` first; it fails
+            // with "wrong column type encountered in column [principal] in table [acl_sid]: found
+            // [boolean (Types#BOOLEAN)], but expecting [bit (Types#INTEGER)]". H2 under MODE=MYSQL
+            // implements BIT as BOOLEAN at the JDBC level, but Hibernate's validate expects
+            // BIT->INTEGER (TINYINT). The Hibernate-generated DDL itself emitted "BIT not null" --
+            // i.e. Hibernate creates the column, H2 maps it to BOOLEAN, then Hibernate's own
+            // validator rejects it. There's no way to make the round-trip clean without changing
+            // either the gsec HBM mappings (out of scope; gsec is external) or the H2 mode. So we
+            // run `none` for now -- Flyway materialises the schema, Hibernate trusts it. The
+            // production-MySQL session will revisit `validate` against the real prod schema dump
+            // where the BIT->BOOLEAN H2 quirk doesn't apply. See FLYWAY_PROD_FOLLOWUP.md.
+            props.setProperty( "hibernate.hbm2ddl.auto", "none" );
             factory.setHibernateProperties( props );
             return factory;
-        }
-
-        @Bean
-        public DataSourceInitializer dataSourceInitializer( DataSource dataSource ) {
-            DataSourceInitializer di = new DataSourceInitializer();
-            di.setDataSource( dataSource );
-            CompositeDatabasePopulator cdp = new CompositeDatabasePopulator();
-            cdp.addPopulators(
-                    new DatabaseSchemaPopulator( "h2" ),
-                    new InitialDataPopulator( true ) );
-            di.setDatabasePopulator( cdp );
-            di.setEnabled( true );
-            return di;
         }
 
         @Bean
