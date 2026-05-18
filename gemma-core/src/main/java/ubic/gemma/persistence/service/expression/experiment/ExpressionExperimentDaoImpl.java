@@ -1923,9 +1923,12 @@ public class ExpressionExperimentDaoImpl
         if ( expressionExperimentIds.isEmpty() ) {
             return Collections.emptyMap();
         }
+        // Hibernate 6: HQL `<plural>.size` member access is rejected ("element attribute 'size'
+        // may not be referenced directly (use element() function)"); switched to the SQL-spec
+        // `size(<plural>)` function call form.
         //noinspection unchecked
         List<Object[]> results = getSessionFactory().getCurrentSession()
-                .createQuery( "select ee.id, ad.id, op.id, oe.id, ee.bioAssays.size from ExpressionExperiment as ee "
+                .createQuery( "select ee.id, ad.id, op.id, oe.id, size(ee.bioAssays) from ExpressionExperiment as ee "
                         + "left join ee.bioAssays ba "
                         + "left join ba.arrayDesignUsed ad "
                         + "left join ba.originalPlatform op " // not all bioAssays have an original platform
@@ -2184,7 +2187,8 @@ public class ExpressionExperimentDaoImpl
     public Collection<ExpressionExperiment> loadLackingTags() {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select e from ExpressionExperiment e where e.characteristics.size = 0" ).list();
+                // Hibernate 6 rejects `<plural>.size` member access; use size(<plural>).
+                .createQuery( "select e from ExpressionExperiment e where size(e.characteristics) = 0" ).list();
     }
 
     @Override
@@ -4030,11 +4034,10 @@ public class ExpressionExperimentDaoImpl
     }
 
     private List<Long> getExpressionExperimentIdsWithCoexpression( boolean cacheable ) {
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery(
-                        "select experimentAnalyzed.id from CoexpressionAnalysis" )
-                .setCacheable( cacheable )
-                .list();
+        // Phase 2 Step 3 deleted the coexpression subsystem entirely (entities, hbm.xml,
+        // services). There is no CoexpressionAnalysis to query. Always return empty — callers use
+        // this to set ExpressionExperimentDetailsValueObject.hasCoexpressionAnalysis(false).
+        return Collections.emptyList();
     }
 
     private List<Long> getExpressionExperimentIdsWithDifferentialExpressionAnalysis( boolean cacheable ) {
