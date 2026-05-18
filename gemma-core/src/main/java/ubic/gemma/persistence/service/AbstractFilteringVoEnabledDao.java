@@ -236,7 +236,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
             // below handles id registration too — no separate registerProperty call needed.
             for ( jakarta.persistence.metamodel.Attribute<?, ?> attr : entityType.getAttributes() ) {
                 String propertyName = attr.getName();
-                Class<?> javaType = attr.getJavaType();
+                Class<?> javaType = normalizeAttributeJavaType( attr.getJavaType() );
                 if ( attr.isAssociation() && attr instanceof jakarta.persistence.metamodel.SingularAttribute ) {
                     if ( maxDepth > 1 ) {
                         //noinspection unchecked
@@ -608,7 +608,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
             }
         }
 
-        Class<?> actualType = attr.getJavaType();
+        Class<?> actualType = normalizeAttributeJavaType( attr.getJavaType() );
 
         // available values, only for enumerated types (Java enums)
         List<Object> allowedValues;
@@ -624,5 +624,23 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
         } else {
             throw new IllegalArgumentException( String.format( "%s is not of a supported type or a collection of supported types %s.", property, cls.getName() ) );
         }
+    }
+
+    /**
+     * Normalize the Java type reported by the JPA Metamodel to the type that
+     * {@link Filter#getConversionService()} knows about.
+     * <p>
+     * The legacy Hibernate {@code ClassMetadata.getPropertyTypes()[i].getReturnedClass()} returned the
+     * field's declared Java type — e.g. {@link java.util.Date} for a {@code <property type="java.util.Date">}
+     * mapping. The Hibernate 6 JPA Metamodel, however, may report a more specific JDBC-flavored subclass
+     * (e.g. {@link java.sql.Timestamp}, {@link java.sql.Date}, {@link java.sql.Time}) depending on the
+     * SQL column type. The Filter conversion service only registers {@link java.util.Date}, so we collapse
+     * those subtypes back to {@code Date.class} to preserve the pre-Hibernate-6 contract.
+     */
+    private static Class<?> normalizeAttributeJavaType( Class<?> javaType ) {
+        if ( java.util.Date.class.isAssignableFrom( javaType ) && !javaType.equals( java.util.Date.class ) ) {
+            return java.util.Date.class;
+        }
+        return javaType;
     }
 }
