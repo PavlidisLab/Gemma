@@ -363,6 +363,12 @@ public class AclAdviceTest extends BaseSpringContextTest {
 
         aclTestUtils.checkEEAcls( ee );
 
+        // Renovations Phase 2: checkDeleteEEAcls walks lazy children (experimentalDesign,
+        // experimentalFactors, bioAssays, etc.); after remove() the EE is detached with no
+        // session so those proxies can't initialize. Thaw before deletion to materialize the
+        // graph in test-scope references.
+        ee = expressionExperimentService.thaw( ee );
+
         expressionExperimentService.remove( ee );
 
         aclTestUtils.checkDeleteEEAcls( ee );
