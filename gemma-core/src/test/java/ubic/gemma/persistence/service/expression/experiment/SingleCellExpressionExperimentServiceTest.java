@@ -463,6 +463,12 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         QuantitationType qt = vectors.iterator().next().getQuantitationType();
         scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors, null, true, false );
         sessionFactory.getCurrentSession().flush();
+        // Hibernate 6: AbstractDao.update is JPA merge() rather than HB5's Session#update reattach,
+        // so the local `vectors` instances stay detached without ids and SingleCellExpression-
+        // DataVector#equals falls back to EE+QT+DesignElement matching — making the
+        // doesNotContainAnyElementsOf(vectors) check below match the new vectors too (same DE
+        // names). Snapshot the persisted vectors with their ids by reading from the merged EE.
+        Set<SingleCellExpressionDataVector> originalVectors = new HashSet<>( ee.getSingleCellExpressionDataVectors() );
         assertThat( ee.getSingleCellExpressionDataVectors() )
                 .hasSize( 10 );
 
@@ -473,7 +479,7 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         sessionFactory.getCurrentSession().flush();
         assertThat( ee.getSingleCellExpressionDataVectors() )
                 .hasSize( 10 )
-                .doesNotContainAnyElementsOf( vectors )
+                .doesNotContainAnyElementsOf( originalVectors )
                 .containsAll( vectors2 );
 
         verify( auditTrailService ).addUpdateEvent( ee, DataAddedEvent.class, "Added 10 vectors for " + qt + " with dimension " + scd + ".", ( String ) null );
