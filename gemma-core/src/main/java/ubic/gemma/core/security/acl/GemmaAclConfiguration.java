@@ -86,9 +86,96 @@ public class GemmaAclConfiguration {
     }
 
     @Bean
-    public AclAuthorizationStrategy aclAuthorizationStrategy() {
+    public AclAuthorizationStrategy aclAuthorizationStrategy(
+            org.springframework.security.access.hierarchicalroles.RoleHierarchy roleHierarchy ) {
         GrantedAuthority admin = new SimpleGrantedAuthority( ADMIN_AUTHORITY );
-        return new AclAuthorizationStrategyImpl( admin, admin, admin );
+        return new RoleHierarchyAwareAclAuthorizationStrategy( roleHierarchy, admin, admin, admin );
+    }
+
+    /**
+     * Spring Security's {@link AclAuthorizationStrategyImpl#securityCheck} compares the
+     * configured "required authority" (e.g. {@code GROUP_ADMIN}) against the raw
+     * {@link org.springframework.security.core.Authentication#getAuthorities() authentication
+     * authorities}, ignoring the role hierarchy. That breaks the {@code @Secured("RUN_AS_ADMIN")}
+     * pattern Gemma uses for signup / user-management methods: {@code RunAsManagerImpl} grants the
+     * RunAs token {@code GROUP_RUN_AS_ADMIN}, which the hierarchy escalates to {@code GROUP_ADMIN},
+     * but the strategy's bare {@code contains} check never sees the expansion and the subsequent
+     * ACE-level {@code isGranted} step then trips on the empty ACL of a freshly-created entity.
+     * Pre-migration the gsec stack had the same code shape but tests like {@code AclAdviceTest#testSignup}
+     * passed for unrelated reasons (the legacy {@code gsec.acl.domain.AclImpl#isGranted} returned
+     * {@code false} on no-match instead of throwing, so AccessDeniedException — not NotFoundException —
+     * leaked through and was caught upstream); after migrating to Spring Security's stock
+     * {@code AclImpl} (via JdbcMutableAclService) the no-match path throws and the test fails.
+     * <p>
+     * This subclass expands the authentication's authorities through the role hierarchy before the
+     * strategy inspects them, so {@code GROUP_RUN_AS_ADMIN} satisfies a {@code GROUP_ADMIN}
+     * requirement — which is what the {@code GROUP_RUN_AS_ADMIN > GROUP_ADMIN} entry in
+     * applicationContext-gsec.xml's hierarchy is for.
+     */
+    static class RoleHierarchyAwareAclAuthorizationStrategy extends AclAuthorizationStrategyImpl {
+
+        private final org.springframework.security.access.hierarchicalroles.RoleHierarchy roleHierarchy;
+
+        RoleHierarchyAwareAclAuthorizationStrategy(
+                org.springframework.security.access.hierarchicalroles.RoleHierarchy roleHierarchy,
+                GrantedAuthority... gas ) {
+            super( gas );
+            this.roleHierarchy = roleHierarchy;
+        }
+
+        @Override
+        public void securityCheck( org.springframework.security.acls.model.Acl acl, int changeType ) {
+            org.springframework.security.core.Authentication original =
+                    org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+            if ( original == null || roleHierarchy == null ) {
+                super.securityCheck( acl, changeType );
+                return;
+            }
+            java.util.Collection<? extends GrantedAuthority> expanded =
+                    roleHierarchy.getReachableGrantedAuthorities( original.getAuthorities() );
+            if ( expanded.size() == original.getAuthorities().size() ) {
+                super.securityCheck( acl, changeType );
+                return;
+            }
+            org.springframework.security.core.context.SecurityContext saved =
+                    org.springframework.security.core.context.SecurityContextHolder.getContext();
+            org.springframework.security.core.context.SecurityContext temp =
+                    org.springframework.security.core.context.SecurityContextHolder.createEmptyContext();
+            temp.setAuthentication( new ExpandedAuthoritiesAuthentication( original, expanded ) );
+            org.springframework.security.core.context.SecurityContextHolder.setContext( temp );
+            try {
+                super.securityCheck( acl, changeType );
+            } finally {
+                org.springframework.security.core.context.SecurityContextHolder.setContext( saved );
+            }
+        }
+    }
+
+    /**
+     * Wraps an existing {@link org.springframework.security.core.Authentication} but reports the
+     * role-hierarchy-expanded set of authorities. Used only to satisfy {@link
+     * AclAuthorizationStrategyImpl#securityCheck}'s strict {@code contains} check; never persisted
+     * or returned outside that one call.
+     */
+    static class ExpandedAuthoritiesAuthentication implements org.springframework.security.core.Authentication {
+        private static final long serialVersionUID = 1L;
+        private final org.springframework.security.core.Authentication delegate;
+        private final java.util.Collection<? extends GrantedAuthority> authorities;
+
+        ExpandedAuthoritiesAuthentication( org.springframework.security.core.Authentication delegate,
+                                           java.util.Collection<? extends GrantedAuthority> authorities ) {
+            this.delegate = delegate;
+            this.authorities = authorities;
+        }
+
+        @Override
+        public java.util.Collection<? extends GrantedAuthority> getAuthorities() { return authorities; }
+        @Override public Object getCredentials() { return delegate.getCredentials(); }
+        @Override public Object getDetails() { return delegate.getDetails(); }
+        @Override public Object getPrincipal() { return delegate.getPrincipal(); }
+        @Override public boolean isAuthenticated() { return delegate.isAuthenticated(); }
+        @Override public void setAuthenticated( boolean isAuthenticated ) { delegate.setAuthenticated( isAuthenticated ); }
+        @Override public String getName() { return delegate.getName(); }
     }
 
     @Bean
@@ -253,12 +340,22 @@ public class GemmaAclConfiguration {
 
         @Override
         public Map<ObjectIdentity, Acl> readAclsById( List<ObjectIdentity> objects ) throws NotFoundException {
+            if ( objects == null || objects.isEmpty() ) {
+                return java.util.Collections.emptyMap();
+            }
             return rekey( objects, delegate.readAclsById( normalize( objects ) ) );
         }
 
         @Override
         public Map<ObjectIdentity, Acl> readAclsById( List<ObjectIdentity> objects, List<Sid> sids )
                 throws NotFoundException, UnloadedSidException {
+            // Spring Security's BasicLookupStrategy asserts notEmpty(objects); callers in
+            // after-invocation collection filters can legitimately end up with an empty list (e.g.
+            // when an association extractor filters out all targets). Short-circuit to an empty map
+            // so the filter pass returns "no rows" rather than aborting with IllegalArgumentException.
+            if ( objects == null || objects.isEmpty() ) {
+                return java.util.Collections.emptyMap();
+            }
             return rekey( objects, delegate.readAclsById( normalize( objects ), sids ) );
         }
 
@@ -360,12 +457,15 @@ public class GemmaAclConfiguration {
                 throw new IllegalArgumentException( "Unsupported Sid type: " + sid.getClass().getName() );
             }
 
-            Long sidId = jdbcTemplate.queryForObject(
+            // queryForObject throws EmptyResultDataAccessException on zero rows; for a deleteSid
+            // call against an already-missing sid we want a no-op, not an exception.
+            List<Long> sidIds = jdbcTemplate.queryForList(
                     "SELECT id FROM acl_sid WHERE principal = ? AND sid = ?",
                     Long.class, isPrincipal, name );
-            if ( sidId == null ) {
+            if ( sidIds.isEmpty() ) {
                 return; // already gone
             }
+            Long sidId = sidIds.get( 0 );
 
             // Order matters: delete ACEs first, then the SID itself. acl_object_identity.owner_sid
             // FKs are nullable; null them out for any AOIs owned by this SID.
