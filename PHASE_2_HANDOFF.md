@@ -45,7 +45,11 @@ mvn -P fast -Denforcer.skip=true install -DskipTests=true:
 ## Session-5 commits (on `phase2`)
 
 ```
-<this commit>   PHASE_2_HANDOFF.md: refresh after cellIds delimiter fix
+<this commit>   PHASE_2_HANDOFF.md: refresh after Initializer wiring + detached-replace fix
+e304d1c2b3      Phase 2: re-resolve managed EE in replaceProcessedDataVectors to dodge stale PersistentSet snapshot
+764004c2ea      Phase 2: testReplaceVectors snapshots persisted vectors instead of detached
+eee9400743      Phase 2: wire SingleCellDataVectorInitializer via setTupleTransformer
+5268d28ac5      PHASE_2_HANDOFF.md: refresh after cellIds delimiter fix
 c0719e0213      Phase 2: fix SingleCellDimension.cellIds delimiter mismatch + CompressedStringListType stream impl
 1e090a2470      PHASE_2_HANDOFF.md: refresh after BLOB-HQL + Subquery FQN + EE @After
 d660c34b63      Phase 2: ExpressionExperimentDaoTest @After re-resolves managed EE before remove
@@ -261,33 +265,23 @@ React port — keep it healthy.
       in session 5 (commit `1a49a43435`): flush ordering on the
       discriminator-aware UPDATE; merge-vs-update semantics in
       service tests; re-resolve managed Statement after merge cascade.
-    - `SingleCellExpressionExperimentServiceTest` — **5 of 7 fixed**;
-      remaining 2 are now deeper than the symptoms first suggested.
-      Closed via: TupleTransformer migration (`1d01e08308`),
-      BinaryFunctionContributor (`2b0028a4e5`), and the cellIds
-      delimiter fix (`c0719e0213` — Phase-2 port hardcoded `"\t"` in
-      one of two CompressedStringListType instances, where the hbm.xml
-      uses the 2-char `"\n"` literal; rewrote `decompressToStream` off
-      Apache commons-lang3 Streams.of(Scanner) which wasn't iterating
-      tokens correctly under 3.18.0). Remaining: the same test that
-      drove the delimiter fix now fails further down on
-      `streamSingleCellDataVectors` — `SingleCellDataVectorInitializer`
-      gets raw `Object[]` instead of the entity-shaped tuple it
-      expects, likely a HB6 NativeQuery + aliasToBean interaction
-      (still an Initializer / TupleTransformer alias plumbing detail).
-      `testReplaceVectors` data-state assertion is the other one.
-    - ~~`ExpressionExperimentDaoTest` (~14 methods)~~ — **mostly fixed**:
-      now 55 tests, 0 failures, 1 error. The getBioAssayDimensions HQL
-      rewrite (`2b0028a4e5`) unstuck the `@After.removeFixtures` path
-      that was poisoning every test; Subquery FQN (`5cb418b360`)
-      fixed 4 filter/subquery toString tests; @After re-resolve
-      (`d660c34b63`) fixed the loadReference cluster. Only
-      `testReplaceProcessedDataVectorsWithDetachedExperiment` is left
-      — a real cascade issue in `updateWithNewVectors`.
-    - `AnnDataSingleCellDataLoaderTest` (2 errors) — not yet looked at.
-    They cluster around vector replace + cascade boundaries; the
-    remaining items need a careful look at service-layer flush
-    boundaries + Hibernate 6's stricter detached-entity semantics.
+    - ~~`SingleCellExpressionExperimentServiceTest`~~ — **fully green
+      (17/0/0)**. Closed via: TupleTransformer migration
+      (`1d01e08308`), BinaryFunctionContributor (`2b0028a4e5`), cellIds
+      delimiter fix (`c0719e0213`), `setTupleTransformer` wiring for
+      `SingleCellDataVectorInitializer` (`eee9400743`), and a test-side
+      snapshot of persisted vectors to dodge equals-by-EE+QT+DE when
+      ids are null (`764004c2ea`).
+    - ~~`ExpressionExperimentDaoTest`~~ — **fully green (53/0/0)**.
+      The final piece was a stale `PersistentSet` snapshot leaking
+      across the bulk-DELETE inside `replaceProcessedDataVectors` when
+      called with a detached EE — resolved by re-resolving the managed
+      EE via `session.get(...)` at the top of the method
+      (`e304d1c2b3`).
+    - `AnnDataSingleCellDataLoaderTest` (2 errors) — env-pre-existing
+      (`ModuleNotFoundError: No module named 'anndata'`). Same shape
+      as the cellranger / `/proc/locks` items already documented as
+      env-pre-existing in `RENOVATIONS.md`.
 3. ~~**HQL `substring()` / `character_length()` on BLOB**~~ — **fixed**
    via `BinaryFunctionContributor` (`2b0028a4e5`). Two binary-aware
    HQL functions registered via the HB6 FunctionContributor SPI:
