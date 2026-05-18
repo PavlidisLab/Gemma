@@ -35,9 +35,9 @@ import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.AuthenticationTrustResolver;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 // Spring Security 5 removed the salt-based PasswordEncoder (org.springframework.security.authentication.encoding)
-// in favour of the algorithm-internal-salt one in org.springframework.security.crypto.password. Existing user hashes
-// generated with the old encoder + username-as-salt will need a migration path (e.g., DelegatingPasswordEncoder)
-// before this can talk to a production database again — tracked as future renovation work.
+// in favour of the algorithm-internal-salt one in org.springframework.security.crypto.password. Legacy hashes
+// produced by Gemma's pre-Phase-2 ShaPasswordEncoder + username-as-salt are recognized by
+// GemmaLegacyAwarePasswordEncoder; new encodings are BCrypt with the {bcrypt} prefix.
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
