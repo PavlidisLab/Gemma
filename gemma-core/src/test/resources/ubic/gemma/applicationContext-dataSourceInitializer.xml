@@ -17,8 +17,10 @@
         </property>
         <property name="enabled" value="${gemma.testdb.initialize}"/>
     </bean>
+    <!-- Runs AFTER sessionFactory so that Hibernate's hbm2ddl=create has materialized the schema
+         before init-acls.sql / init-entities.sql try to INSERT into ACLSID / TAXON / etc. -->
     <bean id="dataSourceInitializer" class="org.springframework.jdbc.datasource.init.DataSourceInitializer"
-          depends-on="createDatabaseInitializer">
+          depends-on="sessionFactory">
         <property name="dataSource" ref="dataSource"/>
         <property name="databasePopulator">
             <bean class="org.springframework.jdbc.datasource.init.CompositeDatabasePopulator">

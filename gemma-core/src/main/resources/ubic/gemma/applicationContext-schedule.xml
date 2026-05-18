@@ -18,18 +18,18 @@
     <bean id="schedulerFactoryBean" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
         <property name="triggers">
             <list>
-                <ref local="arrayDesignReportTrigger"/>
-                <ref local="expressionExperimentReportTrigger"/>
-                <ref local="whatsNewTrigger"/>
-                <ref local="gene2CsUpdateTrigger"/>
-                <ref local="batchInfoTrigger"/>
-                <ref local="ee2cExperimentUpdateTrigger"/>
-                <ref local="ee2cSampleUpdateTrigger"/>
-                <ref local="ee2cExperimentalDesignUpdateTrigger"/>
-                <ref local="ee2adUpdateTrigger"/>
-                <ref local="indexExperimentsTrigger"/>
-                <!-- <ref local="viewTrigger" /> -->
-                <!--<ref local="monitorSpaceTrigger" /> -->
+                <ref bean="arrayDesignReportTrigger"/>
+                <ref bean="expressionExperimentReportTrigger"/>
+                <ref bean="whatsNewTrigger"/>
+                <ref bean="gene2CsUpdateTrigger"/>
+                <ref bean="batchInfoTrigger"/>
+                <ref bean="ee2cExperimentUpdateTrigger"/>
+                <ref bean="ee2cSampleUpdateTrigger"/>
+                <ref bean="ee2cExperimentalDesignUpdateTrigger"/>
+                <ref bean="ee2adUpdateTrigger"/>
+                <ref bean="indexExperimentsTrigger"/>
+                <!-- <ref bean="viewTrigger" /> -->
+                <!--<ref bean="monitorSpaceTrigger" /> -->
             </list>
         </property>
     </bean>
