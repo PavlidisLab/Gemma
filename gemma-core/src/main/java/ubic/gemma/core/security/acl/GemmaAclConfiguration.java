@@ -75,13 +75,13 @@ public class GemmaAclConfiguration {
     private static final String ADMIN_AUTHORITY = "GROUP_ADMIN";
 
     @Bean
-    public org.springframework.security.acls.model.AuditLogger aclAuditLogger() {
+    public org.springframework.security.acls.domain.AuditLogger aclAuditLogger() {
         return new ConsoleAuditLogger();
     }
 
     @Bean
     public PermissionGrantingStrategy permissionGrantingStrategy(
-            org.springframework.security.acls.model.AuditLogger auditLogger ) {
+            org.springframework.security.acls.domain.AuditLogger auditLogger ) {
         return new DefaultPermissionGrantingStrategy( auditLogger );
     }
 
@@ -206,15 +206,6 @@ public class GemmaAclConfiguration {
         @Override
         public Acl readAclById( ObjectIdentity oid, Session session ) throws NotFoundException {
             return delegate.readAclById( oid );
-        }
-
-        /**
-         * Session-aware bulk read. Same reasoning as above.
-         */
-        @Override
-        public Map<ObjectIdentity, Acl> readAclsById( List<ObjectIdentity> oids, Session session )
-                throws NotFoundException {
-            return delegate.readAclsById( oids );
         }
 
         /**
