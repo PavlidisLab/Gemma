@@ -1,8 +1,9 @@
 -- Add some indices that are not included in the generated gemma-ddl.sql.
 -- Some of these are very important for performance
 
-alter table ACLSID
-    add index ACLSID_CLASS (class);
+-- ACLSID_CLASS index removed: the new acl_sid schema (Spring Security canonical)
+-- has a `principal` BIT column instead of a `class` varchar discriminator. With
+-- only two possible values, an index is not useful.
 alter table INVESTIGATION
     add index INVESTIGATION_CLASS (class);
 alter table DATABASE_ENTRY
