@@ -18,6 +18,13 @@
  */
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Order;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.time.StopWatch;
@@ -25,7 +32,9 @@ import org.hibernate.Hibernate;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.Query;
+import org.hibernate.query.criteria.JpaOrder;
 import org.hibernate.type.StandardBasicTypes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -165,9 +174,77 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
 
     @Override
     public Slice<DifferentialExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInLimit( @Nullable Collection<BioAssaySet> bioAssaySets, @Nullable Collection<DatabaseEntry> databaseEntries, @Nullable Filters filters, int offset, int limit, @Nullable Sort sort ) {
-        // Phase 2: this used the Hibernate Criteria + FilterCriteriaUtils / AclCriteriaUtils stack that was removed.
-        // Stubbed until the JPA-Criteria-based filtering machinery is reinstated. See PHASE_2_HANDOFF.md.
-        throw new UnsupportedOperationException( "Criteria-based filtering is temporarily unavailable for ExpressionAnalysisResultSet." );
+        // Phase 2 Step 7 port: pre-stub this used Hibernate Criteria with aliases a (analysis) and e
+        // (analysis.experimentAnalyzed) plus FilterCriteriaUtils. The equivalent JPA Criteria query
+        // below walks analysis.experimentAnalyzed off the root and pulls accession from
+        // experimentAnalyzed treated as ExpressionExperiment (BioAssaySet itself has no accession).
+        StopWatch timer = StopWatch.createStarted();
+        Session session = getSessionFactory().getCurrentSession();
+        CriteriaBuilder cb = session.getCriteriaBuilder();
+
+        // --- main query: distinct entities, ordered, sliced -------------------------------------
+        CriteriaQuery<ExpressionAnalysisResultSet> q = cb.createQuery( ExpressionAnalysisResultSet.class );
+        Root<ExpressionAnalysisResultSet> root = q.from( ExpressionAnalysisResultSet.class );
+        q.select( root ).distinct( true );
+        q.where( buildPredicates( cb, q, root, bioAssaySets, databaseEntries, filters ) );
+        if ( sort != null ) {
+            q.orderBy( buildOrders( cb, root, sort ) );
+        }
+        Query<ExpressionAnalysisResultSet> hq = session.createQuery( q );
+        if ( offset > 0 ) hq.setFirstResult( offset );
+        if ( limit > 0 ) hq.setMaxResults( limit );
+        List<ExpressionAnalysisResultSet> data = hq.getResultList();
+
+        // --- count query: count(distinct id) with the same restrictions -------------------------
+        CriteriaQuery<Long> cq = cb.createQuery( Long.class );
+        Root<ExpressionAnalysisResultSet> countRoot = cq.from( ExpressionAnalysisResultSet.class );
+        cq.select( cb.countDistinct( countRoot.get( "id" ) ) );
+        cq.where( buildPredicates( cb, cq, countRoot, bioAssaySets, databaseEntries, filters ) );
+        Long totalElements = session.createQuery( cq ).getSingleResult();
+        if ( totalElements == null ) {
+            totalElements = 0L;
+        }
+
+        for ( ExpressionAnalysisResultSet d : data ) {
+            thaw( d );
+        }
+
+        if ( timer.getTime() > 1000 ) {
+            log.info( String.format( "Loaded %d/%d result sets matching bioAssaySets=%s, databaseEntries=%s, filters=%s in %d ms.",
+                    data.size(), totalElements,
+                    bioAssaySets == null ? "*" : bioAssaySets.size(),
+                    databaseEntries == null ? "*" : databaseEntries.size(),
+                    filters, timer.getTime() ) );
+        }
+
+        return new Slice<>( loadValueObjects( data ), sort, offset, limit, totalElements );
+    }
+
+    /**
+     * Build the WHERE predicate list shared by the data and count queries for
+     * {@link #findByBioAssaySetInAndDatabaseEntryInLimit}.
+     */
+    private Predicate buildPredicates( CriteriaBuilder cb, jakarta.persistence.criteria.CommonAbstractCriteria query,
+            Root<ExpressionAnalysisResultSet> root,
+            @Nullable Collection<BioAssaySet> bioAssaySets,
+            @Nullable Collection<DatabaseEntry> databaseEntries,
+            @Nullable Filters filters ) {
+        List<Predicate> preds = new ArrayList<>();
+        // Filters predicate (returns cb.conjunction() if filters null/empty).
+        preds.add( FilterJpaUtils.formRestrictionClause( cb, query, root, filters ) );
+        if ( bioAssaySets != null ) {
+            // analysis.experimentAnalyzed in (:bioAssaySets)
+            Path<BioAssaySet> experimentAnalyzed = root.<DifferentialExpressionAnalysis>get( "analysis" ).get( "experimentAnalyzed" );
+            preds.add( experimentAnalyzed.in( bioAssaySets ) );
+        }
+        if ( databaseEntries != null ) {
+            // analysis.experimentAnalyzed.accession in (:databaseEntries) -- accession lives on the
+            // ExpressionExperiment subclass of BioAssaySet, so we need cb.treat() to downcast.
+            Path<BioAssaySet> experimentAnalyzed = root.<DifferentialExpressionAnalysis>get( "analysis" ).get( "experimentAnalyzed" );
+            Path<DatabaseEntry> accession = cb.treat( experimentAnalyzed, ExpressionExperiment.class ).get( "accession" );
+            preds.add( accession.in( databaseEntries ) );
+        }
+        return cb.and( preds.toArray( new Predicate[ 0 ] ) );
     }
 
     @Override
@@ -389,11 +466,6 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
         return hist;
     }
 
-    // Phase 2: the Hibernate Criteria-based filtering plumbing was removed. The
-    // FilterCriteriaUtils / AclCriteriaUtils helpers no longer exist, and this method's
-    // signature on the parent class also went away with the Criteria API. Reinstating a
-    // JPA-Criteria equivalent is tracked in PHASE_2_HANDOFF.md.
-
     @Override
     protected void configureFilterableProperties( FilterablePropertiesConfigurer configurer ) {
         super.configureFilterableProperties( configurer );
@@ -510,5 +582,41 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
     private static class FactorValueIdAndExperimentalFactorId {
         Long factorValueId;
         Long experimentalFactorId;
+    }
+
+    /**
+     * Translate a {@link Sort} chain into a list of JPA {@link Order}s rooted at the result-set entity.
+     * Mirrors {@link AbstractCriteriaFilteringVoEnabledDao} (private) so this DAO can sort the data
+     * query of {@link #findByBioAssaySetInAndDatabaseEntryInLimit} without leaking its concrete
+     * filter-collection signature onto the parent.
+     */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private List<Order> buildOrders( CriteriaBuilder cb, Root<ExpressionAnalysisResultSet> root, Sort sort ) {
+        List<Order> orders = new ArrayList<>();
+        for ( ; sort != null; sort = sort.getAndThen() ) {
+            String propertyName = sort.getPropertyName();
+            Expression<?> expr;
+            if ( propertyName.endsWith( ".size" ) ) {
+                String collectionPath = propertyName.substring( 0, propertyName.length() - ".size".length() );
+                expr = cb.size( ( Expression ) FilterJpaUtils.resolvePath( root, collectionPath ) );
+            } else {
+                expr = FilterJpaUtils.resolvePath( root, propertyName );
+            }
+            Order order = sort.getDirection() == Sort.Direction.DESC ? cb.desc( expr ) : cb.asc( expr );
+            if ( sort.getNullMode() != null && sort.getNullMode() != Sort.NullMode.DEFAULT && order instanceof JpaOrder ) {
+                switch ( sort.getNullMode() ) {
+                    case FIRST:
+                        order = ( ( JpaOrder ) order ).nullPrecedence( NullPrecedence.FIRST );
+                        break;
+                    case LAST:
+                        order = ( ( JpaOrder ) order ).nullPrecedence( NullPrecedence.LAST );
+                        break;
+                    default:
+                        break;
+                }
+            }
+            orders.add( order );
+        }
+        return orders;
     }
 }
