@@ -14,6 +14,7 @@ import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.hibernate.H2Dialect;
 import ubic.gemma.persistence.hibernate.HibernateSessionFactoryBean;
+import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
@@ -51,6 +52,9 @@ public class AbstractFilteringVoEnabledDaoTest extends BaseTest {
             props.setProperty( "hibernate.hbm2ddl.auto", "create" );
             props.setProperty( "hibernate.cache.use_second_level_cache", "false" );
             props.setProperty( "hibernate.cache.use_query_cache", "false" );
+            // ManagedSessionContext: required so that getCurrentSession() resolves in the lightweight
+            // (no Spring TM) test fixture used below for the JPA-Criteria filtering DAO tests.
+            props.setProperty( "hibernate.current_session_context_class", "managed" );
             factory.setHibernateProperties( props );
             return factory;
         }
@@ -58,6 +62,11 @@ public class AbstractFilteringVoEnabledDaoTest extends BaseTest {
         @Bean
         public FakeDao fakeDao( SessionFactory sessionFactory ) {
             return new FakeDao( sessionFactory );
+        }
+
+        @Bean
+        public FakeCriteriaDao fakeCriteriaDao( SessionFactory sessionFactory ) {
+            return new FakeCriteriaDao( sessionFactory );
         }
     }
 
@@ -142,8 +151,27 @@ public class AbstractFilteringVoEnabledDaoTest extends BaseTest {
         }
     }
 
+    /**
+     * Minimal subclass that exercises the JPA-Criteria filtering path (subquery + .size filters).
+     */
+    static class FakeCriteriaDao extends AbstractCriteriaFilteringVoEnabledDao<FakeModel, FakeModelVo> {
+
+        @Autowired
+        public FakeCriteriaDao( SessionFactory sessionFactory ) {
+            super( FakeModel.class, sessionFactory );
+        }
+
+        @Override
+        protected FakeModelVo doLoadValueObject( FakeModel entity ) {
+            return null;
+        }
+    }
+
     @Autowired
     private FakeDao fakeDao;
+
+    @Autowired
+    private FakeCriteriaDao fakeCriteriaDao;
 
     @Test
     public void test() {
@@ -166,5 +194,49 @@ public class AbstractFilteringVoEnabledDaoTest extends BaseTest {
     @Test(expected = IllegalArgumentException.class)
     public void testUndefinedProperty() {
         fakeDao.getFilterablePropertyMeta( "missing" );
+    }
+
+    /**
+     * Exercises the .size-suffix filter path on the JPA-Criteria filtering DAO. Pre-Phase-2 this
+     * went through the deleted Hibernate Criteria API; Phase 2 round 6 restored it via
+     * {@code cb.size(...)} on a Path<Collection<?>>.
+     * <p>
+     * Uses a manually-opened session bound to the thread (no Spring TM in this lightweight test
+     * context) so the DAO's {@code getCurrentSession()} call resolves.
+     */
+    @Test
+    public void testSizeFilterOnCriteriaDao() {
+        runInSession( () -> {
+            Filters filters = Filters.by( Filter.by( null, "collectionOfStrings.size", Integer.class, Filter.Operator.greaterThan, 0 ) );
+            assertThat( fakeCriteriaDao.count( filters ) ).isEqualTo( 0L );
+            assertThat( fakeCriteriaDao.load( filters, null ) ).isEmpty();
+        } );
+    }
+
+    /**
+     * Exercises null-precedence (FIRST/LAST) via the Hibernate-6 JpaOrder vendor extension.
+     */
+    @Test
+    public void testNullPrecedenceOnCriteriaDao() {
+        runInSession( () -> {
+            Sort nullsFirst = Sort.by( null, "name", Sort.Direction.ASC, Sort.NullMode.FIRST );
+            assertThat( fakeCriteriaDao.load( null, nullsFirst ) ).isEmpty();
+            Sort nullsLast = Sort.by( null, "name", Sort.Direction.ASC, Sort.NullMode.LAST );
+            assertThat( fakeCriteriaDao.load( null, nullsLast ) ).isEmpty();
+        } );
+    }
+
+    @Autowired
+    private SessionFactory sessionFactory;
+
+    private void runInSession( Runnable r ) {
+        org.hibernate.Session s = sessionFactory.openSession();
+        org.hibernate.context.internal.ManagedSessionContext.bind( s );
+        try {
+            r.run();
+        } finally {
+            org.hibernate.context.internal.ManagedSessionContext.unbind( sessionFactory );
+            s.close();
+        }
     }
 }

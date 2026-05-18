@@ -7,7 +7,9 @@ import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Root;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.SessionFactory;
+import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.Query;
+import org.hibernate.query.criteria.JpaOrder;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.persistence.util.FilterJpaUtils;
@@ -35,12 +37,9 @@ import java.util.concurrent.TimeUnit;
  *   <li>Sorting: dot-walked property paths, ASC/DESC. Null-precedence is currently ignored
  *       (JPA Criteria's {@code Order} doesn't expose it; Hibernate-specific extension TODO).</li>
  *   <li>Counting: {@code count(distinct id)} via the JPA Criteria.</li>
- *   <li>{@code .size}-suffix filters: not yet ported — throws UOE inside {@link FilterJpaUtils}.</li>
- *   <li>Subquery filters: not yet ported — throws UOE inside {@link FilterJpaUtils}.</li>
+ *   <li>{@code .size}-suffix filters via {@link jakarta.persistence.criteria.CriteriaBuilder#size}.</li>
+ *   <li>Subquery filters (inSubquery / notInSubquery) via {@link jakarta.persistence.criteria.Subquery}.</li>
  * </ul>
- * Subclasses that need either of the unimplemented operators should override the relevant
- * {@code load*}/{@code count} method directly, or use HQL via
- * {@link AbstractQueryFilteringVoEnabledDao}.
  * <p>
  * The pre-Phase-2 {@code FilterablePropertyCriteriaAlias} introspection of the underlying
  * {@code CriteriaImpl.Subcriteria} is gone — JPA Criteria joins are explicit, so subclasses that
@@ -83,7 +82,7 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
         CriteriaQuery<T> q = cb.createQuery( resultType );
         @SuppressWarnings("unchecked")
         Root<O> root = q.from( (Class<O>) getElementClass() );
-        q.where( FilterJpaUtils.formRestrictionClause( cb, root, filters ) );
+        q.where( FilterJpaUtils.formRestrictionClause( cb, q, root, filters ) );
         return new CriteriaContext<>( q, root );
     }
 
@@ -185,17 +184,34 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
         return result == null ? 0L : result;
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     private List<Order> buildOrders( CriteriaBuilder cb, Root<O> root, Sort sort ) {
         List<Order> orders = new ArrayList<>();
         for ( ; sort != null; sort = sort.getAndThen() ) {
             String propertyName = sort.getPropertyName();
+            jakarta.persistence.criteria.Expression<?> expr;
             if ( propertyName.endsWith( ".size" ) ) {
-                throw new UnsupportedOperationException( "Ordering by collection size is not supported by the JPA-Criteria port (see Gemma issue #520)." );
+                String collectionPath = propertyName.substring( 0, propertyName.length() - ".size".length() );
+                expr = cb.size( ( jakarta.persistence.criteria.Expression ) FilterJpaUtils.resolvePath( root, collectionPath ) );
+            } else {
+                expr = FilterJpaUtils.resolvePath( root, propertyName );
             }
-            Path<?> path = FilterJpaUtils.resolvePath( root, propertyName );
-            Order order = sort.getDirection() == Sort.Direction.DESC ? cb.desc( path ) : cb.asc( path );
-            // JPA's Order has no null-precedence accessor; nulls FIRST/LAST is a Hibernate-6 extension
-            // we haven't wired up yet. NullMode.DEFAULT is honoured implicitly.
+            Order order = sort.getDirection() == Sort.Direction.DESC ? cb.desc( expr ) : cb.asc( expr );
+            // JPA's Order has no null-precedence accessor, but in Hibernate 6 the Order returned by
+            // CriteriaBuilder.asc/desc is actually a JpaOrder, which exposes nullPrecedence(...).
+            if ( sort.getNullMode() != null && sort.getNullMode() != Sort.NullMode.DEFAULT && order instanceof JpaOrder ) {
+                switch ( sort.getNullMode() ) {
+                    case FIRST:
+                        order = ( ( JpaOrder ) order ).nullPrecedence( NullPrecedence.FIRST );
+                        break;
+                    case LAST:
+                        order = ( ( JpaOrder ) order ).nullPrecedence( NullPrecedence.LAST );
+                        break;
+                    default:
+                        // DEFAULT handled above; nothing to do.
+                        break;
+                }
+            }
             orders.add( order );
         }
         return orders;
