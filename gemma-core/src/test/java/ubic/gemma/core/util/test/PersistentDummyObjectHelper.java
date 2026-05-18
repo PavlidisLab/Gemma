@@ -441,7 +441,7 @@ public class PersistentDummyObjectHelper {
 
         ExpressionAnalysisResultSet dears = new ExpressionAnalysisResultSet();
         dears.setAnalysis( dea );
-        dears.setExperimentalFactors( Collections.singleton( ef ) );
+        dears.setExperimentalFactors( new HashSet<>( Collections.singleton( ef ) ) );
 
         // draw log2fc from an over-dispersed normal distribution
         RealDistribution log2fcDistribution = new NormalDistribution( 0, 2 );
@@ -465,14 +465,14 @@ public class PersistentDummyObjectHelper {
             dear.setPvalue( pvalue );
             dear.setCorrectedPvalue( dear.getPvalue() / ad.getCompositeSequences().size() );
             dear.setProbe( probe );
-            dear.setContrasts( Collections.singleton( cr ) );
+            dear.setContrasts( new HashSet<>( Collections.singleton( cr ) ) );
 
             results.add( dear );
         }
 
         dears.setResults( results );
 
-        dea.setResultSets( Collections.singleton( dears ) );
+        dea.setResultSets( new HashSet<>( Collections.singleton( dears ) ) );
 
         // create everything at once
         differentialExpressionAnalysisService.create( dea );
@@ -912,7 +912,7 @@ public class PersistentDummyObjectHelper {
             fv.setValue( "Factor value " + RandomStringUtils.insecure()
                     .nextNumeric( PersistentDummyObjectHelper.RANDOM_STRING_LENGTH ) );
             fv.setExperimentalFactor( ef );
-            fv.setCharacteristics( Collections.singleton( getTestStatement( "name" + RandomStringUtils.insecure().nextNumeric( RANDOM_STRING_LENGTH ), fv.getValue() ) ) );
+            fv.setCharacteristics( new HashSet<>( Collections.singleton( getTestStatement( "name" + RandomStringUtils.insecure().nextNumeric( RANDOM_STRING_LENGTH ), fv.getValue() ) ) ) );
             fvCol.add( fv );
         }
 
