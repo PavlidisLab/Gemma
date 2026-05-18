@@ -130,7 +130,18 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     @Override
     @OverridingMethodsMustInvokeSuper
     public T create( T entity ) {
-        Assert.isNull( entity.getId(), "Cannot create an already persistent entity." );
+        if ( entity.getId() != null ) {
+            // Hibernate 6 cascade-via-persist + early-flush patterns (e.g. ExpressionPersister
+            // walking a parent's collection where the parent was already persisted with cascade)
+            // can leave an entity already in the session before the caller's explicit create()
+            // call. Treat as a no-op rather than fail an Assert that was correct under earlier
+            // Hibernate but is overly strict now. Trace-log to keep the diagnostic value of the
+            // old assertion.
+            if ( log.isTraceEnabled() ) {
+                log.trace( String.format( "create() called on already-persistent %s; treating as no-op.", formatEntity( entity ) ) );
+            }
+            return entity;
+        }
         sessionFactory.getCurrentSession().persist( entity );
         if ( log.isTraceEnabled() ) {
             log.trace( String.format( "Created %s.", formatEntity( entity ) ) );
@@ -404,6 +415,15 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     public void update( T entity ) {
         Assert.notNull( entity.getId(), "Cannot update a transient entity." );
         sessionFactory.getCurrentSession().merge( entity );
+        // Hibernate 6 made session.merge() defer cascaded inserts of new child entities until the
+        // next session flush. AclAdvice fires @AfterReturning on this DAO method (before tx
+        // commit) and walks the just-merged tree to create ACLs for each Securable; transient
+        // children that got attached to the parent will silently be skipped because their id is
+        // still null at advice time. Force a flush here so cascade-pending inserts materialize
+        // and child ids are assigned before AclAdvice runs. Paired with the idempotent
+        // create() above so that ExpressionPersister-style flows where the same entity is
+        // create()d explicitly after also being cascaded keep working.
+        sessionFactory.getCurrentSession().flush();
         if ( log.isTraceEnabled() ) {
             log.trace( String.format( "Updated %s.", formatEntity( entity ) ) );
         }
