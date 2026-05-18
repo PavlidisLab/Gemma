@@ -107,20 +107,10 @@
     <!-- Enable AspectJ autoproxy -->
     <aop:aspectj-autoproxy/>
 
-    <!-- Renovations Phase 3 cutover (probing): the Hibernate PostInsert/PostDelete event
-         listener (gemma.gsec.acl.AclEventListener, registered by AclEventListenerConfig)
-         carries ACL maintenance on its own with a thread-local parent stash to discover
-         parent OIDs for SecuredChildren whose securityOwner isn't populated. The AOP advice
-         wiring below is commented out as a cutover probe — if regressions surface, restore
-         to dual-fire mode by uncommenting.
-    <aop:config>
-        <aop:aspect id="aclAspect" ref="aclAdvice" order="4">
-            <aop:after-returning method="doAclAdvice"
-                                 pointcut="ubic.gemma.persistence.util.Pointcuts.modifier()"
-                                 returning="retValue"/>
-        </aop:aspect>
-    </aop:config>
-    -->
+    <!-- Renovations Phase 3: ACL maintenance fires off Hibernate PostInsert/PostDelete events
+         via gemma.gsec.acl.AclEventListener (registered by AclEventListenerConfig). The
+         previous @AfterReturning AOP advice on ubic.gemma.persistence.util.Pointcuts.modifier()
+         was removed once the listener proved out the full 4-test ACL sweep on its own. -->
 
 
     <!-- filters (gemma-specific) -->

@@ -37,18 +37,17 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.util.Pointcuts;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
 
 /**
- * For permissions modification to be triggered, the method name must match certain patterns, which include "create", or
- * "remove". These patterns are defined in the {@link Pointcuts}. Other methods that would require
- * changes to permissions will not work without modifying the source code. *
+ * Gemma-specific extension points for {@link BaseAclAdvice}: identifies User / UserGroup,
+ * supplies their granted authority, marks the entity types that should keep private ACLs on
+ * admin-driven creation, and runs the DEA → ExpressionAnalysisResultSet parent-ACL
+ * special case. Triggered from {@link gemma.gsec.acl.AclEventListener} via the
+ * BaseAclAdvice protected hooks; no longer an AOP advice (Renovations Phase 3 dropped the
+ * {@code @AfterReturning} wiring).
  *
  * @author Paul
  */
@@ -66,34 +65,6 @@ public class AclAdvice extends BaseAclAdvice {
     protected boolean canSkipAclCheck( Object object ) {
         return AuditTrail.class.isAssignableFrom( object.getClass() ) || CurationDetails.class
                 .isAssignableFrom( object.getClass() );
-    }
-
-    @Override
-    protected boolean canSkipAssociationCheck( Object object, String propertyName ) {
-
-        /*
-         * If this is an expression experiment, don't go down the data vectors - it has no securable associations and
-         * would be expensive to traverse.
-         */
-        if ( ExpressionExperiment.class.isAssignableFrom( object.getClass() )
-                && ( propertyName.equals( "rawExpressionDataVectors" )
-                || propertyName.equals( "processedExpressionDataVectors" )
-                || propertyName.equals( "singleCellExpressionDataVectors" ) ) ) {
-            if ( AclAdvice.log.isTraceEnabled() )
-                AclAdvice.log.trace( "Skipping checking acl on vectors on " + object );
-            return true;
-        }
-
-        /*
-         * Array design has some non (directly) securable associations that would be expensive to load
-         */
-        if ( ArrayDesign.class.isAssignableFrom( object.getClass() ) && propertyName.equals( "compositeSequences" ) ) {
-            if ( AclAdvice.log.isTraceEnabled() )
-                AclAdvice.log.trace( "Skipping checking acl on probes on " + object );
-            return true;
-        }
-
-        return false;
     }
 
     @Override
@@ -150,12 +121,6 @@ public class AclAdvice extends BaseAclAdvice {
     @Override
     protected boolean objectIsUserGroup( Securable object ) {
         return UserGroup.class.isAssignableFrom( object.getClass() );
-    }
-
-    @Override
-    protected boolean specialCaseForAssociationFollow( Object object, String property ) {
-        return BioAssay.class.isAssignableFrom( object.getClass() ) && ( property.equals( "sampleUsed" ) || property
-                .equals( "arrayDesignUsed" ) );
     }
 
     @Override
