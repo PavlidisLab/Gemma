@@ -92,7 +92,10 @@ public class ExternalDatabaseServiceTest extends BaseSpringContextTest {
     public void testUpdateExternalDatabaseDontCascadeToRelatedDatabases() {
         ed = externalDatabaseService.create( ExternalDatabase.Factory.newInstance( "ed", DatabaseType.OTHER ) );
         ed2 = ExternalDatabase.Factory.newInstance( "ed2", DatabaseType.OTHER );
-        ed2.setExternalDatabases( Collections.singleton( ed ) );
+        // Hibernate 6's merge replaces collections in-place via PersistentSet.clear() — pass a
+        // mutable Set, not Collections.singleton (immutable wrapper -> UnsupportedOperationException
+        // at PersistentSet.clear -> Collections$1.remove during merge).
+        ed2.setExternalDatabases( new java.util.HashSet<>( Collections.singleton( ed ) ) );
         ed2 = externalDatabaseService.create( ed2 );
         ed2.setDescription( "1234" );
         externalDatabaseService.update( ed2 );
