@@ -21,20 +21,29 @@ public class CreateDatabasePopulator implements DatabasePopulator {
     private final String databaseName;
     private boolean dropIfExists = false;
 
+    /**
+     * Track whether THIS JVM has already dropped the named test database. Spring's TestContext
+     * cache lets integration tests with different @ContextConfiguration shapes each trigger a
+     * fresh DataSourceInitializer; dropping on every one invalidates the tables that a
+     * previously-cached EMF still expects to use. Drop only on the first context bootstrap of
+     * the JVM.
+     */
+    private static final java.util.concurrent.ConcurrentHashMap<String, Boolean> ALREADY_DROPPED = new java.util.concurrent.ConcurrentHashMap<>();
+
     public CreateDatabasePopulator( String databaseName ) {
         this.databaseName = databaseName;
     }
 
     @Override
     public void populate( Connection connection ) throws SQLException {
-        if ( dropIfExists ) {
+        if ( dropIfExists && ALREADY_DROPPED.putIfAbsent( databaseName, Boolean.TRUE ) == null ) {
             try ( PreparedStatement ps = connection.prepareStatement( "drop database if exists " + databaseName ) ) {
-                log.warn( "Dropping database " + databaseName + "..." );
+                log.warn( "Dropping database " + databaseName + " (first context bootstrap of this JVM)..." );
                 ps.execute();
             }
         }
-        try ( PreparedStatement ps = connection.prepareStatement( "create database " + databaseName + " character set utf8mb4" ) ) {
-            log.info( "Creating database " + databaseName );
+        try ( PreparedStatement ps = connection.prepareStatement( "create database if not exists " + databaseName + " character set utf8mb4" ) ) {
+            log.info( "Creating database " + databaseName + " (if not exists)" );
             ps.execute();
         }
     }
