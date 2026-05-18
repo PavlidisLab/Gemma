@@ -430,7 +430,9 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
             subqueryOp = Filter.Operator.inSubquery;
         }
         return Filter.by( objectAlias, getIdentifierPropertyName(), Long.class, subqueryOp,
-                new Subquery( getEntityName(), getIdentifierPropertyName(), aliases, f ),
+                // Use the FQN here (HQL accepts both; FQN is unambiguous and matches the legacy
+                // Subquery toString format that downstream tests and any HQL-aware tooling depend on).
+                new Subquery( getElementClass().getName(), getIdentifierPropertyName(), aliases, f ),
                 propertyName );
     }
 
