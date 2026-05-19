@@ -74,7 +74,7 @@ def apply_rcparams() -> None:
 #   S4+ = downstream / queued
 #   S8+ = blocked / deliberately deferred
 
-TODAY_X = 4.0  # end of S4 (now = 2026-05-19 early hours)
+TODAY_X = 5.0  # end of S5 (now = 2026-05-19 late hours)
 
 @dataclass
 class Task:
@@ -109,6 +109,15 @@ TASKS: list[Task] = [
     Task("ACL & security", "applicationContext-security.xml -> SecurityConfig",
          3.0, 4.0, 4.0, "done",
          "500 LoC Java config; 23 @Beans; runtime smoke pending"),
+    Task("ACL & security", "gsec absorption A (copy + drop dep)",
+         5.0, 5.0, 5.0, "done",
+         "7126 LoC / 65 classes / 27 tests moved to gemma-core; pavlab:gemma-gsec retired"),
+    Task("ACL & security", "gsec absorption B (unify Sids)",
+         5.0, 5.0, 5.0, "done",
+         "AclSid no longer implements Spring Sid; AclLinter applyFixes now persists"),
+    Task("ACL & security", "gsec absorption C+D (drop adapter, rename)",
+         6.0, 8.0, 0.0, "planned",
+         "GsecAclServiceAdapter drop + final package rename to ubic.gemma.core.security.*"),
     Task("ACL & security", "Drop old uppercase ACL tables",
          3.0, 4.0, 0.0, "blocked",
          "blocked on 1 release cycle of write cutover"),
@@ -186,14 +195,35 @@ TASKS: list[Task] = [
     Task("Cleanups", "JUnit jupiter version alignment",
          4.0, 4.0, 4.0, "done",
          "5.11.4 -> 5.12.2 to match Boot 3.5.6 BOM"),
+    Task("Cleanups", "Delete 5 deprecated CLIs",
+         5.0, 5.0, 5.0, "done",
+         "-914 LoC (733 Java + 181 test); per GEMMA_CLI_DEAD_CODE_AUDIT.md"),
+    Task("Cleanups", "Lombok cleanup (records, @Data)",
+         1.0, 5.0, 5.0, "inflight",
+         "30 VOs / ~1156 LoC removed across 3 batches"),
+    Task("Cleanups", "protobuf-java CVE-2024-7254 pin",
+         5.0, 5.0, 5.0, "done",
+         "3.25.1 -> 3.25.5 via dM override"),
+    Task("Cleanups", "AuditTrail/AuditEvent Hibernate cache bug",
+         5.0, 5.0, 5.0, "done",
+         "one-line fix: drop <cache usage=read-only/> on AuditEvent"),
 
     # ---- Cloud-ready -----------------------------------------------------
     Task("Cloud-ready", "gemma-rest standalone packaging",
-         2.0, 6.0, 4.0, "inflight",
-         "standalone-recce flagged 3 blockers; ~1.75 sessions to first WAR"),
+         2.0, 6.0, 5.0, "inflight",
+         "gemma-rest-war profile produces gemma-rest.war (106MB); Phase 1 slice 1 landed"),
     Task("Cloud-ready", "12-factor config (env vars, profiles)",
-         3.0, 6.0, 3.0, "inflight",
-         "Spring profiles audit landed"),
+         3.0, 6.0, 5.0, "inflight",
+         "SettingsConfig env-var fallback (GEMMA_FOO_BAR -> gemma.foo.bar); HIGH #1+#2 closed"),
+    Task("Cloud-ready", "Container image (Dockerfile + recce)",
+         5.0, 6.0, 5.0, "done",
+         "Multi-stage Dockerfile + CONTAINER_IMAGE_RECCE.md; WAR builds; 8 gaps before prod"),
+    Task("Cloud-ready", "Structured logging (JSON + MDC)",
+         5.0, 5.0, 5.0, "done",
+         "JsonTemplateLayout + RequestIdMdcFilter; requestId/userId in every log line"),
+    Task("Cloud-ready", "OpenTelemetry traces",
+         6.0, 8.0, 0.0, "planned",
+         "Phase 3+4 of LOGGING_MODERNIZATION_RECCE.md"),
     Task("Cloud-ready", "Object storage abstraction (S3/GCS)",
          5.0, 8.0, 0.0, "planned"),
     Task("Cloud-ready", "Container image with sane defaults",
@@ -211,6 +241,12 @@ TASKS: list[Task] = [
          3.0, 6.0, 0.0, "planned"),
 
     # ---- AI-driven -------------------------------------------------------
+    Task("AI-driven", "Audit-as-workflow (@Audited + JSON payload)",
+         5.0, 7.0, 5.0, "inflight",
+         "Phase A landed (annotation + aspect + payload column + Spring event); 8/77 callers swept"),
+    Task("AI-driven", "Ticket/workflow layer (CurationDetails replacement)",
+         6.0, 9.0, 0.0, "planned",
+         "Recce landed (AUDIT_AS_WORKFLOW_RECCE.md); Tickets with 1..N targets, GH-issue interop"),
     Task("AI-driven", "Vector store for similarity (pgvector)",
          6.0, 9.0, 0.0, "planned"),
     Task("AI-driven", "Embeddings on metadata fields",
