@@ -20,7 +20,6 @@ package ubic.gemma.persistence.service.genome.sequenceAnalysis;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject;
 import ubic.gemma.persistence.service.AbstractVoEnabledService;
@@ -37,33 +36,34 @@ import java.util.Collection;
 public class BlatResultServiceImpl extends AbstractVoEnabledService<BlatResult, BlatResultValueObject>
         implements BlatResultService {
 
-    private final BlatResultDao blatResultDao;
+    @Autowired
+    private BlatResultReadService readService;
 
     @Autowired
     public BlatResultServiceImpl( BlatResultDao blatResultDao ) {
         super( blatResultDao );
-        this.blatResultDao = blatResultDao;
     }
 
-    /**
-     * @see BlatResultService#findByBioSequence(ubic.gemma.model.genome.biosequence.BioSequence)
-     */
+    // =====================================================================
+    // Read methods -- delegate to BlatResultReadService.
+    // BlatResultService declares no @Secured / @PostAuthorize / @PostFilter
+    // on these read methods (the AdminEditableBaseService @Secured("GROUP_ADMIN")
+    // annotations cover the write side only).
+    // =====================================================================
+
     @Override
-    @Transactional(readOnly = true)
     public Collection<BlatResult> findByBioSequence(
             final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
-        return this.blatResultDao.findByBioSequence( bioSequence );
+        return readService.findByBioSequence( bioSequence );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public BlatResult thaw( BlatResult blatResult ) {
-        return this.blatResultDao.thaw( blatResult );
+        return readService.thaw( blatResult );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<BlatResult> thaw( Collection<BlatResult> blatResults ) {
-        return this.blatResultDao.thaw( blatResults );
+        return readService.thaw( blatResults );
     }
 }
