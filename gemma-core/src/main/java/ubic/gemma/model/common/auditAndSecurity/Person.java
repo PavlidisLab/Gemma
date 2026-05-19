@@ -19,6 +19,8 @@
 package ubic.gemma.model.common.auditAndSecurity;
 
 import jakarta.persistence.Transient;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  *
@@ -28,6 +30,8 @@ import jakarta.persistence.Transient;
  * @deprecated not needed
  */
 @Deprecated
+@Getter
+@Setter
 public class Person extends Contact {
 
     private String lastName;
@@ -35,13 +39,5 @@ public class Person extends Contact {
     @Transient
     public String getFullName() {
         return this.getName() + " " + this.getLastName();
-    }
-
-    public String getLastName() {
-        return this.lastName;
-    }
-
-    public void setLastName( String lastName ) {
-        this.lastName = lastName;
     }
 }

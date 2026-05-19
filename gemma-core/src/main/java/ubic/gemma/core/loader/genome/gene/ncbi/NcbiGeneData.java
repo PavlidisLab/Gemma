@@ -1,5 +1,7 @@
 package ubic.gemma.core.loader.genome.gene.ncbi;
 
+import lombok.Getter;
+import lombok.Setter;
 import ubic.gemma.core.loader.genome.gene.ncbi.model.NCBIGene2Accession;
 import ubic.gemma.core.loader.genome.gene.ncbi.model.NCBIGeneInfo;
 
@@ -13,6 +15,8 @@ import java.util.Collection;
  * @author jsantos
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
+@Getter
+@Setter
 public class NcbiGeneData {
     private NCBIGeneInfo geneInfo;
     private Collection<NCBIGene2Accession> accessions;
@@ -24,23 +28,6 @@ public class NcbiGeneData {
 
     public void addAccession( NCBIGene2Accession accession ) {
         this.accessions.add( accession );
-    }
-
-    public NCBIGeneInfo getGeneInfo() {
-        return this.geneInfo;
-    }
-
-    public void setGeneInfo( NCBIGeneInfo geneInfo ) {
-        this.geneInfo = geneInfo;
-    }
-
-    public Collection<NCBIGene2Accession> getAccessions() {
-        return this.accessions;
-    }
-
-    @SuppressWarnings("unused") // Possible external use
-    public void setAccessions( Collection<NCBIGene2Accession> accessions ) {
-        this.accessions = accessions;
     }
 
 }
