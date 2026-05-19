@@ -18,7 +18,6 @@
  */
 package ubic.gemma.persistence.persister;
 
-import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.*;
@@ -26,14 +25,11 @@ import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.model.common.measurement.Unit;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.persistence.service.common.description.BibliographicReferenceDao;
 import ubic.gemma.persistence.service.common.description.DatabaseEntryDao;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseDao;
-import ubic.gemma.persistence.service.common.measurement.UnitDao;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeDao;
-import ubic.gemma.persistence.util.BusinessKey;
 
 import java.util.Map;
 
@@ -41,7 +37,7 @@ import java.util.Map;
  * Persister for ubic.gemma.model.common package classes.
  * <p>
  * Phase 3 persister retirement: methods here are being rewired to delegate to
- * {@link BusinessKey#find(Session, Object)} (or DAO-level {@code find} where it already
+ * {@code BusinessKey.find(Session, T)} (or DAO-level {@code find} where it already
  * wraps BusinessKey) followed by a direct {@code session.persist} / {@code dao.create}
  * on miss. The aim is to make each {@code persistXxx} a thin two-line "lookup by
  * business key, else create" so the whole persister can eventually be deleted in favour
@@ -62,9 +58,6 @@ public abstract class CommonPersister extends AbstractPersister {
     private QuantitationTypeDao quantitationTypeDao;
 
     @Autowired
-    private UnitDao unitDao;
-
-    @Autowired
     private DatabaseEntryDao databaseEntryDao;
 
     @Override
@@ -72,8 +65,6 @@ public abstract class CommonPersister extends AbstractPersister {
     protected <T extends Identifiable> T doPersist( T entity, Caches caches ) {
         if ( entity instanceof User ) {
             throw new UnsupportedOperationException( "Don't persist users via this class; use the UserManager (core)" );
-        } else if ( entity instanceof Unit ) {
-            return ( T ) this.persistUnit( ( Unit ) entity );
         } else if ( entity instanceof QuantitationType ) {
             return ( T ) this.persistQuantitationType( ( QuantitationType ) entity, caches );
         } else if ( entity instanceof ExternalDatabase ) {
@@ -148,14 +139,6 @@ public abstract class CommonPersister extends AbstractPersister {
         QuantitationType qt = quantitationTypeDao.create( qType );
         quantitationTypeCache.put( key, qt );
         return qt;
-    }
-
-    protected Unit persistUnit( Unit unit ) {
-        // Unit has a static BusinessKey.find — bypass the DAO-level wrapper so the
-        // intent is visible at the call site.
-        Session session = getSessionFactory().getCurrentSession();
-        Unit existing = BusinessKey.find( session, unit );
-        return existing != null ? existing : unitDao.create( unit );
     }
 
     private Object persistBibliographicReference( BibliographicReference reference, Caches caches ) {

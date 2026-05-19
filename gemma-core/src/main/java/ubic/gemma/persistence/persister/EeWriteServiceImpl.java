@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
+import ubic.gemma.model.common.measurement.Unit;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -41,6 +42,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.common.auditAndSecurity.ContactDao;
+import ubic.gemma.persistence.service.common.measurement.UnitDao;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayDao;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionDao;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialDao;
@@ -102,6 +104,8 @@ public class EeWriteServiceImpl implements EeWriteService {
     private ExpressionExperimentSubSetDao expressionExperimentSubSetDao;
     @Autowired
     private FactorValueDao factorValueDao;
+    @Autowired
+    private UnitDao unitDao;
     /**
      * Used to call back into the persister chain for the inherited helpers
      * ({@code persistTaxon}, {@code persistExternalDatabase},
@@ -459,7 +463,7 @@ public class EeWriteServiceImpl implements EeWriteService {
                 factorValue.setExperimentalFactor( experimentalFactor );
                 // measurement will cascade, but not unit.
                 if ( factorValue.getMeasurement() != null && factorValue.getMeasurement().getUnit() != null ) {
-                    factorValue.getMeasurement().setUnit( persister().persistUnit( factorValue.getMeasurement().getUnit() ) );
+                    factorValue.getMeasurement().setUnit( findOrCreateUnit( factorValue.getMeasurement().getUnit() ) );
                 }
             }
         }
@@ -541,7 +545,17 @@ public class EeWriteServiceImpl implements EeWriteService {
         }
         // measurement will cascade, but not unit.
         if ( factorValue.getMeasurement() != null && factorValue.getMeasurement().getUnit() != null ) {
-            factorValue.getMeasurement().setUnit( persister().persistUnit( factorValue.getMeasurement().getUnit() ) );
+            factorValue.getMeasurement().setUnit( findOrCreateUnit( factorValue.getMeasurement().getUnit() ) );
         }
+    }
+
+    /**
+     * Find-or-create for {@link Unit}. UnitDao.find delegates to
+     * {@code BusinessKey.find(Session, Unit)} (name-only BK). Inlined from
+     * the former {@code CommonPersister.persistUnit} during the persister sweep.
+     */
+    private Unit findOrCreateUnit( Unit unit ) {
+        Unit existing = unitDao.find( unit );
+        return existing != null ? existing : unitDao.create( unit );
     }
 }
