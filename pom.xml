@@ -600,6 +600,15 @@
 			<version>2.4.240</version>
 			<scope>test</scope>
 		</dependency>
+		<!-- Phase 3 build hygiene: ArchUnit drives architecture-rule JUnit tests
+		     (e.g. forbid @Autowired on Impl-typed fields, which break under AOP
+		     JDK-proxy wrapping). JUnit 4 flavor matches the rest of the codebase. -->
+		<dependency>
+			<groupId>com.tngtech.archunit</groupId>
+			<artifactId>archunit-junit4</artifactId>
+			<version>1.3.0</version>
+			<scope>test</scope>
+		</dependency>
 
 		<!-- Development tools -->
 		<dependency>
