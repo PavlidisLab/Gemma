@@ -228,6 +228,21 @@
 				<artifactId>hibernate-jcache</artifactId>
 				<version>${hibernate.version}</version>
 			</dependency>
+			<!-- Hibernate Search 7 + Lucene 9 (Renovations Phase 3, search restoration Step 1).
+			     - hibernate-search-mapper-orm: integrates HS into the Hibernate ORM SessionFactory.
+			     - hibernate-search-backend-lucene: the embedded-Lucene (local filesystem) backend.
+			     Lucene 9 is transitively pinned by these artifacts; we deliberately do NOT pin
+			     a standalone Lucene version. See SEARCH_RECCE.md Section 3.1. -->
+			<dependency>
+				<groupId>org.hibernate.search</groupId>
+				<artifactId>hibernate-search-mapper-orm</artifactId>
+				<version>${hibernate.search.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.hibernate.search</groupId>
+				<artifactId>hibernate-search-backend-lucene</artifactId>
+				<version>${hibernate.search.version}</version>
+			</dependency>
 			<!-- Micrometer 1.13.11: BOM imports micrometer-bom 1.13.15. Gemma's pavlab note
 			     flags issues on the 1.14 series; we hold 1.13.11 explicitly. -->
 			<dependency>
@@ -1308,6 +1323,14 @@
 		<spring.version>6.2.8</spring.version>
 		<spring.security.version>6.5.1</spring.security.version>
 		<hibernate.version>6.6.18.Final</hibernate.version>
+		<!-- Renovations Phase 3: Hibernate Search 7 + Lucene 9 restoration.
+		     HS 7.2.x pairs with Hibernate ORM 6.6 and ships against Lucene 9.x
+		     (Lucene is pinned transitively by HS 7's POM; do not declare a
+		     standalone Lucene version unless overriding). See SEARCH_RECCE.md
+		     Section 3.1. Step 1 wires bootstrap only; entity annotations land
+		     in Step 2 and the SearchSource / IndexerService restoration in
+		     Steps 3-4. -->
+		<hibernate.search.version>7.2.4.Final</hibernate.search.version>
 		<!-- Flyway 10.x split out database-specific modules; tests need flyway-database-h2.
 		     Production wiring (flyway-mysql) lands in the follow-on session. -->
 		<flyway.version>10.22.0</flyway.version>

@@ -247,6 +247,13 @@ If we want highlighting beyond the HS-7 native projection, add:
 </dependency>
 ```
 
+> **Step 1 footnote (2026-05-19):** `hibernate-search-backend-lucene:7.2.4.Final`
+> already pulls `lucene-highlighter:9.11.1` transitively (verified via
+> `mvn dependency:tree`), so we get the `org.apache.lucene.search.highlight.*`
+> classes for free — no explicit `lucene-highlighter` dependency required when we
+> reach Step 5's highlighter restoration. Lucene resolved to **9.11.1** under
+> HS 7.2.4.
+
 ### 3.2 API differences — HS 5 → HS 7 (the big ones)
 
 | HS 5 (pre-strip) | HS 7 (target) | Notes |
@@ -307,6 +314,23 @@ Lucene-direct (filesystem) backend, not Elasticsearch. Justification:
 
 `gemma.search.dir` stays. `gemma.compass.dir` legacy alias stays (still
 referenced in `default.properties` for back-compat).
+
+> **Step 1 footnote (2026-05-19):** property keys verified against the
+> shipped HS 7.2.4 jars (`org.hibernate.search.mapper.orm.cfg.HibernateOrmMapperSettings`,
+> `org.hibernate.search.backend.lucene.cfg.LuceneBackendSettings`,
+> `LuceneIndexSettings`). The HS 6+ `automatic_indexing.*` namespace was renamed
+> to `indexing.listeners.enabled` (on-write entity listeners) and
+> `indexing.plan.synchronization.strategy` (write-sync / async commit behaviour)
+> in HS 7.0; the recce's old key `hibernate.search.automatic_indexing.enabled`
+> still works (kept as a deprecated alias on `HibernateOrmMapperSettings`) but
+> the recommended Step-1 key is `hibernate.search.indexing.listeners.enabled`.
+> Step 1 landed three property keys in `HibernateConfig`:
+> `hibernate.search.backend.type=lucene`,
+> `hibernate.search.backend.directory.type=local-filesystem`,
+> `hibernate.search.backend.directory.root=${gemma.search.dir}`,
+> plus `hibernate.search.indexing.listeners.enabled=false` and
+> `hibernate.search.schema_management.strategy=none` to tolerate the
+> empty-mapping case before Step 2 lands `@Indexed` entities.
 
 ### 3.6 Schema on disk
 
