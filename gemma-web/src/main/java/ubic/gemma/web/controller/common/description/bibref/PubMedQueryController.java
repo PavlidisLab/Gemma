@@ -33,7 +33,7 @@ import org.springframework.web.bind.support.SessionStatus;
 import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
+import ubic.gemma.persistence.service.common.description.BibliographicReferenceReadService;
 import ubic.gemma.web.controller.util.MessageUtil;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -54,7 +54,7 @@ public class PubMedQueryController implements InitializingBean {
     @Autowired
     protected MessageUtil messageUtil;
     @Autowired
-    private BibliographicReferenceService bibliographicReferenceService;
+    private BibliographicReferenceReadService bibliographicReferenceReadService;
 
     @Value("${entrez.efetch.apikey}")
     private String ncbiApiKey;
@@ -85,7 +85,7 @@ public class PubMedQueryController implements InitializingBean {
         }
 
         // first see if we already have it in the system.
-        BibliographicReference bibRefFound = bibliographicReferenceService.findByExternalId( accession );
+        BibliographicReference bibRefFound = bibliographicReferenceReadService.findByExternalId( accession );
         if ( bibRefFound != null ) {
             request.setAttribute( "existsInSystem", Boolean.TRUE );
             this.messageUtil.saveMessage( "bibliographicReference.alreadyInSystem", accession, "Already in Gemma" );

@@ -72,7 +72,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
-import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
+import ubic.gemma.persistence.service.common.description.BibliographicReferenceReadService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
@@ -125,7 +125,7 @@ public class ExpressionExperimentController {
     @Autowired
     private AuditEventService auditEventService;
     @Autowired
-    private BibliographicReferenceService bibliographicReferenceService;
+    private BibliographicReferenceReadService bibliographicReferenceReadService;
     @Autowired
     private BioAssayService bioAssayService;
     @Autowired
@@ -1632,7 +1632,7 @@ public class ExpressionExperimentController {
                 throw new EntityNotFoundException( "Cannot access experiment with id=" + eeId );
 
             String pubmedId = getTaskCommand().getPubmedId();
-            BibliographicReference publication = bibliographicReferenceService.findByExternalId( pubmedId );
+            BibliographicReference publication = bibliographicReferenceReadService.findByExternalId( pubmedId );
 
             if ( publication != null ) {
                 // check if the publication is actually being modified
@@ -1642,7 +1642,7 @@ public class ExpressionExperimentController {
                     publication.setId( null );
                     publication = ( BibliographicReference ) persisterHelper.persist( publication );
                     // we need to thaw mesh terms, keywords, etc. for Hibernate Search
-                    publication = bibliographicReferenceService.thaw( publication );
+                    publication = bibliographicReferenceReadService.thaw( publication );
                     expressionExperiment.setPrimaryPublication( publication );
                     expressionExperimentService.update( expressionExperiment );
                 }
@@ -1691,7 +1691,7 @@ public class ExpressionExperimentController {
             }
             ExpressionExperimentDetailsValueObject result = new ExpressionExperimentDetailsValueObject( expressionExperiment );
             result.setPubmedId( Integer.parseInt( pubmedId ) );
-            publication = bibliographicReferenceService.thaw( publication );
+            publication = bibliographicReferenceReadService.thaw( publication );
             result.setPrimaryCitation( CitationValueObject.convert2CitationValueObject( publication ) );
             return newTaskResult( result );
         }

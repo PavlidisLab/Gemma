@@ -31,7 +31,7 @@ import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.persister.PersisterHelper;
-import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
+import ubic.gemma.persistence.service.common.description.BibliographicReferenceReadService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.io.IOException;
@@ -50,7 +50,7 @@ public class UpdatePubMedCli extends AbstractAuthenticatedCLI {
     @Autowired
     private ExpressionExperimentService eeserv;
     @Autowired
-    private BibliographicReferenceService bibliographicReferenceService;
+    private BibliographicReferenceReadService bibliographicReferenceReadService;
     @Autowired
     private PersisterHelper persisterHelper;
 
@@ -155,7 +155,7 @@ public class UpdatePubMedCli extends AbstractAuthenticatedCLI {
      */
     private BibliographicReference getBibliographicReference( String pubmedId ) {
         // check if it already in the system
-        BibliographicReference publication = bibliographicReferenceService.findByExternalId( pubmedId );
+        BibliographicReference publication = bibliographicReferenceReadService.findByExternalId( pubmedId );
         if ( publication == null ) {
             PubMedSearch pms = new PubMedSearch( ncbiApiKey );
             Collection<String> searchTerms = new ArrayList<>();
