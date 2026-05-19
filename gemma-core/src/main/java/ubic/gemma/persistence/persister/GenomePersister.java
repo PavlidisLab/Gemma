@@ -34,6 +34,7 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResult;
 import ubic.gemma.persistence.service.genome.ChromosomeDao;
 import ubic.gemma.persistence.service.genome.GeneDao;
+import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceDao;
 import ubic.gemma.persistence.service.genome.gene.GeneProductDao;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.AnnotationAssociationDao;
@@ -677,7 +678,11 @@ public abstract class GenomePersister extends CommonPersister {
 
         if ( geneProduct.getAccessions() != null ) {
             for ( DatabaseEntry de : geneProduct.getAccessions() ) {
-                de.setExternalDatabase( this.persistExternalDatabase( de.getExternalDatabase(), caches ) );
+                // Phase 3 lift: helper now takes a per-call Map<String, ExternalDatabase>. We
+                // pull the map out of the existing Caches container so it stays shared with
+                // CommonPersister.fillInDatabaseEntry across the rest of this persist; when
+                // those paths are lifted too, this collapses to a method-local HashMap.
+                de.setExternalDatabase( this.persistExternalDatabase( de.getExternalDatabase(), caches.getExternalDatabaseCache() ) );
             }
         }
     }
@@ -823,8 +828,9 @@ public abstract class GenomePersister extends CommonPersister {
 
         if ( bioSequence.getSequenceDatabaseEntry() != null
                 && bioSequence.getSequenceDatabaseEntry().getExternalDatabase().getId() == null ) {
+            // Phase 3 lift: per-call Map; see fillInGeneProductAssociations note above.
             bioSequence.getSequenceDatabaseEntry().setExternalDatabase(
-                    this.persistExternalDatabase( bioSequence.getSequenceDatabaseEntry().getExternalDatabase(), caches ) );
+                    this.persistExternalDatabase( bioSequence.getSequenceDatabaseEntry().getExternalDatabase(), caches.getExternalDatabaseCache() ) );
         }
 
         for ( BioSequence2GeneProduct bioSequence2GeneProduct : bioSequence.getBioSequence2GeneProduct() ) {
@@ -843,7 +849,8 @@ public abstract class GenomePersister extends CommonPersister {
         blatResult.setQuerySequence( this.persistBioSequence( blatResult.getQuerySequence(), caches ) );
         blatResult.setTargetChromosome( this.persistChromosome( blatResult.getTargetChromosome(), null, caches ) );
         if ( blatResult.getSearchedDatabase() != null ) {
-            blatResult.setSearchedDatabase( this.persistExternalDatabase( blatResult.getSearchedDatabase(), caches ) );
+            // Phase 3 lift: per-call Map; see fillInGeneProductAssociations note above.
+            blatResult.setSearchedDatabase( this.persistExternalDatabase( blatResult.getSearchedDatabase(), caches.getExternalDatabaseCache() ) );
         }
         if ( blatResult.getTargetAlignedRegion() != null )
             blatResult.setTargetAlignedRegion(
@@ -889,7 +896,9 @@ public abstract class GenomePersister extends CommonPersister {
                 chromosome.setSequence( this.doPersist( chromosome.getSequence(), caches ) );
             }
             if ( chromosome.getAssemblyDatabase() != null ) {
-                chromosome.setAssemblyDatabase( this.doPersist( chromosome.getAssemblyDatabase(), caches ) );
+                // Phase 3 lift: was doPersist (instanceof ExternalDatabase arm); now a direct
+                // call to the per-call-Map helper. See fillInGeneProductAssociations note above.
+                chromosome.setAssemblyDatabase( this.persistExternalDatabase( chromosome.getAssemblyDatabase(), caches.getExternalDatabaseCache() ) );
             }
             chromosome = chromosomeDao.create( chromosome );
         } else {

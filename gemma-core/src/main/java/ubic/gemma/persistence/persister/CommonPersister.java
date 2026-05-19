@@ -67,8 +67,6 @@ public abstract class CommonPersister extends AbstractPersister {
             throw new UnsupportedOperationException( "Don't persist users via this class; use the UserManager (core)" );
         } else if ( entity instanceof QuantitationType ) {
             return ( T ) this.persistQuantitationType( ( QuantitationType ) entity, caches );
-        } else if ( entity instanceof ExternalDatabase ) {
-            return ( T ) this.persistExternalDatabase( ( ExternalDatabase ) entity, caches );
         } else if ( entity instanceof Characteristic ) {
             // Characteristic is always cascaded from its owning entity (Investigation,
             // BioMaterial, FactorValue, etc. all declare cascade="all" on their
@@ -91,22 +89,39 @@ public abstract class CommonPersister extends AbstractPersister {
         assert databaseEntry.getExternalDatabase().getId() != null;
     }
 
-    protected ExternalDatabase persistExternalDatabase( ExternalDatabase database, Caches caches ) {
-        Map<String, ExternalDatabase> seenDatabases = caches.getExternalDatabaseCache();
+    /**
+     * Phase 3 persister-retirement scaffold: takes a local {@code Map<String, ExternalDatabase>}
+     * instead of pulling the cache out of the {@link Caches} value object. New callers in
+     * the persister chain (and in EE/AD/Genome write services) pass their own per-call map;
+     * the legacy {@link #persistExternalDatabase(ExternalDatabase, Caches)} below delegates here
+     * to preserve the {@link #fillInDatabaseEntry} / {@link #persistDatabaseEntry} paths until
+     * those are lifted too.
+     */
+    protected ExternalDatabase persistExternalDatabase( ExternalDatabase database, Map<String, ExternalDatabase> externalDbCache ) {
         String name = database.getName();
-        if ( seenDatabases.containsKey( name ) ) {
-            return seenDatabases.get( name );
+        if ( name != null && externalDbCache.containsKey( name ) ) {
+            return externalDbCache.get( name );
         }
         // ExternalDatabase has no static BusinessKey.find — DAO-level find()
         // resolves by name (a single-property business key).
         ExternalDatabase existingDatabase = externalDatabaseDao.find( database );
-        if ( existingDatabase == null ) {
-            database = externalDatabaseDao.create( database );
-        } else {
-            database = existingDatabase;
+        ExternalDatabase resolved = existingDatabase != null ? existingDatabase : externalDatabaseDao.create( database );
+        if ( name != null ) {
+            externalDbCache.put( name, resolved );
         }
-        seenDatabases.put( database.getName(), database );
-        return database;
+        return resolved;
+    }
+
+    /**
+     * @deprecated Phase 3 lift transitional shim. New callers use
+     * {@link #persistExternalDatabase(ExternalDatabase, Map)} directly with a per-call
+     * Map. This overload remains for the in-CommonPersister
+     * {@link #fillInDatabaseEntry} / {@link #persistDatabaseEntry} paths, which still
+     * pull the cache from Caches.
+     */
+    @Deprecated
+    protected ExternalDatabase persistExternalDatabase( ExternalDatabase database, Caches caches ) {
+        return this.persistExternalDatabase( database, caches.getExternalDatabaseCache() );
     }
 
     private DatabaseEntry persistDatabaseEntry( DatabaseEntry entity, Caches caches ) {
