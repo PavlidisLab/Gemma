@@ -102,6 +102,10 @@ HB6-respecting patterns the factories enforce:
 | `gemma-core/.../fixture/BioAssayFactory.java` | Done — `builder()` with `.withName(s)`, `.withBioMaterial(bm)`, `.withArrayDesign(ad)`, `.withTaxon(t)`, `.withAccession(bool)`, `.withIsOutlier(bool)`, `.withSequencePairedReads(bool)`. Two terminals: `build()` persists the BA via `BioAssayService.create`; `buildTransient()` persists BM + AD but leaves the BA unpersisted so a parent EE's cascade can handle it (this is the path `ExperimentFactory` now uses for its per-sample BAs). BM creation is inlined pending `BioMaterialFactory`. |
 | `gemma-core/.../fixture/BioAssayFactoryTest.java` | Done — 6 tests, defaults + BM/AD/name overrides + accession opt-out + buildTransient |
 | `gemma-core/.../fixture/ExperimentFactory.java` | Refactored — per-sample BA construction now goes through `bioAssayFactory.builder().buildTransient()` (EE→BA cascade still handles the BA persist). |
+| `gemma-core/.../fixture/GeneFactory.java` | Done — `builder()` with `.withName(s)`, `.withOfficialSymbol(s)`, `.withOfficialName(s)`, `.withNcbiId(int)`, `.withTaxon(t)`, `.withGeneProducts(int)`. Defaults to a mouse gene with a synthetic NCBI id in the 500k+ range; persists via `GeneService.create`. `GeneProduct`s cascade-persist from `Gene.getProducts()`. |
+| `gemma-core/.../fixture/GeneFactoryTest.java` | Done — 7 tests, defaults + taxon/symbol/name/NCBI overrides + gene-products attach + reload-by-NCBI-id round-trip |
+| `gemma-core/.../fixture/CompositeSequenceFactory.java` | Done — `builder()` with `.withName(s)`, `.withDescription(s)`, `.withArrayDesign(ad)`, `.withTaxon(t)`, `.withBioSequence(bool)`. Defaults to a CS attached to a fresh one-color AD with a GenBank-linked `BioSequence`; persists via `CompositeSequenceService.create`. BioSequence is pre-persisted via `BioSequenceService.findOrCreate` because CS→biologicalCharacteristic has no cascade (same HB6 trap that `ArrayDesignFactory` already handles inline). |
+| `gemma-core/.../fixture/CompositeSequenceFactoryTest.java` | Done — 6 tests, defaults + AD/name/description overrides + bioSequence opt-out + taxon-driven BS taxon |
 | `CuratableValueObjectTest` | Migrated (first migration off the helper) |
 
 ## What's planned
@@ -110,10 +114,6 @@ HB6-respecting patterns the factories enforce:
   Next up — currently inlined inside both `ExperimentFactory.Builder.build()`
   and `BioAssayFactory.Builder.build()`; the latter's
   `createDefaultBioMaterial` is the seam to swap once it lands.
-* `CompositeSequenceFactory` / `GeneFactory` — currently inlined inside
-  `ArrayDesignFactory.Builder.build()`; split out once a second caller
-  materializes (e.g., gene-expression-vector tests that need probes
-  independent of an AD).
 * `ExperimentalFactorFactory` — `.categorical().withLevels(2).attachTo(ee)`.
 * `FactorValueFactory` — paired with the above.
 * `DifferentialExpressionAnalysisFactory` — `.attachTo(ee).withProbes(N)`.
