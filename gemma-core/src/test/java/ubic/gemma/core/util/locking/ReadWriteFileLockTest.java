@@ -1,6 +1,6 @@
 package ubic.gemma.core.util.locking;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.core.util.concurrent.ThreadUtils;
 
 import java.io.IOException;

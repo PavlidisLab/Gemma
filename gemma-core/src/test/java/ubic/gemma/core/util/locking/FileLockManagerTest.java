@@ -1,7 +1,7 @@
 package ubic.gemma.core.util.locking;
 
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.core.util.concurrent.ThreadUtils;
 
 import java.io.IOException;
@@ -18,7 +18,7 @@ public class FileLockManagerTest {
 
     private final FileLockManager fileLockManager = new FileLockManagerImpl();
 
-    @After
+    @AfterEach
     public void tearDown() throws IOException {
         assertThat( fileLockManager.getAllLockInfos() ).isEmpty();
     }
