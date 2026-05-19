@@ -665,6 +665,137 @@ direct dep (commons-compress, commons-io, commons-csv, commons-cli)
 because Jena 4.10's `jena-base` declares older versions than Gemma's
 direct pins.
 
+### 6.3.1 Step 2-4 footnote (2026-05-19) — architectural gap discovered
+
+The in-Gemma `OntologySearchService` interface + `JenaTextOntologySearchService`
+impl landed in `ubic.gemma.core.ontology.search` and is wired as a Spring
+bean in `OntologyConfig.ontologySearchService()`. The impl wraps the
+unified-ontology TDB (`gemma.ontology.unified.tdb.dir`) as a
+`TextDataset` with an `EntityDefinition` mirroring baseCode's pre-strip
+`DEFAULT_INDEXABLE_PROPERTIES` (rdfs:label + OBO synonyms + IAO
+alt-label). `OntologySearchSource` (416 LoC) and `GeneOntologySearchSource`
+(167 LoC) were restored from `ed93c2f023^^` and compile clean.
+
+**However**: the 3 disabled tests in `GeneOntologyServiceTest`
+(`testFindTerm`, `testFindTermWithMultipleTerms`, `testFindTermWithEmptyQuery`)
+**cannot** be re-enabled by this work alone. The gap is:
+
+- `gos.findTerm(query, n)` resolves through `GeneOntologyServiceImpl`
+  → `AbstractDelegatingOntologyService.findTerm` → baseCode's
+  `AbstractOntologyService.findTerm`, which consults a package-private
+  `SearchIndex` held in a package-private `State` field on
+  `AbstractOntologyService`.
+- baseCode 1.1.34-RENOVATIONS-SNAPSHOT's `OntologyIndexer` factory is
+  itself package-private; its only public callers live inside baseCode.
+- `OntologyService` (baseCode's interface) does NOT expose `getOntModel()`
+  or any equivalent dataset accessor, so Gemma cannot intercept the
+  OntModel after loading and index it with the in-Gemma jena-text service.
+- The OntModel produced by `UrlOntologyService.loadModel(...)` for
+  URL-loaded ontologies (GO, MONDO, etc.) lives entirely inside baseCode
+  and is unreachable from Gemma.
+
+Net effect: the in-Gemma `JenaTextOntologySearchService` can search the
+**unified TDB** (where `TdbOntologyService` writes consolidated terms),
+but **not** any per-ontology `UrlOntologyService`-backed provider. And
+the restored `OntologySearchSource` / `GeneOntologySearchSource` still
+go through `OntologyService.findTerms` / `geneOntologyService.findTerm`
+respectively, both of which route through the broken baseCode
+`SearchIndex` path. They compile and integrate with
+`CompositeSearchSource` but will return empty for free-text queries
+until the gap is closed.
+
+**Paths to closing the gap (pick one for the next step):**
+
+1. **Modify baseCode.** Add a public `getModel()` accessor on
+   `AbstractOntologyService` (or `OntologyService`) and a public
+   "install external search index" hook. Then plumb the in-Gemma
+   `JenaTextOntologySearchService` through baseCode's `findTerm`
+   methods. Pros: smallest change to call sites; tests pass without
+   touching `GeneOntologyServiceImpl`. Cons: requires a baseCode
+   release; cross-repo coordination during Phase 3 is the exact thing
+   we said we'd avoid (Section 6 first paragraph).
+2. **Rewire in Gemma only.** Override `findTerm` in
+   `GeneOntologyServiceImpl` (and the other Gemma providers that
+   matter) to consult `OntologySearchService` directly, bypassing
+   `super.findTerm`. This means Gemma takes over OntModel loading for
+   those providers (or builds its own URL-loader using the public
+   `jena-core` API). Pros: zero baseCode work. Cons: duplicates
+   significant baseCode ontology-loading machinery; the
+   `AbstractDelegatingOntologyService` inheritance graph wasn't built
+   for partial overrides.
+3. **Populate the unified TDB and route everything through it.**
+   Make the unified-ontology TDB (which IS reachable via
+   `JenaTextOntologySearchService`) the source of truth for ALL
+   ontology-based search by ensuring every provider Gemma cares about
+   either loads into the TDB or has its model copied in.
+   `OntologySearchSource` already operates against URIs, not against
+   per-provider state, so this works for the EE-discovery path.
+   `GeneOntologyServiceTest`'s `findTerm` assertions still need a
+   provider-specific path because they test the per-provider service,
+   not the unified search. Pros: aligns with the unified-ontology
+   direction. Cons: requires loading GO + others into the TDB before
+   the disabled tests can pass, which is a separate infrastructure
+   change.
+
+**Recommendation for the next session:** path 2 for the immediate
+test-re-enable, with the long-term direction being path 3. Path 1 is a
+non-starter while we're avoiding cross-repo work.
+
+**Even more important finding (2026-05-19):** running
+`mvn -pl gemma-core test -Dtest='GeneOntologyServiceTest'` against this
+worktree reveals that **all 13 tests in `GeneOntologyServiceTest` error
+at ApplicationContext load**, not just the 3 disabled ones. Root cause:
+
+```
+Caused by: BeanCreationException: ... geneOntologyService ...
+  Factory method 'geneOntologyService' threw exception with message:
+  com/hp/hpl/jena/ontology/OntProperty
+```
+
+`AbstractOntologyService.class` inside baseCode 1.1.34-RENOVATIONS-SNAPSHOT's
+jar still has bytecode references to the old Jena 2.x namespace
+(`com.hp.hpl.jena.ontology.OntModel`, `com.hp.hpl.jena.ontology.OntProperty`,
+`com.hp.hpl.jena.util.iterator.ExtendedIterator`, etc. — confirmed via
+`unzip -p baseCode-1.1.34-RENOVATIONS-SNAPSHOT.jar AbstractOntologyService.class
+| strings | grep hp/hpl`). Step 1's POM bump moved the runtime to Jena 4.10
+(`org.apache.jena.*`); baseCode's bytecode now hits
+`NoClassDefFoundError` the moment any code path touches
+`AbstractOntologyService`. The pom.xml comment from Step 1 mentions
+flipping three *Gemma* source files from the old namespace, but says
+nothing about the inverse: baseCode itself was never recompiled against
+Jena 4.x, so its compiled classfiles still reference the dead namespace.
+
+This is a strictly bigger issue than the "private OntModel" gap because
+it blocks **all** baseCode-backed ontology service usage at runtime, not
+just search. The 13-test pre-existing failure here is a witness to
+that. Practical implication: **baseCode 1.1.34-RENOVATIONS-SNAPSHOT
+must be rebuilt against Jena 4.x bytecode before Gemma's ontology
+subsystem can boot at runtime** (separate from any search-specific
+work). Same recommendation as Section 6.3 footnote — staying on
+1.1.34-RENOVATIONS-SNAPSHOT is incompatible with the Jena bump; either:
+- Cut a baseCode-1.1.35-SNAPSHOT recompiled against Jena 4.10 (and
+  ideally migrating its own source from `com.hp.hpl.jena.*` to
+  `org.apache.jena.*`), OR
+- Add a transitive `jena-core-old-namespace-shim` to Gemma's POM that
+  exposes the missing `com.hp.hpl.jena.*` packages as aliases for
+  Jena 4 classes. No such shim ships with Jena 4 itself; would need
+  to be hand-written. Strongly discouraged.
+
+The cleanest fix is the baseCode rebuild, which closes BOTH this
+runtime-classpath gap AND opens the door for path 1 (public OntModel /
+SearchIndex hook in the same release).
+
+**State as of this commit:**
+- `ubic.gemma.core.ontology.search.OntologySearchService` interface +
+  `JenaTextOntologySearchService` impl: present, wired, untested.
+- `OntologySearchSource` + `GeneOntologySearchSource`: restored and
+  compiling. Functionally hollow until the gap is closed.
+- `BaseCodeOntologySearchException`, `SearchSourceUtils`, and the
+  `extractTermsDnf` / nested DNF helpers in `LuceneQueryUtils`:
+  restored from pre-strip to support the two sources.
+- `GeneOntologyServiceTest` disabled-tests: FIXME comments updated
+  to point at the gap and the three paths above.
+
 ### 6.4 Refactor-out checkpoint (deferred)
 
 When the dust settles on Phase 3 we can decide whether to push the
