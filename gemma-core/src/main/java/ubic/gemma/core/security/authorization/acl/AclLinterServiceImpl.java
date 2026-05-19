@@ -50,10 +50,10 @@ public class AclLinterServiceImpl implements AclLinterService {
 
     /**
      * Renovations Phase 3: gsec HQL deprecation. Direct JdbcTemplate access to the canonical
-     * Spring Security ACL tables (acl_class, acl_object_identity, acl_sid, acl_entry) lets us
-     * retire HQL references to {@code gemma.gsec.acl.domain.*} entity mappings one query at a
-     * time. Initialised lazily from the {@link DataSource} so the field can be {@code @Autowired}
-     * without forcing the wiring into a constructor.
+     * Spring Security ACL tables ({@code acl_class}, {@code acl_object_identity}, {@code acl_sid},
+     * {@code acl_entry}) lets us retire HQL references to {@code gemma.gsec.acl.domain.*} entity
+     * mappings one query at a time. Initialised lazily from the {@link DataSource} so the field
+     * can be {@code @Autowired} without forcing the wiring into a constructor.
      */
     private JdbcTemplate jdbcTemplate;
 
@@ -144,25 +144,43 @@ public class AclLinterServiceImpl implements AclLinterService {
      */
     private void lintAclObjectIdentityLackingSecurable( Class<? extends Securable> clazz, AclLinterConfig config, Collection<LintResult> results ) {
         log.info( "Linting ACL object identities lacking associated " + clazz.getSimpleName() + "..." );
+        // Phase 3 gsec HQL deprecation: pull existing AOI identifiers for this class via raw SQL
+        // against acl_object_identity + acl_class (canonical Spring Security schema), then compute
+        // the set-difference against entity ids in Java. Replaces the previous HQL "not in"
+        // subquery against gsec's AclObjectIdentity entity mapping. The downstream consumer
+        // (aclService.deleteAcl) accepts any ObjectIdentity; we construct a fresh
+        // AclObjectIdentity(class, identifier) for the deletion call rather than carrying around
+        // a managed entity (the gsec mapping is mutable="false" anyway, so the prior path's
+        // "managed" status bought us nothing).
+        List<Long> aoiIdentifiers = jdbcTemplate.queryForList(
+                "select aoi.object_id_identity "
+                        + "from acl_object_identity aoi "
+                        + "join acl_class cls on aoi.object_id_class = cls.id "
+                        + "where cls.class = ?",
+                Long.class, clazz.getName() );
         //noinspection unchecked
-        List<AclObjectIdentity> list = sessionFactory.getCurrentSession()
-                .createQuery( "select aoi from AclObjectIdentity aoi "
-                        + "where aoi.type = :type and aoi.identifier not in (select e.id from " + sessionFactory.getMetamodel().entity( clazz ).getName() + " e)" )
-                .setParameter( "type", clazz.getName() )
-                .setReadOnly( !config.isApplyFixes() )
-                .list();
-        if ( list.isEmpty() ) {
+        Set<Long> entityIds = new HashSet<>( sessionFactory.getCurrentSession()
+                .createQuery( "select e.id from " + sessionFactory.getMetamodel().entity( clazz ).getName() + " e" )
+                .list() );
+        List<Long> danglingIdentifiers = new ArrayList<>();
+        for ( Long aoiId : aoiIdentifiers ) {
+            if ( !entityIds.contains( aoiId ) ) {
+                danglingIdentifiers.add( aoiId );
+            }
+        }
+        if ( danglingIdentifiers.isEmpty() ) {
             log.info( "There are no dangling ACL object identities for " + clazz.getSimpleName() + "." );
         } else {
-            log.warn( "There are " + list.size() + " dangling ACL object identities for " + clazz.getSimpleName() + "." );
+            log.warn( "There are " + danglingIdentifiers.size() + " dangling ACL object identities for " + clazz.getSimpleName() + "." );
         }
-        for ( AclObjectIdentity aoi : list ) {
+        for ( Long identifier : danglingIdentifiers ) {
             if ( config.isApplyFixes() ) {
+                AclObjectIdentity aoi = new AclObjectIdentity( clazz, identifier );
                 aclService.deleteAcl( aoi, true );
                 log.info( "Deleted dangling " + aoi + "." );
-                results.add( new LintResult( clazz, aoi.getIdentifier(), "Deleted dangling ACL identity.", true ) );
+                results.add( new LintResult( clazz, identifier, "Deleted dangling ACL identity.", true ) );
             } else {
-                results.add( new LintResult( clazz, aoi.getIdentifier(), String.format( "ACL identity has no corresponding entity with ID %d.", aoi.getIdentifier() ), false ) );
+                results.add( new LintResult( clazz, identifier, String.format( "ACL identity has no corresponding entity with ID %d.", identifier ), false ) );
             }
         }
     }

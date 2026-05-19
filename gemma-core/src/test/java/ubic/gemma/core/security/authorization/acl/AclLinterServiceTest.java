@@ -231,5 +231,64 @@ public class AclLinterServiceTest extends BaseDatabaseTest {
         }
         assertTrue( "Identifier without an AOI should be reported as lacking identity",
                 reportedLacking );
+
+    @Test
+    @WithMockUser(authorities = { "GROUP_ADMIN" })
+    public void testLintAclObjectIdentityLackingSecurable_reportsDangling() {
+        AclLinterConfig config = AclLinterConfig.builder()
+                .lintDanglingIdentities( true )
+                .applyFixes( false )
+                .build();
+
+        JdbcTemplate jt = new JdbcTemplate( dataSource );
+        List<Long> existing = jt.queryForList(
+                "select id from acl_class where class = ?", Long.class,
+                ExpressionExperiment.class.getName() );
+        Long classId;
+        if ( existing.isEmpty() ) {
+            jt.update( "insert into acl_class (class) values (?)", ExpressionExperiment.class.getName() );
+            classId = jt.queryForObject(
+                    "select id from acl_class where class = ?", Long.class,
+                    ExpressionExperiment.class.getName() );
+        } else {
+            classId = existing.get( 0 );
+        }
+        // owner_sid=1 (GROUP_ADMIN) seeded by V3__seed_data.sql. No INVESTIGATION row exists
+        // for id=98765 in the fresh test DB, so this AOI is dangling.
+        long danglingId = 98765L;
+        jt.update(
+                "insert into acl_object_identity (object_id_class, object_id_identity, parent_object, owner_sid, entries_inheriting) values (?, ?, NULL, 1, 0)",
+                classId, danglingId );
+
+        Collection<AclLinterService.LintResult> results = aclLinterService.lintAcls( ExpressionExperiment.class, config );
+        boolean reported = false;
+        for ( AclLinterService.LintResult r : results ) {
+            if ( Long.valueOf( danglingId ).equals( r.getIdentifier() )
+                    && r.getMessage().contains( "no corresponding entity" ) ) {
+                reported = true;
+                break;
+            }
+        }
+        assertTrue( "Dangling AOI id " + danglingId + " should be reported by the linter", reported );
     }
+
+    /**
+     * Phase 3 gsec HQL deprecation: empty path for {@code lintAclObjectIdentityLackingSecurable}.
+     * <p>
+     * With no acl_object_identity rows seeded for {@code BioAssay}, the dangling-AOI lint must
+     * report nothing for that class.
+     */
+    @Test
+    @WithMockUser(authorities = { "GROUP_ADMIN" })
+    public void testLintAclObjectIdentityLackingSecurable_emptyPath() {
+        AclLinterConfig config = AclLinterConfig.builder()
+                .lintDanglingIdentities( true )
+                .applyFixes( false )
+                .build();
+        Collection<AclLinterService.LintResult> results = aclLinterService.lintAcls( BioAssay.class, config );
+        for ( AclLinterService.LintResult r : results ) {
+            assertFalse(
+                    "Empty AOI table should not produce dangling results for BioAssay, got: " + r,
+                    r.getMessage().contains( "no corresponding entity" ) );
+        }
 }
