@@ -3,9 +3,9 @@ package ubic.gemma.persistence.service.maintenance;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -15,7 +15,7 @@ import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.mail.MailEngine;
-import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -34,7 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 @ContextConfiguration
-public class TableMaintenanceUtilTest extends BaseTest {
+public class TableMaintenanceUtilTest extends BaseTest5 {
 
     @Configuration
     @TestComponent
@@ -103,7 +103,7 @@ public class TableMaintenanceUtilTest extends BaseTest {
 
     private NativeQuery query;
 
-    @Before
+    @BeforeEach
     public void setUp() throws IOException {
         when( externalDatabaseService.findByNameWithAuditTrail( ExternalDatabases.GENE2CS ) ).thenReturn( gene2csDatabaseEntry );
         query = mock( NativeQuery.class, RETURNS_SELF );
@@ -112,7 +112,7 @@ public class TableMaintenanceUtilTest extends BaseTest {
         when( sessionFactory.getCurrentSession() ).thenReturn( session );
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws IOException {
         reset( externalDatabaseService, sessionFactory, session, query );
         Path f = gene2csInfoPath;

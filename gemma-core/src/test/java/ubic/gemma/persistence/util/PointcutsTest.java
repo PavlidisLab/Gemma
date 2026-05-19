@@ -3,8 +3,8 @@ package ubic.gemma.persistence.util;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,14 +15,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.context.TestComponent;
-import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.persistence.retry.Retryable;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ContextConfiguration
-public class PointcutsTest extends BaseTest {
+public class PointcutsTest extends BaseTest5 {
 
     @Configuration
     @TestComponent
@@ -190,7 +190,7 @@ public class PointcutsTest extends BaseTest {
     @Autowired
     private MyAspect myAspect;
 
-    @After
+    @AfterEach
     public void tearDown() {
         reset( myAspect );
     }

@@ -21,8 +21,8 @@ package ubic.gemma.core.security.audit;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -33,7 +33,7 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.stereotype.Service;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.context.TestComponent;
-import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.model.common.auditAndSecurity.AbstractAuditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Auditable;
@@ -58,7 +58,7 @@ import static org.mockito.Mockito.*;
  * <p>Phase A round-trip verification for {@code AUDIT_SYSTEM_AUDIT.md}.
  */
 @ContextConfiguration
-public class AuditedAspectTest extends BaseTest {
+public class AuditedAspectTest extends BaseTest5 {
 
     /**
      * A locally-defined payload record. Real Phase B payloads will live next
@@ -196,7 +196,7 @@ public class AuditedAspectTest extends BaseTest {
 
     private final AuditEvent stubEvent = new AuditEvent();
 
-    @Before
+    @BeforeEach
     public void setUp() {
         reset( auditTrailService );
         collector.received.clear();

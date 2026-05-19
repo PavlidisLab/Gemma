@@ -20,15 +20,15 @@ package ubic.gemma.core.security.authentication;
 
 import ubic.gemma.core.security.SecurityService;
 import ubic.gemma.core.security.acl.domain.AclService;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.context.TestComponent;
-import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 import ubic.gemma.persistence.service.common.auditAndSecurity.UserDao;
@@ -43,7 +43,7 @@ import static org.mockito.Mockito.*;
  * @author pavlidis
  */
 @ContextConfiguration
-public class UserServiceImplTest extends BaseTest {
+public class UserServiceImplTest extends BaseTest5 {
 
     @Configuration
     @TestComponent
@@ -85,7 +85,7 @@ public class UserServiceImplTest extends BaseTest {
 
     private Collection<UserGroup> userGroups;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         testUser.setId( 1L );
         testUser.setEmail( "foo@bar" );
@@ -101,7 +101,7 @@ public class UserServiceImplTest extends BaseTest {
         userGroups.add( group );
     }
 
-    @After
+    @AfterEach
     public void resetMocks() {
         reset( userDaoMock );
     }
