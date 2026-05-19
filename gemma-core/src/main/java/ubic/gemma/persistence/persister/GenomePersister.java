@@ -107,7 +107,16 @@ public abstract class GenomePersister extends CommonPersister {
      * Update a gene.
      *
      * @param newGeneInfo the non-persistent gene we are copying information from
+     * @deprecated Phase 3 Chunk 5.4 strangler-fig hand-off. The NCBI loader
+     *         path now calls
+     *         {@link ubic.gemma.persistence.service.genome.gene.GeneWriteService#upsert}
+     *         instead of dispatching here. This method remains on disk to keep
+     *         the polymorphic {@code persistOrUpdate} path working for callers
+     *         not yet migrated (Chunk 5.5). Do not introduce new call sites;
+     *         use {@code GeneWriteService.upsert} or {@code updateGene} on the
+     *         service interface instead.
      */
+    @Deprecated
     private Gene updateGene( Gene existingGene, Gene newGeneInfo, Caches caches ) {
 
         // NCBI id can be null if gene has been loaded from a gene info file.
@@ -690,7 +699,14 @@ public abstract class GenomePersister extends CommonPersister {
      * the system.
      *
      * @param usedGIs return toRemove
+     * @deprecated Phase 3 Chunk 5.4 strangler-fig hand-off. The canonical
+     *         implementation now lives in
+     *         {@link ubic.gemma.persistence.service.genome.gene.GeneWriteService#handleGeneProductChangedGIs}.
+     *         This copy is retained only because {@link #updateGene} still
+     *         calls it on the polymorphic legacy path (Chunk 5.5 will remove
+     *         both together).
      */
+    @Deprecated
     private Collection<GeneProduct> handleGeneProductChangedGIs( Gene existingGene, Map<String, GeneProduct> usedGIs ) {
         Collection<String> switchedGis = new HashSet<>();
         Collection<GeneProduct> toRemove = new HashSet<>();
