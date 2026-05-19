@@ -1,11 +1,44 @@
 # Object-Storage Abstraction — Reconnaissance
 
 **Status:** recce only. No production code touched.
-**Scope:** Phase 3, cloud-readiness. Maps the current filesystem coupling
-under `gemma.appdata.home` and lays out a phased path to a
-backend-agnostic blob-storage abstraction.
+**Scope:** Phase 3, cloud-readiness — **BONUS work, not required**.
 **Reference:** PHASE_3_VISION.md L133-135 (object storage); CONFIG_AUDIT.md
 HIGH#2 (`gemma.appdata.home` default now `${java.io.tmpdir}/gemmaData`).
+
+---
+
+## 0. Why object storage at all? (read this first)
+
+**Gemma today** runs on a single server (`homer.msl.ubc.ca`) with files on
+local disk under `${gemma.appdata.home}`. Backups via filesystem snapshots
+/ rsync. No horizontal scaling. **For this deployment, object storage is
+unnecessary.** The HDF5 / Lucene / Jena "local-path" problem only exists
+when you try to back those engines onto S3 — keep files on the same
+machine as the JVM and they just open local paths. Done.
+
+Object storage (S3 / GCS / MinIO) buys you four things, none of which
+Gemma currently needs:
+
+1. **Multi-replica deployment** — N copies of `gemma-rest` behind a load
+   balancer all see the same files. Today: one replica, irrelevant.
+2. **Container persistence across restarts** — ephemeral container disk
+   gets wiped; object storage outlives it. Today: bare-metal JVM, not a
+   concern.
+3. **Independent backup / DR** — object stores already replicated. Today:
+   filesystem snapshots cover this.
+4. **Compute / data separation** — scale compute up/down without moving
+   data around. Today: not scaling.
+
+So **this whole doc is "what to do IF deployment changes"**, not a Phase 3
+priority. The one piece that DID matter — env-var configurability of
+`gemma.appdata.home` so containers can mount a path from outside the
+image — already landed (`23be090ba2`). That's enough for the current
+deployment to be container-aware without object storage in the mix at
+all.
+
+**If/when Gemma needs to move to cloud or run multiple replicas**, the
+inventory + phased plan below is the starting point. Until then, file it
+as planning material.
 
 ---
 
