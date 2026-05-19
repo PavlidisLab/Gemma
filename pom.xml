@@ -1004,6 +1004,13 @@
 		below the runtime JVM. Build + runtime JDK is amazon-corretto-17 (see RENOVATIONS.md).
 		-->
 		<maven.compiler.release>17</maven.compiler.release>
+		<!-- Renovations Phase 3: emit parameter names in bytecode so Spring's
+		     DefaultParameterNameDiscoverer can resolve @PreAuthorize SpEL named bindings
+		     like `hasPermission(#group, 'administration')`. Without -parameters the
+		     discoverer falls through to debug info / ASM (may or may not have names) and
+		     ultimately Spring's SpEL evaluates `#group` to null, returning false and
+		     denying admin invocations. Matched on the gsec side. -->
+		<maven.compiler.parameters>true</maven.compiler.parameters>
 		<!--
 		Renovations Phase 2: Spring 6.1 + Spring Security 6.3 + Hibernate 6.4 + jakarta everywhere.
 		Hibernate Search 5 (and its Lucene 3-era successor lineage) is gutted on this branch — the
