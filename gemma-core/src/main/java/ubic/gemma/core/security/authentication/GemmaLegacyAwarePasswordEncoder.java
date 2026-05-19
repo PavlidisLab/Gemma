@@ -37,30 +37,27 @@ import java.security.NoSuchAlgorithmException;
  *       convention.</li>
  * </ol>
  *
- * <h2>How the username gets here</h2>
+ * <h2>How the username is supplied</h2>
  * Spring Security 6's {@code PasswordEncoder} interface is username-agnostic
- * ({@code encode(rawPassword)} / {@code matches(rawPassword, encodedPassword)}). Salting
- * with the username therefore requires the username to arrive via a side channel. We use a
- * {@link ThreadLocal}: {@link LegacyAwareDaoAuthenticationProvider} sets the current
- * username on this encoder before invoking {@code super.additionalAuthenticationChecks(...)}
- * and clears it afterwards. The ThreadLocal scope is the single auth call, so cross-request
- * leakage is impossible as long as the provider is the only caller and it always clears in
- * a {@code finally}.
+ * ({@code encode(rawPassword)} / {@code matches(rawPassword, encodedPassword)}). Salting with
+ * the username therefore requires the username to arrive via a side channel. Earlier
+ * Phase-2 versions of this class used a {@link ThreadLocal} bound by a custom auth provider,
+ * but that pattern is hostile to async / reactive request flows and to per-request thread
+ * reuse (Phase 3 cloud-readiness goal). The username is now supplied directly, with the
+ * legacy-vs-bcrypt detection still done by inspecting the stored encoded string:
  *
- * <p>Alternative considered: writing a custom {@code AuthenticationProvider} from scratch
- * that does the SHA itself. Rejected — it would duplicate a lot of {@code
- * AbstractUserDetailsAuthenticationProvider} machinery (caching, locking, credentials
- * erasure) and would still need to be told which password format the stored hash was in.
- * Encapsulating the format detection inside the encoder keeps the provider thin.</p>
- *
- * <h2>Migration</h2>
- * {@link #upgradeEncoding(String)} returns {@code true} for any non-bcrypt encoded form, so
- * Spring Security's {@code DaoAuthenticationProvider} will call {@link #encode(CharSequence)}
- * with the verified plaintext after a successful legacy match and the application is
- * expected to write the upgraded {@code {bcrypt}}-prefixed hash back to the user row.
- * (Gemma's {@code UserManagerImpl} does NOT currently observe the
- * {@code AuthenticationSuccessEvent} that would carry the upgraded hash, so this is "ready
- * for upgrade-on-login" but the wiring of the listener is a separate follow-up.)
+ * <ul>
+ *   <li>{@link LegacyAwareDaoAuthenticationProvider#additionalAuthenticationChecks} detects
+ *       a legacy hash on {@code userDetails.getPassword()} and verifies it itself using the
+ *       authoritative username from {@code userDetails.getUsername()}. {@link #matches} is
+ *       never called for legacy hashes.</li>
+ *   <li>{@link #upgradeEncoding(String)} returns {@code true} for legacy hashes, so Spring
+ *       Security's {@code DaoAuthenticationProvider} re-encodes the verified plaintext via
+ *       {@link #encode(CharSequence)} and writes it back via
+ *       {@link org.springframework.security.core.userdetails.UserDetailsPasswordService}
+ *       (implemented by {@code UserManagerImpl}).</li>
+ *   <li>{@link #matches} only handles bcrypt; legacy hashes fail closed here.</li>
+ * </ul>
  *
  * @author Gemma
  */
@@ -72,8 +69,6 @@ public class GemmaLegacyAwarePasswordEncoder implements PasswordEncoder {
     /** Length of a SHA-1 digest in hex characters. */
     private static final int SHA1_HEX_LEN = 40;
 
-    private static final ThreadLocal<String> CURRENT_USERNAME = new ThreadLocal<>();
-
     private final BCryptPasswordEncoder bcrypt;
 
     public GemmaLegacyAwarePasswordEncoder() {
@@ -82,22 +77,6 @@ public class GemmaLegacyAwarePasswordEncoder implements PasswordEncoder {
 
     public GemmaLegacyAwarePasswordEncoder( BCryptPasswordEncoder bcrypt ) {
         this.bcrypt = bcrypt;
-    }
-
-    /**
-     * Bind the current authenticating user's username for the duration of one auth call.
-     * Caller is responsible for {@link #clearCurrentUsername()} in a {@code finally}.
-     */
-    public static void setCurrentUsername( String username ) {
-        CURRENT_USERNAME.set( username );
-    }
-
-    public static void clearCurrentUsername() {
-        CURRENT_USERNAME.remove();
-    }
-
-    static String currentUsername() {
-        return CURRENT_USERNAME.get();
     }
 
     @Override
@@ -114,19 +93,11 @@ public class GemmaLegacyAwarePasswordEncoder implements PasswordEncoder {
         if ( encodedPassword.startsWith( BCRYPT_PREFIX ) ) {
             return bcrypt.matches( rawPassword, encodedPassword.substring( BCRYPT_PREFIX.length() ) );
         }
-        // Legacy: bare 40-char hex SHA-1.
-        if ( isLikelySha1Hex( encodedPassword ) ) {
-            String username = currentUsername();
-            if ( username == null ) {
-                // Without a username we cannot recompute the legacy salt. Fail closed —
-                // returning false rather than throwing means the auth call reports
-                // "bad credentials" instead of leaking the format to clients.
-                return false;
-            }
-            String computed = sha1HexUsernameSalt( rawPassword, username );
-            return constantTimeEquals( computed, encodedPassword );
-        }
-        // Unknown format. Fail closed.
+        // Legacy hashes are intentionally not verified here — the username is not available
+        // through the PasswordEncoder API. LegacyAwareDaoAuthenticationProvider intercepts
+        // legacy stored hashes before super.additionalAuthenticationChecks delegates to this
+        // encoder. Fail closed for defence-in-depth: anything that reaches matches() with a
+        // non-bcrypt format is rejected.
         return false;
     }
 
@@ -135,12 +106,33 @@ public class GemmaLegacyAwarePasswordEncoder implements PasswordEncoder {
         if ( encodedPassword == null ) {
             return false;
         }
-        // Any non-bcrypt format should be re-encoded on next successful login.
+        // Any non-bcrypt format should be re-encoded on next successful login. The framework
+        // (DaoAuthenticationProvider) calls passwordEncoder.encode(presented) + then
+        // userDetailsPasswordService.updatePassword(user, newHash).
         return !encodedPassword.startsWith( BCRYPT_PREFIX );
     }
 
     /**
-     * Compute the legacy hash for direct use (e.g., tests). Format:
+     * @return {@code true} iff {@code encodedPassword} looks like a Gemma legacy SHA-1 hash
+     *         (bare 40-char lowercase/uppercase hex, no prefix). Used by
+     *         {@link LegacyAwareDaoAuthenticationProvider} to route auth checks.
+     */
+    public static boolean isLegacySha1Hex( String encodedPassword ) {
+        if ( encodedPassword == null || encodedPassword.length() != SHA1_HEX_LEN ) {
+            return false;
+        }
+        for ( int i = 0; i < encodedPassword.length(); i++ ) {
+            char c = encodedPassword.charAt( i );
+            boolean isHex = ( c >= '0' && c <= '9' ) || ( c >= 'a' && c <= 'f' ) || ( c >= 'A' && c <= 'F' );
+            if ( !isHex ) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Compute the legacy hash. Format:
      * {@code lowercase-hex(SHA-1(UTF-8(rawPassword + "{" + username + "}")))}.
      */
     public static String sha1HexUsernameSalt( CharSequence rawPassword, String username ) {
@@ -157,21 +149,10 @@ public class GemmaLegacyAwarePasswordEncoder implements PasswordEncoder {
         }
     }
 
-    private static boolean isLikelySha1Hex( String s ) {
-        if ( s.length() != SHA1_HEX_LEN ) {
-            return false;
-        }
-        for ( int i = 0; i < s.length(); i++ ) {
-            char c = s.charAt( i );
-            boolean isHex = ( c >= '0' && c <= '9' ) || ( c >= 'a' && c <= 'f' ) || ( c >= 'A' && c <= 'F' );
-            if ( !isHex ) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private static boolean constantTimeEquals( String a, String b ) {
+    /**
+     * Constant-time, case-insensitive comparison of two hex strings of equal length.
+     */
+    public static boolean constantTimeHexEquals( String a, String b ) {
         if ( a == null || b == null || a.length() != b.length() ) {
             return false;
         }
