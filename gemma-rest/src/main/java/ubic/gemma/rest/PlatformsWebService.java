@@ -38,6 +38,7 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.util.CursorPage;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
@@ -370,13 +371,41 @@ public class PlatformsWebService {
     @GET
     @Path("/{platform}/elements/{probe}/genes")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the genes associated to a probe in a given platform")
-    public FilteredAndPaginatedResponseDataObject<GeneValueObject> getPlatformElementGenes( // Params:
+    @Operation(summary = "Retrieve the genes associated to a probe in a given platform",
+            description = "Supports two pagination modes. Legacy mode: pass `offset` (and `limit`); response includes `offset` and `totalElements`. "
+                    + "Cursor mode (recommended for deep pagination and consistency under writes — a single probe can map to many genes on multi-mapping arrays): "
+                    + "pass an opaque `cursor` token from a previous response's `nextCursor` / `prevCursor` field. "
+                    + "`offset` and `cursor` are mutually exclusive — passing a non-null `cursor` selects cursor mode. "
+                    + "In cursor mode the result is always sorted by ascending `gene.id` (cursor mode forces a single-component id sort pending the indexed-column audit in phase B); "
+                    + "the path-derived `{platform}` and `{probe}` constraints are preserved; `totalElements` is `null` by default (no count query per request).",
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(schema = @Schema(oneOf = {
+                                    FilteredAndPaginatedResponseDataObject.class,
+                                    FilteredAndCursorPaginatedResponseDataObject.class
+                            }))),
+            })
+    public Object getPlatformElementGenes( // Params:
             @PathParam("platform") PlatformArg<?> platformArg, // Required
             @PathParam("probe") CompositeSequenceArg<?> probeArg, // Required
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
-            @QueryParam("limit") @DefaultValue("20") LimitArg limit // Optional, default 20
+            @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
+            @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg
     ) {
+        if ( cursorArg != null ) {
+            // Mutual-exclusion: a non-null cursor selects cursor mode. The default offset=0 is
+            // not considered user-supplied (parallels GET /platforms/{platform}/elements step 1e).
+            // In cursor mode we currently force a +id sort (CompositeSequenceArgService.getGenesByCursor)
+            // — the DAO restricts cursors to single-component id sorts until the index audit lands.
+            // The path-derived arrayDesign.id and {probe} constraints are preserved by the DAO query
+            // (the keyset HQL walks the same join structure as the offset variant, scoped to the resolved
+            // CompositeSequence).
+            ArrayDesign platform = arrayDesignArgService.getEntity( platformArg );
+            CursorPage<Gene> page = probeArgService.getGenesByCursor( probeArg, platform, cursorArg.getValue(), limit.getValue() );
+            // FIXME: deal with potential null return value of loadValueObject (matches the offset variant)
+            CursorPage<GeneValueObject> voPage = page.map( geneService::loadValueObject );
+            return new FilteredAndCursorPaginatedResponseDataObject<>( voPage, probeArgService.getFilters( probeArg ), new String[] { "id" } );
+        }
         // FIXME: deal with potential null return value of loadValueObject
         return paginate( compositeSequenceService
                 .getGenes( probeArgService.getEntityWithPlatform( probeArg, arrayDesignArgService.getEntity( platformArg ) ), offset.getValue(),

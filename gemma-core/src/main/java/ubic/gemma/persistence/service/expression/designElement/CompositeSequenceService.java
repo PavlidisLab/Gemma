@@ -29,6 +29,8 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
+import ubic.gemma.persistence.util.Cursor;
+import ubic.gemma.persistence.util.CursorPage;
 import ubic.gemma.persistence.util.Slice;
 
 import javax.annotation.CheckReturnValue;
@@ -111,6 +113,17 @@ public interface CompositeSequenceService
     Collection<Gene> getGenes( CompositeSequence compositeSequence, boolean useGene2Cs );
 
     Slice<Gene> getGenes( CompositeSequence compositeSequence, int offset, int limit, boolean useGene2Cs );
+
+    /**
+     * Cursor-mode counterpart to {@link #getGenes(CompositeSequence, int, int, boolean)}
+     * — see {@code CURSOR_PAGINATION_STEP1_PLAN.md} step 1l. Always sorts by ascending
+     * {@code gene.id} (the primary key, indexed and unique); the cursor DAO restricts
+     * cursors to single-component id sorts until the index audit lands.
+     *
+     * @see CompositeSequenceDao#getGenesByCursor(CompositeSequence, Cursor, int, boolean)
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COMPOSITE_SEQUENCE_READ" })
+    CursorPage<Gene> getGenesByCursor( CompositeSequence compositeSequence, @Nullable Cursor cursor, int limit, boolean useGene2Cs );
 
     /**
      * @param compositeSequences sequences
