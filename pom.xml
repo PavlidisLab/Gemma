@@ -150,9 +150,9 @@
 			Phase 3: Spring Boot dependencies BOM. NOT making Gemma a Boot application - no
 			@SpringBootApplication, no embedded Tomcat, no autoconfig. Pure version management
 			over the (large) common-transitive surface (jackson-bom, micrometer-bom, jakarta,
-			commons-*, slf4j, logback, mockito, junit, assertj, tomcat embed, etc.). Boot 3.3.x
-			targets Spring Framework 6.1 + Spring Security 6.3 + Hibernate 6.5 - aligned with
-			Gemma's current SF 6.1.20 / SS 6.3.10 / HB 6.4.10 stack. Bumping the BOM major minor
+			commons-*, slf4j, logback, mockito, junit, assertj, tomcat embed, etc.). Boot 3.5.x
+			targets Spring Framework 6.2 + Spring Security 6.5 + Hibernate 6.6 - aligned with
+			Gemma's SF 6.2.8 / SS 6.5.1 / HB 6.6.18.Final stack. Bumping the BOM major minor
 			MUST be coordinated with the spring.version / spring.security.version / hibernate.version
 			properties below; see SPRING_BOOT_BOM_ADOPTION.md.
 			-->
@@ -324,6 +324,13 @@
 				<groupId>org.glassfish.jaxb</groupId>
 				<artifactId>jaxb-core</artifactId>
 				<version>4.0.5</version>
+			</dependency>
+			<!-- error_prone_annotations: gson 2.13.2 (via slack-api) pulls 2.41.0; caffeine 3.2.2
+			     (via yauaa) pulls 2.40.0. Pin to the newer to satisfy convergence. -->
+			<dependency>
+				<groupId>com.google.errorprone</groupId>
+				<artifactId>error_prone_annotations</artifactId>
+				<version>2.41.0</version>
 			</dependency>
 
 			<!-- JUnit 5 (Jupiter) Phase A: Jupiter + Vintage engines side-by-side. -->
@@ -589,7 +596,7 @@
 		<dependency>
 			<groupId>org.ehcache</groupId>
 			<artifactId>ehcache</artifactId>
-			<version>3.10.8</version>
+			<version>3.10.9</version>
 			<classifier>jakarta</classifier>
 			<exclusions>
 				<exclusion>
@@ -624,11 +631,11 @@
 			<artifactId>mysql-connector-j</artifactId>
 			<version>${mysql.version}</version>
 		</dependency>
-		<!-- used in dataSource.xml and testDataSource.xml -->
+		<!-- used in DataSourceConfig. Boot 3.5 BOM ships 6.3.3; track BOM. -->
 		<dependency>
 			<groupId>com.zaxxer</groupId>
 			<artifactId>HikariCP</artifactId>
-			<version>5.1.0</version>
+			<version>6.3.3</version>
 		</dependency>
 
 
@@ -1317,20 +1324,16 @@
 		phase (likely on HS 7 or an external engine like OpenSearch).
 		-->
 		<gsec.version>0.0.24-RENOVATIONS-SNAPSHOT</gsec.version>
-		<!-- Spring Boot dependencies BOM (managed via dependencyManagement above). Boot 3.3.x
-		     line targets SF 6.1 + SS 6.3 + Hibernate 6.5. Gemma now runs SF 6.2 / SS 6.5 /
-		     HB 6.6 (the dM overrides for hibernate-core, hibernate-jcache, micrometer, jackson,
-		     slf4j, jakarta.xml.bind-api, jaxb-runtime, log4j-slf4j2-impl in dependencyManagement
-		     win over the BOM's pins). Bumping the BOM to 3.5.x (which targets SF 6.2 / SS 6.5 /
-		     HB 6.6 natively) is a follow-up so the override surface shrinks. -->
-		<spring-boot.version>3.3.13</spring-boot.version>
+		<!-- Spring Boot dependencies BOM (managed via dependencyManagement above). Boot 3.5.x
+		     targets SF 6.2 + SS 6.5 + Hibernate 6.6 natively - matches Gemma's pins. -->
+		<spring-boot.version>3.5.6</spring-boot.version>
 		<spring.version>6.2.8</spring.version>
 		<spring.security.version>6.5.1</spring.security.version>
 		<hibernate.version>6.6.18.Final</hibernate.version>
 		<!-- Flyway 10.x split out database-specific modules; tests need flyway-database-h2.
 		     Production wiring (flyway-mysql) lands in the follow-on session. -->
 		<flyway.version>10.22.0</flyway.version>
-		<jersey.version>3.1.10</jersey.version>
+		<jersey.version>3.1.11</jersey.version>
 		<!-- Phase 3 logging: bump slf4j-api from parent's 1.7.36 (EOL) to 2.0.x.
 		     log4j-slf4j-impl (1.x bridge) swapped to log4j-slf4j2-impl in <dependencies>. -->
 		<slf4j.version>2.0.16</slf4j.version>
