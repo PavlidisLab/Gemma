@@ -18,6 +18,9 @@
  */
 package ubic.gemma.model.common.description;
 
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.KeywordField;
 import ubic.gemma.model.common.AbstractIdentifiable;
 
 import org.springframework.lang.Nullable;
@@ -28,7 +31,12 @@ import java.util.Objects;
  * <p>
  * A reference to a record in a database.
  * </p>
+ * <p>
+ * Hibernate Search 7 mapping: contributes its {@code accession} as a keyword field via
+ * {@code @IndexedEmbedded} from many indexed roots ({@link ubic.gemma.model.expression.experiment.ExpressionExperiment#getAccession()},
+ * {@link ubic.gemma.model.expression.arrayDesign.ArrayDesign#getExternalReferences()}, etc.).
  */
+@Indexed
 public class DatabaseEntry extends AbstractIdentifiable {
 
     /**
@@ -60,6 +68,7 @@ public class DatabaseEntry extends AbstractIdentifiable {
     private String uri;
     private ExternalDatabase externalDatabase;
 
+    @KeywordField
     public String getAccession() {
         return this.accession;
     }
@@ -85,6 +94,7 @@ public class DatabaseEntry extends AbstractIdentifiable {
     }
 
     @Override
+    @DocumentId
     public Long getId() {
         return super.getId();
     }

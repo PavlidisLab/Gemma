@@ -18,16 +18,25 @@
  */
 package ubic.gemma.model.common.description;
 
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
 import ubic.gemma.model.common.AbstractIdentifiable;
 
 import java.util.Objects;
 
+/**
+ * Base class for {@link Keyword} and {@link MedicalSubjectHeading}; the {@code @Indexed}
+ * annotation lives on the concrete subclasses. The {@code term} field is the only Lucene-indexed
+ * property in the hierarchy.
+ */
 public abstract class BibRefAnnotation extends AbstractIdentifiable {
 
     private Boolean isMajorTopic;
 
     private String term;
 
+    @Override
+    @DocumentId
     public Long getId() {
         return super.getId();
     }
@@ -40,6 +49,7 @@ public abstract class BibRefAnnotation extends AbstractIdentifiable {
         this.isMajorTopic = isMajorTopic;
     }
 
+    @FullTextField
     public String getTerm() {
         return this.term;
     }

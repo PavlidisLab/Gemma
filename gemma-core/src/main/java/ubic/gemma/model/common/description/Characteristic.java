@@ -20,6 +20,10 @@
 package ubic.gemma.model.common.description;
 
 import org.apache.commons.lang3.StringUtils;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.KeywordField;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.AbstractDescribable;
 
@@ -37,9 +41,14 @@ import static org.apache.commons.lang3.StringUtils.stripToNull;
  * Characteristics can have an associated URI from an ontology from {@link #getCategoryUri()} and {@link #getValueUri()},
  * but not necessarily since there might not be an adequate term to represent the conveyed concept. These properties are
  * marked with {@link Nullable} and should always be handled with care.
+ * <p>
+ * Hibernate Search 7 mapping: indexed root and a critical {@code @IndexedEmbedded} contributor —
+ * the {@code value/valueUri} pair is what makes "free-text-over-ontology-terms-as-they-appear-on-datasets"
+ * work (see SEARCH_RECCE.md Section 5.1).
  *
  * @author Paul
  */
+@Indexed
 public class Characteristic extends AbstractDescribable implements Comparable<Characteristic> {
 
     private static final Comparator<Characteristic> BY_CATEGORY_COMPARATOR = ( c1, c2 ) -> CharacteristicUtils.compareTerm( c1.category, c1.categoryUri, c2.category, c2.categoryUri );
@@ -112,6 +121,7 @@ public class Characteristic extends AbstractDescribable implements Comparable<Ch
     }
 
     @Override
+    @DocumentId
     public Long getId() {
         return super.getId();
     }
@@ -120,6 +130,7 @@ public class Characteristic extends AbstractDescribable implements Comparable<Ch
      * @return either the human readable form of the classUri or a free text version if no classUri exists
      */
     @Nullable
+    @FullTextField
     public String getCategory() {
         return this.category;
     }
@@ -142,6 +153,7 @@ public class Characteristic extends AbstractDescribable implements Comparable<Ch
      * associations with this.
      */
     @Nullable
+    @KeywordField
     public String getCategoryUri() {
         return this.categoryUri;
     }
@@ -173,6 +185,7 @@ public class Characteristic extends AbstractDescribable implements Comparable<Ch
     /**
      * @return The human-readable term (e.g., "OrganismPart"; "kinase")
      */
+    @FullTextField
     public String getValue() {
         return this.value;
     }
@@ -189,6 +202,7 @@ public class Characteristic extends AbstractDescribable implements Comparable<Ch
      * abstract class.
      */
     @Nullable
+    @KeywordField
     public String getValueUri() {
         return this.valueUri;
     }

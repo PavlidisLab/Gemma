@@ -18,21 +18,35 @@
  */
 package ubic.gemma.model.genome.gene;
 
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexedEmbedded;
+import org.hibernate.search.mapper.pojo.automaticindexing.ReindexOnUpdate;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexingDependency;
 import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.genome.Gene;
 
 import java.util.Objects;
 
+/**
+ * Hibernate Search 7 mapping: contributes its referenced {@link Gene} via {@code @IndexedEmbedded}
+ * from {@link GeneSet}. The set's documents pick up the gene's official symbol / name / accessions
+ * via this path.
+ */
+@Indexed
 public class GeneSetMember extends AbstractIdentifiable {
 
     private Double score;
     private Gene gene;
 
     @Override
+    @DocumentId
     public Long getId() {
         return super.getId();
     }
 
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
+    @IndexedEmbedded
     public Gene getGene() {
         return this.gene;
     }

@@ -19,6 +19,13 @@
 
 package ubic.gemma.model.expression.experiment;
 
+import org.hibernate.search.engine.backend.types.Projectable;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexedEmbedded;
+import org.hibernate.search.mapper.pojo.automaticindexing.ReindexOnUpdate;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexingDependency;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.DescribableUtils;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
@@ -34,9 +41,14 @@ import java.util.Set;
 
 /**
  * ExperimentFactors are the dependent variables of an experiment (e.g., genotype, time, glucose concentration).
+ * <p>
+ * Hibernate Search 7 mapping: indexed root and embedded contributor via
+ * {@code ExperimentalDesign.experimentalFactors}; pulls its {@link #getCategory()} characteristic
+ * and the deep {@link #getFactorValues()} chain into the EE document.
  *
  * @author Paul
  */
+@Indexed
 public class ExperimentalFactor extends AbstractDescribable implements SecuredChild<ExpressionExperiment> {
 
     public static Comparator<ExperimentalFactor> COMPARATOR = Comparator.comparing( ExperimentalFactor::getName )
@@ -59,16 +71,19 @@ public class ExperimentalFactor extends AbstractDescribable implements SecuredCh
     }
 
     @Override
+    @DocumentId
     public Long getId() {
         return super.getId();
     }
 
     @Override
+    @FullTextField
     public String getName() {
         return super.getName();
     }
 
     @Override
+    @FullTextField(projectable = Projectable.YES)
     public String getDescription() {
         return super.getDescription();
     }
@@ -102,6 +117,8 @@ public class ExperimentalFactor extends AbstractDescribable implements SecuredCh
      * @return the category or null if annotated automatically from GEO or used as a dummy.
      */
     @Nullable
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
+    @IndexedEmbedded
     public Characteristic getCategory() {
         return this.category;
     }
@@ -121,6 +138,8 @@ public class ExperimentalFactor extends AbstractDescribable implements SecuredCh
     /**
      * @return The pairing of BioAssay FactorValues with the ExperimentDesign ExperimentFactor.
      */
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
+    @IndexedEmbedded
     public Set<FactorValue> getFactorValues() {
         return this.factorValues;
     }

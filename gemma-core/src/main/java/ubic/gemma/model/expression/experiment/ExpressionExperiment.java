@@ -15,6 +15,14 @@
 package ubic.gemma.model.expression.experiment;
 
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.search.engine.backend.types.Projectable;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexedEmbedded;
+import org.hibernate.search.mapper.pojo.automaticindexing.ReindexOnUpdate;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexingDependency;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.KeywordField;
 import ubic.gemma.model.common.auditAndSecurity.SecuredNotChild;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
@@ -35,8 +43,17 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
+ * Hibernate Search 7 indexed root.
+ * <p>
+ * Deep {@code @IndexedEmbedded} paths from this entity drive the entire
+ * "free-text-over-EE" experience: bioAssays.sampleUsed.characteristics.value/valueUri,
+ * experimentalDesign.experimentalFactors.factorValues.characteristics.value/valueUri,
+ * primaryPublication / otherRelevantPublications -> abstractText / title / authorList,
+ * etc. See SEARCH_RECCE.md Section 2.1 for the full field inventory.
+ *
  * @author paul
  */
+@Indexed
 @Slf4j
 public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild, Curatable {
 
@@ -121,41 +138,54 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     private Set<Characteristic> allCharacteristics;
 
     @Override
+    @DocumentId
     public Long getId() {
         return super.getId();
     }
 
     @Override
+    @FullTextField
     public String getName() {
         return super.getName();
     }
 
     @Override
+    @FullTextField(projectable = Projectable.YES)
     public String getDescription() {
         return super.getDescription();
     }
 
     @Override
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
+    @IndexedEmbedded
     public Set<BioAssay> getBioAssays() {
         return super.getBioAssays();
     }
 
     @Nullable
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
+    @IndexedEmbedded
     public DatabaseEntry getAccession() {
         return accession;
     }
 
     @Override
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
+    @IndexedEmbedded
     public BibliographicReference getPrimaryPublication() {
         return super.getPrimaryPublication();
     }
 
     @Override
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
+    @IndexedEmbedded
     public Set<BibliographicReference> getOtherRelevantPublications() {
         return super.getOtherRelevantPublications();
     }
 
     @Override
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
+    @IndexedEmbedded(includePaths = { "value", "valueUri" })
     public Set<Characteristic> getCharacteristics() {
         return super.getCharacteristics();
     }
@@ -181,6 +211,8 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     }
 
     @Nullable
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
+    @IndexedEmbedded
     public ExperimentalDesign getExperimentalDesign() {
         return this.experimentalDesign;
     }
@@ -237,6 +269,7 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
      * we often
      * used names like "alizadeh-lymphoma".
      */
+    @KeywordField
     public String getShortName() {
         return this.shortName;
     }

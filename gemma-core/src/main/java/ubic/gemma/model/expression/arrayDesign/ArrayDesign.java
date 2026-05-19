@@ -19,6 +19,14 @@
 
 package ubic.gemma.model.expression.arrayDesign;
 
+import org.hibernate.search.engine.backend.types.Projectable;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexedEmbedded;
+import org.hibernate.search.mapper.pojo.automaticindexing.ReindexOnUpdate;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexingDependency;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.KeywordField;
 import ubic.gemma.model.common.auditAndSecurity.AbstractAuditable;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.SecuredNotChild;
@@ -34,9 +42,12 @@ import java.util.Set;
 
 /**
  * Represents an assembly of design elements that are assayed all at once.
+ * <p>
+ * Hibernate Search 7 indexed root.
  *
  * @author Paul
  */
+@Indexed
 public class ArrayDesign extends AbstractAuditable implements Curatable, SecuredNotChild {
 
     public static final class Factory {
@@ -76,16 +87,19 @@ public class ArrayDesign extends AbstractAuditable implements Curatable, Secured
     }
 
     @Override
+    @DocumentId
     public Long getId() {
         return super.getId();
     }
 
     @Override
+    @FullTextField
     public String getName() {
         return super.getName();
     }
 
     @Override
+    @FullTextField(projectable = Projectable.YES)
     public String getDescription() {
         return super.getDescription();
     }
@@ -101,6 +115,8 @@ public class ArrayDesign extends AbstractAuditable implements Curatable, Secured
         return this.advertisedNumberOfDesignElements;
     }
 
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
+    @IndexedEmbedded
     public Set<AlternateName> getAlternateNames() {
         return this.alternateNames;
     }
@@ -129,6 +145,8 @@ public class ArrayDesign extends AbstractAuditable implements Curatable, Secured
     /**
      * @return Accessions for this array design in other databases, e.g., GEO, ArrayExpression.
      */
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
+    @IndexedEmbedded
     public Set<DatabaseEntry> getExternalReferences() {
         return this.externalReferences;
     }
@@ -156,6 +174,7 @@ public class ArrayDesign extends AbstractAuditable implements Curatable, Secured
      *         we often
      *         used names like "HG-U95A".
      */
+    @KeywordField
     public String getShortName() {
         return this.shortName;
     }

@@ -18,6 +18,14 @@
  */
 package ubic.gemma.model.genome;
 
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.GenericField;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexedEmbedded;
+import org.hibernate.search.mapper.pojo.automaticindexing.ReindexOnUpdate;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexingDependency;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.KeywordField;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.gene.GeneAlias;
 import ubic.gemma.model.genome.gene.GeneProduct;
@@ -29,7 +37,11 @@ import java.util.Set;
 
 /**
  * Represents a functionally transcribed unit in the genome, recognized by other databases (NCBI, Ensembl).
+ * <p>
+ * Hibernate Search 7 indexed root. {@code ncbiGeneId} is an integer, mapped as a generic
+ * (non-analyzed numeric) field.
  */
+@Indexed
 public class Gene extends ChromosomeFeature {
 
     /**
@@ -118,15 +130,19 @@ public class Gene extends ChromosomeFeature {
     }
 
     @Override
+    @DocumentId
     public Long getId() {
         return super.getId();
     }
 
     @Override
+    @FullTextField
     public String getName() {
         return super.getName();
     }
 
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
+    @IndexedEmbedded
     public Set<DatabaseEntry> getAccessions() {
         return this.accessions;
     }
@@ -135,6 +151,8 @@ public class Gene extends ChromosomeFeature {
         this.accessions = accessions;
     }
 
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
+    @IndexedEmbedded
     public Set<GeneAlias> getAliases() {
         return this.aliases;
     }
@@ -147,6 +165,7 @@ public class Gene extends ChromosomeFeature {
      * @return An Ensembl ID for the gene.
      */
     @Nullable
+    @KeywordField
     public String getEnsemblId() {
         return this.ensemblId;
     }
@@ -163,6 +182,7 @@ public class Gene extends ChromosomeFeature {
         this.multifunctionality = multifunctionality;
     }
 
+    @GenericField
     public Integer getNcbiGeneId() {
         return this.ncbiGeneId;
     }
@@ -180,6 +200,7 @@ public class Gene extends ChromosomeFeature {
         this.previousNcbiGeneId = previousNcbiGeneId;
     }
 
+    @KeywordField
     public String getOfficialName() {
         return this.officialName;
     }
@@ -188,6 +209,7 @@ public class Gene extends ChromosomeFeature {
         this.officialName = officialName;
     }
 
+    @KeywordField
     public String getOfficialSymbol() {
         return this.officialSymbol;
     }
@@ -196,6 +218,8 @@ public class Gene extends ChromosomeFeature {
         this.officialSymbol = officialSymbol;
     }
 
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
+    @IndexedEmbedded
     public Set<GeneProduct> getProducts() {
         return this.products;
     }
@@ -207,6 +231,10 @@ public class Gene extends ChromosomeFeature {
     /**
      * @return Note that a Gene also has a chromosome, so the organism can be inferred that way as well. This direct association
      * is a denormalization for queries that don't care about location, just species-membership.
+     * <p>
+     * Step 2 follow-up: the pre-strip HS 5 mapping had {@code @IndexedEmbedded} here, but
+     * {@link Taxon} carries no Lucene fields, so embedding contributes nothing. Skipped; revisit
+     * when / if Taxon grows {@code @FullTextField}s for species-name search.
      */
     public Taxon getTaxon() {
         return this.taxon;
