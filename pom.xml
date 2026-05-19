@@ -210,12 +210,31 @@
 				<artifactId>antlr4-runtime</artifactId>
 				<version>4.13.2</version>
 			</dependency>
-			<!-- Phase 3 logging: override parent's slf4j-api 1.7.36 (EOL) to 2.0.x.
-			     Paired with log4j-slf4j2-impl below. -->
+			<!-- Phase 3 logging: override parent's slf4j-api 1.7.36 (EOL) to 2.0.x. -->
 			<dependency>
 				<groupId>org.slf4j</groupId>
 				<artifactId>slf4j-api</artifactId>
 				<version>${slf4j.version}</version>
+			</dependency>
+
+			<!-- JUnit 5 (Jupiter) Phase A: Jupiter + Vintage engines side-by-side. -->
+			<dependency>
+				<groupId>org.junit.jupiter</groupId>
+				<artifactId>junit-jupiter</artifactId>
+				<version>${junit.jupiter.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.junit.vintage</groupId>
+				<artifactId>junit-vintage-engine</artifactId>
+				<version>${junit.jupiter.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.mockito</groupId>
+				<artifactId>mockito-junit-jupiter</artifactId>
+				<version>${mockito.version}</version>
+				<scope>test</scope>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
@@ -583,6 +602,22 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
+		</dependency>
+		<!--
+		JUnit 5 (Jupiter) migration, Phase A. Jupiter + Vintage are added at the
+		root so every module gets them transitively (currently only gemma-rest
+		had the vintage engine). Versions are managed via the root
+		<dependencyManagement> block above.
+		-->
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.junit.vintage</groupId>
+			<artifactId>junit-vintage-engine</artifactId>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>io.takari.junit</groupId>
@@ -1054,6 +1089,12 @@
 		<prettytime.version>5.0.6.Final</prettytime.version>
 		<mockito.version>5.21.0</mockito.version>
 		<assertj.version>3.27.7</assertj.version>
+		<!-- JUnit 5 (Jupiter) migration, Phase A: Jupiter + Vintage engine + Mockito-Jupiter
+		     run alongside the legacy junit:junit 4.13.2 transitive (from pavlab-starter-parent).
+		     Vintage engine lets the JUnit 5 Platform run the existing ~399 JUnit 4 test classes
+		     while new tests use Jupiter. Pinned at 5.11.4 to match the pre-existing vintage pin
+		     in gemma-rest/pom.xml (the Jersey 3 test framework already required it). -->
+		<junit.jupiter.version>5.11.4</junit.jupiter.version>
 		<!-- this ensures that -DexcludedGroups works properly -->
 		<excludedGroups/>
 		<skipJavadoc>false</skipJavadoc>
