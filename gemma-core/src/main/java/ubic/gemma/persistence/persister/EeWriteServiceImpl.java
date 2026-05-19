@@ -26,6 +26,7 @@ import org.springframework.aop.framework.AopProxyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -39,6 +40,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.persistence.service.common.auditAndSecurity.ContactDao;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayDao;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionDao;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialDao;
@@ -88,6 +90,8 @@ public class EeWriteServiceImpl implements EeWriteService {
     private BioMaterialDao bioMaterialDao;
     @Autowired
     private CompoundDao compoundDao;
+    @Autowired
+    private ContactDao contactDao;
     @Autowired
     private ExperimentalDesignDao experimentalDesignDao;
     @Autowired
@@ -164,7 +168,11 @@ public class EeWriteServiceImpl implements EeWriteService {
             ee.setPrimaryPublication( persister().doPersist( ee.getPrimaryPublication(), caches ) );
         }
         if ( ee.getOwner() != null ) {
-            ee.setOwner( persister().doPersist( ee.getOwner(), caches ) );
+            // BK lookup via ContactDao.find (which delegates to BusinessKey.find(Session, Contact));
+            // covers Person too since Person extends Contact.
+            Contact owner = ee.getOwner();
+            Contact existingOwner = contactDao.find( owner );
+            ee.setOwner( existingOwner != null ? existingOwner : contactDao.create( owner ) );
         }
         if ( ee.getTaxon() != null ) {
             ee.setTaxon( persister().persistTaxon( ee.getTaxon(), caches ) );

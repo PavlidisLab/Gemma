@@ -21,10 +21,12 @@ package ubic.gemma.persistence.persister;
 import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.persistence.service.common.auditAndSecurity.ContactDao;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDao;
 import ubic.gemma.persistence.util.BusinessKey;
 
@@ -54,6 +56,9 @@ public abstract class ArrayDesignPersister extends GenomePersister {
 
     @Autowired
     private ArrayDesignDao arrayDesignDao;
+
+    @Autowired
+    private ContactDao contactDao;
 
     @Override
     @SuppressWarnings("unchecked")
@@ -97,8 +102,12 @@ public abstract class ArrayDesignPersister extends GenomePersister {
     private ArrayDesign persistNewArrayDesign( ArrayDesign arrayDesign, Caches caches ) {
         AbstractPersister.log.debug( "Persisting new platform " + arrayDesign.getName() );
 
-        if ( arrayDesign.getDesignProvider() != null )
-            arrayDesign.setDesignProvider( this.persistContact( arrayDesign.getDesignProvider() ) );
+        if ( arrayDesign.getDesignProvider() != null ) {
+            // BK lookup covers Person (Person extends Contact) — see BusinessKey.find(Session, Contact).
+            Contact designProvider = arrayDesign.getDesignProvider();
+            Contact existing = contactDao.find( designProvider );
+            arrayDesign.setDesignProvider( existing != null ? existing : contactDao.create( designProvider ) );
+        }
 
         if ( arrayDesign.getPrimaryTaxon() == null ) {
             throw new IllegalArgumentException( "Primary taxon cannot be null" );
