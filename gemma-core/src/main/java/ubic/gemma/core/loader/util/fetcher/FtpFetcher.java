@@ -95,7 +95,7 @@ public abstract class FtpFetcher extends AbstractFetcher {
     protected Collection<File> doTask( Callable<Boolean> callable, long expectedSize, String seekFileName,
             String outputFileName ) {
 
-        ExecutorService executor = Executors.newSingleThreadExecutor();
+        ExecutorService executor = Executors.newVirtualThreadPerTaskExecutorIfAvailable();
         Future<Boolean> future = executor.submit( callable );
         executor.shutdown();
 

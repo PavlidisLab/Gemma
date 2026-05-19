@@ -72,7 +72,7 @@ public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFet
     @Override
     protected Collection<File> doTask( Callable<Boolean> callable, long expectedSize, String seekFileName,
             String outputFileName ) {
-        ExecutorService executor = Executors.newSingleThreadExecutor();
+        ExecutorService executor = Executors.newVirtualThreadPerTaskExecutorIfAvailable();
         Future<Boolean> future = executor.submit( callable );
         executor.shutdown();
         try {
@@ -165,7 +165,7 @@ public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFet
     }
 
     protected void unPack( final File toUnpack ) {
-        ExecutorService executor = ubic.gemma.core.util.concurrent.Executors.newSingleThreadExecutor();
+        ExecutorService executor = ubic.gemma.core.util.concurrent.Executors.newVirtualThreadPerTaskExecutorIfAvailable();
         Future<?> future = executor.submit( () -> {
             File extractedFile = new File( FileTools.chompExtension( toUnpack.getAbsolutePath() ) );
             /*
