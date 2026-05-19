@@ -3,9 +3,21 @@
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    xsi:schemaLocation="http://www.hibernate.org/xsd/hibernate-mapping http://hibernate.org/xsd/hibernate-mapping-4.0.xsd">
 
-    <class mutable="false"
-           name="ubic.gemma.model.common.auditAndSecurity.AuditEvent" table="AUDIT_EVENT">
-        <cache usage="read-only"/>
+    <!--
+        Hibernate 6 visibility regression fix: the L2 entity cache directive
+        `<cache usage="read-only"/>` was removed here because, combined with the
+        unidirectional AuditTrail.events bag (no back-reference from AuditEvent
+        to AuditTrail), it served STALE empty-bag results to fresh-session HQL
+        reads after a cross-transaction insert. The AUDIT_EVENT rows existed in
+        the DB and the SQL emitted by `select e from AuditTrail t join t.events e
+        where t=:at` was correct, but Hibernate's cached read-only-entity state
+        served from L2 was preferred over re-materialising from the result set.
+        AuditEvent rows ARE still write-once-immutable (`mutable="false"` is
+        retained), we just no longer cache them in L2. The full investigation is
+        in notable_cases.md (ArrayDesignReportServiceTest baseline failures,
+        2026-05-19).
+    -->
+    <class mutable="false" name="ubic.gemma.model.common.auditAndSecurity.AuditEvent" table="AUDIT_EVENT">
         <id access="field" name="id" type="java.lang.Long">
             <column name="ID" sql-type="BIGINT"/>
             <generator class="native"/>
