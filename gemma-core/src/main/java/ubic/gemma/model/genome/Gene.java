@@ -23,6 +23,8 @@ import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextFi
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.GenericField;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexedEmbedded;
+import org.hibernate.search.mapper.pojo.automaticindexing.ReindexOnUpdate;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexingDependency;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.KeywordField;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.gene.GeneAlias;
@@ -139,6 +141,7 @@ public class Gene extends ChromosomeFeature {
         return super.getName();
     }
 
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
     @IndexedEmbedded
     public Set<DatabaseEntry> getAccessions() {
         return this.accessions;
@@ -148,6 +151,7 @@ public class Gene extends ChromosomeFeature {
         this.accessions = accessions;
     }
 
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
     @IndexedEmbedded
     public Set<GeneAlias> getAliases() {
         return this.aliases;
@@ -214,6 +218,7 @@ public class Gene extends ChromosomeFeature {
         this.officialSymbol = officialSymbol;
     }
 
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
     @IndexedEmbedded
     public Set<GeneProduct> getProducts() {
         return this.products;

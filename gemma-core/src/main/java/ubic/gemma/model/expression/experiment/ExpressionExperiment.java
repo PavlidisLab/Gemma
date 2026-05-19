@@ -20,6 +20,8 @@ import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexedEmbedded;
+import org.hibernate.search.mapper.pojo.automaticindexing.ReindexOnUpdate;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexingDependency;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.KeywordField;
 import ubic.gemma.model.common.auditAndSecurity.SecuredNotChild;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
@@ -154,30 +156,35 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     }
 
     @Override
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
     @IndexedEmbedded
     public Set<BioAssay> getBioAssays() {
         return super.getBioAssays();
     }
 
     @Nullable
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
     @IndexedEmbedded
     public DatabaseEntry getAccession() {
         return accession;
     }
 
     @Override
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
     @IndexedEmbedded
     public BibliographicReference getPrimaryPublication() {
         return super.getPrimaryPublication();
     }
 
     @Override
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
     @IndexedEmbedded
     public Set<BibliographicReference> getOtherRelevantPublications() {
         return super.getOtherRelevantPublications();
     }
 
     @Override
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
     @IndexedEmbedded(includePaths = { "value", "valueUri" })
     public Set<Characteristic> getCharacteristics() {
         return super.getCharacteristics();
@@ -204,6 +211,7 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     }
 
     @Nullable
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
     @IndexedEmbedded
     public ExperimentalDesign getExperimentalDesign() {
         return this.experimentalDesign;

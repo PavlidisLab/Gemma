@@ -24,6 +24,8 @@ import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexedEmbedded;
+import org.hibernate.search.mapper.pojo.automaticindexing.ReindexOnUpdate;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexingDependency;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.KeywordField;
 import ubic.gemma.model.common.auditAndSecurity.AbstractAuditable;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
@@ -113,6 +115,7 @@ public class ArrayDesign extends AbstractAuditable implements Curatable, Secured
         return this.advertisedNumberOfDesignElements;
     }
 
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
     @IndexedEmbedded
     public Set<AlternateName> getAlternateNames() {
         return this.alternateNames;
@@ -142,6 +145,7 @@ public class ArrayDesign extends AbstractAuditable implements Curatable, Secured
     /**
      * @return Accessions for this array design in other databases, e.g., GEO, ArrayExpression.
      */
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
     @IndexedEmbedded
     public Set<DatabaseEntry> getExternalReferences() {
         return this.externalReferences;

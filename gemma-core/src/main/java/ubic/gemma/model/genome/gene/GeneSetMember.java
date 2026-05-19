@@ -21,6 +21,8 @@ package ubic.gemma.model.genome.gene;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexedEmbedded;
+import org.hibernate.search.mapper.pojo.automaticindexing.ReindexOnUpdate;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexingDependency;
 import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.genome.Gene;
 
@@ -43,6 +45,7 @@ public class GeneSetMember extends AbstractIdentifiable {
         return super.getId();
     }
 
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
     @IndexedEmbedded
     public Gene getGene() {
         return this.gene;

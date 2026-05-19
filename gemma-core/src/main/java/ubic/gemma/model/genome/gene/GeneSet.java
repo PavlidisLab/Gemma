@@ -24,6 +24,8 @@ import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexedEmbedded;
+import org.hibernate.search.mapper.pojo.automaticindexing.ReindexOnUpdate;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexingDependency;
 import ubic.gemma.model.common.auditAndSecurity.AbstractAuditable;
 import ubic.gemma.model.common.auditAndSecurity.SecuredNotChild;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -75,6 +77,7 @@ public class GeneSet extends AbstractAuditable implements SecuredNotChild {
         return super.getDescription();
     }
 
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
     @IndexedEmbedded
     public Set<Characteristic> getCharacteristics() {
         return this.characteristics;
@@ -85,6 +88,7 @@ public class GeneSet extends AbstractAuditable implements SecuredNotChild {
     }
 
 
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
     @IndexedEmbedded
     public Set<BibliographicReference> getLiteratureSources() {
         return this.literatureSources;
@@ -94,6 +98,7 @@ public class GeneSet extends AbstractAuditable implements SecuredNotChild {
         this.literatureSources = literatureSources;
     }
 
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
     @IndexedEmbedded
     public Set<GeneSetMember> getMembers() {
         return this.members;
@@ -103,6 +108,7 @@ public class GeneSet extends AbstractAuditable implements SecuredNotChild {
         this.members = members;
     }
 
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
     @IndexedEmbedded
     public DatabaseEntry getSourceAccession() {
         return this.sourceAccession;

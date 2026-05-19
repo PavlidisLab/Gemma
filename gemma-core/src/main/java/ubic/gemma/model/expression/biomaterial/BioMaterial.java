@@ -23,6 +23,8 @@ import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexedEmbedded;
+import org.hibernate.search.mapper.pojo.automaticindexing.ReindexOnUpdate;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexingDependency;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.DescribableUtils;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
@@ -125,6 +127,7 @@ public class BioMaterial extends AbstractDescribable implements SecuredChild<Exp
         return unmodifiableSet( assays );
     }
 
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
     @IndexedEmbedded
     public Set<Characteristic> getCharacteristics() {
         return this.characteristics;
@@ -155,6 +158,7 @@ public class BioMaterial extends AbstractDescribable implements SecuredChild<Exp
      * BioMaterial may reference a given external accession.
      */
     @Nullable
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
     @IndexedEmbedded
     public DatabaseEntry getExternalAccession() {
         return this.externalAccession;

@@ -21,6 +21,8 @@ package ubic.gemma.model.expression.experiment;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexedEmbedded;
+import org.hibernate.search.mapper.pojo.automaticindexing.ReindexOnUpdate;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexingDependency;
 import org.springframework.util.Assert;
 import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
@@ -118,6 +120,7 @@ public class FactorValue extends AbstractIdentifiable implements SecuredChild<Ex
     /**
      * Collection of {@link Statement} describing this factor value.
      */
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
     @IndexedEmbedded
     public Set<Statement> getCharacteristics() {
         return this.characteristics;

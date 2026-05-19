@@ -23,6 +23,8 @@ import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexedEmbedded;
+import org.hibernate.search.mapper.pojo.automaticindexing.ReindexOnUpdate;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexingDependency;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.KeywordField;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.expression.biomaterial.Compound;
@@ -130,6 +132,7 @@ public class BibliographicReference extends AbstractDescribable {
         this.authorList = authorList;
     }
 
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
     @IndexedEmbedded
     public Set<Compound> getChemicals() {
         return this.chemicals;
@@ -178,6 +181,7 @@ public class BibliographicReference extends AbstractDescribable {
         this.issue = issue;
     }
 
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
     @IndexedEmbedded
     public Set<Keyword> getKeywords() {
         return this.keywords;
@@ -187,6 +191,7 @@ public class BibliographicReference extends AbstractDescribable {
         this.keywords = keywords;
     }
 
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
     @IndexedEmbedded
     public Set<MedicalSubjectHeading> getMeshTerms() {
         return this.meshTerms;
@@ -204,6 +209,7 @@ public class BibliographicReference extends AbstractDescribable {
         this.pages = pages;
     }
 
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
     @IndexedEmbedded
     public DatabaseEntry getPubAccession() {
         return this.pubAccession;

@@ -180,7 +180,7 @@ public class HibernateConfig {
         props.setProperty( "hibernate.format_sql", formatSql );
 
         // ------------------------------------------------------------------------------------------
-        // Hibernate Search 7 bootstrap (Renovations Phase 3, search restoration Step 1).
+        // Hibernate Search 7 bootstrap (Renovations Phase 3, search restoration Step 1 + 2).
         // Wires HS 7's Lucene-direct (local filesystem) backend. Property keys verified against
         // org.hibernate.search.engine.cfg.BackendSettings, LuceneBackendSettings,
         // LuceneIndexSettings, and HibernateOrmMapperSettings (HS 7.2.4). The HS 5
@@ -188,10 +188,24 @@ public class HibernateConfig {
         // replaced by the hibernate.search.backend.* and hibernate.search.indexing.*
         // namespaces below. See SEARCH_RECCE.md Section 3.5.
         //
-        // Step 1 SCOPE: bootstrap only. No entities carry @Indexed yet (those land in
-        // Step 2), so HS 7 starts with an empty mapping. We disable on-write listeners and
-        // skip schema management until the entity port lands so the empty mapping does not
-        // blow up ApplicationContext init.
+        // Step 2 update: with @Indexed entities now in place (the eight indexed roots:
+        // ExpressionExperiment, Gene, ArrayDesign, CompositeSequence, BioSequence, GeneSet,
+        // ExpressionExperimentSet, BibliographicReference -- plus the @IndexedEmbedded
+        // contributor graph), we move from "bootstrap-only" to "schema-aware":
+        //   - listeners.enabled stays FALSE: Gemma's pre-strip pattern was manual reindex via
+        //     IndexerService / cron, not automatic on-write through Hibernate listeners.
+        //     Step 3-4 will revisit if/when we want write-through indexing. Keeping it off
+        //     means the SessionFactory boot validates the mapping (will fail-fast on bad
+        //     annotations) but does NOT try to push live writes through Lucene, which keeps
+        //     the test-DB write path identical to today.
+        //   - plan.synchronization.strategy = write-sync: when an indexer DOES enqueue work
+        //     (mass reindex in Step 4), have the indexing plan apply changes synchronously so
+        //     a subsequent query sees them. Cheap on a single-node Lucene backend.
+        //   - schema_management.strategy = create-or-update: now that we have real indexed
+        //     entities, let HS 7 create the per-entity Lucene directories on first boot, and
+        //     keep them in sync if we add a @KeywordField later. Step 6 will do the proper
+        //     "drop the HS5 indexes and reindex from scratch" cutover; create-or-update is
+        //     forgiving in the interim.
         // ------------------------------------------------------------------------------------------
         // Backend type is inferred when only one backend jar is on the classpath; pin it
         // explicitly so a future ES-backend artifact on classpath doesn't silently flip the
@@ -201,16 +215,15 @@ public class HibernateConfig {
         props.setProperty( "hibernate.search.backend.directory.type", "local-filesystem" );
         // Index root directory (HS 7 successor to HS 5's hibernate.search.default.indexBase).
         props.setProperty( "hibernate.search.backend.directory.root", searchIndexBase );
-        // Manual indexing: Gemma's pre-strip pattern relied on the IndexerService / cron
-        // for mass reindex, not on automatic on-write indexing through Hibernate listeners.
-        // Step 3-4 work may flip this back on; for Step 1 (no annotations on entities yet)
-        // it must be off so HS does not try to wire entity listeners against an empty
-        // mapping at SessionFactory build time.
+        // See block comment above: listeners off, manual reindex pattern.
         props.setProperty( "hibernate.search.indexing.listeners.enabled", "false" );
-        // Skip schema management entirely until indexed entities exist (Step 2). Without
-        // this, HS 7's default "create-or-validate" strategy can complain at startup about
-        // index schemas that don't yet have any entity to back them.
-        props.setProperty( "hibernate.search.schema_management.strategy", "none" );
+        // Synchronize indexing-plan commits with the surrounding transaction so post-reindex
+        // queries immediately see the new state.
+        props.setProperty( "hibernate.search.indexing.plan.synchronization.strategy", "write-sync" );
+        // Create per-entity Lucene index dirs on first boot, keep them in sync as the
+        // mapping evolves. Production cutover (Step 6) will drop the legacy HS 5 directories
+        // wholesale before this strategy ever sees them.
+        props.setProperty( "hibernate.search.schema_management.strategy", "create-or-update" );
 
         factory.setHibernateProperties( props );
         return factory;

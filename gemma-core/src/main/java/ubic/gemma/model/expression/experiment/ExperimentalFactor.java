@@ -24,6 +24,8 @@ import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexedEmbedded;
+import org.hibernate.search.mapper.pojo.automaticindexing.ReindexOnUpdate;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexingDependency;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.DescribableUtils;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
@@ -115,6 +117,7 @@ public class ExperimentalFactor extends AbstractDescribable implements SecuredCh
      * @return the category or null if annotated automatically from GEO or used as a dummy.
      */
     @Nullable
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
     @IndexedEmbedded
     public Characteristic getCategory() {
         return this.category;
@@ -135,6 +138,7 @@ public class ExperimentalFactor extends AbstractDescribable implements SecuredCh
     /**
      * @return The pairing of BioAssay FactorValues with the ExperimentDesign ExperimentFactor.
      */
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
     @IndexedEmbedded
     public Set<FactorValue> getFactorValues() {
         return this.factorValues;
