@@ -71,7 +71,19 @@ import java.util.List;
  * {@code applicationContext-security.xml}) and only referenced here — never duplicated.
  */
 @Configuration
-@EnableGlobalMethodSecurity(securedEnabled = true, prePostEnabled = true, order = 1)
+// proxyTargetClass = false is the framework default and matches the lab-wide
+// JDK-proxy invariant carried forward from the legacy XML config (where
+// <s:global-method-security> left proxy-target-class unset, also defaulting
+// to false). Made explicit here per the AspectJ deeper recce
+// (ASPECTJ_DEEPER_AUDIT.md, recommendation #3) so the invariant is visible at
+// the call site and protected against accidental future drift. The
+// method-security MethodInterceptor produced by this annotation participates
+// in the same JDK-proxy stack as the @Transactional / @Secured advisors
+// configured in XML; keeping all of them on interface-based proxies is what
+// allows Gemma's heavy use of "FooService extends BaseService<...>" parametric
+// interfaces (and the corresponding @PreAuthorize SpEL on those interface
+// methods) to be intercepted cleanly.
+@EnableGlobalMethodSecurity(securedEnabled = true, prePostEnabled = true, order = 1, proxyTargetClass = false)
 public class MethodSecurityConfig extends GlobalMethodSecurityConfiguration {
 
     /**
