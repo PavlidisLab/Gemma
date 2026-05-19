@@ -30,15 +30,15 @@
                         us</a>about the problem.
                 </li>
             </c:when>
-            <c:when test="${not empty requestScope['javax.servlet.error.exception']}">
+            <c:when test="${not empty requestScope['jakarta.servlet.error.exception']}">
                 <li>
-                    <a href="mailto:pavlab-support@msl.ubc.ca?subject=${fn:escapeXml(requestScope['javax.servlet.error.exception'].message)}">Email
+                    <a href="mailto:pavlab-support@msl.ubc.ca?subject=${fn:escapeXml(requestScope['jakarta.servlet.error.exception'].message)}">Email
                         us</a> about the problem.
                 </li>
             </c:when>
-            <c:when test="${not empty requestScope['javax.servlet.error.message']}">
+            <c:when test="${not empty requestScope['jakarta.servlet.error.message']}">
                 <li>
-                    <a href="mailto:pavlab-support@msl.ubc.ca?subject=${fn:escapeXml(requestScope['javax.servlet.error.message'])}">Email
+                    <a href="mailto:pavlab-support@msl.ubc.ca?subject=${fn:escapeXml(requestScope['jakarta.servlet.error.message'])}">Email
                         us</a> about the problem.
                 </li>
             </c:when>
