@@ -634,12 +634,12 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Override
     public Collection<CompositeSequence> loadCompositeSequences( ArrayDesign arrayDesign, int limit, int offset ) {
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession()
+        Query<CompositeSequence> query = this.getSessionFactory().getCurrentSession()
                 .createQuery( "select cs from CompositeSequence as cs where cs.arrayDesign = :ad" )
-                .setParameter( "ad", arrayDesign )
-                .setFirstResult( offset )
-                .setMaxResults( limit )
-                .list();
+                .setParameter( "ad", arrayDesign );
+        if ( offset > 0 ) query.setFirstResult( offset );
+        if ( limit > 0 ) query.setMaxResults( limit );
+        return query.list();
     }
 
     /**
