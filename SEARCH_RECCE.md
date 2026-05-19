@@ -644,6 +644,27 @@ APIs the existing code references; Jena 4.10.x is the sweet-spot.
 **Effort estimate: 2-3 sessions in Gemma.** (Faster than the
 sibling-repo path because we don't pay the cross-repo cut/release tax.)
 
+**Step 1 footnote (2026-05-19) — actual versions chosen:** `jena-text` /
+`jena-tdb2` pinned at **4.10.0** (the LAST Jena 4.x release; there is no
+4.11.x — Jena went 4.10.0 → 5.0.0). Lucene **9.11.1** rather than Jena
+4.10.0's parent-POM-pinned 9.7.0 — overridden via a parent
+`<dependencyManagement>` block so Jena's Lucene 9.x converges with HS
+7.2.4's Lucene 9.11.1. This neutralises the "Lucene 8 vs Lucene 9"
+worry from the original Section 6.3 plan: at Jena 4.10.0 we're already
+on Lucene 9. baseCode 1.1.34-RENOVATIONS-SNAPSHOT transitively shipped
+Jena 2.13.0 + TDB 1.1.2 (early-2015 vintage, `com.hp.hpl.jena.*`
+namespace); the bump cascades into three small Gemma source touch-ups:
+`FactorValueOntologyServiceImpl`, `TGFVO`, and
+`UnifiedOntologyUpdaterCli` had to flip from `com.hp.hpl.jena.*` to
+`org.apache.jena.*`, and the CLI's TDB1-internals usage
+(`TDBMaker.createDatasetGraphTDB` + `TDBMaker.releaseLocation`,
+package-private in 4.x) was ported to the public `TDBFactory.createDataset`
+/ `TDBInternal.getDatasetGraphTDB` / `TDBFactory.release` sequence.
+Convergence enforcer needed an `<exclusions>` block on the `baseCode`
+direct dep (commons-compress, commons-io, commons-csv, commons-cli)
+because Jena 4.10's `jena-base` declares older versions than Gemma's
+direct pins.
+
 ### 6.4 Refactor-out checkpoint (deferred)
 
 When the dust settles on Phase 3 we can decide whether to push the

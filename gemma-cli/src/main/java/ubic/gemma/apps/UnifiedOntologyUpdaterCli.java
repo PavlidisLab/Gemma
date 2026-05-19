@@ -1,10 +1,11 @@
 package ubic.gemma.apps;
 
-import com.hp.hpl.jena.tdb.TDBLoader;
-import com.hp.hpl.jena.tdb.base.file.Location;
-import com.hp.hpl.jena.tdb.setup.StoreParams;
-import com.hp.hpl.jena.tdb.store.DatasetGraphTDB;
-import com.hp.hpl.jena.tdb.sys.TDBMaker;
+import org.apache.jena.query.Dataset;
+import org.apache.jena.tdb.TDBFactory;
+import org.apache.jena.tdb.TDBLoader;
+import org.apache.jena.tdb.base.file.Location;
+import org.apache.jena.tdb.store.DatasetGraphTDB;
+import org.apache.jena.tdb.sys.TDBInternal;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
@@ -187,12 +188,21 @@ public class UnifiedOntologyUpdaterCli extends AbstractCLI {
 
     private void createTdbDataset( Path newDir, List<Path> downloadedFiles ) {
         Location loc = Location.create( newDir.toString() );
+        // Jena 4.10 port (Phase 3 ontology Step 1): the Jena 2.13 API
+        //   TDBMaker.createDatasetGraphTDB(loc, StoreParams.getDftStoreParams())
+        //   TDBLoader.load(dsg, fileList, showProgress)
+        //   TDBMaker.releaseLocation(loc)
+        // no longer exists (TDBMaker.releaseLocation became package-private).
+        // Equivalent 4.x sequence: TDBFactory.createDataset(loc) ->
+        // TDBInternal.getDatasetGraphTDB(ds) -> TDBLoader.load(dsg, list) ->
+        // TDBFactory.release(ds). Progress is logged via Jena's own logger.
+        Dataset ds = TDBFactory.createDataset( loc );
         try {
             log.info( "Creating TDB dataset at " + newDir + "..." );
-            DatasetGraphTDB dataset = TDBMaker.createDatasetGraphTDB( loc, StoreParams.getDftStoreParams() );
-            TDBLoader.load( dataset, downloadedFiles.stream().map( Path::toString ).collect( Collectors.toList() ), true );
+            DatasetGraphTDB dataset = TDBInternal.getDatasetGraphTDB( ds );
+            TDBLoader.load( dataset, downloadedFiles.stream().map( Path::toString ).collect( Collectors.toList() ) );
         } finally {
-            TDBMaker.releaseLocation( loc );
+            TDBFactory.release( ds );
         }
     }
 
