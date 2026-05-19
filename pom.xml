@@ -250,6 +250,11 @@
 				<artifactId>micrometer-registry-jmx</artifactId>
 				<version>${micrometer.version}</version>
 			</dependency>
+			<dependency>
+				<groupId>io.micrometer</groupId>
+				<artifactId>micrometer-registry-prometheus</artifactId>
+				<version>${micrometer.version}</version>
+			</dependency>
 			<!-- commons-* overrides: Gemma carries newer commons jars than Boot 3.3 BOM. -->
 			<dependency>
 				<groupId>org.apache.commons</groupId>
@@ -296,6 +301,29 @@
 				<groupId>org.slf4j</groupId>
 				<artifactId>slf4j-api</artifactId>
 				<version>${slf4j.version}</version>
+			</dependency>
+			<!-- log4j-slf4j2-impl: Boot 3.3 BOM ships 2.23.1; Gemma tracks 2.25.3 (parent). -->
+			<dependency>
+				<groupId>org.apache.logging.log4j</groupId>
+				<artifactId>log4j-slf4j2-impl</artifactId>
+				<version>${log4j.version}</version>
+			</dependency>
+			<!-- jakarta.xml.bind-api: Boot 3.3 BOM ships 4.0.2; Gemma tracks 4.0.5. -->
+			<dependency>
+				<groupId>jakarta.xml.bind</groupId>
+				<artifactId>jakarta.xml.bind-api</artifactId>
+				<version>4.0.5</version>
+			</dependency>
+			<!-- jaxb-runtime / jaxb-core: pin to 4.0.5 to match jakarta.xml.bind-api. -->
+			<dependency>
+				<groupId>org.glassfish.jaxb</groupId>
+				<artifactId>jaxb-runtime</artifactId>
+				<version>4.0.5</version>
+			</dependency>
+			<dependency>
+				<groupId>org.glassfish.jaxb</groupId>
+				<artifactId>jaxb-core</artifactId>
+				<version>4.0.5</version>
 			</dependency>
 
 			<!-- JUnit 5 (Jupiter) Phase A: Jupiter + Vintage engines side-by-side. -->
@@ -434,6 +462,13 @@
 			<groupId>org.hibernate.orm</groupId>
 			<artifactId>hibernate-core</artifactId>
 			<version>${hibernate.version}</version>
+			<exclusions>
+				<!-- pulls jakarta.xml.bind-api 4.0.2; we use 4.0.5 directly -->
+				<exclusion>
+					<groupId>jakarta.xml.bind</groupId>
+					<artifactId>jakarta.xml.bind-api</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.dom4j</groupId>
@@ -462,6 +497,13 @@
 			<artifactId>jaxb-runtime</artifactId>
 			<version>4.0.5</version>
 			<scope>runtime</scope>
+			<exclusions>
+				<!-- jaxb-core 4.0.5 pins jakarta.xml.bind-api 4.0.2; we use 4.0.5 directly -->
+				<exclusion>
+					<groupId>jakarta.xml.bind</groupId>
+					<artifactId>jakarta.xml.bind-api</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.jboss.logging</groupId>
@@ -635,7 +677,7 @@
 		<dependency>
 			<groupId>jakarta.xml.bind</groupId>
 			<artifactId>jakarta.xml.bind-api</artifactId>
-			<version>4.0.2</version>
+			<version>4.0.5</version>
 		</dependency>
 
 		<!-- Logging -->
@@ -670,6 +712,11 @@
 		<dependency>
 			<groupId>io.micrometer</groupId>
 			<artifactId>micrometer-registry-jmx</artifactId>
+			<version>${micrometer.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-registry-prometheus</artifactId>
 			<version>${micrometer.version}</version>
 		</dependency>
 

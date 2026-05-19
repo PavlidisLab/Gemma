@@ -107,4 +107,16 @@ public class MetricsConfig {
     public TimedAspect timedAspect( MeterRegistry meterRegistry ) {
         return new TimedAspect( meterRegistry );
     }
+
+    /**
+     * Per-cache JSR-107 metrics (Ehcache 3 / JCache backend, see {@code EhcacheConfig}).
+     * Replaces the {@code MeterRegistryJCacheConfigurer} XML bean previously declared in
+     * applicationContext-serviceBeans.xml.
+     */
+    @Bean
+    public ubic.gemma.core.metrics.MeterRegistryJCacheConfigurer meterRegistryJCacheConfigurer(
+            MeterRegistry meterRegistry,
+            javax.cache.CacheManager jCacheCacheManager ) {
+        return new ubic.gemma.core.metrics.MeterRegistryJCacheConfigurer( meterRegistry, jCacheCacheManager );
+    }
 }
