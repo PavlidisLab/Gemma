@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.persister;
 
 import org.apache.commons.lang3.StringUtils;
+import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.sequence.SequenceBinUtils;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
@@ -39,6 +40,7 @@ import ubic.gemma.persistence.service.genome.sequenceAnalysis.AnnotationAssociat
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatAssociationDao;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultDao;
 import ubic.gemma.persistence.service.genome.taxon.TaxonDao;
+import ubic.gemma.persistence.util.BusinessKey;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -299,7 +301,9 @@ public abstract class GenomePersister extends CommonPersister {
     }
 
     protected BioSequence persistBioSequence( BioSequence bioSequence, Caches caches ) {
-        BioSequence existingBioSequence = bioSequenceDao.find( bioSequence );
+        // BK lookup by (name, taxon); on miss, persist a new sequence after filling in its associations.
+        Session session = getSessionFactory().getCurrentSession();
+        BioSequence existingBioSequence = BusinessKey.find( session, bioSequence );
 
         // try to avoid making the instance 'dirty' if we don't have to, to avoid updates.
         if ( existingBioSequence != null ) {
@@ -846,11 +850,16 @@ public abstract class GenomePersister extends CommonPersister {
             return seenChromosomes.get( key );
         }
 
-        Collection<Chromosome> chromosomes = chromosomeDao.find( chromosome.getName(), ct );
+        // Ensure the probe's taxon is set so BusinessKey.find can use it; the caller may pass an
+        // explicit override via t when chromosome.getTaxon() is null.
+        chromosome.setTaxon( ct );
 
-        if ( chromosomes == null || chromosomes.isEmpty() ) {
+        Session session = getSessionFactory().getCurrentSession();
+        Chromosome existing = BusinessKey.find( session, chromosome );
 
-            // no point in doing this if it already exists.
+        if ( existing == null ) {
+            // Persist associations only on miss (no point if it already exists). Note: doPersist for
+            // Taxon goes through CommonPersister/persistTaxon which is cache-backed and idempotent.
             chromosome.setTaxon( this.doPersist( ct, caches ) );
             if ( chromosome.getSequence() != null ) {
                 // cascade should do?
@@ -860,10 +869,8 @@ public abstract class GenomePersister extends CommonPersister {
                 chromosome.setAssemblyDatabase( this.doPersist( chromosome.getAssemblyDatabase(), caches ) );
             }
             chromosome = chromosomeDao.create( chromosome );
-        } else if ( chromosomes.size() == 1 ) {
-            chromosome = chromosomes.iterator().next();
         } else {
-            throw new IllegalArgumentException( "Non-unique chromosome name  " + chromosome.getName() + " on " + ct );
+            chromosome = existing;
         }
 
         seenChromosomes.put( key, chromosome );
