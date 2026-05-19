@@ -1,6 +1,6 @@
 package ubic.gemma.rest.util;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.persistence.util.Sort;
 
 import static org.assertj.core.api.Assertions.assertThat;
