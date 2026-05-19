@@ -91,6 +91,16 @@ public class ExpressionDataSVDTest extends BaseTest {
         }
 
         @Bean
+        public ubic.gemma.persistence.service.expression.experiment.EeWriteService eeWriteService() {
+            return mock();
+        }
+
+        @Bean
+        public ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentPrePersistService expressionExperimentPrePersistService() {
+            return mock();
+        }
+
+        @Bean
         public PreprocessorService preprocessorService() {
             return mock();
         }
