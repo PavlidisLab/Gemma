@@ -67,10 +67,12 @@
                 </list>
             </constructor-arg>
         </bean>
-        <bean class="ubic.gemma.core.metrics.MeterRegistryEhcacheConfigurer">
-            <constructor-arg ref="meterRegistry"/>
-            <constructor-arg ref="cacheManager"/>
-        </bean>
+        <!-- Phase 3 audit (2026-05-18): the MeterRegistryEhcacheConfigurer bean that lived
+             here was removed because its backing class was deleted with the EhCache 2 retirement
+             (commit ab94b884a4). Activating the metrics profile previously crashed with
+             ClassNotFoundException. A JCache-aware replacement is sketched in
+             ASPECTJ_EHCACHE_AUDIT.md (section "MetricsConfig EhcacheConfigurer breakage status").
+             Reintroduce in a follow-up; the metrics profile is otherwise functional. -->
         <!-- for @Timed annotations -->
         <aop:aspectj-autoproxy/>
         <bean class="io.micrometer.core.aop.TimedAspect">
