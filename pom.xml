@@ -146,6 +146,12 @@
 	</contributors>
 	<dependencyManagement>
 		<dependencies>
+			<!-- Force jakarta.el-api convergence: jersey-bean-validation 3.1.10 wants 5.0.1, JSTL 3.0.0 wants 5.0.0 -->
+			<dependency>
+				<groupId>jakarta.el</groupId>
+				<artifactId>jakarta.el-api</artifactId>
+				<version>5.0.1</version>
+			</dependency>
 			<!-- Overrides for the pavlab-starter-parent's pins that no longer fit the Spring 6 / Hibernate 6 stack. -->
 			<dependency>
 				<groupId>org.hibernate.common</groupId>
