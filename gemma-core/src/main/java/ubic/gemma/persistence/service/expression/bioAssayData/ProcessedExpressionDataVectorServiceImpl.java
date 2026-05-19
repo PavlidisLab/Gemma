@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
 import ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionException;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
+import ubic.gemma.core.security.audit.Audited;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedProcessedVectorComputationEvent;
@@ -122,12 +123,14 @@ public class ProcessedExpressionDataVectorServiceImpl
 
     @Override
     @Transactional
+    @Audited(value = ProcessedVectorComputationEvent.class, message = "Replaced processed expression data.")
     public int replaceProcessedDataVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> vectors, boolean updateRanks ) {
         int replaced;
         try {
             replaced = expressionExperimentService.replaceProcessedDataVectors( ee, vectors );
-            auditTrailService.addUpdateEvent( ee, ProcessedVectorComputationEvent.class, String.format( "Replaced processed expression data for %s.", ee ) );
+            // Success audit event written by @Audited on this method via AuditedAspect.
         } catch ( Exception e ) {
+            // Throwable form retained (REQUIRES_NEW semantics, stack-trace detail) — out of scope for @Audited Phase B.
             auditTrailService.addUpdateEvent( ee, FailedProcessedVectorComputationEvent.class, "Failed to replace processed expression data vectors.", e );
             throw e;
         }
@@ -140,12 +143,14 @@ public class ProcessedExpressionDataVectorServiceImpl
 
     @Override
     @Transactional
+    @Audited(value = ProcessedVectorComputationEvent.class, message = "Removed processed expression data.")
     public int removeProcessedDataVectors( ExpressionExperiment ee ) {
         int removed;
         try {
             removed = expressionExperimentService.removeProcessedDataVectors( ee );
-            auditTrailService.addUpdateEvent( ee, ProcessedVectorComputationEvent.class, String.format( "Removed processed expression data for %s.", ee ) );
+            // Success audit event written by @Audited on this method via AuditedAspect.
         } catch ( Exception e ) {
+            // Throwable form retained (REQUIRES_NEW semantics, stack-trace detail) — out of scope for @Audited Phase B.
             auditTrailService.addUpdateEvent( ee, FailedProcessedVectorComputationEvent.class, "Failed to remove processed expression data vectors.", e );
             throw e;
         }

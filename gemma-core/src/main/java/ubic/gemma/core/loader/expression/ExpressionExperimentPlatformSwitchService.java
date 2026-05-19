@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.expression.AnalysisUtilService;
 import ubic.gemma.core.analysis.preprocess.VectorMergingService;
 import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
+import ubic.gemma.core.security.audit.Audited;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentPlatformSwitchEvent;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -123,6 +124,7 @@ public class ExpressionExperimentPlatformSwitchService {
      *                     changed for them.
      */
     @Transactional
+    @Audited(ExpressionExperimentPlatformSwitchEvent.class)
     public void switchExperimentToArrayDesign( ExpressionExperiment ee, ArrayDesign arrayDesign ) {
         assert arrayDesign != null;
 
@@ -211,8 +213,8 @@ public class ExpressionExperimentPlatformSwitchService {
         }
 
         expressionExperimentService.update( ee );
-        auditTrailService.addUpdateEvent( ee, ExpressionExperimentPlatformSwitchEvent.class,
-                "Switch to use " + arrayDesign.getShortName() );
+        // Audit event written by @Audited on this method via AuditedAspect.
+        // Phase B-2 TODO: restore dynamic note "Switch to use <arrayDesign.shortName>" via SpEL once supported.
         log.info( "Completing switching " + ee ); // flush of transaction happens after this, can take a while.
 
         if ( hasData && targetBioAssayDimension != null /* case 2 */ ) {

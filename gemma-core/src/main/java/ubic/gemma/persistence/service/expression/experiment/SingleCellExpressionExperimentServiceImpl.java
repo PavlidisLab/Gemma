@@ -9,6 +9,7 @@ import org.springframework.util.Assert;
 import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
 import ubic.gemma.core.analysis.singleCell.SingleCellSlicerUtils;
 import ubic.gemma.core.analysis.singleCell.SingleCellSparsityMetrics;
+import ubic.gemma.core.security.audit.Audited;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataIntMatrix;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataMatrix;
@@ -391,6 +392,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional
+    @Audited(DataReplacedEvent.class)
     public int replaceSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, Collection<SingleCellExpressionDataVector> vectors, @Nullable String details, boolean removeOrRecreateCellTypeFactor, boolean ignoreCompatibleFactor ) {
         Assert.notNull( ee.getId(), "The dataset must be persistent." );
         Assert.notNull( quantitationType.getId(), "The quantitation type must be persistent." );
@@ -444,8 +446,8 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
                 log.warn( "Preferred single-cell vectors do not have cell type assignment, but the configuration indicates not to recreate the cell type factor." );
             }
         }
-        auditTrailService.addUpdateEvent( ee, DataReplacedEvent.class,
-                String.format( "Replaced %d vectors with %d vectors for %s with dimension %s.", numVectorsRemoved, vectors.size(), quantitationType, scd ) );
+        // Audit event written by @Audited on this method via AuditedAspect.
+        // Phase B-2 TODO: restore dynamic note "Replaced %d vectors with %d vectors for %s with dimension %s." via SpEL.
         return numVectorsRemoved;
     }
 
@@ -1051,6 +1053,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional
+    @Audited(CellTypeAssignmentRemovedEvent.class)
     public void removeCellTypeAssignment( ExpressionExperiment ee, SingleCellDimension dimension, CellTypeAssignment cellTypeAssignment ) {
         Assert.notNull( ee.getId(), "Dataset must be persistent." );
         Assert.notNull( dimension.getId(), "Single-cell dimension must be persistent." );
@@ -1060,7 +1063,8 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
             throw new IllegalArgumentException( cellTypeAssignment + " is not associated to " + dimension );
         }
         expressionExperimentDao.updateSingleCellDimension( ee, dimension );
-        auditTrailService.addUpdateEvent( ee, CellTypeAssignmentRemovedEvent.class, "Removed " + cellTypeAssignment + " from " + dimension + "." );
+        // Audit event written by @Audited on this method via AuditedAspect.
+        // Phase B-2 TODO: restore dynamic note "Removed <cta> from <dimension>." via SpEL.
     }
 
     @Override
@@ -1208,6 +1212,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional
+    @Audited(CellLevelCharacteristicsAddedEvent.class)
     public CellLevelCharacteristics addCellLevelCharacteristics( ExpressionExperiment ee, SingleCellDimension scd, CellLevelCharacteristics clc ) {
         Assert.notNull( ee.getId(), "Dataset must be persistent." );
         Assert.notNull( scd.getId(), "Dimension must be persistent." );
@@ -1222,12 +1227,14 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         Assert.isTrue( !scd.getCellLevelCharacteristics().contains( clc ), scd + " already has a cell-level characteristics matching " + clc + "." );
         scd.getCellLevelCharacteristics().add( clc );
         expressionExperimentDao.updateSingleCellDimension( ee, scd );
-        auditTrailService.addUpdateEvent( ee, CellLevelCharacteristicsAddedEvent.class, "Added " + clc + " to " + scd + "." );
+        // Audit event written by @Audited on this method via AuditedAspect.
+        // Phase B-2 TODO: restore dynamic note "Added <clc> to <scd>." via SpEL.
         return clc;
     }
 
     @Override
     @Transactional
+    @Audited(CellLevelCharacteristicsRemovedEvent.class)
     public void removeCellLevelCharacteristics( ExpressionExperiment ee, SingleCellDimension scd, CellLevelCharacteristics clc ) {
         Assert.notNull( ee.getId(), "Dataset must be persistent." );
         Assert.notNull( scd.getId(), "Dimension must be persistent." );
@@ -1236,7 +1243,8 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
             throw new IllegalArgumentException( clc + " is not associated to " + scd );
         }
         expressionExperimentDao.updateSingleCellDimension( ee, scd );
-        auditTrailService.addUpdateEvent( ee, CellLevelCharacteristicsRemovedEvent.class, "Removed " + clc + " from " + scd + "." );
+        // Audit event written by @Audited on this method via AuditedAspect.
+        // Phase B-2 TODO: restore dynamic note "Removed <clc> from <scd>." via SpEL.
     }
 
     @Override
