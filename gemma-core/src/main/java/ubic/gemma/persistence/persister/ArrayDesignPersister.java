@@ -18,26 +18,35 @@
  */
 package ubic.gemma.persistence.persister;
 
+import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDao;
-
-import java.util.ArrayList;
-import java.util.Collection;
+import ubic.gemma.persistence.util.BusinessKey;
 
 /**
- * This class handles persisting array designs. This is a bit of a special case, because ArrayDesigns are very large
- * (with associated reporters, CompositeSequences, and BioSequences), and also very likely to be submitted more than
- * once to the system. Therefore, we want to take care not to get multiple slightly different copies of them, but we also
- * don't want to have to spend an inordinate amount of time checking a submitted version against the database.
- * The association between ArrayDesign and DesignElement is compositional - the lifecycle of a {@link ubic.gemma.model.expression.bioAssayData.DesignElementDataVector}
- * is tied to the {@link ArrayDesign}. However, {@link ubic.gemma.model.expression.bioAssayData.DesignElementDataVector}
- * have associations with {@link BioSequence}, which have their own lifecycle, in general.
+ * Handles persisting array designs.
+ * <p>
+ * Phase 3 persister retirement: rewired to {@link BusinessKey#find(Session, ArrayDesign)}
+ * for the root-level "find existing" lookup, with the {@code compositeSequences} and
+ * {@code externalReferences} collections flowing through Hibernate's {@code cascade="all"}
+ * on {@link ArrayDesign#getCompositeSequences()} and {@link ArrayDesign#getExternalReferences()}
+ * (see {@code ArrayDesign.hbm.xml}). The remaining responsibilities here are:
+ * <ul>
+ *   <li>Pre-resolve {@link BioSequence} per composite sequence — BioSequences have their own
+ *       lifecycle (shared across array designs) and are <strong>not</strong> cascaded from
+ *       CompositeSequence; they must be looked up / created before {@code dao.create}.</li>
+ *   <li>Pre-resolve the design provider, primary taxon, and the external database for each
+ *       external reference — these are {@code many-to-one} associations without cascade.</li>
+ * </ul>
+ * <p>
+ * The {@link ArrayDesignsForExperimentCache} contract is unaffected: that cache is populated
+ * explicitly by {@code ExpressionExperimentPrePersistServiceImpl} and {@code GeoServiceImpl},
+ * never as a side effect of this persister.
  *
  * @author pavlidis
  */
@@ -57,7 +66,8 @@ public abstract class ArrayDesignPersister extends GenomePersister {
     }
 
     /**
-     * Persist an array design.
+     * Look up an existing ArrayDesign by business key (shortName, alternate names, or name —
+     * see {@link BusinessKey#matches}); otherwise create a new one along with its full graph.
      */
     private ArrayDesign findOrPersistArrayDesign( ArrayDesign arrayDesign, Caches caches ) {
         if ( arrayDesign.getId() != null ) {
@@ -65,8 +75,8 @@ public abstract class ArrayDesignPersister extends GenomePersister {
             return arrayDesign;
         }
 
-        // Try less stringent search using the short name
-        ArrayDesign existing = arrayDesignDao.findByShortName( arrayDesign.getShortName() );
+        Session session = getSessionFactory().getCurrentSession();
+        ArrayDesign existing = BusinessKey.find( session, arrayDesign );
         if ( existing != null ) {
             AbstractPersister.log.info( String.format( "Platform exactly matching %s doesn't exist, but found %s; returning",
                     arrayDesign, existing ) );
@@ -78,7 +88,11 @@ public abstract class ArrayDesignPersister extends GenomePersister {
     }
 
     /**
-     * Persist an entirely new array design, including composite sequences and any associated new sequences.
+     * Persist an entirely new array design, including composite sequences and any associated
+     * new sequences. CompositeSequences and externalReferences flow through Hibernate cascade
+     * ({@code cascade="all"} declared in ArrayDesign.hbm.xml); only their non-cascaded
+     * many-to-one associations (BioSequence, ExternalDatabase) and the AD's own owning
+     * associations (designProvider, primaryTaxon) need explicit BK resolution here.
      */
     private ArrayDesign persistNewArrayDesign( ArrayDesign arrayDesign, Caches caches ) {
         AbstractPersister.log.debug( "Persisting new platform " + arrayDesign.getName() );
@@ -89,55 +103,37 @@ public abstract class ArrayDesignPersister extends GenomePersister {
         if ( arrayDesign.getPrimaryTaxon() == null ) {
             throw new IllegalArgumentException( "Primary taxon cannot be null" );
         }
-
         arrayDesign.setPrimaryTaxon( this.doPersist( arrayDesign.getPrimaryTaxon(), caches ) );
 
         for ( DatabaseEntry externalRef : arrayDesign.getExternalReferences() ) {
             externalRef.setExternalDatabase( this.persistExternalDatabase( externalRef.getExternalDatabase(), caches ) );
         }
 
-        AbstractPersister.log.debug( "Persisting " + arrayDesign );
-
-        Collection<CompositeSequence> scs = new ArrayList<>( arrayDesign.getCompositeSequences() );
-        arrayDesign.getCompositeSequences().clear();
-        arrayDesign = arrayDesignDao.create( arrayDesign );
-        arrayDesign.getCompositeSequences().addAll( scs );
-        this.persistArrayDesignCompositeSequenceAssociations( arrayDesign, caches );
-        arrayDesignDao.update( arrayDesign );
-
-        return arrayDesign;
-    }
-
-    private void persistArrayDesignCompositeSequenceAssociations( ArrayDesign arrayDesign, Caches caches ) {
+        // Resolve BioSequence for each CompositeSequence before saving the AD.
+        // BioSequence has its own lifecycle (shared across array designs) and is NOT
+        // cascaded from CompositeSequence; CompositeSequence itself IS cascaded from
+        // ArrayDesign (cascade="all" on ArrayDesign.compositeSequences in HBM), so a
+        // single dao.create(ad) persists the whole probe set in one go.
         int numElements = arrayDesign.getCompositeSequences().size();
-        if ( numElements == 0 )
-            return;
-        AbstractPersister.log.debug( "Filling in or updating sequences in composite sequences for " + arrayDesign );
-
-        int persistedBioSequences = 0;
+        int examined = 0;
         for ( CompositeSequence compositeSequence : arrayDesign.getCompositeSequences() ) {
-
             compositeSequence.setArrayDesign( arrayDesign );
-
             BioSequence biologicalCharacteristic = compositeSequence.getBiologicalCharacteristic();
-
-            if ( compositeSequence.getBiologicalCharacteristic() != null ) {
+            if ( biologicalCharacteristic != null ) {
                 compositeSequence.setBiologicalCharacteristic( this.persistBioSequence( biologicalCharacteristic, caches ) );
             }
-
-            if ( ++persistedBioSequences % REPORT_BATCH_SIZE == 0 ) {
-                AbstractPersister.log
-                        .info( persistedBioSequences + "/" + numElements + " compositeSequence sequences examined for "
-                                + arrayDesign );
+            if ( ++examined % REPORT_BATCH_SIZE == 0 ) {
+                AbstractPersister.log.info( examined + "/" + numElements
+                        + " compositeSequence sequences examined for " + arrayDesign );
             }
-
+        }
+        if ( examined > 0 ) {
+            AbstractPersister.log.info( "Total of " + examined
+                    + " compositeSequence sequences examined for " + arrayDesign );
         }
 
-        if ( persistedBioSequences > 0 ) {
-            AbstractPersister.log
-                    .info( "Total of " + persistedBioSequences + " compositeSequence sequences examined for "
-                            + arrayDesign );
-        }
+        AbstractPersister.log.debug( "Persisting " + arrayDesign );
+        return arrayDesignDao.create( arrayDesign );
     }
 
 }
