@@ -118,7 +118,18 @@ public class SettingsConfig {
 
         MutablePropertySources result = new MutablePropertySources();
 
+        // 12-factor: environment-variable overrides (GEMMA_FOO_BAR -> gemma.foo.bar). Listed FIRST so that container
+        // env vars take precedence over a Gemma.properties file on disk. Only keys declared in default.properties /
+        // project.properties are passed through, matching the filtering already done for -D system properties.
+        result.addLast( new PropertiesPropertySource( "environment", filterEnvironmentVariables( System.getenv() ) ) );
+
         result.addLast( new PropertiesPropertySource( "system", filterSystemProperties( System.getProperties() ) ) );
+
+        // expose a small set of JVM-standard system properties (java.io.tmpdir, user.home, user.dir, user.name,
+        // os.name, file.separator, line.separator, path.separator) so that default.properties can reference them
+        // via ${...} placeholders -- needed because PropertySourcesPlaceholderConfigurer with an explicit
+        // PropertySources list does NOT fall back to the Environment for unresolved placeholders.
+        result.addLast( new PropertiesPropertySource( "jvm-standard", jvmStandardProperties() ) );
 
         boolean userConfigLoaded = false;
 
@@ -160,9 +171,15 @@ public class SettingsConfig {
             userConfigLoaded = true;
         }
 
-        // at least one user configuration should be loaded
+        // at least one user configuration should normally be loaded; if no on-disk file resolves we now WARN and
+        // continue rather than throwing, so a container can supply every required property via environment variables
+        // / JVM system properties (which are already a higher-priority source). Required properties without defaults
+        // (e.g. gemma.db.url, gemma.db.user, gemma.db.password) will still fail loudly at their @Value injection
+        // site if they remain unresolved — see CONFIG_AUDIT.md HIGH issue #1.
         if ( !userConfigLoaded ) {
-            throw new RuntimeException( USER_CONFIGURATION + " could not be loaded and no other user configuration were supplied." );
+            log.warn( USER_CONFIGURATION + " was not found via -Dgemma.config, $CATALINA_BASE, or $HOME. "
+                    + "Continuing without an on-disk user configuration; required properties must be supplied "
+                    + "via environment variables or JVM -D system properties (see CONTAINER_CONFIG.md)." );
         }
 
         log.debug( "Loading default configuration files from classpath." );
@@ -222,6 +239,53 @@ public class SettingsConfig {
         cachedSettingsDescriptions = result;
 
         return result;
+    }
+
+    /**
+     * Standard JVM properties that {@code default.properties} / {@code project.properties} are allowed to
+     * reference via {@code ${...}} placeholders. Keeping this list small + explicit so we don't accidentally
+     * leak unrelated system properties into the placeholder resolver.
+     */
+    private static final String[] JVM_STANDARD_PROPERTY_KEYS = {
+            "java.io.tmpdir", "user.home", "user.dir", "user.name",
+            "os.name", "file.separator", "line.separator", "path.separator"
+    };
+
+    static Properties jvmStandardProperties() {
+        Properties props = new Properties();
+        for ( String key : JVM_STANDARD_PROPERTY_KEYS ) {
+            String value = System.getProperty( key );
+            if ( value != null ) {
+                props.setProperty( key, value );
+            }
+        }
+        return props;
+    }
+
+    /**
+     * Translate POSIX-style environment variables ({@code GEMMA_DB_URL}, {@code GEMMA_APPDATA_HOME}) to
+     * dot-separated Gemma keys ({@code gemma.db.url}, {@code gemma.appdata.home}) and keep only those that
+     * correspond to a key declared in {@link #DEFAULT_CONFIGURATIONS}. This lets a container supply any
+     * Gemma property via {@code -e GEMMA_FOO_BAR=...} without needing a {@code Gemma.properties} file on disk.
+     */
+    static Properties filterEnvironmentVariables( Map<String, String> env ) throws IOException {
+        Properties props = new Properties();
+        for ( String loc : DEFAULT_CONFIGURATIONS ) {
+            try ( InputStream is = new ClassPathResource( loc ).getInputStream() ) {
+                Properties defaultProperties = new Properties();
+                defaultProperties.load( is );
+                for ( String key : defaultProperties.stringPropertyNames() ) {
+                    if ( props.containsKey( key ) ) {
+                        continue;
+                    }
+                    String envKey = key.toUpperCase().replace( '.', '_' );
+                    if ( env.containsKey( envKey ) ) {
+                        props.setProperty( key, env.get( envKey ) );
+                    }
+                }
+            }
+        }
+        return props;
     }
 
     /**
