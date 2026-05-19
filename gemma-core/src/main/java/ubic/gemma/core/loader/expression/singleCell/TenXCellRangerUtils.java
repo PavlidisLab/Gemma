@@ -1,6 +1,6 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import no.uib.cipr.matrix.io.MatrixVectorReader;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
@@ -19,7 +19,7 @@ import java.util.zip.GZIPInputStream;
  *
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class TenXCellRangerUtils {
 
     /**

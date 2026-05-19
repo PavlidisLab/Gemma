@@ -1,7 +1,7 @@
 package ubic.gemma.core.loader.expression.geo.singleCell;
 
 import lombok.SneakyThrows;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.Strings;
 import org.springframework.util.Assert;
@@ -52,7 +52,7 @@ import static ubic.gemma.core.loader.expression.geo.singleCell.MexDetector.*;
  *
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSingleCellDetector, SeriesAwareSingleCellDetector, AutoCloseable {
 
 

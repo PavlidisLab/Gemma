@@ -1,6 +1,6 @@
 package ubic.gemma.rest.providers;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ParamException;
 import org.glassfish.jersey.server.monitoring.ApplicationEvent;
@@ -13,7 +13,7 @@ import jakarta.ws.rs.ServiceUnavailableException;
 import jakarta.ws.rs.ext.Provider;
 
 @Provider
-@CommonsLog
+@Slf4j
 public class RequestExceptionLogger implements ApplicationEventListener {
 
     @Override

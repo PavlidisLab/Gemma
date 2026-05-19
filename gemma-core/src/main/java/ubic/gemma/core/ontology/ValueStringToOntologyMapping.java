@@ -1,6 +1,6 @@
 package ubic.gemma.core.ontology;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.io.ClassPathResource;
 import ubic.gemma.model.common.description.Characteristic;
@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
  * <p>
  * The presets are stored in valueStringToOntologyTermMappings.txt.
  */
-@CommonsLog
+@Slf4j
 public class ValueStringToOntologyMapping {
 
     private static final Map<String, Map<String, Characteristic>> term2OntologyMappings = new ConcurrentHashMap<>();

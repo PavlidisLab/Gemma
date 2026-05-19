@@ -19,7 +19,7 @@
 package ubic.gemma.web.taglib.expression.experiment;
 
 import lombok.Setter;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.springframework.web.servlet.tags.HtmlEscapingAwareTag;
@@ -46,7 +46,7 @@ import java.util.*;
  *
  * @author joseph
  */
-@CommonsLog
+@Slf4j
 public class AssayViewTag extends HtmlEscapingAwareTag {
 
     /**

@@ -1,6 +1,6 @@
 package ubic.gemma.persistence.initialization;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.datasource.init.DatabasePopulator;
 import org.springframework.util.Assert;
 
@@ -22,7 +22,7 @@ import java.sql.Connection;
  * manually by the DBA) rather than this populator. Reinstating automatic schema updates is
  * future work — likely Flyway (see {@code RENOVATIONS.md}).
  */
-@CommonsLog
+@Slf4j
 public class DatabaseSchemaUpdatePopulator implements DatabasePopulator {
 
     public DatabaseSchemaUpdatePopulator( String vendor ) {

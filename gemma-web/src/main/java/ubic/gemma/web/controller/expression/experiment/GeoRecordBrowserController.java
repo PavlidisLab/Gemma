@@ -18,7 +18,7 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
@@ -33,7 +33,7 @@ import java.util.Collection;
  * @author pavlidis
  */
 @Controller
-@CommonsLog
+@Slf4j
 public class GeoRecordBrowserController {
 
     @Autowired

@@ -26,7 +26,7 @@ import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import lombok.Value;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Hibernate;
 import org.hibernate.NonUniqueResultException;
@@ -63,7 +63,7 @@ import static ubic.gemma.persistence.util.QueryUtils.listByBatch;
  * @author Paul
  */
 @Repository
-@CommonsLog
+@Slf4j
 public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilteringVoEnabledDao<ExpressionAnalysisResultSet, DifferentialExpressionAnalysisResultSetValueObject>
         implements ExpressionAnalysisResultSetDao {
 

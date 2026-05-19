@@ -1,6 +1,6 @@
 package ubic.gemma.rest.analytics.ga4;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -14,7 +14,7 @@ import static ubic.gemma.rest.analytics.ga4.GoogleAnalytics4Provider.isValidClie
  * @see RequestContextHolder#currentRequestAttributes()
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class RequestAttributesBasedClientIdRetrievalStrategy implements ClientIdRetrievalStrategy {
 
     private static final String DEFAULT_ATTRIBUTE = "clientId";

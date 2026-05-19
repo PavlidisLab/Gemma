@@ -18,7 +18,7 @@
  */
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,7 +43,7 @@ import static ubic.gemma.persistence.service.expression.biomaterial.BioMaterialU
  * @see DifferentialExpressionAnalysisService
  */
 @Service
-@CommonsLog
+@Slf4j
 public class DifferentialExpressionAnalysisServiceImpl extends AbstractService<DifferentialExpressionAnalysis> implements DifferentialExpressionAnalysisService {
 
     private final DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao;

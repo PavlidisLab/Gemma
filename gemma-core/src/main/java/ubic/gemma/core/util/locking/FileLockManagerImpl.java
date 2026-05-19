@@ -1,6 +1,6 @@
 package ubic.gemma.core.util.locking;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.file.PathUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
@@ -24,7 +24,7 @@ import java.util.stream.Stream;
  * @author poirigui
  */
 @Component
-@CommonsLog
+@Slf4j
 public class FileLockManagerImpl implements FileLockManager {
 
     private static final Map<Path, ReadWriteFileLock> fileLocks = Collections.synchronizedMap( new WeakHashMap<>() );

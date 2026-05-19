@@ -1,6 +1,6 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -24,7 +24,7 @@ import static java.util.Objects.requireNonNull;
 
 @Service
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
-@CommonsLog
+@Slf4j
 public class ExpressionExperimentGeoServiceImpl implements ExpressionExperimentGeoService {
 
     private static final SimpleRetryPolicy retryPolicy = new SimpleRetryPolicy( 5, 500, 1.5 );

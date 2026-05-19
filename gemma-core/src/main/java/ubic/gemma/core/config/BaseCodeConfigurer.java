@@ -1,6 +1,6 @@
 package ubic.gemma.core.config;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
@@ -26,7 +26,7 @@ import java.util.Properties;
  * @see Configuration
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class BaseCodeConfigurer implements BeanFactoryPostProcessor {
 
     private static final String BASECODE_PROPERTY_PREFIX = "basecode.";

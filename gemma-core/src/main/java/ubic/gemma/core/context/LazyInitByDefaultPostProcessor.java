@@ -1,6 +1,6 @@
 package ubic.gemma.core.context;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -26,7 +26,7 @@ import java.util.TreeSet;
  * Spring Boot provides a similar functionality with <a href="https://docs.spring.io/spring-boot/api/java/org/springframework/boot/LazyInitializationBeanFactoryPostProcessor.html">LazyInitializationBeanFactoryPostProcessor</a>.
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class LazyInitByDefaultPostProcessor implements BeanFactoryPostProcessor, Ordered {
 
     private static final String IGNORE_ATTRIBUTE = "ubic.gemma.core.context.LazyInitByDefaultPostProcessor.ignore";

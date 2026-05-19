@@ -1,6 +1,6 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -46,7 +46,7 @@ import static ubic.gemma.core.analysis.singleCell.SingleCellSlicerUtils.sliceCel
 import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVectorUtils.createStreamMonitor;
 
 @Service
-@CommonsLog
+@Slf4j
 public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpressionExperimentService {
 
     @Autowired

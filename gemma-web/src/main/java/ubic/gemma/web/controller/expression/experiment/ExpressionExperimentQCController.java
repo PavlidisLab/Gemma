@@ -20,7 +20,7 @@ package ubic.gemma.web.controller.expression.experiment;
 
 import cern.colt.list.DoubleArrayList;
 import cern.jet.stat.Descriptive;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -130,7 +130,7 @@ import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.
  * @author paul
  */
 @Controller
-@CommonsLog
+@Slf4j
 public class ExpressionExperimentQCController {
 
     /**
@@ -279,7 +279,7 @@ public class ExpressionExperimentQCController {
             svdo = svdService.getSvdFactorAnalysis( ee );
         } catch ( Exception e ) {
             // if there is no pca
-            log.error( e, e );
+            log.error( e.getMessage(), e );
         }
 
         if ( svdo != null ) {

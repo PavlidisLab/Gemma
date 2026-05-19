@@ -1,7 +1,7 @@
 package ubic.gemma.core.loader.expression.geo;
 
 import lombok.Value;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -37,7 +37,7 @@ import static org.junit.Assume.assumeNoException;
 /**
  * Test replacements for GEO terms.
  */
-@CommonsLog
+@Slf4j
 @Category(SlowTest.class)
 @NetworkAvailable(url = "http://purl.obolibrary.org/")
 public class GeoTermReplacementTest {

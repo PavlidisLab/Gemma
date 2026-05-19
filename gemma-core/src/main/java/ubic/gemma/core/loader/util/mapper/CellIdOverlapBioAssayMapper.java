@@ -1,6 +1,6 @@
 package ubic.gemma.core.loader.util.mapper;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 
 import java.util.*;
@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
  * Strategy for mapping sample name to {@link BioAssay} that relies on overlapping cell IDs.
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class CellIdOverlapBioAssayMapper extends MapBasedEntityMapper<BioAssay> implements BioAssayMapper {
 
     public CellIdOverlapBioAssayMapper( Map<BioAssay, Set<String>> bioAssayToCellIds, Map<String, Set<String>> sampleNameToCellIds ) {

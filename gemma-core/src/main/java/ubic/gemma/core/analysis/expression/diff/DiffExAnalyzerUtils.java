@@ -1,6 +1,6 @@
 package ubic.gemma.core.analysis.expression.diff;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.Assert;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
@@ -19,7 +19,7 @@ import org.springframework.lang.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@CommonsLog
+@Slf4j
 public class DiffExAnalyzerUtils {
 
     public static final String BIO_MATERIAL_RNAME_PREFIX = "biomat_";

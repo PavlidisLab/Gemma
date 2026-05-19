@@ -1,6 +1,6 @@
 package ubic.gemma.core.loader.expression.geo.singleCell;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import ubic.gemma.core.loader.expression.geo.model.GeoSample;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoader;
@@ -12,7 +12,7 @@ import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoaderConfig;
  * Downloading files in sample and loading is not supported yet.
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class LoomSingleCellDetector extends AbstractSingleFileInSeriesSingleCellDetector {
 
     public LoomSingleCellDetector() {

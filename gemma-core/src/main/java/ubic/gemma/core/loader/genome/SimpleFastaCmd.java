@@ -18,7 +18,7 @@
  */
 package ubic.gemma.core.loader.genome;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.util.ShellUtils;
@@ -38,7 +38,7 @@ import java.util.Collection;
  *
  * @author pavlidis
  */
-@CommonsLog
+@Slf4j
 public class SimpleFastaCmd implements FastaCmd {
 
     private final String fastaCmdExe;

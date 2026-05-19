@@ -1,6 +1,6 @@
 package ubic.gemma.core.ontology;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -40,7 +40,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 @ContextConfiguration
 public class OntologyLoadingTest extends AbstractJUnit4SpringContextTests {
 

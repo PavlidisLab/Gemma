@@ -3,7 +3,7 @@ package ubic.gemma.core.security.authorization.acl;
 import gemma.gsec.acl.domain.AclGrantedAuthoritySid;
 import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.acl.domain.AclService;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.NativeQuery;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +24,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-@CommonsLog
+@Slf4j
 public class AclLinterServiceImpl implements AclLinterService {
 
     /**

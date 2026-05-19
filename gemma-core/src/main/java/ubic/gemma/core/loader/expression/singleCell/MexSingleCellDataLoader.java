@@ -1,7 +1,7 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
 import lombok.Setter;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import no.uib.cipr.matrix.io.MatrixInfo;
 import no.uib.cipr.matrix.io.MatrixSize;
 import no.uib.cipr.matrix.io.MatrixVectorReader;
@@ -47,7 +47,7 @@ import static ubic.gemma.core.loader.util.MatrixMarketUtils.readMatrixMarketFrom
  *
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 @Setter
 public class MexSingleCellDataLoader implements SingleCellDataLoader {
 

@@ -20,7 +20,7 @@ package ubic.gemma.core.loader.expression.geo.model;
 
 import lombok.Getter;
 import lombok.Setter;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import ubic.gemma.core.loader.expression.geo.GeoSampleCorrespondence;
 
 import org.springframework.lang.Nullable;
@@ -33,7 +33,7 @@ import java.util.*;
  * @author pavlidis
  */
 @SuppressWarnings("unused") // Possible external use
-@CommonsLog
+@Slf4j
 @Getter
 @Setter
 public class GeoSeries extends GeoData {

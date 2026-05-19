@@ -1,6 +1,6 @@
 package ubic.gemma.core.analysis.service;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -44,7 +44,7 @@ import java.util.stream.Stream;
  */
 @Service
 @Transactional(readOnly = true)
-@CommonsLog
+@Slf4j
 class ExpressionDataFileHelperService {
 
     @Autowired

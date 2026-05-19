@@ -1,6 +1,6 @@
 package ubic.gemma.core.ontology;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import ubic.basecode.ontology.model.AnnotationProperty;
@@ -22,7 +22,7 @@ import static java.util.Objects.requireNonNull;
  * Utilities for working with ontologies.
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class OntologyUtils {
 
     /**

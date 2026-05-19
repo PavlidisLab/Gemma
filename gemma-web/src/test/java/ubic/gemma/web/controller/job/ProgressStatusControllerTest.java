@@ -18,7 +18,7 @@
  */
 package ubic.gemma.web.controller.job;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +36,7 @@ import static org.junit.Assert.*;
  *
  * @author pavlidis
  */
-@CommonsLog
+@Slf4j
 public class ProgressStatusControllerTest extends BaseWebIntegrationTest {
 
     @Autowired

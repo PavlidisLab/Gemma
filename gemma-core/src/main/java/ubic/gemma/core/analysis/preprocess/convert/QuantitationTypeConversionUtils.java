@@ -19,7 +19,7 @@
 package ubic.gemma.core.analysis.preprocess.convert;
 
 import cern.colt.matrix.DoubleMatrix1D;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.math.MatrixStats;
@@ -47,7 +47,7 @@ import static ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetecti
  *
  * @author pavlidis
  */
-@CommonsLog
+@Slf4j
 public class QuantitationTypeConversionUtils {
 
     public static ExpressionDataDoubleMatrix ensureLog2Scale( ExpressionDataDoubleMatrix expressionData ) throws QuantitationTypeConversionException {

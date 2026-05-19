@@ -1,6 +1,6 @@
 package ubic.gemma.persistence.hibernate;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.springframework.beans.factory.DisposableBean;
@@ -35,7 +35,7 @@ import java.util.Properties;
  *
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class HibernateSessionFactoryBean
         implements FactoryBean<SessionFactory>, InitializingBean, DisposableBean {
 

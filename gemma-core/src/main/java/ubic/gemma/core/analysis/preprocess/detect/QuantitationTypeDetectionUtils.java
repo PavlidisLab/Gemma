@@ -7,7 +7,7 @@ import cern.colt.matrix.impl.DenseDoubleMatrix1D;
 import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 import cern.jet.math.Functions;
 import lombok.Value;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import org.hibernate.LazyInitializationException;
 import ubic.basecode.math.DescriptiveWithMissing;
@@ -25,7 +25,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-@CommonsLog
+@Slf4j
 public class QuantitationTypeDetectionUtils {
 
     public static void lintQuantitationType( QuantitationType quantitationType, ExpressionDataMatrix<?> dmatrix ) {

@@ -18,7 +18,7 @@
  */
 package ubic.gemma.web.controller.search;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -72,7 +72,7 @@ import java.util.stream.Collectors;
  * @author klc
  */
 @Controller
-@CommonsLog
+@Slf4j
 public class GeneralSearchController {
 
     @lombok.Value

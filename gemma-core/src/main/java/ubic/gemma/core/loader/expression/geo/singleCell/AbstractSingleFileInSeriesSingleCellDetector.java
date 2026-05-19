@@ -1,6 +1,6 @@
 package ubic.gemma.core.loader.expression.geo.singleCell;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.file.PathUtils;
@@ -26,7 +26,7 @@ import static ubic.gemma.core.util.NetUtils.bytePerSecondToDisplaySize;
  * Handle detection and download of single-cell data from a single file in the supplementary materials of a GEO series.
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public abstract class AbstractSingleFileInSeriesSingleCellDetector extends AbstractSingleCellDetector {
 
     private final String name;

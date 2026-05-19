@@ -1,6 +1,6 @@
 package ubic.gemma.persistence.hibernate;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.Query;
@@ -16,7 +16,7 @@ import ubic.gemma.core.config.Settings;
  * predictably; the per-entity precision can be recovered later by walking the
  * JPA metamodel if it turns out we need it.
  */
-@CommonsLog
+@Slf4j
 public class HibernateUtils {
 
     private static final String BATCH_FETCH_SIZE_SETTING = "gemma.hibernate.default_batch_fetch_size";

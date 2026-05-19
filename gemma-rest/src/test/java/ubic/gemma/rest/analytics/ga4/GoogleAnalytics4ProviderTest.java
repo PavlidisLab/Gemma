@@ -1,6 +1,6 @@
 package ubic.gemma.rest.analytics.ga4;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.After;
@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static ubic.gemma.rest.util.Assertions.assertThat;
 
-@CommonsLog
+@Slf4j
 public class GoogleAnalytics4ProviderTest {
 
     private GoogleAnalytics4Provider provider;

@@ -1,6 +1,6 @@
 package ubic.gemma.core.analysis.service;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVPrinter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,7 +26,7 @@ import static ubic.gemma.core.util.TsvUtils.format;
 import static ubic.gemma.core.util.TsvUtils.getTsvFormatBuilder;
 
 @Service
-@CommonsLog
+@Slf4j
 public class ExpressionAnalysisResultSetFileServiceImpl implements ExpressionAnalysisResultSetFileService {
 
     @Autowired

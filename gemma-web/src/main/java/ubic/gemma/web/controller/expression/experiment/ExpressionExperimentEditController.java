@@ -20,7 +20,7 @@ package ubic.gemma.web.controller.expression.experiment;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -76,7 +76,7 @@ import java.util.stream.Collectors;
  * @author keshav
  */
 @Controller
-@CommonsLog
+@Slf4j
 public class ExpressionExperimentEditController {
 
     @Autowired

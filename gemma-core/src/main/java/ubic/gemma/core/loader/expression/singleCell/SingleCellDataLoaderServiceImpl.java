@@ -1,6 +1,6 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -45,7 +45,7 @@ import static java.util.Objects.requireNonNull;
 import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVectorUtils.createStreamMonitor;
 
 @Service
-@CommonsLog
+@Slf4j
 public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderService {
 
     @Autowired

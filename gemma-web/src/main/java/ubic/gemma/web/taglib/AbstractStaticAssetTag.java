@@ -1,7 +1,7 @@
 package ubic.gemma.web.taglib;
 
 import lombok.Setter;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.servlet.tags.form.TagWriter;
 import ubic.gemma.web.assets.StaticAssetResolver;
 
@@ -12,7 +12,7 @@ import jakarta.servlet.jsp.JspException;
  * @author poirigui
  * @see StaticAssetResolver
  */
-@CommonsLog
+@Slf4j
 public abstract class AbstractStaticAssetTag extends AbstractHtmlElementTag {
 
     private transient StaticAssetResolver staticAssetResolver;

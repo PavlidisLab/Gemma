@@ -1,7 +1,7 @@
 package ubic.gemma.core.util;
 
 import lombok.Value;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
 import org.apache.commons.io.IOUtils;
@@ -40,7 +40,7 @@ import static org.apache.commons.io.FileUtils.byteCountToDisplaySize;
  *
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class SimpleDownloader {
 
     @Nullable

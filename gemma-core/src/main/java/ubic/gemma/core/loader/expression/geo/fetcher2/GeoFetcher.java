@@ -1,6 +1,6 @@
 package ubic.gemma.core.loader.expression.geo.fetcher2;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import ubic.gemma.core.loader.expression.geo.service.*;
@@ -18,7 +18,7 @@ import java.nio.file.Path;
 import java.util.stream.Stream;
 import java.util.zip.GZIPOutputStream;
 
-@CommonsLog
+@Slf4j
 public class GeoFetcher extends AbstractFetcher {
 
     private final SimpleRetry<IOException> retryTemplate;

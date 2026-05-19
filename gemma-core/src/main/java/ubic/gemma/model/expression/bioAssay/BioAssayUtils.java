@@ -1,7 +1,7 @@
 package ubic.gemma.model.expression.bioAssay;
 
 import com.fasterxml.jackson.databind.util.StdDateFormat;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import ubic.gemma.model.common.description.Category;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicUtils;
@@ -13,7 +13,7 @@ import java.text.DateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@CommonsLog
+@Slf4j
 public class BioAssayUtils {
 
     /**

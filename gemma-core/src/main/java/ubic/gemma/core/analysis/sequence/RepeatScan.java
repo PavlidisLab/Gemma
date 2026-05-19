@@ -18,7 +18,7 @@
  */
 package ubic.gemma.core.analysis.sequence;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -45,7 +45,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author pavlidis
  */
-@CommonsLog
+@Slf4j
 public class RepeatScan {
 
     private static final int UPDATE_INTERVAL_MS = 1000 * 60 * 2;

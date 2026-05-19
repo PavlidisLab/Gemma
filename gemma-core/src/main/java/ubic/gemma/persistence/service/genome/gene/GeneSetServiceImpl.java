@@ -19,7 +19,7 @@
 package ubic.gemma.persistence.service.genome.gene;
 
 import gemma.gsec.SecurityService;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,7 +44,7 @@ import java.util.*;
  * @author kelsey
  */
 @Service
-@CommonsLog
+@Slf4j
 public class GeneSetServiceImpl extends AbstractVoEnabledService<GeneSet, DatabaseBackedGeneSetValueObject> implements GeneSetService {
 
     private static final Double DEFAULT_SCORE = 0.0;

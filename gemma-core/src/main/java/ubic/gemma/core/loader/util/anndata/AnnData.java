@@ -1,6 +1,6 @@
 package ubic.gemma.core.loader.util.anndata;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.Assert;
 import ubic.gemma.core.loader.util.hdf5.H5File;
 
@@ -14,7 +14,7 @@ import java.util.Objects;
 
 import static ubic.gemma.core.loader.util.anndata.Utils.checkEncoding;
 
-@CommonsLog
+@Slf4j
 public class AnnData implements Closeable {
 
     public static AnnData open( Path path ) throws IOException {

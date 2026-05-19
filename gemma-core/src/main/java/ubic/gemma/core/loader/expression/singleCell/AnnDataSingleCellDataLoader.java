@@ -2,7 +2,7 @@ package ubic.gemma.core.loader.expression.singleCell;
 
 import lombok.Setter;
 import lombok.Value;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.util.Assert;
 import ubic.gemma.core.analysis.singleCell.SingleCellDescriptive;
@@ -45,7 +45,7 @@ import static java.util.Objects.requireNonNull;
  *
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 @Setter
 public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
 

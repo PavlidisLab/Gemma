@@ -1,6 +1,6 @@
 package ubic.gemma.core.analysis.singleCell.aggregate;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@CommonsLog
+@Slf4j
 @Service
 public class SingleCellExpressionExperimentCreateSubSetsAndAggregateServiceImpl implements SingleCellExpressionExperimentCreateSubSetsAndAggregateService {
 

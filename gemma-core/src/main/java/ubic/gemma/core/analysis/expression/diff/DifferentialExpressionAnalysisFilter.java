@@ -1,6 +1,6 @@
 package ubic.gemma.core.analysis.expression.diff;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.TextStringBuilder;
 import ubic.gemma.core.analysis.preprocess.filter.*;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
@@ -13,7 +13,7 @@ import static ubic.gemma.core.analysis.preprocess.filter.ExpressionDataFilterUti
  *
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class DifferentialExpressionAnalysisFilter implements ExpressionDataFilter<ExpressionDataDoubleMatrix> {
 
     public static final int DEFAULT_MINIMUM_NUMBER_OF_CELLS_PER_SAMPLE = MinimumCellsFilter.DEFAULT_MINIMUM_NUMBER_OF_CELLS_PER_SAMPLE;

@@ -16,7 +16,7 @@ package ubic.gemma.persistence.service.analysis.expression.sampleCoexpression;
 
 import cern.colt.list.DoubleArrayList;
 import cern.colt.matrix.DoubleMatrix2D;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -67,7 +67,7 @@ import static ubic.gemma.persistence.util.ByteArrayUtils.doubleMatrixToBytes;
  * @author paul
  */
 @Service
-@CommonsLog
+@Slf4j
 public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpressionAnalysisService {
 
     private static final String MSG_ERR_NO_VECTORS = "No processed expression vectors available for experiment, can not compute sample correlation matrix.";

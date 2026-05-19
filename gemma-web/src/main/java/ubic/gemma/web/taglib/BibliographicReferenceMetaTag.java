@@ -1,7 +1,7 @@
 package ubic.gemma.web.taglib;
 
 import lombok.Setter;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.springframework.util.Assert;
@@ -21,7 +21,7 @@ import static org.springframework.web.util.HtmlUtils.htmlEscape;
  *
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class BibliographicReferenceMetaTag extends TagSupport {
 
     @Setter

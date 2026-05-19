@@ -2,7 +2,7 @@ package ubic.gemma.core.util.test;
 
 import gemma.gsec.AuthorityConstants;
 import gemma.gsec.authentication.UserDetailsImpl;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +26,7 @@ import java.util.*;
  * @author poirigui
  */
 @Service
-@CommonsLog
+@Slf4j
 public class TestAuthenticationUtilsImpl implements InitializingBean, TestAuthenticationUtils {
 
     @Autowired

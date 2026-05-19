@@ -1,6 +1,6 @@
 package ubic.gemma.persistence.util;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.stream.Streams;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
@@ -37,7 +37,7 @@ import java.util.stream.Stream;
  * {@link Query#scroll(ScrollMode)} when supported and an offset/limit
  * fallback otherwise. Cursor-fetch tuning can be re-added if needed.
  */
-@CommonsLog
+@Slf4j
 public class QueryUtils {
 
     /**

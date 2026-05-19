@@ -1,9 +1,9 @@
 package ubic.gemma.core.logging;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 
-@CommonsLog
+@Slf4j
 public class LoggingTest {
 
     @Test

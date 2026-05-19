@@ -1,6 +1,6 @@
 package ubic.gemma.core.analysis.preprocess.filter;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.Assert;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
@@ -38,7 +38,7 @@ import static ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConver
  *
  * @author paul
  */
-@CommonsLog
+@Slf4j
 public class RepetitiveValuesFilter implements ExpressionDataFilter<ExpressionDataDoubleMatrix> {
 
     public static final Mode DEFAULT_MODE = Mode.AUTODETECT;

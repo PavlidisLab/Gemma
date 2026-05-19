@@ -1,6 +1,6 @@
 package ubic.gemma.core.ontology;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.cache.Cache;
 import org.springframework.util.Assert;
@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
  * difference from the {@link OntologyService}.
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 class OntologyCache {
 
     private final Cache searchCache, parentsCache, childrenCache;
