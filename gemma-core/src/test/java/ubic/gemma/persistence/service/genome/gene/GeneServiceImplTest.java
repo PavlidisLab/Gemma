@@ -54,7 +54,7 @@ public class GeneServiceImplTest {
     public void setUp() throws Exception {
 
         geneDaoMock = mock( GeneDao.class );
-        svc = new GeneServiceImpl( geneDaoMock );
+        svc = new GeneServiceImpl( geneDaoMock, new GeneReadServiceImpl( geneDaoMock ) );
 
         Taxon t = Taxon.Factory.newInstance();
         t.setCommonName( "moose" );
