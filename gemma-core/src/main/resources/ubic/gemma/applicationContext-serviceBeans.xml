@@ -26,9 +26,24 @@
 
     <!-- micrometer, for metrics -->
     <beans profile="metrics">
-        <bean id="meterRegistry" class="io.micrometer.jmx.JmxMeterRegistry">
+        <!-- Backing registries: JMX (in-process MBeans) + Prometheus (HTTP scrape exposition). -->
+        <bean id="jmxMeterRegistry" class="io.micrometer.jmx.JmxMeterRegistry">
             <constructor-arg value="DEFAULT"/>
             <constructor-arg value="SYSTEM"/>
+        </bean>
+        <bean id="prometheusMeterRegistry"
+              class="ubic.gemma.core.metrics.CompositeMeterRegistryFactory"
+              factory-method="prometheus"/>
+        <!-- Composite fans every binder write out to both backends. This is the bean every
+             existing consumer injects via the unqualified MeterRegistry type. -->
+        <bean id="meterRegistry" class="ubic.gemma.core.metrics.CompositeMeterRegistryFactory"
+              factory-method="of">
+            <constructor-arg>
+                <list>
+                    <ref bean="jmxMeterRegistry"/>
+                    <ref bean="prometheusMeterRegistry"/>
+                </list>
+            </constructor-arg>
         </bean>
         <bean class="ubic.gemma.core.metrics.GenericMeterRegistryConfigurer">
             <constructor-arg ref="meterRegistry"/>
