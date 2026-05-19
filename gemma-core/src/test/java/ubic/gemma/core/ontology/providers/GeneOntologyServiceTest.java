@@ -33,9 +33,9 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
-import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.search.OntologySearchException;
-import ubic.basecode.ontology.search.OntologySearchResult;
+import ubic.gemma.core.ontology.basecode.model.OntologyTerm;
+import ubic.gemma.core.ontology.basecode.search.OntologySearchException;
+import ubic.gemma.core.ontology.basecode.search.OntologySearchResult;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
@@ -111,40 +111,23 @@ public class GeneOntologyServiceTest extends BaseTest implements InitializingBea
         }
     }
 
-    // FIXME (Phase 3 search Step 2-4, 2026-05-19): the in-Gemma jena-text
-    // OntologySearchService landed (ubic.gemma.core.ontology.search), but
-    // gos.findTerm() still routes through baseCode's AbstractOntologyService,
-    // which keeps its SearchIndex behind a package-private field and exposes
-    // no public hook for an external indexer. baseCode 1.1.34's
-    // OntologyIndexer is a Lucene-3-era stub that always returns null, so
-    // gos.initialize(is, true) does not build a search index ("Attempt to
-    // search ... when index is null, no results will be returned"), findTerm
-    // returns empty, and the empty-query validator never runs.
-    //
-    // Re-enabling these requires one of (see SEARCH_RECCE.md Section 6):
-    //   (a) Modifying baseCode to expose the loaded OntModel and/or accept
-    //       an externally-installed SearchIndex, then plumbing the in-Gemma
-    //       JenaTextOntologySearchService through it.
-    //   (b) Rewriting GeneOntologyServiceImpl.findTerm in Gemma to consult
-    //       JenaTextOntologySearchService (or a sibling URL-loader variant)
-    //       directly, bypassing super.findTerm.
-    // Path (b) is the smaller change but requires Gemma to manage its own
-    // OntModel for GO instead of relying on baseCode's UrlOntologyService.
-    @Ignore("baseCode private OntModel blocks in-Gemma indexer; see SEARCH_RECCE.md Section 6")
+    // Phase 3 search/ontology Step 3 (2026-05-19): re-enabled. The baseCode
+    // ontology classes are now in-tree under
+    // ubic.gemma.core.ontology.basecode.* and OntologyIndexer builds a real
+    // Lucene 9 in-memory index over the in-memory OntModel via
+    // LuceneOntologySearchIndex, so gos.findTerm() actually returns hits.
     @Test
     public void testFindTerm() throws OntologySearchException {
         Collection<OntologySearchResult<OntologyTerm>> matches = gos.findTerm( "toxin", 500 );
         assertEquals( 4, matches.size() );
     }
 
-    @Ignore("baseCode private OntModel blocks in-Gemma indexer; see SEARCH_RECCE.md Section 6")
     @Test
     public void testFindTermWithMultipleTerms() throws OntologySearchException {
         Collection<OntologySearchResult<OntologyTerm>> matches = gos.findTerm( "toxin transporter activity", 500 );
         assertEquals( 1, matches.size() );
     }
 
-    @Ignore("baseCode private OntModel blocks in-Gemma indexer; see SEARCH_RECCE.md Section 6")
     @Test(expected = IllegalArgumentException.class)
     public void testFindTermWithEmptyQuery() throws OntologySearchException {
         gos.findTerm( " ", 500 );

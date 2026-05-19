@@ -6,7 +6,7 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
 import org.springframework.web.servlet.tags.HtmlEscapingAwareTag;
 import org.springframework.web.servlet.tags.form.TagWriter;
 import org.springframework.web.util.HtmlUtils;
-import ubic.basecode.ontology.model.OntologyResource;
+import ubic.gemma.core.ontology.basecode.model.OntologyResource;
 import ubic.gemma.core.ontology.OntologyExternalLinks;
 
 import org.springframework.lang.Nullable;

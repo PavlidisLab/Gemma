@@ -36,16 +36,16 @@ import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
-import ubic.basecode.ontology.model.AnnotationProperty;
-import ubic.basecode.ontology.model.OntologyProperty;
-import ubic.basecode.ontology.model.OntologyResource;
-import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
-import ubic.basecode.ontology.providers.ObiService;
-import ubic.basecode.ontology.search.OntologySearchException;
-import ubic.basecode.ontology.search.OntologySearchResult;
-import ubic.basecode.ontology.simple.OntologyPropertySimple;
-import ubic.basecode.ontology.simple.OntologyTermSimple;
+import ubic.gemma.core.ontology.basecode.model.AnnotationProperty;
+import ubic.gemma.core.ontology.basecode.model.OntologyProperty;
+import ubic.gemma.core.ontology.basecode.model.OntologyResource;
+import ubic.gemma.core.ontology.basecode.model.OntologyTerm;
+import ubic.gemma.core.ontology.basecode.providers.ExperimentalFactorOntologyService;
+import ubic.gemma.core.ontology.basecode.providers.ObiService;
+import ubic.gemma.core.ontology.basecode.search.OntologySearchException;
+import ubic.gemma.core.ontology.basecode.search.OntologySearchResult;
+import ubic.gemma.core.ontology.basecode.simple.OntologyPropertySimple;
+import ubic.gemma.core.ontology.basecode.simple.OntologyTermSimple;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.ontology.providers.OntologyServiceFactory;
 import ubic.gemma.core.search.SearchException;
@@ -133,7 +133,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     private List<OntologyServiceFactory<?>> ontologyServiceFactories;
 
     @Autowired
-    private List<ubic.basecode.ontology.providers.OntologyService> ontologyServices;
+    private List<ubic.gemma.core.ontology.basecode.providers.OntologyService> ontologyServices;
 
     @Autowired
     @Qualifier("ontologyTaskExecutor")
@@ -154,7 +154,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     public void afterPropertiesSet() throws Exception {
         ontologyCache = new OntologyCache( cacheManager.getCache( SEARCH_CACHE_NAME ), cacheManager.getCache( PARENTS_CACHE_NAME ), cacheManager.getCache( CHILDREN_CACHE_NAME ) );
         if ( ontologyServiceFactories != null && autoLoadOntologies ) {
-            List<ubic.basecode.ontology.providers.OntologyService> enabledOntologyServices = ontologyServiceFactories.stream()
+            List<ubic.gemma.core.ontology.basecode.providers.OntologyService> enabledOntologyServices = ontologyServiceFactories.stream()
                     .map( factory -> {
                         try {
                             return factory.getObject();
@@ -162,11 +162,11 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                             throw new RuntimeException( e );
                         }
                     } )
-                    .filter( ubic.basecode.ontology.providers.OntologyService::isEnabled )
+                    .filter( ubic.gemma.core.ontology.basecode.providers.OntologyService::isEnabled )
                     .collect( Collectors.toList() );
             if ( !enabledOntologyServices.isEmpty() ) {
                 log.info( "The following ontologies are enabled:\n\t" + enabledOntologyServices.stream()
-                        .map( ubic.basecode.ontology.providers.OntologyService::toString )
+                        .map( ubic.gemma.core.ontology.basecode.providers.OntologyService::toString )
                         .collect( Collectors.joining( "\n\t" ) ) );
             } else {
                 log.warn( "No ontologies are enabled, consider enabling them by setting 'load.{name}Ontology' options in Gemma.properties." );
@@ -295,7 +295,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             try {
                 OntologyTerm foundByUri = findFirst( ontology -> ontology.getTerm( search ), "terms matching " + search, timeUnit.toMillis( timeout ) );
                 if ( foundByUri != null ) {
-                    return Collections.singleton( new ubic.basecode.ontology.search.OntologySearchResult<>( foundByUri, 1.0 ) );
+                    return Collections.singleton( new ubic.gemma.core.ontology.basecode.search.OntologySearchResult<>( foundByUri, 1.0 ) );
                 }
             } catch ( TimeoutException e ) {
                 throw new SearchTimeoutException( "Ontology search timed out for querying terms matching " + search, e );
@@ -536,7 +536,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
     @Override
     public void reindexAllOntologies() {
-        for ( ubic.basecode.ontology.providers.OntologyService serv : this.ontologyServices ) {
+        for ( ubic.gemma.core.ontology.basecode.providers.OntologyService serv : this.ontologyServices ) {
             if ( serv.isEnabled() && serv.isSearchEnabled() ) {
                 ontologyTaskExecutor.execute( () -> {
                     OntologyServiceImpl.log.info( "Reindexing " + serv + "..." );
@@ -549,7 +549,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
     @Override
     public void reinitializeAndReindexAllOntologies() {
-        for ( ubic.basecode.ontology.providers.OntologyService serv : this.ontologyServices ) {
+        for ( ubic.gemma.core.ontology.basecode.providers.OntologyService serv : this.ontologyServices ) {
             if ( serv.isOntologyLoaded() ) {
                 if ( serv.isEnabled() ) {
                     boolean isSearchEnabled = serv.isSearchEnabled();
@@ -875,7 +875,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             Map<String, CharacteristicValueObject> characteristicFromDatabaseWithValueUri, long timeoutMs ) throws SearchException {
 
         // in neurocarta we don't need to search all Ontologies
-        List<ubic.basecode.ontology.providers.OntologyService> ontologyServicesToUse;
+        List<ubic.gemma.core.ontology.basecode.providers.OntologyService> ontologyServicesToUse;
         if ( useNeuroCartaOntology ) {
             ontologyServicesToUse = Arrays.asList(
 //                    nifstdOntologyService,
@@ -1048,12 +1048,12 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
      * Find the first non-null result among loaded ontology services.
      */
     @Nullable
-    private <T> T findFirst( Function<ubic.basecode.ontology.providers.OntologyService, T> function, String query, long timeoutMs ) throws TimeoutException {
+    private <T> T findFirst( Function<ubic.gemma.core.ontology.basecode.providers.OntologyService, T> function, String query, long timeoutMs ) throws TimeoutException {
         StopWatch timer = StopWatch.createStarted();
         List<Future<T>> futures = new ArrayList<>( ontologyServices.size() );
         List<Object> objects = new ArrayList<>( ontologyServices.size() );
         ExecutorCompletionService<T> completionService = new ExecutorCompletionService<>( taskExecutor );
-        for ( ubic.basecode.ontology.providers.OntologyService service : ontologyServices ) {
+        for ( ubic.gemma.core.ontology.basecode.providers.OntologyService service : ontologyServices ) {
             if ( service.isOntologyLoaded() ) {
                 futures.add( completionService.submit( () -> function.apply( service ) ) );
                 objects.add( service );
@@ -1094,7 +1094,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         return searchInThreads( function, ontologyServices, query, timeoutMs );
     }
 
-    private <T> List<T> searchInThreads( CallableWithOntologyService<Collection<T>> function, List<ubic.basecode.ontology.providers.OntologyService> ontologyServices, String query, long timeoutMs ) throws SearchException {
+    private <T> List<T> searchInThreads( CallableWithOntologyService<Collection<T>> function, List<ubic.gemma.core.ontology.basecode.providers.OntologyService> ontologyServices, String query, long timeoutMs ) throws SearchException {
         try {
             return combineInThreads( function, ontologyServices, query, timeoutMs );
         } catch ( TimeoutException e ) {
@@ -1111,7 +1111,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
     @FunctionalInterface
     private interface CallableWithOntologyService<T> {
-        T call( ubic.basecode.ontology.providers.OntologyService service ) throws Exception;
+        T call( ubic.gemma.core.ontology.basecode.providers.OntologyService service ) throws Exception;
     }
 
     private <T> List<T> combineInThreads( CallableWithOntologyService<Collection<T>> work, String query, long timeoutMs ) throws TimeoutException {
@@ -1123,12 +1123,12 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
      * <p>
      * The functions are evaluated using Gemma's short-lived task executor.
      */
-    private <T> List<T> combineInThreads( CallableWithOntologyService<Collection<T>> work, List<ubic.basecode.ontology.providers.OntologyService> ontologyServices, String query, long timeoutMs ) throws TimeoutException {
+    private <T> List<T> combineInThreads( CallableWithOntologyService<Collection<T>> work, List<ubic.gemma.core.ontology.basecode.providers.OntologyService> ontologyServices, String query, long timeoutMs ) throws TimeoutException {
         StopWatch timer = StopWatch.createStarted();
         List<Future<Collection<T>>> futures = new ArrayList<>( ontologyServices.size() );
         List<Object> objects = new ArrayList<>( ontologyServices.size() );
         ExecutorCompletionService<Collection<T>> completionService = new ExecutorCompletionService<>( taskExecutor );
-        for ( ubic.basecode.ontology.providers.OntologyService os : ontologyServices ) {
+        for ( ubic.gemma.core.ontology.basecode.providers.OntologyService os : ontologyServices ) {
             if ( os.isOntologyLoaded() ) {
                 futures.add( completionService.submit( () -> work.call( os ) ) );
                 objects.add( os );

@@ -4,10 +4,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.cache.Cache;
 import org.springframework.util.Assert;
-import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.providers.OntologyService;
-import ubic.basecode.ontology.search.OntologySearchException;
-import ubic.basecode.ontology.search.OntologySearchResult;
+import ubic.gemma.core.ontology.basecode.model.OntologyTerm;
+import ubic.gemma.core.ontology.basecode.providers.OntologyService;
+import ubic.gemma.core.ontology.basecode.search.OntologySearchException;
+import ubic.gemma.core.ontology.basecode.search.OntologySearchResult;
 import ubic.gemma.persistence.cache.CacheKeyLock;
 import ubic.gemma.persistence.cache.CacheUtils;
 

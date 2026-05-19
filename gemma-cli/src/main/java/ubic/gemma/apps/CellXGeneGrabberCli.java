@@ -7,9 +7,9 @@ import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
-import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
-import ubic.basecode.ontology.providers.OntologyService;
-import ubic.basecode.ontology.providers.UberonOntologyService;
+import ubic.gemma.core.ontology.basecode.providers.ExperimentalFactorOntologyService;
+import ubic.gemma.core.ontology.basecode.providers.OntologyService;
+import ubic.gemma.core.ontology.basecode.providers.UberonOntologyService;
 import ubic.gemma.cli.completion.CompletionType;
 import ubic.gemma.cli.completion.CompletionUtils;
 import ubic.gemma.cli.util.AbstractCLI;
@@ -198,7 +198,7 @@ public class CellXGeneGrabberCli extends AbstractCLI {
      */
     private Collection<String> expandKeywords( OntologyService ontologyService, Collection<String> keywords ) {
         Set<String> result = new HashSet<>();
-        Set<ubic.basecode.ontology.model.OntologyTerm> terms = new HashSet<>();
+        Set<ubic.gemma.core.ontology.basecode.model.OntologyTerm> terms = new HashSet<>();
         for ( String t : keywords ) {
             result.add( t );
             if ( OntologyUtils.isTermUri( t ) ) {
@@ -208,7 +208,7 @@ public class CellXGeneGrabberCli extends AbstractCLI {
             } else {
                 continue;
             }
-            ubic.basecode.ontology.model.OntologyTerm ot = ontologyService.getTerm( t );
+            ubic.gemma.core.ontology.basecode.model.OntologyTerm ot = ontologyService.getTerm( t );
             if ( ot != null ) {
                 terms.add( ot );
             } else {
@@ -216,7 +216,7 @@ public class CellXGeneGrabberCli extends AbstractCLI {
             }
         }
         terms.addAll( ontologyService.getChildren( terms, false, true ) );
-        for ( ubic.basecode.ontology.model.OntologyTerm t : terms ) {
+        for ( ubic.gemma.core.ontology.basecode.model.OntologyTerm t : terms ) {
             String termId = OntologyUtils.getTermId( t );
             if ( termId != null ) {
                 result.add( termId );

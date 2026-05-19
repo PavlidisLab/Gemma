@@ -14,9 +14,9 @@
  */
 package ubic.gemma.core.ontology;
 
-import ubic.basecode.ontology.model.OntologyProperty;
-import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.search.OntologySearchResult;
+import ubic.gemma.core.ontology.basecode.model.OntologyProperty;
+import ubic.gemma.core.ontology.basecode.model.OntologyTerm;
+import ubic.gemma.core.ontology.basecode.search.OntologySearchResult;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.genome.Taxon;

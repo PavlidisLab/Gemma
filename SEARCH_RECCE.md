@@ -796,6 +796,57 @@ SearchIndex hook in the same release).
 - `GeneOntologyServiceTest` disabled-tests: FIXME comments updated
   to point at the gap and the three paths above.
 
+### 6.3.2 Step 3 (2026-05-19) — baseCode ontology classes pulled in-tree
+
+**Both gaps closed.** Per user direction ("everything from basecode that we
+need should just be directly moved over and re-written"), the baseCode
+ontology sub-tree was copied into Gemma and ported to the Jena 4 namespace.
+
+- New in-tree home: `gemma-core/src/main/java/ubic/gemma/core/ontology/basecode/`
+  with subpackages `{model, jena, providers, search, simple}`. The `ncbo`
+  sub-package was skipped (no Gemma consumer).
+- 64 in-Gemma consumer files (gemma-core/cli/rest/web, prod + test) had
+  their imports rewritten from `ubic.basecode.ontology.*` to
+  `ubic.gemma.core.ontology.basecode.*`. The baseCode JAR is still on the
+  classpath because non-ontology baseCode (`Configuration`, IO/stats
+  utilities) is used elsewhere; its now-silent ontology classes are dead
+  weight Phase 4 can clean up.
+- Jena 4 namespace migration done: `com.hp.hpl.jena.*` →
+  `org.apache.jena.*` everywhere, with two non-mechanical ports:
+  `Filter<T>` (Jena 2) → `java.util.function.Predicate<T>` (Jena 4
+  `ExtendedIterator.filterKeep/Drop` accepts `Predicate` directly), and
+  `UniqueExtendedIterator.create(it)` → `WrappedIterator.create(it)
+  .filterKeep(new UniqueFilter<>())`.
+- **The runtime classpath gap (section 6.3.1's "even more important
+  finding") is closed**: every Spring bean that touches an
+  `AbstractOntologyService` now resolves to the in-tree Jena-4-compatible
+  source. The 13-test pre-existing failure in `GeneOntologyServiceTest`
+  (NoClassDefFoundError on `com/hp/hpl/jena/ontology/OntProperty`) is gone.
+- **The findTerm gap (section 6.3.1's "private OntModel" problem) is also
+  closed**, by a different route than any of the three paths originally
+  proposed. baseCode's `OntologyIndexer` was a stub returning null (which
+  is why `findTerm` always returned empty); the in-tree port replaces it
+  with a real Lucene 9 indexer (`LuceneOntologySearchIndex`,
+  `ByteBuffersDirectory` + `StandardAnalyzer`) that builds an in-memory
+  index over the in-memory `OntModel` keyed by subject URI. The
+  `IndexableProperty` set kept is the original baseCode
+  `DEFAULT_INDEXABLE_PROPERTIES` (rdfs:label + OBO synonyms + IAO
+  alt-label + OBO id-bearing predicates). `AbstractOntologyService.findTerm`
+  now actually fires for every provider, not just for the unified TDB.
+- The three previously-disabled `GeneOntologyServiceTest` cases are
+  re-enabled and pass: `testFindTerm` (returns 4 hits for "toxin"),
+  `testFindTermWithMultipleTerms` (1 hit for "toxin transporter
+  activity"), `testFindTermWithEmptyQuery` (IllegalArgumentException
+  on empty input). `GeneOntologyServiceTest` is back to 13/0/0/0.
+- The Gemma-side `JenaTextOntologySearchService` (Section 6.3.1, used
+  for the unified TDB) is **untouched** — it covers a complementary
+  scope (the unified ontology aggregate). The new
+  `LuceneOntologySearchIndex` covers per-provider URL/classpath/TDB
+  loads. The two coexist; `OntologySearchSource` continues to call the
+  Spring-wired `OntologySearchService` bean for unified-TDB lookups,
+  while `GeneOntologyServiceImpl.findTerm` and other per-provider
+  `findTerm` callers go through baseCode-port + the new indexer.
+
 ### 6.4 Refactor-out checkpoint (deferred)
 
 When the dust settles on Phase 3 we can decide whether to push the

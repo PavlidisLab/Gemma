@@ -3,7 +3,7 @@ package ubic.gemma.web.taglib;
 import lombok.Setter;
 import org.springframework.util.Assert;
 import org.springframework.web.servlet.tags.form.TagWriter;
-import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.core.ontology.basecode.model.OntologyTerm;
 
 import java.util.Collection;
 import java.util.LinkedList;

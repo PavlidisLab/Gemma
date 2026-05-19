@@ -3,10 +3,10 @@ package ubic.gemma.core.ontology.providers;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;
-import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.providers.DiseaseOntologyService;
-import ubic.basecode.ontology.search.OntologySearchException;
-import ubic.basecode.ontology.search.OntologySearchResult;
+import ubic.gemma.core.ontology.basecode.model.OntologyTerm;
+import ubic.gemma.core.ontology.basecode.providers.DiseaseOntologyService;
+import ubic.gemma.core.ontology.basecode.search.OntologySearchException;
+import ubic.gemma.core.ontology.basecode.search.OntologySearchResult;
 import ubic.gemma.core.search.SearchException;
 
 import java.io.IOException;
@@ -24,8 +24,8 @@ public class DiseaseOntologyTest {
     @Test
     public void testGetTermByUri() throws InterruptedException, IOException {
         DiseaseOntologyService diseaseOntologyService = new DiseaseOntologyService();
-        assertEquals( ubic.basecode.ontology.providers.OntologyService.LanguageLevel.FULL, diseaseOntologyService.getLanguageLevel() );
-        assertEquals( ubic.basecode.ontology.providers.OntologyService.InferenceMode.TRANSITIVE, diseaseOntologyService.getInferenceMode() );
+        assertEquals( ubic.gemma.core.ontology.basecode.providers.OntologyService.LanguageLevel.FULL, diseaseOntologyService.getLanguageLevel() );
+        assertEquals( ubic.gemma.core.ontology.basecode.providers.OntologyService.InferenceMode.TRANSITIVE, diseaseOntologyService.getInferenceMode() );
         diseaseOntologyService.initialize( new ClassPathResource( "/data/loader/ontology/dotest.owl.xml" ).getInputStream(), true );
 
         OntologyTerm term;

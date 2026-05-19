@@ -19,8 +19,8 @@
 
 package ubic.gemma.core.ontology.providers;
 
-import ubic.basecode.ontology.jena.UrlOntologyService;
-import ubic.basecode.ontology.providers.AbstractDelegatingOntologyService;
+import ubic.gemma.core.ontology.basecode.jena.UrlOntologyService;
+import ubic.gemma.core.ontology.basecode.providers.AbstractDelegatingOntologyService;
 import ubic.gemma.core.config.Settings;
 
 /**

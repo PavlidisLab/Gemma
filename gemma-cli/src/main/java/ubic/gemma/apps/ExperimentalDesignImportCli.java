@@ -23,7 +23,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
+import ubic.gemma.core.ontology.basecode.providers.ExperimentalFactorOntologyService;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.core.ontology.OntologyUtils;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;

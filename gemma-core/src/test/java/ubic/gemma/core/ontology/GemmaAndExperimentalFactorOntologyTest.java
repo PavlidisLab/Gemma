@@ -14,9 +14,9 @@ import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
-import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
-import ubic.basecode.ontology.providers.ObiService;
+import ubic.gemma.core.ontology.basecode.model.OntologyTerm;
+import ubic.gemma.core.ontology.basecode.providers.ExperimentalFactorOntologyService;
+import ubic.gemma.core.ontology.basecode.providers.ObiService;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.ontology.providers.GemmaOntologyService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
@@ -36,7 +36,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
 
 /**
- * This test covers cases where inference is done across two distinct {@link ubic.basecode.ontology.providers.OntologyService}.
+ * This test covers cases where inference is done across two distinct {@link ubic.gemma.core.ontology.basecode.providers.OntologyService}.
  * @author poirigui
  */
 @Ignore("This test is timing out on the CI.")

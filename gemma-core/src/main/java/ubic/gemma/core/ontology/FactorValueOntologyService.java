@@ -1,7 +1,7 @@
 package ubic.gemma.core.ontology;
 
-import ubic.basecode.ontology.model.OntologyIndividual;
-import ubic.basecode.ontology.model.OntologyStatement;
+import ubic.gemma.core.ontology.basecode.model.OntologyIndividual;
+import ubic.gemma.core.ontology.basecode.model.OntologyStatement;
 import ubic.gemma.persistence.util.Slice;
 
 import org.springframework.lang.Nullable;
@@ -17,7 +17,7 @@ import java.util.Set;
  *     <li>Factor values (i.e. http://gemma.msl.ubc.ca/ont/TGFVO/1)</li>
  *     <li>Factor value annotations (i.e. http://gemma.msl.ubc.ca/ont/TGFVO/1/2) which can be either a subject, object or a characteristic</li>
  * </ul>
- * TODO: fully implement the {@link ubic.basecode.ontology.providers.OntologyService} interface.
+ * TODO: fully implement the {@link ubic.gemma.core.ontology.basecode.providers.OntologyService} interface.
  */
 public interface FactorValueOntologyService {
 

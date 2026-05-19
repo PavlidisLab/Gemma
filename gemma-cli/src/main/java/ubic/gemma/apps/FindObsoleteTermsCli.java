@@ -5,7 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.task.AsyncTaskExecutor;
-import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.core.ontology.basecode.model.OntologyTerm;
 import ubic.gemma.cli.util.AbstractAuthenticatedCLI;
 import ubic.gemma.cli.util.CLI;
 import ubic.gemma.core.ontology.OntologyService;
@@ -33,7 +33,7 @@ public class FindObsoleteTermsCli extends AbstractAuthenticatedCLI {
     private boolean autoLoadOntologies;
 
     @Autowired
-    private List<ubic.basecode.ontology.providers.OntologyService> ontologies;
+    private List<ubic.gemma.core.ontology.basecode.providers.OntologyService> ontologies;
 
     @Override
     public CommandGroup getCommandGroup() {
@@ -62,26 +62,26 @@ public class FindObsoleteTermsCli extends AbstractAuthenticatedCLI {
         }
 
         log.info( String.format( "Warming up %d ontologies ...", ontologies.size() ) );
-        CompletionService<ubic.basecode.ontology.providers.OntologyService> completionService = new ExecutorCompletionService<>( ontologyTaskExecutor );
-        Map<ubic.basecode.ontology.providers.OntologyService, Future<ubic.basecode.ontology.providers.OntologyService>> futures = new LinkedHashMap<>();
-        for ( ubic.basecode.ontology.providers.OntologyService ontology : ontologies ) {
+        CompletionService<ubic.gemma.core.ontology.basecode.providers.OntologyService> completionService = new ExecutorCompletionService<>( ontologyTaskExecutor );
+        Map<ubic.gemma.core.ontology.basecode.providers.OntologyService, Future<ubic.gemma.core.ontology.basecode.providers.OntologyService>> futures = new LinkedHashMap<>();
+        for ( ubic.gemma.core.ontology.basecode.providers.OntologyService ontology : ontologies ) {
             futures.put( ontology, completionService.submit( () -> {
                 // we don't need all those features for detecting obsolete terms
                 ontology.setSearchEnabled( false );
-                ontology.setInferenceMode( ubic.basecode.ontology.providers.OntologyService.InferenceMode.NONE );
+                ontology.setInferenceMode( ubic.gemma.core.ontology.basecode.providers.OntologyService.InferenceMode.NONE );
                 ontology.initialize( true, false );
                 return ontology;
             } ) );
         }
 
         for ( int i = 0; i < ontologies.size(); i++ ) {
-            ubic.basecode.ontology.providers.OntologyService os = completionService.take().get();
+            ubic.gemma.core.ontology.basecode.providers.OntologyService os = completionService.take().get();
             log.info( String.format( " === Ontology (%d/%d) warmed up: %s", i + 1, ontologies.size(), os ) );
             int remainingToLoad = ontologies.size() - ( i + 1 );
             if ( remainingToLoad > 0 && remainingToLoad <= 5 ) {
                 log.info( "Still loading:\n\t" + futures.entrySet().stream().filter( e -> !e.getValue().isDone() )
                         .map( Map.Entry::getKey )
-                        .map( ubic.basecode.ontology.providers.OntologyService::toString )
+                        .map( ubic.gemma.core.ontology.basecode.providers.OntologyService::toString )
                         .collect( Collectors.joining( "\n\t" ) ) );
             }
         }

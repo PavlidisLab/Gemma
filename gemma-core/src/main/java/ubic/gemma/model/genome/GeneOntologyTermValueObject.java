@@ -2,7 +2,7 @@ package ubic.gemma.model.genome;
 
 import lombok.Getter;
 import lombok.Setter;
-import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.core.ontology.basecode.model.OntologyTerm;
 
 import java.io.Serializable;
 

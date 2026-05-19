@@ -22,8 +22,8 @@ import java.util.List;
  *
  * <p><b>Origin.</b> This interface is a Gemma-internal restatement of the
  * search API that baseCode 1.1.34 exposed via
- * {@code ubic.basecode.ontology.jena.OntologyIndexer} +
- * {@code ubic.basecode.ontology.providers.OntologyService#findTerm(String, int)}.
+ * {@code ubic.gemma.core.ontology.basecode.jena.OntologyIndexer} +
+ * {@code ubic.gemma.core.ontology.basecode.providers.OntologyService#findTerm(String, int)}.
  * baseCode's machinery was retired with the Lucene-3 strip
  * (baseCode commit {@code a7e7112}); the search code was pulled into Gemma
  * during Phase 3 search restoration (see {@code SEARCH_RECCE.md} Section 6)
@@ -31,7 +31,7 @@ import java.util.List;
  * port from one repo for the duration of Phase 3. The Gemma-side API is
  * deliberately narrower: it returns {@link org.apache.jena.rdf.model.Resource}
  * handles into the dataset rather than baseCode's
- * {@code ubic.basecode.ontology.model.OntologyResource} wrappers, because the
+ * {@code ubic.gemma.core.ontology.basecode.model.OntologyResource} wrappers, because the
  * search subsystem and the baseCode resource model are now decoupled (the
  * baseCode {@code OntModel} is package-private and unreachable from outside
  * baseCode).
