@@ -82,6 +82,16 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
         this.objectAlias = objectAlias;
     }
 
+    /**
+     * @return the HQL object alias used to refer to the root entity in this DAO's queries
+     *         (e.g. {@code ee} for {@code ExpressionExperiment}), or {@code null} when the
+     *         DAO operates on the implicit root.
+     */
+    @Nullable
+    protected final String getObjectAlias() {
+        return objectAlias;
+    }
+
     @Override
     @OverridingMethodsMustInvokeSuper
     public void afterPropertiesSet() {
