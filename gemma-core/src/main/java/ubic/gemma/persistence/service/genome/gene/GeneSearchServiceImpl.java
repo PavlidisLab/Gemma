@@ -65,6 +65,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
     private TaxonService taxonService;
     private GeneSetSearch geneSetSearch;
     private GeneSetService geneSetService;
+    private GeneSetReadService geneSetReadService;
     private GeneService geneService;
     private GeneOntologyService geneOntologyService;
     private GeneSetValueObjectHelper geneSetValueObjectHelper;
@@ -75,6 +76,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
     @Autowired
     public GeneSearchServiceImpl( SearchService searchService, SecurityService securityService,
             TaxonService taxonService, GeneSetSearch geneSetSearch, GeneSetService geneSetService,
+            GeneSetReadService geneSetReadService,
             GeneService geneService, GeneOntologyService geneOntologyService,
             GeneSetValueObjectHelper geneSetValueObjectHelper ) {
         this.searchService = searchService;
@@ -82,6 +84,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
         this.taxonService = taxonService;
         this.geneSetSearch = geneSetSearch;
         this.geneSetService = geneSetService;
+        this.geneSetReadService = geneSetReadService;
         this.geneService = geneService;
         this.geneOntologyService = geneOntologyService;
         this.geneSetValueObjectHelper = geneSetValueObjectHelper;
@@ -252,7 +255,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
                 }
                 isSetOwnedByUser.put( gs.getId(), securityService.isOwnedByCurrentUser( gs ) );
 
-                taxon = geneSetService.getTaxon( gs );
+                taxon = geneSetReadService.getTaxon( gs );
                 GeneSetValueObject gsVo;
                 try {
                     gsVo = geneSetValueObjectHelper.convertToValueObject( gs );
@@ -411,7 +414,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
         for ( SearchResult<GeneSet> sr : geneSetSearchResults ) {
             GeneSet gs = sr.getResultObject();
             if ( gs != null ) {
-                Set<Long> geneSetTaxaIds = geneSetService.getTaxa( gs ).stream()
+                Set<Long> geneSetTaxaIds = geneSetReadService.getTaxa( gs ).stream()
                         .map( Taxon::getId )
                         .collect( Collectors.toSet() );
                 isSetOwnedByUser.put( gs.getId(), securityService.isOwnedByCurrentUser( gs ) );
