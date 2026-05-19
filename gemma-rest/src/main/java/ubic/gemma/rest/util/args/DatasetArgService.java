@@ -25,9 +25,13 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.util.Cursor;
+import ubic.gemma.persistence.util.CursorPage;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.IdentifiableUtils;
+import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.rest.util.MalformedArgException;
 
 import org.springframework.lang.Nullable;
@@ -111,6 +115,20 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
 
     public Filters getFilters( FilterArg<ExpressionExperiment> filterArg, @Nullable Collection<OntologyTerm> mentionedTerms, @Nullable Collection<OntologyTerm> inferredTerms, long timeout, TimeUnit timeUnit ) throws TimeoutException {
         return service.getEnhancedFilters( super.getFilters( filterArg ), mentionedTerms, inferredTerms, timeout, timeUnit );
+    }
+
+    /**
+     * Cursor-mode counterpart to {@link ExpressionExperimentService#loadValueObjects(Filters, Sort, int, int)}.
+     * Always sorts by ascending {@code id} (the primary key, indexed and unique) — see
+     * {@code CURSOR_PAGINATION_STEP1_PLAN.md} step 1d. The caller's {@code Filters} still
+     * applies (so endpoints like {@code GET /taxa/{taxon}/datasets} can pre-compose the
+     * {@code taxon.id = ?} constraint into the filter and pass it through). The user's
+     * {@code ?sort=} arg is intentionally not honoured in cursor mode because the DAO
+     * currently restricts cursors to single-component id sorts (recce sec. 3.4 — to be
+     * lifted in phase B once the index audit is complete).
+     */
+    public CursorPage<ExpressionExperimentValueObject> getDatasetsByCursor( @Nullable Filters filters, @Nullable Cursor cursor, int limit ) {
+        return service.loadValueObjectsByCursor( filters, service.getSort( "id", Sort.Direction.ASC, Sort.NullMode.LAST ), cursor, limit );
     }
 
     /**
