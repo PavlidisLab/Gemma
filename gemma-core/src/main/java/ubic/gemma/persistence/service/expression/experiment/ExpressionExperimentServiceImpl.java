@@ -45,7 +45,6 @@ import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 import ubic.gemma.persistence.service.blacklist.BlacklistedEntityService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
-import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
@@ -77,8 +76,6 @@ public class ExpressionExperimentServiceImpl
     @Autowired
     private AuditEventService auditEventService;
     @Autowired
-    private BioAssayDimensionService bioAssayDimensionService;
-    @Autowired
     private QuantitationTypeService quantitationTypeService;
     @Autowired
     private BlacklistedEntityService blacklistedEntityService;
@@ -90,6 +87,8 @@ public class ExpressionExperimentServiceImpl
     private ExpressionExperimentWriteService writeService;
     @Autowired
     private ExpressionExperimentSubSetReadService subSetReadService;
+    @Autowired
+    private ExpressionExperimentDataVectorService dataVectorService;
     @Autowired
     private ubic.gemma.persistence.service.common.description.CharacteristicService characteristicService;
     @Autowired
@@ -154,176 +153,81 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<RawExpressionDataVector> getRawDataVectors( ExpressionExperiment ee, QuantitationType qt ) {
-        return expressionExperimentDao.getRawDataVectors( ee, qt );
+        return dataVectorService.getRawDataVectors( ee, qt );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<RawExpressionDataVector> getRawDataVectors( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType qt ) {
-        return expressionExperimentDao.getRawDataVectors( ee, samples, qt );
+        return dataVectorService.getRawDataVectors( ee, samples, qt );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<RawExpressionDataVector> getPreferredRawDataVectors( ExpressionExperiment expressionExperiment ) {
-        return expressionExperimentDao.getPreferredRawDataVectors( expressionExperiment );
+        return dataVectorService.getPreferredRawDataVectors( expressionExperiment );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Map<QuantitationType, Collection<RawExpressionDataVector>> getMissingValuesVectors( ExpressionExperiment ee ) {
-        return expressionExperimentDao.getMissingValuesVectors( ee );
+        return dataVectorService.getMissingValuesVectors( ee );
     }
 
     @Override
-    @Transactional
     public int addRawDataVectors( ExpressionExperiment ee,
             QuantitationType quantitationType,
             Collection<RawExpressionDataVector> newVectors ) {
-        createDimensionIfNecessary( newVectors );
-        createQuantitationTypeIfNecessary( newVectors, RawExpressionDataVector.class );
-        return expressionExperimentDao.addRawDataVectors( ee, quantitationType, newVectors );
+        return dataVectorService.addRawDataVectors( ee, quantitationType, newVectors );
     }
 
     @Override
-    @Transactional
     public int replaceRawDataVectors( ExpressionExperiment ee, QuantitationType qt, Collection<RawExpressionDataVector> vectors ) {
-        createDimensionIfNecessary( vectors );
-        return expressionExperimentDao.replaceRawDataVectors( ee, qt, vectors );
+        return dataVectorService.replaceRawDataVectors( ee, qt, vectors );
     }
 
     @Override
-    @Transactional
     public int replaceAllRawDataVectors( ExpressionExperiment ee,
             Collection<RawExpressionDataVector> newVectors ) {
-        if ( newVectors.isEmpty() ) {
-            throw new UnsupportedOperationException( "Only use this method for replacing vectors, not erasing them" );
-        }
-
-        Set<QuantitationType> existingQts = ee.getRawExpressionDataVectors().stream()
-                .map( DataVector::getQuantitationType )
-                .collect( Collectors.toSet() );
-
-        Set<QuantitationType> newQts = newVectors.stream()
-                .map( RawExpressionDataVector::getQuantitationType )
-                .collect( Collectors.toSet() );
-
-        Set<QuantitationType> preferredQts = newQts.stream()
-                .filter( QuantitationType::getIsPreferred )
-                .collect( Collectors.toSet() );
-        if ( preferredQts.size() > 1 ) {
-            throw new IllegalArgumentException( "There must be exactly one preferred quantitation type." );
-        }
-
-        // group the vectors up by QT
-        Map<QuantitationType, Set<RawExpressionDataVector>> vectorsByQt = newVectors.stream()
-                .collect( Collectors.groupingBy( RawExpressionDataVector::getQuantitationType, Collectors.toSet() ) );
-
-        int replaced = 0;
-        for ( Map.Entry<QuantitationType, Set<RawExpressionDataVector>> e : vectorsByQt.entrySet() ) {
-            if ( existingQts.contains( e.getKey() ) ) {
-                replaced += replaceRawDataVectors( ee, e.getKey(), e.getValue() );
-            } else {
-                replaced += addRawDataVectors( ee, e.getKey(), e.getValue() );
-            }
-        }
-
-        for ( QuantitationType qt : existingQts ) {
-            if ( !newQts.contains( qt ) ) {
-                removeRawDataVectors( ee, qt );
-            }
-        }
-
-        return replaced;
+        return dataVectorService.replaceAllRawDataVectors( ee, newVectors );
     }
 
     @Override
-    @Transactional
     public int removeAllRawDataVectors( ExpressionExperiment ee ) {
-        return expressionExperimentDao.removeAllRawDataVectors( ee );
+        return dataVectorService.removeAllRawDataVectors( ee );
     }
 
     @Override
-    @Transactional
     public int removeRawDataVectors( ExpressionExperiment ee, QuantitationType qt ) {
-        return removeRawDataVectors( ee, qt, false );
+        return dataVectorService.removeRawDataVectors( ee, qt );
     }
 
     @Override
-    @Transactional
     public int removeRawDataVectors( ExpressionExperiment ee, QuantitationType qt, boolean keepDimension ) {
-        return expressionExperimentDao.removeRawDataVectors( ee, qt, keepDimension );
+        return dataVectorService.removeRawDataVectors( ee, qt, keepDimension );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Optional<Collection<ProcessedExpressionDataVector>> getProcessedDataVectors( ExpressionExperiment ee ) {
-        return Optional.ofNullable( expressionExperimentDao.getProcessedDataVectors( ee ) );
+        return dataVectorService.getProcessedDataVectors( ee );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Optional<Collection<ProcessedExpressionDataVector>> getProcessedDataVectors( ExpressionExperiment ee, List<BioAssay> assays ) {
-        return Optional.ofNullable( expressionExperimentDao.getProcessedDataVectors( ee, assays ) );
+        return dataVectorService.getProcessedDataVectors( ee, assays );
     }
 
     @Override
-    @Transactional
     public int createProcessedDataVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> vectors ) {
-        createDimensionIfNecessary( vectors );
-        createQuantitationTypeIfNecessary( vectors, ProcessedExpressionDataVector.class );
-        return expressionExperimentDao.createProcessedDataVectors( ee, vectors );
+        return dataVectorService.createProcessedDataVectors( ee, vectors );
     }
 
     @Override
-    @Transactional
     public int removeProcessedDataVectors( ExpressionExperiment ee ) {
-        return expressionExperimentDao.removeProcessedDataVectors( ee );
+        return dataVectorService.removeProcessedDataVectors( ee );
     }
 
     @Override
-    @Transactional
     public int replaceProcessedDataVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> vectors ) {
-        createDimensionIfNecessary( vectors );
-        // unlike raw vectors, the "new" processed vectors might use a different QT
-        createQuantitationTypeIfNecessary( vectors, ProcessedExpressionDataVector.class );
-        return expressionExperimentDao.replaceProcessedDataVectors( ee, vectors );
-    }
-
-    private void createDimensionIfNecessary( Collection<? extends BulkExpressionDataVector> vectors ) {
-        Collection<BioAssayDimension> dimension = vectors.stream()
-                .map( BulkExpressionDataVector::getBioAssayDimension )
-                .collect( Collectors.toSet() );
-        if ( dimension.size() != 1 ) {
-            throw new IllegalArgumentException( "Vectors must share a common bioassay dimension" );
-        }
-        BioAssayDimension bad = dimension.iterator().next();
-        if ( bad.getId() == null ) {
-            log.info( "Creating " + bad + "..." );
-            bad = this.bioAssayDimensionService.findOrCreate( bad );
-            for ( BulkExpressionDataVector vector : vectors ) {
-                vector.setBioAssayDimension( bad );
-            }
-        }
-    }
-
-    private <T extends DataVector> void createQuantitationTypeIfNecessary( Collection<T> vectors, Class<? extends DataVector> vectorType ) {
-        Set<QuantitationType> quantitationType = vectors.stream()
-                .map( DataVector::getQuantitationType )
-                .collect( Collectors.toSet() );
-        if ( quantitationType.size() != 1 ) {
-            throw new IllegalArgumentException( "Vectors must share a common quantitation type." );
-        }
-        QuantitationType qt = quantitationType.iterator().next();
-        if ( qt.getId() == null ) {
-            log.info( "Creating " + qt + "..." );
-            qt = quantitationTypeService.create( qt, vectorType );
-            for ( DataVector vector : vectors ) {
-                vector.setQuantitationType( qt );
-            }
-        }
+        return dataVectorService.replaceProcessedDataVectors( ee, vectors );
     }
 
     @Override

@@ -69,6 +69,11 @@ public class ExpressionExperimentServiceTest extends BaseTest {
         }
 
         @Bean
+        public ExpressionExperimentDataVectorService expressionExperimentDataVectorService() {
+            return mock( ExpressionExperimentDataVectorService.class );
+        }
+
+        @Bean
         public ExpressionExperimentFilterRewriteHelperService expressionExperimentFilterInferenceHelperService( OntologyService ontologyService ) {
             return new ExpressionExperimentFilterRewriteHelperService( ontologyService );
         }

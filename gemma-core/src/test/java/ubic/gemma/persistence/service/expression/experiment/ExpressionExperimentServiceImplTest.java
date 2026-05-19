@@ -98,6 +98,15 @@ public class ExpressionExperimentServiceImplTest extends BaseTest {
         }
 
         @Bean
+        public ExpressionExperimentDataVectorService expressionExperimentDataVectorService(
+                ExpressionExperimentDao expressionExperimentDao,
+                BioAssayDimensionService bioAssayDimensionService,
+                QuantitationTypeService quantitationTypeService ) {
+            return new ExpressionExperimentDataVectorServiceImpl( expressionExperimentDao,
+                    bioAssayDimensionService, quantitationTypeService );
+        }
+
+        @Bean
         public AuditEventService auditEventService() {
             return mock( AuditEventService.class );
         }
