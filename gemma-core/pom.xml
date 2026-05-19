@@ -250,20 +250,27 @@
             <version>1.8.6</version>
         </dependency>
 
-        <!-- Testing -->
-        <!-- specifically for spring-security-test which refers to definitions from jakarta.servlet-api, spring-web and spring-security-web -->
+        <!-- jakarta.servlet-api + spring-security-web: previously test-scoped (only spring-security-test
+             needed them). Phase 3 gsec absorption: gemma.gsec.authentication.Ajax*Handler (formerly
+             provided by the gemma-gsec JAR at compile time) now lives under gemma-core/src/main/java
+             and references HttpServletRequest/Response + SavedRequestAwareAuthenticationSuccessHandler,
+             so these deps are promoted to compile scope. servlet-api stays `provided` since the
+             container (Tomcat/Jetty) supplies the implementation at runtime. -->
         <dependency>
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>
             <version>6.0.0</version>
-            <scope>test</scope>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-web</artifactId>
             <version>${spring.security.version}</version>
-            <scope>test</scope>
         </dependency>
+        <!-- Phase 3 gsec absorption: org.json.JSONObject used by Ajax*Handler is inherited
+             from the root pom's <dependencies> block (org.json:json:20240303), no redeclaration needed. -->
+
+        <!-- Testing -->
         <!-- Phase 2: pull spring-security-test as a regular jar rather than unpacking 4.0 sources. -->
         <dependency>
             <groupId>org.springframework.security</groupId>
