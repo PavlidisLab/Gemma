@@ -69,13 +69,17 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetailsValueObject;
+import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketState;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketValueObject;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchCorrectionEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.CurationNoteUpdateEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.DoesNotNeedAttentionEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedDifferentialExpressionAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedLinkAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedMeanVarianceUpdateEvent;
@@ -87,12 +91,9 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.GeeqEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MeanVarianceUpdateEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.NeedsAttentionEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.NotTroubledStatusFlagEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.SampleCorrelationAnalysisEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.TroubledStatusFlagEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.Characteristic;
@@ -113,8 +114,11 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.core.security.authentication.UserManager;
+import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
@@ -237,6 +241,10 @@ public class DatasetsWebService {
     private GeeqService geeqService;
     @Autowired
     private TicketsWebService ticketsWebService;
+    @Autowired
+    private TicketService ticketService;
+    @Autowired
+    private UserManager userManager;
 
     @Context
     private UriInfo uriInfo;
@@ -957,16 +965,33 @@ public class DatasetsWebService {
         }
     }
 
+    /**
+     * @deprecated per Decision 1 of {@code AUDIT_AS_WORKFLOW_RECCE.md} the
+     * {@code troubled} / {@code needsAttention} flips are now backed by
+     * {@link TicketService}: a {@code troubled=true} flip opens a
+     * {@link TicketType#QUALITY_REVIEW} ticket, {@code troubled=false} resolves the
+     * matching open ticket(s), and analogously for {@code needsAttention}
+     * (mapped to {@link TicketType#GENERIC} on open). Clients should migrate to
+     * {@code POST /tickets} + {@code PUT /tickets/{id}} on {@code TicketsWebService}.
+     * The endpoint is retained for back-compat while the UI moves over.
+     * The {@code curationNote} field is still routed through
+     * {@link CurationNoteUpdateEvent} pending the note-to-ticket-comment migration
+     * (see {@code CURATION_DETAILS_RETIREMENT.md}).
+     */
     @PUT
     @Path("/{dataset}/curationDetails")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasAuthority('GROUP_ADMIN')")
-    @Operation(summary = "Update the curation details of a dataset",
-            description = "Each field in the request body is optional. Provided fields are applied via the corresponding "
-                    + "audit event types (`TroubledStatusFlagEvent`/`NotTroubledStatusFlagEvent`, "
-                    + "`NeedsAttentionEvent`/`DoesNotNeedAttentionEvent`, `CurationNoteUpdateEvent`). "
-                    + "An optional `note` is attached to the trouble/needs-attention events; `curationNote` is the new note text.",
+    @Deprecated
+    @Operation(summary = "Update the curation details of a dataset (deprecated; use /tickets)",
+            description = "DEPRECATED — the troubled/needsAttention flips are now backed by the Ticket layer "
+                    + "(see /tickets). Setting troubled=true opens a QUALITY_REVIEW ticket targeting the dataset; "
+                    + "troubled=false resolves all open QUALITY_REVIEW tickets. needsAttention=true opens a GENERIC "
+                    + "ticket; needsAttention=false resolves all open GENERIC/BATCH_INFO_NEEDED tickets. "
+                    + "An optional `note` is supplied as the ticket title (on open) or transition reason (on resolve). "
+                    + "`curationNote` is still applied via the legacy CurationNoteUpdateEvent pending the note-to-comment "
+                    + "migration. New clients should call /tickets directly.",
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
             responses = {
@@ -983,19 +1008,64 @@ public class DatasetsWebService {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         CurationDetails cd = ee.getCurationDetails();
         if ( body.getTroubled() != null && body.getTroubled() != cd.getTroubled() ) {
-            auditTrailService.addUpdateEvent( ee,
-                    body.getTroubled() ? TroubledStatusFlagEvent.class : NotTroubledStatusFlagEvent.class,
-                    body.getNote() );
+            applyFlagViaTickets( ee, body.getTroubled(), TicketType.QUALITY_REVIEW,
+                    Collections.singleton( TicketType.QUALITY_REVIEW ),
+                    body.getNote(), "Dataset flagged as troubled" );
         }
         if ( body.getNeedsAttention() != null && body.getNeedsAttention() != cd.getNeedsAttention() ) {
-            auditTrailService.addUpdateEvent( ee,
-                    body.getNeedsAttention() ? NeedsAttentionEvent.class : DoesNotNeedAttentionEvent.class,
-                    body.getNote() );
+            applyFlagViaTickets( ee, body.getNeedsAttention(), TicketType.GENERIC,
+                    EnumSet.of( TicketType.GENERIC, TicketType.BATCH_INFO_NEEDED ),
+                    body.getNote(), "Dataset needs attention" );
         }
         if ( body.getCurationNote() != null ) {
+            // Curation notes do not yet map onto ticket comments — keep the legacy event path
+            // until the note-to-comment migration lands (see CURATION_DETAILS_RETIREMENT.md).
+            //noinspection deprecation
             auditTrailService.addUpdateEvent( ee, CurationNoteUpdateEvent.class, body.getCurationNote() );
         }
         return respond( new CurationDetailsValueObject( ee.getCurationDetails() ) );
+    }
+
+    /**
+     * Ticket-layer back-end for the legacy {@code troubled} / {@code needsAttention} flips.
+     * Opens a ticket of {@code openType} (when {@code on=true} and no matching open ticket exists),
+     * or transitions every open ticket whose type is in {@code resolveTypes} to
+     * {@link TicketState#RESOLVED} (when {@code on=false}).
+     *
+     * @param note         optional human note supplied on the legacy request; used as ticket title
+     *                     on open and as transition reason on resolve.
+     * @param defaultTitle fallback ticket title when {@code note} is blank.
+     */
+    private void applyFlagViaTickets( ExpressionExperiment ee, boolean on, TicketType openType,
+            Set<TicketType> resolveTypes, @Nullable String note, String defaultTitle ) {
+        User actor = userManager.getCurrentUser();
+        if ( actor == null ) {
+            // @PreAuthorize on the endpoint already gates anonymous callers — this is a defensive guard
+            // for the edge case where SecurityContext returns a non-User principal.
+            throw new BadRequestException( "No authenticated user resolved." );
+        }
+        if ( on ) {
+            // No-op if a matching open ticket already exists (prevents duplicate opens on idempotent
+            // re-flips). The shim's needsAttention/troubled read should already be false here, but the
+            // explicit guard keeps behaviour sane if the ticket layer is mid-state.
+            List<Ticket> existing = ticketService.findOpenForTarget( TicketTargetType.EXPRESSION_EXPERIMENT, ee.getId() );
+            for ( Ticket t : existing ) {
+                if ( t.getType() == openType ) {
+                    return;
+                }
+            }
+            String title = ( note != null && !note.trim().isEmpty() ) ? note.trim() : defaultTitle;
+            ticketService.openTicket( actor, openType, title,
+                    Collections.singleton( TicketTarget.Factory.newInstance(
+                            TicketTargetType.EXPRESSION_EXPERIMENT, ee.getId() ) ) );
+        } else {
+            for ( Ticket t : ticketService.findOpenForTarget( TicketTargetType.EXPRESSION_EXPERIMENT, ee.getId() ) ) {
+                if ( resolveTypes.contains( t.getType() ) && t.getState() != TicketState.RESOLVED
+                        && t.getState() != TicketState.CANCELLED ) {
+                    ticketService.transition( t, TicketState.RESOLVED, actor, note );
+                }
+            }
+        }
     }
 
     /**
