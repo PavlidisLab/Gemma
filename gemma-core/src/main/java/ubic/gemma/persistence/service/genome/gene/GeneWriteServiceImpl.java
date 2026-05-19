@@ -99,22 +99,38 @@ public class GeneWriteServiceImpl implements GeneWriteService {
             existingGene = geneDao.find( gene );
         }
 
+        // Per-upsert caches. Without these, every external-database and chromosome
+        // business-key lookup goes to the DB, and those finds trigger Hibernate
+        // auto-flush in the middle of a dirty entity manipulation (e.g. after a new
+        // PhysicalLocation is wired in but before it has been cascaded). The legacy
+        // GenomePersister threaded a Caches object for exactly this reason. We retain
+        // the two caches that the gene-load path exercises hard (ExternalDatabase per
+        // accession, Chromosome per location); the Taxon cache is intentionally
+        // omitted because Hibernate L1 covers within-tx repeats and the gene loader
+        // does not churn taxa.
+        Map<String, ExternalDatabase> externalDbCache = new HashMap<>();
+        Map<Integer, Chromosome> chromosomeCache = new HashMap<>();
+
         if ( existingGene == null ) {
-            return this.create( gene );
+            return this.create( gene, externalDbCache, chromosomeCache );
         }
 
         if ( log.isDebugEnabled() )
             log.debug( "Updating " + existingGene );
 
-        return this.updateGene( existingGene, gene );
+        return this.updateGene( existingGene, gene, externalDbCache, chromosomeCache );
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
     public Gene create( Gene gene ) {
+        return this.create( gene, new HashMap<String, ExternalDatabase>(), new HashMap<Integer, Chromosome>() );
+    }
+
+    private Gene create( Gene gene, Map<String, ExternalDatabase> externalDbCache, Map<Integer, Chromosome> chromosomeCache ) {
         if ( !gene.getAccessions().isEmpty() ) {
             for ( DatabaseEntry de : gene.getAccessions() ) {
-                this.fillInDatabaseEntry( de );
+                this.fillInDatabaseEntry( de, externalDbCache );
             }
         }
 
@@ -128,7 +144,21 @@ public class GeneWriteServiceImpl implements GeneWriteService {
             gene.setTaxon( this.persistTaxon( gene.getTaxon() ) );
         }
         if ( gene.getPhysicalLocation() != null ) {
-            this.fillChromosomeLocationAssociations( gene.getPhysicalLocation(), gene.getTaxon() );
+            this.fillChromosomeLocationAssociations( gene.getPhysicalLocation(), gene.getTaxon(), chromosomeCache );
+        }
+
+        // Pre-resolve every ExternalDatabase used by any product accession BEFORE
+        // geneDao.create(). The find() inside persistExternalDatabase triggers an
+        // auto-flush, which after gene creation would try to flush the gene's
+        // cascade-pending DatabaseEntries and blow up with HHH000099. Doing it now
+        // keeps the call cache warm so the post-create fillInGeneProductAssociations
+        // never re-queries.
+        for ( GeneProduct gp : tempGeneProduct ) {
+            if ( gp.getAccessions() != null ) {
+                for ( DatabaseEntry de : gp.getAccessions() ) {
+                    de.setExternalDatabase( this.persistExternalDatabase( de.getExternalDatabase(), externalDbCache ) );
+                }
+            }
         }
 
         if ( log.isDebugEnabled() )
@@ -160,7 +190,7 @@ public class GeneWriteServiceImpl implements GeneWriteService {
         // attach the products.
         gene.setProducts( geneProductsForNewGene );
         for ( GeneProduct gp : gene.getProducts() ) {
-            this.fillInGeneProductAssociations( gp );
+            this.fillInGeneProductAssociations( gp, externalDbCache, chromosomeCache );
         }
 
         try {
@@ -182,6 +212,10 @@ public class GeneWriteServiceImpl implements GeneWriteService {
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
     public Gene updateGene( Gene existingGene, Gene newGeneInfo ) {
+        return this.updateGene( existingGene, newGeneInfo, new HashMap<String, ExternalDatabase>(), new HashMap<Integer, Chromosome>() );
+    }
+
+    private Gene updateGene( Gene existingGene, Gene newGeneInfo, Map<String, ExternalDatabase> externalDbCache, Map<Integer, Chromosome> chromosomeCache ) {
 
         // NCBI id can be null if gene has been loaded from a gene info file.
         Integer existingNcbiId = existingGene.getNcbiGeneId();
@@ -243,7 +277,7 @@ public class GeneWriteServiceImpl implements GeneWriteService {
         }
         for ( DatabaseEntry de : newGeneInfo.getAccessions() ) {
             if ( !updatedAcMap.containsKey( de.getAccession() ) ) {
-                this.fillInDatabaseEntry( de );
+                this.fillInDatabaseEntry( de, externalDbCache );
                 existingGene.getAccessions().add( de );
             }
         }
@@ -252,9 +286,17 @@ public class GeneWriteServiceImpl implements GeneWriteService {
         existingGene.setDescription( newGeneInfo.getDescription() );
         existingGene.setOfficialName( newGeneInfo.getOfficialName() );
         existingGene.setOfficialSymbol( newGeneInfo.getOfficialSymbol() );
-        existingGene.setPhysicalLocation( newGeneInfo.getPhysicalLocation() );
 
-        this.fillChromosomeLocationAssociations( existingGene.getPhysicalLocation(), existingGene.getTaxon() );
+        // Resolve the new PhysicalLocation's chromosome BEFORE attaching it to the
+        // managed existingGene. Otherwise the persistChromosome call (BK find)
+        // auto-flushes the dirty existingGene whose new transient PhysicalLocation
+        // still references a transient Chromosome — failing with TransientObjectException
+        // ("save the transient instance before flushing: PhysicalLocation"). cascade=all
+        // on Gene->PhysicalLocation does not extend to PL->Chromosome.
+        if ( newGeneInfo.getPhysicalLocation() != null ) {
+            this.fillChromosomeLocationAssociations( newGeneInfo.getPhysicalLocation(), existingGene.getTaxon(), chromosomeCache );
+        }
+        existingGene.setPhysicalLocation( newGeneInfo.getPhysicalLocation() );
 
         existingGene.getAliases().clear();
         existingGene.getAliases().addAll( newGeneInfo.getAliases() );
@@ -277,17 +319,17 @@ public class GeneWriteServiceImpl implements GeneWriteService {
             if ( updatedGpMap.containsKey( newGeneProductInfo.getName() ) ) {
                 log.debug( "Updating gene product based on name: " + newGeneProductInfo );
                 GeneProduct existingGeneProduct = updatedGpMap.get( newGeneProductInfo.getName() );
-                this.updateGeneProduct( existingGeneProduct, newGeneProductInfo );
+                this.updateGeneProduct( existingGeneProduct, newGeneProductInfo, externalDbCache, chromosomeCache );
             } else if ( updatedGpMap.containsKey( newGeneProductInfo.getNcbiGi() ) ) {
                 log.debug( "Updating gene product based on GI: " + newGeneProductInfo );
                 GeneProduct existingGeneProduct = updatedGpMap.get( newGeneProductInfo.getNcbiGi() );
-                this.updateGeneProduct( existingGeneProduct, newGeneProductInfo );
+                this.updateGeneProduct( existingGeneProduct, newGeneProductInfo, externalDbCache, chromosomeCache );
             } else {
                 GeneProduct existingGeneProduct = geneProductDao.find( newGeneProductInfo );
                 if ( existingGeneProduct == null ) {
                     // it is, in fact, new, so far as we can tell.
                     newGeneProductInfo.setGene( existingGene );
-                    this.fillInGeneProductAssociations( newGeneProductInfo );
+                    this.fillInGeneProductAssociations( newGeneProductInfo, externalDbCache, chromosomeCache );
                     log.debug( "New product for " + existingGene + ": " + newGeneProductInfo );
                     existingGene.getProducts().add( newGeneProductInfo );
                 } else {
@@ -342,7 +384,7 @@ public class GeneWriteServiceImpl implements GeneWriteService {
                     existingGene.getProducts().add( existingGeneProduct );
                     assert existingGeneProduct.getGene().equals( existingGene );
 
-                    this.updateGeneProduct( existingGeneProduct, newGeneProductInfo );
+                    this.updateGeneProduct( existingGeneProduct, newGeneProductInfo, externalDbCache, chromosomeCache );
 
                 }
             }
@@ -484,6 +526,12 @@ public class GeneWriteServiceImpl implements GeneWriteService {
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
     public void updateGeneProduct( GeneProduct existingGeneProduct, GeneProduct updatedGeneProductInfo ) {
+        this.updateGeneProduct( existingGeneProduct, updatedGeneProductInfo,
+                new HashMap<String, ExternalDatabase>(), new HashMap<Integer, Chromosome>() );
+    }
+
+    private void updateGeneProduct( GeneProduct existingGeneProduct, GeneProduct updatedGeneProductInfo,
+            Map<String, ExternalDatabase> externalDbCache, Map<Integer, Chromosome> chromosomeCache ) {
         Gene geneForExistingGeneProduct = existingGeneProduct.getGene();
 
         existingGeneProduct = geneProductDao.thaw( existingGeneProduct );
@@ -495,19 +543,28 @@ public class GeneWriteServiceImpl implements GeneWriteService {
         existingGeneProduct.setDescription( updatedGeneProductInfo.getDescription() );
         existingGeneProduct.setNcbiGi( updatedGeneProductInfo.getNcbiGi() );
 
-        this.addAnyNewAccessions( existingGeneProduct, updatedGeneProductInfo );
+        this.addAnyNewAccessions( existingGeneProduct, updatedGeneProductInfo, externalDbCache );
 
-        existingGeneProduct.setPhysicalLocation( updatedGeneProductInfo.getPhysicalLocation() );
-        if ( existingGeneProduct.getPhysicalLocation() != null ) {
-            existingGeneProduct.getPhysicalLocation().setChromosome(
-                    this.persistChromosome( existingGeneProduct.getPhysicalLocation().getChromosome(),
-                            geneForExistingGeneProduct.getTaxon() ) );
+        // Resolve the new PhysicalLocation's chromosome BEFORE attaching it to the
+        // managed existingGeneProduct, for the same reason as in updateGene above:
+        // PL->Chromosome has no cascade, so the auto-flush triggered by the chromosome
+        // BK lookup would blow up on the transient PL otherwise.
+        if ( updatedGeneProductInfo.getPhysicalLocation() != null
+                && updatedGeneProductInfo.getPhysicalLocation().getChromosome() != null ) {
+            updatedGeneProductInfo.getPhysicalLocation().setChromosome(
+                    this.persistChromosome( updatedGeneProductInfo.getPhysicalLocation().getChromosome(),
+                            geneForExistingGeneProduct.getTaxon(), chromosomeCache ) );
         }
+        existingGeneProduct.setPhysicalLocation( updatedGeneProductInfo.getPhysicalLocation() );
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
     public void addAnyNewAccessions( GeneProduct existing, GeneProduct geneProduct ) {
+        this.addAnyNewAccessions( existing, geneProduct, new HashMap<String, ExternalDatabase>() );
+    }
+
+    private void addAnyNewAccessions( GeneProduct existing, GeneProduct geneProduct, Map<String, ExternalDatabase> externalDbCache ) {
         Map<String, DatabaseEntry> updatedGpMap = new HashMap<>();
         existing = geneProductDao.thaw( existing );
         for ( DatabaseEntry de : existing.getAccessions() ) {
@@ -515,7 +572,7 @@ public class GeneWriteServiceImpl implements GeneWriteService {
         }
         for ( DatabaseEntry de : geneProduct.getAccessions() ) {
             if ( !updatedGpMap.containsKey( de.getAccession() ) ) {
-                this.fillInDatabaseEntry( de );
+                this.fillInDatabaseEntry( de, externalDbCache );
                 existing.getAccessions().add( de );
             }
         }
@@ -563,45 +620,70 @@ public class GeneWriteServiceImpl implements GeneWriteService {
     // identity. Once the cutover lands, GenomePersister's copies go away.
 
     private void fillInDatabaseEntry( DatabaseEntry databaseEntry ) {
+        this.fillInDatabaseEntry( databaseEntry, new HashMap<String, ExternalDatabase>() );
+    }
+
+    private void fillInDatabaseEntry( DatabaseEntry databaseEntry, Map<String, ExternalDatabase> externalDbCache ) {
         ExternalDatabase tempExternalDb = databaseEntry.getExternalDatabase();
         databaseEntry.setExternalDatabase( null );
-        ExternalDatabase persistedDb = this.persistExternalDatabase( tempExternalDb );
+        ExternalDatabase persistedDb = this.persistExternalDatabase( tempExternalDb, externalDbCache );
         databaseEntry.setExternalDatabase( persistedDb );
         assert databaseEntry.getExternalDatabase().getId() != null;
     }
 
     private ExternalDatabase persistExternalDatabase( ExternalDatabase database ) {
+        return this.persistExternalDatabase( database, new HashMap<String, ExternalDatabase>() );
+    }
+
+    private ExternalDatabase persistExternalDatabase( ExternalDatabase database, Map<String, ExternalDatabase> externalDbCache ) {
+        String name = database.getName();
+        if ( name != null && externalDbCache.containsKey( name ) ) {
+            return externalDbCache.get( name );
+        }
         // ExternalDatabase has no static BusinessKey.find; DAO-level find()
         // resolves by name (single-property business key).
         ExternalDatabase existingDatabase = externalDatabaseDao.find( database );
-        if ( existingDatabase == null ) {
-            return externalDatabaseDao.create( database );
+        ExternalDatabase resolved = existingDatabase != null ? existingDatabase : externalDatabaseDao.create( database );
+        if ( name != null ) {
+            externalDbCache.put( name, resolved );
         }
-        return existingDatabase;
+        return resolved;
     }
 
     private void fillChromosomeLocationAssociations( ChromosomeLocation chromosomeLocation, Taxon t ) {
+        this.fillChromosomeLocationAssociations( chromosomeLocation, t, new HashMap<Integer, Chromosome>() );
+    }
+
+    private void fillChromosomeLocationAssociations( ChromosomeLocation chromosomeLocation, Taxon t, Map<Integer, Chromosome> chromosomeCache ) {
         if ( chromosomeLocation == null ) return;
         if ( chromosomeLocation.getChromosome() != null ) {
-            chromosomeLocation.setChromosome( this.persistChromosome( chromosomeLocation.getChromosome(), t ) );
+            chromosomeLocation.setChromosome( this.persistChromosome( chromosomeLocation.getChromosome(), t, chromosomeCache ) );
         }
     }
 
     private void fillInGeneProductAssociations( GeneProduct geneProduct ) {
-        if ( geneProduct.getPhysicalLocation() != null ) {
+        this.fillInGeneProductAssociations( geneProduct, new HashMap<String, ExternalDatabase>(), new HashMap<Integer, Chromosome>() );
+    }
+
+    private void fillInGeneProductAssociations( GeneProduct geneProduct, Map<String, ExternalDatabase> externalDbCache, Map<Integer, Chromosome> chromosomeCache ) {
+        if ( geneProduct.getPhysicalLocation() != null && geneProduct.getPhysicalLocation().getChromosome() != null ) {
             geneProduct.getPhysicalLocation().setChromosome(
                     this.persistChromosome( geneProduct.getPhysicalLocation().getChromosome(),
-                            geneProduct.getGene().getTaxon() ) );
+                            geneProduct.getGene().getTaxon(), chromosomeCache ) );
         }
 
         if ( geneProduct.getAccessions() != null ) {
             for ( DatabaseEntry de : geneProduct.getAccessions() ) {
-                de.setExternalDatabase( this.persistExternalDatabase( de.getExternalDatabase() ) );
+                de.setExternalDatabase( this.persistExternalDatabase( de.getExternalDatabase(), externalDbCache ) );
             }
         }
     }
 
     private Chromosome persistChromosome( Chromosome chromosome, Taxon t ) {
+        return this.persistChromosome( chromosome, t, new HashMap<Integer, Chromosome>() );
+    }
+
+    private Chromosome persistChromosome( Chromosome chromosome, Taxon t, Map<Integer, Chromosome> chromosomeCache ) {
         if ( chromosome == null ) return null;
         Taxon ct = t;
         if ( ct == null ) {
@@ -609,9 +691,29 @@ public class GeneWriteServiceImpl implements GeneWriteService {
         }
         chromosome.setTaxon( ct );
 
+        // Build a cache key the same way GenomePersister did: chromosome name +
+        // taxon identifier hash (NCBI id first, then common/scientific name). This
+        // avoids hitting BusinessKey.find for every repeat (and the auto-flush it
+        // triggers) when the same chromosome is referenced by many products / a
+        // batch of genes on the same chromosome.
+        int key = chromosome.getName() != null ? chromosome.getName().hashCode() : 0;
+        if ( ct != null ) {
+            if ( ct.getNcbiId() != null ) {
+                key += ct.getNcbiId().hashCode();
+            } else if ( ct.getCommonName() != null ) {
+                key += ct.getCommonName().hashCode();
+            } else if ( ct.getScientificName() != null ) {
+                key += ct.getScientificName().hashCode();
+            }
+        }
+        if ( chromosomeCache.containsKey( key ) ) {
+            return chromosomeCache.get( key );
+        }
+
         Session session = sessionFactory.getCurrentSession();
         Chromosome existing = BusinessKey.find( session, chromosome );
 
+        Chromosome resolved;
         if ( existing == null ) {
             // On miss we are about to insert; the chromosome's taxon FK is NOT NULL and
             // does not cascade-persist, so resolve any transient Taxon first. This matches
@@ -620,9 +722,12 @@ public class GeneWriteServiceImpl implements GeneWriteService {
             if ( ct != null ) {
                 chromosome.setTaxon( this.persistTaxon( ct ) );
             }
-            return chromosomeDao.create( chromosome );
+            resolved = chromosomeDao.create( chromosome );
+        } else {
+            resolved = existing;
         }
-        return existing;
+        chromosomeCache.put( key, resolved );
+        return resolved;
     }
 
     /**
