@@ -31,9 +31,6 @@ import java.util.HashSet;
 
 /**
  * Persist objects like Gene2GOAssociation.
- * <p>
- * Phase-2 note: the gene-gene coexpression subsystem was removed, so {@code CoexpressionAnalysis}
- * handling is gone too.
  *
  * @author pavlidis
  */

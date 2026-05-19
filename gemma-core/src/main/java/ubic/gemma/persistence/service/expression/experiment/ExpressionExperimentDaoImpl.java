@@ -4046,28 +4046,24 @@ public class ExpressionExperimentDaoImpl
     }
 
     /**
-     * Filling 'hasDifferentialExpressionAnalysis' and 'hasCoexpressionAnalysis'
+     * Filling 'hasDifferentialExpressionAnalysis' (and 'hasCoexpressionAnalysis' for API compatibility).
+     * <p>
+     * The coexpression subsystem was removed in Phase 1c, so {@code hasCoexpressionAnalysis} is
+     * always {@code false}. The flag itself is kept on the VO and the REST {@code PipelineStatusValueObject}
+     * for backward compatibility with legacy clients.
      */
     private void populateAnalysisInformation( Collection<ExpressionExperimentDetailsValueObject> vos, boolean cacheable ) {
         if ( vos.isEmpty() ) {
             return;
         }
 
-        // these are cached queries (thus super-fast)
-        Set<Long> withCoexpression = new HashSet<>( getExpressionExperimentIdsWithCoexpression( cacheable ) );
+        // cached query (thus super-fast)
         Set<Long> withDiffEx = new HashSet<>( getExpressionExperimentIdsWithDifferentialExpressionAnalysis( cacheable ) );
 
         for ( ExpressionExperimentDetailsValueObject vo : vos ) {
-            vo.setHasCoexpressionAnalysis( withCoexpression.contains( vo.getId() ) );
+            vo.setHasCoexpressionAnalysis( false );
             vo.setHasDifferentialExpressionAnalysis( withDiffEx.contains( vo.getId() ) );
         }
-    }
-
-    private List<Long> getExpressionExperimentIdsWithCoexpression( boolean cacheable ) {
-        // Phase 2 Step 3 deleted the coexpression subsystem entirely (entities, hbm.xml,
-        // services). There is no CoexpressionAnalysis to query. Always return empty — callers use
-        // this to set ExpressionExperimentDetailsValueObject.hasCoexpressionAnalysis(false).
-        return Collections.emptyList();
     }
 
     private List<Long> getExpressionExperimentIdsWithDifferentialExpressionAnalysis( boolean cacheable ) {

@@ -26,9 +26,6 @@ import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.Sam
 
 /**
  * Utility methods for dealing with analyses.
- * <p>
- * Phase-2 note: the gene-gene coexpression subsystem was removed. References to
- * {@code CoexpressionAnalysisService} / {@code CoexpressionAnalysis} are gone.
  *
  * @author paul
  */

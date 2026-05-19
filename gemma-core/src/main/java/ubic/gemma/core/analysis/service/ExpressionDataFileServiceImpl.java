@@ -779,12 +779,6 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
-    public LockedPath writeOrLocateCoexpressionDataFile( ExpressionExperiment ee, boolean forceWrite ) throws IOException {
-        // Phase 2: the gene-gene coexpression subsystem was removed; this no longer produces a file.
-        throw new UnsupportedOperationException( "Coexpression data export is unavailable: the coexpression subsystem was removed in Phase 2." );
-    }
-
-    @Override
     public Optional<LockedPath> writeOrLocateProcessedDataFile( ExpressionExperiment ee, boolean filtered, boolean forceWrite ) throws IOException, FilteringException {
         // randomize file name if temporary in case of access by more than one user at once
         String result;

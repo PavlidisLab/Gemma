@@ -243,7 +243,4 @@ public class ExpressionExperimentServiceTest extends BaseTest {
         verify( expressionExperimentDao ).getAnnotationsUsageFrequency( Collections.emptyList(), null, -1, 0, null, null, null, null, false, false );
         verifyNoMoreInteractions( expressionExperimentDao );
     }
-
-    // Phase 2: removed testRemoveDatasetWithCoexpressionLinks — the coexpression subsystem and its
-    // pre-remove check are gone.
 }
