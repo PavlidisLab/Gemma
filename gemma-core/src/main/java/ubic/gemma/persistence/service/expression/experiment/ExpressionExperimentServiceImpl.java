@@ -18,20 +18,14 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
-import gemma.gsec.SecurityService;
-import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.ConfigAttribute;
 import org.springframework.security.access.SecurityConfig;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.Assert;
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.SearchException;
-import ubic.gemma.core.search.SearchService;
-import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.common.description.*;
@@ -46,16 +40,10 @@ import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
-import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
-import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponentAnalysisService;
-import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
 import ubic.gemma.persistence.service.blacklist.BlacklistedEntityService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
-import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
-import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
@@ -70,8 +58,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static java.util.Objects.requireNonNull;
-import ubic.gemma.model.common.description.CharacteristicUtils;
 import static ubic.gemma.model.common.description.CharacteristicUtils.*;
 
 /**
@@ -91,39 +77,15 @@ public class ExpressionExperimentServiceImpl
     @Autowired
     private BioAssayDimensionService bioAssayDimensionService;
     @Autowired
-    private BioMaterialService bioMaterialService;
-    @Autowired
-    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
-    @Autowired
-    private ExpressionExperimentSetService expressionExperimentSetService;
-    @Autowired
-    private ExpressionExperimentSubSetService expressionExperimentSubSetService;
-    @Autowired
-    private ExperimentalFactorService experimentalFactorService;
-    @Autowired
-    private FactorValueService factorValueService;
-    @Autowired
-    private OntologyService ontologyService;
-    @Autowired
-    private PrincipalComponentAnalysisService principalComponentAnalysisService;
-    @Autowired
     private QuantitationTypeService quantitationTypeService;
-    @Autowired
-    private SearchService searchService;
-    @Autowired
-    private SecurityService securityService;
-    @Autowired
-    private SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService;
     @Autowired
     private BlacklistedEntityService blacklistedEntityService;
     @Autowired
     private ExpressionExperimentFilterRewriteHelperService filterRewriteService;
     @Autowired
-    private CharacteristicService characteristicService;
-    @Autowired
-    private AuditTrailService auditTrailService;
-    @Autowired
     private ExpressionExperimentReadService readService;
+    @Autowired
+    private ExpressionExperimentWriteService writeService;
 
     @Autowired
     public ExpressionExperimentServiceImpl( ExpressionExperimentDao expressionExperimentDao ) {
@@ -169,77 +131,18 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
-    @Transactional
     public ExperimentalFactor addFactor( ExpressionExperiment ee, ExperimentalFactor factor ) {
-        ExpressionExperiment experiment = expressionExperimentDao.load( ee.getId() );
-        if ( experiment == null ) {
-            throw new IllegalArgumentException( "The passed EE does not exist anymore." );
-        }
-        factor.setExperimentalDesign( experiment.getExperimentalDesign() );
-        factor.setSecurityOwner( experiment );
-        factor = experimentalFactorService.create( factor ); // to make sure we get acls.
-        if ( experiment.getExperimentalDesign() == null ) {
-            log.info( "Creating missing experimental design for " + experiment );
-            experiment.setExperimentalDesign( new ExperimentalDesign() );
-        }
-        experiment.getExperimentalDesign().getExperimentalFactors().add( factor );
-        expressionExperimentDao.update( experiment );
-        return factor;
+        return writeService.addFactor( ee, factor );
     }
 
     @Override
-    @Transactional
     public FactorValue addFactorValue( ExpressionExperiment ee, FactorValue fv ) {
-        assert fv.getExperimentalFactor() != null;
-        ExpressionExperiment experiment = requireNonNull( expressionExperimentDao.load( ee.getId() ) );
-        fv.setSecurityOwner( experiment );
-        if ( experiment.getExperimentalDesign() == null ) {
-            log.info( "Creating missing experimental design for " + experiment );
-            experiment.setExperimentalDesign( new ExperimentalDesign() );
-        }
-        Collection<ExperimentalFactor> efs = experiment.getExperimentalDesign().getExperimentalFactors();
-        fv = this.factorValueService.create( fv );
-        for ( ExperimentalFactor ef : efs ) {
-            if ( fv.getExperimentalFactor().equals( ef ) ) {
-                ef.getFactorValues().add( fv );
-                break;
-            }
-        }
-        expressionExperimentDao.update( experiment );
-        return fv;
+        return writeService.addFactorValue( ee, fv );
     }
 
-
     @Override
-    @Transactional
     public void addFactorValues( ExpressionExperiment ee, Map<BioMaterial, FactorValue> fvs ) {
-        ExpressionExperiment experiment = requireNonNull( expressionExperimentDao.load( ee.getId() ) );
-        if ( experiment.getExperimentalDesign() == null ) {
-            log.info( "Creating missing experimental design for " + experiment );
-            experiment.setExperimentalDesign( new ExperimentalDesign() );
-        }
-        Collection<ExperimentalFactor> efs = experiment.getExperimentalDesign().getExperimentalFactors();
-        int count = 0;
-        for ( BioMaterial bm : fvs.keySet() ) {
-            FactorValue fv = fvs.get( bm );
-            fv.setSecurityOwner( experiment );
-            fv = this.factorValueService.create( fv );
-
-            for ( ExperimentalFactor ef : efs ) {
-                if ( fv.getExperimentalFactor().equals( ef ) ) {
-                    ef.getFactorValues().add( fv );
-                    break;
-                }
-            }
-            bm.getFactorValues().add( fv );
-            ++count;
-            if ( count % 50 == 0 ) {
-                log.info( "Processed: " + count + " biomaterials for new factor values" );
-            }
-        }
-        log.info( "Processed: " + count + " biomaterials for new factor values, updating ..." );
-        //  expressionExperimentDao.update( experiment );
-        bioMaterialService.update( fvs.keySet() );
+        writeService.addFactorValues( ee, fvs );
     }
 
     @Override
@@ -1220,41 +1123,14 @@ public class ExpressionExperimentServiceImpl
         return readService.loadValueObjectsByIds( ids, maintainOrder );
     }
 
-    /**
-     * Will add the characteristic to the expression experiment and persist the changes.
-     *
-     * @param ee the experiment to add the characteristics to.
-     * @param vc If the evidence code is null, it will be filled in with IC. A category and value must be provided.
-     */
     @Override
-    @Transactional
     public void addCharacteristic( ExpressionExperiment ee, Characteristic vc ) {
-        Assert.isTrue( StringUtils.isNotBlank( vc.getCategory() ), "Must provide a category" );
-        Assert.isTrue( StringUtils.isNotBlank( vc.getValue() ), "Must provide a value" );
-
-        ee = ensureInSession( ee );
-
-        if ( vc.getEvidenceCode() == null ) {
-            log.debug( String.format( "No evidence code set for %s, defaulting to %s.", vc, GOEvidenceCode.IC ) );
-            vc.setEvidenceCode( GOEvidenceCode.IC ); // assume: manually added characteristic
-        }
-
-        ExpressionExperimentServiceImpl.log
-                .info( "Adding characteristic '" + vc.getValue() + "' to " + ee.getShortName() + " (ID=" + ee.getId()
-                        + ") : " + vc );
-
-        ee.getCharacteristics().add( vc );
-        this.update( ee );
+        writeService.addCharacteristic( ee, vc );
     }
 
     @Override
-    @Transactional
     public void removeCharacteristics( ExpressionExperiment ee, Collection<Characteristic> characteristicsToRemove ) {
-        Assert.isTrue( characteristicsToRemove.stream().allMatch( c -> c.getId() != null ), "All characteristics must be persistent." );
-        Assert.isTrue( ee.getCharacteristics().containsAll( characteristicsToRemove ) , "expected true");
-        ee.getCharacteristics().removeAll( characteristicsToRemove );
-        update( ee );
-        characteristicService.remove( characteristicsToRemove );
+        writeService.removeCharacteristics( ee, characteristicsToRemove );
     }
 
     /**
@@ -1363,45 +1239,13 @@ public class ExpressionExperimentServiceImpl
      * will not be deleted automatically).
      */
     @Override
-    @Transactional
     public void remove( ExpressionExperiment ee ) {
-        ee = ensureInSession( ee );
-
-        if ( !securityService.isEditableByCurrentUser( ee ) ) {
-            throw new SecurityException(
-                    "Error performing 'ExpressionExperimentService.remove(ExpressionExperiment expressionExperiment)' --> "
-                            + " You do not have permission to edit this experiment." );
-        }
-
-        // Remove subsets
-        Collection<ExpressionExperimentSubSet> subsets = this.getSubSetsWithBioAssays( ee );
-        for ( ExpressionExperimentSubSet subset : subsets ) {
-            expressionExperimentSubSetService.remove( subset );
-        }
-
-        // Remove differential expression analyses
-        this.differentialExpressionAnalysisService.removeForExperiment( ee, true );
-
-        // Remove any sample coexpression matrices
-        this.sampleCoexpressionAnalysisService.removeForExperiment( ee );
-
-        // Remove PCA
-        this.principalComponentAnalysisService.removeForExperiment( ee );
-
-        /*
-         * Delete any expression experiment sets that only have this one ee in it. If possible remove this experiment
-         * from other sets, and update them. IMPORTANT, this section assumes that we already checked for gene2gene
-         * analyses!
-         */
-        this.expressionExperimentSetService.removeFromSets( ee );
-
-        super.remove( ee );
+        writeService.remove( ee );
     }
 
     @Override
-    @Transactional
     public void remove( Collection<ExpressionExperiment> entities ) {
-        entities.forEach( this::remove );
+        writeService.remove( entities );
     }
 
     /*
@@ -1430,70 +1274,13 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
-    @Transactional
     public void updateQuantitationType( ExpressionExperiment ee, QuantitationType qt, @Nullable QuantitationType previousPreferredQt ) {
-        Assert.notNull( ee.getId(), "The experiment must be persistent." );
-        Assert.notNull( qt.getId(), "The quantitation type must be persistent." );
-        // FIXME: hashing depends on properties that might have been altered that would in turn affect hashCode(), so we
-        //        cannot use contains
-        Assert.isTrue( ee.getQuantitationTypes().stream().anyMatch( qt::equals ),
-                "The quantitation type does not belong to " + ee + "." );
-
-        Class<? extends DataVector> vectorType = quantitationTypeService.getDataVectorType( qt );
-
-        if ( vectorType != null ) {
-            if ( qt.isPreferred( vectorType ) ) {
-                // set all other QTs to non-preferred (regardless of their type)
-                for ( QuantitationType otherQt : ee.getQuantitationTypes() ) {
-                    if ( otherQt.isPreferred( vectorType ) && !otherQt.equals( qt ) ) {
-                        log.info( "Marking " + otherQt + " as non-preferred for " + vectorType + "." );
-                        otherQt.setIsPreferred( false, vectorType );
-                        quantitationTypeService.update( otherQt );
-                    }
-                }
-                if ( !qt.equals( previousPreferredQt ) ) {
-                    Class<? extends PreferredDataChangedEvent> eventType = getPreferredDataChangedEventForVectorType( vectorType );
-                    String message = String.format( "The preferred quantitation type for %s changed%s to %s.",
-                            vectorType.getSimpleName(), previousPreferredQt != null ? " from " + previousPreferredQt : "", qt );
-                    if ( eventType != null ) {
-                        auditTrailService.addUpdateEvent( ee, eventType, message );
-                    } else {
-                        log.warn( message + " There is no audit event type for this change." );
-                    }
-                }
-            } else if ( previousPreferredQt != null && previousPreferredQt.isPreferred( vectorType ) && qt.equals( previousPreferredQt ) ) {
-                Class<? extends PreferredDataChangedEvent> eventType = getPreferredDataChangedEventForVectorType( vectorType );
-                String message = String.format( "The preferred quantitation type for %s was cleared (previously %s).",
-                        vectorType.getSimpleName(), previousPreferredQt );
-                if ( eventType != null ) {
-                    auditTrailService.addUpdateEvent( ee, eventType, message );
-                } else {
-                    log.warn( message + " There is no audit event type for this change." );
-                }
-            }
-        } else {
-            log.warn( qt + " does not have a vector type, likely cause is the absence of data vectors." );
-        }
-
-        quantitationTypeService.update( qt );
-    }
-
-    @Nullable
-    private Class<? extends PreferredDataChangedEvent> getPreferredDataChangedEventForVectorType( Class<? extends DataVector> vectorType ) {
-        if ( SingleCellExpressionDataVector.class.isAssignableFrom( vectorType ) ) {
-            return PreferredSingleCellDataChangedEvent.class;
-        } else if ( RawExpressionDataVector.class.isAssignableFrom( vectorType ) ) {
-            return PreferredRawDataChangedEvent.class;
-        } else {
-            // there is no event for a change of processed data because we don't allow more than one set of processed
-            return null;
-        }
+        writeService.updateQuantitationType( ee, qt, previousPreferredQt );
     }
 
     @Override
-    @Transactional
     public MeanVarianceRelation updateMeanVarianceRelation( ExpressionExperiment ee, MeanVarianceRelation mvr ) {
-        return expressionExperimentDao.updateMeanVarianceRelation( ee, mvr );
+        return writeService.updateMeanVarianceRelation( ee, mvr );
     }
 
     @Override
