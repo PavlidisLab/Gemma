@@ -2,8 +2,8 @@ package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,7 +11,7 @@ import org.springframework.security.test.context.support.WithSecurityContextTest
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.context.TestComponent;
-import ubic.gemma.core.util.test.BaseDatabaseTest;
+import ubic.gemma.core.util.test.BaseDatabaseTest5;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
@@ -25,11 +25,11 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 
 import java.util.*;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 
 @ContextConfiguration
-public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
+public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest5 {
 
     private static final int NUM_PROBES = 100;
 
@@ -61,7 +61,7 @@ public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
     @Autowired
     private ProcessedExpressionDataVectorDao processedExpressionDataVectorDao;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         RandomExpressionDataMatrixUtils.setSeed( 123L );
     }

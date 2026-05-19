@@ -3,9 +3,9 @@ package ubic.gemma.persistence.service.expression.experiment;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.SessionFactory;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ThrowingConsumer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -14,7 +14,7 @@ import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.analysis.singleCell.SingleCellSparsityMetrics;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataMatrix;
-import ubic.gemma.core.util.test.BaseDatabaseTest;
+import ubic.gemma.core.util.test.BaseDatabaseTest5;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DataAddedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DataRemovedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEvent;
@@ -54,7 +54,7 @@ import static ubic.gemma.persistence.service.expression.bioAssayData.RandomSingl
  * Tests covering integration of single-cell.
  */
 @ContextConfiguration
-public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest {
+public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest5 {
 
     @Configuration
     @TestComponent
@@ -124,7 +124,7 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
     private ArrayDesign ad;
     private ExpressionExperiment ee;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         Taxon taxon = new Taxon();
         sessionFactory.getCurrentSession().persist( taxon );
@@ -150,7 +150,7 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         ee = expressionExperimentDao.create( ee );
     }
 
-    @After
+    @AfterEach
     public void resetMocks() {
         reset( auditTrailService );
     }

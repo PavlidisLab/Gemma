@@ -2,14 +2,14 @@ package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.context.TestComponent;
-import ubic.gemma.core.util.test.BaseDatabaseTest;
+import ubic.gemma.core.util.test.BaseDatabaseTest5;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
@@ -20,12 +20,12 @@ import ubic.gemma.model.genome.Taxon;
 
 import java.util.Collections;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.*;
 
 @ContextConfiguration
-public class RawAndProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
+public class RawAndProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest5 {
 
     @Configuration
     @TestComponent
@@ -56,7 +56,7 @@ public class RawAndProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest
     @Autowired
     private ProcessedExpressionDataVectorDao processedExpressionDataVectorDao;
 
-    @After
+    @AfterEach
     public void tearDown() {
         reset( rawExpressionDataVectorDao, processedExpressionDataVectorDao );
     }
