@@ -23,6 +23,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.fixture.ArrayDesignFactory;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AlignmentBasedGeneMappingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceUpdateEvent;
@@ -45,11 +46,19 @@ public class ArrayDesignReportServiceTest extends BaseSpringContextTest {
     @Autowired
     ArrayDesignReportService arrayDesignReportService;
 
+    @Autowired
+    private ArrayDesignFactory arrayDesignFactory;
+
     @Before
     public void setUp() throws Exception {
         if ( !ArrayDesignReportServiceTest.persisted ) {
-            ArrayDesignReportServiceTest.ad = this
-                    .getTestPersistentArrayDesign( 5, true, false, false ); // not read only.
+            // Phase 3 fixture migration: typed ArrayDesignFactory replaces
+            // PersistentDummyObjectHelper.getTestPersistentArrayDesign(5, true,
+            // false, false). 5 composite sequences, random names, no sequences,
+            // not read-only.
+            ArrayDesignReportServiceTest.ad = arrayDesignFactory.builder()
+                    .withCompositeSequences( 5 )
+                    .build();
 
             ads.addUpdateEvent( ArrayDesignReportServiceTest.ad, ArrayDesignSequenceUpdateEvent.class, "sequences");
 
