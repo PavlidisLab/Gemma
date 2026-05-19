@@ -3067,6 +3067,17 @@ public class DatasetsWebService {
         }
     }
 
+    /**
+     * TODO (Phase 3 cleanup leftover): cannot fold into a method-level
+     * {@code @PreAuthorize("hasAuthority('GROUP_ADMIN')")} because the four call-sites
+     * ({@link #getDatasetProcessedExpression}, {@link #getDatasetRawExpression},
+     * {@link #getDatasetSingleCellExpression}, {@link #getDatasetDesign}) gate this admin
+     * requirement on {@code force == true} — the endpoints must remain callable by non-admins
+     * when {@code force} is false. Refactoring would require splitting each endpoint into
+     * admin-only and public variants, which inflates the public REST surface. Leaving the
+     * conditional manual check in place is the least-bad option until the {@code force}
+     * parameter is itself reconsidered.
+     */
     private void checkIsAdmin() {
         accessDecisionManager.decide( SecurityContextHolder.getContext().getAuthentication(), null, Collections.singletonList( new SecurityConfig( "GROUP_ADMIN" ) ) );
     }
