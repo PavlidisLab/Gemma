@@ -428,6 +428,78 @@ For an nf-core wrapper: same shape, but `process()` becomes a
 the output dir is scraped for `multiqc_data/general_stats.json` to
 fill `qcSummary`.
 
+### 5.1 Workflow-tool integration patterns
+
+Gemma's pipeline operations use **Nextflow**, **SLURM**, and **Luigi**.
+The event pattern is workflow-tool-agnostic — the worker is just a small
+bridge that subscribes to RabbitMQ and delegates to whichever tool fits:
+
+**Nextflow / nf-core**:
+```python
+def process(payload, ticketId):
+    work_dir = f"/scratch/gemma/{ticketId}"
+    subprocess.run([
+        "nextflow", "run", "nf-core/rnaseq",
+        "--input", f"{work_dir}/samplesheet.csv",
+        "--outdir", work_dir,
+        "-profile", "singularity",
+        "-resume",
+    ], check=True)
+    return scrape_multiqc(work_dir)
+```
+
+**SLURM**:
+```python
+def process(payload, ticketId):
+    job_id = subprocess.check_output([
+        "sbatch", "--parsable",
+        "--job-name", f"gemma-{ticketId}",
+        "--output", f"/scratch/gemma/{ticketId}/slurm-%j.out",
+        "--export", f"GEMMA_TICKET_ID={ticketId}",
+        "/opt/gemma/pipelines/rnaseq.sbatch",
+    ]).decode().strip()
+    # Poll squeue until job clears, OR register a SLURM completion-hook
+    # script that publishes the terminal event back to RabbitMQ
+    return wait_for_slurm(job_id)
+```
+
+The polling variant lives in the worker. The hook variant has the
+SLURM job itself publish the terminal event — better for long jobs
+that outlive worker processes. The hook script is one
+`amqplib_publish.py` invocation in the sbatch script's epilogue.
+
+**Luigi**:
+```python
+def process(payload, ticketId):
+    luigi.build([
+        ProcessRnaSeqTask(
+            ticket_id=ticketId,
+            sra_accession=payload["sraAccession"],
+            sample_accessions=payload["sampleAccessions"],
+            genome_build=payload["genomeBuild"],
+        )
+    ], workers=4, local_scheduler=False)  # talks to central scheduler
+```
+
+Luigi's task-completion hook (`@luigi.Task.event_handler(luigi.Event.SUCCESS)`)
+or the `WrapperTask` pattern can publish the terminal event directly,
+so the worker doesn't need to poll the scheduler.
+
+**Mix-and-match**: a single Gemma worker can route per-payload to
+different tools (e.g., `payload.runner == "nextflow"` → nf-core,
+`payload.runner == "slurm"` → sbatch). Or run multiple worker fleets,
+each pinned to one tool. Choice is operational — the event schema
+doesn't care.
+
+**Idempotency note specific to SLURM**: if a worker crashes after
+`sbatch` returned a job id but before publishing started-event,
+the SLURM job is still running unattended. Mitigation: SLURM
+job's epilogue script ALWAYS publishes the terminal event using
+the env-var `GEMMA_TICKET_ID` as the correlation key. Worker
+crashes become harmless — terminal event still arrives at the
+ingester even if its originating worker disappeared. (The same
+pattern works for Luigi via its task event_handler hooks.)
+
 ---
 
 ## 6. Phased adoption
