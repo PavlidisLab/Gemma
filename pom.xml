@@ -1361,9 +1361,11 @@
 		<!-- JUnit 5 (Jupiter) migration, Phase A: Jupiter + Vintage engine + Mockito-Jupiter
 		     run alongside the legacy junit:junit 4.13.2 transitive (from pavlab-starter-parent).
 		     Vintage engine lets the JUnit 5 Platform run the existing ~399 JUnit 4 test classes
-		     while new tests use Jupiter. Pinned at 5.11.4 to match the pre-existing vintage pin
-		     in gemma-rest/pom.xml (the Jersey 3 test framework already required it). -->
-		<junit.jupiter.version>5.11.4</junit.jupiter.version>
+		     while new tests use Jupiter. Aligned to 5.12.2 to match the spring-boot 3.5.6 BOM,
+		     which transitively pulls junit-jupiter-api/engine/params at 5.12.2 and
+		     junit-platform-* at 1.12.2; an older pin here (e.g. 5.11.4) splits the JUnit jars
+		     across versions and breaks the surefire fork with NoClassDefFoundError. -->
+		<junit.jupiter.version>5.12.2</junit.jupiter.version>
 		<!-- this ensures that -DexcludedGroups works properly -->
 		<excludedGroups/>
 		<skipJavadoc>false</skipJavadoc>

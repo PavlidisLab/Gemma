@@ -44,11 +44,10 @@ import java.util.List;
  * {@code applicationContext-serviceBeans.xml}. Activated only when the {@code metrics} Spring
  * profile is set; otherwise none of these beans are instantiated.
  * <p>
- * One intentional drop from the legacy XML: the {@code MeterRegistryEhcacheConfigurer} bean.
- * Its backing class was deleted during the Phase 2 EhCache 2 retirement and never replaced.
- * The metrics profile has been broken (would fail to start) since that change; carrying the
- * dead reference forward into Java would only fail at compile time. Reintroduce it in a
- * follow-up if cache metrics are needed.
+ * The legacy {@code MeterRegistryEhcacheConfigurer} (Ehcache 2.x API) was deleted in Phase 2
+ * along with the rest of the Ehcache 2 stack, which left the {@code metrics} profile broken
+ * until Phase 3. It is replaced here by {@link #meterRegistryJCacheConfigurer} which binds
+ * per-cache JSR-107 metrics from the new Ehcache 3 / JCache backend.
  */
 @Configuration
 @Profile("metrics")
