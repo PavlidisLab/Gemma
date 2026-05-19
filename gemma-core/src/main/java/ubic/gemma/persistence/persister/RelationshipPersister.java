@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.ExpressionExperimentSetDao;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationDao;
@@ -30,6 +31,7 @@ import ubic.gemma.persistence.util.BusinessKey;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Map;
 
 /**
  * Persist objects like Gene2GOAssociation.
@@ -55,17 +57,17 @@ public abstract class RelationshipPersister extends ExpressionPersister {
 
     @Override
     @SuppressWarnings("unchecked")
-    protected <T extends Identifiable> T doPersist( T entity, Caches caches ) {
+    protected <T extends Identifiable> T doPersist( T entity, Caches caches, Map<String, ExternalDatabase> xdbCache ) {
         if ( entity instanceof Gene2GOAssociation ) {
-            return ( T ) this.persistGene2GOAssociation( ( Gene2GOAssociation ) entity, caches );
+            return ( T ) this.persistGene2GOAssociation( ( Gene2GOAssociation ) entity, caches, xdbCache );
         } else if ( entity instanceof ExpressionExperimentSet ) {
-            return ( T ) this.persistExpressionExperimentSet( ( ExpressionExperimentSet ) entity, caches );
+            return ( T ) this.persistExpressionExperimentSet( ( ExpressionExperimentSet ) entity, caches, xdbCache );
         } else {
-            return super.doPersist( entity, caches );
+            return super.doPersist( entity, caches, xdbCache );
         }
     }
 
-    private ExpressionExperimentSet persistExpressionExperimentSet( ExpressionExperimentSet entity, Caches caches ) {
+    private ExpressionExperimentSet persistExpressionExperimentSet( ExpressionExperimentSet entity, Caches caches, Map<String, ExternalDatabase> xdbCache ) {
         // No static BusinessKey.find for ExpressionExperimentSet (the DAO-level find()
         // takes an ExpressionExperiment with different semantics — "sets containing this
         // EE"), so we keep the explicit member-persistence + create flow. Members
@@ -75,7 +77,7 @@ public abstract class RelationshipPersister extends ExpressionPersister {
 
         for ( ExpressionExperiment baSet : entity.getExperiments() ) {
             if ( baSet.getId() == null ) {
-                baSet = this.doPersist( baSet, caches );
+                baSet = this.doPersist( baSet, caches, xdbCache );
             }
             setMembers.add( baSet );
         }
@@ -85,10 +87,10 @@ public abstract class RelationshipPersister extends ExpressionPersister {
         return expressionExperimentSetDao.create( entity );
     }
 
-    private Gene2GOAssociation persistGene2GOAssociation( Gene2GOAssociation association, Caches caches ) {
+    private Gene2GOAssociation persistGene2GOAssociation( Gene2GOAssociation association, Caches caches, Map<String, ExternalDatabase> xdbCache ) {
         // Gene first — Gene2GOAssociation BK matches on gene + ontologyEntry, so the
         // gene side must be resolved to a managed instance before the lookup.
-        association.setGene( this.persistGene( association.getGene(), caches ) );
+        association.setGene( this.persistGene( association.getGene(), caches, xdbCache ) );
         Session session = getSessionFactory().getCurrentSession();
         Gene2GOAssociation existing = BusinessKey.find( session, association );
         return existing != null ? existing : gene2GoAssociationDao.create( association );
