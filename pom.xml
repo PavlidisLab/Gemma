@@ -165,11 +165,10 @@
 			</dependency>
 
 			<!--
-			Overrides retained AFTER BOM adoption. The Phase 2 Step 9 convergence pins for
-			httpcore 4.4.16, jakarta.xml.bind-api 4.0.2, glassfish-jaxb 4.0.5 and cache-api 1.1.1
-			have been dropped: Boot 3.3.13 manages all four at the exact versions Gemma had pinned.
-			What remains here is artifacts the BOM does not manage at all.
+			Overrides retained AFTER BOM adoption. Each entry is here because either (a) the BOM
+			does not manage the artifact, or (b) Gemma needs a different version than the BOM picks.
 			-->
+			<!-- (a) Not managed by Boot 3.3 BOM. -->
 			<dependency>
 				<groupId>org.hibernate.common</groupId>
 				<artifactId>hibernate-commons-annotations</artifactId>
@@ -189,6 +188,108 @@
 				<groupId>org.antlr</groupId>
 				<artifactId>antlr4-runtime</artifactId>
 				<version>4.13.2</version>
+			</dependency>
+			<!-- (b) BOM-managed but Gemma needs a different version. Each override below
+			     wins over the BOM's pick. dependencyConvergence requires the override to
+			     match every transitive arrival path - that's the whole point of pinning
+			     in dependencyManagement. -->
+			<!-- Jackson 2.21.x: Boot 3.3 BOM imports jackson-bom 2.17.3; Gemma needs 2.21.x for
+			     security fixes + jakarta-xmlbind module compatibility. Override the three core
+			     jars + datatypes that arrive transitively at 2.17.3. -->
+			<dependency>
+				<groupId>com.fasterxml.jackson.core</groupId>
+				<artifactId>jackson-core</artifactId>
+				<version>${jackson.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.fasterxml.jackson.core</groupId>
+				<artifactId>jackson-databind</artifactId>
+				<version>${jackson.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.fasterxml.jackson.core</groupId>
+				<artifactId>jackson-annotations</artifactId>
+				<version>${jackson-annotations.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.fasterxml.jackson.datatype</groupId>
+				<artifactId>jackson-datatype-jsr310</artifactId>
+				<version>${jackson.version}</version>
+			</dependency>
+			<!-- Hibernate 6.4.10: BOM ships 6.5.3.Final. Gemma stays on 6.4.x until a
+			     coordinated Hibernate minor bump (separate worktree). -->
+			<dependency>
+				<groupId>org.hibernate.orm</groupId>
+				<artifactId>hibernate-core</artifactId>
+				<version>${hibernate.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.hibernate.orm</groupId>
+				<artifactId>hibernate-jcache</artifactId>
+				<version>${hibernate.version}</version>
+			</dependency>
+			<!-- Micrometer 1.13.11: BOM imports micrometer-bom 1.13.15. Gemma's pavlab note
+			     flags issues on the 1.14 series; we hold 1.13.11 explicitly. -->
+			<dependency>
+				<groupId>io.micrometer</groupId>
+				<artifactId>micrometer-core</artifactId>
+				<version>${micrometer.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.micrometer</groupId>
+				<artifactId>micrometer-commons</artifactId>
+				<version>${micrometer.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.micrometer</groupId>
+				<artifactId>micrometer-observation</artifactId>
+				<version>${micrometer.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.micrometer</groupId>
+				<artifactId>micrometer-registry-jmx</artifactId>
+				<version>${micrometer.version}</version>
+			</dependency>
+			<!-- commons-* overrides: Gemma carries newer commons jars than Boot 3.3 BOM. -->
+			<dependency>
+				<groupId>org.apache.commons</groupId>
+				<artifactId>commons-lang3</artifactId>
+				<version>3.20.0</version>
+			</dependency>
+			<dependency>
+				<groupId>commons-codec</groupId>
+				<artifactId>commons-codec</artifactId>
+				<version>1.20.0</version>
+			</dependency>
+			<!-- aspectjweaver: Gemma 1.9.25.1 > BOM 1.9.24 (the .1 is a Gemma-relevant fix). -->
+			<dependency>
+				<groupId>org.aspectj</groupId>
+				<artifactId>aspectjweaver</artifactId>
+				<version>1.9.25.1</version>
+			</dependency>
+			<!-- commons-pool2: Gemma 2.13.1 > BOM 2.12.1. -->
+			<dependency>
+				<groupId>org.apache.commons</groupId>
+				<artifactId>commons-pool2</artifactId>
+				<version>2.13.1</version>
+			</dependency>
+			<!-- mysql-connector-j: Gemma pins 8.4.0 LTS; BOM has 8.3.0. -->
+			<dependency>
+				<groupId>com.mysql</groupId>
+				<artifactId>mysql-connector-j</artifactId>
+				<version>${mysql.version}</version>
+			</dependency>
+			<!-- log4j 2: pavlab-starter-parent pins ${log4j.version} = 2.25.3 (transitively
+			     reaching log4j-jcl / log4j-jul direct deps), BOM is on 2.23.1. We track parent. -->
+			<dependency>
+				<groupId>org.apache.logging.log4j</groupId>
+				<artifactId>log4j-jcl</artifactId>
+				<version>${log4j.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.logging.log4j</groupId>
+				<artifactId>log4j-jul</artifactId>
+				<version>${log4j.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
@@ -1001,10 +1102,13 @@
 		<gsec.version>0.0.23-RENOVATIONS-SNAPSHOT</gsec.version>
 		<!-- Spring Boot dependencies BOM (managed via dependencyManagement above). Boot 3.3.x
 		     line targets SF 6.1 + SS 6.3 + Hibernate 6.5, the closest fit to Gemma's current
-		     SF 6.1 / SS 6.3 / HB 6.4 stack. Do NOT bump to 3.4+ without also bumping
+		     SF 6.1.20 / SS 6.3.10 / HB 6.4.10 stack. Do NOT bump to 3.4+ without also bumping
 		     Spring Framework to 6.2 (see SPRING_BOOT_BOM_ADOPTION.md). -->
 		<spring-boot.version>3.3.13</spring-boot.version>
-		<spring.version>6.1.20</spring.version>
+		<!-- Bumped 6.1.20 -> 6.1.21 (patch) to match Boot 3.3.13's spring-framework.version,
+		     eliminating dependencyConvergence noise where transitives (e.g. gsec, spring-security)
+		     pulled the BOM's 6.1.21 against Gemma's 6.1.20 direct pins. -->
+		<spring.version>6.1.21</spring.version>
 		<spring.security.version>6.3.10</spring.security.version>
 		<hibernate.version>6.4.10.Final</hibernate.version>
 		<!-- Flyway 10.x split out database-specific modules; tests need flyway-database-h2.
