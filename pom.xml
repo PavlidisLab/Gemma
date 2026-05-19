@@ -669,6 +669,15 @@
 								Swagger bumps a minor version.
 								-->
 								<dependencyConvergence/>
+								<!--
+								Phase 3 build hygiene: catch the "forgot to bump one module's parent
+								version" failure mode of the hand-edited release ritual (see
+								RELEASING.md). reactorModuleConvergence fails at `mvn validate` if
+								any child module declares a <parent><version> that does not match
+								the reactor root, or if a module's own version drifts from the parent.
+								Built-in to maven-enforcer-plugin; no extra plugin dep needed.
+								-->
+								<reactorModuleConvergence/>
 							</rules>
 						</configuration>
 					</execution>
