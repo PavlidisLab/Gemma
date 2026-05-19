@@ -49,7 +49,7 @@ import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpre
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.core.security.authentication.UserManager;
-import ubic.gemma.core.security.authentication.UserService;
+import ubic.gemma.core.security.authentication.UserReadService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketService;
@@ -290,13 +290,13 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         }
 
         @Bean
-        public UserService userService() {
-            return mock( UserService.class );
+        public UserReadService userReadService() {
+            return mock( UserReadService.class );
         }
 
         @Bean
-        public TicketsWebService ticketsWebService( TicketService ticketService, UserManager userManager, UserService userService ) {
-            return new TicketsWebService( ticketService, userManager, userService );
+        public TicketsWebService ticketsWebService( TicketService ticketService, UserManager userManager, UserReadService userReadService ) {
+            return new TicketsWebService( ticketService, userManager, userReadService );
         }
     }
 

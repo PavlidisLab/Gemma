@@ -55,6 +55,11 @@ public class UserServiceImplTest extends BaseTest5 {
         }
 
         @Bean
+        public UserReadService userReadService( UserDao userDao, UserGroupDao userGroupDao ) {
+            return new UserReadServiceImpl( userDao, userGroupDao );
+        }
+
+        @Bean
         public UserDao userDao() {
             return mock();
         }

@@ -19,7 +19,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.security.access.prepost.PreAuthorize;
 import ubic.gemma.core.security.authentication.UserManager;
-import ubic.gemma.core.security.authentication.UserService;
+import ubic.gemma.core.security.authentication.UserReadService;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketEvent;
@@ -73,7 +73,7 @@ public class TicketsWebServiceTest {
     private UserManager userManager;
 
     @Mock
-    private UserService userService;
+    private UserReadService userReadService;
 
     @InjectMocks
     private TicketsWebService webService;
