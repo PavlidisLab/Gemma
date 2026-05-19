@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.genome.gene.GeneSetService;
+import ubic.gemma.persistence.service.genome.gene.GeneWriteService;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -53,6 +54,8 @@ public class NCBIGeneLoadingTest extends BaseSpringContextTest {
     private GeneSetService geneSetService;
     @Autowired
     private GeneProductService geneProductService;
+    @Autowired
+    private GeneWriteService geneWriteService;
 
     @Before
     public void setup() {
@@ -68,6 +71,7 @@ public class NCBIGeneLoadingTest extends BaseSpringContextTest {
     @Category(SlowTest.class)
     public void testGeneLoader() throws Exception {
         NcbiGeneLoader loader = new NcbiGeneLoader( persisterHelper );
+        loader.setGeneWriteService( geneWriteService );
         loader.setTaxonService( taxonService );
 
         String geneInfoTestFile = "/data/loader/genome/gene/gene_info.human.sample";

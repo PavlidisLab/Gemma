@@ -48,6 +48,7 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
+import ubic.gemma.persistence.service.genome.gene.GeneWriteService;
 
 import java.io.File;
 import java.io.IOException;
@@ -94,6 +95,9 @@ public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTe
 
     @Autowired
     private ArrayDesignProbeMapperService arrayDesignProbeMapperService;
+
+    @Autowired
+    private GeneWriteService geneWriteService;
 
     @Value("${entrez.efetch.apikey}")
     private String ncbiApiKey;
@@ -214,6 +218,7 @@ public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTe
         NcbiGeneLoader loader = new NcbiGeneLoader();
         loader.setTaxonService( taxonService );
         loader.setPersisterHelper( this.persisterHelper );
+        loader.setGeneWriteService( this.geneWriteService );
 
         String filePath = FileTools.resourceToPath( "/data/loader/genome/gene" );
 
