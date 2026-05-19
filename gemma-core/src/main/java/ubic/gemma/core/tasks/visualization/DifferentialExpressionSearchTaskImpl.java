@@ -37,7 +37,7 @@ import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpre
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.service.analysis.expression.diff.MissingResult;
 import ubic.gemma.persistence.service.analysis.expression.diff.NonRetainedResult;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetReadService;
 import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import java.util.*;
@@ -69,7 +69,7 @@ public class DifferentialExpressionSearchTaskImpl
     @Autowired
     private DifferentialExpressionResultService differentialExpressionResultService;
     @Autowired
-    private ExpressionExperimentSubSetService experimentSubSetService;
+    private ExpressionExperimentSubSetReadService experimentSubSetReadService;
 
     @Override
     public TaskResult call() {
@@ -533,7 +533,7 @@ public class DifferentialExpressionSearchTaskImpl
         if ( analysis.isSubset() ) {
 
             Long eeid = analysis.getExperimentAnalyzedId();
-            keepForSubSet = this.experimentSubSetService.getFactorValuesUsed( eeid, experimentalFactor );
+            keepForSubSet = this.experimentSubSetReadService.getFactorValuesUsedAsVO( eeid, experimentalFactor );
             // could this be empty?
             if ( keepForSubSet.isEmpty() ) {
                 DifferentialExpressionSearchTaskImpl.log

@@ -38,7 +38,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.analysis.expression.diff.GeneDiffExMetaAnalysisService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetReadService;
 
 import java.util.*;
 
@@ -57,7 +57,7 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
     private CompositeSequenceService compositeSequenceService;
 
     @Autowired
-    private ExpressionExperimentSubSetService expressionExperimentSubSetService;
+    private ExpressionExperimentSubSetReadService expressionExperimentSubSetReadService;
 
     @Autowired
     private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
@@ -609,7 +609,7 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
         if ( experimentAnalyzed instanceof ExpressionExperimentSubSet ) {
 
             ExpressionExperimentSubSet eesubset = ( ExpressionExperimentSubSet ) experimentAnalyzed;
-            Collection<FactorValue> factorValuesUsed = expressionExperimentSubSetService
+            Collection<FactorValue> factorValuesUsed = expressionExperimentSubSetReadService
                     .getFactorValuesUsed( eesubset, factor );
             if ( factorValuesUsed.size() > 2 ) {
                 throw new IllegalArgumentException(
