@@ -1,3 +1,15 @@
+## Spring-MVC legacy cruft — SimpleFormController shim (2026-05-19)
+
+**Case**: PR [#508](https://github.com/PavlidisLab/Gemma/pull/508) ("Move to Spring 4", still OPEN as of 2026-05-19) flagged Spring's removal of `SimpleFormController` as a migration blocker years ago. The shim `gemma-web/src/main/java/ubic/gemma/web/compat/SimpleFormController.java` (96 LoC, the sole file in the `compat/` package) was created as a compile-time stand-in. Today, exactly one caller remains: `ArrayDesignFormController` (167 LoC, carrying a FIXME marker pointing back at the same problem).
+
+**Why it matters**: 263 LoC of legacy Spring-MVC cruft that has no real users — the controller is part of `gemma-web` which is on the chopping block (`project_gemma_web_replacement.md`). PR #508 and Issue #116 ("Migrate to Spring 5") were both filed to plan this work; we're now four major Spring versions past their target (current: Spring 6.2 / Hibernate 6.6 / Spring Security 6.5).
+
+**Lesson**: When `gemma-web` is retired, the entire `web/compat/` package and `ArrayDesignFormController` go with it. No separate cleanup needed.
+
+**Fix scope**: 0 LoC needed now; deletion happens automatically with gemma-web retirement. **TODO**: close GitHub PR #508 + Issue #116 with a "superseded by Phase 3" comment.
+
+---
+
 ## ArrayDesignReportServiceTest baseline failures (2026-05-19)
 
 **Case**: 3/3 tests in `ArrayDesignReportServiceTest` fail with `assertTrue(!report.equals("[None]"))` at lines 78/88/98 — the SUT's `getLast*Event(id)` returns the no-event sentinel even though `setUp()` has explicitly inserted 5 typed `AuditEvent`s via `AuditTrailService.addUpdateEvent(...)`.
