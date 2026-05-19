@@ -11,18 +11,32 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
+import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.core.search.SearchException;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
+import ubic.gemma.model.expression.experiment.ExperimentalDesignValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -30,7 +44,10 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedMap;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 
 /**
@@ -202,4 +219,86 @@ public interface ExpressionExperimentReadService {
      */
     @Nullable
     Taxon getTaxon( ExpressionExperiment expressionExperiment );
+
+    // ---------------------------------------------------------------------
+    // Phase 1.5 -- bucket B (counts / reporting / VOs) + bucket G
+    // (filter/search infra). These methods were moved bodily from
+    // ExpressionExperimentServiceImpl in the Phase 3 decomposition;
+    // the facade delegates to this service.
+    // ---------------------------------------------------------------------
+
+    List<ExpressionExperiment> browse( int start, int limit );
+
+    Collection<Long> filter( String searchString ) throws SearchException;
+
+    Collection<Long> filterByTaxon( Collection<Long> ids, Taxon taxon );
+
+    Map<Long, Long> getAnnotationCountsByIds( Collection<Long> ids );
+
+    @Nullable
+    ExperimentalDesignValueObject getExperimentalDesignValueObject( ExpressionExperiment ee );
+
+    Set<AnnotationValueObject> getAnnotations( ExpressionExperiment expressionExperiment );
+
+    Set<AnnotationValueObject> getAnnotations( ExpressionExperimentSubSet ee );
+
+    Filters getEnhancedFilters( Filters f, @Nullable Collection<OntologyTerm> mentionedTerms, @Nullable Collection<OntologyTerm> inferredTerms, long timeout, TimeUnit timeUnit ) throws TimeoutException;
+
+    Map<BioAssay, Long> getNumberOfDesignElementsPerSample( ExpressionExperiment expressionExperiment );
+
+    List<Long> loadIdsWithCache( @Nullable Filters filters, @Nullable Sort sort );
+
+    long countWithCache( @Nullable Filters filters, @Nullable Set<Long> extraIds );
+
+    Slice<ExpressionExperimentValueObject> loadValueObjectsWithCache( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
+
+    Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Filters filters, @Nullable Set<Long> extraIds, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris, int maxResults );
+
+    List<ExpressionExperimentService.CharacteristicWithUsageStatisticsAndOntologyTerm> getAnnotationsUsageFrequency( @Nullable Filters filters, @Nullable Set<Long> extraIds, @Nullable String category, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, int minFrequency, @Nullable Collection<String> retainedTermUris, int maxResults, boolean includePredicates, boolean includeObjects, long timeout, TimeUnit timeUnit ) throws TimeoutException;
+
+    Map<TechnologyType, Long> getTechnologyTypeUsageFrequency( @Nullable Filters filters, @Nullable Set<Long> extraIds );
+
+    Map<ArrayDesign, Long> getArrayDesignUsedOrOriginalPlatformUsageFrequency( @Nullable Filters filters, @Nullable Set<Long> extraIds, int maxResults );
+
+    Map<Taxon, Long> getTaxaUsageFrequency( @Nullable Filters filters, @Nullable Set<Long> extraIds );
+
+    long getBioMaterialCount( ExpressionExperiment expressionExperiment );
+
+    long getRawDataVectorCount( ExpressionExperiment ee );
+
+    Collection<ExpressionExperiment> getExperimentsWithOutliers();
+
+    Map<Long, Date> getLastArrayDesignUpdate( Collection<ExpressionExperiment> expressionExperiments );
+
+    Date getLastArrayDesignUpdate( ExpressionExperiment ee );
+
+    Map<Long, AuditEvent> getLastLinkAnalysis( Collection<Long> ids );
+
+    Map<Long, AuditEvent> getLastMissingValueAnalysis( Collection<Long> ids );
+
+    Map<Long, AuditEvent> getLastProcessedDataUpdate( Collection<Long> ids );
+
+    Map<Taxon, Long> getPerTaxonCount();
+
+    Map<Long, Long> getPopulatedFactorCounts( Collection<Long> ids );
+
+    Map<Long, Long> getPopulatedFactorCountsExcludeBatch( Collection<Long> ids );
+
+    Map<ExpressionExperiment, Collection<AuditEvent>> getSampleRemovalEvents( Collection<ExpressionExperiment> expressionExperiments );
+
+    Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( @Nullable Collection<Long> ids, @Nullable Taxon taxon, @Nullable Sort sort, int offset, int limit );
+
+    Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsWithCache( Collection<Long> ids, @Nullable Taxon taxon, @Nullable Sort sort, int offset, int limit );
+
+    List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsByIds( Collection<Long> ids );
+
+    List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsByIdsWithCache( Collection<Long> ids );
+
+    Slice<ExpressionExperimentValueObject> loadBlacklistedValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
+
+    List<ExpressionExperimentValueObject> loadValueObjectsByIdsWithRelationsAndCache( List<Long> ids );
+
+    List<ExpressionExperimentValueObject> loadValueObjectsByIds( List<Long> ids, boolean maintainOrder );
+
+    long countBioMaterials( @Nullable Filters filters );
 }
