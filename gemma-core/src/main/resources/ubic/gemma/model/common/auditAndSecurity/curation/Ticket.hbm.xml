@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hibernate-mapping xmlns="http://www.hibernate.org/xsd/hibernate-mapping"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.hibernate.org/xsd/hibernate-mapping http://hibernate.org/xsd/hibernate-mapping-4.0.xsd">
+
+    <!--
+        Phase B-1 of AUDIT_AS_WORKFLOW_RECCE.md. Ticket is Auditable
+        (Decision 6) so it owns an AuditTrail just like Investigation /
+        ArrayDesign / UserGroup. Title is stored in the inherited NAME
+        column from AbstractDescribable; the Java accessors expose it as
+        getTitle()/setTitle().
+    -->
+    <class name="ubic.gemma.model.common.auditAndSecurity.curation.Ticket" table="TICKET">
+        <cache usage="read-write"/>
+        <id name="id" type="java.lang.Long" unsaved-value="null">
+            <column name="ID" sql-type="BIGINT"/>
+            <generator class="native"/>
+        </id>
+        <many-to-one name="auditTrail" class="ubic.gemma.model.common.auditAndSecurity.AuditTrail"
+                     cascade="all" lazy="proxy" fetch="select">
+            <column name="AUDIT_TRAIL_FK" not-null="true" sql-type="BIGINT" unique="true"/>
+        </many-to-one>
+        <!-- title (Ticket.getTitle is a thin alias for getName) -->
+        <property name="name" type="java.lang.String">
+            <column name="NAME" not-null="true" unique="false"
+                    sql-type="VARCHAR(255)" index="TICKET_NAME"/>
+        </property>
+        <property name="description" type="org.hibernate.type.MaterializedClobType">
+            <column name="DESCRIPTION" not-null="false" unique="false" sql-type="text"/>
+        </property>
+        <property name="type">
+            <column name="TYPE" not-null="true" sql-type="VARCHAR(64)" index="TICKET_TYPE"/>
+            <type name="org.hibernate.type.EnumType">
+                <param name="enumClass">ubic.gemma.model.common.auditAndSecurity.curation.TicketType</param>
+                <param name="useNamed">true</param>
+            </type>
+        </property>
+        <property name="state">
+            <column name="STATE" not-null="true" sql-type="VARCHAR(32)" index="TICKET_STATE"/>
+            <type name="org.hibernate.type.EnumType">
+                <param name="enumClass">ubic.gemma.model.common.auditAndSecurity.curation.TicketState</param>
+                <param name="useNamed">true</param>
+            </type>
+        </property>
+        <property name="priority">
+            <column name="PRIORITY" not-null="true" sql-type="VARCHAR(16)"/>
+            <type name="org.hibernate.type.EnumType">
+                <param name="enumClass">ubic.gemma.model.common.auditAndSecurity.curation.TicketPriority</param>
+                <param name="useNamed">true</param>
+            </type>
+        </property>
+        <property name="dueDate" type="java.util.Date">
+            <column name="DUE_DATE" not-null="false" sql-type="DATETIME(3)"/>
+        </property>
+        <property name="createdAt" type="java.util.Date">
+            <column name="CREATED_AT" not-null="true" sql-type="DATETIME(3)"/>
+        </property>
+        <property name="updatedAt" type="java.util.Date">
+            <column name="UPDATED_AT" not-null="true" sql-type="DATETIME(3)"/>
+        </property>
+        <property name="externalIssueUrl" type="java.lang.String">
+            <column name="EXTERNAL_ISSUE_URL" not-null="false" sql-type="VARCHAR(512)"/>
+        </property>
+        <property name="externalIssueSyncState">
+            <column name="EXTERNAL_ISSUE_SYNC_STATE" not-null="true" sql-type="VARCHAR(16)"/>
+            <type name="org.hibernate.type.EnumType">
+                <param name="enumClass">ubic.gemma.model.common.auditAndSecurity.curation.ExternalIssueSyncState</param>
+                <param name="useNamed">true</param>
+            </type>
+        </property>
+        <many-to-one name="reporter" class="ubic.gemma.model.common.auditAndSecurity.Contact"
+                     lazy="proxy" fetch="select">
+            <column name="REPORTER_FK" not-null="true" sql-type="BIGINT"/>
+        </many-to-one>
+        <many-to-one name="assignee" class="ubic.gemma.model.common.auditAndSecurity.Contact"
+                     lazy="proxy" fetch="select">
+            <column name="ASSIGNEE_FK" not-null="false" sql-type="BIGINT"/>
+        </many-to-one>
+        <set name="targets" lazy="true" fetch="select" cascade="all,delete-orphan" inverse="true">
+            <key foreign-key="TICKET_TARGET_TICKET_FKC">
+                <column name="TICKET_FK" sql-type="BIGINT" not-null="true"/>
+            </key>
+            <one-to-many class="ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget"/>
+        </set>
+        <set name="events" lazy="true" fetch="select" cascade="all,delete-orphan" inverse="true" order-by="OCCURRED_AT">
+            <key foreign-key="TICKET_EVENT_TICKET_FKC">
+                <column name="TICKET_FK" sql-type="BIGINT" not-null="true"/>
+            </key>
+            <one-to-many class="ubic.gemma.model.common.auditAndSecurity.curation.TicketEvent"/>
+        </set>
+    </class>
+</hibernate-mapping>
