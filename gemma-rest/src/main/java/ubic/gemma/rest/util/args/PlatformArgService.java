@@ -83,4 +83,23 @@ public class PlatformArgService extends AbstractEntityArgService<ArrayDesign, Ar
         Filters filters = Filters.by( csService.getFilter( "arrayDesign.id", Long.class, Filter.Operator.eq, ad.getId() ) );
         return csService.loadValueObjectsByCursor( filters, csService.getSort( "id", Sort.Direction.ASC, Sort.NullMode.LAST ), cursor, limit );
     }
+
+    /**
+     * Cursor-mode counterpart to {@link #getExperiments(PlatformArg, int, int)}: keyset pagination
+     * over the {@link ExpressionExperimentValueObject datasets} that use a single platform,
+     * always sorted by ascending {@code id} (the primary key, indexed and unique) — see
+     * {@code CURSOR_PAGINATION_STEP1_PLAN.md} step 1f. The path-derived
+     * {@code bioAssays.arrayDesignUsed.id = ?} constraint is preserved (composed into the
+     * {@link Filters} before the DAO call) so the cursor-mode result is restricted to the same
+     * platform that the offset-mode result would be. The legacy offset-mode {@code Sort} keyed
+     * off {@code bioAssays.arrayDesignUsed.id} (not stable for keyset pagination); cursor mode
+     * tightens this to an explicit id-asc sort because the cursor DAO currently restricts
+     * cursors to single-component id sorts (recce sec. 3.4 — to be lifted in phase B once the
+     * index audit is complete).
+     */
+    public CursorPage<ExpressionExperimentValueObject> getExperimentsByCursor( PlatformArg<?> arg, @Nullable Cursor cursor, int limit ) {
+        ArrayDesign ad = this.getEntity( arg );
+        Filters filters = Filters.by( eeService.getFilter( "bioAssays.arrayDesignUsed.id", Long.class, Filter.Operator.eq, ad.getId() ) );
+        return eeService.loadValueObjectsByCursor( filters, eeService.getSort( "id", Sort.Direction.ASC, Sort.NullMode.LAST ), cursor, limit );
+    }
 }

@@ -76,14 +76,19 @@ public class PlatformsWebServiceTest extends BaseJerseyIntegrationTest {
 
     @Test
     public void testPlatformDatasets() {
-        PaginatedResponseDataObject<ExpressionExperimentValueObject> response = platformsWebService.getPlatformDatasets(
+        Object response = platformsWebService.getPlatformDatasets(
                 PlatformArg.valueOf( this.arrayDesign.getId().toString() ),
                 OffsetArg.valueOf( "0" ),
-                LimitArg.valueOf( "20" ) );
+                LimitArg.valueOf( "20" ),
+                null /* cursor */ );
         assertThat( response )
+                .isInstanceOf( PaginatedResponseDataObject.class )
                 .hasFieldOrPropertyWithValue( "offset", 0 )
                 .hasFieldOrPropertyWithValue( "limit", 20 );
-        assertThat( response.getData() )
+        @SuppressWarnings("unchecked")
+        PaginatedResponseDataObject<ExpressionExperimentValueObject> page =
+                ( PaginatedResponseDataObject<ExpressionExperimentValueObject> ) response;
+        assertThat( page.getData() )
                 .singleElement()
                 .hasFieldOrPropertyWithValue( "id", expressionExperiment.getId() );
     }

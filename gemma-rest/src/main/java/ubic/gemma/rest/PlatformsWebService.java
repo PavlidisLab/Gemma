@@ -194,12 +194,36 @@ public class PlatformsWebService {
     @GET
     @Path("/{platform}/datasets")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve all experiments using a given platform")
-    public PaginatedResponseDataObject<ExpressionExperimentValueObject> getPlatformDatasets( // Params:
+    @Operation(summary = "Retrieve all experiments using a given platform",
+            description = "Supports two pagination modes. Legacy mode: pass `offset` (and `limit`); response includes `offset` and `totalElements`. "
+                    + "Cursor mode (recommended for deep pagination and consistency under writes): pass an opaque `cursor` token from a previous response's `nextCursor` / `prevCursor` field. "
+                    + "`offset` and `cursor` are mutually exclusive — passing a non-null `cursor` selects cursor mode. "
+                    + "In cursor mode the result is always sorted by ascending `id` (legacy offset mode keys off `bioAssays.arrayDesignUsed.id`; cursor mode forces a single-component id sort pending the indexed-column audit in phase B); the `bioAssays.arrayDesignUsed.id = ?` constraint is preserved; `totalElements` is `null` by default (no count query per request).",
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(schema = @Schema(oneOf = {
+                                    PaginatedResponseDataObject.class,
+                                    CursorPaginatedResponseDataObject.class
+                            }))),
+            })
+    public Object getPlatformDatasets( // Params:
             @PathParam("platform") PlatformArg<?> platformArg, // Required
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
-            @QueryParam("limit") @DefaultValue("20") LimitArg limit // Optional, default 20
+            @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
+            @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg
     ) {
+        if ( cursorArg != null ) {
+            // Mutual-exclusion: a non-null cursor selects cursor mode. The default offset=0 is
+            // not considered user-supplied (parallels GET /platforms/{platform}/elements step 1e).
+            // In cursor mode we currently force a +id sort (PlatformArgService.getExperimentsByCursor)
+            // — the DAO restricts cursors to single-component id sorts until the index audit lands.
+            // The path-derived bioAssays.arrayDesignUsed.id filter is composed into the Filters
+            // inside getExperimentsByCursor so the platform scope is enforced identically in both
+            // modes.
+            CursorPage<ExpressionExperimentValueObject> page = arrayDesignArgService.getExperimentsByCursor(
+                    platformArg, cursorArg.getValue(), limit.getValue() );
+            return paginateByCursor( page, new String[] { "id" } );
+        }
         return paginate( arrayDesignArgService.getExperiments( platformArg, limit.getValue(), offset.getValue() ), new String[] { "id" } );
     }
 
