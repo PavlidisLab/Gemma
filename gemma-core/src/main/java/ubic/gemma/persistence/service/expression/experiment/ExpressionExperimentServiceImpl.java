@@ -24,6 +24,9 @@ import org.springframework.security.access.ConfigAttribute;
 import org.springframework.security.access.SecurityConfig;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
+import ubic.gemma.model.association.GOEvidenceCode;
+import org.apache.commons.lang3.StringUtils;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -86,6 +89,10 @@ public class ExpressionExperimentServiceImpl
     private ExpressionExperimentReadService readService;
     @Autowired
     private ExpressionExperimentWriteService writeService;
+    @Autowired
+    private ubic.gemma.persistence.service.common.description.CharacteristicService characteristicService;
+    @Autowired
+    private ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService auditTrailService;
 
     @Autowired
     public ExpressionExperimentServiceImpl( ExpressionExperimentDao expressionExperimentDao ) {
