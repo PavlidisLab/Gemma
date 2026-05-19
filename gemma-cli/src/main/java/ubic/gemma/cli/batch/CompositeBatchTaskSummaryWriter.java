@@ -1,6 +1,5 @@
 package ubic.gemma.cli.batch;
 
-import lombok.SneakyThrows;
 import lombok.extern.apachecommons.CommonsLog;
 
 import java.io.IOException;
@@ -16,7 +15,6 @@ public class CompositeBatchTaskSummaryWriter implements BatchTaskSummaryWriter {
     }
 
     @Override
-    @SneakyThrows
     public void write( BatchTaskProcessingResult result ) throws IOException {
         Exception firstException = null;
         for ( BatchTaskSummaryWriter writer : writers ) {
@@ -31,12 +29,11 @@ public class CompositeBatchTaskSummaryWriter implements BatchTaskSummaryWriter {
             }
         }
         if ( firstException != null ) {
-            throw firstException;
+            throwAsIOException( firstException );
         }
     }
 
     @Override
-    @SneakyThrows
     public void close() throws IOException {
         Exception firstException = null;
         for ( BatchTaskSummaryWriter writer : writers ) {
@@ -51,7 +48,23 @@ public class CompositeBatchTaskSummaryWriter implements BatchTaskSummaryWriter {
             }
         }
         if ( firstException != null ) {
-            throw firstException;
+            throwAsIOException( firstException );
+        }
+    }
+
+    /**
+     * Re-raise an exception caught from a delegate writer. {@link BatchTaskSummaryWriter#write} and
+     * {@link BatchTaskSummaryWriter#close} are only declared to throw {@link IOException}, so any
+     * non-IOException checked exception (which delegates should not be raising) is wrapped.
+     * Runtime exceptions pass through unchanged.
+     */
+    private static void throwAsIOException( Exception e ) throws IOException {
+        if ( e instanceof IOException ) {
+            throw ( IOException ) e;
+        } else if ( e instanceof RuntimeException ) {
+            throw ( RuntimeException ) e;
+        } else {
+            throw new IOException( e );
         }
     }
 }

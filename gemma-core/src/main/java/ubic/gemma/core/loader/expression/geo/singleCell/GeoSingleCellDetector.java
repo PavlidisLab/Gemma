@@ -1,6 +1,5 @@
 package ubic.gemma.core.loader.expression.geo.singleCell;
 
-import lombok.SneakyThrows;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.Strings;
@@ -402,23 +401,33 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
         return downloadSamplesInParallel( series, SingleCellDataType.MEX );
     }
 
-    // this exception cannot be raised since we're downloading a specific file
-    @SneakyThrows(NoSingleCellDataFoundException.class)
+    /**
+     * Download a specific supplementary file for the given data type.
+     * <p>
+     * Because a specific file is named, the underlying detectors should never raise
+     * {@link NoSingleCellDataFoundException}; if one does anyway it indicates a programming error
+     * (the named file truly did not exist) and is surfaced as an {@link IllegalStateException}.
+     */
     public void downloadSingleCellData( GeoSeries series, SingleCellDataType dataType, String supplementaryFile ) throws IOException {
-        switch ( dataType ) {
-            case ANNDATA:
-                download( () -> annDataDetector.downloadSingleCellData( series, supplementaryFile ) );
-                break;
-            case SEURAT_DISK:
-                download( () -> seuratDiskDetector.downloadSingleCellData( series, supplementaryFile ) );
-                break;
-            case LOOM:
-                download( () -> loomDetector.downloadSingleCellData( series, supplementaryFile ) );
-                break;
-            case MEX:
-                throw new UnsupportedOperationException( "Downloading a specific supplementary file for " + dataType + " is not supported." );
-            default:
-                throw new IllegalArgumentException( "Unknown single-cell data type " + dataType );
+        try {
+            switch ( dataType ) {
+                case ANNDATA:
+                    download( () -> annDataDetector.downloadSingleCellData( series, supplementaryFile ) );
+                    break;
+                case SEURAT_DISK:
+                    download( () -> seuratDiskDetector.downloadSingleCellData( series, supplementaryFile ) );
+                    break;
+                case LOOM:
+                    download( () -> loomDetector.downloadSingleCellData( series, supplementaryFile ) );
+                    break;
+                case MEX:
+                    throw new UnsupportedOperationException( "Downloading a specific supplementary file for " + dataType + " is not supported." );
+                default:
+                    throw new IllegalArgumentException( "Unknown single-cell data type " + dataType );
+            }
+        } catch ( NoSingleCellDataFoundException e ) {
+            // Should not happen: a specific supplementary file was named.
+            throw new IllegalStateException( "Named supplementary file was not found for " + dataType + ": " + supplementaryFile, e );
         }
     }
 
