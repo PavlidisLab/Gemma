@@ -210,6 +210,33 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
     }
 
     /**
+     * Cursor-mode counterpart to {@link #getSamples(DatasetArg)} for the {@code GET
+     * /datasets/{dataset}/samples} endpoint — see {@code CURSOR_PAGINATION_STEP1_PLAN.md}
+     * step 1k. Walks the EE→bioAssays association directly via
+     * {@link BioAssayService#loadValueObjectsByCursorForExpressionExperiment(ExpressionExperiment, Cursor, int)};
+     * always sorts by ascending {@code id} (the primary key, indexed and unique). The
+     * {@code thawLite} step is intentionally omitted in cursor mode because the keyset
+     * HQL fetches the assays directly (it doesn't iterate {@code ee.getBioAssays()} as
+     * a lazy collection). Outliers are populated post-hoc on the returned page's data,
+     * matching the offset-mode VO shape.
+     * <p>
+     * Note: this branch is taken only when no {@code quantitationType} / {@code
+     * useProcessedQuantitationType} parameter is supplied — see
+     * {@link ubic.gemma.rest.DatasetsWebService#getDatasetSamples}. The QT-narrowed
+     * variants intentionally remain offset-mode (they sort by
+     * {@code BioAssay::getName} and apply a {@link BioAssayDimension} restriction that
+     * is not expressible as an {@code id}-only cursor).
+     */
+    public CursorPage<BioAssayValueObject> getSamplesByCursor( DatasetArg<?> arg, @Nullable Cursor cursor, int limit ) {
+        ExpressionExperiment ee = this.getEntity( arg );
+        CursorPage<BioAssayValueObject> page = baService.loadValueObjectsByCursorForExpressionExperiment( ee, cursor, limit );
+        // populateOutliers takes the underlying VOs in place; the CursorPage's data
+        // list is what it iterates (CursorPage IS-A List<VO>).
+        populateOutliers( ee, page );
+        return page;
+    }
+
+    /**
      * Obtain a collection of BioAssays that represent the experiments samples for a particular quantitation type.
      */
     public List<BioAssayValueObject> getSamples( DatasetArg<?> datasetArg, QuantitationType qt ) {

@@ -24,10 +24,13 @@ import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDao;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialDao;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
+import ubic.gemma.persistence.util.Cursor;
+import ubic.gemma.persistence.util.CursorPage;
 
 import org.springframework.lang.Nullable;
 import java.util.*;
@@ -155,6 +158,13 @@ public class BioAssayServiceImpl extends AbstractFilteringVoEnabledService<BioAs
                 .stream()
                 .collect( Collectors.toMap( vo -> arrayDesigns.get( vo.getId() ), Function.identity() ) );
         return bioAssayDao.loadValueObjects( entities, ba2vo, assay2sourceAssayMap, basic, allFactorValues );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CursorPage<BioAssayValueObject> loadValueObjectsByCursorForExpressionExperiment(
+            ExpressionExperiment ee, @Nullable Cursor cursor, int limit ) {
+        return bioAssayDao.loadValueObjectsByCursorForExpressionExperiment( ee, cursor, limit );
     }
 
     private void handleAddBioMaterialAssociation( BioAssay bioAssay, BioMaterial bioMaterial ) {

@@ -24,7 +24,10 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
+import ubic.gemma.persistence.util.Cursor;
+import ubic.gemma.persistence.util.CursorPage;
 
 import org.springframework.lang.Nullable;
 import java.util.Collection;
@@ -52,4 +55,24 @@ public interface BioAssayDao extends FilteringVoEnabledDao<BioAssay, BioAssayVal
             @Nullable Map<ArrayDesign, ArrayDesignValueObject> ad2vo,
             @Nullable Map<BioAssay, BioAssay> assay2sourceAssayMap,
             boolean basic, boolean allFactorValues );
+
+    /**
+     * Cursor-paged listing of {@link BioAssayValueObject}s for a single
+     * {@link ExpressionExperiment}, sorted by ascending {@code id} — see
+     * {@code CURSOR_PAGINATION_STEP1_PLAN.md} step 1k.
+     * <p>
+     * {@link BioAssayDao} extends the no-op filtering base class
+     * ({@code AbstractNoopFilteringVoEnabledDao}) and therefore cannot reuse the standard
+     * {@link FilteringVoEnabledDao#loadValueObjectsByCursor(ubic.gemma.persistence.util.Filters,
+     * ubic.gemma.persistence.util.Sort, Cursor, int)} machinery — the unified Filter→HQL
+     * compiler isn't wired through for BioAssays. We instead emit a focused keyset HQL
+     * query that walks {@code ee.bioAssays} (the EE-scope is the path-derived constraint
+     * for {@code GET /datasets/{dataset}/samples}). The cursor predicate is appended as
+     * {@code ba.id > :cursor} (ASC; reversed for BACKWARD cursors); we fetch
+     * {@code limit + 1} rows to detect the next page; {@code totalElements} is left
+     * {@code null} (cursor mode skips the {@code COUNT(*)} per request, matching the rest
+     * of the cursor surface).
+     */
+    CursorPage<BioAssayValueObject> loadValueObjectsByCursorForExpressionExperiment(
+            ExpressionExperiment ee, @Nullable Cursor cursor, int limit );
 }

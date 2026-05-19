@@ -28,11 +28,14 @@ import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableBaseService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableFilteringVoEnabledService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
+import ubic.gemma.persistence.util.Cursor;
+import ubic.gemma.persistence.util.CursorPage;
 
 import javax.annotation.CheckReturnValue;
 import org.springframework.lang.Nullable;
@@ -117,4 +120,16 @@ public interface BioAssayService extends SecurableBaseService<BioAssay>, Securab
      * @see BioAssayDao#loadValueObjects(Collection, Map, Map, boolean, boolean)
      */
     List<BioAssayValueObject> loadValueObjects( Collection<BioAssay> entities, @Nullable Map<BioAssay, BioAssay> assay2sourceAssayMap, boolean basic, boolean allFactorValues );
+
+    /**
+     * Cursor-mode counterpart to the legacy unpaginated {@code BioAssayDao} EE-scoped
+     * sample listing — see {@code CURSOR_PAGINATION_STEP1_PLAN.md} step 1k. Always sorts
+     * by ascending {@code id} (primary key, indexed and unique); the cursor DAO restricts
+     * cursors to single-component id sorts until the index audit lands.
+     *
+     * @see BioAssayDao#loadValueObjectsByCursorForExpressionExperiment(ExpressionExperiment, Cursor, int)
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    CursorPage<BioAssayValueObject> loadValueObjectsByCursorForExpressionExperiment(
+            ExpressionExperiment ee, @Nullable Cursor cursor, int limit );
 }
