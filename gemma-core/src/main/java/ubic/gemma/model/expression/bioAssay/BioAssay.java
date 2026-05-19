@@ -18,6 +18,11 @@
  */
 package ubic.gemma.model.expression.bioAssay;
 
+import org.hibernate.search.engine.backend.types.Projectable;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexedEmbedded;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.DescribableUtils;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
@@ -34,7 +39,12 @@ import java.util.Date;
  * Represents the bringing together of a biomaterial with an assay of some sort (typically an expression assay). We
  * don't distinguish between "physical" and "computational" BioAssays, so this is a concrete class. This has several
  * slots that are used specifically to support sequence-based data, but is intended to be generic.
+ * <p>
+ * Hibernate Search 7 mapping: indexed root and embedded contributor via
+ * {@link ExpressionExperiment#getBioAssays()}. Carries shortName, name, description, accession, and
+ * the {@link BioMaterial sampleUsed} subgraph (whose characteristics feed dataset free-text search).
  */
+@Indexed
 public class BioAssay extends AbstractDescribable implements SecuredChild<ExpressionExperiment> {
 
     public static final int MAX_NAME_LENGTH = 255;
@@ -174,11 +184,13 @@ public class BioAssay extends AbstractDescribable implements SecuredChild<Expres
     }
 
     @Override
+    @DocumentId
     public Long getId() {
         return super.getId();
     }
 
     @Nullable
+    @FullTextField
     public String getShortName() {
         return shortName;
     }
@@ -188,16 +200,19 @@ public class BioAssay extends AbstractDescribable implements SecuredChild<Expres
     }
 
     @Override
+    @FullTextField
     public String getName() {
         return super.getName();
     }
 
     @Override
+    @FullTextField(projectable = Projectable.YES)
     public String getDescription() {
         return super.getDescription();
     }
 
     @Nullable
+    @IndexedEmbedded
     public DatabaseEntry getAccession() {
         return this.accession;
     }
@@ -231,6 +246,7 @@ public class BioAssay extends AbstractDescribable implements SecuredChild<Expres
         this.processingDate = processingDate;
     }
 
+    @IndexedEmbedded
     public BioMaterial getSampleUsed() {
         return this.sampleUsed;
     }

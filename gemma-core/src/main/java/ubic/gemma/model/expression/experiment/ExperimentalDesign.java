@@ -18,6 +18,11 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import org.hibernate.search.engine.backend.types.Projectable;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexedEmbedded;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 import ubic.gemma.model.common.description.Characteristic;
@@ -26,6 +31,13 @@ import org.springframework.lang.Nullable;
 import jakarta.persistence.Transient;
 import java.util.Set;
 
+/**
+ * Hibernate Search 7 mapping: indexed root and embedded contributor to
+ * {@link ExpressionExperiment#getExperimentalDesign()}. The deep
+ * {@code experimentalFactors.factorValues.characteristics.{value,valueUri}} path on EE
+ * runs through this entity.
+ */
+@Indexed
 public class ExperimentalDesign extends AbstractDescribable implements SecuredChild<ExpressionExperiment> {
 
     private String replicateDescription;
@@ -38,16 +50,19 @@ public class ExperimentalDesign extends AbstractDescribable implements SecuredCh
     private ExpressionExperiment securityOwner;
 
     @Override
+    @DocumentId
     public Long getId() {
         return super.getId();
     }
 
     @Override
+    @FullTextField
     public String getName() {
         return super.getName();
     }
 
     @Override
+    @FullTextField(projectable = Projectable.YES)
     public String getDescription() {
         return super.getDescription();
     }
@@ -55,6 +70,7 @@ public class ExperimentalDesign extends AbstractDescribable implements SecuredCh
     /**
      * @return The description of the factors (TimeCourse, Dosage, etc.) that group the BioAssays.
      */
+    @IndexedEmbedded
     public Set<ExperimentalFactor> getExperimentalFactors() {
         return this.experimentalFactors;
     }

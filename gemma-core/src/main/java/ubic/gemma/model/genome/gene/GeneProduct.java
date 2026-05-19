@@ -18,6 +18,11 @@ package ubic.gemma.model.genome.gene;
  *
  */
 
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexedEmbedded;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.KeywordField;
 import ubic.gemma.model.common.DescribableUtils;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.ChromosomeFeature;
@@ -28,6 +33,12 @@ import jakarta.persistence.Transient;
 import java.util.Objects;
 import java.util.Set;
 
+/**
+ * Hibernate Search 7 mapping: contributes {@code name} (tokenized), {@code ncbiGi} (keyword), and
+ * its {@code accessions} (via {@code @IndexedEmbedded} -> {@code DatabaseEntry.accession}) up to
+ * {@link Gene}'s document via the {@link Gene#getProducts()} embedded path.
+ */
+@Indexed
 public class GeneProduct extends ChromosomeFeature {
 
     private String ncbiGi;
@@ -91,15 +102,18 @@ public class GeneProduct extends ChromosomeFeature {
     }
 
     @Override
+    @DocumentId
     public Long getId() {
         return super.getId();
     }
 
     @Override
+    @FullTextField
     public String getName() {
         return super.getName();
     }
 
+    @IndexedEmbedded
     public Set<DatabaseEntry> getAccessions() {
         return this.accessions;
     }
@@ -139,6 +153,7 @@ public class GeneProduct extends ChromosomeFeature {
     /**
      * @return GI for the gene product (if available)
      */
+    @KeywordField
     public String getNcbiGi() {
         return this.ncbiGi;
     }

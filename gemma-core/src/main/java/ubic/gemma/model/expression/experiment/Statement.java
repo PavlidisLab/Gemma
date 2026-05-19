@@ -1,6 +1,8 @@
 package ubic.gemma.model.expression.experiment;
 
 import org.apache.commons.lang3.StringUtils;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.KeywordField;
 import ubic.gemma.model.common.description.Category;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicUtils;
@@ -157,6 +159,7 @@ public class Statement extends Characteristic {
     }
 
     @Nullable
+    @FullTextField
     public String getPredicate() {
         return predicate;
     }
@@ -166,6 +169,7 @@ public class Statement extends Characteristic {
     }
 
     @Nullable
+    @KeywordField
     public String getPredicateUri() {
         return predicateUri;
     }
@@ -175,6 +179,7 @@ public class Statement extends Characteristic {
     }
 
     @Nullable
+    @FullTextField
     public String getObject() {
         return object;
     }
@@ -184,6 +189,7 @@ public class Statement extends Characteristic {
     }
 
     @Nullable
+    @KeywordField
     public String getObjectUri() {
         return objectUri;
     }
@@ -193,6 +199,7 @@ public class Statement extends Characteristic {
     }
 
     @Nullable
+    @FullTextField
     public String getSecondPredicate() {
         return secondPredicate;
     }
@@ -202,6 +209,7 @@ public class Statement extends Characteristic {
     }
 
     @Nullable
+    @KeywordField
     public String getSecondPredicateUri() {
         return secondPredicateUri;
     }
@@ -211,6 +219,7 @@ public class Statement extends Characteristic {
     }
 
     @Nullable
+    @FullTextField
     public String getSecondObject() {
         return secondObject;
     }
@@ -220,6 +229,7 @@ public class Statement extends Characteristic {
     }
 
     @Nullable
+    @KeywordField
     public String getSecondObjectUri() {
         return secondObjectUri;
     }

@@ -18,6 +18,9 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexedEmbedded;
 import org.springframework.util.Assert;
 import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
@@ -34,7 +37,12 @@ import java.util.stream.Collectors;
 
 /**
  * The value for a ExperimentalFactor, representing a specific instance of the factor, such as "10 ug/kg" or "mutant"
+ * <p>
+ * Hibernate Search 7 mapping: indexed root and embedded contributor to
+ * {@link ExperimentalFactor#getFactorValues()}. Pulls each {@link Statement} characteristic
+ * (a {@link Characteristic} subtype with predicate + object slots) into the EE document.
  */
+@Indexed
 public class FactorValue extends AbstractIdentifiable implements SecuredChild<ExpressionExperiment> {
 
     private ExperimentalFactor experimentalFactor;
@@ -54,6 +62,7 @@ public class FactorValue extends AbstractIdentifiable implements SecuredChild<Ex
     private ExpressionExperiment securityOwner = null;
 
     @Override
+    @DocumentId
     public Long getId() {
         return super.getId();
     }
@@ -109,6 +118,7 @@ public class FactorValue extends AbstractIdentifiable implements SecuredChild<Ex
     /**
      * Collection of {@link Statement} describing this factor value.
      */
+    @IndexedEmbedded
     public Set<Statement> getCharacteristics() {
         return this.characteristics;
     }
