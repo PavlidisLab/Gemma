@@ -10,23 +10,21 @@
  */
 package gemma.gsec.acl.domain;
 
+import org.springframework.security.acls.domain.GrantedAuthoritySid;
+import org.springframework.security.acls.domain.PrincipalSid;
 import org.springframework.security.acls.model.Sid;
 
 import javax.annotation.Nullable;
 
 /**
- * Utilities for inspecting {@link Sid} instances that may be either gsec's own
- * {@link AclPrincipalSid} / {@link AclGrantedAuthoritySid} or Spring Security's stock
- * {@link org.springframework.security.acls.domain.PrincipalSid} /
- * {@link org.springframework.security.acls.domain.GrantedAuthoritySid}.
+ * Utilities for inspecting {@link Sid} instances.
  * <p>
- * After Renovations Phase 2, ACLs are read back by Spring Security's
- * {@code BasicLookupStrategy}, which builds Spring-typed sids. The legacy gsec-typed sids still
- * appear in code paths that construct sids from authentication tokens or build them inline (e.g.
- * {@code BaseAclAdvice}). Both flavours co-exist; tests like
- * {@code if ( sid instanceof AclPrincipalSid )} silently fail on Spring-typed sids and break ACL
- * predicates such as {@code isPrivate}, {@code isShared}, ownership checks, and group-membership
- * checks. Use these helpers in place of bare {@code instanceof}.
+ * After Phase B of the gsec absorption there is exactly one {@code Sid} hierarchy at runtime —
+ * Spring Security's stock {@link PrincipalSid} / {@link GrantedAuthoritySid}. gsec's Hibernate-
+ * mapped {@link AclPrincipalSid} / {@link AclGrantedAuthoritySid} are NOT {@code Sid}
+ * implementations any more (they're JPA entities backing HQL queries against {@code acl_sid}).
+ * Callers that have an entity in hand should convert via {@link AclSid#toSid()} before reaching
+ * these helpers; the helpers themselves only know about the Spring types.
  */
 public final class Sids {
 
@@ -34,22 +32,17 @@ public final class Sids {
     }
 
     /**
-     * True if the sid identifies a principal (user) — either gsec's {@link AclPrincipalSid} or
-     * Spring Security's {@link org.springframework.security.acls.domain.PrincipalSid}.
+     * True if the sid identifies a principal (user).
      */
     public static boolean isPrincipal( @Nullable Sid sid ) {
-        return sid instanceof AclPrincipalSid
-                || sid instanceof org.springframework.security.acls.domain.PrincipalSid;
+        return sid instanceof PrincipalSid;
     }
 
     /**
-     * True if the sid identifies a granted authority (group/role) — either gsec's
-     * {@link AclGrantedAuthoritySid} or Spring Security's
-     * {@link org.springframework.security.acls.domain.GrantedAuthoritySid}.
+     * True if the sid identifies a granted authority (group/role).
      */
     public static boolean isGrantedAuthority( @Nullable Sid sid ) {
-        return sid instanceof AclGrantedAuthoritySid
-                || sid instanceof org.springframework.security.acls.domain.GrantedAuthoritySid;
+        return sid instanceof GrantedAuthoritySid;
     }
 
     /**
@@ -58,11 +51,8 @@ public final class Sids {
      */
     @Nullable
     public static String principalName( @Nullable Sid sid ) {
-        if ( sid instanceof AclPrincipalSid ) {
-            return ( ( AclPrincipalSid ) sid ).getPrincipal();
-        }
-        if ( sid instanceof org.springframework.security.acls.domain.PrincipalSid ) {
-            return ( ( org.springframework.security.acls.domain.PrincipalSid ) sid ).getPrincipal();
+        if ( sid instanceof PrincipalSid ) {
+            return ( ( PrincipalSid ) sid ).getPrincipal();
         }
         return null;
     }
@@ -73,11 +63,8 @@ public final class Sids {
      */
     @Nullable
     public static String grantedAuthority( @Nullable Sid sid ) {
-        if ( sid instanceof AclGrantedAuthoritySid ) {
-            return ( ( AclGrantedAuthoritySid ) sid ).getGrantedAuthority();
-        }
-        if ( sid instanceof org.springframework.security.acls.domain.GrantedAuthoritySid ) {
-            return ( ( org.springframework.security.acls.domain.GrantedAuthoritySid ) sid ).getGrantedAuthority();
+        if ( sid instanceof GrantedAuthoritySid ) {
+            return ( ( GrantedAuthoritySid ) sid ).getGrantedAuthority();
         }
         return null;
     }

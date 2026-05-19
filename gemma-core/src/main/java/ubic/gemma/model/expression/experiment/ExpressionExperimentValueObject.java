@@ -210,7 +210,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.setUserCanWrite( permissions[1] );
         this.setIsShared( permissions[2] );
 
-        String ownerName = gemma.gsec.acl.domain.Sids.principalName( sid );
+        String ownerName = gemma.gsec.acl.domain.Sids.principalName( sid == null ? null : sid.toSid() );
         this.setUserOwned( ownerName != null && Objects.equals( ownerName, SecurityUtil.getCurrentUsername() ) );
     }
 

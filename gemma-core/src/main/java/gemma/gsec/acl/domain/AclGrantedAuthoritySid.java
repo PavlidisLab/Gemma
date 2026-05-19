@@ -14,20 +14,24 @@
  */
 package gemma.gsec.acl.domain;
 
-import org.hibernate.Hibernate;
+import org.springframework.security.acls.model.Sid;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.util.Assert;
 
 import java.util.Objects;
 
 /**
+ * Hibernate-mapped row for a granted-authority entry in {@code acl_sid} (discriminator
+ * {@code principal=0}). Phase B of the gsec absorption removed this class from Spring Security's
+ * {@code Sid} hierarchy so the runtime security path now uses exactly one {@code Sid} type
+ * ({@link org.springframework.security.acls.domain.GrantedAuthoritySid}). This class is a pure JPA
+ * entity used by HQL queries (see {@code AclQueryUtils}) — call {@link #toSid()} at the boundary
+ * when a Spring-typed sid is needed.
+ *
  * @author Paul
- * @version $Id: AclGrantedAuthoritySid.java,v 1.1 2013/09/14 16:55:18 paul Exp $
  */
 public class AclGrantedAuthoritySid extends AclSid {
-    /**
-     *
-     */
+
     private static final long serialVersionUID = 7755206462003052441L;
     private String grantedAuthority;
 
@@ -57,6 +61,11 @@ public class AclGrantedAuthoritySid extends AclSid {
     }
 
     @Override
+    public Sid toSid() {
+        return new org.springframework.security.acls.domain.GrantedAuthoritySid( grantedAuthority );
+    }
+
+    @Override
     public int hashCode() {
         return Objects.hash( grantedAuthority );
     }
@@ -65,20 +74,8 @@ public class AclGrantedAuthoritySid extends AclSid {
     public boolean equals( Object object ) {
         if ( object == null ) return false;
         if ( this == object ) return true;
-
-        // Renovations Phase 2 (Hibernate 6): unwrap HibernateProxy before the instanceof check.
-        // See the parallel comment in AclPrincipalSid.equals() — many-to-one AclSid references
-        // can come back as proxies declared against the abstract base class even with lazy="false".
-        Object unwrapped = ( object instanceof org.hibernate.proxy.HibernateProxy )
-            ? Hibernate.unproxy( object )
-            : object;
-
-        if ( !( unwrapped instanceof AclGrantedAuthoritySid ) ) {
-            return false;
-        }
-
-        // Delegate to getGrantedAuthority() to perform actual comparison (both should be identical)
-        return Objects.equals( ( ( AclGrantedAuthoritySid ) unwrapped ).getGrantedAuthority(), this.getGrantedAuthority() );
+        if ( !( object instanceof AclGrantedAuthoritySid ) ) return false;
+        return Objects.equals( ( ( AclGrantedAuthoritySid ) object ).getGrantedAuthority(), this.getGrantedAuthority() );
     }
 
     @Override

@@ -20,6 +20,8 @@
 package gemma.gsec.acl.domain;
 
 import gemma.gsec.model.Securable;
+import org.springframework.security.acls.domain.GrantedAuthoritySid;
+import org.springframework.security.acls.domain.PrincipalSid;
 import org.springframework.security.acls.model.ObjectIdentity;
 import org.springframework.security.acls.model.Sid;
 import org.springframework.util.Assert;
@@ -170,9 +172,36 @@ public class AclObjectIdentity implements ObjectIdentity {
         return ownerSid;
     }
 
+    /**
+     * Set the owner from an {@link AclSid} entity (Hibernate-side).
+     */
+    public void setOwnerSid( AclSid ownerSid ) {
+        this.ownerSid = ownerSid;
+    }
 
-    public void setOwnerSid( Sid ownerSid ) {
-        this.ownerSid = ( AclSid ) ownerSid;
+    /**
+     * Set the owner from a Spring Security {@link Sid}. The legacy gsec {@code AclImpl} accepts
+     * a Spring sid through Spring's {@code OwnershipAcl} interface; this overload bridges that
+     * back to the Hibernate-mapped entity. Phase B of the gsec absorption split the Sid hierarchy
+     * cleanly: gsec entities are no longer {@code Sid} implementations, so the conversion has to
+     * happen here. The legacy {@code AclImpl}/{@code AclDaoImpl} stack is no longer wired in
+     * production (the {@code aclService} bean is now {@code JdbcMutableAclService}); this path
+     * remains for {@code BaseDatabaseTest}-based unit tests that still exercise the legacy stack.
+     */
+    public void setOwnerSidFromSpring( Sid ownerSid ) {
+        if ( ownerSid == null ) {
+            this.ownerSid = null;
+        } else if ( ownerSid instanceof AclSid ) {
+            // Defensive: callers shouldn't pass AclSid as a Sid (Phase B decoupled them) but if
+            // they do, accept it.
+            this.ownerSid = ( AclSid ) ownerSid;
+        } else if ( ownerSid instanceof PrincipalSid ) {
+            this.ownerSid = new AclPrincipalSid( ( ( PrincipalSid ) ownerSid ).getPrincipal() );
+        } else if ( ownerSid instanceof GrantedAuthoritySid ) {
+            this.ownerSid = new AclGrantedAuthoritySid( ( ( GrantedAuthoritySid ) ownerSid ).getGrantedAuthority() );
+        } else {
+            throw new IllegalArgumentException( "Unsupported Sid type: " + ownerSid.getClass().getName() );
+        }
     }
 
     public AclObjectIdentity getParentObject() {

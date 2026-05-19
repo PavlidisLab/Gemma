@@ -49,6 +49,15 @@ public interface AclDao {
     @Nullable
     AclSid find( Sid sid, Session session );
 
+    /**
+     * Look up the persisted {@link AclSid} row matching the principal/grantedAuthority carried by
+     * the given (already-loaded but possibly detached) entity. Phase B of the gsec absorption
+     * decoupled {@link AclSid} from Spring's {@link Sid} hierarchy, so callers that have an
+     * entity in hand (rather than a Spring-typed sid) need this overload.
+     */
+    @Nullable
+    AclSid find( AclSid sid );
+
     List<AclObjectIdentity> findChildren( AclObjectIdentity parentIdentity );
 
     AclSid findOrCreate( AclSid sid );

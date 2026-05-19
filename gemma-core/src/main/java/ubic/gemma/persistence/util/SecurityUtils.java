@@ -2,12 +2,12 @@ package ubic.gemma.persistence.util;
 
 import gemma.gsec.AuthorityConstants;
 import gemma.gsec.acl.domain.AclEntry;
-import gemma.gsec.acl.domain.AclGrantedAuthoritySid;
 import gemma.gsec.acl.domain.AclObjectIdentity;
-import gemma.gsec.acl.domain.AclPrincipalSid;
 import gemma.gsec.util.SecurityUtil;
 import org.springframework.security.access.vote.AuthenticatedVoter;
 import org.springframework.security.acls.domain.BasePermission;
+import org.springframework.security.acls.domain.GrantedAuthoritySid;
+import org.springframework.security.acls.domain.PrincipalSid;
 import org.springframework.security.acls.model.Sid;
 
 public class SecurityUtils {
@@ -15,6 +15,10 @@ public class SecurityUtils {
     /**
      * Checks ACL related properties from the AclObjectIdentity.
      * Some of the code is adapted from {@link gemma.gsec.util.SecurityUtil}, but allows usage without an Acl object.
+     * <p>
+     * Phase B of the gsec absorption: {@link AclEntry#getSid()} now returns a Spring Security
+     * {@link Sid} (converted via {@code AclSid#toSid()}); the {@code instanceof} checks below
+     * inspect Spring's stock {@link PrincipalSid} / {@link GrantedAuthoritySid} accordingly.
      *
      * @param aoi the acl object identity of an object whose permissions are to be checked.
      * @return an array of booleans that represent permissions of currently logged in user as follows:
@@ -38,11 +42,11 @@ public class SecurityUtils {
             } else {
                 if ( ( ace.getMask() & BasePermission.WRITE.getMask() ) != 0 || ( ace.getMask() & BasePermission.ADMINISTRATION.getMask() ) != 0 ) {
                     Sid sid = ace.getSid();
-                    if ( sid instanceof AclGrantedAuthoritySid ) {
+                    if ( sid instanceof GrantedAuthoritySid ) {
                         //noinspection unused //FIXME if user is in granted group then he can write probably
-                        String grantedAuthority = ( ( AclGrantedAuthoritySid ) sid ).getGrantedAuthority();
-                    } else if ( sid instanceof AclPrincipalSid ) {
-                        if ( ( ( AclPrincipalSid ) sid ).getPrincipal().equals( SecurityUtil.getCurrentUsername() ) ) {
+                        String grantedAuthority = ( ( GrantedAuthoritySid ) sid ).getGrantedAuthority();
+                    } else if ( sid instanceof PrincipalSid ) {
+                        if ( ( ( PrincipalSid ) sid ).getPrincipal().equals( SecurityUtil.getCurrentUsername() ) ) {
                             canWrite = true;
                         }
                     }
@@ -52,8 +56,8 @@ public class SecurityUtils {
             // Check public and shared - code adapted from SecurityUtils, only we do not hold an ACL object.
             if ( ( ace.getMask() & BasePermission.READ.getMask() ) != 0 ) {
                 Sid sid = ace.getSid();
-                if ( sid instanceof AclGrantedAuthoritySid ) {
-                    String grantedAuthority = ( ( AclGrantedAuthoritySid ) sid ).getGrantedAuthority();
+                if ( sid instanceof GrantedAuthoritySid ) {
+                    String grantedAuthority = ( ( GrantedAuthoritySid ) sid ).getGrantedAuthority();
 
                     if ( grantedAuthority.equals( AuthenticatedVoter.IS_AUTHENTICATED_ANONYMOUSLY ) && ace
                             .isGranting() ) {

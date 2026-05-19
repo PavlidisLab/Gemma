@@ -1,6 +1,5 @@
 package ubic.gemma.core.security.authorization.acl;
 
-import gemma.gsec.acl.domain.AclGrantedAuthoritySid;
 import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.acl.domain.AclService;
 import lombok.extern.slf4j.Slf4j;
@@ -557,15 +556,20 @@ public class AclLinterServiceImpl implements AclLinterService {
             Long identifier_ = ( ( Number ) row[1] ).longValue();
             if ( config.isApplyFixes() ) {
                 MutableAcl acl = ( MutableAcl ) aclService.readAclById( new AclObjectIdentity( type, identifier_ ) );
-                // gsec's AclImpl.insertAce downcasts the Sid to gsec's AclSid, so we must hand it a
-                // gsec-typed sid instance rather than Spring's stock GrantedAuthoritySid.
-                acl.insertAce( acl.getEntries().size(), permission, new AclGrantedAuthoritySid( grantedAuthority ), granting );
+                // Phase B of gsec absorption: use Spring's stock GrantedAuthoritySid. The previous
+                // call constructed a gsec AclGrantedAuthoritySid (now no longer a Spring Sid) which
+                // would fail the {@code AclImpl.insertAce} downcast path historically and silently
+                // mismatch in JdbcMutableAclService's sid lookup (instanceof PrincipalSid /
+                // GrantedAuthoritySid checks in createOrRetrieveSidPrimaryKey both returned false).
+                // That made applyFixes a silent no-op for the inserted ACE.
+                acl.insertAce( acl.getEntries().size(), permission,
+                        new org.springframework.security.acls.domain.GrantedAuthoritySid( grantedAuthority ), granting );
                 aclService.updateAcl( acl );
-                // gsec's AclDaoImpl.convert() mutates the managed AOI's entries collection (clear+re-add)
-                // as part of update(). Because the entries mapping has no inverse="true", Hibernate would
-                // otherwise issue UPDATEs to acl_entry.acl_object_identity on the next flush — but those
-                // rows have already been written through JdbcMutableAclService, so the UPDATEs see 0 rows
-                // and throw StaleStateException. Clearing the session drops the dirty collection state.
+                // The legacy gsec AclDaoImpl.convert() used to mutate the managed AOI's entries
+                // collection during update(), conflicting with JdbcMutableAclService's already-
+                // persisted rows on the next Hibernate flush. Production is on JdbcMutableAclService
+                // now, but we still clear the session here so any HQL-loaded AclObjectIdentity rows
+                // (used elsewhere in the linter) don't fight a stale snapshot of acl_entry.
                 sessionFactory.getCurrentSession().clear();
                 String fixMessage = "Added missing " + aclEntryDescription + ".";
                 log.info( formatEntity( clazz, identifier_ ) + ": " + fixMessage );
