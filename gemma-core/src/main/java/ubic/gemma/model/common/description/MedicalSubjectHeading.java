@@ -21,12 +21,18 @@ package ubic.gemma.model.common.description;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
 
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Hibernate Search 7 mapping: indexed root for MeSH terms attached to a
+ * {@link BibliographicReference}. Inherits {@code term} from {@link BibRefAnnotation}.
+ */
 @Getter
 @Setter
+@Indexed
 public class MedicalSubjectHeading extends BibRefAnnotation {
 
     private Set<MedicalSubjectHeading> qualifiers = new HashSet<>();

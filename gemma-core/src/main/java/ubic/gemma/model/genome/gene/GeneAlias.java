@@ -18,14 +18,23 @@
  */
 package ubic.gemma.model.genome.gene;
 
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.KeywordField;
 import ubic.gemma.model.common.AbstractIdentifiable;
 
 import java.util.Objects;
 
+/**
+ * Hibernate Search 7 mapping: contributes its {@link #getAlias()} as a keyword (non-tokenized)
+ * field via {@code @IndexedEmbedded} from {@link ubic.gemma.model.genome.Gene}.
+ */
+@Indexed
 public class GeneAlias extends AbstractIdentifiable {
 
     private String alias;
 
+    @KeywordField
     public String getAlias() {
         return this.alias;
     }
@@ -35,6 +44,7 @@ public class GeneAlias extends AbstractIdentifiable {
     }
 
     @Override
+    @DocumentId
     public Long getId() {
         return super.getId();
     }

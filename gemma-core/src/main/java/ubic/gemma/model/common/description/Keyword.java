@@ -18,7 +18,13 @@
  */
 package ubic.gemma.model.common.description;
 
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
 
+/**
+ * Hibernate Search 7 mapping: indexed root for keyword phrases attached to a
+ * {@link BibliographicReference}. Inherits {@code term} from {@link BibRefAnnotation}.
+ */
+@Indexed
 public class Keyword extends BibRefAnnotation {
 
     public static final class Factory {

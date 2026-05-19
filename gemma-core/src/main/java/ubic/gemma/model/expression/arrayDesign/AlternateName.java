@@ -18,18 +18,31 @@
  */
 package ubic.gemma.model.expression.arrayDesign;
 
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
 import ubic.gemma.model.common.AbstractIdentifiable;
 
 import java.util.Objects;
 
+/**
+ * Hibernate Search 7 mapping: contributes its {@link #getName()} as a tokenized field to
+ * {@link ArrayDesign}'s document via {@code @IndexedEmbedded}. Carries its own {@code @Indexed}
+ * for symmetry with the pre-strip HS 5 mapping, even though the only Lucene path that consumes
+ * AlternateName documents today is the {@code ArrayDesign.alternateNames} embedded path.
+ */
+@Indexed
 public class AlternateName extends AbstractIdentifiable {
 
     private String name;
 
+    @Override
+    @DocumentId
     public Long getId() {
         return super.getId();
     }
 
+    @FullTextField
     public String getName() {
         return this.name;
     }

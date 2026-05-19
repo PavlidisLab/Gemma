@@ -18,18 +18,29 @@
  */
 package ubic.gemma.model.expression.biomaterial;
 
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.KeywordField;
 import ubic.gemma.model.common.AbstractDescribable;
 
+/**
+ * Hibernate Search 7 mapping: chemicals attached to {@link ubic.gemma.model.common.description.BibliographicReference}
+ * via {@code @IndexedEmbedded}; {@code name} is tokenized, {@code registryNumber} is keyword (CAS).
+ */
+@Indexed
 public class Compound extends AbstractDescribable {
 
     private String registryNumber;
 
     @Override
+    @DocumentId
     public Long getId() {
         return super.getId();
     }
 
     @Override
+    @FullTextField
     public String getName() {
         return super.getName();
     }
@@ -37,6 +48,7 @@ public class Compound extends AbstractDescribable {
     /**
      * @return CAS registry number (see http://www.cas.org/)
      */
+    @KeywordField
     public String getRegistryNumber() {
         return this.registryNumber;
     }
