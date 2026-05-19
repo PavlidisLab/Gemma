@@ -78,6 +78,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.Objects.requireNonNull;
+import ubic.gemma.model.common.description.CharacteristicUtils;
 import static ubic.gemma.model.common.description.CharacteristicUtils.*;
 import static ubic.gemma.model.expression.experiment.StatementUtils.formatStatement;
 
@@ -1870,6 +1871,91 @@ public class ExpressionExperimentServiceImpl
         ee.getCharacteristics().removeAll( characteristicsToRemove );
         update( ee );
         characteristicService.remove( characteristicsToRemove );
+    }
+
+    /**
+     * Idempotent set-replace for an EE's direct characteristic set. See the interface javadoc.
+     * <p>
+     * Implementation: diff current vs desired by (category, categoryUri, value, valueUri) using
+     * {@link ubic.gemma.model.common.description.CharacteristicUtils#equals(String, String, String, String)};
+     * preserved characteristics retain their identity (no churn for unchanged tags), drops go through
+     * {@code characteristicService.remove}, adds get an {@code IC} evidence code by default. Emits a
+     * single {@link ManualAnnotationEvent} when the desired set differs from the current set.
+     */
+    @Override
+    @Transactional
+    public void updateAnnotations( ExpressionExperiment ee, Collection<Characteristic> desired ) {
+        Assert.notNull( desired, "Desired characteristic set must not be null (use an empty collection to clear)." );
+        for ( Characteristic vc : desired ) {
+            Assert.isTrue( StringUtils.isNotBlank( vc.getCategory() ), "Each desired characteristic must have a non-blank category." );
+            Assert.isTrue( StringUtils.isNotBlank( vc.getValue() ), "Each desired characteristic must have a non-blank value." );
+        }
+
+        ee = ensureInSession( ee );
+
+        Collection<Characteristic> current = ee.getCharacteristics();
+        List<Characteristic> toRemove = new ArrayList<>();
+        List<Characteristic> toAdd = new ArrayList<>();
+
+        // anything in current not represented in desired -> remove
+        for ( Characteristic c : current ) {
+            boolean keep = false;
+            for ( Characteristic d : desired ) {
+                if ( sameTag( c, d ) ) {
+                    keep = true;
+                    break;
+                }
+            }
+            if ( !keep ) {
+                toRemove.add( c );
+            }
+        }
+        // anything in desired not already present -> add
+        for ( Characteristic d : desired ) {
+            boolean already = false;
+            for ( Characteristic c : current ) {
+                if ( sameTag( c, d ) ) {
+                    already = true;
+                    break;
+                }
+            }
+            if ( !already ) {
+                Characteristic fresh = Characteristic.Factory.newInstance();
+                fresh.setCategory( d.getCategory() );
+                fresh.setCategoryUri( d.getCategoryUri() );
+                fresh.setValue( d.getValue() );
+                fresh.setValueUri( d.getValueUri() );
+                fresh.setEvidenceCode( d.getEvidenceCode() != null ? d.getEvidenceCode() : GOEvidenceCode.IC );
+                toAdd.add( fresh );
+            }
+        }
+
+        if ( toRemove.isEmpty() && toAdd.isEmpty() ) {
+            log.debug( "updateAnnotations: no change for " + ee.getShortName() + " (ID=" + ee.getId() + ")" );
+            return;
+        }
+
+        if ( !toRemove.isEmpty() ) {
+            Assert.isTrue( toRemove.stream().allMatch( c -> c.getId() != null ), "All characteristics to remove must be persistent." );
+            current.removeAll( toRemove );
+        }
+        if ( !toAdd.isEmpty() ) {
+            current.addAll( toAdd );
+        }
+        update( ee );
+        if ( !toRemove.isEmpty() ) {
+            characteristicService.remove( toRemove );
+        }
+
+        log.info( "updateAnnotations: " + ee.getShortName() + " (ID=" + ee.getId() + ") added=" + toAdd.size()
+                + " removed=" + toRemove.size() );
+        auditTrailService.addUpdateEvent( ee, ManualAnnotationEvent.class,
+                "Replaced annotations via API (added=" + toAdd.size() + ", removed=" + toRemove.size() + ")" );
+    }
+
+    private static boolean sameTag( Characteristic a, Characteristic b ) {
+        return CharacteristicUtils.equals( a.getCategory(), a.getCategoryUri(), b.getCategory(), b.getCategoryUri() )
+                && CharacteristicUtils.equals( a.getValue(), a.getValueUri(), b.getValue(), b.getValueUri() );
     }
 
     @Override
