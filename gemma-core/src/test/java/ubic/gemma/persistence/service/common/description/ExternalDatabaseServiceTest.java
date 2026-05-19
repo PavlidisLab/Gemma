@@ -1,10 +1,10 @@
 package ubic.gemma.persistence.service.common.description;
 
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.security.authentication.UserManager;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.description.DatabaseType;
@@ -18,7 +18,7 @@ import java.util.Date;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 
-public class ExternalDatabaseServiceTest extends BaseSpringContextTest {
+public class ExternalDatabaseServiceTest extends BaseSpringContextTest5 {
 
     @Autowired
     private ExternalDatabaseService externalDatabaseService;
@@ -29,7 +29,7 @@ public class ExternalDatabaseServiceTest extends BaseSpringContextTest {
     /* fixtures */
     private ExternalDatabase ed, ed2;
 
-    @After
+    @AfterEach
     public void tearDown() {
         if ( ed != null ) {
             externalDatabaseService.remove( ed );

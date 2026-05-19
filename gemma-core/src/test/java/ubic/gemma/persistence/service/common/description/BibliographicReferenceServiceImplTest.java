@@ -18,12 +18,12 @@
  */
 package ubic.gemma.persistence.service.common.description;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.springframework.test.util.ReflectionTestUtils;
 import ubic.gemma.core.search.SearchService;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -36,7 +36,7 @@ import static org.mockito.Mockito.when;
 /**
  * @author pavlidis
  */
-public class BibliographicReferenceServiceImplTest extends BaseSpringContextTest {
+public class BibliographicReferenceServiceImplTest extends BaseSpringContextTest5 {
 
     private BibliographicReferenceServiceImpl svc = null;
     private BibliographicReferenceReadServiceImpl readSvc = null;
@@ -49,7 +49,7 @@ public class BibliographicReferenceServiceImplTest extends BaseSpringContextTest
     @Mock
     private ExpressionExperimentService expressionExperimentService;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
 
         readSvc = new BibliographicReferenceReadServiceImpl( brdao, searchService, expressionExperimentService );

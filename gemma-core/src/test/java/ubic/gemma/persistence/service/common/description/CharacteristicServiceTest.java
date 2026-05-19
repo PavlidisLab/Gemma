@@ -21,11 +21,11 @@ package ubic.gemma.persistence.service.common.description;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.hibernate.Hibernate;
 import org.hibernate.QueryException;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -41,12 +41,12 @@ import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 
 import java.util.*;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author luke
  */
-public class CharacteristicServiceTest extends BaseSpringContextTest {
+public class CharacteristicServiceTest extends BaseSpringContextTest5 {
 
     @Autowired
     private CharacteristicService characteristicService;
@@ -64,7 +64,7 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
     private Characteristic eeChar1;
     private Characteristic eeChar2;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         ee = this.getTestPersistentBasicExpressionExperiment();
         ee.setCharacteristics( this.getTestPersistentCharacteristics( 2 ) );
@@ -95,7 +95,7 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
         tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         if ( ee != null ) {
             runAsAdmin();
@@ -116,9 +116,9 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
         characteristicService.browse( 10, 10, "category", true );
     }
 
-    @Test(expected = QueryException.class)
+    @Test
     public void testBrowseWithInvalidField() {
-        characteristicService.browse( 10, 10, "foo", true );
+        assertThrows( QueryException.class, () -> characteristicService.browse( 10, 10, "foo", true ) );
     }
 
     @Autowired

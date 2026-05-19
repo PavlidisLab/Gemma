@@ -19,12 +19,12 @@
 package ubic.gemma.persistence.service.genome;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.loader.util.GenBankUtils;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.Taxon;
@@ -32,21 +32,21 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author pavlidis
  *
  */
-public class BioSequencePersistTest extends BaseSpringContextTest {
+public class BioSequencePersistTest extends BaseSpringContextTest5 {
 
     @Autowired
     BioSequenceService bss;
 
     private BioSequence bs;
 
-    @Before
+    @BeforeEach
     public void onSetUpInTransaction() {
 
         bs = BioSequence.Factory.newInstance();
@@ -67,7 +67,7 @@ public class BioSequencePersistTest extends BaseSpringContextTest {
         bs.setType( SequenceType.WHOLE_CHROMOSOME );
     }
 
-    @After
+    @AfterEach
     public void onTearDownInTransaction() {
         bss.remove( bs );
     }

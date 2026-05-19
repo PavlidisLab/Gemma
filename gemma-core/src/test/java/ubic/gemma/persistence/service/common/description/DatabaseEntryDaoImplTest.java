@@ -18,26 +18,26 @@
  */
 package ubic.gemma.persistence.service.common.description;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.transaction.TransactionalTestExecutionListener;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.persistence.service.common.description.DatabaseEntryDao;
 
 import java.util.Collections;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author pavlidis
  */
 @TestExecutionListeners(value = TransactionalTestExecutionListener.class,
         mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
-public class DatabaseEntryDaoImplTest extends BaseSpringContextTest {
+public class DatabaseEntryDaoImplTest extends BaseSpringContextTest5 {
 
     @Autowired
     private DatabaseEntryDao databaseEntryDao;
