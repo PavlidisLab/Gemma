@@ -21,7 +21,6 @@ package ubic.gemma.persistence.service.genome.gene;
 import ubic.gemma.core.security.SecurityService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -56,6 +55,9 @@ public class GeneSetServiceImpl extends AbstractVoEnabledService<GeneSet, Databa
     private GeneSetDao geneSetDao = null;
 
     @Autowired
+    private GeneSetReadService readService;
+
+    @Autowired
     private GeneSetSearch geneSetSearch;
 
     @Autowired
@@ -72,21 +74,22 @@ public class GeneSetServiceImpl extends AbstractVoEnabledService<GeneSet, Databa
         super( voDao );
     }
 
+    // =====================================================================
+    // Read methods -- delegate to GeneSetReadService.
+    // ACL @Secured / @PostFilter annotations live on the GeneSetService
+    // interface and apply at the facade proxy boundary; callers that need
+    // permission filtering MUST go through this facade rather than injecting
+    // GeneSetReadService directly.
+    // =====================================================================
+
     @Override
-    @Transactional(readOnly = true)
     public Collection<GeneSet> loadWithMembers( Collection<Long> ids ) {
-        Collection<GeneSet> geneSets = geneSetDao.load( ids );
-        geneSets.forEach( gs -> {
-            Hibernate.initialize( gs.getMembers() );
-            gs.getMembers().forEach( member -> Hibernate.initialize( member.getGene() ) );
-        } );
-        return geneSets;
+        return readService.loadWithMembers( ids );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<GeneSet> findByGene( Gene gene ) {
-        return this.geneSetDao.findByGene( gene );
+        return readService.findByGene( gene );
     }
 
     @Override
@@ -96,9 +99,8 @@ public class GeneSetServiceImpl extends AbstractVoEnabledService<GeneSet, Databa
     }
 
     @Override
-    @Transactional(readOnly = true)
     public DatabaseBackedGeneSetValueObject loadValueObjectByIdLite( Long id ) {
-        return geneSetDao.loadValueObjectByIdLite( id );
+        return readService.loadValueObjectByIdLite( id );
     }
 
     @Override
@@ -109,45 +111,38 @@ public class GeneSetServiceImpl extends AbstractVoEnabledService<GeneSet, Databa
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<DatabaseBackedGeneSetValueObject> loadValueObjectsByIdsLite( Collection<Long> genesetIds ) {
-        return this.geneSetDao.loadValueObjectsByIdsLite( genesetIds );
+        return readService.loadValueObjectsByIdsLite( genesetIds );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<GeneSet> findByName( String name ) {
-        return this.geneSetDao.findByName( name );
+        return readService.findByName( name );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<GeneSet> findByName( String name, Taxon taxon ) {
-        return this.geneSetDao.findByName( name, taxon );
+        return readService.findByName( name, taxon );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<GeneSet> loadAll( @Nullable Taxon tax ) {
-        return this.geneSetDao.loadAll( tax );
+        return readService.loadAll( tax );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<GeneSet> loadMyGeneSets() {
-        return this.geneSetDao.loadAll();
+        return readService.loadMyGeneSets();
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<GeneSet> loadMyGeneSets( Taxon tax ) {
-        return this.geneSetDao.loadAll( tax );
+        return readService.loadMyGeneSets( tax );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<GeneSet> loadMySharedGeneSets( Taxon tax ) {
-        return this.geneSetDao.loadAll( tax );
+        return readService.loadMySharedGeneSets( tax );
     }
 
 //    @Override
@@ -386,36 +381,18 @@ public class GeneSetServiceImpl extends AbstractVoEnabledService<GeneSet, Databa
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<GeneValueObject> getGenesInGroup( GeneSetValueObject object ) {
-
-        Collection<GeneValueObject> results;
-
-        GeneSet gs = this.load( object.getId() );
-        if ( gs == null )
-            return null;
-
-        results = GeneValueObject.convertMembers2GeneValueObjects( gs.getMembers() );
-
-        return results;
-
+        return readService.getGenesInGroup( object );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<Long> getGeneIdsInGroup( GeneSetValueObject object ) {
-        DatabaseBackedGeneSetValueObject vo = loadValueObjectById( object.getId() );
-        if ( vo == null ) {
-            log.warn( String.format( "GeneSet %d was null when reloading it from the database, was it removed?", object.getId() ) );
-            return Collections.emptySet();
-        }
-        return vo.getGeneIds();
+        return readService.getGeneIdsInGroup( object );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public int getSize( GeneSetValueObject object ) {
-        return this.geneSetDao.getGeneCount( object.getId() );
+        return readService.getSize( object );
     }
 
     @Override
@@ -467,40 +444,18 @@ public class GeneSetServiceImpl extends AbstractVoEnabledService<GeneSet, Databa
     }
 
     @Override
-    @Transactional(readOnly = true)
     public TaxonValueObject getTaxonVOforGeneSetVO( SessionBoundGeneSetValueObject geneSetVO ) {
-
-        if ( geneSetVO == null )
-            return null;
-
-        if ( geneSetVO.getGeneIds() == null )
-            return null;
-
-        TaxonValueObject taxonVO = null;
-        // get taxon from members
-        for ( Long l : geneSetVO.getGeneIds() ) {
-            Gene gene = geneService.load( l );
-
-            if ( gene != null && gene.getTaxon() != null ) {
-                taxonVO = TaxonValueObject.fromEntity( gene.getTaxon() );
-                break;// assuming that the taxon will be the same for all genes in the set so no need to load all genes
-                // from set
-            }
-        }
-
-        return taxonVO;
+        return readService.getTaxonVOforGeneSetVO( geneSetVO );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Taxon getTaxon( GeneSet geneSet ) {
-        return geneSetDao.getTaxon( geneSet );
+        return readService.getTaxon( geneSet );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Set<Taxon> getTaxa( GeneSet geneSet ) {
-        return new HashSet<>( geneSetDao.getTaxa( geneSet ) );
+        return readService.getTaxa( geneSet );
     }
 
     private void checkGeneList( GeneSet gset, Collection<GeneSetMember> updatedGenelist, Collection<Gene> genes ) {
