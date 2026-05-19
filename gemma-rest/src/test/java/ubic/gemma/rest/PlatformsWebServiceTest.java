@@ -10,7 +10,6 @@ import ubic.gemma.core.util.test.TestAuthenticationUtils;
 import ubic.gemma.model.blacklist.BlacklistedPlatform;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
-import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.blacklist.BlacklistedEntityService;
@@ -91,11 +90,13 @@ public class PlatformsWebServiceTest extends BaseJerseyIntegrationTest {
 
     @Test
     public void testPlatformElements() {
-        PaginatedResponseDataObject<CompositeSequenceValueObject> response = platformsWebService.getPlatformElements(
+        Object response = platformsWebService.getPlatformElements(
                 PlatformArg.valueOf( this.arrayDesign.getId().toString() ),
                 OffsetArg.valueOf( "0" ),
-                LimitArg.valueOf( "20" ) );
+                LimitArg.valueOf( "20" ),
+                null /* cursor */ );
         assertThat( response )
+                .isInstanceOf( PaginatedResponseDataObject.class )
                 .hasFieldOrPropertyWithValue( "offset", 0 )
                 .hasFieldOrPropertyWithValue( "limit", 20 );
     }

@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
@@ -63,5 +64,23 @@ public class PlatformArgService extends AbstractEntityArgService<ArrayDesign, Ar
         final ArrayDesign ad = this.getEntity( arg );
         Filters filters = Filters.by( csService.getFilter( "arrayDesign.id", Long.class, Filter.Operator.eq, ad.getId() ) );
         return csService.loadValueObjects( filters, null, offset, limit );
+    }
+
+    /**
+     * Cursor-mode counterpart to {@link #getElements(PlatformArg, int, int)}: keyset pagination
+     * over the {@link CompositeSequence design elements} of a single platform, always sorted by
+     * ascending {@code id} (the primary key, indexed and unique) — see
+     * {@code CURSOR_PAGINATION_STEP1_PLAN.md} step 1e. The path-derived
+     * {@code arrayDesign.id = ?} constraint is preserved (composed into the {@link Filters}
+     * before the DAO call) so the cursor-mode result is restricted to the same platform that
+     * the offset-mode result would be. The legacy offset-mode {@code Sort} was {@code null}
+     * (DAO default); cursor mode tightens this to an explicit id-asc sort because the
+     * cursor DAO currently restricts cursors to single-component id sorts (recce sec. 3.4 —
+     * to be lifted in phase B once the index audit is complete).
+     */
+    public CursorPage<CompositeSequenceValueObject> getElementsByCursor( PlatformArg<?> arg, @Nullable Cursor cursor, int limit ) {
+        final ArrayDesign ad = this.getEntity( arg );
+        Filters filters = Filters.by( csService.getFilter( "arrayDesign.id", Long.class, Filter.Operator.eq, ad.getId() ) );
+        return csService.loadValueObjectsByCursor( filters, csService.getSort( "id", Sort.Direction.ASC, Sort.NullMode.LAST ), cursor, limit );
     }
 }
