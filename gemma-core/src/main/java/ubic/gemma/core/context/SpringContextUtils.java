@@ -88,7 +88,7 @@ public class SpringContextUtils {
         if ( isWebApp ) {
             throw new UnsupportedOperationException( "The Web app context cannot be retrieved from here, use WebApplicationContextUtils.getWebApplicationContext() instead." );
         }
-        return getApplicationContext( testing ? new String[] { "testing" } : new String[0], additionalConfigurationLocations );
+        return getApplicationContext( testing ? new String[] { EnvironmentProfiles.TEST } : new String[0], additionalConfigurationLocations );
     }
 
     /**
