@@ -39,6 +39,7 @@ import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
+import ubic.gemma.rest.util.CursorPaginatedResponseDataObject;
 import ubic.gemma.rest.util.FilteredAndCursorPaginatedResponseDataObject;
 import ubic.gemma.rest.util.FilteredAndPaginatedResponseDataObject;
 import ubic.gemma.rest.util.PaginatedResponseDataObject;
@@ -50,6 +51,7 @@ import jakarta.ws.rs.core.MediaType;
 import java.util.List;
 
 import static ubic.gemma.rest.util.Responders.paginate;
+import static ubic.gemma.rest.util.Responders.paginateByCursor;
 import static ubic.gemma.rest.util.Responders.respond;
 
 /**
@@ -155,13 +157,38 @@ public class TaxaWebService {
     @GET
     @Path("/{taxon}/genes")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve all genes in a given taxon")
-    public PaginatedResponseDataObject<GeneValueObject> getTaxonGenes(
+    @Operation(summary = "Retrieve all genes in a given taxon",
+            description = "Supports two pagination modes. Legacy mode: pass `offset` (and `limit`); response includes `offset` and `totalElements`. "
+                    + "Cursor mode (recommended for deep pagination and consistency under writes): pass an opaque `cursor` token from a previous response's `nextCursor` / `prevCursor` field. "
+                    + "`offset` and `cursor` are mutually exclusive — passing a non-null `cursor` selects cursor mode. "
+                    + "In cursor mode the result is always sorted by ascending `id` (cursor mode forces a single-component id sort pending the indexed-column audit in phase B); the `taxon.id = ?` constraint is preserved; `totalElements` is `null` by default (no count query per request).",
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(schema = @Schema(oneOf = {
+                                    PaginatedResponseDataObject.class,
+                                    CursorPaginatedResponseDataObject.class
+                            }))),
+            })
+    public Object getTaxonGenes(
             @PathParam("taxon") TaxonArg<?> taxonArg,
             @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
-            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg
+            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg,
+            @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg
     ) {
-        Slice<GeneValueObject> slice = geneArgService.getGenesInTaxon( taxonArgService.getEntity( taxonArg ), offsetArg.getValue(), limitArg.getValue() );
+        Taxon taxon = taxonArgService.getEntity( taxonArg );
+        if ( cursorArg != null ) {
+            // Mutual-exclusion: a non-null cursor selects cursor mode. The default offset=0 is
+            // not considered user-supplied (parallels GET /platforms/{platform}/datasets step 1f).
+            // In cursor mode we currently force a +id sort (GeneArgService.getGenesInTaxonByCursor)
+            // — the DAO restricts cursors to single-component id sorts until the index audit lands.
+            // The path-derived taxon.id filter is composed into the Filters inside
+            // getGenesInTaxonByCursor so the taxon scope is enforced identically in both modes.
+            CursorPage<GeneValueObject> page = geneArgService.getGenesInTaxonByCursor(
+                    taxon, cursorArg.getValue(), limitArg.getValue() );
+            geneService.populateAssociatedExperimentCount( page );
+            return paginateByCursor( page, new String[] { "id" } );
+        }
+        Slice<GeneValueObject> slice = geneArgService.getGenesInTaxon( taxon, offsetArg.getValue(), limitArg.getValue() );
         geneService.populateAssociatedExperimentCount( slice );
         return paginate( slice, new String[] { "id" } );
     }
