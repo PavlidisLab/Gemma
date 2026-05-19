@@ -118,7 +118,8 @@ public interface CharacteristicService extends BaseService<Characteristic>, Filt
      */
     @Secured({ "GROUP_ADMIN" })
     // FIXME: this is too slow when large number of results are returned
-    //        @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_VALUES_READ" })
+    //        @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    //        @PostFilter("hasPermission(filterObject.value, 'READ') or hasPermission(filterObject.value, 'ADMINISTRATION')")
     Map<Characteristic, Identifiable> getParents( Collection<Characteristic> characteristics, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, boolean thawParents );
 
     //    /**
