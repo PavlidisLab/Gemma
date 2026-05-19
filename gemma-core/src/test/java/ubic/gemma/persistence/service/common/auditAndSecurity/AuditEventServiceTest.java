@@ -22,6 +22,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceUpdateEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
@@ -42,6 +43,9 @@ public class AuditEventServiceTest extends BaseSpringContextTest {
     @Autowired
     private AuditEventService auditEventService;
 
+    @Autowired
+    private ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService auditTrailService;
+
     @Before
     public void setUp() throws Exception {
         for ( int i = 0; i < 5; i++ ) {
@@ -53,6 +57,10 @@ public class AuditEventServiceTest extends BaseSpringContextTest {
 
             ad.setDescription( "arrrgh" );
             ads.update( ad );
+            // Emit a typed update event so getUpdatedSinceDate (which filters on
+            // eventType IS NOT NULL — see AUDIT_SYSTEM_AUDIT.md Section 5, risk #1)
+            // observes this auditable in its result.
+            auditTrailService.addUpdateEvent( ad, ArrayDesignSequenceUpdateEvent.class, "test typed update" );
         }
     }
 

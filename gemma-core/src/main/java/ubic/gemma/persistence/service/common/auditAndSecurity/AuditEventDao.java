@@ -98,6 +98,12 @@ public interface AuditEventDao extends BaseDao<AuditEvent> {
 
     /**
      * Get auditables that have been updated since the given date.
+     * <p>
+     * "Updated" here means the auditable received at least one typed {@link AuditEvent} (i.e.
+     * {@code eventType IS NOT NULL}) in the window. Generic auto-UPDATE rows
+     * ({@code action='U'}, {@code eventType=null}) are intentionally NOT counted: that machinery
+     * is being retired (see {@code AUDIT_SYSTEM_AUDIT.md} Section 5, risk #1), so this query
+     * defines "updated" purely in terms of semantic, typed events.
      */
     <T extends Auditable> Collection<T> getUpdatedSinceDate( Class<T> auditableClass, Date date );
 }

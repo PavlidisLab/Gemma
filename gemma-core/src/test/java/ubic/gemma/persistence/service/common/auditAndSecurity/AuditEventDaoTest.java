@@ -140,16 +140,28 @@ public class AuditEventDaoTest extends BaseDatabaseTest {
 
     @Test
     public void testGetUpdatedSinceDate() {
+        // "Updated" now means "received any typed AuditEvent in the window" — i.e. eventType IS NOT NULL.
+        // See AUDIT_SYSTEM_AUDIT.md Section 5, risk #1.
         Date before = new Date();
-        ExpressionExperiment auditable = new ExpressionExperiment();
-        sessionFactory.getCurrentSession().persist( auditable );
-        assertNull( auditEventDao.getLastEvent( auditable, BatchInformationFetchingEvent.class ) );
-        auditable.getAuditTrail().getEvents().add( AuditEvent.Factory.newInstance( new Date(), AuditAction.C, null, null, null, new BatchInformationFetchingEvent() ) );
-        auditable.getAuditTrail().getEvents().add( AuditEvent.Factory.newInstance( new Date(), AuditAction.U, null, null, null, new BatchInformationFetchingEvent() ) );
+        ExpressionExperiment withTyped = new ExpressionExperiment();
+        sessionFactory.getCurrentSession().persist( withTyped );
+        // Typed update event — should be picked up.
+        withTyped.getAuditTrail().getEvents().add( AuditEvent.Factory.newInstance( new Date(), AuditAction.U, null, null, null, new BatchInformationFetchingEvent() ) );
+
+        ExpressionExperiment onlyGenericUpdate = new ExpressionExperiment();
+        sessionFactory.getCurrentSession().persist( onlyGenericUpdate );
+        // Generic auto-UPDATE (eventType == null) — must NOT be picked up under the new semantics.
+        onlyGenericUpdate.getAuditTrail().getEvents().add( AuditEvent.Factory.newInstance( new Date(), AuditAction.U, null, null, null, null ) );
+
+        ExpressionExperiment onlyCreate = new ExpressionExperiment();
+        sessionFactory.getCurrentSession().persist( onlyCreate );
+        // Plain create with no typed event — must NOT be picked up.
+        onlyCreate.getAuditTrail().getEvents().add( AuditEvent.Factory.newInstance( new Date(), AuditAction.C, null, null, null, null ) );
+
         sessionFactory.getCurrentSession().flush();
         sessionFactory.getCurrentSession().clear();
-        Assertions.assertThat( auditEventDao.getNewSinceDate( ExpressionExperiment.class, before ) )
+        Assertions.assertThat( auditEventDao.getUpdatedSinceDate( ExpressionExperiment.class, before ) )
                 .hasSize( 1 )
-                .contains( auditable );
+                .contains( withTyped );
     }
 }
