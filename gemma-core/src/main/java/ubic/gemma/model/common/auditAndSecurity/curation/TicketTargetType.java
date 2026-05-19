@@ -20,5 +20,14 @@ package ubic.gemma.model.common.auditAndSecurity.curation;
  */
 public enum TicketTargetType {
     EXPRESSION_EXPERIMENT,
-    ARRAY_DESIGN
+    ARRAY_DESIGN,
+    /**
+     * A single {@link ubic.gemma.model.expression.experiment.FactorValue}.
+     * Tickets that flag a specific FV typically also target the owning
+     * {@link #EXPRESSION_EXPERIMENT} so the EE-level "any open ticket?"
+     * lookup picks them up; see
+     * {@code FactorValueNeedsAttentionServiceImpl} for the canonical
+     * dual-target usage.
+     */
+    FACTOR_VALUE
 }
