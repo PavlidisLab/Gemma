@@ -1126,7 +1126,7 @@
 		-->
 		<gsec.version>0.0.23-RENOVATIONS-SNAPSHOT</gsec.version>
 		<spring.version>6.2.8</spring.version>
-		<spring.security.version>6.3.10</spring.security.version>
+		<spring.security.version>6.5.1</spring.security.version>
 		<hibernate.version>6.6.18.Final</hibernate.version>
 		<!-- Flyway 10.x split out database-specific modules; tests need flyway-database-h2.
 		     Production wiring (flyway-mysql) lands in the follow-on session. -->
