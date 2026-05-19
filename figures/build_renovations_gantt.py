@@ -23,6 +23,7 @@ Style is pinned to the user's global figure rules:
 """
 from __future__ import annotations
 
+import os
 import re
 from dataclasses import dataclass
 from datetime import datetime
@@ -74,7 +75,7 @@ def apply_rcparams() -> None:
 #   S4+ = downstream / queued
 #   S8+ = blocked / deliberately deferred
 
-TODAY_X = 5.0  # end of S5 (now = 2026-05-19 late hours)
+TODAY_X = 6.0  # end of S6 (now = 2026-05-19 mid-day)
 
 @dataclass
 class Task:
@@ -115,9 +116,12 @@ TASKS: list[Task] = [
     Task("ACL & security", "gsec absorption B (unify Sids)",
          5.0, 5.0, 5.0, "done",
          "AclSid no longer implements Spring Sid; AclLinter applyFixes now persists"),
-    Task("ACL & security", "gsec absorption C+D (drop adapter, rename)",
-         6.0, 8.0, 0.0, "planned",
-         "GsecAclServiceAdapter drop + final package rename to ubic.gemma.core.security.*"),
+    Task("ACL & security", "gsec absorption D (package rename)",
+         5.0, 6.0, 6.0, "done",
+         "rename gemma.gsec.* -> ubic.gemma.core.security.* landed (merge c15c1e6f4f)"),
+    Task("ACL & security", "gsec absorption C (drop GsecAclServiceAdapter)",
+         6.0, 9.0, 6.0, "deferred",
+         "recce landed (GSEC_PHASE_C_RECCE.md); migration deferred to 2.0.x — needs integration-test time"),
     Task("ACL & security", "Drop old uppercase ACL tables",
          3.0, 4.0, 0.0, "blocked",
          "blocked on 1 release cycle of write cutover"),
@@ -136,8 +140,8 @@ TASKS: list[Task] = [
          2.0, 6.0, 4.0, "inflight",
          "recce + roadmap landed; decomposition not yet started"),
     Task("Maintainability", "persisterHelper retirement (~9.5 sessions)",
-         2.0, 8.0, 3.0, "inflight",
-         "BusinessKey lifts done; CommonPersister, GenomePersister, RelationshipPersister, ArrayDesignPersister, ExpressionPersister rewired"),
+         2.0, 9.0, 3.0, "inflight",
+         "BusinessKey lifts done; 5 persisters rewired; queued for next push (~6.5 sessions remain)"),
     Task("Maintainability", "Externalize ACL (OPA / Cedar)",
          6.0, 10.0, 0.0, "planned"),
     Task("Maintainability", "Deprecate ensureInSession / findOrCreate",
@@ -169,9 +173,12 @@ TASKS: list[Task] = [
          "Lombok/AspectJ/JaCoCo pre-bumped to JDK-21 floors"),
     Task("Framework bumps", "Maven plugin modernization",
          1.0, 2.0, 2.0, "done"),
-    Task("Framework bumps", "JUnit 5 migration",
-         2.0, 7.0, 4.0, "inflight",
-         "recce + roadmap; BaseJerseyTest already off SpringJUnit4"),
+    Task("Framework bumps", "JUnit 5 migration (per-class)",
+         2.0, 7.0, 6.0, "inflight",
+         "Batch 6 landed (25 more classes; cumulative 125+ off Vintage)"),
+    Task("Framework bumps", "JUnit 5 BaseTest hierarchy migration",
+         6.0, 8.0, 6.0, "inflight",
+         "the next unlock — running on a parallel agent branch, not yet merged"),
 
     # ---- Cleanups & audits -----------------------------------------------
     Task("Cleanups", "Coexpression stub removal",
@@ -199,8 +206,8 @@ TASKS: list[Task] = [
          5.0, 5.0, 5.0, "done",
          "-914 LoC (733 Java + 181 test); per GEMMA_CLI_DEAD_CODE_AUDIT.md"),
     Task("Cleanups", "Lombok cleanup (records, @Data)",
-         1.0, 5.0, 5.0, "inflight",
-         "30 VOs / ~1156 LoC removed across 3 batches"),
+         1.0, 7.0, 6.0, "inflight",
+         "Batch 5 landed (14 VOs / -362 LoC); cumulative 50 VOs across 5 batches"),
     Task("Cleanups", "protobuf-java CVE-2024-7254 pin",
          5.0, 5.0, 5.0, "done",
          "3.25.1 -> 3.25.5 via dM override"),
@@ -241,12 +248,21 @@ TASKS: list[Task] = [
          3.0, 6.0, 0.0, "planned"),
 
     # ---- AI-driven -------------------------------------------------------
-    Task("AI-driven", "Audit-as-workflow (@Audited + JSON payload)",
-         5.0, 7.0, 5.0, "inflight",
-         "Phase A landed (annotation + aspect + payload column + Spring event); 8/77 callers swept"),
-    Task("AI-driven", "Ticket/workflow layer (CurationDetails replacement)",
-         6.0, 9.0, 0.0, "planned",
-         "Recce landed (AUDIT_AS_WORKFLOW_RECCE.md); Tickets with 1..N targets, GH-issue interop"),
+    Task("AI-driven", "Audit-as-workflow Phase A+B (@Audited + JSON payload)",
+         5.0, 7.0, 6.0, "inflight",
+         "Phase A landed; Phase B-1/B-2/B-3 landed (Ticket entity + read+write REST + CurationDetails shim)"),
+    Task("AI-driven", "Audit migration Phase C (PostInsert/PreDelete listeners)",
+         6.0, 8.0, 6.0, "inflight",
+         "scoping recce in flight on a parallel agent branch; blocked on listener design"),
+    Task("AI-driven", "Ticket/workflow layer (read + write REST)",
+         5.0, 7.0, 6.0, "done",
+         "Ticket entity + read-only REST + write-side POST/PUT/DELETE landed (merge aa18f8a323)"),
+    Task("AI-driven", "Deprecate CurationDetailsService write methods",
+         6.0, 7.0, 6.0, "inflight",
+         "migrate 3-5 callers off the write API — running on a parallel agent branch"),
+    Task("AI-driven", "Service decomp (10th: CharacteristicReadService)",
+         6.0, 7.0, 6.0, "inflight",
+         "running on a parallel agent branch; nine read services already extracted"),
     Task("AI-driven", "Vector store for similarity (pgvector)",
          6.0, 9.0, 0.0, "planned"),
     Task("AI-driven", "Embeddings on metadata fields",
@@ -255,6 +271,29 @@ TASKS: list[Task] = [
          4.0, 7.0, 0.0, "planned"),
     Task("AI-driven", "Promote gemma-curation-agents in-tree",
          4.0, 6.0, 0.0, "planned"),
+
+    # ---- Release plan (three gates) --------------------------------------
+    Task("Release plan", "Gate 1: hotfix-1.32.7 -> dev -> 1.32.7 minor",
+         6.0, 7.0, 6.0, "inflight",
+         "already ancestor of phase2-acl-migrate; ship 1.32.7 first"),
+    Task("Release plan", "Gate 2: catch-up merge dev -> phase2-acl-migrate",
+         7.0, 8.0, 0.0, "planned",
+         "after Gate 1 lands"),
+    Task("Release plan", "Gate 3: phase2-acl-migrate -> dev as Gemma 2.0",
+         8.0, 9.0, 0.0, "planned",
+         "version bump 1.32.7-SNAPSHOT -> 2.0.0-SNAPSHOT immediately precedes"),
+    Task("Release plan", "Full mvn verify against gemdtest",
+         6.0, 8.0, 0.0, "planned",
+         "queued; gates 2.0 release"),
+    Task("Release plan", "Container deploy validation",
+         6.0, 9.0, 0.0, "planned",
+         "8 gaps before prod per CONTAINER_IMAGE_RECCE.md"),
+    Task("Release plan", "PR / issue triage passes 1+2+3",
+         6.0, 8.0, 0.0, "planned",
+         "queued"),
+    Task("Release plan", "Worktree cleanup (~23 GB)",
+         6.0, 7.0, 0.0, "planned",
+         "interactive cleanup script; queued"),
 ]
 
 
@@ -341,8 +380,8 @@ def render() -> None:
     ax.set_xlim(0, 11.0)
     ax.set_ylim(-0.5, n - 0.5)
     xticks = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-    xlabels = ["S0", "S1", "S2\n(today)", "S3", "S4", "S5",
-               "S6", "S7", "S8", "S9", "S10+"]
+    xlabels = ["S0", "S1", "S2", "S3", "S4", "S5",
+               "S6\n(today)", "S7", "S8", "S9", "S10+"]
     ax.set_xticks(xticks)
     ax.set_xticklabels(xlabels, fontsize=8, color=SUBTLE)
     ax.tick_params(axis="x", length=0, pad=3)
@@ -406,19 +445,29 @@ def render() -> None:
         a.set_clip_on(False)
 
     stamp = datetime.now().strftime("%Y-%m-%d_%H%M")
-    out = f"/Users/pzoot/Dev/eclipseworkspace/Gemma/figures/renovations_gantt_{stamp}.svg"
-    fig.savefig(out, format="svg", bbox_inches="tight", facecolor="white")
+    # Resolve figures/ relative to this script so the script works in
+    # worktrees as well as the main repo (previously a hardcoded
+    # absolute path always wrote to the main repo even when the script
+    # was being edited in a worktree).
+    fig_dir = os.path.dirname(os.path.abspath(__file__))
+    stamped = f"{fig_dir}/renovations_gantt_{stamp}.svg"
+    canonical = f"{fig_dir}/renovations_gantt.svg"
+    fig.savefig(stamped, format="svg", bbox_inches="tight", facecolor="white")
 
     # Strip clipPath wrappers post-write — matplotlib's SVG backend
     # emits them regardless of artist-level set_clip_on(False), and
     # Illustrator's Tiny SVG import drops them with a warning anyway.
-    with open(out, "r", encoding="utf-8") as fh:
+    with open(stamped, "r", encoding="utf-8") as fh:
         svg = fh.read()
     svg = re.sub(r' clip-path="url\(#[^"]+\)"', "", svg)
     svg = re.sub(r"<clipPath[^>]*>.*?</clipPath>", "", svg, flags=re.S)
-    with open(out, "w", encoding="utf-8") as fh:
+    with open(stamped, "w", encoding="utf-8") as fh:
         fh.write(svg)
-    print(f"wrote {out}")
+    # Mirror the stamped output to the canonical (latest) filename.
+    with open(canonical, "w", encoding="utf-8") as fh:
+        fh.write(svg)
+    print(f"wrote {stamped}")
+    print(f"wrote {canonical}")
 
 
 if __name__ == "__main__":
