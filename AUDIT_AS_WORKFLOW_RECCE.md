@@ -646,3 +646,63 @@ User flagged this is "another story". For now: append-only (mirrors the audit-ev
 
 User flagged separate curator and admin roles are needed but "another story". This recce assumes a single "authenticated authorized user" check for all ticket operations in Phase 1. The role split can be a follow-on PR that adds per-event-type role restrictions.
 
+
+### Decision 6: Tickets are Auditable
+
+`Ticket` implements `Auditable` and owns its own `AuditTrail`. Two
+streams, two purposes:
+
+| Stream         | Carries                           | When written                                |
+|----------------|-----------------------------------|---------------------------------------------|
+| `TicketEvent`  | domain workflow facts             | state transitions, comments, assignments    |
+| `AuditEvent`   | governance who-touched-this-row   | every mutation of the Ticket itself         |
+
+Concretely:
+- A curator changing a ticket from OPEN to IN_PROGRESS appends a
+  `TicketEvent(type=STATE_CHANGED, payload={from: OPEN, to: IN_PROGRESS})`
+  to the workflow log.
+- The same mutation also generates an `AuditEvent` of generic-update type
+  on the Ticket's audit trail (or a typed `TicketStateChangedEvent`
+  via `@Audited` once Phase A lands).
+- Edits to a `TicketEvent` row (if Decision 4 ever moves from append-only
+  to in-place) would generate `AuditEvent`s on the Ticket's audit trail
+  — which is how you'd answer "who edited this comment".
+
+This means Ticket adds two columns:
+```sql
+ALTER TABLE ticket ADD COLUMN audit_trail_fk BIGINT NULL FK -> audit_trail;
+```
+(matches the existing `Auditable` HBM pattern across `Investigation`,
+`UserGroup`, `ArrayDesign`, etc.)
+
+### Decision 7: GitHub-issue interop (optional, deferred)
+
+Tickets MAY mirror to GitHub issues. The mapping is loose:
+
+```sql
+ALTER TABLE ticket ADD COLUMN external_issue_url VARCHAR(512) NULL;
+ALTER TABLE ticket ADD COLUMN external_issue_sync_state ENUM('NONE','PENDING','SYNCED','DRIFTED') DEFAULT 'NONE';
+```
+
+Implementation deferred. When a ticket is created or its state changes,
+an optional handler can POST to GitHub via the API; on the inbound side,
+a webhook listener can update `external_issue_sync_state`. The
+`@TransactionalEventListener` pattern on `TicketEvent` handles this
+cleanly without coupling the core domain to GitHub:
+
+```java
+@Component
+@ConditionalOnProperty("gemma.tickets.github.enabled")
+public class GithubIssueSync {
+    @TransactionalEventListener(TicketStateChangedEvent.class)
+    public void onStateChange(TicketStateChangedEvent e) {
+        if (e.ticket().getExternalIssueUrl() != null) {
+            githubClient.transitionIssue(e.ticket(), e.newState());
+        }
+    }
+}
+```
+
+Not in Phase 1 of the ticket layer. Documented here so the schema
+provisions for it.
+
