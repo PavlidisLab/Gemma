@@ -55,6 +55,40 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
         throw new NotImplementedException( "Counting " + getElementClass() + " is not supported." );
     }
 
+    /**
+     * Name of the Hibernate L2 query-cache region to use for filtered-VO queries from this DAO,
+     * or {@code null} to use Hibernate's default {@code StandardQueryCache} region.
+     * <p>
+     * Subclasses with a hot filter path (e.g. {@code ExpressionExperimentDaoImpl}) override this
+     * to shard their cache entries into a dedicated, separately-bounded region declared in
+     * {@code EhcacheConfig}. Shared sharding here is safe because each subclass's
+     * {@link #getFilteringQuery(Filters, Sort)} already produces type-specific HQL — there is no
+     * risk of two DAO types colliding on the same cache key.
+     * <p>
+     * Default: {@code null} (fall back to {@code StandardQueryCache}). See
+     * {@code HIBERNATE_L2_CACHE_AUDIT.md} recommendation #4 for context.
+     */
+    @Nullable
+    protected String getQueryCacheRegion() {
+        return null;
+    }
+
+    /**
+     * Apply {@link Query#setCacheable(boolean)} and, when a region is declared via
+     * {@link #getQueryCacheRegion()}, {@link Query#setCacheRegion(String)} so the cached
+     * result lands in the sharded region rather than the shared default.
+     */
+    private <Q extends Query<?>> Q applyCacheRegion( Q query, boolean cacheable ) {
+        query.setCacheable( cacheable );
+        if ( cacheable ) {
+            String region = getQueryCacheRegion();
+            if ( region != null ) {
+                query.setCacheRegion( region );
+            }
+        }
+        return query;
+    }
+
     private final TypedResultTransformer<O> DEFAULT_ENTITY_TRANSFORMER = new TypedResultTransformer<O>() {
         @Override
         @Nullable
@@ -157,7 +191,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
     private List<Long> doLoadIdsWithCache( @Nullable Filters filters, @Nullable Sort sort, boolean cacheable ) {
         StopWatch timer = StopWatch.createStarted();
         //noinspection unchecked
-        List<Long> result = ( List<Long> ) getFilteringIdQuery( filters, sort ).setCacheable( cacheable ).list();
+        List<Long> result = ( List<Long> ) applyCacheRegion( getFilteringIdQuery( filters, sort ), cacheable ).list();
         timer.stop();
         if ( timer.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
             log.warn( String.format( "Loading %d IDs for %s took %s ms.", result.size(), getElementClass().getName(),
@@ -168,7 +202,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
 
     private List<O> doLoadWithCache( @Nullable Filters filters, @Nullable Sort sort, boolean cacheable ) {
         StopWatch timer = StopWatch.createStarted();
-        List<?> rows = getFilteringQuery( filters, sort ).setCacheable( cacheable ).list();
+        List<?> rows = applyCacheRegion( getFilteringQuery( filters, sort ), cacheable ).list();
         List<O> result = getEntityTransformer().applyTo( rows );
         if ( timer.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
             log.warn( String.format( "Loading %d entities for %s took %s ms.", result.size(), getElementClass().getName(),
@@ -183,12 +217,12 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
         Query<?> totalElementsQuery = getFilteringCountQuery( filters );
         if ( offset > 0 ) query.setFirstResult( offset );
         if ( limit > 0 ) query.setMaxResults( limit );
-        List<?> rows = query.setCacheable( cacheable ).list();
+        List<?> rows = applyCacheRegion( query, cacheable ).list();
         List<O> result = getEntityTransformer().applyTo( rows );
         StopWatch countingStopWatch = StopWatch.createStarted();
         Long totalElements;
         if ( limit > 0 && ( result.isEmpty() || result.size() == limit ) ) {
-            totalElements = ( Long ) totalElementsQuery.setCacheable( cacheable ).uniqueResult();
+            totalElements = ( Long ) applyCacheRegion( totalElementsQuery, cacheable ).uniqueResult();
         } else {
             totalElements = offset + ( long ) result.size();
         }
@@ -204,7 +238,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
 
     private List<VO> doLoadValueObjectsWithCache( @Nullable Filters filters, @Nullable Sort sort, boolean cacheable ) {
         StopWatch stopWatch = StopWatch.createStarted();
-        List<?> rows = this.getFilteringQuery( filters, sort ).setCacheable( cacheable ).list();
+        List<?> rows = applyCacheRegion( this.getFilteringQuery( filters, sort ), cacheable ).list();
         List<VO> results = getValueObjectTransformer().applyTo( rows );
         stopWatch.stop();
         if ( stopWatch.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
@@ -220,13 +254,13 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
         Query<?> totalElementsQuery = getFilteringCountQuery( filters );
         if ( offset > 0 ) query.setFirstResult( offset );
         if ( limit > 0 ) query.setMaxResults( limit );
-        List<?> rows = query.setCacheable( cacheable ).list();
+        List<?> rows = applyCacheRegion( query, cacheable ).list();
         List<VO> list = getValueObjectTransformer().applyTo( rows );
 
         StopWatch countingStopWatch = StopWatch.createStarted();
         Long totalElements;
         if ( limit > 0 && ( list.isEmpty() || list.size() == limit ) ) {
-            totalElements = ( Long ) totalElementsQuery.setCacheable( cacheable ).uniqueResult();
+            totalElements = ( Long ) applyCacheRegion( totalElementsQuery, cacheable ).uniqueResult();
         } else {
             totalElements = offset + ( long ) list.size();
         }
@@ -245,7 +279,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
     private long doCountWithCache( @Nullable Filters filters, boolean cacheable ) {
         StopWatch timer = StopWatch.createStarted();
         try {
-            return ( Long ) requireNonNull( this.getFilteringCountQuery( filters ).setCacheable( cacheable ).uniqueResult(),
+            return ( Long ) requireNonNull( applyCacheRegion( this.getFilteringCountQuery( filters ), cacheable ).uniqueResult(),
                     String.format( "Counting query for %s returned null.", getElementClass().getName() ) );
         } finally {
             timer.stop();

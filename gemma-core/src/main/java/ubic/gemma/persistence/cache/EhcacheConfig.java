@@ -80,6 +80,12 @@ public class EhcacheConfig {
     private static final CacheSpec L2_NONSTRICT = new CacheSpec( 1000, Duration.ofMinutes( 5 ) );
     /** Collection region defaults: small heap, medium TTL. */
     private static final CacheSpec L2_COLLECTION = new CacheSpec( 1000, Duration.ofMinutes( 30 ) );
+    /**
+     * Default sizing for sharded query-cache regions (i.e. named alternatives to
+     * {@code StandardQueryCache}). Matches the StandardQueryCache sizing so a sharded
+     * region behaves the same as the shared one, just isolated from other-query eviction.
+     */
+    private static final CacheSpec L2_QUERY = new CacheSpec( 5000, Duration.ofMinutes( 30 ) );
 
     static {
         // Spring Security ACL cache — read-heavy, evictions driven by AclService mutations.
@@ -115,7 +121,11 @@ public class EhcacheConfig {
 
     static {
         // --- Hibernate standard regions (query cache + invalidation timestamps) ---
-        // StandardQueryCache: holds every setCacheable(true) query result.
+        // StandardQueryCache: holds every setCacheable(true) query result that has NOT been
+        // sharded into a named region via setCacheRegion(...). Hot DAOs (notably
+        // ExpressionExperimentDaoImpl) shard their cacheable queries into the
+        // ExpressionExperiment.* regions declared below to keep their eviction pressure off
+        // this shared region. See HIBERNATE_L2_CACHE_AUDIT.md recommendation #4.
         L2_CACHES.put( "org.hibernate.cache.internal.StandardQueryCache", new CacheSpec( 5000, Duration.ofMinutes( 30 ) ) );
         // UpdateTimestampsCache / TimestampsRegion: tracks last-write timestamps per table
         // for query-cache invalidation. MUST be eternal (TTL=null) - eviction here would
@@ -123,6 +133,19 @@ public class EhcacheConfig {
         L2_CACHES.put( "org.hibernate.cache.spi.UpdateTimestampsCache", new CacheSpec( 5000, null ) );
         // Hibernate 6 internal alias for the same region; declare both to be safe.
         L2_CACHES.put( "org.hibernate.cache.spi.TimestampsRegion", new CacheSpec( 5000, null ) );
+
+        // --- Sharded query-cache regions (named alternatives to StandardQueryCache) ---
+        // Names match the constants in ExpressionExperimentDaoImpl
+        // (FILTERED_VO_CACHE_REGION, ANNOTATIONS_CACHE_REGION, USAGE_FREQ_CACHE_REGION,
+        // QUERIES_CACHE_REGION). The EE-VO filter path is the hottest contributor in
+        // gemma-core (24 setCacheable calls in ExpressionExperimentDaoImpl out of 49
+        // gemma-core-wide per the L2 audit) and is given its own dedicated region so the
+        // catalog/filter traffic does not evict unrelated cached queries (taxon lookups,
+        // platform lookups, ACL helpers, etc).
+        L2_CACHES.put( "ExpressionExperiment.filteredVo", L2_QUERY );
+        L2_CACHES.put( "ExpressionExperiment.annotations", L2_QUERY );
+        L2_CACHES.put( "ExpressionExperiment.usageFrequency", L2_QUERY );
+        L2_CACHES.put( "ExpressionExperiment.queries", L2_QUERY );
 
         // --- Read-only entity regions (immutable configuration / reference data) ---
         L2_CACHES.put( "ubic.gemma.model.analysis.AnalysisResultSet", L2_READ_ONLY );
