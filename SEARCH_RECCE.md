@@ -496,6 +496,16 @@ restoration is another (mostly mechanical).
 - Production cutover: schedule the reindex inside a maintenance window,
   flip the new HS-7 build, monitor `/search` latency.
 
+> **Step 6 follow-up (2026-05-19):** the operator-facing runbook for the
+> reindex (CLI invocation, expected runtime, disk layout, downtime, recovery,
+> cron pattern) lives in [`SEARCH_INDEX_OPERATIONS.md`](./SEARCH_INDEX_OPERATIONS.md).
+> An end-to-end smoke IT (`MassIndexerSmokeIntegrationTest`) lands in
+> `gemma-core/src/test/java/ubic/gemma/core/search/` — JUnit-4,
+> `@Tag("integration")`-routed (Failsafe only), `@Ignore`'d by default
+> because it is destructive against the shared `gemma.search.dir` + gemdtest
+> and conflicts with other parallel ITs. Run it manually for cutover
+> validation per the doc.
+
 ### Effort + parallelism summary
 
 | Step | Effort | Can run in parallel with |
