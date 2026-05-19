@@ -18,16 +18,21 @@
  */
 package ubic.gemma.model.genome.sequenceAnalysis;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
 /**
  * Represents the result of a BLAT search. The column names follow the convention of Kent et al.
+ * <p>
+ * Equality is inherited from {@link SequenceSimilaritySearchResult}, which uses an id-aware,
+ * proxy-safe identifier hash via {@code IdentifiableUtils}. We deliberately do NOT override
+ * equals/hashCode here: the previous {@code @EqualsAndHashCode(callSuper = true)} pulled in all
+ * 17 subclass fields plus lazy associations from the superclass, which is unsafe inside a Set
+ * or Map (would trigger lazy-init / N+1 on hash) and produced unstable hashes when nullable
+ * primitives flipped.
  */
 @Getter
 @Setter
-@EqualsAndHashCode(callSuper = true)
 public class BlatResult extends SequenceSimilaritySearchResult {
 
     private Integer blockCount;
