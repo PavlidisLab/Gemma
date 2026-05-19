@@ -19,6 +19,11 @@
 
 package ubic.gemma.model.analysis.expression;
 
+import org.hibernate.search.engine.backend.types.Projectable;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexedEmbedded;
 import ubic.gemma.model.common.DescribableUtils;
 import ubic.gemma.model.common.auditAndSecurity.AbstractAuditable;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
@@ -32,9 +37,13 @@ import java.util.Set;
 
 /**
  * A grouping of expression studies.
+ * <p>
+ * Hibernate Search 7 indexed root. Section 2.1 of SEARCH_RECCE.md notes that the pre-strip
+ * code had a TODO to include {@code experiments.*} in this document; that gap is preserved.
  *
  * @author Paul
  */
+@Indexed
 public class ExpressionExperimentSet extends AbstractAuditable implements Securable {
 
     @Nullable
@@ -49,6 +58,7 @@ public class ExpressionExperimentSet extends AbstractAuditable implements Secura
     }
 
     @Override
+    @DocumentId
     public Long getId() {
         return super.getId();
     }
@@ -67,16 +77,19 @@ public class ExpressionExperimentSet extends AbstractAuditable implements Secura
     }
 
     @Override
+    @FullTextField
     public String getName() {
         return super.getName();
     }
 
     @Override
+    @FullTextField(projectable = Projectable.YES)
     public String getDescription() {
         return super.getDescription();
     }
 
     @Nullable
+    @IndexedEmbedded
     public DatabaseEntry getAccession() {
         return accession;
     }

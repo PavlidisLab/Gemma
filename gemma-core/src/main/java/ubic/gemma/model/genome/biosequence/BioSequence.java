@@ -18,6 +18,10 @@
  */
 package ubic.gemma.model.genome.biosequence;
 
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexedEmbedded;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.DescribableUtils;
@@ -37,7 +41,11 @@ import java.util.Set;
  * of nucleotides associated with a gene product. This class only represents the sequence itself ("ATCGCCG..."), not the
  * physical item, and not the database entry for the sequence.
  * </p>
+ * <p>
+ * Hibernate Search 7 mapping: indexed root and embedded contributor via
+ * {@link ubic.gemma.model.expression.designElement.CompositeSequence#getBiologicalCharacteristic()}.
  */
+@Indexed
 public class BioSequence extends AbstractDescribable {
 
     private Long length;
@@ -54,11 +62,13 @@ public class BioSequence extends AbstractDescribable {
     private Set<BioSequence2GeneProduct> bioSequence2GeneProduct = new java.util.HashSet<>();
 
     @Override
+    @DocumentId
     public Long getId() {
         return super.getId();
     }
 
     @Override
+    @FullTextField
     public String getName() {
         return super.getName();
     }
@@ -126,6 +136,7 @@ public class BioSequence extends AbstractDescribable {
         this.sequence = sequence;
     }
 
+    @IndexedEmbedded
     public DatabaseEntry getSequenceDatabaseEntry() {
         return this.sequenceDatabaseEntry;
     }

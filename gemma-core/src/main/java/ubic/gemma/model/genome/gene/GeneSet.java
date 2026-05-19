@@ -19,6 +19,11 @@
 
 package ubic.gemma.model.genome.gene;
 
+import org.hibernate.search.engine.backend.types.Projectable;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexedEmbedded;
 import ubic.gemma.model.common.auditAndSecurity.AbstractAuditable;
 import ubic.gemma.model.common.auditAndSecurity.SecuredNotChild;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -30,8 +35,13 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * A grouping of genes that share a common relationship
+ * A grouping of genes that share a common relationship.
+ * <p>
+ * Hibernate Search 7 indexed root. Embeds {@link Characteristic} on each member of
+ * {@link #getCharacteristics()}, source accession, literature references, and members
+ * (which in turn embed each {@link Gene}).
  */
+@Indexed
 public class GeneSet extends AbstractAuditable implements SecuredNotChild {
 
     private Set<Characteristic> characteristics = new HashSet<>();
@@ -48,20 +58,24 @@ public class GeneSet extends AbstractAuditable implements SecuredNotChild {
     }
 
     @Override
+    @DocumentId
     public Long getId() {
         return super.getId();
     }
 
     @Override
+    @FullTextField
     public String getName() {
         return super.getName();
     }
 
     @Override
+    @FullTextField(projectable = Projectable.YES)
     public String getDescription() {
         return super.getDescription();
     }
 
+    @IndexedEmbedded
     public Set<Characteristic> getCharacteristics() {
         return this.characteristics;
     }
@@ -71,6 +85,7 @@ public class GeneSet extends AbstractAuditable implements SecuredNotChild {
     }
 
 
+    @IndexedEmbedded
     public Set<BibliographicReference> getLiteratureSources() {
         return this.literatureSources;
     }
@@ -79,6 +94,7 @@ public class GeneSet extends AbstractAuditable implements SecuredNotChild {
         this.literatureSources = literatureSources;
     }
 
+    @IndexedEmbedded
     public Set<GeneSetMember> getMembers() {
         return this.members;
     }
@@ -87,6 +103,7 @@ public class GeneSet extends AbstractAuditable implements SecuredNotChild {
         this.members = members;
     }
 
+    @IndexedEmbedded
     public DatabaseEntry getSourceAccession() {
         return this.sourceAccession;
     }

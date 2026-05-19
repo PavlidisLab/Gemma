@@ -18,6 +18,11 @@
  */
 package ubic.gemma.model.expression.designElement;
 
+import org.hibernate.search.engine.backend.types.Projectable;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexedEmbedded;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -27,23 +32,29 @@ import java.util.Objects;
 /**
  * A "Probe set" (Affymetrix) or a "Probe" (other types of arrays). The sequence referred to is a "target sequence"
  * (Affymetrix), oligo (oligo arrays) or cDNA clone/EST (cDNA arrays)
+ * <p>
+ * Hibernate Search 7 indexed root.
  */
+@Indexed
 public class CompositeSequence extends AbstractDescribable {
 
     private BioSequence biologicalCharacteristic;
     private ArrayDesign arrayDesign;
 
     @Override
+    @DocumentId
     public Long getId() {
         return super.getId();
     }
 
     @Override
+    @FullTextField
     public String getName() {
         return super.getName();
     }
 
     @Override
+    @FullTextField(projectable = Projectable.YES)
     public String getDescription() {
         return super.getDescription();
     }
@@ -59,6 +70,7 @@ public class CompositeSequence extends AbstractDescribable {
     /**
      * @return The sequence for this composite sequence.
      */
+    @IndexedEmbedded
     public BioSequence getBiologicalCharacteristic() {
         return this.biologicalCharacteristic;
     }
