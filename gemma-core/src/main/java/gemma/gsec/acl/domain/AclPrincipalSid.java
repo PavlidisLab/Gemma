@@ -14,7 +14,7 @@
  */
 package gemma.gsec.acl.domain;
 
-import org.hibernate.Hibernate;
+import org.springframework.security.acls.model.Sid;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.util.Assert;
@@ -22,8 +22,14 @@ import org.springframework.util.Assert;
 import java.util.Objects;
 
 /**
+ * Hibernate-mapped row for a principal entry in {@code acl_sid} (discriminator {@code principal=1}).
+ * Phase B of the gsec absorption removed this class from Spring Security's {@code Sid} hierarchy
+ * so the runtime security path now uses exactly one {@code Sid} type
+ * ({@link org.springframework.security.acls.domain.PrincipalSid}). This class is a pure JPA
+ * entity used by HQL queries (see {@code AclQueryUtils}) — call {@link #toSid()} at the boundary
+ * when a Spring-typed sid is needed.
+ *
  * @author Paul
- * @version $Id: AclPrincipalSid.java,v 1.1 2013/09/14 16:55:18 paul Exp $
  */
 public class AclPrincipalSid extends AclSid {
 
@@ -58,6 +64,11 @@ public class AclPrincipalSid extends AclSid {
     }
 
     @Override
+    public Sid toSid() {
+        return new org.springframework.security.acls.domain.PrincipalSid( principal );
+    }
+
+    @Override
     public int hashCode() {
         return Objects.hash( principal );
     }
@@ -66,23 +77,8 @@ public class AclPrincipalSid extends AclSid {
     public boolean equals( Object object ) {
         if ( object == null ) return false;
         if ( this == object ) return true;
-
-        // Renovations Phase 2 (Hibernate 6): when an AclSid is loaded as a many-to-one (e.g. as
-        // AclObjectIdentity.ownerSid or AclEntry.sid), Hibernate may wrap it in a HibernateProxy
-        // declared against the abstract parent class AclSid — even when the mapping requests
-        // lazy="false". A plain `instanceof AclPrincipalSid` check then returns false on what is
-        // actually a principal SID, breaking ACL ownership checks (AclAuthorizationStrategyImpl).
-        // Unwrap the proxy before the instanceof test.
-        Object unwrapped = ( object instanceof org.hibernate.proxy.HibernateProxy )
-            ? Hibernate.unproxy( object )
-            : object;
-
-        if ( !( unwrapped instanceof AclPrincipalSid ) ) {
-            return false;
-        }
-
-        // Delegate to getPrincipal() to perform actual comparison (both should be identical)
-        return Objects.equals( ( ( AclPrincipalSid ) unwrapped ).getPrincipal(), this.getPrincipal() );
+        if ( !( object instanceof AclPrincipalSid ) ) return false;
+        return Objects.equals( ( ( AclPrincipalSid ) object ).getPrincipal(), this.getPrincipal() );
     }
 
     @Override

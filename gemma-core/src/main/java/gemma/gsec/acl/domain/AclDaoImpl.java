@@ -195,7 +195,17 @@ public class AclDaoImpl implements AclDao {
                 .setParameter( "g", g.getGrantedAuthority() )
                 .setCacheable( true )
                 .uniqueResult();
-        } else if ( sid instanceof AclPrincipalSid ) {
+        } else {
+            throw new IllegalArgumentException( "Unsupported ACL SID type: " + sid.getClass() );
+        }
+    }
+
+    @Override
+    public AclSid find( AclSid sid ) {
+        // Phase B of gsec absorption: AclSid is no longer a Spring Sid. Route entity-typed
+        // lookups directly without crossing the Spring Sid interface.
+        Session session = sessionFactory.getCurrentSession();
+        if ( sid instanceof AclPrincipalSid ) {
             AclPrincipalSid p = ( AclPrincipalSid ) sid;
             if ( p.getId() != null ) {
                 return ( AclSid ) session.get( AclPrincipalSid.class, p.getId() );
@@ -383,9 +393,12 @@ public class AclDaoImpl implements AclDao {
             log.trace( "Preparing to update " + entriesFromAcl.size() + " aces on " + acl.getObjectIdentity() );
         for ( AccessControlEntry ace : entriesFromAcl ) {
             if ( log.isTraceEnabled() ) log.trace( ace );
-            AclSid sid = ( AclSid ) ace.getSid();
+            // Phase B: AclEntry.getSid() now returns Spring Sid (via toSid()). Read the
+            // entity-typed sid directly through the AclEntry-specific accessor; on the new
+            // code path AclImpl.insertAce ensures the field is always an AclSid entity.
+            AclEntry aace = ( AclEntry ) ace;
+            AclSid sid = aace.getSidEntity();
             if ( sid != null && sid.getId() == null ) {
-                AclEntry aace = ( AclEntry ) ace;
                 aace.setSid( this.findOrCreate( sid ) );
             }
         }

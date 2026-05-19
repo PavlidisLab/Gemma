@@ -23,12 +23,18 @@ import org.springframework.security.acls.domain.PermissionFactory;
 import org.springframework.security.acls.model.AccessControlEntry;
 import org.springframework.security.acls.model.Acl;
 import org.springframework.security.acls.model.Permission;
+import org.springframework.security.acls.model.Sid;
 import org.springframework.util.Assert;
 
 import java.util.Objects;
 
 /**
- * Models the acl entry
+ * Hibernate-mapped {@code acl_entry} row. Phase B of the gsec absorption decoupled the Sid
+ * hierarchy: this entry's stored {@link #sid} field is a JPA entity ({@link AclSid}) that does
+ * NOT implement Spring Security's {@code Sid} interface. {@link #getSid()} converts to a Spring
+ * sid at the boundary via {@link AclSid#toSid()} so callers that talk to the
+ * {@link AccessControlEntry} contract see the stock Spring type. {@link #getSidEntity()} exposes
+ * the entity for HQL-side use.
  *
  * @author paul
  */
@@ -36,9 +42,6 @@ public class AclEntry implements AccessControlEntry, Comparable<AclEntry> {
 
     private static final PermissionFactory permissionFactory = new DefaultPermissionFactory();
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
     private static final long serialVersionUID = -4697361841061166973L;
 
     private Long id;
@@ -87,8 +90,21 @@ public class AclEntry implements AccessControlEntry, Comparable<AclEntry> {
         this.mask = permission.getMask();
     }
 
+    /**
+     * Returns the stored sid as a Spring Security {@link Sid} (built via
+     * {@link AclSid#toSid()}). After Phase B of the gsec absorption, callers that exercise the
+     * {@code AccessControlEntry} contract see exactly one Sid type (Spring's stock).
+     */
     @Override
-    public AclSid getSid() {
+    public Sid getSid() {
+        return this.sid == null ? null : this.sid.toSid();
+    }
+
+    /**
+     * Returns the underlying Hibernate-mapped {@code acl_sid} entity. For HQL-internal use only;
+     * external callers should use {@link #getSid()} which yields a Spring-typed sid.
+     */
+    public AclSid getSidEntity() {
         return this.sid;
     }
 

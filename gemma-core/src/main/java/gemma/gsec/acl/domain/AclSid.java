@@ -14,21 +14,21 @@
  */
 package gemma.gsec.acl.domain;
 
-import org.springframework.security.acls.model.Sid;
-
 /**
+ * Hibernate-mapped abstract base for {@code acl_sid} rows. Phase B of the gsec absorption
+ * decoupled this hierarchy from Spring Security's {@link org.springframework.security.acls.model.Sid}
+ * interface: there is now exactly one {@code Sid} hierarchy at runtime (Spring's stock
+ * {@link org.springframework.security.acls.domain.PrincipalSid} /
+ * {@link org.springframework.security.acls.domain.GrantedAuthoritySid}). This class and its
+ * subclasses exist purely as JPA entity types backing HQL queries against {@code acl_sid}
+ * (e.g. {@code AclQueryUtils} subqueries). They are NEVER constructed for use in the security
+ * path. Callers that need a {@code Sid} from one of these entities call {@link #toSid()}.
+ *
  * @author Paul
- * @version $Id: AclSid.java,v 1.1 2013/09/14 16:55:20 paul Exp $
  */
-public abstract class AclSid implements Sid {
+public abstract class AclSid implements java.io.Serializable {
 
-    /**
-     *
-     */
     private static final long serialVersionUID = -3256613712125656321L;
-    // This ID is just our convention for hibernate. In reality the effective unique primary key is the sid (e.g.
-    // username or
-    // grantedauthority)
     private Long id;
 
     public Long getId() {
@@ -39,4 +39,10 @@ public abstract class AclSid implements Sid {
         this.id = id;
     }
 
+    /**
+     * Convert this Hibernate-mapped row to a Spring Security
+     * {@link org.springframework.security.acls.model.Sid} for use in the security path
+     * (ACL equality checks, owner comparisons, ACE construction).
+     */
+    public abstract org.springframework.security.acls.model.Sid toSid();
 }

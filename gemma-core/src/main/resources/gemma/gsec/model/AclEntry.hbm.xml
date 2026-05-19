@@ -24,7 +24,7 @@
       <property name="aceOrder" type="java.lang.Integer">
          <column name="ace_order" not-null="true" unique="false" sql-type="INTEGER"/>
       </property>
-      <many-to-one name="sid" class="gemma.gsec.acl.domain.AclSid" lazy="false" fetch="select">
+      <many-to-one name="sid" class="gemma.gsec.acl.domain.AclSid" lazy="false" fetch="select" access="field">
          <column name="sid" not-null="true" sql-type="BIGINT"/>
       </many-to-one>
    </class>

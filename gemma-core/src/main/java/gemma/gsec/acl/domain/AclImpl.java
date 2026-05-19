@@ -125,7 +125,7 @@ public class AclImpl implements OwnershipAcl {
 
     @Override
     public Sid getOwner() {
-        return this.objectIdentity.getOwnerSid();
+        AclSid s = this.objectIdentity.getOwnerSid(); return s == null ? null : s.toSid();
     }
 
     @Override
@@ -159,7 +159,24 @@ public class AclImpl implements OwnershipAcl {
                 "atIndexLocation must be less than or equal to the size of the AccessControlEntry collection" );
         }
 
-        AclEntry ace = new AclEntry( this, ( AclSid ) sid, permission, granting );
+        // Phase B of gsec absorption: accept both gsec AclSid entities (legacy path) and
+        // Spring's stock PrincipalSid / GrantedAuthoritySid (new code paths that talk to
+        // JdbcMutableAclService normally, but may land here when tests still wire the legacy
+        // gsec ACL stack via BaseDatabaseTest). Convert Spring sids to the corresponding
+        // entity before persisting through Hibernate.
+        AclSid sidEntity;
+        if ( sid instanceof AclSid ) {
+            sidEntity = ( AclSid ) sid;
+        } else if ( sid instanceof org.springframework.security.acls.domain.PrincipalSid ) {
+            sidEntity = new AclPrincipalSid(
+                    ( ( org.springframework.security.acls.domain.PrincipalSid ) sid ).getPrincipal() );
+        } else if ( sid instanceof org.springframework.security.acls.domain.GrantedAuthoritySid ) {
+            sidEntity = new AclGrantedAuthoritySid(
+                    ( ( org.springframework.security.acls.domain.GrantedAuthoritySid ) sid ).getGrantedAuthority() );
+        } else {
+            throw new IllegalArgumentException( "Unsupported Sid type: " + sid.getClass().getName() );
+        }
+        AclEntry ace = new AclEntry( this, sidEntity, permission, granting );
 
         int osize = this.entries.size();
         synchronized ( entries ) {
@@ -315,7 +332,7 @@ public class AclImpl implements OwnershipAcl {
     public void setOwner( Sid newOwner ) {
         aclAuthorizationStrategy.securityCheck( this, AclAuthorizationStrategy.CHANGE_OWNERSHIP );
         Assert.notNull( newOwner, "Owner required" );
-        this.objectIdentity.setOwnerSid( newOwner );
+        this.objectIdentity.setOwnerSidFromSpring( newOwner );
     }
 
     @Override
