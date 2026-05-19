@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hibernate-mapping xmlns="http://www.hibernate.org/xsd/hibernate-mapping"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.hibernate.org/xsd/hibernate-mapping http://hibernate.org/xsd/hibernate-mapping-4.0.xsd">
+
+    <!--
+        Append-only workflow log entry for a Ticket. Mirrors AuditEvent.hbm.xml: mutable="false",
+        payload is a CLOB-mapped JSON string (the entity layer treats it as opaque; Jackson decoding
+        happens at the service / VO boundary).
+    -->
+    <class mutable="false"
+           name="ubic.gemma.model.common.auditAndSecurity.curation.TicketEvent" table="TICKET_EVENT">
+        <id name="id" type="java.lang.Long" unsaved-value="null">
+            <column name="ID" sql-type="BIGINT"/>
+            <generator class="native"/>
+        </id>
+        <many-to-one name="ticket" class="ubic.gemma.model.common.auditAndSecurity.curation.Ticket"
+                     lazy="proxy" fetch="select">
+            <column name="TICKET_FK" not-null="true" sql-type="BIGINT"/>
+        </many-to-one>
+        <many-to-one name="actor" class="ubic.gemma.model.common.auditAndSecurity.Contact"
+                     lazy="proxy" fetch="select">
+            <column name="ACTOR_FK" not-null="true" sql-type="BIGINT"/>
+        </many-to-one>
+        <property name="occurredAt" type="java.util.Date">
+            <column name="OCCURRED_AT" not-null="true" sql-type="DATETIME(3)" index="TICKET_EVENT_OCCURRED_AT"/>
+        </property>
+        <property name="type">
+            <column name="TYPE" not-null="true" sql-type="VARCHAR(64)"/>
+            <type name="org.hibernate.type.EnumType">
+                <param name="enumClass">ubic.gemma.model.common.auditAndSecurity.curation.TicketEventType</param>
+                <param name="useNamed">true</param>
+            </type>
+        </property>
+        <property name="payload" type="org.hibernate.type.MaterializedClobType">
+            <column name="PAYLOAD" not-null="false" sql-type="json"/>
+        </property>
+    </class>
+</hibernate-mapping>
