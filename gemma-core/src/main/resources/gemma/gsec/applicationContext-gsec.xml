@@ -67,11 +67,9 @@
 		<constructor-arg ref="aclAuthorizationStrategy"/>
 	</bean>
 
-	<bean id="permissionEvaluator" class="org.springframework.security.acls.AclPermissionEvaluator">
-		<constructor-arg ref="aclService"/>
-		<property name="objectIdentityRetrievalStrategy" ref="objectIdentityRetrievalStrategy"/>
-		<property name="sidRetrievalStrategy" ref="sidRetrievalStrategy"/>
-	</bean>
+	<!-- permissionEvaluator moved to ubic.gemma.core.security.MethodSecurityConfig as a @Bean
+	     so the SpEL-handler owner is co-located with the AclPermissionEvaluator wiring.
+	     See gsec-absorption roadmap. -->
 
 
 	<!-- needed for the use of @Pre... and @Post... -->
