@@ -27,14 +27,12 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.measurement.Unit;
-import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailDao;
 import ubic.gemma.persistence.service.common.description.BibliographicReferenceDao;
 import ubic.gemma.persistence.service.common.description.DatabaseEntryDao;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseDao;
 import ubic.gemma.persistence.service.common.measurement.UnitDao;
-import ubic.gemma.persistence.service.common.protocol.ProtocolDao;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeDao;
 import ubic.gemma.persistence.util.BusinessKey;
 
@@ -65,9 +63,6 @@ public abstract class CommonPersister extends AbstractPersister {
     private ExternalDatabaseDao externalDatabaseDao;
 
     @Autowired
-    private ProtocolDao protocolDao;
-
-    @Autowired
     private QuantitationTypeDao quantitationTypeDao;
 
     @Autowired
@@ -89,8 +84,6 @@ public abstract class CommonPersister extends AbstractPersister {
             return ( T ) this.persistQuantitationType( ( QuantitationType ) entity, caches );
         } else if ( entity instanceof ExternalDatabase ) {
             return ( T ) this.persistExternalDatabase( ( ExternalDatabase ) entity, caches );
-        } else if ( entity instanceof Protocol ) {
-            return ( T ) this.persistProtocol( ( Protocol ) entity );
         } else if ( entity instanceof Characteristic ) {
             // Characteristic is always cascaded from its owning entity (Investigation,
             // BioMaterial, FactorValue, etc. all declare cascade="all" on their
@@ -152,12 +145,6 @@ public abstract class CommonPersister extends AbstractPersister {
         // and only unique within an external database, so we always create.
         entity.setExternalDatabase( this.persistExternalDatabase( entity.getExternalDatabase(), caches ) );
         return databaseEntryDao.create( entity );
-    }
-
-    protected Protocol persistProtocol( Protocol protocol ) {
-        // Protocols are not shared across analyses (per PP2017 comment); always create.
-        // Kept as a thin pass-through for the dispatch in doPersist().
-        return protocolDao.create( protocol );
     }
 
     protected QuantitationType persistQuantitationType( QuantitationType qType, Caches caches ) {
