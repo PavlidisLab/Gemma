@@ -4,6 +4,21 @@
 **Branch baseline:** `phase2-acl-migrate` HEAD `342cbb0a1b`
 **Status:** recce only. No code changes; this is a measurement + projection doc.
 
+> **Audit note (2026-05-19, cruft-delete agent off `db5c0540af`):** ran a
+> conservative deletion sweep against this inventory and deleted **zero**
+> files. Every Section 1/2/3 line item is either (a) on an in-flight
+> agent's avoid-list (persister `*`), (b) gated on a multi-session migration
+> not yet landed (AfterInvocation Phase C, gsec Phase C adapter drop,
+> gemma-web retirement), (c) explicitly KEEP-INVESTIGATE pending audit (§4),
+> or (d) the verdict turned out wrong on grep: `Reporter.java` is referenced
+> by `SequenceManipulation.java`; `SidValueObject` is referenced by
+> `SecurityController` + `SecurityInfoValueObject`; the §1.7 XML stubs
+> carry in-tree comments stating they MUST remain to preserve the
+> `classpath*:ubic/gemma/applicationContext-*.xml` wildcard-loader
+> contract. The "Phase 3 cruft inventory" is best read as **a projection
+> of where the LoC will land after the planned migrations finish**, not as
+> a queue of safe-now deletions.
+
 This doc inventories Java (and adjacent config) that is **queued to disappear** or
 **queued to shrink** as Phase 3 modernization lands, with concrete file paths +
 line counts + a verdict per item (DELETE / SHRINK-BY / KEEP-INVESTIGATE). Section
