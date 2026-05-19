@@ -42,6 +42,7 @@ import ubic.gemma.persistence.service.genome.GeneDao;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceDao;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.AnnotationAssociationDao;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatAssociationDao;
+import ubic.gemma.persistence.service.genome.taxon.TaxonDao;
 import ubic.gemma.persistence.util.BusinessKey;
 
 import java.util.Collection;
@@ -84,6 +85,8 @@ public class GeneWriteServiceImpl implements GeneWriteService {
     @Autowired
     private ExternalDatabaseDao externalDatabaseDao;
     @Autowired
+    private TaxonDao taxonDao;
+    @Autowired
     private SessionFactory sessionFactory;
 
     @Override
@@ -117,9 +120,13 @@ public class GeneWriteServiceImpl implements GeneWriteService {
 
         Collection<GeneProduct> tempGeneProduct = gene.getProducts();
         gene.setProducts( null );
-        // Note: taxon and chromosome filling are NOT handled here in PREP — the persister
-        // still does that on its create path. After cutover, callers either pre-resolve
-        // these or this method gets the BK helpers (see migration plan section 5.3 step 3).
+        // Resolve the gene's taxon up-front (matches GenomePersister.persistGene); without this
+        // a transient Taxon attached to the gene blows up on flush with a
+        // TransientPropertyValueException, and downstream chromosome BK lookups need an
+        // ID-bearing taxon too.
+        if ( gene.getTaxon() != null ) {
+            gene.setTaxon( this.persistTaxon( gene.getTaxon() ) );
+        }
         if ( gene.getPhysicalLocation() != null ) {
             this.fillChromosomeLocationAssociations( gene.getPhysicalLocation(), gene.getTaxon() );
         }
@@ -606,7 +613,32 @@ public class GeneWriteServiceImpl implements GeneWriteService {
         Chromosome existing = BusinessKey.find( session, chromosome );
 
         if ( existing == null ) {
+            // On miss we are about to insert; the chromosome's taxon FK is NOT NULL and
+            // does not cascade-persist, so resolve any transient Taxon first. This matches
+            // GenomePersister.persistChromosome's miss-branch (which delegated to
+            // doPersist(Taxon, caches) -> persistTaxon).
+            if ( ct != null ) {
+                chromosome.setTaxon( this.persistTaxon( ct ) );
+            }
             return chromosomeDao.create( chromosome );
+        }
+        return existing;
+    }
+
+    /**
+     * Find-or-create for a {@link Taxon} by business key. Mirrors
+     * {@link ubic.gemma.persistence.persister.GenomePersister#persistTaxon} minus the
+     * per-call cache (Hibernate L1 covers within-transaction identity, and the gene
+     * import paths that drive this service don't churn taxa hot enough to need the
+     * cache that GenomePersister maintained).
+     */
+    private Taxon persistTaxon( Taxon taxon ) {
+        if ( taxon == null ) return null;
+        if ( taxon.getId() != null ) return taxon;
+        Session session = sessionFactory.getCurrentSession();
+        Taxon existing = BusinessKey.find( session, taxon );
+        if ( existing == null ) {
+            return taxonDao.create( taxon );
         }
         return existing;
     }
