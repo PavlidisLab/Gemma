@@ -18,6 +18,7 @@
  */
 package ubic.gemma.persistence.persister;
 
+import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.*;
@@ -37,12 +38,20 @@ import ubic.gemma.persistence.service.common.description.ExternalDatabaseDao;
 import ubic.gemma.persistence.service.common.measurement.UnitDao;
 import ubic.gemma.persistence.service.common.protocol.ProtocolDao;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeDao;
+import ubic.gemma.persistence.util.BusinessKey;
 
-import java.util.Collection;
 import java.util.Map;
 
 /**
  * Persister for ubic.gemma.model.common package classes.
+ * <p>
+ * Phase 3 persister retirement: methods here are being rewired to delegate to
+ * {@link BusinessKey#find(Session, Object)} (or DAO-level {@code find} where it already
+ * wraps BusinessKey) followed by a direct {@code session.persist} / {@code dao.create}
+ * on miss. The aim is to make each {@code persistXxx} a thin two-line "lookup by
+ * business key, else create" so the whole persister can eventually be deleted in favour
+ * of either the DAO {@code findOrCreate} call or a JPA cascade declared in the parent's
+ * HBM mapping.
  *
  * @author pavlidis
  */
@@ -82,7 +91,6 @@ public abstract class CommonPersister extends AbstractPersister {
             return ( T ) this.persistAuditTrail( ( AuditTrail ) entity );
         } else if ( entity instanceof User ) {
             throw new UnsupportedOperationException( "Don't persist users via this class; use the UserManager (core)" );
-            // return persistUser( ( User ) entity );
         } else if ( entity instanceof Person ) {
             return ( T ) this.persistPerson( ( Person ) entity );
         } else if ( entity instanceof Contact ) {
@@ -96,7 +104,10 @@ public abstract class CommonPersister extends AbstractPersister {
         } else if ( entity instanceof Protocol ) {
             return ( T ) this.persistProtocol( ( Protocol ) entity );
         } else if ( entity instanceof Characteristic ) {
-            return null; // cascade
+            // Characteristic is always cascaded from its owning entity (Investigation,
+            // BioMaterial, FactorValue, etc. all declare cascade="all" on their
+            // characteristics collection in HBM). Nothing to do here.
+            return null;
         } else if ( entity instanceof BibliographicReference ) {
             return ( T ) this.persistBibliographicReference( ( BibliographicReference ) entity, caches );
         } else if ( entity instanceof DatabaseEntry ) {
@@ -115,40 +126,38 @@ public abstract class CommonPersister extends AbstractPersister {
     }
 
     protected AuditTrail persistAuditTrail( AuditTrail entity ) {
+        // AuditTrail has no business key; events are persisted by composition.
+        // Most callers reach AuditTrail via the Auditable parent's cascade=all and
+        // never invoke this directly — preserved for the few that do.
         for ( AuditEvent event : entity.getEvents() ) {
             if ( event == null )
                 continue; // legacy of ordered-list which could end up with gaps; should not be needed
-            // any more
-            // event.setPerformer( ( User ) persistPerson( event.getPerformer() ) );
             assert event.getPerformer() != null;
         }
-
-        // events are persisted by composition.
         return auditTrailDao.create( entity );
     }
 
     protected Contact persistContact( Contact contact ) {
-        return this.contactDao.findOrCreate( contact );
+        // BusinessKey.find(Session, Contact) covers Person too (Person extends Contact).
+        Session session = getSessionFactory().getCurrentSession();
+        Contact existing = BusinessKey.find( session, contact );
+        return existing != null ? existing : contactDao.create( contact );
     }
 
     protected ExternalDatabase persistExternalDatabase( ExternalDatabase database, Caches caches ) {
         Map<String, ExternalDatabase> seenDatabases = caches.getExternalDatabaseCache();
-
         String name = database.getName();
-
         if ( seenDatabases.containsKey( name ) ) {
             return seenDatabases.get( name );
         }
-
+        // ExternalDatabase has no static BusinessKey.find — DAO-level find()
+        // resolves by name (a single-property business key).
         ExternalDatabase existingDatabase = externalDatabaseDao.find( database );
-
-        // don't use findOrCreate to avoid flush.
         if ( existingDatabase == null ) {
             database = externalDatabaseDao.create( database );
         } else {
             database = existingDatabase;
         }
-
         seenDatabases.put( database.getName(), database );
         return database;
     }
@@ -157,55 +166,65 @@ public abstract class CommonPersister extends AbstractPersister {
         if ( entity.getExternalDatabase() == null ) {
             throw new IllegalArgumentException( String.format( "DatabaseEntry %s must have an associated external database.", entity ) );
         }
+        // Resolve the ExternalDatabase first (BK lookup, cached), then persist the
+        // entry itself. DatabaseEntry has no business key — accession is per-entry
+        // and only unique within an external database, so we always create.
         entity.setExternalDatabase( this.persistExternalDatabase( entity.getExternalDatabase(), caches ) );
         return databaseEntryDao.create( entity );
     }
 
-
     protected Protocol persistProtocol( Protocol protocol ) {
-        // I changed this to create instead of findOrCreate because in
-        // practice protocols are not shared; we use them to store information about analyses we run. PP2017
+        // Protocols are not shared across analyses (per PP2017 comment); always create.
+        // Kept as a thin pass-through for the dispatch in doPersist().
         return protocolDao.create( protocol );
     }
 
     protected QuantitationType persistQuantitationType( QuantitationType qType, Caches caches ) {
-        /*
-         * this cache is dangerous if run for multiple experiment loadings. For this reason we clear the cache
-         * before persisting each experiment.
-         */
-        int key;
+        // QTs are per-experiment — we deliberately do NOT find-or-create across
+        // experiments, only within one (via the cache, which the caller clears
+        // between experiments). The cache key matches BusinessKey.matches semantics
+        // for QuantitationType ((name, description)).
         if ( qType.getName() == null )
             throw new IllegalArgumentException( "QuantitationType must have a name" );
-        key = qType.getName().hashCode();
+        int key = qType.getName().hashCode();
         if ( qType.getDescription() != null )
             key += qType.getDescription().hashCode();
 
         Map<Integer, QuantitationType> quantitationTypeCache = caches.getQuantitationTypeCache();
-
         if ( quantitationTypeCache.containsKey( key ) ) {
             return quantitationTypeCache.get( key );
         }
 
-        /*
-         * Note: we use 'create' here instead of 'findOrCreate' because we don't want quantitation types shared across
-         * experiments.
-         */
         QuantitationType qt = quantitationTypeDao.create( qType );
         quantitationTypeCache.put( key, qt );
         return qt;
     }
 
     protected Unit persistUnit( Unit unit ) {
-        return this.unitDao.findOrCreate( unit );
+        // Unit has a static BusinessKey.find — bypass the DAO-level wrapper so the
+        // intent is visible at the call site.
+        Session session = getSessionFactory().getCurrentSession();
+        Unit existing = BusinessKey.find( session, unit );
+        return existing != null ? existing : unitDao.create( unit );
     }
 
     private Object persistBibliographicReference( BibliographicReference reference, Caches caches ) {
+        // BK is the pubAccession (a DatabaseEntry); resolve its ExternalDatabase first
+        // so the BK lookup can match by accession string. BibliographicReference has
+        // no static BusinessKey.find — the DAO-level find() queries by pubAccession.accession.
         this.fillInDatabaseEntry( reference.getPubAccession(), caches );
-        return this.bibliographicReferenceDao.findOrCreate( reference );
+        BibliographicReference existing = bibliographicReferenceDao.find( reference );
+        return existing != null ? existing : bibliographicReferenceDao.create( reference );
     }
 
     private Person persistPerson( Person person ) {
-        return this.personDao.findOrCreate( person );
+        // Person extends Contact; BusinessKey.find(Session, Contact) handles it.
+        Session session = getSessionFactory().getCurrentSession();
+        Contact existing = BusinessKey.find( session, person );
+        if ( existing instanceof Person ) {
+            return ( Person ) existing;
+        }
+        return personDao.create( person );
     }
 
 }

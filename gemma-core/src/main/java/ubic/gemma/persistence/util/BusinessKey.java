@@ -32,9 +32,11 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.measurement.Unit;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.AlternateName;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -233,6 +235,26 @@ public class BusinessKey {
             attachBioSequence( cb, from, "sequence", chromosome.getSequence(), preds );
         }
         return preds;
+    }
+
+    /**
+     * Find an existing {@link Chromosome} by its business key (name + taxon, optionally tightened by
+     * assemblyDatabase + sequence when present on the input).
+     *
+     * @throws IllegalArgumentException if the chromosome lacks a name or a taxon
+     * @throws org.hibernate.NonUniqueResultException if more than one row matches the key
+     */
+    public static Chromosome find( Session session, Chromosome chromosome ) {
+        checkValidKey( chromosome );
+        CriteriaBuilder cb = session.getCriteriaBuilder();
+        CriteriaQuery<Chromosome> cq = cb.createQuery( Chromosome.class );
+        Root<Chromosome> root = cq.from( Chromosome.class );
+        List<Predicate> preds = matches( cb, root, chromosome );
+        cq.select( root );
+        if ( !preds.isEmpty() ) {
+            cq.where( preds.toArray( new Predicate[0] ) );
+        }
+        return session.createQuery( cq ).uniqueResult();
     }
 
     // ===== Contact =====
@@ -518,6 +540,102 @@ public class BusinessKey {
         preds.add( baJoin.get( "id" ).in( IdentifiableUtils.getIds( entity.getBioAssays() ) ) );
         cq.select( root ).distinct( true ).where( preds.toArray( new Predicate[0] ) );
         return session.createQuery( cq ).uniqueResult();
+    }
+
+    // ===== QuantitationType =====
+    //
+    // The business key matches QuantitationType#equals: name + generalType + type + scale + representation
+    // + the five boolean flags (isBackground, isBackgroundSubtracted, isRatio, isNormalized, isBatchCorrected)
+    // + isRecomputedFromRawData. This mirrors QuantitationTypeDaoImpl#qtMatchClause.
+    //
+    // Note: in practice the persister uses create() rather than findOrCreate() for QT, because QTs are
+    // experiment-scoped and intentionally not shared. The find(...) here is still useful for callers
+    // that need to dedupe within a single experiment.
+
+    public static List<Predicate> matches( CriteriaBuilder cb, From<?, QuantitationType> from, QuantitationType qt ) {
+        List<Predicate> preds = new ArrayList<>();
+        preds.add( cb.equal( from.get( "name" ), qt.getName() ) );
+        preds.add( cb.equal( from.get( "generalType" ), qt.getGeneralType() ) );
+        preds.add( cb.equal( from.get( "type" ), qt.getType() ) );
+        preds.add( cb.equal( from.get( "scale" ), qt.getScale() ) );
+        preds.add( cb.equal( from.get( "representation" ), qt.getRepresentation() ) );
+        preds.add( cb.equal( from.get( "isBackground" ), qt.getIsBackground() ) );
+        preds.add( cb.equal( from.get( "isBackgroundSubtracted" ), qt.getIsBackgroundSubtracted() ) );
+        preds.add( cb.equal( from.get( "isRatio" ), qt.getIsRatio() ) );
+        preds.add( cb.equal( from.get( "isNormalized" ), qt.getIsNormalized() ) );
+        preds.add( cb.equal( from.get( "isBatchCorrected" ), qt.getIsBatchCorrected() ) );
+        preds.add( cb.equal( from.get( "isRecomputedFromRawData" ), qt.getIsRecomputedFromRawData() ) );
+        return preds;
+    }
+
+    /**
+     * Find an existing {@link QuantitationType} whose full set of identifying fields equals the input's.
+     *
+     * @throws IllegalArgumentException if the QT lacks a name
+     * @throws org.hibernate.NonUniqueResultException if more than one row matches the key
+     */
+    public static QuantitationType find( Session session, QuantitationType qt ) {
+        checkKey( qt );
+        CriteriaBuilder cb = session.getCriteriaBuilder();
+        CriteriaQuery<QuantitationType> cq = cb.createQuery( QuantitationType.class );
+        Root<QuantitationType> root = cq.from( QuantitationType.class );
+        cq.select( root ).where( matches( cb, root, qt ).toArray( new Predicate[0] ) );
+        return session.createQuery( cq ).uniqueResult();
+    }
+
+    // ===== BioAssayDimension =====
+    //
+    // The natural key is the (ordered) list of BioAssays. Candidates are pre-filtered by size and
+    // "shares at least one BioAssay id with the input" (mirroring BioAssayDimensionDaoImpl#find), then
+    // the caller's BioAssayDimension.equals(...) (which compares the bioAssays lists) is applied in
+    // Java to enforce identity-and-order. All BioAssays must be persistent (have an id).
+
+    public static BioAssayDimension find( Session session, BioAssayDimension bioAssayDimension ) {
+        checkKey( bioAssayDimension );
+
+        Collection<Long> bioAssayIds = new HashSet<>();
+        for ( BioAssay ba : bioAssayDimension.getBioAssays() ) {
+            bioAssayIds.add( ba.getId() );
+        }
+
+        CriteriaBuilder cb = session.getCriteriaBuilder();
+        CriteriaQuery<BioAssayDimension> cq = cb.createQuery( BioAssayDimension.class );
+        Root<BioAssayDimension> root = cq.from( BioAssayDimension.class );
+        List<Predicate> preds = new ArrayList<>();
+        preds.add( cb.equal( cb.size( root.get( "bioAssays" ) ), bioAssayDimension.getBioAssays().size() ) );
+        if ( !bioAssayIds.isEmpty() ) {
+            Join<BioAssayDimension, BioAssay> baJoin = root.join( "bioAssays" );
+            preds.add( baJoin.get( "id" ).in( bioAssayIds ) );
+        }
+        cq.select( root ).distinct( true ).where( preds.toArray( new Predicate[0] ) );
+
+        List<BioAssayDimension> candidates = session.createQuery( cq ).list();
+        for ( BioAssayDimension candidate : candidates ) {
+            // BioAssayDimension.equals checks list-equality of bioAssays (preserving order).
+            if ( candidate.getBioAssays().equals( bioAssayDimension.getBioAssays() ) ) {
+                return candidate;
+            }
+        }
+        return null;
+    }
+
+    public static void checkKey( BioAssayDimension bioAssayDimension ) {
+        if ( bioAssayDimension == null || bioAssayDimension.getBioAssays() == null
+                || bioAssayDimension.getBioAssays().isEmpty() ) {
+            throw new IllegalArgumentException( "BioAssayDimension must have at least one BioAssay." );
+        }
+        for ( BioAssay ba : bioAssayDimension.getBioAssays() ) {
+            if ( ba == null || ba.getId() == null ) {
+                throw new IllegalArgumentException(
+                        "BioAssayDimension's BioAssays must all be persistent (have an id) to be findable." );
+            }
+        }
+    }
+
+    public static void checkKey( QuantitationType quantitationType ) {
+        if ( quantitationType == null || StringUtils.isBlank( quantitationType.getName() ) ) {
+            throw new IllegalArgumentException( "QuantitationType must have a name." );
+        }
     }
 
     // ===== DatabaseEntry =====
