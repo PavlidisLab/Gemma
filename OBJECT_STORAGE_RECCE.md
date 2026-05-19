@@ -113,6 +113,14 @@ mechanical (both expose the same S3 verbs).
 Reject: Commons VFS (stagnant + sandbox-only S3); Spring Cloud AWS
 (magnetic to Spring Boot we don't run).
 
+**Note on HDF5:** the generic blob path (read/write/list/delete) uses
+AWS SDK v2 as described. HDF5 (`.h5ad`) does **not** go through the
+SDK at all — it uses [AWS Mountpoint-for-S3]
+(https://github.com/awslabs/mountpoint-s3), a FUSE-based driver that
+exposes the bucket as a local POSIX path so the native HDF5 library
+can mmap chunks directly. Mountpoint is operationally a sidecar /
+init-container concern, not a Java dependency. See §3.6.1.
+
 ---
 
 ## 3. Migration shape
@@ -140,9 +148,10 @@ public interface BlobStorageService {
      *  filesystem). */
     Stream<URI> list(URI uri) throws IOException;
 
-    /** Stage a remote blob to a local Path. Required for HDF5 / Jena TDB /
-     *  Lucene / sub-process inputs. Returns a handle that deletes the
-     *  staged file on close. */
+    /** Stage a remote blob to a local Path for short-lived R / Python
+     *  sub-process inputs. Returns a handle that deletes the staged file
+     *  on close. NOTE: HDF5, Jena TDB, and Lucene do NOT use this — see
+     *  §3.6 for per-engine local-path strategies. */
     StagedBlob stage(URI uri) throws IOException;
 
     /** Optional metadata: size, last-modified, checksum. */
@@ -184,13 +193,80 @@ is `Path`-scoped. Filesystem backend keeps it; S3 backend implements
 Phase A defines `BlobLock` mirroring `LockedPath` and the filesystem
 impl delegates to today's `FileLockManager`. S3 impl ships in Phase C.
 
-### 3.5 Sub-process / native-lib helpers
+### 3.5 Sub-process helpers
 
-`stage(URI)` returns a `StagedBlob` carrying a local `Path` whose
-lifetime is bounded by `try-with-resources`. Native consumers (HDF5,
-R/Python sub-processes, Jena TDB, Lucene) call `stage()` and pass the
-local path. For write-back, a paired `Stager.upload(localPath, URI)`
-finalizes the artifact.
+R / Python sub-processes that need a real local file for short-lived
+inputs go through a narrow `stage(URI) → StagedBlob` helper on the
+filesystem backend: copy-down on entry, delete on `close()`,
+try-with-resources lifetime. The three native engines below do **not**
+use it — each has a better per-engine answer.
+
+### 3.6 Native engines that need a local path — per-engine answers
+
+The earlier draft proposed one generic `stage(URI) → StagedBlob` for
+HDF5, Jena TDB, and Lucene. That over-generalizes: the three engines
+have radically different access patterns and the right local-path
+strategy differs accordingly.
+
+#### 3.6.1 HDF5 (`.h5ad`) — AWS Mountpoint-for-S3
+
+- **Access pattern:** write-once (the loader streams the whole
+  `.h5ad` end-to-end, never mutates in place), then read-mostly with
+  random access (HDF5 chunked reads through the native library).
+- **Solution:** mount the S3 bucket via [AWS Mountpoint-for-S3]
+  (https://github.com/awslabs/mountpoint-s3) as a local POSIX path.
+  Mountpoint is read-optimized, supports random reads natively, and
+  its sequential-write-only restriction is a non-issue for `.h5ad`
+  files (loader writes top-to-bottom, never seeks back).
+- **Code shape:** a tiny `S3MountedPath(uri)` helper that resolves
+  `s3://bucket/path/file.h5ad` to `<gemma.storage.s3.hdf5MountPath>/
+  path/file.h5ad` and hands a `java.nio.file.Path` to
+  `AnnData.open(Path)`. No SDK calls, no streaming abstraction —
+  Mountpoint does the work at the OS layer.
+- **Why not stage-to-scratch:** `.h5ad` files run 10 MB - 50 GB; a
+  full local copy doubles storage and blocks first read. Mountpoint
+  streams chunks on demand.
+
+#### 3.6.2 Lucene / Compass search indices — rebuild on cold start
+
+- **Access pattern:** derived index. Source of truth is ontology
+  files + DB metadata; the index can always be rebuilt.
+- **Solution:** don't put it in S3 at all. On container start, if
+  `${gemma.search.dir}` is empty (ephemeral local scratch in a
+  containerized deploy), kick off a cold-start rebuild from the
+  canonical inputs. While the index is warming, search endpoints
+  return a 503 / "rebuilding" response.
+- **Code shape:** a `LuceneColdStartRebuildJob` (Spring lifecycle
+  bean or scheduled task) + delete the `searchIndices/` sub-tree
+  from any S3-backed plan. ~100 LoC.
+- **Long-term:** move off Lucene to OpenSearch (managed remote
+  service, no local-path requirement). See §6.
+- **Why not stage-from-S3:** the index is derived; S3 storage buys
+  nothing the rebuild can't recreate, and Lucene mmap'd segments
+  don't tolerate the staging round-trip cleanly.
+
+#### 3.6.3 Jena TDB — stage on startup + periodic snapshot
+
+- **Access pattern:** small (tens of MB), occasional writes (the
+  ontology-loader cron rewrites the triple store; everything else
+  reads). Typically only **one replica writes** (the cron pod);
+  other replicas are read-only.
+- **Solution:** on startup, copy `s3://bucket/ontology/tdb/` to
+  `${gemma.ontology.unified.tdb.dir}` (local scratch). When the
+  ontology-loader writes, after each successful batch, snapshot the
+  directory back to S3 if mtime advanced. Read-only replicas
+  periodically poll S3 for a newer snapshot and refresh.
+- **Code shape:** a `JenaTdbStageAndSnapshot` helper (~150 LoC):
+  - `stageOnStart()` — `aws s3 sync` equivalent via SDK v2 into the
+    local TDB dir.
+  - `snapshotIfChanged()` — called from the ontology-loader's
+    post-commit hook; uploads delta back to S3.
+  - `pollForRefresh()` — read-only replicas; polls
+    `s3://.../tdb/.last-modified` and re-stages if newer.
+- **Why not Mountpoint:** Jena TDB does seeking writes (B-tree
+  updates), which Mountpoint's sequential-write restriction
+  forbids. Stage-and-snapshot is the right shape for "small,
+  occasional writes, single-writer."
 
 ---
 
@@ -277,18 +353,69 @@ Risk: medium — first production code that talks to a remote service.
 Validation: testcontainers MinIO, plus a manual smoke against a real
 MinIO/Ceph cluster.
 
-### Phase D — Full migration of remaining call sites
+### Phase D — Native-engine local-path strategies (per-engine)
+
+The three native engines that need a real local path (HDF5, Lucene,
+Jena TDB — §1.4 footgun #1, fully spelled out in §3.6) each get their
+own sub-phase. These are independent and can land in any order.
+
+#### D1 — HDF5 via Mountpoint-for-S3 (~50 LoC)
+
+- Add `gemma.storage.s3.hdf5MountPath` config key (default unset → no
+  remote backing, current behavior).
+- Tiny `S3MountedPath` helper resolving `s3://.../foo.h5ad` to
+  `<hdf5MountPath>/foo.h5ad`. Single call site change in the loader
+  that hands a `Path` to `AnnData.open(...)`.
+- Ops side (not in this LoC budget): Mountpoint runs as a sidecar /
+  init-container; documented in the deploy README.
+- Risk: low. Validation: smoke test reading an `.h5ad` through a
+  local Mountpoint mount against MinIO.
+
+#### D2 — Lucene cold-start rebuild (~100 LoC)
+
+- Drop `searchIndices/` from any S3-backed plan; `gemma.search.dir`
+  stays pointed at ephemeral local scratch.
+- Add `LuceneColdStartRebuildJob` (Spring lifecycle bean): on
+  startup, if the index directory is empty or stale, rebuild from
+  ontology files + DB metadata in the background. Search endpoints
+  return 503 / "rebuilding" until ready.
+- Risk: low-medium — rebuild time is the user-visible cost; needs
+  measurement on a representative DB before rollout.
+- Validation: integration test with a wiped `gemma.search.dir`;
+  measured rebuild time logged.
+
+#### D3 — Jena TDB stage-and-snapshot (~150 LoC)
+
+- `JenaTdbStageAndSnapshot` helper with three entry points:
+  - `stageOnStart()` — `s3 sync` into `${gemma.ontology.unified.tdb.dir}` on container boot.
+  - `snapshotIfChanged()` — wired into the ontology-loader's
+    post-commit hook; uploads when local mtime advances.
+  - `pollForRefresh()` — read-only replicas poll
+    `s3://.../tdb/.last-modified` on a schedule.
+- Single-writer assumption enforced by `gemma.storage.instance.role`
+  (`ontology-writer` | `read-only`); the snapshot path only fires
+  for the writer role.
+- Risk: medium — first code that coordinates state between replicas.
+- Validation: testcontainers MinIO + two-replica integration test
+  (writer + read-only).
+
+#### Phase D total: ~300 LoC
+
+### Phase E — Full migration of remaining call sites
 
 **Scope:** sweep the 52 distinct source files that call `Files.*` (per
 §1.2). For each: replace direct path I/O with `BlobStorageService`,
-using `stage()` where native libs / sub-processes are involved.
+using `stage()` only where R / Python sub-processes need a short-lived
+local file.
 
 Sub-batches:
-- D1: `ExpressionDataFileServiceImpl` + `ExpressionMetadataChangelogFileServiceImpl` (hottest path, locked, EE-scoped).
-- D2: GEO / NCBI / ArrayExpress fetchers (`SimpleDownloader`, `GeoFetcher`, `MexDetector`, `HttpFetcher`, `AbstractSingleFileInSeriesSingleCellDetector`).
-- D3: CLI writers (`RawExpressionDataWriterCli`, `SingleCellDataWriterCli`, `DifferentialExpressionAnalysisWriterCli`, `ExpressionDataMatrixWriterCLI`, `CellLevelMetadataWriterCli`, `ExperimentalDesignImportCli`, `LoadSimpleExpressionDataCli`).
-- D4: Ontology / Jena TDB / search indices — these likely **stay on local FS** behind a `BlobStorageService` adapter that pins the URI to a known scratch path; document the constraint.
-- D5: `TableMaintenanceUtilImpl` gene2cs serialized blob; `GeoBrowserServiceImpl` info-store.
+- E1: `ExpressionDataFileServiceImpl` + `ExpressionMetadataChangelogFileServiceImpl` (hottest path, locked, EE-scoped).
+- E2: GEO / NCBI / ArrayExpress fetchers (`SimpleDownloader`, `GeoFetcher`, `MexDetector`, `HttpFetcher`, `AbstractSingleFileInSeriesSingleCellDetector`).
+- E3: CLI writers (`RawExpressionDataWriterCli`, `SingleCellDataWriterCli`, `DifferentialExpressionAnalysisWriterCli`, `ExpressionDataMatrixWriterCLI`, `CellLevelMetadataWriterCli`, `ExperimentalDesignImportCli`, `LoadSimpleExpressionDataCli`).
+- E4: `TableMaintenanceUtilImpl` gene2cs serialized blob; `GeoBrowserServiceImpl` info-store.
+
+(Ontology / Jena TDB / search indices are out of this sweep —
+handled in Phase D.)
 
 **Files modified (estimate):** ~50 files, ~2-3 KLoC delta. Risk:
 medium-high — this is the production hot path. Validation: full
@@ -302,7 +429,10 @@ manual end-to-end on a staging deployment.
 | A | +900 / -0 | 0 modified, 7 new | low | unit + `mvn verify` |
 | B | +250 / -180 (net +70) | 3-4 modified | low | unit + targeted gemdtest |
 | C | +1600 / -0 | 4 new + 1 pom edit | medium | testcontainers MinIO + real-cluster smoke |
-| D | +3000 / -2500 (net +500) | ~50 modified | medium-high | full verify + staged sub-batches |
+| D1 | +50 | 1-2 modified, 1 new | low | Mountpoint smoke vs MinIO |
+| D2 | +100 | 1-2 new | low-medium | integration test, measured rebuild time |
+| D3 | +150 | 2-3 new | medium | testcontainers MinIO, 2-replica test |
+| E | +3000 / -2500 (net +500) | ~50 modified | medium-high | full verify + staged sub-batches |
 
 ---
 
@@ -315,11 +445,17 @@ manual end-to-end on a staging deployment.
   concern; can layer on top of the `BlobStorageService` later.
 - **Cross-region replication** / disaster recovery. Backend concern,
   out of code scope.
-- **Lucene / Jena TDB / HDF5 remote backends.** These native consumers
-  stay pinned to local scratch behind a `stage()` veneer (§3.5, Phase
-  D4). Migrating *them* to a true remote backend is a separate
-  initiative (requires either FUSE, an alternative index format, or
-  per-library remote support — none are free).
+- **Moving Lucene to OpenSearch.** Phase D2 keeps Lucene local +
+  rebuilt on cold start. The long-term replacement is OpenSearch (a
+  managed remote search service with no local-path requirement). When
+  that happens, the cold-start-rebuild job disappears, Gemma talks to
+  OpenSearch over HTTP, and `gemma.search.dir` is retired. Separate
+  initiative — index schema, query translation, and reindex tooling
+  all need their own design pass.
+- **Migrating HDF5 / Jena TDB to fully remote storage.** Phase D
+  lands per-engine local-path strategies (Mountpoint for HDF5;
+  stage-and-snapshot for Jena TDB). True-remote alternatives (Zarr,
+  hosted triple stores like AWS Neptune) are a separate initiative.
 - **Per-tenant bucket sharding.** Single bucket + key prefix is fine
   for Phase A-D. Multi-tenant sharding is a Phase 4 concern.
 - **Retroactive provenance stamping** of existing artifacts. New
