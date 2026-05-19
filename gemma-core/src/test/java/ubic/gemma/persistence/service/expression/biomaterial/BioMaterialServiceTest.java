@@ -18,24 +18,24 @@
  */
 package ubic.gemma.persistence.service.expression.biomaterial;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.core.util.test.fixture.BioMaterialFactory;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialDaoImpl;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author pavlidis
  *
  */
-public class BioMaterialServiceTest extends BaseSpringContextTest {
+public class BioMaterialServiceTest extends BaseSpringContextTest5 {
 
     private String searchkeyName;
     private String searchkeyAcc;
@@ -46,7 +46,7 @@ public class BioMaterialServiceTest extends BaseSpringContextTest {
     @Autowired
     private BioMaterialFactory bioMaterialFactory;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         log.info( "Starting setup" );
         // Phase 3 fixture migration: typed BioMaterialFactory replaces

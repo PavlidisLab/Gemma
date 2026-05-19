@@ -19,23 +19,23 @@
 
 package ubic.gemma.model.genome;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetMember;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.persistence.service.genome.gene.GeneSetValueObjectHelper;
 import ubic.gemma.persistence.service.genome.gene.GeneSetService;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author tvrossum
  */
-public class GeneSetValueObjectHelperTest extends BaseSpringContextTest {
+public class GeneSetValueObjectHelperTest extends BaseSpringContextTest5 {
 
     @Autowired
     private GeneSetService geneSetService;
@@ -43,7 +43,7 @@ public class GeneSetValueObjectHelperTest extends BaseSpringContextTest {
     private GeneSetValueObjectHelper geneSetValueObjectHelper;
     private GeneSet gset = null;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
 
         Gene g1 = this.getTestPersistentGene();
