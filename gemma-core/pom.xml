@@ -14,7 +14,13 @@
             <plugin>
                 <groupId>io.github.git-commit-id</groupId>
                 <artifactId>git-commit-id-maven-plugin</artifactId>
-                <version>9.0.2</version>
+                <!-- 9.2.0 is the latest 9.x. The 10.x line requires Maven 3.9+, but
+                     Jenkins still pins Maven 3.6.3 (see .jenkins/Jenkinsfile), so 10.x
+                     is deferred until the CI toolchain is bumped. Revisit then; the only
+                     real 9 -> 10 config change is that <includeOnlyProperties> moved from
+                     exact-match to regex (the regex form is
+                     <includeOnlyProperty>^git\.commit\.id$</includeOnlyProperty>). -->
+                <version>9.2.0</version>
                 <executions>
                     <execution>
                         <id>generate-build-info</id>
