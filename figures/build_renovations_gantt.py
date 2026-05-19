@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from datetime import datetime
 
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
@@ -73,7 +74,7 @@ def apply_rcparams() -> None:
 #   S4+ = downstream / queued
 #   S8+ = blocked / deliberately deferred
 
-TODAY_X = 2.0  # end of S2 (today = 2026-05-18 end-of-day)
+TODAY_X = 4.0  # end of S4 (now = 2026-05-19 early hours)
 
 @dataclass
 class Task:
@@ -89,13 +90,13 @@ class Task:
 TASKS: list[Task] = [
     # ---- First wave (foundational, the three lighthouses) -----------------
     Task("First wave",  "Flyway / Liquibase schema versioning",
-         0.0, 4.0, 2.0, "inflight",
+         0.0, 5.0, 3.0, "inflight",
          "H2 + MySQL baseline landed; prod wiring blocked on ops"),
     Task("First wave",  "Streaming-by-default DAOs",
          0.0, 5.0, 0.0, "deferred",
          "deprioritized this session (perf-flavor)"),
     Task("First wave",  "Test-fixture rewrite (factories)",
-         0.0, 6.0, 2.0, "inflight",
+         0.0, 6.0, 3.0, "inflight",
          "Experiment + BioMaterial + ArrayDesign factories; ~5 entities remain"),
 
     # ---- ACL / security (Phase 2 residual completed in Phase 3) ----------
@@ -105,25 +106,28 @@ TASKS: list[Task] = [
          0.0, 1.0, 1.0, "done"),
     Task("ACL & security", "ACL upper->lower data migration (prod)",
          0.0, 1.0, 1.0, "done"),
+    Task("ACL & security", "applicationContext-security.xml -> SecurityConfig",
+         3.0, 4.0, 4.0, "done",
+         "500 LoC Java config; 23 @Beans; runtime smoke pending"),
     Task("ACL & security", "Drop old uppercase ACL tables",
          3.0, 4.0, 0.0, "blocked",
          "blocked on 1 release cycle of write cutover"),
     Task("ACL & security", "gsec HQL deprecation",
-         1.0, 5.0, 2.0, "inflight",
+         1.0, 5.0, 3.0, "inflight",
          "12 sites inventoried; 5 converted; AclQueryUtils high-risk"),
     Task("ACL & security", "@EnableMethodSecurity migration (14 providers)",
-         1.0, 2.0, 2.0, "done",
+         1.0, 3.0, 3.0, "done",
          "AfterInvocation Phases A+B landed; on legacy stack by design"),
 
     # ---- Easier to maintain ----------------------------------------------
     Task("Maintainability", "XML -> @Configuration (6 modules)",
-         0.0, 3.0, 2.0, "done",
+         0.0, 4.0, 4.0, "done",
          "component-scan, serviceBeans, dataSource, hibernate, schedule, security, gemma-rest, gemma-cli"),
     Task("Maintainability", "Decompose ExpressionExperimentServiceImpl",
-         2.0, 6.0, 2.0, "inflight",
+         2.0, 6.0, 4.0, "inflight",
          "recce + roadmap landed; decomposition not yet started"),
     Task("Maintainability", "persisterHelper retirement (~9.5 sessions)",
-         2.0, 8.0, 2.0, "inflight",
+         2.0, 8.0, 3.0, "inflight",
          "BusinessKey lifts done; CommonPersister, GenomePersister, RelationshipPersister, ArrayDesignPersister, ExpressionPersister rewired"),
     Task("Maintainability", "Externalize ACL (OPA / Cedar)",
          6.0, 10.0, 0.0, "planned"),
@@ -138,20 +142,26 @@ TASKS: list[Task] = [
 
     # ---- Framework / dependency bumps ------------------------------------
     Task("Framework bumps", "Spring Framework 6.1 -> 6.2",
-         1.0, 2.0, 2.0, "done"),
+         1.0, 3.0, 3.0, "done"),
     Task("Framework bumps", "Spring Security 6.3 -> 6.5",
-         1.0, 2.0, 2.0, "done"),
+         1.0, 3.0, 3.0, "done"),
     Task("Framework bumps", "Hibernate 6.4 -> 6.6",
-         1.0, 2.0, 2.0, "done"),
-    Task("Framework bumps", "Spring Boot 3 feasibility recce",
-         1.0, 2.0, 2.0, "done"),
+         1.0, 3.0, 3.0, "done"),
+    Task("Framework bumps", "Spring Boot dep. BOM 3.3 -> 3.5",
+         1.0, 4.0, 4.0, "done",
+         "BOM 3.5.6 matches SF/SS/HB natively; shrunk override surface"),
+    Task("Framework bumps", "HikariCP 5 -> 6",
+         3.0, 4.0, 4.0, "done",
+         "5.1.0 -> 6.3.3 via Boot BOM"),
+    Task("Framework bumps", "gsec 0.0.23 -> 0.0.24",
+         3.0, 3.0, 3.0, "done"),
     Task("Framework bumps", "Java 21 readiness (still on 17)",
-         1.0, 6.0, 2.0, "inflight",
+         1.0, 6.0, 3.0, "inflight",
          "Lombok/AspectJ/JaCoCo pre-bumped to JDK-21 floors"),
     Task("Framework bumps", "Maven plugin modernization",
          1.0, 2.0, 2.0, "done"),
     Task("Framework bumps", "JUnit 5 migration",
-         2.0, 7.0, 2.0, "inflight",
+         2.0, 7.0, 4.0, "inflight",
          "recce + roadmap; BaseJerseyTest already off SpringJUnit4"),
 
     # ---- Cleanups & audits -----------------------------------------------
@@ -164,21 +174,25 @@ TASKS: list[Task] = [
     Task("Cleanups", "HikariCP modernize / Hibernate envers audit",
          1.0, 2.0, 2.0, "done"),
     Task("Cleanups", "RestTemplate -> RestClient",
-         1.0, 4.0, 2.0, "inflight",
+         1.0, 4.0, 3.0, "inflight",
          "GoogleAnalytics4Provider done; rest audited"),
     Task("Cleanups", "Lombok cleanup (records, @SneakyThrows)",
          1.0, 2.0, 2.0, "done"),
     Task("Cleanups", "Cache modernization (JCache, @Cacheable)",
          1.0, 2.0, 2.0, "done"),
     Task("Cleanups", "Metrics profile restore",
-         1.0, 2.0, 2.0, "done"),
+         1.0, 4.0, 4.0, "done",
+         "MeterRegistryJCacheConfigurer + MetricsConfigTest landed S4"),
+    Task("Cleanups", "JUnit jupiter version alignment",
+         4.0, 4.0, 4.0, "done",
+         "5.11.4 -> 5.12.2 to match Boot 3.5.6 BOM"),
 
     # ---- Cloud-ready -----------------------------------------------------
     Task("Cloud-ready", "gemma-rest standalone packaging",
-         2.0, 5.0, 2.0, "inflight",
-         "web.xml bootstrap landed; RestSecurityConfig drafted"),
+         2.0, 6.0, 4.0, "inflight",
+         "standalone-recce flagged 3 blockers; ~1.75 sessions to first WAR"),
     Task("Cloud-ready", "12-factor config (env vars, profiles)",
-         3.0, 6.0, 2.0, "inflight",
+         3.0, 6.0, 3.0, "inflight",
          "Spring profiles audit landed"),
     Task("Cloud-ready", "Object storage abstraction (S3/GCS)",
          5.0, 8.0, 0.0, "planned"),
@@ -340,10 +354,9 @@ def render() -> None:
 
     # ---- source caption ----
     fig.text(0.02, 0.005,
-             "Source: PHASE_3_VISION.md @ 08e760bdaf; "
-             "memory/project_phase3_progress.md; "
-             "git log --since=2026-05-15 across worktree-* branches. "
-             "Generated 2026-05-18.",
+             "Source: PHASE_3_VISION.md; memory/project_phase3_progress.md; "
+             "git log across worktree-* branches. "
+             f"Generated {datetime.now():%Y-%m-%d %H:%M}.",
              fontsize=7.5, color=SUBTLE, ha="left", va="bottom")
 
     # ---- layout + clipPath strip + save ----
@@ -356,7 +369,8 @@ def render() -> None:
               + list(ax.collections) + list(ax.images)):
         a.set_clip_on(False)
 
-    out = "/Users/pzoot/Dev/eclipseworkspace/Gemma/figures/renovations_gantt.svg"
+    stamp = datetime.now().strftime("%Y-%m-%d_%H%M")
+    out = f"/Users/pzoot/Dev/eclipseworkspace/Gemma/figures/renovations_gantt_{stamp}.svg"
     fig.savefig(out, format="svg", bbox_inches="tight", facecolor="white")
 
     # Strip clipPath wrappers post-write — matplotlib's SVG backend
