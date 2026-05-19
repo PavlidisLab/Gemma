@@ -6,7 +6,7 @@ import ubic.gemma.core.loader.expression.singleCell.AbstractAnnDataSingleCellDat
 import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataTransformationFactory;
 import ubic.gemma.core.loader.util.anndata.Dataframe;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.nio.file.Path;
 
 @CommonsLog

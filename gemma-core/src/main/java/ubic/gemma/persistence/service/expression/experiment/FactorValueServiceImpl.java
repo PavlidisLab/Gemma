@@ -27,7 +27,7 @@ import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 import ubic.gemma.persistence.util.Slice;
 
-import javax.annotation.Nonnull;
+import org.springframework.lang.NonNull;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -67,7 +67,7 @@ public class FactorValueServiceImpl extends AbstractFilteringVoEnabledService<Fa
         return fv;
     }
 
-    @Nonnull
+    @NonNull
     @Override
     @Transactional(readOnly = true)
     public <T extends Exception> FactorValue loadWithExperimentalFactorOrFail( Long id, Function<String, T> exceptionSupplier ) throws T {

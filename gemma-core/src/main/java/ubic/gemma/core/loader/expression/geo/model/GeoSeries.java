@@ -23,7 +23,7 @@ import lombok.Setter;
 import lombok.extern.apachecommons.CommonsLog;
 import ubic.gemma.core.loader.expression.geo.GeoSampleCorrespondence;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.*;
 
 /**

@@ -10,7 +10,7 @@ import org.hibernate.usertype.UserType;
 import org.springframework.util.Assert;
 import ubic.gemma.core.util.concurrent.ThreadUtils;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;

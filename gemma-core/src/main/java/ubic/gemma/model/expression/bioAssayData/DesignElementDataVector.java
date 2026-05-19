@@ -22,7 +22,7 @@ import lombok.Getter;
 import lombok.Setter;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Objects;
 
 /**

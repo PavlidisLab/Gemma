@@ -32,7 +32,7 @@ import org.springframework.core.convert.converter.ConverterFactory;
 import org.springframework.core.convert.support.ConfigurableConversionService;
 import org.springframework.core.convert.support.GenericConversionService;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.DateFormat;

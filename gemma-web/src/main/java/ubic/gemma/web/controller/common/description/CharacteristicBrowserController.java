@@ -39,7 +39,7 @@ import ubic.gemma.web.controller.util.ListBatchCommand;
 import ubic.gemma.web.controller.util.view.JsonReaderResponse;
 import ubic.gemma.web.util.WebEntityUrlBuilder;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.*;
 
 import static org.apache.commons.lang3.StringUtils.defaultIfBlank;

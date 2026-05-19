@@ -3,7 +3,7 @@ package ubic.gemma.core.loader.expression.ucsc.cellbrowser.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.List;
 
 @Data

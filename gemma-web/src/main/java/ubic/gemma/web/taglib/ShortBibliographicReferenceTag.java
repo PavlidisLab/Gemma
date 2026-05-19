@@ -25,7 +25,7 @@ import ubic.gemma.core.loader.entrez.pubmed.PubMedUtils;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.web.assets.StaticAssetResolver;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import jakarta.servlet.jsp.JspException;
 import jakarta.servlet.jsp.tagext.Tag;
 import java.util.Calendar;

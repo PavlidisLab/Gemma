@@ -5,7 +5,7 @@ import org.ocpsoft.prettytime.shade.edu.emory.mathcs.backport.java.util.Collecti
 import ubic.gemma.cli.util.CLI;
 import ubic.gemma.cli.util.CLIContext;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.List;
 
 public class TestCli implements CLI {

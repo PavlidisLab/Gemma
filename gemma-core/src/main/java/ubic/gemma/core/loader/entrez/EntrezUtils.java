@@ -6,7 +6,7 @@ import org.springframework.util.Assert;
 import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.util.SimpleRetryCallable;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;

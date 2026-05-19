@@ -2,7 +2,7 @@ package ubic.gemma.cli.util;
 
 import org.apache.commons.cli.Options;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.List;
 
 /**

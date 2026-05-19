@@ -2,7 +2,7 @@ package ubic.gemma.model.expression.experiment;
 
 import org.junit.Test;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

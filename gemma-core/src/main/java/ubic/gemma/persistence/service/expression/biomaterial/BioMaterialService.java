@@ -30,7 +30,7 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableBaseServi
 import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableBaseVoEnabledService;
 
 import javax.annotation.CheckReturnValue;
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Collection;
 import java.util.Map;
 import java.util.function.Function;

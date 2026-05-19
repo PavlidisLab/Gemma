@@ -4,7 +4,7 @@ import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.internal.Iterables;
 import org.springframework.validation.Errors;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 public class ErrorsAssert extends AbstractAssert<ErrorsAssert, Errors> {
 

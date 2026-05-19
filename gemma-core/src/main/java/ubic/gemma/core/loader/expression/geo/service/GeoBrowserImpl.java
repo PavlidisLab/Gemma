@@ -48,7 +48,7 @@ import ubic.gemma.model.common.description.MedicalSubjectHeading;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import javax.xml.xpath.XPathExpression;
 import java.io.*;
 import java.net.URL;

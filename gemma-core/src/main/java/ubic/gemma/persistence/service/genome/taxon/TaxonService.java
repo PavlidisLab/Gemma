@@ -23,7 +23,7 @@ import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AdminEditableBaseImmutableService;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Collection;
 
 /**

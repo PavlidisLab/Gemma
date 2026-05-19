@@ -1,6 +1,6 @@
 /**
  */
-@ParametersAreNonnullByDefault
+@NonNullApi
 package ubic.gemma.core.analysis.service;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import org.springframework.lang.NonNullApi;

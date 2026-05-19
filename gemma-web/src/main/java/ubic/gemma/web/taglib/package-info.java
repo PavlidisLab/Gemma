@@ -1,7 +1,7 @@
 /**
  * This package contains custom JSP tag libraries used in the Gemma Web application.
  */
-@ParametersAreNonnullByDefault
+@NonNullApi
 package ubic.gemma.web.taglib;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import org.springframework.lang.NonNullApi;

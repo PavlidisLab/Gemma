@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.model.genome.Gene;
 
-import javax.annotation.Nonnull;
+import org.springframework.lang.NonNull;
 
 /**
  * Long argument type for Gene API, referencing the Gene NCBI ID.
@@ -23,7 +23,7 @@ public class GeneNcbiIdArg extends GeneArg<Integer> {
         super( "ncbiGeneId", Integer.class, l );
     }
 
-    @Nonnull
+    @NonNull
     @Override
     Gene getEntity( GeneService service ) {
         return service.findByNCBIId( this.getValue() );

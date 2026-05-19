@@ -4,7 +4,7 @@ import lombok.Setter;
 import org.springframework.util.Assert;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataType;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.nio.file.Path;
 import java.util.Set;
 import java.util.stream.Collectors;

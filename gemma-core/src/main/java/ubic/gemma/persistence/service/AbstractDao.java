@@ -36,8 +36,8 @@ import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.hibernate.HibernateUtils;
 import ubic.gemma.persistence.util.QueryUtils;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -275,7 +275,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
         return results;
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public T loadReference( Long id ) {
         //noinspection unchecked
@@ -286,7 +286,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
         return entity;
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public T reload( T entity ) {
         Assert.notNull( entity.getId(), "Cannot reload a transient entity." );
@@ -302,7 +302,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
         return entity;
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public Collection<T> reload( Collection<T> entities ) {
         StopWatch timer = StopWatch.createStarted();

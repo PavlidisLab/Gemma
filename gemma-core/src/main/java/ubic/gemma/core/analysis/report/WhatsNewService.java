@@ -20,7 +20,7 @@ package ubic.gemma.core.analysis.report;
 
 import org.springframework.security.access.annotation.Secured;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * Creates reports that can be shown on the web pages or in social media feeds.

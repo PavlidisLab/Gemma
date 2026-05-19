@@ -2,7 +2,7 @@ package ubic.gemma.persistence.util;
 
 import org.apache.commons.lang3.ArrayUtils;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.List;
 
 /**

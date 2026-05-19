@@ -29,7 +29,7 @@ import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.rest.SearchWebService;
 import ubic.gemma.rest.util.args.*;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.IOException;
 import java.lang.annotation.Annotation;

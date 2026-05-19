@@ -22,7 +22,7 @@ import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableBaseImmutableService;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.List;
 
 /**

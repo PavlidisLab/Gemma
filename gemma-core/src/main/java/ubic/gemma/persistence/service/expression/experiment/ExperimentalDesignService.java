@@ -22,7 +22,7 @@ import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableBaseService;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * @author kelsey

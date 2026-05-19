@@ -6,7 +6,7 @@ import org.springframework.beans.factory.config.AbstractFactoryBean;
 import org.springframework.core.task.TaskExecutor;
 import ubic.basecode.ontology.providers.OntologyService;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Set;
 
 /**

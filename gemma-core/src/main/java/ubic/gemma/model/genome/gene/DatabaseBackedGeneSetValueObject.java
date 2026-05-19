@@ -40,7 +40,7 @@ package ubic.gemma.model.genome.gene;
 import lombok.extern.apachecommons.CommonsLog;
 import ubic.gemma.model.genome.Taxon;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * @author tvrossum

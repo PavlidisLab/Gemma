@@ -4,7 +4,7 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.BeanFactory;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataType;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;

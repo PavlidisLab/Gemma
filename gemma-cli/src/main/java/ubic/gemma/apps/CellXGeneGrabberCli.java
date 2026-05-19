@@ -26,7 +26,7 @@ import ubic.gemma.core.util.TsvUtils;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;

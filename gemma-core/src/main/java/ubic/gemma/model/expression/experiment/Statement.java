@@ -5,8 +5,8 @@ import ubic.gemma.model.common.description.Category;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicUtils;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import jakarta.persistence.Transient;
 import java.util.Comparator;
 import java.util.Objects;
@@ -328,7 +328,7 @@ public class Statement extends Characteristic {
     }
 
     @Override
-    public int compareTo( @Nonnull Characteristic characteristic ) {
+    public int compareTo( @NonNull Characteristic characteristic ) {
         if ( characteristic instanceof Statement ) {
             return COMPARATOR.compare( this, ( Statement ) characteristic );
         }

@@ -18,7 +18,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.util.Slice;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.awt.image.BufferedImage;
 import java.nio.DoubleBuffer;
 import java.util.Collection;

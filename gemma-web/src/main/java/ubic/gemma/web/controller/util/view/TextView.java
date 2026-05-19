@@ -21,7 +21,7 @@ package ubic.gemma.web.controller.util.view;
 import org.springframework.util.Assert;
 import org.springframework.web.servlet.view.AbstractView;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Map;

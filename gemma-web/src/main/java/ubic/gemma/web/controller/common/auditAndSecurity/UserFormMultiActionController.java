@@ -39,7 +39,7 @@ import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.web.controller.util.JsonUtil;
 import ubic.gemma.web.controller.util.MessageUtil;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Locale;

@@ -4,8 +4,8 @@ import org.hibernate.Hibernate;
 import ubic.gemma.model.annotations.MayBeUninitialized;
 import ubic.gemma.model.common.Identifiable;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collector;
@@ -26,7 +26,7 @@ public class IdentifiableUtils {
      * @param identifiable an entity to get the ID from
      * @throws NullPointerException if the identifier is null
      */
-    @Nonnull
+    @NonNull
     public static Long getRequiredId( Identifiable identifiable ) {
         return requireNonNull( identifiable.getId() );
     }

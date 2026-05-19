@@ -6,7 +6,7 @@ import org.springframework.context.SmartLifecycle;
 import org.springframework.util.Assert;
 import ubic.gemma.core.util.concurrent.ThreadUtils;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;

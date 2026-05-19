@@ -9,7 +9,7 @@ import ubic.gemma.core.loader.expression.singleCell.AbstractMexSingleCellDataLoa
 import ubic.gemma.core.loader.expression.singleCell.TenXCellRangerUtils;
 import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataTransformationFactory;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.nio.file.Path;
 import java.util.*;
 

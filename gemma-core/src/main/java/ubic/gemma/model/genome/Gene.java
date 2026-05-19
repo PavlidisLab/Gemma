@@ -23,7 +23,7 @@ import ubic.gemma.model.genome.gene.GeneAlias;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.Multifunctionality;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.HashSet;
 import java.util.Set;
 

@@ -11,7 +11,7 @@ import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.util.UninitializedList;
 import ubic.gemma.model.util.UninitializedSet;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.beans.PropertyDescriptor;
 import java.util.*;
 import java.util.function.Function;

@@ -23,7 +23,7 @@ import lombok.Setter;
 import lombok.extern.apachecommons.CommonsLog;
 import ubic.gemma.web.util.Constants;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import jakarta.servlet.jsp.JspException;
 import jakarta.servlet.jsp.PageContext;
 import jakarta.servlet.jsp.tagext.TagSupport;

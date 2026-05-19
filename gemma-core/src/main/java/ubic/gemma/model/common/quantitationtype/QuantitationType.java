@@ -26,7 +26,7 @@ import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 
-import javax.annotation.Nonnull;
+import org.springframework.lang.NonNull;
 import java.util.Objects;
 
 public class QuantitationType extends AbstractDescribable {
@@ -156,7 +156,7 @@ public class QuantitationType extends AbstractDescribable {
      * <a href="https://github.com/PavlidisLab/Gemma/issues/620">#620</a> for details. For now, this is the best we can
      * do.
      */
-    public boolean isPreferred( @Nonnull Class<? extends DataVector> vectorType ) {
+    public boolean isPreferred( @NonNull Class<? extends DataVector> vectorType ) {
         Assert.notNull( vectorType , "must not be null");
         if ( SingleCellExpressionDataVector.class.isAssignableFrom( vectorType ) ) {
             return getIsSingleCellPreferred();
@@ -172,7 +172,7 @@ public class QuantitationType extends AbstractDescribable {
     /**
      * Set the preferred status for a particular vector type.
      */
-    public void setIsPreferred( boolean isPreferred, @Nonnull Class<? extends DataVector> vectorType ) {
+    public void setIsPreferred( boolean isPreferred, @NonNull Class<? extends DataVector> vectorType ) {
         Assert.notNull( vectorType , "must not be null");
         if ( SingleCellExpressionDataVector.class.isAssignableFrom( vectorType ) ) {
             setIsSingleCellPreferred( isPreferred );

@@ -8,7 +8,7 @@ import ubic.gemma.core.loader.expression.cellxgene.model.OntologyTerm;
 import ubic.gemma.core.ontology.OntologyUtils;
 import ubic.gemma.model.common.description.DatabaseEntry;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;

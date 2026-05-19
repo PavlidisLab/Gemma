@@ -48,8 +48,8 @@ import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.persistence.util.Thaws;
 
 import javax.annotation.CheckReturnValue;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -62,7 +62,7 @@ import java.util.function.Function;
 public interface ExpressionExperimentService extends SecurableBaseService<ExpressionExperiment>,
         SecurableFilteringVoEnabledService<ExpressionExperiment, ExpressionExperimentValueObject> {
 
-    @Nonnull
+    @NonNull
     ExpressionExperiment loadReference( Long id );
 
     /**

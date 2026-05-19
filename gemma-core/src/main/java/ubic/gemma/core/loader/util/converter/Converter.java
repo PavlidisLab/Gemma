@@ -18,7 +18,7 @@
  */
 package ubic.gemma.core.loader.util.converter;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Collection;
 
 /**

@@ -6,7 +6,7 @@ import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.model.common.measurement.MeasurementValueObject;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Iterator;
 
 import static org.apache.commons.lang3.StringUtils.defaultIfBlank;

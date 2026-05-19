@@ -16,7 +16,7 @@ package ubic.gemma.core.loader.expression.geo.service;
 
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.List;

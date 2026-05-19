@@ -55,8 +55,8 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.util.EntityUrlBuilder;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.File;
 import java.io.FileWriter;
@@ -646,7 +646,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
      * @param baselineConditions for each categorical factor used in the model, the baseline condition
      * @param subsetFactorValue  null unless analyzing a subset (only used for book-keeping)
      */
-    @Nonnull
+    @NonNull
     private DifferentialExpressionAnalysis doAnalysis( BioAssaySet bioAssaySet,
             ExpressionDataDoubleMatrix expressionData, List<BioMaterial> samplesUsed,
             List<ExperimentalFactor> factors,

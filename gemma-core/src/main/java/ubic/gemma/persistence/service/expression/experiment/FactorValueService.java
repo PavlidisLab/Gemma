@@ -29,8 +29,8 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableFiltering
 import ubic.gemma.persistence.util.Slice;
 
 import javax.annotation.CheckReturnValue;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -94,7 +94,7 @@ public interface FactorValueService extends SecurableBaseService<FactorValue>, S
     /**
      * Load a {@link FactorValue} with an initialized experimental factor or fail.
      */
-    @Nonnull
+    @NonNull
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     <T extends Exception> FactorValue loadWithExperimentalFactorOrFail( Long id, Function<String, T> exceptionSupplier ) throws T;
 

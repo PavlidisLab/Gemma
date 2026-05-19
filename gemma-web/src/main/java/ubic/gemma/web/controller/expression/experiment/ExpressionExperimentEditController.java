@@ -64,7 +64,7 @@ import ubic.gemma.web.controller.util.EntityNotFoundException;
 import ubic.gemma.web.controller.util.MessageUtil;
 import ubic.gemma.web.service.ExpressionExperimentEditControllerHelperService;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.*;
 import java.util.Map.Entry;

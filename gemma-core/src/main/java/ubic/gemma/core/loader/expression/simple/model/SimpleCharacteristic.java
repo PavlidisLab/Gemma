@@ -3,7 +3,7 @@ package ubic.gemma.core.loader.expression.simple.model;
 import lombok.Value;
 import ubic.gemma.model.common.description.Characteristic;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.Serializable;
 
 @Value

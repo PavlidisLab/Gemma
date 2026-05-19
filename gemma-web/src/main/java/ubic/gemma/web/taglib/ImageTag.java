@@ -3,7 +3,7 @@ package ubic.gemma.web.taglib;
 import lombok.Setter;
 import org.springframework.web.servlet.tags.form.TagWriter;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import jakarta.servlet.jsp.JspException;
 
 /**

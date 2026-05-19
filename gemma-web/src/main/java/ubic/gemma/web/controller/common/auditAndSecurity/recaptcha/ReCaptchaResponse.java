@@ -18,7 +18,7 @@
  */
 package ubic.gemma.web.controller.common.auditAndSecurity.recaptcha;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 public class ReCaptchaResponse {
 

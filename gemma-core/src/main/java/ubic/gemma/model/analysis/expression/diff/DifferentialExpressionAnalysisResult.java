@@ -21,7 +21,7 @@ package ubic.gemma.model.analysis.expression.diff;
 import ubic.gemma.model.analysis.AnalysisResult;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;

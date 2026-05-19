@@ -33,7 +33,7 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableFiltering
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 
 import javax.annotation.CheckReturnValue;
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;

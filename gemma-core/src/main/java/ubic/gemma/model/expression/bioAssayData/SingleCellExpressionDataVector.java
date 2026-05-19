@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import ubic.gemma.persistence.hibernate.ByteArrayType;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Objects;
 
 /**

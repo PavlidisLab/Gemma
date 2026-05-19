@@ -78,7 +78,7 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonDao;
 import ubic.gemma.persistence.util.*;
 import ubic.gemma.persistence.util.Filter;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.DataInputStream;
 import java.io.EOFException;
 import java.io.IOException;

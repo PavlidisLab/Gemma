@@ -9,7 +9,7 @@ import ubic.gemma.cli.util.EntityLocator;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.persistence.service.common.protocol.ProtocolService;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * @author poirigui

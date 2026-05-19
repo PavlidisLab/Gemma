@@ -23,7 +23,7 @@ import ubic.gemma.cli.util.CLI;
 import ubic.gemma.cli.util.EntityLocator;
 import ubic.gemma.model.genome.Taxon;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 import static ubic.gemma.cli.util.EntityOptionsUtils.addTaxonOption;
 

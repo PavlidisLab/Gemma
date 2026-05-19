@@ -6,7 +6,7 @@ import org.springframework.core.convert.converter.ConditionalGenericConverter;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.service.BaseReadOnlyService;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.*;
 
 /**

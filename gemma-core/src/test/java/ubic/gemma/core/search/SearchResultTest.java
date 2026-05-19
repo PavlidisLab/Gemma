@@ -4,7 +4,7 @@ import org.junit.Test;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.search.SearchResult;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;

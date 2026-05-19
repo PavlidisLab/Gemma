@@ -30,7 +30,7 @@ import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.IdentifiableUtils;
 import ubic.gemma.rest.util.MalformedArgException;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.InternalServerErrorException;
 import jakarta.ws.rs.NotFoundException;

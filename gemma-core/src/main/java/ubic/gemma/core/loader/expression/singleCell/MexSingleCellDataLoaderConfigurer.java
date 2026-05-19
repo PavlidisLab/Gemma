@@ -8,7 +8,7 @@ import ubic.gemma.core.loader.util.mapper.BioAssayMapper;
 import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.nio.file.Path;
 import java.util.*;
 

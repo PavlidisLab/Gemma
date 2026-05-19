@@ -10,7 +10,7 @@ import org.springframework.jdbc.datasource.init.DatabasePopulatorUtils;
 import ubic.gemma.cli.util.AbstractCLI;
 import ubic.gemma.persistence.initialization.DatabaseSchemaUpdatePopulator;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import javax.sql.DataSource;
 
 /**

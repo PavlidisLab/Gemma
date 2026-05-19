@@ -21,7 +21,7 @@ package ubic.gemma.model.expression.bioAssayData;
 import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;

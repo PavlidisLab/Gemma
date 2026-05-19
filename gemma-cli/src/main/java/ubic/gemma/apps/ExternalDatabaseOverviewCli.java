@@ -9,7 +9,7 @@ import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;

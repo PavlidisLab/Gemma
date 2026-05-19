@@ -3,7 +3,7 @@ package ubic.gemma.cli.completion;
 import org.apache.commons.cli.Options;
 import ubic.gemma.cli.util.CLI;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.util.SortedMap;

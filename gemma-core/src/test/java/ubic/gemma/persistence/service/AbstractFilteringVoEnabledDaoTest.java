@@ -20,7 +20,7 @@ import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.core.context.TestComponent;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import javax.sql.DataSource;
 import jakarta.persistence.*;
 import java.util.Collection;

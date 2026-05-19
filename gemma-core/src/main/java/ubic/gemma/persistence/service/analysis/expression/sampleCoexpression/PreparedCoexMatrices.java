@@ -16,7 +16,7 @@ package ubic.gemma.persistence.service.analysis.expression.sampleCoexpression;
 
 import ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionMatrix;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * Helper class for sample coexpression analysis.

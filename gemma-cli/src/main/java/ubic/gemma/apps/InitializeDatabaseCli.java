@@ -14,7 +14,7 @@ import ubic.gemma.persistence.initialization.CreateDatabasePopulator;
 import ubic.gemma.persistence.initialization.DatabaseSchemaPopulator;
 import ubic.gemma.persistence.initialization.InitialDataPopulator;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import javax.sql.DataSource;
 
 import static ubic.gemma.persistence.initialization.BootstrappedDataSourceFactory.createBootstrappedDataSource;

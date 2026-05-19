@@ -32,7 +32,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.cache.CacheUtils;
 import ubic.gemma.persistence.service.AbstractService;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;

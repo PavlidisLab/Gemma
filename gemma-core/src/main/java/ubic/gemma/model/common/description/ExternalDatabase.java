@@ -25,7 +25,7 @@ import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.net.URL;
 import java.util.Date;
 import java.util.HashSet;

@@ -28,7 +28,7 @@ import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.persistence.service.AbstractService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.net.URL;
 import java.util.*;
 import java.util.stream.Collectors;

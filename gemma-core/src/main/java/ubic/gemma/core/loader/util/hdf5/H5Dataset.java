@@ -3,7 +3,7 @@ package ubic.gemma.core.loader.util.hdf5;
 import hdf.hdf5lib.HDF5Constants;
 import org.springframework.util.Assert;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import javax.annotation.WillClose;
 import java.util.Optional;
 

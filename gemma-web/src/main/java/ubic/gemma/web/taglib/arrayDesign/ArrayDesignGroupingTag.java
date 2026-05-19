@@ -21,7 +21,7 @@ package ubic.gemma.web.taglib.arrayDesign;
 import lombok.Setter;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import jakarta.servlet.jsp.JspException;
 import jakarta.servlet.jsp.tagext.TagSupport;
 import java.util.Collection;

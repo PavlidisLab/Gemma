@@ -32,7 +32,7 @@ import ubic.gemma.model.common.description.Versioned;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.util.ModelUtils;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collection;

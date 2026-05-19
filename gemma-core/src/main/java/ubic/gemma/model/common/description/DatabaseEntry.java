@@ -20,7 +20,7 @@ package ubic.gemma.model.common.description;
 
 import ubic.gemma.model.common.AbstractIdentifiable;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Comparator;
 import java.util.Objects;
 

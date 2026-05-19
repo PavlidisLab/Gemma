@@ -4,7 +4,7 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.util.Assert;
 import ubic.gemma.core.loader.util.hdf5.H5File;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Path;
