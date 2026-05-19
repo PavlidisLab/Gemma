@@ -30,7 +30,6 @@ import ubic.gemma.model.common.measurement.Unit;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailDao;
-import ubic.gemma.persistence.service.common.auditAndSecurity.PersonDao;
 import ubic.gemma.persistence.service.common.description.BibliographicReferenceDao;
 import ubic.gemma.persistence.service.common.description.DatabaseEntryDao;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseDao;
@@ -66,9 +65,6 @@ public abstract class CommonPersister extends AbstractPersister {
     private ExternalDatabaseDao externalDatabaseDao;
 
     @Autowired
-    private PersonDao personDao;
-
-    @Autowired
     private ProtocolDao protocolDao;
 
     @Autowired
@@ -87,8 +83,6 @@ public abstract class CommonPersister extends AbstractPersister {
             return ( T ) this.persistAuditTrail( ( AuditTrail ) entity );
         } else if ( entity instanceof User ) {
             throw new UnsupportedOperationException( "Don't persist users via this class; use the UserManager (core)" );
-        } else if ( entity instanceof Person ) {
-            return ( T ) this.persistPerson( ( Person ) entity );
         } else if ( entity instanceof Unit ) {
             return ( T ) this.persistUnit( ( Unit ) entity );
         } else if ( entity instanceof QuantitationType ) {
@@ -202,16 +196,6 @@ public abstract class CommonPersister extends AbstractPersister {
         this.fillInDatabaseEntry( reference.getPubAccession(), caches );
         BibliographicReference existing = bibliographicReferenceDao.find( reference );
         return existing != null ? existing : bibliographicReferenceDao.create( reference );
-    }
-
-    private Person persistPerson( Person person ) {
-        // Person extends Contact; BusinessKey.find(Session, Contact) handles it.
-        Session session = getSessionFactory().getCurrentSession();
-        Contact existing = BusinessKey.find( session, person );
-        if ( existing instanceof Person ) {
-            return ( Person ) existing;
-        }
-        return personDao.create( person );
     }
 
 }
