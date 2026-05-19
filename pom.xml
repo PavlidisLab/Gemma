@@ -315,6 +315,14 @@
 				<artifactId>log4j-slf4j2-impl</artifactId>
 				<version>${log4j.version}</version>
 			</dependency>
+			<!-- Phase 3 logging A: JSON-line layout for production rolling-file appender.
+			     Boot 3.5 BOM ships 2.24.3; pin to ${log4j.version} (2.25.3) so it stays
+			     on the same release train as log4j-core. -->
+			<dependency>
+				<groupId>org.apache.logging.log4j</groupId>
+				<artifactId>log4j-layout-template-json</artifactId>
+				<version>${log4j.version}</version>
+			</dependency>
 			<!-- jakarta.xml.bind-api: Boot 3.5 BOM ships 4.0.2; Gemma tracks 4.0.5. -->
 			<dependency>
 				<groupId>jakarta.xml.bind</groupId>

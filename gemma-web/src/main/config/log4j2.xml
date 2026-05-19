@@ -28,7 +28,12 @@
             <DefaultRolloverStrategy max="100" fileIndex="min"/>
         </RollingFile>
         <RollingFile name="file" fileName="${gemma.log.dir}/gemma.log" filePattern="${gemma.log.dir}/gemma.log.%i">
-            <PatternLayout pattern="${gemma.log.pattern}"/>
+            <!-- Phase 3 logging A: JSON-line output for cloud log aggregation. Other rolling-file
+                 appenders (auditFile, jsFile, annotationsFile, warningFile, errorFile) stay on
+                 PatternLayout — they have format contracts (grep-based ops scripts, audit consumers,
+                 in-browser JS log endpoint) that JSON would break. Dev console + tests are also
+                 unchanged. See LOGGING_MODERNIZATION_RECCE.md §3 Phase 1. -->
+            <JsonTemplateLayout eventTemplateUri="classpath:log4j2-json-template.json"/>
             <Policies>
                 <SizeBasedTriggeringPolicy size="10000KB"/>
             </Policies>

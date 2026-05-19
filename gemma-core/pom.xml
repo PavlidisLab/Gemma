@@ -291,6 +291,16 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- Phase 3 logging A: JsonTemplateLayout for the production rolling-file appender
+             (gemma-web + gemma-cli log4j2.xml). Version is managed by the root pom's
+             <dependencyManagement> at ${log4j.version}. Runtime scope: the layout is loaded
+             reflectively by log4j-core during config parsing, no compile-time references. -->
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-layout-template-json</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
     </dependencies>
 
 </project>

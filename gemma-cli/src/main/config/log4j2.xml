@@ -20,7 +20,12 @@
                 pattern="%d %highlight{%p} %style{%pid}{magenta} [%t] %style{%C{1.}.%M(%L)}{cyan} | %m%n%xEx{filters(${gemma.log.filter})}"/>
         </Console>
         <RollingFile name="file" fileName="${gemma.log.dir}/gemma.log" filePattern="${gemma.log.dir}/gemma.log.%i">
-            <PatternLayout pattern="${gemma.log.pattern}"/>
+            <!-- Phase 3 logging A: JSON-line output for cloud log aggregation. Console stays
+                 PatternLayout (humans read it); other rolling-file appenders (warningFile,
+                 errorFile, auditFile, annotationsFile) keep PatternLayout to preserve their
+                 format contracts. Dev console + tests are also unchanged. See
+                 LOGGING_MODERNIZATION_RECCE.md §3 Phase 1. -->
+            <JsonTemplateLayout eventTemplateUri="classpath:log4j2-json-template.json"/>
             <Policies>
                 <SizeBasedTriggeringPolicy size="10000KB"/>
             </Policies>
