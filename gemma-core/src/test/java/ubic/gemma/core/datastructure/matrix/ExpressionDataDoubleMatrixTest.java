@@ -1,7 +1,7 @@
 package ubic.gemma.core.datastructure.matrix;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;

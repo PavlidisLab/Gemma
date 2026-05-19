@@ -2,7 +2,7 @@ package ubic.gemma.core.datastructure.sparse;
 
 import no.uib.cipr.matrix.io.MatrixVectorReader;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.io.InputStreamReader;

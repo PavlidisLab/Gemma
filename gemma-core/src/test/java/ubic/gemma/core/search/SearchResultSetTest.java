@@ -1,7 +1,7 @@
 package ubic.gemma.core.search;
 
 import org.assertj.core.data.Index;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.model.common.search.SearchResult;
 import ubic.gemma.model.common.search.SearchResultSet;
 import ubic.gemma.model.common.search.SearchSettings;
@@ -10,8 +10,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static ubic.gemma.core.util.test.Maps.map;
 
 public class SearchResultSetTest {
