@@ -36,7 +36,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;

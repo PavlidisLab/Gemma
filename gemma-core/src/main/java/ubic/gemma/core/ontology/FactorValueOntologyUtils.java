@@ -6,7 +6,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.model.expression.experiment.StatementValueObject;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;

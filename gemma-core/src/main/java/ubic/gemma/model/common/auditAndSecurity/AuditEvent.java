@@ -22,7 +22,7 @@ package ubic.gemma.model.common.auditAndSecurity;
 import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Date;
 import java.util.Objects;
 

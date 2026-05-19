@@ -5,7 +5,7 @@ import ubic.gemma.core.loader.util.hdf5.H5Dataset;
 import ubic.gemma.core.loader.util.hdf5.H5FundamentalType;
 import ubic.gemma.core.loader.util.hdf5.H5Type;
 
-import javax.annotation.Nonnull;
+import org.springframework.lang.NonNull;
 
 /**
  * An array backend by a H5 enum dataset.
@@ -28,7 +28,7 @@ public class EnumArray implements Array<String> {
         this.codes = dataset.toIntegerVector();
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public String get( int i ) {
         return values[codes[i]];

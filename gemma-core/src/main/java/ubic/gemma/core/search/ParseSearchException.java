@@ -1,7 +1,7 @@
 package ubic.gemma.core.search;
 
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * An exception that indicate that the search query could not be parsed.

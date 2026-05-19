@@ -12,7 +12,7 @@ import org.apache.commons.pool2.impl.DefaultPooledObject;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.springframework.util.Assert;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;

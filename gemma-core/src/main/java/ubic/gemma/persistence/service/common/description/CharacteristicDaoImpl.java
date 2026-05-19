@@ -46,7 +46,7 @@ import ubic.gemma.persistence.util.EE2CAclQueryUtils;
 import ubic.gemma.persistence.util.IdentifiableUtils;
 import ubic.gemma.persistence.util.QueryUtils;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 

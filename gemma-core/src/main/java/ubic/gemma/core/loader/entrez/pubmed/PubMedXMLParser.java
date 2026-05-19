@@ -28,7 +28,7 @@ import ubic.gemma.core.util.XMLUtils;
 import ubic.gemma.model.common.description.*;
 import ubic.gemma.model.expression.biomaterial.Compound;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import javax.xml.xpath.XPathExpression;
 import java.io.IOException;
 import java.io.InputStream;

@@ -7,7 +7,7 @@ import lombok.extern.apachecommons.CommonsLog;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;

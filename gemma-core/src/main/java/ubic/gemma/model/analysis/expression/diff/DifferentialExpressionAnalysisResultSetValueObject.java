@@ -7,7 +7,7 @@ import ubic.gemma.model.expression.experiment.FactorValueBasicValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.TaxonValueObject;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;

@@ -31,7 +31,7 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabases;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;

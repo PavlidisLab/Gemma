@@ -25,7 +25,7 @@ import ubic.gemma.model.common.measurement.MeasurementUtils;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.*;
 
 import static org.apache.commons.lang3.StringUtils.normalizeSpace;

@@ -2,7 +2,7 @@ package ubic.gemma.core.security.authorization.acl;
 
 import org.springframework.security.acls.model.ObjectIdentity;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.Serializable;
 
 /**

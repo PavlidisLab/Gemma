@@ -27,7 +27,7 @@ import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.persistence.service.BaseImmutableService;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Date;
 
 /**

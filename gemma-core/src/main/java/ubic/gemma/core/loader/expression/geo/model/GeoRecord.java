@@ -21,7 +21,7 @@ package ubic.gemma.core.loader.expression.geo.model;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.*;
 
 /**

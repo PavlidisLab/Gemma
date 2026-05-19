@@ -45,7 +45,7 @@ import ubic.gemma.web.controller.util.ControllerUtils;
 import ubic.gemma.web.controller.util.EntityNotFoundException;
 import ubic.gemma.web.controller.util.MessageUtil;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.Writer;

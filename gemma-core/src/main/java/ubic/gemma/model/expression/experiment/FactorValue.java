@@ -25,7 +25,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.persistence.util.IdentifiableUtils;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import jakarta.persistence.Transient;
 import java.util.HashSet;
 import java.util.Objects;

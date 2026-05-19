@@ -22,7 +22,7 @@ package ubic.gemma.model.analysis;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.protocol.Protocol;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * An analysis of one or more Investigations. The manner in which the analysis was done is described in the Protocol and

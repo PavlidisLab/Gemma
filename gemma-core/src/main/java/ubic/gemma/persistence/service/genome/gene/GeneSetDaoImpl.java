@@ -34,7 +34,7 @@ import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailDao;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 

@@ -21,7 +21,7 @@ package ubic.gemma.persistence.service.expression.experiment;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.persistence.service.BaseDao;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * @see ubic.gemma.model.expression.experiment.ExperimentalDesign

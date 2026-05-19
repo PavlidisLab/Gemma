@@ -28,7 +28,7 @@ import ubic.basecode.math.Stats;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collections;

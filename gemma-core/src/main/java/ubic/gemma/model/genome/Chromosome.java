@@ -22,7 +22,7 @@ import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Objects;
 
 /**

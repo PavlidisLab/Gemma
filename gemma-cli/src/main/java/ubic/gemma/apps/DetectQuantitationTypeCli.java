@@ -11,7 +11,7 @@ import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 import static ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionUtils.inferQuantitationType;
 

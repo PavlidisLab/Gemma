@@ -5,7 +5,7 @@ import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.nio.*;
 import java.util.Collection;
 

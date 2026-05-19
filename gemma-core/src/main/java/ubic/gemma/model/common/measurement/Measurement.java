@@ -21,7 +21,7 @@ package ubic.gemma.model.common.measurement;
 import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import jakarta.persistence.Transient;
 import java.util.Comparator;
 import java.util.Objects;

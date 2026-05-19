@@ -4,7 +4,7 @@ import ubic.gemma.core.job.Task;
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.model.common.Identifiable;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * A simple task command that contains an entity ID and class.

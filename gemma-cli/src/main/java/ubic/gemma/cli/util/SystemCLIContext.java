@@ -2,7 +2,7 @@ package ubic.gemma.cli.util;
 
 import lombok.Getter;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.Console;
 import java.io.InputStream;
 import java.io.PrintStream;

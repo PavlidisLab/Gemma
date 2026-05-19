@@ -21,8 +21,8 @@ import ubic.gemma.model.annotations.GemmaRestOnly;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.IdentifiableValueObject;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import java.util.*;
 
 import static ubic.gemma.model.common.description.CharacteristicUtils.compareTerm;
@@ -172,7 +172,7 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
     }
 
     @Override
-    public int compareTo( @Nonnull CharacteristicValueObject that ) {
+    public int compareTo( @NonNull CharacteristicValueObject that ) {
         return COMPARATOR.compare( this, that );
     }
 

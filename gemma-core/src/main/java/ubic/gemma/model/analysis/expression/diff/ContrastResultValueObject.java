@@ -9,7 +9,7 @@ import ubic.gemma.model.util.ModelUtils;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.expression.experiment.FactorValueBasicValueObject;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * Represents a contrast result.

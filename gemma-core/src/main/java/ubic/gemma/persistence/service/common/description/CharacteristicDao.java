@@ -29,7 +29,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.BrowsingDao;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;

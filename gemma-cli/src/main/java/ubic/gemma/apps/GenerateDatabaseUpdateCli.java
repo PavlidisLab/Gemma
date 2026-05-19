@@ -13,7 +13,7 @@ import ubic.gemma.cli.util.AbstractCLI;
 import ubic.gemma.persistence.hibernate.H2Dialect;
 import ubic.gemma.persistence.hibernate.MySQL57InnoDBDialect;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import javax.sql.DataSource;
 import java.io.IOException;
 import java.io.PrintWriter;

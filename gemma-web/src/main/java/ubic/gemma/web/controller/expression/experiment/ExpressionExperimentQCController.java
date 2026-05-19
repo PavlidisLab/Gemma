@@ -105,7 +105,7 @@ import ubic.gemma.web.controller.util.MessageUtil;
 import ubic.gemma.web.controller.util.view.TextView;
 import ubic.gemma.web.util.WebEntityUrlBuilder;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import jakarta.servlet.http.HttpServletResponse;
 import java.awt.*;
 import java.awt.geom.Ellipse2D;

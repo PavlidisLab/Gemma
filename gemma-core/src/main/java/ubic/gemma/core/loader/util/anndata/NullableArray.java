@@ -4,7 +4,7 @@ import org.springframework.util.Assert;
 import ubic.gemma.core.loader.util.hdf5.H5Dataset;
 import ubic.gemma.core.loader.util.hdf5.H5Group;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 import static ubic.gemma.core.loader.util.anndata.Utils.checkEncoding;
 

@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import ubic.gemma.model.expression.experiment.GeeqValueObject;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Date;
 import java.util.List;
 

@@ -2,7 +2,7 @@
  * This package contains classes related to static assets management, such as CSS and JavaScript files.
  * @author poirigui
  */
-@ParametersAreNonnullByDefault
+@NonNullApi
 package ubic.gemma.web.assets;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import org.springframework.lang.NonNullApi;

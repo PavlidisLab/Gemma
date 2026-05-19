@@ -3,7 +3,7 @@ package ubic.gemma.cli.options;
 import lombok.Getter;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.nio.file.Path;
 
 /**

@@ -1,6 +1,6 @@
 package ubic.gemma.cli.util;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;

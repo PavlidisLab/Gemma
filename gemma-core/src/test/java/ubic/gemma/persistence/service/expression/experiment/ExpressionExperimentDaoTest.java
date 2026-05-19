@@ -36,7 +36,7 @@ import ubic.gemma.persistence.util.FilterQueryUtils;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Subquery;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;

@@ -62,7 +62,7 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RandomSingleCellDataUtils;
 import ubic.gemma.persistence.service.expression.experiment.*;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.*;
 
 /**

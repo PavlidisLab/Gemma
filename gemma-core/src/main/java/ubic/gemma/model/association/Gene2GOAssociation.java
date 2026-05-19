@@ -22,7 +22,7 @@ import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.genome.Gene;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Objects;
 
 public class Gene2GOAssociation extends AbstractIdentifiable {

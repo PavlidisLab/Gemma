@@ -11,8 +11,8 @@ import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.rest.util.EntityNotFoundException;
 import ubic.gemma.rest.util.MalformedArgException;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
 import java.lang.reflect.InvocationTargetException;
@@ -76,7 +76,7 @@ public abstract class AbstractEntityArgService<T extends Identifiable, S extends
     }
 
     @Override
-    @Nonnull
+    @NonNull
     public T getEntity( AbstractEntityArg<?, T, S> entityArg ) throws NotFoundException, BadRequestException {
         return checkEntity( entityArg, entityArg.getEntity( service ) );
     }

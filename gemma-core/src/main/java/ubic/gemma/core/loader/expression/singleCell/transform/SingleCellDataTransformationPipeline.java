@@ -2,7 +2,7 @@ package ubic.gemma.core.loader.expression.singleCell.transform;
 
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataType;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;

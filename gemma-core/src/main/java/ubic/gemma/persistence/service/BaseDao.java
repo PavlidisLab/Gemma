@@ -22,8 +22,8 @@ import org.hibernate.ObjectNotFoundException;
 import ubic.gemma.model.common.Identifiable;
 
 import javax.annotation.CheckReturnValue;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.stream.Stream;
@@ -127,7 +127,7 @@ public interface BaseDao<T extends Identifiable> {
      *
      * @see org.hibernate.Session#load(Object, Serializable)
      */
-    @Nonnull
+    @NonNull
     T loadReference( Long id );
 
     /**
@@ -137,7 +137,7 @@ public interface BaseDao<T extends Identifiable> {
      *
      * @throws org.hibernate.ObjectNotFoundException if the entity does not exist.
      */
-    @Nonnull
+    @NonNull
     T reload( T entity ) throws ObjectNotFoundException;
 
     /**
@@ -145,7 +145,7 @@ public interface BaseDao<T extends Identifiable> {
      * <p>
      * This does nothing for entities already in the session.
      */
-    @Nonnull
+    @NonNull
     Collection<T> reload( Collection<T> entities ) throws ObjectNotFoundException;
 
     /**

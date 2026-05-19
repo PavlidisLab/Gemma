@@ -19,7 +19,7 @@ import ubic.gemma.core.loader.expression.singleCell.TenXCellRangerUtils;
 import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataTransformationFactory;
 import ubic.gemma.core.util.ProgressInputStream;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;

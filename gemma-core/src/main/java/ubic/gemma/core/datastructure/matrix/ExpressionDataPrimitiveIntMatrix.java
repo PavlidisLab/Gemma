@@ -2,7 +2,7 @@ package ubic.gemma.core.datastructure.matrix;
 
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 public interface ExpressionDataPrimitiveIntMatrix extends ExpressionDataMatrix<Integer> {
 

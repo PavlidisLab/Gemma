@@ -11,7 +11,7 @@ import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.persistence.util.*;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;

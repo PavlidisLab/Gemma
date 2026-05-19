@@ -33,7 +33,7 @@ import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.persistence.service.AbstractNoopFilteringVoEnabledDao;
 import ubic.gemma.persistence.util.*;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 

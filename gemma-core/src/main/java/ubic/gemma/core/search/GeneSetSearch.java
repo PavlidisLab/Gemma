@@ -21,7 +21,7 @@ import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.persistence.service.genome.gene.GeneSetService;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Collection;
 
 /**

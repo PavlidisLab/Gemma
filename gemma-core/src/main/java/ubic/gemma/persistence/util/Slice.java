@@ -1,6 +1,6 @@
 package ubic.gemma.persistence.util;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.AbstractList;
 import java.util.List;
 import java.util.function.Function;

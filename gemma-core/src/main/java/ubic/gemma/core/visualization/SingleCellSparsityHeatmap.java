@@ -13,7 +13,7 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.awt.image.BufferedImage;
 import java.util.*;
 import java.util.stream.Collectors;

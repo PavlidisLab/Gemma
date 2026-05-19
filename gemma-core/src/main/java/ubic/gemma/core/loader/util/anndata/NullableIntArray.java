@@ -2,7 +2,7 @@ package ubic.gemma.core.loader.util.anndata;
 
 import ubic.gemma.core.loader.util.hdf5.H5Group;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 public class NullableIntArray extends NullableArray<Integer> {
 

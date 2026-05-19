@@ -3,7 +3,7 @@ package ubic.gemma.model.expression.bioAssayData;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * A data vector storing bulk expression data.

@@ -28,7 +28,7 @@ import ubic.gemma.persistence.util.FilterQueryUtils;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.text.MessageFormat;
 
 /**

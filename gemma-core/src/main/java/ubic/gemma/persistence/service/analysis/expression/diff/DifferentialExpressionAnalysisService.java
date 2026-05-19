@@ -27,7 +27,7 @@ import ubic.gemma.persistence.service.analysis.AnalysisService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableBaseService;
 
 import javax.annotation.CheckReturnValue;
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Collection;
 import java.util.Map;
 

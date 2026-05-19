@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.util.StdDateFormat;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.IOException;
 import java.io.Writer;
 import java.math.RoundingMode;

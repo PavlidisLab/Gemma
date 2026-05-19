@@ -22,7 +22,7 @@ import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 import ubic.gemma.model.common.description.Characteristic;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import jakarta.persistence.Transient;
 import java.util.Set;
 

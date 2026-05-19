@@ -17,7 +17,7 @@ package ubic.gemma.core.job;
 import lombok.extern.apachecommons.CommonsLog;
 import ubic.gemma.core.job.progress.ProgressUpdateContext;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.concurrent.Callable;
 
 import static java.util.Objects.requireNonNull;

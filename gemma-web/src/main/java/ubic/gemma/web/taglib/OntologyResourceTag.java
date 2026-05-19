@@ -9,7 +9,7 @@ import org.springframework.web.util.HtmlUtils;
 import ubic.basecode.ontology.model.OntologyResource;
 import ubic.gemma.core.ontology.OntologyExternalLinks;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import jakarta.servlet.jsp.JspException;
 
 @Setter

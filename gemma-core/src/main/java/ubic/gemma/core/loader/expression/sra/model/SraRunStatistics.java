@@ -2,7 +2,7 @@ package ubic.gemma.core.loader.expression.sra.model;
 
 import lombok.Data;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlAttribute;

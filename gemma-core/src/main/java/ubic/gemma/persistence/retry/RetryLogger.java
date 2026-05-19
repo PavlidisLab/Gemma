@@ -27,7 +27,7 @@ import org.springframework.retry.RetryContext;
 import org.springframework.retry.listener.RetryListenerSupport;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * Provide logging when an operation has failed and is being retried. This would not be needed if there was better

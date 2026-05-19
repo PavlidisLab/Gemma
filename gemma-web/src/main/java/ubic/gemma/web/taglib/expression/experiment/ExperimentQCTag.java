@@ -31,7 +31,7 @@ import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentQCCon
 import ubic.gemma.web.taglib.AbstractHtmlElementTag;
 import ubic.gemma.web.util.WebEntityUrlBuilder;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import jakarta.servlet.jsp.JspException;
 
 import static org.springframework.web.util.JavaScriptUtils.javaScriptEscape;

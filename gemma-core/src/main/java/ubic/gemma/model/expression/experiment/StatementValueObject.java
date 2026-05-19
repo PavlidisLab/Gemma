@@ -6,8 +6,8 @@ import ubic.gemma.model.annotations.GemmaRestOnly;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.IdentifiableValueObject;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import java.util.Comparator;
 
 import static ubic.gemma.model.common.description.CharacteristicUtils.compareTerm;
@@ -98,7 +98,7 @@ public class StatementValueObject extends IdentifiableValueObject<Statement> imp
     }
 
     @Override
-    public int compareTo( @Nonnull StatementValueObject other ) {
+    public int compareTo( @NonNull StatementValueObject other ) {
         return COMPARATOR.compare( this, other );
     }
 }

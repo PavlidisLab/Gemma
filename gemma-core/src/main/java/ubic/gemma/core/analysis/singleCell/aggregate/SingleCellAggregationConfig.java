@@ -5,7 +5,7 @@ import lombok.Getter;
 import ubic.gemma.model.common.description.Categories;
 import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.Console;
 
 /**

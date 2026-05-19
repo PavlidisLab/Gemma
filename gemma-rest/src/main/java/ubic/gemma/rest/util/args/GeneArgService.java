@@ -16,7 +16,7 @@ import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
-import javax.annotation.Nonnull;
+import org.springframework.lang.NonNull;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
 import java.util.ArrayList;
@@ -40,7 +40,7 @@ public class GeneArgService extends AbstractEntityArgService<Gene, GeneService> 
      *
      * @throws BadRequestException if more than one gene match the supplied gene argument
      */
-    @Nonnull
+    @NonNull
     @Override
     public Gene getEntity( AbstractEntityArg<?, Gene, GeneService> entityArg ) throws NotFoundException, BadRequestException {
         List<Gene> matchedGenes = getEntities( entityArg );
@@ -58,7 +58,7 @@ public class GeneArgService extends AbstractEntityArgService<Gene, GeneService> 
      *
      * @throws BadRequestException if more than one gene match the supplied gene argumen in the given taxon
      */
-    @Nonnull
+    @NonNull
     public Gene getEntityWithTaxon( GeneArg<?> entityArg, Taxon taxon ) {
         List<Gene> matchedGenes = getEntitiesWithTaxon( entityArg, taxon );
         if ( matchedGenes.isEmpty() ) {

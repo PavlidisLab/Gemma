@@ -21,7 +21,7 @@ import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.util.ModelUtils;
 import ubic.gemma.persistence.util.SecurityUtils;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;

@@ -21,7 +21,7 @@ package ubic.gemma.model.analysis.expression.coexpression;
 import ubic.gemma.model.analysis.SingleExperimentAnalysis;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import jakarta.persistence.Transient;
 
 /**

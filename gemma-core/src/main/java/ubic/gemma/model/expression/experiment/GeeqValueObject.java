@@ -26,7 +26,7 @@ import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.persistence.service.expression.experiment.GeeqServiceImpl;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Date;
 
 /**

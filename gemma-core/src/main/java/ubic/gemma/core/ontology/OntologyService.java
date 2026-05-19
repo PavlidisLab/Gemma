@@ -21,7 +21,7 @@ import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.genome.Taxon;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;

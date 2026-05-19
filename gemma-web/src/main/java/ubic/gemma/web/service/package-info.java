@@ -1,4 +1,4 @@
-@ParametersAreNonnullByDefault
+@NonNullApi
 package ubic.gemma.web.service;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import org.springframework.lang.NonNullApi;

@@ -129,8 +129,8 @@ import ubic.gemma.rest.annotations.GZIP;
 import ubic.gemma.rest.util.*;
 import ubic.gemma.rest.util.args.*;
 
-import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
+import org.springframework.lang.Nullable;
+import org.springframework.lang.NonNullApi;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.*;
 import java.io.IOException;

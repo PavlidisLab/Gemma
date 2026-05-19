@@ -3,7 +3,7 @@ package ubic.gemma.cli.options;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.nio.file.Files;
 import java.nio.file.Path;
 

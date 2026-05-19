@@ -4,7 +4,7 @@ import gemma.gsec.model.SecureValueObject;
 import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.Serializable;
 import java.util.Collection;
 

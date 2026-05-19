@@ -3,7 +3,7 @@ package ubic.gemma.persistence.util;
 import org.junit.Test;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 

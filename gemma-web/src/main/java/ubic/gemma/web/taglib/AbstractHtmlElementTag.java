@@ -4,7 +4,7 @@ import org.springframework.web.servlet.tags.HtmlEscapingAwareTag;
 import org.springframework.web.servlet.tags.form.TagWriter;
 import org.springframework.web.util.HtmlUtils;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import jakarta.servlet.jsp.JspException;
 import jakarta.servlet.jsp.tagext.DynamicAttributes;
 import java.util.LinkedHashMap;

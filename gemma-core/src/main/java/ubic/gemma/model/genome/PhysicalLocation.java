@@ -18,7 +18,7 @@
  */
 package ubic.gemma.model.genome;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Objects;
 
 public class PhysicalLocation extends ChromosomeLocation {

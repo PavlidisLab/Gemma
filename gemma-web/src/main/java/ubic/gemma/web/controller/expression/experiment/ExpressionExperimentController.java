@@ -95,7 +95,7 @@ import ubic.gemma.web.controller.util.view.JsonReaderResponse;
 import ubic.gemma.web.service.ExpressionExperimentControllerHelperService;
 import ubic.gemma.web.util.WebEntityUrlBuilder;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

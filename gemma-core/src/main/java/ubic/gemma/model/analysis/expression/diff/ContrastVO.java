@@ -17,7 +17,7 @@ package ubic.gemma.model.analysis.expression.diff;
 import lombok.Data;
 import ubic.gemma.model.common.ValueObject;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.Serializable;
 
 /**

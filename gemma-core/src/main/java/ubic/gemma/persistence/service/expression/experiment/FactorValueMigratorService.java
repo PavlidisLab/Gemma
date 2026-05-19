@@ -5,7 +5,7 @@ import lombok.Value;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.Statement;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;

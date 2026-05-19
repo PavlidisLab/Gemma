@@ -1,7 +1,7 @@
 package ubic.gemma.core.util.locking;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLockInterruptionException;
@@ -68,13 +68,13 @@ class ReadWriteFileLock implements ReadWriteLock {
         return fc;
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public Lock readLock() {
         return readLock;
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public Lock writeLock() {
         return writeLock;
@@ -233,7 +233,7 @@ class ReadWriteFileLock implements ReadWriteLock {
             }
         }
 
-        @Nonnull
+        @NonNull
         @Override
         public Condition newCondition() {
             return lock.newCondition();

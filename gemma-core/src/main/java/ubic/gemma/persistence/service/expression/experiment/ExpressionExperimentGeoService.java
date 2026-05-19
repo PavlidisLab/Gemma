@@ -4,7 +4,7 @@ import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * This service provides access to GEO metadata for any given Gemma dataset.

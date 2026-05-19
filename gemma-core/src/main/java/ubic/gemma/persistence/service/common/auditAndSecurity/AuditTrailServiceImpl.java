@@ -39,7 +39,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.persistence.service.AbstractService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.GenericCuratableDao;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 

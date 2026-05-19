@@ -23,7 +23,7 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.HashSet;
 import java.util.Set;
 

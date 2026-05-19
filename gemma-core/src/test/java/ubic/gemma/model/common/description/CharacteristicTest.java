@@ -3,7 +3,7 @@ package ubic.gemma.model.common.description;
 import org.assertj.core.groups.Tuple;
 import org.junit.Test;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.SortedSet;

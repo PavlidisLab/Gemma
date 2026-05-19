@@ -7,7 +7,7 @@ import ubic.gemma.core.util.ListUtils;
 import ubic.gemma.model.common.Identifiable;
 
 import javax.annotation.CheckReturnValue;
-import javax.annotation.Nonnull;
+import org.springframework.lang.NonNull;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
 import java.util.*;
 import java.util.function.Function;
@@ -44,7 +44,7 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
         return mainDao.find( entity );
     }
 
-    @Nonnull
+    @NonNull
     @Override
     @Transactional(readOnly = true)
     public O findOrFail( O entity ) {
@@ -118,7 +118,7 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
         return mainDao.load( id );
     }
 
-    @Nonnull
+    @NonNull
     @Override
     @Transactional(readOnly = true)
     public O loadOrFail( Long id ) {
@@ -126,7 +126,7 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
                 String.format( "No %s with ID %d.", mainDao.getElementClass().getName(), id ) );
     }
 
-    @Nonnull
+    @NonNull
     @Override
     @Transactional(readOnly = true)
     public <T extends Exception> O loadOrFail( Long id, Supplier<T> exceptionSupplier ) throws T {
@@ -137,7 +137,7 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
         return entity;
     }
 
-    @Nonnull
+    @NonNull
     @Override
     @Transactional(readOnly = true)
     public <T extends Exception> O loadOrFail( Long id, Function<String, T> exceptionSupplier ) throws T {
@@ -148,7 +148,7 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
         return entity;
     }
 
-    @Nonnull
+    @NonNull
     @Override
     @Transactional(readOnly = true)
     public <T extends Exception> O loadOrFail( Long id, Function<String, T> exceptionSupplier, String message ) throws T {

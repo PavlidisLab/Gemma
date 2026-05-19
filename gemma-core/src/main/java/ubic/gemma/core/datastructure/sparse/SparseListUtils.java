@@ -2,7 +2,7 @@ package ubic.gemma.core.datastructure.sparse;
 
 import org.springframework.util.Assert;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.List;
 
 import static java.util.Arrays.binarySearch;

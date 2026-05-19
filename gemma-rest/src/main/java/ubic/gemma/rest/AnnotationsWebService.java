@@ -52,7 +52,7 @@ import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.ResponseErrorObject;
 import ubic.gemma.rest.util.args.*;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import java.net.URI;

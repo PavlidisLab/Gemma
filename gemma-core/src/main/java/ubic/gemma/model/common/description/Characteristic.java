@@ -23,8 +23,8 @@ import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.AbstractDescribable;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import java.util.Comparator;
 import java.util.Objects;
 
@@ -235,7 +235,7 @@ public class Characteristic extends AbstractDescribable implements Comparable<Ch
     }
 
     @Override
-    public int compareTo( @Nonnull Characteristic characteristic ) {
+    public int compareTo( @NonNull Characteristic characteristic ) {
         return COMPARATOR.compare( this, characteristic );
     }
 

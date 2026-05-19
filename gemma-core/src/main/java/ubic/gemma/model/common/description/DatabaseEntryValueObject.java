@@ -19,7 +19,7 @@ import lombok.EqualsAndHashCode;
 import ubic.gemma.core.loader.util.ExternalDatabaseUtils;
 import ubic.gemma.model.common.IdentifiableValueObject;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * ValueObject for database entry

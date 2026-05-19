@@ -24,7 +24,7 @@ import ubic.gemma.model.common.DescribableUtils;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Taxon;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Objects;
 import java.util.Set;
 

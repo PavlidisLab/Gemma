@@ -12,7 +12,7 @@ import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.persistence.util.*;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;

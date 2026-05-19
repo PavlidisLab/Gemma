@@ -18,7 +18,7 @@ import ubic.gemma.model.common.auditAndSecurity.SecuredNotChild;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.protocol.Protocol;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.stream.Collectors;

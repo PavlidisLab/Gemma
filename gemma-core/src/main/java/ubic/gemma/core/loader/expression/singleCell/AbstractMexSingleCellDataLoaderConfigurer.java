@@ -11,7 +11,7 @@ import org.springframework.util.Assert;
 import ubic.gemma.core.loader.expression.singleCell.transform.SingleCell10xMexFilter;
 import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataTransformationFactory;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;

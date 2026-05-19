@@ -21,7 +21,7 @@ package ubic.gemma.model.genome;
 import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.description.ExternalDatabase;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Objects;
 
 public class Taxon extends AbstractIdentifiable {

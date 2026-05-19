@@ -63,7 +63,7 @@ import ubic.gemma.web.controller.util.EntityNotFoundException;
 import ubic.gemma.web.controller.util.view.TextView;
 import ubic.gemma.web.controller.visualization.VisualizationValueObject;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.*;

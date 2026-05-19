@@ -5,7 +5,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.util.Assert;
 import ubic.gemma.cli.util.AnsiEscapeCodes;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.Console;
 import java.io.IOException;
 import java.io.Serializable;

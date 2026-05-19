@@ -2,7 +2,7 @@ package ubic.gemma.cli.completion;
 
 import org.apache.commons.cli.Options;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.PrintWriter;
 
 public interface CompletionGenerator {

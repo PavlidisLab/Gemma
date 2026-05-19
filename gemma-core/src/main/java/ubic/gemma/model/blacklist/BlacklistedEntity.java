@@ -22,7 +22,7 @@ package ubic.gemma.model.blacklist;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.description.DatabaseEntry;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * Represents a blacklisted entity that should not be loaded into Gemma.

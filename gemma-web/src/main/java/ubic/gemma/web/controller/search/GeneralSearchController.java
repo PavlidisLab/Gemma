@@ -56,7 +56,7 @@ import ubic.gemma.persistence.util.UnsupportedEntityUrlException;
 import ubic.gemma.web.controller.util.view.JsonReaderResponse;
 import ubic.gemma.web.util.WebEntityUrlBuilder;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import jakarta.servlet.http.HttpServletRequest;
 import java.net.URI;
 import java.net.URISyntaxException;

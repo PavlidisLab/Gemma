@@ -4,7 +4,7 @@ import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
 import ubic.gemma.model.common.description.ExternalDatabases;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * Extends {@link ubic.gemma.core.loader.util.ExternalDatabaseUtils} with web-specific utilities.

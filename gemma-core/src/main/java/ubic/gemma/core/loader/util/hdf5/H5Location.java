@@ -5,7 +5,7 @@ import hdf.hdf5lib.callbacks.H5A_iterate_t;
 import hdf.hdf5lib.callbacks.H5L_iterate_opdata_t;
 import org.springframework.util.Assert;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;

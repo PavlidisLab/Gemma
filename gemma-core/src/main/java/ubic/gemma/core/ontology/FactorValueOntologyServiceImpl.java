@@ -25,7 +25,7 @@ import ubic.gemma.persistence.util.IdentifiableUtils;
 import ubic.gemma.persistence.util.QueryUtils;
 import ubic.gemma.persistence.util.Slice;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.Writer;
 import java.util.*;

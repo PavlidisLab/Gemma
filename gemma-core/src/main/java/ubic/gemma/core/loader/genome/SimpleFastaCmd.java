@@ -24,7 +24,7 @@ import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.util.ShellUtils;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

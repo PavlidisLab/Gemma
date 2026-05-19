@@ -49,7 +49,7 @@ import ubic.gemma.rest.util.ResponseErrorObject;
 import ubic.gemma.rest.util.SortValueObject;
 import ubic.gemma.rest.util.args.*;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.HttpHeaders;

@@ -10,7 +10,7 @@ import ubic.gemma.core.tasks.analysis.expression.PreprocessTaskCommand;
 import ubic.gemma.core.tasks.analysis.expression.SvdTaskCommand;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Date;
 import java.util.Queue;
 

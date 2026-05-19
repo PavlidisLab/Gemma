@@ -10,7 +10,7 @@
  * Once transformed in this way, the data becomes suitable for preprocessing and analysis.
  * @author poirigui
  */
-@ParametersAreNonnullByDefault
+@NonNullApi
 package ubic.gemma.core.analysis.singleCell;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import org.springframework.lang.NonNullApi;

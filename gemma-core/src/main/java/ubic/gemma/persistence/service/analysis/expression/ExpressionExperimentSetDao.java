@@ -25,7 +25,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueOb
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.persistence.service.BaseVoEnabledDao;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Collection;
 import java.util.List;
 

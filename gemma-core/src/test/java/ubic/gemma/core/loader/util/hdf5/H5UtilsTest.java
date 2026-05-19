@@ -2,7 +2,7 @@ package ubic.gemma.core.loader.util.hdf5;
 
 import org.junit.Test;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 import static org.junit.Assert.assertNotNull;
 

@@ -21,7 +21,7 @@ package ubic.gemma.model.analysis.expression.diff;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * Represents a contrast between "conditions". In practice, this is the comparison between a factor level and the

@@ -4,7 +4,7 @@ import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.persistence.service.BaseReadOnlyService;
 
-import javax.annotation.Nonnull;
+import org.springframework.lang.NonNull;
 import java.util.Collection;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -16,7 +16,7 @@ public interface SecurableBaseReadOnlyService<C extends Securable> extends BaseR
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
     C find( C entity );
 
-    @Nonnull
+    @NonNull
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     C findOrFail( C entity ) throws NullPointerException;
@@ -29,22 +29,22 @@ public interface SecurableBaseReadOnlyService<C extends Securable> extends BaseR
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
     C load( Long id );
 
-    @Nonnull
+    @NonNull
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     C loadOrFail( Long id ) throws NullPointerException;
 
-    @Nonnull
+    @NonNull
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     <T extends Exception> C loadOrFail( Long id, Supplier<T> exceptionSupplier ) throws T;
 
-    @Nonnull
+    @NonNull
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     <T extends Exception> C loadOrFail( Long id, Function<String, T> exceptionSupplier ) throws T;
 
-    @Nonnull
+    @NonNull
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     <T extends Exception> C loadOrFail( Long id, Function<String, T> exceptionSupplier, String message ) throws T;

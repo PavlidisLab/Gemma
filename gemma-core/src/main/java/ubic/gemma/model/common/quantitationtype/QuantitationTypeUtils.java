@@ -5,8 +5,8 @@ import org.apache.commons.lang3.Strings;
 import org.springframework.util.Assert;
 import ubic.gemma.persistence.util.ByteArrayUtils;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import java.util.Collection;
 import java.util.Set;
 import java.util.function.Function;
@@ -57,7 +57,7 @@ public class QuantitationTypeUtils {
      * For counting data represented as double or float, the default value is transformed as per
      * {@link #getDefaultCountValueAsDouble(QuantitationType)} and {@link #getDefaultCountValueAsFloat(QuantitationType)}.
      */
-    @Nonnull
+    @NonNull
     public static Object getDefaultValue( QuantitationType quantitationType ) {
         PrimitiveType pt = quantitationType.getRepresentation();
         switch ( pt ) {
@@ -86,7 +86,7 @@ public class QuantitationTypeUtils {
         }
     }
 
-    @Nonnull
+    @NonNull
     public static Number getDefaultValueAsNumber( QuantitationType quantitationType ) {
         PrimitiveType pt = quantitationType.getRepresentation();
         switch ( pt ) {

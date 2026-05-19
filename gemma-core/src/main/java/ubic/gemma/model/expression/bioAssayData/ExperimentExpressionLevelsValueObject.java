@@ -4,7 +4,7 @@ import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.genome.Gene;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.LinkedList;
