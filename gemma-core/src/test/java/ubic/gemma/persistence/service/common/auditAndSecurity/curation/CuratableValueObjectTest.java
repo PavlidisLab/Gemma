@@ -25,6 +25,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.fixture.ExperimentFactory;
 import ubic.gemma.model.common.auditAndSecurity.eventType.TroubledStatusFlagEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
@@ -60,6 +61,9 @@ public class CuratableValueObjectTest extends BaseSpringContextTest {
     @Autowired
     private AuditTrailService auditTrailService;
 
+    @Autowired
+    private ExperimentFactory experimentFactory;
+
     @Before
     public void setUp() throws Exception {
 
@@ -89,7 +93,9 @@ public class CuratableValueObjectTest extends BaseSpringContextTest {
         ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
         ed.setName( RandomStringUtils.insecure().nextAlphanumeric( 8 ) );
 
-        expressionExperiment = super.getTestPersistentBasicExpressionExperiment();
+        // Phase 3: migrated from PersistentDummyObjectHelper.getTestPersistentBasicExpressionExperiment()
+        // to ExperimentFactory; the supplied AD is passed in so the BAs reference the AD this test asserts on.
+        expressionExperiment = experimentFactory.bulkRna().withArrayDesign( arrayDesign ).build();
 
     }
 
