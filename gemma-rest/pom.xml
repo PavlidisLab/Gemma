@@ -10,6 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>gemma-rest</artifactId>
+    <packaging>${gemma.rest.packaging}</packaging>
 
     <name>Gemma REST</name>
     <description>Module containing the Gemma REST API</description>
@@ -276,6 +277,73 @@
 
     <properties>
         <javadocSourcePaths>${delombok.output};${project.build.directory}/generated-sources/antlr4</javadocSourcePaths>
+        <!--
+            Phase 1 of GEMMA_REST_STANDALONE_RECCE.md: packaging defaults to JAR so that
+            gemma-web's WAR build (which consumes gemma-rest as a compile-scope JAR dep,
+            see gemma-web/pom.xml:103-107) continues to pull gemma-rest's classes into
+            its WEB-INF/lib unchanged. Activate the `gemma-rest-war` profile to flip to
+            WAR packaging for standalone deployment:
+                mvn -pl gemma-rest -am package -P gemma-rest-war -DskipTests
+        -->
+        <gemma.rest.packaging>jar</gemma.rest.packaging>
     </properties>
+
+    <profiles>
+        <profile>
+            <id>gemma-rest-war</id>
+            <properties>
+                <gemma.rest.packaging>war</gemma.rest.packaging>
+            </properties>
+            <build>
+                <finalName>gemma-rest</finalName>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-war-plugin</artifactId>
+                        <configuration>
+                            <!--
+                                The descriptor is gemma-rest's own (no override on
+                                webXml); failOnMissingWebXml=true makes the build fail
+                                fast if it ever goes missing.
+                            -->
+                            <failOnMissingWebXml>true</failOnMissingWebXml>
+                            <webResources>
+                                <!--
+                                    Bundle the Swagger UI assets under /resources/restapidocs.
+                                    Mirrors the webResources block currently in gemma-web/pom.xml;
+                                    the long-term home for this is gemma-rest once gemma-web is
+                                    deleted (RECCE §5 step 4). Until gemma-web is gone, both WARs
+                                    ship the Swagger UI - harmless duplication during cutover.
+                                -->
+                                <resource>
+                                    <directory>${project.basedir}/src/main/resources/restapidocs</directory>
+                                    <targetPath>resources/restapidocs</targetPath>
+                                </resource>
+                            </webResources>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+            <dependencies>
+                <!--
+                    Tomcat provided-scope deps mirror gemma-web/pom.xml:172-186. Needed at
+                    compile time for any code that touches Catalina APIs; provided so the
+                    container supplies them at runtime. Tomcat version pinned to the root
+                    pom property `tomcat.version` (currently 10.1.34).
+                -->
+                <dependency>
+                    <groupId>org.apache.tomcat</groupId>
+                    <artifactId>tomcat-servlet-api</artifactId>
+                    <scope>provided</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.tomcat</groupId>
+                    <artifactId>tomcat-catalina</artifactId>
+                    <version>${tomcat.version}</version>
+                    <scope>provided</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
 
 </project>

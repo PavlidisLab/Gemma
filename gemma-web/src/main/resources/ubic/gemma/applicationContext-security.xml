@@ -6,16 +6,14 @@
             http://www.springframework.org/schema/security
             http://www.springframework.org/schema/security/spring-security.xsd">
 
-	<bean id="httpAccessDecisionManager" class="org.springframework.security.access.vote.AffirmativeBased">
-		<property name="allowIfAllAbstainDecisions" value="true"/>
-		<constructor-arg>
-			<list>
-				<bean class="org.springframework.security.web.access.expression.WebExpressionVoter"/>
-				<ref bean="roleHierarchyVoter"/>
-				<bean class="org.springframework.security.access.vote.AuthenticatedVoter"/> <!-- so we can use 'IS_AUTHENTICATED_ANONYMOUSLY in security (as opposed to ROLE_ANONYMOUS) -->
-			</list>
-		</constructor-arg>
-	</bean>
+	<!--
+		Phase 1 of GEMMA_REST_STANDALONE_RECCE.md: the httpAccessDecisionManager bean is now
+		produced by ubic.gemma.rest.security.RestSecurityConfig#httpAccessDecisionManager(...)
+		(a @Bean named "httpAccessDecisionManager"). The previous duplicate XML definition was
+		removed here to resolve the bean-id collision flagged in section 6.2 of the recce. The
+		<s:http access-decision-manager-ref="httpAccessDecisionManager"> references in this
+		file continue to resolve by name from the Java-config bean.
+	-->
 
 	<!-- For use with access tags -->
 	<bean id="defaultWebSecurityExpressionHandler"
@@ -32,11 +30,13 @@
 		<property name="defaultFailureUrl" value="/login.jsp"/>
 	</bean>
 
-	<bean id="restAuthEntryPoint" class="ubic.gemma.rest.security.RestAuthEntryPoint">
-		<constructor-arg ref="objectMapper"/>
-		<constructor-arg ref="openApi"/>
-		<constructor-arg ref="buildInfo"/>
-	</bean>
+	<!--
+		Phase 1 of GEMMA_REST_STANDALONE_RECCE.md: the restAuthEntryPoint bean is now produced
+		by @Component("restAuthEntryPoint") on ubic.gemma.rest.security.RestAuthEntryPoint
+		(picked up by gemma-rest's component-scan in ubic.gemma.rest). Removing the XML duplicate
+		here means the bean is producible in standalone gemma-rest mode without this file on the
+		classpath; the entry-point-ref="restAuthEntryPoint" references below still resolve.
+	-->
 
 	<s:http access-decision-manager-ref="httpAccessDecisionManager" pattern="/rest/v2/**"
 			entry-point-ref="restAuthEntryPoint" realm="Gemma RESTful API">

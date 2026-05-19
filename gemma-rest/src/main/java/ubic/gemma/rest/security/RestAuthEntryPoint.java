@@ -19,6 +19,7 @@ import io.swagger.v3.oas.models.OpenAPI;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.stereotype.Component;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.concurrent.FutureUtils;
 import ubic.gemma.rest.util.BuildInfoValueObject;
@@ -36,9 +37,19 @@ import java.util.concurrent.Future;
 /**
  * Implementation of {@link AuthenticationEntryPoint} for the RESTful API to handle authentication.
  * <p>
- * This is used in applicationContext-ws-rest.xml as part of Spring Security HTTP configuration.
+ * Promoted to {@code @Component("restAuthEntryPoint")} as part of Phase 1 of
+ * {@code GEMMA_REST_STANDALONE_RECCE.md} so the bean is producible without
+ * gemma-web's {@code applicationContext-security.xml}. The matching XML bean
+ * definition in {@code gemma-web/applicationContext-security.xml} was removed
+ * to avoid a bean-id collision; the {@code <s:http pattern="/rest/v2/**">}
+ * chain in that XML still resolves {@code entry-point-ref="restAuthEntryPoint"}
+ * by name from this component.
+ * <p>
+ * Referenced by {@link RestSecurityConfig#restSecurityFilterChain} via
+ * {@code @Qualifier("restAuthEntryPoint")}.
  */
 @Slf4j
+@Component("restAuthEntryPoint")
 public class RestAuthEntryPoint implements AuthenticationEntryPoint {
 
     private static final String MESSAGE_401 = "Provided authentication credentials are invalid.";
