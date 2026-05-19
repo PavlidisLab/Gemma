@@ -153,3 +153,4 @@ atlassian-ide-plugin.xml
 
 # a custom copy of Gemma_CLI.xml for testing purposes
 .idea/runConfigurations/Gemma_CLI_custom.xml
+figures/__pycache__/
