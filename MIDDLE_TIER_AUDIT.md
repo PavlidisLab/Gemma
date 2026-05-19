@@ -381,3 +381,54 @@ Why this one:
 3.x slice applies to `getSubSetsByFactorValue`,
 `getProcessedQuantitationType`, `getBioAssayDimension` (the other top-5 EES
 methods called from REST/web).
+
+---
+
+### 5.1 Lighthouse slice — landed pattern
+
+The first slice landed as the batched-subset variant of
+`getSubSetsWithBioAssays`. Concrete shape:
+
+| layer | signature |
+|---|---|
+| DAO | `Map<ExpressionExperiment, Collection<ExpressionExperimentSubSet>> getSubSetsByExpressionExperiments(Collection<ExpressionExperiment>)` |
+| Service | `@Secured({"IS_AUTHENTICATED_ANONYMOUSLY","ACL_SECURABLE_COLLECTION_READ"}) Map<EE,Collection<EESubSet>> getSubSetsWithBioAssays(Collection<EE>)` |
+| Caller | `AnalysisResultSetsWebService.getResultSets` — one call, then `bas.addAll(subSetsByEE.values()…)` |
+
+Pattern rules — apply these verbatim to every follow-on slice:
+
+1. **Always take and return a `Collection`/`Map` keyed by the input
+   entity.** Never reach into the result by id; the input itself is the
+   key. This survives proxy/managed-instance shifts and reads naturally at
+   the call site.
+2. **Seed the result map with every input entity** (empty bucket if no
+   children). Callers iterate without null-checks; this matches
+   `getSampleRemovalEvents`'s contract.
+3. **Guard empty input at the top** (`return emptyMap()`). Avoid the
+   round-trip; avoid surprising the IN-list rewriter.
+4. **Batch via `QueryUtils.listByIdentifiableBatch(query, "ees",
+   inputs, 2048)`** so we get the existing
+   `MAX_PARAMETER_LIST_SIZE`-aware splitter for free instead of a fresh
+   `OPTIMIZE_*` cargo-cult.
+5. **ACL annotation: `ACL_SECURABLE_COLLECTION_READ`** at the service
+   interface — validates every input entity is readable up-front so the
+   DAO can assume a pre-filtered set. The returned children inherit
+   ACL semantics from their parent.
+6. **Don't bypass the service.** The DAO method exists, but the REST/web
+   caller goes through the service-layer facade so the `@Secured` voter
+   still runs.
+
+Next candidates that match this shape (drop-in conversions):
+
+| current per-EE method | batched replacement |
+|---|---|
+| `EES.getBioAssayDimension(ee)` | `Map<EE,BioAssayDimension> getBioAssayDimensionByExpressionExperiments(Collection<EE>)` |
+| `EES.getProcessedQuantitationType(ee)` | `Map<EE,QuantitationType> getProcessedQuantitationTypeByExpressionExperiments(Collection<EE>)` |
+| `EES.getSubSetsByDimension(ee)` | `Map<EE,Map<BioAssayDimension,Set<EESubSet>>> getSubSetsByDimensionByExpressionExperiments(Collection<EE>)` |
+| `auditEventService.retainLackingEvent(ees, type)` loop in `ExpressionExperimentController.applyFilter` | already plural, but used 8× — wrap into one call that takes a `Set<Class<? extends AuditEventType>>` |
+
+The `ExpressionExperimentBatchInformationServiceImpl` and
+`ExpressionExperimentPlatformSwitchService` callers of
+`getSubSetsWithBioAssays(ee)` are CLI-side and run in non-throughput-critical
+paths — leave them alone for now; the new batched method is available if a
+follow-on slice needs it.

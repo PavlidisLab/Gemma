@@ -348,6 +348,21 @@ public interface ExpressionExperimentDao
 
     Collection<ExpressionExperimentSubSet> getSubSets( ExpressionExperiment expressionExperiment );
 
+    /**
+     * Batched variant of {@link #getSubSets(ExpressionExperiment)}: obtain subsets for every experiment in the input
+     * collection in a single query, keyed by source experiment.
+     * <p>
+     * This is the canonical {@code findByEntityIdsInWith<Children>} shape — it replaces a per-entity loop that calls
+     * {@link #getSubSets(ExpressionExperiment)} once per experiment with one HQL round-trip. Experiments without
+     * subsets are present in the result map with an empty collection so callers can iterate without null-checks. ACL
+     * filtering is enforced at the service layer (see {@code ExpressionExperimentService.getSubSetsWithBioAssays}) —
+     * this DAO assumes the caller has already filtered the input.
+     *
+     * @param expressionExperiments experiments to fetch subsets for; may be empty
+     * @return a map from each input experiment to its subsets (empty collection if none)
+     */
+    Map<ExpressionExperiment, Collection<ExpressionExperimentSubSet>> getSubSetsByExpressionExperiments( Collection<ExpressionExperiment> expressionExperiments );
+
     Collection<ExpressionExperimentSubSet> getSubSets( ExpressionExperiment expressionExperiment, BioAssayDimension bad );
 
     Map<BioAssayDimension, Set<ExpressionExperimentSubSet>> getSubSetsByDimension( ExpressionExperiment expressionExperiment );

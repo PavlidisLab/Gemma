@@ -28,6 +28,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.util.Filter;
@@ -498,6 +499,54 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
                 } );
         // assertEquals( "and (ee.id in (select e.id from ubic.gemma.model.expression.experiment.ExpressionExperiment e join e.allCharacteristics ac where ac.valueUri in (:ac_valueUri1)))",
         //         FilterQueryUtils.formRestrictionClause( Filters.by( f ) ) );
+    }
+
+    @Test
+    public void testGetSubSetsByExpressionExperimentsEmpty() {
+        // empty input must short-circuit to an empty map (no query round-trip, no NPE)
+        assertThat( expressionExperimentDao.getSubSetsByExpressionExperiments( Collections.emptyList() ) )
+                .isEmpty();
+    }
+
+    @Test
+    public void testGetSubSetsByExpressionExperimentsBatched() {
+        // ee1 has two subsets, ee2 has one, ee3 has none — verify all three appear in the result and the loop is
+        // collapsed to one query
+        ExpressionExperiment ee1 = createExpressionExperiment();
+        ExpressionExperiment ee2 = createExpressionExperiment();
+        ExpressionExperiment ee3 = createExpressionExperiment();
+
+        ExpressionExperimentSubSet subset1a = ExpressionExperimentSubSet.Factory.newInstance( "ee1-subset-a", ee1 );
+        ExpressionExperimentSubSet subset1b = ExpressionExperimentSubSet.Factory.newInstance( "ee1-subset-b", ee1 );
+        ExpressionExperimentSubSet subset2 = ExpressionExperimentSubSet.Factory.newInstance( "ee2-subset", ee2 );
+        sessionFactory.getCurrentSession().persist( subset1a );
+        sessionFactory.getCurrentSession().persist( subset1b );
+        sessionFactory.getCurrentSession().persist( subset2 );
+        sessionFactory.getCurrentSession().flush();
+
+        Map<ExpressionExperiment, Collection<ExpressionExperimentSubSet>> bySource =
+                expressionExperimentDao.getSubSetsByExpressionExperiments( Arrays.asList( ee1, ee2, ee3 ) );
+
+        assertThat( bySource ).hasSize( 3 );
+        // The SubSet.Factory.newInstance(name, ee) prepends "<ee name> - "; compare on the id-set instead
+        assertThat( bySource.get( ee1 ) )
+                .extracting( "id" )
+                .containsExactlyInAnyOrder( subset1a.getId(), subset1b.getId() );
+        assertThat( bySource.get( ee2 ) )
+                .extracting( "id" )
+                .containsExactly( subset2.getId() );
+        // ee3 must be present with an empty bucket so callers can iterate without null-checks
+        assertThat( bySource.get( ee3 ) ).isEmpty();
+
+        // clean up — DAO.remove(ee) does not cascade to subsets (the cascade lives in the service layer),
+        // so drop the subsets first, then the EEs themselves; ee3 is handed off to @After
+        sessionFactory.getCurrentSession().remove( subset1a );
+        sessionFactory.getCurrentSession().remove( subset1b );
+        sessionFactory.getCurrentSession().remove( subset2 );
+        sessionFactory.getCurrentSession().flush();
+        expressionExperimentDao.remove( ee1 );
+        expressionExperimentDao.remove( ee2 );
+        ee = ee3;
     }
 
     @Test
