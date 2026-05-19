@@ -78,6 +78,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.Objects.requireNonNull;
+import ubic.gemma.model.common.description.CharacteristicUtils;
 import static ubic.gemma.model.common.description.CharacteristicUtils.*;
 import static ubic.gemma.model.expression.experiment.StatementUtils.formatStatement;
 
@@ -1953,8 +1954,8 @@ public class ExpressionExperimentServiceImpl
     }
 
     private static boolean sameTag( Characteristic a, Characteristic b ) {
-        return equals( a.getCategory(), a.getCategoryUri(), b.getCategory(), b.getCategoryUri() )
-                && equals( a.getValue(), a.getValueUri(), b.getValue(), b.getValueUri() );
+        return CharacteristicUtils.equals( a.getCategory(), a.getCategoryUri(), b.getCategory(), b.getCategoryUri() )
+                && CharacteristicUtils.equals( a.getValue(), a.getValueUri(), b.getValue(), b.getValueUri() );
     }
 
     @Override
