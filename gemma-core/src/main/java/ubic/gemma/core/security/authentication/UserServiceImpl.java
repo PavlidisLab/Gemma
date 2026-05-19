@@ -60,6 +60,9 @@ public class UserServiceImpl implements UserService, ApplicationContextAware {
     @Autowired
     private AclService aclService;
 
+    @Autowired
+    private UserReadService userReadService;
+
     // FIXME: remove SecurityService from here, it depends on UserService, we're using afterPropertiesSet() as a
     //        workaround to prevent circular dependency
     private ApplicationContext applicationContext;
@@ -167,58 +170,48 @@ public class UserServiceImpl implements UserService, ApplicationContextAware {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public User findByEmail( final String email ) {
-        return this.userDao.findByEmail( email );
-
+        return userReadService.findByEmail( email );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ubic.gemma.model.common.auditAndSecurity.User findByUserName( final String userName ) {
-        return this.userDao.findByUserName( userName );
+        return userReadService.findByUserName( userName );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public UserGroup findGroupByName( String name ) {
-        return this.userGroupDao.findByName( name );
+        return userReadService.findGroupByName( name );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public boolean groupExists( String name ) {
-        return this.userGroupDao.findByName( name ) != null;
+        return userReadService.groupExists( name );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<ubic.gemma.core.security.model.UserGroup> findGroupsForUser( ubic.gemma.core.security.model.User user ) {
-        return new ArrayList<>( this.userGroupDao.findGroupsForUser( ( User ) user ) );
+        return new ArrayList<>( userReadService.findGroupsForUser( ( User ) user ) );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<ubic.gemma.core.security.model.UserGroup> listAvailableGroups() {
-        return new ArrayList<>( this.userGroupDao.loadAll() );
+        return new ArrayList<>( userReadService.listAvailableGroups() );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public User load( final Long id ) {
-        return this.userDao.load( id );
+        return userReadService.load( id );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<ubic.gemma.core.security.model.User> loadAll() {
-        return new ArrayList<>( this.userDao.loadAll() );
+        return new ArrayList<>( userReadService.loadAll() );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<ubic.gemma.core.security.model.GroupAuthority> loadGroupAuthorities( ubic.gemma.core.security.model.User user ) {
-        return new ArrayList<>( this.userDao.loadGroupAuthorities( ( User ) user ) );
+        return new ArrayList<>( userReadService.loadGroupAuthorities( ( User ) user ) );
     }
 
     @Override

@@ -19,7 +19,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.security.authentication.UserManager;
-import ubic.gemma.core.security.authentication.UserService;
+import ubic.gemma.core.security.authentication.UserReadService;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketEventValueObject;
@@ -81,13 +81,13 @@ public class TicketsWebService {
 
     private final TicketService ticketService;
     private final UserManager userManager;
-    private final UserService userService;
+    private final UserReadService userReadService;
 
     @Autowired
-    public TicketsWebService( TicketService ticketService, UserManager userManager, UserService userService ) {
+    public TicketsWebService( TicketService ticketService, UserManager userManager, UserReadService userReadService ) {
         this.ticketService = ticketService;
         this.userManager = userManager;
-        this.userService = userService;
+        this.userReadService = userReadService;
     }
 
     /**
@@ -217,7 +217,7 @@ public class TicketsWebService {
             ticketService.update( created );
         }
         if ( req.getAssigneeId() != null ) {
-            User assignee = userService.load( req.getAssigneeId() );
+            User assignee = userReadService.load( req.getAssigneeId() );
             if ( assignee == null ) {
                 throw new BadRequestException( "No user with id " + req.getAssigneeId() );
             }
@@ -285,7 +285,7 @@ public class TicketsWebService {
         if ( req.isAssigneeIdSet() ) {
             User assignee = null;
             if ( req.getAssigneeId() != null ) {
-                assignee = userService.load( req.getAssigneeId() );
+                assignee = userReadService.load( req.getAssigneeId() );
                 if ( assignee == null ) {
                     throw new BadRequestException( "No user with id " + req.getAssigneeId() );
                 }

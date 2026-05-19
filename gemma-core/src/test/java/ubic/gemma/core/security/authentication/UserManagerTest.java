@@ -54,6 +54,11 @@ public class UserManagerTest extends BaseDatabaseTest5 {
         }
 
         @Bean
+        public UserReadService userReadService( UserDao userDao, UserGroupDao userGroupDao ) {
+            return new UserReadServiceImpl( userDao, userGroupDao );
+        }
+
+        @Bean
         public UserManager userManager() {
             return new UserManagerImpl();
         }
