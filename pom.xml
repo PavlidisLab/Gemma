@@ -728,7 +728,14 @@
 					<includes>
 						<include>**/*Test.java</include>
 					</includes>
-					<excludedGroups>ubic.gemma.core.util.test.category.IntegrationTest,${excludedGroups}</excludedGroups>
+					<!--
+					JUnit 5 Phase B0 dual-selector. Excludes both the legacy
+					JUnit 4 @Category(IntegrationTest.class) (selected via FQCN —
+					exposed as a tag by the Vintage engine) AND the new
+					@Tag("integration") JUnit 5 marker. Comma-separated entries
+					form a tag-expression OR on the JUnit Platform.
+					-->
+					<excludedGroups>ubic.gemma.core.util.test.category.IntegrationTest,integration,${excludedGroups}</excludedGroups>
 					<!--suppress MavenModelInspection -->
 					<skip>${skipUnitTests}</skip>
 				</configuration>
@@ -743,7 +750,16 @@
 					<includes>
 						<include>**/*Test.java</include>
 					</includes>
-					<groups>ubic.gemma.core.util.test.category.IntegrationTest</groups>
+					<!--
+					JUnit 5 Phase B0 dual-selector. With Surefire/Failsafe 3.x +
+					Jupiter on the classpath, <groups> is a JUnit Platform tag
+					expression. The Vintage engine exposes JUnit 4 @Category
+					interfaces as tags named by their fully-qualified class name,
+					so the FQCN below still selects @Category(IntegrationTest.class)
+					classes, and "integration" picks up classes annotated with
+					@Tag("integration"). The | operator is JUnit Platform OR.
+					-->
+					<groups>ubic.gemma.core.util.test.category.IntegrationTest | integration</groups>
 					<!--suppress MavenModelInspection -->
 					<skip>${skipIntegrationTests}</skip>
 				</configuration>
