@@ -120,7 +120,8 @@ public interface DifferentialExpressionAnalysisService extends AnalysisService<D
      * @param includeSubSets include analyses for their {@link ExpressionExperimentSubSet}
      * @return analyses grouped by experiment, subset analyses are mapped to their source experiment
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ", "AFTER_ACL_MAP_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
+    @PostFilter("hasPermission(filterObject.key, 'READ') or hasPermission(filterObject.key, 'ADMINISTRATION')")
     Map<ExpressionExperiment, Collection<DifferentialExpressionAnalysis>> findByExperiments( Collection<ExpressionExperiment> experiments, boolean includeSubSets );
 
     /**

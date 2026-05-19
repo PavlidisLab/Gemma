@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PostFilter;
 import org.springframework.security.access.prepost.PostAuthorize;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -131,7 +132,8 @@ public interface FactorValueService extends SecurableBaseService<FactorValue>, S
      */
     @Deprecated
     @Secured({ "GROUP_ADMIN" })
-    // FIXME: use @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" }), but some FVs have broken ACLs
+    // FIXME: use @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" }), but some FVs have broken ACLs
+    // FIXME: use @PostFilter("hasPermission(filterObject.key, 'READ') or hasPermission(filterObject.key, 'ADMINISTRATION')")
     Map<Long, Integer> loadIdsWithNumberOfOldStyleCharacteristics( Set<Long> excludedIds );
 
     /**
