@@ -1,6 +1,6 @@
 package ubic.gemma.persistence.initialization;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.datasource.init.DatabasePopulator;
 
 import java.sql.Connection;
@@ -15,7 +15,7 @@ import java.sql.SQLException;
  * @author poirigui
  * @see BootstrappedDataSourceFactory
  */
-@CommonsLog
+@Slf4j
 public class CreateDatabasePopulator implements DatabasePopulator {
 
     private final String databaseName;

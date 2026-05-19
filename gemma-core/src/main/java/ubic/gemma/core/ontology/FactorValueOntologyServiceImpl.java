@@ -2,7 +2,7 @@ package ubic.gemma.core.ontology;
 
 import com.hp.hpl.jena.ontology.*;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -35,7 +35,7 @@ import static ubic.gemma.core.ontology.FactorValueOntologyUtils.*;
 import static ubic.gemma.model.expression.experiment.FactorValueUtils.getSummaryString;
 
 @Service
-@CommonsLog
+@Slf4j
 @ParametersAreNonnullByDefault
 public class FactorValueOntologyServiceImpl implements FactorValueOntologyService {
 

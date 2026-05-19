@@ -1,6 +1,6 @@
 package ubic.gemma.web.assets;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.util.Assert;
@@ -18,7 +18,7 @@ import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
  * An internal static asset server that uses npm to serve static assets.
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class InternalStaticAssetServer implements StaticAssetServer, SmartLifecycle {
 
     private final Path npmExe;

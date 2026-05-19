@@ -1,6 +1,6 @@
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +30,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
-@CommonsLog
+@Slf4j
 class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedExpressionDataVectorService {
 
     private final ProcessedExpressionDataVectorDao processedExpressionDataVectorDao;

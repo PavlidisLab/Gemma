@@ -14,7 +14,7 @@
  */
 package ubic.gemma.rest.servlet;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.http.HttpMethod;
@@ -37,7 +37,7 @@ import java.io.IOException;
  * <p>
  * This is mounted on the gemma-rest servlet in the web.xml configuration file.
  */
-@CommonsLog
+@Slf4j
 public class CorsFilter extends OncePerRequestFilter {
 
     private static final String WILDCARD = "*";

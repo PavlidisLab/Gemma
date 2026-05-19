@@ -1,7 +1,7 @@
 package ubic.gemma.core.loader.expression.singleCell.metadata;
 
 import lombok.Setter;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
 import ubic.gemma.core.loader.expression.singleCell.AbstractDelegatingSingleCellDataLoader;
@@ -28,7 +28,7 @@ import java.util.Set;
  * @see GenericCellLevelCharacteristicsMetadataParser
  */
 @Setter
-@CommonsLog
+@Slf4j
 public class GenericMetadataSingleCellDataLoader extends AbstractDelegatingSingleCellDataLoader implements SingleCellDataLoader {
 
     private static final String DEFAULT_CELL_TYPE_ASSIGNMENT_NAME = "cell type";

@@ -24,7 +24,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
@@ -49,7 +49,7 @@ import java.util.stream.Collectors;
 @SuppressWarnings("unused") // Used in front end
 @Data
 @EqualsAndHashCode(of = { "shortName" }, callSuper = true)
-@CommonsLog
+@Slf4j
 public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDesign> implements Versioned {
     /**
      * The serial version UID of this class. Needed for serialization.

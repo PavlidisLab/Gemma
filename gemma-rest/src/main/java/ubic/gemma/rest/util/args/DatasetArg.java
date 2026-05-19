@@ -1,7 +1,7 @@
 package ubic.gemma.rest.util.args;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -15,7 +15,7 @@ import javax.annotation.Nullable;
  * @author tesarst
  */
 @Schema(oneOf = { DatasetIdArg.class, DatasetStringArg.class })
-@CommonsLog
+@Slf4j
 public abstract class DatasetArg<T>
         extends AbstractEntityArg<T, ExpressionExperiment, ExpressionExperimentService> {
 

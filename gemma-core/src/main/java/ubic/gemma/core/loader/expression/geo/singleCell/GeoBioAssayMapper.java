@@ -1,6 +1,6 @@
 package ubic.gemma.core.loader.expression.geo.singleCell;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.Strings;
 import ubic.gemma.core.loader.util.mapper.AbstractBioAssayMapper;
 import ubic.gemma.core.loader.util.mapper.HintingEntityMapper;
@@ -19,7 +19,7 @@ import java.util.*;
  *
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class GeoBioAssayMapper extends AbstractBioAssayMapper implements HintingEntityMapper<BioAssay> {
 
     @Override

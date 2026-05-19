@@ -19,7 +19,7 @@
 package ubic.gemma.web.controller.common.auditAndSecurity;
 
 import gemma.gsec.authentication.UserDetailsImpl;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
@@ -52,7 +52,7 @@ import java.util.regex.Pattern;
  * @author keshav
  */
 @Controller
-@CommonsLog
+@Slf4j
 public class UserFormMultiActionController {
 
     public static final int MIN_PASSWORD_LENGTH = 6;

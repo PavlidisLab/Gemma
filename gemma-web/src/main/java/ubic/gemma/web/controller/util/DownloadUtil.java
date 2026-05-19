@@ -1,6 +1,6 @@
 package ubic.gemma.web.controller.util;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,7 +21,7 @@ import java.nio.file.Path;
  * @author poirigui
  */
 @Component
-@CommonsLog
+@Slf4j
 public class DownloadUtil {
 
     @Value("${tomcat.sendfile.enabled}")

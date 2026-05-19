@@ -20,7 +20,7 @@ package ubic.gemma.core.analysis.sequence;
 
 import lombok.Getter;
 import lombok.Setter;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -57,7 +57,7 @@ import java.util.concurrent.TimeUnit;
  * @author pavlidis
  */
 @Getter
-@CommonsLog
+@Slf4j
 public class ShellDelegatingBlat implements Blat {
 
     /**

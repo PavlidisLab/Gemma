@@ -20,7 +20,7 @@
 package ubic.gemma.persistence.service.maintenance;
 
 import io.micrometer.core.annotation.Timed;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.file.PathUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.query.Query;
@@ -66,7 +66,7 @@ import java.util.Map;
  * @author paul
  */
 @Service
-@CommonsLog
+@Slf4j
 public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
 
     /**

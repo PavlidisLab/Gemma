@@ -1,6 +1,6 @@
 package ubic.gemma.core.loader.expression.cellxgene;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.Strings;
 import ubic.gemma.core.loader.expression.singleCell.AnnDataSingleCellDataLoader;
 import ubic.gemma.core.loader.util.mapper.SimpleBioAssayMapper;
@@ -13,7 +13,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@CommonsLog
+@Slf4j
 public class CellXGeneAnnDataSingleCellDataLoader extends AnnDataSingleCellDataLoader {
 
     private final boolean keepPooledSample;

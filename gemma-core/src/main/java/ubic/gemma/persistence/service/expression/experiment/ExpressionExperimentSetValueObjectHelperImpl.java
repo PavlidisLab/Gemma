@@ -38,7 +38,7 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import gemma.gsec.SecurityService;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -61,7 +61,7 @@ import java.util.Set;
  *
  */
 @Component
-@CommonsLog
+@Slf4j
 public class ExpressionExperimentSetValueObjectHelperImpl implements ExpressionExperimentSetValueObjectHelper {
 
     private final ExpressionExperimentSetService expressionExperimentSetService;

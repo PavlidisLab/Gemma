@@ -18,7 +18,7 @@
  */
 package ubic.gemma.web.controller.genome;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.servlet.ModelAndView;
@@ -45,7 +45,7 @@ import java.util.HashSet;
  * @author pavlidis
  */
 @Controller
-@CommonsLog
+@Slf4j
 public class BlatResultTrackController extends AbstractController {
 
     @Autowired

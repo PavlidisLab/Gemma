@@ -19,7 +19,7 @@
 
 package ubic.gemma.web.controller.visualization;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import ubic.basecode.dataStructure.DoublePoint;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -35,7 +35,7 @@ import java.util.List;
  *
  * @author paul
  */
-@CommonsLog
+@Slf4j
 public class FactorProfile {
 
     /**

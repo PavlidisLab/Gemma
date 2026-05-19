@@ -1,6 +1,6 @@
 package ubic.gemma.core.loader.expression.geo.singleCell;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoader;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoaderConfig;
@@ -18,7 +18,7 @@ import java.nio.file.Path;
  * This detector has additional heuristics for detecting sample names.
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class AnnDataDetector extends AbstractSingleH5FileInSeriesSingleCellDetector implements SingleCellDetector {
 
     @Nullable

@@ -1,6 +1,6 @@
 package ubic.gemma.rest.providers;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import ubic.gemma.core.datastructure.matrix.io.MexMatrixBundler;
 
 import jakarta.ws.rs.Produces;
@@ -20,7 +20,7 @@ import static ubic.gemma.rest.DatasetsWebService.APPLICATION_10X_MEX_TYPE;
 
 @Provider
 @Produces(APPLICATION_10X_MEX)
-@CommonsLog
+@Slf4j
 public class MexBundlerProvider implements MessageBodyWriter<Path> {
 
     private final MexMatrixBundler bundler = new MexMatrixBundler();

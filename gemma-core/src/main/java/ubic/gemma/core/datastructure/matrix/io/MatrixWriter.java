@@ -19,7 +19,7 @@
 package ubic.gemma.core.datastructure.matrix.io;
 
 import lombok.Setter;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import ubic.gemma.core.analysis.preprocess.convert.UnsupportedQuantitationScaleConversionException;
 import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrix;
 import ubic.gemma.core.datastructure.matrix.MultiAssayBulkExpressionDataMatrix;
@@ -53,7 +53,7 @@ import static ubic.gemma.core.util.TsvUtils.format;
  * @author pavlidis
  */
 @Setter
-@CommonsLog
+@Slf4j
 @ParametersAreNonnullByDefault
 public class MatrixWriter implements BulkExpressionDataMatrixWriter {
 

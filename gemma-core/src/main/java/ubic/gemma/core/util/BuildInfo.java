@@ -1,6 +1,6 @@
 package ubic.gemma.core.util;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -18,7 +18,7 @@ import java.util.Properties;
 import java.util.TimeZone;
 
 @Component
-@CommonsLog
+@Slf4j
 public class BuildInfo implements InitializingBean {
 
     private static final DateFormat MAVEN_DATETIME_PATTERN;

@@ -1,7 +1,7 @@
 package ubic.gemma.core.security.audit;
 
 import com.fasterxml.jackson.databind.util.StdDateFormat;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Auditable;
@@ -12,7 +12,7 @@ import java.text.DateFormat;
  * Logger for created {@link AuditEvent}.
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class AuditLogger {
 
     /**

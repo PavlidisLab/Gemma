@@ -16,7 +16,7 @@ package ubic.gemma.rest.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.models.OpenAPI;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import ubic.gemma.core.util.BuildInfo;
@@ -38,7 +38,7 @@ import java.util.concurrent.Future;
  * <p>
  * This is used in applicationContext-ws-rest.xml as part of Spring Security HTTP configuration.
  */
-@CommonsLog
+@Slf4j
 public class RestAuthEntryPoint implements AuthenticationEntryPoint {
 
     private static final String MESSAGE_401 = "Provided authentication credentials are invalid.";

@@ -30,7 +30,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Value;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
@@ -161,7 +161,7 @@ import static ubic.gemma.rest.util.Responders.sendfile;
  */
 @Service
 @Path("/datasets")
-@CommonsLog
+@Slf4j
 public class DatasetsWebService {
 
     public static final String TEXT_TAB_SEPARATED_VALUES_UTF8 = "text/tab-separated-values; charset=UTF-8";

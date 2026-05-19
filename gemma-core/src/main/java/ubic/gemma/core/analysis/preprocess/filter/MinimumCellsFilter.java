@@ -1,6 +1,6 @@
 package ubic.gemma.core.analysis.preprocess.filter;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.Assert;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
@@ -28,7 +28,7 @@ import java.util.Map;
  *
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class MinimumCellsFilter implements ExpressionDataFilter<ExpressionDataDoubleMatrix> {
 
     public static final int

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import ubic.gemma.model.analysis.CellTypeAssignmentValueObject;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -31,7 +31,7 @@ import static java.util.Objects.requireNonNull;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@CommonsLog
+@Slf4j
 public class SingleCellDimensionValueObject extends IdentifiableValueObject<SingleCellDimension> {
 
     /**

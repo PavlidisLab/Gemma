@@ -1,7 +1,7 @@
 package ubic.gemma.core.visualization.cellbrowser;
 
 import lombok.Setter;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import ubic.basecode.util.StringUtil;
 import ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils;
@@ -28,7 +28,7 @@ import static ubic.gemma.persistence.service.expression.biomaterial.BioMaterialU
  * Write metadata file for the Cell Browser visualization tool.
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class CellBrowserMetadataWriter {
 
     /**

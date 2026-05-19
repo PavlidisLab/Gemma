@@ -1,6 +1,6 @@
 package ubic.gemma.core.loader.entrez;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
 import ubic.gemma.core.config.Settings;
@@ -20,7 +20,7 @@ import static ubic.gemma.core.util.StringUtils.urlEncode;
  * Read more about this in <a href="https://www.ncbi.nlm.nih.gov/books/NBK25500/">The E-utilities In-Depth: Parameters, Syntax and More</a>.
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class EntrezUtils {
 
     public static final String ESEARCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi";

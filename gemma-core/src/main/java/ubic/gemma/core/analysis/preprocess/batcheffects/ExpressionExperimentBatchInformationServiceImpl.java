@@ -1,6 +1,6 @@
 package ubic.gemma.core.analysis.preprocess.batcheffects;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.math3.exception.NotStrictlyPositiveException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
 
 @Service
-@CommonsLog
+@Slf4j
 public class ExpressionExperimentBatchInformationServiceImpl implements ExpressionExperimentBatchInformationService {
 
     private static final double BATCH_CONFOUND_THRESHOLD = 0.01;

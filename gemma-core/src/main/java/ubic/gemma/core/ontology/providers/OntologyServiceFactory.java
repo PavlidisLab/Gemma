@@ -1,6 +1,6 @@
 package ubic.gemma.core.ontology.providers;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.config.AbstractFactoryBean;
 import org.springframework.core.task.TaskExecutor;
@@ -13,7 +13,7 @@ import java.util.Set;
  * Factory bean for baseCode's {@link OntologyService}.
  * @param <T> the type of ontology service this factory produces
  */
-@CommonsLog
+@Slf4j
 @SuppressWarnings("unused")
 public class OntologyServiceFactory<T extends OntologyService> extends AbstractFactoryBean<T> {
 

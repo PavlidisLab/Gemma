@@ -19,7 +19,7 @@
 
 package ubic.gemma.core.analysis.expression.diff;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.MeasurementUtils;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -35,7 +35,7 @@ import static org.apache.commons.lang3.StringUtils.normalizeSpace;
  *
  * @author paul
  */
-@CommonsLog
+@Slf4j
 public class BaselineSelection {
 
     // see bug 4316. This term is "control"

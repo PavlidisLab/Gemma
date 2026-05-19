@@ -13,7 +13,7 @@ import io.swagger.v3.core.util.Json;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import lombok.Value;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,7 +48,7 @@ import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
  * @author poirigui
  */
 @Component
-@CommonsLog
+@Slf4j
 @ParametersAreNonnullByDefault
 public class CustomModelResolver extends ModelResolver {
 

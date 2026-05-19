@@ -1,6 +1,6 @@
 package ubic.gemma.core.analysis.service;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
 import ubic.basecode.util.FileTools;
@@ -38,7 +38,7 @@ import static ubic.gemma.core.util.TsvUtils.formatComment;
  * @author paul
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class DiffExAnalysisResultSetWriter {
 
     private final EntityUrlBuilder entityUrlBuilder;

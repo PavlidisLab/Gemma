@@ -1,6 +1,6 @@
 package ubic.gemma.cli.config;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Profile;
@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 /**
  * Lint various aspects of the configuration for the CLI profile.
  */
-@CommonsLog
+@Slf4j
 @Profile("cli")
 @Component
 public class ConfigurationLinter implements ApplicationListener<ContextRefreshedEvent> {

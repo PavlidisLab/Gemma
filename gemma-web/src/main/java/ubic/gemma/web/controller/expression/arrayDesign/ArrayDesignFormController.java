@@ -19,7 +19,7 @@
 package ubic.gemma.web.controller.expression.arrayDesign;
 
 import lombok.Setter;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.propertyeditors.CustomNumberEditor;
 import org.springframework.validation.BindException;
@@ -49,7 +49,7 @@ import static java.util.Objects.requireNonNull;
  *
  * @author keshav
  */
-@CommonsLog
+@Slf4j
 public class ArrayDesignFormController extends SimpleFormController {
 
     @Setter

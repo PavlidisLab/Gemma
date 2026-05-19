@@ -15,7 +15,7 @@
 package ubic.gemma.core.analysis.preprocess.batcheffects;
 
 import lombok.Setter;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,7 +51,7 @@ import java.util.*;
  * @author paul
  */
 @Service
-@CommonsLog
+@Slf4j
 public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationService {
 
     /**

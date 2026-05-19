@@ -1,6 +1,6 @@
 package ubic.gemma.core.loader.expression.geo.singleCell;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.Assert;
 import ubic.gemma.core.loader.expression.geo.model.GeoChannel;
 import ubic.gemma.core.loader.expression.geo.model.GeoSample;
@@ -15,7 +15,7 @@ import java.util.*;
 
 import static java.util.Objects.requireNonNull;
 
-@CommonsLog
+@Slf4j
 public class GeoMexSingleCellDataLoaderConfigurer extends AbstractMexSingleCellDataLoaderConfigurer {
 
     private final GeoSeries series;

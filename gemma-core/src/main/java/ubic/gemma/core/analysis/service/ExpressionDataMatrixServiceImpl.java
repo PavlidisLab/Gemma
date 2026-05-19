@@ -19,7 +19,7 @@
 package ubic.gemma.core.analysis.service;
 
 import cern.colt.list.DoubleArrayList;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -60,7 +60,7 @@ import java.util.stream.Collectors;
  * @author keshav
  */
 @Component
-@CommonsLog
+@Slf4j
 public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixService {
 
     @Autowired

@@ -1,6 +1,6 @@
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
  * @author Paul
  */
 @Service
-@CommonsLog
+@Slf4j
 public class ProcessedExpressionDataVectorServiceImpl
         extends AbstractBulkExpressionDataVectorService<ProcessedExpressionDataVector>
         implements ProcessedExpressionDataVectorService {

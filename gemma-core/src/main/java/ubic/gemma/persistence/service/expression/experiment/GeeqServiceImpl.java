@@ -20,7 +20,7 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import cern.colt.list.DoubleArrayList;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.math3.stat.StatUtils;
@@ -52,7 +52,7 @@ import javax.annotation.Nullable;
 import java.util.*;
 
 @Service
-@CommonsLog
+@Slf4j
 public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObject> implements GeeqService {
 
     /**

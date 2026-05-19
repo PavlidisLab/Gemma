@@ -1,6 +1,6 @@
 package ubic.gemma.core.analysis.service;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.file.PathUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +22,7 @@ import java.time.format.DateTimeFormatter;
 import static ubic.gemma.core.analysis.service.ExpressionDataFileUtils.getExpressionExperimentMetadataDirname;
 
 @Service
-@CommonsLog
+@Slf4j
 public class ExpressionMetadataChangelogFileServiceImpl implements ExpressionMetadataChangelogFileService {
 
     private static final DateTimeFormatter CHANGELOG_DATE_FORMAT = DateTimeFormatter.ofPattern( "yyyy-MM-dd" );

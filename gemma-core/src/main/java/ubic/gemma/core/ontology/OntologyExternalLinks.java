@@ -1,6 +1,6 @@
 package ubic.gemma.core.ontology;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.io.ClassPathResource;
@@ -24,7 +24,7 @@ import static ubic.gemma.core.util.StringUtils.urlEncode;
  * Provides external links for ontology resources based on their URIs and other metadata.
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class OntologyExternalLinks {
 
     /**

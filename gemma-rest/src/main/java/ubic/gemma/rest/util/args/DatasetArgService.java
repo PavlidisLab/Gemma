@@ -1,6 +1,6 @@
 package ubic.gemma.rest.util.args;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -41,7 +41,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 @Service
-@CommonsLog
+@Slf4j
 public class DatasetArgService extends AbstractEntityArgService<ExpressionExperiment, ExpressionExperimentService> {
 
     private final SearchService searchService;

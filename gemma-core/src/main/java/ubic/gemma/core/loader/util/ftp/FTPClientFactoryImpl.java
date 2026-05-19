@@ -1,6 +1,6 @@
 package ubic.gemma.core.loader.util.ftp;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPConnectionClosedException;
@@ -28,7 +28,7 @@ import java.util.concurrent.ConcurrentMap;
  * Anonymous authentication is used by default.
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class FTPClientFactoryImpl implements FTPClientFactory, AutoCloseable {
 
     private Duration connectTimeout = Duration.ofMillis( 60000 );

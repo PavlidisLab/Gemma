@@ -1,6 +1,6 @@
 package ubic.gemma.core.analysis.singleCell;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.util.Assert;
@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
  * @author poirigui
  * @see ubic.gemma.core.analysis.preprocess.slice.BulkDataSlicerUtils
  */
-@CommonsLog
+@Slf4j
 public class SingleCellSlicerUtils {
 
     /**

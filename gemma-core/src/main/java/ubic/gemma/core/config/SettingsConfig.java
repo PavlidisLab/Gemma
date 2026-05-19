@@ -1,6 +1,6 @@
 package ubic.gemma.core.config;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
@@ -34,7 +34,7 @@ import java.util.Set;
  * Beans declaration for making the settings available via the Spring Environment and placeholder substitution.
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 @Configuration
 public class SettingsConfig {
 

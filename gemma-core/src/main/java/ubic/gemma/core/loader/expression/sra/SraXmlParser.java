@@ -1,6 +1,6 @@
 package ubic.gemma.core.loader.expression.sra;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -20,7 +20,7 @@ import java.io.InputStream;
  * Parses SRA XML format.
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class SraXmlParser {
 
     public SraExperimentPackageSet parse( InputStream in ) throws IOException {

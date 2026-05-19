@@ -1,7 +1,7 @@
 package ubic.gemma.core.loader.util.anndata;
 
 import lombok.Value;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.iterators.ArrayIterator;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.util.Assert;
@@ -24,7 +24,7 @@ import static ubic.gemma.core.loader.util.anndata.Utils.checkEncoding;
  * @param <K> the type of index being used
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class Dataframe<K> implements Iterable<Dataframe.Column<K, ?>>, AutoCloseable {
 
     /**

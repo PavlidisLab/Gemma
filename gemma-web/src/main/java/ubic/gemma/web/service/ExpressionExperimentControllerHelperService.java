@@ -1,6 +1,6 @@
 package ubic.gemma.web.service;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import nl.basjes.parse.useragent.UserAgent;
 import nl.basjes.parse.useragent.UserAgentAnalyzer;
 import org.apache.commons.lang3.StringUtils;
@@ -62,7 +62,7 @@ import static ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectUtils.
 import static ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectUtils.getBatchEffectType;
 
 @Service
-@CommonsLog
+@Slf4j
 public class ExpressionExperimentControllerHelperService {
 
     @Autowired

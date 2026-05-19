@@ -1,6 +1,6 @@
 package ubic.gemma.core.visualization;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.jfree.chart.ChartTheme;
 import org.jfree.chart.ChartUtils;
@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
 
-@CommonsLog
+@Slf4j
 public class ChartThemeUtils {
 
     /**

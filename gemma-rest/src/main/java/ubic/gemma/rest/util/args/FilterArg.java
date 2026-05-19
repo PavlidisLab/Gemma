@@ -16,7 +16,7 @@ package ubic.gemma.rest.util.args;
 
 import io.swagger.v3.oas.annotations.ExternalDocumentation;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 import ubic.gemma.model.common.Identifiable;
@@ -127,7 +127,7 @@ import static ubic.gemma.rest.util.ArgUtils.decodeCompressedArg;
  * @see ubic.gemma.persistence.util.Filter.Operator
  * @see FilteringService
  */
-@CommonsLog
+@Slf4j
 @Schema(type = "string", description = "Filter results by matching the expression. The exact syntax is described in the attached external documentation. The filter value may be compressed with gzip and encoded with base64.",
         externalDocs = @ExternalDocumentation(url = "${gemma.hosturl}/resources/apidocs/ubic/gemma/rest/util/args/FilterArg.html"))
 public class FilterArg<O extends Identifiable> extends AbstractArg<FilterArg.Filter> {

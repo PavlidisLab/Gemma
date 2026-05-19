@@ -7,7 +7,7 @@ import io.swagger.v3.oas.integration.api.OpenApiContext;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.servers.Server;
 import lombok.Setter;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
@@ -34,7 +34,7 @@ import java.util.concurrent.Future;
  * The singleton is managed by {@link OpenApiContextLocator} and identified by the contextId argument.
  */
 @Setter
-@CommonsLog
+@Slf4j
 public class OpenApiFactory extends AbstractAsyncFactoryBean<OpenAPI> implements ServletConfigAware, BeanFactoryAware {
 
     /**

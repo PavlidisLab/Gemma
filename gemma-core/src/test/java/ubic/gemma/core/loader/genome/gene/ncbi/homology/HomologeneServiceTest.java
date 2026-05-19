@@ -18,7 +18,7 @@
  */
 package ubic.gemma.core.loader.genome.gene.ncbi.homology;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -166,7 +166,7 @@ public class HomologeneServiceTest extends BaseTest {
     /**
      * Factory for {@link HomologeneService}.
      */
-    @CommonsLog
+    @Slf4j
     public static class HomologeneServiceFactory extends AbstractAsyncFactoryBean<HomologeneService> {
 
         private static final String HOMOLOGENE_FILE_CONFIG = "ncbi.homologene.fileName";

@@ -3,7 +3,7 @@ package ubic.gemma.model.common.auditAndSecurity.curation;
 import gemma.gsec.util.SecurityUtil;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.StringEscapeUtils;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
@@ -16,7 +16,7 @@ import java.util.Date;
  * curatable objects.
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
-@CommonsLog
+@Slf4j
 @Getter
 @Setter
 public abstract class AbstractCuratableValueObject<C extends Curatable> extends IdentifiableValueObject<C> {

@@ -1,6 +1,6 @@
 package ubic.gemma.persistence.service;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThatNoException;
  * Test all possible filterable properties for filtering and sorting results.
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 @Category(SlowTest.class)
 public class FilteringVoEnabledServiceIntegrationTest extends BaseIntegrationTest {
 

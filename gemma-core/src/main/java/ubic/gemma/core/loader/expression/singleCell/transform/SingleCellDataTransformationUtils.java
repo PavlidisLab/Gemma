@@ -1,6 +1,6 @@
 package ubic.gemma.core.loader.expression.singleCell.transform;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataType;
 
 import javax.annotation.Nullable;
@@ -11,7 +11,7 @@ import java.nio.file.Path;
 /**
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class SingleCellDataTransformationUtils {
 
     /**

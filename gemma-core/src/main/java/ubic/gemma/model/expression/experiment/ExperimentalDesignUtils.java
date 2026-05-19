@@ -14,7 +14,7 @@
  */
 package ubic.gemma.model.expression.experiment;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 /**
  * @author paul
  */
-@CommonsLog
+@Slf4j
 @ParametersAreNonnullByDefault
 public class ExperimentalDesignUtils {
 

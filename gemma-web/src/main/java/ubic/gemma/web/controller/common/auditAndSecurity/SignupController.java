@@ -22,7 +22,7 @@ import gemma.gsec.authentication.LoginDetailsValueObject;
 import gemma.gsec.authentication.UserDetailsImpl;
 import gemma.gsec.util.SecurityUtil;
 import lombok.Setter;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.springframework.beans.factory.InitializingBean;
@@ -52,7 +52,7 @@ import java.util.Locale;
  * @author keshav
  */
 @Controller
-@CommonsLog
+@Slf4j
 public class SignupController implements InitializingBean {
 
     @Autowired

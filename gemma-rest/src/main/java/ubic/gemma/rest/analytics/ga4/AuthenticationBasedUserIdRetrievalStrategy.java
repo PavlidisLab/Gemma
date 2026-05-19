@@ -1,6 +1,6 @@
 package ubic.gemma.rest.analytics.ga4;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationTrustResolver;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -10,7 +10,7 @@ import org.springframework.security.core.userdetails.UserDetails;
  * Strategy for the user ID that uses the authentication object from the {@link SecurityContextHolder}.
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class AuthenticationBasedUserIdRetrievalStrategy implements UserIdRetrievalStrategy {
 
     private final AuthenticationTrustResolver authenticationTrustResolver;

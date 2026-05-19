@@ -18,7 +18,7 @@
  */
 package ubic.gemma.core.loader.expression.geo.service;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
@@ -64,7 +64,7 @@ import static ubic.gemma.core.loader.entrez.EntrezUtils.quoteTerm;
 import static ubic.gemma.core.loader.expression.geo.service.GeoUtils.getUrlForBrowsing;
 import static ubic.gemma.core.util.XMLUtils.*;
 
-@CommonsLog
+@Slf4j
 public class GeoBrowserImpl implements GeoBrowser {
 
     /**

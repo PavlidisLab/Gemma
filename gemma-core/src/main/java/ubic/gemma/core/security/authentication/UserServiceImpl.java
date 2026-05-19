@@ -20,7 +20,7 @@ import gemma.gsec.acl.domain.AclService;
 import org.springframework.security.acls.domain.GrantedAuthoritySid;
 import gemma.gsec.authentication.UserExistsException;
 import gemma.gsec.util.SecurityUtil;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.beans.BeansException;
@@ -46,7 +46,7 @@ import static java.util.Objects.requireNonNull;
  * @author pavlidis
  */
 @Service
-@CommonsLog
+@Slf4j
 public class UserServiceImpl implements UserService, ApplicationContextAware {
 
     private static final String ADMINISTRATOR_USER_NAME = "administrator";

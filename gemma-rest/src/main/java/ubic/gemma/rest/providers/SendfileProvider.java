@@ -1,6 +1,6 @@
 package ubic.gemma.rest.providers;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import ubic.gemma.rest.util.Sendfile;
@@ -24,7 +24,7 @@ import java.lang.reflect.Type;
  * @see Sendfile
  */
 @Provider
-@CommonsLog
+@Slf4j
 @Component
 @Produces({ "application/octet-stream", "*/*" })
 public class SendfileProvider implements MessageBodyWriter<Sendfile> {

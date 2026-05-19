@@ -21,7 +21,7 @@ package ubic.gemma.core.analysis.expression.diff;
 import cern.colt.list.DoubleArrayList;
 import cern.colt.matrix.DoubleMatrix1D;
 import cern.colt.matrix.impl.DenseDoubleMatrix1D;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -89,7 +89,7 @@ import static ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSor
  * @author paul
  */
 @Component
-@CommonsLog
+@Slf4j
 @ParametersAreNonnullByDefault
 public class LinearModelAnalyzer implements DiffExAnalyzer {
 

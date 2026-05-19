@@ -1,6 +1,6 @@
 package ubic.gemma.core.loader.expression.sequencing;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -23,7 +23,7 @@ import java.util.function.Function;
  * @author poirigui
  * @see SequencingMetadata
  */
-@CommonsLog
+@Slf4j
 public class SequencingMetadataFileDataLoader extends AbstractDelegatingSequencingDataLoader {
 
     @Nullable

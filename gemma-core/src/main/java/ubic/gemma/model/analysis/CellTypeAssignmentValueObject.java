@@ -3,7 +3,7 @@ package ubic.gemma.model.analysis;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 
@@ -20,7 +20,7 @@ import static java.util.Objects.requireNonNull;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@CommonsLog
+@Slf4j
 public class CellTypeAssignmentValueObject extends AnalysisValueObject<CellTypeAssignment> {
 
     /**

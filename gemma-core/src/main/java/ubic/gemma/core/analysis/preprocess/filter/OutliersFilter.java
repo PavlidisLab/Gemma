@@ -1,6 +1,6 @@
 package ubic.gemma.core.analysis.preprocess.filter;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
  *
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class OutliersFilter implements ExpressionDataFilter<ExpressionDataDoubleMatrix> {
 
     @Override

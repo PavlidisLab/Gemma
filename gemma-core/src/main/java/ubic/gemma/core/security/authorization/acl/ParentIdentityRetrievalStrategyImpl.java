@@ -1,7 +1,7 @@
 package ubic.gemma.core.security.authorization.acl;
 
 import gemma.gsec.acl.domain.AclObjectIdentity;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +28,7 @@ import java.util.Collection;
  * @author poirigui
  */
 @Service
-@CommonsLog
+@Slf4j
 public class ParentIdentityRetrievalStrategyImpl implements ParentIdentityRetrievalStrategy {
 
     @Autowired

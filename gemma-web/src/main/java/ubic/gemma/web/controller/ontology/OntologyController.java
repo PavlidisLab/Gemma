@@ -1,6 +1,6 @@
 package ubic.gemma.web.controller.ontology;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -43,7 +43,7 @@ import static java.util.Objects.requireNonNull;
  */
 @RequestMapping("/ont")
 @Controller
-@CommonsLog
+@Slf4j
 @SuppressWarnings("HttpUrlsUsage")
 public class OntologyController {
 

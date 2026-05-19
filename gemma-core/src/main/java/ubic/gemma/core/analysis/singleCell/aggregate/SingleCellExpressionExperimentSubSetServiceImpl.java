@@ -1,6 +1,6 @@
 package ubic.gemma.core.analysis.singleCell.aggregate;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,7 +29,7 @@ import static ubic.gemma.core.analysis.singleCell.CellLevelCharacteristicsMappin
 import static ubic.gemma.core.util.StringUtils.abbreviateWithSuffix;
 
 @Service
-@CommonsLog
+@Slf4j
 public class SingleCellExpressionExperimentSubSetServiceImpl implements SingleCellExpressionExperimentSubSetService {
 
     @Autowired

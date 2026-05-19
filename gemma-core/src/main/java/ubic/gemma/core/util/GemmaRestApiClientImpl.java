@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.util.StdDateFormat;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -27,7 +27,7 @@ import java.util.Base64;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
-@CommonsLog
+@Slf4j
 public class GemmaRestApiClientImpl implements GemmaRestApiClient {
 
     private final String hostUrl;

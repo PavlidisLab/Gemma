@@ -18,7 +18,7 @@
  */
 package ubic.gemma.web.listener;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.context.ContextLoaderListener;
@@ -35,7 +35,7 @@ import static org.springframework.web.context.support.WebApplicationContextUtils
  * @author Matt Raible (original version)
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class StartupListener extends ContextLoaderListener {
 
     @Override

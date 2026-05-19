@@ -14,7 +14,7 @@
  */
 package ubic.gemma.model.expression.experiment;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import ubic.gemma.model.common.auditAndSecurity.SecuredNotChild;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
@@ -37,7 +37,7 @@ import java.util.Set;
 /**
  * @author paul
  */
-@CommonsLog
+@Slf4j
 public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild, Curatable {
 
     public static final class Factory {

@@ -1,6 +1,6 @@
 package ubic.gemma.core.context;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.DisposableBean;
 import ubic.gemma.core.util.concurrent.Executors;
 
@@ -28,7 +28,7 @@ import java.util.concurrent.Future;
  * @param <T> type of bean that this factory provides
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public abstract class AbstractAsyncFactoryBean<T> implements AsyncFactoryBean<T>, DisposableBean {
 
     /**

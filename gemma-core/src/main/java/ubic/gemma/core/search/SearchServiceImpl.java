@@ -19,7 +19,7 @@
 
 package ubic.gemma.core.search;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -70,7 +70,7 @@ import java.util.stream.Collectors;
  * git history (renovations branch, pre-phase2).
  */
 @Service
-@CommonsLog
+@Slf4j
 public class SearchServiceImpl implements SearchService, InitializingBean {
 
     private static class SearchResultMapImpl extends LinkedMultiValueMap<Class<? extends Identifiable>, SearchResult<?>> implements SearchResultMap {

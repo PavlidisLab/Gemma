@@ -1,6 +1,6 @@
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 
 import static ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionUtils.ensureLog2Scale;
 
-@CommonsLog
+@Slf4j
 @Service
 class ProcessedExpressionDataVectorCreationHelperServiceImpl implements ProcessedExpressionDataVectorCreationHelperService {
 

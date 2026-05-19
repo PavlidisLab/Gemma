@@ -14,7 +14,7 @@
  */
 package ubic.gemma.core.job;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import ubic.gemma.core.job.progress.ProgressUpdateContext;
 
 import javax.annotation.Nullable;
@@ -27,7 +27,7 @@ import static java.util.Objects.requireNonNull;
  *
  * @author anton
  */
-@CommonsLog
+@Slf4j
 class ExecutingTask implements Callable<TaskResult> {
 
     private final String taskId;

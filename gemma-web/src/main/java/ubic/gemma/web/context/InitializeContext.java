@@ -1,6 +1,6 @@
 package ubic.gemma.web.context;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextInitializer;
@@ -23,7 +23,7 @@ import static ubic.gemma.core.context.SpringContextUtils.prepareContext;
  * @author Matt Raible (original version)
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class InitializeContext implements ApplicationContextInitializer<ConfigurableWebApplicationContext> {
 
     /**

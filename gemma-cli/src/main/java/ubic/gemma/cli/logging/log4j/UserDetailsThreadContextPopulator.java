@@ -1,6 +1,6 @@
 package ubic.gemma.cli.logging.log4j;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.ThreadContext;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -12,7 +12,7 @@ import ubic.gemma.core.logging.log4j.ThreadContextPopulator;
  * Populate user details in the Log4j {@link ThreadContext}.
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 @Component
 public class UserDetailsThreadContextPopulator implements ThreadContextPopulator, CLIAuthenticationAware {
 

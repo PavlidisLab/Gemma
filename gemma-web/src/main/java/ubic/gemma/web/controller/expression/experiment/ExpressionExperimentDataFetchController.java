@@ -18,7 +18,7 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -63,7 +63,7 @@ import java.util.List;
  * @author pavlidis
  */
 @SuppressWarnings("unused") // Called from JS
-@CommonsLog
+@Slf4j
 @Controller
 public class ExpressionExperimentDataFetchController {
 

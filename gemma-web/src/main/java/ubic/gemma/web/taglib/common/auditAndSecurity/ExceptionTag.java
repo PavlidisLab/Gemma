@@ -19,7 +19,7 @@
 package ubic.gemma.web.taglib.common.auditAndSecurity;
 
 import lombok.Setter;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.security.access.AccessDeniedException;
@@ -37,7 +37,7 @@ import static org.springframework.web.util.HtmlUtils.htmlEscape;
  * @author pavlidis
  */
 @Setter
-@CommonsLog
+@Slf4j
 public class ExceptionTag extends RequestContextAwareTag {
 
     /**

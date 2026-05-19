@@ -1,6 +1,6 @@
 package ubic.gemma.persistence.initialization;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.datasource.init.CompositeDatabasePopulator;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
@@ -12,7 +12,7 @@ import java.sql.SQLException;
  * Populate some initial data for tests.
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class InitialDataPopulator extends CompositeDatabasePopulator {
 
     private final boolean slim;

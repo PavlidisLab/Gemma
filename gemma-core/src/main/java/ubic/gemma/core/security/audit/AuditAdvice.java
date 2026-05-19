@@ -18,7 +18,7 @@
  */
 package ubic.gemma.core.security.audit;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.Signature;
@@ -61,7 +61,7 @@ import static ubic.gemma.core.util.StringUtils.abbreviateInBytes;
 @Component
 @ParametersAreNonnullByDefault
 // Note that we have a special logger configured for this class, so remove events get stored.
-@CommonsLog
+@Slf4j
 public class AuditAdvice {
 
     private enum OperationType {

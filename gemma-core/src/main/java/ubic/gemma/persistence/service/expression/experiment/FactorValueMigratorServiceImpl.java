@@ -1,6 +1,6 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
-@CommonsLog
+@Slf4j
 @Deprecated
 public class FactorValueMigratorServiceImpl implements FactorValueMigratorService {
 

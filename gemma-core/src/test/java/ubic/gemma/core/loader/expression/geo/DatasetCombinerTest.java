@@ -18,7 +18,7 @@
  */
 package ubic.gemma.core.loader.expression.geo;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -44,7 +44,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author pavlidis
  */
-@CommonsLog
+@Slf4j
 @Category(SlowTest.class)
 public class DatasetCombinerTest {
 

@@ -2,7 +2,7 @@ package ubic.gemma.rest;
 
 import io.swagger.v3.core.util.Json;
 import io.swagger.v3.oas.models.OpenAPI;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -25,7 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class AnalysisResultSetsJerseyTest extends BaseJerseyIntegrationTest {
 
     @Autowired

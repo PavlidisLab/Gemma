@@ -18,7 +18,7 @@
  */
 package ubic.gemma.web.controller.common.auditAndSecurity;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.multipart.MultipartFile;
@@ -45,7 +45,7 @@ import java.util.Map;
  * @author keshav
  * @author Traces of Matt Raible
  */
-@CommonsLog
+@Slf4j
 public class FileUploadController extends AbstractController {
 
     @Value("${gemma.download.path}/userUploads")

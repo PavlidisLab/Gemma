@@ -18,7 +18,7 @@
  */
 package ubic.gemma.web.controller.util;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -34,7 +34,7 @@ import java.util.List;
  * @author pavlidis
  */
 @Component
-@CommonsLog
+@Slf4j
 public class MessageUtil {
 
     public static final String MESSAGES_ATTRIBUTE = "messages";

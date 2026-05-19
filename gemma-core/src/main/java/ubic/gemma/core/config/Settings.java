@@ -18,7 +18,7 @@
  */
 package ubic.gemma.core.config;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ConfigurationUtils;
 import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler;
@@ -40,7 +40,7 @@ import java.util.NoSuchElementException;
  *             to inject configurations. You can use {@code @Value("${property}")} as replacement.
  */
 @Deprecated
-@CommonsLog
+@Slf4j
 public class Settings {
 
     /**

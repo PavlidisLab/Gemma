@@ -1,6 +1,6 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataTransformationFactory;
 import ubic.gemma.core.loader.util.anndata.Dataframe;
 import ubic.gemma.core.loader.util.mapper.BioAssayMapper;
@@ -10,7 +10,7 @@ import javax.annotation.Nullable;
 import java.nio.file.Path;
 import java.util.Collection;
 
-@CommonsLog
+@Slf4j
 public class AnnDataSingleCellDataLoaderConfigurer extends AbstractAnnDataSingleCellDataLoaderConfigurer {
 
     private final Collection<BioAssay> bioAssays;

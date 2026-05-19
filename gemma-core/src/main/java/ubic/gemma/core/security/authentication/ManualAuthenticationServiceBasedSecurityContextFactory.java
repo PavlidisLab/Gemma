@@ -2,7 +2,7 @@ package ubic.gemma.core.security.authentication;
 
 import gemma.gsec.authentication.ManualAuthenticationService;
 import lombok.Setter;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.config.AbstractFactoryBean;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -13,7 +13,7 @@ import org.springframework.util.Assert;
  * @author poirigui
  */
 @Setter
-@CommonsLog
+@Slf4j
 public class ManualAuthenticationServiceBasedSecurityContextFactory extends AbstractFactoryBean<SecurityContext> {
 
     private ManualAuthenticationService manualAuthenticationService;
