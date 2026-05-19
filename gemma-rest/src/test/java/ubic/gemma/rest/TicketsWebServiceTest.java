@@ -17,6 +17,9 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.security.access.prepost.PreAuthorize;
+import ubic.gemma.core.security.authentication.UserManager;
+import ubic.gemma.core.security.authentication.UserService;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketEvent;
@@ -32,7 +35,9 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketSer
 import ubic.gemma.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.rest.util.ResponseDataObject;
 
+import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
+import jakarta.ws.rs.core.Response;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -45,6 +50,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -61,6 +68,12 @@ public class TicketsWebServiceTest {
 
     @Mock
     private TicketService ticketService;
+
+    @Mock
+    private UserManager userManager;
+
+    @Mock
+    private UserService userService;
 
     @InjectMocks
     private TicketsWebService webService;
@@ -183,5 +196,170 @@ public class TicketsWebServiceTest {
         List<TicketValueObject> vos = webService.openTicketsForArrayDesign( 7L );
 
         assertThat( vos ).hasSize( 1 );
+    }
+
+    /* -------------- write-side endpoints (POST/PUT/DELETE) -------------- */
+
+    @Test
+    public void testCreateTicket_happyPath() {
+        when( userManager.getCurrentUser() ).thenReturn( reporter );
+        when( ticketService.openTicket( eq( reporter ), eq( TicketType.GENERIC ), eq( "Test ticket" ), any() ) )
+                .thenReturn( ticket );
+
+        TicketsWebService.CreateTicketRequest req = new TicketsWebService.CreateTicketRequest();
+        req.setType( TicketType.GENERIC );
+        req.setTitle( "Test ticket" );
+        TicketsWebService.TicketTargetRequest tr = new TicketsWebService.TicketTargetRequest();
+        tr.setTargetType( TicketTargetType.EXPRESSION_EXPERIMENT );
+        tr.setTargetId( 99L );
+        req.setTargets( Collections.singletonList( tr ) );
+
+        Response resp = webService.createTicket( req );
+
+        assertThat( resp.getStatus() ).isEqualTo( Response.Status.CREATED.getStatusCode() );
+        Object entity = resp.getEntity();
+        assertThat( entity ).isInstanceOf( ResponseDataObject.class );
+        @SuppressWarnings("unchecked")
+        ResponseDataObject<TicketValueObject> body = ( ResponseDataObject<TicketValueObject> ) entity;
+        assertThat( body.getData().getId() ).isEqualTo( 1L );
+        assertThat( body.getData().getEvents() ).hasSize( 1 );
+        verify( ticketService ).openTicket( eq( reporter ), eq( TicketType.GENERIC ), eq( "Test ticket" ), any() );
+    }
+
+    @Test
+    public void testCreateTicket_missingTitle_throws400() {
+        // Title validation runs before user resolution; no stubbing needed.
+        TicketsWebService.CreateTicketRequest req = new TicketsWebService.CreateTicketRequest();
+        req.setType( TicketType.GENERIC );
+        TicketsWebService.TicketTargetRequest tr = new TicketsWebService.TicketTargetRequest();
+        tr.setTargetType( TicketTargetType.EXPRESSION_EXPERIMENT );
+        tr.setTargetId( 99L );
+        req.setTargets( Collections.singletonList( tr ) );
+
+        assertThatThrownBy( () -> webService.createTicket( req ) )
+                .isInstanceOf( BadRequestException.class );
+    }
+
+    @Test
+    public void testCreateTicket_nullBody_throws400() {
+        assertThatThrownBy( () -> webService.createTicket( null ) )
+                .isInstanceOf( BadRequestException.class );
+    }
+
+    @Test
+    public void testUpdateTicket_stateTransition() {
+        when( userManager.getCurrentUser() ).thenReturn( reporter );
+        when( ticketService.load( 1L ) ).thenReturn( ticket );
+        when( ticketService.transition( eq( ticket ), eq( TicketState.IN_PROGRESS ), eq( reporter ), any() ) )
+                .thenReturn( ticket );
+
+        TicketsWebService.UpdateTicketRequest req = new TicketsWebService.UpdateTicketRequest();
+        req.setState( TicketState.IN_PROGRESS );
+        req.setReason( "starting work" );
+
+        ResponseDataObject<TicketValueObject> resp = webService.updateTicket( 1L, req );
+
+        assertThat( resp.getData() ).isNotNull();
+        verify( ticketService ).transition( ticket, TicketState.IN_PROGRESS, reporter, "starting work" );
+        verify( ticketService, never() ).addComment( any(), any(), any() );
+        verify( ticketService, never() ).assign( any(), any(), any() );
+    }
+
+    @Test
+    public void testUpdateTicket_addComment() {
+        when( userManager.getCurrentUser() ).thenReturn( reporter );
+        when( ticketService.load( 1L ) ).thenReturn( ticket );
+        when( ticketService.addComment( eq( ticket ), eq( reporter ), eq( "looks good" ) ) ).thenReturn( ticket );
+
+        TicketsWebService.UpdateTicketRequest req = new TicketsWebService.UpdateTicketRequest();
+        req.setComment( "looks good" );
+
+        webService.updateTicket( 1L, req );
+
+        verify( ticketService ).addComment( ticket, reporter, "looks good" );
+    }
+
+    @Test
+    public void testUpdateTicket_clearAssignee() {
+        when( userManager.getCurrentUser() ).thenReturn( reporter );
+        when( ticketService.load( 1L ) ).thenReturn( ticket );
+        when( ticketService.assign( eq( ticket ), eq( reporter ), isNull() ) ).thenReturn( ticket );
+
+        TicketsWebService.UpdateTicketRequest req = new TicketsWebService.UpdateTicketRequest();
+        req.setAssigneeId( null ); // explicit null → clear
+        assertThat( req.isAssigneeIdSet() ).isTrue();
+
+        webService.updateTicket( 1L, req );
+
+        verify( ticketService ).assign( ticket, reporter, null );
+    }
+
+    @Test
+    public void testUpdateTicket_notFound_throws404() {
+        when( ticketService.load( 999L ) ).thenReturn( null );
+        TicketsWebService.UpdateTicketRequest req = new TicketsWebService.UpdateTicketRequest();
+        req.setState( TicketState.RESOLVED );
+        assertThatThrownBy( () -> webService.updateTicket( 999L, req ) )
+                .isInstanceOf( NotFoundException.class );
+    }
+
+    @Test
+    public void testDeleteTicket_softCancels() {
+        when( userManager.getCurrentUser() ).thenReturn( reporter );
+        when( ticketService.load( 1L ) ).thenReturn( ticket );
+
+        Response resp = webService.deleteTicket( 1L, "test cleanup" );
+
+        assertThat( resp.getStatus() ).isEqualTo( Response.Status.NO_CONTENT.getStatusCode() );
+        verify( ticketService ).transition( ticket, TicketState.CANCELLED, reporter, "test cleanup" );
+    }
+
+    @Test
+    public void testDeleteTicket_alreadyCancelled_noTransition() {
+        when( userManager.getCurrentUser() ).thenReturn( reporter );
+        ticket.setState( TicketState.CANCELLED );
+        when( ticketService.load( 1L ) ).thenReturn( ticket );
+
+        Response resp = webService.deleteTicket( 1L, null );
+
+        assertThat( resp.getStatus() ).isEqualTo( Response.Status.NO_CONTENT.getStatusCode() );
+        verify( ticketService, never() ).transition( any(), any(), any(), any() );
+    }
+
+    @Test
+    public void testDeleteTicket_notFound_throws404() {
+        when( ticketService.load( 999L ) ).thenReturn( null );
+        assertThatThrownBy( () -> webService.deleteTicket( 999L, null ) )
+                .isInstanceOf( NotFoundException.class );
+    }
+
+    /**
+     * Annotation-level auth guard: the write-side endpoints must carry
+     * {@code @PreAuthorize("isAuthenticated()")}. At runtime Spring's method-
+     * security AOP turns the missing/anonymous principal into a 401/403; here
+     * we verify the precondition that produces that runtime behaviour without
+     * standing up the Spring container.
+     */
+    @Test
+    public void testWriteEndpoints_requireAuthentication() throws NoSuchMethodException {
+        assertPreAuthorizeIsAuthenticated(
+                TicketsWebService.class.getMethod( "createTicket",
+                        TicketsWebService.CreateTicketRequest.class ) );
+        assertPreAuthorizeIsAuthenticated(
+                TicketsWebService.class.getMethod( "updateTicket",
+                        Long.class, TicketsWebService.UpdateTicketRequest.class ) );
+        assertPreAuthorizeIsAuthenticated(
+                TicketsWebService.class.getMethod( "deleteTicket",
+                        Long.class, String.class ) );
+    }
+
+    private static void assertPreAuthorizeIsAuthenticated( java.lang.reflect.Method m ) {
+        PreAuthorize annot = m.getAnnotation( PreAuthorize.class );
+        assertThat( annot )
+                .as( "method %s must carry @PreAuthorize", m.getName() )
+                .isNotNull();
+        assertThat( annot.value() )
+                .as( "method %s must require isAuthenticated()", m.getName() )
+                .contains( "isAuthenticated()" );
     }
 }
