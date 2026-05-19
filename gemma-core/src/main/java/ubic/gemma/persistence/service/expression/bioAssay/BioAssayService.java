@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service.expression.bioAssay;
 
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -63,7 +64,8 @@ public interface BioAssayService extends SecurableBaseService<BioAssay>, Securab
     Collection<BioAssayDimension> findBioAssayDimensions( BioAssay bioAssay );
 
     @Nullable
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostAuthorize("returnObject == null or hasPermission(returnObject, 'READ') or hasPermission(returnObject, 'ADMINISTRATION')")
     BioAssay findByShortName( String shortName );
 
     /**

@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service.common.protocol;
 
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PostAuthorize;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableBaseImmutableService;
 
@@ -31,7 +32,8 @@ import java.util.List;
 public interface ProtocolService extends SecurableBaseImmutableService<Protocol> {
 
     @Nullable
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostAuthorize("returnObject == null or hasPermission(returnObject, 'READ') or hasPermission(returnObject, 'ADMINISTRATION')")
     Protocol findByName( String protocolName );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })

@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PostAuthorize;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableBaseService;
 
@@ -30,7 +31,8 @@ import javax.annotation.Nullable;
 public interface ExperimentalDesignService extends SecurableBaseService<ExperimentalDesign> {
 
     @Nullable
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostAuthorize("returnObject == null or hasPermission(returnObject, 'READ') or hasPermission(returnObject, 'ADMINISTRATION')")
     ExperimentalDesign loadWithExperimentalFactors( Long id );
 
     /**

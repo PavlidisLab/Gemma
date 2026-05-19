@@ -3,6 +3,7 @@ package ubic.gemma.persistence.service.expression.experiment;
 import lombok.Builder;
 import lombok.Getter;
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PostAuthorize;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataMatrix;
 import ubic.gemma.model.common.description.Category;
 import ubic.gemma.model.common.description.Characteristic;
@@ -29,7 +30,8 @@ public interface SingleCellExpressionExperimentService {
      * The rest of the experiment is also initialized as per {@link ExpressionExperimentDao#thawLite(ExpressionExperiment)}.
      */
     @Nullable
-    @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
+    @Secured({ "GROUP_USER" })
+    @PostAuthorize("returnObject == null or hasPermission(returnObject, 'READ') or hasPermission(returnObject, 'ADMINISTRATION')")
     ExpressionExperiment loadWithSingleCellVectors( Long id );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
