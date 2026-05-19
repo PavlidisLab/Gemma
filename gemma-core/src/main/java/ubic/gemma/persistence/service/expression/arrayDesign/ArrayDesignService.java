@@ -33,6 +33,8 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableBaseService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableFilteringVoEnabledService;
+import ubic.gemma.persistence.util.Cursor;
+import ubic.gemma.persistence.util.CursorPage;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
@@ -408,6 +410,16 @@ public interface ArrayDesignService extends SecurableBaseService<ArrayDesign>,
      */
     @Secured("GROUP_ADMIN")
     Slice<ArrayDesignValueObject> loadBlacklistedValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
+
+    /**
+     * Cursor-mode counterpart to {@link #loadBlacklistedValueObjects(Filters, Sort, int, int)} —
+     * see {@code CURSOR_PAGINATION_STEP1_PLAN.md} step 1h. No need for
+     * {@code ACL_VALUE_OBJECT_COLLECTION_READ} because the filtering is done in the query.
+     *
+     * @see ArrayDesignDao#loadBlacklistedValueObjectsByCursor(Filters, Sort, Cursor, int)
+     */
+    @Secured("GROUP_ADMIN")
+    CursorPage<ArrayDesignValueObject> loadBlacklistedValueObjectsByCursor( @Nullable Filters filters, Sort sort, @Nullable Cursor cursor, int limit );
 
     @Secured("IS_AUTHENTICATED_ANONYMOUSLY")
     Collection<ArrayDesignValueObject> loadValueObjectsWithCache( @Nullable Filters filters, @Nullable Sort sort );

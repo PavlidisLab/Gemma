@@ -171,14 +171,38 @@ public class PlatformsWebService {
     @Path("/blacklisted")
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasAuthority('GROUP_ADMIN')")
-    @Operation(summary = "Retrieve all blacklisted platforms", hidden = true)
-    public FilteredAndPaginatedResponseDataObject<ArrayDesignValueObject> getBlacklistedPlatforms(
+    @Operation(summary = "Retrieve all blacklisted platforms", hidden = true,
+            description = "Supports two pagination modes. Legacy mode: pass `offset` (and `limit`); response includes `offset` and `totalElements`. "
+                    + "Cursor mode (recommended for deep pagination and consistency under writes): pass an opaque `cursor` token from a previous response's `nextCursor` / `prevCursor` field. "
+                    + "`offset` and `cursor` are mutually exclusive — passing a non-null `cursor` selects cursor mode. "
+                    + "In cursor mode the result is always sorted by ascending `id` (the user `sort` arg is currently ignored, pending the indexed-column audit in phase B); the blacklist short-name/accession predicate is preserved on top of the user-supplied `?filter=`; `totalElements` is `null` by default (no count query per request).",
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(schema = @Schema(oneOf = {
+                                    FilteredAndPaginatedResponseDataObject.class,
+                                    FilteredAndCursorPaginatedResponseDataObject.class
+                            }))),
+            })
+    public Object getBlacklistedPlatforms(
             @QueryParam("filter") @DefaultValue("") FilterArg<ArrayDesign> filter,
             @QueryParam("sort") @DefaultValue("+id") SortArg<ArrayDesign> sort,
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset,
-            @QueryParam("limit") @DefaultValue("20") LimitArg limit
+            @QueryParam("limit") @DefaultValue("20") LimitArg limit,
+            @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg
     ) {
-        return paginate( arrayDesignService::loadBlacklistedValueObjects, arrayDesignArgService.getFilters( filter ),
+        Filters filters = arrayDesignArgService.getFilters( filter );
+        if ( cursorArg != null ) {
+            // Mutual-exclusion: a non-null cursor selects cursor mode. The default offset=0 is
+            // not considered user-supplied (parallels GET /platforms step 1c). In cursor mode we
+            // currently force a +id sort (PlatformArgService.getBlacklistedPlatformsByCursor) —
+            // the DAO restricts cursors to single-component id sorts until the index audit lands.
+            // The blacklist short-name/accession predicate is composed inside the DAO so the
+            // blacklist scope is enforced identically in both modes.
+            CursorPage<ArrayDesignValueObject> page = arrayDesignArgService.getBlacklistedPlatformsByCursor(
+                    filters, cursorArg.getValue(), limit.getValue() );
+            return new FilteredAndCursorPaginatedResponseDataObject<>( page, filters, new String[] { "id" } );
+        }
+        return paginate( arrayDesignService::loadBlacklistedValueObjects, filters,
                 new String[] { "id" }, arrayDesignArgService.getSort( sort ), offset.getValue(), limit.getValue() );
     }
 

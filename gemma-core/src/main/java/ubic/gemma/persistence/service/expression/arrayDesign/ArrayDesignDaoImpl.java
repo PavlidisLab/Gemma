@@ -175,6 +175,30 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     @Override
     public Slice<ArrayDesignValueObject> loadBlacklistedValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
+        Filters composed = composeBlacklistFilters( filters );
+        if ( composed == null ) {
+            return new Slice<>( Collections.emptyList(), sort, offset, limit, 0L );
+        }
+        return loadValueObjects( composed, sort, offset, limit );
+    }
+
+    @Override
+    public CursorPage<ArrayDesignValueObject> loadBlacklistedValueObjectsByCursor( @Nullable Filters filters, Sort sort, @Nullable Cursor cursor, int limit ) {
+        Filters composed = composeBlacklistFilters( filters );
+        if ( composed == null ) {
+            return new CursorPage<>( Collections.emptyList(), sort, limit, null, null, 0L );
+        }
+        return loadValueObjectsByCursor( composed, sort, cursor, limit );
+    }
+
+    /**
+     * Compose the blacklist filter (matching either {@code shortName} or {@code accession}) on
+     * top of the caller-supplied {@link Filters}. Returns {@code null} when there are no
+     * blacklisted platforms — both {@link #loadBlacklistedValueObjects} and
+     * {@link #loadBlacklistedValueObjectsByCursor} short-circuit to an empty page in that case.
+     */
+    @Nullable
+    private Filters composeBlacklistFilters( @Nullable Filters filters ) {
         if ( filters == null ) {
             filters = Filters.empty();
         } else {
@@ -186,7 +210,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         // or by accession
         Set<String> blacklistedAccessions = getBlacklistedAccessions();
         if ( blacklistedShortNames.isEmpty() && blacklistedAccessions.isEmpty() ) {
-            return new Slice<>( Collections.emptyList(), sort, offset, limit, 0L );
+            return null;
         }
         Filters.FiltersClauseBuilder clauseBuilder = filters.and();
         if ( !blacklistedShortNames.isEmpty() ) {
@@ -195,8 +219,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         if ( !blacklistedAccessions.isEmpty() ) {
             clauseBuilder = clauseBuilder.or( EXTERNAL_REFERENCE_ALIAS, "accession", String.class, Filter.Operator.in, blacklistedAccessions );
         }
-        filters = clauseBuilder.build();
-        return loadValueObjects( filters, sort, offset, limit );
+        return clauseBuilder.build();
     }
 
     @Override

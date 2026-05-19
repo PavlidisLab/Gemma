@@ -102,4 +102,18 @@ public class PlatformArgService extends AbstractEntityArgService<ArrayDesign, Ar
         Filters filters = Filters.by( eeService.getFilter( "bioAssays.arrayDesignUsed.id", Long.class, Filter.Operator.eq, ad.getId() ) );
         return eeService.loadValueObjectsByCursor( filters, eeService.getSort( "id", Sort.Direction.ASC, Sort.NullMode.LAST ), cursor, limit );
     }
+
+    /**
+     * Cursor-mode counterpart to {@link ArrayDesignService#loadBlacklistedValueObjects(Filters, Sort, int, int)}.
+     * Always sorts by ascending {@code id} (the primary key, indexed and unique) — see
+     * {@code CURSOR_PAGINATION_STEP1_PLAN.md} step 1h. The user's {@code ?filter=} arg still
+     * applies; the user's {@code ?sort=} arg is intentionally not honoured in cursor mode because
+     * the DAO currently restricts cursors to single-component id sorts (recce sec. 3.4 — to be
+     * lifted in phase B once the index audit is complete). The blacklist short-name/accession
+     * predicate is composed inside the DAO ({@code ArrayDesignDaoImpl#composeBlacklistFilters})
+     * so the same blacklist scope is enforced identically in both modes.
+     */
+    public CursorPage<ArrayDesignValueObject> getBlacklistedPlatformsByCursor( @Nullable Filters filters, @Nullable Cursor cursor, int limit ) {
+        return service.loadBlacklistedValueObjectsByCursor( filters, service.getSort( "id", Sort.Direction.ASC, Sort.NullMode.LAST ), cursor, limit );
+    }
 }

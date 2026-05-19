@@ -13,6 +13,8 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.CachedFilteringVoEnabledDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CuratableDao;
+import ubic.gemma.persistence.util.Cursor;
+import ubic.gemma.persistence.util.CursorPage;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
@@ -175,4 +177,12 @@ public interface ArrayDesignDao extends CuratableDao<ArrayDesign>,
     void deleteGeneProductAnnotationAssociations( ArrayDesign arrayDesign );
 
     Slice<ArrayDesignValueObject> loadBlacklistedValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
+
+    /**
+     * Cursor-mode counterpart to {@link #loadBlacklistedValueObjects(Filters, Sort, int, int)}:
+     * keyset pagination over the blacklisted platforms, applying the same shortName/accession
+     * blacklist filter that the offset-mode variant composes — see
+     * {@code CURSOR_PAGINATION_STEP1_PLAN.md} step 1h.
+     */
+    CursorPage<ArrayDesignValueObject> loadBlacklistedValueObjectsByCursor( @Nullable Filters filters, Sort sort, @Nullable Cursor cursor, int limit );
 }

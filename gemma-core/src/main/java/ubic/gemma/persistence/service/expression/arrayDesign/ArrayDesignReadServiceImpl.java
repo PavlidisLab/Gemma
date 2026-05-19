@@ -32,6 +32,8 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventDao;
+import ubic.gemma.persistence.util.Cursor;
+import ubic.gemma.persistence.util.CursorPage;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
@@ -283,6 +285,12 @@ public class ArrayDesignReadServiceImpl implements ArrayDesignReadService {
     @Transactional(readOnly = true)
     public Slice<ArrayDesignValueObject> loadBlacklistedValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
         return arrayDesignDao.loadBlacklistedValueObjects( filters, sort, offset, limit );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CursorPage<ArrayDesignValueObject> loadBlacklistedValueObjectsByCursor( @Nullable Filters filters, Sort sort, @Nullable Cursor cursor, int limit ) {
+        return arrayDesignDao.loadBlacklistedValueObjectsByCursor( filters, sort, cursor, limit );
     }
 
     @Override
