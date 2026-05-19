@@ -19,7 +19,6 @@
 package ubic.gemma.persistence.persister;
 
 import lombok.Value;
-import lombok.With;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.FlushMode;
@@ -33,7 +32,6 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Taxon;
 
-import org.springframework.lang.Nullable;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
 import java.util.*;
 
@@ -64,18 +62,17 @@ public abstract class AbstractPersister implements Persister {
      * Various caches to refer back to not-yet persisted entities (and thus not easily obtainable from the persistence
      * context).
      * <p>
-     * Phase 3 persister-retirement note: the {@code externalDatabaseCache} field has been
-     * removed from this container and is now plumbed through helper-method signatures as
-     * an explicit {@code Map<String, ExternalDatabase>} parameter. The remaining fields
-     * (arrayDesignCache, taxonCache, chromosomeCache, bioAssayDimensionCache) still ride
-     * on this POJO because each is wired to a distinct entity-graph slice and threading
+     * Phase 3 persister-retirement note: both the {@code externalDatabaseCache} and
+     * {@code arrayDesignCache} fields have been removed from this container and are
+     * now plumbed through helper-method signatures as explicit parameters (a
+     * {@code Map<String, ExternalDatabase>} and an
+     * {@link ArrayDesignsForExperimentCache} respectively). The remaining fields
+     * (taxonCache, chromosomeCache, bioAssayDimensionCache) still ride on this
+     * POJO because each is wired to a distinct entity-graph slice and threading
      * them as separate parameters would explode signatures without semantic benefit.
      */
-    @With
     @Value(staticConstructor = "empty")
     protected static class Caches {
-        @Nullable
-        ArrayDesignsForExperimentCache arrayDesignCache;
         /**
          * Keys are either string or integers.
          */
@@ -99,7 +96,7 @@ public abstract class AbstractPersister implements Persister {
         try {
             sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.MANUAL );
             AbstractPersister.log.trace( String.format( "Persisting a %s.", formatEntity( entity ) ) );
-            T persistedEntity = doPersist( entity, Caches.empty( null ), new HashMap<>() );
+            T persistedEntity = doPersist( entity, Caches.empty(), new HashMap<>() );
             sessionFactory.getCurrentSession().flush();
             return persistedEntity;
         } finally {
@@ -113,7 +110,7 @@ public abstract class AbstractPersister implements Persister {
         try {
             sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.MANUAL );
             AbstractPersister.log.trace( String.format( "Persisting or updating a %s.", formatEntity( entity ) ) );
-            T persistedEntity = doPersistOrUpdate( entity, Caches.empty( null ), new HashMap<>() );
+            T persistedEntity = doPersistOrUpdate( entity, Caches.empty(), new HashMap<>() );
             sessionFactory.getCurrentSession().flush();
             return persistedEntity;
         } finally {
@@ -127,7 +124,7 @@ public abstract class AbstractPersister implements Persister {
         try {
             sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.MANUAL );
             AbstractPersister.log.trace( String.format( "Persisting a collection of %d entities.", col.size() ) );
-            List<T> result = doPersist( col, Caches.empty( null ), new HashMap<>() );
+            List<T> result = doPersist( col, Caches.empty(), new HashMap<>() );
             sessionFactory.getCurrentSession().flush();
             return result;
         } finally {
