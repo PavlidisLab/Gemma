@@ -10,14 +10,6 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>gemma-rest</artifactId>
-    <!--
-        Packaging is property-driven so the `gemma-rest-war` profile (see <profiles>
-        below) can flip this from `jar` to `war` without breaking the default build.
-        Default = jar (gemma-web depends on it as compile-scope jar; flipping by
-        default would break gemma-web's build). See GEMMA_REST_STANDALONE_ROADMAP.md
-        Phase 1 and the comment block on <profiles> for the activation incantation.
-    -->
-    <packaging>${gemma.rest.packaging}</packaging>
 
     <name>Gemma REST</name>
     <description>Module containing the Gemma REST API</description>
@@ -94,11 +86,10 @@
             <artifactId>jersey-spring6</artifactId>
             <version>${jersey.version}</version>
             <exclusions>
-                <!--
-                  Note: the hibernate-validator exclusion was removed (Phase 3, Bean Validation opt-in).
-                  Hibernate Validator is now an explicit declared dependency below so JAX-RS @Valid
-                  / @NotNull / etc. fire on endpoint params and DTO fields.
-                -->
+                <exclusion>
+                    <groupId>org.hibernate.validator</groupId>
+                    <artifactId>hibernate-validator</artifactId>
+                </exclusion>
                 <exclusion>
                     <groupId>org.springframework</groupId>
                     <artifactId>spring-aop</artifactId>
@@ -148,16 +139,13 @@
         </dependency>
         <!--
           Jersey 3's test framework brings in JUnit 5 (Jupiter), so Maven Surefire auto-detects the
-          JUnit 5 platform provider. But Gemma's REST tests are all JUnit 4 (org.junit.Test). Add
-          the vintage engine so the JUnit 5 platform can run JUnit 4 tests; without it, Surefire
-          silently runs 0 tests and reports BUILD SUCCESS.
+          JUnit 5 platform provider. The vintage engine lets the JUnit 5 platform run JUnit 4
+          tests; without it, Surefire silently runs 0 tests and reports BUILD SUCCESS.
+          Phase 3 JUnit 5 migration (Phase A): junit-vintage-engine + junit-jupiter are now
+          inherited from the root POM (test scope, managed version), so the explicit
+          declaration here is no longer needed.
         -->
-        <dependency>
-            <groupId>org.junit.vintage</groupId>
-            <artifactId>junit-vintage-engine</artifactId>
-            <version>5.14.4</version>
-            <scope>test</scope>
-        </dependency>
+
         <dependency>
             <groupId>org.glassfish.jersey.test-framework.providers</groupId>
             <artifactId>jersey-test-framework-provider-inmemory</artifactId>
@@ -178,32 +166,6 @@
             <scope>provided</scope>
         </dependency>
 
-        <!--
-          Jakarta Bean Validation (JSR-380) opt-in (Phase 3).
-          The API artifact provides @Valid / @NotNull / @NotEmpty / @NotBlank / @Size / @Min / @Max / @Pattern.
-          Hibernate Validator is the reference impl (Jakarta EE 10 era; aligned with jakarta.* APIs).
-          jersey-bean-validation auto-registers Jersey's ValidationFeature, so JAX-RS picks up
-          @Valid on resource method params and constraint annotations on DTO fields with no
-          additional config code.
-
-          Adoption is per-endpoint and incremental — see VALIDATION_OPTIN_NOTES.md at repo root.
-        -->
-        <dependency>
-            <groupId>jakarta.validation</groupId>
-            <artifactId>jakarta.validation-api</artifactId>
-            <version>3.0.2</version>
-        </dependency>
-        <dependency>
-            <groupId>org.hibernate.validator</groupId>
-            <artifactId>hibernate-validator</artifactId>
-            <version>8.0.1.Final</version>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish.jersey.ext</groupId>
-            <artifactId>jersey-bean-validation</artifactId>
-            <version>${jersey.version}</version>
-        </dependency>
-
         <!-- Swagger -->
         <dependency>
             <groupId>io.swagger.core.v3</groupId>
@@ -218,10 +180,10 @@
                     <groupId>jakarta.xml.bind</groupId>
                     <artifactId>jakarta.xml.bind-api</artifactId>
                 </exclusion>
-                <!--
-                  Note: the jakarta.validation-api exclusion was removed (Phase 3, Bean Validation opt-in).
-                  jakarta.validation-api is now declared explicitly below.
-                -->
+                <exclusion>
+                    <groupId>jakarta.validation</groupId>
+                    <artifactId>jakarta.validation-api</artifactId>
+                </exclusion>
                 <exclusion>
                     <groupId>com.fasterxml.jackson.core</groupId>
                     <artifactId>jackson-annotations</artifactId>
@@ -314,59 +276,6 @@
 
     <properties>
         <javadocSourcePaths>${delombok.output};${project.build.directory}/generated-sources/antlr4</javadocSourcePaths>
-        <!--
-            Default packaging. Overridden to `war` by the `gemma-rest-war` profile
-            (see <profiles> below) for standalone WAR builds. Default stays `jar`
-            so that gemma-web (which depends on gemma-rest as a compile-scope jar)
-            and downstream consumers of the published jar artifact build unchanged.
-        -->
-        <gemma.rest.packaging>jar</gemma.rest.packaging>
     </properties>
-
-    <!--
-        Phase 1 of GEMMA_REST_STANDALONE_ROADMAP.md (gemma-rest standalone packaging).
-
-        The standalone WAR is produced only when the `gemma-rest-war` profile is
-        active:
-
-            mvn -pl gemma-rest -am package -P gemma-rest-war -DskipTests
-
-        The flip to `war` as the default packaging — plus the corresponding
-        gemma-web cleanup — is deferred to the cutover phase (roadmap §8 row 4).
-        Until then, this profile lets the WAR build be smoke-tested without
-        breaking gemma-web's build.
-
-        The profile flips the gemma.rest.packaging property from `jar` to `war`
-        and points the maven-war-plugin at the src/main/webapp tree (the
-        descriptor lives at src/main/webapp/WEB-INF/web.xml, which is the
-        maven-war-plugin default — so no <webXml> override is needed).
-        `<finalName>gemma-rest</finalName>` produces a clean `gemma-rest.war`
-        filename.
-    -->
-    <profiles>
-        <profile>
-            <id>gemma-rest-war</id>
-            <properties>
-                <gemma.rest.packaging>war</gemma.rest.packaging>
-            </properties>
-            <build>
-                <finalName>gemma-rest</finalName>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-war-plugin</artifactId>
-                        <configuration>
-                            <!--
-                                Fail the build if web.xml is missing — the whole
-                                point of activating this profile is to get a
-                                deployable WAR with its own descriptor.
-                            -->
-                            <failOnMissingWebXml>true</failOnMissingWebXml>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 
 </project>
