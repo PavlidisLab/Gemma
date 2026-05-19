@@ -243,6 +243,134 @@
 				<artifactId>hibernate-search-backend-lucene</artifactId>
 				<version>${hibernate.search.version}</version>
 			</dependency>
+			<!-- Phase 3 ontology Step 1: Jena 4.10.0 + Lucene 9.11.1 convergence.
+			     Manage every Jena artifact the dependency graph could reach (direct +
+			     transitive from baseCode's old jena-core 2.13.0 + jena-tdb 1.1.2)
+			     so they all converge on 4.10.0. The maven-enforcer dependencyConvergence
+			     rule fails if any one Jena jar leaks through at 2.x. -->
+			<dependency>
+				<groupId>org.apache.jena</groupId>
+				<artifactId>jena-tdb2</artifactId>
+				<version>${jena.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.jena</groupId>
+				<artifactId>jena-text</artifactId>
+				<version>${jena.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.jena</groupId>
+				<artifactId>jena-core</artifactId>
+				<version>${jena.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.jena</groupId>
+				<artifactId>jena-arq</artifactId>
+				<version>${jena.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.jena</groupId>
+				<artifactId>jena-base</artifactId>
+				<version>${jena.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.jena</groupId>
+				<artifactId>jena-iri</artifactId>
+				<version>${jena.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.jena</groupId>
+				<artifactId>jena-shaded-guava</artifactId>
+				<version>${jena.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.jena</groupId>
+				<artifactId>jena-tdb</artifactId>
+				<version>${jena.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.jena</groupId>
+				<artifactId>jena-cmds</artifactId>
+				<version>${jena.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.jena</groupId>
+				<artifactId>jena-dboe-base</artifactId>
+				<version>${jena.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.jena</groupId>
+				<artifactId>jena-dboe-index</artifactId>
+				<version>${jena.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.jena</groupId>
+				<artifactId>jena-dboe-trans-data</artifactId>
+				<version>${jena.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.jena</groupId>
+				<artifactId>jena-dboe-transaction</artifactId>
+				<version>${jena.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.jena</groupId>
+				<artifactId>jena-dboe-storage</artifactId>
+				<version>${jena.version}</version>
+			</dependency>
+			<!-- Lucene 9.11.1 convergence: jena-text 4.10.0's parent POM pins these at
+			     9.7.0; HS 7.2.4 ships them at 9.11.1. Override to HS's choice so
+			     there's a single Lucene 9.x train across both consumers. -->
+			<dependency>
+				<groupId>org.apache.lucene</groupId>
+				<artifactId>lucene-core</artifactId>
+				<version>${lucene.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.lucene</groupId>
+				<artifactId>lucene-analysis-common</artifactId>
+				<version>${lucene.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.lucene</groupId>
+				<artifactId>lucene-queryparser</artifactId>
+				<version>${lucene.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.lucene</groupId>
+				<artifactId>lucene-highlighter</artifactId>
+				<version>${lucene.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.lucene</groupId>
+				<artifactId>lucene-backward-codecs</artifactId>
+				<version>${lucene.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.lucene</groupId>
+				<artifactId>lucene-queries</artifactId>
+				<version>${lucene.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.lucene</groupId>
+				<artifactId>lucene-sandbox</artifactId>
+				<version>${lucene.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.lucene</groupId>
+				<artifactId>lucene-memory</artifactId>
+				<version>${lucene.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.lucene</groupId>
+				<artifactId>lucene-join</artifactId>
+				<version>${lucene.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.lucene</groupId>
+				<artifactId>lucene-facet</artifactId>
+				<version>${lucene.version}</version>
+			</dependency>
 			<!-- Micrometer 1.13.11: BOM imports micrometer-bom 1.13.15. Gemma's pavlab note
 			     flags issues on the 1.14 series; we hold 1.13.11 explicitly. -->
 			<dependency>
@@ -466,6 +594,31 @@
 			<groupId>baseCode</groupId>
 			<artifactId>baseCode</artifactId>
 			<version>1.1.34-RENOVATIONS-SNAPSHOT</version>
+			<exclusions>
+				<!-- Phase 3 ontology Step 1: baseCode transitively pulls Jena (now
+				     pinned to 4.10.0 in our dependencyManagement). Jena 4.10's
+				     jena-base bundles older commons-* declarations than Gemma's
+				     direct pins; exclude them on the baseCode path so the enforcer
+				     dependencyConvergence rule passes. The correct versions
+				     (commons-compress 1.28.0, commons-io 2.21.0, commons-csv
+				     1.14.1) are supplied by Gemma's direct dependencyManagement. -->
+				<exclusion>
+					<groupId>org.apache.commons</groupId>
+					<artifactId>commons-compress</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>commons-io</groupId>
+					<artifactId>commons-io</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.apache.commons</groupId>
+					<artifactId>commons-csv</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>commons-cli</groupId>
+					<artifactId>commons-cli</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<!-- pavlab:gemma-gsec dependency removed in Phase 3 absorption: gsec source now lives
@@ -1331,6 +1484,21 @@
 		     in Step 2 and the SearchSource / IndexerService restoration in
 		     Steps 3-4. -->
 		<hibernate.search.version>7.2.4.Final</hibernate.search.version>
+		<!-- Renovations Phase 3 ontology Step 1: in-Gemma baseCode ontology indexer
+		     port. baseCode 1.1.34-RENOVATIONS-SNAPSHOT transitively brings in Jena
+		     2.13.0 / TDB 1.1.2 (early-2015 vintage). We pin Jena 4.10.0 — the LAST
+		     4.x release (4.10.0 -> 5.0.0; no 4.11.x exists). Staying on 4.x because
+		     Jena 5 dropped `org.apache.jena.atlas` APIs that baseCode references AND
+		     bumped Java baseline to 17. jena-text 4.10.0 pins Lucene 9.7.0 via its
+		     parent POM — we override transitively to Lucene 9.11.1 (HS 7.2.4's
+		     pinned Lucene) so the two consumers converge on one Lucene 9.x line.
+		     See SEARCH_RECCE.md Section 6.3 footnote. -->
+		<jena.version>4.10.0</jena.version>
+		<!-- Lucene 9.11.1: pinned transitively by hibernate-search-backend-lucene
+		     7.2.4 (do NOT bump independently). jena-text 4.10.0 ships with Lucene
+		     9.7.0 in its dependencyManagement; we override to match HS 7's pin so
+		     the maven-enforcer dependencyConvergence rule passes. -->
+		<lucene.version>9.11.1</lucene.version>
 		<!-- Flyway 10.x split out database-specific modules; tests need flyway-database-h2.
 		     Production wiring (flyway-mysql) lands in the follow-on session. -->
 		<flyway.version>10.22.0</flyway.version>
@@ -1341,7 +1509,7 @@
 		<jackson.version>2.21.0</jackson.version>
 		<jackson-annotations.version>2.21</jackson-annotations.version>
 		<swagger.version>2.2.50</swagger.version>
-		<!-- Lucene removed: Hibernate Search 5 was gutted in Phase 2; no direct Lucene deps required. -->
+		<!-- Lucene 9.11.1: see lucene.version above (defined alongside jena.version). -->
 		<slack.version>1.47.0</slack.version>
 		<!-- I've been running into some issues with the 1.14 series, to be investigated... -->
 		<micrometer.version>1.13.11</micrometer.version>

@@ -1,7 +1,7 @@
 package ubic.gemma.core.ontology;
 
-import com.hp.hpl.jena.ontology.*;
-import com.hp.hpl.jena.rdf.model.ModelFactory;
+import org.apache.jena.ontology.*;
+import org.apache.jena.rdf.model.ModelFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
