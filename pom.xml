@@ -345,6 +345,112 @@
 				<version>${mockito.version}</version>
 				<scope>test</scope>
 			</dependency>
+			<!--
+			Phase 3 framework bump: force convergence across all transitive Spring deps
+			(notably from gsec built against 6.1.20 and spring-security pulling its own
+			spring-* set). dependencyManagement here overrides any version anywhere in the
+			transitive graph, satisfying the dependencyConvergence enforcer rule.
+			-->
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-core</artifactId>
+				<version>${spring.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-beans</artifactId>
+				<version>${spring.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-context</artifactId>
+				<version>${spring.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-context-support</artifactId>
+				<version>${spring.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-expression</artifactId>
+				<version>${spring.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-aop</artifactId>
+				<version>${spring.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-aspects</artifactId>
+				<version>${spring.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-tx</artifactId>
+				<version>${spring.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-jdbc</artifactId>
+				<version>${spring.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-orm</artifactId>
+				<version>${spring.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-web</artifactId>
+				<version>${spring.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-webmvc</artifactId>
+				<version>${spring.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.security</groupId>
+				<artifactId>spring-security-core</artifactId>
+				<version>${spring.security.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.security</groupId>
+				<artifactId>spring-security-acl</artifactId>
+				<version>${spring.security.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.security</groupId>
+				<artifactId>spring-security-config</artifactId>
+				<version>${spring.security.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.security</groupId>
+				<artifactId>spring-security-web</artifactId>
+				<version>${spring.security.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.security</groupId>
+				<artifactId>spring-security-crypto</artifactId>
+				<version>${spring.security.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.security</groupId>
+				<artifactId>spring-security-taglibs</artifactId>
+				<version>${spring.security.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.hibernate.orm</groupId>
+				<artifactId>hibernate-core</artifactId>
+				<version>${hibernate.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.hibernate.orm</groupId>
+				<artifactId>hibernate-jcache</artifactId>
+				<version>${hibernate.version}</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 	<dependencies>
@@ -1203,16 +1309,15 @@
 		-->
 		<gsec.version>0.0.23-RENOVATIONS-SNAPSHOT</gsec.version>
 		<!-- Spring Boot dependencies BOM (managed via dependencyManagement above). Boot 3.3.x
-		     line targets SF 6.1 + SS 6.3 + Hibernate 6.5, the closest fit to Gemma's current
-		     SF 6.1.20 / SS 6.3.10 / HB 6.4.10 stack. Do NOT bump to 3.4+ without also bumping
-		     Spring Framework to 6.2 (see SPRING_BOOT_BOM_ADOPTION.md). -->
+		     line targets SF 6.1 + SS 6.3 + Hibernate 6.5. Gemma now runs SF 6.2 / SS 6.5 /
+		     HB 6.6 (the dM overrides for hibernate-core, hibernate-jcache, micrometer, jackson,
+		     slf4j, jakarta.xml.bind-api, jaxb-runtime, log4j-slf4j2-impl in dependencyManagement
+		     win over the BOM's pins). Bumping the BOM to 3.5.x (which targets SF 6.2 / SS 6.5 /
+		     HB 6.6 natively) is a follow-up so the override surface shrinks. -->
 		<spring-boot.version>3.3.13</spring-boot.version>
-		<!-- Bumped 6.1.20 -> 6.1.21 (patch) to match Boot 3.3.13's spring-framework.version,
-		     eliminating dependencyConvergence noise where transitives (e.g. gsec, spring-security)
-		     pulled the BOM's 6.1.21 against Gemma's 6.1.20 direct pins. -->
-		<spring.version>6.1.21</spring.version>
-		<spring.security.version>6.3.10</spring.security.version>
-		<hibernate.version>6.4.10.Final</hibernate.version>
+		<spring.version>6.2.8</spring.version>
+		<spring.security.version>6.5.1</spring.security.version>
+		<hibernate.version>6.6.18.Final</hibernate.version>
 		<!-- Flyway 10.x split out database-specific modules; tests need flyway-database-h2.
 		     Production wiring (flyway-mysql) lands in the follow-on session. -->
 		<flyway.version>10.22.0</flyway.version>
