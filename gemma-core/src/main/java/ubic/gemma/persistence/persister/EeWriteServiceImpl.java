@@ -22,6 +22,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.FlushMode;
+import org.springframework.aop.framework.AopProxyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -105,20 +106,42 @@ public class EeWriteServiceImpl implements EeWriteService {
      * non-EE associations (Publications, Persons, QuantitationTypes, ...).
      * When the persister chain is deleted in E5, these calls become direct
      * collaborator-DAO calls.
+     * <p>
+     * Field type is the {@link PersisterHelper} interface (not the impl) so
+     * Spring can inject the {@code @Transactional} JDK proxy without a
+     * {@code BeanNotOfRequiredTypeException}. The protected helpers used here
+     * ({@code doPersist}, {@code persistTaxon}, {@code getSessionFactory},
+     * {@code fillInDatabaseEntry}, {@code persistExternalDatabase},
+     * {@code persistQuantitationType}, {@code persistUnit}) live on
+     * {@link AbstractPersister} and are not part of the public interface;
+     * access them via {@link #persister()} which unwraps the proxy to the
+     * underlying {@link PersisterHelperImpl}.
      */
     @Autowired
-    private PersisterHelperImpl persisterHelper;
+    private PersisterHelper persisterHelper;
+
+    /**
+     * Returns the underlying {@link PersisterHelperImpl}, unwrapping the
+     * Spring AOP proxy if necessary. Needed to reach the protected helpers
+     * inherited from {@link AbstractPersister} that are not on the
+     * {@link PersisterHelper} interface. Goes away with the persister chain
+     * in E5.
+     */
+    private PersisterHelperImpl persister() {
+        Object target = AopProxyUtils.getSingletonTarget( persisterHelper );
+        return ( PersisterHelperImpl ) ( target != null ? target : persisterHelper );
+    }
 
     @Override
     @Transactional
     public ExpressionExperiment create( ExpressionExperiment ee, @Nullable ArrayDesignsForExperimentCache cache ) {
         try {
-            persisterHelper.getSessionFactory().getCurrentSession().setHibernateFlushMode( FlushMode.MANUAL );
+            persister().getSessionFactory().getCurrentSession().setHibernateFlushMode( FlushMode.MANUAL );
             ExpressionExperiment persistedEntity = persistExpressionExperiment( ee, AbstractPersister.Caches.empty( cache ) );
-            persisterHelper.getSessionFactory().getCurrentSession().flush();
+            persister().getSessionFactory().getCurrentSession().flush();
             return persistedEntity;
         } finally {
-            persisterHelper.getSessionFactory().getCurrentSession().setHibernateFlushMode( FlushMode.AUTO );
+            persister().getSessionFactory().getCurrentSession().setHibernateFlushMode( FlushMode.AUTO );
         }
     }
 
@@ -138,20 +161,20 @@ public class EeWriteServiceImpl implements EeWriteService {
         log.debug( ">>>>>>>>>> Persisting " + ee );
 
         if ( ee.getPrimaryPublication() != null ) {
-            ee.setPrimaryPublication( persisterHelper.doPersist( ee.getPrimaryPublication(), caches ) );
+            ee.setPrimaryPublication( persister().doPersist( ee.getPrimaryPublication(), caches ) );
         }
         if ( ee.getOwner() != null ) {
-            ee.setOwner( persisterHelper.doPersist( ee.getOwner(), caches ) );
+            ee.setOwner( persister().doPersist( ee.getOwner(), caches ) );
         }
         if ( ee.getTaxon() != null ) {
-            ee.setTaxon( persisterHelper.persistTaxon( ee.getTaxon(), caches ) );
+            ee.setTaxon( persister().persistTaxon( ee.getTaxon(), caches ) );
         }
 
-        ee.setQuantitationTypes( persisterHelper.doPersist( ee.getQuantitationTypes(), caches ) );
-        ee.setOtherRelevantPublications( persisterHelper.doPersist( ee.getOtherRelevantPublications(), caches ) );
+        ee.setQuantitationTypes( persister().doPersist( ee.getQuantitationTypes(), caches ) );
+        ee.setOtherRelevantPublications( persister().doPersist( ee.getOtherRelevantPublications(), caches ) );
 
         if ( ee.getAccession() != null ) {
-            persisterHelper.fillInDatabaseEntry( ee.getAccession(), caches );
+            persister().fillInDatabaseEntry( ee.getAccession(), caches );
         }
 
         // This has to come first and be persisted, so our FactorValues get persisted before we process the
@@ -250,7 +273,7 @@ public class EeWriteServiceImpl implements EeWriteService {
                 throw new IllegalStateException( "You must provide the platform in the cache object" );
             }
 
-            arrayDesignUsed = ( ArrayDesign ) persisterHelper.getSessionFactory().getCurrentSession()
+            arrayDesignUsed = ( ArrayDesign ) persister().getSessionFactory().getCurrentSession()
                     .load( ArrayDesign.class, arrayDesignUsed.getId() );
 
             if ( arrayDesignUsed == null ) {
@@ -277,12 +300,12 @@ public class EeWriteServiceImpl implements EeWriteService {
         // DatabaseEntries are persisted by composition, so we just need to fill in the ExternalDatabase.
         if ( bioAssay.getAccession() != null ) {
             bioAssay.getAccession().setExternalDatabase(
-                    persisterHelper.persistExternalDatabase( bioAssay.getAccession().getExternalDatabase(), caches ) );
+                    persister().persistExternalDatabase( bioAssay.getAccession().getExternalDatabase(), caches ) );
             log.debug( "external database done" );
         }
 
         // BioMaterials
-        bioAssay.setSampleUsed( persisterHelper.doPersist( bioAssay.getSampleUsed(), caches ) );
+        bioAssay.setSampleUsed( persister().doPersist( bioAssay.getSampleUsed(), caches ) );
 
         log.debug( "Done with " + bioAssay );
 
@@ -321,8 +344,8 @@ public class EeWriteServiceImpl implements EeWriteService {
         dataVector.setBioAssayDimension( bioAssayDimension );
 
         assert dataVector.getQuantitationType() != null;
-        QuantitationType qt = persisterHelper.persistQuantitationType( dataVector.getQuantitationType(), caches );
-        qt = ( QuantitationType ) persisterHelper.getSessionFactory().getCurrentSession().merge( qt );
+        QuantitationType qt = persister().persistQuantitationType( dataVector.getQuantitationType(), caches );
+        qt = ( QuantitationType ) persister().getSessionFactory().getCurrentSession().merge( qt );
         dataVector.setQuantitationType( qt );
 
         return bioAssayDimension;
@@ -406,7 +429,7 @@ public class EeWriteServiceImpl implements EeWriteService {
      */
     void processExperimentalDesign( ExperimentalDesign experimentalDesign, AbstractPersister.Caches caches ) {
 
-        persisterHelper.doPersist( experimentalDesign.getTypes(), caches );
+        persister().doPersist( experimentalDesign.getTypes(), caches );
 
         if ( experimentalDesign.getExperimentalFactors() == null ) {
             experimentalDesign.setExperimentalFactors( new HashSet<>() );
@@ -428,7 +451,7 @@ public class EeWriteServiceImpl implements EeWriteService {
                 factorValue.setExperimentalFactor( experimentalFactor );
                 // measurement will cascade, but not unit.
                 if ( factorValue.getMeasurement() != null && factorValue.getMeasurement().getUnit() != null ) {
-                    factorValue.getMeasurement().setUnit( persisterHelper.persistUnit( factorValue.getMeasurement().getUnit() ) );
+                    factorValue.getMeasurement().setUnit( persister().persistUnit( factorValue.getMeasurement().getUnit() ) );
                 }
             }
         }
@@ -444,11 +467,11 @@ public class EeWriteServiceImpl implements EeWriteService {
 
         log.debug( "Persisting " + entity );
         if ( entity.getExternalAccession() != null ) {
-            persisterHelper.fillInDatabaseEntry( entity.getExternalAccession(), caches );
+            persister().fillInDatabaseEntry( entity.getExternalAccession(), caches );
         }
 
         log.debug( "db entry done" );
-        entity.setSourceTaxon( persisterHelper.persistTaxon( entity.getSourceTaxon(), caches ) );
+        entity.setSourceTaxon( persister().persistTaxon( entity.getSourceTaxon(), caches ) );
 
         log.debug( "taxon done" );
 
@@ -500,7 +523,7 @@ public class EeWriteServiceImpl implements EeWriteService {
     }
 
     void fillInExperimentalFactorAssociations( ExperimentalFactor experimentalFactor, AbstractPersister.Caches caches ) {
-        persisterHelper.doPersist( experimentalFactor.getAnnotations(), caches );
+        persister().doPersist( experimentalFactor.getAnnotations(), caches );
     }
 
     void fillInFactorValueAssociations( FactorValue factorValue, AbstractPersister.Caches caches ) {
@@ -510,7 +533,7 @@ public class EeWriteServiceImpl implements EeWriteService {
         }
         // measurement will cascade, but not unit.
         if ( factorValue.getMeasurement() != null && factorValue.getMeasurement().getUnit() != null ) {
-            factorValue.getMeasurement().setUnit( persisterHelper.persistUnit( factorValue.getMeasurement().getUnit() ) );
+            factorValue.getMeasurement().setUnit( persister().persistUnit( factorValue.getMeasurement().getUnit() ) );
         }
     }
 }

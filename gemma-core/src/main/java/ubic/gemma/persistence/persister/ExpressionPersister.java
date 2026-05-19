@@ -18,6 +18,7 @@
  */
 package ubic.gemma.persistence.persister;
 
+import org.springframework.aop.framework.AopProxyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +29,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.Compound;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
+import ubic.gemma.persistence.service.expression.experiment.EeWriteService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentPrePersistService;
 
 import javax.annotation.Nullable;
@@ -46,10 +48,32 @@ import javax.annotation.Nullable;
  */
 public abstract class ExpressionPersister extends ArrayDesignPersister implements PersisterHelper {
 
+    /**
+     * Autowired as the {@link EeWriteService} interface (not the {@code Impl})
+     * so Spring can inject the {@code @Transactional} JDK proxy without a
+     * {@code BeanNotOfRequiredTypeException}. The package-private dispatch
+     * methods on {@link EeWriteServiceImpl} ({@code persistExpressionExperiment},
+     * {@code persistBioAssay}, etc.) are not on the interface; reach them via
+     * {@link #eeWriteServiceImpl()} which unwraps the proxy.
+     */
     @Autowired
-    private EeWriteServiceImpl eeWriteService;
+    private EeWriteService eeWriteService;
     @Autowired
     private ExpressionExperimentPrePersistService expressionExperimentPrePersistService;
+
+    /**
+     * Returns the underlying {@link EeWriteServiceImpl}, unwrapping the Spring
+     * AOP proxy if necessary. Needed to reach the package-private dispatch
+     * helpers ({@code persistExpressionExperiment}, {@code persistBioAssay},
+     * {@code persistBioAssayDimension}, {@code persistBioMaterial},
+     * {@code persistCompound}, {@code persistExpressionExperimentSubSet}) used
+     * by the strangler-fig {@link #doPersist} dispatch table. Goes away with
+     * the persister chain in E5.
+     */
+    private EeWriteServiceImpl eeWriteServiceImpl() {
+        Object target = AopProxyUtils.getSingletonTarget( eeWriteService );
+        return ( EeWriteServiceImpl ) ( target != null ? target : eeWriteService );
+    }
 
     @Override
     @Transactional
@@ -65,22 +89,23 @@ public abstract class ExpressionPersister extends ArrayDesignPersister implement
     @Override
     @SuppressWarnings("unchecked")
     protected <T extends Identifiable> T doPersist( T entity, Caches caches ) {
+        EeWriteServiceImpl impl = eeWriteServiceImpl();
         if ( entity instanceof ExpressionExperiment ) {
             if ( caches.getArrayDesignCache() == null ) {
                 AbstractPersister.log.warn( "Consider doing the 'prepare' step in a separate transaction." );
                 caches = caches.withArrayDesignCache( this.prepare( ( ExpressionExperiment ) entity ) );
             }
-            return ( T ) eeWriteService.persistExpressionExperiment( ( ExpressionExperiment ) entity, caches );
+            return ( T ) impl.persistExpressionExperiment( ( ExpressionExperiment ) entity, caches );
         } else if ( entity instanceof BioAssayDimension ) {
-            return ( T ) eeWriteService.persistBioAssayDimension( ( BioAssayDimension ) entity, caches );
+            return ( T ) impl.persistBioAssayDimension( ( BioAssayDimension ) entity, caches );
         } else if ( entity instanceof BioMaterial ) {
-            return ( T ) eeWriteService.persistBioMaterial( ( BioMaterial ) entity, caches );
+            return ( T ) impl.persistBioMaterial( ( BioMaterial ) entity, caches );
         } else if ( entity instanceof BioAssay ) {
-            return ( T ) eeWriteService.persistBioAssay( ( BioAssay ) entity, caches );
+            return ( T ) impl.persistBioAssay( ( BioAssay ) entity, caches );
         } else if ( entity instanceof Compound ) {
-            return ( T ) eeWriteService.persistCompound( ( Compound ) entity );
+            return ( T ) impl.persistCompound( ( Compound ) entity );
         } else if ( entity instanceof ExpressionExperimentSubSet ) {
-            return ( T ) eeWriteService.persistExpressionExperimentSubSet( ( ExpressionExperimentSubSet ) entity );
+            return ( T ) impl.persistExpressionExperimentSubSet( ( ExpressionExperimentSubSet ) entity );
         } else {
             return super.doPersist( entity, caches );
         }
