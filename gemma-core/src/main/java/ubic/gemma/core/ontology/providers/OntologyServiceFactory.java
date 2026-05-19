@@ -4,7 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.config.AbstractFactoryBean;
 import org.springframework.core.task.TaskExecutor;
-import ubic.basecode.ontology.providers.OntologyService;
+import ubic.gemma.core.ontology.basecode.providers.OntologyService;
 
 import org.springframework.lang.Nullable;
 import java.util.Set;

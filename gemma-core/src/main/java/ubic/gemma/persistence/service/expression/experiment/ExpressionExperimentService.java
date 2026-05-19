@@ -22,7 +22,7 @@ import lombok.Value;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.access.prepost.PostFilter;
 import org.springframework.security.access.prepost.PostAuthorize;
-import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.core.ontology.basecode.model.OntologyTerm;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;

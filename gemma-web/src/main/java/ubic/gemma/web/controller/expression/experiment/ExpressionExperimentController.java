@@ -36,7 +36,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 import ubic.basecode.dataStructure.CountingMap;
-import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.core.ontology.basecode.model.OntologyTerm;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;

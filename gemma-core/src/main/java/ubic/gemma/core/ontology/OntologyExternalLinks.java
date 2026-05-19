@@ -6,9 +6,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.util.Assert;
-import ubic.basecode.ontology.model.AnnotationProperty;
-import ubic.basecode.ontology.model.OntologyResource;
-import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.core.ontology.basecode.model.AnnotationProperty;
+import ubic.gemma.core.ontology.basecode.model.OntologyResource;
+import ubic.gemma.core.ontology.basecode.model.OntologyTerm;
 
 import org.springframework.lang.Nullable;
 import java.io.IOException;

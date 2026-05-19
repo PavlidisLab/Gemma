@@ -26,7 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import ubic.gemma.model.association.GOEvidenceCode;
 import org.apache.commons.lang3.StringUtils;
-import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.core.ontology.basecode.model.OntologyTerm;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;

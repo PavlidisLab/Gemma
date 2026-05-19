@@ -2,8 +2,8 @@ package ubic.gemma.core.ontology.providers;
 
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.providers.UberonOntologyService;
+import ubic.gemma.core.ontology.basecode.model.OntologyTerm;
+import ubic.gemma.core.ontology.basecode.providers.UberonOntologyService;
 import ubic.gemma.core.util.test.category.SlowTest;
 
 import java.util.Collections;
@@ -18,8 +18,8 @@ public class UberonOntologyTest {
     @Category(SlowTest.class)
     public void testSubstantiaNigraInUberon() {
         UberonOntologyService uberonOntologyService = new UberonOntologyService();
-        assertEquals( ubic.basecode.ontology.providers.OntologyService.LanguageLevel.FULL, uberonOntologyService.getLanguageLevel() );
-        assertEquals( ubic.basecode.ontology.providers.OntologyService.InferenceMode.TRANSITIVE, uberonOntologyService.getInferenceMode() );
+        assertEquals( ubic.gemma.core.ontology.basecode.providers.OntologyService.LanguageLevel.FULL, uberonOntologyService.getLanguageLevel() );
+        assertEquals( ubic.gemma.core.ontology.basecode.providers.OntologyService.InferenceMode.TRANSITIVE, uberonOntologyService.getInferenceMode() );
         uberonOntologyService.initialize( true, false );
         OntologyTerm brain = uberonOntologyService.getTerm( "http://purl.obolibrary.org/obo/UBERON_0000955" );
         assertNotNull( brain );

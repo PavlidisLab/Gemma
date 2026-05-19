@@ -1,7 +1,7 @@
 package ubic.gemma.core.ontology.providers;
 
 import org.junit.jupiter.api.Test;
-import ubic.basecode.ontology.providers.OntologyService;
+import ubic.gemma.core.ontology.basecode.providers.OntologyService;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;

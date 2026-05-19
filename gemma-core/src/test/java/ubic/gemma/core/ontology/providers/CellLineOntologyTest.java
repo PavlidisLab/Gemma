@@ -2,10 +2,10 @@ package ubic.gemma.core.ontology.providers;
 
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.providers.CellLineOntologyService;
-import ubic.basecode.ontology.search.OntologySearchException;
-import ubic.basecode.ontology.search.OntologySearchResult;
+import ubic.gemma.core.ontology.basecode.model.OntologyTerm;
+import ubic.gemma.core.ontology.basecode.providers.CellLineOntologyService;
+import ubic.gemma.core.ontology.basecode.search.OntologySearchException;
+import ubic.gemma.core.ontology.basecode.search.OntologySearchResult;
 import ubic.gemma.core.util.test.category.SlowTest;
 
 import static org.assertj.core.api.Assertions.assertThat;

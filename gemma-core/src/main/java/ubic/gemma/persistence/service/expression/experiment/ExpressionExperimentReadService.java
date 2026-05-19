@@ -11,7 +11,7 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
-import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.core.ontology.basecode.model.OntologyTerm;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;

@@ -14,10 +14,10 @@
  */
 package ubic.gemma.core.ontology.providers;
 
-import ubic.basecode.ontology.model.OntologyIndividual;
-import ubic.basecode.ontology.model.OntologyResource;
-import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.providers.OntologyService;
+import ubic.gemma.core.ontology.basecode.model.OntologyIndividual;
+import ubic.gemma.core.ontology.basecode.model.OntologyResource;
+import ubic.gemma.core.ontology.basecode.model.OntologyTerm;
+import ubic.gemma.core.ontology.basecode.providers.OntologyService;
 import ubic.gemma.core.ontology.providers.GeneOntologyServiceImpl.GOAspect;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;

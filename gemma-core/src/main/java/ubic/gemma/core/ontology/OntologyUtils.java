@@ -3,9 +3,9 @@ package ubic.gemma.core.ontology;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import ubic.basecode.ontology.model.AnnotationProperty;
-import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.providers.OntologyService;
+import ubic.gemma.core.ontology.basecode.model.AnnotationProperty;
+import ubic.gemma.core.ontology.basecode.model.OntologyTerm;
+import ubic.gemma.core.ontology.basecode.providers.OntologyService;
 
 import org.springframework.lang.Nullable;
 import java.io.IOException;

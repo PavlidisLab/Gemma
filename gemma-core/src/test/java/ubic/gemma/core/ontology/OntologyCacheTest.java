@@ -4,11 +4,11 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.cache.concurrent.ConcurrentMapCache;
-import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.providers.OntologyService;
-import ubic.basecode.ontology.search.OntologySearchException;
-import ubic.basecode.ontology.search.OntologySearchResult;
-import ubic.basecode.ontology.simple.OntologyTermSimple;
+import ubic.gemma.core.ontology.basecode.model.OntologyTerm;
+import ubic.gemma.core.ontology.basecode.providers.OntologyService;
+import ubic.gemma.core.ontology.basecode.search.OntologySearchException;
+import ubic.gemma.core.ontology.basecode.search.OntologySearchResult;
+import ubic.gemma.core.ontology.basecode.simple.OntologyTermSimple;
 
 import java.util.Arrays;
 import java.util.Collections;

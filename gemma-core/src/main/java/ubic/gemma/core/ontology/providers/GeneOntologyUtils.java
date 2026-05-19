@@ -1,6 +1,6 @@
 package ubic.gemma.core.ontology.providers;
 
-import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.core.ontology.basecode.model.OntologyTerm;
 import ubic.gemma.core.ontology.OntologyUtils;
 import ubic.gemma.model.common.description.Characteristic;
 
