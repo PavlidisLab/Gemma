@@ -89,6 +89,22 @@ public interface AuditTrailService extends BaseImmutableService<AuditTrail> {
     @Secured({ "GROUP_AGENT" })
     AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, @Nullable String note, @Nullable String detail, Date performedDate );
 
+    /**
+     * Add an update audit event of a specific type, attaching a JSON payload
+     * string.
+     * <p>
+     * Phase A of {@code AUDIT_SYSTEM_AUDIT.md}: used by
+     * {@code AuditedAspect} when an {@code @Audited}-annotated method
+     * declared an {@code AuditEventPayload} parameter. The string is stored
+     * verbatim in {@code AUDIT_EVENT.PAYLOAD} (MySQL JSON / H2 CLOB) without
+     * any further validation.
+     *
+     * @param payloadJson Jackson-serialised JSON, or {@code null} for events
+     *                    without structured data.
+     */
+    @Secured({ "GROUP_AGENT" })
+    AuditEvent addUpdateEventWithPayload( Auditable auditable, Class<? extends AuditEventType> type, @Nullable String note, @Nullable String payloadJson );
+
     @Override
     @Secured({ "GROUP_USER" })
     AuditTrail create( AuditTrail auditTrail );
