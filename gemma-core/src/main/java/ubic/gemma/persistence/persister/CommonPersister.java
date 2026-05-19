@@ -72,30 +72,30 @@ public abstract class CommonPersister extends AbstractPersister {
             // BioMaterial, FactorValue, etc. all declare cascade="all" on their
             // characteristics collection in HBM). Nothing to do here.
             return null;
-        } else if ( entity instanceof BibliographicReference ) {
-            return ( T ) this.persistBibliographicReference( ( BibliographicReference ) entity, caches );
-        } else if ( entity instanceof DatabaseEntry ) {
-            return ( T ) this.persistDatabaseEntry( ( DatabaseEntry ) entity, caches );
         } else {
             return super.doPersist( entity, caches );
         }
     }
 
-    protected void fillInDatabaseEntry( DatabaseEntry databaseEntry, Caches caches ) {
+    /**
+     * Phase 3 persister-retirement scaffold: takes a per-call
+     * {@code Map<String, ExternalDatabase>}. Used by in-tree callers
+     * ({@link GenomePersister}, {@link EeWriteServiceImpl},
+     * {@link ArrayDesignPersister}, and {@link #persistBibliographicReference})
+     * to dedupe ExternalDatabase lookups within one persist call.
+     */
+    protected void fillInDatabaseEntry( DatabaseEntry databaseEntry, Map<String, ExternalDatabase> externalDbCache ) {
         ExternalDatabase tempExternalDb = databaseEntry.getExternalDatabase();
         databaseEntry.setExternalDatabase( null );
-        ExternalDatabase persistedDb = this.persistExternalDatabase( tempExternalDb, caches );
+        ExternalDatabase persistedDb = this.persistExternalDatabase( tempExternalDb, externalDbCache );
         databaseEntry.setExternalDatabase( persistedDb );
         assert databaseEntry.getExternalDatabase().getId() != null;
     }
 
     /**
-     * Phase 3 persister-retirement scaffold: takes a local {@code Map<String, ExternalDatabase>}
-     * instead of pulling the cache out of the {@link Caches} value object. New callers in
-     * the persister chain (and in EE/AD/Genome write services) pass their own per-call map;
-     * the legacy {@link #persistExternalDatabase(ExternalDatabase, Caches)} below delegates here
-     * to preserve the {@link #fillInDatabaseEntry} / {@link #persistDatabaseEntry} paths until
-     * those are lifted too.
+     * Phase 3 persister-retirement scaffold: takes a per-call
+     * {@code Map<String, ExternalDatabase>}. New callers in the persister chain
+     * (and in EE/AD/Genome write services) pass their own per-call map.
      */
     protected ExternalDatabase persistExternalDatabase( ExternalDatabase database, Map<String, ExternalDatabase> externalDbCache ) {
         String name = database.getName();
@@ -113,25 +113,18 @@ public abstract class CommonPersister extends AbstractPersister {
     }
 
     /**
-     * In-CommonPersister convenience: pulls the per-call Map out of the
-     * {@link Caches} container for the {@link #fillInDatabaseEntry} /
-     * {@link #persistDatabaseEntry} paths. External callers (GenomePersister,
-     * ArrayDesignPersister, EeWriteServiceImpl) call
-     * {@link #persistExternalDatabase(ExternalDatabase, Map)} directly with
-     * their own per-call map; this overload is intentionally private.
+     * Phase 3 persister-retirement scaffold: takes a per-call
+     * {@code Map<String, ExternalDatabase>}. Used by GenomePersister to resolve
+     * BioSequence.sequenceDatabaseEntry (the only in-tree caller).
      */
-    private ExternalDatabase persistExternalDatabase( ExternalDatabase database, Caches caches ) {
-        return this.persistExternalDatabase( database, caches.getExternalDatabaseCache() );
-    }
-
-    private DatabaseEntry persistDatabaseEntry( DatabaseEntry entity, Caches caches ) {
+    protected DatabaseEntry persistDatabaseEntry( DatabaseEntry entity, Map<String, ExternalDatabase> externalDbCache ) {
         if ( entity.getExternalDatabase() == null ) {
             throw new IllegalArgumentException( String.format( "DatabaseEntry %s must have an associated external database.", entity ) );
         }
         // Resolve the ExternalDatabase first (BK lookup, cached), then persist the
         // entry itself. DatabaseEntry has no business key — accession is per-entry
         // and only unique within an external database, so we always create.
-        entity.setExternalDatabase( this.persistExternalDatabase( entity.getExternalDatabase(), caches ) );
+        entity.setExternalDatabase( this.persistExternalDatabase( entity.getExternalDatabase(), externalDbCache ) );
         return databaseEntryDao.create( entity );
     }
 
@@ -156,11 +149,20 @@ public abstract class CommonPersister extends AbstractPersister {
         return qt;
     }
 
-    private Object persistBibliographicReference( BibliographicReference reference, Caches caches ) {
+    /**
+     * Phase 3 persister-retirement scaffold: takes a per-call
+     * {@code Map<String, ExternalDatabase>}. Used by
+     * {@link EeWriteServiceImpl} to resolve primaryPublication and
+     * otherRelevantPublications within one EE-graph persist. External
+     * (top-level) callers go through
+     * {@code BibliographicReferenceService.findOrCreate} which resolves the XDB
+     * via a fresh map per call.
+     */
+    protected BibliographicReference persistBibliographicReference( BibliographicReference reference, Map<String, ExternalDatabase> externalDbCache ) {
         // BK is the pubAccession (a DatabaseEntry); resolve its ExternalDatabase first
         // so the BK lookup can match by accession string. BibliographicReference has
         // no static BusinessKey.find — the DAO-level find() queries by pubAccession.accession.
-        this.fillInDatabaseEntry( reference.getPubAccession(), caches );
+        this.fillInDatabaseEntry( reference.getPubAccession(), externalDbCache );
         BibliographicReference existing = bibliographicReferenceDao.find( reference );
         return existing != null ? existing : bibliographicReferenceDao.create( reference );
     }

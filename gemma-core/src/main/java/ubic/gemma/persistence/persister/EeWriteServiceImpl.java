@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
+import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.measurement.Unit;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -169,7 +170,9 @@ public class EeWriteServiceImpl implements EeWriteService {
         log.debug( ">>>>>>>>>> Persisting " + ee );
 
         if ( ee.getPrimaryPublication() != null ) {
-            ee.setPrimaryPublication( persister().doPersist( ee.getPrimaryPublication(), caches ) );
+            // Phase 3 lift: was doPersist (instanceof BibliographicReference arm); now a
+            // direct call to the per-call-Map persistBibliographicReference helper.
+            ee.setPrimaryPublication( persister().persistBibliographicReference( ee.getPrimaryPublication(), caches.getExternalDatabaseCache() ) );
         }
         if ( ee.getOwner() != null ) {
             // BK lookup via ContactDao.find (which delegates to BusinessKey.find(Session, Contact));
@@ -183,10 +186,19 @@ public class EeWriteServiceImpl implements EeWriteService {
         }
 
         ee.setQuantitationTypes( persister().doPersist( ee.getQuantitationTypes(), caches ) );
-        ee.setOtherRelevantPublications( persister().doPersist( ee.getOtherRelevantPublications(), caches ) );
+        if ( ee.getOtherRelevantPublications() != null ) {
+            // Phase 3 lift: was doPersist (instanceof BibliographicReference arm); now a
+            // direct call to the per-call-Map persistBibliographicReference helper.
+            Set<BibliographicReference> persistedOther = new HashSet<>();
+            for ( BibliographicReference pub : ee.getOtherRelevantPublications() ) {
+                persistedOther.add( persister().persistBibliographicReference( pub, caches.getExternalDatabaseCache() ) );
+            }
+            ee.setOtherRelevantPublications( persistedOther );
+        }
 
         if ( ee.getAccession() != null ) {
-            persister().fillInDatabaseEntry( ee.getAccession(), caches );
+            // Phase 3 lift: per-call Map; see fillInBioAssayAssociations note.
+            persister().fillInDatabaseEntry( ee.getAccession(), caches.getExternalDatabaseCache() );
         }
 
         // This has to come first and be persisted, so our FactorValues get persisted before we process the
@@ -484,7 +496,8 @@ public class EeWriteServiceImpl implements EeWriteService {
 
         log.debug( "Persisting " + entity );
         if ( entity.getExternalAccession() != null ) {
-            persister().fillInDatabaseEntry( entity.getExternalAccession(), caches );
+            // Phase 3 lift: per-call Map; see fillInBioAssayAssociations note.
+            persister().fillInDatabaseEntry( entity.getExternalAccession(), caches.getExternalDatabaseCache() );
         }
 
         log.debug( "db entry done" );

@@ -24,7 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.persistence.persister.Persister;
+import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,7 +44,7 @@ public class PubMedService {
     private static final Log log = LogFactory.getLog( PubMedService.class.getName() );
 
     @Autowired
-    private Persister persisterHelper;
+    private BibliographicReferenceService bibliographicReferenceService;
 
     /**
      * @param directory of XML files
@@ -69,7 +69,9 @@ public class PubMedService {
     private void loadFromFile( InputStream f ) throws IOException {
         Collection<BibliographicReference> refs = PubMedXMLParser.parse( f );
         PubMedService.log.info( "Persisting " + refs.size() );
-        persisterHelper.persist( refs );
+        for ( BibliographicReference ref : refs ) {
+            bibliographicReferenceService.findOrCreate( ref );
+        }
     }
 
 }
