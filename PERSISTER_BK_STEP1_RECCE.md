@@ -362,6 +362,77 @@ matches the BK).
 `mvn -pl gemma-core,gemma-cli,gemma-rest test-compile` clean after
 the change.
 
+#### 6.2.quater Persister sweep -- Protocol, AuditTrail, Unit (2026-05-19)
+
+Same pattern as 6.2.bis/tris, applied to three more `persistXxx`
+methods in `CommonPersister`. All landed on branch `persister-sweep`
+off `phase2-acl-migrate` HEAD `c8e212f969`.
+
+**Protocol** (consolidated, 1 caller):
+
+- Caller: `DifferentialExpressionAnalysisHelperServiceImpl.persistStub`
+  set `entity.setProtocol((Protocol) persisterHelper.persist(...))`.
+- `persistProtocol` was a pure pass-through (`protocolDao.create(p)`)
+  -- Protocols are intentionally not shared across analyses.
+- Inlined at call site as `entity.setProtocol(protocolDao.create(...))`.
+- Removed: `instanceof Protocol` arm, `persistProtocol` method,
+  `ProtocolDao` field + import from `CommonPersister`.
+
+**AuditTrail** (dead-removed, 0 callers):
+
+- No production caller of `persisterHelper.persist(AuditTrail)`.
+  Audit trails are always reached via the parent `Auditable`'s
+  `cascade=all` and never enter the dispatch chain.
+- The comment on `persistAuditTrail` said "preserved for the few
+  that do" -- there are none.
+- Removed: `instanceof AuditTrail` arm, `persistAuditTrail` method,
+  `AuditTrailDao` field + import.
+
+**Unit** (consolidated, 2 callers, both in `EeWriteServiceImpl`):
+
+- Callers: `fillInExperimentalFactorAssociations` and
+  `fillInFactorValueAssociations`, both calling
+  `persister().persistUnit(...)` for FactorValue measurement units.
+- The previous `persistUnit` bypassed `UnitDao.find` to call
+  `BusinessKey.find(session, unit)` directly -- but the DAO
+  delegates to the same call, so semantics are identical.
+- Added private `findOrCreateUnit(Unit)` helper in
+  `EeWriteServiceImpl` (`unitDao.find orElse unitDao.create`) and
+  routed both call sites through it.
+- Removed: `instanceof Unit` arm, `persistUnit` method, `UnitDao`
+  field, and the now-stale `Session` / `Unit` / `BusinessKey`
+  imports + Javadoc `{@link}` reference in `CommonPersister`.
+
+After all three, `CommonPersister.doPersist` is down to: `User`
+(throws), `QuantitationType`, `ExternalDatabase`, `Characteristic`
+(no-op), `BibliographicReference`, `DatabaseEntry` -- six arms,
+two of which (`User`, `Characteristic`) are degenerate. The
+remaining four all involve `Caches` (`ExternalDatabase`, `QT`,
+`BibRef` via `fillInDatabaseEntry`, `DatabaseEntry` likewise).
+Lifting them requires a decision on where the per-call
+ExternalDatabase / QT caches live post-persister -- see Sec 4.2
+above. Deferred to the deletion sweep.
+
+`mvn -pl gemma-core,gemma-cli,gemma-rest test-compile` clean after
+each commit (three commits, one per `persistXxx`).
+
+**Persister sweep -- methods still present in `CommonPersister`:**
+
+| method | callers | state | reason left |
+|---|---|---|---|
+| `persistExternalDatabase` | 5 in persisters + 4 in `GeneWriteServiceImpl` | left | Owns the per-call `ExternalDatabase` cache (`Caches.externalDatabaseCache`). Lifting needs cache-lifetime decision (Sec 4.2). |
+| `persistDatabaseEntry` (private) | dispatch + `fillInDatabaseEntry` | left | Pure create + cached external-DB resolve. Goes with `persistExternalDatabase`. |
+| `persistQuantitationType` | 1 (`EeWriteServiceImpl` L355) | left | Owns the per-experiment QT cache (`Caches.quantitationTypeCache`) -- intentionally per-EE; lifting requires the cache to follow. |
+| `persistBibliographicReference` (private) | 1 (`GeoServiceImpl` L387 via dispatch) | left | Calls `fillInDatabaseEntry` which uses the ExternalDatabase cache. Couples to the cache-lifetime question above. |
+
+All four remaining `persistXxx` in `CommonPersister` are blocked on
+the same call: where do the `Caches.externalDatabaseCache` and
+`Caches.quantitationTypeCache` live after the persister chain is
+deleted? That is exactly the question Sec 6.1 (`ExternalDatabase`
+`Caches` lift) was posed to answer. Recommend doing that pilot
+next before sweeping any of the four; otherwise each sweep would
+have to invent its own answer in isolation.
+
 ### 6.3 Smallest test of the new pattern
 
 After 6.2 lands, the acceptance check is:
