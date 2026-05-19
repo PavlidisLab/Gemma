@@ -51,6 +51,7 @@ import ubic.gemma.core.security.authorization.acl.AclEntryAfterInvocationValueOb
 import ubic.gemma.core.security.authorization.acl.AclEntryAfterInvocationValueObjectMapReadProvider;
 import ubic.gemma.core.security.authorization.acl.AclEntryAfterInvocationValueObjectReadProvider;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -251,10 +252,16 @@ public class SecurityConfig {
             @Qualifier("daoAuthenticationProvider") AuthenticationProvider daoAuthenticationProvider,
             @Qualifier("runAsAuthenticationProvider") AuthenticationProvider runAsAuthenticationProvider,
             @Qualifier("anonymousAuthenticationProvider") AuthenticationProvider anonymousAuthenticationProvider ) {
-        return new ProviderManager( Arrays.asList(
+        // Mutable ArrayList (not Arrays.asList) so that test scaffolding can append a
+        // TestingAuthenticationProvider at context load — TestAuthenticationUtilsImpl.afterPropertiesSet()
+        // calls ((ProviderManager) authenticationManager).getProviders().add(...). Spring Security's
+        // ProviderManager stores the list reference directly without defensive copy, so the legacy
+        // <s:authentication-manager> XML behaviour (which produced a mutable ManagedList) must be
+        // preserved here for tests to load.
+        return new ProviderManager( new ArrayList<>( Arrays.asList(
                 daoAuthenticationProvider,
                 runAsAuthenticationProvider,
-                anonymousAuthenticationProvider ) );
+                anonymousAuthenticationProvider ) ) );
     }
 
     /**
