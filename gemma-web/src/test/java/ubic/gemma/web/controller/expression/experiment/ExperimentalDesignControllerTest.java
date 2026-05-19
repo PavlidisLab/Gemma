@@ -1,6 +1,6 @@
 package ubic.gemma.web.controller.expression.experiment;
 
-import gemma.gsec.SecurityService;
+import ubic.gemma.core.security.gsec.SecurityService;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

@@ -14,7 +14,7 @@
  */
 package ubic.gemma.core.tasks.maintenance;
 
-import gemma.gsec.SecurityService;
+import ubic.gemma.core.security.gsec.SecurityService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;

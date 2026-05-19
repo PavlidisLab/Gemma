@@ -1,6 +1,6 @@
 package ubic.gemma.cli.authentication;
 
-import gemma.gsec.authentication.ManualAuthenticationService;
+import ubic.gemma.core.security.gsec.authentication.ManualAuthenticationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

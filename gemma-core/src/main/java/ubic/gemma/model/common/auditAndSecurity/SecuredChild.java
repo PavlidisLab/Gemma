@@ -1,6 +1,6 @@
 package ubic.gemma.model.common.auditAndSecurity;
 
-import gemma.gsec.acl.domain.AclObjectIdentity;
+import ubic.gemma.core.security.gsec.acl.domain.AclObjectIdentity;
 
 import org.springframework.lang.Nullable;
 import jakarta.persistence.Transient;
@@ -9,7 +9,7 @@ import jakarta.persistence.Transient;
  *
  * @param <OT> type of the security owner
  */
-public interface SecuredChild<OT extends Securable> extends Securable, gemma.gsec.model.SecuredChild {
+public interface SecuredChild<OT extends Securable> extends Securable, ubic.gemma.core.security.gsec.model.SecuredChild {
 
     /**
      * Obtain the security owner of this secured child.

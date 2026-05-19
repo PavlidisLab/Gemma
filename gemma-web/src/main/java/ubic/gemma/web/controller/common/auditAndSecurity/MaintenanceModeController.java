@@ -18,7 +18,7 @@
  */
 package ubic.gemma.web.controller.common.auditAndSecurity;
 
-import gemma.gsec.util.SecurityUtil;
+import ubic.gemma.core.security.gsec.util.SecurityUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;

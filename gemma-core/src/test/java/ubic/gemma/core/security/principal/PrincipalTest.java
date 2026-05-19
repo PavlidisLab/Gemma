@@ -18,7 +18,7 @@
  */
 package ubic.gemma.core.security.principal;
 
-import gemma.gsec.authentication.UserDetailsImpl;
+import ubic.gemma.core.security.gsec.authentication.UserDetailsImpl;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;

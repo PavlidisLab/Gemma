@@ -1,7 +1,7 @@
 package ubic.gemma.persistence.service.common.description;
 
-import gemma.gsec.acl.domain.AclObjectIdentity;
-import gemma.gsec.util.SecurityUtil;
+import ubic.gemma.core.security.gsec.acl.domain.AclObjectIdentity;
+import ubic.gemma.core.security.gsec.util.SecurityUtil;
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metadata.ClassMetadata;

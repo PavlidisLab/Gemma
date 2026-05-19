@@ -15,7 +15,7 @@
  */
 package ubic.gemma.core.security.authorization.acl;
 
-import gemma.gsec.acl.domain.AclService;
+import ubic.gemma.core.security.gsec.acl.domain.AclService;
 import org.hibernate.Session;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.AuthorizationServiceException;
@@ -39,7 +39,7 @@ import java.util.stream.Stream;
  * closes the session when the returned stream is closed.
  * <p>
  * Phase 3 AfterInvocation Phase B port: verbatim port of
- * {@code gemma.gsec.acl.afterinvocation.AclEntryAfterInvocationStreamFilteringProvider} into gemma-core so the
+ * {@code ubic.gemma.core.security.gsec.acl.afterinvocation.AclEntryAfterInvocationStreamFilteringProvider} into gemma-core so the
  * AfterInvocation provider chain no longer depends on the gsec class. Note this provider requires the gsec
  * {@link AclService} subtype (not just the stock Spring Security {@code AclService}) because it needs the
  * {@code openSession()} / {@code readAclById(oid, session)} extension methods — that gsec class is part of the ACL

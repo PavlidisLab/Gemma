@@ -1,12 +1,12 @@
 package ubic.gemma.core.util.test;
 
-import gemma.gsec.acl.AclAuthorizationStrategyImpl;
-import gemma.gsec.acl.AclSidRetrievalStrategyImpl;
-import gemma.gsec.acl.ObjectIdentityRetrievalStrategyImpl;
-import gemma.gsec.acl.domain.AclDao;
-import gemma.gsec.acl.domain.AclDaoImpl;
-import gemma.gsec.acl.domain.AclService;
-import gemma.gsec.acl.domain.AclServiceImpl;
+import ubic.gemma.core.security.gsec.acl.AclAuthorizationStrategyImpl;
+import ubic.gemma.core.security.gsec.acl.AclSidRetrievalStrategyImpl;
+import ubic.gemma.core.security.gsec.acl.ObjectIdentityRetrievalStrategyImpl;
+import ubic.gemma.core.security.gsec.acl.domain.AclDao;
+import ubic.gemma.core.security.gsec.acl.domain.AclDaoImpl;
+import ubic.gemma.core.security.gsec.acl.domain.AclService;
+import ubic.gemma.core.security.gsec.acl.domain.AclServiceImpl;
 import org.flywaydb.core.Flyway;
 import org.h2.Driver;
 import org.hibernate.SessionFactory;

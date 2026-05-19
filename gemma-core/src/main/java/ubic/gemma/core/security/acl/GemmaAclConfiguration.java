@@ -10,7 +10,7 @@
  */
 package ubic.gemma.core.security.acl;
 
-import gemma.gsec.acl.domain.AclService;
+import ubic.gemma.core.security.gsec.acl.domain.AclService;
 import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.Cache;
@@ -335,7 +335,7 @@ public class GemmaAclConfiguration {
         /**
          * Re-key the result map by the caller's original ObjectIdentity instances. Spring Security's
          * lookup builds Map keys using {@link org.springframework.security.acls.domain.ObjectIdentityImpl}
-         * from DB rows; callers passing in gsec's {@link gemma.gsec.acl.domain.AclObjectIdentity} get
+         * from DB rows; callers passing in gsec's {@link ubic.gemma.core.security.gsec.acl.domain.AclObjectIdentity} get
          * back a map whose keys won't satisfy {@code result.get(originalOid)} because of the
          * type-strict equals on both sides. Map each caller-supplied OID to the Acl that lives under
          * its normalized counterpart in the delegate's result.
@@ -356,7 +356,7 @@ public class GemmaAclConfiguration {
         /**
          * Spring Security's {@link org.springframework.security.acls.domain.ObjectIdentityImpl#equals}
          * and {@code hashCode} are not symmetric with gsec's
-         * {@link gemma.gsec.acl.domain.AclObjectIdentity}: ObjectIdentityImpl#equals does an
+         * {@link ubic.gemma.core.security.gsec.acl.domain.AclObjectIdentity}: ObjectIdentityImpl#equals does an
          * {@code instanceof ObjectIdentityImpl} check (returns false for AclObjectIdentity), and its
          * hashCode formula (31*type + identifier) differs from AclObjectIdentity's
          * Objects.hash(type, identifier). BasicLookupStrategy returns a

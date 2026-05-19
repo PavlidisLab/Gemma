@@ -120,7 +120,7 @@ public class MethodSecurityConfig extends GlobalMethodSecurityConfiguration {
             // afterAclCompositeSequenceCollectionRead and afterAclDataVectorCollectionRead are
             //   Gemma-class beans whose base classes were ported into gemma-core in Phase B (the
             //   ByAssociation / CollectionFiltering provider hierarchy now lives in
-            //   ubic.gemma.core.security.authorization.acl, not gemma.gsec.acl.afterinvocation).
+            //   ubic.gemma.core.security.authorization.acl, not ubic.gemma.core.security.gsec.acl.afterinvocation).
             //   Same bean ids — the wiring contract is unchanged.
             "afterAclCompositeSequenceCollectionRead", // Phase B — bulk fetch by ArrayDesign (Gemma base class)
             "afterAclDataVectorCollectionRead", // Phase B — bulk fetch by ExpressionExperiment (Gemma base class)

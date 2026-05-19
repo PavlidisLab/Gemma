@@ -1,6 +1,6 @@
 package ubic.gemma.rest;
 
-import gemma.gsec.SecurityService;
+import ubic.gemma.core.security.gsec.SecurityService;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;

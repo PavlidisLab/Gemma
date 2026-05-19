@@ -26,7 +26,7 @@ import java.util.Set;
 /**
  * A user of the software system, who is authenticated.
  */
-public class User extends Person implements gemma.gsec.model.User {
+public class User extends Person implements ubic.gemma.core.security.gsec.model.User {
 
     private String userName;
     private String password;

@@ -22,11 +22,11 @@
 		<property name="roleHierarchy" ref="roleHierarchy"/>
 	</bean>
 
-	<bean id="ajaxAuthenticationSuccessHandler" class="gemma.gsec.authentication.AjaxAuthenticationSuccessHandler">
+	<bean id="ajaxAuthenticationSuccessHandler" class="ubic.gemma.core.security.gsec.authentication.AjaxAuthenticationSuccessHandler">
 		<property name="alwaysUseDefaultTargetUrl" value="false"/>
 	</bean>
 
-	<bean id="ajaxAuthenticationFailureHandler" class="gemma.gsec.authentication.AjaxAuthenticationFailureHandler">
+	<bean id="ajaxAuthenticationFailureHandler" class="ubic.gemma.core.security.gsec.authentication.AjaxAuthenticationFailureHandler">
 		<property name="defaultFailureUrl" value="/login.jsp"/>
 	</bean>
 

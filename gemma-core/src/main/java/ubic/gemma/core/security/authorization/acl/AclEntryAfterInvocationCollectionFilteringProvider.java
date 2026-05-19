@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
  * to bulk-fetch ACLs for every element of the returned collection in a single query.
  * <p>
  * Phase 3 AfterInvocation Phase B port: this class is a verbatim port of
- * {@code gemma.gsec.acl.afterinvocation.AclEntryAfterInvocationCollectionFilteringProvider}
+ * {@code ubic.gemma.core.security.gsec.acl.afterinvocation.AclEntryAfterInvocationCollectionFilteringProvider}
  * into gemma-core so the AfterInvocation provider chain has no remaining runtime dependency
  * on the gsec class. Behaviorally identical; the Gemma subclasses
  * ({@link AclEntryAfterInvocationCompositeSequenceCollectionByArrayDesignFilteringProvider},

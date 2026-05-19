@@ -18,7 +18,7 @@
  */
 package ubic.gemma.web.taglib.expression.experiment;
 
-import gemma.gsec.util.SecurityUtil;
+import ubic.gemma.core.security.gsec.util.SecurityUtil;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;

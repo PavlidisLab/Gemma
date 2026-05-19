@@ -119,7 +119,7 @@ import java.util.List;
  */
 @Configuration
 @EnableAspectJAutoProxy
-@ImportResource("classpath:gemma/gsec/applicationContext-*.xml")
+@ImportResource("classpath:ubic/gemma/core/security/gsec/applicationContext-*.xml")
 public class SecurityConfig {
 
     /**
@@ -388,7 +388,7 @@ public class SecurityConfig {
             SidRetrievalStrategy sidRetrievalStrategy ) {
         AclEntryAfterInvocationQuietReadProvider p =
                 new AclEntryAfterInvocationQuietReadProvider( aclService, ADMIN_OR_READ );
-        p.setProcessDomainObjectClass( gemma.gsec.model.Securable.class );
+        p.setProcessDomainObjectClass( ubic.gemma.core.security.gsec.model.Securable.class );
         return configureRetrievalStrategies( p, objectIdentityRetrievalStrategy, sidRetrievalStrategy );
     }
 
@@ -406,7 +406,7 @@ public class SecurityConfig {
             SidRetrievalStrategy sidRetrievalStrategy ) {
         AclEntryAfterInvocationValueObjectReadProvider p =
                 new AclEntryAfterInvocationValueObjectReadProvider( aclService, READ_ONLY );
-        p.setProcessDomainObjectClass( gemma.gsec.model.SecureValueObject.class );
+        p.setProcessDomainObjectClass( ubic.gemma.core.security.gsec.model.SecureValueObject.class );
         return configureRetrievalStrategies( p, objectIdentityRetrievalStrategy, sidRetrievalStrategy );
     }
 
@@ -423,7 +423,7 @@ public class SecurityConfig {
             SidRetrievalStrategy sidRetrievalStrategy ) {
         AclEntryAfterInvocationValueObjectCollectionReadProvider p =
                 new AclEntryAfterInvocationValueObjectCollectionReadProvider( aclService, READ_ONLY );
-        p.setProcessDomainObjectClass( gemma.gsec.model.SecureValueObject.class );
+        p.setProcessDomainObjectClass( ubic.gemma.core.security.gsec.model.SecureValueObject.class );
         return configureRetrievalStrategies( p, objectIdentityRetrievalStrategy, sidRetrievalStrategy );
     }
 
@@ -439,7 +439,7 @@ public class SecurityConfig {
             SidRetrievalStrategy sidRetrievalStrategy ) {
         AclEntryAfterInvocationValueObjectMapReadProvider p =
                 new AclEntryAfterInvocationValueObjectMapReadProvider( aclService, READ_ONLY );
-        p.setProcessDomainObjectClass( gemma.gsec.model.SecureValueObject.class );
+        p.setProcessDomainObjectClass( ubic.gemma.core.security.gsec.model.SecureValueObject.class );
         return configureRetrievalStrategies( p, objectIdentityRetrievalStrategy, sidRetrievalStrategy );
     }
 
@@ -454,7 +454,7 @@ public class SecurityConfig {
             SidRetrievalStrategy sidRetrievalStrategy ) {
         AclEntryAfterInvocationOwnedCollectionFilteringProvider p =
                 new AclEntryAfterInvocationOwnedCollectionFilteringProvider( aclService, ADMIN_OR_WRITE );
-        p.setProcessDomainObjectClass( gemma.gsec.model.Securable.class );
+        p.setProcessDomainObjectClass( ubic.gemma.core.security.gsec.model.Securable.class );
         return configureRetrievalStrategies( p, objectIdentityRetrievalStrategy, sidRetrievalStrategy );
     }
 
@@ -469,7 +469,7 @@ public class SecurityConfig {
             SidRetrievalStrategy sidRetrievalStrategy ) {
         AclEntryAfterInvocationPrivateCollectionFilteringProvider p =
                 new AclEntryAfterInvocationPrivateCollectionFilteringProvider( aclService, ADMIN_OR_WRITE_OR_READ );
-        p.setProcessDomainObjectClass( gemma.gsec.model.Securable.class );
+        p.setProcessDomainObjectClass( ubic.gemma.core.security.gsec.model.Securable.class );
         return configureRetrievalStrategies( p, objectIdentityRetrievalStrategy, sidRetrievalStrategy );
     }
 
@@ -482,12 +482,12 @@ public class SecurityConfig {
             // gsec's AclService (not Spring's) — the Stream filter constructor wants the
             // gsec interface specifically. The aclService bean from GemmaAclConfiguration
             // is a GsecAclServiceAdapter which implements both interfaces.
-            @Qualifier("aclService") gemma.gsec.acl.domain.AclService aclService,
+            @Qualifier("aclService") ubic.gemma.core.security.gsec.acl.domain.AclService aclService,
             ObjectIdentityRetrievalStrategy objectIdentityRetrievalStrategy,
             SidRetrievalStrategy sidRetrievalStrategy ) {
         AclEntryAfterInvocationStreamFilteringProvider p =
                 new AclEntryAfterInvocationStreamFilteringProvider( aclService, ADMIN_OR_READ );
-        p.setProcessDomainObjectClass( gemma.gsec.model.Securable.class );
+        p.setProcessDomainObjectClass( ubic.gemma.core.security.gsec.model.Securable.class );
         return configureRetrievalStrategies( p, objectIdentityRetrievalStrategy, sidRetrievalStrategy );
     }
 

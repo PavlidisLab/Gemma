@@ -11,8 +11,8 @@
  */
 package ubic.gemma.core.security.acl;
 
-import gemma.gsec.acl.AclEventListener;
-import gemma.gsec.acl.BaseAclAdvice;
+import ubic.gemma.core.security.gsec.acl.AclEventListener;
+import ubic.gemma.core.security.gsec.acl.BaseAclAdvice;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.SessionFactory;

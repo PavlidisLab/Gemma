@@ -1,6 +1,6 @@
 package ubic.gemma.persistence.service.common.auditAndSecurity.curation;
 
-import gemma.gsec.util.SecurityUtil;
+import ubic.gemma.core.security.gsec.util.SecurityUtil;
 import org.hibernate.SessionFactory;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;

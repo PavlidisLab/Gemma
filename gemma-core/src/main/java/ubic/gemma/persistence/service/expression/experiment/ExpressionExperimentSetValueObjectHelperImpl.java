@@ -37,7 +37,7 @@
 
 package ubic.gemma.persistence.service.expression.experiment;
 
-import gemma.gsec.SecurityService;
+import ubic.gemma.core.security.gsec.SecurityService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;

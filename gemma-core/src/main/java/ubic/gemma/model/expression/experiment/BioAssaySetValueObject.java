@@ -1,6 +1,6 @@
 package ubic.gemma.model.expression.experiment;
 
-import gemma.gsec.model.SecureValueObject;
+import ubic.gemma.core.security.gsec.model.SecureValueObject;
 import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 

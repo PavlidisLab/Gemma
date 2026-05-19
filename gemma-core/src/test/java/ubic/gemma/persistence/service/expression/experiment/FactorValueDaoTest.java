@@ -1,6 +1,6 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
-import gemma.gsec.acl.domain.AclObjectIdentity;
+import ubic.gemma.core.security.gsec.acl.domain.AclObjectIdentity;
 import org.hibernate.SessionFactory;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;

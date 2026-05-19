@@ -18,10 +18,10 @@
  */
 package ubic.gemma.web.controller.common.auditAndSecurity;
 
-import gemma.gsec.AuthorityConstants;
-import gemma.gsec.SecurityService;
-import gemma.gsec.authentication.UserDetailsImpl;
-import gemma.gsec.util.SecurityUtil;
+import ubic.gemma.core.security.gsec.AuthorityConstants;
+import ubic.gemma.core.security.gsec.SecurityService;
+import ubic.gemma.core.security.gsec.authentication.UserDetailsImpl;
+import ubic.gemma.core.security.gsec.util.SecurityUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

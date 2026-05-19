@@ -18,7 +18,7 @@
  */
 package ubic.gemma.web.controller.common.auditAndSecurity;
 
-import gemma.gsec.authentication.UserDetailsImpl;
+import ubic.gemma.core.security.gsec.authentication.UserDetailsImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;

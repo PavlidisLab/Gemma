@@ -18,10 +18,10 @@
  */
 package ubic.gemma.core.security.authorization.acl;
 
-import gemma.gsec.SecurityService;
-import gemma.gsec.acl.domain.AclObjectIdentity;
-import gemma.gsec.acl.domain.AclService;
-import gemma.gsec.authentication.UserDetailsImpl;
+import ubic.gemma.core.security.gsec.SecurityService;
+import ubic.gemma.core.security.gsec.acl.domain.AclObjectIdentity;
+import ubic.gemma.core.security.gsec.acl.domain.AclService;
+import ubic.gemma.core.security.gsec.authentication.UserDetailsImpl;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -112,7 +112,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
         aclTestUtils.checkHasAces( ad );
 
         Sid owner = securityService.getOwner( ad );
-        assertEquals( "administrator", gemma.gsec.acl.domain.Sids.principalName( owner ) );
+        assertEquals( "administrator", ubic.gemma.core.security.gsec.acl.domain.Sids.principalName( owner ) );
 
         arrayDesignService.remove( ad );
 
@@ -144,10 +144,10 @@ public class AclAdviceTest extends BaseSpringContextTest {
         aclTestUtils.checkHasAces( ad );
 
         Sid owner = securityService.getOwner( ad );
-        assertEquals( userName, gemma.gsec.acl.domain.Sids.principalName( owner ) );
+        assertEquals( userName, ubic.gemma.core.security.gsec.acl.domain.Sids.principalName( owner ) );
 
         arrayDesignService.update( ad );
-        assertEquals( userName, gemma.gsec.acl.domain.Sids.principalName( owner ) );
+        assertEquals( userName, ubic.gemma.core.security.gsec.acl.domain.Sids.principalName( owner ) );
 
         arrayDesignService.remove( ad );
 

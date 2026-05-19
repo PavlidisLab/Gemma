@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+   "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!--
+   Mapped against Spring Security 6's canonical acl_entry table. Two columns
+   (audit_success, audit_failure) exist in the schema but aren't surfaced as
+   properties yet — gsec's entry model doesn't use them. They default to 0.
+-->
+<hibernate-mapping>
+   <class name="ubic.gemma.core.security.gsec.acl.domain.AclEntry" table="acl_entry" mutable="false">
+      <cache usage="read-write"/>
+      <id name="id" type="java.lang.Long" unsaved-value="null">
+         <column name="id" sql-type="BIGINT"/>
+         <generator class="native">
+         </generator>
+      </id>
+      <property name="granting" type="java.lang.Boolean">
+         <column name="granting" not-null="true" unique="false" sql-type="BIT"/>
+      </property>
+      <property name="mask" type="java.lang.Integer">
+         <column name="mask" not-null="true" unique="false" sql-type="INTEGER"/>
+      </property>
+      <property name="aceOrder" type="java.lang.Integer">
+         <column name="ace_order" not-null="true" unique="false" sql-type="INTEGER"/>
+      </property>
+      <many-to-one name="sid" class="ubic.gemma.core.security.gsec.acl.domain.AclSid" lazy="false" fetch="select" access="field">
+         <column name="sid" not-null="true" sql-type="BIGINT"/>
+      </many-to-one>
+   </class>
+</hibernate-mapping>

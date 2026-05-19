@@ -1,6 +1,6 @@
 package ubic.gemma.core.security;
 
-import gemma.gsec.util.SecurityUtil;
+import ubic.gemma.core.security.gsec.util.SecurityUtil;
 import org.junit.Test;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.test.context.support.WithMockUser;

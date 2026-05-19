@@ -162,7 +162,7 @@ public class DataSourceConfig {
     @Lazy
     @Profile({ "production", "dev" })
     public ManualAuthenticationServiceBasedSecurityContextFactory groupAgentSecurityContext(
-            gemma.gsec.authentication.ManualAuthenticationService manualAuthenticationService,
+            ubic.gemma.core.security.gsec.authentication.ManualAuthenticationService manualAuthenticationService,
             @Value("${gemma.agent.userName}") String userName,
             @Value("${gemma.agent.password}") String password ) {
         ManualAuthenticationServiceBasedSecurityContextFactory factory =
@@ -182,7 +182,7 @@ public class DataSourceConfig {
     @Lazy
     @Profile({ "test", "testdb" })
     public ManualAuthenticationServiceBasedSecurityContextFactory testGroupAgentSecurityContext(
-            gemma.gsec.authentication.ManualAuthenticationService manualAuthenticationService,
+            ubic.gemma.core.security.gsec.authentication.ManualAuthenticationService manualAuthenticationService,
             @Value("${gemma.testdb.agent.userName}") String userName,
             @Value("${gemma.testdb.agent.password}") String password ) {
         ManualAuthenticationServiceBasedSecurityContextFactory factory =

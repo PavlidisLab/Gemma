@@ -1,6 +1,6 @@
 package ubic.gemma.cli.authentication;
 
-import gemma.gsec.authentication.ManualAuthenticationService;
+import ubic.gemma.core.security.gsec.authentication.ManualAuthenticationService;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;

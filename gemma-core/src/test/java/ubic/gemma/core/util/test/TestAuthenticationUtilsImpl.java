@@ -1,7 +1,7 @@
 package ubic.gemma.core.util.test;
 
-import gemma.gsec.AuthorityConstants;
-import gemma.gsec.authentication.UserDetailsImpl;
+import ubic.gemma.core.security.gsec.AuthorityConstants;
+import ubic.gemma.core.security.gsec.authentication.UserDetailsImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.InitializingBean;

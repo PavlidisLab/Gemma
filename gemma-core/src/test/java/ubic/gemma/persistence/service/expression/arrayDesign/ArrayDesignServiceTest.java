@@ -18,7 +18,7 @@
  */
 package ubic.gemma.persistence.service.expression.arrayDesign;
 
-import gemma.gsec.SecurityService;
+import ubic.gemma.core.security.gsec.SecurityService;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.hibernate.Hibernate;
 import org.junit.After;

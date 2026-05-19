@@ -1,4 +1,4 @@
 package ubic.gemma.model.common.auditAndSecurity;
 
-public interface SecuredNotChild extends Securable, gemma.gsec.model.SecuredNotChild {
+public interface SecuredNotChild extends Securable, ubic.gemma.core.security.gsec.model.SecuredNotChild {
 }
