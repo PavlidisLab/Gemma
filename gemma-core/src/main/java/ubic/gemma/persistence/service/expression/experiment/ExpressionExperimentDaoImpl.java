@@ -4281,6 +4281,13 @@ public class ExpressionExperimentDaoImpl
         ee = ensureEeInSession( ee );
         Collection<QuantitationType> qtsToRemove;
         Collection<BioAssayDimension> dimensions;
+        // Hibernate 6: vectors removed from the in-memory collection (or whose DB rows are bulk-deleted
+        // below) remain managed in the PersistenceContext and still reference their QT. The subsequent
+        // session.delete(qt) puts the QT into DELETING state, and the next autoflush walks those orphan
+        // vectors via ACTION_CHECK_ON_FLUSH and throws TransientObjectException. Capture them here so
+        // we can evict() after the bulk delete (see HIBERNATE6_CASCADE_AUDIT.md HIGH #1 +
+        // notable_cases.md "ExpressionExperimentDaoTest 18 TransientObjectException failures").
+        Collection<RawExpressionDataVector> vectorsToEvict;
         if ( Hibernate.isInitialized( ee.getRawExpressionDataVectors() ) ) {
             qtsToRemove = ee.getRawExpressionDataVectors().stream()
                     .map( DataVector::getQuantitationType )
@@ -4292,6 +4299,7 @@ public class ExpressionExperimentDaoImpl
             } else {
                 dimensions = null;
             }
+            vectorsToEvict = new ArrayList<>( ee.getRawExpressionDataVectors() );
             ee.getRawExpressionDataVectors().clear();
         } else {
             //noinspection unchecked
@@ -4308,6 +4316,7 @@ public class ExpressionExperimentDaoImpl
             } else {
                 dimensions = null;
             }
+            vectorsToEvict = Collections.emptyList();
         }
         getSessionFactory().getCurrentSession()
                 .createQuery( "delete from RawExpressionDataVectorNumberOfCells v where v.vector in (select vector from RawExpressionDataVector vector where vector.expressionExperiment = :ee)" )
@@ -4317,9 +4326,16 @@ public class ExpressionExperimentDaoImpl
                 .createQuery( "delete from RawExpressionDataVector v where v.expressionExperiment = :ee" )
                 .setParameter( "ee", ee )
                 .executeUpdate();
+        // Evict the now-stale vectors from the PersistenceContext: their DB rows are gone, but the
+        // managed instances still hold many-to-one refs to the QTs we're about to delete.
+        for ( RawExpressionDataVector v : vectorsToEvict ) {
+            getSessionFactory().getCurrentSession().evict( v );
+        }
         // remove QTs and unused dimensions
         removeQts( ee, qtsToRemove );
-        update( ee );
+        // No update(ee) here: ee is managed (via ensureEeInSession), collection mutations are
+        // tracked and will flush automatically. The HB5-era merge() re-cascaded through the
+        // partially-deleted QT/vector graph and was the proximate trigger of the HB6 explosion.
         if ( !keepDimensions ) {
             removeUnusedDimensions( ee, dimensions );
         }
@@ -4335,6 +4351,8 @@ public class ExpressionExperimentDaoImpl
         Assert.notNull( qt.getId(), "Quantitation type must be persistent" );
         ee = ensureEeInSession( ee );
         Collection<BioAssayDimension> dimensions;
+        // see comment in removeAllRawDataVectors — capture orphaned vectors for post-bulk-delete eviction
+        Collection<RawExpressionDataVector> vectorsToEvict = Collections.emptyList();
         if ( Hibernate.isInitialized( ee.getRawExpressionDataVectors() ) ) {
             Assert.isTrue( ee.getQuantitationTypes().contains( qt ) || ee.getRawExpressionDataVectors().stream().anyMatch( v -> v.getQuantitationType().equals( qt ) ),
                     "The provided quantitation type must belong to at least one raw vector of the experiment." );
@@ -4346,6 +4364,9 @@ public class ExpressionExperimentDaoImpl
             } else {
                 dimensions = null;
             }
+            vectorsToEvict = ee.getRawExpressionDataVectors().stream()
+                    .filter( v -> v.getQuantitationType().equals( qt ) )
+                    .collect( Collectors.toList() );
             ee.getRawExpressionDataVectors().removeIf( vec -> vec.getQuantitationType().equals( qt ) );
         } else if ( !keepDimension ) {
             Assert.isTrue( ee.getQuantitationTypes().contains( qt ) || getRawDataVectorCount( ee, qt ) > 0,
@@ -4369,8 +4390,11 @@ public class ExpressionExperimentDaoImpl
                 .setParameter( "ee", ee )
                 .setParameter( "qt", qt )
                 .executeUpdate();
+        for ( RawExpressionDataVector v : vectorsToEvict ) {
+            getSessionFactory().getCurrentSession().evict( v );
+        }
         removeQts( ee, Collections.singleton( qt ) );
-        update( ee );
+        // No update(ee): ee is managed, mutations are tracked. See removeAllRawDataVectors.
         if ( !keepDimension ) {
             removeUnusedDimensions( ee, dimensions );
         }
@@ -4392,6 +4416,10 @@ public class ExpressionExperimentDaoImpl
                 .filter( v -> v.getQuantitationType().equals( qt ) )
                 .map( BulkExpressionDataVector::getBioAssayDimension )
                 .collect( Collectors.toSet() );
+        // Capture the old vectors so we can evict them after the bulk delete; see removeAllRawDataVectors.
+        List<RawExpressionDataVector> vectorsToEvict = ee.getRawExpressionDataVectors().stream()
+                .filter( v -> v.getQuantitationType().equals( qt ) )
+                .collect( Collectors.toList() );
         ee.getRawExpressionDataVectors().removeIf( v -> v.getQuantitationType().equals( qt ) );
         getSessionFactory().getCurrentSession()
                 .createQuery( "delete from RawExpressionDataVectorNumberOfCells v where v.vector in (select vector from RawExpressionDataVector vector where vector.expressionExperiment = :ee and vector.quantitationType = :qt)" )
@@ -4403,6 +4431,9 @@ public class ExpressionExperimentDaoImpl
                 .setParameter( "ee", ee )
                 .setParameter( "qt", qt )
                 .executeUpdate();
+        for ( RawExpressionDataVector v : vectorsToEvict ) {
+            getSessionFactory().getCurrentSession().evict( v );
+        }
         // in case it was attached to the previous vectors, but not the EE QTs
         if ( ee.getQuantitationTypes().add( qt ) ) {
             log.warn( qt + " was not attached to " + ee + ", but was associated to at least one of its replaced raw vectors, it will be added directly." );
@@ -4516,6 +4547,8 @@ public class ExpressionExperimentDaoImpl
 
         Collection<QuantitationType> qtsToRemove;
         Collection<BioAssayDimension> dimensions;
+        // see removeAllRawDataVectors for rationale
+        Collection<ProcessedExpressionDataVector> vectorsToEvict;
         if ( Hibernate.isInitialized( ee.getProcessedExpressionDataVectors() ) ) {
             // obtain QTs to remove directly from the vectors
             qtsToRemove = ee.getProcessedExpressionDataVectors().stream()
@@ -4524,6 +4557,7 @@ public class ExpressionExperimentDaoImpl
             dimensions = ee.getProcessedExpressionDataVectors().stream()
                     .map( BulkExpressionDataVector::getBioAssayDimension )
                     .collect( Collectors.toSet() );
+            vectorsToEvict = new ArrayList<>( ee.getProcessedExpressionDataVectors() );
             ee.getProcessedExpressionDataVectors().clear();
         } else {
             //noinspection unchecked
@@ -4538,6 +4572,7 @@ public class ExpressionExperimentDaoImpl
                             + "where v.expressionExperiment = :ee group by v.bioAssayDimension" )
                     .setParameter( "ee", ee )
                     .list();
+            vectorsToEvict = Collections.emptyList();
         }
 
         // this is not really allowed, but it might happen
@@ -4556,10 +4591,14 @@ public class ExpressionExperimentDaoImpl
                 .setParameter( "ee", ee )
                 .executeUpdate();
 
+        for ( ProcessedExpressionDataVector v : vectorsToEvict ) {
+            getSessionFactory().getCurrentSession().evict( v );
+        }
+
         // remove QTs and unused dimensions
         removeQts( ee, qtsToRemove );
 
-        update( ee );
+        // No update(ee): ee is managed, mutations are tracked. See removeAllRawDataVectors.
 
         if ( !keepDimensions ) {
             removeUnusedDimensions( ee, dimensions );
@@ -4592,6 +4631,8 @@ public class ExpressionExperimentDaoImpl
         if ( qtsToRemove.remove( newQt ) ) {
             log.info( newQt + " is being reused, will not remove it." );
         }
+        // Capture the old vectors so we can evict them after the bulk delete; see removeAllRawDataVectors.
+        List<ProcessedExpressionDataVector> vectorsToEvict = new ArrayList<>( ee.getProcessedExpressionDataVectors() );
         ee.getProcessedExpressionDataVectors().clear();
         getSessionFactory().getCurrentSession()
                 .createQuery( "delete from ProcessedExpressionDataVectorNumberOfCells v where v.vector in (select vector from ProcessedExpressionDataVector vector where vector.expressionExperiment = :ee)" )
@@ -4601,6 +4642,9 @@ public class ExpressionExperimentDaoImpl
                 .createQuery( "delete from ProcessedExpressionDataVector pv where pv.expressionExperiment = :ee" )
                 .setParameter( "ee", ee )
                 .executeUpdate();
+        for ( ProcessedExpressionDataVector v : vectorsToEvict ) {
+            getSessionFactory().getCurrentSession().evict( v );
+        }
         ee.getProcessedExpressionDataVectors().addAll( vectors );
         ee.setNumberOfDataVectors( vectors.size() );
         ee.getQuantitationTypes().add( newQt );
