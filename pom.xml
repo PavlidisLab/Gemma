@@ -1307,7 +1307,7 @@
 		are stubbed to return empty; reinstating real ontology / entity full-text search is a future
 		phase (likely on HS 7 or an external engine like OpenSearch).
 		-->
-		<gsec.version>0.0.23-RENOVATIONS-SNAPSHOT</gsec.version>
+		<gsec.version>0.0.24-RENOVATIONS-SNAPSHOT</gsec.version>
 		<!-- Spring Boot dependencies BOM (managed via dependencyManagement above). Boot 3.3.x
 		     line targets SF 6.1 + SS 6.3 + Hibernate 6.5. Gemma now runs SF 6.2 / SS 6.5 /
 		     HB 6.6 (the dM overrides for hibernate-core, hibernate-jcache, micrometer, jackson,
