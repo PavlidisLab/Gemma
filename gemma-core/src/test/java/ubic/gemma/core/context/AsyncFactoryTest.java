@@ -1,7 +1,7 @@
 package ubic.gemma.core.context;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Bean;
@@ -10,7 +10,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.util.StopWatch;
 import ubic.gemma.core.util.concurrent.Executors;
-import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.BaseTest5;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
 
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @ContextConfiguration
-public class AsyncFactoryTest extends BaseTest {
+public class AsyncFactoryTest extends BaseTest5 {
 
     public static class MyService {
         public MyService() throws InterruptedException {
@@ -63,7 +63,7 @@ public class AsyncFactoryTest extends BaseTest {
     public void testGetBeanAsync() {
         Future<MyService> future = beanFactory.getBean( MyServiceFactory.class ).getObject();
         Future<MyService> future2 = beanFactory.getBean( MyServiceFactory.class ).getObject();
-        Assert.assertNotSame( future, future2 );
+        Assertions.assertNotSame( future, future2 );
     }
 
     @Test
@@ -80,7 +80,7 @@ public class AsyncFactoryTest extends BaseTest {
         }
         stopWatch.stop();
         // loading them all sequentially would take 2s
-        Assert.assertTrue( stopWatch.getTotalTimeMillis() < 500 );
+        Assertions.assertTrue( stopWatch.getTotalTimeMillis() < 500 );
     }
 
     @Test
@@ -93,13 +93,13 @@ public class AsyncFactoryTest extends BaseTest {
         }
         executor.shutdown();
         // this should finish very quickly, but the future creation will still be pending
-        Assert.assertTrue( executor.awaitTermination( 5, TimeUnit.SECONDS ) );
+        Assertions.assertTrue( executor.awaitTermination( 5, TimeUnit.SECONDS ) );
         // cancel all pending creation
         factory.destroy();
         // wait after all the pending bean creation
         for ( Future<Future<MyService>> f : futures ) {
-            Assert.assertTrue( f.isDone() );
-            Assert.assertTrue( f.get().isDone() || f.get().isCancelled() );
+            Assertions.assertTrue( f.isDone() );
+            Assertions.assertTrue( f.get().isDone() || f.get().isCancelled() );
         }
     }
 
@@ -112,7 +112,7 @@ public class AsyncFactoryTest extends BaseTest {
         }
         factory.destroy();
         for ( Future<MyService> future : futures ) {
-            Assert.assertTrue( future.isCancelled() );
+            Assertions.assertTrue( future.isCancelled() );
         }
     }
 
@@ -120,6 +120,6 @@ public class AsyncFactoryTest extends BaseTest {
     public void testGetBean() throws ExecutionException, InterruptedException {
         MyService myService = beanFactory.getBean( MyServiceFactory.class ).getObject().get();
         MyService myService1 = beanFactory.getBean( MyServiceFactory.class ).getObject().get();
-        Assert.assertNotSame( myService, myService1 );
+        Assertions.assertNotSame( myService, myService1 );
     }
 }

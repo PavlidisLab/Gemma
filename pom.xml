@@ -835,6 +835,19 @@
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-core</artifactId>
 		</dependency>
+		<!--
+		Phase 3 JUnit 5 migration, base class step (Phase B0).
+		mockito-junit-jupiter ships MockitoExtension, which replaces the
+		JUnit 4 MockitoRule held by BaseSpringContextTest. Pulled into every
+		module so the new JUnit 5 parallel base classes
+		(BaseSpringContextTest5 et al.) can be referenced anywhere a JUnit 4
+		base class was previously used.
+		-->
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-junit-jupiter</artifactId>
+			<scope>test</scope>
+		</dependency>
 		<dependency>
 			<groupId>org.assertj</groupId>
 			<artifactId>assertj-core</artifactId>
