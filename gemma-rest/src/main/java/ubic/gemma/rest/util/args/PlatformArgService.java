@@ -3,15 +3,20 @@ package ubic.gemma.rest.util.args;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.util.Cursor;
+import ubic.gemma.persistence.util.CursorPage;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
+
+import org.springframework.lang.Nullable;
 
 @Service
 public class PlatformArgService extends AbstractEntityArgService<ArrayDesign, ArrayDesignService> {
@@ -24,6 +29,18 @@ public class PlatformArgService extends AbstractEntityArgService<ArrayDesign, Ar
         super( service );
         this.eeService = eeService;
         this.csService = csService;
+    }
+
+    /**
+     * Cursor-mode counterpart to {@link ArrayDesignService#loadValueObjects(Filters, Sort, int, int)}.
+     * Always sorts by ascending {@code id} (the primary key, indexed and unique) — see
+     * {@code CURSOR_PAGINATION_STEP1_PLAN.md} step 1c. The user's {@code ?filter=} arg
+     * still applies; the user's {@code ?sort=} arg is intentionally not honoured in cursor
+     * mode because the DAO currently restricts cursors to single-component id sorts
+     * (recce sec. 3.4 — to be lifted in phase B once the index audit is complete).
+     */
+    public CursorPage<ArrayDesignValueObject> getPlatformsByCursor( @Nullable Filters filters, @Nullable Cursor cursor, int limit ) {
+        return service.loadValueObjectsByCursor( filters, service.getSort( "id", Sort.Direction.ASC, Sort.NullMode.LAST ), cursor, limit );
     }
 
     /**
