@@ -11,8 +11,10 @@
  */
 package ubic.gemma.persistence.service.common.auditAndSecurity.curation;
 
+import org.springframework.lang.Nullable;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketPriority;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType;
 import ubic.gemma.persistence.service.BaseDao;
 
@@ -40,4 +42,23 @@ public interface TicketDao extends BaseDao<Ticket> {
      * of state. Used by curator dashboards.
      */
     List<Ticket> findAssignedTo( Contact assignee );
+
+    /**
+     * Paged, filtered list query for the REST surface (Phase B-2). All filter
+     * arguments are independently optional; passing {@code null} for each one
+     * disables that filter. Results are ordered by {@code updatedAt} desc.
+     *
+     * @param openOnly      if true, only OPEN/IN_PROGRESS tickets
+     * @param assigneeId    filter by current assignee {@link Contact#getId()} (nullable)
+     * @param priority      filter by priority (nullable)
+     * @param offset        first row to return (0-based)
+     * @param limit         max rows to return; values &lt;= 0 are treated as "no limit"
+     */
+    List<Ticket> findTickets( boolean openOnly, @Nullable Long assigneeId, @Nullable TicketPriority priority, int offset, int limit );
+
+    /**
+     * Count tickets matching the same filters as
+     * {@link #findTickets(boolean, Long, TicketPriority, int, int)}.
+     */
+    long countTickets( boolean openOnly, @Nullable Long assigneeId, @Nullable TicketPriority priority );
 }

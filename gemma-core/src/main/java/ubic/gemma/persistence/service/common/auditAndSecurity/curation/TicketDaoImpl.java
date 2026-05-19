@@ -13,9 +13,11 @@ package ubic.gemma.persistence.service.common.auditAndSecurity.curation;
 
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketPriority;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketState;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType;
 import ubic.gemma.persistence.service.AbstractDao;
@@ -59,5 +61,63 @@ public class TicketDaoImpl extends AbstractDao<Ticket> implements TicketDao {
                         "select t from Ticket t where t.assignee = :a order by t.updatedAt desc" )
                 .setParameter( "a", assignee )
                 .list();
+    }
+
+    @Override
+    public List<Ticket> findTickets( boolean openOnly, @Nullable Long assigneeId, @Nullable TicketPriority priority, int offset, int limit ) {
+        StringBuilder hql = new StringBuilder( "select t from Ticket t where 1=1" );
+        if ( openOnly ) {
+            hql.append( " and t.state in :openStates" );
+        }
+        if ( assigneeId != null ) {
+            hql.append( " and t.assignee.id = :assigneeId" );
+        }
+        if ( priority != null ) {
+            hql.append( " and t.priority = :priority" );
+        }
+        hql.append( " order by t.updatedAt desc" );
+        org.hibernate.query.Query<?> q = this.getSessionFactory().getCurrentSession().createQuery( hql.toString() );
+        if ( openOnly ) {
+            q.setParameterList( "openStates", Arrays.asList( TicketState.OPEN, TicketState.IN_PROGRESS ) );
+        }
+        if ( assigneeId != null ) {
+            q.setParameter( "assigneeId", assigneeId );
+        }
+        if ( priority != null ) {
+            q.setParameter( "priority", priority );
+        }
+        if ( offset > 0 ) {
+            q.setFirstResult( offset );
+        }
+        if ( limit > 0 ) {
+            q.setMaxResults( limit );
+        }
+        //noinspection unchecked
+        return ( List<Ticket> ) q.list();
+    }
+
+    @Override
+    public long countTickets( boolean openOnly, @Nullable Long assigneeId, @Nullable TicketPriority priority ) {
+        StringBuilder hql = new StringBuilder( "select count(t) from Ticket t where 1=1" );
+        if ( openOnly ) {
+            hql.append( " and t.state in :openStates" );
+        }
+        if ( assigneeId != null ) {
+            hql.append( " and t.assignee.id = :assigneeId" );
+        }
+        if ( priority != null ) {
+            hql.append( " and t.priority = :priority" );
+        }
+        org.hibernate.query.Query<?> q = this.getSessionFactory().getCurrentSession().createQuery( hql.toString() );
+        if ( openOnly ) {
+            q.setParameterList( "openStates", Arrays.asList( TicketState.OPEN, TicketState.IN_PROGRESS ) );
+        }
+        if ( assigneeId != null ) {
+            q.setParameter( "assigneeId", assigneeId );
+        }
+        if ( priority != null ) {
+            q.setParameter( "priority", priority );
+        }
+        return ( Long ) q.uniqueResult();
     }
 }

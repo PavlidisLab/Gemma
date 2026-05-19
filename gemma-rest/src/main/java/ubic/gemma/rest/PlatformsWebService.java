@@ -29,6 +29,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
@@ -85,6 +86,8 @@ public class PlatformsWebService {
     private CompositeSequenceArgService probeArgService;
     @Autowired
     private AccessDecisionManager accessDecisionManager;
+    @Autowired
+    private TicketsWebService ticketsWebService;
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -302,6 +305,20 @@ public class PlatformsWebService {
                 .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
                 .header( "Content-Disposition", "attachment; filename=\"" + ( download ? file.getFileName().toString() : FilenameUtils.removeExtension( file.getFileName().toString() ) ) + "\"" )
                 .build();
+    }
+
+    /**
+     * Retrieves the open curation tickets for a given platform.
+     */
+    @GET
+    @Path("/{platform}/tickets")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve the open curation tickets for a platform")
+    public ResponseDataObject<java.util.List<TicketValueObject>> getPlatformTickets(
+            @PathParam("platform") PlatformArg<?> platformArg
+    ) {
+        ArrayDesign ad = arrayDesignArgService.getEntity( platformArg );
+        return respond( ticketsWebService.openTicketsForArrayDesign( ad.getId() ) );
     }
 
     /**
