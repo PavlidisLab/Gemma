@@ -29,6 +29,7 @@ import ubic.gemma.core.loader.expression.sra.model.SraExperimentPackage;
 import ubic.gemma.core.loader.expression.sra.model.SraExperimentPackageSet;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
 import ubic.gemma.core.loader.util.mapper.BioAssayMapper;
+import ubic.gemma.core.loader.util.mapper.RenamingBioAssayMapperParser;
 import ubic.gemma.core.util.ProgressReporterFactory;
 import ubic.gemma.core.util.SimpleRetryPolicy;
 import ubic.gemma.core.util.concurrent.Executors;
@@ -612,7 +613,16 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
         for ( SingleCellDetector detector : detectors ) {
             try {
                 SingleCellDataLoader loader = detector.getSingleCellDataLoader( series, config );
-                loader.setBioAssayToSampleNameMapper( GEO_BIO_ASSAY_TO_SAMPLE_NAME_MATCHER );
+                BioAssayMapper mapper = GEO_BIO_ASSAY_TO_SAMPLE_NAME_MATCHER;
+                if ( config.getRenamingFile() != null ) {
+                    log.info( "Applying a sample renaming file " + config.getRenamingFile() + " to the sample name mapping strategy." );
+                    try {
+                        mapper = new RenamingBioAssayMapperParser( mapper ).parse( config.getRenamingFile() );
+                    } catch ( IOException e ) {
+                        throw new RuntimeException( "Failed to parse renaming file " + config.getRenamingFile() + ".", e );
+                    }
+                }
+                loader.setBioAssayToSampleNameMapper( mapper );
                 return loader;
             } catch ( UnsupportedOperationException e ) {
                 if ( firstUnsupported == null ) {

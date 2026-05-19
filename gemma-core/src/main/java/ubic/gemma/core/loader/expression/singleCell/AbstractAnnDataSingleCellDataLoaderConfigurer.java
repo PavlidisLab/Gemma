@@ -1,6 +1,9 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.lang3.Strings;
 import org.springframework.util.Assert;
 import ubic.gemma.core.loader.expression.singleCell.transform.*;
@@ -11,11 +14,14 @@ import ubic.gemma.core.loader.util.anndata.MissingEncodingAttributeException;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -156,13 +162,17 @@ public abstract class AbstractAnnDataSingleCellDataLoaderConfigurer implements S
         }
         if ( sampleColumn == null || ( cellTypeColumn == null && !ignoreCellTypeColumn ) ) {
             log.info( "Automatically detecting sample and/or cell type columns in AnnData file " + annDataFile + "..." );
+            Set<String> renamingKeys = loadRenamingKeys( config );
             for ( Dataframe.Column<?, ?> col : var ) {
                 if ( !col.getType().equals( String.class ) ) {
                     continue;
                 }
                 //noinspection unchecked
                 Dataframe.Column<?, String> strCol = ( Dataframe.Column<?, String> ) col;
-                if ( sampleColumn == null && isSampleNameColumn( strCol ) ) {
+                if ( sampleColumn == null && renamingKeys != null && columnMatchesRenamingKeys( strCol, renamingKeys ) ) {
+                    log.info( "Detected that '" + col.getName() + "' is the sample name column via renaming file." );
+                    sampleColumn = col.getName();
+                } else if ( sampleColumn == null && isSampleNameColumn( strCol ) ) {
                     log.info( "Detected that '" + col.getName() + "' is the sample name column." );
                     sampleColumn = col.getName();
                 }
@@ -311,9 +321,8 @@ public abstract class AbstractAnnDataSingleCellDataLoaderConfigurer implements S
     }
 
     private boolean hasGenes( Dataframe<?> df ) {
-        for ( Dataframe.Column<?, ?> column : df ) {
-            //noinspection unchecked
-            if ( column.getType().equals( String.class ) && isGeneColumn( ( Dataframe.Column<?, String> ) column ) ) {
+        for ( Dataframe.Column<?, String> column : iterateStringColumns( df ) ) {
+            if ( isGeneColumn( column ) ) {
                 return true;
             }
         }
@@ -327,9 +336,12 @@ public abstract class AbstractAnnDataSingleCellDataLoaderConfigurer implements S
                 return df.getColumns().contains( sampleFactorName );
             }
         }
-        for ( Dataframe.Column<?, ?> column : df ) {
-            //noinspection unchecked
-            if ( column.getType().equals( String.class ) && isSampleNameColumn( ( Dataframe.Column<?, String> ) column ) ) {
+        Set<String> renamingKeys = loadRenamingKeys( config );
+        for ( Dataframe.Column<?, String> column : iterateStringColumns( df ) ) {
+            if ( renamingKeys != null && columnMatchesRenamingKeys( column, renamingKeys ) ) {
+                return true;
+            }
+            if ( isSampleNameColumn( column ) ) {
                 return true;
             }
         }
@@ -337,9 +349,8 @@ public abstract class AbstractAnnDataSingleCellDataLoaderConfigurer implements S
     }
 
     private boolean hasCellIdColumn( Dataframe<?> df ) {
-        for ( Dataframe.Column<?, ?> column : df ) {
-            //noinspection unchecked
-            if ( column.getType().equals( String.class ) && isCellIdColumn( ( Dataframe.Column<?, String> ) column ) ) {
+        for ( Dataframe.Column<?, String> column : iterateStringColumns( df ) ) {
+            if ( isCellIdColumn( column ) ) {
                 return true;
             }
         }
@@ -353,13 +364,78 @@ public abstract class AbstractAnnDataSingleCellDataLoaderConfigurer implements S
                 return df.getColumns().contains( cellTypeFactorName );
             }
         }
-        for ( Dataframe.Column<?, ?> column : df ) {
-            //noinspection unchecked
-            if ( column.getType().equals( String.class ) && isCellTypeColumn( ( Dataframe.Column<?, String> ) column ) ) {
+        for ( Dataframe.Column<?, String> column : iterateStringColumns( df ) ) {
+            if ( isCellTypeColumn( column ) ) {
                 return true;
             }
         }
         return false;
+    }
+
+    /**
+     * Parse the "AnnData side" column of a sample renaming file, if one is configured. Returns null when no renaming
+     * file is set so callers can fall through to heuristic detection.
+     * <p>
+     * Note: {@link ubic.gemma.core.loader.util.mapper.RenamingBioAssayMapperParser} treats column 1 of the TSV as the
+     * value appearing in the data (and column 0 as the BioAssay identifier), so we read column 1 here to stay
+     * consistent with how the resulting mapper performs lookups.
+     */
+    @Nullable
+    private Set<String> loadRenamingKeys( SingleCellDataLoaderConfig config ) {
+        Path renamingFile = config.getRenamingFile();
+        if ( renamingFile == null ) {
+            return null;
+        }
+        Set<String> keys = new HashSet<>();
+        try ( CSVParser parser = CSVFormat.TDF.parse( Files.newBufferedReader( renamingFile ) ) ) {
+            for ( CSVRecord record : parser ) {
+                keys.add( record.get( 1 ) );
+            }
+        } catch ( IOException e ) {
+            throw new UncheckedIOException( "Failed to read renaming file " + renamingFile + ".", e );
+        }
+        return keys;
+    }
+
+    private boolean columnMatchesRenamingKeys( Dataframe.Column<?, String> column, Set<String> renamingKeys ) {
+        Set<String> values = column.uniqueValues();
+        if ( values.isEmpty() ) {
+            return false;
+        }
+        for ( String v : values ) {
+            if ( v != null && !renamingKeys.contains( v ) ) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Iterate only the string-typed columns of a dataframe, skipping columns whose type cannot be determined or
+     * materialized. This keeps column probing (sample name, cell id, cell type, gene) resilient to unsupported
+     * encoding types in unrelated columns.
+     */
+    private Iterable<Dataframe.Column<?, String>> iterateStringColumns( Dataframe<?> df ) {
+        List<Dataframe.Column<?, String>> result = new ArrayList<>();
+        for ( String columnName : df.getColumns() ) {
+            Class<?> type;
+            try {
+                type = df.getColumnType( columnName );
+            } catch ( RuntimeException e ) {
+                log.warn( "Could not determine type for column '" + columnName + "', skipping.", e );
+                continue;
+            }
+            if ( !String.class.equals( type ) ) {
+                continue;
+            }
+            try {
+                //noinspection unchecked
+                result.add( ( Dataframe.Column<?, String> ) df.getColumn( columnName, String.class ) );
+            } catch ( RuntimeException e ) {
+                log.warn( "Could not load string column '" + columnName + "', skipping.", e );
+            }
+        }
+        return result;
     }
 
     /**

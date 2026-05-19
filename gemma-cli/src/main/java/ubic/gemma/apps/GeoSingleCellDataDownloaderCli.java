@@ -77,7 +77,8 @@ public class GeoSingleCellDataDownloaderCli extends AbstractCLI {
     private static final String
             SAMPLE_ACCESSIONS_OPTION = "sampleAccessions",
             DATA_TYPE_OPTION = "dataType",
-            SUPPLEMENTARY_FILE_OPTION = "supplementaryFile";
+            SUPPLEMENTARY_FILE_OPTION = "supplementaryFile",
+            RENAMING_FILE_OPTION = "renamingFile";
 
     /**
      * Only applicable if dataType is set to MEX.
@@ -136,6 +137,8 @@ public class GeoSingleCellDataDownloaderCli extends AbstractCLI {
     private SingleCellDataType dataType;
     @Nullable
     private String supplementaryFile;
+    @Nullable
+    private Path renamingFile;
 
     // MEX options
     @Nullable
@@ -197,6 +200,7 @@ public class GeoSingleCellDataDownloaderCli extends AbstractCLI {
         options.addOption( Option.builder( SAMPLE_ACCESSIONS_OPTION ).longOpt( "sample-accessions" ).hasArg().desc( "Comma-delimited list of sample accessions to download." ).get() );
         options.addOption( Option.builder( DATA_TYPE_OPTION ).longOpt( "data-type" ).hasArg().desc( "Data type. Possible values are: " + Arrays.stream( SingleCellDataType.values() ).map( Enum::name ).collect( Collectors.joining( ", " ) ) + ". Only works if a single accession is passed to -e/--acc." ).get() );
         options.addOption( Option.builder( SUPPLEMENTARY_FILE_OPTION ).longOpt( "supplementary-file" ).hasArgs().desc( "Supplementary file to download. Only works if a single accession is passed to -e/--acc and -dataType is specified." ).get() );
+        options.addOption( Option.builder( RENAMING_FILE_OPTION ).longOpt( "renaming-file" ).hasArg().type( Path.class ).desc( "File containing a sample renaming scheme. The format is a two-column TSV with the first column containing author-provided sample names (i.e. obs column values in the AnnData) and the second column suitable assay identifiers (i.e. GEO accessions). When provided, this is also used to identify the sample-name column in AnnData files." ).get() );
         options.addOption( Option.builder( MEX_BARCODES_FILE_SUFFIX ).longOpt( "mex-barcodes-file" ).hasArg().desc( "Suffix to use to detect MEX barcodes file. Glob patterns may be used (i.e. raw_*_barcodes.tsv.gz). Only works if -dataType/--data-type is set to MEX." ).get() );
         options.addOption( Option.builder( MEX_FEATURES_FILE_SUFFIX ).longOpt( "mex-features-file" ).hasArg().desc( "Suffix to use to detect MEX features file. Glob patterns may be used (i.e. raw_*_features.tsv.gz). Only works if -dataType/--data-type is set to MEX." ).get() );
         options.addOption( Option.builder( MEX_MATRIX_FILE_SUFFIX ).longOpt( "mex-matrix-file" ).hasArg().desc( "Suffix to use to detect MEX matrix file. Glob patterns may be used (i.e. raw_*_matrix.mtx.gz). Only works if -dataType/--data-type is set to MEX." ).get() );
@@ -356,6 +360,7 @@ public class GeoSingleCellDataDownloaderCli extends AbstractCLI {
             featuresFileSuffix = commandLine.getOptionValue( MEX_FEATURES_FILE_SUFFIX, "features.tsv" );
             matrixFileSuffix = commandLine.getOptionValue( MEX_MATRIX_FILE_SUFFIX, "matrix.mtx" );
         }
+        renamingFile = commandLine.getParsedOptionValue( RENAMING_FILE_OPTION );
         if ( commandLine.hasOption( SUPPLEMENTARY_FILE_OPTION ) ) {
             if ( !singleAccessionMode ) {
                 throw new IllegalArgumentException( "The -supplementaryFile option requires that only one accession be supplied via -e/--acc." );
@@ -544,6 +549,7 @@ public class GeoSingleCellDataDownloaderCli extends AbstractCLI {
                                         .ignoreSamplesLackingData( true )
                                         .ignoreDataVectors( true ) // making data suitable for loading is too expensive
                                         .discardEmptyCells( true ) // this is quite expensive, and we don't mind overcounting cells here
+                                        .renamingFile( renamingFile )
                                         .build();
                                 try ( SingleCellDataLoader loader = detector.getSingleCellDataLoader( series, config ) ) {
                                     numberOfSamples = loader.getSampleNames().size();

@@ -29,6 +29,9 @@ public class CategoricalArray<T> implements Array<T> {
         } else if ( Integer.class.isAssignableFrom( categoryType ) ) {
             //noinspection unchecked
             this.categories = ( T[] ) Arrays.stream( group.getDataset( "categories" ).toIntegerVector() ).boxed().toArray();
+        } else if ( Double.class.isAssignableFrom( categoryType ) ) {
+            //noinspection unchecked
+            this.categories = ( T[] ) Arrays.stream( group.getDataset( "categories" ).toDoubleVector() ).boxed().toArray();
         } else {
             throw new IllegalArgumentException( "Unsupported scalar type for vector " + categoryType );
         }

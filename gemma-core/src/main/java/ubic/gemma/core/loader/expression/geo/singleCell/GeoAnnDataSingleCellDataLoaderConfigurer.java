@@ -23,6 +23,8 @@ class GeoAnnDataSingleCellDataLoaderConfigurer extends AbstractAnnDataSingleCell
 
     @Override
     protected boolean isSampleNameColumn( Dataframe.Column<?, String> column ) {
-        return column.uniqueValues().stream().allMatch( val -> matcher.match( series.getSamples(), val ).size() == 1 );
+        return matcher.matchAll( series.getSamples(), column.uniqueValues() )
+                .values().stream()
+                .allMatch( s -> s.size() == 1 );
     }
 }
