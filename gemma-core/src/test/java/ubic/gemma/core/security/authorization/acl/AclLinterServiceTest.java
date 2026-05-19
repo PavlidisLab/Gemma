@@ -231,7 +231,12 @@ public class AclLinterServiceTest extends BaseDatabaseTest {
         }
         assertTrue( "Identifier without an AOI should be reported as lacking identity",
                 reportedLacking );
+    }
 
+    /**
+     * Phase 3 gsec HQL deprecation: regression coverage for the converted JdbcTemplate-backed
+     * {@code lintAclObjectIdentityLackingSecurable} (dangling-AOI variant).
+     */
     @Test
     @WithMockUser(authorities = { "GROUP_ADMIN" })
     public void testLintAclObjectIdentityLackingSecurable_reportsDangling() {
@@ -291,4 +296,5 @@ public class AclLinterServiceTest extends BaseDatabaseTest {
                     "Empty AOI table should not produce dangling results for BioAssay, got: " + r,
                     r.getMessage().contains( "no corresponding entity" ) );
         }
+    }
 }
