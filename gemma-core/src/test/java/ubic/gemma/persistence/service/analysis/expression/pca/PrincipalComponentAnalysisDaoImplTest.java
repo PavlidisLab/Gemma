@@ -1,13 +1,13 @@
 package ubic.gemma.persistence.service.analysis.expression.pca;
 
 import org.hibernate.SessionFactory;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.context.TestComponent;
-import ubic.gemma.core.util.test.BaseDatabaseTest;
+import ubic.gemma.core.util.test.BaseDatabaseTest5;
 import ubic.gemma.model.analysis.expression.pca.Eigenvalue;
 import ubic.gemma.model.analysis.expression.pca.Eigenvector;
 import ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis;
@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @ContextConfiguration
-public class PrincipalComponentAnalysisDaoImplTest extends BaseDatabaseTest {
+public class PrincipalComponentAnalysisDaoImplTest extends BaseDatabaseTest5 {
 
     @Configuration
     @TestComponent

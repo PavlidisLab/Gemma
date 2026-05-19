@@ -7,10 +7,10 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.Type;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,7 +28,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.mail.MailEngine;
-import ubic.gemma.core.util.test.BaseDatabaseTest;
+import ubic.gemma.core.util.test.BaseDatabaseTest5;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.common.Identifiable;
@@ -57,7 +57,7 @@ import static org.mockito.Mockito.mock;
 @ContextConfiguration
 @TestExecutionListeners(value = WithSecurityContextTestExecutionListener.class,
         mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
-public class CharacteristicDaoTest extends BaseDatabaseTest {
+public class CharacteristicDaoTest extends BaseDatabaseTest5 {
 
     @Configuration
     @TestComponent
@@ -120,7 +120,7 @@ public class CharacteristicDaoTest extends BaseDatabaseTest {
     /* fixtures */
     private Collection<Characteristic> characteristics;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         // TODO
         characteristics = Arrays.asList(
@@ -135,7 +135,7 @@ public class CharacteristicDaoTest extends BaseDatabaseTest {
         characteristics = characteristicDao.create( characteristics );
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         characteristicDao.remove( characteristics );
     }
@@ -171,7 +171,7 @@ public class CharacteristicDaoTest extends BaseDatabaseTest {
     }
 
     @Test
-    @Ignore("FIXME: H2 does not appreciate missing aggregator in group by, but I have not yet figured out how to fix it.")
+    @Disabled("FIXME: H2 does not appreciate missing aggregator in group by, but I have not yet figured out how to fix it.")
     public void testCountByValueLike() {
         Map<String, Characteristic> results = characteristicDao.findByValueLikeGroupedByNormalizedValue( "male%", null, false );
         assertThat( results ).containsKeys( "http://test/T0001".toLowerCase(), "http://test/T0002".toLowerCase(), "male reproductive system (unknown term)" );

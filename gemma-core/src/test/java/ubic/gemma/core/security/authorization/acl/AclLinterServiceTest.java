@@ -2,7 +2,7 @@ package ubic.gemma.core.security.authorization.acl;
 
 import ubic.gemma.core.security.acl.ObjectIdentityRetrievalStrategyImpl;
 import org.hibernate.SessionFactory;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,7 +13,7 @@ import org.springframework.security.test.context.support.WithSecurityContextTest
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.context.TestComponent;
-import ubic.gemma.core.util.test.BaseDatabaseTest;
+import ubic.gemma.core.util.test.BaseDatabaseTest5;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -26,15 +26,15 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
 @ContextConfiguration
 @TestExecutionListeners(value = WithSecurityContextTestExecutionListener.class,
         mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
-public class AclLinterServiceTest extends BaseDatabaseTest {
+public class AclLinterServiceTest extends BaseDatabaseTest5 {
 
     @Configuration
     @TestComponent
@@ -139,8 +139,8 @@ public class AclLinterServiceTest extends BaseDatabaseTest {
         Collection<AclLinterService.LintResult> empty = aclLinterService.lintAcls( ExpressionExperiment.class, config );
         for ( AclLinterService.LintResult r : empty ) {
             assertFalse(
-                    "Empty entity table should not produce 'lacking identity' results, got: " + r,
-                    r.getMessage().contains( "lacks an ACL identity" ) );
+                    r.getMessage().contains( "lacks an ACL identity" ),
+                    "Empty entity table should not produce 'lacking identity' results, got: " + r );
         }
 
         // Happy path: insert a real AOI for ExpressionExperiment id=99999 (no entity row of that
@@ -169,8 +169,8 @@ public class AclLinterServiceTest extends BaseDatabaseTest {
         // so the set should still be empty under the lacking-identity lint.
         for ( AclLinterService.LintResult r : results ) {
             assertFalse(
-                    "Seeded AOI id should not be reported as lacking identity, got: " + r,
-                    r.getMessage().contains( "lacks an ACL identity" ) && r.getIdentifier().equals( 99999L ) );
+                    r.getMessage().contains( "lacks an ACL identity" ) && r.getIdentifier().equals( 99999L ),
+                    "Seeded AOI id should not be reported as lacking identity, got: " + r );
         }
     }
 
@@ -217,8 +217,8 @@ public class AclLinterServiceTest extends BaseDatabaseTest {
                 lacking.add( r );
             }
         }
-        assertEquals( "Identifier with seeded AOI should not be reported as lacking identity: " + lacking,
-                0, lacking.size() );
+        assertEquals( 0, lacking.size(),
+                "Identifier with seeded AOI should not be reported as lacking identity: " + lacking );
 
         // Lint with an identifier that does NOT have an AOI: should report it.
         Collection<AclLinterService.LintResult> withoutAoi = aclLinterService.lintAcls( BioAssay.class, 88888L, config );
@@ -229,8 +229,8 @@ public class AclLinterServiceTest extends BaseDatabaseTest {
                 break;
             }
         }
-        assertTrue( "Identifier without an AOI should be reported as lacking identity",
-                reportedLacking );
+        assertTrue( reportedLacking,
+                "Identifier without an AOI should be reported as lacking identity" );
     }
 
     /**
@@ -274,7 +274,7 @@ public class AclLinterServiceTest extends BaseDatabaseTest {
                 break;
             }
         }
-        assertTrue( "Dangling AOI id " + danglingId + " should be reported by the linter", reported );
+        assertTrue( reported, "Dangling AOI id " + danglingId + " should be reported by the linter" );
     }
 
     /**
@@ -293,8 +293,8 @@ public class AclLinterServiceTest extends BaseDatabaseTest {
         Collection<AclLinterService.LintResult> results = aclLinterService.lintAcls( BioAssay.class, config );
         for ( AclLinterService.LintResult r : results ) {
             assertFalse(
-                    "Empty AOI table should not produce dangling results for BioAssay, got: " + r,
-                    r.getMessage().contains( "no corresponding entity" ) );
+                    r.getMessage().contains( "no corresponding entity" ),
+                    "Empty AOI table should not produce dangling results for BioAssay, got: " + r );
         }
     }
 
@@ -350,8 +350,8 @@ public class AclLinterServiceTest extends BaseDatabaseTest {
                 break;
             }
         }
-        assertTrue( "SecuredNotChild with non-null parent_object should be reported by the linter",
-                reported );
+        assertTrue( reported,
+                "SecuredNotChild with non-null parent_object should be reported by the linter" );
     }
 
     /**
@@ -370,9 +370,9 @@ public class AclLinterServiceTest extends BaseDatabaseTest {
         Collection<AclLinterService.LintResult> results = aclLinterService.lintAcls( ExpressionExperiment.class, 33333L, config );
         for ( AclLinterService.LintResult r : results ) {
             assertFalse(
-                    "Id with no AOI should not be reported by SecuredNotChild lint, got: " + r,
                     r.getMessage().contains( "implements the SecuredNotChild interface" )
-                            && Long.valueOf( 33333L ).equals( r.getIdentifier() ) );
+                            && Long.valueOf( 33333L ).equals( r.getIdentifier() ),
+                    "Id with no AOI should not be reported by SecuredNotChild lint, got: " + r );
         }
     }
 }

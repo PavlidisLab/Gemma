@@ -3,7 +3,7 @@ package ubic.gemma.core.security.authentication;
 import ubic.gemma.core.security.SecurityService;
 import ubic.gemma.core.security.authentication.UserDetailsImpl;
 import org.hibernate.SessionFactory;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,7 +12,7 @@ import org.springframework.security.authentication.AuthenticationTrustResolverIm
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.context.TestComponent;
-import ubic.gemma.core.util.test.BaseDatabaseTest;
+import ubic.gemma.core.util.test.BaseDatabaseTest5;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.persistence.service.common.auditAndSecurity.UserDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.UserDaoImpl;
@@ -22,12 +22,12 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.UserGroupDaoImpl;
 import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
 @ContextConfiguration
-public class UserManagerTest extends BaseDatabaseTest {
+public class UserManagerTest extends BaseDatabaseTest5 {
 
     @Configuration
     @TestComponent

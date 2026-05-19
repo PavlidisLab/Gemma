@@ -6,8 +6,8 @@ import org.assertj.core.api.InstanceOfAssertFactories;
 import org.hibernate.CacheMode;
 import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,7 +16,7 @@ import org.springframework.security.test.context.support.WithSecurityContextTest
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.context.TestComponent;
-import ubic.gemma.core.util.test.BaseDatabaseTest;
+import ubic.gemma.core.util.test.BaseDatabaseTest5;
 import ubic.gemma.model.common.description.Categories;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicUtils;
@@ -43,12 +43,12 @@ import java.util.stream.LongStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 @ContextConfiguration
 @TestExecutionListeners(value = WithSecurityContextTestExecutionListener.class,
         mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
-public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
+public class ExpressionExperimentDaoTest extends BaseDatabaseTest5 {
 
     @Configuration
     @TestComponent
@@ -68,7 +68,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
 
     private ExpressionExperiment ee;
 
-    @After
+    @AfterEach
     public void removeFixtures() {
         if ( ee != null ) {
             // Hibernate 6: tests like testLoadReference / testLoadMultipleReferences evict the EE
@@ -847,7 +847,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         assertTrue( sessionFactory.getCurrentSession().contains( bad ) );
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testRemoveRawDataVectorsWhenQtIsUnknown() {
         ee = createExpressionExperimentWithRawVectors();
         QuantitationType qt = new QuantitationType();
@@ -857,7 +857,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         qt.setScale( ScaleType.LOG2 );
         qt.setRepresentation( PrimitiveType.DOUBLE );
         sessionFactory.getCurrentSession().persist( qt );
-        assertEquals( 10, expressionExperimentDao.removeRawDataVectors( ee, qt, false ) );
+        assertThrows( IllegalArgumentException.class, () -> expressionExperimentDao.removeRawDataVectors( ee, qt, false ) );
     }
 
     @Test

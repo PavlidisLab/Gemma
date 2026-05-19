@@ -1,7 +1,7 @@
 package ubic.gemma.core.security.authorization.acl;
 
 import ubic.gemma.core.security.acl.domain.AclObjectIdentity;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,7 +12,7 @@ import org.springframework.security.test.context.support.WithSecurityContextTest
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.context.TestComponent;
-import ubic.gemma.core.util.test.BaseDatabaseTest;
+import ubic.gemma.core.util.test.BaseDatabaseTest5;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -20,9 +20,9 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import javax.sql.DataSource;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -44,7 +44,7 @@ import static org.mockito.Mockito.when;
 @ContextConfiguration
 @TestExecutionListeners(value = WithSecurityContextTestExecutionListener.class,
         mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
-public class ParentIdentityRetrievalStrategyTest extends BaseDatabaseTest {
+public class ParentIdentityRetrievalStrategyTest extends BaseDatabaseTest5 {
 
     @Configuration
     @TestComponent
@@ -92,11 +92,11 @@ public class ParentIdentityRetrievalStrategyTest extends BaseDatabaseTest {
         when( expressionExperimentService.findIdByBioAssay( ba, true ) ).thenReturn( eeId );
 
         ObjectIdentity oid = strategy.getParentIdentity( ba );
-        assertNotNull( "Strategy must return an ObjectIdentity for a seeded AOI", oid );
+        assertNotNull( oid, "Strategy must return an ObjectIdentity for a seeded AOI" );
         assertEquals( ExpressionExperiment.class.getName(), oid.getType() );
         assertEquals( eeId, oid.getIdentifier() );
         AclObjectIdentity aoi = ( AclObjectIdentity ) oid;
-        assertNotNull( "AclObjectIdentity.id (acl_object_identity PK) must be populated", aoi.getId() );
+        assertNotNull( aoi.getId(), "AclObjectIdentity.id (acl_object_identity PK) must be populated" );
     }
 
     /**
@@ -113,7 +113,7 @@ public class ParentIdentityRetrievalStrategyTest extends BaseDatabaseTest {
         when( expressionExperimentService.findIdByBioAssay( ba, true ) ).thenReturn( 999999L );
 
         ObjectIdentity oid = strategy.getParentIdentity( ba );
-        assertNull( "Strategy must return null when no acl_object_identity row matches", oid );
+        assertNull( oid, "Strategy must return null when no acl_object_identity row matches" );
     }
 
     /**
@@ -128,7 +128,7 @@ public class ParentIdentityRetrievalStrategyTest extends BaseDatabaseTest {
         when( expressionExperimentService.findIdByBioAssay( ba, true ) ).thenReturn( null );
 
         ObjectIdentity oid = strategy.getParentIdentity( ba );
-        assertNull( "Strategy must return null when the resolved parent identifier is null", oid );
+        assertNull( oid, "Strategy must return null when the resolved parent identifier is null" );
     }
 
     private static Long ensureAclClass( JdbcTemplate jt, String className ) {

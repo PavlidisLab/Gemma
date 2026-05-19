@@ -1,14 +1,14 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import org.hibernate.SessionFactory;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.context.TestComponent;
-import ubic.gemma.core.util.test.BaseDatabaseTest;
+import ubic.gemma.core.util.test.BaseDatabaseTest5;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -16,11 +16,11 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.genome.Taxon;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ContextConfiguration
-public class ExpressionExperimentSubSetDaoTest extends BaseDatabaseTest {
+public class ExpressionExperimentSubSetDaoTest extends BaseDatabaseTest5 {
 
     @Configuration
     @TestComponent
@@ -38,7 +38,7 @@ public class ExpressionExperimentSubSetDaoTest extends BaseDatabaseTest {
     private Taxon taxon;
     private ArrayDesign ad;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         taxon = new Taxon();
         sessionFactory.getCurrentSession().persist( taxon );
