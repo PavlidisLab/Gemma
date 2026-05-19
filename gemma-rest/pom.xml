@@ -139,16 +139,13 @@
         </dependency>
         <!--
           Jersey 3's test framework brings in JUnit 5 (Jupiter), so Maven Surefire auto-detects the
-          JUnit 5 platform provider. But Gemma's REST tests are all JUnit 4 (org.junit.Test). Add
-          the vintage engine so the JUnit 5 platform can run JUnit 4 tests; without it, Surefire
-          silently runs 0 tests and reports BUILD SUCCESS.
+          JUnit 5 platform provider. The vintage engine lets the JUnit 5 platform run JUnit 4
+          tests; without it, Surefire silently runs 0 tests and reports BUILD SUCCESS.
+          Phase 3 JUnit 5 migration (Phase A): junit-vintage-engine + junit-jupiter are now
+          inherited from the root POM (test scope, managed version), so the explicit
+          declaration here is no longer needed.
         -->
-        <dependency>
-            <groupId>org.junit.vintage</groupId>
-            <artifactId>junit-vintage-engine</artifactId>
-            <version>5.11.4</version>
-            <scope>test</scope>
-        </dependency>
+
         <dependency>
             <groupId>org.glassfish.jersey.test-framework.providers</groupId>
             <artifactId>jersey-test-framework-provider-inmemory</artifactId>
