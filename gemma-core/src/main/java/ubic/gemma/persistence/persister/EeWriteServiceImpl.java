@@ -44,6 +44,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.common.auditAndSecurity.ContactDao;
 import ubic.gemma.persistence.service.common.measurement.UnitDao;
+import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeDao;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayDao;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionDao;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialDao;
@@ -58,6 +59,7 @@ import ubic.gemma.persistence.service.expression.experiment.FactorValueDao;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -69,7 +71,7 @@ import java.util.Set;
  * {@code service.expression.experiment}) so it can share the package-protected
  * {@link AbstractPersister.Caches} type and the protected helper methods on the
  * persister chain ({@code persistTaxon}, {@code persistExternalDatabase},
- * {@code persistQuantitationType}, {@code persistUnit}, {@code fillInDatabaseEntry}).
+ * {@code fillInDatabaseEntry}).
  * <p>
  * Until the persister chain is fully retired (E5), this class collaborates with
  * {@link ExpressionPersister} via the injected {@link PersisterHelper}: the helper
@@ -107,12 +109,13 @@ public class EeWriteServiceImpl implements EeWriteService {
     private FactorValueDao factorValueDao;
     @Autowired
     private UnitDao unitDao;
+    @Autowired
+    private QuantitationTypeDao quantitationTypeDao;
     /**
      * Used to call back into the persister chain for the inherited helpers
      * ({@code persistTaxon}, {@code persistExternalDatabase},
-     * {@code persistQuantitationType}, {@code persistUnit},
      * {@code fillInDatabaseEntry}) and for {@code doPersist} dispatch on
-     * non-EE associations (Publications, Persons, QuantitationTypes, ...).
+     * non-EE associations (Publications, Persons, ...).
      * When the persister chain is deleted in E5, these calls become direct
      * collaborator-DAO calls.
      * <p>
@@ -120,8 +123,7 @@ public class EeWriteServiceImpl implements EeWriteService {
      * Spring can inject the {@code @Transactional} JDK proxy without a
      * {@code BeanNotOfRequiredTypeException}. The protected helpers used here
      * ({@code doPersist}, {@code persistTaxon}, {@code getSessionFactory},
-     * {@code fillInDatabaseEntry}, {@code persistExternalDatabase},
-     * {@code persistQuantitationType}, {@code persistUnit}) live on
+     * {@code fillInDatabaseEntry}, {@code persistExternalDatabase}) live on
      * {@link AbstractPersister} and are not part of the public interface;
      * access them via {@link #persister()} which unwraps the proxy to the
      * underlying {@link PersisterHelperImpl}.
@@ -185,7 +187,16 @@ public class EeWriteServiceImpl implements EeWriteService {
             ee.setTaxon( persister().persistTaxon( ee.getTaxon(), caches ) );
         }
 
-        ee.setQuantitationTypes( persister().doPersist( ee.getQuantitationTypes(), caches ) );
+        // Phase 3 lift: was doPersist (instanceof QuantitationType arm in CommonPersister);
+        // now a direct call to the per-call-Map findOrCreateQuantitationType helper. The
+        // map is shared with fillInDesignElementDataVectorAssociations below so QTs
+        // referenced both at the EE level and per-vector dedupe to the same row.
+        Map<Integer, QuantitationType> qtCache = new HashMap<>();
+        Set<QuantitationType> persistedQts = new HashSet<>();
+        for ( QuantitationType qt : ee.getQuantitationTypes() ) {
+            persistedQts.add( findOrCreateQuantitationType( qt, qtCache ) );
+        }
+        ee.setQuantitationTypes( persistedQts );
         if ( ee.getOtherRelevantPublications() != null ) {
             // Phase 3 lift: was doPersist (instanceof BibliographicReference arm); now a
             // direct call to the per-call-Map persistBibliographicReference helper.
@@ -213,7 +224,7 @@ public class EeWriteServiceImpl implements EeWriteService {
         checkExperimentalDesign( ee );
 
         // This does most of the preparatory work.
-        processBioAssays( ee, caches );
+        processBioAssays( ee, caches, qtCache );
 
         ee = expressionExperimentDao.create( ee );
 
@@ -364,7 +375,7 @@ public class EeWriteServiceImpl implements EeWriteService {
         return bioAssayDimensionDao.findOrCreate( bioAssayDimension );
     }
 
-    BioAssayDimension fillInDesignElementDataVectorAssociations( BulkExpressionDataVector dataVector, AbstractPersister.Caches caches ) {
+    BioAssayDimension fillInDesignElementDataVectorAssociations( BulkExpressionDataVector dataVector, AbstractPersister.Caches caches, Map<Integer, QuantitationType> qtCache ) {
         // we should have done this already.
         assert dataVector.getDesignElement() != null;
 
@@ -373,14 +384,14 @@ public class EeWriteServiceImpl implements EeWriteService {
         dataVector.setBioAssayDimension( bioAssayDimension );
 
         assert dataVector.getQuantitationType() != null;
-        QuantitationType qt = persister().persistQuantitationType( dataVector.getQuantitationType(), caches );
+        QuantitationType qt = findOrCreateQuantitationType( dataVector.getQuantitationType(), qtCache );
         qt = ( QuantitationType ) persister().getSessionFactory().getCurrentSession().merge( qt );
         dataVector.setQuantitationType( qt );
 
         return bioAssayDimension;
     }
 
-    Set<BioAssay> fillInExpressionExperimentDataVectorAssociations( ExpressionExperiment ee, AbstractPersister.Caches caches ) {
+    Set<BioAssay> fillInExpressionExperimentDataVectorAssociations( ExpressionExperiment ee, AbstractPersister.Caches caches, Map<Integer, QuantitationType> qtCache ) {
         log.debug( "Filling in DesignElementDataVectors..." );
 
         Set<BioAssay> bioAssays = new HashSet<>();
@@ -388,7 +399,7 @@ public class EeWriteServiceImpl implements EeWriteService {
         timer.start();
         int count = 0;
         for ( RawExpressionDataVector dataVector : ee.getRawExpressionDataVectors() ) {
-            BioAssayDimension bioAssayDimension = fillInDesignElementDataVectorAssociations( dataVector, caches );
+            BioAssayDimension bioAssayDimension = fillInDesignElementDataVectorAssociations( dataVector, caches, qtCache );
 
             if ( timer.getTime() > 5000 ) {
                 if ( count == 0 ) {
@@ -429,7 +440,7 @@ public class EeWriteServiceImpl implements EeWriteService {
     /**
      * Handle persisting of the bioassays on the way to persisting the expression experiment.
      */
-    void processBioAssays( ExpressionExperiment expressionExperiment, AbstractPersister.Caches caches ) {
+    void processBioAssays( ExpressionExperiment expressionExperiment, AbstractPersister.Caches caches, Map<Integer, QuantitationType> qtCache ) {
         if ( expressionExperiment.getRawExpressionDataVectors().isEmpty() ) {
             log.debug( "Filling in bioassays" );
             for ( BioAssay bioAssay : expressionExperiment.getBioAssays() ) {
@@ -438,7 +449,7 @@ public class EeWriteServiceImpl implements EeWriteService {
         } else {
             log.debug( "Filling in bioassays via data vectors" ); // usual case.
             Set<BioAssay> alreadyFilled;
-            alreadyFilled = fillInExpressionExperimentDataVectorAssociations( expressionExperiment, caches );
+            alreadyFilled = fillInExpressionExperimentDataVectorAssociations( expressionExperiment, caches, qtCache );
             expressionExperiment.setBioAssays( alreadyFilled );
             expressionExperiment.setNumberOfSamples( alreadyFilled.size() );
         }
@@ -575,5 +586,36 @@ public class EeWriteServiceImpl implements EeWriteService {
     private Unit findOrCreateUnit( Unit unit ) {
         Unit existing = unitDao.find( unit );
         return existing != null ? existing : unitDao.create( unit );
+    }
+
+    /**
+     * Per-EE-persist memoised create-or-reuse for {@link QuantitationType}.
+     * <p>
+     * QTs are deliberately per-experiment: a QT named "Signal" in EE A is a distinct
+     * row from a QT named "Signal" in EE B. Within one EE-graph persist, however, many
+     * data vectors typically share the same QT instance (the same {@code (name,
+     * description)}); without dedup that would create N duplicate rows for N vectors,
+     * because {@code AbstractPersister.persist} runs under {@link FlushMode#MANUAL} so
+     * a DAO {@code find} cannot see an in-flight {@code create} until end-of-transaction.
+     * <p>
+     * The cache key matches {@code BusinessKey.matches(QT, QT)} semantics — the hash of
+     * {@code (name, description)}. Callers must pass the same map for all QT references
+     * within one EE persist; see {@link #persistExpressionExperiment}.
+     * <p>
+     * Inlined from the former {@code CommonPersister.persistQuantitationType} during
+     * the persister sweep.
+     */
+    private QuantitationType findOrCreateQuantitationType( QuantitationType qType, Map<Integer, QuantitationType> qtCache ) {
+        if ( qType.getName() == null )
+            throw new IllegalArgumentException( "QuantitationType must have a name" );
+        int key = qType.getName().hashCode();
+        if ( qType.getDescription() != null )
+            key += qType.getDescription().hashCode();
+        if ( qtCache.containsKey( key ) ) {
+            return qtCache.get( key );
+        }
+        QuantitationType qt = quantitationTypeDao.create( qType );
+        qtCache.put( key, qt );
+        return qt;
     }
 }

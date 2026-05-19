@@ -29,7 +29,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Taxon;
@@ -79,10 +78,6 @@ public abstract class AbstractPersister implements Persister {
          * Keys are custom hash codes.
          */
         Map<Integer, Chromosome> chromosomeCache = new HashMap<>();
-        /**
-         * Keys are custom hash codes.
-         */
-        Map<Integer, QuantitationType> quantitationTypeCache = new HashMap<>();
         /**
          * Keys are custom hash codes.
          */
