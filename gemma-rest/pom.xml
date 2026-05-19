@@ -86,10 +86,11 @@
             <artifactId>jersey-spring6</artifactId>
             <version>${jersey.version}</version>
             <exclusions>
-                <exclusion>
-                    <groupId>org.hibernate.validator</groupId>
-                    <artifactId>hibernate-validator</artifactId>
-                </exclusion>
+                <!--
+                  Note: the hibernate-validator exclusion was removed (Phase 3, Bean Validation opt-in).
+                  Hibernate Validator is now an explicit declared dependency below so JAX-RS @Valid
+                  / @NotNull / etc. fire on endpoint params and DTO fields.
+                -->
                 <exclusion>
                     <groupId>org.springframework</groupId>
                     <artifactId>spring-aop</artifactId>
@@ -169,6 +170,32 @@
             <scope>provided</scope>
         </dependency>
 
+        <!--
+          Jakarta Bean Validation (JSR-380) opt-in (Phase 3).
+          The API artifact provides @Valid / @NotNull / @NotEmpty / @NotBlank / @Size / @Min / @Max / @Pattern.
+          Hibernate Validator is the reference impl (Jakarta EE 10 era; aligned with jakarta.* APIs).
+          jersey-bean-validation auto-registers Jersey's ValidationFeature, so JAX-RS picks up
+          @Valid on resource method params and constraint annotations on DTO fields with no
+          additional config code.
+
+          Adoption is per-endpoint and incremental — see VALIDATION_OPTIN_NOTES.md at repo root.
+        -->
+        <dependency>
+            <groupId>jakarta.validation</groupId>
+            <artifactId>jakarta.validation-api</artifactId>
+            <version>3.0.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.hibernate.validator</groupId>
+            <artifactId>hibernate-validator</artifactId>
+            <version>8.0.1.Final</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.ext</groupId>
+            <artifactId>jersey-bean-validation</artifactId>
+            <version>${jersey.version}</version>
+        </dependency>
+
         <!-- Swagger -->
         <dependency>
             <groupId>io.swagger.core.v3</groupId>
@@ -183,10 +210,10 @@
                     <groupId>jakarta.xml.bind</groupId>
                     <artifactId>jakarta.xml.bind-api</artifactId>
                 </exclusion>
-                <exclusion>
-                    <groupId>jakarta.validation</groupId>
-                    <artifactId>jakarta.validation-api</artifactId>
-                </exclusion>
+                <!--
+                  Note: the jakarta.validation-api exclusion was removed (Phase 3, Bean Validation opt-in).
+                  jakarta.validation-api is now declared explicitly below.
+                -->
                 <exclusion>
                     <groupId>com.fasterxml.jackson.core</groupId>
                     <artifactId>jackson-annotations</artifactId>
