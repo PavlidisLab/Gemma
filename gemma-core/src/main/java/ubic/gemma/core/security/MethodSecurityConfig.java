@@ -14,6 +14,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.security.access.AfterInvocationProvider;
@@ -24,6 +25,10 @@ import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.access.intercept.AfterInvocationManager;
 import org.springframework.security.access.intercept.AfterInvocationProviderManager;
 import org.springframework.security.access.intercept.RunAsManager;
+import org.springframework.security.acls.AclPermissionEvaluator;
+import org.springframework.security.acls.model.AclService;
+import org.springframework.security.acls.model.ObjectIdentityRetrievalStrategy;
+import org.springframework.security.acls.model.SidRetrievalStrategy;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.method.configuration.GlobalMethodSecurityConfiguration;
 
@@ -136,6 +141,35 @@ public class MethodSecurityConfig extends GlobalMethodSecurityConfiguration {
             "gemmaAfterAclStreamRead", // Phase B — Stream<?> return type, Gemma-owned
             "postInvocationAdviceProvider" // for @PostAuthorize / @PostFilter — REQUIRED for Phase A annotations
     );
+
+    /**
+     * The {@link AclPermissionEvaluator} that backs {@code @PreAuthorize("hasPermission(...)")} and
+     * {@code @PostAuthorize("hasPermission(...)")} SpEL. Declared here (rather than left in gsec's
+     * {@code applicationContext-gsec.xml}) so the SpEL evaluator bean owns its evaluator
+     * dependency directly — per the gsec absorption roadmap, which routes the lab's
+     * {@code permissionEvaluator} + {@code securityExpressionHandler} to this class.
+     * <p>
+     * Constructor-wired with {@link AclService} only; the {@link ObjectIdentityRetrievalStrategy}
+     * and {@link SidRetrievalStrategy} are applied via setters when those beans are present in
+     * the context (they're defined in gsec XML / {@code GemmaAclConfiguration}). The fallback to
+     * Spring Security's stock strategies (used when the optional beans are absent) is what lets
+     * minimal IT contexts that don't import the full gsec stack still load cleanly.
+     */
+    @Bean(name = "permissionEvaluator")
+    public PermissionEvaluator permissionEvaluator( AclService aclService,
+            ObjectProvider<ObjectIdentityRetrievalStrategy> oirsProvider,
+            ObjectProvider<SidRetrievalStrategy> srsProvider ) {
+        AclPermissionEvaluator pe = new AclPermissionEvaluator( aclService );
+        ObjectIdentityRetrievalStrategy oirs = oirsProvider.getIfAvailable();
+        if ( oirs != null ) {
+            pe.setObjectIdentityRetrievalStrategy( oirs );
+        }
+        SidRetrievalStrategy srs = srsProvider.getIfAvailable();
+        if ( srs != null ) {
+            pe.setSidRetrievalStrategy( srs );
+        }
+        return pe;
+    }
 
     @Autowired
     private PermissionEvaluator permissionEvaluator;
