@@ -1018,7 +1018,7 @@
 		are stubbed to return empty; reinstating real ontology / entity full-text search is a future
 		phase (likely on HS 7 or an external engine like OpenSearch).
 		-->
-		<gsec.version>0.0.23-RENOVATIONS-SNAPSHOT</gsec.version>
+		<gsec.version>0.0.24-RENOVATIONS-SNAPSHOT</gsec.version>
 		<spring.version>6.1.20</spring.version>
 		<spring.security.version>6.3.10</spring.security.version>
 		<hibernate.version>6.4.10.Final</hibernate.version>
