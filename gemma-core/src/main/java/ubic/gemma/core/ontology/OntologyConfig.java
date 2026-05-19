@@ -19,6 +19,8 @@ import ubic.gemma.core.ontology.providers.GemmaOntologyService;
 import ubic.gemma.core.ontology.providers.MondoOntologyService;
 import ubic.gemma.core.ontology.providers.OntologyServiceFactory;
 import ubic.gemma.core.ontology.providers.PatoOntologyService;
+import ubic.gemma.core.ontology.search.JenaTextOntologySearchService;
+import ubic.gemma.core.ontology.search.OntologySearchService;
 import ubic.gemma.core.util.TextResourceToSetOfLinesFactoryBean;
 
 import java.io.IOException;
@@ -153,6 +155,20 @@ public class OntologyConfig {
     @Bean
     public FactoryBean<MondoOntologyService> mondoOntologyServiceOntologyService() {
         return createOntologyFactory( MondoOntologyService.class, "http://purl.obolibrary.org/obo/MONDO_" );
+    }
+
+    /**
+     * In-Gemma jena-text / Lucene-9 ontology full-text search service
+     * (Phase 3 search restoration; see {@code SEARCH_RECCE.md} Section 6).
+     * Wraps the unified-ontology TDB as a {@code TextDataset}. Disabled when
+     * {@code gemma.ontology.unified.enabled=false}.
+     */
+    @Bean(destroyMethod = "close")
+    public OntologySearchService ontologySearchService(
+            @Value("${gemma.ontology.unified.enabled}") boolean enabled,
+            @Value("${gemma.ontology.unified.tdb.dir}") Path tdbDir
+    ) {
+        return new JenaTextOntologySearchService( tdbDir, enabled );
     }
 
     private <T extends OntologyService> OntologyServiceFactory<T> createOntologyFactory( Class<T> ontologyClass, String... allowedUriPrefixes ) {
