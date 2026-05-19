@@ -54,7 +54,7 @@ public class UpdatePubMedCli extends AbstractAuthenticatedCLI {
     @Autowired
     private PersisterHelper persisterHelper;
 
-    @Value("${entrez.efetch.apikey")
+    @Value("${entrez.efetch.apikey}")
     private String ncbiApiKey;
 
     @Override
