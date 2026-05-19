@@ -3,13 +3,13 @@ package ubic.gemma.persistence.service;
 import lombok.Data;
 import org.h2.Driver;
 import org.hibernate.SessionFactory;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 import org.springframework.test.context.ContextConfiguration;
-import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.hibernate.H2Dialect;
@@ -29,9 +29,10 @@ import java.util.List;
 import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @ContextConfiguration
-public class AbstractFilteringVoEnabledDaoTest extends BaseTest {
+public class AbstractFilteringVoEnabledDaoTest extends BaseTest5 {
 
     @TestComponent
     @Configuration
@@ -191,9 +192,9 @@ public class AbstractFilteringVoEnabledDaoTest extends BaseTest {
                 .hasFieldOrPropertyWithValue( "propertyType", Integer.class );
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testUndefinedProperty() {
-        fakeDao.getFilterablePropertyMeta( "missing" );
+        assertThrows( IllegalArgumentException.class, () -> fakeDao.getFilterablePropertyMeta( "missing" ) );
     }
 
     /**
