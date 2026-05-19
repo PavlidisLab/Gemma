@@ -25,7 +25,15 @@ import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
  * This event type resets the trouble flag of curation details of a curatable object.
  *
  * @author Paul
+ * @deprecated resolve the open
+ * {@link ubic.gemma.model.common.auditAndSecurity.curation.TicketType#QUALITY_REVIEW QUALITY_REVIEW}
+ * ticket(s) via
+ * {@link ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketService#transition}
+ * instead (target state
+ * {@link ubic.gemma.model.common.auditAndSecurity.curation.TicketState#RESOLVED}).
+ * See {@link CurationDetailsEvent} for the full migration map.
  */
+@Deprecated
 public class NotTroubledStatusFlagEvent extends TroubledStatusFlagAlteringEvent {
 
 

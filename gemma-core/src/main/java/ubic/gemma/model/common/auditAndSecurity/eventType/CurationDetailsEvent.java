@@ -25,8 +25,33 @@ import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 /**
  * Event types that can change {@link CurationDetails} of {@link Curatable} objects.
  *
+ * <p><strong>Deprecated</strong> &mdash; per Decision 1 of {@code AUDIT_AS_WORKFLOW_RECCE.md}
+ * the {@code CurationDetails} write path is being retired in favour of the Phase B-1 Ticket
+ * layer ({@link ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketService}).
+ * New code should:</p>
+ *
+ * <ul>
+ *   <li>For {@link TroubledStatusFlagEvent} / {@link NotTroubledStatusFlagEvent} &rarr;
+ *       open / resolve a ticket of type
+ *       {@link ubic.gemma.model.common.auditAndSecurity.curation.TicketType#QUALITY_REVIEW}.</li>
+ *   <li>For {@link NeedsAttentionEvent} / {@link DoesNotNeedAttentionEvent} &rarr;
+ *       open / resolve a ticket of type
+ *       {@link ubic.gemma.model.common.auditAndSecurity.curation.TicketType#GENERIC}
+ *       (or {@link ubic.gemma.model.common.auditAndSecurity.curation.TicketType#BATCH_INFO_NEEDED}
+ *       when the context is missing-batch-info).</li>
+ *   <li>For {@link CurationNoteUpdateEvent} &rarr; comment on the relevant open ticket
+ *       via {@link ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketService#addComment}
+ *       once the curation-note &harr; ticket mapping lands (see {@code CURATION_DETAILS_RETIREMENT.md}).</li>
+ * </ul>
+ *
+ * <p>Existing emitters of these events continue to work &mdash; the class is preserved for
+ * backwards compatibility with audit-log replay and historical row read-back. Do not add new
+ * emitters.</p>
+ *
  * @author tesarst
+ * @deprecated use {@link ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketService}.
  */
+@Deprecated
 public abstract class CurationDetailsEvent extends AuditEventType {
 
     /**

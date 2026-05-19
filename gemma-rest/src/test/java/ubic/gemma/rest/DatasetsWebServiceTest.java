@@ -48,8 +48,11 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
+import ubic.gemma.core.security.authentication.UserManager;
+import ubic.gemma.core.security.authentication.UserService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
@@ -269,6 +272,31 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         @Bean
         public EntityUrlBuilder entityUrlBuilder() {
             return new EntityUrlBuilder( "http://localhost:8080" );
+        }
+
+        // Phase B-1 ticket layer dependencies — DatasetsWebService injects
+        // TicketsWebService (for the /datasets/{id}/tickets read shim) plus
+        // TicketService + UserManager (for the legacy /curationDetails write
+        // shim, which now routes troubled/needsAttention flips through
+        // TicketService.openTicket / transition).
+        @Bean
+        public TicketService ticketService() {
+            return mock( TicketService.class );
+        }
+
+        @Bean
+        public UserManager userManager() {
+            return mock( UserManager.class );
+        }
+
+        @Bean
+        public UserService userService() {
+            return mock( UserService.class );
+        }
+
+        @Bean
+        public TicketsWebService ticketsWebService( TicketService ticketService, UserManager userManager, UserService userService ) {
+            return new TicketsWebService( ticketService, userManager, userService );
         }
     }
 

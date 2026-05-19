@@ -25,7 +25,13 @@ import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
  * Sets the trouble flag of curation details of any Curatable object.
  *
  * @author Paul
+ * @deprecated open a
+ * {@link ubic.gemma.model.common.auditAndSecurity.curation.TicketType#QUALITY_REVIEW QUALITY_REVIEW}
+ * ticket via
+ * {@link ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketService#openTicket}
+ * instead. See {@link CurationDetailsEvent} for the full migration map.
  */
+@Deprecated
 public class TroubledStatusFlagEvent extends TroubledStatusFlagAlteringEvent {
 
     @Override
