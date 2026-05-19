@@ -17,11 +17,15 @@ import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.util.test.BaseTest;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
+import static ubic.gemma.core.config.SettingsConfig.filterEnvironmentVariables;
 import static ubic.gemma.core.config.SettingsConfig.filterSystemProperties;
+import static ubic.gemma.core.config.SettingsConfig.jvmStandardProperties;
 
 @ActiveProfiles(EnvironmentProfiles.TEST)
 @ContextConfiguration
@@ -40,6 +44,9 @@ public class SettingsConfigTest extends BaseTest {
 
         private static PropertySources propertySources() throws IOException {
             MutablePropertySources result = new MutablePropertySources();
+            // system properties first so ${java.io.tmpdir} (used in default.properties for gemma.appdata.home)
+            // resolves correctly without an on-disk Gemma.properties
+            result.addLast( new PropertiesPropertySource( "system", System.getProperties() ) );
             result.addLast( new ResourcePropertySource( new ClassPathResource( "default.properties" ) ) );
             result.addLast( new ResourcePropertySource( new ClassPathResource( "project.properties" ) ) );
             Properties buildProps = new Properties();
@@ -88,7 +95,10 @@ public class SettingsConfigTest extends BaseTest {
         assertThat( featuredExternalDatabases )
                 .isNotNull()
                 .contains( "hg38", "mm39" );
-        assertEquals( "/var/tmp/gemmaData", appDataHome );
+        // gemma.appdata.home default resolves via java.io.tmpdir (portable across Linux/macOS/Windows/containers);
+        // the JVM temp dir may have a trailing separator (e.g. "/var/folders/.../T/") on some platforms.
+        String expectedAppDataHome = System.getProperty( "java.io.tmpdir" ) + "/gemmaData";
+        assertEquals( expectedAppDataHome, appDataHome );
         assertEquals( appDataHome + "/download", downloadPath );
         assertEquals( appDataHome + "/searchIndices", searchDir );
         assertEquals( searchDir, compassDir );
@@ -122,5 +132,35 @@ public class SettingsConfigTest extends BaseTest {
     public void testSettingsDescriptions() throws IOException {
         assertThat( SettingsConfig.settingsDescriptions() )
                 .containsEntry( "ga.tracker", "Google Analytics 4" );
+    }
+
+    @Test
+    public void testJvmStandardPropertiesIncludesTmpdir() {
+        Properties props = jvmStandardProperties();
+        // java.io.tmpdir is always set on every JVM Gemma supports
+        assertThat( props ).containsKey( "java.io.tmpdir" );
+        assertThat( props.getProperty( "java.io.tmpdir" ) )
+                .isEqualTo( System.getProperty( "java.io.tmpdir" ) );
+        assertThat( props ).containsKey( "user.home" );
+    }
+
+    @Test
+    public void testEnvironmentVariableFiltering12FactorStyle() throws IOException {
+        // GEMMA_FOO_BAR -> gemma.foo.bar translation; only declared keys pass through
+        Map<String, String> env = new HashMap<>();
+        env.put( "GEMMA_DB_URL", "jdbc:mysql://db.example.com:3306/gemd" );
+        env.put( "GEMMA_DB_USER", "gemmauser" );
+        env.put( "GEMMA_APPDATA_HOME", "/srv/gemmaData" );
+        env.put( "NOT_A_GEMMA_KEY", "should-be-ignored" );
+        // env vars that don't correspond to any declared Gemma key should be dropped
+        env.put( "GEMMA_NONEXISTENT_KEY", "should-also-be-ignored" );
+
+        Properties filtered = filterEnvironmentVariables( env );
+        assertThat( filtered )
+                .containsEntry( "gemma.db.url", "jdbc:mysql://db.example.com:3306/gemd" )
+                .containsEntry( "gemma.db.user", "gemmauser" )
+                .containsEntry( "gemma.appdata.home", "/srv/gemmaData" )
+                .doesNotContainKey( "NOT_A_GEMMA_KEY" )
+                .doesNotContainKey( "gemma.nonexistent.key" );
     }
 }
