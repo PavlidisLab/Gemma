@@ -19,10 +19,14 @@
 
 package ubic.gemma.model.common.auditAndSecurity;
 
+import lombok.Getter;
+import lombok.Setter;
 import ubic.gemma.model.common.Identifiable;
 
 import java.util.Date;
 
+@Getter
+@Setter
 public class JobInfo implements Identifiable, SecuredNotChild {
 
     private Boolean runningStatus = Boolean.TRUE;
@@ -46,96 +50,6 @@ public class JobInfo implements Identifiable, SecuredNotChild {
         }
         final JobInfo that = ( JobInfo ) object;
         return this.id != null && that.getId() != null && this.id.equals( that.getId() );
-    }
-
-    public String getDescription() {
-        return this.description;
-    }
-
-    public void setDescription( String description ) {
-        this.description = description;
-    }
-
-    public Date getEndTime() {
-        return this.endTime;
-    }
-
-    public void setEndTime( Date endTime ) {
-        this.endTime = endTime;
-    }
-
-    public String getFailedMessage() {
-        return this.failedMessage;
-    }
-
-    public void setFailedMessage( String failedMessage ) {
-        this.failedMessage = failedMessage;
-    }
-
-    @Override
-    public Long getId() {
-        return this.id;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
-    }
-
-    /**
-     * @return A field to store all the message progress updates
-     */
-    public String getMessages() {
-        return this.messages;
-    }
-
-    public void setMessages( String messages ) {
-        this.messages = messages;
-    }
-
-    public Integer getPhases() {
-        return this.phases;
-    }
-
-    public void setPhases( Integer phases ) {
-        this.phases = phases;
-    }
-
-    public Boolean getRunningStatus() {
-        return this.runningStatus;
-    }
-
-    public void setRunningStatus( Boolean runningStatus ) {
-        this.runningStatus = runningStatus;
-    }
-
-    public Date getStartTime() {
-        return this.startTime;
-    }
-
-    public void setStartTime( Date startTime ) {
-        this.startTime = startTime;
-    }
-
-    /**
-     * @return An ID by which this job's results can be found
-     */
-    public String getTaskId() {
-        return this.taskId;
-    }
-
-    public void setTaskId( String taskId ) {
-        this.taskId = taskId;
-    }
-
-    /**
-     * @return The user who started the job. Can be left null to indicate job was run by an anonymous user.
-     */
-    public User getUser() {
-        return this.user;
-    }
-
-    public void setUser( User user ) {
-        this.user = user;
     }
 
     @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
