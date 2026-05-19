@@ -22,8 +22,11 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.persistence.util.Cursor;
+import ubic.gemma.persistence.util.CursorPage;
 import ubic.gemma.persistence.util.Slice;
 
+import org.springframework.lang.Nullable;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -142,6 +145,12 @@ public class CompositeSequenceReadServiceImpl implements CompositeSequenceReadSe
     @Transactional(readOnly = true)
     public Slice<Gene> getGenes( CompositeSequence compositeSequence, int offset, int limit, boolean useGene2Cs ) {
         return this.compositeSequenceDao.getGenes( compositeSequence, offset, limit, useGene2Cs );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CursorPage<Gene> getGenesByCursor( CompositeSequence compositeSequence, @Nullable Cursor cursor, int limit, boolean useGene2Cs ) {
+        return this.compositeSequenceDao.getGenesByCursor( compositeSequence, cursor, limit, useGene2Cs );
     }
 
     @Override

@@ -38,6 +38,8 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 import ubic.gemma.persistence.service.genome.gene.GeneProductService;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultService;
+import ubic.gemma.persistence.util.Cursor;
+import ubic.gemma.persistence.util.CursorPage;
 import ubic.gemma.persistence.util.Slice;
 
 import org.springframework.lang.Nullable;
@@ -169,6 +171,11 @@ public class CompositeSequenceServiceImpl
     @Override
     public Slice<Gene> getGenes( CompositeSequence compositeSequence, int offset, int limit, boolean useGene2Cs ) {
         return compositeSequenceReadService.getGenes( compositeSequence, offset, limit, useGene2Cs );
+    }
+
+    @Override
+    public CursorPage<Gene> getGenesByCursor( CompositeSequence compositeSequence, @Nullable Cursor cursor, int limit, boolean useGene2Cs ) {
+        return compositeSequenceReadService.getGenesByCursor( compositeSequence, cursor, limit, useGene2Cs );
     }
 
     @Override

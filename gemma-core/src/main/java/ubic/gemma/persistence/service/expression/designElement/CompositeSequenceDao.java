@@ -25,8 +25,11 @@ import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
+import ubic.gemma.persistence.util.Cursor;
+import ubic.gemma.persistence.util.CursorPage;
 import ubic.gemma.persistence.util.Slice;
 
+import org.springframework.lang.Nullable;
 import java.util.Collection;
 import java.util.Map;
 
@@ -106,6 +109,26 @@ public interface CompositeSequenceDao extends FilteringVoEnabledDao<CompositeSeq
      * @return collection of genes
      */
     Slice<Gene> getGenes( CompositeSequence compositeSequence, int offset, int limit, boolean useGene2Cs );
+
+    /**
+     * Cursor-paged listing of {@link Gene}s associated with a single
+     * {@link CompositeSequence} — see {@code CURSOR_PAGINATION_STEP1_PLAN.md} step 1l.
+     * Always sorted by ascending {@code gene.id} (the primary key, indexed and unique);
+     * the cursor DAO currently restricts cursors to single-component id sorts until the
+     * index audit lands.
+     * <p>
+     * Mirrors the structure of {@link #getGenes(CompositeSequence, int, int, boolean)}
+     * but appends an {@code id > :cursorId} (ASC forward) / {@code id < :cursorId} (ASC
+     * backward) predicate to the existing probe→gene join query and fetches
+     * {@code limit + 1} rows to detect the next page; {@code totalElements} is left
+     * {@code null} (cursor mode skips the {@code COUNT(*)} per request, matching the
+     * rest of the cursor surface).
+     *
+     * @param useGene2Cs whether to use the denormalized {@code GENE2CS} mapping table for
+     *                   a faster (but potentially less accurate) lookup, matching the
+     *                   semantics of the offset variant.
+     */
+    CursorPage<Gene> getGenesByCursor( CompositeSequence compositeSequence, @Nullable Cursor cursor, int limit, boolean useGene2Cs );
 
     /**
      * @param compositeSequences sequences
