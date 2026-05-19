@@ -32,7 +32,7 @@ import ubic.gemma.core.ontology.providers.GeneOntologyServiceImpl.GOAspect;
 import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.core.util.test.category.SlowTest;
-import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
+import ubic.gemma.persistence.service.association.Gene2GOAssociationReadService;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 
 import java.io.IOException;
@@ -73,8 +73,8 @@ public class GeneOntologyService2Test extends BaseTest implements InitializingBe
         }
 
         @Bean
-        public Gene2GOAssociationService gene2GOAssociationService() {
-            return mock( Gene2GOAssociationService.class );
+        public Gene2GOAssociationReadService gene2GOAssociationReadService() {
+            return mock( Gene2GOAssociationReadService.class );
         }
 
         @Bean

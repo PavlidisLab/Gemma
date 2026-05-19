@@ -38,7 +38,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
+import ubic.gemma.persistence.service.association.Gene2GOAssociationReadService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.util.EntityUrlBuilder;
@@ -90,7 +90,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
     private ExpressionDataFileService expressionDataFileService;
 
     @Autowired
-    private Gene2GOAssociationService gene2GOAssociationService;
+    private Gene2GOAssociationReadService gene2GOAssociationService;
 
     @Autowired
     private GeneOntologyService goService;

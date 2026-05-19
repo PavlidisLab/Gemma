@@ -35,7 +35,7 @@ import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.genome.gene.GOGroupValueObject;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetMember;
-import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
+import ubic.gemma.persistence.service.association.Gene2GOAssociationReadService;
 import ubic.gemma.persistence.service.genome.gene.GeneSetService;
 import ubic.gemma.persistence.service.genome.gene.GeneSetValueObjectHelper;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
@@ -59,7 +59,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
     private static final Log log = LogFactory.getLog( GeneSetSearchImpl.class );
 
     @Autowired
-    private Gene2GOAssociationService gene2GoService;
+    private Gene2GOAssociationReadService gene2GoService;
     @Autowired
     private GeneOntologyService geneOntologyService;
     @Autowired

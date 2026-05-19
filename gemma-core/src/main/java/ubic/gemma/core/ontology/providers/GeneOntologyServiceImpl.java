@@ -44,7 +44,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.GeneOntologyTermValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.cache.CacheUtils;
-import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
+import ubic.gemma.persistence.service.association.Gene2GOAssociationReadService;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 
 import org.springframework.lang.Nullable;
@@ -71,7 +71,7 @@ public class GeneOntologyServiceImpl extends AbstractDelegatingOntologyService i
     private static final Log log = LogFactory.getLog( GeneOntologyServiceImpl.class.getName() );
 
     @Autowired
-    private Gene2GOAssociationService gene2GOAssociationService;
+    private Gene2GOAssociationReadService gene2GOAssociationService;
 
     @Autowired
     private GeneService geneService;

@@ -3,7 +3,7 @@ package ubic.gemma.core.ontology;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
+import ubic.gemma.persistence.service.association.Gene2GOAssociationReadService;
 
 import java.util.Collection;
 import java.util.List;
@@ -27,7 +27,7 @@ public interface GoMetric {
 
     Integer getChildrenOccurrence( Map<String, Integer> termCountMap, String term );
 
-    void setGene2GOAssociationService( Gene2GOAssociationService gene2GOAssociationService );
+    void setGene2GOAssociationReadService( Gene2GOAssociationReadService gene2GOAssociationService );
 
     void setGeneOntologyService( GeneOntologyService geneOntologyService );
 

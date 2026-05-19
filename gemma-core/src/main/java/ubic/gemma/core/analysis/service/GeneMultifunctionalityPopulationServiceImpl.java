@@ -34,7 +34,7 @@ import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.Multifunctionality;
-import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
+import ubic.gemma.persistence.service.association.Gene2GOAssociationReadService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
@@ -51,7 +51,7 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
     private static final Log log = LogFactory.getLog( GeneMultifunctionalityPopulationServiceImpl.class );
 
     @Autowired
-    private Gene2GOAssociationService gene2GOService;
+    private Gene2GOAssociationReadService gene2GOService;
 
     @Autowired
     private GeneService geneService;

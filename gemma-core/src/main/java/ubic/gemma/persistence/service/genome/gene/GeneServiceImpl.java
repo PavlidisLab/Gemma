@@ -43,7 +43,7 @@ import ubic.gemma.model.genome.PhysicalLocationValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.*;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
-import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
+import ubic.gemma.persistence.service.association.Gene2GOAssociationReadService;
 import ubic.gemma.persistence.service.common.description.CharacteristicReadService;
 import ubic.gemma.persistence.service.genome.GeneDao;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.AnnotationAssociationService;
@@ -69,7 +69,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
     @Autowired
     private CharacteristicReadService characteristicService;
     @Autowired
-    private Gene2GOAssociationService gene2GOAssociationService;
+    private Gene2GOAssociationReadService gene2GOAssociationService;
     @Autowired
     private GeneSetSearch geneSetSearch;
     @Autowired

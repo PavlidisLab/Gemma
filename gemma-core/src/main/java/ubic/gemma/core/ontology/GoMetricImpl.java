@@ -30,7 +30,7 @@ import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
+import ubic.gemma.persistence.service.association.Gene2GOAssociationReadService;
 
 import java.util.*;
 
@@ -52,7 +52,7 @@ public class GoMetricImpl implements GoMetric {
     private boolean partOf = true;
 
     @Autowired
-    private Gene2GOAssociationService gene2GOAssociationService;
+    private Gene2GOAssociationReadService gene2GOAssociationService;
     @Autowired
     private GeneOntologyService geneOntologyService;
 
@@ -337,7 +337,7 @@ public class GoMetricImpl implements GoMetric {
      * @param gene2GOAssociationService the gene2GOAssociationService to set
      */
     @Override
-    public void setGene2GOAssociationService( Gene2GOAssociationService gene2GOAssociationService ) {
+    public void setGene2GOAssociationReadService( Gene2GOAssociationReadService gene2GOAssociationService ) {
         this.gene2GOAssociationService = gene2GOAssociationService;
     }
 
