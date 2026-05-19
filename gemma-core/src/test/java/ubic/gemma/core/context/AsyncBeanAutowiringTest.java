@@ -1,7 +1,7 @@
 package ubic.gemma.core.context;
 
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
-import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.BaseTest5;
 
 import java.util.Collections;
 import java.util.List;
@@ -18,10 +18,11 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @DirtiesContext
 @ContextConfiguration
-public class AsyncBeanAutowiringTest extends BaseTest {
+public class AsyncBeanAutowiringTest extends BaseTest5 {
 
     public static class MyService {
     }
@@ -99,13 +100,13 @@ public class AsyncBeanAutowiringTest extends BaseTest {
     }
 
     @Test
-    @Ignore("Injecting a list of parametrized beans is not supported by Spring 3 (see issue https://github.com/PavlidisLab/Gemma/issues/612)")
+    @Disabled("Injecting a list of parametrized beans is not supported by Spring 3 (see issue https://github.com/PavlidisLab/Gemma/issues/612)")
     public void testAutowiredList() {
         assertThat( myServiceList ).containsExactly( myService );
     }
 
     @Test
-    @Ignore("Injecting a map of parametrized beans is not supported by Spring 3 (see issue https://github.com/PavlidisLab/Gemma/issues/612)")
+    @Disabled("Injecting a map of parametrized beans is not supported by Spring 3 (see issue https://github.com/PavlidisLab/Gemma/issues/612)")
     public void testAutowiredMap() {
         assertThat( myServiceByName ).containsExactlyEntriesOf( Collections.singletonMap( "myService", myService ) );
     }
@@ -128,9 +129,9 @@ public class AsyncBeanAutowiringTest extends BaseTest {
         assertThat( myServiceFactory.getObject() ).succeedsWithin( 1, TimeUnit.SECONDS );
     }
 
-    @Test(expected = NoSuchBeanDefinitionException.class)
+    @Test
     public void testInjectBeanDirectly() {
-        beanFactory.getBean( MyService.class );
+        assertThrows( NoSuchBeanDefinitionException.class, () -> beanFactory.getBean( MyService.class ) );
     }
 
 }
