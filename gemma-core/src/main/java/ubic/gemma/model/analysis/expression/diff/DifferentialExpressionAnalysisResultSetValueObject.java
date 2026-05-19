@@ -1,6 +1,8 @@
 package ubic.gemma.model.analysis.expression.diff;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.Getter;
+import lombok.Setter;
 import ubic.gemma.model.analysis.AnalysisResultSetValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.FactorValueBasicValueObject;
@@ -17,6 +19,8 @@ import java.util.stream.Collectors;
 /**
  * Wraps an {@link ExpressionAnalysisResultSet} and expose it to the public API.
  */
+@Getter
+@Setter
 public class DifferentialExpressionAnalysisResultSetValueObject extends AnalysisResultSetValueObject<DifferentialExpressionAnalysisResult, ExpressionAnalysisResultSet> {
 
     private DifferentialExpressionAnalysisValueObject analysis;
@@ -92,59 +96,6 @@ public class DifferentialExpressionAnalysisResultSetValueObject extends Analysis
                 .stream()
                 .map( result -> new DifferentialExpressionAnalysisResultValueObject( result, includeFactorValuesInContrasts, result2Genes.getOrDefault( result.getId(), Collections.emptySet() ), includeTaxonInGenes ) )
                 .collect( Collectors.toList() );
-    }
-
-    public DifferentialExpressionAnalysisValueObject getAnalysis() {
-        return analysis;
-    }
-
-    public void setAnalysis( DifferentialExpressionAnalysisValueObject analysis ) {
-        this.analysis = analysis;
-    }
-
-    public Collection<ExperimentalFactorValueObject> getExperimentalFactors() {
-        return experimentalFactors;
-    }
-
-    public void setExperimentalFactors( Collection<ExperimentalFactorValueObject> experimentalFactors ) {
-        this.experimentalFactors = experimentalFactors;
-    }
-
-    @Nullable
-    public FactorValueBasicValueObject getBaselineGroup() {
-        return baselineGroup;
-    }
-
-    public void setBaselineGroup( @Nullable FactorValueBasicValueObject baselineGroup ) {
-        this.baselineGroup = baselineGroup;
-    }
-
-    @Nullable
-    @SuppressWarnings("unused")
-    public FactorValueBasicValueObject getSecondBaselineGroup() {
-        return secondBaselineGroup;
-    }
-
-    public void setSecondBaselineGroup( @Nullable FactorValueBasicValueObject secondBaselineGroup ) {
-        this.secondBaselineGroup = secondBaselineGroup;
-    }
-
-    @Nullable
-    public Set<TaxonValueObject> getTaxa() {
-        return taxa;
-    }
-
-    public void setTaxa( @Nullable Set<TaxonValueObject> taxa ) {
-        this.taxa = taxa;
-    }
-
-    @Override
-    public Collection<DifferentialExpressionAnalysisResultValueObject> getResults() {
-        return results;
-    }
-
-    public void setResults( Collection<DifferentialExpressionAnalysisResultValueObject> results ) {
-        this.results = results;
     }
 
     @Override

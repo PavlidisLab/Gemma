@@ -14,6 +14,9 @@
  */
 package ubic.gemma.core.analysis.expression.diff;
 
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.Setter;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.gene.GeneValueObject;
@@ -26,11 +29,14 @@ import java.util.Collection;
  *
  * @author keshav
  */
+@Getter
+@Setter
 @SuppressWarnings({ "WeakerAccess", "unused" }) // Frontend use
 public class DifferentialExpressionMetaAnalysisValueObject implements Serializable {
 
     private GeneValueObject gene = null;
 
+    @Setter(AccessLevel.NONE)
     private String sortKey;
     private Double fisherPValue = null;
     private int numSearchedExperiments;
@@ -41,68 +47,8 @@ public class DifferentialExpressionMetaAnalysisValueObject implements Serializab
 
     private Collection<DifferentialExpressionValueObject> probeResults = null;
 
-    public Double getFisherPValue() {
-        return fisherPValue;
-    }
-
-    public void setFisherPValue( Double fisherPValue ) {
-        this.fisherPValue = fisherPValue;
-    }
-
-    public GeneValueObject getGene() {
-        return gene;
-    }
-
-    public void setGene( GeneValueObject gene ) {
-        this.gene = gene;
-    }
-
-    public Collection<BioAssaySet> getActiveExperiments() {
-        return activeExperiments;
-    }
-
-    public void setActiveExperiments( Collection<BioAssaySet> activeExperiments ) {
-        this.activeExperiments = activeExperiments;
-    }
-
-    public Collection<DifferentialExpressionValueObject> getProbeResults() {
-        return probeResults;
-    }
-
-    public void setProbeResults( Collection<DifferentialExpressionValueObject> probeResults ) {
-        this.probeResults = probeResults;
-    }
-
-    public String getSortKey() {
-        return sortKey;
-    }
-
     public void setSortKey() {
         this.sortKey = String.format( "%06f%s", this.getFisherPValue(), this.getGene().getOfficialSymbol() );
-    }
-
-    public int getNumSearchedExperiments() {
-        return numSearchedExperiments;
-    }
-
-    public void setNumSearchedExperiments( int numSearchedExperiments ) {
-        this.numSearchedExperiments = numSearchedExperiments;
-    }
-
-    public int getNumExperimentsInScope() {
-        return numExperimentsInScope;
-    }
-
-    public void setNumExperimentsInScope( int numExperimentsInScope ) {
-        this.numExperimentsInScope = numExperimentsInScope;
-    }
-
-    public int getNumMetThreshold() {
-        return numMetThreshold;
-    }
-
-    public void setNumMetThreshold( int numMetThreshold ) {
-        this.numMetThreshold = numMetThreshold;
     }
 
     @Override
