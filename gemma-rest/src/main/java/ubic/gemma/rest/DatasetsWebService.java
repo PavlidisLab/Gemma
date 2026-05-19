@@ -1800,6 +1800,123 @@ public class DatasetsWebService {
     }
 
     /**
+     * Request body for {@link #updateDatasetAnnotations}. The {@code annotations} field is the desired
+     * direct-EE characteristic set; the call is idempotent set-replace semantics (see the service
+     * javadoc on {@code ExpressionExperimentService#updateAnnotations}).
+     */
+    public static class AnnotationsUpdateRequest {
+        @Nullable
+        private List<AnnotationTagInput> annotations;
+
+        @Nullable
+        public List<AnnotationTagInput> getAnnotations() {
+            return annotations;
+        }
+
+        public void setAnnotations( @Nullable List<AnnotationTagInput> annotations ) {
+            this.annotations = annotations;
+        }
+    }
+
+    /**
+     * Minimal write-shape for an annotation tag. {@code category} and {@code value} are required;
+     * {@code categoryUri} and {@code valueUri} are optional ontology pointers. This is the JSON shape
+     * the curation-agents client sends; mapped to a {@code Characteristic} server-side.
+     */
+    public static class AnnotationTagInput {
+        private String category;
+        @Nullable
+        private String categoryUri;
+        private String value;
+        @Nullable
+        private String valueUri;
+
+        public String getCategory() {
+            return category;
+        }
+
+        public void setCategory( String category ) {
+            this.category = category;
+        }
+
+        @Nullable
+        public String getCategoryUri() {
+            return categoryUri;
+        }
+
+        public void setCategoryUri( @Nullable String categoryUri ) {
+            this.categoryUri = categoryUri;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        public void setValue( String value ) {
+            this.value = value;
+        }
+
+        @Nullable
+        public String getValueUri() {
+            return valueUri;
+        }
+
+        public void setValueUri( @Nullable String valueUri ) {
+            this.valueUri = valueUri;
+        }
+    }
+
+    @PUT
+    @Path("/{dataset}/annotations")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Replace the direct annotations of a dataset",
+            description = "Idempotent set-replace for the experiment-level tags (organism part, disease, "
+                    + "treatment, etc.) held directly by the dataset. Tags on subsets, factor values, "
+                    + "and biomaterials are NOT touched. The diff is computed by (category, categoryUri, "
+                    + "value, valueUri); unchanged tags keep their identity, drops are removed, new ones "
+                    + "are added with an `IC` evidence code. A single `ManualAnnotationEvent` is recorded "
+                    + "when the call actually changes the set. Requires `ACL_SECURABLE_EDIT` on the dataset.",
+            security = { @SecurityRequirement(name = "basicAuth"), @SecurityRequirement(name = "cookieAuth") },
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "400", description = "The request body is missing or malformed.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "403", description = "The caller lacks edit permission on the dataset.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<Set<AnnotationValueObject>> updateDatasetAnnotations(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Nullable AnnotationsUpdateRequest body
+    ) {
+        if ( body == null || body.getAnnotations() == null ) {
+            throw new BadRequestException( "A request body with an 'annotations' field is required (use an empty list to clear)." );
+        }
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        List<Characteristic> desired = new ArrayList<>( body.getAnnotations().size() );
+        for ( AnnotationTagInput tag : body.getAnnotations() ) {
+            if ( tag == null ) {
+                throw new BadRequestException( "Annotation entries must not be null." );
+            }
+            if ( StringUtils.isBlank( tag.getCategory() ) ) {
+                throw new BadRequestException( "Each annotation must have a non-blank 'category'." );
+            }
+            if ( StringUtils.isBlank( tag.getValue() ) ) {
+                throw new BadRequestException( "Each annotation must have a non-blank 'value'." );
+            }
+            Characteristic c = Characteristic.Factory.newInstance();
+            c.setCategory( tag.getCategory() );
+            c.setCategoryUri( tag.getCategoryUri() );
+            c.setValue( tag.getValue() );
+            c.setValueUri( tag.getValueUri() );
+            desired.add( c );
+        }
+        expressionExperimentService.updateAnnotations( ee, desired );
+        return respond( expressionExperimentService.getAnnotations( ee ) );
+    }
+
+    /**
      * Retrieve all available quantitation types for a dataset.
      */
     @GET
