@@ -1,8 +1,8 @@
 package ubic.gemma.persistence.initialization;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static ubic.gemma.persistence.initialization.BootstrappedDataSourceFactory.stripPathComponent;
 
 public class BootstrappedDataSourceFactoryTest {

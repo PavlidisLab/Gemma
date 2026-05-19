@@ -1,11 +1,11 @@
 package ubic.gemma.web.util;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.web.controller.util.EntityDelegator;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class EntityDelegatorTest {
 
@@ -29,8 +29,8 @@ public class EntityDelegatorTest {
         assertFalse( ed.holds( ExperimentalDesign.class ) );
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testEntityDelegatorWithNullId() {
-        new EntityDelegator<>( new ExpressionExperiment() );
+        assertThrows( IllegalArgumentException.class, () -> new EntityDelegator<>( new ExpressionExperiment() ) );
     }
 }
