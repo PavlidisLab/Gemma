@@ -5,7 +5,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import ubic.gemma.core.context.AsyncFactoryBean;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonReadService;
 
 import java.io.IOException;
 
@@ -19,9 +19,9 @@ public class HomologeneConfig {
     private String homologeneFile;
 
     @Bean
-    public AsyncFactoryBean<HomologeneService> homologeneService( GeneService geneService, TaxonService taxonService ) {
+    public AsyncFactoryBean<HomologeneService> homologeneService( GeneService geneService, TaxonReadService taxonReadService ) {
         return AsyncFactoryBean.singleton( () -> {
-            HomologeneService s = new HomologeneServiceImpl( geneService, taxonService, new HomologeneNcbiFtpResource( homologeneFile ) );
+            HomologeneService s = new HomologeneServiceImpl( geneService, taxonReadService, new HomologeneNcbiFtpResource( homologeneFile ) );
             if ( loadHomologene ) {
                 try {
                     s.refresh();

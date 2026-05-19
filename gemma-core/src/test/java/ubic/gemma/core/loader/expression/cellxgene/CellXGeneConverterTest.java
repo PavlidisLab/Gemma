@@ -30,7 +30,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonReadService;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -73,10 +73,10 @@ public class CellXGeneConverterTest extends BaseTest {
         ExternalDatabaseService eds = mock();
         ExternalDatabase cellxGeneDatabase = ExternalDatabase.Factory.newInstance( "CELLxGENE", DatabaseType.EXPRESSION );
         when( eds.findByName( "CELLxGENE" ) ).thenReturn( cellxGeneDatabase );
-        TaxonService taxonService = mock();
+        TaxonReadService taxonReadService = mock();
         human = new Taxon();
-        when( taxonService.findByScientificName( "Homo sapiens" ) ).thenReturn( human );
-        cellxgeneConverter = new CellXGeneConverter( eds, taxonService, new PubMedSearch( ncbiApiKey ) );
+        when( taxonReadService.findByScientificName( "Homo sapiens" ) ).thenReturn( human );
+        cellxgeneConverter = new CellXGeneConverter( eds, taxonReadService, new PubMedSearch( ncbiApiKey ) );
         fetcher = new CellXGeneFetcher( new SimpleRetryPolicy( 3, 500, 1.5 ),
                 downloadDir );
     }
