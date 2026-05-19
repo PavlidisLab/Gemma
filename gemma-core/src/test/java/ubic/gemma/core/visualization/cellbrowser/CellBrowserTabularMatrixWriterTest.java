@@ -1,6 +1,6 @@
 package ubic.gemma.core.visualization.cellbrowser;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataDoubleMatrix;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 

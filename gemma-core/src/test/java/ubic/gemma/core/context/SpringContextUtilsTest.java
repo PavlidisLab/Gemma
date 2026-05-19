@@ -1,10 +1,11 @@
 package ubic.gemma.core.context;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class SpringContextUtilsTest {
 
@@ -15,12 +16,12 @@ public class SpringContextUtilsTest {
         SpringContextUtils.prepareContext( context );
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testPrepareContextWhenMoreThanOneEnvironmentProfileIsActive() {
         GenericApplicationContext context = new GenericApplicationContext();
         context.getEnvironment().addActiveProfile( EnvironmentProfiles.TEST );
         context.getEnvironment().addActiveProfile( EnvironmentProfiles.DEV );
-        SpringContextUtils.prepareContext( context );
+        assertThrows( IllegalStateException.class, () -> SpringContextUtils.prepareContext( context ) );
     }
 
     @Test

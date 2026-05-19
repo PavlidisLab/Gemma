@@ -19,7 +19,7 @@
 
 package ubic.gemma.core.analysis.preprocess.batcheffects;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.InputStream;
 import java.text.DateFormat;
@@ -27,7 +27,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Tests of parsing various flat file formats used for Agilent slides (and possibly other types)

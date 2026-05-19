@@ -1,7 +1,7 @@
 package ubic.gemma.core.analysis.preprocess.filter;
 
 import cern.colt.matrix.DoubleMatrix1D;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.math.MatrixStats;

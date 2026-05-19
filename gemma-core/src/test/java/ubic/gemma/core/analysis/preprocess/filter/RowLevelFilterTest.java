@@ -1,7 +1,7 @@
 package ubic.gemma.core.analysis.preprocess.filter;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import ubic.basecode.math.Constants;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -15,14 +15,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class RowLevelFilterTest {
 
     private ExpressionDataDoubleMatrix matrix;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         RandomExpressionDataMatrixUtils.setSeed( 123L );
         ExpressionExperiment ee = new ExpressionExperiment();

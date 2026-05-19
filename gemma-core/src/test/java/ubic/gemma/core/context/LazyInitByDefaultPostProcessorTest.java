@@ -1,7 +1,7 @@
 package ubic.gemma.core.context;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.support.BeanDefinitionValidationException;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -83,7 +83,7 @@ public class LazyInitByDefaultPostProcessorTest {
         }
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
         contextRefreshed.set( false );
     }

@@ -1,6 +1,6 @@
 package ubic.gemma.core.analysis.preprocess;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
@@ -9,7 +9,7 @@ import ubic.gemma.model.expression.experiment.Statement;
 import java.nio.charset.StandardCharsets;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static ubic.gemma.core.analysis.preprocess.SplitExperimentServiceImpl.generateNameForSplit;
 
 public class SplitExperimentNameGeneratorTest {
