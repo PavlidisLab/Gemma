@@ -95,6 +95,12 @@ public abstract class AbstractFilteringVoEnabledService<O extends Identifiable, 
 
     @Override
     @Transactional(readOnly = true)
+    public CursorPage<VO> loadValueObjectsByCursor( @Nullable Filters filters, Sort sort, @Nullable Cursor cursor, int limit ) {
+        return voDao.loadValueObjectsByCursor( filters, sort, cursor, limit );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public long count( @Nullable Filters filters ) {
         return voDao.count( filters );
     }

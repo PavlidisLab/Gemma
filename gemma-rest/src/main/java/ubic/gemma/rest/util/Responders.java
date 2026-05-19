@@ -14,6 +14,7 @@
  */
 package ubic.gemma.rest.util;
 
+import ubic.gemma.persistence.util.CursorPage;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
@@ -97,6 +98,15 @@ public class Responders {
      */
     public static <T> QueriedAndFilteredAndPaginatedResponseDataObject<T> paginate( Slice<T> payload, String query, @Nullable Filters filters, String[] groupBy ) {
         return new QueriedAndFilteredAndPaginatedResponseDataObject<>( payload, query, filters, groupBy );
+    }
+
+    /**
+     * Paginate a {@link CursorPage} into the cursor-mode response wrapper.
+     *
+     * @see CursorPaginatedResponseDataObject
+     */
+    public static <T> CursorPaginatedResponseDataObject<T> paginateByCursor( CursorPage<T> payload, String[] groupBy ) {
+        return new CursorPaginatedResponseDataObject<>( payload, groupBy );
     }
 
     /**

@@ -2,6 +2,8 @@ package ubic.gemma.persistence.service;
 
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.persistence.util.Cursor;
+import ubic.gemma.persistence.util.CursorPage;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
@@ -24,4 +26,15 @@ public interface FilteringVoEnabledService<O extends Identifiable, VO extends Id
      * @see FilteringVoEnabledDao#loadValueObjects(Filters, Sort)
      */
     List<VO> loadValueObjects( @Nullable Filters filters, @Nullable Sort sort );
+
+    /**
+     * Keyset (cursor) pagination — service-layer pass-through to
+     * {@link FilteringVoEnabledDao#loadValueObjectsByCursor(Filters, Sort, Cursor, int)}.
+     *
+     * @see FilteringVoEnabledDao#loadValueObjectsByCursor(Filters, Sort, Cursor, int)
+     */
+    default CursorPage<VO> loadValueObjectsByCursor( @Nullable Filters filters, Sort sort, @Nullable Cursor cursor, int limit ) {
+        throw new UnsupportedOperationException( "Cursor-based pagination is not implemented for "
+                + getClass().getName() + "." );
+    }
 }

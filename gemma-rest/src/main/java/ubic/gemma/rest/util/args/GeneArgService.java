@@ -11,12 +11,15 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
+import ubic.gemma.persistence.util.Cursor;
+import ubic.gemma.persistence.util.CursorPage;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
 import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
 import java.util.ArrayList;
@@ -91,6 +94,14 @@ public class GeneArgService extends AbstractEntityArgService<Gene, GeneService> 
 
     public Slice<GeneValueObject> getGenes( int offset, int limit ) {
         return service.loadValueObjects( null, service.getSort( "id", Sort.Direction.ASC, Sort.NullMode.LAST ), offset, limit );
+    }
+
+    /**
+     * Cursor-mode counterpart to {@link #getGenes(int, int)}: keyset pagination over genes,
+     * always sorted by ascending {@code id} (the primary key, indexed and unique).
+     */
+    public CursorPage<GeneValueObject> getGenesByCursor( @Nullable Cursor cursor, int limit ) {
+        return service.loadValueObjectsByCursor( null, service.getSort( "id", Sort.Direction.ASC, Sort.NullMode.LAST ), cursor, limit );
     }
 
     public Slice<GeneValueObject> getGenesInTaxon( Taxon taxon, int offset, int limit ) {
