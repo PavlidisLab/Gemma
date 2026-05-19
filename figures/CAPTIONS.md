@@ -1,5 +1,33 @@
 # Figure captions
 
+## renovations_gantt.svg (v6 — 2026-05-19_1027)
+
+**What it is.** Phase 3 renovations Gantt updated for the 2026-05-19
+mid-day session close. Same encoding as the earlier snapshots; today
+moved from S2 to S6 to reflect five additional half-day sessions
+since the v1 chart.
+
+**How to read it.** Identical encoding to the earlier snapshots:
+rows grouped by renovation category, x-axis in agent-session units
+S0 through S10+, dashed line at S6 = today. Emerald is shipped,
+amber is in flight, gray is planned, red-hatch blocked on ops,
+dotted deferred. A new **Release plan** category at the bottom
+tracks the three-gate path to Gemma 2.0 (1.32.7 minor first,
+catch-up merge dev -> phase2-acl-migrate, then 2.0 release).
+
+**What it shows.** Net changes since `renovations_gantt_2026-05-19_0745.svg`:
+gsec absorption Phase D landed (emerald); gsec Phase C marked
+deferred (dotted) — recce done, migration pushed to 2.0.x.
+Ticket/workflow layer (read + write REST) flipped to done.
+Audit-workflow Phase B fully amber-to-emerald progressed
+(B-1/B-2/B-3 all landed). JUnit 5 per-class migration ticked
+forward (125+ classes off Vintage); JUnit 5 BaseTest hierarchy
+migration added as a new amber row (the next unlock, in flight on
+a parallel agent branch). Lombok cleanup advanced to 50 VOs.
+Three new "in flight on parallel agents" rows for audit-Phase-C
+recce, CurationDetailsService write-method deprecation, and the
+10th service decomp (CharacteristicReadService).
+
 ## renovations_gantt.svg
 
 **What it is.** Horizontal Gantt of the Phase 3 renovations plan from
