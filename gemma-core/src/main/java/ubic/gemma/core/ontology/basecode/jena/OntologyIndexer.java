@@ -40,16 +40,18 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Stub indexer for ontology full-text search.
+ * Indexer for ontology full-text search.
  * <p>
- * The previous implementation indexed an OntModel into Lucene 3.x via a private {@code LuceneSearchIndex}
- * implementation of {@link SearchIndex}. Lucene 3 has been removed on the renovations branch so this indexer is now
- * disabled — both factory methods return null. {@link AbstractOntologyService} already tolerates a null index (search
- * returns empty results with a warning).
- * <p>
- * Reinstating ontology full-text search is future renovation work (proper Lucene 5+ port, or migration to Jena's
- * {@code jena-text} module). The {@link IndexableProperty} type is preserved because callers in baseCode and Gemma
- * reference {@link #DEFAULT_INDEXABLE_PROPERTIES} for their own configuration.
+ * <b>Phase 3 (Gemma 2.0) restoration.</b> baseCode 1.1.34-RENOVATIONS-SNAPSHOT
+ * shipped this class as a stub that always returned null — the previous
+ * Lucene-3 implementation was deleted on the renovations branch — which
+ * silently disabled {@code findTerm} across every provider. Now that the
+ * baseCode ontology source lives in-tree on Lucene 9 + Jena 4.10, this
+ * indexer builds a real in-memory Lucene 9 index per ontology via
+ * {@link LuceneOntologySearchIndex}, restoring per-provider free-text
+ * search. {@link AbstractOntologyService} continues to tolerate a null
+ * index (search returns empty results with a warning) if construction
+ * fails for any reason.
  *
  * @author pavlidis
  */
@@ -95,29 +97,54 @@ class OntologyIndexer {
         DEFAULT_INDEXABLE_PROPERTIES = Collections.unmodifiableSet( props );
     }
 
-    /** Stub: always null. */
+    /**
+     * Look up a previously-built index for the named ontology. The Gemma
+     * implementation does not persist indexes to disk yet (the pre-strip
+     * baseCode version cached under {@code Configuration.get("ontology.cache.dir")});
+     * call {@link #indexOntology(String, OntModel, Set, boolean)} to build
+     * one on demand. Returning null signals to {@link AbstractOntologyService}
+     * that no cached index exists, which triggers a rebuild.
+     */
     @Nullable
     public static SearchIndex getSubjectIndex( String name, Set<String> excludedFromStemming ) {
         return null;
     }
 
-    /** Stub: always null. */
+    /**
+     * @see #getSubjectIndex(String, Set)
+     */
     @Nullable
     public static SearchIndex getSubjectIndex( String name, Collection<IndexableProperty> indexableProperties, Set<String> excludedFromStemming ) {
         return null;
     }
 
-    /** Stub: always null; logs once. */
+    /**
+     * Build a fresh in-memory Lucene 9 index over the given {@link OntModel}
+     * using {@link #DEFAULT_INDEXABLE_PROPERTIES} as the indexable property
+     * set. Returns null only if building the index fails outright; the caller
+     * ({@link AbstractOntologyService}) treats null as "search disabled for
+     * this ontology" and falls back to returning empty results with a
+     * warning.
+     */
     @Nullable
     public static SearchIndex indexOntology( String name, OntModel model, Set<String> excludedFromStemming, boolean force ) throws JenaException, IOException {
-        log.info( "Ontology search is disabled (renovations stub); skipping indexing of {}", name );
-        return null;
+        return indexOntology( name, model, DEFAULT_INDEXABLE_PROPERTIES, excludedFromStemming, force );
     }
 
-    /** Stub: always null; logs once. */
+    /**
+     * Build a fresh in-memory Lucene 9 index over the given {@link OntModel}
+     * with the caller-supplied indexable property set.
+     */
     @Nullable
     public static SearchIndex indexOntology( String name, OntModel model, Collection<IndexableProperty> indexableProperties, Set<String> excludedFromStemming, boolean force ) throws JenaException, IOException {
-        log.info( "Ontology search is disabled (renovations stub); skipping indexing of {}", name );
-        return null;
+        try {
+            log.info( "Building in-memory Lucene 9 index for ontology {}", name );
+            return LuceneOntologySearchIndex.build( model, indexableProperties, excludedFromStemming );
+        } catch ( RuntimeException e ) {
+            // Don't take the whole context down if indexing fails; downstream
+            // findTerm calls degrade gracefully via the null-index branch.
+            log.error( "Failed to build search index for ontology {} — search will be disabled for it.", name, e );
+            return null;
+        }
     }
 }
