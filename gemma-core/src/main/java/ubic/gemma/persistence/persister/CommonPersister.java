@@ -18,7 +18,6 @@
  */
 package ubic.gemma.persistence.persister;
 
-import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.*;
@@ -26,17 +25,11 @@ import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.model.common.measurement.Unit;
-import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailDao;
 import ubic.gemma.persistence.service.common.description.BibliographicReferenceDao;
 import ubic.gemma.persistence.service.common.description.DatabaseEntryDao;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseDao;
-import ubic.gemma.persistence.service.common.measurement.UnitDao;
-import ubic.gemma.persistence.service.common.protocol.ProtocolDao;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeDao;
-import ubic.gemma.persistence.util.BusinessKey;
 
 import java.util.Map;
 
@@ -44,7 +37,7 @@ import java.util.Map;
  * Persister for ubic.gemma.model.common package classes.
  * <p>
  * Phase 3 persister retirement: methods here are being rewired to delegate to
- * {@link BusinessKey#find(Session, Object)} (or DAO-level {@code find} where it already
+ * {@code BusinessKey.find(Session, T)} (or DAO-level {@code find} where it already
  * wraps BusinessKey) followed by a direct {@code session.persist} / {@code dao.create}
  * on miss. The aim is to make each {@code persistXxx} a thin two-line "lookup by
  * business key, else create" so the whole persister can eventually be deleted in favour
@@ -56,22 +49,13 @@ import java.util.Map;
 public abstract class CommonPersister extends AbstractPersister {
 
     @Autowired
-    private AuditTrailDao auditTrailDao;
-
-    @Autowired
     private BibliographicReferenceDao bibliographicReferenceDao;
 
     @Autowired
     private ExternalDatabaseDao externalDatabaseDao;
 
     @Autowired
-    private ProtocolDao protocolDao;
-
-    @Autowired
     private QuantitationTypeDao quantitationTypeDao;
-
-    @Autowired
-    private UnitDao unitDao;
 
     @Autowired
     private DatabaseEntryDao databaseEntryDao;
@@ -79,18 +63,12 @@ public abstract class CommonPersister extends AbstractPersister {
     @Override
     @SuppressWarnings("unchecked")
     protected <T extends Identifiable> T doPersist( T entity, Caches caches ) {
-        if ( entity instanceof AuditTrail ) {
-            return ( T ) this.persistAuditTrail( ( AuditTrail ) entity );
-        } else if ( entity instanceof User ) {
+        if ( entity instanceof User ) {
             throw new UnsupportedOperationException( "Don't persist users via this class; use the UserManager (core)" );
-        } else if ( entity instanceof Unit ) {
-            return ( T ) this.persistUnit( ( Unit ) entity );
         } else if ( entity instanceof QuantitationType ) {
             return ( T ) this.persistQuantitationType( ( QuantitationType ) entity, caches );
         } else if ( entity instanceof ExternalDatabase ) {
             return ( T ) this.persistExternalDatabase( ( ExternalDatabase ) entity, caches );
-        } else if ( entity instanceof Protocol ) {
-            return ( T ) this.persistProtocol( ( Protocol ) entity );
         } else if ( entity instanceof Characteristic ) {
             // Characteristic is always cascaded from its owning entity (Investigation,
             // BioMaterial, FactorValue, etc. all declare cascade="all" on their
@@ -111,18 +89,6 @@ public abstract class CommonPersister extends AbstractPersister {
         ExternalDatabase persistedDb = this.persistExternalDatabase( tempExternalDb, caches );
         databaseEntry.setExternalDatabase( persistedDb );
         assert databaseEntry.getExternalDatabase().getId() != null;
-    }
-
-    protected AuditTrail persistAuditTrail( AuditTrail entity ) {
-        // AuditTrail has no business key; events are persisted by composition.
-        // Most callers reach AuditTrail via the Auditable parent's cascade=all and
-        // never invoke this directly — preserved for the few that do.
-        for ( AuditEvent event : entity.getEvents() ) {
-            if ( event == null )
-                continue; // legacy of ordered-list which could end up with gaps; should not be needed
-            assert event.getPerformer() != null;
-        }
-        return auditTrailDao.create( entity );
     }
 
     protected ExternalDatabase persistExternalDatabase( ExternalDatabase database, Caches caches ) {
@@ -154,12 +120,6 @@ public abstract class CommonPersister extends AbstractPersister {
         return databaseEntryDao.create( entity );
     }
 
-    protected Protocol persistProtocol( Protocol protocol ) {
-        // Protocols are not shared across analyses (per PP2017 comment); always create.
-        // Kept as a thin pass-through for the dispatch in doPersist().
-        return protocolDao.create( protocol );
-    }
-
     protected QuantitationType persistQuantitationType( QuantitationType qType, Caches caches ) {
         // QTs are per-experiment — we deliberately do NOT find-or-create across
         // experiments, only within one (via the cache, which the caller clears
@@ -179,14 +139,6 @@ public abstract class CommonPersister extends AbstractPersister {
         QuantitationType qt = quantitationTypeDao.create( qType );
         quantitationTypeCache.put( key, qt );
         return qt;
-    }
-
-    protected Unit persistUnit( Unit unit ) {
-        // Unit has a static BusinessKey.find — bypass the DAO-level wrapper so the
-        // intent is visible at the call site.
-        Session session = getSessionFactory().getCurrentSession();
-        Unit existing = BusinessKey.find( session, unit );
-        return existing != null ? existing : unitDao.create( unit );
     }
 
     private Object persistBibliographicReference( BibliographicReference reference, Caches caches ) {
