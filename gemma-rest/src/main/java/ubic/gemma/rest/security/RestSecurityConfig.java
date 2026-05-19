@@ -31,12 +31,24 @@ import java.util.List;
 /**
  * Spring Security 6 configuration for the Gemma RESTful API ({@code /rest/v2/**}).
  *
- * <p><b>NOT YET WIRED.</b> This class exists in the codebase but is not yet picked
- * up by any component-scan or XML reference. Wiring is a follow-up step in the
- * gemma-rest standalone packaging migration. When wired, this class will replace
- * the {@code <s:http pattern="/rest/v2/**">} block in
+ * <p><b>Wiring status (Phase 1 of GEMMA_REST_STANDALONE_ROADMAP.md):</b> this
+ * {@code @Configuration} class is picked up by gemma-rest's existing
+ * {@code <context:component-scan base-package="ubic.gemma.rest"/>}
+ * ({@code gemma-rest/src/main/resources/ubic/gemma/applicationContext-component-scan.xml}).
+ * It is therefore active in any Spring root context that loads gemma-rest's
+ * classpath XML — which today means both gemma-web's WAR boot AND the
+ * gemma-rest standalone WAR boot (the latter activated via
+ * {@code mvn -pl gemma-rest -P gemma-rest-war package}; see
+ * {@code gemma-rest/src/main/webapp/WEB-INF/web.xml}).
+ *
+ * <p>The legacy {@code <s:http pattern="/rest/v2/**">} block in
  * {@code gemma-web/src/main/resources/ubic/gemma/applicationContext-security.xml}
- * (currently lines 41-47).
+ * (lines 41-47) coexists with this Java config for now. Removing the XML block
+ * is roadmap §8 row 2; until that lands, both definitions register a
+ * {@code SecurityFilterChain} for {@code /rest/v2/**} and Spring Security
+ * applies them in registration order. The gemma-rest standalone WAR
+ * deliberately omits gemma-web's {@code applicationContext-security.xml} from
+ * its classpath, so there only this {@code @Bean} contributes the REST chain.
  *
  * <h2>Filter chain summary (translated from the legacy XML)</h2>
  * The legacy XML block was:
