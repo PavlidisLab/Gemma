@@ -81,12 +81,32 @@ public abstract class CommonPersister extends AbstractPersister {
         }
     }
 
-    protected void fillInDatabaseEntry( DatabaseEntry databaseEntry, Caches caches ) {
+    /**
+     * Phase 3 persister-retirement scaffold: takes a per-call
+     * {@code Map<String, ExternalDatabase>} directly instead of pulling it out of
+     * the {@link Caches} value object. New callers ({@link GenomePersister},
+     * {@link EeWriteServiceImpl}) pass their own map; the legacy
+     * {@link #fillInDatabaseEntry(DatabaseEntry, Caches)} below delegates here
+     * to preserve the dispatch-arm paths until those are lifted too.
+     */
+    protected void fillInDatabaseEntry( DatabaseEntry databaseEntry, Map<String, ExternalDatabase> externalDbCache ) {
         ExternalDatabase tempExternalDb = databaseEntry.getExternalDatabase();
         databaseEntry.setExternalDatabase( null );
-        ExternalDatabase persistedDb = this.persistExternalDatabase( tempExternalDb, caches );
+        ExternalDatabase persistedDb = this.persistExternalDatabase( tempExternalDb, externalDbCache );
         databaseEntry.setExternalDatabase( persistedDb );
         assert databaseEntry.getExternalDatabase().getId() != null;
+    }
+
+    /**
+     * In-CommonPersister convenience: pulls the per-call Map out of the
+     * {@link Caches} container for the dispatch-arm paths (and the legacy
+     * persistBibliographicReference). External callers
+     * ({@link GenomePersister}, {@link EeWriteServiceImpl}) call
+     * {@link #fillInDatabaseEntry(DatabaseEntry, Map)} directly with their own
+     * per-call map.
+     */
+    private void fillInDatabaseEntry( DatabaseEntry databaseEntry, Caches caches ) {
+        this.fillInDatabaseEntry( databaseEntry, caches.getExternalDatabaseCache() );
     }
 
     /**
@@ -124,15 +144,25 @@ public abstract class CommonPersister extends AbstractPersister {
         return this.persistExternalDatabase( database, caches.getExternalDatabaseCache() );
     }
 
-    private DatabaseEntry persistDatabaseEntry( DatabaseEntry entity, Caches caches ) {
+    /**
+     * Phase 3 persister-retirement scaffold: takes a per-call
+     * {@code Map<String, ExternalDatabase>} directly. The legacy
+     * {@link #persistDatabaseEntry(DatabaseEntry, Caches)} delegates here for
+     * the dispatch-arm path.
+     */
+    protected DatabaseEntry persistDatabaseEntry( DatabaseEntry entity, Map<String, ExternalDatabase> externalDbCache ) {
         if ( entity.getExternalDatabase() == null ) {
             throw new IllegalArgumentException( String.format( "DatabaseEntry %s must have an associated external database.", entity ) );
         }
         // Resolve the ExternalDatabase first (BK lookup, cached), then persist the
         // entry itself. DatabaseEntry has no business key — accession is per-entry
         // and only unique within an external database, so we always create.
-        entity.setExternalDatabase( this.persistExternalDatabase( entity.getExternalDatabase(), caches ) );
+        entity.setExternalDatabase( this.persistExternalDatabase( entity.getExternalDatabase(), externalDbCache ) );
         return databaseEntryDao.create( entity );
+    }
+
+    private DatabaseEntry persistDatabaseEntry( DatabaseEntry entity, Caches caches ) {
+        return this.persistDatabaseEntry( entity, caches.getExternalDatabaseCache() );
     }
 
     protected QuantitationType persistQuantitationType( QuantitationType qType, Caches caches ) {
@@ -156,13 +186,23 @@ public abstract class CommonPersister extends AbstractPersister {
         return qt;
     }
 
-    private Object persistBibliographicReference( BibliographicReference reference, Caches caches ) {
+    /**
+     * Phase 3 persister-retirement scaffold: takes a per-call
+     * {@code Map<String, ExternalDatabase>} directly. The legacy
+     * {@link #persistBibliographicReference(BibliographicReference, Caches)} delegates
+     * here for the dispatch-arm path.
+     */
+    protected BibliographicReference persistBibliographicReference( BibliographicReference reference, Map<String, ExternalDatabase> externalDbCache ) {
         // BK is the pubAccession (a DatabaseEntry); resolve its ExternalDatabase first
         // so the BK lookup can match by accession string. BibliographicReference has
         // no static BusinessKey.find — the DAO-level find() queries by pubAccession.accession.
-        this.fillInDatabaseEntry( reference.getPubAccession(), caches );
+        this.fillInDatabaseEntry( reference.getPubAccession(), externalDbCache );
         BibliographicReference existing = bibliographicReferenceDao.find( reference );
         return existing != null ? existing : bibliographicReferenceDao.create( reference );
+    }
+
+    private BibliographicReference persistBibliographicReference( BibliographicReference reference, Caches caches ) {
+        return this.persistBibliographicReference( reference, caches.getExternalDatabaseCache() );
     }
 
 }

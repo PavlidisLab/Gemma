@@ -186,7 +186,8 @@ public class EeWriteServiceImpl implements EeWriteService {
         ee.setOtherRelevantPublications( persister().doPersist( ee.getOtherRelevantPublications(), caches ) );
 
         if ( ee.getAccession() != null ) {
-            persister().fillInDatabaseEntry( ee.getAccession(), caches );
+            // Phase 3 lift: per-call Map; see fillInBioAssayAssociations note.
+            persister().fillInDatabaseEntry( ee.getAccession(), caches.getExternalDatabaseCache() );
         }
 
         // This has to come first and be persisted, so our FactorValues get persisted before we process the
@@ -484,7 +485,8 @@ public class EeWriteServiceImpl implements EeWriteService {
 
         log.debug( "Persisting " + entity );
         if ( entity.getExternalAccession() != null ) {
-            persister().fillInDatabaseEntry( entity.getExternalAccession(), caches );
+            // Phase 3 lift: per-call Map; see fillInBioAssayAssociations note.
+            persister().fillInDatabaseEntry( entity.getExternalAccession(), caches.getExternalDatabaseCache() );
         }
 
         log.debug( "db entry done" );

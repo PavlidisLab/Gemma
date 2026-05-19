@@ -181,7 +181,8 @@ public abstract class GenomePersister extends CommonPersister {
         }
         for ( DatabaseEntry de : newGeneInfo.getAccessions() ) {
             if ( !updatedAcMap.containsKey( de.getAccession() ) ) {
-                this.fillInDatabaseEntry( de, caches );
+                // Phase 3 lift: per-call Map; see fillInGeneProductAssociations note.
+                this.fillInDatabaseEntry( de, caches.getExternalDatabaseCache() );
                 existingGene.getAccessions().add( de );
             }
         }
@@ -454,7 +455,8 @@ public abstract class GenomePersister extends CommonPersister {
 
         if ( !gene.getAccessions().isEmpty() ) {
             for ( DatabaseEntry de : gene.getAccessions() ) {
-                this.fillInDatabaseEntry( de, caches );
+                // Phase 3 lift: per-call Map; see fillInGeneProductAssociations note.
+                this.fillInDatabaseEntry( de, caches.getExternalDatabaseCache() );
             }
         }
 
@@ -601,7 +603,9 @@ public abstract class GenomePersister extends CommonPersister {
 
         if ( bioSequence.getSequenceDatabaseEntry() != null && !bioSequence.getSequenceDatabaseEntry()
                 .equals( existingBioSequence.getSequenceDatabaseEntry() ) ) {
-            existingBioSequence.setSequenceDatabaseEntry( this.doPersist( bioSequence.getSequenceDatabaseEntry(), caches ) );
+            // Phase 3 lift: was doPersist (instanceof DatabaseEntry arm); now a direct
+            // call to the per-call-Map persistDatabaseEntry helper.
+            existingBioSequence.setSequenceDatabaseEntry( this.persistDatabaseEntry( bioSequence.getSequenceDatabaseEntry(), caches.getExternalDatabaseCache() ) );
         }
 
         // I don't fully understand what's going on here, but if we don't do this we fail to synchronize changes.
@@ -657,7 +661,8 @@ public abstract class GenomePersister extends CommonPersister {
         }
         for ( DatabaseEntry de : geneProduct.getAccessions() ) {
             if ( !updatedGpMap.containsKey( de.getAccession() ) ) {
-                this.fillInDatabaseEntry( de, caches );
+                // Phase 3 lift: per-call Map; see fillInGeneProductAssociations note.
+                this.fillInDatabaseEntry( de, caches.getExternalDatabaseCache() );
                 existing.getAccessions().add( de );
             }
         }
