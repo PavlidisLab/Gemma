@@ -337,9 +337,6 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
 
         populateAssociatedExperimentCount( Collections.singletonList( gvo ) );
 
-        // Phase 2: gene-gene coexpression / node-degree information is no longer populated;
-        // the coexpression subsystem was removed.
-
         return gvo;
     }
 

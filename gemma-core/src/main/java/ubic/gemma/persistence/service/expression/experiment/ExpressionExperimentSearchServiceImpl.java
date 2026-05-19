@@ -200,8 +200,6 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
 
                 assert numWithDifferentialExpressionAnalysis <= entry.getValue().size();
 
-                // Phase 2: coexpression analysis count no longer tracked; the coex subsystem was removed.
-                ftvo.setNumWithCoexpressionAnalysis( 0 );
                 ftvo.setNumWithDifferentialExpressionAnalysis( numWithDifferentialExpressionAnalysis );
                 displayResults.add( new SearchResultDisplayObject( ftvo ) );
             }

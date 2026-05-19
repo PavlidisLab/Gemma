@@ -166,7 +166,4 @@ public class GeneWebService {
     ) {
         return respond( geneArgService.getGeneGoTerms( geneArg ) );
     }
-
-    // Phase 2: the gene-gene coexpression endpoint and the GeneCoexpressionSearchService were removed
-    // along with the rest of the coexpression subsystem.
 }

@@ -159,17 +159,6 @@ public class ExpressionExperimentDataFetchController {
     }
 
     /**
-     * AJAX Method - kicks off a job to start generating (if need be) the text based tab delimited co-expression data
-     * file
-     */
-    public String getCoExpressionDataFile( Long eeId ) {
-        ExpressionExperimentDataFetchCommand tc = new ExpressionExperimentDataFetchCommand();
-        tc.setExpressionExperimentId( eeId );
-        CoExpressionDataWriterJob job = new CoExpressionDataWriterJob( tc );
-        return taskRunningService.submitTask( job );
-    }
-
-    /**
      * AJAX Method - kicks off a job to start generating (if need be) the text based tab delimited experiment design
      * data file
      */
@@ -195,41 +184,6 @@ public class ExpressionExperimentDataFetchController {
                 return t;
         }
         return null;
-    }
-
-    class CoExpressionDataWriterJob extends AbstractTask<ExpressionExperimentDataFetchCommand> {
-
-        protected final Log log = LogFactory.getLog( this.getClass().getName() );
-
-        CoExpressionDataWriterJob( ExpressionExperimentDataFetchCommand eeId ) {
-            super( eeId );
-        }
-
-        @Override
-        public TaskResult call() {
-            StopWatch watch = new StopWatch();
-            watch.start();
-
-            Long eeId = this.getTaskCommand().getExpressionExperimentId();
-            ExpressionExperiment ee = expressionExperimentService.load( eeId );
-
-            if ( ee == null ) {
-                throw new RuntimeException(
-                        "No data available (either due to lack of authorization, or use of an invalid entity identifier)" );
-            }
-
-            Path f;
-            try ( LockedPath lockedPath = expressionDataFileService.writeOrLocateCoexpressionDataFile( ee, false ) ) {
-                f = lockedPath.getPath();
-            } catch ( IOException e ) {
-                throw new RuntimeException( e );
-            }
-
-            watch.stop();
-            log.debug( "Finished getting co-expression file; done in " + watch.getTime() + " milliseconds" );
-
-            return newTaskResult( servletContext.getContextPath() + "/getData.html?file=" + f.getFileName() );
-        }
     }
 
     /**

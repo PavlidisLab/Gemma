@@ -341,15 +341,6 @@ public interface ExpressionDataFileService {
     void writeDesignMatrix( ExpressionExperiment ee, QuantitationType qt, Class<? extends DataVector> vectorType, Writer writer, boolean autoFlush ) throws IOException;
 
     /**
-     * Write or located the coexpression data file for a given experiment
-     *
-     * @param ee         the experiment
-     * @param forceWrite whether to force write
-     * @return file
-     */
-    LockedPath writeOrLocateCoexpressionDataFile( ExpressionExperiment ee, boolean forceWrite ) throws IOException;
-
-    /**
      * Locate or create a data file containing the 'preferred and masked' expression data matrix, with filtering for low
      * expression applied (currently supports default settings only). It will be gzip-compressed.
      * The file will be regenerated even if one already exists if the forceWrite parameter is true, or if there was

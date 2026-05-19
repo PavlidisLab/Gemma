@@ -795,8 +795,8 @@ public class ExpressionExperimentQCController {
      *         this can be removed
      */
     private XYSeries getCorrelHist( ExpressionExperiment ee ) throws IOException {
-        // Phase 2: the persistent CoexpCorrelationDistribution went away with the coexpression
-        // subsystem. Only the legacy on-disk file path is left.
+        // Only the legacy on-disk file path is supported -- the persistent CoexpCorrelationDistribution
+        // went away with the coexpression subsystem.
         return this.getCorrelHistFromFile( ee );
     }
 
@@ -833,7 +833,6 @@ public class ExpressionExperimentQCController {
                 }
             }
 
-            // Phase 2: DB backfill removed with the coexpression subsystem.
             return series;
 
         }
@@ -913,9 +912,6 @@ public class ExpressionExperimentQCController {
         String suffix = ".correlDist.txt";
         return analysisStoragePath.resolve( shortName + suffix );
     }
-
-    // Phase 2: legacy CoexpCorrelationDistribution -> DB conversion removed along with the
-    // coexpression subsystem.
 
     private void writeDetailedFactorAnalysis( ExpressionExperiment ee, int perChartSize, ChartTheme chartTheme, HttpServletResponse os ) throws Exception {
         SVDResult svdo = svdService.getSvdFactorAnalysis( ee );
