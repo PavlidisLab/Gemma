@@ -1,8 +1,8 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import org.assertj.core.util.Sets;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.simple.OntologyTermSimple;
 import ubic.gemma.core.ontology.OntologyService;
@@ -26,7 +26,7 @@ public class ExpressionExperimentFilterRewriteHelperServiceTest {
     private OntologyService ontologyService;
     private OntologyTerm term, b, c;
 
-    @Before
+    @BeforeEach
     public void setUp() throws TimeoutException {
         ontologyService = mock();
         filterInferenceService = new ExpressionExperimentFilterRewriteHelperService( ontologyService );

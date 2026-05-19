@@ -20,8 +20,8 @@ package ubic.gemma.core.loader.util.biomart;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import ubic.gemma.model.genome.Taxon;
 
@@ -29,8 +29,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.ConnectException;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests that biomart fetcher works correctly. That is firstly that a file can be downloaded it calls the biomart
@@ -44,7 +44,7 @@ public class BioMartEnsemblNcbiFetcherTest {
     private static final Log log = LogFactory.getLog( BioMartEnsemblNcbiFetcherTest.class );
     private BiomartEnsemblNcbiFetcher biomartEnsemblNcbiFetcher = null;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         biomartEnsemblNcbiFetcher = new BiomartEnsemblNcbiFetcher();
     }
