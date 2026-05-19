@@ -19,6 +19,8 @@
 package ubic.gemma.model.expression.designElement;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.Getter;
+import lombok.Setter;
 import ubic.gemma.model.analysis.sequence.GeneMappingSummary;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
@@ -29,6 +31,8 @@ import java.util.Collection;
  * @author anton
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
+@Getter
+@Setter
 public class CompositeSequenceValueObject extends IdentifiableValueObject<CompositeSequence> {
 
     private static final long serialVersionUID = 4915680501039784666L;
@@ -86,37 +90,5 @@ public class CompositeSequenceValueObject extends IdentifiableValueObject<Compos
         int result = 1;
         result = prime * result + ( ( id == null ) ? 0 : id.hashCode() );
         return result;
-    }
-
-    public ArrayDesignValueObject getArrayDesign() {
-        return arrayDesign;
-    }
-
-    public void setArrayDesign( ArrayDesignValueObject arrayDesign ) {
-        this.arrayDesign = arrayDesign;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription( String description ) {
-        this.description = description;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName( String name ) {
-        this.name = name;
-    }
-
-    public Collection<GeneMappingSummary> getGeneMappingSummaries() {
-        return geneMappingSummaries;
-    }
-
-    public void setGeneMappingSummaries( Collection<GeneMappingSummary> geneMappingSummaries ) {
-        this.geneMappingSummaries = geneMappingSummaries;
     }
 }
