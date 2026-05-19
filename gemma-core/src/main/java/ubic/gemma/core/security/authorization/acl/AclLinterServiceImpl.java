@@ -7,6 +7,7 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.NativeQuery;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.security.acls.model.MutableAcl;
 import org.springframework.security.acls.model.Permission;
@@ -19,6 +20,7 @@ import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.protocol.Protocol;
 
 import javax.annotation.Nullable;
+import javax.sql.DataSource;
 import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -45,6 +47,20 @@ public class AclLinterServiceImpl implements AclLinterService {
     private ParentIdentityRetrievalStrategy parentIdentityRetrievalStrategy;
     @Autowired
     private AclClassMetadata aclClassMetadata;
+
+    /**
+     * Renovations Phase 3: gsec HQL deprecation. Direct JdbcTemplate access to the canonical
+     * Spring Security ACL tables (acl_class, acl_object_identity, acl_sid, acl_entry) lets us
+     * retire HQL references to {@code gemma.gsec.acl.domain.*} entity mappings one query at a
+     * time. Initialised lazily from the {@link DataSource} so the field can be {@code @Autowired}
+     * without forcing the wiring into a constructor.
+     */
+    private JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    public void setDataSource( DataSource dataSource ) {
+        this.jdbcTemplate = new JdbcTemplate( dataSource );
+    }
 
     @Override
     @Transactional
@@ -158,12 +174,26 @@ public class AclLinterServiceImpl implements AclLinterService {
      */
     private void lintSecurableLackingObjectIdentity( Class<? extends Securable> clazz, AclLinterConfig config, Collection<LintResult> results ) {
         log.info( "Linting " + clazz.getSimpleName() + " lacking ACL object identities..." );
+        // Phase 3 gsec HQL deprecation: pull the existing AOI identifiers for this class via raw
+        // SQL against acl_object_identity + acl_class (canonical Spring Security schema), then
+        // compute the set-difference against the entity ids in Java. Replaces the previous HQL
+        // subquery against gsec's AclObjectIdentity entity mapping.
+        Set<Long> existingAoiIdentifiers = new HashSet<>( jdbcTemplate.queryForList(
+                "select aoi.object_id_identity "
+                        + "from acl_object_identity aoi "
+                        + "join acl_class cls on aoi.object_id_class = cls.id "
+                        + "where cls.class = ?",
+                Long.class, clazz.getName() ) );
         //noinspection unchecked
-        List<Long> list = sessionFactory.getCurrentSession()
-                .createQuery( "select e.id from " + sessionFactory.getMetamodel().entity( clazz ).getName() + " e "
-                        + "where e.id not in (select aoi.identifier from AclObjectIdentity aoi where aoi.type = :type)" )
-                .setParameter( "type", clazz.getName() )
+        List<Long> allEntityIds = sessionFactory.getCurrentSession()
+                .createQuery( "select e.id from " + sessionFactory.getMetamodel().entity( clazz ).getName() + " e" )
                 .list();
+        List<Long> list = new ArrayList<>();
+        for ( Long id : allEntityIds ) {
+            if ( !existingAoiIdentifiers.contains( id ) ) {
+                list.add( id );
+            }
+        }
         if ( list.isEmpty() ) {
             log.info( "All " + clazz.getSimpleName() + " have ACL identities." );
         } else {
@@ -186,12 +216,16 @@ public class AclLinterServiceImpl implements AclLinterService {
      * The fix is to create the missing ACL identity.
      */
     private void lintSecurableLackingObjectIdentity( Class<? extends Securable> clazz, Long identifier, AclLinterConfig config, Collection<LintResult> results ) {
-        Boolean hasAoi = ( Boolean ) sessionFactory.getCurrentSession()
-                .createQuery( "select count(*) > 0 from " + sessionFactory.getMetamodel().entity( clazz ).getName() + " e "
-                        + "where e.id = :identifier and e.id not in (select aoi.identifier from AclObjectIdentity aoi where aoi.type = :type and aoi.identifier = :identifier)" )
-                .setParameter( "identifier", identifier )
-                .setParameter( "type", clazz.getName() )
-                .uniqueResult();
+        // Phase 3 gsec HQL deprecation: existence check against acl_object_identity + acl_class
+        // via raw SQL. Replaces the previous HQL form that used a {@code not in (select
+        // aoi.identifier from AclObjectIdentity ...)} subquery, inverted in Java.
+        Integer aoiCount = jdbcTemplate.queryForObject(
+                "select count(*) "
+                        + "from acl_object_identity aoi "
+                        + "join acl_class cls on aoi.object_id_class = cls.id "
+                        + "where cls.class = ? and aoi.object_id_identity = ?",
+                Integer.class, clazz.getName(), identifier );
+        boolean hasAoi = aoiCount != null && aoiCount > 0;
         if ( hasAoi ) {
             log.info( formatEntity( clazz, identifier ) + " has an ACL identity." );
             return;
