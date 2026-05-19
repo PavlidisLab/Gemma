@@ -1823,6 +1823,36 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public Map<ExpressionExperiment, Collection<ExpressionExperimentSubSet>> getSubSetsByExpressionExperiments( Collection<ExpressionExperiment> expressionExperiments ) {
+        // canonical empty-input guard so callers don't pay a query round-trip for the no-op case
+        if ( expressionExperiments.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+        Query query = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select eess.sourceExperiment, eess from ExpressionExperimentSubSet eess "
+                        + "where eess.sourceExperiment in (:ees)" );
+        //noinspection unchecked
+        List<Object[]> rows = QueryUtils.listByIdentifiableBatch( query, "ees",
+                expressionExperiments, 2048 );
+        // Seed every requested experiment with an empty bucket so callers can iterate without null checks
+        // (mirrors the contract of getSampleRemovalEvents). Use IdentityHashMap-equivalent semantics by
+        // identifier-equality via HashMap on managed entities; for proxies we collapse on Hibernate's
+        // identifier equality which is fine here since the input collection is the source of truth.
+        Map<ExpressionExperiment, Collection<ExpressionExperimentSubSet>> result = new HashMap<>();
+        for ( ExpressionExperiment ee : expressionExperiments ) {
+            result.put( ee, new HashSet<>() );
+        }
+        for ( Object[] row : rows ) {
+            ExpressionExperiment ee = ( ExpressionExperiment ) row[0];
+            ExpressionExperimentSubSet subset = ( ExpressionExperimentSubSet ) row[1];
+            // groupingBy can produce a bucket that doesn't match an input EE under proxy/instance shifts;
+            // fall back to a put-if-absent so we never lose a row.
+            result.computeIfAbsent( ee, k -> new HashSet<>() ).add( subset );
+        }
+        return result;
+    }
+
+    @Override
     public Collection<ExpressionExperimentSubSet> getSubSets( ExpressionExperiment expressionExperiment, BioAssayDimension bad ) {
         //noinspection unchecked
         return getSessionFactory().getCurrentSession()

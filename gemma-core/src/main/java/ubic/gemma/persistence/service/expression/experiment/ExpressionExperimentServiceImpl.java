@@ -1560,6 +1560,12 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
+    public Map<ExpressionExperiment, Collection<ExpressionExperimentSubSet>> getSubSetsWithBioAssays( Collection<ExpressionExperiment> expressionExperiments ) {
+        return this.expressionExperimentDao.getSubSetsByExpressionExperiments( expressionExperiments );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Collection<ExpressionExperimentSubSet> getSubSetsWithCharacteristics( ExpressionExperiment ee ) {
         Collection<ExpressionExperimentSubSet> result = this.expressionExperimentDao.getSubSets( ee );
         for ( ExpressionExperimentSubSet subSet : result ) {

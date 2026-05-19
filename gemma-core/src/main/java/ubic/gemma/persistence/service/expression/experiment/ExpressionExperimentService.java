@@ -869,6 +869,21 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     Collection<ExpressionExperimentSubSet> getSubSetsWithBioAssays( ExpressionExperiment expressionExperiment );
 
     /**
+     * Batched variant of {@link #getSubSetsWithBioAssays(ExpressionExperiment)}: obtain subsets for every experiment
+     * in the input collection in a single query, keyed by source experiment.
+     * <p>
+     * Replaces the {@code for ee : ees -> getSubSetsWithBioAssays(ee)} N+1 pattern with one round-trip. Experiments
+     * without subsets are present in the result map with an empty collection so callers can iterate without
+     * null-checks. {@code ACL_SECURABLE_COLLECTION_READ} validates every input experiment is readable; the returned
+     * subsets inherit ACL semantics from their source experiment (they are not themselves separately ACL'd).
+     *
+     * @param expressionExperiments experiments to fetch subsets for; may be empty
+     * @return a map from each input experiment to its subsets (empty collection if none)
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
+    Map<ExpressionExperiment, Collection<ExpressionExperimentSubSet>> getSubSetsWithBioAssays( Collection<ExpressionExperiment> expressionExperiments );
+
+    /**
      * Obtain all the subsets for a given dataset.
      * <p>
      * Subsets characteristics are initialized and assays are thawed as per {@link Thaws#thawBioAssay(BioAssay)}.

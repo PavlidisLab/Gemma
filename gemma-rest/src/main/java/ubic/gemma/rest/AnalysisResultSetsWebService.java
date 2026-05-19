@@ -36,6 +36,7 @@ import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -114,9 +115,11 @@ public class AnalysisResultSetsWebService {
         if ( datasets != null ) {
             Collection<ExpressionExperiment> ees = new ArrayList<>( datasetArgService.getEntities( datasets ) );
             bas = new ArrayList<>( ees );
-            // expand with all subsets
-            for ( ExpressionExperiment ee : ees ) {
-                bas.addAll( expressionExperimentService.getSubSetsWithBioAssays( ee ) );
+            // expand with all subsets — single batched fetch keyed by source experiment, replaces the per-EE N+1
+            Map<ExpressionExperiment, Collection<ExpressionExperimentSubSet>> subSetsByEE =
+                    expressionExperimentService.getSubSetsWithBioAssays( ees );
+            for ( Collection<ExpressionExperimentSubSet> subSets : subSetsByEE.values() ) {
+                bas.addAll( subSets );
             }
         }
         Collection<DatabaseEntry> des = null;
