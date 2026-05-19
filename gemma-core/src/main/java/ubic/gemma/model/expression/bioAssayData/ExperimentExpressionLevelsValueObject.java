@@ -1,5 +1,7 @@
 package ubic.gemma.model.expression.bioAssayData;
 
+import lombok.AccessLevel;
+import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.genome.Gene;
@@ -12,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 @SuppressWarnings("unused") // Used in rest api
+@Getter
 public class ExperimentExpressionLevelsValueObject implements Serializable {
     public static final String OPT_PICK_MAX = "pickmax";
     public static final String OPT_PICK_VAR = "pickvar";
@@ -40,22 +43,19 @@ public class ExperimentExpressionLevelsValueObject implements Serializable {
         }
     }
 
-    public long getDatasetId() {
-        return datasetId;
-    }
-
-    public LinkedList<GeneElementExpressionsValueObject> getGeneExpressionLevels() {
-        return geneExpressionLevels;
-    }
-
     // Used in rest api
     @SuppressWarnings("unused")
+    @Getter
     public static class GeneElementExpressionsValueObject implements Serializable {
         private static final String AVG_PREFIX = "Averaged from";
         private static final String MSG_ERR_VECS_MAX = "Can not compute max from null or 1 element vector collection";
         private static final String MSG_ERR_VECS_VAR = "Can not compute var from null or 1 element vector collection";
         private String geneOfficialSymbol;
         private Integer geneNcbiId;
+        /**
+         * Exposed via {@link #getVectors()} (legacy getter name).
+         */
+        @Getter(AccessLevel.NONE)
         private List<VectorElementValueObject> elements = new LinkedList<>();
 
         public GeneElementExpressionsValueObject() {
@@ -98,14 +98,6 @@ public class ExperimentExpressionLevelsValueObject implements Serializable {
                     elements.add( new VectorElementValueObject( vector ) );
                 }
             }
-        }
-
-        public String getGeneOfficialSymbol() {
-            return geneOfficialSymbol;
-        }
-
-        public Integer getGeneNcbiId() {
-            return geneNcbiId;
         }
 
         public List<VectorElementValueObject> getVectors() {
@@ -195,6 +187,7 @@ public class ExperimentExpressionLevelsValueObject implements Serializable {
 
     @SuppressWarnings("unused")
     // Used in rest api
+    @Getter
     public static class VectorElementValueObject implements Serializable {
         private String designElementName;
         private Map<String, Double> bioAssayExpressionLevels = new HashMap<>();
@@ -213,14 +206,6 @@ public class ExperimentExpressionLevelsValueObject implements Serializable {
             for ( Map.Entry<String, Double> entry : bioAssayValues.entrySet() ) {
                 bioAssayExpressionLevels.put( entry.getKey(), entry.getValue() );
             }
-        }
-
-        public String getDesignElementName() {
-            return designElementName;
-        }
-
-        public Map<String, Double> getBioAssayExpressionLevels() {
-            return bioAssayExpressionLevels;
         }
 
         private void extractProbeLevels( DoubleVectorValueObject vector ) {

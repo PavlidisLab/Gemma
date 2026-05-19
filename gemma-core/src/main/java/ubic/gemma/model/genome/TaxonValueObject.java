@@ -14,6 +14,8 @@
  */
 package ubic.gemma.model.genome;
 
+import lombok.Getter;
+import lombok.Setter;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
@@ -22,6 +24,8 @@ import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
  * @author Paul
  */
 @SuppressWarnings({ "WeakerAccess", "unused" }) // Used in frontend
+@Getter
+@Setter
 public class TaxonValueObject extends IdentifiableValueObject<Taxon> {
 
     private String scientificName;
@@ -61,54 +65,6 @@ public class TaxonValueObject extends IdentifiableValueObject<Taxon> {
 
     public static TaxonValueObject fromEntity( Taxon taxon ) {
         return new TaxonValueObject( taxon );
-    }
-
-    public String getCommonName() {
-        return this.commonName;
-    }
-
-    public void setCommonName( String commonName ) {
-        this.commonName = commonName;
-    }
-
-    public ExternalDatabaseValueObject getExternalDatabase() {
-        return this.externalDatabase;
-    }
-
-    public void setExternalDatabase( ExternalDatabaseValueObject externalDatabase ) {
-        this.externalDatabase = externalDatabase;
-    }
-
-    public Boolean getIsGenesUsable() {
-        return this.isGenesUsable;
-    }
-
-    public void setIsGenesUsable( Boolean isGenesUsable ) {
-        this.isGenesUsable = isGenesUsable;
-    }
-
-    public Boolean getIsSpecies() {
-        return this.isSpecies;
-    }
-
-    public void setIsSpecies( Boolean isSpecies ) {
-        this.isSpecies = isSpecies;
-    }
-
-    public Integer getNcbiId() {
-        return this.ncbiId;
-    }
-
-    public void setNcbiId( Integer ncbiId ) {
-        this.ncbiId = ncbiId;
-    }
-
-    public String getScientificName() {
-        return this.scientificName;
-    }
-
-    public void setScientificName( String scientificName ) {
-        this.scientificName = scientificName;
     }
 
 }

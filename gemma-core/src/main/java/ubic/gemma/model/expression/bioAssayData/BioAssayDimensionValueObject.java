@@ -15,6 +15,9 @@
 package ubic.gemma.model.expression.bioAssayData;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -38,6 +41,8 @@ import java.util.Map;
  * @author Paul
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
+@Getter
+@Setter
 public class BioAssayDimensionValueObject extends IdentifiableValueObject<BioAssayDimension> {
 
     private static final long serialVersionUID = -8686807689616396835L;
@@ -47,8 +52,18 @@ public class BioAssayDimensionValueObject extends IdentifiableValueObject<BioAss
     @Deprecated
     @Schema(description = "This field is deprecated and scheduled for removal. Favour the quantitation type description.", deprecated = true)
     private String description;
+    @Setter(AccessLevel.NONE)
     private final List<BioAssayValueObject> bioAssays = new LinkedList<>();
+    /**
+     * Only mutated via {@link #reorder(List)}.
+     */
+    @Setter(AccessLevel.NONE)
     private boolean isReordered = false;
+    /**
+     * Boolean property with legacy {@code getIsSubset()/setIsSubset()} naming.
+     */
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
     private boolean isSubset = false;
 
     /**
@@ -92,30 +107,6 @@ public class BioAssayDimensionValueObject extends IdentifiableValueObject<BioAss
                 + ", " + ( bioAssays != null ? "bioAssays=" + StringUtils.join( bioAssays, "," ) : "" ) + "]";
     }
 
-    @Deprecated
-    public String getName() {
-        return name;
-    }
-
-    @Deprecated
-    public void setName( String name ) {
-        this.name = name;
-    }
-
-    @Deprecated
-    public String getDescription() {
-        return description;
-    }
-
-    @Deprecated
-    public void setDescription( String description ) {
-        this.description = description;
-    }
-
-    public List<BioAssayValueObject> getBioAssays() {
-        return bioAssays;
-    }
-
     public void clearBioAssays() {
         this.bioAssays.clear();
     }
@@ -130,21 +121,6 @@ public class BioAssayDimensionValueObject extends IdentifiableValueObject<BioAss
 
     public void setIsSubset( boolean isSubset ) {
         this.isSubset = isSubset;
-    }
-
-    /**
-     * @return the original source. If this is reordered or a subset, the return value will <em>not</em> be.
-     */
-    public BioAssayDimensionValueObject getSourceBioAssayDimension() {
-        return sourceBioAssayDimension;
-    }
-
-    public void setSourceBioAssayDimension( BioAssayDimensionValueObject source ) {
-        this.sourceBioAssayDimension = source;
-    }
-
-    public boolean isReordered() {
-        return isReordered;
     }
 
     public void reorder( List<BioAssayValueObject> newOrdering ) {
