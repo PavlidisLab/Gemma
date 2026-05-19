@@ -30,6 +30,7 @@ import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -180,6 +181,9 @@ public class ExpressionExperimentServiceTest extends BaseTest {
     private ExpressionExperimentDao expressionExperimentDao;
 
     @Autowired
+    private ExpressionExperimentReadService expressionExperimentReadService;
+
+    @Autowired
     private OntologyService ontologyService;
 
     @Autowired
@@ -187,46 +191,37 @@ public class ExpressionExperimentServiceTest extends BaseTest {
 
     @After
     public void tearDown() {
-        reset( ontologyService, securityService );
+        reset( ontologyService, securityService, expressionExperimentReadService );
     }
 
     @Test
     public void testGetEnhancedFilters() throws TimeoutException {
-        OntologyTerm term = mock( OntologyTerm.class );
-        when( ontologyService.getTerms( eq( Collections.singleton( "http://example.com/T00001" ) ), anyLong(), any() ) ).thenReturn( Collections.singleton( term ) );
         Filters f = Filters.by( "c", "valueUri", String.class, Filter.Operator.eq, "http://example.com/T00001", "characteristics.valueUri" );
+        Filters expected = Filters.by( "c", "valueUri", String.class, Filter.Operator.eq, "http://example.com/T00001", "characteristics.valueUri" );
+        when( expressionExperimentReadService.getEnhancedFilters( eq( f ), any(), any(), anyLong(), any() ) ).thenReturn( expected );
         Filters inferredFilters = expressionExperimentService.getEnhancedFilters( f, null, null, 30, TimeUnit.SECONDS );
-        assertThat( inferredFilters ).hasToString( "any(c.valueUri = http://example.com/T00001)" );
-        verify( ontologyService ).getTerms( eq( Collections.singleton( "http://example.com/T00001" ) ), longThat( l -> l > 0 && l <= 30000 ), eq( TimeUnit.MILLISECONDS ) );
-        verify( ontologyService ).getChildren( eq( Collections.singleton( term ) ), eq( false ), eq( true ), longThat( l -> l <= 30000L ), eq( TimeUnit.MILLISECONDS ) );
+        assertThat( inferredFilters ).isSameAs( expected );
+        verify( expressionExperimentReadService ).getEnhancedFilters( f, null, null, 30, TimeUnit.SECONDS );
     }
 
     @Test
     public void testGetEnhancedFiltersWhenANegativeQueryIsPerformed() throws TimeoutException {
-        OntologyTerm term = mock( OntologyTerm.class );
-        when( ontologyService.getTerms( eq( Collections.singleton( "http://example.com/T00001" ) ), anyLong(), any() ) ).thenReturn( Collections.singleton( term ) );
         Filters f = Filters.by( "c", "valueUri", String.class, Filter.Operator.notEq, "http://example.com/T00001", "characteristics.valueUri" );
+        Filters expected = Filters.by( "c", "valueUri", String.class, Filter.Operator.notEq, "http://example.com/T00001", "characteristics.valueUri" );
+        when( expressionExperimentReadService.getEnhancedFilters( eq( f ), any(), any(), anyLong(), any() ) ).thenReturn( expected );
         Filters inferredFilters = expressionExperimentService.getEnhancedFilters( f, null, null, 30, TimeUnit.SECONDS );
-        assertThat( inferredFilters ).hasToString( "none(c.valueUri = http://example.com/T00001)" );
-        verify( ontologyService ).getTerms( eq( Collections.singleton( "http://example.com/T00001" ) ), longThat( l -> l > 0 && l <= 30000 ), eq( TimeUnit.MILLISECONDS ) );
-        verify( ontologyService ).getChildren( eq( Collections.singleton( term ) ), eq( false ), eq( true ), longThat( l -> l <= 30000L ), eq( TimeUnit.MILLISECONDS ) );
+        assertThat( inferredFilters ).isSameAs( expected );
+        verify( expressionExperimentReadService ).getEnhancedFilters( f, null, null, 30, TimeUnit.SECONDS );
     }
 
     @Test
     public void testGetEnhancedFiltersWhenAPredicateOrObjectIsUsed() throws TimeoutException {
         Filters f = Filters.by( "ac", "object", String.class, Filter.Operator.eq, "http://example.com/T00001", "allCharacteristics.object" );
+        Filters expected = Filters.by( "ac", "object", String.class, Filter.Operator.eq, "http://example.com/T00001", "allCharacteristics.object" );
+        when( expressionExperimentReadService.getEnhancedFilters( eq( f ), any(), any(), anyLong(), any() ) ).thenReturn( expected );
         Filters inferredFilter = expressionExperimentService.getEnhancedFilters( f, null, null, 30, TimeUnit.SECONDS );
-        assertThat( inferredFilter )
-                .hasToString( "ac.object = http://example.com/T00001 or ac.secondObject = http://example.com/T00001" );
-        assertThat( inferredFilter.toOriginalString() )
-                .isEqualTo( "allCharacteristics.object = http://example.com/T00001" );
-        assertThat( inferredFilter )
-                .singleElement()
-                .satisfies( subClause -> {
-                    assertThat( subClause ).hasSize( 2 )
-                            .extracting( Filter::getPropertyName )
-                            .containsExactly( "object", "secondObject" );
-                } );
+        assertThat( inferredFilter ).isSameAs( expected );
+        verify( expressionExperimentReadService ).getEnhancedFilters( f, null, null, 30, TimeUnit.SECONDS );
     }
 
     @Test
@@ -240,17 +235,22 @@ public class ExpressionExperimentServiceTest extends BaseTest {
 
     @Test
     public void testGetAnnotationsUsageFrequency() throws TimeoutException {
-        expressionExperimentService.getAnnotationsUsageFrequency( Filters.empty(), null, null, null, null, 0, null, -1, false, false, 5000, TimeUnit.MILLISECONDS );
-        verify( expressionExperimentDao ).getAnnotationsUsageFrequency( null, null, -1, 0, null, null, null, null, false, false );
-        verifyNoMoreInteractions( expressionExperimentDao );
+        List<ExpressionExperimentService.CharacteristicWithUsageStatisticsAndOntologyTerm> expected = Collections.emptyList();
+        when( expressionExperimentReadService.getAnnotationsUsageFrequency( any(), any(), any(), any(), any(), anyInt(), any(), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) ).thenReturn( expected );
+        List<ExpressionExperimentService.CharacteristicWithUsageStatisticsAndOntologyTerm> result =
+                expressionExperimentService.getAnnotationsUsageFrequency( Filters.empty(), null, null, null, null, 0, null, -1, false, false, 5000, TimeUnit.MILLISECONDS );
+        assertThat( result ).isSameAs( expected );
+        verify( expressionExperimentReadService ).getAnnotationsUsageFrequency( Filters.empty(), null, null, null, null, 0, null, -1, false, false, 5000, TimeUnit.MILLISECONDS );
     }
 
     @Test
     public void testGetAnnotationsUsageFrequencyWithFilters() throws TimeoutException {
+        List<ExpressionExperimentService.CharacteristicWithUsageStatisticsAndOntologyTerm> expected = Collections.emptyList();
+        when( expressionExperimentReadService.getAnnotationsUsageFrequency( any(), any(), any(), any(), any(), anyInt(), any(), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) ).thenReturn( expected );
         Filters f = Filters.by( "c", "valueUri", String.class, Filter.Operator.eq, "http://example.com/T00001", "characteristics.valueUri" );
-        expressionExperimentService.getAnnotationsUsageFrequency( f, null, null, null, null, 0, null, -1, false, false, 5000, TimeUnit.MILLISECONDS );
-        verify( expressionExperimentDao ).loadIdsWithCache( f, null );
-        verify( expressionExperimentDao ).getAnnotationsUsageFrequency( Collections.emptyList(), null, -1, 0, null, null, null, null, false, false );
-        verifyNoMoreInteractions( expressionExperimentDao );
+        List<ExpressionExperimentService.CharacteristicWithUsageStatisticsAndOntologyTerm> result =
+                expressionExperimentService.getAnnotationsUsageFrequency( f, null, null, null, null, 0, null, -1, false, false, 5000, TimeUnit.MILLISECONDS );
+        assertThat( result ).isSameAs( expected );
+        verify( expressionExperimentReadService ).getAnnotationsUsageFrequency( f, null, null, null, null, 0, null, -1, false, false, 5000, TimeUnit.MILLISECONDS );
     }
 }
