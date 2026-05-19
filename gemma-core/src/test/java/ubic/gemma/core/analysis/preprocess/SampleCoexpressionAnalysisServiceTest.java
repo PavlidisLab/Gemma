@@ -14,25 +14,24 @@
  */
 package ubic.gemma.core.analysis.preprocess;
 
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
-import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author paul
  */
-public class SampleCoexpressionAnalysisServiceTest extends BaseSpringContextTest {
+public class SampleCoexpressionAnalysisServiceTest extends BaseSpringContextTest5 {
 
     @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
@@ -40,7 +39,7 @@ public class SampleCoexpressionAnalysisServiceTest extends BaseSpringContextTest
     private SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService;
 
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
     public void test() throws QuantitationTypeConversionException, FilteringException {
         ExpressionExperiment ee = super.getTestPersistentCompleteExpressionExperiment( false );
         assertFalse( sampleCoexpressionAnalysisService.hasAnalysis( ee ) );

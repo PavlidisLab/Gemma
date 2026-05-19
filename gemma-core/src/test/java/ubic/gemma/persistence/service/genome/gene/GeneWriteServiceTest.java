@@ -19,12 +19,11 @@
 package ubic.gemma.persistence.service.genome.gene;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
-import ubic.gemma.core.util.test.category.IntegrationTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProduct;
@@ -59,8 +58,8 @@ import static org.junit.Assert.fail;
  * agent; the test scaffold (autowires, taxon setup, naming convention) is in
  * place so re-enabling them is mechanical.</p>
  */
-@Category(IntegrationTest.class)
-public class GeneWriteServiceTest extends BaseSpringContextTest {
+@Tag("integration")
+public class GeneWriteServiceTest extends BaseSpringContextTest5 {
 
     @Autowired
     private GeneWriteService geneWriteService;
@@ -189,7 +188,7 @@ public class GeneWriteServiceTest extends BaseSpringContextTest {
      * Lcp65Ab1 + Lcp65Ab2 in drosophila.
      */
     @Test
-    @Ignore("Phase 3 Chunk 5.3 cutover test - fixture pending (bicistronic gene-product reattachment)")
+    @Disabled("Phase 3 Chunk 5.3 cutover test - fixture pending (bicistronic gene-product reattachment)")
     public void testDrosophilaBicistronicReattachment() {
         // Setup expected:
         //   - taxon: drosophila
@@ -299,7 +298,7 @@ public class GeneWriteServiceTest extends BaseSpringContextTest {
      * BioSequencePersistTest for the closest existing pattern.
      */
     @Test
-    @Ignore("Phase 3 Chunk 5.3 cutover test - fixture pending (gene-product accession history)")
+    @Disabled("Phase 3 Chunk 5.3 cutover test - fixture pending (gene-product accession history)")
     public void testGeneProductAccessionHistoryRotation() {
         // Setup:
         //   - persist gene with GP carrying accession A1 (db=GenBank)

@@ -19,16 +19,15 @@
 package ubic.gemma.persistence.service.genome.sequenceAnalysis;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
-import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -46,7 +45,7 @@ import static org.junit.Assert.assertNotNull;
 /**
  * @author pavlidis
  */
-public class BlatAssociationServiceTest extends BaseSpringContextTest {
+public class BlatAssociationServiceTest extends BaseSpringContextTest5 {
 
     private final String testGeneIdentifier = RandomStringUtils.insecure().nextAlphabetic( 4 );
 
@@ -68,7 +67,7 @@ public class BlatAssociationServiceTest extends BaseSpringContextTest {
     @Autowired
     private GeneService geneService;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
 
         int numSequencesToCreate = 20;
@@ -105,7 +104,7 @@ public class BlatAssociationServiceTest extends BaseSpringContextTest {
         }
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         Collection<Gene> genes = geneService.loadAll();
         for ( Gene gene : genes ) {
@@ -118,7 +117,7 @@ public class BlatAssociationServiceTest extends BaseSpringContextTest {
     }
 
     @Test
-    @Category( SlowTest.class )
+    @Tag("slow")
     public final void testFindBioSequence() {
         BioSequence bs = BioSequence.Factory.newInstance();
         Taxon t = Taxon.Factory.newInstance();
@@ -136,7 +135,7 @@ public class BlatAssociationServiceTest extends BaseSpringContextTest {
     }
 
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
     public final void testFindGene() {
         Gene g = Gene.Factory.newInstance();
         g.setOfficialName( testGeneIdentifier );

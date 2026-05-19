@@ -22,12 +22,11 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.assertj.core.api.Assertions;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.concurrent.Executors;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
-import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
@@ -56,7 +55,7 @@ import static org.junit.Assert.*;
  *
  * @author pavlidis
  */
-public class AuditAdviceTest extends BaseSpringContextTest {
+public class AuditAdviceTest extends BaseSpringContextTest5 {
 
     @Autowired
     private AuditEventService auditEventService;
@@ -181,7 +180,7 @@ public class AuditAdviceTest extends BaseSpringContextTest {
      */
     @SuppressWarnings("Duplicates") // Not in this project
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
     public void testAuditFindOrCreateConcurrentTorture() {
         int numThreads = 14; // too high and we run out of connections, which is not what we're testing.
         final int numExperimentsPerThread = 5;

@@ -18,17 +18,16 @@
  */
 package ubic.gemma.core.loader.genome.gene.ncbi;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.genome.gene.GeneSetService;
 import ubic.gemma.persistence.service.genome.gene.GeneWriteService;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
-import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -39,12 +38,12 @@ import ubic.gemma.persistence.service.genome.gene.GeneProductService;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author pavlidis
  */
-public class NCBIGeneLoadingTest extends BaseSpringContextTest {
+public class NCBIGeneLoadingTest extends BaseSpringContextTest5 {
 
     private Gene g = null;
 
@@ -57,18 +56,18 @@ public class NCBIGeneLoadingTest extends BaseSpringContextTest {
     @Autowired
     private GeneWriteService geneWriteService;
 
-    @Before
+    @BeforeEach
     public void setup() {
         clean();
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         clean();
     }
 
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
     public void testGeneLoader() throws Exception {
         NcbiGeneLoader loader = new NcbiGeneLoader( persisterHelper );
         loader.setGeneWriteService( geneWriteService );

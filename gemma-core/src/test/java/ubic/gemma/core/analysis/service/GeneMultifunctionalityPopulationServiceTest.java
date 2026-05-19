@@ -20,17 +20,16 @@
 package ubic.gemma.core.analysis.service;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.annotation.DirtiesContext;
 import ubic.gemma.core.ontology.OntologyUtils;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
-import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
@@ -59,7 +58,7 @@ import static org.assertj.core.api.Assertions.tuple;
  * @author paul
  */
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringContextTest {
+public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringContextTest5 {
 
     private final String[] goTerms = new String[] { "GO_0047500", "GO_0051530", "GO_0051724", "GO_0004118",
             "GO_0005324" };
@@ -75,7 +74,7 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
     private ExternalDatabaseService externalDatabaseService;
     private Taxon testTaxon;
 
-    @After
+    @AfterEach
     public void tearDown() {
         if ( testTaxon != null ) {
             Collection<Gene> genes = geneService.loadAll( testTaxon );
@@ -86,7 +85,7 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
         }
     }
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         // force-load specific terms to get consistent results, this dirites the context
         try ( InputStream stream = new GZIPInputStream(
@@ -123,7 +122,7 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
     }
 
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
     public void test() {
         log.info( "Updating multifunctionality" );
         Date beforeUpdateDate = new Date();

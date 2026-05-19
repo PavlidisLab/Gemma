@@ -18,16 +18,15 @@
  */
 package ubic.gemma.core.analysis.preprocess;
 
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataBooleanMatrix;
 import ubic.gemma.core.datastructure.matrix.TwoChannelExpressionDataMatrixBuilder;
 import ubic.gemma.core.loader.expression.geo.*;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
-import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -42,12 +41,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.zip.GZIPInputStream;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author pavlidis
  */
-public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
+public class TwoChannelMissingValuesTest extends BaseSpringContextTest5 {
 
     @Autowired
     private GeoConverter gc;
@@ -59,7 +58,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
     private ExpressionExperimentService eeService;
 
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
     public void testMissingValue() throws Exception {
         ExpressionExperiment old = eeService.findByShortName( "GSE2221" );
         if ( old != null )
@@ -114,7 +113,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
     }
 
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
     final public void testMissingValueGSE523() throws Exception {
         ExpressionExperiment old = eeService.findByShortName( "GSE523" );
         if ( old != null )
@@ -143,7 +142,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
      * Was giving all missing values.
      */
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
     public void testMissingValueGSE11017() throws Exception {
 
         ExpressionExperiment old = eeService.findByShortName( "GSE11017" );
@@ -204,7 +203,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
      * GSE56 is corrupt: there is no Channel 1 signal value in the data file.
      */
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
     public void testMissingValueGSE56() throws Exception {
         ExpressionExperiment old = eeService.findByShortName( "GSE56" );
         if ( old != null )

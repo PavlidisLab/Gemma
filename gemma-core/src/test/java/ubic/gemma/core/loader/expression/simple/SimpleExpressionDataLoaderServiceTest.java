@@ -19,15 +19,14 @@
 package ubic.gemma.core.loader.expression.simple;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.After;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.gemma.core.loader.expression.simple.model.*;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
-import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
@@ -47,8 +46,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /**
  * @author pavlidis
  */
-@Category(SlowTest.class)
-public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest {
+@Tag("slow")
+public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest5 {
 
     @Autowired
     private ExpressionExperimentService eeService;
@@ -58,7 +57,7 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
 
     private ExpressionExperiment ee;
 
-    @After
+    @AfterEach
     public void after() {
         if ( ee != null ) {
             eeService.remove( ee );
