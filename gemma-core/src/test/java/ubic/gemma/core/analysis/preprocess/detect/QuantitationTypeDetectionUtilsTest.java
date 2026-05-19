@@ -1,7 +1,7 @@
 package ubic.gemma.core.analysis.preprocess.detect;
 
 import org.apache.commons.math3.distribution.NormalDistribution;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
