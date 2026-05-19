@@ -118,6 +118,18 @@ public class HibernateConfig {
     @Value("${gemma.transaction.maxretries}")
     private int maxRetries;
 
+    /**
+     * Filesystem root for Hibernate Search 7's Lucene indexes.
+     * <p>
+     * Resolved from {@code gemma.search.dir} (see {@code default.properties}); each
+     * indexed entity becomes a sub-directory under this root. The directory is created
+     * on demand at first index/query. See SEARCH_RECCE.md Section 3.5 — this is the
+     * HS 7 successor to the pre-Phase-2 {@code hibernate.search.default.indexBase}
+     * property.
+     */
+    @Value("${gemma.search.dir}")
+    private String searchIndexBase;
+
     // ---------------------------------------------------------------------------------------------
     // SessionFactory
     // ---------------------------------------------------------------------------------------------
@@ -166,6 +178,39 @@ public class HibernateConfig {
         // debugging options
         props.setProperty( "hibernate.show_sql", showSql );
         props.setProperty( "hibernate.format_sql", formatSql );
+
+        // ------------------------------------------------------------------------------------------
+        // Hibernate Search 7 bootstrap (Renovations Phase 3, search restoration Step 1).
+        // Wires HS 7's Lucene-direct (local filesystem) backend. Property keys verified against
+        // org.hibernate.search.engine.cfg.BackendSettings, LuceneBackendSettings,
+        // LuceneIndexSettings, and HibernateOrmMapperSettings (HS 7.2.4). The HS 5
+        // lucene_version / default.indexBase / indexing_strategy keys are GONE in HS 7 and
+        // replaced by the hibernate.search.backend.* and hibernate.search.indexing.*
+        // namespaces below. See SEARCH_RECCE.md Section 3.5.
+        //
+        // Step 1 SCOPE: bootstrap only. No entities carry @Indexed yet (those land in
+        // Step 2), so HS 7 starts with an empty mapping. We disable on-write listeners and
+        // skip schema management until the entity port lands so the empty mapping does not
+        // blow up ApplicationContext init.
+        // ------------------------------------------------------------------------------------------
+        // Backend type is inferred when only one backend jar is on the classpath; pin it
+        // explicitly so a future ES-backend artifact on classpath doesn't silently flip the
+        // default.
+        props.setProperty( "hibernate.search.backend.type", "lucene" );
+        // Local filesystem directory storage (vs. heap / NIO mmap variants).
+        props.setProperty( "hibernate.search.backend.directory.type", "local-filesystem" );
+        // Index root directory (HS 7 successor to HS 5's hibernate.search.default.indexBase).
+        props.setProperty( "hibernate.search.backend.directory.root", searchIndexBase );
+        // Manual indexing: Gemma's pre-strip pattern relied on the IndexerService / cron
+        // for mass reindex, not on automatic on-write indexing through Hibernate listeners.
+        // Step 3-4 work may flip this back on; for Step 1 (no annotations on entities yet)
+        // it must be off so HS does not try to wire entity listeners against an empty
+        // mapping at SessionFactory build time.
+        props.setProperty( "hibernate.search.indexing.listeners.enabled", "false" );
+        // Skip schema management entirely until indexed entities exist (Step 2). Without
+        // this, HS 7's default "create-or-validate" strategy can complain at startup about
+        // index schemas that don't yet have any entity to back them.
+        props.setProperty( "hibernate.search.schema_management.strategy", "none" );
 
         factory.setHibernateProperties( props );
         return factory;

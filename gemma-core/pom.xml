@@ -136,9 +136,20 @@
             </exclusions>
         </dependency>
 
-        <!-- Renovations Phase 2: Lucene + Hibernate Search removed. SearchService is stubbed to return
-             empty results; reinstating real full-text search is future work (Hibernate Search 7 +
-             Lucene 9, or external OpenSearch/Postgres FTS). -->
+        <!-- Hibernate Search 7 + Lucene 9 (Renovations Phase 3, search restoration Step 1).
+             Bootstraps the SearchService restoration. Step 1 wires the FS-based Lucene
+             backend only; no @Indexed / @FullTextField annotations on entities yet (those
+             land in Step 2). The SessionFactory will pick HS 7 up off the classpath via
+             the integrator-loader; HS bootstrap properties are set in HibernateConfig
+             (hibernate.search.backend.*). See SEARCH_RECCE.md Sections 3.1, 3.4, 3.5. -->
+        <dependency>
+            <groupId>org.hibernate.search</groupId>
+            <artifactId>hibernate-search-mapper-orm</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.hibernate.search</groupId>
+            <artifactId>hibernate-search-backend-lucene</artifactId>
+        </dependency>
 
         <!-- Apache Commons -->
         <dependency>
