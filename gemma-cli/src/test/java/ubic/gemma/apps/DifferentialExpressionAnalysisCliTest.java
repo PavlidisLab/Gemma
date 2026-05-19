@@ -1,8 +1,8 @@
 package ubic.gemma.apps;
 
 import org.assertj.core.util.Sets;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,7 +20,7 @@ import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.util.GemmaRestApiClient;
-import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -49,7 +49,7 @@ import static ubic.gemma.cli.util.test.Assertions.assertThat;
 @ContextConfiguration
 @TestExecutionListeners(value = WithSecurityContextTestExecutionListener.class,
         mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
-public class DifferentialExpressionAnalysisCliTest extends BaseTest {
+public class DifferentialExpressionAnalysisCliTest extends BaseTest5 {
 
     @Autowired
     private GemmaRestApiClient gemmaRestApiClient;
@@ -144,7 +144,7 @@ public class DifferentialExpressionAnalysisCliTest extends BaseTest {
 
     private ExperimentalFactor a, b, c, d, e;
 
-    @Before
+    @BeforeEach
     public void setUp() throws IOException {
         ee = new ExpressionExperiment();
         ee.setId( 1L );
