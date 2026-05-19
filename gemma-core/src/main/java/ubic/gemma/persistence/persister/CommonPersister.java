@@ -113,14 +113,14 @@ public abstract class CommonPersister extends AbstractPersister {
     }
 
     /**
-     * @deprecated Phase 3 lift transitional shim. New callers use
-     * {@link #persistExternalDatabase(ExternalDatabase, Map)} directly with a per-call
-     * Map. This overload remains for the in-CommonPersister
-     * {@link #fillInDatabaseEntry} / {@link #persistDatabaseEntry} paths, which still
-     * pull the cache from Caches.
+     * In-CommonPersister convenience: pulls the per-call Map out of the
+     * {@link Caches} container for the {@link #fillInDatabaseEntry} /
+     * {@link #persistDatabaseEntry} paths. External callers (GenomePersister,
+     * ArrayDesignPersister, EeWriteServiceImpl) call
+     * {@link #persistExternalDatabase(ExternalDatabase, Map)} directly with
+     * their own per-call map; this overload is intentionally private.
      */
-    @Deprecated
-    protected ExternalDatabase persistExternalDatabase( ExternalDatabase database, Caches caches ) {
+    private ExternalDatabase persistExternalDatabase( ExternalDatabase database, Caches caches ) {
         return this.persistExternalDatabase( database, caches.getExternalDatabaseCache() );
     }
 
