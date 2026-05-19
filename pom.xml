@@ -1028,7 +1028,7 @@
 		<jersey.version>3.1.10</jersey.version>
 		<jackson.version>2.21.0</jackson.version>
 		<jackson-annotations.version>2.21</jackson-annotations.version>
-		<swagger.version>2.2.42</swagger.version>
+		<swagger.version>2.2.50</swagger.version>
 		<!-- Lucene removed: Hibernate Search 5 was gutted in Phase 2; no direct Lucene deps required. -->
 		<slack.version>1.47.0</slack.version>
 		<!-- I've been running into some issues with the 1.14 series, to be investigated... -->
