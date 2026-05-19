@@ -415,15 +415,60 @@ class DifferentialExpressionAnalysisDaoImpl extends AbstractDao<DifferentialExpr
         log.info( "Removing " + analysis + "..." );
         List<Long> resultSetIds = IdentifiableUtils.getIds( analysis.getResultSets() );
         if ( !resultSetIds.isEmpty() ) {
-            int removedContrasts = getSessionFactory().getCurrentSession()
+            Session session = getSessionFactory().getCurrentSession();
+            int removedContrasts = session
                     .createNativeQuery( "delete cr from CONTRAST_RESULT cr where cr.DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK in (select dear.ID from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear where dear.RESULT_SET_FK in (:resultSetIds))" )
                     .setParameterList( "resultSetIds", resultSetIds )
                     .executeUpdate();
-            int removedResults = getSessionFactory().getCurrentSession()
+            int removedResults = session
                     .createNativeQuery( "delete dear from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear where dear.RESULT_SET_FK in (:resultSetIds)" )
                     .setParameterList( "resultSetIds", resultSetIds )
                     .executeUpdate();
             log.info( String.format( "Removed %d results and %d contrasts from %s.", removedResults, removedContrasts, analysis ) );
+
+            /*
+             * Hibernate 6 fix (HIBERNATE6_CASCADE_AUDIT.md HIGH #2).
+             *
+             * The two native bulk deletes above wipe DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT
+             * + CONTRAST_RESULT rows directly at the DB level, bypassing the
+             * session entirely. Any DifferentialExpressionAnalysisResult /
+             * ContrastResult instances that the caller already loaded into
+             * the session (the test exercises this; service callers that
+             * read result-sets before deleting also do) are now dangling
+             * references to deleted DB rows. Without explicit eviction the
+             * subsequent `super.remove(analysis)` / `session.remove(analysis)`
+             * cascade triggers HB6's ACTION_CHECK_ON_FLUSH walk through
+             * `resultSets` -> each ExpressionAnalysisResultSet -> its
+             * `results` bag (still holding stale managed DEARs whose
+             * `resultSet` many-to-one points at an ExpressionAnalysisResultSet
+             * now in DELETING state), and HB6 raises TransientObjectException
+             * on `persistent instance references an unsaved transient
+             * instance of ExpressionAnalysisResultSet`. Evict the stale
+             * child entities explicitly so the cascade walk only sees the
+             * parent graph that `session.remove(analysis)` is actually
+             * authorised to delete.
+             *
+             * Companion to 02c87a91ed (AnalysisResultSet + DEAResult L2
+             * cache drop, HIGH #3) and ab8b4c443c (AuditEvent L2 cache
+             * drop). Pattern A + B + D from the audit doc.
+             */
+            for ( ExpressionAnalysisResultSet rs : analysis.getResultSets() ) {
+                if ( !org.hibernate.Hibernate.isInitialized( rs.getResults() ) ) {
+                    continue;
+                }
+                for ( DifferentialExpressionAnalysisResult der : rs.getResults() ) {
+                    if ( org.hibernate.Hibernate.isInitialized( der.getContrasts() ) ) {
+                        for ( ContrastResult cr : der.getContrasts() ) {
+                            if ( session.contains( cr ) ) {
+                                session.evict( cr );
+                            }
+                        }
+                    }
+                    if ( session.contains( der ) ) {
+                        session.evict( der );
+                    }
+                }
+            }
         }
         super.remove( analysis );
     }
