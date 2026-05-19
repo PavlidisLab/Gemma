@@ -18,8 +18,8 @@
  */
 package ubic.gemma.core.loader.util.biomart;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import ubic.gemma.model.genome.Taxon;
@@ -31,7 +31,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Class to test BioMartEnsemblNcbiObjectGeneration. Simple class but there is some logic connected to the many to many
@@ -44,7 +44,7 @@ public class BioMartEnsemblNcbiObjectGeneratorTest {
     private Collection<Taxon> taxa = null;
     private File taxonBiomartFile = null;
 
-    @Before
+    @BeforeEach
     public void setUp() throws URISyntaxException, IOException {
         biomartEnsemblNcbiObjectGenerator = new BiomartEnsemblNcbiObjectGenerator();
         Taxon taxon = Taxon.Factory.newInstance();

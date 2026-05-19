@@ -20,7 +20,7 @@ package ubic.gemma.core.logging.log4j;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.core.job.progress.ProgressUpdateCallback;
 import ubic.gemma.core.job.progress.ProgressUpdateContext;
 
@@ -29,8 +29,8 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * For this test to work you should have the appender configured in log4j-test.properties. If not it will be set up

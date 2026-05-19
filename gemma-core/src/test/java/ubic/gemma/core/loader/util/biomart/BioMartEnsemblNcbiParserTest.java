@@ -18,8 +18,8 @@
  */
 package ubic.gemma.core.loader.util.biomart;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import ubic.gemma.model.genome.Taxon;
@@ -27,8 +27,8 @@ import ubic.gemma.model.genome.Taxon;
 import java.io.IOException;
 import java.util.Collection;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests the parsing of a BioMart file. Tests one line can be parsed and whole files. Some error conditions are tested
@@ -40,7 +40,7 @@ public class BioMartEnsemblNcbiParserTest {
 
     private BiomartEnsembleNcbiParser parser = null;
 
-    @Before
+    @BeforeEach
     public void setUp() {
 
         Taxon taxon = Taxon.Factory.newInstance();

@@ -1,6 +1,6 @@
 package ubic.gemma.core.loader.util.anndata;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
 import ubic.gemma.core.loader.util.hdf5.H5FundamentalType;
 
@@ -10,7 +10,7 @@ import java.util.NoSuchElementException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class AnnDataTest {
 
