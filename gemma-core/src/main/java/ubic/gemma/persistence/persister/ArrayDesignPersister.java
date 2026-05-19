@@ -115,7 +115,10 @@ public abstract class ArrayDesignPersister extends GenomePersister {
         arrayDesign.setPrimaryTaxon( this.doPersist( arrayDesign.getPrimaryTaxon(), caches ) );
 
         for ( DatabaseEntry externalRef : arrayDesign.getExternalReferences() ) {
-            externalRef.setExternalDatabase( this.persistExternalDatabase( externalRef.getExternalDatabase(), caches ) );
+            // Phase 3 lift: helper now takes a per-call Map<String, ExternalDatabase>; pulled
+            // from the existing Caches container so it stays shared with fillInDatabaseEntry
+            // for the rest of this persist.
+            externalRef.setExternalDatabase( this.persistExternalDatabase( externalRef.getExternalDatabase(), caches.getExternalDatabaseCache() ) );
         }
 
         // Resolve BioSequence for each CompositeSequence before saving the AD.

@@ -311,8 +311,13 @@ public class EeWriteServiceImpl implements EeWriteService {
 
         // DatabaseEntries are persisted by composition, so we just need to fill in the ExternalDatabase.
         if ( bioAssay.getAccession() != null ) {
+            // Phase 3 lift: helper now takes a per-call Map<String, ExternalDatabase>; pulled
+            // from the existing Caches container so it stays shared with the persister-chain
+            // fillInDatabaseEntry callers (e.g. persistExpressionExperiment, persistBioMaterial)
+            // for the rest of this persist. When fillInDatabaseEntry is lifted too the field
+            // disappears and this collapses to a method-local HashMap.
             bioAssay.getAccession().setExternalDatabase(
-                    persister().persistExternalDatabase( bioAssay.getAccession().getExternalDatabase(), caches ) );
+                    persister().persistExternalDatabase( bioAssay.getAccession().getExternalDatabase(), caches.getExternalDatabaseCache() ) );
             log.debug( "external database done" );
         }
 
