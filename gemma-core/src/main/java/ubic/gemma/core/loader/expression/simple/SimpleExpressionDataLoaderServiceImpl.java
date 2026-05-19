@@ -48,9 +48,10 @@ import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.persistence.persister.PersisterHelper;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.experiment.EeWriteService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentPrePersistService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import org.springframework.lang.Nullable;
@@ -73,7 +74,9 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
     @Autowired
     private ArrayDesignService arrayDesignService;
     @Autowired
-    private PersisterHelper persisterHelper;
+    private EeWriteService eeWriteService;
+    @Autowired
+    private ExpressionExperimentPrePersistService expressionExperimentPrePersistService;
     @Autowired
     private PreprocessorService preprocessorService;
     @Autowired
@@ -94,7 +97,7 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
     @Override
     public ExpressionExperiment create( SimpleExpressionExperimentMetadata metaData, @Nullable DoubleMatrix<String, String> matrix ) {
         ExpressionExperiment experiment = this.convert( metaData, matrix );
-        experiment = persisterHelper.persist( experiment, persisterHelper.prepare( experiment ) );
+        experiment = eeWriteService.create( experiment, expressionExperimentPrePersistService.prepare( experiment ) );
         if ( matrix != null && metaData.getQuantitationType() != null && metaData.getQuantitationType().getIsPreferred() ) {
             log.info( experiment + " has preferred raw data vectors, preprocessing it..." );
             preprocessorService.process( experiment, true, true );

@@ -53,6 +53,7 @@ import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
+import ubic.gemma.persistence.service.expression.experiment.EeWriteService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentPrePersistService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
@@ -74,6 +75,8 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
     static final Log log = LogFactory.getLog( GeoServiceImpl.class );
     @Autowired
     private PersisterHelper persisterHelper;
+    @Autowired
+    private EeWriteService eeWriteService;
     @Autowired
     private ArrayDesignService arrayDesignService;
     @Autowired
@@ -268,12 +271,12 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
         this.getPubMedInfo( result );
 
         GeoServiceImpl.log.debug( "Converted " + seriesAccession );
-        assert persisterHelper != null;
+        assert eeWriteService != null;
 
         Collection<ExpressionExperiment> persistedResult = new HashSet<>();
         for ( ExpressionExperiment ee : result ) {
             c = expressionExperimentPrePersistService.prepare( ee, c );
-            ee = persisterHelper.persist( ee, c );
+            ee = eeWriteService.create( ee, c );
             persistedResult.add( ee );
             GeoServiceImpl.log.debug( "Persisted " + seriesAccession );
 
