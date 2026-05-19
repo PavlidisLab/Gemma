@@ -31,7 +31,7 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
-import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatAssociationService;
+import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatAssociationReadService;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultReadService;
 
 import java.util.*;
@@ -47,13 +47,13 @@ public class ArrayDesignMapResultServiceImpl implements ArrayDesignMapResultServ
     private static final Log log = LogFactory.getLog( ArrayDesignMapResultServiceImpl.class.getName() );
 
     private final BlatResultReadService blatResultService;
-    private final BlatAssociationService blatAssociationService;
+    private final BlatAssociationReadService blatAssociationService;
     private final ArrayDesignService arrayDesignService;
     private final CompositeSequenceService compositeSequenceService;
 
     @Autowired
     public ArrayDesignMapResultServiceImpl( BlatResultReadService blatResultService,
-            BlatAssociationService blatAssociationService, ArrayDesignService arrayDesignService,
+            BlatAssociationReadService blatAssociationService, ArrayDesignService arrayDesignService,
             CompositeSequenceService compositeSequenceService ) {
         this.blatResultService = blatResultService;
         this.blatAssociationService = blatAssociationService;
