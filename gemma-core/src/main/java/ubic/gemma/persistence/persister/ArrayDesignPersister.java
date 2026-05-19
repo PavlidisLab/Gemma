@@ -26,6 +26,7 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.service.common.auditAndSecurity.ContactDao;
@@ -69,10 +70,10 @@ public abstract class ArrayDesignPersister extends GenomePersister {
     @SuppressWarnings("unchecked")
     protected <T extends Identifiable> T doPersist( T entity, Caches caches, Map<String, ExternalDatabase> xdbCache ) {
         if ( entity instanceof ArrayDesign ) {
-            // Phase 3 lift: taxonCache is now an explicit per-call parameter on the
-            // ArrayDesignPersister-internal helpers; allocate a fresh map at this
-            // polymorphic dispatch entry point.
-            return ( T ) this.findOrPersistArrayDesign( ( ArrayDesign ) entity, caches, xdbCache, new HashMap<>() );
+            // Phase 3 lift: taxonCache and chromosomeCache are now explicit per-call
+            // parameters on the ArrayDesignPersister-internal helpers; allocate fresh
+            // maps at this polymorphic dispatch entry point.
+            return ( T ) this.findOrPersistArrayDesign( ( ArrayDesign ) entity, caches, xdbCache, new HashMap<>(), new HashMap<>() );
         } else {
             return super.doPersist( entity, caches, xdbCache );
         }
@@ -82,7 +83,7 @@ public abstract class ArrayDesignPersister extends GenomePersister {
      * Look up an existing ArrayDesign by business key (shortName, alternate names, or name —
      * see {@link BusinessKey#matches}); otherwise create a new one along with its full graph.
      */
-    private ArrayDesign findOrPersistArrayDesign( ArrayDesign arrayDesign, Caches caches, Map<String, ExternalDatabase> xdbCache, Map<Object, Taxon> taxonCache ) {
+    private ArrayDesign findOrPersistArrayDesign( ArrayDesign arrayDesign, Caches caches, Map<String, ExternalDatabase> xdbCache, Map<Object, Taxon> taxonCache, Map<Integer, Chromosome> chromosomeCache ) {
         if ( arrayDesign.getId() != null ) {
             AbstractPersister.log.debug( "Platform " + arrayDesign + " already exists, returning..." );
             return arrayDesign;
@@ -97,7 +98,7 @@ public abstract class ArrayDesignPersister extends GenomePersister {
         }
 
         AbstractPersister.log.debug( arrayDesign + " is new, processing..." );
-        return this.persistNewArrayDesign( arrayDesign, caches, xdbCache, taxonCache );
+        return this.persistNewArrayDesign( arrayDesign, caches, xdbCache, taxonCache, chromosomeCache );
     }
 
     /**
@@ -107,7 +108,7 @@ public abstract class ArrayDesignPersister extends GenomePersister {
      * many-to-one associations (BioSequence, ExternalDatabase) and the AD's own owning
      * associations (designProvider, primaryTaxon) need explicit BK resolution here.
      */
-    private ArrayDesign persistNewArrayDesign( ArrayDesign arrayDesign, Caches caches, Map<String, ExternalDatabase> xdbCache, Map<Object, Taxon> taxonCache ) {
+    private ArrayDesign persistNewArrayDesign( ArrayDesign arrayDesign, Caches caches, Map<String, ExternalDatabase> xdbCache, Map<Object, Taxon> taxonCache, Map<Integer, Chromosome> chromosomeCache ) {
         AbstractPersister.log.debug( "Persisting new platform " + arrayDesign.getName() );
 
         if ( arrayDesign.getDesignProvider() != null ) {
@@ -141,7 +142,7 @@ public abstract class ArrayDesignPersister extends GenomePersister {
             compositeSequence.setArrayDesign( arrayDesign );
             BioSequence biologicalCharacteristic = compositeSequence.getBiologicalCharacteristic();
             if ( biologicalCharacteristic != null ) {
-                compositeSequence.setBiologicalCharacteristic( this.persistBioSequence( biologicalCharacteristic, caches, xdbCache, taxonCache ) );
+                compositeSequence.setBiologicalCharacteristic( this.persistBioSequence( biologicalCharacteristic, caches, xdbCache, taxonCache, chromosomeCache ) );
             }
             if ( ++examined % REPORT_BATCH_SIZE == 0 ) {
                 AbstractPersister.log.info( examined + "/" + numElements

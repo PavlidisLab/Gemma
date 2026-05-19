@@ -27,6 +27,7 @@ import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.ExpressionExperimentSetDao;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationDao;
+import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.util.BusinessKey;
 
@@ -92,10 +93,12 @@ public abstract class RelationshipPersister extends ExpressionPersister {
     private Gene2GOAssociation persistGene2GOAssociation( Gene2GOAssociation association, Caches caches, Map<String, ExternalDatabase> xdbCache ) {
         // Gene first — Gene2GOAssociation BK matches on gene + ontologyEntry, so the
         // gene side must be resolved to a managed instance before the lookup.
-        // Phase 3 lift: taxonCache is per-call; allocate a fresh map here since the
-        // Gene2GO path persists one gene at a time and there's no shared cache to thread.
+        // Phase 3 lift: taxonCache and chromosomeCache are per-call; allocate fresh
+        // maps here since the Gene2GO path persists one gene at a time and there's
+        // no shared cache to thread.
         Map<Object, Taxon> taxonCache = new HashMap<>();
-        association.setGene( this.persistGene( association.getGene(), caches, xdbCache, taxonCache ) );
+        Map<Integer, Chromosome> chromosomeCache = new HashMap<>();
+        association.setGene( this.persistGene( association.getGene(), caches, xdbCache, taxonCache, chromosomeCache ) );
         Session session = getSessionFactory().getCurrentSession();
         Gene2GOAssociation existing = BusinessKey.find( session, association );
         return existing != null ? existing : gene2GoAssociationDao.create( association );
