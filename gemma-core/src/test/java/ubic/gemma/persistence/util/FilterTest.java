@@ -18,7 +18,7 @@
  */
 package ubic.gemma.persistence.util;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.core.convert.ConversionFailedException;
 
 import java.time.LocalDateTime;

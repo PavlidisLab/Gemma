@@ -17,7 +17,7 @@
  */
 package ubic.gemma.persistence.util;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -27,7 +27,7 @@ import ubic.gemma.model.genome.Taxon;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Pure unit tests for the validator portion of {@link BusinessKey} added during the Phase 3
