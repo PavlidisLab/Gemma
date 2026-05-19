@@ -312,13 +312,41 @@ public class PlatformsWebService {
     @GET
     @Path("/{platform}/elements/{probes}")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the selected probes for a given platform")
-    public FilteredAndPaginatedResponseDataObject<CompositeSequenceValueObject> getPlatformElement( // Params:
+    @Operation(summary = "Retrieve the selected probes for a given platform",
+            description = "Supports two pagination modes. Legacy mode: pass `offset` (and `limit`); response includes `offset` and `totalElements`. "
+                    + "Cursor mode (recommended for deep pagination and consistency under writes): pass an opaque `cursor` token from a previous response's `nextCursor` / `prevCursor` field. "
+                    + "`offset` and `cursor` are mutually exclusive — passing a non-null `cursor` selects cursor mode. "
+                    + "In cursor mode the result is always sorted by ascending `id` (cursor mode forces a single-component id sort pending the indexed-column audit in phase B); the path-derived `arrayDesign.id = ?` constraint and the `{probes}` id/name set restriction are both preserved; `totalElements` is `null` by default (no count query per request).",
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(schema = @Schema(oneOf = {
+                                    FilteredAndPaginatedResponseDataObject.class,
+                                    FilteredAndCursorPaginatedResponseDataObject.class
+                            }))),
+            })
+    public Object getPlatformElement( // Params:
             @PathParam("platform") PlatformArg<?> platformArg, // Required
             @PathParam("probes") CompositeSequenceArrayArg probesArg, // Required
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
-            @QueryParam("limit") @DefaultValue("20") LimitArg limit // Optional, default 20
+            @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
+            @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg
     ) {
+        if ( cursorArg != null ) {
+            // Mutual-exclusion: a non-null cursor selects cursor mode. The default offset=0 is
+            // not considered user-supplied (parallels GET /platforms/{platform}/elements step 1e).
+            // In cursor mode we currently force a +id sort (PlatformArgService.getElementsByCursor)
+            // — the DAO restricts cursors to single-component id sorts until the index audit lands.
+            // The path-derived arrayDesign.id filter AND the {probes} id/name set restriction are
+            // composed into the Filters inside getElementsByCursor (via CompositeSequenceArrayArg
+            // .getPlatformFilter()) so the scope is enforced identically in both modes.
+            CursorPage<CompositeSequenceValueObject> page = arrayDesignArgService.getElementsByCursor(
+                    platformArg, probesArg, cursorArg.getValue(), limit.getValue() );
+            // Filters are computed inside getElementsByCursor; re-compute here purely for the
+            // echoed `filter` field on the response wrapper (matches the offset variant).
+            probesArg.setPlatform( arrayDesignArgService.getEntity( platformArg ) );
+            Filters filters = Filters.by( probesArg.getPlatformFilter() );
+            return new FilteredAndCursorPaginatedResponseDataObject<>( page, filters, new String[] { "id" } );
+        }
         probesArg.setPlatform( arrayDesignArgService.getEntity( platformArg ) );
         Filters filters = Filters.by( probesArg.getPlatformFilter() );
         return paginate( compositeSequenceService::loadValueObjects, filters, new String[] { "id" },

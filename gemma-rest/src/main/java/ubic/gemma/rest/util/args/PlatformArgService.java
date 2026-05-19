@@ -85,6 +85,26 @@ public class PlatformArgService extends AbstractEntityArgService<ArrayDesign, Ar
     }
 
     /**
+     * Cursor-mode counterpart to {@link CompositeSequenceService#loadValueObjects(Filters, Sort, int, int)}
+     * scoped to a single platform AND a fixed set of probe identifiers (the
+     * {@code /{platform}/elements/{probes}} endpoint) — see
+     * {@code CURSOR_PAGINATION_STEP1_PLAN.md} step 1j. Always sorted by ascending {@code id}
+     * (the primary key, indexed and unique) because the cursor DAO currently restricts cursors
+     * to single-component id sorts (recce sec. 3.4 — to be lifted in phase B once the index
+     * audit is complete).
+     * <p>
+     * Filter composition matches the offset variant exactly: {@code Filters.by(probesArg.getPlatformFilter())}.
+     * {@link CompositeSequenceArrayArg#getPlatformFilter()} already encodes both the
+     * {@code arrayDesign.id = ?} platform-scope and the {@code id IN (...)} / {@code name IN (...)}
+     * probe-set restriction, so we don't need to compose them separately here.
+     */
+    public CursorPage<CompositeSequenceValueObject> getElementsByCursor( PlatformArg<?> arg, CompositeSequenceArrayArg probesArg, @Nullable Cursor cursor, int limit ) {
+        probesArg.setPlatform( this.getEntity( arg ) );
+        Filters filters = Filters.by( probesArg.getPlatformFilter() );
+        return csService.loadValueObjectsByCursor( filters, csService.getSort( "id", Sort.Direction.ASC, Sort.NullMode.LAST ), cursor, limit );
+    }
+
+    /**
      * Cursor-mode counterpart to {@link #getExperiments(PlatformArg, int, int)}: keyset pagination
      * over the {@link ExpressionExperimentValueObject datasets} that use a single platform,
      * always sorted by ascending {@code id} (the primary key, indexed and unique) — see
