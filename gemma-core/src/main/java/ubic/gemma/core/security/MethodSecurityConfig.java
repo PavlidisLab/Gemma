@@ -105,7 +105,13 @@ public class MethodSecurityConfig extends GlobalMethodSecurityConfiguration {
             //   moved to @PostFilter("hasPermission(filterObject.key, ...)").
             // afterAclMapValuesRead removed in Phase 3 Phase A — no live callsites (only one
             //   commented-out FIXME reference in CharacteristicService).
-            "afterAclReadQuiet", // AFTER_ACL_READ_QUIET — deferred to Phase B (return-null-on-denial)
+            // afterAclReadQuiet (gsec) replaced in Phase 3 Phase B by Gemma-owned
+            //   gemmaAfterAclReadQuiet (AclEntryAfterInvocationQuietReadProvider). Same
+            //   semantics — READ-or-ADMIN check, null on denial — but no gsec dependency.
+            //   Can't be a @PostAuthorize: that annotation has no "return null on denial"
+            //   mode, and the 17 call sites pervasively rely on null to distinguish "not
+            //   found / not visible" (HTTP 404) from "found but denied" (HTTP 403).
+            "gemmaAfterAclReadQuiet",
             "afterAclCompositeSequenceCollectionRead", // Phase B — bulk fetch by ArrayDesign
             "afterAclDataVectorCollectionRead", // Phase B — bulk fetch by ExpressionExperiment
             "afterAclMyDataRead", // Phase B — needs ACL owner SpEL helper
