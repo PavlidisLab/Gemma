@@ -19,12 +19,15 @@
 
 package ubic.gemma.model.analysis.expression.diff;
 
+import lombok.Data;
+
 import java.io.Serializable;
 
 /**
  * @author frances
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
+@Data
 public class IncludedResultSetInfoValueObject implements Serializable {
 
     /**
@@ -35,28 +38,4 @@ public class IncludedResultSetInfoValueObject implements Serializable {
     private Long experimentId;
     private Long analysisId;
     private Long resultSetId;
-
-    public Long getAnalysisId() {
-        return this.analysisId;
-    }
-
-    public void setAnalysisId( Long analysisId ) {
-        this.analysisId = analysisId;
-    }
-
-    public Long getExperimentId() {
-        return this.experimentId;
-    }
-
-    public void setExperimentId( Long experimentId ) {
-        this.experimentId = experimentId;
-    }
-
-    public Long getResultSetId() {
-        return this.resultSetId;
-    }
-
-    public void setResultSetId( Long resultSetId ) {
-        this.resultSetId = resultSetId;
-    }
 }
