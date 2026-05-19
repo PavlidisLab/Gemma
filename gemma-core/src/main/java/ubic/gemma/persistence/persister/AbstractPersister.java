@@ -29,7 +29,6 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.genome.Chromosome;
 
 import javax.annotation.OverridingMethodsMustInvokeSuper;
 import java.util.*;
@@ -62,21 +61,16 @@ public abstract class AbstractPersister implements Persister {
      * context).
      * <p>
      * Phase 3 persister-retirement note: the {@code externalDatabaseCache},
-     * {@code arrayDesignCache}, and {@code taxonCache} fields have been removed
-     * from this container and are now plumbed through helper-method signatures
-     * as explicit parameters (a {@code Map<String, ExternalDatabase>}, an
-     * {@link ArrayDesignsForExperimentCache}, and a {@code Map<Object, Taxon>}
-     * respectively). The remaining fields (chromosomeCache, bioAssayDimensionCache)
-     * still ride on this POJO because each is wired to a distinct entity-graph
-     * slice and threading them as separate parameters would explode signatures
-     * without semantic benefit.
+     * {@code arrayDesignCache}, {@code taxonCache}, and {@code chromosomeCache}
+     * fields have been removed from this container and are now plumbed through
+     * helper-method signatures as explicit parameters (a
+     * {@code Map<String, ExternalDatabase>}, an {@link ArrayDesignsForExperimentCache},
+     * a {@code Map<Object, Taxon>}, and a {@code Map<Integer, Chromosome>}
+     * respectively). The remaining field (bioAssayDimensionCache) still rides on
+     * this POJO; once it is similarly lifted this Caches POJO can be deleted.
      */
     @Value(staticConstructor = "empty")
     protected static class Caches {
-        /**
-         * Keys are custom hash codes.
-         */
-        Map<Integer, Chromosome> chromosomeCache = new HashMap<>();
         /**
          * Keys are custom hash codes.
          */
