@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.ContextRefreshedEvent;
+import ubic.gemma.core.context.EnvironmentProfiles;
 
 import java.util.Comparator;
 import java.util.HashMap;
@@ -17,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Configuration
-@Profile("profiling")
+@Profile(EnvironmentProfiles.PROFILING)
 public class ProfilingConfig {
 
     @Autowired

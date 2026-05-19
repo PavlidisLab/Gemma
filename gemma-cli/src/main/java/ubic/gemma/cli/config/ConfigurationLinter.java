@@ -6,12 +6,13 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
+import ubic.gemma.core.context.EnvironmentProfiles;
 
 /**
  * Lint various aspects of the configuration for the CLI profile.
  */
 @Slf4j
-@Profile("cli")
+@Profile(EnvironmentProfiles.CLI)
 @Component
 public class ConfigurationLinter implements ApplicationListener<ContextRefreshedEvent> {
 

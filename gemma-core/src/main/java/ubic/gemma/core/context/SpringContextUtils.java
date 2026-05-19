@@ -88,7 +88,7 @@ public class SpringContextUtils {
         if ( isWebApp ) {
             throw new UnsupportedOperationException( "The Web app context cannot be retrieved from here, use WebApplicationContextUtils.getWebApplicationContext() instead." );
         }
-        return getApplicationContext( testing ? new String[] { "testing" } : new String[0], additionalConfigurationLocations );
+        return getApplicationContext( testing ? new String[] { EnvironmentProfiles.TEST } : new String[0], additionalConfigurationLocations );
     }
 
     /**
@@ -116,9 +116,9 @@ public class SpringContextUtils {
                 cac.getEnvironment().addActiveProfile( EnvironmentProfiles.DEV );
             }
             // enable the scheduler profile if quartzOn is set to true
-            if ( Settings.getBoolean( "quartzOn" ) && !cac.getEnvironment().acceptsProfiles( "scheduler" ) ) {
+            if ( Settings.getBoolean( "quartzOn" ) && !cac.getEnvironment().acceptsProfiles( EnvironmentProfiles.SCHEDULER ) ) {
                 log.warn( "Enabling the Quartz scheduler since quartzOn is set. You should add 'scheduler' to the active profiles instead." );
-                cac.getEnvironment().addActiveProfile( "scheduler" );
+                cac.getEnvironment().addActiveProfile( EnvironmentProfiles.SCHEDULER );
             }
         }
         long numberOfActiveEnvironmentProfiles = Stream.of( EnvironmentProfiles.PRODUCTION, EnvironmentProfiles.DEV, EnvironmentProfiles.TEST )
