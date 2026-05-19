@@ -99,17 +99,24 @@ HB6-respecting patterns the factories enforce:
 | `gemma-core/.../fixture/TaxonFactoryTest.java` | Done — 10 tests, seeded shortcuts + ad-hoc + missing-seed error path |
 | `gemma-core/.../fixture/ArrayDesignFactory.java` | Done — `oneColor()`, `twoColor()`, `geneChip()`, `withTechnologyType(tt)`; `.withProbes(N)`, `.withSequences(boolean)`, `.withRandomProbeNames(boolean)`, `.withTaxon(t)`, `.withShortName(s)`, `.withName(n)`. CSes attach via cascade=all from AD; BioSequences are persisted first because CS→biologicalCharacteristic has no cascade. |
 | `gemma-core/.../fixture/ArrayDesignFactoryTest.java` | Done — 9 tests, defaults + technology types + probe shapes + biosequence attachment + taxon override |
+| `gemma-core/.../fixture/BioAssayFactory.java` | Done — `builder()` with `.withName(s)`, `.withBioMaterial(bm)`, `.withArrayDesign(ad)`, `.withTaxon(t)`, `.withAccession(bool)`, `.withIsOutlier(bool)`, `.withSequencePairedReads(bool)`. Two terminals: `build()` persists the BA via `BioAssayService.create`; `buildTransient()` persists BM + AD but leaves the BA unpersisted so a parent EE's cascade can handle it (this is the path `ExperimentFactory` now uses for its per-sample BAs). BM creation is inlined pending `BioMaterialFactory`. |
+| `gemma-core/.../fixture/BioAssayFactoryTest.java` | Done — 6 tests, defaults + BM/AD/name overrides + accession opt-out + buildTransient |
+| `gemma-core/.../fixture/ExperimentFactory.java` | Refactored — per-sample BA construction now goes through `bioAssayFactory.builder().buildTransient()` (EE→BA cascade still handles the BA persist). |
 | `CuratableValueObjectTest` | Migrated (first migration off the helper) |
 
 ## What's planned
 
 * `BioMaterialFactory` — `.withTaxon(t).withCharacteristic(c).build()`.
+  Next up — currently inlined inside both `ExperimentFactory.Builder.build()`
+  and `BioAssayFactory.Builder.build()`; the latter's
+  `createDefaultBioMaterial` is the seam to swap once it lands.
+* `CompositeSequenceFactory` / `GeneFactory` — currently inlined inside
+  `ArrayDesignFactory.Builder.build()`; split out once a second caller
+  materializes (e.g., gene-expression-vector tests that need probes
+  independent of an AD).
 * `ExperimentalFactorFactory` — `.categorical().withLevels(2).attachTo(ee)`.
 * `FactorValueFactory` — paired with the above.
 * `DifferentialExpressionAnalysisFactory` — `.attachTo(ee).withProbes(N)`.
-* `BioAssayFactory` — `.withBioMaterial(bm).withArrayDesign(ad)` (currently
-  inlined inside `ExperimentFactory.Builder.build()`; split out once a
-  second caller materializes).
 * Single-cell vector population helpers split out of
   `RandomSingleCellDataUtils` into a `SingleCellVectorFactory` callable
   on the output of `experimentFactory.singleCell().build()`.
