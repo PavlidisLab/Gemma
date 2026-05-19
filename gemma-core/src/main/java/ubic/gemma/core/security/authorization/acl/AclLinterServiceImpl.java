@@ -422,30 +422,39 @@ public class AclLinterServiceImpl implements AclLinterService {
      * Lint for securable entities that are explicitly not children, but have a parent object set in their ACL identity.
      * <p>
      * The fix is to detach them from their parent.
+     * <p>
+     * Phase 3 gsec HQL deprecation: read the AOI identifiers via raw SQL against the canonical
+     * Spring Security tables ({@code acl_object_identity} JOIN {@code acl_class}), then drive the
+     * fix through {@link AclService#updateAcl(MutableAcl)}. This replaces the previous HQL select
+     * + Hibernate dirty-flush path. Crucially, gsec's {@code AclObjectIdentity} mapping is
+     * {@code mutable="false"}: the prior {@code aoi.setParentObject(null)} call was a silent
+     * no-op — fixes never persisted. Routing through {@code aclService.updateAcl} (which delegates
+     * to {@link org.springframework.security.acls.jdbc.JdbcMutableAclService}) makes the fix
+     * actually land, and gets cache invalidation for free.
      */
     private void lintSecuredNotChildWithParent( Class<? extends SecuredNotChild> clazz, AclLinterConfig config, Collection<LintResult> results ) {
         log.info( "Linting " + clazz.getSimpleName() + " with parent ACL identities..." );
-        //noinspection unchecked
-        List<AclObjectIdentity> list = sessionFactory.getCurrentSession()
-                .createQuery( "select aoi from AclObjectIdentity aoi "
-                        + "where aoi.type = :type "
-                        + "and aoi.parentObject is not null" )
-                .setParameter( "type", clazz.getName() )
-                .setReadOnly( !config.isApplyFixes() )
-                .list();
-        if ( list.isEmpty() ) {
+        List<Long> identifiers = jdbcTemplate.queryForList(
+                "select aoi.object_id_identity "
+                        + "from acl_object_identity aoi "
+                        + "join acl_class cls on aoi.object_id_class = cls.id "
+                        + "where cls.class = ? and aoi.parent_object is not null",
+                Long.class, clazz.getName() );
+        if ( identifiers.isEmpty() ) {
             log.info( "No " + clazz.getSimpleName() + " have parent ACL identities; this is expected as it implements the SecuredNotChild interface." );
         } else {
-            log.warn( "There are " + list.size() + " " + clazz.getSimpleName() + " with parent ACL identities; this is not expected as it implements the SecuredNotChild interface." );
+            log.warn( "There are " + identifiers.size() + " " + clazz.getSimpleName() + " with parent ACL identities; this is not expected as it implements the SecuredNotChild interface." );
         }
-        for ( AclObjectIdentity aoi : list ) {
+        for ( Long identifier : identifiers ) {
             if ( config.isApplyFixes() ) {
-                aoi.setParentObject( null );
+                MutableAcl acl = ( MutableAcl ) aclService.readAclById( new AclObjectIdentity( clazz, identifier ) );
+                acl.setParent( null );
+                aclService.updateAcl( acl );
                 String fixMessage = "Detached parent ACL identity.";
-                log.info( formatEntity( clazz, aoi ) + ": " + fixMessage );
-                results.add( new LintResult( clazz, aoi.getIdentifier(), fixMessage, true ) );
+                log.info( formatEntity( clazz, identifier ) + ": " + fixMessage );
+                results.add( new LintResult( clazz, identifier, fixMessage, true ) );
             } else {
-                results.add( new LintResult( clazz, aoi.getIdentifier(), "Entity has a parent ACL identity, but it implements the SecuredNotChild interface.", false ) );
+                results.add( new LintResult( clazz, identifier, "Entity has a parent ACL identity, but it implements the SecuredNotChild interface.", false ) );
             }
         }
     }
@@ -454,27 +463,30 @@ public class AclLinterServiceImpl implements AclLinterService {
      * Lint for securable entities that are explicitly not children, but have a parent object set in their ACL identity.
      * <p>
      * The fix is to detach them from their parent.
+     * <p>
+     * Phase 3 gsec HQL deprecation: single-id variant of the bulk method above. Same conversion
+     * pattern: raw-SQL existence check, then route the fix through {@link AclService#updateAcl}.
      */
     private void lintSecuredNotChildWithParent( Class<? extends SecuredNotChild> clazz, Long identifier, AclLinterConfig config, Collection<LintResult> results ) {
-        AclObjectIdentity aoi = ( AclObjectIdentity ) sessionFactory.getCurrentSession()
-                .createQuery( "select aoi from AclObjectIdentity aoi "
-                        + "where aoi.identifier = :identifier and aoi.type = :type "
-                        + "and aoi.parentObject is not null" )
-                .setParameter( "identifier", identifier )
-                .setParameter( "type", clazz.getName() )
-                .setReadOnly( !config.isApplyFixes() )
-                .uniqueResult();
-        if ( aoi == null ) {
+        Integer hasParentCount = jdbcTemplate.queryForObject(
+                "select count(*) "
+                        + "from acl_object_identity aoi "
+                        + "join acl_class cls on aoi.object_id_class = cls.id "
+                        + "where cls.class = ? and aoi.object_id_identity = ? and aoi.parent_object is not null",
+                Integer.class, clazz.getName(), identifier );
+        if ( hasParentCount == null || hasParentCount == 0 ) {
             log.info( formatEntity( clazz, identifier ) + " has no parent ACL identity; this is expected as it implements the SecuredNotChild interface." );
             return;
         }
         if ( config.isApplyFixes() ) {
-            aoi.setParentObject( null );
+            MutableAcl acl = ( MutableAcl ) aclService.readAclById( new AclObjectIdentity( clazz, identifier ) );
+            acl.setParent( null );
+            aclService.updateAcl( acl );
             String fixMessage = "Detached parent ACL identity.";
             log.info( formatEntity( clazz, identifier ) + ": " + fixMessage );
-            results.add( new LintResult( clazz, aoi.getIdentifier(), fixMessage, true ) );
+            results.add( new LintResult( clazz, identifier, fixMessage, true ) );
         } else {
-            results.add( new LintResult( clazz, aoi.getIdentifier(), "Entity has a parent ACL identity, but it implements the SecuredNotChild interface.", false ) );
+            results.add( new LintResult( clazz, identifier, "Entity has a parent ACL identity, but it implements the SecuredNotChild interface.", false ) );
         }
     }
 

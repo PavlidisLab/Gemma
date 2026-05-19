@@ -34,14 +34,14 @@ acl_entry            (id, acl_object_identity FK, ace_order, sid FK,
 |---|------|---------|--------|------------|-----------------------|------------|--------|
 | 1 | `gemma-core/.../authorization/acl/AclLinterServiceImpl.java` | 162–166 | A | `select e.id from Entity e where e.id not in (select aoi.identifier from AclObjectIdentity aoi where aoi.type = :type)` | `acl_object_identity` JOIN `acl_class` | **simple** (returns ids only) | **CONVERTED (kickoff)** |
 | 2 | `gemma-core/.../authorization/acl/AclLinterServiceImpl.java` | 189–194 | A | `select count(*) > 0 from Entity e where e.id = :id and e.id not in (select aoi.identifier from AclObjectIdentity aoi where aoi.type=:t and aoi.identifier=:id)` | `acl_object_identity` JOIN `acl_class` | **simple** (existence check) | **CONVERTED (kickoff)** |
-| 3 | `gemma-core/.../authorization/acl/AclLinterServiceImpl.java` | 132–142 | B | `select aoi from AclObjectIdentity aoi where aoi.type=:t and aoi.identifier not in (select e.id from Entity e)` — dangling-AOI detection. Materialises `List<AclObjectIdentity>` and reads `aoi.getIdentifier()` only. | `acl_object_identity` JOIN `acl_class` (left-anti against entity table) | medium (subquery against dynamic entity table) | pending |
+| 3 | `gemma-core/.../authorization/acl/AclLinterServiceImpl.java` | 132–142 | B | `select aoi from AclObjectIdentity aoi where aoi.type=:t and aoi.identifier not in (select e.id from Entity e)` — dangling-AOI detection. Materialises `List<AclObjectIdentity>` and reads `aoi.getIdentifier()` only. | `acl_object_identity` JOIN `acl_class` (left-anti against entity table) | medium (subquery against dynamic entity table) | **CONVERTED** (commit `88a379127a`) |
 | 4 | `gemma-core/.../authorization/acl/AclLinterServiceImpl.java` | 214–220 | B | `select aoi from AclObjectIdentity aoi where aoi.type=:t and aoi.parentObject is null` — SecuredChild without parent. Caller mutates `aoi.setParentObject(...)`. | `acl_object_identity` JOIN `acl_class` where `parent_object IS NULL` | **high** (mutation via managed entity) | pending |
 | 5 | `gemma-core/.../authorization/acl/AclLinterServiceImpl.java` | 252–259 | B | Single-id form of #4. Same mutation pattern. | as #4 | high | pending |
 | 6 | `gemma-core/.../authorization/acl/AclLinterServiceImpl.java` | 292–301 | B | `select aoi from AclObjectIdentity aoi join aoi.parentObject parentAoi where aoi.type=:t and (parentAoi.type<>:pt or parentAoi.identifier <> (<dynamic-HQL>))` — incorrect parent detection. Materialises + mutates. | self-join on `acl_object_identity` JOIN `acl_class` (twice) + arbitrary inner HQL fragment via `expectedParentIdQueries` | **high** (dynamic subqueries) | pending |
 | 7 | `gemma-core/.../authorization/acl/AclLinterServiceImpl.java` | 334–344 | B | Single-id form of #6. | as #6 | high | pending |
-| 8 | `gemma-core/.../authorization/acl/AclLinterServiceImpl.java` | 377–383 | B | `select aoi from AclObjectIdentity aoi where aoi.type=:t and aoi.parentObject is not null` — SecuredNotChild with parent. Caller mutates `aoi.setParentObject(null)`. | `acl_object_identity` JOIN `acl_class` where `parent_object IS NOT NULL` | high (mutation) | pending |
-| 9 | `gemma-core/.../authorization/acl/AclLinterServiceImpl.java` | 407–414 | B | Single-id form of #8. | as #8 | high | pending |
-| 10 | `gemma-core/.../authorization/acl/ParentIdentityRetrievalStrategyImpl.java` | 92–96 | B | `select aoi from AclObjectIdentity aoi where aoi.type=:t and aoi.identifier=:id` — return the AOI as `ObjectIdentity`. Consumed by callers via `aoi.setParentObject(returned)` (Hibernate-managed mutation). | `acl_object_identity` JOIN `acl_class` | **medium-high** (return type is `ObjectIdentity`; conversion away from gsec AOI requires returning either a `Long acl_object_identity.id` for downstream JDBC update OR a stock Spring `ObjectIdentityImpl`) | pending |
+| 8 | `gemma-core/.../authorization/acl/AclLinterServiceImpl.java` | 377–383 | B | `select aoi from AclObjectIdentity aoi where aoi.type=:t and aoi.parentObject is not null` — SecuredNotChild with parent. Caller mutates `aoi.setParentObject(null)`. | `acl_object_identity` JOIN `acl_class` where `parent_object IS NOT NULL` | high (mutation) | **CONVERTED** (this session — JDBC select + `aclService.updateAcl`) |
+| 9 | `gemma-core/.../authorization/acl/AclLinterServiceImpl.java` | 407–414 | B | Single-id form of #8. | as #8 | high | **CONVERTED** (this session — JDBC count + `aclService.updateAcl`) |
+| 10 | `gemma-core/.../authorization/acl/ParentIdentityRetrievalStrategyImpl.java` | 92–96 | B | `select aoi from AclObjectIdentity aoi where aoi.type=:t and aoi.identifier=:id` — return the AOI as `ObjectIdentity`. Consumed by callers via `aoi.setParentObject(returned)` (Hibernate-managed mutation). | `acl_object_identity` JOIN `acl_class` | **medium-high** (return type is `ObjectIdentity`; conversion away from gsec AOI requires returning either a `Long acl_object_identity.id` for downstream JDBC update OR a stock Spring `ObjectIdentityImpl`) | **CONVERTED** (RowMapper to fresh `AclObjectIdentity(id, type, identifier)`) |
 | 11 | `gemma-core/.../persistence/util/AclQueryUtils.java` | 56–59, 62, 133–157 | A | HQL `formAclRestrictionClause()` — `, AclObjectIdentity aoi join aoi.ownerSid sid left join aoi.entries ace where ...`. **Used as a fragment composed into many other HQL queries across DAOs.** | `acl_object_identity` JOIN `acl_class` JOIN `acl_sid` LEFT JOIN `acl_entry` (the native equivalent at lines 172–229 already exists) | **structural / high impact** (every DAO that builds a query around `formAclRestrictionClause` would have to switch to the native flavour) | pending |
 | 12 | `gemma-core/.../persistence/service/expression/experiment/ExpressionExperimentDaoImpl.java` | 2103–2105, 2259–2262 | B | `transformTuple` casts `row[1]` to `AclObjectIdentity` and `row[2]` to `AclSid`, then passes them to VO constructors. The HQL that produces these rows lives in `AbstractCuratableDao` / VO-loading machinery and is fed by `AclQueryUtils.formAclRestrictionClause`. | as #11 | **structural / high impact** (touches the EE VO loader; coupled to #11) | pending |
 
@@ -139,11 +139,32 @@ is more involved:
 
 - Reading: return `(acl_object_identity.id, object_id_identity, parent_object)`
   as a small DTO via `RowMapper`.
-- Writing: replace the implicit Hibernate dirty-checking flush with an explicit
-  `jdbcTemplate.update("update acl_object_identity set parent_object = ? where id = ?", ...)`.
-- Caveat: the gsec `AclDaoImpl` does additional cache invalidation on AOI
-  mutation; `GsecAclServiceAdapter` and the surrounding cache wiring need
-  audit before bypassing the Hibernate write path.
+- Writing: either (a) replace the implicit Hibernate dirty-checking flush with
+  an explicit `jdbcTemplate.update("update acl_object_identity set parent_object = ? where id = ?", ...)`,
+  OR (b) route the write through `aclService.updateAcl(mutableAcl)` — which
+  delegates to Spring's `JdbcMutableAclService` and gets cache invalidation for
+  free. Pattern (b) is cleaner and matches the existing `lintPermissions`
+  precedent; pattern (a) needs a manual cache-evict.
+
+### LANDMINE — `mutable="false"` on gsec's `AclObjectIdentity`
+
+The gsec `AclObjectIdentity.hbm.xml` mapping carries `mutable="false"`. This
+means **every `aoi.setParentObject(...)` / `aoi.setEntries(...)` call in the
+pre-conversion bucket B code silently no-ops** — Hibernate refuses to dirty
+the entity. Concretely:
+
+- Pre-conversion #4 / #5 (`lintSecuredChildWithoutParent` with `applyFixes=true`)
+  computes the correct parent AOI but never persists the fix.
+- Pre-conversion #6 / #7 (`lintSecuredChildWithIncorrectParent` with `applyFixes=true`)
+  same — fix is computed and discarded.
+- Pre-conversion #8 / #9 (`lintSecuredNotChildWithParent` with `applyFixes=true`)
+  same — `setParentObject(null)` is a no-op.
+
+The "fix" path of the SecuredChild / SecuredNotChild lints has therefore been
+silently broken since the gsec mapping was switched to `mutable="false"`. This
+is why #8 / #9 were ratable as low-risk to convert: there is no Hibernate
+write path to preserve. The converted code now routes through
+`aclService.updateAcl(...)` and the fix actually lands.
 
 ---
 
@@ -181,8 +202,9 @@ extending this conversion further.
 | Complexity | Sites | Est effort per site | Notes |
 |------------|-------|---------------------|-------|
 | simple (id/count returns, no mutation) | #1 (done), #2 (done) | 30 min | Pattern above. |
-| medium (read-only AOI fetch consumed as a value) | #3, #10 | 1–2 h | RowMapper to a small DTO; rewire callers; smoke-test with `AclLinterServiceTest` + an integration test that exercises `ParentIdentityRetrievalStrategyImpl`. |
-| high (read + mutation) | #4, #5, #6, #7, #8, #9 | 2–4 h each | Replace Hibernate dirty-flush with explicit `jdbcTemplate.update`. Audit cache invalidation in `GsecAclServiceAdapter`. Confirm with an integration test that lints and then re-lints to verify the fix landed. |
+| medium (read-only AOI fetch consumed as a value) | #3 (done), #10 (done) | 1–2 h | RowMapper to a small DTO; rewire callers; smoke-test with `AclLinterServiceTest` + an integration test that exercises `ParentIdentityRetrievalStrategyImpl`. |
+| high (read + mutation — SecuredNotChild branch) | #8 (done), #9 (done) | 2–4 h each | JDBC read + route fix through `aclService.updateAcl`. Since the gsec mapping is `mutable="false"`, the *pre-conversion* "fix" path was a silent no-op (see LANDMINE section); the converted code is the first version that actually persists the fix. Confirmed by `AclLinterServiceTest.testLintSecuredNotChildWithParent_*`. |
+| high (read + mutation — SecuredChild branch) | #4, #5, #6, #7 | 2–4 h each | More involved than #8/#9: the fix invokes `parentIdentityRetrievalStrategy.getParentIdentity(sc)` to compute the *correct* parent AOI, then must set it on the child ACL. Pattern: JDBC read for the AOI list, `aclService.readAclById(...)` for each child, compute parent via the existing strategy, `acl.setParent(parentAcl)` (also requires `aclService.readAclById` for the parent), `aclService.updateAcl(acl)`. Same `mutable="false"` LANDMINE applies — pre-conversion "fix" was a silent no-op. #6 / #7 additionally need to read `parentObject.type` and `parentObject.identifier` for the incorrect-parent detection. |
 | structural | #11, #12 | 1–2 d | `formAclRestrictionClause` is woven into the EE / curatable DAO HQL builder. Switching to `formNativeAclJoinClause` everywhere means every DAO that uses it must move to native SQL. The native version already exists; the work is converting consumers. |
 
 Total: roughly **2–3 weeks** to complete the deprecation if pursued

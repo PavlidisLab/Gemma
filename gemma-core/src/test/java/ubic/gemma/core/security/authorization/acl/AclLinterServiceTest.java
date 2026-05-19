@@ -297,4 +297,82 @@ public class AclLinterServiceTest extends BaseDatabaseTest {
                     r.getMessage().contains( "no corresponding entity" ) );
         }
     }
+
+    /**
+     * Phase 3 gsec HQL deprecation: regression coverage for the converted JdbcTemplate-backed
+     * {@code lintSecuredNotChildWithParent} (bulk variant).
+     * <p>
+     * Seeds an AOI for {@link ExpressionExperiment} (a {@link ubic.gemma.model.common.auditAndSecurity.SecuredNotChild})
+     * carrying a non-null {@code parent_object}, then verifies the linter reports the entity
+     * in dry-run mode.
+     */
+    @Test
+    @WithMockUser(authorities = { "GROUP_ADMIN" })
+    public void testLintSecuredNotChildWithParent_reportsWhenParentSet() {
+        AclLinterConfig config = AclLinterConfig.builder()
+                .lintNotChildWithParent( true )
+                .applyFixes( false )
+                .build();
+
+        JdbcTemplate jt = new JdbcTemplate( dataSource );
+        // Seed acl_class for ExpressionExperiment.
+        List<Long> existing = jt.queryForList(
+                "select id from acl_class where class = ?", Long.class,
+                ExpressionExperiment.class.getName() );
+        Long classId;
+        if ( existing.isEmpty() ) {
+            jt.update( "insert into acl_class (class) values (?)", ExpressionExperiment.class.getName() );
+            classId = jt.queryForObject(
+                    "select id from acl_class where class = ?", Long.class,
+                    ExpressionExperiment.class.getName() );
+        } else {
+            classId = existing.get( 0 );
+        }
+        // Insert a parent AOI (any class will do as the FK target; reuse the same class row).
+        jt.update(
+                "insert into acl_object_identity (object_id_class, object_id_identity, parent_object, owner_sid, entries_inheriting) values (?, ?, NULL, 1, 0)",
+                classId, 11111L );
+        Long parentAoiId = jt.queryForObject(
+                "select id from acl_object_identity where object_id_class = ? and object_id_identity = ?",
+                Long.class, classId, 11111L );
+        // Insert the SecuredNotChild AOI pointing at the parent — this is the misconfiguration the
+        // linter targets.
+        jt.update(
+                "insert into acl_object_identity (object_id_class, object_id_identity, parent_object, owner_sid, entries_inheriting) values (?, ?, ?, 1, 0)",
+                classId, 22222L, parentAoiId );
+
+        Collection<AclLinterService.LintResult> results = aclLinterService.lintAcls( ExpressionExperiment.class, config );
+        boolean reported = false;
+        for ( AclLinterService.LintResult r : results ) {
+            if ( Long.valueOf( 22222L ).equals( r.getIdentifier() )
+                    && r.getMessage().contains( "implements the SecuredNotChild interface" ) ) {
+                reported = true;
+                break;
+            }
+        }
+        assertTrue( "SecuredNotChild with non-null parent_object should be reported by the linter",
+                reported );
+    }
+
+    /**
+     * Phase 3 gsec HQL deprecation: regression coverage for the single-id variant of
+     * {@code lintSecuredNotChildWithParent}. Verifies that an identifier with no AOI does not
+     * surface as a finding (short-circuits cleanly).
+     */
+    @Test
+    @WithMockUser(authorities = { "GROUP_ADMIN" })
+    public void testLintSecuredNotChildWithParent_singleId_noAoi() {
+        AclLinterConfig config = AclLinterConfig.builder()
+                .lintNotChildWithParent( true )
+                .applyFixes( false )
+                .build();
+        // Id 33333 has no AOI row; the linter must not report it as having a parent.
+        Collection<AclLinterService.LintResult> results = aclLinterService.lintAcls( ExpressionExperiment.class, 33333L, config );
+        for ( AclLinterService.LintResult r : results ) {
+            assertFalse(
+                    "Id with no AOI should not be reported by SecuredNotChild lint, got: " + r,
+                    r.getMessage().contains( "implements the SecuredNotChild interface" )
+                            && Long.valueOf( 33333L ).equals( r.getIdentifier() ) );
+        }
+    }
 }
