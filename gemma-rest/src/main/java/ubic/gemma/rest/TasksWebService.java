@@ -7,7 +7,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.job.SubmittedTask;
 import ubic.gemma.core.job.TaskRunningService;
@@ -40,7 +40,7 @@ public class TasksWebService {
     @GET
     @Path("/{taskId}")
     @Produces(MediaType.APPLICATION_JSON)
-    @Secured("GROUP_ADMIN")
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
     @Operation(summary = "Retrieve the status of a submitted pipeline task",
             description = "Returns a snapshot of the named task's current state (`queued`, `running`, `completed`, "
                     + "`failed`, `cancelling`, `unknown`), its submission/start/finish timestamps, the experiment "
