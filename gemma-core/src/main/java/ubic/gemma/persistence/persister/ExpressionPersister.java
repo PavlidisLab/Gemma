@@ -35,8 +35,6 @@ import ubic.gemma.model.expression.biomaterial.Compound;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayDao;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionDao;
-import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialDao;
-import ubic.gemma.persistence.service.expression.biomaterial.CompoundDao;
 import ubic.gemma.persistence.service.expression.experiment.*;
 
 import javax.annotation.Nullable;
@@ -52,21 +50,21 @@ public abstract class ExpressionPersister extends ArrayDesignPersister implement
     @Autowired
     private BioAssayDao bioAssayDao;
     @Autowired
-    private BioMaterialDao bioMaterialDao;
-    @Autowired
-    private CompoundDao compoundDao;
-    @Autowired
     private ExperimentalDesignDao experimentalDesignDao;
-    @Autowired
-    private ExperimentalFactorDao experimentalFactorDao;
     @Autowired
     private ExpressionExperimentDao expressionExperimentDao;
     @Autowired
-    private ExpressionExperimentSubSetDao expressionExperimentSubSetDao;
-    @Autowired
-    private FactorValueDao factorValueDao;
-    @Autowired
     private ExpressionExperimentPrePersistService expressionExperimentPrePersistService;
+    /**
+     * Phase 3 ExpressionPersister retirement (Chunk E2): the trivial
+     * find-or-create methods (Compound, BioMaterial, FactorValue,
+     * ExperimentalFactor, ExpressionExperimentSubSet) delegate their DAO
+     * lookup-or-insert step here. The persister still owns the surrounding
+     * orchestration (taxon, accession, association fill-in). As more of the
+     * body migrates in Chunks E3+ this delegation will become the entry point.
+     */
+    @Autowired
+    private EeWriteService eeWriteService;
 
     @Override
     @Transactional
@@ -389,14 +387,16 @@ public abstract class ExpressionPersister extends ArrayDesignPersister implement
         AbstractPersister.log.debug( "taxon done" );
 
         AbstractPersister.log.debug( "start save" );
-        BioMaterial bm = bioMaterialDao.findOrCreate( entity );
+        // Phase 3 E2: BK find-or-create relocated to EeWriteService.
+        BioMaterial bm = eeWriteService.findOrCreate( entity );
         AbstractPersister.log.debug( "save biomaterial done" );
 
         return bm;
     }
 
     private Compound persistCompound( Compound compound ) {
-        return compoundDao.findOrCreate( compound );
+        // Phase 3 E2: BK find-or-create relocated to EeWriteService.
+        return eeWriteService.findOrCreate( compound );
     }
 
     /**
@@ -405,7 +405,8 @@ public abstract class ExpressionPersister extends ArrayDesignPersister implement
     private ExperimentalFactor persistExperimentalFactor( ExperimentalFactor experimentalFactor, Caches caches ) {
         assert experimentalFactor.getType() != null;
         this.fillInExperimentalFactorAssociations( experimentalFactor, caches );
-        return experimentalFactorDao.create( experimentalFactor );
+        // Phase 3 E2: DAO create relocated to EeWriteService.
+        return eeWriteService.create( experimentalFactor );
     }
 
     private ExpressionExperimentSubSet persistExpressionExperimentSubSet( ExpressionExperimentSubSet entity ) {
@@ -415,7 +416,8 @@ public abstract class ExpressionPersister extends ArrayDesignPersister implement
             throw new IllegalArgumentException(
                     "Subsets are only supported for expression experiments that are already persistent" );
         } else {
-            return expressionExperimentSubSetDao.findOrCreate( entity );
+            // Phase 3 E2: BK find-or-create relocated to EeWriteService.
+            return eeWriteService.findOrCreate( entity );
         }
     }
 
@@ -432,7 +434,8 @@ public abstract class ExpressionPersister extends ArrayDesignPersister implement
                     "You must fill in the experimental factor before persisting a factorvalue" );
         }
         this.fillInFactorValueAssociations( factorValue, caches );
-        return factorValueDao.findOrCreate( factorValue );
+        // Phase 3 E2: BK find-or-create relocated to EeWriteService.
+        return eeWriteService.findOrCreate( factorValue );
     }
 
     /**
