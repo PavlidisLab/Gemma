@@ -37,15 +37,39 @@ import javax.annotation.Nullable;
 /**
  * Historical persister entry point for {@link ExpressionExperiment} graphs.
  * <p>
- * Phase 3 (strangler-fig): all body methods have been relocated to
- * {@link EeWriteServiceImpl}. This class is now a thin delegate that keeps the
- * {@link PersisterHelper} dispatch surface ({@link #doPersist}, {@link #persist})
- * working while callers migrate to {@link ubic.gemma.persistence.service.expression.experiment.EeWriteService}
- * directly (chunk E4). The class is scheduled for deletion in chunk E5.
+ * Phase 3 (strangler-fig, chunks E3-E5): all body methods have been relocated
+ * to {@link EeWriteServiceImpl}. This class is now a thin delegate that keeps
+ * the {@link PersisterHelper} dispatch surface ({@link #doPersist},
+ * {@link #persist}) working for the remaining polymorphic callers that route
+ * an {@link ExpressionExperiment} through {@code persisterHelper.persist(obj)}.
+ * <p>
+ * <b>Deprecation status (chunk E5):</b> the class has been marked
+ * {@code @Deprecated}. The 2 hot direct callers ({@code GeoServiceImpl},
+ * {@code SimpleExpressionDataLoaderServiceImpl}) have been cut over to
+ * {@link ubic.gemma.persistence.service.expression.experiment.EeWriteService#create}.
+ * Final deletion is blocked on migrating the ~20 polymorphic call sites
+ * tracked in {@code EXPRESSION_PERSISTER_DELETION.md} at the repo root;
+ * once those route through the modern API, this class and its place in the
+ * {@code ExpressionPersister -> ArrayDesignPersister -> GenomePersister
+ * -> RelationshipPersister -> CommonPersister -> AbstractPersister} chain
+ * can collapse and the EE dispatch arm should move to
+ * {@link PersisterHelperImpl} (or be removed entirely).
+ * <p>
+ * <b>Do not add new call sites that depend on this class.</b> Use
+ * {@link ubic.gemma.persistence.service.expression.experiment.EeWriteService#create}
+ * for new code.
  *
  * @author pavlidis
  * @see EeWriteServiceImpl
+ * @see ubic.gemma.persistence.service.expression.experiment.EeWriteService#create(ExpressionExperiment, ArrayDesignsForExperimentCache)
+ * @deprecated since Phase 3 / chunk E5. Use
+ * {@link ubic.gemma.persistence.service.expression.experiment.EeWriteService#create(ExpressionExperiment, ArrayDesignsForExperimentCache)}
+ * (or {@link ubic.gemma.persistence.service.expression.experiment.EeWriteService#create(ExpressionExperiment)})
+ * directly. This class will be deleted once the remaining polymorphic
+ * {@code persisterHelper.persist(...)} callers migrate; see
+ * {@code EXPRESSION_PERSISTER_DELETION.md}.
  */
+@Deprecated
 public abstract class ExpressionPersister extends ArrayDesignPersister implements PersisterHelper {
 
     /**
@@ -75,12 +99,28 @@ public abstract class ExpressionPersister extends ArrayDesignPersister implement
         return ( EeWriteServiceImpl ) ( target != null ? target : eeWriteService );
     }
 
+    /**
+     * @deprecated use
+     * {@link EeWriteService#create(ExpressionExperiment, ArrayDesignsForExperimentCache)}
+     * directly. Retained only so polymorphic callers that hit
+     * {@link PersisterHelper#persist(ExpressionExperiment, ArrayDesignsForExperimentCache)}
+     * keep working through chunk E5.
+     */
     @Override
+    @Deprecated
     @Transactional
     public ExpressionExperiment persist( ExpressionExperiment ee, @Nullable ArrayDesignsForExperimentCache cachedArrays ) {
         return eeWriteService.create( ee, cachedArrays );
     }
 
+    /**
+     * @deprecated use
+     * {@link ExpressionExperimentPrePersistService#prepare(ExpressionExperiment)}
+     * directly. Retained only so polymorphic callers that hit
+     * {@link PersisterHelper#prepare(ExpressionExperiment)} keep working
+     * through chunk E5.
+     */
+    @Deprecated
     @Secured("GROUP_USER")
     public ArrayDesignsForExperimentCache prepare( ExpressionExperiment ee ) {
         return expressionExperimentPrePersistService.prepare( ee );
