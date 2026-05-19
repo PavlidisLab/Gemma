@@ -156,6 +156,7 @@ import static ubic.gemma.core.analysis.service.ExpressionDataFileUtils.*;
 import static ubic.gemma.persistence.util.IdentifiableUtils.toIdentifiableSet;
 import static ubic.gemma.rest.util.MediaTypeUtils.negotiate;
 import static ubic.gemma.rest.util.MediaTypeUtils.withQuality;
+import static ubic.gemma.rest.util.Responders.paginateByCursor;
 import static ubic.gemma.rest.util.Responders.respond;
 import static ubic.gemma.rest.util.Responders.sendfile;
 
@@ -831,15 +832,43 @@ public class DatasetsWebService {
     @GET
     @Path("/{dataset}/samples")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the samples of a dataset", responses = {
-            @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
-            @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
-                    content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
-    public ResponseDataObject<List<BioAssayValueObject>> getDatasetSamples( // Params:
+    @Operation(summary = "Retrieve the samples of a dataset",
+            description = "Legacy mode (no `cursor` parameter): returns the full unpaginated assay list in the existing shape. "
+                    + "Cursor mode (recommended for deep listings — single-cell datasets can have tens of thousands of assays): "
+                    + "pass an opaque `cursor` token from a previous response's `nextCursor` / `prevCursor` field along with a `limit`. "
+                    + "In cursor mode the result is always sorted by ascending `id` (cursor mode forces a single-component id sort pending the indexed-column audit in phase B); "
+                    + "the path-derived `expressionExperiment.id = ?` constraint is preserved; `totalElements` is `null` by default (no count query per request). "
+                    + "The `quantitationType` and `useProcessedQuantitationType` query parameters narrow the assays to a specific `BioAssayDimension` and intentionally remain offset-mode "
+                    + "(they sort by assay name and apply a dimension restriction that is not expressible as an `id`-only cursor); supplying `cursor` together with either of those is a `400`.",
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(schema = @Schema(oneOf = {
+                                    ResponseDataObject.class,
+                                    CursorPaginatedResponseDataObject.class
+                            }))),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public Object getDatasetSamples( // Params:
             @PathParam("dataset") DatasetArg<?> datasetArg, // Required
             @QueryParam("quantitationType") QuantitationTypeArg<?> quantitationTypeArg,
-            @QueryParam("useProcessedQuantitationType") boolean useProcessedQuantitationType
+            @QueryParam("useProcessedQuantitationType") boolean useProcessedQuantitationType,
+            @Parameter(description = "Opaque keyset-pagination cursor token; not supported in combination with `quantitationType` or `useProcessedQuantitationType`.")
+            @QueryParam("cursor") CursorArg cursorArg,
+            @Parameter(description = "Page size for cursor mode (ignored when no `cursor` is supplied).")
+            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg
     ) {
+        if ( cursorArg != null ) {
+            // Mutual-exclusion: the QT-narrowed variants apply a BioAssayDimension restriction and sort
+            // by assay name (see DatasetArgService.getSamples(DatasetArg, QuantitationType)); neither is
+            // expressible as an id-only cursor under the step 1b restriction, so refuse instead of silently
+            // ignoring the user's request.
+            if ( quantitationTypeArg != null || useProcessedQuantitationType ) {
+                throw new BadRequestException( "Cursor pagination is not supported together with quantitationType / "
+                        + "useProcessedQuantitationType; either drop the cursor or drop the QT parameters." );
+            }
+            CursorPage<BioAssayValueObject> page = datasetArgService.getSamplesByCursor( datasetArg, cursorArg.getValue(), limitArg.getValue() );
+            return paginateByCursor( page, new String[] { "id" } );
+        }
         if ( quantitationTypeArg != null ) {
             ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
             QuantitationType qt = quantitationTypeArgService.getEntity( quantitationTypeArg, ee );
