@@ -19,20 +19,17 @@
 package ubic.gemma.model.common.description;
 
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.HashSet;
 import java.util.Set;
 
+@Getter
+@Setter
 public class MedicalSubjectHeading extends BibRefAnnotation {
 
     private Set<MedicalSubjectHeading> qualifiers = new HashSet<>();
-
-    public Set<MedicalSubjectHeading> getQualifiers() {
-        return this.qualifiers;
-    }
-
-    public void setQualifiers( Set<MedicalSubjectHeading> qualifiers ) {
-        this.qualifiers = qualifiers;
-    }
 
     public static final class Factory {
         public static MedicalSubjectHeading newInstance() {

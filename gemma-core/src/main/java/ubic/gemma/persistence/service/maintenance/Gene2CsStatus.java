@@ -18,6 +18,8 @@
  */
 package ubic.gemma.persistence.service.maintenance;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.lang.Nullable;
 import java.io.Serializable;
 import java.util.Date;
@@ -29,6 +31,8 @@ import java.util.Date;
  * @see TableMaintenanceUtil
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
+@Getter
+@Setter
 public class Gene2CsStatus implements Serializable {
 
     private static final long serialVersionUID = 1956861185764899312L;
@@ -39,31 +43,6 @@ public class Gene2CsStatus implements Serializable {
     private Exception error;
 
     private String annotation;
-
-    public String getAnnotation() {
-        return annotation;
-    }
-
-    public void setAnnotation( String annotation ) {
-        this.annotation = annotation;
-    }
-
-    @Nullable
-    public Exception getError() {
-        return error;
-    }
-
-    public void setError( @Nullable Exception error ) {
-        this.error = error;
-    }
-
-    public Date getLastUpdate() {
-        return lastUpdate;
-    }
-
-    public void setLastUpdate( Date lastUpdate ) {
-        this.lastUpdate = lastUpdate;
-    }
 
     @Override
     public String toString() {

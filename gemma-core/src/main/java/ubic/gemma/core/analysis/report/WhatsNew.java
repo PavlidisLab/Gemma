@@ -18,6 +18,8 @@
  */
 package ubic.gemma.core.analysis.report;
 
+import lombok.Getter;
+import lombok.Setter;
 import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -31,6 +33,8 @@ import java.util.*;
  * @author pavlidis
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
+@Getter
+@Setter
 public class WhatsNew {
 
     private Collection<Auditable> newObjects;
@@ -102,17 +106,6 @@ public class WhatsNew {
     }
 
     /**
-     * @return all the new objects regardless of class.
-     */
-    public Collection<Auditable> getNewObjects() {
-        return newObjects;
-    }
-
-    public void setNewObjects( Collection<Auditable> newObjects ) {
-        this.newObjects = newObjects;
-    }
-
-    /**
      * adds a single auditable to the new object list
      *
      * @param newObject the object to add
@@ -146,69 +139,6 @@ public class WhatsNew {
      */
     public void addUpdatedObjects( Collection<? extends Auditable> objs ) {
         this.updatedObjects.addAll( objs );
-    }
-
-    /**
-     * @return all the updated objects, regardless of class.
-     */
-    public Collection<Auditable> getUpdatedObjects() {
-        return updatedObjects;
-    }
-
-    public void setUpdatedObjects( Collection<Auditable> updatedObjects ) {
-        this.updatedObjects = updatedObjects;
-    }
-
-    /**
-     * @return get a map for the total number expression experiments per taxon
-     */
-    public Map<Taxon, Long> getEeCountPerTaxon() {
-        return this.eeCountPerTaxon;
-    }
-
-    public void setEeCountPerTaxon( Map<Taxon, Long> eeCountPerTaxon ) {
-        this.eeCountPerTaxon = eeCountPerTaxon;
-    }
-
-    /**
-     * @return get a map for the number of new expression experiments per taxon
-     */
-    public Map<Taxon, Collection<Long>> getNewEEIdsPerTaxon() {
-        return this.newEEIdsPerTaxon;
-    }
-
-    public void setNewEEIdsPerTaxon( Map<Taxon, Collection<Long>> eeCountPerTaxon ) {
-        this.newEEIdsPerTaxon = eeCountPerTaxon;
-    }
-
-    /**
-     * @return get a map for the number of updated expression experiments per taxon
-     */
-    public Map<Taxon, Collection<Long>> getUpdatedEEIdsPerTaxon() {
-        return this.updatedEEIdsPerTaxon;
-    }
-
-    public void setUpdatedEEIdsPerTaxon( Map<Taxon, Collection<Long>> map ) {
-        this.updatedEEIdsPerTaxon = map;
-    }
-
-    /**
-     * @return get a count of the number of biomaterials in the new expression experiments
-     */
-    public long getNewBioMaterialCount() {
-        return this.newBioMaterialCount;
-    }
-
-    public void setNewBioMaterialCount( long count ) {
-        this.newBioMaterialCount = count;
-    }
-
-    public Date getDate() {
-        return date;
-    }
-
-    public void setDate( Date date ) {
-        this.date = date;
     }
 
 }

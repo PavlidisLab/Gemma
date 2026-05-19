@@ -18,29 +18,18 @@
  */
 package ubic.gemma.core.security.authentication;
 
+import lombok.Getter;
+import lombok.Setter;
+
 /**
  * @author cmcdonald
  */
+@Getter
+@Setter
 public class LoginDetailsValueObject {
 
     private String userName;
 
     private boolean loggedIn;
-
-    public String getUserName() {
-        return userName;
-    }
-
-    public boolean isLoggedIn() {
-        return loggedIn;
-    }
-
-    public void setLoggedIn( boolean loggedIn ) {
-        this.loggedIn = loggedIn;
-    }
-
-    public void setUserName( String userName ) {
-        this.userName = userName;
-    }
 
 }
