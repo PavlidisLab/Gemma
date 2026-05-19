@@ -109,6 +109,21 @@ public class GeneArgService extends AbstractEntityArgService<Gene, GeneService> 
     }
 
     /**
+     * Cursor-mode counterpart to {@link #getGenesInTaxon(Taxon, int, int)}: keyset pagination
+     * over the genes belonging to a single taxon, always sorted by ascending {@code id} (the
+     * primary key, indexed and unique) — see {@code CURSOR_PAGINATION_STEP1_PLAN.md} step 1g.
+     * The path-derived {@code taxon.id = ?} constraint is preserved (composed into the
+     * {@link Filters} before the DAO call) so the cursor-mode result is restricted to the same
+     * taxon that the offset-mode result would be. The cursor DAO currently restricts cursors to
+     * single-component id sorts (recce sec. 3.4 — to be lifted in phase B once the index audit
+     * is complete).
+     */
+    public CursorPage<GeneValueObject> getGenesInTaxonByCursor( Taxon taxon, @Nullable Cursor cursor, int limit ) {
+        Filters filters = Filters.by( service.getFilter( "taxon.id", Long.class, Filter.Operator.eq, taxon.getId() ) );
+        return service.loadValueObjectsByCursor( filters, service.getSort( "id", Sort.Direction.ASC, Sort.NullMode.LAST ), cursor, limit );
+    }
+
+    /**
      * @return a collection of Gene value objects..
      */
     public List<GeneValueObject> getGenesInTaxon( GeneArrayArg arg, Taxon taxon ) {
