@@ -123,6 +123,19 @@
     </filter>
 
     <!--
+        Per-request MDC enrichment (requestId + userId). The gemma-rest counterpart of
+        gemma-web's ubic.gemma.web.logging.RequestIdMdcFilter. See
+        LOGGING_MODERNIZATION_RECCE.md §3 Phase 2 and the JSON template at
+        gemma-core/src/main/resources/log4j2-json-template.json (the mdc block surfaces
+        these keys in every JSON log line). Mapped below AFTER springSecurityFilterChain
+        so SecurityContextHolder is populated by the time userId is resolved.
+    -->
+    <filter>
+        <filter-name>requestIdMdcFilter</filter-name>
+        <filter-class>ubic.gemma.rest.servlet.RequestIdMdcFilter</filter-class>
+    </filter>
+
+    <!--
         Filter ordering. Servlet spec evaluates <filter-mapping> elements in the
         order they appear in the descriptor. We need:
           1. encodingFilter (set charset before anything reads the body)
@@ -130,6 +143,9 @@
                              potentially rejects with 401; gemma-web's comment
                              at web.xml:117–118 documented the same constraint)
           3. springSecurityFilterChain (authn/authz)
+          4. requestIdMdcFilter        (populates MDC requestId + userId for log
+                                        correlation — must run after the security
+                                        chain so SecurityContextHolder is set)
     -->
     <filter-mapping>
         <filter-name>encodingFilter</filter-name>
@@ -141,6 +157,12 @@
     </filter-mapping>
     <filter-mapping>
         <filter-name>springSecurityFilterChain</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+    <!-- MDC enrichment must run AFTER springSecurityFilterChain so userId can be resolved
+         from a populated SecurityContextHolder. -->
+    <filter-mapping>
+        <filter-name>requestIdMdcFilter</filter-name>
         <url-pattern>/*</url-pattern>
     </filter-mapping>
 

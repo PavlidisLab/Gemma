@@ -108,6 +108,17 @@
         <filter-class>ubic.gemma.rest.servlet.RestapidocsIndexRewriteFilter</filter-class>
     </filter>
 
+    <!-- Per-request MDC enrichment: populates requestId (from X-Request-Id header or freshly minted
+         UUID) + userId (from SecurityContextHolder or "anonymous") into log4j ThreadContext for the
+         lifetime of the request. See LOGGING_MODERNIZATION_RECCE.md §3 Phase 2 and the JSON
+         template at gemma-core/src/main/resources/log4j2-json-template.json which surfaces the MDC
+         block. Mapping ordering below places this filter AFTER springSecurityFilterChain so
+         SecurityContextHolder is populated by the time userId is resolved. -->
+    <filter>
+        <filter-name>requestIdMdcFilter</filter-name>
+        <filter-class>ubic.gemma.web.logging.RequestIdMdcFilter</filter-class>
+    </filter>
+
     <filter-mapping>
         <filter-name>gemmaWebMetricsFilter</filter-name>
         <servlet-name>gemma</servlet-name>
@@ -130,6 +141,13 @@
     <!-- Spring Security -->
     <filter-mapping>
         <filter-name>springSecurityFilterChain</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+    <!-- MDC enrichment for log correlation. Must run AFTER springSecurityFilterChain so the
+         SecurityContextHolder is populated by the time we read it for userId. -->
+    <filter-mapping>
+        <filter-name>requestIdMdcFilter</filter-name>
         <url-pattern>/*</url-pattern>
     </filter-mapping>
 
