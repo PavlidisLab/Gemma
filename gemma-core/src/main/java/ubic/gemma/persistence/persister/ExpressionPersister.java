@@ -133,17 +133,19 @@ public abstract class ExpressionPersister extends ArrayDesignPersister implement
     protected <T extends Identifiable> T doPersist( T entity, Caches caches, Map<String, ExternalDatabase> xdbCache ) {
         EeWriteServiceImpl impl = eeWriteServiceImpl();
         if ( entity instanceof ExpressionExperiment ) {
-            if ( caches.getArrayDesignCache() == null ) {
-                AbstractPersister.log.warn( "Consider doing the 'prepare' step in a separate transaction." );
-                caches = caches.withArrayDesignCache( this.prepare( ( ExpressionExperiment ) entity ) );
-            }
-            return ( T ) impl.persistExpressionExperiment( ( ExpressionExperiment ) entity, caches, xdbCache );
+            // Phase 3 lift: adCache is now an explicit per-call parameter rather
+            // than a field on Caches. The polymorphic doPersist entry point has no
+            // adCache available, so we synthesise one via prepare(); the modern
+            // EeWriteService.create(ee, cache) path supplies it directly.
+            AbstractPersister.log.warn( "Consider doing the 'prepare' step in a separate transaction." );
+            ArrayDesignsForExperimentCache adCache = this.prepare( ( ExpressionExperiment ) entity );
+            return ( T ) impl.persistExpressionExperiment( ( ExpressionExperiment ) entity, caches, xdbCache, adCache );
         } else if ( entity instanceof BioAssayDimension ) {
-            return ( T ) impl.persistBioAssayDimension( ( BioAssayDimension ) entity, caches, xdbCache );
+            return ( T ) impl.persistBioAssayDimension( ( BioAssayDimension ) entity, caches, xdbCache, null );
         } else if ( entity instanceof BioMaterial ) {
             return ( T ) impl.persistBioMaterial( ( BioMaterial ) entity, caches, xdbCache );
         } else if ( entity instanceof BioAssay ) {
-            return ( T ) impl.persistBioAssay( ( BioAssay ) entity, caches, xdbCache );
+            return ( T ) impl.persistBioAssay( ( BioAssay ) entity, caches, xdbCache, null );
         } else if ( entity instanceof Compound ) {
             return ( T ) impl.persistCompound( ( Compound ) entity );
         } else if ( entity instanceof ExpressionExperimentSubSet ) {
