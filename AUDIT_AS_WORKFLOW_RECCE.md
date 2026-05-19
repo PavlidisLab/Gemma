@@ -573,3 +573,76 @@ the first roll-out (Phase E only).
 
 *Recce written 2026-05-19 by Claude (Opus 4.7 1M). No production code
 modified.*
+
+---
+
+## User decisions (2026-05-19)
+
+These supersede earlier speculation in this doc.
+
+### Decision 1: CurationDetailsService becomes Tickets
+
+Tickets REPLACE `CurationDetailsService` and its `needsAttention` / `troubled` / `curationNote` fields on `ExpressionExperiment`. The CurationDetails model is wrong because it presumes 1:1 with the experiment; tickets are top-level objects that may target a SET of entities.
+
+**Concretely retired**:
+- `CurationDetails` entity + its fields embedded in `ExpressionExperiment`.
+- `CurationDetailsService.update*` callers — migrate to `TicketService.open / addComment / resolve`.
+- The `needsAttention` / `troubled` boolean flags — replaced by "is there an OPEN ticket targeting this EE?".
+
+### Decision 2: Ticket has 1..N targets, of mixed types
+
+Two `TargetType` values initially: `EXPRESSION_EXPERIMENT`, `ARRAY_DESIGN`. Extensible without schema migration.
+
+Schema:
+```sql
+CREATE TABLE ticket (
+  id BIGINT PK AUTO_INCREMENT,
+  type VARCHAR(64) NOT NULL,           -- TicketType enum (BATCH_INFO_NEEDED, REALIGNMENT_NEEDED, ...)
+  state VARCHAR(32) NOT NULL,          -- TicketState enum, explicit, NOT derived
+  priority VARCHAR(16) NOT NULL,
+  due_date DATETIME NULL,
+  title VARCHAR(255) NOT NULL,
+  reporter_id BIGINT FK -> contact,
+  assignee_id BIGINT FK -> contact NULL,
+  created_at DATETIME NOT NULL,
+  updated_at DATETIME NOT NULL
+);
+
+CREATE TABLE ticket_target (
+  id BIGINT PK AUTO_INCREMENT,
+  ticket_id BIGINT FK -> ticket NOT NULL,
+  target_type VARCHAR(32) NOT NULL,    -- TargetType enum
+  target_id BIGINT NOT NULL,           -- bare FK, NOT declared in JPA
+  INDEX idx_ticket_target_lookup (target_type, target_id),
+  UNIQUE (ticket_id, target_type, target_id)
+);
+
+CREATE TABLE ticket_event (
+  id BIGINT PK AUTO_INCREMENT,
+  ticket_id BIGINT FK -> ticket NOT NULL,
+  actor_id BIGINT FK -> contact NOT NULL,
+  occurred_at DATETIME NOT NULL,
+  type VARCHAR(64) NOT NULL,           -- TicketEventType enum
+  payload JSON NULL                    -- same shape as audit_event.payload
+);
+```
+
+The `(target_type, target_id)` composite index supports the "open tickets targeting this EE" query without joins through `ticket_id`.
+
+### Decision 3: Comment auth = any authenticated curator/admin role
+
+Anonymous users cannot comment or change state. Authenticated users with role `curator` OR `admin` can:
+- Add comments (`TicketEventType.COMMENTED`).
+- Change state (`TicketEventType.STATE_CHANGED`).
+- Assign (`TicketEventType.ASSIGNED`).
+
+(Future refinement: per-event-type role restrictions if needed; e.g., only admin can DELETE a comment, only assignee can RESOLVE. Out of scope for first cut.)
+
+### Decision 4: Comment edits — TBD
+
+User flagged this is "another story". For now: append-only (mirrors the audit-event model and the prior `AGENT_WRITEBACK_RECCE.md` "events are receipts, not state" constraint). The sibling repo's in-place edit (`AUDIT_DISPOSITION_EDIT_HANDOFF.md`) is acknowledged but not adopted in Phase 1.
+
+### Decision 5: Curator vs admin role split — out of scope
+
+User flagged separate curator and admin roles are needed but "another story". This recce assumes a single "authenticated authorized user" check for all ticket operations in Phase 1. The role split can be a follow-on PR that adds per-event-type role restrictions.
+
