@@ -430,8 +430,8 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
             }
             if ( firstBaselineId != null && secondBaselineId != null ) {
                 results.put( rsId, Baseline.interaction(
-                        ( FactorValue ) getSessionFactory().getCurrentSession().load( FactorValue.class, firstBaselineId ),
-                        ( FactorValue ) getSessionFactory().getCurrentSession().load( FactorValue.class, secondBaselineId ) )
+                        ( FactorValue ) getSessionFactory().getCurrentSession().getReference( FactorValue.class, firstBaselineId ),
+                        ( FactorValue ) getSessionFactory().getCurrentSession().getReference( FactorValue.class, secondBaselineId ) )
                 );
             } else {
                 log.warn( "Could not fill the baseline groups for " + rsId + ": one or more baselines were not found in other result sets from the same analysis." );

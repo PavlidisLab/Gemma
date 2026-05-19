@@ -2927,7 +2927,7 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public SingleCellDimension reloadSingleCellDimension( ExpressionExperiment ee, SingleCellDimension dimension ) {
-        SingleCellDimension dim = ( SingleCellDimension ) getSessionFactory().getCurrentSession().load( SingleCellDimension.class, dimension.getId() );
+        SingleCellDimension dim = ( SingleCellDimension ) getSessionFactory().getCurrentSession().getReference( SingleCellDimension.class, dimension.getId() );
         if ( dim == null ) {
             throw new org.hibernate.ObjectNotFoundException( ( Object ) dimension.getId(), SingleCellDimension.class.getName() );
         }

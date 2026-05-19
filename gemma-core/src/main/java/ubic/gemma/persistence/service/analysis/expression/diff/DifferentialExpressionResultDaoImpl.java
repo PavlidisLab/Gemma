@@ -190,7 +190,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
                 if ( baselineId != null ) {
                     // create a proxy, cheap
                     if ( baselineType.equals( FactorType.CATEGORICAL ) ) {
-                        FactorValue baseline = ( FactorValue ) getSessionFactory().getCurrentSession().load( FactorValue.class, baselineId );
+                        FactorValue baseline = ( FactorValue ) getSessionFactory().getCurrentSession().getReference( FactorValue.class, baselineId );
                         baselineMap.put( r, Baseline.categorical( baseline ) );
                     } else {
                         // we have a few experiments with continuous factors with a baseline set in the result set, this
