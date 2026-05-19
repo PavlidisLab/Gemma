@@ -220,6 +220,108 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
         return new Slice<>( loadValueObjects( data ), sort, offset, limit, totalElements );
     }
 
+    @Override
+    public CursorPage<DifferentialExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInByCursor(
+            @Nullable Collection<BioAssaySet> bioAssaySets,
+            @Nullable Collection<DatabaseEntry> databaseEntries,
+            @Nullable Filters filters,
+            @Nullable Cursor cursor,
+            int limit ) {
+        // Step 1i: keyset pagination over /resultSets. Mirrors the offset-mode shape of
+        // findByBioAssaySetInAndDatabaseEntryInLimit but with single-component +id sort enforced
+        // and an id > lastSeenId (or id < lastSeenId for BACKWARD) predicate appended when a
+        // cursor is present. Fetches limit+1 to detect hasMore; no COUNT(*) per request.
+        Assert.isTrue( limit > 0, "Cursor page limit must be > 0." );
+        final String expectedSortSpec = "+id";
+        if ( cursor != null ) {
+            if ( !expectedSortSpec.equals( cursor.getSortSpec() ) ) {
+                throw new IllegalArgumentException( "Cursor sort spec '" + cursor.getSortSpec()
+                        + "' does not match the requested sort '" + expectedSortSpec + "'." );
+            }
+            Object[] key = cursor.getKeyTuple();
+            if ( key.length != 1 ) {
+                throw new IllegalArgumentException( "Cursor key tuple must have exactly 1 component for sort '"
+                        + expectedSortSpec + "'; got " + key.length + "." );
+            }
+        }
+        boolean backward = cursor != null && cursor.getDirection() == Cursor.Direction.BACKWARD;
+        Long lastSeenId = null;
+        if ( cursor != null ) {
+            try {
+                lastSeenId = ( ( Number ) cursor.getKeyTuple()[0] ).longValue();
+            } catch ( ClassCastException e ) {
+                throw new IllegalArgumentException( "Cursor key component must be numeric for sort '" + expectedSortSpec + "'.", e );
+            }
+        }
+
+        StopWatch timer = StopWatch.createStarted();
+        Session session = getSessionFactory().getCurrentSession();
+        CriteriaBuilder cb = session.getCriteriaBuilder();
+
+        CriteriaQuery<ExpressionAnalysisResultSet> q = cb.createQuery( ExpressionAnalysisResultSet.class );
+        Root<ExpressionAnalysisResultSet> root = q.from( ExpressionAnalysisResultSet.class );
+        q.select( root ).distinct( true );
+        // Build the shared predicates (filters + bas/des) and append the keyset predicate
+        // (id > lastSeenId for forward+asc / forward+backward=desc handled below).
+        Predicate base = buildPredicates( cb, q, root, bioAssaySets, databaseEntries, filters );
+        Predicate where = base;
+        if ( lastSeenId != null ) {
+            // forward: id > x; backward: id < x (id-asc client-visible order). When backward,
+            // we reverse the order in the driver query and reverse the returned page below.
+            Predicate keyset = backward
+                    ? cb.lessThan( root.get( "id" ).as( Long.class ), lastSeenId )
+                    : cb.greaterThan( root.get( "id" ).as( Long.class ), lastSeenId );
+            where = cb.and( base, keyset );
+        }
+        q.where( where );
+        // backward cursor: order by id DESC in the driver query, reverse the returned page.
+        q.orderBy( backward ? cb.desc( root.get( "id" ) ) : cb.asc( root.get( "id" ) ) );
+
+        Query<ExpressionAnalysisResultSet> hq = session.createQuery( q );
+        hq.setMaxResults( limit + 1 );
+        List<ExpressionAnalysisResultSet> data = hq.getResultList();
+
+        boolean hasMore = data.size() > limit;
+        if ( hasMore ) {
+            data = new ArrayList<>( data.subList( 0, limit ) );
+        }
+        if ( backward ) {
+            Collections.reverse( data );
+        }
+
+        for ( ExpressionAnalysisResultSet d : data ) {
+            thaw( d );
+        }
+
+        List<DifferentialExpressionAnalysisResultSetValueObject> vos = loadValueObjects( data );
+
+        String nextCursor = null;
+        String prevCursor = null;
+        if ( !vos.isEmpty() ) {
+            DifferentialExpressionAnalysisResultSetValueObject last = vos.get( vos.size() - 1 );
+            DifferentialExpressionAnalysisResultSetValueObject first = vos.get( 0 );
+            // emit nextCursor only when there's another page in the forward direction
+            if ( backward || hasMore ) {
+                nextCursor = new Cursor( expectedSortSpec, new Object[] { last.getId() }, Cursor.Direction.FORWARD ).encode();
+            }
+            // emit prevCursor whenever we have a cursor (at least one page is behind us)
+            if ( cursor != null ) {
+                prevCursor = new Cursor( expectedSortSpec, new Object[] { first.getId() }, Cursor.Direction.BACKWARD ).encode();
+            }
+        }
+
+        if ( timer.getTime() > 1000 ) {
+            log.info( String.format( "Cursor-loaded %d/%d result sets matching bioAssaySets=%s, databaseEntries=%s, filters=%s, cursor=%s in %d ms.",
+                    vos.size(), limit + 1,
+                    bioAssaySets == null ? "*" : bioAssaySets.size(),
+                    databaseEntries == null ? "*" : databaseEntries.size(),
+                    filters, cursor, timer.getTime() ) );
+        }
+
+        Sort idSort = Sort.by( null, "id", Sort.Direction.ASC, Sort.NullMode.LAST, "id" );
+        return new CursorPage<>( vos, idSort, limit, nextCursor, prevCursor, null );
+    }
+
     /**
      * Build the WHERE predicate list shared by the data and count queries for
      * {@link #findByBioAssaySetInAndDatabaseEntryInLimit}.

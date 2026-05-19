@@ -120,12 +120,13 @@ public class AnalysisResultSetsWebServiceTest extends BaseJerseyIntegrationTest 
 
     @Test
     public void testFindAllWhenNoDatasetsAreProvidedThenReturnLatestAnalysisResults() {
-        ResponseDataObject<?> result = service.getResultSets( null,
+        ResponseDataObject<?> result = (ResponseDataObject<?>) service.getResultSets( null,
                 null,
                 FilterArg.valueOf( "" ),
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
-                SortArg.valueOf( "+id" ) );
+                SortArg.valueOf( "+id" ),
+                null );
         //noinspection unchecked
         List<DifferentialExpressionAnalysisResultSetValueObject> results = ( ( List<DifferentialExpressionAnalysisResultSetValueObject> ) result.getData() );
 
@@ -142,12 +143,13 @@ public class AnalysisResultSetsWebServiceTest extends BaseJerseyIntegrationTest 
 
     @Test
     public void testFindAllWithFilters() {
-        ResponseDataObject<?> result = service.getResultSets( null,
+        ResponseDataObject<?> result = (ResponseDataObject<?>) service.getResultSets( null,
                 null,
                 FilterArg.valueOf( "id = " + this.dears.getId() ),
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
-                SortArg.valueOf( "+id" ) );
+                SortArg.valueOf( "+id" ),
+                null );
         //noinspection unchecked
         List<DifferentialExpressionAnalysisResultSetValueObject> results = ( List<DifferentialExpressionAnalysisResultSetValueObject> ) result.getData();
         assertEquals( results.size(), 1 );
@@ -157,12 +159,13 @@ public class AnalysisResultSetsWebServiceTest extends BaseJerseyIntegrationTest 
 
     @Test
     public void testFindAllWithFiltersAndCollections() {
-        ResponseDataObject<?> result = service.getResultSets( null,
+        ResponseDataObject<?> result = (ResponseDataObject<?>) service.getResultSets( null,
                 null,
                 FilterArg.valueOf( "id in (" + this.dears.getId() + ")" ),
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
-                SortArg.valueOf( "+id" ) );
+                SortArg.valueOf( "+id" ),
+                null );
         //noinspection unchecked
         List<DifferentialExpressionAnalysisResultSetValueObject> results = ( List<DifferentialExpressionAnalysisResultSetValueObject> ) result.getData();
         assertEquals( results.size(), 1 );
@@ -177,19 +180,21 @@ public class AnalysisResultSetsWebServiceTest extends BaseJerseyIntegrationTest 
                 FilterArg.valueOf( "id2 = " + this.dears.getId() ),
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
-                SortArg.valueOf( "+id" ) ) );
+                SortArg.valueOf( "+id" ),
+                null ) );
     }
 
     @Test
     public void testFindAllWithDatasetIdsThenReturnLatestAnalysisResults() {
         DatasetArrayArg datasets = DatasetArrayArg.valueOf( String.valueOf( ee.getId() ) );
-        ResponseDataObject<?> result = service.getResultSets(
+        ResponseDataObject<?> result = (ResponseDataObject<?>) service.getResultSets(
                 datasets,
                 null,
                 FilterArg.valueOf( "" ),
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
-                SortArg.valueOf( "+id" ) );
+                SortArg.valueOf( "+id" ),
+                null );
         //noinspection unchecked
         List<DifferentialExpressionAnalysisResultSetValueObject> results = ( List<DifferentialExpressionAnalysisResultSetValueObject> ) result.getData();
         assertEquals( results.get( 0 ).getId(), dears.getId() );
@@ -203,19 +208,21 @@ public class AnalysisResultSetsWebServiceTest extends BaseJerseyIntegrationTest 
                 null,
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
-                SortArg.valueOf( "+id" ) ) );
+                SortArg.valueOf( "+id" ),
+                null ) );
         assertEquals( e.getResponse().getStatus(), Response.Status.NOT_FOUND.getStatusCode() );
     }
 
     @Test
     public void testFindAllWithDatabaseEntriesThenReturnLatestAnalysisResults() {
         assertThat( ee.getAccession() ).isNotNull();
-        ResponseDataObject<?> result = service.getResultSets( null,
+        ResponseDataObject<?> result = (ResponseDataObject<?>) service.getResultSets( null,
                 DatabaseEntryArrayArg.valueOf( ee.getAccession().getAccession() ),
                 FilterArg.valueOf( "" ),
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
-                SortArg.valueOf( "+id" ) );
+                SortArg.valueOf( "+id" ),
+                null );
         //noinspection unchecked
         List<DifferentialExpressionAnalysisResultSetValueObject> results = ( List<DifferentialExpressionAnalysisResultSetValueObject> ) result.getData();
         assertEquals( results.get( 0 ).getId(), dears.getId() );
@@ -229,7 +236,8 @@ public class AnalysisResultSetsWebServiceTest extends BaseJerseyIntegrationTest 
                 null,
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
-                SortArg.valueOf( "+id" ) ) );
+                SortArg.valueOf( "+id" ),
+                null ) );
         assertEquals( e.getResponse().getStatus(), Response.Status.NOT_FOUND.getStatusCode() );
     }
 

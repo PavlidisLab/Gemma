@@ -28,6 +28,8 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 import ubic.gemma.persistence.service.analysis.AnalysisResultSetDao;
 import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
+import ubic.gemma.persistence.util.Cursor;
+import ubic.gemma.persistence.util.CursorPage;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
@@ -110,6 +112,24 @@ public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<Dif
      * @param sort            field and direction by which the collection is ordered
      */
     Slice<DifferentialExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInLimit( @Nullable Collection<BioAssaySet> bioAssaySets, @Nullable Collection<DatabaseEntry> databaseEntries, @Nullable Filters filters, int offset, int limit, @Nullable Sort sort );
+
+    /**
+     * Cursor-paged counterpart to {@link #findByBioAssaySetInAndDatabaseEntryInLimit}: keyset
+     * pagination over the result sets associated to a set of {@link BioAssaySet} and external
+     * {@link DatabaseEntry database entries}, always sorted by ascending {@code id}.
+     * <p>
+     * Single-component {@code id}-asc sort only — see
+     * {@code CURSOR_PAGINATION_STEP1_PLAN.md} step 1i (compound sorts deferred pending the
+     * indexed-column audit, recce sec. 3.4). When {@code cursor} is non-null the cursor's
+     * {@code sortSpec} must equal {@code "+id"} and its key tuple must be a single numeric id.
+     *
+     * @param bioAssaySets    related {@link BioAssaySet}, or any if null
+     * @param databaseEntries related external identifier associated to the {@link BioAssaySet}, or any if null
+     * @param filters         filters for restricting results
+     * @param cursor          decoded cursor (forward or backward) for keyset pagination, or {@code null} for the first page
+     * @param limit           maximum number of results to return
+     */
+    CursorPage<DifferentialExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInByCursor( @Nullable Collection<BioAssaySet> bioAssaySets, @Nullable Collection<DatabaseEntry> databaseEntries, @Nullable Filters filters, @Nullable Cursor cursor, int limit );
 
     /**
      * Initialize the analysis and subset factor vale.

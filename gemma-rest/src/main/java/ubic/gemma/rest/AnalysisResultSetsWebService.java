@@ -40,9 +40,12 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.util.CursorPage;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.rest.annotations.GZIP;
+import ubic.gemma.rest.util.CursorPaginatedResponseDataObject;
+import ubic.gemma.rest.util.FilteredAndCursorPaginatedResponseDataObject;
 import ubic.gemma.rest.util.FilteredAndPaginatedResponseDataObject;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.ResponseErrorObject;
@@ -103,14 +106,26 @@ public class AnalysisResultSetsWebService {
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve all result sets matching the provided criteria")
-    public FilteredAndPaginatedResponseDataObject<DifferentialExpressionAnalysisResultSetValueObject> getResultSets(
+    @Operation(summary = "Retrieve all result sets matching the provided criteria",
+            description = "Supports two pagination modes. Legacy mode: pass `offset` (and `limit`); response includes `offset` and `totalElements`. "
+                    + "Cursor mode (recommended for deep pagination and consistency under writes): pass an opaque `cursor` token from a previous response's `nextCursor` / `prevCursor` field. "
+                    + "`offset` and `cursor` are mutually exclusive — passing a non-null `cursor` selects cursor mode. "
+                    + "In cursor mode the result is always sorted by ascending `id` (the user's `?sort=` is ignored); the dataset / databaseEntry / filter constraints are preserved; `totalElements` is `null` by default (no count query per request).",
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(oneOf = {
+                                    FilteredAndPaginatedResponseDataObject.class,
+                                    FilteredAndCursorPaginatedResponseDataObject.class
+                            }))),
+            })
+    public Object getResultSets(
             @Parameter(schema = @Schema(implementation = DatasetArrayArg.class), explode = Explode.FALSE) @QueryParam("datasets") DatasetArrayArg datasets,
             @Parameter(schema = @Schema(implementation = DatabaseEntryArrayArg.class), explode = Explode.FALSE) @QueryParam("databaseEntries") DatabaseEntryArrayArg databaseEntries,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionAnalysisResultSet> filters,
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset,
             @QueryParam("limit") @DefaultValue("20") LimitArg limit,
-            @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionAnalysisResultSet> sort ) {
+            @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionAnalysisResultSet> sort,
+            @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg ) {
         Collection<BioAssaySet> bas = null;
         if ( datasets != null ) {
             Collection<ExpressionExperiment> ees = new ArrayList<>( datasetArgService.getEntities( datasets ) );
@@ -127,6 +142,15 @@ public class AnalysisResultSetsWebService {
             des = databaseEntryArgService.getEntities( databaseEntries );
         }
         Filters filters2 = expressionAnalysisResultSetArgService.getFilters( filters );
+        if ( cursorArg != null ) {
+            // Mutual-exclusion: a non-null cursor selects cursor mode (parallels GET /platforms step 1c
+            // and step 1h). In cursor mode we currently force a +id sort (DAO enforced) — the user's
+            // ?sort= arg is intentionally not consulted. The dataset / databaseEntry / filter scope
+            // is preserved identically across modes.
+            CursorPage<DifferentialExpressionAnalysisResultSetValueObject> page =
+                    expressionAnalysisResultSetArgService.getResultSetsByCursor( bas, des, filters2, cursorArg.getValue(), limit.getValue() );
+            return new FilteredAndCursorPaginatedResponseDataObject<>( page, filters2, new String[] { "id" } );
+        }
         return paginate( expressionAnalysisResultSetService.findByBioAssaySetInAndDatabaseEntryInLimit(
                         bas, des, filters2, offset.getValue(), limit.getValue(), expressionAnalysisResultSetArgService.getSort( sort ) ),
                 filters2, new String[] { "id" } );
