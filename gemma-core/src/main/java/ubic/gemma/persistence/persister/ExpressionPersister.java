@@ -33,7 +33,10 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.persistence.service.expression.experiment.EeWriteService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentPrePersistService;
 
+import ubic.gemma.model.genome.Taxon;
+
 import javax.annotation.Nullable;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -132,6 +135,10 @@ public abstract class ExpressionPersister extends ArrayDesignPersister implement
     @SuppressWarnings("unchecked")
     protected <T extends Identifiable> T doPersist( T entity, Caches caches, Map<String, ExternalDatabase> xdbCache ) {
         EeWriteServiceImpl impl = eeWriteServiceImpl();
+        // Phase 3 lift: taxonCache is now an explicit per-call parameter. Allocate a
+        // fresh map at this polymorphic dispatch entry point; the modern
+        // EeWriteService.create(ee, cache) path allocates its own.
+        Map<Object, Taxon> taxonCache = new HashMap<>();
         if ( entity instanceof ExpressionExperiment ) {
             // Phase 3 lift: adCache is now an explicit per-call parameter rather
             // than a field on Caches. The polymorphic doPersist entry point has no
@@ -139,13 +146,13 @@ public abstract class ExpressionPersister extends ArrayDesignPersister implement
             // EeWriteService.create(ee, cache) path supplies it directly.
             AbstractPersister.log.warn( "Consider doing the 'prepare' step in a separate transaction." );
             ArrayDesignsForExperimentCache adCache = this.prepare( ( ExpressionExperiment ) entity );
-            return ( T ) impl.persistExpressionExperiment( ( ExpressionExperiment ) entity, caches, xdbCache, adCache );
+            return ( T ) impl.persistExpressionExperiment( ( ExpressionExperiment ) entity, caches, xdbCache, adCache, taxonCache );
         } else if ( entity instanceof BioAssayDimension ) {
-            return ( T ) impl.persistBioAssayDimension( ( BioAssayDimension ) entity, caches, xdbCache, null );
+            return ( T ) impl.persistBioAssayDimension( ( BioAssayDimension ) entity, caches, xdbCache, null, taxonCache );
         } else if ( entity instanceof BioMaterial ) {
-            return ( T ) impl.persistBioMaterial( ( BioMaterial ) entity, caches, xdbCache );
+            return ( T ) impl.persistBioMaterial( ( BioMaterial ) entity, caches, xdbCache, taxonCache );
         } else if ( entity instanceof BioAssay ) {
-            return ( T ) impl.persistBioAssay( ( BioAssay ) entity, caches, xdbCache, null );
+            return ( T ) impl.persistBioAssay( ( BioAssay ) entity, caches, xdbCache, null, taxonCache );
         } else if ( entity instanceof Compound ) {
             return ( T ) impl.persistCompound( ( Compound ) entity );
         } else if ( entity instanceof ExpressionExperimentSubSet ) {
