@@ -95,30 +95,21 @@ HB6-respecting patterns the factories enforce:
 |---|---|
 | `gemma-core/.../fixture/ExperimentFactory.java` | Done — `bulkRna()`, `singleCell()`, `.withSamples(N)`, `.withArrayDesign(ad)`, `.withTaxon(t)`, `.withShortName(s)`, `.includeRawDataQt(boolean)` |
 | `gemma-core/.../fixture/ExperimentFactoryTest.java` | Done — 4 tests, defaults + overrides |
+| `gemma-core/.../fixture/TaxonFactory.java` | Done — seeded shortcuts (`mouse()`, `human()`, `rat()`, `zebrafish()`, `fly()`, `worm()`, `yeast()`), parameterized resolvers (`byCommonName(s)`, `byScientificName(s)`, `byNcbiId(id)`), and admin-only `adHoc()` builder with `.withScientificName/CommonName/NcbiId/GenesUsable`. NCBI ids for ad-hoc taxa land in the 500k+ synthetic range so they never collide with real assignments. |
+| `gemma-core/.../fixture/TaxonFactoryTest.java` | Done — 10 tests, seeded shortcuts + ad-hoc + missing-seed error path |
+| `gemma-core/.../fixture/ArrayDesignFactory.java` | Done — `oneColor()`, `twoColor()`, `geneChip()`, `withTechnologyType(tt)`; `.withProbes(N)`, `.withSequences(boolean)`, `.withRandomProbeNames(boolean)`, `.withTaxon(t)`, `.withShortName(s)`, `.withName(n)`. CSes attach via cascade=all from AD; BioSequences are persisted first because CS→biologicalCharacteristic has no cascade. |
+| `gemma-core/.../fixture/ArrayDesignFactoryTest.java` | Done — 9 tests, defaults + technology types + probe shapes + biosequence attachment + taxon override |
 | `CuratableValueObjectTest` | Migrated (first migration off the helper) |
-| `gemma-core/.../fixture/BioMaterialFactory.java` | Done — `.withTaxon(t)`, `.withName(s)`, `.withSourceBioMaterial(parent)`, `.withExternalAccession()`. Source BM must already be persistent. |
-| `gemma-core/.../fixture/BioMaterialFactoryTest.java` | Done — 5 tests: defaults, withTaxon, parent chaining, transient-parent rejection, withExternalAccession |
-| `BioMaterialServiceTest` | Migrated — drops `getTestPersistentBioMaterial()` in favour of `bioMaterialFactory.withExternalAccession().build()` (GEO accession is load-bearing — the test searches by it). |
-| `gemma-core/.../fixture/ArrayDesignFactory.java` | Done — `.withTaxon(t)`, `.withShortName(s)`, `.withName(s)`, `.withCompositeSequences(N)`, `.withTechnologyType(tt)`. Default `TechnologyType.GENELIST`. |
-| `gemma-core/.../fixture/ArrayDesignFactoryTest.java` | Done — 4 tests: defaults, withCompositeSequences exact-N + back-references, withTaxon, withShortName |
-| `ArrayDesignReportServiceTest` | Migrated — drops `getTestPersistentArrayDesign(5, true, false, false)` in favour of `arrayDesignFactory.builder().withCompositeSequences(5).build()`. |
 
 ## What's planned
 
-* `BibliographicReferenceFactory` — `.withAccession(s).build()` paired
-  with a fixed PubMed external DB lookup (mirrors how
-  `BioMaterialFactory.withExternalAccession()` resolves GEO).
-* `CompositeSequenceFactory` — `.withArrayDesign(ad).withBioSequence(true)`.
-  Splits out the "with sequences" branch of the old
-  `getTestPersistentArrayDesign(N, randomNames, doSequence)` so it can
-  be composed onto an existing AD instead of forcing the AD factory to
-  know about probe biology.
-* `GeneFactory` — `.withTaxon(t).withSymbol(s).build()`. Currently
-  Genes are fabricated inline by `PersistentDummyObjectHelper` in three
-  places.
+* `BioMaterialFactory` — `.withTaxon(t).withCharacteristic(c).build()`.
 * `ExperimentalFactorFactory` — `.categorical().withLevels(2).attachTo(ee)`.
 * `FactorValueFactory` — paired with the above.
 * `DifferentialExpressionAnalysisFactory` — `.attachTo(ee).withProbes(N)`.
+* `BioAssayFactory` — `.withBioMaterial(bm).withArrayDesign(ad)` (currently
+  inlined inside `ExperimentFactory.Builder.build()`; split out once a
+  second caller materializes).
 * Single-cell vector population helpers split out of
   `RandomSingleCellDataUtils` into a `SingleCellVectorFactory` callable
   on the output of `experimentFactory.singleCell().build()`.
