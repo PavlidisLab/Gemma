@@ -2,6 +2,23 @@
 
 The H2 test path is now Flyway-managed (see `gemma-core/src/main/resources/db/migration/h2/V1__hibernate_baseline.sql`, `V2__schema_extras.sql`, `V3__seed_data.sql`, and the `Flyway` bean in `BaseDatabaseTest`). Production MySQL is still on implicit Hibernate-generated schema with `hbm2ddl.auto=update`. This doc tracks what the next session needs to do to flip prod to Flyway too.
 
+## Status as of this commit
+
+**Done:**
+- MySQL baseline scripts are in place at `gemma-core/src/main/resources/db/migration/mysql/`:
+  - `V1__mysql_baseline.sql` (Hibernate-generated DDL via MySQL57InnoDBDialect from a freshly-rebuilt `gemdtest`)
+  - `V2__schema_extras.sql` (mirrors H2 V2 with MySQL `(100)`-prefix URI indices substituted for the H2-specific ones)
+  - `V3__seed_data.sql` (verbatim copy of H2 V3 — seed data is vendor-neutral)
+- `gemma-core/src/test/java/ubic/gemma/core/util/test/MysqlSchemaBaselineDumper.java` — one-off `main()` to regenerate V1 against a clean `gemdtest` (mirrors `SchemaBaselineDumper`)
+
+**Not yet done (still requires ops coordination):**
+- Wiring Flyway into the production `applicationContext-hibernate.xml` bean wiring (the H2 path in `BaseDatabaseTest` is the template; add a `Flyway` bean with `baselineOnMigrate=true`, `validateOnMigrate=true`, `locations=classpath:db/migration/mysql/`)
+- Switching production Hibernate to `validate` (or keeping it controllable via the existing `${gemma.hibernate.hbm2ddl.auto}` property with the default changed to `validate`)
+- Capturing a real prod schema dump (vs the Hibernate-generated `V1__mysql_baseline.sql` currently in place) and reconciling drift
+- Real-prod cutover with the steps below
+
+The reason the current `V1__mysql_baseline.sql` isn't shipped to prod yet: it's Hibernate's *view* of the schema, generated from current entity metadata. The real prod schema has drifted via years of manual DBA-applied `sql/migrations/db.*.sql` changes — there will be cosmetic + possibly substantive differences. The dumper-from-staging step below replaces `V1` with the ground-truth before wiring it in.
+
 ## Why this is its own session
 
 - We need a real prod schema dump as the source of truth, not Hibernate's view of what prod *should* look like. The two have drifted over years of manual DBA-applied migrations in `gemma-core/src/main/resources/sql/migrations/db.*.sql`.
