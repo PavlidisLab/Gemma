@@ -64,6 +64,7 @@ import ubic.gemma.rest.util.BaseJerseyTest;
 import ubic.gemma.rest.util.JacksonConfig;
 import ubic.gemma.rest.util.args.*;
 
+import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.io.IOException;
@@ -669,6 +670,72 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasHeaderWithValue( "Cache-Control", "max-age=1200" );
         verify( expressionExperimentService ).load( 1L );
         verify( expressionExperimentService ).getAnnotations( ee );
+    }
+
+    @Test
+    @WithMockUser
+    public void testUpdateDatasetAnnotations() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.getAnnotations( ee ) ).thenReturn( Collections.emptySet() );
+        String body = "{\"annotations\":[{\"category\":\"organism part\",\"categoryUri\":\"http://purl.obolibrary.org/obo/UBERON_0000479\","
+                + "\"value\":\"liver\",\"valueUri\":\"http://purl.obolibrary.org/obo/UBERON_0002107\"}]}";
+        assertThat( target( "/datasets/1/annotations" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
+        ArgumentCaptor<Collection<ubic.gemma.model.common.description.Characteristic>> captor = ArgumentCaptor.forClass( Collection.class );
+        verify( expressionExperimentService ).updateAnnotations( eq( ee ), captor.capture() );
+        Collection<ubic.gemma.model.common.description.Characteristic> sent = captor.getValue();
+        assertThat( sent ).hasSize( 1 );
+        ubic.gemma.model.common.description.Characteristic c = sent.iterator().next();
+        assertThat( c.getCategory() ).isEqualTo( "organism part" );
+        assertThat( c.getValue() ).isEqualTo( "liver" );
+        assertThat( c.getValueUri() ).isEqualTo( "http://purl.obolibrary.org/obo/UBERON_0002107" );
+        verify( expressionExperimentService ).getAnnotations( ee );
+    }
+
+    @Test
+    @WithMockUser
+    public void testUpdateDatasetAnnotationsAcceptsEmptyListAsClear() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.getAnnotations( ee ) ).thenReturn( Collections.emptySet() );
+        assertThat( target( "/datasets/1/annotations" ).request().put( Entity.json( "{\"annotations\":[]}" ) ) )
+                .hasStatus( Response.Status.OK );
+        verify( expressionExperimentService ).updateAnnotations( eq( ee ), argThat( Collection::isEmpty ) );
+    }
+
+    @Test
+    @WithMockUser
+    public void testUpdateDatasetAnnotationsMissingBody() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        // empty/missing JSON body -- body is null on the handler side
+        assertThat( target( "/datasets/1/annotations" ).request().put( Entity.json( "{}" ) ) )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        verify( expressionExperimentService, never() ).updateAnnotations( any(), any() );
+    }
+
+    @Test
+    @WithMockUser
+    public void testUpdateDatasetAnnotationsRejectsBlankCategory() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        String body = "{\"annotations\":[{\"category\":\"\",\"value\":\"liver\"}]}";
+        assertThat( target( "/datasets/1/annotations" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        verify( expressionExperimentService, never() ).updateAnnotations( any(), any() );
+    }
+
+    @Test
+    @WithMockUser
+    public void testUpdateDatasetAnnotationsRejectsBlankValue() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        String body = "{\"annotations\":[{\"category\":\"organism part\",\"value\":\"  \"}]}";
+        assertThat( target( "/datasets/1/annotations" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        verify( expressionExperimentService, never() ).updateAnnotations( any(), any() );
     }
 
     @Test
