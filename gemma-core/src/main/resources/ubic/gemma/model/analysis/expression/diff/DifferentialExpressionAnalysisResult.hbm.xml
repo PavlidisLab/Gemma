@@ -4,6 +4,18 @@
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    xsi:schemaLocation="http://www.hibernate.org/xsd/hibernate-mapping http://hibernate.org/xsd/hibernate-mapping-4.0.xsd">
 
+    <!--
+        Intentionally no `<cache usage="read-only"/>` on this entity or its
+        `contrasts` bag. This is the inner level of the two-level
+        ExpressionAnalysisResultSet -> DifferentialExpressionAnalysisResult
+        chain flagged by HIBERNATE6_CASCADE_AUDIT.md risk #3 (matches the
+        AuditTrail/AuditEvent shape fixed in ab8b4c443c): a read-only L2 cache
+        on a `mutable="false"` child of a `mutable="false"` parent causes
+        Hibernate 6 to serve stale empty-bag results to fresh-session reads
+        after cross-tx writes. `mutable="false"` is retained because the rows
+        ARE write-once-immutable; do not re-add an L2 cache directive without
+        first re-validating the audit's read-path scenario.
+    -->
     <class name="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult"
            table="DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT" mutable="false">
         <id name="id" type="java.lang.Long" unsaved-value="null">

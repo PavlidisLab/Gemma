@@ -2,9 +2,19 @@
 <hibernate-mapping xmlns="http://www.hibernate.org/xsd/hibernate-mapping"
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    xsi:schemaLocation="http://www.hibernate.org/xsd/hibernate-mapping http://hibernate.org/xsd/hibernate-mapping-4.0.xsd">
+    <!--
+        Hibernate 6 visibility regression fix (mirrors AuditEvent fix
+        ab8b4c443c): the L2 entity cache directive `<cache usage="read-only"/>`
+        was removed here because the same shape (mutable="false" parent +
+        child collections + read-only L2 cache, two levels deep through
+        ExpressionAnalysisResultSet.results -> DifferentialExpressionAnalysisResult.contrasts)
+        served stale empty-bag results to fresh-session reads after cross-tx
+        writes. AnalysisResultSet rows ARE still write-once-immutable
+        (`mutable="false"` is retained); we just no longer cache them in L2.
+        Preemptive fix per HIBERNATE6_CASCADE_AUDIT.md risk #3.
+    -->
     <class name="ubic.gemma.model.analysis.AnalysisResultSet" table="ANALYSIS_RESULT_SET" mutable="false"
     >
-        <cache usage="read-only"/>
         <id name="id" type="java.lang.Long" unsaved-value="null">
             <column name="ID" sql-type="BIGINT"/>
             <generator class="native"/>
@@ -54,9 +64,15 @@
                              lazy="proxy" fetch="select">
                     <column name="PVALUE_DISTRIBUTION_FK" not-null="false" sql-type="BIGINT" unique="true"/>
                 </many-to-one>
-                <!-- eager for proactive caching -->
+                <!--
+                    Cache directive removed (Hibernate 6 fix, mirrors AuditEvent
+                    ab8b4c443c). The collection-level read-only L2 cache on a
+                    `mutable="false"` child bag inside a `mutable="false"` parent
+                    is the exact shape that caused stale empty-bag reads
+                    cross-transaction. The set is still eagerly fetched for
+                    proactive loading; mutable="false" retained.
+                -->
                 <set name="hitListSizes" lazy="false" fetch="select" cascade="all" mutable="false">
-                    <cache usage="read-only"/>
                     <key foreign-key="HIT_LIST_SIZE_RESULT_SET_FKC">
                         <column name="RESULT_SET_FK" sql-type="BIGINT"/>
                     </key>
