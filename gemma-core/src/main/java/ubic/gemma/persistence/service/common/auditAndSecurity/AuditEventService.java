@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PostFilter;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
@@ -76,7 +77,8 @@ public interface AuditEventService {
     /**
      *
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     <T extends Auditable> Collection<T> getNewSinceDate( Class<T> auditableClass, Date date );
 
     /**
@@ -86,7 +88,8 @@ public interface AuditEventService {
      * auditables will be returned. See AclEntryAfterInvocationCollectionFilteringProvider and
      * applicationContext-security.xml
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     <T extends Auditable> Collection<T> getUpdatedSinceDate( Class<T> auditableClass, Date date );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })

@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service.common.protocol;
 
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PostFilter;
 import org.springframework.security.access.prepost.PostAuthorize;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableBaseImmutableService;
@@ -36,6 +37,7 @@ public interface ProtocolService extends SecurableBaseImmutableService<Protocol>
     @PostAuthorize("returnObject == null or hasPermission(returnObject, 'READ') or hasPermission(returnObject, 'ADMINISTRATION')")
     Protocol findByName( String protocolName );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     List<Protocol> loadAllUniqueByName();
 }

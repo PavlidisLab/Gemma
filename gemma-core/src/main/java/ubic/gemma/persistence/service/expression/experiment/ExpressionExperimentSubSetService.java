@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PostFilter;
 import org.springframework.security.access.prepost.PostAuthorize;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -46,7 +47,8 @@ public interface ExpressionExperimentSubSetService extends BaseService<Expressio
     @Secured({ "GROUP_USER" })
     ExpressionExperimentSubSet findOrCreate( ExpressionExperimentSubSet entity );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<ExpressionExperimentSubSet> findByBioAssayIn( Collection<BioAssay> bioAssays );
 
     @Override
@@ -64,7 +66,8 @@ public interface ExpressionExperimentSubSetService extends BaseService<Expressio
     ExpressionExperimentSubSet loadWithBioAssays( Long id );
 
     @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<ExpressionExperimentSubSet> loadAll();
 
     /**

@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service.expression.biomaterial;
 
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PostFilter;
 import org.springframework.security.access.prepost.PostAuthorize;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -82,7 +83,8 @@ public interface BioMaterialService extends SecurableBaseService<BioMaterial>, S
     BioMaterial thaw( BioMaterial bioMaterial );
 
     @CheckReturnValue
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<BioMaterial> thaw( Collection<BioMaterial> bioMaterials );
 
     /**

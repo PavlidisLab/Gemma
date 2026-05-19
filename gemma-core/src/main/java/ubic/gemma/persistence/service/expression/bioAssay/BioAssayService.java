@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service.expression.bioAssay;
 
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PostFilter;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -72,22 +73,26 @@ public interface BioAssayService extends SecurableBaseService<BioAssay>, Securab
      * @param accession eg GSM12345.
      * @return BioAssays that match based on the plain accession (unconstrained by ExternalDatabase).
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<BioAssay> findByAccession( String accession );
 
     /**
      * @see BioMaterialService#findSubBioMaterials(BioMaterial, boolean)
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<BioAssay> findSubBioAssays( BioAssay bioAssay, boolean direct );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<BioAssay> findSiblings( BioAssay bioAssay );
 
     /**
      * Obtain all the {@link BioAssaySet} that contain the given {@link BioAssay}.
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<BioAssaySet> getBioAssaySets( BioAssay bioAssay );
 
     /**
@@ -104,7 +109,8 @@ public interface BioAssayService extends SecurableBaseService<BioAssay>, Securab
     BioAssay thaw( BioAssay bioAssay );
 
     @CheckReturnValue
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<BioAssay> thaw( Collection<BioAssay> bioAssays );
 
     /**

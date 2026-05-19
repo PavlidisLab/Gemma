@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PostFilter;
 import org.springframework.security.access.prepost.PostAuthorize;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
@@ -46,13 +47,15 @@ public interface DifferentialExpressionAnalysisService extends AnalysisService<D
     @Nullable
     DifferentialExpressionAnalysis loadWithExperimentAnalyzed( Long id );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<DifferentialExpressionAnalysis> findByName( String name );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
     Collection<DifferentialExpressionAnalysis> findByFactor( ExperimentalFactor ef );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<BioAssaySet> findExperimentsWithAnalyses( Gene gene );
 
     @Nullable
@@ -108,7 +111,8 @@ public interface DifferentialExpressionAnalysisService extends AnalysisService<D
      * @param includeSubSets     include analyses for its {@link ExpressionExperimentSubSet}
      * @return find all the analyses that involved the given investigation
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<DifferentialExpressionAnalysis> findByExperiment( ExpressionExperiment experimentAnalyzed, boolean includeSubSets );
 
     /**

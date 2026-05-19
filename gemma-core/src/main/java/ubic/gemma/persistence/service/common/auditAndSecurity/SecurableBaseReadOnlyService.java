@@ -1,6 +1,7 @@
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PostFilter;
 import org.springframework.security.access.prepost.PostAuthorize;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.persistence.service.BaseReadOnlyService;
@@ -24,7 +25,8 @@ public interface SecurableBaseReadOnlyService<C extends Securable> extends BaseR
     C findOrFail( C entity ) throws NullPointerException;
 
     @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<C> load( Collection<Long> ids );
 
     @Override
@@ -56,7 +58,8 @@ public interface SecurableBaseReadOnlyService<C extends Securable> extends BaseR
     <T extends Exception> C loadOrFail( Long id, Function<String, T> exceptionSupplier, String message ) throws T;
 
     @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<C> loadAll();
 
     @Override

@@ -20,6 +20,7 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import lombok.Value;
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PostFilter;
 import org.springframework.security.access.prepost.PostAuthorize;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.search.SearchException;
@@ -241,7 +242,8 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     int removeProcessedDataVectors( ExpressionExperiment ee );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     List<ExpressionExperiment> browse( int start, int limit );
 
     /**
@@ -344,10 +346,12 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      * accession can result
      * in multiple experiments in Gemma.
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<ExpressionExperiment> findByAccession( DatabaseEntry accession );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<ExpressionExperiment> findByAccession( String accession );
 
     @Nullable
@@ -358,7 +362,8 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      * @param bibRef bibliographic reference
      * @return a collection of EE that have that reference that BibliographicReference
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<ExpressionExperiment> findByBibliographicReference( BibliographicReference bibRef );
 
     /**
@@ -383,19 +388,22 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      * @param bm bio material
      * @return experiment the given biomaterial is associated with
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<ExpressionExperiment> findByBioMaterial( BioMaterial bm );
 
     /**
      *
      * @param includeSubSets include samples that are associated to assays that belong to subsets of the experiment
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<ExpressionExperiment> findByBioMaterial( BioMaterial bm, boolean includeSubSets );
 
     Collection<Long> findIdsByBioMaterial( BioMaterial bm, boolean includeSubSets );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Map<ExpressionExperiment, Collection<BioMaterial>> findByBioMaterials( Collection<BioMaterial> biomaterials );
 
     /**
@@ -404,7 +412,8 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      * @return a collection of expression experiment ids that express the given gene above the given expression
      * level
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<ExpressionExperiment> findByExpressedGene( Gene gene, double rank );
 
     @Nullable
@@ -428,7 +437,8 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     @Nullable
     Long findIdByFactor( ExperimentalFactor factor );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<ExpressionExperiment> findByFactors( Collection<ExperimentalFactor> factors );
 
     @Nullable
@@ -444,10 +454,12 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     @PostAuthorize("returnObject == null or hasPermission(returnObject, 'READ') or hasPermission(returnObject, 'ADMINISTRATION')")
     ExpressionExperiment findByFactorValueId( Long factorValueId );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<ExpressionExperiment> findByFactorValues( Collection<FactorValue> factorValues );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<ExpressionExperiment> findByFactorValueIds( Collection<Long> factorValueIds );
 
     /**
@@ -456,10 +468,12 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      * the AD
      * hybridizes to the given Gene)
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<ExpressionExperiment> findByGene( Gene gene );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<ExpressionExperiment> findByName( String name );
 
     @Nullable
@@ -482,13 +496,16 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
     ExpressionExperiment findByShortNameAndThawLite( String shortName );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<ExpressionExperiment> findByTaxon( Taxon taxon );
 
-    @Secured({ "GROUP_AGENT", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "GROUP_AGENT" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     List<ExpressionExperiment> findByUpdatedLimit( int limit );
 
-    @Secured({ "GROUP_AGENT", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "GROUP_AGENT" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<ExpressionExperiment> findUpdatedAfter( Date date );
 
     @Nullable
@@ -762,7 +779,8 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     long getRawDataVectorCount( ExpressionExperiment ee );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<ExpressionExperiment> getExperimentsWithOutliers();
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
@@ -1031,10 +1049,12 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     @Secured({ "GROUP_ADMIN", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Slice<ExpressionExperimentValueObject> loadBlacklistedValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<ExpressionExperiment> loadLackingFactors();
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<ExpressionExperiment> loadLackingTags();
 
     /**
@@ -1100,7 +1120,8 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      *
      * @return collection of GEO experiments which lack an association with a publication (non-GEO experiments will be ignored)
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<ExpressionExperiment> getExperimentsLackingPublications();
 
     /**

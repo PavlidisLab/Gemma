@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service.genome.gene;
 
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PostFilter;
 import org.springframework.security.core.userdetails.User;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.genome.Gene;
@@ -43,7 +44,8 @@ public interface GeneSetService extends SecurableBaseService<GeneSet>, Securable
     /**
      * Load the gene sets with their members initialized.
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<GeneSet> loadWithMembers( Collection<Long> ids );
 
     /**
@@ -54,7 +56,8 @@ public interface GeneSetService extends SecurableBaseService<GeneSet>, Securable
      * @return gene sets
      * @see GeneSetDao GeneSetDao for security filtering
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<GeneSet> findByGene( Gene gene );
 
     @Nullable
@@ -70,7 +73,8 @@ public interface GeneSetService extends SecurableBaseService<GeneSet>, Securable
      * @return gene sets
      * @see GeneSetDao GeneSetDao for security filtering
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<GeneSet> findByName( String name );
 
     /**
@@ -80,7 +84,8 @@ public interface GeneSetService extends SecurableBaseService<GeneSet>, Securable
      * @return gene sets
      * @see GeneSetDao GeneSetDao for security filtering
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<GeneSet> findByName( String name, Taxon taxon );
 
     /**
@@ -89,7 +94,8 @@ public interface GeneSetService extends SecurableBaseService<GeneSet>, Securable
      * @return gene sets
      * @see GeneSetDao GeneSetDao for security filtering
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<GeneSet> loadAll( @Nullable Taxon tax );
 
     /**
