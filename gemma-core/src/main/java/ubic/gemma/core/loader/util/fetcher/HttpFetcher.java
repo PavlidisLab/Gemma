@@ -73,7 +73,7 @@ public class HttpFetcher extends AbstractFetcher {
                 output = outputFileName;
             }
 
-            Future<?> future = Executors.newSingleThreadExecutor().submit( () -> {
+            Future<?> future = Executors.newVirtualThreadPerTaskExecutorIfAvailable().submit( () -> {
                 AbstractFetcher.log.info( "Fetching " + url );
                 try ( InputStream inputStream = new URL( url ).openStream();
                         OutputStream outputStream = new FileOutputStream( output ) ) {
