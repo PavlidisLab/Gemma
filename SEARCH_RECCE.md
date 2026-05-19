@@ -533,11 +533,15 @@ baseCode and needs its own modernization. See section 6.
 
 ---
 
-## 6. baseCode ontology indexer (separate effort)
+## 6. baseCode ontology indexer (in-Gemma, refactor out later)
 
-**Treat as a sibling Phase-3 effort, not part of this work.**
+**Decision (user, 2026-05-19):** the needed baseCode ontology-indexer code
+gets pulled INTO Gemma rather than upgraded in baseCode upstream. We will
+refactor it back out later if/when that makes sense, but for now we
+explicitly accept the duplication to avoid multi-repo coordination during
+Phase 3.
 
-### 6.1 Where baseCode is wired into Gemma
+### 6.1 Where baseCode is wired into Gemma today
 
 - Dependency: `pom.xml` declares
   `baseCode:baseCode:1.1.34-RENOVATIONS-SNAPSHOT`.
@@ -558,13 +562,13 @@ Lucene 3-era in-memory index keyed off the Jena triples. With Lucene 5+
 the API surface shifted enough that baseCode's index code degraded —
 the Phase 2 strip on the Gemma side removed *Gemma's* consumption of
 `LuceneQueryUtils.escape()` and the Compass/Lucene 3 escape helpers
-from the ontology code path, but baseCode itself still ships its
-own (now disconnected from Gemma's HS index) Lucene-based ontology
+from the ontology code path, but the baseCode dep itself still ships
+its own (now disconnected from Gemma's HS index) Lucene-based ontology
 search.
 
-### 6.3 Recommended path
+### 6.3 Recommended path — in-Gemma `jena-text` + Jena 4.x port
 
-**`jena-text` + Jena 4.x namespace upgrade in baseCode.**
+**`jena-text` + Jena 4.x namespace upgrade, hosted inside Gemma.**
 
 `jena-text` (`org.apache.jena:jena-text`) is Apache Jena's standard
 integration of Lucene over RDF datasets — it indexes literal values
@@ -577,27 +581,52 @@ clause backed by a properly-maintained Lucene index.
 Jena 4.x is the right anchor: the modern Jena release line, Lucene 8/9
 compatible, and Apache-maintained. Going to Jena 5 is premature — Jena
 5 requires Java 17 minimum but also drops some `org.apache.jena.atlas`
-APIs that baseCode currently references; Jena 4.10.x is the
-sweet-spot.
+APIs the existing code references; Jena 4.10.x is the sweet-spot.
 
-**Suggested sub-steps (rough — for the sibling recce):**
+**Suggested sub-steps (in Gemma):**
 
-1. Bump baseCode's `org.apache.jena.*` deps to 4.10.0.
-2. Add `jena-text` to baseCode.
-3. Replace baseCode's hand-rolled Lucene-3 ontology index with a
-   `TextDataset` wrapping the existing TDB dataset.
-4. Update `OntologySearchService` to issue `text:query` SPARQL.
-5. Cut a `baseCode:1.2.0-RENOVATIONS-SNAPSHOT` and bump Gemma.
+1. Add `org.apache.jena:jena-tdb2:4.10.0`, `org.apache.jena:jena-text:4.10.0`,
+   and the Jena 4 transitive deps directly to `gemma-core/pom.xml`. Keep
+   the existing baseCode dep for now (we still consume non-search baseCode
+   pieces).
+2. Create `ubic.gemma.core.ontology.search` package; port the needed
+   pieces of baseCode's `OntologySearchService` interface + Jena-TDB
+   wiring inline (mark the new files with a Javadoc header noting they
+   originated in baseCode and were pulled in for the Phase 3 search
+   restoration).
+3. Build a `TextDataset` wrapping the existing TDB dataset (the one
+   `OntologyConfig` already manages); register the index inside Gemma's
+   Spring context.
+4. Replace the disconnected baseCode `LuceneQueryUtils.escape()`
+   consumption with Jena 4 `TextSearch.escape` (or inline equivalent).
+5. Update `OntologySearchSource` (restored in Step 3 of the main
+   migration) to call into the in-Gemma `OntologySearchService` rather
+   than the baseCode-shipped one. The Spring `@Qualifier` selects the
+   in-Gemma bean.
+6. **Do not bump baseCode**: the non-search baseCode classes Gemma still
+   uses (`TdbOntologyService`, ontology-loader scaffolding, GO term
+   structures) keep working against `1.1.34-RENOVATIONS-SNAPSHOT`.
 
-**Effort estimate: 3-4 sessions in baseCode.** Not in Gemma.
+**Effort estimate: 2-3 sessions in Gemma.** (Faster than the
+sibling-repo path because we don't pay the cross-repo cut/release tax.)
 
-### 6.4 Cross-reference
+### 6.4 Refactor-out checkpoint (deferred)
 
-The Gemma-side `OntologySearchSource` (restored in Step 3) will pick
-up the improved baseCode search **transparently** — no Gemma code
-change needed past the bump. Until baseCode lands, ontology-term
-free-text discovery will be partially functional (single-term, no
-fuzzy matching, no compound-term boosting).
+When the dust settles on Phase 3 we can decide whether to push the
+ontology-search subset back to baseCode (where other downstream consumers
+of baseCode could benefit) or leave it in Gemma permanently. The
+in-Gemma classes are tagged with the originated-in-baseCode Javadoc
+header so the future extraction has a clear target list.
+
+### 6.5 Cross-reference with main search plan
+
+The Gemma-side `OntologySearchSource` (restored in Step 3) consumes
+whichever `OntologySearchService` bean is wired. Until the in-Gemma
+port lands, ontology-term free-text discovery is partially functional
+(single-term, no fuzzy matching, no compound-term boosting). Order the
+work so the main HS 7 / Lucene 9 stack lands first; the in-Gemma
+ontology index can follow without blocking the rest of the
+free-text-over-EE search.
 
 ---
 
