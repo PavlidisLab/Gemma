@@ -84,7 +84,10 @@ public interface AuditEventService {
 
     /**
      * @param date date
-     * @return a collection of Auditable objects that were updated since the date entered.
+     * @return a collection of Auditable objects that received at least one typed
+     * {@link ubic.gemma.model.common.auditAndSecurity.AuditEvent} (i.e. {@code eventType IS NOT NULL})
+     * since the date entered. Generic auto-UPDATE rows ({@code action='U'}, {@code eventType=null})
+     * are NOT counted — see {@code AUDIT_SYSTEM_AUDIT.md} Section 5, risk #1.
      * Note that this security setting works even though auditables aren't necessarily securable; non-securable
      * auditables will be returned. See AclEntryAfterInvocationCollectionFilteringProvider and
      * applicationContext-security.xml

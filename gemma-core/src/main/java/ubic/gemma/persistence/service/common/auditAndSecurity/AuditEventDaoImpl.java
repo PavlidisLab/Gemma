@@ -116,12 +116,18 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
     @Override
     public <T extends Auditable> Collection<T> getUpdatedSinceDate( Class<T> auditableClass, Date date ) {
         String entityName = ubic.gemma.persistence.hibernate.HibernateUtils.getEntityName( getSessionFactory(), auditableClass );
+        // "Updated" = received any typed AuditEvent in the window. We intentionally do NOT filter on
+        // ae.action='U' (generic auto-UPDATE) because that machinery is being retired in Phase C of the
+        // audit migration (see AUDIT_SYSTEM_AUDIT.md Section 5, risk #1). Filtering on
+        // ae.eventType IS NOT NULL keeps semantic updates (typed events emitted explicitly by services)
+        // and naturally excludes generic auto-UPDATE rows (eventType=null) and creation events
+        // (action='C', also eventType=null). Output shape is unchanged: one auditable per row.
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
                 .createQuery( "select adb from " + entityName + " adb "
                         + "join adb.auditTrail atr "
                         + "join atr.events as ae "
-                        + "where ae.date >= :date and ae.action='U' "
+                        + "where ae.date >= :date and ae.eventType is not null "
                         + "group by adb" )
                 .setParameter( "date", date )
                 .list();
