@@ -19,7 +19,7 @@
 
 package ubic.gemma.core.analysis.preprocess;
 
-import gemma.gsec.SecurityService;
+import ubic.gemma.core.security.SecurityService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

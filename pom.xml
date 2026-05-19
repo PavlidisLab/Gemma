@@ -454,8 +454,10 @@
 		</dependency>
 
 		<!-- pavlab:gemma-gsec dependency removed in Phase 3 absorption: gsec source now lives
-		     under gemma-core/src/main/java/gemma/gsec/ (package names preserved per absorption
-		     roadmap Phase A). See GSEC_ABSORPTION_ROADMAP.md. -->
+		     under gemma-core/src/main/java/ubic/gemma/core/security/ (Phase D-1 intermediate
+		     home at ubic.gemma.core.security.gsec.* merged into ubic.gemma.core.security.*
+		     proper in Phase D-2; gsec's UserService renamed to BaseUserService to avoid an
+		     FQN collision with the Gemma-owned UserService). See GSEC_ABSORPTION_ROADMAP.md. -->
 
 		<!-- Spring -->
 		<dependency>

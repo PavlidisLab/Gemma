@@ -1,7 +1,7 @@
 package ubic.gemma.core.security.authentication;
 
-import gemma.gsec.SecurityService;
-import gemma.gsec.authentication.UserDetailsImpl;
+import ubic.gemma.core.security.SecurityService;
+import ubic.gemma.core.security.authentication.UserDetailsImpl;
 import org.hibernate.SessionFactory;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -18,8 +18,8 @@
  */
 package ubic.gemma.persistence.service.genome.gene;
 
-import gemma.gsec.SecurityService;
-import gemma.gsec.util.SecurityUtil;
+import ubic.gemma.core.security.SecurityService;
+import ubic.gemma.core.security.util.SecurityUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;

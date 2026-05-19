@@ -19,7 +19,7 @@
 
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
-import gemma.gsec.acl.domain.AclService;
+import ubic.gemma.core.security.acl.domain.AclService;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
 import org.junit.Before;

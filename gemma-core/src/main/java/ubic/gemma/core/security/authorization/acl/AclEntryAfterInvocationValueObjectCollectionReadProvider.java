@@ -10,9 +10,9 @@
  */
 package ubic.gemma.core.security.authorization.acl;
 
-import gemma.gsec.acl.afterinvocation.AclEntryAfterInvocationCollectionFilteringProvider;
-import gemma.gsec.model.SecureValueObject;
-import gemma.gsec.util.SecurityUtil;
+import ubic.gemma.core.security.acl.afterinvocation.AclEntryAfterInvocationCollectionFilteringProvider;
+import ubic.gemma.core.security.model.SecureValueObject;
+import ubic.gemma.core.security.util.SecurityUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.security.acls.model.Acl;

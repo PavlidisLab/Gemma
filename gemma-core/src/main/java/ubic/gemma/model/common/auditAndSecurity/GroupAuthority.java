@@ -25,7 +25,7 @@ import java.util.Objects;
 /**
  * Authority for groups (kind of like a "user role", but for group-based authorization)
  */
-public class GroupAuthority extends AbstractIdentifiable implements gemma.gsec.model.GroupAuthority {
+public class GroupAuthority extends AbstractIdentifiable implements ubic.gemma.core.security.model.GroupAuthority {
 
     private String authority;
 

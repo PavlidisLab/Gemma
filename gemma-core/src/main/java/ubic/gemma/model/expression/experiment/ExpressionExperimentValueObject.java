@@ -3,10 +3,10 @@ package ubic.gemma.model.expression.experiment;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import gemma.gsec.acl.domain.AclObjectIdentity;
-import gemma.gsec.acl.domain.AclPrincipalSid;
-import gemma.gsec.acl.domain.AclSid;
-import gemma.gsec.util.SecurityUtil;
+import ubic.gemma.core.security.acl.domain.AclObjectIdentity;
+import ubic.gemma.core.security.acl.domain.AclPrincipalSid;
+import ubic.gemma.core.security.acl.domain.AclSid;
+import ubic.gemma.core.security.util.SecurityUtil;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
@@ -210,7 +210,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.setUserCanWrite( permissions[1] );
         this.setIsShared( permissions[2] );
 
-        String ownerName = gemma.gsec.acl.domain.Sids.principalName( sid == null ? null : sid.toSid() );
+        String ownerName = ubic.gemma.core.security.acl.domain.Sids.principalName( sid == null ? null : sid.toSid() );
         this.setUserOwned( ownerName != null && Objects.equals( ownerName, SecurityUtil.getCurrentUsername() ) );
     }
 

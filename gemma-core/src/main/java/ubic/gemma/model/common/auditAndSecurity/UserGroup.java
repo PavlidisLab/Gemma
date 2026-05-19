@@ -29,7 +29,7 @@ import java.util.Set;
  *
  * @author Paul
  */
-public class UserGroup extends AbstractAuditable implements gemma.gsec.model.UserGroup {
+public class UserGroup extends AbstractAuditable implements ubic.gemma.core.security.model.UserGroup {
 
     private Set<User> groupMembers = new HashSet<>();
     private Set<GroupAuthority> authorities = new HashSet<>();

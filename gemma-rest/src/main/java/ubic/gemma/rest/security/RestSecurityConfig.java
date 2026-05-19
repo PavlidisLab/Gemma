@@ -144,7 +144,7 @@ public class RestSecurityConfig {
      * hierarchy (via {@code roleHierarchyVoter}). In Spring Security 6's
      * {@code authorizeHttpRequests}, role hierarchy is applied automatically when a
      * {@code RoleHierarchy} bean is present in the context (which it is &mdash; defined
-     * in {@code gemma/gsec/applicationContext-gsec.xml}). So {@code hasAuthority("GROUP_USER")}
+     * in {@code ubic/gemma/core/security/applicationContext-gsec.xml}). So {@code hasAuthority("GROUP_USER")}
      * here will correctly grant access to any authority that the role hierarchy resolves
      * as &ge; {@code GROUP_USER}.
      */

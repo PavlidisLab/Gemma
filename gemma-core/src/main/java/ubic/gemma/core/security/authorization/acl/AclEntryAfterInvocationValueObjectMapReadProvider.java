@@ -10,7 +10,7 @@
  */
 package ubic.gemma.core.security.authorization.acl;
 
-import gemma.gsec.model.SecureValueObject;
+import ubic.gemma.core.security.model.SecureValueObject;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.AuthorizationServiceException;
 import org.springframework.security.access.ConfigAttribute;

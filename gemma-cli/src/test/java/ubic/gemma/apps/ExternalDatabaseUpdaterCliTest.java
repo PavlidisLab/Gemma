@@ -1,6 +1,6 @@
 package ubic.gemma.apps;
 
-import gemma.gsec.authentication.ManualAuthenticationService;
+import ubic.gemma.core.security.authentication.ManualAuthenticationService;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

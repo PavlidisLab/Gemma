@@ -18,8 +18,8 @@
  */
 package ubic.gemma.core.analysis.report;
 
-import gemma.gsec.SecurityService;
-import gemma.gsec.authentication.ManualAuthenticationService;
+import ubic.gemma.core.security.SecurityService;
+import ubic.gemma.core.security.authentication.ManualAuthenticationService;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;

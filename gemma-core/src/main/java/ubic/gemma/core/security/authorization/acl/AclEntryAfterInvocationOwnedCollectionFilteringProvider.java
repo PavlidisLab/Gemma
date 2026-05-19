@@ -17,7 +17,7 @@
  */
 package ubic.gemma.core.security.authorization.acl;
 
-import gemma.gsec.util.SecurityUtil;
+import ubic.gemma.core.security.util.SecurityUtil;
 import org.springframework.security.access.AfterInvocationProvider;
 import org.springframework.security.acls.model.Acl;
 import org.springframework.security.acls.model.AclService;
@@ -31,7 +31,7 @@ import java.util.List;
  * edit remain. Public, read-only-shared data sets are removed — this powers the "my data" listing.
  * <p>
  * Phase 3 AfterInvocation Phase B port: verbatim port of
- * {@code gemma.gsec.acl.afterinvocation.AclEntryAfterInvocationOwnedCollectionFilteringProvider} into gemma-core so
+ * {@code ubic.gemma.core.security.acl.afterinvocation.AclEntryAfterInvocationOwnedCollectionFilteringProvider} into gemma-core so
  * the AfterInvocation provider chain no longer depends on the gsec class. The owner-name lookup is still done via the
  * gsec {@code AclPrincipalSid}/{@code Sids} utility — that's a small utility class, not a Spring Security
  * after-invocation provider; this migration is scoped to the latter.
@@ -52,7 +52,7 @@ public class AclEntryAfterInvocationOwnedCollectionFilteringProvider extends Acl
     }
 
     private boolean ownedByCurrentUser( Acl acl ) {
-        String ownerName = gemma.gsec.acl.domain.Sids.principalName( acl.getOwner() );
+        String ownerName = ubic.gemma.core.security.acl.domain.Sids.principalName( acl.getOwner() );
         return ownerName != null && ownerName.equals( SecurityUtil.getCurrentUsername() );
     }
 }

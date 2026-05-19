@@ -14,7 +14,7 @@
  */
 package ubic.gemma.apps;
 
-import gemma.gsec.SecurityService;
+import ubic.gemma.core.security.SecurityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MakePublicEvent;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;

@@ -1,6 +1,6 @@
 package ubic.gemma.core.security.authorization.acl;
 
-import gemma.gsec.acl.domain.AclObjectIdentity;
+import ubic.gemma.core.security.acl.domain.AclObjectIdentity;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;

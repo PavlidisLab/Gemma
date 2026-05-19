@@ -18,7 +18,7 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
-import gemma.gsec.SecurityService;
+import ubic.gemma.core.security.SecurityService;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

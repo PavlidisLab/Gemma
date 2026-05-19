@@ -18,7 +18,7 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
-import gemma.gsec.SecurityService;
+import ubic.gemma.core.security.SecurityService;
 import org.apache.commons.collections4.SetUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;

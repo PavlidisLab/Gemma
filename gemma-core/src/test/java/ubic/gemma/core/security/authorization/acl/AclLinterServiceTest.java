@@ -1,6 +1,6 @@
 package ubic.gemma.core.security.authorization.acl;
 
-import gemma.gsec.acl.ObjectIdentityRetrievalStrategyImpl;
+import ubic.gemma.core.security.acl.ObjectIdentityRetrievalStrategyImpl;
 import org.hibernate.SessionFactory;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;

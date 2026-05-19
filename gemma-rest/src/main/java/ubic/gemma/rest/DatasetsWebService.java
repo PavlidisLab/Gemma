@@ -16,8 +16,8 @@ package ubic.gemma.rest;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import gemma.gsec.SecurityService;
-import gemma.gsec.util.SecurityUtil;
+import ubic.gemma.core.security.SecurityService;
+import ubic.gemma.core.security.util.SecurityUtil;
 import io.swagger.v3.oas.annotations.ExternalDocumentation;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

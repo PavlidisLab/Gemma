@@ -19,7 +19,7 @@
 
 package ubic.gemma.web.controller.common;
 
-import gemma.gsec.util.SecurityUtil;
+import ubic.gemma.core.security.util.SecurityUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;

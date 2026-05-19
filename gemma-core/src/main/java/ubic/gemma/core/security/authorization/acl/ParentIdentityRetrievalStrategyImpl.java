@@ -1,6 +1,6 @@
 package ubic.gemma.core.security.authorization.acl;
 
-import gemma.gsec.acl.domain.AclObjectIdentity;
+import ubic.gemma.core.security.acl.domain.AclObjectIdentity;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,9 +1,9 @@
 package ubic.gemma.persistence.util;
 
-import gemma.gsec.AuthorityConstants;
-import gemma.gsec.acl.domain.AclEntry;
-import gemma.gsec.acl.domain.AclObjectIdentity;
-import gemma.gsec.util.SecurityUtil;
+import ubic.gemma.core.security.AuthorityConstants;
+import ubic.gemma.core.security.acl.domain.AclEntry;
+import ubic.gemma.core.security.acl.domain.AclObjectIdentity;
+import ubic.gemma.core.security.util.SecurityUtil;
 import org.springframework.security.access.vote.AuthenticatedVoter;
 import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.security.acls.domain.GrantedAuthoritySid;
@@ -14,7 +14,7 @@ public class SecurityUtils {
 
     /**
      * Checks ACL related properties from the AclObjectIdentity.
-     * Some of the code is adapted from {@link gemma.gsec.util.SecurityUtil}, but allows usage without an Acl object.
+     * Some of the code is adapted from {@link ubic.gemma.core.security.util.SecurityUtil}, but allows usage without an Acl object.
      * <p>
      * Phase B of the gsec absorption: {@link AclEntry#getSid()} now returns a Spring Security
      * {@link Sid} (converted via {@code AclSid#toSid()}); the {@code instanceof} checks below

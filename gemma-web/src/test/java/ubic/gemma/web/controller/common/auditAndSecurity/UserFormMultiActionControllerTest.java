@@ -1,6 +1,6 @@
 package ubic.gemma.web.controller.common.auditAndSecurity;
 
-import gemma.gsec.authentication.UserDetailsImpl;
+import ubic.gemma.core.security.authentication.UserDetailsImpl;
 import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,6 +1,6 @@
 package ubic.gemma.core.security.authentication;
 
-import gemma.gsec.authentication.ManualAuthenticationService;
+import ubic.gemma.core.security.authentication.ManualAuthenticationService;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.config.AbstractFactoryBean;

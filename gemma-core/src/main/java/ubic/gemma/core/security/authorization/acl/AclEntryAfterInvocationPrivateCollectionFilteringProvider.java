@@ -17,7 +17,7 @@
  */
 package ubic.gemma.core.security.authorization.acl;
 
-import gemma.gsec.util.SecurityUtil;
+import ubic.gemma.core.security.util.SecurityUtil;
 import org.springframework.security.access.AfterInvocationProvider;
 import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.security.acls.model.Acl;
@@ -34,7 +34,7 @@ import java.util.List;
  * listing.
  * <p>
  * Phase 3 AfterInvocation Phase B port: verbatim port of
- * {@code gemma.gsec.acl.afterinvocation.AclEntryAfterInvocationPrivateCollectionFilteringProvider} into gemma-core so
+ * {@code ubic.gemma.core.security.acl.afterinvocation.AclEntryAfterInvocationPrivateCollectionFilteringProvider} into gemma-core so
  * the AfterInvocation provider chain no longer depends on the gsec class.
  *
  * @author keshav

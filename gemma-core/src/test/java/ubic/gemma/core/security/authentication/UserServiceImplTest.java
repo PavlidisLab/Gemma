@@ -18,8 +18,8 @@
  */
 package ubic.gemma.core.security.authentication;
 
-import gemma.gsec.SecurityService;
-import gemma.gsec.acl.domain.AclService;
+import ubic.gemma.core.security.SecurityService;
+import ubic.gemma.core.security.acl.domain.AclService;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

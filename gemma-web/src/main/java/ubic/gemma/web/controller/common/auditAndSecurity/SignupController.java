@@ -18,9 +18,9 @@
  */
 package ubic.gemma.web.controller.common.auditAndSecurity;
 
-import gemma.gsec.authentication.LoginDetailsValueObject;
-import gemma.gsec.authentication.UserDetailsImpl;
-import gemma.gsec.util.SecurityUtil;
+import ubic.gemma.core.security.authentication.LoginDetailsValueObject;
+import ubic.gemma.core.security.authentication.UserDetailsImpl;
+import ubic.gemma.core.security.util.SecurityUtil;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
