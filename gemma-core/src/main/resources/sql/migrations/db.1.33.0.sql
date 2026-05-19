@@ -73,6 +73,39 @@ CREATE TABLE acl_entry (
 -- ====================================================================
 -- Wrap in a single transaction so any failure rolls back the data move
 -- (the CREATE TABLE statements above will auto-commit either way).
+--
+-- IMPORTANT: do NOT rerun this section against a partially-populated target.
+-- Prod hit this once: a prior dry-run committed the acl_entry INSERT but
+-- left acl_class / acl_sid / acl_object_identity empty (root cause unknown
+-- -- possibly an out-of-band COMMIT after the auto-commit on CREATE TABLE).
+-- Re-running blindly hit `Duplicate entry '1' for key 'PRIMARY'` on the
+-- acl_entry INSERT. The recovery path was to comment out the acl_entry
+-- INSERT and run only the three smaller INSERTs against the already-correct
+-- acl_entry rows (IDs preserved across the migration, so FKs reconcile).
+--
+-- Guard: bail out before any INSERT if ANY of the four target tables is
+-- already non-empty. Use a stored-program SIGNAL so the script aborts in
+-- MySQL clients that don't honor `\warning` or similar.
+DELIMITER //
+DROP PROCEDURE IF EXISTS check_acl_targets_empty//
+CREATE PROCEDURE check_acl_targets_empty()
+BEGIN
+  DECLARE total BIGINT;
+  SELECT (SELECT COUNT(*) FROM acl_class)
+       + (SELECT COUNT(*) FROM acl_sid)
+       + (SELECT COUNT(*) FROM acl_object_identity)
+       + (SELECT COUNT(*) FROM acl_entry)
+    INTO total;
+  IF total > 0 THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT =
+      'New ACL tables are non-empty; do not rerun this migration blindly. '
+      'See the comment at the top of section 2.';
+  END IF;
+END//
+DELIMITER ;
+CALL check_acl_targets_empty();
+DROP PROCEDURE check_acl_targets_empty;
+
 START TRANSACTION;
 SET FOREIGN_KEY_CHECKS = 0;  -- parent_object self-reference
 
