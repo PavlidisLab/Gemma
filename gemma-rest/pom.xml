@@ -10,6 +10,14 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>gemma-rest</artifactId>
+    <!--
+        Packaging is property-driven so the `gemma-rest-war` profile (see <profiles>
+        below) can flip this from `jar` to `war` without breaking the default build.
+        Default = jar (gemma-web depends on it as compile-scope jar; flipping by
+        default would break gemma-web's build). See GEMMA_REST_STANDALONE_ROADMAP.md
+        Phase 1 and the comment block on <profiles> for the activation incantation.
+    -->
+    <packaging>${gemma.rest.packaging}</packaging>
 
     <name>Gemma REST</name>
     <description>Module containing the Gemma REST API</description>
@@ -306,6 +314,59 @@
 
     <properties>
         <javadocSourcePaths>${delombok.output};${project.build.directory}/generated-sources/antlr4</javadocSourcePaths>
+        <!--
+            Default packaging. Overridden to `war` by the `gemma-rest-war` profile
+            (see <profiles> below) for standalone WAR builds. Default stays `jar`
+            so that gemma-web (which depends on gemma-rest as a compile-scope jar)
+            and downstream consumers of the published jar artifact build unchanged.
+        -->
+        <gemma.rest.packaging>jar</gemma.rest.packaging>
     </properties>
+
+    <!--
+        Phase 1 of GEMMA_REST_STANDALONE_ROADMAP.md (gemma-rest standalone packaging).
+
+        The standalone WAR is produced only when the `gemma-rest-war` profile is
+        active:
+
+            mvn -pl gemma-rest -am package -P gemma-rest-war -DskipTests
+
+        The flip to `war` as the default packaging — plus the corresponding
+        gemma-web cleanup — is deferred to the cutover phase (roadmap §8 row 4).
+        Until then, this profile lets the WAR build be smoke-tested without
+        breaking gemma-web's build.
+
+        The profile flips the gemma.rest.packaging property from `jar` to `war`
+        and points the maven-war-plugin at the src/main/webapp tree (the
+        descriptor lives at src/main/webapp/WEB-INF/web.xml, which is the
+        maven-war-plugin default — so no <webXml> override is needed).
+        `<finalName>gemma-rest</finalName>` produces a clean `gemma-rest.war`
+        filename.
+    -->
+    <profiles>
+        <profile>
+            <id>gemma-rest-war</id>
+            <properties>
+                <gemma.rest.packaging>war</gemma.rest.packaging>
+            </properties>
+            <build>
+                <finalName>gemma-rest</finalName>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-war-plugin</artifactId>
+                        <configuration>
+                            <!--
+                                Fail the build if web.xml is missing — the whole
+                                point of activating this profile is to get a
+                                deployable WAR with its own descriptor.
+                            -->
+                            <failOnMissingWebXml>true</failOnMissingWebXml>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>

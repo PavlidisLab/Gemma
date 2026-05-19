@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    gemma-rest standalone WAR bootstrap (Phase 1 of GEMMA_REST_STANDALONE_ROADMAP.md).
+
+    This descriptor is the gemma-rest-owned replacement for the Jersey/Spring/Security
+    declarations currently living in gemma-web/src/main/webapp/WEB-INF/web.xml. It is
+    NOT YET ACTIVE in the default build — gemma-rest still packages as a JAR by
+    default so gemma-web's WAR build keeps working unchanged. To produce a standalone
+    gemma-rest WAR, activate the `gemma-rest-war` profile:
+
+        mvn -pl gemma-rest -am package -P gemma-rest-war -DskipTests
+
+    The bean wiring is identical to gemma-web's bootstrap minus gemma-web-specific
+    listeners (StartupListener, UserCounterListener), filters (sitemesh, encodingFilter
+    on form-login URLs, gemmaWebMetricsFilter), and servlets (DispatcherServlet,
+    DefaultServlet, JSP error pages). What remains is the bare minimum to serve
+    /rest/v2/** authenticated via the Spring Security 6 filter chain assembled by
+    `ubic.gemma.rest.security.RestSecurityConfig`.
+
+    Servlet 6 / Jakarta EE namespace. Container target: Tomcat 10.1.x.
+-->
+<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd"
+         version="6.0">
+
+    <display-name>Gemma REST</display-name>
+
+    <!--
+        Spring root context. Same classpath glob as gemma-web today: catches
+        gemma-core's applicationContext-*.xml zoo plus gemma-rest's own
+        applicationContext-{analytics,component-scan}.xml. gemma-web's contributions
+        (applicationContext-{security,serviceBeans,component-scan,metrics}.xml)
+        will simply be absent from the classpath of the gemma-rest WAR — that's the
+        whole point of the split. The <s:http pattern="/rest/v2/**"> block currently
+        in gemma-web's applicationContext-security.xml is replaced by the
+        SecurityFilterChain @Bean in ubic.gemma.rest.security.RestSecurityConfig
+        (which lives in this module and is picked up by gemma-rest's component-scan).
+    -->
+    <context-param>
+        <param-name>contextConfigLocation</param-name>
+        <param-value>classpath*:ubic/gemma/applicationContext-*.xml</param-value>
+    </context-param>
+
+    <!--
+        Listeners. Kept:
+          - IntrospectorCleanupListener — prevents PropertyDescriptor leaks on undeploy
+          - HttpSessionEventPublisher    — Spring Security session-lifecycle events
+        Dropped (gemma-web-specific):
+          - ubic.gemma.web.listener.StartupListener
+          - ubic.gemma.web.listener.UserCounterListener
+        InitializeContext (ApplicationContextInitializer) is also gemma-web-specific
+        and is NOT registered here. A gemma-rest-owned equivalent is a separate phase
+        (see GEMMA_REST_STANDALONE_ROADMAP.md §6 item 7) — until that lands, the
+        standalone WAR runs without active-profile injection, which is acceptable
+        for the first boot smoke test.
+    -->
+    <listener>
+        <listener-class>org.springframework.web.util.IntrospectorCleanupListener</listener-class>
+    </listener>
+    <listener>
+        <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+    </listener>
+    <listener>
+        <listener-class>org.springframework.security.web.session.HttpSessionEventPublisher</listener-class>
+    </listener>
+
+    <!--
+        CORS. Same wiring as gemma-web/web.xml:84–103 so gemma-curation-ui (the
+        SPA replacing gemma-web) can hit /rest/v2/** cross-origin. The CorsFilter
+        class itself lives in gemma-rest already (ubic.gemma.rest.servlet.CorsFilter),
+        which is the right module — this descriptor just registers it.
+    -->
+    <filter>
+        <filter-name>cors</filter-name>
+        <filter-class>ubic.gemma.rest.servlet.CorsFilter</filter-class>
+        <init-param>
+            <param-name>allowedOrigins</param-name>
+            <param-value>${cors.allowedOrigins}</param-value>
+        </init-param>
+        <init-param>
+            <param-name>allowedHeaders</param-name>
+            <param-value>Authorization,Content-Type,X-Gemma-Client-ID,X-Requested-With</param-value>
+        </init-param>
+        <init-param>
+            <param-name>allowCredentials</param-name>
+            <param-value>true</param-value>
+        </init-param>
+        <init-param>
+            <param-name>maxAge</param-name>
+            <param-value>1200</param-value>
+        </init-param>
+    </filter>
+
+    <!--
+        Spring Security filter chain. DelegatingFilterProxy looks up the
+        springSecurityFilterChain bean assembled by RestSecurityConfig (SS6
+        SecurityFilterChain @Bean — see that class for the full mapping from the
+        legacy <s:http pattern="/rest/v2/**"> XML).
+    -->
+    <filter>
+        <filter-name>springSecurityFilterChain</filter-name>
+        <filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
+    </filter>
+
+    <!--
+        UTF-8 forcing. gemma-web mapped this to /j_spring_security_check + the
+        DispatcherServlet only; for the REST WAR every request is /rest/v2/** and
+        body decoding is Jersey-controlled, so a blanket /* mapping is both
+        sufficient and harmless.
+    -->
+    <filter>
+        <filter-name>encodingFilter</filter-name>
+        <filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>
+        <init-param>
+            <param-name>encoding</param-name>
+            <param-value>UTF-8</param-value>
+        </init-param>
+        <init-param>
+            <param-name>forceEncoding</param-name>
+            <param-value>true</param-value>
+        </init-param>
+    </filter>
+
+    <!--
+        Filter ordering. Servlet spec evaluates <filter-mapping> elements in the
+        order they appear in the descriptor. We need:
+          1. encodingFilter (set charset before anything reads the body)
+          2. cors           (must add Access-Control-* headers BEFORE security
+                             potentially rejects with 401; gemma-web's comment
+                             at web.xml:117–118 documented the same constraint)
+          3. springSecurityFilterChain (authn/authz)
+    -->
+    <filter-mapping>
+        <filter-name>encodingFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>cors</filter-name>
+        <url-pattern>/rest/v2/*</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>springSecurityFilterChain</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+    <!--
+        Jersey servlet. Init params copied verbatim from gemma-web/web.xml:176–198
+        so the REST surface area is identical. Package-scan covers
+        ubic.gemma.rest (the @Path resources) and the Swagger jaxrs2 integration.
+        The two Jersey providers (GZipEncoder + Spring RequestContextFilter) are
+        registered by classname. OpenAPI config is anchored to the gemma-rest
+        context id and points at the openapi-configuration.yaml bundled in
+        gemma-rest's classes.
+    -->
+    <servlet>
+        <servlet-name>gemma-rest</servlet-name>
+        <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
+        <init-param>
+            <param-name>jersey.config.server.provider.packages</param-name>
+            <param-value>io.swagger.v3.jaxrs2.integration.resources,ubic.gemma.rest</param-value>
+        </init-param>
+        <init-param>
+            <param-name>jersey.config.server.provider.classnames</param-name>
+            <param-value>org.glassfish.jersey.message.GZipEncoder,org.glassfish.jersey.server.spring.scope.RequestContextFilter</param-value>
+        </init-param>
+        <init-param>
+            <param-name>openapi.context.id</param-name>
+            <param-value>ubic.gemma.rest</param-value>
+        </init-param>
+        <init-param>
+            <param-name>openApi.configuration.location</param-name>
+            <param-value>/WEB-INF/classes/openapi-configuration.yaml</param-value>
+        </init-param>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>gemma-rest</servlet-name>
+        <url-pattern>/rest/v2/*</url-pattern>
+    </servlet-mapping>
+
+    <!--
+        No <session-config>, no <error-page>, no <jsp-config>, no <mime-mapping>.
+        gemma-rest is JSON-API-only:
+          - Authn flows via HTTP Basic on every request (RestSecurityConfig sets
+            SessionCreationPolicy.STATELESS), so JSESSIONID config is moot.
+          - Error responses are emitted as JSON ResponseErrorObject by
+            RestAuthEntryPoint + Jersey ExceptionMappers — no JSP fallback page.
+          - No static assets are served from this WAR (restapidocs/ moves later;
+            see roadmap §6 item 6).
+    -->
+</web-app>
