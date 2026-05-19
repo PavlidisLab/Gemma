@@ -1296,7 +1296,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
             /*
              * If this is a subset, it is possible the baseline chosen is not eligible for the subset.
              */
-            LinearModelAnalyzer.log.info( ef );
+            LinearModelAnalyzer.log.info( String.valueOf( ef ) );
 
             assert baselineConditions.get( ef ).getExperimentalFactor().equals( ef ) : baselineConditions.get( ef ) + " is not a value of " + ef;
             properDesignMatrix.setBaseline( factorName, baselineFactorValue );

@@ -279,7 +279,7 @@ public class ExpressionExperimentQCController {
             svdo = svdService.getSvdFactorAnalysis( ee );
         } catch ( Exception e ) {
             // if there is no pca
-            log.error( e, e );
+            log.error( e.getMessage(), e );
         }
 
         if ( svdo != null ) {
