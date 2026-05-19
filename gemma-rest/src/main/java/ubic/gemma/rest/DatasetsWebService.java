@@ -296,12 +296,12 @@ public class DatasetsWebService {
             // slice the ranked IDs
             List<Long> idsSlice = sliceIds( ids, offset, limit );
 
-            // now highlight the results in the slice
-            // Phase 2: search subsystem is stubbed (Lucene/Hibernate Search are gone), so we pass a
-            // no-op Highlighter rather than null. Preserves the "highlighter requested" intent in the
-            // SearchContext — search-stub returns empty highlights regardless. Will be wired to a real
-            // highlighter when the search subsystem is rebuilt.
-            ubic.gemma.core.search.Highlighter highlighter = ( value, field ) -> java.util.Collections.emptyMap();
+            // now highlight the results in the slice. With the Phase-3 Step-5 wiring, the
+            // HibernateSearchSource projects the projectable text fields of each hit and routes
+            // them through this Highlighter; DefaultHighlighter returns the matched value verbatim
+            // under its field name (no span tagging yet — that pairs with the Step-6 reindex when
+            // we flip fields to highlightable = Highlightable.ANY for the HS 7 native projection).
+            ubic.gemma.core.search.Highlighter highlighter = new ubic.gemma.core.search.DefaultHighlighter();
             List<SearchResult<ExpressionExperiment>> results = datasetArgService.getResultsForSearchQuery( query, highlighter, warnings );
             Map<Long, SearchResult<ExpressionExperiment>> resultById = results.stream().collect( Collectors.toMap( SearchResult::getResultId, e -> e ) );
 

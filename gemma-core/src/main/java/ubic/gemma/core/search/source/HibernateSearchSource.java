@@ -15,6 +15,7 @@ import org.springframework.security.acls.model.SidRetrievalStrategy;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.search.FieldAwareSearchSource;
+import ubic.gemma.core.search.Highlighter;
 import ubic.gemma.core.search.SearchContext;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.security.acl.domain.AclObjectIdentity;
@@ -124,6 +125,18 @@ public class HibernateSearchSource implements FieldAwareSearchSource {
     private static final Map<Class<?>, Set<String>> ALL_FIELDS = new HashMap<>();
     private static final Map<Class<?>, Set<String>> ALL_EXACT_FIELDS = new HashMap<>();
 
+    /**
+     * Per-indexed-root list of {@code projectable = Projectable.YES} fields. Mirrors the
+     * {@code @FullTextField(projectable = Projectable.YES)} annotations on the entity classes.
+     *
+     * <p>The Step-5 highlighter path projects these out of the Lucene document and routes the
+     * raw value through {@link Highlighter#highlight(String, String)} on the SearchContext. The
+     * HS 7 native {@code f.highlight(field)} projection is intentionally avoided here because it
+     * requires the field schema to declare {@code highlightable = Highlightable.ANY}, a change
+     * paired with the Step-6 reindex.</p>
+     */
+    private static final Map<Class<?>, String[]> PROJECTABLE_FIELDS = new HashMap<>();
+
     static {
         DATASET_FIELDS = ArrayUtils.addAll( DATASET_FIELDS, prefix( "primaryPublication.", PUBLICATION_FIELDS ) );
         DATASET_FIELDS = ArrayUtils.addAll( DATASET_FIELDS, prefix( "otherRelevantPublications.", PUBLICATION_FIELDS ) );
@@ -149,6 +162,16 @@ public class HibernateSearchSource implements FieldAwareSearchSource {
         ALL_EXACT_FIELDS.put( GeneSet.class, new HashSet<>( Arrays.asList( GENE_SET_EXACT_FIELDS ) ) );
         ALL_EXACT_FIELDS.put( ExpressionExperimentSet.class, new HashSet<>( Arrays.asList( EXPERIMENT_SET_EXACT_FIELDS ) ) );
         ALL_EXACT_FIELDS.put( BibliographicReference.class, new HashSet<>( Arrays.asList( PUBLICATION_EXACT_FIELDS ) ) );
+
+        // Projectable fields per @Indexed root. These match the @FullTextField(projectable = Projectable.YES)
+        // annotations on the entity classes; keep in sync if you flip more fields to projectable.
+        PROJECTABLE_FIELDS.put( ExpressionExperiment.class, new String[] { "description" } );
+        PROJECTABLE_FIELDS.put( ArrayDesign.class, new String[] { "description" } );
+        PROJECTABLE_FIELDS.put( CompositeSequence.class, new String[] { "description" } );
+        PROJECTABLE_FIELDS.put( GeneSet.class, new String[] { "description" } );
+        PROJECTABLE_FIELDS.put( ExpressionExperimentSet.class, new String[] { "description" } );
+        PROJECTABLE_FIELDS.put( BibliographicReference.class, new String[] { "abstractText", "authorList", "title" } );
+        // Gene + BioSequence have no projectable text fields today.
     }
 
     private static String[] prefix( String p, String... fields ) {
@@ -178,51 +201,54 @@ public class HibernateSearchSource implements FieldAwareSearchSource {
 
     @Override
     public Collection<ubic.gemma.model.common.search.SearchResult<ArrayDesign>> searchArrayDesign( SearchSettings settings, SearchContext context ) throws SearchException {
-        return searchFor( settings, ArrayDesign.class, settings.getMode() == SearchSettings.SearchMode.EXACT ? PLATFORM_EXACT_FIELDS : PLATFORM_FIELDS );
+        return searchFor( settings, context, ArrayDesign.class, settings.getMode() == SearchSettings.SearchMode.EXACT ? PLATFORM_EXACT_FIELDS : PLATFORM_FIELDS );
     }
 
     @Override
     public Collection<ubic.gemma.model.common.search.SearchResult<BibliographicReference>> searchBibliographicReference( SearchSettings settings, SearchContext context ) throws SearchException {
-        return searchFor( settings, BibliographicReference.class, settings.getMode() == SearchSettings.SearchMode.EXACT ? PUBLICATION_EXACT_FIELDS : PUBLICATION_FIELDS );
+        return searchFor( settings, context, BibliographicReference.class, settings.getMode() == SearchSettings.SearchMode.EXACT ? PUBLICATION_EXACT_FIELDS : PUBLICATION_FIELDS );
     }
 
     @Override
     public Collection<ubic.gemma.model.common.search.SearchResult<ExpressionExperimentSet>> searchExperimentSet( SearchSettings settings, SearchContext context ) throws SearchException {
-        return searchFor( settings, ExpressionExperimentSet.class, settings.getMode() == SearchSettings.SearchMode.EXACT ? EXPERIMENT_SET_EXACT_FIELDS : EXPERIMENT_SET_FIELDS );
+        return searchFor( settings, context, ExpressionExperimentSet.class, settings.getMode() == SearchSettings.SearchMode.EXACT ? EXPERIMENT_SET_EXACT_FIELDS : EXPERIMENT_SET_FIELDS );
     }
 
     @Override
     public Collection<ubic.gemma.model.common.search.SearchResult<BioSequence>> searchBioSequence( SearchSettings settings, SearchContext context ) throws SearchException {
-        return searchFor( settings, BioSequence.class, settings.getMode() == SearchSettings.SearchMode.EXACT ? BIO_SEQUENCE_EXACT_FIELDS : BIO_SEQUENCE_FIELDS );
+        return searchFor( settings, context, BioSequence.class, settings.getMode() == SearchSettings.SearchMode.EXACT ? BIO_SEQUENCE_EXACT_FIELDS : BIO_SEQUENCE_FIELDS );
     }
 
     @Override
     public Collection<ubic.gemma.model.common.search.SearchResult<CompositeSequence>> searchCompositeSequence( SearchSettings settings, SearchContext context ) throws SearchException {
-        return searchFor( settings, CompositeSequence.class, settings.getMode() == SearchSettings.SearchMode.EXACT ? COMPOSITE_SEQUENCE_EXACT_FIELDS : COMPOSITE_SEQUENCE_FIELDS );
+        return searchFor( settings, context, CompositeSequence.class, settings.getMode() == SearchSettings.SearchMode.EXACT ? COMPOSITE_SEQUENCE_EXACT_FIELDS : COMPOSITE_SEQUENCE_FIELDS );
     }
 
     @Override
     public Collection<ubic.gemma.model.common.search.SearchResult<ExpressionExperiment>> searchExpressionExperiment( SearchSettings settings, SearchContext context ) throws SearchException {
-        return searchFor( settings, ExpressionExperiment.class, settings.getMode() == SearchSettings.SearchMode.EXACT ? DATASET_EXACT_FIELDS : DATASET_FIELDS );
+        return searchFor( settings, context, ExpressionExperiment.class, settings.getMode() == SearchSettings.SearchMode.EXACT ? DATASET_EXACT_FIELDS : DATASET_FIELDS );
     }
 
     @Override
     public Collection<ubic.gemma.model.common.search.SearchResult<Gene>> searchGene( SearchSettings settings, SearchContext context ) throws SearchException {
-        return searchFor( settings, Gene.class, settings.getMode() == SearchSettings.SearchMode.EXACT ? GENE_EXACT_FIELDS : GENE_FIELDS );
+        return searchFor( settings, context, Gene.class, settings.getMode() == SearchSettings.SearchMode.EXACT ? GENE_EXACT_FIELDS : GENE_FIELDS );
     }
 
     @Override
     public Collection<ubic.gemma.model.common.search.SearchResult<GeneSet>> searchGeneSet( SearchSettings settings, SearchContext context ) throws SearchException {
-        return searchFor( settings, GeneSet.class, settings.getMode() == SearchSettings.SearchMode.EXACT ? GENE_SET_EXACT_FIELDS : GENE_SET_FIELDS );
+        return searchFor( settings, context, GeneSet.class, settings.getMode() == SearchSettings.SearchMode.EXACT ? GENE_SET_EXACT_FIELDS : GENE_SET_FIELDS );
     }
 
     /**
      * HS 7 search implementation: build a per-class scope, parse the user query through a
      * {@code simpleQueryString} predicate over the field list (an HS-7 native, ASCII-safe
-     * alternative to HS 5's {@code MultiFieldQueryParser}), then project entity reference
-     * and Lucene score.
+     * alternative to HS 5's {@code MultiFieldQueryParser}), then project entity reference,
+     * Lucene score, and (when a {@link Highlighter} is supplied via {@link SearchContext})
+     * the values of the per-class {@link #PROJECTABLE_FIELDS} so they can be post-processed
+     * into highlight snippets.
      */
-    private <T extends Identifiable> Collection<ubic.gemma.model.common.search.SearchResult<T>> searchFor( SearchSettings settings, Class<T> clazz, String... fields ) throws SearchException {
+    private <T extends Identifiable> Collection<ubic.gemma.model.common.search.SearchResult<T>> searchFor(
+            SearchSettings settings, SearchContext context, Class<T> clazz, String... fields ) throws SearchException {
         if ( settings.getQuery() == null || settings.getQuery().trim().isEmpty() ) {
             return Collections.emptyList();
         }
@@ -230,8 +256,22 @@ public class HibernateSearchSource implements FieldAwareSearchSource {
             Session session = sessionFactory.getCurrentSession();
             SearchSession searchSession = Search.session( session );
 
+            final Highlighter highlighter = context != null ? context.getHighlighter() : null;
+            final String[] highlightFields = highlighter != null
+                    ? PROJECTABLE_FIELDS.getOrDefault( clazz, new String[0] )
+                    : new String[0];
+
             SearchResult<List<?>> hits = searchSession.search( clazz )
-                    .select( f -> f.composite( f.entityReference(), f.score() ) )
+                    .select( f -> {
+                        org.hibernate.search.engine.search.projection.SearchProjection<?>[] projections =
+                                new org.hibernate.search.engine.search.projection.SearchProjection<?>[2 + highlightFields.length];
+                        projections[0] = f.entityReference().toProjection();
+                        projections[1] = f.score().toProjection();
+                        for ( int i = 0; i < highlightFields.length; i++ ) {
+                            projections[2 + i] = f.field( highlightFields[i], String.class ).toProjection();
+                        }
+                        return f.composite( projections );
+                    } )
                     .where( f -> f.simpleQueryString()
                             .fields( fields )
                             .matching( settings.getQuery() )
@@ -243,7 +283,7 @@ public class HibernateSearchSource implements FieldAwareSearchSource {
             DoubleSummaryStatistics stats = rows.stream().mapToDouble( r -> ( Float ) r.get( 1 ) ).summaryStatistics();
 
             List<ubic.gemma.model.common.search.SearchResult<T>> results = rows.stream()
-                    .map( r -> rowToSearchResult( r, settings, clazz, stats ) )
+                    .map( r -> rowToSearchResult( r, settings, clazz, stats, highlighter, highlightFields ) )
                     .filter( java.util.Objects::nonNull )
                     .collect( Collectors.toList() );
 
@@ -258,7 +298,8 @@ public class HibernateSearchSource implements FieldAwareSearchSource {
     }
 
     private <T extends Identifiable> ubic.gemma.model.common.search.SearchResult<T> rowToSearchResult(
-            List<?> row, SearchSettings settings, Class<T> clazz, DoubleSummaryStatistics stats ) {
+            List<?> row, SearchSettings settings, Class<T> clazz, DoubleSummaryStatistics stats,
+            Highlighter highlighter, String[] highlightFields ) {
         Object refObj = row.get( 0 );
         Float scoreF = ( Float ) row.get( 1 );
         double score;
@@ -275,15 +316,28 @@ public class HibernateSearchSource implements FieldAwareSearchSource {
         } else {
             return null;
         }
+        Map<String, String> highlights = null;
+        if ( highlighter != null && highlightFields.length > 0 ) {
+            highlights = new HashMap<>();
+            for ( int i = 0; i < highlightFields.length; i++ ) {
+                Object v = row.get( 2 + i );
+                if ( v instanceof String && !( ( String ) v ).isEmpty() ) {
+                    highlights.putAll( highlighter.highlight( ( String ) v, highlightFields[i] ) );
+                }
+            }
+            if ( highlights.isEmpty() ) {
+                highlights = null;
+            }
+        }
         if ( settings.isFillResults() ) {
             T entity = sessionFactory.getCurrentSession().get( clazz, id );
             if ( entity == null || entity.getId() == null ) {
                 // entity vanished out from under the index — skip the stale hit.
                 return null;
             }
-            return ubic.gemma.model.common.search.SearchResult.from( clazz, entity, score, null, "hibernateSearch" );
+            return ubic.gemma.model.common.search.SearchResult.from( clazz, entity, score, highlights, "hibernateSearch" );
         } else {
-            return ubic.gemma.model.common.search.SearchResult.from( clazz, id, score, null, "hibernateSearch" );
+            return ubic.gemma.model.common.search.SearchResult.from( clazz, id, score, highlights, "hibernateSearch" );
         }
     }
 
