@@ -117,6 +117,90 @@ public class LuceneQueryUtils {
         }
     }
 
+    public static Set<Set<String>> extractTermsDnf( SearchSettings settings, @Nullable Consumer<Throwable> issueReporter ) throws SearchException {
+        return extractTermsDnf( settings, false, issueReporter );
+    }
+
+    /**
+     * Extract a DNF (Disjunctive Normal Form) from the terms of a query.
+     * <p>
+     * Clauses can be nested (i.e. {@code a OR (d OR (c AND (d AND e))}) as long as {@code OR} and {@code AND} are not
+     * interleaved. Prohibited clauses are ignored unless they break the DNF structure, in which case this returns an
+     * empty set.
+     *
+     * @param allowWildcards allow {@link PrefixQuery} and {@link WildcardQuery} clauses
+     */
+    public static Set<Set<String>> extractTermsDnf( SearchSettings settings, boolean allowWildcards, @Nullable Consumer<Throwable> issueReporter ) throws SearchException {
+        Query q = parseSafely( settings, createQueryParser(), issueReporter );
+        if ( q instanceof BooleanQuery ) {
+            Set<Set<String>> ds = new LinkedHashSet<>();
+            if ( extractNestedDisjunctions( ( BooleanQuery ) q, ds, allowWildcards ) ) {
+                return ds;
+            }
+            return Collections.emptySet();
+        } else if ( allowWildcards && q instanceof PrefixQuery && isTermGlobal( ( ( PrefixQuery ) q ).getPrefix() ) ) {
+            return Collections.singleton( Collections.singleton( termToString( ( ( PrefixQuery ) q ).getPrefix() ) + "*" ) );
+        } else if ( allowWildcards && q instanceof WildcardQuery && isTermGlobal( ( ( WildcardQuery ) q ).getTerm() ) ) {
+            return Collections.singleton( Collections.singleton( termToString( ( ( WildcardQuery ) q ).getTerm() ) ) );
+        } else if ( q instanceof TermQuery && isTermGlobal( ( ( TermQuery ) q ).getTerm() ) ) {
+            return Collections.singleton( Collections.singleton( termToString( ( ( TermQuery ) q ).getTerm() ) ) );
+        } else {
+            return Collections.emptySet();
+        }
+    }
+
+    private static boolean extractNestedDisjunctions( BooleanQuery query, Set<Set<String>> terms, boolean allowWildcards ) {
+        if ( query.clauses().stream().anyMatch( BooleanClause::isRequired ) ) {
+            Set<String> subClause = new LinkedHashSet<>();
+            terms.add( subClause );
+            return extractNestedConjunctions( query, subClause );
+        }
+        // at this point, all clauses are optional
+        for ( BooleanClause clause : query.clauses() ) {
+            if ( clause.isProhibited() ) {
+                continue;
+            }
+            Query q = clause.getQuery();
+            if ( q instanceof BooleanQuery ) {
+                if ( !extractNestedDisjunctions( ( BooleanQuery ) q, terms, allowWildcards ) ) {
+                    return false;
+                }
+            } else if ( allowWildcards && q instanceof PrefixQuery && isTermGlobal( ( ( PrefixQuery ) q ).getPrefix() ) ) {
+                terms.add( Collections.singleton( termToString( ( ( PrefixQuery ) q ).getPrefix() ) + "*" ) );
+            } else if ( allowWildcards && q instanceof WildcardQuery && isTermGlobal( ( ( WildcardQuery ) q ).getTerm() ) ) {
+                terms.add( Collections.singleton( termToString( ( ( WildcardQuery ) q ).getTerm() ) ) );
+            } else if ( q instanceof TermQuery && isTermGlobal( ( ( TermQuery ) q ).getTerm() ) ) {
+                terms.add( Collections.singleton( termToString( ( ( TermQuery ) q ).getTerm() ) ) );
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Extract nested conjunctions from a query and populate their terms in the given set.
+     *
+     * @return true if all the clauses in the query are conjunctions
+     */
+    private static boolean extractNestedConjunctions( BooleanQuery query, Set<String> terms ) {
+        if ( !query.clauses().stream().allMatch( c -> c.isRequired() || c.isProhibited() ) ) {
+            return false;
+        }
+        for ( BooleanClause clause : query.clauses() ) {
+            if ( clause.isProhibited() ) {
+                continue;
+            }
+            Query q = clause.getQuery();
+            if ( q instanceof BooleanQuery ) {
+                if ( !extractNestedConjunctions( ( BooleanQuery ) q, terms ) ) {
+                    return false;
+                }
+            } else if ( q instanceof TermQuery && isTermGlobal( ( ( TermQuery ) q ).getTerm() ) ) {
+                terms.add( termToString( ( ( TermQuery ) q ).getTerm() ) );
+            }
+        }
+        return true;
+    }
+
     /**
      * @see #prepareDatabaseQuery(SearchSettings, boolean, Consumer)
      */
