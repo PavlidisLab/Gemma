@@ -48,6 +48,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentReadService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.util.ArrayList;
@@ -95,8 +96,13 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     private SampleCoexpressionAnalysisDao sampleCoexpressionAnalysisDao;
     @Autowired
     private SVDService svdService;
+    /**
+     * Inject the thin read service rather than the facade {@link ExpressionExperimentService}
+     * to break the dependency cycle: EESI autowires this service for its remove() cascade,
+     * so closing the loop through the facade would force Spring into proxy late-binding.
+     */
     @Autowired
-    private ExpressionExperimentService expressionExperimentService;
+    private ExpressionExperimentReadService expressionExperimentReadService;
     @Autowired
     private AuditTrailService auditTrailService;
 
@@ -124,7 +130,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     @Override
     @Transactional(readOnly = true)
     public DoubleMatrix<BioAssay, BioAssay> retrieveExisting( ExpressionExperiment ee ) {
-        ExpressionExperiment thawedee = this.expressionExperimentService.thawLite( ee );
+        ExpressionExperiment thawedee = this.expressionExperimentReadService.thawLite( ee );
         SampleCoexpressionAnalysis analysis = sampleCoexpressionAnalysisDao.load( thawedee );
         if ( analysis == null || analysis.getFullCoexpressionMatrix() == null || this.shouldComputeRegressed( thawedee, analysis ) ) {
             SampleCoexpressionAnalysisServiceImpl.log
@@ -166,7 +172,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
             throw new RuntimeException( "Full coexpression matrix could not be computed." );
         }
 
-        ExpressionExperiment thawedee = this.expressionExperimentService.thawLite( ee );
+        ExpressionExperiment thawedee = this.expressionExperimentReadService.thawLite( ee );
 
         // Remove any old data
         this.removeForExperiment( thawedee );

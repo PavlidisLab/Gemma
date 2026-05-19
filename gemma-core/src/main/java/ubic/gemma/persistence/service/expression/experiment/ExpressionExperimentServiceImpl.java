@@ -21,7 +21,6 @@ package ubic.gemma.persistence.service.expression.experiment;
 import gemma.gsec.SecurityService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
-import org.hibernate.CacheMode;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.ConfigAttribute;
@@ -130,6 +129,8 @@ public class ExpressionExperimentServiceImpl
     private CharacteristicService characteristicService;
     @Autowired
     private AuditTrailService auditTrailService;
+    @Autowired
+    private ExpressionExperimentReadService readService;
 
     @Autowired
     public ExpressionExperimentServiceImpl( ExpressionExperimentDao expressionExperimentDao ) {
@@ -141,78 +142,37 @@ public class ExpressionExperimentServiceImpl
     @NonNull
     @Transactional(readOnly = true)
     public ExpressionExperiment loadReference( Long id ) {
-        return expressionExperimentDao.loadReference( id );
+        return readService.loadReference( id );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> loadReferences( Collection<Long> ids ) {
-        return expressionExperimentDao.loadReference( ids );
+        return readService.loadReferences( ids );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> loadAllReferences() {
-        return expressionExperimentDao.loadReference( expressionExperimentDao.loadIds( null, null ) );
+        return readService.loadAllReferences();
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment loadWithAuditTrail( Long id ) {
-        ExpressionExperiment ee = expressionExperimentDao.load( id );
-        if ( ee != null ) {
-            Hibernate.initialize( ee.getAuditTrail() );
-        }
-        return ee;
+        return readService.loadWithAuditTrail( id );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<Long> loadTroubledIds() {
-        return expressionExperimentDao.loadTroubledIds();
+        return readService.loadTroubledIds();
     }
 
     @Override
-    @Transactional(readOnly = true)
     public SortedMap<String, String> loadAllIdentifiersAndName( boolean includeNames ) {
-        List<ExpressionExperimentDao.Identifiers> allIds = expressionExperimentDao.loadAllIdentifiers();
-        TreeMap<String, String> finalIds = new TreeMap<>( String.CASE_INSENSITIVE_ORDER );
-        populateIdentifierMap( allIds, identifiers -> String.valueOf( identifiers.getId() ), finalIds );
-        populateIdentifierMap( allIds, ExpressionExperimentDao.Identifiers::getShortName, finalIds );
-        populateIdentifierMap( allIds, ExpressionExperimentDao.Identifiers::getAccession, finalIds );
-        if ( includeNames ) {
-            populateIdentifierMap( allIds, ExpressionExperimentDao.Identifiers::getName, finalIds );
-        }
-        return finalIds;
-    }
-
-    private void populateIdentifierMap( Collection<ExpressionExperimentDao.Identifiers> identifiers,
-            Function<ExpressionExperimentDao.Identifiers, String> extractor, Map<String, String> identifierMap ) {
-        Map<String, String> eeIds = new TreeMap<>( String.CASE_INSENSITIVE_ORDER );
-        Set<String> ambiguousIdentifiers = new HashSet<>();
-        for ( ExpressionExperimentDao.Identifiers ids : identifiers ) {
-            String id = extractor.apply( ids );
-            if ( id == null ) {
-                continue;
-            }
-            if ( identifierMap.containsKey( id ) ) {
-                // this indicates that there is already a higher-priority identifier for this EE
-                continue;
-            }
-            if ( eeIds.put( id, ids.getName() ) != null ) {
-                // another EE has the same ID
-                ambiguousIdentifiers.add( id );
-            }
-        }
-        ambiguousIdentifiers.forEach( eeIds::remove );
-        log.info( "Removed " + ambiguousIdentifiers.size() + " ambiguous identifiers." );
-        identifierMap.putAll( eeIds );
+        return readService.loadAllIdentifiersAndName( includeNames );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment reload( ExpressionExperiment ee ) {
-        return expressionExperimentDao.reload( ee );
+        return readService.reload( ee );
     }
 
     @Override
@@ -500,300 +460,198 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment loadWithPrimaryPublication( Long id ) {
-        ExpressionExperiment ee = load( id );
-        if ( ee != null ) {
-            if ( ee.getPrimaryPublication() != null ) {
-                Thaws.thawBibliographicReference( ee.getPrimaryPublication() );
-            }
-        }
-        return ee;
+        return readService.loadWithPrimaryPublication( id );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment loadWithPrimaryPublicationAndOtherRelevantPublications( Long id ) {
-        ExpressionExperiment ee = load( id );
-        if ( ee != null ) {
-            if ( ee.getPrimaryPublication() != null ) {
-                Thaws.thawBibliographicReference( ee.getPrimaryPublication() );
-            }
-            ee.getOtherRelevantPublications().forEach( Thaws::thawBibliographicReference );
-        }
-        return ee;
+        return readService.loadWithPrimaryPublicationAndOtherRelevantPublications( id );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment loadWithMeanVarianceRelation( Long id ) {
-        ExpressionExperiment ee = load( id );
-        if ( ee != null ) {
-            Hibernate.initialize( ee.getMeanVarianceRelation() );
-        }
-        return ee;
+        return readService.loadWithMeanVarianceRelation( id );
     }
 
-    /**
-     * @see ExpressionExperimentService#findByAccession(DatabaseEntry)
-     */
     @Override
-    @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> findByAccession( final DatabaseEntry accession ) {
-        return this.expressionExperimentDao.findByAccession( accession );
+        return readService.findByAccession( accession );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> findByAccession( String accession ) {
-        return this.expressionExperimentDao.findByAccession( accession );
+        return readService.findByAccession( accession );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment findOneByAccession( String accession ) {
-        return this.expressionExperimentDao.findOneByAccession( accession );
+        return readService.findOneByAccession( accession );
     }
 
-    /**
-     * @see ExpressionExperimentService#findByBibliographicReference(BibliographicReference)
-     */
     @Override
-    @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> findByBibliographicReference( final BibliographicReference bibRef ) {
-        return this.expressionExperimentDao.findByBibliographicReference( bibRef );
+        return readService.findByBibliographicReference( bibRef );
     }
 
-    /**
-     * @see ExpressionExperimentService#findByBioAssay(BioAssay)
-     */
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment findByBioAssay( final BioAssay ba ) {
-        return this.expressionExperimentDao.findByBioAssay( ba );
+        return readService.findByBioAssay( ba );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment findByBioAssay( BioAssay ba, boolean includeSubSets ) {
-        return this.expressionExperimentDao.findByBioAssay( ba, includeSubSets );
+        return readService.findByBioAssay( ba, includeSubSets );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Long findIdByBioAssay( BioAssay ba, boolean includeSubSets ) {
-        return this.expressionExperimentDao.findIdByBioAssay( ba, includeSubSets );
+        return readService.findIdByBioAssay( ba, includeSubSets );
     }
 
-    /**
-     * @see ExpressionExperimentService#findByBioMaterial(BioMaterial)
-     */
     @Override
-    @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> findByBioMaterial( final BioMaterial bm ) {
-        return this.expressionExperimentDao.findByBioMaterial( bm );
+        return readService.findByBioMaterial( bm );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> findByBioMaterial( BioMaterial bm, boolean includeSubSets ) {
-        return this.expressionExperimentDao.findByBioMaterial( bm, includeSubSets );
+        return readService.findByBioMaterial( bm, includeSubSets );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<Long> findIdsByBioMaterial( BioMaterial bm, boolean includeSubSets ) {
-        return this.expressionExperimentDao.findIdsByBioMaterial( bm, includeSubSets );
+        return readService.findIdsByBioMaterial( bm, includeSubSets );
     }
 
     @Override
     public Map<ExpressionExperiment, Collection<BioMaterial>> findByBioMaterials( Collection<BioMaterial> biomaterials ) {
-        return this.expressionExperimentDao.findByBioMaterials( biomaterials );
+        return readService.findByBioMaterials( biomaterials );
     }
 
-    /**
-     * @see ExpressionExperimentService#findByExpressedGene(Gene, double)
-     */
     @Override
-    @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> findByExpressedGene( final Gene gene, final double rank ) {
-        return this.expressionExperimentDao.findByExpressedGene( gene, rank );
+        return readService.findByExpressedGene( gene, rank );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment findByDesign( ExperimentalDesign ed ) {
-        return this.expressionExperimentDao.findByDesign( ed );
+        return readService.findByDesign( ed );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Long findIdByDesign( ExperimentalDesign design ) {
-        return this.expressionExperimentDao.findIdByDesign( design );
+        return readService.findIdByDesign( design );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment findByDesignId( Long designId ) {
-        return this.expressionExperimentDao.findByDesignId( designId );
+        return readService.findByDesignId( designId );
     }
 
-    /**
-     * @see ExpressionExperimentService#findByFactor(ExperimentalFactor)
-     */
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment findByFactor( final ExperimentalFactor factor ) {
-        return this.expressionExperimentDao.findByFactor( factor );
+        return readService.findByFactor( factor );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Long findIdByFactor( ExperimentalFactor factor ) {
-        return this.expressionExperimentDao.findIdByFactor( factor );
+        return readService.findIdByFactor( factor );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> findByFactors( Collection<ExperimentalFactor> factors ) {
-        return this.expressionExperimentDao.findByFactors( factors );
+        return readService.findByFactors( factors );
     }
 
-    /**
-     * @see ExpressionExperimentService#findByFactorValue(FactorValue)
-     */
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment findByFactorValue( final FactorValue factorValue ) {
-        return this.expressionExperimentDao.findByFactorValue( factorValue );
+        return readService.findByFactorValue( factorValue );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Long findIdByFactorValue( FactorValue factorValue ) {
-        return this.expressionExperimentDao.findIdByFactorValue( factorValue );
+        return readService.findIdByFactorValue( factorValue );
     }
 
-    /**
-     * @see ExpressionExperimentService#findByFactorValue(FactorValue)
-     */
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment findByFactorValueId( final Long factorValueId ) {
-        return this.expressionExperimentDao.findByFactorValueId( factorValueId );
+        return readService.findByFactorValueId( factorValueId );
     }
 
-    /**
-     * @see ExpressionExperimentService#findByFactorValues(Collection)
-     */
     @Override
-    @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> findByFactorValues( final Collection<FactorValue> factorValues ) {
-        return this.expressionExperimentDao.findByFactorValues( factorValues );
+        return readService.findByFactorValues( factorValues );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> findByFactorValueIds( Collection<Long> factorValueIds ) {
-        return this.expressionExperimentDao.findByFactorValueIds( factorValueIds );
+        return readService.findByFactorValueIds( factorValueIds );
     }
 
-    /**
-     * @see ExpressionExperimentService#findByGene(Gene)
-     */
     @Override
-    @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> findByGene( final Gene gene ) {
-        return this.expressionExperimentDao.findByGene( gene );
+        return readService.findByGene( gene );
     }
 
-    /**
-     * @see ExpressionExperimentService#findByName(String)
-     */
     @Override
-    @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> findByName( final String name ) {
-        return this.expressionExperimentDao.findByName( name );
+        return readService.findByName( name );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment findOneByName( String name ) {
-        return expressionExperimentDao.findOneByName( name );
+        return readService.findOneByName( name );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment findByQuantitationType( QuantitationType type ) {
-        return this.expressionExperimentDao.findByQuantitationType( type );
+        return readService.findByQuantitationType( type );
     }
 
-    /**
-     * @see ExpressionExperimentService#findByShortName(String)
-     */
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment findByShortName( final String shortName ) {
-        return this.expressionExperimentDao.findByShortName( shortName );
+        return readService.findByShortName( shortName );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment findByShortNameWithPrimaryPublication( String shortName ) {
-        ExpressionExperiment ee = this.expressionExperimentDao.findByShortName( shortName );
-        if ( ee != null && ee.getPrimaryPublication() != null ) {
-            Thaws.thawBibliographicReference( ee.getPrimaryPublication() );
-        }
-        return ee;
+        return readService.findByShortNameWithPrimaryPublication( shortName );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment findByShortNameAndThawLite( String shortName ) {
-        ExpressionExperiment ee = this.expressionExperimentDao.findByShortName( shortName );
-        if ( ee != null ) {
-            expressionExperimentDao.thawLite( ee );
-        }
-        return ee;
+        return readService.findByShortNameAndThawLite( shortName );
     }
 
-    /**
-     * @see ExpressionExperimentService#findByTaxon(Taxon)
-     */
     @Override
-    @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> findByTaxon( final Taxon taxon ) {
-        return this.expressionExperimentDao.findByTaxon( taxon );
+        return readService.findByTaxon( taxon );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<ExpressionExperiment> findByUpdatedLimit( int limit ) {
-        return this.expressionExperimentDao.findByUpdatedLimit( limit );
+        return readService.findByUpdatedLimit( limit );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> findUpdatedAfter( Date date ) {
-        return this.expressionExperimentDao.findUpdatedAfter( date );
+        return readService.findUpdatedAfter( date );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment findByMeanVarianceRelation( MeanVarianceRelation mvr ) {
-        return this.expressionExperimentDao.findByMeanVarianceRelation( mvr );
+        return readService.findByMeanVarianceRelation( mvr );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Long findIdByMeanVarianceRelation( MeanVarianceRelation mvr ) {
-        return this.expressionExperimentDao.findIdByMeanVarianceRelation( mvr );
+        return readService.findIdByMeanVarianceRelation( mvr );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public boolean existsByShortName( String shortName ) {
-        return this.expressionExperimentDao.existsByShortName( shortName );
+        return readService.existsByShortName( shortName );
     }
 
     @Override
@@ -1010,86 +868,43 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment loadWithCharacteristics( Long id ) {
-        ExpressionExperiment ee = expressionExperimentDao.load( id );
-        if ( ee != null ) {
-            Hibernate.initialize( ee.getCharacteristics() );
-        }
-        return ee;
+        return readService.loadWithCharacteristics( id );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public <T extends Exception> ExpressionExperiment loadAndThawLiteOrFail( Long id, Function<String, T> exceptionSupplier, String message ) throws T {
-        ExpressionExperiment ee = loadOrFail( id, exceptionSupplier, message );
-        this.expressionExperimentDao.thawLite( ee );
-        return ee;
+        return readService.loadAndThawLiteOrFail( id, exceptionSupplier, message );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public <T extends Exception> ExpressionExperiment loadAndThawLiteOrFail( Long id, Function<String, T> exceptionSupplier ) throws T {
-        ExpressionExperiment ee = loadOrFail( id, exceptionSupplier );
-        this.expressionExperimentDao.thawLite( ee );
-        return ee;
+        return readService.loadAndThawLiteOrFail( id, exceptionSupplier );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public <T extends Exception> ExpressionExperiment loadAndThawLiterOrFail( Long id, Function<String, T> exceptionSupplier ) throws T {
-        ExpressionExperiment ee = loadOrFail( id, exceptionSupplier );
-        this.expressionExperimentDao.thawLiter( ee );
-        return ee;
+        return readService.loadAndThawLiterOrFail( id, exceptionSupplier );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment loadAndThaw( Long id ) {
-        ExpressionExperiment ee = load( id );
-        if ( ee != null ) {
-            this.expressionExperimentDao.thaw( ee );
-        }
-        return ee;
+        return readService.loadAndThaw( id );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment loadAndThawLite( Long id ) {
-        ExpressionExperiment ee = load( id );
-        if ( ee != null ) {
-            this.expressionExperimentDao.thawLite( ee );
-        }
-        return ee;
+        return readService.loadAndThawLite( id );
     }
 
-    /**
-     * {@inheritDoc}
-     * <p>
-     * FIXME: There seems to be a bug in Hibernate where collections are not evicted, so newly added entities might
-     *        not appear as a result of using the {@link CacheMode#REFRESH} mode. To workaround this, we explicitly
-     *        evict collections that are cached prior to thawing their contents.
-     */
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment loadAndThawLiteWithRefreshCacheMode( Long id ) {
-        ExpressionExperiment ee = expressionExperimentDao.load( id, CacheMode.REFRESH );
-        if ( ee != null ) {
-            this.expressionExperimentDao.evictCharacteristicsCache( ee );
-            this.expressionExperimentDao.evictBioAssaysCache( ee );
-            this.expressionExperimentDao.evictQuantitationTypesCache( ee );
-            this.expressionExperimentDao.evictOtherPartsCache( ee );
-            this.expressionExperimentDao.thawLite( ee );
-        }
-        return ee;
+        return readService.loadAndThawLiteWithRefreshCacheMode( id );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public <T extends Exception> ExpressionExperiment loadAndThawOrFail( Long id, Function<String, T> exceptionSupplier ) throws T {
-        ExpressionExperiment ee = loadOrFail( id, exceptionSupplier );
-        this.expressionExperimentDao.thaw( ee );
-        return ee;
+        return readService.loadAndThawOrFail( id, exceptionSupplier );
     }
 
     @Override
@@ -1695,9 +1510,8 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Taxon getTaxon( final ExpressionExperiment ee ) {
-        return this.expressionExperimentDao.getTaxon( ee );
+        return readService.getTaxon( ee );
     }
 
     @Override
@@ -1798,15 +1612,13 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> loadLackingFactors() {
-        return this.expressionExperimentDao.loadLackingFactors();
+        return readService.loadLackingFactors();
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> loadLackingTags() {
-        return this.expressionExperimentDao.loadLackingTags();
+        return readService.loadLackingTags();
     }
 
     @Override
@@ -1959,27 +1771,18 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment thaw( final ExpressionExperiment expressionExperiment ) {
-        ExpressionExperiment result = ensureInSession( expressionExperiment );
-        this.expressionExperimentDao.thaw( result );
-        return result;
+        return readService.thaw( expressionExperiment );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment thawLite( final ExpressionExperiment expressionExperiment ) {
-        ExpressionExperiment result = ensureInSession( expressionExperiment );
-        this.expressionExperimentDao.thawLite( result );
-        return result;
+        return readService.thawLite( expressionExperiment );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment thawLiter( final ExpressionExperiment expressionExperiment ) {
-        ExpressionExperiment result = ensureInSession( expressionExperiment );
-        this.expressionExperimentDao.thawLiter( result );
-        return result;
+        return readService.thawLiter( expressionExperiment );
     }
 
     /**
