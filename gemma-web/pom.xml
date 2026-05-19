@@ -191,20 +191,19 @@
 			<artifactId>log4j-web</artifactId>
 		</dependency>
 
-		<!-- JSTL -->
+		<!-- JSTL (Jakarta) -->
 		<dependency>
-			<groupId>org.apache.taglibs</groupId>
-			<artifactId>taglibs-standard-spec</artifactId>
-			<version>1.2.5</version>
-			<scope>runtime</scope>
+			<groupId>jakarta.servlet.jsp.jstl</groupId>
+			<artifactId>jakarta.servlet.jsp.jstl-api</artifactId>
+			<version>3.0.0</version>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.taglibs</groupId>
-			<artifactId>taglibs-standard-impl</artifactId>
-			<version>1.2.5</version>
+			<groupId>org.glassfish.web</groupId>
+			<artifactId>jakarta.servlet.jsp.jstl</artifactId>
+			<version>3.0.1</version>
 			<scope>runtime</scope>
 		</dependency>
-		<!-- optional dependency of taglibs-standard-impl that accelerates XML processing -->
+		<!-- optional dependency of jakarta.servlet.jsp.jstl that accelerates XML processing -->
 		<dependency>
 			<groupId>xalan</groupId>
 			<artifactId>xalan</artifactId>

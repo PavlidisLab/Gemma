@@ -1,5 +1,5 @@
 <%@ include file="/common/taglibs.jsp" %>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
+<%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 <head>
 <title>All Bibliographic References for Experiments</title>
 </head>
