@@ -18,6 +18,8 @@
  */
 package ubic.gemma.core.tasks.analysis.diffex;
 
+import lombok.Getter;
+import lombok.Setter;
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.Task;
 
@@ -28,6 +30,7 @@ import java.util.Collection;
  *
  * @author frances
  */
+@Getter
 public class DiffExMetaAnalyzerTaskCommand extends TaskCommand {
 
     private static final long serialVersionUID = 1L;
@@ -35,6 +38,7 @@ public class DiffExMetaAnalyzerTaskCommand extends TaskCommand {
     private final Collection<Long> analysisResultSetIds;
     private String name;
     private String description;
+    @Setter
     private boolean persist = false;
 
     public DiffExMetaAnalyzerTaskCommand( Collection<Long> analysisResultSetIds ) {
@@ -47,27 +51,6 @@ public class DiffExMetaAnalyzerTaskCommand extends TaskCommand {
         this.name = name;
         this.description = description;
         this.persist = persist;
-    }
-
-    public boolean isPersist() {
-        return this.persist;
-    }
-
-    @SuppressWarnings("unused") // Possible external use
-    public void setPersist( boolean persist ) {
-        this.persist = persist;
-    }
-
-    public Collection<Long> getAnalysisResultSetIds() {
-        return this.analysisResultSetIds;
-    }
-
-    public String getName() {
-        return this.name;
-    }
-
-    public String getDescription() {
-        return this.description;
     }
 
     @Override

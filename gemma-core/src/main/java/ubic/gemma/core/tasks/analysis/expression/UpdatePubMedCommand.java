@@ -18,6 +18,8 @@
  */
 package ubic.gemma.core.tasks.analysis.expression;
 
+import lombok.Getter;
+import lombok.Setter;
 import ubic.gemma.core.job.Task;
 import ubic.gemma.core.job.TaskCommand;
 
@@ -25,17 +27,14 @@ import ubic.gemma.core.job.TaskCommand;
  * @author paul
  *
  */
+@Getter
+@Setter
 public class UpdatePubMedCommand extends TaskCommand {
 
     private static final long serialVersionUID = 1L;
 
     private Long entityId;
     private String pubmedId;
-
-    @Override
-    public Class<? extends Task<? extends TaskCommand>> getTaskClass() {
-        return null;
-    }
 
     public UpdatePubMedCommand() {
         super();
@@ -45,19 +44,8 @@ public class UpdatePubMedCommand extends TaskCommand {
         this.entityId = entityId;
     }
 
-    public Long getEntityId() {
-        return entityId;
-    }
-
-    public void setEntityId( Long entityId ) {
-        this.entityId = entityId;
-    }
-
-    public String getPubmedId() {
-        return pubmedId;
-    }
-
-    public void setPubmedId( String pubmedId ) {
-        this.pubmedId = pubmedId;
+    @Override
+    public Class<? extends Task<? extends TaskCommand>> getTaskClass() {
+        return null;
     }
 }

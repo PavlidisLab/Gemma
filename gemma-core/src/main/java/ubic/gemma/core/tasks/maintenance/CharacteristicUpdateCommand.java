@@ -19,6 +19,8 @@
 
 package ubic.gemma.core.tasks.maintenance;
 
+import lombok.Getter;
+import lombok.Setter;
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.Task;
 import ubic.gemma.model.common.description.AnnotationValueObject;
@@ -28,6 +30,8 @@ import java.util.Collection;
 /**
  * @author paul
  */
+@Getter
+@Setter
 public class CharacteristicUpdateCommand extends TaskCommand {
 
     private static final long serialVersionUID = 1L;
@@ -39,36 +43,8 @@ public class CharacteristicUpdateCommand extends TaskCommand {
      */
     private boolean remove = false;
 
-    /**
-     * @return the annotationValueObjects
-     */
-    public Collection<AnnotationValueObject> getAnnotationValueObjects() {
-        return annotationValueObjects;
-    }
-
-    /**
-     * @param annotationValueObjects the annotationValueObjects to set
-     */
-    public void setAnnotationValueObjects( Collection<AnnotationValueObject> annotationValueObjects ) {
-        this.annotationValueObjects = annotationValueObjects;
-    }
-
     @Override
     public Class<? extends Task<? extends TaskCommand>> getTaskClass() {
         return CharacteristicUpdateTask.class;
-    }
-
-    /**
-     * @return the remove
-     */
-    public boolean isRemove() {
-        return remove;
-    }
-
-    /**
-     * @param remove the remove to set
-     */
-    public void setRemove( boolean remove ) {
-        this.remove = remove;
     }
 }
