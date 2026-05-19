@@ -7,7 +7,7 @@ import ubic.gemma.cli.util.AbstractAuthenticatedCLI;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
-import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
+import ubic.gemma.persistence.service.common.description.ExternalDatabaseReadService;
 
 import org.springframework.lang.Nullable;
 import java.util.Comparator;
@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 public class ExternalDatabaseOverviewCli extends AbstractAuthenticatedCLI {
 
     @Autowired
-    private ExternalDatabaseService externalDatabaseService;
+    private ExternalDatabaseReadService externalDatabaseService;
 
     @Autowired
     private AuditEventService auditEventService;

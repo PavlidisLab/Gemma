@@ -54,7 +54,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.PolymerType;
 import ubic.gemma.model.genome.biosequence.SequenceType;
-import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
+import ubic.gemma.persistence.service.common.description.ExternalDatabaseReadService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import org.springframework.lang.Nullable;
@@ -123,7 +123,7 @@ public class GeoConverterImpl implements GeoConverter {
     }
 
     @Autowired
-    private ExternalDatabaseService externalDatabaseService;
+    private ExternalDatabaseReadService externalDatabaseService;
     @Autowired
     private TaxonService taxonService;
 

@@ -16,7 +16,7 @@ import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.concurrent.FutureUtils;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
-import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
+import ubic.gemma.persistence.service.common.description.ExternalDatabaseReadService;
 import ubic.gemma.rest.util.BuildInfoValueObject;
 import ubic.gemma.rest.util.ResponseDataObject;
 
@@ -51,7 +51,7 @@ public class RootWebService {
     private static final String MSG_WELCOME = "Welcome to Gemma RESTful API.";
 
     @Autowired
-    private ExternalDatabaseService externalDatabaseService;
+    private ExternalDatabaseReadService externalDatabaseService;
 
     @Autowired
     private UserManager userManager;
