@@ -9,6 +9,110 @@ Branch: `phase2-acl-migrate` (HEAD `41e612f547`).
 
 ---
 
+## Phase C status (2026-05-19): not yet retired — blocked on CREATE/DELETE cutover
+
+Phases A + B + B-2 + B-3 are merged. WhatsNew is refactored to the
+`eventType is not null` query. The AuditTrail / AuditEvent cache bug is
+fixed. The remaining gate to deleting `AuditAdvice` end-to-end is moving
+**CREATE** and **DELETE** row emission out of the aspect onto the Hibernate
+event-listener path that `AuditTrailEventListener` already pioneered for
+the audit-trail-existence invariant. Note that this departs from the
+original Phase C plan above — that plan kept the imperative CREATE in
+AuditAdvice and only retired the generic UPDATE/SAVE branches. The newer
+"all-the-way listener" plan is the one we'll execute.
+
+### Why not in this branch
+
+The audit unit + integration tests (`AuditAdviceTest`,
+`ExpressionExperimentServiceIntegrationTest`, `GeoDatasetServiceTest`,
+`AuditTrailServiceImplTest`, `AuditTrailDaoTest`) lean on AuditAdvice
+emitting CREATE rows from the AOP path. Cutting them over to a Hibernate
+listener path needs a single coordinated change set that (a) ships the
+listener, (b) deletes AuditAdvice, (c) updates every test fixture, and
+(d) is validated against `gemdtest` integration — none of which can be
+half-landed without leaving the trunk with phantom AuditEvent rows or
+missing them entirely. The local CI here only runs the unit slice; the
+integration slice is gemdtest-bound and serial.
+
+### Path forward (Phase C — full retirement)
+
+1. **Extend `AuditTrailEventListener`** to also implement
+   `PostInsertEventListener` (better fit than `PersistEventListener` for
+   *writing* a CREATE row — the AuditTrail row has its ID by the time
+   PostInsert fires, no transient-entity errors). On post-insert of any
+   `Auditable`, enqueue an `AuditEvent` with `action=CREATE`, `eventType=null`,
+   and the current `User`. Cascade is free: Hibernate fires PostInsert per
+   entity that gets inserted, including those that arrived via cascade.
+
+2. **Add a sibling `AuditTrailDeleteEventListener`** implementing
+   `PreDeleteEventListener` (must fire BEFORE the row is gone — at
+   `PostDelete` the AuditTrail itself has already been removed). On pre-delete
+   of any `Auditable`, enqueue an `AuditEvent` with `action=DELETE`. Same
+   cascade story: PreDelete fires per entity reached by cascade. Register
+   both listeners in `AuditTrailEventListenerConfig`.
+
+3. **User acquisition inside the listener**: `UserManager.getCurrentUser()`
+   needs the FlushMode dance currently in `AuditAdvice.doAuditAdvice`
+   (lines 168–174) — set `FlushMode.MANUAL` for the call, restore. The
+   anonymous-user skip (line 175–178) needs the same behaviour.
+
+4. **Curation-details side-effect**: today `AuditAdvice.addAuditEvent`
+   (line 334) calls `curatableDao.updateCurationDetailsFromAuditEvent` for
+   `Curatable + UPDATE`. CREATE/DELETE do not trigger this side-effect, so
+   the listener cutover does not need to replicate it — but worth a code
+   comment in the new listener noting that UPDATE on Curatable is now
+   handled exclusively by `@Audited`-annotated services that call
+   `AuditTrailServiceImpl.doAddUpdateEvent` (line 131–133).
+
+5. **Delete `AuditAdvice` entirely** (−373 LoC) once 1+2+3 are in place
+   and `AuditTrailService.addUpdateEvent` imperative API is the only
+   remaining UPDATE-row writer. The `@IgnoreAudit` annotation can also be
+   retired — its only consumer is AuditAdvice.
+
+6. **DatasetsWebService.getDatasetAuditEvents**: switch to filter
+   `eventType != null` (or use a dedicated `getEventsWithType` accessor on
+   `AuditEventService`). Per Section 5, risk #2.
+
+7. **ArrayDesignAuditTrailCleanupCli**: its `eventType==null && action==UPDATE`
+   bucket disappears under the new world (only CREATE + DELETE will be
+   eventType=null; both are kept exactly once). Either retire the CLI or
+   shrink it to the typed-event-bucket logic only.
+
+8. **Test fixture sweep** — non-exhaustive:
+   - `AuditAdviceTest`: the class name and the imperative `update()`-then-
+     expect-an-UPDATE-row pattern need to change. Either rename to
+     `AuditListenerTest` and switch to typed-`@Audited` events, or drop
+     the asserts that count generic UPDATE rows.
+   - `ExpressionExperimentServiceIntegrationTest` line 499:
+     `containsExactly(AuditAction.CREATE, AuditAction.UPDATE)` currently
+     verifies the AuditAdvice-emitted UPDATE row. Same fix.
+   - `GeoDatasetServiceTest` line 319: same shape.
+   - `AuditTrailServiceImplTest`, `AuditTrailDaoTest`: these are unit-level
+     and exercise the service API directly, should be fine.
+
+### Risk gradient
+
+- **HIGH**: getting the Hibernate listener registration order right
+  (PostInsert listener has to write into the same transaction; the
+  AuditTrail must already be in the session via cascade). The existing
+  `AuditTrailEventListener` proves the chokepoint pattern works, so the
+  risk is in lifecycle event choice, not registration mechanics.
+- **MEDIUM**: user-acquisition inside a Hibernate event listener. The
+  FlushMode dance is required because `UserManager.getCurrentUser()` can
+  cause Hibernate to flush, and we're mid-flush already. Pattern in
+  `AuditAdvice` is the reference.
+- **LOW**: the consumer-side changes (DatasetsWebService, the CLI,
+  WhatsNew). All small surface, all already partially refactored.
+
+### What unblocks landing
+
+A worktree dedicated to this where the agent can run
+`mvn verify -pl gemma-core` against `gemdtest` end-to-end and watch
+`AUDIT_EVENT` row counts. Phase B-3 + Phase C should ship together to
+avoid two trunk-disturbing audit churns.
+
+---
+
 ## 1. How auto-audit is wired today
 
 The mechanism is a Spring AOP aspect, not a Hibernate Interceptor. The aspect
