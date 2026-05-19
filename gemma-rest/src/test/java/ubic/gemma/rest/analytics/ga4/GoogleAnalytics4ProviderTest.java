@@ -7,7 +7,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 import ubic.gemma.core.util.concurrent.Executors;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.rest.analytics.AnalyticsProvider;
@@ -31,12 +31,13 @@ public class GoogleAnalytics4ProviderTest {
 
     @Before
     public void setUp() {
-        RestTemplate restTemplate = new RestTemplate();
-        restTemplate.getInterceptors().add( ( request, body, execution ) -> {
-            log.info( String.format( "\nURL: %s\nPayload: %s", request.getURI(), new String( body, StandardCharsets.UTF_8 ) ) );
-            return execution.execute( request, body );
-        } );
-        provider = new GoogleAnalytics4Provider( restTemplate, "test", "test" );
+        RestClient restClient = RestClient.builder()
+                .requestInterceptor( ( request, body, execution ) -> {
+                    log.info( String.format( "\nURL: %s\nPayload: %s", request.getURI(), new String( body, StandardCharsets.UTF_8 ) ) );
+                    return execution.execute( request, body );
+                } )
+                .build();
+        provider = new GoogleAnalytics4Provider( restClient, "test", "test" );
         provider.afterPropertiesSet();
         provider.setDebug( true );
         ThreadLocal<String> clientId = ThreadLocal.withInitial( () -> RandomStringUtils.insecure().nextNumeric( 10 ) + "." + RandomStringUtils.insecure().nextNumeric( 10 ) );

@@ -11,13 +11,12 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.util.Assert;
 import org.springframework.validation.DirectFieldBindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
 import ubic.gemma.core.util.concurrent.Executors;
 import ubic.gemma.rest.analytics.AnalyticsProvider;
 
@@ -63,7 +62,7 @@ public class GoogleAnalytics4Provider implements AnalyticsProvider, Initializing
             endpoint = "https://www.google-analytics.com/mp/collect?api_secret={apiSecret}&measurement_id={measurementId}",
             debugEndpoint = "https://www.google-analytics.com/debug/mp/collect?api_secret={apiSecret}&measurement_id={measurementId}";
 
-    private final RestTemplate restTemplate;
+    private final RestClient restClient;
     private final ScheduledExecutorService taskExecutor = Executors.newSingleThreadScheduledExecutor();
     private final String measurementId;
     private final String apiSecret;
@@ -82,22 +81,22 @@ public class GoogleAnalytics4Provider implements AnalyticsProvider, Initializing
     /**
      * Create a new Google Analytics 4 provider.
      *
-     * @param restTemplate  a REST template for performing requests with the collect API
+     * @param restClient    a REST client for performing requests with the collect API
      * @param measurementId a measurement ID which may be empty
      * @param apiSecret     an API secret, must be non-empty if measurementId is supplied
      */
-    public GoogleAnalytics4Provider( RestTemplate restTemplate, String measurementId, String apiSecret ) {
+    public GoogleAnalytics4Provider( RestClient restClient, String measurementId, String apiSecret ) {
         Assert.isTrue( StringUtils.isBlank( measurementId ) || !StringUtils.isBlank( apiSecret ) , "expected true");
-        this.restTemplate = restTemplate;
+        this.restClient = restClient;
         this.measurementId = measurementId;
         this.apiSecret = apiSecret;
     }
 
     /**
-     * @see #GoogleAnalytics4Provider(RestTemplate, String, String)
+     * @see #GoogleAnalytics4Provider(RestClient, String, String)
      */
     public GoogleAnalytics4Provider( String measurementId, String apiSecret ) {
-        this( new RestTemplate(), measurementId, apiSecret );
+        this( RestClient.create(), measurementId, apiSecret );
     }
 
 
@@ -395,21 +394,25 @@ public class GoogleAnalytics4Provider implements AnalyticsProvider, Initializing
         try {
             log.trace( String.format( "Flushing a batch of %d events, %d events pending...", batch.size(), events.size() ) );
             if ( debug ) {
-                ValidationResult v = restTemplate.postForObject( debugEndpoint, payload, ValidationResult.class, apiSecret, measurementId );
-                if ( !v.validationMessages.isEmpty() ) {
+                ValidationResult v = restClient.post()
+                        .uri( debugEndpoint, apiSecret, measurementId )
+                        .body( payload )
+                        .retrieve()
+                        .body( ValidationResult.class );
+                if ( v != null && !v.validationMessages.isEmpty() ) {
                     throw new IllegalArgumentException( v.toString() );
                 }
             } else {
-                restTemplate.postForLocation( endpoint, payload, apiSecret, measurementId );
+                restClient.post()
+                        .uri( endpoint, apiSecret, measurementId )
+                        .body( payload )
+                        .retrieve()
+                        .toBodilessEntity();
             }
             return batch.size();
         } catch ( RestClientException e ) {
             if ( debug ) {
                 throw e;
-            } else if ( e instanceof ClientHttpRequestExecution ) {
-                log.error( String.format( "Failed to publish %d analytics events due to a client-side exception; the events will be discarded.", batch.size() ), e );
-                // we have to lie here because events will not be resent
-                return batch.size();
             } else {
                 // for server and I/O errors, requeue the events and resend them later
                 log.warn( String.format( "Failed to publish %d analytics events due to a server-side or I/O error; the events will be resent later.", batch.size() ), e );
