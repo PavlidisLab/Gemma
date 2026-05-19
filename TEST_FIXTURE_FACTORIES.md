@@ -96,11 +96,26 @@ HB6-respecting patterns the factories enforce:
 | `gemma-core/.../fixture/ExperimentFactory.java` | Done — `bulkRna()`, `singleCell()`, `.withSamples(N)`, `.withArrayDesign(ad)`, `.withTaxon(t)`, `.withShortName(s)`, `.includeRawDataQt(boolean)` |
 | `gemma-core/.../fixture/ExperimentFactoryTest.java` | Done — 4 tests, defaults + overrides |
 | `CuratableValueObjectTest` | Migrated (first migration off the helper) |
+| `gemma-core/.../fixture/BioMaterialFactory.java` | Done — `.withTaxon(t)`, `.withName(s)`, `.withSourceBioMaterial(parent)`, `.withExternalAccession()`. Source BM must already be persistent. |
+| `gemma-core/.../fixture/BioMaterialFactoryTest.java` | Done — 5 tests: defaults, withTaxon, parent chaining, transient-parent rejection, withExternalAccession |
+| `BioMaterialServiceTest` | Migrated — drops `getTestPersistentBioMaterial()` in favour of `bioMaterialFactory.withExternalAccession().build()` (GEO accession is load-bearing — the test searches by it). |
+| `gemma-core/.../fixture/ArrayDesignFactory.java` | Done — `.withTaxon(t)`, `.withShortName(s)`, `.withName(s)`, `.withCompositeSequences(N)`, `.withTechnologyType(tt)`. Default `TechnologyType.GENELIST`. |
+| `gemma-core/.../fixture/ArrayDesignFactoryTest.java` | Done — 4 tests: defaults, withCompositeSequences exact-N + back-references, withTaxon, withShortName |
+| `ArrayDesignReportServiceTest` | Migrated — drops `getTestPersistentArrayDesign(5, true, false, false)` in favour of `arrayDesignFactory.builder().withCompositeSequences(5).build()`. |
 
 ## What's planned
 
-* `BioMaterialFactory` — `.withTaxon(t).withCharacteristic(c).build()`.
-* `ArrayDesignFactory` — `.withProbes(N).withSequence(true).withTaxon(t).build()`.
+* `BibliographicReferenceFactory` — `.withAccession(s).build()` paired
+  with a fixed PubMed external DB lookup (mirrors how
+  `BioMaterialFactory.withExternalAccession()` resolves GEO).
+* `CompositeSequenceFactory` — `.withArrayDesign(ad).withBioSequence(true)`.
+  Splits out the "with sequences" branch of the old
+  `getTestPersistentArrayDesign(N, randomNames, doSequence)` so it can
+  be composed onto an existing AD instead of forcing the AD factory to
+  know about probe biology.
+* `GeneFactory` — `.withTaxon(t).withSymbol(s).build()`. Currently
+  Genes are fabricated inline by `PersistentDummyObjectHelper` in three
+  places.
 * `ExperimentalFactorFactory` — `.categorical().withLevels(2).attachTo(ee)`.
 * `FactorValueFactory` — paired with the above.
 * `DifferentialExpressionAnalysisFactory` — `.attachTo(ee).withProbes(N)`.

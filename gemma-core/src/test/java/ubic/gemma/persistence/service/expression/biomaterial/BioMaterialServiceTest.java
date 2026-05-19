@@ -23,6 +23,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.fixture.BioMaterialFactory;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialDaoImpl;
@@ -42,16 +43,23 @@ public class BioMaterialServiceTest extends BaseSpringContextTest {
     @Autowired
     private BioMaterialService bioMaterialService;
 
+    @Autowired
+    private BioMaterialFactory bioMaterialFactory;
+
     @Before
     public void setUp() throws Exception {
         log.info( "Starting setup" );
-        BioMaterial testbm = this.getTestPersistentBioMaterial();
+        // Phase 3 fixture migration: typed BioMaterialFactory replaces
+        // PersistentDummyObjectHelper.getTestPersistentBioMaterial(). We need
+        // the external GEO accession because testFindBioMaterial(ByAccessionOnly)
+        // searches by it.
+        BioMaterial testbm = bioMaterialFactory.withExternalAccession().build();
         searchkeyName = testbm.getName();
         searchkeyAcc = testbm.getExternalAccession().getAccession();
 
-        // create a couple more.
-        this.getTestPersistentBioMaterial();
-        this.getTestPersistentBioMaterial();
+        // create a couple more so the find() exercises a non-trivial result set.
+        bioMaterialFactory.withExternalAccession().build();
+        bioMaterialFactory.withExternalAccession().build();
         log.info( "Ending setup" );
     }
 
