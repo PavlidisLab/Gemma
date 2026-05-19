@@ -15,7 +15,7 @@ import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.expression.arrayDesign.AlternateName;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.common.description.CharacteristicService;
+import ubic.gemma.persistence.service.common.description.CharacteristicReadService;
 import ubic.gemma.persistence.service.common.protocol.ProtocolService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -48,7 +48,7 @@ public class CompleteCli extends AbstractAuthenticatedCLI {
     private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
-    private CharacteristicService characteristicService;
+    private CharacteristicReadService characteristicService;
 
     /**
      * The type of completion to produce.

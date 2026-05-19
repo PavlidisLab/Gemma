@@ -44,7 +44,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.*;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
-import ubic.gemma.persistence.service.common.description.CharacteristicService;
+import ubic.gemma.persistence.service.common.description.CharacteristicReadService;
 import ubic.gemma.persistence.service.genome.GeneDao;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.AnnotationAssociationService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
@@ -67,7 +67,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
     @Autowired
     private AnnotationAssociationService annotationAssociationService;
     @Autowired
-    private CharacteristicService characteristicService;
+    private CharacteristicReadService characteristicService;
     @Autowired
     private Gene2GOAssociationService gene2GOAssociationService;
     @Autowired
@@ -358,7 +358,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
     }
 
     /**
-     * Looks up all gene URIs in a single {@link CharacteristicService#findExperimentsByUris}
+     * Looks up all gene URIs in a single {@link CharacteristicReadService#findExperimentsByUris}
      * call, then assigns the distinct-EE counts back to each VO. VOs without an NCBI ID are left at their
      * current value (the default initializer of 0).
      */
