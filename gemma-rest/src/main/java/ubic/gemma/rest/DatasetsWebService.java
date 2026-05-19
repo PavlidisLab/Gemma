@@ -69,6 +69,7 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetailsValueObject;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketValueObject;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchCorrectionEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationEvent;
@@ -234,6 +235,8 @@ public class DatasetsWebService {
     private TaskRunningService taskRunningService;
     @Autowired
     private GeeqService geeqService;
+    @Autowired
+    private TicketsWebService ticketsWebService;
 
     @Context
     private UriInfo uriInfo;
@@ -855,6 +858,20 @@ public class DatasetsWebService {
         List<BibliographicReferenceValueObject> out = datasetArgService.getPublications( datasetArg );
         return respond( out );
 
+    }
+
+    @GET
+    @Path("/{dataset}/tickets")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve the open curation tickets for a dataset", responses = {
+            @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+            @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                    content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<List<TicketValueObject>> getDatasetTickets(
+            @PathParam("dataset") DatasetArg<?> datasetArg
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        return respond( ticketsWebService.openTicketsForExpressionExperiment( ee.getId() ) );
     }
 
     @GET

@@ -14,6 +14,7 @@ package ubic.gemma.persistence.service.common.auditAndSecurity.curation;
 import org.springframework.lang.Nullable;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketPriority;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketState;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType;
@@ -74,4 +75,10 @@ public interface TicketService extends BaseService<Ticket> {
 
     /** @see TicketDao#findAssignedTo */
     List<Ticket> findAssignedTo( Contact assignee );
+
+    /** @see TicketDao#findTickets */
+    List<Ticket> findTickets( boolean openOnly, @Nullable Long assigneeId, @Nullable TicketPriority priority, int offset, int limit );
+
+    /** @see TicketDao#countTickets */
+    long countTickets( boolean openOnly, @Nullable Long assigneeId, @Nullable TicketPriority priority );
 }

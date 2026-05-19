@@ -20,6 +20,7 @@ import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketEventType;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketPriority;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketState;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType;
@@ -140,6 +141,18 @@ public class TicketServiceImpl extends AbstractService<Ticket> implements Ticket
     public List<Ticket> findAssignedTo( Contact assignee ) {
         Assert.notNull( assignee, "Assignee cannot be null." );
         return ticketDao.findAssignedTo( assignee );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Ticket> findTickets( boolean openOnly, @Nullable Long assigneeId, @Nullable TicketPriority priority, int offset, int limit ) {
+        return ticketDao.findTickets( openOnly, assigneeId, priority, offset, limit );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countTickets( boolean openOnly, @Nullable Long assigneeId, @Nullable TicketPriority priority ) {
+        return ticketDao.countTickets( openOnly, assigneeId, priority );
     }
 
     private static void bumpUpdated( Ticket t ) {
