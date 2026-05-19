@@ -40,7 +40,7 @@ import ubic.gemma.core.util.test.NetworkAvailable;
 import ubic.gemma.core.util.test.NetworkAvailableRule;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonReadService;
 
 import java.util.Collection;
 import java.util.concurrent.Future;
@@ -86,8 +86,8 @@ public class HomologeneServiceTest extends BaseTest {
         }
 
         @Bean
-        public TaxonService taxonService() {
-            return mock( TaxonService.class );
+        public TaxonReadService taxonService() {
+            return mock( TaxonReadService.class );
         }
     }
 
@@ -174,12 +174,12 @@ public class HomologeneServiceTest extends BaseTest {
         private static final boolean LOAD_HOMOLOGENE = Settings.getBoolean( HomologeneServiceFactory.LOAD_HOMOLOGENE_CONFIG, true );
 
         private final GeneService geneService;
-        private final TaxonService taxonService;
+        private final TaxonReadService taxonService;
 
         private Resource homologeneFile = new HomologeneNcbiFtpResource( Settings.getString( HOMOLOGENE_FILE_CONFIG ) );
         private boolean loadHomologene = LOAD_HOMOLOGENE;
 
-        public HomologeneServiceFactory( GeneService geneService, TaxonService taxonService ) {
+        public HomologeneServiceFactory( GeneService geneService, TaxonReadService taxonService ) {
             this.geneService = geneService;
             this.taxonService = taxonService;
         }

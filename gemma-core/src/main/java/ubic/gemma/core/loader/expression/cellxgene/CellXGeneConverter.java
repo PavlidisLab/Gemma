@@ -17,7 +17,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonReadService;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -36,12 +36,12 @@ import static java.util.Objects.requireNonNull;
 public class CellXGeneConverter {
 
     private final ExternalDatabaseService externalDatabaseService;
-    private final TaxonService taxonService;
+    private final TaxonReadService taxonReadService;
     private final PubMedSearch pubMedSearch;
 
-    public CellXGeneConverter( ExternalDatabaseService externalDatabaseService, TaxonService taxonService, PubMedSearch pubMedSearch ) {
+    public CellXGeneConverter( ExternalDatabaseService externalDatabaseService, TaxonReadService taxonReadService, PubMedSearch pubMedSearch ) {
         this.externalDatabaseService = externalDatabaseService;
-        this.taxonService = taxonService;
+        this.taxonReadService = taxonReadService;
         this.pubMedSearch = pubMedSearch;
     }
 
@@ -123,7 +123,7 @@ public class CellXGeneConverter {
             throw new IllegalArgumentException( "Dataset has more than one organism: " + datasetMetadata.getOrganism() + ", but splitting is not supported yet." );
         }
         OntologyTerm ot = datasetMetadata.getOrganism().iterator().next();
-        return requireNonNull( taxonService.findByScientificName( ot.getLabel() ), "No taxon found for organism: " + ot.getLabel() );
+        return requireNonNull( taxonReadService.findByScientificName( ot.getLabel() ), "No taxon found for organism: " + ot.getLabel() );
     }
 
     private Set<Characteristic> convertExperimentTags( DatasetMetadata datasetMetadata ) {

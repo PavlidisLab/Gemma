@@ -43,7 +43,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonReadService;
 import ubic.gemma.persistence.util.EntityUrlBuilder;
 import ubic.gemma.persistence.util.Slice;
 
@@ -80,7 +80,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService, InitializingBea
     protected ArrayDesignService arrayDesignService;
 
     @Autowired
-    private TaxonService taxonService;
+    private TaxonReadService taxonReadService;
 
     @Autowired
     private ExternalDatabaseService externalDatabaseService;
@@ -211,9 +211,9 @@ public class GeoBrowserServiceImpl implements GeoBrowserService, InitializingBea
 
                     int i = 0;
                     for ( String string : organisms ) {
-                        Taxon t = taxonService.findByCommonName( string );
+                        Taxon t = taxonReadService.findByCommonName( string );
                         if ( t == null ) {
-                            t = taxonService.findByScientificName( string );
+                            t = taxonReadService.findByScientificName( string );
                             if ( t == null ) {
                                 return false;
                             }
