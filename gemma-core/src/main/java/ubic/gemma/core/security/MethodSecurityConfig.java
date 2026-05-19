@@ -40,7 +40,7 @@ import java.util.List;
  * that uses {@link AccessDecisionManager}, {@link AfterInvocationManager}, and {@link RunAsManager}.
  * The new {@code @EnableMethodSecurity} annotation is an
  * {@link org.springframework.security.authorization.AuthorizationManager}-based replacement that
- * has no {@link AfterInvocationManager} concept — porting Gemma's 14 after-invocation providers to
+ * has no {@link AfterInvocationManager} concept — porting Gemma's after-invocation providers to
  * the new model would require a full re-architecture (custom {@code AuthorizationManager} + a
  * post-invocation {@code MethodInterceptor}). We deliberately stay on the legacy stack via
  * {@code @EnableGlobalMethodSecurity} so the existing after-invocation provider beans, the existing
@@ -96,20 +96,25 @@ public class MethodSecurityConfig extends GlobalMethodSecurityConfiguration {
      * produced is the contract for the migration.
      */
     private static final List<String> AFTER_INVOCATION_PROVIDER_BEAN_NAMES = Arrays.asList(
-            "afterAclReadQuiet",
-            "afterAclRead",
-            "afterAclCollectionRead",
-            "afterAclCompositeSequenceCollectionRead",
-            "afterAclDataVectorCollectionRead",
-            "afterAclMyDataRead",
-            "afterAclMyPrivateDataRead",
-            "afterAclValueObjectCollection",
-            "afterAclValueObjectMap",
-            "afterAclValueObject",
-            "afterAclMapRead",
-            "afterAclMapValuesRead",
-            "afterAclStreamRead",
-            "postInvocationAdviceProvider" // for @PostAuthorize / @PostFilter
+            // afterAclRead removed in Phase 3 Phase A — AFTER_ACL_READ callsites moved
+            //   to @PostAuthorize("hasPermission(returnObject, ...)") which dispatches via
+            //   postInvocationAdviceProvider + the wired AclPermissionEvaluator.
+            // afterAclCollectionRead removed in Phase 3 Phase A — AFTER_ACL_COLLECTION_READ
+            //   callsites moved to @PostFilter("hasPermission(filterObject, ...)").
+            // afterAclMapRead removed in Phase 3 Phase A — AFTER_ACL_MAP_READ callsites
+            //   moved to @PostFilter("hasPermission(filterObject.key, ...)").
+            // afterAclMapValuesRead removed in Phase 3 Phase A — no live callsites (only one
+            //   commented-out FIXME reference in CharacteristicService).
+            "afterAclReadQuiet", // AFTER_ACL_READ_QUIET — deferred to Phase B (return-null-on-denial)
+            "afterAclCompositeSequenceCollectionRead", // Phase B — bulk fetch by ArrayDesign
+            "afterAclDataVectorCollectionRead", // Phase B — bulk fetch by ExpressionExperiment
+            "afterAclMyDataRead", // Phase B — needs ACL owner SpEL helper
+            "afterAclMyPrivateDataRead", // Phase B — needs ACL private SpEL helper
+            "afterAclValueObjectCollection", // Phase B — VO metadata side-effect
+            "afterAclValueObjectMap", // Phase B — VO metadata side-effect
+            "afterAclValueObject", // Phase B — VO metadata side-effect
+            "afterAclStreamRead", // Phase B — Stream<?> return type
+            "postInvocationAdviceProvider" // for @PostAuthorize / @PostFilter — REQUIRED for Phase A annotations
     );
 
     @Autowired
@@ -165,7 +170,7 @@ public class MethodSecurityConfig extends GlobalMethodSecurityConfiguration {
     }
 
     /**
-     * Aggregate the 14 after-invocation providers from {@link #AFTER_INVOCATION_PROVIDER_BEAN_NAMES}
+     * Aggregate the after-invocation providers from {@link #AFTER_INVOCATION_PROVIDER_BEAN_NAMES}
      * into an {@link AfterInvocationProviderManager}. This preserves the post-invocation
      * filtering chain (ACL_READ filters, value-object filters, {@code @PostAuthorize} /
      * {@code @PostFilter} advice) that the XML {@code <s:after-invocation-provider>} elements

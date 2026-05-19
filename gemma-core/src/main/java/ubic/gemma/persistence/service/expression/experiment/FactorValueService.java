@@ -19,6 +19,8 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PostFilter;
+import org.springframework.security.access.prepost.PostAuthorize;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
@@ -88,14 +90,16 @@ public interface FactorValueService extends SecurableBaseService<FactorValue>, S
     Collection<FactorValue> findByValueStartingWith( String valuePrefix, int maxResults );
 
     @Nullable
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostAuthorize("returnObject == null or hasPermission(returnObject, 'READ') or hasPermission(returnObject, 'ADMINISTRATION')")
     FactorValue loadWithExperimentalFactor( Long id );
 
     /**
      * Load a {@link FactorValue} with an initialized experimental factor or fail.
      */
     @NonNull
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostAuthorize("returnObject == null or hasPermission(returnObject, 'READ') or hasPermission(returnObject, 'ADMINISTRATION')")
     <T extends Exception> FactorValue loadWithExperimentalFactorOrFail( Long id, Function<String, T> exceptionSupplier ) throws T;
 
     /**
@@ -118,7 +122,8 @@ public interface FactorValueService extends SecurableBaseService<FactorValue>, S
     @Nullable
     @Deprecated
     @Secured({ "GROUP_ADMIN" })
-    // FIXME: use @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" }), but some FVs have broken ACLs
+    // FIXME: use @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" }), but some FVs have broken ACLs
+    // FIXME: use @PostAuthorize("returnObject == null or hasPermission(returnObject, 'READ') or hasPermission(returnObject, 'ADMINISTRATION')")
     FactorValue loadWithOldStyleCharacteristics( Long id, boolean readOnly );
 
     /**
@@ -127,7 +132,8 @@ public interface FactorValueService extends SecurableBaseService<FactorValue>, S
      */
     @Deprecated
     @Secured({ "GROUP_ADMIN" })
-    // FIXME: use @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" }), but some FVs have broken ACLs
+    // FIXME: use @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" }), but some FVs have broken ACLs
+    // FIXME: use @PostFilter("hasPermission(filterObject.key, 'READ') or hasPermission(filterObject.key, 'ADMINISTRATION')")
     Map<Long, Integer> loadIdsWithNumberOfOldStyleCharacteristics( Set<Long> excludedIds );
 
     /**

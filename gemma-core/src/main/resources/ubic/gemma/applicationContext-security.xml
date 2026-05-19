@@ -109,9 +109,11 @@
            - overrides accessDecisionManager() / runAsManager() to return the existing beans
              (accessDecisionManager, runAsManager — defined in gsec's applicationContext-gsec.xml
              and this file respectively).
-           - overrides afterInvocationManager() to aggregate the same 14 after-invocation
-             provider beans listed below (afterAclReadQuiet, afterAclRead, ...) via a
-             (deprecated-but-functional) AfterInvocationProviderManager. -->
+           - overrides afterInvocationManager() to aggregate the surviving after-invocation
+             provider beans (Phase 3 Phase A removed afterAclRead / afterAclCollectionRead /
+             afterAclMapRead / afterAclMapValuesRead in favor of @PostAuthorize /
+             @PostFilter; the rest stay until Phase B custom AuthorizationManagers land)
+             via a (deprecated-but-functional) AfterInvocationProviderManager. -->
     <!-- removed: <s:global-method-security ...> with 14 <s:after-invocation-provider> children -->
 
     <!-- Enable AspectJ autoproxy -->

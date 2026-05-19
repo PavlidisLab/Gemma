@@ -2,6 +2,7 @@ package ubic.gemma.core.security.authentication;
 
 import gemma.gsec.authentication.UserExistsException;
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PostAuthorize;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 
@@ -20,11 +21,13 @@ public interface UserService extends gemma.gsec.authentication.UserService {
     User findByUserName( String s );
 
     @Override
-    @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
+    @Secured({ "GROUP_USER" })
+    @PostAuthorize("returnObject == null or hasPermission(returnObject, 'READ') or hasPermission(returnObject, 'ADMINISTRATION')")
     User findByEmail( String s );
 
     @Override
-    @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
+    @Secured({ "GROUP_USER" })
+    @PostAuthorize("returnObject == null or hasPermission(returnObject, 'READ') or hasPermission(returnObject, 'ADMINISTRATION')")
     UserGroup findGroupByName( String s );
 
     @Override

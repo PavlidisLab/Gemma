@@ -1,6 +1,7 @@
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PostAuthorize;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.persistence.service.BaseImmutableService;
 
@@ -10,7 +11,8 @@ public interface SecurableBaseImmutableService<C extends Securable> extends Base
         SecurableBaseReadOnlyService<C> {
 
     @Override
-    @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
+    @Secured({ "GROUP_USER" })
+    @PostAuthorize("returnObject == null or hasPermission(returnObject, 'READ') or hasPermission(returnObject, 'ADMINISTRATION')")
     C findOrCreate( C entity );
 
     @Override
