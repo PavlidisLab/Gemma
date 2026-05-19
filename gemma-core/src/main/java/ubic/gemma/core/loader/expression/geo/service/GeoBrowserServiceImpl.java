@@ -98,7 +98,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService, InitializingBea
 
     private final Map<String, GeoRecord> localInfo = new ConcurrentHashMap<>();
 
-    private final ExecutorService es = Executors.newSingleThreadExecutor();
+    private final ExecutorService es = Executors.newVirtualThreadPerTaskExecutorIfAvailable();
 
     @Override
     public void afterPropertiesSet() {
