@@ -154,3 +154,11 @@ atlassian-ide-plugin.xml
 # a custom copy of Gemma_CLI.xml for testing purposes
 .idea/runConfigurations/Gemma_CLI_custom.xml
 figures/__pycache__/
+
+# Hibernate Search 7 Lucene index dirs (when gemma.search.dir resolves
+# to a relative path during tests, HS 7 creates per-entity subdirs at
+# that root). Follow-up: make gemma.search.dir absolute in test contexts
+# so this can't happen, then remove these patterns.
+/searchIndices/
+/gemma-core/searchIndices/
+/gemma-core/target/searchIndices/
