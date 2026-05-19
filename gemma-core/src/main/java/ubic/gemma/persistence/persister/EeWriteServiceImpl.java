@@ -43,6 +43,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.common.auditAndSecurity.ContactDao;
 import ubic.gemma.persistence.service.common.measurement.UnitDao;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeDao;
@@ -152,7 +153,7 @@ public class EeWriteServiceImpl implements EeWriteService {
     public ExpressionExperiment create( ExpressionExperiment ee, @Nullable ArrayDesignsForExperimentCache cache ) {
         try {
             persister().getSessionFactory().getCurrentSession().setHibernateFlushMode( FlushMode.MANUAL );
-            ExpressionExperiment persistedEntity = persistExpressionExperiment( ee, AbstractPersister.Caches.empty(), new HashMap<>(), cache );
+            ExpressionExperiment persistedEntity = persistExpressionExperiment( ee, AbstractPersister.Caches.empty(), new HashMap<>(), cache, new HashMap<>() );
             persister().getSessionFactory().getCurrentSession().flush();
             return persistedEntity;
         } finally {
@@ -165,7 +166,7 @@ public class EeWriteServiceImpl implements EeWriteService {
      * strangler-fig window) from {@link ExpressionPersister#doPersist} when an
      * EE is reached via the polymorphic dispatch.
      */
-    ExpressionExperiment persistExpressionExperiment( ExpressionExperiment ee, AbstractPersister.Caches caches, Map<String, ExternalDatabase> xdbCache, @Nullable ArrayDesignsForExperimentCache adCache ) {
+    ExpressionExperiment persistExpressionExperiment( ExpressionExperiment ee, AbstractPersister.Caches caches, Map<String, ExternalDatabase> xdbCache, @Nullable ArrayDesignsForExperimentCache adCache, Map<Object, Taxon> taxonCache ) {
         ExpressionExperiment existingEE = expressionExperimentDao.findByShortName( ee.getShortName() );
         if ( existingEE != null ) {
             log.warn( "Expression experiment with same short name exists (" + existingEE
@@ -188,7 +189,7 @@ public class EeWriteServiceImpl implements EeWriteService {
             ee.setOwner( existingOwner != null ? existingOwner : contactDao.create( owner ) );
         }
         if ( ee.getTaxon() != null ) {
-            ee.setTaxon( persister().persistTaxon( ee.getTaxon(), caches ) );
+            ee.setTaxon( persister().persistTaxon( ee.getTaxon(), taxonCache ) );
         }
 
         // Phase 3 lift: was doPersist (instanceof QuantitationType arm in CommonPersister);
@@ -228,7 +229,7 @@ public class EeWriteServiceImpl implements EeWriteService {
         checkExperimentalDesign( ee );
 
         // This does most of the preparatory work.
-        processBioAssays( ee, caches, xdbCache, adCache, qtCache );
+        processBioAssays( ee, caches, xdbCache, adCache, qtCache, taxonCache );
 
         ee = expressionExperimentDao.create( ee );
 
@@ -296,7 +297,7 @@ public class EeWriteServiceImpl implements EeWriteService {
         }
     }
 
-    void fillInBioAssayAssociations( BioAssay bioAssay, AbstractPersister.Caches caches, Map<String, ExternalDatabase> xdbCache, @Nullable ArrayDesignsForExperimentCache adCache ) {
+    void fillInBioAssayAssociations( BioAssay bioAssay, AbstractPersister.Caches caches, Map<String, ExternalDatabase> xdbCache, @Nullable ArrayDesignsForExperimentCache adCache, Map<Object, Taxon> taxonCache ) {
 
         ArrayDesign arrayDesign = bioAssay.getArrayDesignUsed();
         ArrayDesign arrayDesignUsed;
@@ -345,25 +346,28 @@ public class EeWriteServiceImpl implements EeWriteService {
         }
 
         // BioMaterials
-        bioAssay.setSampleUsed( persister().doPersist( bioAssay.getSampleUsed(), caches, xdbCache ) );
+        // Phase 3 lift: was persister().doPersist (instanceof BioMaterial arm in
+        // ExpressionPersister); now a direct call to persistBioMaterial so the threaded
+        // taxonCache stays alive across all BioAssays in this EE graph.
+        bioAssay.setSampleUsed( persistBioMaterial( bioAssay.getSampleUsed(), caches, xdbCache, taxonCache ) );
 
         log.debug( "Done with " + bioAssay );
 
     }
 
-    BioAssay persistBioAssay( BioAssay assay, AbstractPersister.Caches caches, Map<String, ExternalDatabase> xdbCache, @Nullable ArrayDesignsForExperimentCache adCache ) {
+    BioAssay persistBioAssay( BioAssay assay, AbstractPersister.Caches caches, Map<String, ExternalDatabase> xdbCache, @Nullable ArrayDesignsForExperimentCache adCache, Map<Object, Taxon> taxonCache ) {
         log.debug( "Persisting " + assay );
-        fillInBioAssayAssociations( assay, caches, xdbCache, adCache );
+        fillInBioAssayAssociations( assay, caches, xdbCache, adCache, taxonCache );
         return bioAssayDao.create( assay );
     }
 
-    BioAssayDimension persistBioAssayDimension( BioAssayDimension bioAssayDimension, AbstractPersister.Caches caches, Map<String, ExternalDatabase> xdbCache, @Nullable ArrayDesignsForExperimentCache adCache ) {
+    BioAssayDimension persistBioAssayDimension( BioAssayDimension bioAssayDimension, AbstractPersister.Caches caches, Map<String, ExternalDatabase> xdbCache, @Nullable ArrayDesignsForExperimentCache adCache, Map<Object, Taxon> taxonCache ) {
         log.debug( "Persisting bioAssayDimension" );
         List<BioAssay> persistedBioAssays = new ArrayList<>();
         for ( BioAssay bioAssay : bioAssayDimension.getBioAssays() ) {
             assert bioAssay != null;
             // bioAssay.setId( null ); // in case of retry.
-            persistedBioAssays.add( persistBioAssay( bioAssay, caches, xdbCache, adCache ) );
+            persistedBioAssays.add( persistBioAssay( bioAssay, caches, xdbCache, adCache, taxonCache ) );
             if ( persistedBioAssays.size() % 10 == 0 ) {
                 log.debug( "Persisted: " + persistedBioAssays.size() + " bioassays" );
             }
@@ -375,11 +379,11 @@ public class EeWriteServiceImpl implements EeWriteService {
         return bioAssayDimensionDao.findOrCreate( bioAssayDimension );
     }
 
-    BioAssayDimension fillInDesignElementDataVectorAssociations( BulkExpressionDataVector dataVector, AbstractPersister.Caches caches, Map<String, ExternalDatabase> xdbCache, @Nullable ArrayDesignsForExperimentCache adCache, Map<Integer, QuantitationType> qtCache ) {
+    BioAssayDimension fillInDesignElementDataVectorAssociations( BulkExpressionDataVector dataVector, AbstractPersister.Caches caches, Map<String, ExternalDatabase> xdbCache, @Nullable ArrayDesignsForExperimentCache adCache, Map<Integer, QuantitationType> qtCache, Map<Object, Taxon> taxonCache ) {
         // we should have done this already.
         assert dataVector.getDesignElement() != null;
 
-        BioAssayDimension bioAssayDimension = getBioAssayDimensionFromCacheOrCreate( dataVector, caches, xdbCache, adCache );
+        BioAssayDimension bioAssayDimension = getBioAssayDimensionFromCacheOrCreate( dataVector, caches, xdbCache, adCache, taxonCache );
 
         dataVector.setBioAssayDimension( bioAssayDimension );
 
@@ -391,7 +395,7 @@ public class EeWriteServiceImpl implements EeWriteService {
         return bioAssayDimension;
     }
 
-    Set<BioAssay> fillInExpressionExperimentDataVectorAssociations( ExpressionExperiment ee, AbstractPersister.Caches caches, Map<String, ExternalDatabase> xdbCache, @Nullable ArrayDesignsForExperimentCache adCache, Map<Integer, QuantitationType> qtCache ) {
+    Set<BioAssay> fillInExpressionExperimentDataVectorAssociations( ExpressionExperiment ee, AbstractPersister.Caches caches, Map<String, ExternalDatabase> xdbCache, @Nullable ArrayDesignsForExperimentCache adCache, Map<Integer, QuantitationType> qtCache, Map<Object, Taxon> taxonCache ) {
         log.debug( "Filling in DesignElementDataVectors..." );
 
         Set<BioAssay> bioAssays = new HashSet<>();
@@ -399,7 +403,7 @@ public class EeWriteServiceImpl implements EeWriteService {
         timer.start();
         int count = 0;
         for ( RawExpressionDataVector dataVector : ee.getRawExpressionDataVectors() ) {
-            BioAssayDimension bioAssayDimension = fillInDesignElementDataVectorAssociations( dataVector, caches, xdbCache, adCache, qtCache );
+            BioAssayDimension bioAssayDimension = fillInDesignElementDataVectorAssociations( dataVector, caches, xdbCache, adCache, qtCache, taxonCache );
 
             if ( timer.getTime() > 5000 ) {
                 if ( count == 0 ) {
@@ -422,14 +426,14 @@ public class EeWriteServiceImpl implements EeWriteService {
         return bioAssays;
     }
 
-    private BioAssayDimension getBioAssayDimensionFromCacheOrCreate( BulkExpressionDataVector vector, AbstractPersister.Caches caches, Map<String, ExternalDatabase> xdbCache, @Nullable ArrayDesignsForExperimentCache adCache ) {
+    private BioAssayDimension getBioAssayDimensionFromCacheOrCreate( BulkExpressionDataVector vector, AbstractPersister.Caches caches, Map<String, ExternalDatabase> xdbCache, @Nullable ArrayDesignsForExperimentCache adCache, Map<Object, Taxon> taxonCache ) {
         Map<Integer, BioAssayDimension> bioAssayDimensionCache = caches.getBioAssayDimensionCache();
 
         Integer dimensionName = vector.getBioAssayDimension().hashCode();
         if ( bioAssayDimensionCache.containsKey( dimensionName ) ) {
             vector.setBioAssayDimension( bioAssayDimensionCache.get( dimensionName ) );
         } else {
-            BioAssayDimension bAd = persistBioAssayDimension( vector.getBioAssayDimension(), caches, xdbCache, adCache );
+            BioAssayDimension bAd = persistBioAssayDimension( vector.getBioAssayDimension(), caches, xdbCache, adCache, taxonCache );
             bioAssayDimensionCache.put( dimensionName, bAd );
             vector.setBioAssayDimension( bAd );
         }
@@ -440,16 +444,16 @@ public class EeWriteServiceImpl implements EeWriteService {
     /**
      * Handle persisting of the bioassays on the way to persisting the expression experiment.
      */
-    void processBioAssays( ExpressionExperiment expressionExperiment, AbstractPersister.Caches caches, Map<String, ExternalDatabase> xdbCache, @Nullable ArrayDesignsForExperimentCache adCache, Map<Integer, QuantitationType> qtCache ) {
+    void processBioAssays( ExpressionExperiment expressionExperiment, AbstractPersister.Caches caches, Map<String, ExternalDatabase> xdbCache, @Nullable ArrayDesignsForExperimentCache adCache, Map<Integer, QuantitationType> qtCache, Map<Object, Taxon> taxonCache ) {
         if ( expressionExperiment.getRawExpressionDataVectors().isEmpty() ) {
             log.debug( "Filling in bioassays" );
             for ( BioAssay bioAssay : expressionExperiment.getBioAssays() ) {
-                fillInBioAssayAssociations( bioAssay, caches, xdbCache, adCache );
+                fillInBioAssayAssociations( bioAssay, caches, xdbCache, adCache, taxonCache );
             }
         } else {
             log.debug( "Filling in bioassays via data vectors" ); // usual case.
             Set<BioAssay> alreadyFilled;
-            alreadyFilled = fillInExpressionExperimentDataVectorAssociations( expressionExperiment, caches, xdbCache, adCache, qtCache );
+            alreadyFilled = fillInExpressionExperimentDataVectorAssociations( expressionExperiment, caches, xdbCache, adCache, qtCache, taxonCache );
             expressionExperiment.setBioAssays( alreadyFilled );
             expressionExperiment.setNumberOfSamples( alreadyFilled.size() );
         }
@@ -501,7 +505,7 @@ public class EeWriteServiceImpl implements EeWriteService {
         experimentalDesignDao.create( experimentalDesign );
     }
 
-    BioMaterial persistBioMaterial( BioMaterial entity, AbstractPersister.Caches caches, Map<String, ExternalDatabase> xdbCache ) {
+    BioMaterial persistBioMaterial( BioMaterial entity, AbstractPersister.Caches caches, Map<String, ExternalDatabase> xdbCache, Map<Object, Taxon> taxonCache ) {
         log.debug( "Persisting " + entity );
         assert entity.getSourceTaxon() != null;
 
@@ -512,7 +516,7 @@ public class EeWriteServiceImpl implements EeWriteService {
         }
 
         log.debug( "db entry done" );
-        entity.setSourceTaxon( persister().persistTaxon( entity.getSourceTaxon(), caches ) );
+        entity.setSourceTaxon( persister().persistTaxon( entity.getSourceTaxon(), taxonCache ) );
 
         log.debug( "taxon done" );
 
