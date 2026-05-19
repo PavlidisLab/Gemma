@@ -104,9 +104,28 @@ public class MethodSecurityConfig extends GlobalMethodSecurityConfiguration {
             "afterAclDataVectorCollectionRead", // Phase B — bulk fetch by ExpressionExperiment
             "afterAclMyDataRead", // Phase B — needs ACL owner SpEL helper
             "afterAclMyPrivateDataRead", // Phase B — needs ACL private SpEL helper
-            "afterAclValueObjectCollection", // Phase B — VO metadata side-effect
-            "afterAclValueObjectMap", // Phase B — VO metadata side-effect
-            "afterAclValueObject", // Phase B — VO metadata side-effect
+            // afterAclValueObjectCollection (gsec) replaced in Phase 3 Phase B by Gemma-owned
+            //   gemmaAfterAclValueObjectCollectionRead (AclEntryAfterInvocationValueObjectCollectionReadProvider).
+            //   Same semantics — bulk ACL READ filter + per-row SecureValueObject metadata
+            //   population (isPublic / isShared / userOwned / userCanWrite). Can't be a
+            //   @PostFilter: that annotation can retain/drop but not mutate retained elements,
+            //   and the metadata side-effect drives lock / share / edit UI affordances across
+            //   the catalog / dataset / gene-set listings.
+            "gemmaAfterAclValueObjectCollectionRead",
+            // afterAclValueObjectMap (gsec) replaced in Phase 3 Phase B by Gemma-owned
+            //   gemmaAfterAclValueObjectMapRead (AclEntryAfterInvocationValueObjectMapReadProvider).
+            //   Same semantics — bulk ACL READ filter over a Map keyed by SecureValueObject,
+            //   with per-key metadata population (isPublic / isShared / userOwned / userCanWrite).
+            //   Values are not checked. Can't be a @PostFilter: that annotation has no hook to
+            //   mutate retained keys, and the metadata side-effect drives the DEA results UI
+            //   (dataset lock / share / mine flags on each result-row's keying VO).
+            "gemmaAfterAclValueObjectMapRead",
+            // afterAclValueObject (gsec) replaced in Phase 3 Phase B by Gemma-owned
+            //   gemmaAfterAclValueObjectRead (AclEntryAfterInvocationValueObjectReadProvider).
+            //   Same semantics — single-object ACL READ check + SecureValueObject metadata
+            //   population. Can't be a @PostAuthorize: the side-effect on the returned VO is
+            //   load-bearing, and @PostAuthorize has no hook to mutate the result.
+            "gemmaAfterAclValueObjectRead",
             "afterAclStreamRead", // Phase B — Stream<?> return type
             "postInvocationAdviceProvider" // for @PostAuthorize / @PostFilter — REQUIRED for Phase A annotations
     );

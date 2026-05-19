@@ -132,6 +132,66 @@
         <property name="processDomainObjectClass" value="gemma.gsec.model.Securable"/>
     </bean>
 
+    <!-- Phase 3 AfterInvocation Phase B: Gemma-owned replacement for gsec's afterAclValueObject.
+         Single-object ACL READ check that also populates the SecureValueObject security-metadata
+         fields (isPublic / isShared / userOwned / userCanWrite) as a side-effect of the ACL fetch.
+         Cannot be expressed as @PostAuthorize: the side-effect on the returned VO is load-bearing
+         (drives lock / share / edit UI affordances in the web layer), and @PostAuthorize has no
+         hook to mutate the result. See AclEntryAfterInvocationValueObjectReadProvider javadoc. -->
+    <bean id="gemmaAfterAclValueObjectRead"
+          class="ubic.gemma.core.security.authorization.acl.AclEntryAfterInvocationValueObjectReadProvider">
+        <constructor-arg ref="aclService"/>
+        <constructor-arg>
+            <list>
+                <util:constant static-field="org.springframework.security.acls.domain.BasePermission.READ"/>
+            </list>
+        </constructor-arg>
+        <property name="objectIdentityRetrievalStrategy" ref="objectIdentityRetrievalStrategy"/>
+        <property name="sidRetrievalStrategy" ref="sidRetrievalStrategy"/>
+        <property name="processDomainObjectClass" value="gemma.gsec.model.SecureValueObject"/>
+    </bean>
+
+    <!-- Phase 3 AfterInvocation Phase B: Gemma-owned replacement for gsec's afterAclValueObjectCollection.
+         Bulk ACL READ filter over a collection of SecureValueObjects, populating per-row
+         security-metadata fields (isPublic / isShared / userOwned / userCanWrite) on every retained
+         VO. Cannot be expressed as @PostFilter: the per-row side-effect is load-bearing (drives
+         catalog / dataset / gene-set listing UI affordances), and @PostFilter can only retain or
+         drop, not mutate. Extends gsec's bulk-optimized parent for a single readAclsById call
+         instead of N reads. See AclEntryAfterInvocationValueObjectCollectionReadProvider javadoc. -->
+    <bean id="gemmaAfterAclValueObjectCollectionRead"
+          class="ubic.gemma.core.security.authorization.acl.AclEntryAfterInvocationValueObjectCollectionReadProvider">
+        <constructor-arg ref="aclService"/>
+        <constructor-arg>
+            <list>
+                <util:constant static-field="org.springframework.security.acls.domain.BasePermission.READ"/>
+            </list>
+        </constructor-arg>
+        <property name="objectIdentityRetrievalStrategy" ref="objectIdentityRetrievalStrategy"/>
+        <property name="sidRetrievalStrategy" ref="sidRetrievalStrategy"/>
+        <property name="processDomainObjectClass" value="gemma.gsec.model.SecureValueObject"/>
+    </bean>
+
+    <!-- Phase 3 AfterInvocation Phase B: Gemma-owned replacement for gsec's afterAclValueObjectMap.
+         Bulk ACL READ filter over a Map whose keys are SecureValueObjects (e.g.
+         DifferentialExpressionAnalysisValueObject keyed by ExpressionExperimentValueObject),
+         populating per-key security-metadata fields on every retained key VO. Map values are NOT
+         checked. Cannot be expressed as @PostFilter: the per-key side-effect is load-bearing
+         (DEA results UI renders dataset lock / share / mine flags from the key VO), and
+         @PostFilter can only retain or drop entries, not mutate retained keys.
+         See AclEntryAfterInvocationValueObjectMapReadProvider javadoc. -->
+    <bean id="gemmaAfterAclValueObjectMapRead"
+          class="ubic.gemma.core.security.authorization.acl.AclEntryAfterInvocationValueObjectMapReadProvider">
+        <constructor-arg ref="aclService"/>
+        <constructor-arg>
+            <list>
+                <util:constant static-field="org.springframework.security.acls.domain.BasePermission.READ"/>
+            </list>
+        </constructor-arg>
+        <property name="objectIdentityRetrievalStrategy" ref="objectIdentityRetrievalStrategy"/>
+        <property name="sidRetrievalStrategy" ref="sidRetrievalStrategy"/>
+        <property name="processDomainObjectClass" value="gemma.gsec.model.SecureValueObject"/>
+    </bean>
+
     <!-- After reading collection of composite sequences -->
     <bean id="afterAclCompositeSequenceCollectionRead"
           class="ubic.gemma.core.security.authorization.acl.AclEntryAfterInvocationCompositeSequenceCollectionByArrayDesignFilteringProvider">
