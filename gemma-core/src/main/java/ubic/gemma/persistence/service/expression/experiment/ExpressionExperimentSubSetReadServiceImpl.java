@@ -15,12 +15,14 @@ import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.persistence.util.Thaws;
 
 import javax.annotation.Nullable;
@@ -45,10 +47,13 @@ import java.util.stream.Collectors;
 public class ExpressionExperimentSubSetReadServiceImpl implements ExpressionExperimentSubSetReadService {
 
     private final ExpressionExperimentDao expressionExperimentDao;
+    private final ExpressionExperimentSubSetDao expressionExperimentSubSetDao;
 
     @Autowired
-    public ExpressionExperimentSubSetReadServiceImpl( ExpressionExperimentDao expressionExperimentDao ) {
+    public ExpressionExperimentSubSetReadServiceImpl( ExpressionExperimentDao expressionExperimentDao,
+            ExpressionExperimentSubSetDao expressionExperimentSubSetDao ) {
         this.expressionExperimentDao = expressionExperimentDao;
+        this.expressionExperimentSubSetDao = expressionExperimentSubSetDao;
     }
 
     @Override
@@ -184,5 +189,52 @@ public class ExpressionExperimentSubSetReadServiceImpl implements ExpressionExpe
             result.getBioAssays().forEach( Thaws::thawBioAssay );
         }
         return result;
+    }
+
+    // -----------------------------------------------------------------------
+    // Migrated from ExpressionExperimentSubSetServiceImpl
+    // -----------------------------------------------------------------------
+
+    @Override
+    @Nullable
+    @Transactional(readOnly = true)
+    public ExpressionExperimentSubSet loadSubSet( Long id ) {
+        return expressionExperimentSubSetDao.load( id );
+    }
+
+    @Override
+    @Nullable
+    @Transactional(readOnly = true)
+    public ExpressionExperimentSubSet loadSubSetWithBioAssays( Long id ) {
+        return expressionExperimentSubSetDao.loadWithBioAssays( id );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<ExpressionExperimentSubSet> findByBioAssayIn( Collection<BioAssay> bioAssays ) {
+        return expressionExperimentSubSetDao.findByBioAssayIn( bioAssays );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<FactorValue> getFactorValuesUsed( ExpressionExperimentSubSet entity, ExperimentalFactor factor ) {
+        return expressionExperimentSubSetDao.getFactorValuesUsed( entity, factor );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<FactorValueValueObject> getFactorValuesUsedAsVO( Long subSetId, Long experimentalFactor ) {
+        Collection<FactorValue> list = expressionExperimentSubSetDao.getFactorValuesUsed( subSetId, experimentalFactor );
+        Collection<FactorValueValueObject> result = new HashSet<>();
+        for ( FactorValue fv : list ) {
+            result.add( new FactorValueValueObject( fv ) );
+        }
+        return result;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperimentSubSet subset ) {
+        return expressionExperimentSubSetDao.getArrayDesignsUsed( subset );
     }
 }

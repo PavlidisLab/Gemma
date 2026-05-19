@@ -26,7 +26,7 @@ import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpre
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawAndProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetReadService;
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 
 import org.springframework.lang.Nullable;
@@ -50,7 +50,7 @@ class ExpressionDataFileHelperService {
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
     @Autowired
-    private ExpressionExperimentSubSetService expressionExperimentSubSetService;
+    private ExpressionExperimentSubSetReadService expressionExperimentSubSetReadService;
     @Autowired
     private ArrayDesignService arrayDesignService;
     @Autowired
@@ -182,7 +182,7 @@ class ExpressionDataFileHelperService {
         if ( experimentAnalyzed instanceof ExpressionExperiment ) {
             ads = this.expressionExperimentService.getArrayDesignsUsed( ( ExpressionExperiment ) experimentAnalyzed );
         } else if ( experimentAnalyzed instanceof ExpressionExperimentSubSet ) {
-            ads = this.expressionExperimentSubSetService.getArrayDesignsUsed( ( ExpressionExperimentSubSet ) experimentAnalyzed );
+            ads = this.expressionExperimentSubSetReadService.getArrayDesignsUsed( ( ExpressionExperimentSubSet ) experimentAnalyzed );
         } else {
             throw new UnsupportedOperationException( "Unsupported BioAssaySet type: " + experimentAnalyzed.getClass() );
         }

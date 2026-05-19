@@ -11,11 +11,14 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -41,8 +44,16 @@ import java.util.Set;
  * ACL / {@code @Secured} annotations live on {@link ExpressionExperimentService} (the
  * caller-facing facade interface); enforcement happens at the facade proxy boundary, so this
  * interface is intentionally unsecured.
+ * <p>
+ * This service also houses the read methods that used to live on
+ * {@link ExpressionExperimentSubSetService} (the standalone subset CRUD service):
+ * {@link #findByBioAssayIn}, {@link #getFactorValuesUsed}, {@link #getFactorValuesUsedAsVO},
+ * {@link #getArrayDesignsUsed}, {@link #loadSubSet}, {@link #loadSubSetWithBioAssays}. The
+ * standalone {@link ExpressionExperimentSubSetService} now delegates these reads here, keeping
+ * its facade ACL annotations in place.
  *
  * @see ExpressionExperimentService
+ * @see ExpressionExperimentSubSetService
  */
 public interface ExpressionExperimentSubSetReadService {
 
@@ -114,4 +125,56 @@ public interface ExpressionExperimentSubSetReadService {
      */
     @Nullable
     ExpressionExperimentSubSet getSubSetByIdWithCharacteristicsAndBioAssays( ExpressionExperiment ee, Long subSetId );
+
+    // -----------------------------------------------------------------------
+    // Read methods migrated from the standalone ExpressionExperimentSubSetService.
+    // These do NOT take a parent ExpressionExperiment context; they operate directly
+    // on ExpressionExperimentSubSet IDs / instances. ACL coverage stays on the
+    // ExpressionExperimentSubSetService facade.
+    // -----------------------------------------------------------------------
+
+    /**
+     * Load a subset by ID, without initializing collections.
+     *
+     * @see ExpressionExperimentSubSetService#load(Long)
+     */
+    @Nullable
+    ExpressionExperimentSubSet loadSubSet( Long id );
+
+    /**
+     * Load a subset by ID with its bio-assays initialized.
+     *
+     * @see ExpressionExperimentSubSetService#loadWithBioAssays(Long)
+     */
+    @Nullable
+    ExpressionExperimentSubSet loadSubSetWithBioAssays( Long id );
+
+    /**
+     * Find every subset that contains any of the supplied bio-assays.
+     *
+     * @see ExpressionExperimentSubSetService#findByBioAssayIn(Collection)
+     */
+    Collection<ExpressionExperimentSubSet> findByBioAssayIn( Collection<BioAssay> bioAssays );
+
+    /**
+     * Obtain the {@link FactorValue}s used by samples in the given subset for the given factor.
+     *
+     * @see ExpressionExperimentSubSetService#getFactorValuesUsed(ExpressionExperimentSubSet, ExperimentalFactor)
+     */
+    Collection<FactorValue> getFactorValuesUsed( ExpressionExperimentSubSet entity, ExperimentalFactor factor );
+
+    /**
+     * VO-form variant of {@link #getFactorValuesUsed(ExpressionExperimentSubSet, ExperimentalFactor)}
+     * accepting plain IDs.
+     *
+     * @see ExpressionExperimentSubSetService#getFactorValuesUsed(Long, Long)
+     */
+    Collection<FactorValueValueObject> getFactorValuesUsedAsVO( Long subSetId, Long experimentalFactor );
+
+    /**
+     * Obtain the array designs used by the assays in the subset.
+     *
+     * @see ExpressionExperimentSubSetService#getArrayDesignsUsed(ExpressionExperimentSubSet)
+     */
+    Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperimentSubSet subset );
 }

@@ -17,9 +17,14 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
+import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -33,6 +38,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -48,6 +54,9 @@ public class ExpressionExperimentSubSetReadServiceTest {
 
     @Mock
     private ExpressionExperimentDao dao;
+
+    @Mock
+    private ExpressionExperimentSubSetDao subSetDao;
 
     @InjectMocks
     private ExpressionExperimentSubSetReadServiceImpl service;
@@ -148,5 +157,86 @@ public class ExpressionExperimentSubSetReadServiceTest {
         assertEquals( 0, actual.size() );
         verify( dao ).getSubSets( ee, bad );
         verifyNoMoreInteractions( dao );
+    }
+
+    // -----------------------------------------------------------------------
+    // Tests for methods migrated from ExpressionExperimentSubSetServiceImpl
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void loadSubSet_delegatesToSubSetDaoLoad() {
+        ExpressionExperimentSubSet ss = ExpressionExperimentSubSet.Factory.newInstance( "ss", ee );
+        ss.setId( 11L );
+        when( subSetDao.load( 11L ) ).thenReturn( ss );
+
+        ExpressionExperimentSubSet actual = service.loadSubSet( 11L );
+
+        assertSame( ss, actual );
+        verify( subSetDao ).load( 11L );
+        verifyNoMoreInteractions( subSetDao );
+    }
+
+    @Test
+    public void loadSubSetWithBioAssays_delegatesToSubSetDao() {
+        ExpressionExperimentSubSet ss = ExpressionExperimentSubSet.Factory.newInstance( "ss", ee );
+        when( subSetDao.loadWithBioAssays( 12L ) ).thenReturn( ss );
+
+        ExpressionExperimentSubSet actual = service.loadSubSetWithBioAssays( 12L );
+
+        assertSame( ss, actual );
+        verify( subSetDao ).loadWithBioAssays( 12L );
+        verifyNoMoreInteractions( subSetDao );
+    }
+
+    @Test
+    public void findByBioAssayIn_delegatesToSubSetDao() {
+        Collection<BioAssay> input = Collections.emptyList();
+        Collection<ExpressionExperimentSubSet> expected = Collections.emptyList();
+        when( subSetDao.findByBioAssayIn( input ) ).thenReturn( expected );
+
+        Collection<ExpressionExperimentSubSet> actual = service.findByBioAssayIn( input );
+
+        assertSame( expected, actual );
+        verify( subSetDao ).findByBioAssayIn( input );
+        verifyNoMoreInteractions( subSetDao );
+    }
+
+    @Test
+    public void getFactorValuesUsed_entityAndFactor_delegatesToSubSetDao() {
+        ExpressionExperimentSubSet ss = ExpressionExperimentSubSet.Factory.newInstance( "ss", ee );
+        ExperimentalFactor ef = ExperimentalFactor.Factory.newInstance();
+        Collection<FactorValue> expected = Collections.emptyList();
+        when( subSetDao.getFactorValuesUsed( ss, ef ) ).thenReturn( expected );
+
+        Collection<FactorValue> actual = service.getFactorValuesUsed( ss, ef );
+
+        assertSame( expected, actual );
+        verify( subSetDao ).getFactorValuesUsed( ss, ef );
+        verifyNoMoreInteractions( subSetDao );
+    }
+
+    @Test
+    public void getFactorValuesUsedAsVO_emptyResult_returnsEmptyCollection() {
+        when( subSetDao.getFactorValuesUsed( 33L, 44L ) ).thenReturn( Collections.emptyList() );
+
+        Collection<FactorValueValueObject> actual = service.getFactorValuesUsedAsVO( 33L, 44L );
+
+        assertNotNull( actual );
+        assertTrue( actual.isEmpty() );
+        verify( subSetDao ).getFactorValuesUsed( 33L, 44L );
+        verifyNoMoreInteractions( subSetDao );
+    }
+
+    @Test
+    public void getArrayDesignsUsed_delegatesToSubSetDao() {
+        ExpressionExperimentSubSet ss = ExpressionExperimentSubSet.Factory.newInstance( "ss", ee );
+        Collection<ArrayDesign> expected = Collections.emptyList();
+        when( subSetDao.getArrayDesignsUsed( ss ) ).thenReturn( expected );
+
+        Collection<ArrayDesign> actual = service.getArrayDesignsUsed( ss );
+
+        assertSame( expected, actual );
+        verify( subSetDao ).getArrayDesignsUsed( ss );
+        verifyNoMoreInteractions( subSetDao );
     }
 }
