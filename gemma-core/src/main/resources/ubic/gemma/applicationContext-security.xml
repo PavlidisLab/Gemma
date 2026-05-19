@@ -191,4 +191,52 @@
         <property name="sidRetrievalStrategy" ref="sidRetrievalStrategy"/>
     </bean>
 
+    <!-- Phase 3 AfterInvocation Phase B: Gemma-owned replacements for the gsec MyData / MyPrivateData / Stream
+         providers. Same semantics as the gsec beans (afterAclMyDataRead / afterAclMyPrivateDataRead /
+         afterAclStreamRead) but live in gemma-core so we can retire those gsec classes. MethodSecurityConfig's
+         AFTER_INVOCATION_PROVIDER_BEAN_NAMES list refers to these by their gemma-prefixed bean ids; the gsec beans
+         remain defined (we import that XML) but are no longer wired into the AfterInvocationManager. -->
+    <bean id="gemmaAfterAclMyDataRead"
+          class="ubic.gemma.core.security.authorization.acl.AclEntryAfterInvocationOwnedCollectionFilteringProvider">
+        <constructor-arg ref="aclService"/>
+        <constructor-arg>
+            <list>
+                <util:constant static-field="org.springframework.security.acls.domain.BasePermission.ADMINISTRATION"/>
+                <util:constant static-field="org.springframework.security.acls.domain.BasePermission.WRITE"/>
+            </list>
+        </constructor-arg>
+        <property name="objectIdentityRetrievalStrategy" ref="objectIdentityRetrievalStrategy"/>
+        <property name="sidRetrievalStrategy" ref="sidRetrievalStrategy"/>
+        <property name="processDomainObjectClass" value="gemma.gsec.model.Securable"/>
+    </bean>
+
+    <bean id="gemmaAfterAclMyPrivateDataRead"
+          class="ubic.gemma.core.security.authorization.acl.AclEntryAfterInvocationPrivateCollectionFilteringProvider">
+        <constructor-arg ref="aclService"/>
+        <constructor-arg>
+            <list>
+                <util:constant static-field="org.springframework.security.acls.domain.BasePermission.ADMINISTRATION"/>
+                <util:constant static-field="org.springframework.security.acls.domain.BasePermission.WRITE"/>
+                <util:constant static-field="org.springframework.security.acls.domain.BasePermission.READ"/>
+            </list>
+        </constructor-arg>
+        <property name="objectIdentityRetrievalStrategy" ref="objectIdentityRetrievalStrategy"/>
+        <property name="sidRetrievalStrategy" ref="sidRetrievalStrategy"/>
+        <property name="processDomainObjectClass" value="gemma.gsec.model.Securable"/>
+    </bean>
+
+    <bean id="gemmaAfterAclStreamRead"
+          class="ubic.gemma.core.security.authorization.acl.AclEntryAfterInvocationStreamFilteringProvider">
+        <constructor-arg ref="aclService"/>
+        <constructor-arg>
+            <list>
+                <util:constant static-field="org.springframework.security.acls.domain.BasePermission.ADMINISTRATION"/>
+                <util:constant static-field="org.springframework.security.acls.domain.BasePermission.READ"/>
+            </list>
+        </constructor-arg>
+        <property name="objectIdentityRetrievalStrategy" ref="objectIdentityRetrievalStrategy"/>
+        <property name="sidRetrievalStrategy" ref="sidRetrievalStrategy"/>
+        <property name="processDomainObjectClass" value="gemma.gsec.model.Securable"/>
+    </bean>
+
 </beans>
