@@ -325,6 +325,43 @@ two-liner at each call site -- on the actual surface that needed
 it. Pattern is reusable for the remaining seven persistXxx methods
 in `CommonPersister`.
 
+#### 6.2.tris Person follow-up (2026-05-19)
+
+Same shape, even smaller. After the Contact pilot inlined the two
+Contact-typed callers (`ArrayDesign.designProvider`,
+`ExpressionExperiment.owner`), the `instanceof Person` arm of
+`CommonPersister.doPersist` had no live caller:
+
+- No model field is typed `Person` (only `User extends Person`,
+  which is handled by a separate `UnsupportedOperationException`
+  arm; everything else routes through `Contact`).
+- Both `Contact`-typed call sites were inlined by the Contact
+  pilot, so no `instanceof Contact` runtime-Person object reaches
+  `doPersist` either.
+- `grep -rn "persistPerson\|doPersist.*[Pp]erson" gemma-core
+  gemma-cli gemma-rest gemma-web` returns only the two
+  `CommonPersister` self-references; no external callers.
+- `grep -rn "persisterHelper.persist" --include=*.java` returns
+  zero `Person`-shaped arguments.
+- No `Person`/`Persister` test class exists (`-Dtest='*Person*,
+  *Persister*'` runs zero tests).
+
+Migration done:
+
+- `CommonPersister`: removed the `instanceof Person` dispatch arm,
+  deleted `persistPerson`, removed the now-unused `PersonDao`
+  field + import.
+
+No call-site inlining needed (the Contact pilot already covered
+the only paths that could have reached `persistPerson` -- both
+went via the Contact arm at runtime, both now use `contactDao.find
+orElse contactDao.create`, which handles Person correctly because
+`BusinessKey.find(Session, Contact)` returns whichever subclass
+matches the BK).
+
+`mvn -pl gemma-core,gemma-cli,gemma-rest test-compile` clean after
+the change.
+
 ### 6.3 Smallest test of the new pattern
 
 After 6.2 lands, the acceptance check is:
