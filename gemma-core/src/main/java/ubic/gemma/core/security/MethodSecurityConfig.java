@@ -121,16 +121,18 @@ public class MethodSecurityConfig extends GlobalMethodSecurityConfiguration {
             "afterAclDataVectorCollectionRead", // Phase B — bulk fetch by ExpressionExperiment (Gemma base class)
             // afterAclMyDataRead / afterAclMyPrivateDataRead / afterAclStreamRead (gsec)
             //   replaced in Phase B by Gemma-owned gemmaAfterAclMyDataRead /
-            //   gemmaAfterAclMyPrivateDataRead / gemmaAfterAclStreamRead beans, defined in
-            //   applicationContext-security.xml. Same semantics; no longer depend on the gsec
-            //   AclEntryAfterInvocationOwnedCollectionFilteringProvider /
-            //   AclEntryAfterInvocationPrivateCollectionFilteringProvider /
-            //   AclEntryAfterInvocationStreamFilteringProvider classes.
+            //   gemmaAfterAclMyPrivateDataRead / gemmaAfterAclStreamRead beans.
             "gemmaAfterAclMyDataRead", // Phase B — owner-and-permission filter, Gemma-owned
             "gemmaAfterAclMyPrivateDataRead", // Phase B — private-and-readable filter, Gemma-owned
-            "afterAclValueObjectCollection", // Phase B — VO metadata side-effect
-            "afterAclValueObjectMap", // Phase B — VO metadata side-effect
-            "afterAclValueObject", // Phase B — VO metadata side-effect
+            // afterAclValueObjectCollection / afterAclValueObjectMap / afterAclValueObject (gsec)
+            //   replaced in Phase 3 Phase B by Gemma-owned wrappers (Provider subclasses in
+            //   ubic.gemma.core.security.authorization.acl). Same semantics including the
+            //   load-bearing SecureValueObject metadata population (isPublic / isShared /
+            //   userOwned / userCanWrite). Can't be plain @PostAuthorize / @PostFilter: those
+            //   annotations have no hook to mutate retained elements/keys.
+            "gemmaAfterAclValueObjectCollectionRead",
+            "gemmaAfterAclValueObjectMapRead",
+            "gemmaAfterAclValueObjectRead",
             "gemmaAfterAclStreamRead", // Phase B — Stream<?> return type, Gemma-owned
             "postInvocationAdviceProvider" // for @PostAuthorize / @PostFilter — REQUIRED for Phase A annotations
     );
