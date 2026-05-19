@@ -228,18 +228,58 @@ public class GeneWriteServiceTest extends BaseSpringContextTest {
      * post-state across the transaction boundary.
      */
     @Test
-    @Ignore("Phase 3 Chunk 5.3 cutover test - fixture pending (GI rotation in-place)")
     public void testGiRotationInPlace() {
-        // Setup:
-        //   - persist gene with one GP (name='NM_001234', GI='100000001')
-        // Action:
-        //   - construct newInfo with same gene id and one GP
-        //     (name='NM_001234', GI='100000002')
-        //   - updateGene(persisted, newInfo)
-        // Assert:
-        //   - reload gene: single GP, name='NM_001234', GI now '100000002'
-        //   - no GP rows orphaned
-        fail( "fixture not yet written - see javadoc" );
+        Taxon human = this.getTaxon( "human" );
+
+        String symbol = "TEST_" + RandomStringUtils.insecure().nextAlphabetic( 6 ).toUpperCase();
+        String productName = "NM_" + RandomStringUtils.insecure().nextNumeric( 6 );
+        String oldGi = RandomStringUtils.insecure().nextNumeric( 9 );
+        // distinct GI (lexically guaranteed different; '9...' vs '1...').
+        String newGi = "9" + RandomStringUtils.insecure().nextNumeric( 8 );
+
+        Gene existing = Gene.Factory.newInstance();
+        existing.setName( symbol );
+        existing.setOfficialSymbol( symbol );
+        existing.setOfficialName( symbol + " original" );
+        existing.setNcbiGeneId( Integer.parseInt( RandomStringUtils.insecure().nextNumeric( 7 ) ) );
+        existing.setTaxon( human );
+
+        GeneProduct gp = GeneProduct.Factory.newInstance();
+        gp.setName( productName );
+        gp.setGene( existing );
+        gp.setNcbiGi( oldGi );
+        existing.getProducts().add( gp );
+
+        Gene persisted = ( Gene ) this.persisterHelper.persist( existing );
+        assertNotNull( persisted.getId() );
+        assertEquals( "fixture should have exactly one product before update", 1, persisted.getProducts().size() );
+        assertEquals( oldGi, persisted.getProducts().iterator().next().getNcbiGi() );
+
+        // Incoming "rotated GI" gene info: same name + same NCBI gene id, with one product
+        // carrying the SAME name but a different GI. handleGeneProductChangedGIs() should
+        // recognize the existing GP by name match and update its NcbiGi in place; no orphan
+        // GPs, toRemove should be empty.
+        Gene newInfo = Gene.Factory.newInstance();
+        newInfo.setName( symbol );
+        newInfo.setOfficialSymbol( symbol );
+        newInfo.setOfficialName( symbol + " rotated" );
+        newInfo.setNcbiGeneId( persisted.getNcbiGeneId() );
+        newInfo.setTaxon( human );
+
+        GeneProduct newGp = GeneProduct.Factory.newInstance();
+        newGp.setName( productName );
+        newGp.setNcbiGi( newGi );
+        newGp.setGene( newInfo );
+        newInfo.getProducts().add( newGp );
+
+        Gene updated = geneWriteService.updateGene( persisted, newInfo );
+
+        assertNotNull( updated );
+        assertEquals( "GI rotation must not create or remove products", 1, updated.getProducts().size() );
+        GeneProduct rotated = updated.getProducts().iterator().next();
+        assertEquals( "GP name must be unchanged", productName, rotated.getName() );
+        assertEquals( "GP NcbiGi must be rotated to the new value", newGi, rotated.getNcbiGi() );
+        assertEquals( symbol + " rotated", updated.getOfficialName() );
     }
 
     /**
