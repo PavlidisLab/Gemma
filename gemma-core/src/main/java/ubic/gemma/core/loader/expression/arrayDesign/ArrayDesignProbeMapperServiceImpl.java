@@ -54,7 +54,7 @@ import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 import ubic.gemma.persistence.service.genome.gene.GeneProductService;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.AnnotationAssociationService;
-import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultService;
+import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultReadService;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -84,7 +84,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
     private final ArrayDesignReportService arrayDesignReportService;
     private final ArrayDesignService arrayDesignService;
     private final BioSequenceService bioSequenceService;
-    private final BlatResultService blatResultService;
+    private final BlatResultReadService blatResultService;
     private final CompositeSequenceService compositeSequenceService;
     private final ExpressionDataFileService expressionDataFileService;
     private final GeneProductService geneProductService;
@@ -97,7 +97,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
     public ArrayDesignProbeMapperServiceImpl( AnnotationAssociationService annotationAssociationService,
             ArrayDesignAnnotationService arrayDesignAnnotationService,
             ArrayDesignReportService arrayDesignReportService, ArrayDesignService arrayDesignService,
-            ProbeMapper probeMapper, BioSequenceService bioSequenceService, BlatResultService blatResultService,
+            ProbeMapper probeMapper, BioSequenceService bioSequenceService, BlatResultReadService blatResultService,
             CompositeSequenceService compositeSequenceService, ExpressionDataFileService expressionDataFileService,
             GeneProductService geneProductService, GeneService geneService, Persister persisterHelper, TaskExecutor taskExecutor ) {
         this.annotationAssociationService = annotationAssociationService;
