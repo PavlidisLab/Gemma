@@ -16,21 +16,17 @@ import static org.junit.Assert.*;
 
 public class DiseaseOntologyTest {
 
-    @Ignore("Blocked on Phase 3 search-subsystem rebuild: baseCode's renovations branch gutted "
-            + "the Lucene 3 ontology indexer (a Lucene 9 / HS 7 / OpenSearch rebuild is its own "
-            + "phase). DiseaseOntologyService.findTerm now returns an empty collection, so "
-            + "assertFalse(name.isEmpty()) fails. The getTerm-by-URI assertions further down "
-            + "do not need Lucene and would still pass — re-enable this test once findTerm works.")
+    /**
+     * URI-lookup assertions: do not depend on the Lucene indexer, so they survive Phase 2's
+     * teardown of the search subsystem. Split out from the original {@code test()} method
+     * (which still mixes in a {@code findTerm} call — see below).
+     */
     @Test
-    public void test() throws SearchException, OntologySearchException, InterruptedException, IOException {
+    public void testGetTermByUri() throws InterruptedException, IOException {
         DiseaseOntologyService diseaseOntologyService = new DiseaseOntologyService();
         assertEquals( ubic.basecode.ontology.providers.OntologyService.LanguageLevel.FULL, diseaseOntologyService.getLanguageLevel() );
         assertEquals( ubic.basecode.ontology.providers.OntologyService.InferenceMode.TRANSITIVE, diseaseOntologyService.getInferenceMode() );
         diseaseOntologyService.initialize( new ClassPathResource( "/data/loader/ontology/dotest.owl.xml" ).getInputStream(), true );
-
-        Collection<OntologySearchResult<OntologyTerm>> name = diseaseOntologyService.findTerm( "diarrhea", 100 );
-
-        assertFalse( name.isEmpty() );
 
         OntologyTerm term;
 
@@ -43,5 +39,17 @@ public class DiseaseOntologyTest {
         term = diseaseOntologyService.getTerm( "http://purl.obolibrary.org/obo/DOID_0050132" );
         assertNotNull( term );
         assertFalse( term.isObsolete() );
+    }
+
+    @Ignore("Blocked on Phase 3 search-subsystem rebuild: baseCode's renovations branch gutted "
+            + "the Lucene 3 ontology indexer (a Lucene 9 / HS 7 / OpenSearch rebuild is its own "
+            + "phase). DiseaseOntologyService.findTerm now returns an empty collection. "
+            + "Tracked in PHASE3_TEST_TRIAGE.md.")
+    @Test
+    public void testFindTerm() throws SearchException, OntologySearchException, InterruptedException, IOException {
+        DiseaseOntologyService diseaseOntologyService = new DiseaseOntologyService();
+        diseaseOntologyService.initialize( new ClassPathResource( "/data/loader/ontology/dotest.owl.xml" ).getInputStream(), true );
+        Collection<OntologySearchResult<OntologyTerm>> name = diseaseOntologyService.findTerm( "diarrhea", 100 );
+        assertFalse( name.isEmpty() );
     }
 }
