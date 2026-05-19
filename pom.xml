@@ -210,6 +210,13 @@
 				<artifactId>antlr4-runtime</artifactId>
 				<version>4.13.2</version>
 			</dependency>
+			<!-- Phase 3 logging: override parent's slf4j-api 1.7.36 (EOL) to 2.0.x.
+			     Paired with log4j-slf4j2-impl below. -->
+			<dependency>
+				<groupId>org.slf4j</groupId>
+				<artifactId>slf4j-api</artifactId>
+				<version>${slf4j.version}</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 	<dependencies>
@@ -421,11 +428,6 @@
 			<artifactId>commons-logging</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>commons-logging</groupId>
-			<artifactId>commons-logging-api</artifactId>
-			<version>1.1</version>
-		</dependency>
-		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-collections4</artifactId>
 			<version>4.5.0</version>
@@ -543,7 +545,9 @@
 		</dependency>
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
-			<artifactId>log4j-slf4j-impl</artifactId>
+			<artifactId>log4j-slf4j2-impl</artifactId>
+			<!-- parent manages log4j-slf4j-impl (1.x bridge) but not the slf4j2 variant; pin explicitly to the same log4j BOM version -->
+			<version>${log4j.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
@@ -1026,6 +1030,9 @@
 		     Production wiring (flyway-mysql) lands in the follow-on session. -->
 		<flyway.version>10.22.0</flyway.version>
 		<jersey.version>3.1.10</jersey.version>
+		<!-- Phase 3 logging: bump slf4j-api from parent's 1.7.36 (EOL) to 2.0.x.
+		     log4j-slf4j-impl (1.x bridge) swapped to log4j-slf4j2-impl in <dependencies>. -->
+		<slf4j.version>2.0.16</slf4j.version>
 		<jackson.version>2.21.0</jackson.version>
 		<jackson-annotations.version>2.21</jackson-annotations.version>
 		<swagger.version>2.2.42</swagger.version>
