@@ -73,14 +73,20 @@ public @interface Audited {
     String message() default "";
 
     /**
-     * Optional SpEL expression evaluated against the join-point root object
-     * (i.e. {@code #root.args[i]} resolves to the i-th method argument; named
-     * argument references like {@code #ee} require {@code -parameters} compile
-     * flag, so prefer positional access).
+     * Optional SpEL expression evaluated against the join-point. Resolves
+     * method arguments by name (e.g. {@code #ee}, {@code #arrayDesign}) —
+     * requires {@code -parameters} compile flag, which is enabled
+     * project-wide in the parent pom. Positional access via
+     * {@code #root.args[i]} also works because the root object is the
+     * args array. The method's return value is exposed as {@code #result}
+     * (so {@code @AfterReturning}-only — the expression sees a fully
+     * populated return).
      *
      * <p>The result is converted to {@code String} via Spring's
      * {@code ConversionService} default behaviour and stored in
-     * {@code AUDIT_EVENT.NOTE}.
+     * {@code AUDIT_EVENT.NOTE}. If the SpEL evaluator throws, the failure
+     * is logged at {@code ERROR} and {@link #message()} is used as the
+     * fallback (the audit row is never dropped over a formatting glitch).
      */
     String messageSpel() default "";
 }

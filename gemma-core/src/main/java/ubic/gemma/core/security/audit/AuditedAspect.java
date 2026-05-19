@@ -28,6 +28,10 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.annotation.Order;
+import org.springframework.expression.Expression;
+import org.springframework.expression.ExpressionParser;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -81,6 +85,9 @@ public class AuditedAspect {
     private final ObjectMapper objectMapper;
     /** Cache resolved event-type instances; concrete types are effectively singletons. */
     private final ConcurrentMap<Class<? extends AuditEventType>, AuditEventType> eventTypeCache = new ConcurrentHashMap<>();
+    /** Parsed SpEL expressions are cached by source string; expressions are method-stable. */
+    private final ConcurrentMap<String, Expression> spelCache = new ConcurrentHashMap<>();
+    private final ExpressionParser spelParser = new SpelExpressionParser();
 
     @Autowired
     public AuditedAspect( AuditTrailService auditTrailService, ApplicationEventPublisher eventPublisher ) {
@@ -94,8 +101,8 @@ public class AuditedAspect {
         this.objectMapper = new ObjectMapper();
     }
 
-    @AfterReturning( "@annotation(audited)" )
-    public void afterAuditedMethod( JoinPoint joinPoint, Audited audited ) {
+    @AfterReturning( pointcut = "@annotation(audited)", returning = "result" )
+    public void afterAuditedMethod( JoinPoint joinPoint, Audited audited, @Nullable Object result ) {
         Object[] args = joinPoint.getArgs();
         Auditable target = findAuditable( args );
         if ( target == null ) {
@@ -105,7 +112,7 @@ public class AuditedAspect {
         }
         AuditEventPayload payload = findPayload( args );
         String payloadJson = serialisePayload( payload, joinPoint );
-        String note = resolveMessage( audited, joinPoint );
+        String note = resolveMessage( audited, joinPoint, result );
         AuditEvent ev;
         try {
             ev = auditTrailService.addUpdateEventWithPayload( target, audited.value(), note, payloadJson );
@@ -162,17 +169,39 @@ public class AuditedAspect {
     }
 
     @Nullable
-    private String resolveMessage( Audited audited, JoinPoint joinPoint ) {
-        if ( !audited.messageSpel().isEmpty() ) {
-            // Phase A intentionally ships without SpEL support: spring-expression
-            // is on the gemma-core classpath only at runtime scope, and Phase A's
-            // pilot call sites all pass static notes that fit the literal
-            // message() attribute. Phase B will (a) widen spring-expression to
-            // compile scope and (b) wire a SpelExpressionParser+
-            // StandardEvaluationContext here if/when a dynamic-note caller is
-            // migrated. We log a warning so misuse is loud rather than silent.
-            log.warn( "@Audited.messageSpel='{}' set on {} but SpEL is not yet supported in Phase A; falling back to literal message().",
-                    audited.messageSpel(), joinPoint.getSignature() );
+    private String resolveMessage( Audited audited, JoinPoint joinPoint, @Nullable Object returnValue ) {
+        String spel = audited.messageSpel();
+        if ( !spel.isEmpty() ) {
+            // Phase B-2: SpEL support. spring-expression was widened to compile
+            // scope in gemma-core/pom.xml so we can wire a SpelExpressionParser
+            // + StandardEvaluationContext directly. Method parameters resolve by
+            // name (javac -parameters is enabled, see parent pom). Positional
+            // access via #root.args[i] also works (root object is the args array).
+            // The method's return value is exposed as #result.
+            try {
+                MethodSignature sig = ( MethodSignature ) joinPoint.getSignature();
+                StandardEvaluationContext ctx = new StandardEvaluationContext();
+                Object[] args = joinPoint.getArgs();
+                ctx.setRootObject( args );
+                ctx.setVariable( "result", returnValue );
+                String[] paramNames = sig.getParameterNames();
+                if ( paramNames != null ) {
+                    for ( int i = 0; i < paramNames.length && i < args.length; i++ ) {
+                        if ( paramNames[i] != null ) {
+                            ctx.setVariable( paramNames[i], args[i] );
+                        }
+                    }
+                }
+                Expression expr = spelCache.computeIfAbsent( spel, spelParser::parseExpression );
+                String evaluated = expr.getValue( ctx, String.class );
+                if ( evaluated != null && !evaluated.isEmpty() ) {
+                    return evaluated;
+                }
+            } catch ( RuntimeException e ) {
+                // Don't drop the audit row over a SpEL hiccup, but make it loud.
+                log.error( "Failed to evaluate @Audited.messageSpel='{}' on {}; falling back to literal message().",
+                        spel, joinPoint.getSignature(), e );
+            }
         }
         String literal = audited.message();
         return literal.isEmpty() ? null : literal;

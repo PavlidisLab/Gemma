@@ -124,7 +124,8 @@ public class ExpressionExperimentPlatformSwitchService {
      *                     changed for them.
      */
     @Transactional
-    @Audited(ExpressionExperimentPlatformSwitchEvent.class)
+    @Audited(value = ExpressionExperimentPlatformSwitchEvent.class,
+            messageSpel = "'Switch to use ' + #arrayDesign.shortName")
     public void switchExperimentToArrayDesign( ExpressionExperiment ee, ArrayDesign arrayDesign ) {
         assert arrayDesign != null;
 
@@ -214,7 +215,7 @@ public class ExpressionExperimentPlatformSwitchService {
 
         expressionExperimentService.update( ee );
         // Audit event written by @Audited on this method via AuditedAspect.
-        // Phase B-2 TODO: restore dynamic note "Switch to use <arrayDesign.shortName>" via SpEL once supported.
+        // Note "Switch to use <shortName>" is built by SpEL in the annotation (Phase B-2).
         log.info( "Completing switching " + ee ); // flush of transaction happens after this, can take a while.
 
         if ( hasData && targetBioAssayDimension != null /* case 2 */ ) {

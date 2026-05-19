@@ -107,6 +107,15 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <!-- spring-expression: parent pom declares this at runtime scope (sufficient for
+             @Cacheable/@PreAuthorize SpEL parsing which Spring does reflectively). The
+             AuditedAspect (AUDIT_SYSTEM_AUDIT.md Phase B-2) imports SpelExpressionParser
+             directly to evaluate @Audited.messageSpel, so we widen the scope to compile
+             here. Version is managed by the parent. -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-expression</artifactId>
+        </dependency>
 
         <!-- Email -->
         <dependency>

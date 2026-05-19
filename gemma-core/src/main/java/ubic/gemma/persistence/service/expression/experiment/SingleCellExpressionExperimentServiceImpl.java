@@ -392,7 +392,8 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional
-    @Audited(DataReplacedEvent.class)
+    @Audited(value = DataReplacedEvent.class,
+            messageSpel = "'Replaced ' + #result + ' vectors with ' + #vectors.size() + ' vectors for ' + #quantitationType + ' with dimension ' + #vectors.iterator().next().singleCellDimension + '.'")
     public int replaceSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, Collection<SingleCellExpressionDataVector> vectors, @Nullable String details, boolean removeOrRecreateCellTypeFactor, boolean ignoreCompatibleFactor ) {
         Assert.notNull( ee.getId(), "The dataset must be persistent." );
         Assert.notNull( quantitationType.getId(), "The quantitation type must be persistent." );
@@ -447,7 +448,9 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
             }
         }
         // Audit event written by @Audited on this method via AuditedAspect.
-        // Phase B-2 TODO: restore dynamic note "Replaced %d vectors with %d vectors for %s with dimension %s." via SpEL.
+        // Note "Replaced N vectors with M vectors for <qt> with dimension <scd>." is built by SpEL
+        // in the annotation (uses #result for the removed-count and #vectors.iterator().next().singleCellDimension
+        // for the dimension; both are accessible at @AfterReturning time).
         return numVectorsRemoved;
     }
 
@@ -1053,7 +1056,8 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional
-    @Audited(CellTypeAssignmentRemovedEvent.class)
+    @Audited(value = CellTypeAssignmentRemovedEvent.class,
+            messageSpel = "'Removed ' + #cellTypeAssignment + ' from ' + #dimension + '.'")
     public void removeCellTypeAssignment( ExpressionExperiment ee, SingleCellDimension dimension, CellTypeAssignment cellTypeAssignment ) {
         Assert.notNull( ee.getId(), "Dataset must be persistent." );
         Assert.notNull( dimension.getId(), "Single-cell dimension must be persistent." );
@@ -1064,7 +1068,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         }
         expressionExperimentDao.updateSingleCellDimension( ee, dimension );
         // Audit event written by @Audited on this method via AuditedAspect.
-        // Phase B-2 TODO: restore dynamic note "Removed <cta> from <dimension>." via SpEL.
+        // Note "Removed <cta> from <dimension>." is built by SpEL in the annotation (Phase B-2).
     }
 
     @Override
@@ -1212,7 +1216,8 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional
-    @Audited(CellLevelCharacteristicsAddedEvent.class)
+    @Audited(value = CellLevelCharacteristicsAddedEvent.class,
+            messageSpel = "'Added ' + #clc + ' to ' + #scd + '.'")
     public CellLevelCharacteristics addCellLevelCharacteristics( ExpressionExperiment ee, SingleCellDimension scd, CellLevelCharacteristics clc ) {
         Assert.notNull( ee.getId(), "Dataset must be persistent." );
         Assert.notNull( scd.getId(), "Dimension must be persistent." );
@@ -1228,13 +1233,14 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         scd.getCellLevelCharacteristics().add( clc );
         expressionExperimentDao.updateSingleCellDimension( ee, scd );
         // Audit event written by @Audited on this method via AuditedAspect.
-        // Phase B-2 TODO: restore dynamic note "Added <clc> to <scd>." via SpEL.
+        // Note "Added <clc> to <scd>." is built by SpEL in the annotation (Phase B-2).
         return clc;
     }
 
     @Override
     @Transactional
-    @Audited(CellLevelCharacteristicsRemovedEvent.class)
+    @Audited(value = CellLevelCharacteristicsRemovedEvent.class,
+            messageSpel = "'Removed ' + #clc + ' from ' + #scd + '.'")
     public void removeCellLevelCharacteristics( ExpressionExperiment ee, SingleCellDimension scd, CellLevelCharacteristics clc ) {
         Assert.notNull( ee.getId(), "Dataset must be persistent." );
         Assert.notNull( scd.getId(), "Dimension must be persistent." );
@@ -1244,7 +1250,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         }
         expressionExperimentDao.updateSingleCellDimension( ee, scd );
         // Audit event written by @Audited on this method via AuditedAspect.
-        // Phase B-2 TODO: restore dynamic note "Removed <clc> from <scd>." via SpEL.
+        // Note "Removed <clc> from <scd>." is built by SpEL in the annotation (Phase B-2).
     }
 
     @Override

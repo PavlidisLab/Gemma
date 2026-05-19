@@ -118,6 +118,39 @@ public class AuditedAspectTest extends BaseTest {
         public void noAuditableArg( String onlyArg ) {
             // no-op
         }
+
+        /**
+         * Dynamic note built from a method parameter via SpEL. The expression
+         * references the parameter by name ({@code #reason}); this only works
+         * because javac is run with {@code -parameters} project-wide (see the
+         * parent pom). Exercises the Phase B-2 SpEL path in AuditedAspect.
+         */
+        @Audited( value = SampleRemovalEvent.class,
+                messageSpel = "'Removed sample because: ' + #reason" )
+        public void removeWithSpelMessage( FakeAuditable target, String reason ) {
+            // no-op; the aspect resolves the note from #reason
+        }
+
+        /**
+         * SpEL referencing the return value via {@code #result}. The aspect
+         * is {@code @AfterReturning} so {@code #result} is fully populated.
+         */
+        @Audited( value = SampleRemovalEvent.class,
+                messageSpel = "'Removed ' + #result + ' samples.'" )
+        public int removeAndCount( FakeAuditable target, int count ) {
+            return count;
+        }
+
+        /**
+         * Malformed SpEL — aspect must NOT drop the audit row; it falls back
+         * to the literal {@code message()} attribute (which here is set).
+         */
+        @Audited( value = SampleRemovalEvent.class,
+                message = "fallback literal",
+                messageSpel = "#nonexistent.foo.bar()" )
+        public void brokenSpelFallsBack( FakeAuditable target ) {
+            // no-op
+        }
     }
 
     static class AuditedEventCollector {
@@ -238,6 +271,52 @@ public class AuditedAspectTest extends BaseTest {
 
         verifyNoInteractions( auditTrailService );
         assertThat( collector.received ).isEmpty();
+    }
+
+    /**
+     * Phase B-2: {@code messageSpel} must be evaluated against the method
+     * arguments (by parameter name) and the resolved string passed through
+     * to {@link AuditTrailService#addUpdateEventWithPayload}.
+     */
+    @Test
+    public void testMessageSpelEvaluation() {
+        FakeAuditable target = new FakeAuditable( 100L );
+
+        annotatedService.removeWithSpelMessage( target, "low-quality" );
+
+        verify( auditTrailService ).addUpdateEventWithPayload(
+                eq( target ),
+                eq( SampleRemovalEvent.class ),
+                eq( "Removed sample because: low-quality" ),
+                eq( null ) );
+        assertThat( collector.received ).hasSize( 1 );
+    }
+
+    @Test
+    public void messageSpel_canReferenceReturnValueWithHashResult() {
+        FakeAuditable target = new FakeAuditable( 101L );
+
+        int returned = annotatedService.removeAndCount( target, 5 );
+
+        assertThat( returned ).isEqualTo( 5 );
+        verify( auditTrailService ).addUpdateEventWithPayload(
+                eq( target ),
+                eq( SampleRemovalEvent.class ),
+                eq( "Removed 5 samples." ),
+                eq( null ) );
+    }
+
+    @Test
+    public void brokenSpel_fallsBackToLiteralMessageAndStillWritesAuditRow() {
+        FakeAuditable target = new FakeAuditable( 102L );
+
+        annotatedService.brokenSpelFallsBack( target );
+
+        verify( auditTrailService ).addUpdateEventWithPayload(
+                eq( target ),
+                eq( SampleRemovalEvent.class ),
+                eq( "fallback literal" ),
+                eq( null ) );
     }
 
 }
