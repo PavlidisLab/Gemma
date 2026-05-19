@@ -438,18 +438,9 @@
 			<version>1.1.34-RENOVATIONS-SNAPSHOT</version>
 		</dependency>
 
-		<dependency>
-			<groupId>pavlab</groupId>
-			<artifactId>gemma-gsec</artifactId>
-			<version>${gsec.version}</version>
-			<exclusions>
-				<!-- Force ehcache-core 2.6.11 (we declare it directly below for Spring 4.3 compat). -->
-				<exclusion>
-					<groupId>net.sf.ehcache</groupId>
-					<artifactId>ehcache-core</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
+		<!-- pavlab:gemma-gsec dependency removed in Phase 3 absorption: gsec source now lives
+		     under gemma-core/src/main/java/gemma/gsec/ (package names preserved per absorption
+		     roadmap Phase A). See GSEC_ABSORPTION_ROADMAP.md. -->
 
 		<!-- Spring -->
 		<dependency>
@@ -1280,7 +1271,7 @@
 		are stubbed to return empty; reinstating real ontology / entity full-text search is a future
 		phase (likely on HS 7 or an external engine like OpenSearch).
 		-->
-		<gsec.version>0.0.24-RENOVATIONS-SNAPSHOT</gsec.version>
+		<!-- gsec.version property removed in Phase 3 absorption (gsec source absorbed into gemma-core). -->
 		<!-- Spring Boot dependencies BOM (managed via dependencyManagement above). Boot 3.5.x
 		     targets SF 6.2 + SS 6.5 + Hibernate 6.6 natively - matches Gemma's pins. -->
 		<spring-boot.version>3.5.6</spring-boot.version>
