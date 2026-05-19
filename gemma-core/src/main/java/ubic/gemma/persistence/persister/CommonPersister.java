@@ -30,7 +30,6 @@ import ubic.gemma.model.common.measurement.Unit;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailDao;
-import ubic.gemma.persistence.service.common.auditAndSecurity.ContactDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.PersonDao;
 import ubic.gemma.persistence.service.common.description.BibliographicReferenceDao;
 import ubic.gemma.persistence.service.common.description.DatabaseEntryDao;
@@ -64,9 +63,6 @@ public abstract class CommonPersister extends AbstractPersister {
     private BibliographicReferenceDao bibliographicReferenceDao;
 
     @Autowired
-    private ContactDao contactDao;
-
-    @Autowired
     private ExternalDatabaseDao externalDatabaseDao;
 
     @Autowired
@@ -93,8 +89,6 @@ public abstract class CommonPersister extends AbstractPersister {
             throw new UnsupportedOperationException( "Don't persist users via this class; use the UserManager (core)" );
         } else if ( entity instanceof Person ) {
             return ( T ) this.persistPerson( ( Person ) entity );
-        } else if ( entity instanceof Contact ) {
-            return ( T ) this.persistContact( ( Contact ) entity );
         } else if ( entity instanceof Unit ) {
             return ( T ) this.persistUnit( ( Unit ) entity );
         } else if ( entity instanceof QuantitationType ) {
@@ -135,13 +129,6 @@ public abstract class CommonPersister extends AbstractPersister {
             assert event.getPerformer() != null;
         }
         return auditTrailDao.create( entity );
-    }
-
-    protected Contact persistContact( Contact contact ) {
-        // BusinessKey.find(Session, Contact) covers Person too (Person extends Contact).
-        Session session = getSessionFactory().getCurrentSession();
-        Contact existing = BusinessKey.find( session, contact );
-        return existing != null ? existing : contactDao.create( contact );
     }
 
     protected ExternalDatabase persistExternalDatabase( ExternalDatabase database, Caches caches ) {

@@ -281,6 +281,50 @@ of the two, sets a clearer pattern for the eight other persistXxx
 methods in `CommonPersister`, and doesn't need to touch the `Caches`
 value object's lifetime contract (which is its own follow-up).
 
+#### 6.2.bis Pilot as executed (2026-05-19)
+
+The pilot as actually run differed from the plan above; the recce
+mis-identified the caller. `AuditTrailServiceImpl.createAuditEvent`
+sets the performer from `userManager.getCurrentUser()` (already a
+managed User entity) -- it never goes through `persisterHelper`. So
+"`AuditTrail.performer` goes through `AuditTrailService`" is true,
+but the resolution step the recce wanted to eliminate doesn't exist
+on that path.
+
+The actual callers of `persistContact` on `phase2-acl-migrate` HEAD
+`e39366679` are two, both inside the persister package:
+
+1. `ArrayDesignPersister.persistNewArrayDesign` -- calls
+   `this.persistContact(arrayDesign.getDesignProvider())` to resolve
+   the array-design `designProvider` (a `Contact`).
+2. `EeWriteServiceImpl.persistExpressionExperiment` -- the
+   `ee.setOwner(persister().doPersist(ee.getOwner(), caches))` line
+   routes through the `instanceof Contact` arm of
+   `CommonPersister.doPersist` (EE owner is a `Contact`).
+
+Migration done:
+
+- `ArrayDesignPersister`: added `@Autowired ContactDao contactDao`;
+  inlined `contactDao.find(...) orElse contactDao.create(...)` in
+  place of `this.persistContact(...)`.
+- `EeWriteServiceImpl`: added `@Autowired ContactDao contactDao`;
+  inlined `contactDao.find(...) orElse contactDao.create(...)` in
+  place of `persister().doPersist(ee.getOwner(), caches)`.
+- `CommonPersister`: removed the `instanceof Contact` dispatch arm,
+  deleted `persistContact`, removed the now-unused `ContactDao`
+  field + import.
+
+`AuditTrailServiceImpl` was left untouched. The recce's Sec. 6.3
+acceptance check ("grep for `persisterHelper.persist.*Contact`
+returns zero") was already true before the change; the relevant grep
+post-change is for `persistContact` callers (also zero) and for
+`instanceof Contact` in `CommonPersister.doPersist` (also gone).
+
+Sets the same pattern Sec. 6.2 was after -- a `dao.find / dao.create`
+two-liner at each call site -- on the actual surface that needed
+it. Pattern is reusable for the remaining seven persistXxx methods
+in `CommonPersister`.
+
 ### 6.3 Smallest test of the new pattern
 
 After 6.2 lands, the acceptance check is:
