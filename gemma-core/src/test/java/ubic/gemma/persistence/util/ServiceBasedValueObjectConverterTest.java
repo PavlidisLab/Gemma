@@ -1,8 +1,8 @@
 package ubic.gemma.persistence.util;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,7 +15,7 @@ import org.springframework.security.test.context.support.WithSecurityContextTest
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.context.TestComponent;
-import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.Mockito.*;
@@ -36,7 +37,7 @@ import static org.mockito.Mockito.*;
 @ContextConfiguration
 @TestExecutionListeners(value = WithSecurityContextTestExecutionListener.class,
         mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
-public class ServiceBasedValueObjectConverterTest extends BaseTest {
+public class ServiceBasedValueObjectConverterTest extends BaseTest5 {
 
     @Configuration
     @TestComponent
@@ -55,7 +56,7 @@ public class ServiceBasedValueObjectConverterTest extends BaseTest {
 
     private ExpressionExperiment ee;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         ee = new ExpressionExperiment();
         ee.setId( 1L );
@@ -78,7 +79,7 @@ public class ServiceBasedValueObjectConverterTest extends BaseTest {
         ;
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         reset( expressionExperimentService );
     }
@@ -190,9 +191,10 @@ public class ServiceBasedValueObjectConverterTest extends BaseTest {
         verifyNoInteractions( expressionExperimentService );
     }
 
-    @Test(expected = ConverterNotFoundException.class)
+    @Test
     public void testConvertUnknownType() {
-        conversionService.convert( new ArrayDesign(), TypeDescriptor.valueOf( ArrayDesign.class ), TypeDescriptor.valueOf( ArrayDesignValueObject.class ) );
+        assertThrows( ConverterNotFoundException.class,
+                () -> conversionService.convert( new ArrayDesign(), TypeDescriptor.valueOf( ArrayDesign.class ), TypeDescriptor.valueOf( ArrayDesignValueObject.class ) ) );
     }
 
 }

@@ -1,7 +1,7 @@
 package ubic.gemma.core.logging.log4j;
 
 import org.apache.logging.log4j.ThreadContext;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -12,14 +12,14 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.util.BuildInfo;
-import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.BaseTest5;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ContextConfiguration
 @TestExecutionListeners(value = WithSecurityContextTestExecutionListener.class,
         mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
-public class BuildInfoThreadContextPopulatorTest extends BaseTest {
+public class BuildInfoThreadContextPopulatorTest extends BaseTest5 {
 
     @Configuration
     @TestComponent
