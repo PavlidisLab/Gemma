@@ -18,6 +18,7 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.CacheMode;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.ontology.model.OntologyTerm;
@@ -109,11 +110,20 @@ public class ExpressionExperimentReadServiceImpl implements ExpressionExperiment
 
     @Autowired
     private AuditEventService auditEventService;
+    /**
+     * {@code @Lazy} to break a Spring construction cycle. {@code ExpressionExperimentSetServiceImpl}
+     * constructor-injects this read service; {@code OntologyService} -> {@code SearchService} ->
+     * {@code valueObjectConversionService} -> {@code ExpressionExperimentSetService} closes the
+     * cycle. Lazy proxies on these two field deps defer instantiation past the cycle.
+     */
     @Autowired
+    @Lazy
     private OntologyService ontologyService;
     @Autowired
+    @Lazy
     private SearchService searchService;
     @Autowired
+    @Lazy
     private ExpressionExperimentFilterRewriteHelperService filterRewriteService;
 
     @Autowired
