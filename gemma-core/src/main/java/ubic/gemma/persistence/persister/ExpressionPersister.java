@@ -35,8 +35,6 @@ import ubic.gemma.model.expression.biomaterial.Compound;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayDao;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionDao;
-import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialDao;
-import ubic.gemma.persistence.service.expression.biomaterial.CompoundDao;
 import ubic.gemma.persistence.service.expression.experiment.*;
 
 import org.springframework.lang.Nullable;
@@ -52,21 +50,21 @@ public abstract class ExpressionPersister extends ArrayDesignPersister implement
     @Autowired
     private BioAssayDao bioAssayDao;
     @Autowired
-    private BioMaterialDao bioMaterialDao;
-    @Autowired
-    private CompoundDao compoundDao;
-    @Autowired
     private ExperimentalDesignDao experimentalDesignDao;
-    @Autowired
-    private ExperimentalFactorDao experimentalFactorDao;
     @Autowired
     private ExpressionExperimentDao expressionExperimentDao;
     @Autowired
-    private ExpressionExperimentSubSetDao expressionExperimentSubSetDao;
-    @Autowired
-    private FactorValueDao factorValueDao;
-    @Autowired
     private ExpressionExperimentPrePersistService expressionExperimentPrePersistService;
+    /**
+     * Phase 3 ExpressionPersister retirement (Chunk E2): the trivial
+     * find-or-create methods (Compound, BioMaterial, FactorValue,
+     * ExperimentalFactor, ExpressionExperimentSubSet) delegate their DAO
+     * lookup-or-insert step here. The persister still owns the surrounding
+     * orchestration (taxon, accession, association fill-in). As more of the
+     * body migrates in Chunks E3+ this delegation will become the entry point.
+     */
+    @Autowired
+    private EeWriteService eeWriteService;
 
     @Override
     @Transactional
@@ -389,14 +387,16 @@ public abstract class ExpressionPersister extends ArrayDesignPersister implement
         AbstractPersister.log.debug( "taxon done" );
 
         AbstractPersister.log.debug( "start save" );
-        BioMaterial bm = bioMaterialDao.findOrCreate( entity );
+        // Phase 3 E2: BK find-or-create relocated to EeWriteService.
+        BioMaterial bm = eeWriteService.findOrCreate( entity );
         AbstractPersister.log.debug( "save biomaterial done" );
 
         return bm;
     }
 
     private Compound persistCompound( Compound compound ) {
-        return compoundDao.findOrCreate( compound );
+        // Phase 3 E2: BK find-or-create relocated to EeWriteService.
+        return eeWriteService.findOrCreate( compound );
     }
 
     /**
@@ -405,7 +405,8 @@ public abstract class ExpressionPersister extends ArrayDesignPersister implement
     private ExperimentalFactor persistExperimentalFactor( ExperimentalFactor experimentalFactor, Caches caches ) {
         assert experimentalFactor.getType() != null;
         this.fillInExperimentalFactorAssociations( experimentalFactor, caches );
-        return experimentalFactorDao.create( experimentalFactor );
+        // Phase 3 E2: DAO create relocated to EeWriteService.
+        return eeWriteService.create( experimentalFactor );
     }
 
     private ExpressionExperimentSubSet persistExpressionExperimentSubSet( ExpressionExperimentSubSet entity ) {
@@ -415,7 +416,8 @@ public abstract class ExpressionPersister extends ArrayDesignPersister implement
             throw new IllegalArgumentException(
                     "Subsets are only supported for expression experiments that are already persistent" );
         } else {
-            return expressionExperimentSubSetDao.findOrCreate( entity );
+            // Phase 3 E2: BK find-or-create relocated to EeWriteService.
+            return eeWriteService.findOrCreate( entity );
         }
     }
 
@@ -432,7 +434,8 @@ public abstract class ExpressionPersister extends ArrayDesignPersister implement
                     "You must fill in the experimental factor before persisting a factorvalue" );
         }
         this.fillInFactorValueAssociations( factorValue, caches );
-        return factorValueDao.findOrCreate( factorValue );
+        // Phase 3 E2: BK find-or-create relocated to EeWriteService.
+        return eeWriteService.findOrCreate( factorValue );
     }
 
     /**
@@ -453,56 +456,56 @@ public abstract class ExpressionPersister extends ArrayDesignPersister implement
         }
     }
 
+    /**
+     * Persist the ExperimentalDesign and its EF/FV graph, then return it persistent.
+     * <p>
+     * Historical note (pre-Phase-3): this method used to explicitly withhold each
+     * collection and call {@code experimentalFactorDao.create} / {@code factorValueDao.create}
+     * so the {@code @AfterReturning} ACL advice would fire on each DAO call.
+     * Post-{@code 21e4fc41} the {@code EntityInsert} listener attaches ACLs from
+     * Hibernate insert events directly, so cascade inserts produce identical ACL
+     * results. The explicit per-FV create loop and the cascade-override withhold-
+     * and-put-back gymnastics are gone; we let the {@code ExperimentalDesign}
+     * cascade (ED → EF → FV) do the work and the listener attach the ACLs.
+     * <p>
+     * The ED still has to be persisted here (ahead of {@code processBioAssays}) so
+     * that {@code FactorValue} ids are assigned before {@code BioMaterial.factorValues}
+     * are walked in {@link #fillInBioAssayAssociations}; otherwise those BMs would
+     * see transient FVs and try to persist them through {@code persistFactorValue},
+     * forking the persistence path.
+     */
     private void processExperimentalDesign( ExperimentalDesign experimentalDesign, Caches caches ) {
 
         this.doPersist( experimentalDesign.getTypes(), caches );
 
-        // Withhold to avoid premature cascade.
-        Set<ExperimentalFactor> factors = experimentalDesign.getExperimentalFactors();
-        if ( factors == null ) {
-            factors = new HashSet<>();
+        if ( experimentalDesign.getExperimentalFactors() == null ) {
+            experimentalDesign.setExperimentalFactors( new HashSet<>() );
         }
-        experimentalDesign.setExperimentalFactors( null );
 
-        // Note we use create because this is specific to the instance. (we're overriding a cascade)
-        experimentalDesign = experimentalDesignDao.create( experimentalDesign );
-
-        // Put back.
-        experimentalDesign.setExperimentalFactors( factors );
-
-        // assert !this.isTransient( experimentalDesign );
-        assert experimentalDesign.getExperimentalFactors() != null;
-
+        // Fill in associations that the cascade doesn't reach (EF annotations,
+        // FV measurement units, back-references). Cascade handles ED→EF→FV
+        // inserts and the EntityInsert listener attaches their ACLs.
         for ( ExperimentalFactor experimentalFactor : experimentalDesign.getExperimentalFactors() ) {
-
-            // experimentalFactor.setId( null ); // in case of retry.
             experimentalFactor.setExperimentalDesign( experimentalDesign );
+            this.fillInExperimentalFactorAssociations( experimentalFactor, caches );
 
-            // Override cascade like above.
-            Collection<FactorValue> factorValues = experimentalFactor.getFactorValues();
-            experimentalFactor.setFactorValues( null );
-            experimentalFactor = this.persistExperimentalFactor( experimentalFactor, caches );
-
-            if ( factorValues == null ) {
+            if ( experimentalFactor.getFactorValues() == null ) {
                 AbstractPersister.log.warn( "Factor values collection was null for " + experimentalFactor );
                 continue;
             }
 
-            Set<FactorValue> createdFactorValues = new HashSet<>( factorValues.size() );
-            for ( FactorValue factorValue : factorValues ) {
+            for ( FactorValue factorValue : experimentalFactor.getFactorValues() ) {
                 factorValue.setExperimentalFactor( experimentalFactor );
-                this.fillInFactorValueAssociations( factorValue, caches );
-
-                // this cascades from updates to the factor, but because auto-flush is off, we have to do this here to
-                // get ACLs populated.
-                createdFactorValues.add( factorValueDao.create( factorValue ) );
+                // measurement will cascade, but not unit.
+                if ( factorValue.getMeasurement() != null && factorValue.getMeasurement().getUnit() != null ) {
+                    factorValue.getMeasurement().setUnit( this.persistUnit( factorValue.getMeasurement().getUnit() ) );
+                }
             }
-
-            experimentalFactor.setFactorValues( createdFactorValues );
-
-            experimentalFactorDao.update( experimentalFactor );
-
         }
+
+        // Cascade=all on ExperimentalDesign.experimentalFactors and ExperimentalFactor.factorValues
+        // makes this one create() walk the whole subgraph; the EntityInsert listener attaches ACLs.
+        experimentalDesignDao.create( experimentalDesign );
     }
 
 }
