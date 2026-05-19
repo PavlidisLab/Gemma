@@ -1,7 +1,7 @@
 package ubic.gemma.model.expression.experiment;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.model.common.measurement.MeasurementType;
@@ -19,7 +19,7 @@ public class ExperimentalDesignUtilsTest {
 
     private final Random random = new Random( 123L );
 
-    @Before
+    @BeforeEach
     public void setUp() {
         random.setSeed( 123L );
     }

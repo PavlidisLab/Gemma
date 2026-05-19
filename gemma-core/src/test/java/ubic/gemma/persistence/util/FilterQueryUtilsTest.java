@@ -1,7 +1,7 @@
 package ubic.gemma.persistence.util;
 
 import org.hibernate.query.Query;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.Collections;

@@ -1,8 +1,8 @@
 package ubic.gemma.core.ontology;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.cache.concurrent.ConcurrentMapCache;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.OntologyService;
@@ -16,7 +16,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertSame;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.Mockito.*;
 
 public class OntologyCacheTest {
@@ -25,7 +25,7 @@ public class OntologyCacheTest {
     private OntologyCache ontologyCache;
     private OntologyTerm term1, term2, term3, term4;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         ontologyService = mock( OntologyService.class );
         ontologyCache = new OntologyCache( new ConcurrentMapCache( "search" ), new ConcurrentMapCache( "parents" ), new ConcurrentMapCache( "children" ) );
@@ -35,7 +35,7 @@ public class OntologyCacheTest {
         term4 = new OntologyTermSimple( "http://example.com/term4", "term4" );
     }
 
-    @After
+    @AfterEach
     public void resetMocks() {
         reset( ontologyService );
     }

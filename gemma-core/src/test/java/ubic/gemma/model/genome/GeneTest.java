@@ -18,11 +18,11 @@
  */
 package ubic.gemma.model.genome;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 /**
  * Tests of 'equals' implementation
@@ -109,7 +109,7 @@ public class GeneTest {
 
     }
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         aTax = Taxon.Factory.newInstance();
         aTax.setScientificName( "Foobius Barius" );

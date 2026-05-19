@@ -1,7 +1,7 @@
 package ubic.gemma.model.common.description;
 
 import org.assertj.core.groups.Tuple;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.lang.Nullable;
 import java.util.Arrays;

@@ -2,12 +2,12 @@ package ubic.gemma.model.common.quantitationtype;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.assertj.core.api.Assertions;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.persistence.util.ByteArrayUtils;
 
 import java.util.Arrays;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class QuantitationTypeUtilsTest {
 
