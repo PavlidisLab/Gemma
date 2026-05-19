@@ -107,7 +107,7 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
         bindQtParams( q, entity );
         Long id = q.uniqueResult();
         if ( id == null ) return null;
-        return ( QuantitationType ) getSessionFactory().getCurrentSession().load( QuantitationType.class, id );
+        return ( QuantitationType ) getSessionFactory().getCurrentSession().getReference( QuantitationType.class, id );
     }
 
     @Override

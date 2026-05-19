@@ -228,7 +228,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
                 String uri = subEntry.getKey();
                 result2.computeIfAbsent( clazz, k -> new HashMap<>() )
                         .computeIfAbsent( uri, row -> subEntry.getValue().stream()
-                                .map( eeId -> ( ExpressionExperiment ) getSessionFactory().getCurrentSession().load( ExpressionExperiment.class, eeId ) )
+                                .map( eeId -> ( ExpressionExperiment ) getSessionFactory().getCurrentSession().getReference( ExpressionExperiment.class, eeId ) )
                                 .collect( toIdentifiableSet() ) );
             }
         }

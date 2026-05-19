@@ -245,7 +245,7 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
             AuditEvent e = ( AuditEvent ) ar[1];
             // only retain the first one which is the latest (by date or ID)
             //noinspection unchecked
-            result.putIfAbsent( ( T ) getSessionFactory().getCurrentSession().load( auditableClass, t ), e );
+            result.putIfAbsent( ( T ) getSessionFactory().getCurrentSession().getReference( auditableClass, t ), e );
         }
 
         timer.stop();
