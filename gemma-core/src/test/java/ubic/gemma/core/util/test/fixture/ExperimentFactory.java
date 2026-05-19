@@ -106,6 +106,9 @@ public class ExperimentFactory {
     @Autowired
     private ExternalDatabaseService externalDatabaseService;
 
+    @Autowired
+    private BioAssayFactory bioAssayFactory;
+
     /**
      * Start building a bulk-RNA expression experiment. Defaults:
      * mouse taxon, 8 samples, freshly-minted single-platform AD with zero
@@ -232,28 +235,23 @@ public class ExperimentFactory {
 
             // BioMaterials + BioAssays. The HBM mapping does NOT cascade from
             // EE.bioAssays → BioAssay.sampleUsed (BioMaterial), so the BM must
-            // be persistent BEFORE the EE.create() session sees the graph. We
-            // persist BMs explicitly through BioMaterialService.create (which
-            // also fires the ACL listener on the BM). BAs cascade from EE.
+            // be persistent BEFORE the EE.create() session sees the graph.
+            // BioAssayFactory.buildTransient() persists the BM (and AD if it
+            // had to create one) but leaves the BA transient so EE's cascade
+            // handles it. BAs cascade from EE.
             for ( int i = 0; i < this.numSamples; i++ ) {
                 BioMaterial bm = BioMaterial.Factory.newInstance();
                 bm.setName( shortNm + "_bm_" + i );
                 bm.setSourceTaxon( t );
                 bm = factory.bioMaterialService.create( bm );
 
-                BioAssay ba = BioAssay.Factory.newInstance();
-                ba.setName( shortNm + "_ba_" + i );
-                ba.setSampleUsed( bm );
-                ba.setArrayDesignUsed( ad );
-                ba.setIsOutlier( false );
-                ba.setSequencePairedReads( false );
+                BioAssay ba = factory.bioAssayFactory.builder()
+                        .withName( shortNm + "_ba_" + i )
+                        .withBioMaterial( bm )
+                        .withArrayDesign( ad )
+                        .withTaxon( t )
+                        .buildTransient();
 
-                DatabaseEntry baAcc = DatabaseEntry.Factory.newInstance();
-                baAcc.setAccession( ba.getName() );
-                baAcc.setExternalDatabase( geo );
-                ba.setAccession( baAcc );
-
-                bm.getBioAssaysUsedIn().add( ba );
                 ee.getBioAssays().add( ba );
             }
             ee.setNumberOfSamples( this.numSamples );
