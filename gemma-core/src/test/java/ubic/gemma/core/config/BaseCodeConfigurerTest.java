@@ -1,18 +1,18 @@
 package ubic.gemma.core.config;
 
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.MutablePropertySources;
 import ubic.basecode.util.Configuration;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static ubic.gemma.core.util.test.Maps.map;
 
 public class BaseCodeConfigurerTest {
 
-    @After
+    @AfterEach
     public void resetBaseCodeConfiguration() {
         Configuration.reset();
     }

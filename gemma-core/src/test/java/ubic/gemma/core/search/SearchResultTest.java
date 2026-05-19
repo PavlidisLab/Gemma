@@ -1,6 +1,6 @@
 package ubic.gemma.core.search;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.search.SearchResult;
 
@@ -8,6 +8,7 @@ import org.springframework.lang.Nullable;
 import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static ubic.gemma.core.util.test.Maps.map;
 
 /**
@@ -39,9 +40,10 @@ public class SearchResultTest {
         assertThat( sr ).hasToString( String.format( "FooBar Id=1 Score=%.2f Highlights=a Source=test object [Not Filled]", 1.0 ) );
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testResultObjectWithNullId() {
-        SearchResult.from( FooBar.class, new FooBar( null ), 1.0, null, "test object" );
+        assertThrows( IllegalArgumentException.class,
+                () -> SearchResult.from( FooBar.class, new FooBar( null ), 1.0, null, "test object" ) );
     }
 
     @Test
@@ -50,16 +52,16 @@ public class SearchResultTest {
         sr.setResultObject( new FooBar( 1L ) );
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testSetResultObjectWithNullId() {
         SearchResult<Identifiable> sr = SearchResult.from( FooBar.class, 1L, 1.0, null, "test object" );
-        sr.setResultObject( new FooBar( null ) );
+        assertThrows( IllegalArgumentException.class, () -> sr.setResultObject( new FooBar( null ) ) );
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testSetResultObjectWithDifferentId() {
         SearchResult<Identifiable> sr = SearchResult.from( FooBar.class, 1L, 1.0, null, "test object" );
-        sr.setResultObject( new FooBar( 2L ) );
+        assertThrows( IllegalArgumentException.class, () -> sr.setResultObject( new FooBar( 2L ) ) );
     }
 
 }
