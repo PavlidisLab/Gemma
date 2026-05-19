@@ -48,13 +48,18 @@ public class ExpressionExperimentSetServiceImpl
     private static final String AUTOMATICALLY_GENERATED_EXPERIMENT_GROUP_DESCRIPTION = "Automatically generated for %s EEs";
 
     private final ExpressionExperimentSetDao expressionExperimentSetDao;
-    private final ExpressionExperimentService expressionExperimentService;
+    /**
+     * Inject the thin read service rather than the facade {@link ExpressionExperimentService}
+     * to break the dependency cycle (this service is itself injected by EESI via the facade
+     * autowire on the writer side).
+     */
+    private final ExpressionExperimentReadService expressionExperimentReadService;
 
     @Autowired
-    public ExpressionExperimentSetServiceImpl( ExpressionExperimentSetDao expressionExperimentSetDao, ExpressionExperimentService expressionExperimentService ) {
+    public ExpressionExperimentSetServiceImpl( ExpressionExperimentSetDao expressionExperimentSetDao, ExpressionExperimentReadService expressionExperimentReadService ) {
         super( expressionExperimentSetDao );
         this.expressionExperimentSetDao = expressionExperimentSetDao;
-        this.expressionExperimentService = expressionExperimentService;
+        this.expressionExperimentReadService = expressionExperimentReadService;
     }
 
     @Override
@@ -193,7 +198,7 @@ public class ExpressionExperimentSetServiceImpl
         Taxon groupTaxon = expressionExperimentSet.getTaxon();
         Taxon eeTaxon;
         for ( ExpressionExperiment ee : expressionExperimentSet.getExperiments() ) {
-            eeTaxon = expressionExperimentService.getTaxon( ee );
+            eeTaxon = expressionExperimentReadService.getTaxon( ee );
 
             if ( eeTaxon == null ) {
                 // this can happen if there are 0 samples
