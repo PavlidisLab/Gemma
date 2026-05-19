@@ -93,6 +93,11 @@ public class ExpressionExperimentServiceImplTest extends BaseTest {
         }
 
         @Bean
+        public ExpressionExperimentSubSetReadService expressionExperimentSubSetReadService() {
+            return mock( ExpressionExperimentSubSetReadService.class );
+        }
+
+        @Bean
         public AuditEventService auditEventService() {
             return mock( AuditEventService.class );
         }
