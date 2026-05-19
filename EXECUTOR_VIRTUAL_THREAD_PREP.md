@@ -235,6 +235,28 @@ Priority by I/O-boundedness, blast radius, and revertability:
 the generic `taskExecutor` / `TaskRunningServiceImpl` (mixed workloads — would
 need workload-aware routing, not a blanket switch).
 
+### Deferred: scheduled-executor callsites (Groups 3 and 5)
+
+`GoogleAnalytics4Provider` and `Hibernate4QueryMetrics` use
+`Executors.newSingleThreadScheduledExecutor()` to drive
+`scheduleWithFixedDelay` / `scheduleAtFixedRate`. The VT-aware factory
+`newVirtualThreadPerTaskExecutorIfAvailable()` returns an `ExecutorService`,
+not a `ScheduledExecutorService` — and the JDK 21 API ships no virtual-thread
+flavour of the scheduled executor. A semantic-preserving simple swap is
+therefore not possible.
+
+A two-tier refactor (keep a platform-thread `ScheduledExecutorService` as a
+tick source; dispatch the actual flush/scrape work to a VT executor on each
+tick) is technically feasible but changes flush semantics — both callsites
+serialize their tick-bodies and rely on overlapping work being naturally
+prevented by single-threading. The gain is marginal: a 1Hz fixed-rate scrape
+or flush is already cheap, and the recce had already flagged these as
+low-priority (sections 3 and 6 above).
+
+Decision: leave the scheduled callsites on platform threads. Revisit only if
+profiling on JDK 21 shows the GA4 flush or Hibernate scrape actually pinning
+a carrier thread for non-trivial duration.
+
 ---
 
 ## 7. Open questions
