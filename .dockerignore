@@ -1,0 +1,31 @@
+# Keep the build context lean. The Dockerfile only needs the POMs and src/
+# trees for each module; everything else just slows down the COPY step.
+**/target
+**/.git
+**/.idea
+**/*.iml
+**/node_modules
+**/*.log
+
+# Repo recce / planning docs -- not needed for a build.
+*.md
+docs/
+figures/
+.claude/
+.github/
+.mvn/
+
+# IDE / OS cruft.
+.DS_Store
+**/.vscode
+
+# Existing test fixture; not part of the runtime image.
+docker-compose.yml
+docker-compose.test.yml
+
+# Justfile / scripts that are not consumed at build time.
+justfile
+cleanup_worktrees.sh
+
+# Existing top-level src/ (parent pom's site/assembly resources, not gemma-rest).
+src/
