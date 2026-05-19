@@ -284,6 +284,13 @@
 				<artifactId>mysql-connector-j</artifactId>
 				<version>${mysql.version}</version>
 			</dependency>
+			<!-- protobuf-java: transitive via mysql-connector-j 8.4.0 ships 3.25.1;
+			     pin to 3.25.5+ for CVE-2024-7254 (parser DoS). Per DEPENDENCY_AUDIT.md. -->
+			<dependency>
+				<groupId>com.google.protobuf</groupId>
+				<artifactId>protobuf-java</artifactId>
+				<version>3.25.5</version>
+			</dependency>
 			<!-- log4j 2: pavlab-starter-parent pins ${log4j.version} = 2.25.3 (transitively
 			     reaching log4j-jcl / log4j-jul direct deps), BOM is on 2.23.1. We track parent. -->
 			<dependency>
