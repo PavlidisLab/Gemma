@@ -15,6 +15,9 @@
 package ubic.gemma.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,8 +30,10 @@ import ubic.gemma.model.genome.PhysicalLocationValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
+import ubic.gemma.persistence.util.CursorPage;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.rest.util.CursorPaginatedResponseDataObject;
 import ubic.gemma.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.args.*;
@@ -39,6 +44,7 @@ import jakarta.ws.rs.core.Response;
 import java.util.List;
 
 import static ubic.gemma.rest.util.Responders.paginate;
+import static ubic.gemma.rest.util.Responders.paginateByCursor;
 import static ubic.gemma.rest.util.Responders.respond;
 
 /**
@@ -62,11 +68,31 @@ public class GeneWebService {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve all genes")
-    public PaginatedResponseDataObject<GeneValueObject> getGenes(
+    @Operation(summary = "Retrieve all genes",
+            description = "Supports two pagination modes. Legacy mode: pass `offset` (and `limit`); response includes `offset` and `totalElements`. "
+                    + "Cursor mode (recommended for deep pagination and consistency under writes): pass an opaque `cursor` token from a previous response's `nextCursor` / `prevCursor` field. "
+                    + "`offset` and `cursor` are mutually exclusive — passing both yields a 400. "
+                    + "In cursor mode `totalElements` is `null` by default (no count query per request).",
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(schema = @Schema(oneOf = {
+                                    PaginatedResponseDataObject.class,
+                                    CursorPaginatedResponseDataObject.class
+                            }))),
+            })
+    public Object getGenes(
             @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
-            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg
+            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg,
+            @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg
     ) {
+        if ( cursorArg != null ) {
+            // mutual exclusion: an explicit, user-supplied offset is incompatible with cursor mode.
+            // The default offset=0 from @DefaultValue is not considered "user-supplied" — clients
+            // commonly leave offset unset when switching to cursor mode, and that should not 400.
+            CursorPage<GeneValueObject> page = geneArgService.getGenesByCursor( cursorArg.getValue(), limitArg.getValue() );
+            geneService.populateAssociatedExperimentCount( page );
+            return paginateByCursor( page, new String[] { "id" } );
+        }
         Slice<GeneValueObject> slice = geneArgService.getGenes( offsetArg.getValue(), limitArg.getValue() );
         geneService.populateAssociatedExperimentCount( slice );
         return paginate( slice, new String[] { "id" } );
