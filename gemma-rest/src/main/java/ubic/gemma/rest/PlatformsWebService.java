@@ -25,7 +25,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.security.access.SecurityConfig;
-import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
@@ -142,7 +142,7 @@ public class PlatformsWebService {
     @GET
     @Path("/blacklisted")
     @Produces(MediaType.APPLICATION_JSON)
-    @Secured("GROUP_ADMIN")
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
     @Operation(summary = "Retrieve all blacklisted platforms", hidden = true)
     public FilteredAndPaginatedResponseDataObject<ArrayDesignValueObject> getBlacklistedPlatforms(
             @QueryParam("filter") @DefaultValue("") FilterArg<ArrayDesign> filter,

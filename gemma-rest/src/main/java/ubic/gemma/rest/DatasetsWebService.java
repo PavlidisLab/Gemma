@@ -38,7 +38,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.security.access.SecurityConfig;
-import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import ubic.basecode.ontology.model.OntologyTerm;
@@ -412,7 +412,7 @@ public class DatasetsWebService {
 
     @GET
     @Path("/platforms/refresh")
-    @Secured("GROUP_ADMIN")
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Retrieve refreshed experiment-to-platform associations.",
@@ -670,7 +670,7 @@ public class DatasetsWebService {
 
     @GET
     @Path("/annotations/refresh")
-    @Secured("GROUP_ADMIN")
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve refreshed dataset annotations.",
             responses = {
@@ -779,7 +779,7 @@ public class DatasetsWebService {
     @GET
     @Path("/blacklisted")
     @Produces(MediaType.APPLICATION_JSON)
-    @Secured("GROUP_ADMIN")
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
     @Operation(summary = "Retrieve all blacklisted datasets", hidden = true)
     public FilteredAndInferredAndPaginatedResponseDataObject<ExpressionExperimentValueObject> getBlacklistedDatasets(
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg,
@@ -944,7 +944,7 @@ public class DatasetsWebService {
     @Path("/{dataset}/curationDetails")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @Secured("GROUP_ADMIN")
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
     @Operation(summary = "Update the curation details of a dataset",
             description = "Each field in the request body is optional. Provided fields are applied via the corresponding "
                     + "audit event types (`TroubledStatusFlagEvent`/`NotTroubledStatusFlagEvent`, "
@@ -1023,7 +1023,7 @@ public class DatasetsWebService {
     @Path("/{dataset}/permissions")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @Secured("GROUP_ADMIN")
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
     @Operation(summary = "Update the sharing permissions of a dataset",
             description = "Toggle whether a dataset is publicly readable. The `isPublic` field is optional; if omitted, "
                     + "no change is made and the current state is returned.",
@@ -1176,7 +1176,7 @@ public class DatasetsWebService {
     @GET
     @Path("/{dataset}/geeq")
     @Produces(MediaType.APPLICATION_JSON)
-    @Secured("GROUP_ADMIN")
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
     @Operation(summary = "Retrieve the GEEQ scores of a dataset",
             description = "Returns the administrative GEEQ view exposing the underlying suitability and quality "
                     + "score factors, plus a `lastComputed` timestamp from the most recent `GeeqEvent`. Returns "
@@ -1208,7 +1208,7 @@ public class DatasetsWebService {
     @PUT
     @Path("/{dataset}/geeq")
     @Produces(MediaType.APPLICATION_JSON)
-    @Secured("GROUP_ADMIN")
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
     @Operation(summary = "Recompute GEEQ scores for a dataset",
             description = "Synchronously recomputes the GEEQ quality and suitability scores for the dataset and "
                     + "writes a `GeeqEvent` to the audit log. The optional `mode` query parameter selects which "
@@ -1239,7 +1239,7 @@ public class DatasetsWebService {
     @POST
     @Path("/{dataset}/tasks/preprocess")
     @Produces(MediaType.APPLICATION_JSON)
-    @Secured("GROUP_ADMIN")
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
     @Operation(summary = "Run preprocessing run for a dataset",
             description = "Recomputes processed data vectors and refreshes downstream diagnostics. Returns 202 with "
                     + "a `Location` header pointing at the polling endpoint `/tasks/{taskId}`. Tasks are kept "
@@ -1262,7 +1262,7 @@ public class DatasetsWebService {
     @POST
     @Path("/{dataset}/tasks/diagnostics")
     @Produces(MediaType.APPLICATION_JSON)
-    @Secured("GROUP_ADMIN")
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
     @Operation(summary = "Submit a diagnostics-only preprocessing run for a dataset",
             description = "Refreshes mean-variance, PCA and sample-correlation diagnostics without recomputing "
                     + "processed vectors. Returns 202 with a `Location` header pointing at `/tasks/{taskId}`.",
@@ -1285,7 +1285,7 @@ public class DatasetsWebService {
     @POST
     @Path("/{dataset}/tasks/batchInfo")
     @Produces(MediaType.APPLICATION_JSON)
-    @Secured("GROUP_ADMIN")
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
     @Operation(summary = "Run a batch-information fetch for a dataset",
             description = "Re-fetches batch information from the source data. Returns 202 with a `Location` "
                     + "header pointing at `/tasks/{taskId}`.",
@@ -1348,7 +1348,7 @@ public class DatasetsWebService {
     @Path("/{dataset}/tasks/differential")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @Secured("GROUP_ADMIN")
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
     @Operation(summary = "Run differential expression analysis for a dataset",
             description = "If the request body is omitted (or all fields are null), every non-batch experimental "
                     + "factor is included with `includeInteractions=true`. Returns 202 with a `Location` header "
@@ -1435,7 +1435,7 @@ public class DatasetsWebService {
     @POST
     @Path("/{dataset}/tasks/redo/{analysisId}")
     @Produces(MediaType.APPLICATION_JSON)
-    @Secured("GROUP_ADMIN")
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
     @Operation(summary = "Redo an existing differential expression analysis",
             description = "Re-runs the named differential analysis using its original configuration. Returns 202 "
                     + "with a `Location` header pointing at `/tasks/{taskId}`.",
@@ -1464,7 +1464,7 @@ public class DatasetsWebService {
     @DELETE
     @Path("/{dataset}/tasks/differential/{analysisId}")
     @Produces(MediaType.APPLICATION_JSON)
-    @Secured("GROUP_ADMIN")
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
     @Operation(summary = "Remove of a differential expression analysis",
             description = "Asynchronously deletes the named differential analysis from the dataset. Returns 202 "
                     + "with a `Location` header pointing at `/tasks/{taskId}`; the actual delete completes "
@@ -2380,7 +2380,7 @@ public class DatasetsWebService {
      * does not reflect the presence or absence of a batch effect.
      */
     @GET
-    @Secured("GROUP_ADMIN")
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
     @Path("/{dataset}/hasbatch")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Indicate of a dataset has batch information", hidden = true)
@@ -2392,7 +2392,7 @@ public class DatasetsWebService {
     }
 
     @GET
-    @Secured("GROUP_ADMIN")
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{dataset}/batchInformation")
     @Operation(summary = "Retrieve the batch information of a dataset", hidden = true)
@@ -2737,7 +2737,7 @@ public class DatasetsWebService {
      * This has the main side effect of refreshing the second-level cache with the contents of the database.
      */
     @GET
-    @Secured("GROUP_ADMIN")
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
     @Path("/{dataset}/refresh")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve a refreshed dataset",
