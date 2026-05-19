@@ -1,7 +1,7 @@
 package ubic.gemma.model.genome;
 
 import org.assertj.core.api.Assertions;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 
 import static org.assertj.core.api.Assertions.assertThat;

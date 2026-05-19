@@ -1,9 +1,9 @@
 package ubic.gemma.model.expression.experiment;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.model.common.description.Categories;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static ubic.gemma.model.expression.experiment.ExperimentFactorUtils.isBatchFactor;
 
 public class ExperimentFactorUtilsTest {
