@@ -18,71 +18,31 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.biomaterial.Compound;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
-import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.persister.ArrayDesignsForExperimentCache;
+
+import javax.annotation.Nullable;
 
 /**
- * Phase 3 ExpressionPersister retirement: the eventual home for the
- * EE persistence path. This skeleton exposes the "trivial find-or-create"
- * primitives that {@link ubic.gemma.persistence.persister.ExpressionPersister}
- * used to inline. The persister still owns orchestration (taxon / accession /
- * association fill-in); each of its {@code persistXxx} methods now delegates
- * the lookup-or-insert step here.
+ * Write service for {@link ExpressionExperiment} graphs.
  * <p>
- * Strangler-fig staging: callers continue to go through the persister chain
- * unchanged. As more of the persister body moves into the impl (Chunks E3+),
- * this interface will grow a top-level {@code create(ExpressionExperiment, ...)}
- * method and the persister itself will be deleted.
+ * This is the strangler-fig replacement for the EE-related portions of
+ * {@code ExpressionPersister}. The full migration is tracked in
+ * {@code EXPRESSIONPERSISTER_MIGRATION_PLAN.md}.
  *
  * @author pavlidis
  */
 public interface EeWriteService {
 
     /**
-     * Find an existing Compound by business key (name) or create a new one.
-     * Wraps {@code CompoundDao.findOrCreate} which delegates to
-     * {@code BusinessKey}-equivalent name lookup.
-     */
-    Compound findOrCreate( Compound compound );
-
-    /**
-     * Find an existing BioMaterial by business key (see
-     * {@code BusinessKey.find(Session, BioMaterial)}) or create one.
+     * Persist an {@link ExpressionExperiment} graph.
      * <p>
-     * Pre-conditions enforced by the caller in the current persister chain:
-     * the source taxon must already be persistent, and any external accession
-     * must have its {@code ExternalDatabase} resolved.
+     * The {@code cache} should be obtained from a prior, separate transaction
+     * via {@link ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentPrePersistService#prepare}.
+     *
+     * @param ee    the expression experiment to persist
+     * @param cache cache of array designs already persisted in a prior transaction
+     * @return the persisted entity
      */
-    BioMaterial findOrCreate( BioMaterial bioMaterial );
-
-    /**
-     * Find an existing FactorValue by business key (see
-     * {@code BusinessKey.find(Session, FactorValue)}) or create one.
-     * <p>
-     * Pre-condition: the parent {@code ExperimentalFactor} must already be
-     * persistent (id != null). The persister chain ensures this via
-     * {@code fillInFactorValueAssociations}.
-     */
-    FactorValue findOrCreate( FactorValue factorValue );
-
-    /**
-     * Persist a new ExperimentalFactor. {@code ExperimentalFactor} is
-     * composition-owned by its parent {@code ExperimentalDesign} so we do
-     * <em>not</em> find-or-create: each call creates a fresh row. Kept on
-     * the service interface as {@code create} (not {@code findOrCreate}) to
-     * preserve that semantic.
-     */
-    ExperimentalFactor create( ExperimentalFactor experimentalFactor );
-
-    /**
-     * Find or create an ExpressionExperimentSubSet by business key (see
-     * {@code BusinessKey.find(Session, ExpressionExperimentSubSet)}).
-     * <p>
-     * Pre-conditions enforced by the caller: the subset must have at least
-     * one bioassay, and its source experiment must already be persistent.
-     */
-    ExpressionExperimentSubSet findOrCreate( ExpressionExperimentSubSet subSet );
+    ExpressionExperiment create( ExpressionExperiment ee, @Nullable ArrayDesignsForExperimentCache cache );
 }

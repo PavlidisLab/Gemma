@@ -18,112 +18,43 @@
  */
 package ubic.gemma.persistence.persister;
 
-import org.apache.commons.lang3.time.StopWatch;
-import org.hibernate.FlushMode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
-import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.Compound;
-import ubic.gemma.model.expression.experiment.*;
-import ubic.gemma.persistence.service.expression.bioAssay.BioAssayDao;
-import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionDao;
-import ubic.gemma.persistence.service.expression.experiment.*;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentPrePersistService;
 
-import org.springframework.lang.Nullable;
-import java.util.*;
+import javax.annotation.Nullable;
 
 /**
+ * Historical persister entry point for {@link ExpressionExperiment} graphs.
+ * <p>
+ * Phase 3 (strangler-fig): all body methods have been relocated to
+ * {@link EeWriteServiceImpl}. This class is now a thin delegate that keeps the
+ * {@link PersisterHelper} dispatch surface ({@link #doPersist}, {@link #persist})
+ * working while callers migrate to {@link ubic.gemma.persistence.service.expression.experiment.EeWriteService}
+ * directly (chunk E4). The class is scheduled for deletion in chunk E5.
+ *
  * @author pavlidis
+ * @see EeWriteServiceImpl
  */
 public abstract class ExpressionPersister extends ArrayDesignPersister implements PersisterHelper {
 
     @Autowired
-    private BioAssayDimensionDao bioAssayDimensionDao;
-    @Autowired
-    private BioAssayDao bioAssayDao;
-    @Autowired
-    private ExperimentalDesignDao experimentalDesignDao;
-    @Autowired
-    private ExpressionExperimentDao expressionExperimentDao;
+    private EeWriteServiceImpl eeWriteService;
     @Autowired
     private ExpressionExperimentPrePersistService expressionExperimentPrePersistService;
-    /**
-     * Phase 3 ExpressionPersister retirement (Chunk E2): the trivial
-     * find-or-create methods (Compound, BioMaterial, FactorValue,
-     * ExperimentalFactor, ExpressionExperimentSubSet) delegate their DAO
-     * lookup-or-insert step here. The persister still owns the surrounding
-     * orchestration (taxon, accession, association fill-in). As more of the
-     * body migrates in Chunks E3+ this delegation will become the entry point.
-     */
-    @Autowired
-    private EeWriteService eeWriteService;
 
     @Override
     @Transactional
     public ExpressionExperiment persist( ExpressionExperiment ee, @Nullable ArrayDesignsForExperimentCache cachedArrays ) {
-        try {
-            getSessionFactory().getCurrentSession().setHibernateFlushMode( FlushMode.MANUAL );
-            ExpressionExperiment persistedEntity = persistExpressionExperiment( ee, Caches.empty( cachedArrays ) );
-            getSessionFactory().getCurrentSession().flush();
-            return persistedEntity;
-        } finally {
-            getSessionFactory().getCurrentSession().setHibernateFlushMode( FlushMode.AUTO );
-        }
-    }
-
-    protected ExpressionExperiment persistExpressionExperiment( ExpressionExperiment ee, Caches caches ) {
-        ExpressionExperiment existingEE = expressionExperimentDao.findByShortName( ee.getShortName() );
-        if ( existingEE != null ) {
-            AbstractPersister.log.warn( "Expression experiment with same short name exists (" + existingEE
-                    + "), returning it (this method does not handle updates)" );
-            return existingEE;
-        }
-
-        AbstractPersister.log.debug( ">>>>>>>>>> Persisting " + ee );
-
-        if ( ee.getPrimaryPublication() != null ) {
-            ee.setPrimaryPublication( this.doPersist( ee.getPrimaryPublication(), caches ) );
-        }
-        if ( ee.getOwner() != null ) {
-            ee.setOwner( this.doPersist( ee.getOwner(), caches ) );
-        }
-        if ( ee.getTaxon() != null ) {
-            ee.setTaxon( this.persistTaxon( ee.getTaxon(), caches ) );
-        }
-
-        ee.setQuantitationTypes( this.doPersist( ee.getQuantitationTypes(), caches ) );
-        ee.setOtherRelevantPublications( this.doPersist( ee.getOtherRelevantPublications(), caches ) );
-
-        if ( ee.getAccession() != null ) {
-            this.fillInDatabaseEntry( ee.getAccession(), caches );
-        }
-
-        // This has to come first and be persisted, so our FactorValues get persisted before we process the
-        // BioAssays.
-        if ( ee.getExperimentalDesign() != null ) {
-            ExperimentalDesign experimentalDesign = ee.getExperimentalDesign();
-            this.processExperimentalDesign( experimentalDesign, caches );
-            assert experimentalDesign.getId() != null;
-            ee.setExperimentalDesign( experimentalDesign );
-        }
-
-        this.checkExperimentalDesign( ee );
-
-        // This does most of the preparatory work.
-        this.processBioAssays( ee, caches );
-
-        ee = expressionExperimentDao.create( ee );
-
-        AbstractPersister.log.debug( "<<<<<< FINISHED Persisting " + ee );
-        return ee;
+        return eeWriteService.create( ee, cachedArrays );
     }
 
     @Secured("GROUP_USER")
@@ -139,373 +70,20 @@ public abstract class ExpressionPersister extends ArrayDesignPersister implement
                 AbstractPersister.log.warn( "Consider doing the 'prepare' step in a separate transaction." );
                 caches = caches.withArrayDesignCache( this.prepare( ( ExpressionExperiment ) entity ) );
             }
-            return ( T ) this.persistExpressionExperiment( ( ExpressionExperiment ) entity, caches );
+            return ( T ) eeWriteService.persistExpressionExperiment( ( ExpressionExperiment ) entity, caches );
         } else if ( entity instanceof BioAssayDimension ) {
-            return ( T ) this.persistBioAssayDimension( ( BioAssayDimension ) entity, caches );
+            return ( T ) eeWriteService.persistBioAssayDimension( ( BioAssayDimension ) entity, caches );
         } else if ( entity instanceof BioMaterial ) {
-            return ( T ) this.persistBioMaterial( ( BioMaterial ) entity, caches );
+            return ( T ) eeWriteService.persistBioMaterial( ( BioMaterial ) entity, caches );
         } else if ( entity instanceof BioAssay ) {
-            return ( T ) this.persistBioAssay( ( BioAssay ) entity, caches );
+            return ( T ) eeWriteService.persistBioAssay( ( BioAssay ) entity, caches );
         } else if ( entity instanceof Compound ) {
-            return ( T ) this.persistCompound( ( Compound ) entity );
+            return ( T ) eeWriteService.persistCompound( ( Compound ) entity );
         } else if ( entity instanceof ExpressionExperimentSubSet ) {
-            return ( T ) this.persistExpressionExperimentSubSet( ( ExpressionExperimentSubSet ) entity );
+            return ( T ) eeWriteService.persistExpressionExperimentSubSet( ( ExpressionExperimentSubSet ) entity );
         } else {
             return super.doPersist( entity, caches );
         }
-    }
-
-    /**
-     * If there are factorValues, check if they are setup right and if they are used by biomaterials.
-     */
-    private void checkExperimentalDesign( ExpressionExperiment expExp ) {
-        if ( expExp.getExperimentalDesign() == null ) {
-            AbstractPersister.log.warn( "No experimental design!" );
-            return;
-        }
-
-        Collection<ExperimentalFactor> efs = expExp.getExperimentalDesign().getExperimentalFactors();
-
-        if ( efs.isEmpty() )
-            return;
-
-        AbstractPersister.log.debug( "Checking experimental design for valid setup" );
-
-        Collection<BioAssay> bioAssays = expExp.getBioAssays();
-
-        /*
-         * note this is very inefficient but it doesn't matter.
-         */
-        for ( ExperimentalFactor ef : efs ) {
-            AbstractPersister.log
-                    .info( "Checking: " + ef + ", " + ef.getFactorValues().size() + " factor values to check..." );
-
-            for ( FactorValue fv : ef.getFactorValues() ) {
-
-                if ( fv.getExperimentalFactor() == null || !fv.getExperimentalFactor().equals( ef ) ) {
-                    throw new IllegalStateException(
-                            "Factor value " + fv + " should have had experimental factor " + ef + ", it had " + fv
-                                    .getExperimentalFactor() );
-                }
-
-                boolean found = false;
-                // Make sure there is at least one bioassay using it.
-                for ( BioAssay ba : bioAssays ) {
-                    BioMaterial bm = ba.getSampleUsed();
-                    for ( FactorValue fvb : bm.getFactorValues() ) {
-
-                        // They should be persistent already at this point.
-                        if ( ( fvb.getId() != null || fv.getId() != null ) && fvb.equals( fv ) && fvb == fv ) {
-                            // Note we use == because they should be the same objects.
-                            found = true;
-                            break;
-                        }
-                    }
-                }
-
-                if ( !found ) {
-                    /*
-                     * Basically this means there is factor value but no biomaterial is associated with it. This can
-                     * happen...especially with test objects, so we just warn.
-                     */
-                    // FIXME: throw new IllegalStateException( "Unused factorValue: No bioassay..biomaterial association with " + fv );
-                    AbstractPersister.log.warn( "Unused factorValue: No bioassay..biomaterial association with " + fv );
-                }
-            }
-
-        }
-    }
-
-    private void fillInBioAssayAssociations( BioAssay bioAssay, Caches caches ) {
-
-        ArrayDesignsForExperimentCache c = caches.getArrayDesignCache();
-        ArrayDesign arrayDesign = bioAssay.getArrayDesignUsed();
-        ArrayDesign arrayDesignUsed;
-        if ( arrayDesign.getId() != null ) {
-            arrayDesignUsed = arrayDesign;
-        } else if ( c == null || !c.getArrayDesignCache().containsKey( arrayDesign.getShortName() ) ) {
-            throw new UnsupportedOperationException( "You must provide the persistent platforms in a cache object" );
-        } else {
-            arrayDesignUsed = c.getArrayDesignCache().get( arrayDesign.getShortName() );
-
-            if ( arrayDesignUsed == null || arrayDesignUsed.getId() == null ) {
-                throw new IllegalStateException( "You must provide the platform in the cache object" );
-            }
-
-            arrayDesignUsed = ( ArrayDesign ) this.getSessionFactory().getCurrentSession()
-                    .load( ArrayDesign.class, arrayDesignUsed.getId() );
-
-            if ( arrayDesignUsed == null ) {
-                throw new IllegalStateException( "No platform matching " + arrayDesign.getShortName() );
-            }
-
-            AbstractPersister.log.debug( "Setting platform used for bioassay to " + arrayDesignUsed.getId() );
-        }
-
-        bioAssay.setArrayDesignUsed( arrayDesignUsed );
-
-        BioMaterial material = bioAssay.getSampleUsed();
-        Set<FactorValue> savedFactorValues = new HashSet<>();
-        for ( FactorValue factorValue : material.getFactorValues() ) {
-            // Factors are not compositioned in any more, but by association with the ExperimentalFactor.
-            this.fillInFactorValueAssociations( factorValue, caches );
-            savedFactorValues.add( this.persistFactorValue( factorValue, caches ) );
-        }
-        material.setFactorValues( savedFactorValues );
-
-        if ( !savedFactorValues.isEmpty() )
-            AbstractPersister.log.debug( "factor values done" );
-
-        // DatabaseEntries are persisted by composition, so we just need to fill in the ExternalDatabase.
-        if ( bioAssay.getAccession() != null ) {
-            bioAssay.getAccession().setExternalDatabase(
-                    this.persistExternalDatabase( bioAssay.getAccession().getExternalDatabase(), caches ) );
-            AbstractPersister.log.debug( "external database done" );
-        }
-
-        // BioMaterials
-        bioAssay.setSampleUsed( this.doPersist( bioAssay.getSampleUsed(), caches ) );
-
-        AbstractPersister.log.debug( "Done with " + bioAssay );
-
-    }
-
-    private BioAssayDimension fillInDesignElementDataVectorAssociations( BulkExpressionDataVector dataVector, Caches caches ) {
-        // we should have done this already.
-        assert dataVector.getDesignElement() != null;
-
-        BioAssayDimension bioAssayDimension = this.getBioAssayDimensionFromCacheOrCreate( dataVector, caches );
-
-        dataVector.setBioAssayDimension( bioAssayDimension );
-
-        assert dataVector.getQuantitationType() != null;
-        QuantitationType qt = this.persistQuantitationType( dataVector.getQuantitationType(), caches );
-        qt = ( QuantitationType ) this.getSessionFactory().getCurrentSession().merge( qt );
-        dataVector.setQuantitationType( qt );
-
-        return bioAssayDimension;
-    }
-
-    private void fillInExperimentalFactorAssociations( ExperimentalFactor experimentalFactor, Caches caches ) {
-        this.doPersist( experimentalFactor.getAnnotations(), caches );
-    }
-
-    private Set<BioAssay> fillInExpressionExperimentDataVectorAssociations( ExpressionExperiment ee, Caches caches ) {
-        AbstractPersister.log.debug( "Filling in DesignElementDataVectors..." );
-
-        Set<BioAssay> bioAssays = new HashSet<>();
-        StopWatch timer = new StopWatch();
-        timer.start();
-        int count = 0;
-        for ( RawExpressionDataVector dataVector : ee.getRawExpressionDataVectors() ) {
-            BioAssayDimension bioAssayDimension = this.fillInDesignElementDataVectorAssociations( dataVector, caches );
-
-            if ( timer.getTime() > 5000 ) {
-                if ( count == 0 ) {
-                    AbstractPersister.log.debug( "Setup: " + timer.getTime() );
-                } else {
-                    AbstractPersister.log
-                            .info( "Filled in " + ( count ) + " DesignElementDataVectors (" + timer.getTime()
-                                    + "ms since last check)" );
-                }
-                timer.reset();
-                timer.start();
-            }
-
-            bioAssays.addAll( bioAssayDimension.getBioAssays() );
-
-            ++count;
-        }
-
-        AbstractPersister.log.debug( "Filled in total of " + count + " DesignElementDataVectors, " + bioAssays.size()
-                + " bioassays" );
-        return bioAssays;
-    }
-
-    private void fillInFactorValueAssociations( FactorValue factorValue, Caches caches ) {
-        this.fillInExperimentalFactorAssociations( factorValue.getExperimentalFactor(), caches );
-        if ( factorValue.getExperimentalFactor().getId() == null ) {
-            factorValue.setExperimentalFactor( this.persistExperimentalFactor( factorValue.getExperimentalFactor(), caches ) );
-        }
-        // measurement will cascade, but not unit.
-        if ( factorValue.getMeasurement() != null && factorValue.getMeasurement().getUnit() != null ) {
-            factorValue.getMeasurement().setUnit( this.persistUnit( factorValue.getMeasurement().getUnit() ) );
-        }
-    }
-
-    private BioAssayDimension getBioAssayDimensionFromCacheOrCreate( BulkExpressionDataVector vector, Caches caches ) {
-        Map<Integer, BioAssayDimension> bioAssayDimensionCache = caches.getBioAssayDimensionCache();
-
-        Integer dimensionName = vector.getBioAssayDimension().hashCode();
-        if ( bioAssayDimensionCache.containsKey( dimensionName ) ) {
-            vector.setBioAssayDimension( bioAssayDimensionCache.get( dimensionName ) );
-        } else {
-            BioAssayDimension bAd = this.persistBioAssayDimension( vector.getBioAssayDimension(), caches );
-            bioAssayDimensionCache.put( dimensionName, bAd );
-            vector.setBioAssayDimension( bAd );
-        }
-
-        return bioAssayDimensionCache.get( dimensionName );
-    }
-
-    private BioAssay persistBioAssay( BioAssay assay, Caches caches ) {
-        AbstractPersister.log.debug( "Persisting " + assay );
-        this.fillInBioAssayAssociations( assay, caches );
-        return bioAssayDao.create( assay );
-    }
-
-    private BioAssayDimension persistBioAssayDimension( BioAssayDimension bioAssayDimension, Caches caches ) {
-        AbstractPersister.log.debug( "Persisting bioAssayDimension" );
-        List<BioAssay> persistedBioAssays = new ArrayList<>();
-        for ( BioAssay bioAssay : bioAssayDimension.getBioAssays() ) {
-            assert bioAssay != null;
-            // bioAssay.setId( null ); // in case of retry.
-            persistedBioAssays.add( this.persistBioAssay( bioAssay, caches ) );
-            if ( persistedBioAssays.size() % 10 == 0 ) {
-                AbstractPersister.log.debug( "Persisted: " + persistedBioAssays.size() + " bioassays" );
-            }
-        }
-        AbstractPersister.log.debug( "Done persisting " + persistedBioAssays.size() + " bioassays" );
-        assert !persistedBioAssays.isEmpty();
-        bioAssayDimension.setBioAssays( persistedBioAssays );
-        // bioAssayDimension.setId( null ); // in case of retry.
-        return bioAssayDimensionDao.findOrCreate( bioAssayDimension );
-    }
-
-    private BioMaterial persistBioMaterial( BioMaterial entity, Caches caches ) {
-        AbstractPersister.log.debug( "Persisting " + entity );
-        assert entity.getSourceTaxon() != null;
-
-        AbstractPersister.log.debug( "Persisting " + entity );
-        if ( entity.getExternalAccession() != null ) {
-            this.fillInDatabaseEntry( entity.getExternalAccession(), caches );
-        }
-
-        AbstractPersister.log.debug( "db entry done" );
-        entity.setSourceTaxon( this.persistTaxon( entity.getSourceTaxon(), caches ) );
-
-        AbstractPersister.log.debug( "taxon done" );
-
-        AbstractPersister.log.debug( "start save" );
-        // Phase 3 E2: BK find-or-create relocated to EeWriteService.
-        BioMaterial bm = eeWriteService.findOrCreate( entity );
-        AbstractPersister.log.debug( "save biomaterial done" );
-
-        return bm;
-    }
-
-    private Compound persistCompound( Compound compound ) {
-        // Phase 3 E2: BK find-or-create relocated to EeWriteService.
-        return eeWriteService.findOrCreate( compound );
-    }
-
-    /**
-     * Note that this uses 'create', not 'findOrCreate'.
-     */
-    private ExperimentalFactor persistExperimentalFactor( ExperimentalFactor experimentalFactor, Caches caches ) {
-        assert experimentalFactor.getType() != null;
-        this.fillInExperimentalFactorAssociations( experimentalFactor, caches );
-        // Phase 3 E2: DAO create relocated to EeWriteService.
-        return eeWriteService.create( experimentalFactor );
-    }
-
-    private ExpressionExperimentSubSet persistExpressionExperimentSubSet( ExpressionExperimentSubSet entity ) {
-        if ( entity.getBioAssays().isEmpty() ) {
-            throw new IllegalArgumentException( "Cannot make a subset with no bioassays" );
-        } else if ( entity.getSourceExperiment().getId() == null ) {
-            throw new IllegalArgumentException(
-                    "Subsets are only supported for expression experiments that are already persistent" );
-        } else {
-            // Phase 3 E2: BK find-or-create relocated to EeWriteService.
-            return eeWriteService.findOrCreate( entity );
-        }
-    }
-
-    /**
-     * If we get here first (e.g., via bioAssay->bioMaterial) we have to override the cascade.
-     */
-    private FactorValue persistFactorValue( FactorValue factorValue, Caches caches ) {
-        if ( factorValue.getId() != null ) {
-            // already persistent
-            return factorValue;
-        }
-        if ( factorValue.getExperimentalFactor().getId() == null ) {
-            throw new IllegalArgumentException(
-                    "You must fill in the experimental factor before persisting a factorvalue" );
-        }
-        this.fillInFactorValueAssociations( factorValue, caches );
-        // Phase 3 E2: BK find-or-create relocated to EeWriteService.
-        return eeWriteService.findOrCreate( factorValue );
-    }
-
-    /**
-     * Handle persisting of the bioassays on the way to persisting the expression experiment.
-     */
-    private void processBioAssays( ExpressionExperiment expressionExperiment, Caches caches ) {
-        if ( expressionExperiment.getRawExpressionDataVectors().isEmpty() ) {
-            AbstractPersister.log.debug( "Filling in bioassays" );
-            for ( BioAssay bioAssay : expressionExperiment.getBioAssays() ) {
-                this.fillInBioAssayAssociations( bioAssay, caches );
-            }
-        } else {
-            AbstractPersister.log.debug( "Filling in bioassays via data vectors" ); // usual case.
-            Set<BioAssay> alreadyFilled;
-            alreadyFilled = this.fillInExpressionExperimentDataVectorAssociations( expressionExperiment, caches );
-            expressionExperiment.setBioAssays( alreadyFilled );
-            expressionExperiment.setNumberOfSamples( alreadyFilled.size() );
-        }
-    }
-
-    /**
-     * Persist the ExperimentalDesign and its EF/FV graph, then return it persistent.
-     * <p>
-     * Historical note (pre-Phase-3): this method used to explicitly withhold each
-     * collection and call {@code experimentalFactorDao.create} / {@code factorValueDao.create}
-     * so the {@code @AfterReturning} ACL advice would fire on each DAO call.
-     * Post-{@code 21e4fc41} the {@code EntityInsert} listener attaches ACLs from
-     * Hibernate insert events directly, so cascade inserts produce identical ACL
-     * results. The explicit per-FV create loop and the cascade-override withhold-
-     * and-put-back gymnastics are gone; we let the {@code ExperimentalDesign}
-     * cascade (ED → EF → FV) do the work and the listener attach the ACLs.
-     * <p>
-     * The ED still has to be persisted here (ahead of {@code processBioAssays}) so
-     * that {@code FactorValue} ids are assigned before {@code BioMaterial.factorValues}
-     * are walked in {@link #fillInBioAssayAssociations}; otherwise those BMs would
-     * see transient FVs and try to persist them through {@code persistFactorValue},
-     * forking the persistence path.
-     */
-    private void processExperimentalDesign( ExperimentalDesign experimentalDesign, Caches caches ) {
-
-        this.doPersist( experimentalDesign.getTypes(), caches );
-
-        if ( experimentalDesign.getExperimentalFactors() == null ) {
-            experimentalDesign.setExperimentalFactors( new HashSet<>() );
-        }
-
-        // Fill in associations that the cascade doesn't reach (EF annotations,
-        // FV measurement units, back-references). Cascade handles ED→EF→FV
-        // inserts and the EntityInsert listener attaches their ACLs.
-        for ( ExperimentalFactor experimentalFactor : experimentalDesign.getExperimentalFactors() ) {
-            experimentalFactor.setExperimentalDesign( experimentalDesign );
-            this.fillInExperimentalFactorAssociations( experimentalFactor, caches );
-
-            if ( experimentalFactor.getFactorValues() == null ) {
-                AbstractPersister.log.warn( "Factor values collection was null for " + experimentalFactor );
-                continue;
-            }
-
-            for ( FactorValue factorValue : experimentalFactor.getFactorValues() ) {
-                factorValue.setExperimentalFactor( experimentalFactor );
-                // measurement will cascade, but not unit.
-                if ( factorValue.getMeasurement() != null && factorValue.getMeasurement().getUnit() != null ) {
-                    factorValue.getMeasurement().setUnit( this.persistUnit( factorValue.getMeasurement().getUnit() ) );
-                }
-            }
-        }
-
-        // Cascade=all on ExperimentalDesign.experimentalFactors and ExperimentalFactor.factorValues
-        // makes this one create() walk the whole subgraph; the EntityInsert listener attaches ACLs.
-        experimentalDesignDao.create( experimentalDesign );
     }
 
 }
