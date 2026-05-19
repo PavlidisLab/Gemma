@@ -19,12 +19,15 @@
 
 package ubic.gemma.model.analysis.expression.diff;
 
+import lombok.Data;
+
 import java.io.Serializable;
 
 /**
  * @author frances
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
+@Data
 public class GeneDifferentialExpressionMetaAnalysisResultValueObject implements Serializable {
 
     /**
@@ -37,44 +40,4 @@ public class GeneDifferentialExpressionMetaAnalysisResultValueObject implements 
     private Double metaPvalue;
     private Double metaQvalue;
     private Boolean upperTail;
-
-    public String getGeneName() {
-        return this.geneName;
-    }
-
-    public void setGeneName( String geneName ) {
-        this.geneName = geneName;
-    }
-
-    public String getGeneSymbol() {
-        return this.geneSymbol;
-    }
-
-    public void setGeneSymbol( String geneSymbol ) {
-        this.geneSymbol = geneSymbol;
-    }
-
-    public Double getMetaPvalue() {
-        return this.metaPvalue;
-    }
-
-    public void setMetaPvalue( Double metaPvalue ) {
-        this.metaPvalue = metaPvalue;
-    }
-
-    public Double getMetaQvalue() {
-        return this.metaQvalue;
-    }
-
-    public void setMetaQvalue( Double metaQvalue ) {
-        this.metaQvalue = metaQvalue;
-    }
-
-    public Boolean getUpperTail() {
-        return this.upperTail;
-    }
-
-    public void setUpperTail( Boolean upperTail ) {
-        this.upperTail = upperTail;
-    }
 }

@@ -19,6 +19,8 @@
 
 package ubic.gemma.model.blacklist;
 
+import lombok.Getter;
+import lombok.Setter;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
 
@@ -26,6 +28,8 @@ import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
  *
  * @author paul
  */
+@Getter
+@Setter
 public class BlacklistedValueObject extends IdentifiableValueObject<BlacklistedEntity> {
     private static final long serialVersionUID = -4817418347388923905L;
 
@@ -59,53 +63,5 @@ public class BlacklistedValueObject extends IdentifiableValueObject<BlacklistedE
     @SuppressWarnings("unused")
     private BlacklistedValueObject( Long id ) {
         super( id );
-    }
-
-    public String getAccession() {
-        return accession;
-    }
-
-    public ExternalDatabaseValueObject getExternalDatabase() {
-        return externalDatabase;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getReason() {
-        return reason;
-    }
-
-    public String getShortName() {
-        return shortName;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setAccession( String accession ) {
-        this.accession = accession;
-    }
-
-    public void setExternalDatabase( ExternalDatabaseValueObject externalDatabase ) {
-        this.externalDatabase = externalDatabase;
-    }
-
-    public void setName( String name ) {
-        this.name = name;
-    }
-
-    public void setReason( String reason ) {
-        this.reason = reason;
-    }
-
-    public void setShortName( String shortName ) {
-        this.shortName = shortName;
-    }
-
-    public void setType( String type ) {
-        this.type = type;
     }
 }
