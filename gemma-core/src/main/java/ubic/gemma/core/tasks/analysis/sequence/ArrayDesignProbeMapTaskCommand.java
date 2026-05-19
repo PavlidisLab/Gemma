@@ -18,6 +18,8 @@
  */
 package ubic.gemma.core.tasks.analysis.sequence;
 
+import lombok.Getter;
+import lombok.Setter;
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
@@ -27,6 +29,8 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
  * @author keshav
  */
 @SuppressWarnings("unused") // Possible external use
+@Getter
+@Setter
 public class ArrayDesignProbeMapTaskCommand extends TaskCommand {
 
     private static final long serialVersionUID = 1L;
@@ -49,25 +53,8 @@ public class ArrayDesignProbeMapTaskCommand extends TaskCommand {
         this.arrayDesign = arrayDesign;
     }
 
-    public ArrayDesign getArrayDesign() {
-        return arrayDesign;
-    }
-
-    public void setArrayDesign( ArrayDesign arrayDesign ) {
-        this.arrayDesign = arrayDesign;
-    }
-
     @Override
     public Class<ArrayDesignProbeMapperTask> getTaskClass() {
         return ArrayDesignProbeMapperTask.class;
     }
-
-    public boolean isForceAnalysis() {
-        return forceAnalysis;
-    }
-
-    public void setForceAnalysis( boolean forceAnalysis ) {
-        this.forceAnalysis = forceAnalysis;
-    }
-
 }
