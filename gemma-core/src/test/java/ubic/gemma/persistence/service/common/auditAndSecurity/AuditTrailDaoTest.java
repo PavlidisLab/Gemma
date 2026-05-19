@@ -19,10 +19,10 @@
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
@@ -32,13 +32,13 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
 import java.util.Date;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author keshav
  */
-public class AuditTrailDaoTest extends BaseSpringContextTest {
+public class AuditTrailDaoTest extends BaseSpringContextTest5 {
 
     @Autowired
     AuditTrailService auditTrailService;
@@ -48,7 +48,7 @@ public class AuditTrailDaoTest extends BaseSpringContextTest {
     private Auditable auditable;
     private AuditTrail auditTrail;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
 
         ArrayDesign ad = ArrayDesign.Factory.newInstance();

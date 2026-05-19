@@ -4,11 +4,11 @@ import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -17,19 +17,19 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static ubic.gemma.persistence.util.AclQueryUtils.*;
 
-public class AclQueryUtilsTest extends BaseSpringContextTest {
+public class AclQueryUtilsTest extends BaseSpringContextTest5 {
 
     @Autowired
     private SessionFactory sessionFactory;
 
     private Session session;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         this.session = sessionFactory.openSession();
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         this.session.close();
     }

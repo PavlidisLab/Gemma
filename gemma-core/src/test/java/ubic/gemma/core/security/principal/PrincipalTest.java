@@ -19,8 +19,8 @@
 package ubic.gemma.core.security.principal;
 
 import ubic.gemma.core.security.authentication.UserDetailsImpl;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -28,19 +28,19 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.core.Authentication;
 import ubic.gemma.core.security.authentication.UserManager;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 
 import java.util.Date;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Test that we can log users in, etc.
  *
  * @author pavlidis
  */
-public class PrincipalTest extends BaseSpringContextTest {
+public class PrincipalTest extends BaseSpringContextTest5 {
 
     @Autowired
     private AuthenticationManager authenticationManager;
@@ -57,7 +57,7 @@ public class PrincipalTest extends BaseSpringContextTest {
 
     private String email = "foo@foo.foo";
 
-    @Before
+    @BeforeEach
     public void before() {
 
         pwd = this.randomName();

@@ -18,10 +18,10 @@
  */
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceUpdateEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
@@ -30,12 +30,12 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
  * @author pavlidis
  */
-public class AuditEventServiceTest extends BaseSpringContextTest {
+public class AuditEventServiceTest extends BaseSpringContextTest5 {
 
     @Autowired
     private ArrayDesignService ads;
@@ -46,7 +46,7 @@ public class AuditEventServiceTest extends BaseSpringContextTest {
     @Autowired
     private ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService auditTrailService;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         for ( int i = 0; i < 5; i++ ) {
             ArrayDesign ad = ArrayDesign.Factory.newInstance();
