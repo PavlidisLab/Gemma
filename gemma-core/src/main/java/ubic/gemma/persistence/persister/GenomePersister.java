@@ -334,7 +334,14 @@ public abstract class GenomePersister extends CommonPersister {
         } else if ( commonName != null && seenTaxa.containsKey( commonName.toLowerCase() ) ) {
             return seenTaxa.get( commonName.toLowerCase() );
         } else {
-            Taxon fTaxon = taxonDao.findOrCreate( taxon );
+            // BK lookup; on miss, persist a new taxon. Equivalent to taxonDao.findOrCreate, which
+            // itself delegates to BusinessKey.find under the hood; inlining here keeps the persister
+            // self-contained and consistent with the other simple find-or-create methods.
+            Session session = getSessionFactory().getCurrentSession();
+            Taxon fTaxon = BusinessKey.find( session, taxon );
+            if ( fTaxon == null ) {
+                fTaxon = taxonDao.create( taxon );
+            }
             assert fTaxon != null;
             assert fTaxon.getId() != null;
 
