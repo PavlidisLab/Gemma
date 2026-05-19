@@ -100,6 +100,9 @@ public class PersistentDummyObjectHelper {
     private PersisterHelper persisterHelper;
 
     @Autowired
+    private ubic.gemma.persistence.service.common.auditAndSecurity.ContactDao contactDao;
+
+    @Autowired
     private ExpressionExperimentService eeService;
 
     @Autowired
@@ -721,7 +724,8 @@ public class PersistentDummyObjectHelper {
         c.setName(
                 RandomStringUtils.insecure().nextNumeric( PersistentDummyObjectHelper.RANDOM_STRING_LENGTH ) + "_testcontact" );
         c.setEmail( c.getName() + "@foo.org" );
-        c = persisterHelper.persist( c );
+        Contact existing = contactDao.find( c );
+        c = existing != null ? existing : contactDao.create( c );
         return c;
     }
 
