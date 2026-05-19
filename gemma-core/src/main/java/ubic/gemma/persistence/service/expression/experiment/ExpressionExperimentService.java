@@ -1052,6 +1052,26 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     void removeCharacteristics( ExpressionExperiment ee, Collection<Characteristic> characteristicsToRemove );
 
     /**
+     * Replace the experiment-level characteristic set on {@code ee} with the supplied {@code desired}
+     * collection (idempotent set semantics).
+     * <p>
+     * Operates only on characteristics held directly by the {@link ExpressionExperiment} (i.e. its
+     * {@code ExperimentTag} set). Characteristics on subsets, factor values, and biomaterials are left
+     * untouched. The diff is computed by (category, categoryUri, value, valueUri) — characteristics that
+     * appear in both the current and desired sets are preserved with their existing identity; new ones
+     * are created (evidence code defaulted to {@code IC} if not supplied) and dropped ones are removed.
+     * A single {@link ubic.gemma.model.common.auditAndSecurity.eventType.ManualAnnotationEvent} is
+     * emitted when the call actually changes the set; if the desired set already matches the current
+     * set, no audit event is recorded.
+     *
+     * @param ee      the experiment whose characteristic set is being replaced
+     * @param desired the desired characteristic set. Each member must have a non-blank category and
+     *                value (URIs optional). The collection itself may be empty (to clear all tags).
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void updateAnnotations( ExpressionExperiment ee, Collection<Characteristic> desired );
+
+    /**
      * @see ExpressionExperimentDao#thaw(ExpressionExperiment)
      */
     @CheckReturnValue
