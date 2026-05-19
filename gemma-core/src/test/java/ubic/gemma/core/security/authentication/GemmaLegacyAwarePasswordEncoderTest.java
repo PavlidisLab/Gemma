@@ -15,7 +15,6 @@
  */
 package ubic.gemma.core.security.authentication;
 
-import org.junit.After;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -26,52 +25,20 @@ import static org.junit.Assert.assertTrue;
 /**
  * Verifies {@link GemmaLegacyAwarePasswordEncoder} against fixtures lifted from
  * {@code gemma-core/src/main/resources/sql/init-data.sql} — these are the actual hashes
- * shipped with Gemma so any production user row with the legacy SHA-1 format must match.
+ * shipped with Gemma so any production user row with the legacy SHA-1 format must still be
+ * recognized as legacy (and trigger {@code upgradeEncoding}). Legacy verification itself
+ * is the responsibility of {@link LegacyAwareDaoAuthenticationProvider}, which can see the
+ * username from UserDetails — see {@code LegacyAwareDaoAuthenticationProviderTest}.
  */
 public class GemmaLegacyAwarePasswordEncoderTest {
 
     private final GemmaLegacyAwarePasswordEncoder encoder = new GemmaLegacyAwarePasswordEncoder();
 
-    @After
-    public void clearTl() {
-        GemmaLegacyAwarePasswordEncoder.clearCurrentUsername();
-    }
-
     @Test
-    public void legacyHash_administrator_matches() {
+    public void legacyHash_isRecognizedAsLegacyFormat() {
         // from init-data.sql line 11: user 'administrator' with password 'administrator'
         String stored = "b7338dcc17d6b6c199a75540aab6d0506567b980";
-        GemmaLegacyAwarePasswordEncoder.setCurrentUsername( "administrator" );
-        assertTrue( encoder.matches( "administrator", stored ) );
-    }
-
-    @Test
-    public void legacyHash_gemmaAgent_matches() {
-        // from init-data.sql line 11: user 'gemmaAgent' with password 'XXXXXXXX'
-        String stored = "2db458c67b4b52bba0184611c302c9c174ce8de4";
-        GemmaLegacyAwarePasswordEncoder.setCurrentUsername( "gemmaAgent" );
-        assertTrue( encoder.matches( "XXXXXXXX", stored ) );
-    }
-
-    @Test
-    public void legacyHash_wrongPassword_rejected() {
-        String stored = "b7338dcc17d6b6c199a75540aab6d0506567b980";
-        GemmaLegacyAwarePasswordEncoder.setCurrentUsername( "administrator" );
-        assertFalse( encoder.matches( "not-the-password", stored ) );
-    }
-
-    @Test
-    public void legacyHash_wrongUsername_rejected() {
-        String stored = "b7338dcc17d6b6c199a75540aab6d0506567b980";
-        GemmaLegacyAwarePasswordEncoder.setCurrentUsername( "someoneElse" );
-        assertFalse( encoder.matches( "administrator", stored ) );
-    }
-
-    @Test
-    public void legacyHash_withoutUsernameThreadLocal_failsClosed() {
-        // No setCurrentUsername. Encoder must not accept anything — and must not throw.
-        String stored = "b7338dcc17d6b6c199a75540aab6d0506567b980";
-        assertFalse( encoder.matches( "administrator", stored ) );
+        assertTrue( GemmaLegacyAwarePasswordEncoder.isLegacySha1Hex( stored ) );
     }
 
     @Test
@@ -82,6 +49,15 @@ public class GemmaLegacyAwarePasswordEncoderTest {
     }
 
     @Test
+    public void legacyHash_matchesIsFailClosed() {
+        // matches() cannot verify legacy hashes (no username available) — fail closed.
+        String stored = "b7338dcc17d6b6c199a75540aab6d0506567b980";
+        assertFalse( "encoder.matches must not verify legacy hashes (no username channel) — "
+                        + "LegacyAwareDaoAuthenticationProvider handles legacy verification before delegating",
+                encoder.matches( "administrator", stored ) );
+    }
+
+    @Test
     public void encode_producesBcryptPrefixed_andMatchesBack() {
         String raw = "hunter2";
         String encoded = encoder.encode( raw );
@@ -89,14 +65,6 @@ public class GemmaLegacyAwarePasswordEncoderTest {
                 encoded.startsWith( GemmaLegacyAwarePasswordEncoder.BCRYPT_PREFIX ) );
         assertTrue( encoder.matches( raw, encoded ) );
         assertFalse( encoder.matches( "wrong", encoded ) );
-    }
-
-    @Test
-    public void bcryptHash_doesNotRequireUsernameThreadLocal() {
-        // The username TL is only needed for legacy decode.
-        String encoded = encoder.encode( "hunter2" );
-        GemmaLegacyAwarePasswordEncoder.clearCurrentUsername();
-        assertTrue( encoder.matches( "hunter2", encoded ) );
     }
 
     @Test
@@ -121,14 +89,41 @@ public class GemmaLegacyAwarePasswordEncoderTest {
         // Not 40 hex chars, not bcrypt-prefixed.
         assertFalse( encoder.matches( "anything", "not-a-known-format" ) );
         assertFalse( encoder.matches( "anything", "" ) );
+        assertFalse( encoder.matches( "anything", null ) );
+    }
+
+    @Test
+    public void isLegacySha1Hex_rejectsBcryptAndOther() {
+        assertFalse( GemmaLegacyAwarePasswordEncoder.isLegacySha1Hex( null ) );
+        assertFalse( GemmaLegacyAwarePasswordEncoder.isLegacySha1Hex( "" ) );
+        assertFalse( GemmaLegacyAwarePasswordEncoder.isLegacySha1Hex( "too-short" ) );
+        // 40 chars but contains non-hex
+        assertFalse( GemmaLegacyAwarePasswordEncoder
+                .isLegacySha1Hex( "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz" ) );
+        // bcrypt: definitely not 40-char-hex
+        assertFalse( GemmaLegacyAwarePasswordEncoder
+                .isLegacySha1Hex( encoder.encode( "x" ) ) );
     }
 
     @Test
     public void sha1HexUsernameSalt_helperMatchesFixtures() {
-        // Document the salt format directly.
+        // Document the salt format directly — these are the exact stored hashes in
+        // init-data.sql, so production rows can be re-derived from raw password + username.
         assertEquals( "b7338dcc17d6b6c199a75540aab6d0506567b980",
                 GemmaLegacyAwarePasswordEncoder.sha1HexUsernameSalt( "administrator", "administrator" ) );
         assertEquals( "2db458c67b4b52bba0184611c302c9c174ce8de4",
                 GemmaLegacyAwarePasswordEncoder.sha1HexUsernameSalt( "XXXXXXXX", "gemmaAgent" ) );
+    }
+
+    @Test
+    public void constantTimeHexEquals_caseInsensitive() {
+        assertTrue( GemmaLegacyAwarePasswordEncoder
+                .constantTimeHexEquals( "abcdef", "ABCDEF" ) );
+        assertFalse( GemmaLegacyAwarePasswordEncoder
+                .constantTimeHexEquals( "abcdef", "abcde0" ) );
+        assertFalse( GemmaLegacyAwarePasswordEncoder
+                .constantTimeHexEquals( "abc", "abcd" ) );
+        assertFalse( GemmaLegacyAwarePasswordEncoder
+                .constantTimeHexEquals( null, "abc" ) );
     }
 }

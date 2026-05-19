@@ -46,6 +46,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserCache;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsPasswordService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.core.userdetails.cache.NullUserCache;
 import org.springframework.stereotype.Service;
@@ -64,7 +65,7 @@ import java.util.stream.Collectors;
  */
 @SuppressWarnings("unused")
 @Service("userManager")
-public class UserManagerImpl implements UserManager {
+public class UserManagerImpl implements UserManager, UserDetailsPasswordService {
 
     private final Log logger = LogFactory.getLog( this.getClass() );
 
@@ -570,6 +571,39 @@ public class UserManagerImpl implements UserManager {
         // addCustomAuthorities( user.getUsername(), dbAuths );
 
         return this.createUserDetails( username, new UserDetailsImpl( user ), dbAuths );
+    }
+
+    /**
+     * Spring Security 6's password-upgrade hook. Called by
+     * {@code DaoAuthenticationProvider.authenticate(...)} when the configured
+     * {@link PasswordEncoder} reports {@code upgradeEncoding(storedHash) == true} after a
+     * successful auth — i.e., when a user logs in with a legacy SHA-1 password that should
+     * be re-encoded as {@code {bcrypt}}. The framework supplies the already-encoded new
+     * hash; this implementation just persists it.
+     *
+     * <p>This replaces the prior ThreadLocal-based upgrade scheme (see
+     * {@link LegacyAwareDaoAuthenticationProvider} class javadoc): no thread-bound state,
+     * works under async / reactive flows.</p>
+     */
+    @Override
+    @Transactional
+    public UserDetails updatePassword( UserDetails user, String newPassword ) {
+        String username = user.getUsername();
+        User dbUser = userService.findByUserName( username );
+        if ( dbUser == null ) {
+            throw new UsernameNotFoundException( "User with name " + username + " could not be loaded" );
+        }
+        dbUser.setPassword( newPassword );
+        userService.update( dbUser );
+        userCache.removeUserFromCache( username );
+        if ( logger.isDebugEnabled() ) {
+            logger.debug( "Upgraded stored password hash for user '" + username + "' to current encoding" );
+        }
+        // Return a fresh UserDetails carrying the new hash so the caller's later operations
+        // (e.g. SecurityContext refresh) see the updated value.
+        return new UserDetailsImpl( newPassword, username, user.isEnabled(),
+                new ArrayList<>( user.getAuthorities() ),
+                dbUser.getEmail(), dbUser.getSignupToken(), dbUser.getSignupTokenDatestamp() );
     }
 
     protected List<UserDetails> loadUsersByUsername( String username ) {

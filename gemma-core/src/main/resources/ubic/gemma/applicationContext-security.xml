@@ -41,12 +41,15 @@
     <bean id="authenticationLoggerListener" class="org.springframework.security.authentication.event.LoggerListener"/>
 
     <s:authentication-manager alias="authenticationManager">
-        <!-- Custom DaoAuthenticationProvider that binds the username to the password
-             encoder's ThreadLocal so GemmaLegacyAwarePasswordEncoder can recompute the
-             legacy SHA-1(rawPassword + "{" + username + "}") hash. Configured here as a
-             plain bean (below) rather than via the <s:authentication-provider
-             user-service-ref="..."> namespace shortcut, because that shortcut only builds
-             a vanilla DaoAuthenticationProvider. -->
+        <!-- LegacyAwareDaoAuthenticationProvider verifies pre-Phase-2 SHA-1+username-salt
+             hashes itself (the username is read from userDetails, not a ThreadLocal) and
+             delegates bcrypt verification to the stock DaoAuthenticationProvider machinery.
+             userDetailsPasswordService is wired in so successful logins against a legacy
+             hash get auto-upgraded to {bcrypt} on the next request — see
+             GemmaLegacyAwarePasswordEncoder.upgradeEncoding(). Configured as a plain bean
+             (below) rather than via the <s:authentication-provider user-service-ref="...">
+             namespace shortcut, because that shortcut only builds a vanilla
+             DaoAuthenticationProvider. -->
         <s:authentication-provider ref="daoAuthenticationProvider"/>
         <s:authentication-provider ref="runAsAuthenticationProvider"/>
         <s:authentication-provider ref="anonymousAuthenticationProvider"/>
@@ -56,6 +59,14 @@
           class="ubic.gemma.core.security.authentication.LegacyAwareDaoAuthenticationProvider">
         <property name="userDetailsService" ref="userManager"/>
         <property name="passwordEncoder" ref="passwordEncoder"/>
+        <!-- Spring Security 6 password-upgrade hook: when the encoder reports
+             upgradeEncoding(stored) == true after a successful auth, the framework calls
+             userDetailsPasswordService.updatePassword(user, newEncoded) automatically.
+             UserManagerImpl is also the userDetailsService (see userManager alias above), so
+             this is the same bean — but the property must be set explicitly because
+             DaoAuthenticationProvider does not auto-detect when the two implementations
+             coincide. -->
+        <property name="userDetailsPasswordService" ref="userManager"/>
     </bean>
 
     <bean id="runAsManager" class="org.springframework.security.access.intercept.RunAsManagerImpl">
@@ -68,14 +79,17 @@
         <property name="key" value="${gemma.runas.password}"/>
     </bean>
 
-    <!-- declared separately so it can be injected into UserManagerImpl directly.
+    <!-- Declared separately so it can be injected into UserManagerImpl directly.
          Was org.springframework.security.authentication.encoding.ShaPasswordEncoder with
          <s:salt-source user-property="username"/>; that whole package was removed in Spring
-         Security 5. The Gemma-specific encoder below recognizes both the legacy
-         SHA-1(rawPassword + "{" + username + "}") format (bare 40-hex digest, no prefix —
-         see sql/init-data.sql) AND new BCrypt hashes ({bcrypt} prefix per
-         DelegatingPasswordEncoder convention). New encodings produce BCrypt; legacy hashes
-         are flagged for upgrade-on-next-login via PasswordEncoder.upgradeEncoding(). -->
+         Security 5. The Gemma-specific encoder below produces and matches BCrypt hashes
+         ({bcrypt} prefix per DelegatingPasswordEncoder convention) and recognizes legacy
+         SHA-1(rawPassword + "{" + username + "}") hashes (bare 40-hex digest, no prefix —
+         see sql/init-data.sql) only via upgradeEncoding() — the legacy compare itself is
+         done in LegacyAwareDaoAuthenticationProvider so it can use the username from
+         UserDetails directly (no ThreadLocal). New encodings produce BCrypt; legacy hashes
+         are auto-upgraded on next successful login via the userDetailsPasswordService hook
+         on the auth provider. -->
     <bean id="passwordEncoder"
           class="ubic.gemma.core.security.authentication.GemmaLegacyAwarePasswordEncoder"/>
 
