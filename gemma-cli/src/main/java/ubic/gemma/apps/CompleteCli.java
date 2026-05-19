@@ -16,7 +16,7 @@ import ubic.gemma.model.expression.arrayDesign.AlternateName;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.common.description.CharacteristicReadService;
-import ubic.gemma.persistence.service.common.protocol.ProtocolService;
+import ubic.gemma.persistence.service.common.protocol.ProtocolReadService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
@@ -42,7 +42,7 @@ public class CompleteCli extends AbstractAuthenticatedCLI {
     private ExpressionExperimentSetService expressionExperimentSetService;
 
     @Autowired
-    private ProtocolService protocolService;
+    private ProtocolReadService protocolReadService;
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
@@ -135,7 +135,7 @@ public class CompleteCli extends AbstractAuthenticatedCLI {
                 }
                 break;
             case PROTOCOL:
-                for ( Protocol protocol : protocolService.loadAllUniqueByName() ) {
+                for ( Protocol protocol : protocolReadService.loadAllUniqueByName() ) {
                     printCompletion( String.valueOf( protocol.getId() ), protocol.getName() );
                     printCompletion( protocol.getName(), protocol.getName() );
                 }
