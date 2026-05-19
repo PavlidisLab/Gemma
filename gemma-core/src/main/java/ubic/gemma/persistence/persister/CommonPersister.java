@@ -25,11 +25,9 @@ import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.persistence.service.common.description.BibliographicReferenceDao;
 import ubic.gemma.persistence.service.common.description.DatabaseEntryDao;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseDao;
-import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeDao;
 
 import java.util.Map;
 
@@ -55,9 +53,6 @@ public abstract class CommonPersister extends AbstractPersister {
     private ExternalDatabaseDao externalDatabaseDao;
 
     @Autowired
-    private QuantitationTypeDao quantitationTypeDao;
-
-    @Autowired
     private DatabaseEntryDao databaseEntryDao;
 
     @Override
@@ -65,8 +60,6 @@ public abstract class CommonPersister extends AbstractPersister {
     protected <T extends Identifiable> T doPersist( T entity, Caches caches ) {
         if ( entity instanceof User ) {
             throw new UnsupportedOperationException( "Don't persist users via this class; use the UserManager (core)" );
-        } else if ( entity instanceof QuantitationType ) {
-            return ( T ) this.persistQuantitationType( ( QuantitationType ) entity, caches );
         } else if ( entity instanceof Characteristic ) {
             // Characteristic is always cascaded from its owning entity (Investigation,
             // BioMaterial, FactorValue, etc. all declare cascade="all" on their
@@ -126,27 +119,6 @@ public abstract class CommonPersister extends AbstractPersister {
         // and only unique within an external database, so we always create.
         entity.setExternalDatabase( this.persistExternalDatabase( entity.getExternalDatabase(), externalDbCache ) );
         return databaseEntryDao.create( entity );
-    }
-
-    protected QuantitationType persistQuantitationType( QuantitationType qType, Caches caches ) {
-        // QTs are per-experiment — we deliberately do NOT find-or-create across
-        // experiments, only within one (via the cache, which the caller clears
-        // between experiments). The cache key matches BusinessKey.matches semantics
-        // for QuantitationType ((name, description)).
-        if ( qType.getName() == null )
-            throw new IllegalArgumentException( "QuantitationType must have a name" );
-        int key = qType.getName().hashCode();
-        if ( qType.getDescription() != null )
-            key += qType.getDescription().hashCode();
-
-        Map<Integer, QuantitationType> quantitationTypeCache = caches.getQuantitationTypeCache();
-        if ( quantitationTypeCache.containsKey( key ) ) {
-            return quantitationTypeCache.get( key );
-        }
-
-        QuantitationType qt = quantitationTypeDao.create( qType );
-        quantitationTypeCache.put( key, qt );
-        return qt;
     }
 
     /**
