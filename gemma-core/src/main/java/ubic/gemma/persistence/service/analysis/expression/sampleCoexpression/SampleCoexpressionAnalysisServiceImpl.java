@@ -28,6 +28,7 @@ import ubic.basecode.math.MatrixRowStats;
 import ubic.basecode.math.MatrixStats;
 import ubic.basecode.math.linearmodels.DesignMatrix;
 import ubic.basecode.math.linearmodels.LeastSquaresFit;
+import ubic.gemma.core.security.audit.Audited;
 import ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.core.analysis.preprocess.filter.ExpressionExperimentFilterConfig;
@@ -165,6 +166,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
      */
     @Override
     @Transactional(isolation = Isolation.SERIALIZABLE)
+    @Audited(value = SampleCorrelationAnalysisEvent.class, message = "Sample correlation has been computed.")
     public DoubleMatrix<BioAssay, BioAssay> compute( ExpressionExperiment ee, PreparedCoexMatrices matrices ) {
         SampleCoexpressionMatrix matrix = matrices.matrix;
 
@@ -192,7 +194,10 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         this.logCormatStatus( analysis, true );
         analysis = sampleCoexpressionAnalysisDao.create( analysis );
 
-        auditTrailService.addUpdateEvent( ee, SampleCorrelationAnalysisEvent.class, "Sample correlation has been computed." );
+        // Phase A spot-migration: the @Audited annotation on this method (see
+        // signature above) now writes the SampleCorrelationAnalysisEvent
+        // automatically on successful return. AuditedAspect locates the
+        // first Auditable arg (ee) and delegates to AuditTrailService.
 
         return toDoubleMatrix( analysis.getBestCoexpressionMatrix() );
     }

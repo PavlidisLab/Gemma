@@ -41,6 +41,18 @@
                   type="org.hibernate.type.MaterializedClobType">
             <column name="DETAIL" not-null="false" sql-type="text"/>
         </property>
+        <!--
+            Phase A typed-audit migration: optional JSON payload set by the
+            new AuditedAspect. MySQL column is JSON; H2 mirrors as CLOB. The
+            HBM type is plain MaterializedClobType because Hibernate doesn't
+            ship a portable JSON ORM type and the entity treats the value as
+            an opaque string anyway (the AuditEventPayload Jackson decode
+            happens at the caller layer, not at the entity layer).
+        -->
+        <property access="field" name="payload"
+                  type="org.hibernate.type.MaterializedClobType">
+            <column name="PAYLOAD" not-null="false" sql-type="json"/>
+        </property>
         <many-to-one access="field"
                      class="ubic.gemma.model.common.auditAndSecurity.User"
                      fetch="select" lazy="false" name="performer">

@@ -45,6 +45,17 @@ public class AuditEvent extends AbstractIdentifiable {
     private String note = null;
     @Nullable
     private User performer = null;
+    /**
+     * Raw JSON serialisation of an {@link
+     * ubic.gemma.core.security.audit.AuditEventPayload} record, when the
+     * originating {@link ubic.gemma.core.security.audit.Audited}-annotated
+     * service method declared a payload parameter. Kept as an unparsed string
+     * at the entity level; callers that want typed access should use
+     * {@code objectMapper.readValue(payload, AuditEventPayload.class)}.
+     * Phase A of {@code AUDIT_SYSTEM_AUDIT.md}.
+     */
+    @Nullable
+    private String payload = null;
 
     @Override
     public int hashCode() {
@@ -100,6 +111,26 @@ public class AuditEvent extends AbstractIdentifiable {
         return this.performer;
     }
 
+    /**
+     * @return the raw JSON serialisation of the originating
+     * {@link ubic.gemma.core.security.audit.AuditEventPayload}, or {@code null}
+     * for legacy / payload-less events.
+     */
+    @Nullable
+    public String getPayload() {
+        return this.payload;
+    }
+
+    /**
+     * Set the raw JSON payload string. Intentionally package-private; used by
+     * {@code AuditedAspect} immediately after factory instantiation and by
+     * Hibernate field-access mapping. Do not call from application code —
+     * AuditEvent is otherwise still immutable.
+     */
+    void setPayload( @Nullable String payload ) {
+        this.payload = payload;
+    }
+
     @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public static final class Factory {
         /**
@@ -114,6 +145,19 @@ public class AuditEvent extends AbstractIdentifiable {
             entity.detail = detail;
             entity.performer = performer;
             entity.eventType = eventType;
+            return entity;
+        }
+
+        /**
+         * Create a new audit event with a serialised payload. Phase A of
+         * {@code AUDIT_SYSTEM_AUDIT.md}: used by {@code AuditedAspect} when the
+         * annotated method declared an {@link ubic.gemma.core.security.audit.AuditEventPayload}
+         * parameter.
+         */
+        public static AuditEvent newInstance( Date date, AuditAction action, String note, String detail, User performer,
+                AuditEventType eventType, @Nullable String payload ) {
+            AuditEvent entity = newInstance( date, action, note, detail, performer, eventType );
+            entity.payload = payload;
             return entity;
         }
     }
