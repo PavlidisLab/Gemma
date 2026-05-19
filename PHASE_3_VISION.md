@@ -178,10 +178,15 @@ Items deferred during Phase 2 that Phase 3 should pick up:
   `-Dspring.test.context.failure.threshold=0` globally or fix the
   underlying first-failure each time. Tied to the Flyway work — once
   schema is stable, context-load failures should be rare.
-- **`session.refresh` edge cases.** Two known callsites need it
+- **`session.refresh` edge cases.** ~~Two known callsites need it
   (`DataUpdaterImpl.replaceData` line 672, `ExternalFileGeneLoaderServiceTest`
-  line 123). Symptom of the "stop using `ensureInSession` escape
-  hatches" item under Easier-to-maintain.
+  line 123).~~ Resolved 2026-05-18: verified no `session.refresh`,
+  `getSession().refresh`, or `entityManager.refresh` calls exist anywhere
+  in the repo (whole-repo grep, all branches in `git log -G`). The
+  pointers in this note appear to have been stale before Phase 3 even
+  started. Related concern — "stop using `ensureInSession` escape
+  hatches" under Easier-to-maintain — also clean: zero `ensureInSession`
+  references under `gemma-core/.../loader/`.
 - **gsec deprecation.** Phase 2 replaces gsec's `AclDaoImpl` with
   `JdbcMutableAclService` but keeps gsec's domain types
   (`AclObjectIdentity`, `AclSid`, `AclEntry`) because they're embedded
