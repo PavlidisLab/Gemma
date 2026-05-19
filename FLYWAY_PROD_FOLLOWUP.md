@@ -2,22 +2,32 @@
 
 The H2 test path is now Flyway-managed (see `gemma-core/src/main/resources/db/migration/h2/V1__hibernate_baseline.sql`, `V2__schema_extras.sql`, `V3__seed_data.sql`, and the `Flyway` bean in `BaseDatabaseTest`). Production MySQL is still on implicit Hibernate-generated schema with `hbm2ddl.auto=update`. This doc tracks what the next session needs to do to flip prod to Flyway too.
 
-## Status as of this commit
+## Status
 
 **Done:**
-- MySQL baseline scripts are in place at `gemma-core/src/main/resources/db/migration/mysql/`:
-  - `V1__mysql_baseline.sql` (Hibernate-generated DDL via MySQL57InnoDBDialect from a freshly-rebuilt `gemdtest`)
-  - `V2__schema_extras.sql` (mirrors H2 V2 with MySQL `(100)`-prefix URI indices substituted for the H2-specific ones)
-  - `V3__seed_data.sql` (verbatim copy of H2 V3 — seed data is vendor-neutral)
-- `gemma-core/src/test/java/ubic/gemma/core/util/test/MysqlSchemaBaselineDumper.java` — one-off `main()` to regenerate V1 against a clean `gemdtest` (mirrors `SchemaBaselineDumper`)
+- `gemma-core/src/main/resources/db/migration/mysql/V1__prod_baseline.sql` — the actual prod schema dump from `homer.msl.ubc.ca` via the local port-8000 forward (`mysqldump --no-data --routines --triggers`, then stripped of `AUTO_INCREMENT=N` and dump-header comments). 123 tables, 2313 lines.
+- `gemma-core/src/test/java/ubic/gemma/core/util/test/MysqlSchemaBaselineDumper.java` — one-off `main()` retained for regenerating a Hibernate-view baseline against a clean `gemdtest` (useful for drift comparisons against `V1__prod_baseline.sql`, NOT used as a Flyway migration source).
 
-**Not yet done (still requires ops coordination):**
-- Wiring Flyway into the production `applicationContext-hibernate.xml` bean wiring (the H2 path in `BaseDatabaseTest` is the template; add a `Flyway` bean with `baselineOnMigrate=true`, `validateOnMigrate=true`, `locations=classpath:db/migration/mysql/`)
-- Switching production Hibernate to `validate` (or keeping it controllable via the existing `${gemma.hibernate.hbm2ddl.auto}` property with the default changed to `validate`)
-- Capturing a real prod schema dump (vs the Hibernate-generated `V1__mysql_baseline.sql` currently in place) and reconciling drift
-- Real-prod cutover with the steps below
+**Retired** (Phase-3-mid-session placeholders that don't fit the prod-baseline strategy):
+- `V1__mysql_baseline.sql` (Hibernate-generated) — replaced by `V1__prod_baseline.sql`. The Hibernate-view dump only models 79 of prod's 123 tables (legacy Coexpression / PAZAR / phenotype / user_query / etc. tables and the old uppercase `ACLENTRY` schema aren't in Hibernate metadata anymore).
+- `V2__schema_extras.sql`, `V3__seed_data.sql` — aimed at a "test MySQL rebuilt from Flyway from empty" path that doesn't exist (MySQL test path uses `hbm2ddl.auto=create`, not Flyway). The H2 V2/V3 still serve the actual H2-Flyway test path under `db/migration/h2/`.
 
-The reason the current `V1__mysql_baseline.sql` isn't shipped to prod yet: it's Hibernate's *view* of the schema, generated from current entity metadata. The real prod schema has drifted via years of manual DBA-applied `sql/migrations/db.*.sql` changes — there will be cosmetic + possibly substantive differences. The dumper-from-staging step below replaces `V1` with the ground-truth before wiring it in.
+**Drift findings from the prod dump:**
+- **44 prod-only tables** that Hibernate doesn't generate. Three categories:
+  1. *Old ACL schema, active* — `ACLENTRY` (3.87M rows), `ACLOBJECTIDENTITY` (3.87M rows), `ACLSID`, `ACL_CLASS`. Prod's lowercase canonical `acl_object_identity`/`acl_entry`/etc. is in place but empty (0 rows). The Phase 3 ACL listener / Sid migration targets the lowercase schema; the data migration from upper→lower hasn't happened yet.
+  2. *Coexpression subsystem, deleted from code in Phase 1c, tables still in prod* — `HUMAN_GENE_COEXPRESSION`, `MOUSE_*`, `RAT_*`, `OTHER_*`, `USER_PROBE_CO_EXPRESSION`, `COEXP_*`, `GENE_COEX_*`. Should be dropped in a future migration once we confirm nothing reads them.
+  3. *Denormalized / maintained tables* — `GENE2CS`, `EXPRESSION_EXPERIMENT2ARRAY_DESIGN`, `EXPERIMENTAL_FACTOR_ANNOTATIONS`, `EXPRESSION_EXPERIMENT2CHARACTERISTIC`. Maintained by `TableMaintenanceUtilImpl` + `sql/init-entities.sql`. Already in `db/migration/h2/V2__schema_extras.sql` for the H2 test path.
+  4. *Legacy* — `BIB_REFERENCE_CANDIDATE_GENE`, `BIBLIOGRAPHIC_REFERENCES2GENE_SETS`, `DESIGN_ELEMENT_DIMENSION`, `FILE_FORMAT`, `GENE_ANALYSIS_RESULT`, `GENE_HOMOLOGY`, `GENE2_GENE_PROTEIN_ASSOCIATION`, `LITERATURE_ASSOCIATION`, `PAZAR_ASSOCIATION`, `PHENOTYPE_ASSOCIATION`, `PHENOTYPE_ASSOCIATION_PUBLICATIONS`, `PROTEIN_PROTEIN_INTERACTION`, `SEARCH_SETTINGS`, `USER_QUERY`, `USER_ROLE`, `HIBERNATE_SEQUENCES`. Mostly removed-from-code legacy. Audit + drop in future migrations.
+- Prod's `acl_entry` already has `audit_success`/`audit_failure` columns — the `H2 V2` ALTERs that add them are unnecessary on prod.
+
+**Not yet done (still requires ops sign-off + downtime window):**
+- Wiring Flyway into production `applicationContext-hibernate.xml` (add a `Flyway` bean with `baselineOnMigrate=true`, `validateOnMigrate=true`, `locations=classpath:db/migration/mysql/`)
+- Switching production Hibernate to `validate` (controllable via the existing `${gemma.hibernate.hbm2ddl.auto}` property)
+- Actual production cutover (backup, rollback rehearsal, deploy window)
+
+The migration scripts strategy after this commit:
+- `db/migration/mysql/V1__prod_baseline.sql` — ground truth for `baselineOnMigrate=true`. Flyway treats existing prod as already-at-V1 and re-runs nothing.
+- Future `V2__*.sql`, `V3__*.sql`, etc. — new schema changes applied via Flyway on top of the baseline. The previously-loose `sql/migrations/db.*.sql` files (db.0.0.1.sql through db.X.Y.Z.sql) become the model for what V2+ look like, now as Flyway-tracked migrations with checksums.
 
 ## Why this is its own session
 
