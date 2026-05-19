@@ -37,6 +37,7 @@ import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentUpdateFromGEOEvent;
 import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabases;
@@ -99,6 +100,8 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
     private BioMaterialService bioMaterialService;
     @Autowired
     private AuditTrailService auditTrailService;
+    @Autowired
+    private BibliographicReferenceService bibliographicReferenceService;
 
     @Value("${geo.minimumSamplesToLoad}")
     private int minimumSampleCountToLoad;
@@ -384,7 +387,7 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
             BibliographicReference primaryPublication = freshFromGEO.getPrimaryPublication();
             if ( ee.getPrimaryPublication() == null && primaryPublication != null ) {
                 log.info( "Found new primary publication for " + geoAccession + ": " + primaryPublication.getPubAccession() );
-                primaryPublication = ( BibliographicReference ) persisterHelper.persist( primaryPublication );
+                primaryPublication = bibliographicReferenceService.findOrCreate( primaryPublication );
                 ee.setPrimaryPublication( primaryPublication ); // persist first?
                 pubUpdate = true;
             }

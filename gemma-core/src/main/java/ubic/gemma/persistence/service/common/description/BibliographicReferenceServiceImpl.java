@@ -25,6 +25,7 @@ import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentIdAndShortName;
@@ -71,6 +72,9 @@ public class BibliographicReferenceServiceImpl
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
+    @Autowired
+    private ExternalDatabaseDao externalDatabaseDao;
+
     @Value("${entrez.efetch.apikey}")
     private String ncbiApiKey;
 
@@ -85,6 +89,29 @@ public class BibliographicReferenceServiceImpl
     @Override
     public void afterPropertiesSet() throws Exception {
         this.pubMedXmlFetcher = new PubMedSearch( ncbiApiKey );
+    }
+
+    /**
+     * Find an existing BibliographicReference by its pubAccession, or create a new one.
+     * The embedded {@link ExternalDatabase} on the pubAccession is resolved (find-or-create
+     * by name) before delegating to {@link BibliographicReferenceDao#findOrCreate} so the
+     * caller can pass a transient XDB instance without violating the
+     * {@code cascade="none"} on {@code DatabaseEntry.externalDatabase}.
+     * <p>
+     * Phase 3 persister-retirement: replaces {@code persisterHelper.persist(BibRef)}
+     * (which routed through {@code CommonPersister.persistBibliographicReference}).
+     */
+    @Override
+    @Transactional
+    public BibliographicReference findOrCreate( BibliographicReference ref ) {
+        if ( ref.getPubAccession() != null && ref.getPubAccession().getExternalDatabase() != null ) {
+            ExternalDatabase xdb = ref.getPubAccession().getExternalDatabase();
+            if ( xdb.getId() == null ) {
+                ExternalDatabase existing = externalDatabaseDao.find( xdb );
+                ref.getPubAccession().setExternalDatabase( existing != null ? existing : externalDatabaseDao.create( xdb ) );
+            }
+        }
+        return bibliographicReferenceDao.findOrCreate( ref );
     }
 
     @Override

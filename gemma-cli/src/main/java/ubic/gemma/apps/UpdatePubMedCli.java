@@ -30,8 +30,8 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.persister.PersisterHelper;
 import ubic.gemma.persistence.service.common.description.BibliographicReferenceReadService;
+import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.io.IOException;
@@ -52,7 +52,7 @@ public class UpdatePubMedCli extends AbstractAuthenticatedCLI {
     @Autowired
     private BibliographicReferenceReadService bibliographicReferenceReadService;
     @Autowired
-    private PersisterHelper persisterHelper;
+    private BibliographicReferenceService bibliographicReferenceService;
 
     @Value("${entrez.efetch.apikey}")
     private String ncbiApiKey;
@@ -175,7 +175,7 @@ public class UpdatePubMedCli extends AbstractAuthenticatedCLI {
             pubAccession.setExternalDatabase( ed );
 
             publication.setPubAccession( pubAccession );
-            publication = ( BibliographicReference ) persisterHelper.persist( publication );
+            publication = bibliographicReferenceService.findOrCreate( publication );
 
         }
         return publication;

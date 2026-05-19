@@ -30,7 +30,7 @@ import ubic.gemma.core.loader.entrez.pubmed.ExpressionExperimentBibRefFinder;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.persister.PersisterHelper;
+import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.io.BufferedReader;
@@ -51,7 +51,7 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
     @Autowired
     private ExpressionExperimentService ees;
     @Autowired
-    private PersisterHelper persisterHelper;
+    private BibliographicReferenceService bibliographicReferenceService;
     private PubMedSearch fetcher;
     private ExpressionExperimentBibRefFinder finder;
 
@@ -177,7 +177,7 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
             }
 
             log.info( "Found pubAccession " + ref.getPubAccession().getAccession() + " for " + experiment );
-            ref = ( BibliographicReference ) persisterHelper.persist( ref );
+            ref = bibliographicReferenceService.findOrCreate( ref );
             experiment.setPrimaryPublication( ref );
             ees.update( experiment );
             addSuccessObject( experiment, "Updated primary publication." );
