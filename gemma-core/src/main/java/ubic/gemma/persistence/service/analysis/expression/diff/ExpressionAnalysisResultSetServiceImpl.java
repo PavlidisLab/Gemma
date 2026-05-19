@@ -12,6 +12,8 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
+import ubic.gemma.persistence.util.Cursor;
+import ubic.gemma.persistence.util.CursorPage;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
@@ -114,6 +116,17 @@ public class ExpressionAnalysisResultSetServiceImpl extends AbstractFilteringVoE
                 offset,
                 limit,
                 sort );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CursorPage<DifferentialExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInByCursor(
+            @Nullable Collection<BioAssaySet> bioAssaySets,
+            @Nullable Collection<DatabaseEntry> externalIds,
+            @Nullable Filters filters,
+            @Nullable Cursor cursor,
+            int limit ) {
+        return voDao.findByBioAssaySetInAndDatabaseEntryInByCursor( bioAssaySets, externalIds, filters, cursor, limit );
     }
 
     @Override

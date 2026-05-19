@@ -11,6 +11,8 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
 import ubic.gemma.persistence.service.analysis.AnalysisResultSetService;
+import ubic.gemma.persistence.util.Cursor;
+import ubic.gemma.persistence.util.CursorPage;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
@@ -45,6 +47,12 @@ public interface ExpressionAnalysisResultSetService extends AnalysisResultSetSer
     Map<Long, Set<Gene>> loadResultIdToGenesMap( ExpressionAnalysisResultSet ears );
 
     Slice<DifferentialExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInLimit( @Nullable Collection<BioAssaySet> bioAssaySets, @Nullable Collection<DatabaseEntry> externalIds, @Nullable Filters filters, int offset, int limit, @Nullable Sort sort );
+
+    /**
+     * Cursor-paged counterpart to {@link #findByBioAssaySetInAndDatabaseEntryInLimit}. Always
+     * sorts by ascending {@code id} — see {@code CURSOR_PAGINATION_STEP1_PLAN.md} step 1i.
+     */
+    CursorPage<DifferentialExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInByCursor( @Nullable Collection<BioAssaySet> bioAssaySets, @Nullable Collection<DatabaseEntry> externalIds, @Nullable Filters filters, @Nullable Cursor cursor, int limit );
 
     Baseline getBaseline( ExpressionAnalysisResultSet ears );
 
