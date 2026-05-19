@@ -3,16 +3,29 @@
        xmlns:context="http://www.springframework.org/schema/context"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
-   http://www.springframework.org/schema/context  http://www.springframework.org/schema/context/spring-context.xsd">
+       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
 
-    <!-- This defines which classes are picked up by annotation-scanning for beans (e.g. @Component or @Service or @Repository
-        or @Controller). We exclude ubic.gemma.web here, it is brought in by gemma-servlet.xml. -->
-    <context:component-scan base-package="ubic.gemma.core" name-generator="ubic.gemma.core.context.BeanNameGenerator">
-        <context:exclude-filter type="annotation" expression="ubic.gemma.core.context.TestComponent"/>
-    </context:component-scan>
+    <!--
+        Phase 3 XML->Java migration: the actual component-scan (base-packages, exclude
+        filters, BeanNameGenerator) now lives in ubic.gemma.core.config.ComponentScanConfig.
 
-    <context:component-scan base-package="ubic.gemma.persistence" name-generator="ubic.gemma.core.context.BeanNameGenerator">
-        <context:exclude-filter type="annotation" expression="ubic.gemma.core.context.TestComponent"/>
-    </context:component-scan>
+        This file remains as a thin bootstrap:
+          1. <context:annotation-config/> registers the annotation-aware post-processors
+             (ConfigurationClassPostProcessor, AutowiredAnnotationBeanPostProcessor, etc.)
+             that turn @Configuration / @Bean / @Autowired into actual wiring.
+          2. The single <bean class="..."/> seeds the ComponentScanConfig @Configuration
+             into the context. Spring then processes its @ComponentScan, which pulls in
+             every other @Configuration / @Component under ubic.gemma.core +
+             ubic.gemma.persistence.
+
+        Keeping this XML stub (rather than deleting it) preserves the existing
+        classpath*:ubic/gemma/applicationContext-*.xml wildcard loader contract used by
+        web.xml, BaseIntegrationTest, BaseWebIntegrationTest, BaseJerseyIntegrationTest,
+        and SpringContextUtils.
+    -->
+
+    <context:annotation-config/>
+
+    <bean class="ubic.gemma.core.config.ComponentScanConfig"/>
 
 </beans>
