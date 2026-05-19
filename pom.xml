@@ -308,23 +308,13 @@
 				<artifactId>log4j-slf4j2-impl</artifactId>
 				<version>${log4j.version}</version>
 			</dependency>
-			<!-- jakarta.xml.bind-api: Boot 3.3 BOM ships 4.0.2; Gemma tracks 4.0.5. -->
+			<!-- jakarta.xml.bind-api: Boot 3.5 BOM ships 4.0.2; Gemma tracks 4.0.5. -->
 			<dependency>
 				<groupId>jakarta.xml.bind</groupId>
 				<artifactId>jakarta.xml.bind-api</artifactId>
 				<version>4.0.5</version>
 			</dependency>
-			<!-- jaxb-runtime / jaxb-core: pin to 4.0.5 to match jakarta.xml.bind-api. -->
-			<dependency>
-				<groupId>org.glassfish.jaxb</groupId>
-				<artifactId>jaxb-runtime</artifactId>
-				<version>4.0.5</version>
-			</dependency>
-			<dependency>
-				<groupId>org.glassfish.jaxb</groupId>
-				<artifactId>jaxb-core</artifactId>
-				<version>4.0.5</version>
-			</dependency>
+			<!-- jaxb-runtime / jaxb-core: Boot 3.5 BOM ships glassfish-jaxb 4.0.5 (matches Gemma); no override needed. -->
 			<!-- error_prone_annotations: gson 2.13.2 (via slack-api) pulls 2.41.0; caffeine 3.2.2
 			     (via yauaa) pulls 2.40.0. Pin to the newer to satisfy convergence. -->
 			<dependency>
@@ -333,19 +323,10 @@
 				<version>2.41.0</version>
 			</dependency>
 
-			<!-- JUnit 5 (Jupiter) Phase A: Jupiter + Vintage engines side-by-side. -->
-			<dependency>
-				<groupId>org.junit.jupiter</groupId>
-				<artifactId>junit-jupiter</artifactId>
-				<version>${junit.jupiter.version}</version>
-				<scope>test</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.junit.vintage</groupId>
-				<artifactId>junit-vintage-engine</artifactId>
-				<version>${junit.jupiter.version}</version>
-				<scope>test</scope>
-			</dependency>
+			<!-- JUnit 5 (Jupiter) Phase A: Jupiter + Vintage engines side-by-side.
+			     Boot 3.5 BOM imports junit-bom at 5.12.2 (matches Gemma's junit.jupiter.version),
+			     so junit-jupiter / junit-vintage-engine no longer need overrides.
+			     Mockito stays pinned because Gemma leads BOM (5.21.0 > BOM 5.17.0). -->
 			<dependency>
 				<groupId>org.mockito</groupId>
 				<artifactId>mockito-junit-jupiter</artifactId>
@@ -447,16 +428,6 @@
 				<groupId>org.springframework.security</groupId>
 				<artifactId>spring-security-taglibs</artifactId>
 				<version>${spring.security.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.hibernate.orm</groupId>
-				<artifactId>hibernate-core</artifactId>
-				<version>${hibernate.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.hibernate.orm</groupId>
-				<artifactId>hibernate-jcache</artifactId>
-				<version>${hibernate.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
@@ -575,13 +546,6 @@
 			<groupId>org.hibernate.orm</groupId>
 			<artifactId>hibernate-core</artifactId>
 			<version>${hibernate.version}</version>
-			<exclusions>
-				<!-- pulls jakarta.xml.bind-api 4.0.2; we use 4.0.5 directly -->
-				<exclusion>
-					<groupId>jakarta.xml.bind</groupId>
-					<artifactId>jakarta.xml.bind-api</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.dom4j</groupId>
@@ -610,13 +574,6 @@
 			<artifactId>jaxb-runtime</artifactId>
 			<version>4.0.5</version>
 			<scope>runtime</scope>
-			<exclusions>
-				<!-- jaxb-core 4.0.5 pins jakarta.xml.bind-api 4.0.2; we use 4.0.5 directly -->
-				<exclusion>
-					<groupId>jakarta.xml.bind</groupId>
-					<artifactId>jakarta.xml.bind-api</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.jboss.logging</groupId>
