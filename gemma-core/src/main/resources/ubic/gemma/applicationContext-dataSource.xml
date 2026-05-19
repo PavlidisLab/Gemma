@@ -55,6 +55,9 @@
             <property name="dataSourceProperties" ref="dataSourceProps"/>
             <property name="maximumPoolSize" value="${gemma.testdb.maximumPoolSize}"/>
             <property name="minimumIdle" value="${gemma.testdb.minimumIdle}"/>
+            <!-- Phase 3 build (HikariCP audit): warn after 60s of un-closed connection in test
+                 runs. Catches connection leaks early. Off (0) in prod by default. -->
+            <property name="leakDetectionThreshold" value="60000"/>
         </bean>
         <bean id="groupAgentSecurityContext"
               class="ubic.gemma.core.security.authentication.ManualAuthenticationServiceBasedSecurityContextFactory"
