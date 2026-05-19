@@ -1,8 +1,8 @@
 package ubic.gemma.core.loader.expression.geo.service;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static ubic.gemma.core.loader.expression.geo.service.GeoUtils.getUrlForBrowsing;
 import static ubic.gemma.core.loader.expression.geo.service.GeoUtils.getUrlForSupplementaryMaterial;
 

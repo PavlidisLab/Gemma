@@ -36,12 +36,9 @@ import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayDao;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorDao;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueDao;
-import ubic.gemma.persistence.util.Thaws;
 
 import java.util.*;
 import java.util.function.Function;
-
-import static ubic.gemma.persistence.util.Thaws.thawBioMaterial;
 
 /**
  * @author pavlidis
@@ -57,83 +54,65 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
     private final BioAssayDao bioAssayDao;
     private final ExperimentalFactorDao experimentalFactorDao;
     private final CharacteristicService characteristicService;
+    private final BioMaterialReadService bioMaterialReadService;
 
     @Autowired
     public BioMaterialServiceImpl( BioMaterialDao bioMaterialDao, FactorValueDao factorValueDao,
-            BioAssayDao bioAssayDao, ExperimentalFactorDao experimentalFactorDao, CharacteristicService characteristicService ) {
+            BioAssayDao bioAssayDao, ExperimentalFactorDao experimentalFactorDao,
+            CharacteristicService characteristicService,
+            BioMaterialReadService bioMaterialReadService ) {
         super( bioMaterialDao );
         this.bioMaterialDao = bioMaterialDao;
         this.factorValueDao = factorValueDao;
         this.bioAssayDao = bioAssayDao;
         this.experimentalFactorDao = experimentalFactorDao;
         this.characteristicService = characteristicService;
+        this.bioMaterialReadService = bioMaterialReadService;
     }
 
     @Override
-    @Transactional(readOnly = true)
     public BioMaterial copy( BioMaterial bioMaterial ) {
-        return this.bioMaterialDao.copy( bioMaterial );
+        return bioMaterialReadService.copy( bioMaterial );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<BioMaterial> findSubBioMaterials( BioMaterial bioMaterial, boolean direct ) {
-        return bioMaterialDao.findSubBioMaterials( bioMaterial, direct );
+        return bioMaterialReadService.findSubBioMaterials( bioMaterial, direct );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<BioMaterial> findSiblings( BioMaterial bioMaterial ) {
-        if ( bioMaterial.getSourceBioMaterial() == null ) {
-            return Collections.emptySet();
-        }
-        Collection<BioMaterial> siblings = findSubBioMaterials( bioMaterial.getSourceBioMaterial(), true );
-        siblings.remove( bioMaterial );
-        return siblings;
+        return bioMaterialReadService.findSiblings( bioMaterial );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<BioMaterial> findByExperiment( ExpressionExperiment experiment ) {
-        return this.bioMaterialDao.findByExperiment( experiment );
+        return bioMaterialReadService.findByExperiment( experiment );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<BioMaterial> findByFactor( ExperimentalFactor experimentalFactor ) {
-        return this.bioMaterialDao.findByFactor( experimentalFactor );
+        return bioMaterialReadService.findByFactor( experimentalFactor );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public <T extends Exception> BioMaterial loadAndThawOrFail( Long bmId, Function<String, T> exceptionSupplier, String message ) throws T {
-        BioMaterial bm = loadOrFail( bmId, exceptionSupplier, message );
-        thawBioMaterial( bm );
-        return bm;
+        return bioMaterialReadService.loadAndThawOrFail( bmId, exceptionSupplier, message );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Map<BioMaterial, Map<BioAssay, ExpressionExperiment>> getExpressionExperiments( BioMaterial bm ) {
-        // source biomaterials need to be visited, so this must be in the session
-        bm = ensureInSession( bm );
-        return this.bioMaterialDao.getExpressionExperiments( bm );
+        return bioMaterialReadService.getExpressionExperiments( bm );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public BioMaterial thaw( BioMaterial bioMaterial ) {
-        bioMaterial = ensureInSession( bioMaterial );
-        thawBioMaterial( bioMaterial );
-        return bioMaterial;
+        return bioMaterialReadService.thaw( bioMaterial );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<BioMaterial> thaw( Collection<BioMaterial> bioMaterials ) {
-        bioMaterials = ensureInSession( bioMaterials );
-        bioMaterials.forEach( Thaws::thawBioMaterial );
-        return bioMaterials;
+        return bioMaterialReadService.thaw( bioMaterials );
     }
 
     @Override

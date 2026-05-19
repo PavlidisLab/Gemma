@@ -14,6 +14,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialDaoImpl;
+import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialReadService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialServiceImpl;
 
@@ -34,7 +35,7 @@ public class ExperimentalFactorServiceTest extends BaseDatabaseTest {
 
         @Bean
         public BioMaterialService bioMaterialService( SessionFactory sessionFactory ) {
-            return new BioMaterialServiceImpl( new BioMaterialDaoImpl( sessionFactory ), mock(), mock(), mock(), mock() );
+            return new BioMaterialServiceImpl( new BioMaterialDaoImpl( sessionFactory ), mock(), mock(), mock(), mock(), mock( BioMaterialReadService.class ) );
         }
 
         @Bean

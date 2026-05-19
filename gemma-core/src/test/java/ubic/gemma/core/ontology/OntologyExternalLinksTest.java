@@ -1,13 +1,13 @@
 package ubic.gemma.core.ontology;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import ubic.basecode.ontology.model.AnnotationProperty;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.simple.OntologyTermSimple;
 
 import java.io.IOException;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
