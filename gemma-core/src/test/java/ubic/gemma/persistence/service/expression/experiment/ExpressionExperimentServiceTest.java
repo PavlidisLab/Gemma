@@ -64,6 +64,11 @@ public class ExpressionExperimentServiceTest extends BaseTest {
         }
 
         @Bean
+        public ExpressionExperimentSubSetReadService expressionExperimentSubSetReadService() {
+            return mock( ExpressionExperimentSubSetReadService.class );
+        }
+
+        @Bean
         public ExpressionExperimentFilterRewriteHelperService expressionExperimentFilterInferenceHelperService( OntologyService ontologyService ) {
             return new ExpressionExperimentFilterRewriteHelperService( ontologyService );
         }

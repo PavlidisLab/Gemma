@@ -18,7 +18,6 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
-import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.ConfigAttribute;
 import org.springframework.security.access.SecurityConfig;
@@ -89,6 +88,8 @@ public class ExpressionExperimentServiceImpl
     private ExpressionExperimentReadService readService;
     @Autowired
     private ExpressionExperimentWriteService writeService;
+    @Autowired
+    private ExpressionExperimentSubSetReadService subSetReadService;
     @Autowired
     private ubic.gemma.persistence.service.common.description.CharacteristicService characteristicService;
     @Autowired
@@ -871,138 +872,63 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<ExpressionExperimentSubSet> getSubSetsWithBioAssays( final ExpressionExperiment expressionExperiment ) {
-        return this.expressionExperimentDao.getSubSets( expressionExperiment );
+        return subSetReadService.getSubSetsWithBioAssays( expressionExperiment );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Map<ExpressionExperiment, Collection<ExpressionExperimentSubSet>> getSubSetsWithBioAssays( Collection<ExpressionExperiment> expressionExperiments ) {
-        return this.expressionExperimentDao.getSubSetsByExpressionExperiments( expressionExperiments );
+        return subSetReadService.getSubSetsWithBioAssays( expressionExperiments );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<ExpressionExperimentSubSet> getSubSetsWithCharacteristics( ExpressionExperiment ee ) {
-        Collection<ExpressionExperimentSubSet> result = this.expressionExperimentDao.getSubSets( ee );
-        for ( ExpressionExperimentSubSet subSet : result ) {
-            Hibernate.initialize( subSet.getCharacteristics() );
-        }
-        return result;
+        return subSetReadService.getSubSetsWithCharacteristics( ee );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Map<BioAssayDimension, Set<ExpressionExperimentSubSet>> getSubSetsByDimension( ExpressionExperiment expressionExperiment ) {
-        return expressionExperimentDao.getSubSetsByDimension( expressionExperiment );
+        return subSetReadService.getSubSetsByDimension( expressionExperiment );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Map<BioAssayDimension, Set<ExpressionExperimentSubSet>> getSubSetsByDimensionWithBioAssays( ExpressionExperiment expressionExperiment ) {
-        Map<BioAssayDimension, Set<ExpressionExperimentSubSet>> result = expressionExperimentDao.getSubSetsByDimension( expressionExperiment );
-        for ( Set<ExpressionExperimentSubSet> subSets : result.values() ) {
-            for ( ExpressionExperimentSubSet s : subSets ) {
-                for ( BioAssay ba : s.getBioAssays() ) {
-                    Hibernate.initialize( ba.getSampleUsed() );
-                    Hibernate.initialize( ba.getSampleUsed().getSourceBioMaterial() );
-                }
-            }
-        }
-        return result;
+        return subSetReadService.getSubSetsByDimensionWithBioAssays( expressionExperiment );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<ExpressionExperimentSubSet> getSubSets( ExpressionExperiment expressionExperiment, BioAssayDimension dimension ) {
-        return expressionExperimentDao.getSubSets( expressionExperiment, dimension );
+        return subSetReadService.getSubSets( expressionExperiment, dimension );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<ExpressionExperimentSubSet> getSubSetsWithBioAssays( ExpressionExperiment expressionExperiment, BioAssayDimension dimension ) {
-        Collection<ExpressionExperimentSubSet> subSets = expressionExperimentDao.getSubSets( expressionExperiment, dimension );
-        for ( ExpressionExperimentSubSet s : subSets ) {
-            for ( BioAssay ba : s.getSourceExperiment().getBioAssays() ) {
-                Hibernate.initialize( ba.getSampleUsed() );
-                Hibernate.initialize( ba.getSampleUsed().getSourceBioMaterial() );
-            }
-            for ( BioAssay ba : s.getBioAssays() ) {
-                Hibernate.initialize( ba.getSampleUsed() );
-                Hibernate.initialize( ba.getSampleUsed().getSourceBioMaterial() );
-            }
-        }
-        return subSets;
+        return subSetReadService.getSubSetsWithBioAssays( expressionExperiment, dimension );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Map<ExperimentalFactor, Map<FactorValue, ExpressionExperimentSubSet>> getSubSetsByFactorValue( ExpressionExperiment expressionExperiment, BioAssayDimension dimension ) {
-        return getSubSetsByFactorValueInternal( getSubSetsWithBioAssays( expressionExperiment, dimension ) );
+        return subSetReadService.getSubSetsByFactorValue( expressionExperiment, dimension );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Map<FactorValue, ExpressionExperimentSubSet> getSubSetsByFactorValue( ExpressionExperiment expressionExperiment, ExperimentalFactor experimentalFactor, BioAssayDimension dimension ) {
-        // TODO: could this be made more efficient for a single factor?
-        return getSubSetsByFactorValueInternal( getSubSetsWithBioAssays( expressionExperiment, dimension ) )
-                .get( experimentalFactor );
+        return subSetReadService.getSubSetsByFactorValue( expressionExperiment, experimentalFactor, dimension );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Map<FactorValue, ExpressionExperimentSubSet> getSubSetsByFactorValueWithCharacteristicsAndBioAssays( ExpressionExperiment expressionExperiment, ExperimentalFactor experimentalFactor, BioAssayDimension dimension ) {
-        Map<FactorValue, ExpressionExperimentSubSet> result;
-        result = getSubSetsByFactorValue( expressionExperiment, experimentalFactor, dimension );
-        if ( result != null ) {
-            for ( ExpressionExperimentSubSet subSet : result.values() ) {
-                Hibernate.initialize( subSet.getCharacteristics() );
-                for ( BioAssay ba : subSet.getBioAssays() ) {
-                    Thaws.thawBioAssay( ba );
-                }
-            }
-        }
-        return result;
-    }
-
-    private Map<ExperimentalFactor, Map<FactorValue, ExpressionExperimentSubSet>> getSubSetsByFactorValueInternal( Collection<ExpressionExperimentSubSet> subSets ) {
-        Map<ExperimentalFactor, Map<FactorValue, Set<ExpressionExperimentSubSet>>> result = new HashMap<>();
-        for ( ExpressionExperimentSubSet subSet : subSets ) {
-            for ( BioAssay ba : subSet.getBioAssays() ) {
-                for ( FactorValue fv : ba.getSampleUsed().getAllFactorValues() ) {
-                    result.computeIfAbsent( fv.getExperimentalFactor(), k -> new HashMap<>() )
-                            .computeIfAbsent( fv, k -> new HashSet<>() )
-                            .add( subSet );
-                }
-            }
-        }
-        return result.entrySet().stream()
-                // only retain FVs that fully separates subsets
-                // if there are as many FVs than subsets, we know there is exactly one subset per FV
-                .filter( e -> e.getValue().size() == subSets.size() )
-                .collect( Collectors.toMap( Map.Entry::getKey, e -> e.getValue().entrySet().stream().collect( Collectors.toMap( Map.Entry::getKey, e2 -> e2.getValue().iterator().next() ) ) ) );
+        return subSetReadService.getSubSetsByFactorValueWithCharacteristicsAndBioAssays( expressionExperiment, experimentalFactor, dimension );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperimentSubSet getSubSetByIdWithCharacteristics( ExpressionExperiment ee, Long subSetId ) {
-        ExpressionExperimentSubSet result = expressionExperimentDao.getSubSetById( ee, subSetId );
-        if ( result != null ) {
-            Hibernate.initialize( result.getCharacteristics() );
-        }
-        return result;
+        return subSetReadService.getSubSetByIdWithCharacteristics( ee, subSetId );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperimentSubSet getSubSetByIdWithCharacteristicsAndBioAssays( ExpressionExperiment ee, Long subSetId ) {
-        ExpressionExperimentSubSet result = expressionExperimentDao.getSubSetById( ee, subSetId );
-        if ( result != null ) {
-            result.getSourceExperiment().getBioAssays().forEach( Thaws::thawBioAssay );
-            result.getBioAssays().forEach( Thaws::thawBioAssay );
-        }
-        return result;
+        return subSetReadService.getSubSetByIdWithCharacteristicsAndBioAssays( ee, subSetId );
     }
 
     @Override
