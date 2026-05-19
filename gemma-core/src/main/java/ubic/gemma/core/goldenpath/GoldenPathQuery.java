@@ -20,8 +20,8 @@ package ubic.gemma.core.goldenpath;
 
 import org.springframework.jdbc.core.SqlParameter;
 import org.springframework.jdbc.object.MappingSqlQuery;
-import ubic.basecode.util.SQLUtils;
 import ubic.gemma.core.loader.genome.BlatResultParser;
+import ubic.gemma.core.util.SQLUtils;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
