@@ -453,56 +453,56 @@ public abstract class ExpressionPersister extends ArrayDesignPersister implement
         }
     }
 
+    /**
+     * Persist the ExperimentalDesign and its EF/FV graph, then return it persistent.
+     * <p>
+     * Historical note (pre-Phase-3): this method used to explicitly withhold each
+     * collection and call {@code experimentalFactorDao.create} / {@code factorValueDao.create}
+     * so the {@code @AfterReturning} ACL advice would fire on each DAO call.
+     * Post-{@code 21e4fc41} the {@code EntityInsert} listener attaches ACLs from
+     * Hibernate insert events directly, so cascade inserts produce identical ACL
+     * results. The explicit per-FV create loop and the cascade-override withhold-
+     * and-put-back gymnastics are gone; we let the {@code ExperimentalDesign}
+     * cascade (ED → EF → FV) do the work and the listener attach the ACLs.
+     * <p>
+     * The ED still has to be persisted here (ahead of {@code processBioAssays}) so
+     * that {@code FactorValue} ids are assigned before {@code BioMaterial.factorValues}
+     * are walked in {@link #fillInBioAssayAssociations}; otherwise those BMs would
+     * see transient FVs and try to persist them through {@code persistFactorValue},
+     * forking the persistence path.
+     */
     private void processExperimentalDesign( ExperimentalDesign experimentalDesign, Caches caches ) {
 
         this.doPersist( experimentalDesign.getTypes(), caches );
 
-        // Withhold to avoid premature cascade.
-        Set<ExperimentalFactor> factors = experimentalDesign.getExperimentalFactors();
-        if ( factors == null ) {
-            factors = new HashSet<>();
+        if ( experimentalDesign.getExperimentalFactors() == null ) {
+            experimentalDesign.setExperimentalFactors( new HashSet<>() );
         }
-        experimentalDesign.setExperimentalFactors( null );
 
-        // Note we use create because this is specific to the instance. (we're overriding a cascade)
-        experimentalDesign = experimentalDesignDao.create( experimentalDesign );
-
-        // Put back.
-        experimentalDesign.setExperimentalFactors( factors );
-
-        // assert !this.isTransient( experimentalDesign );
-        assert experimentalDesign.getExperimentalFactors() != null;
-
+        // Fill in associations that the cascade doesn't reach (EF annotations,
+        // FV measurement units, back-references). Cascade handles ED→EF→FV
+        // inserts and the EntityInsert listener attaches their ACLs.
         for ( ExperimentalFactor experimentalFactor : experimentalDesign.getExperimentalFactors() ) {
-
-            // experimentalFactor.setId( null ); // in case of retry.
             experimentalFactor.setExperimentalDesign( experimentalDesign );
+            this.fillInExperimentalFactorAssociations( experimentalFactor, caches );
 
-            // Override cascade like above.
-            Collection<FactorValue> factorValues = experimentalFactor.getFactorValues();
-            experimentalFactor.setFactorValues( null );
-            experimentalFactor = this.persistExperimentalFactor( experimentalFactor, caches );
-
-            if ( factorValues == null ) {
+            if ( experimentalFactor.getFactorValues() == null ) {
                 AbstractPersister.log.warn( "Factor values collection was null for " + experimentalFactor );
                 continue;
             }
 
-            Set<FactorValue> createdFactorValues = new HashSet<>( factorValues.size() );
-            for ( FactorValue factorValue : factorValues ) {
+            for ( FactorValue factorValue : experimentalFactor.getFactorValues() ) {
                 factorValue.setExperimentalFactor( experimentalFactor );
-                this.fillInFactorValueAssociations( factorValue, caches );
-
-                // this cascades from updates to the factor, but because auto-flush is off, we have to do this here to
-                // get ACLs populated.
-                createdFactorValues.add( factorValueDao.create( factorValue ) );
+                // measurement will cascade, but not unit.
+                if ( factorValue.getMeasurement() != null && factorValue.getMeasurement().getUnit() != null ) {
+                    factorValue.getMeasurement().setUnit( this.persistUnit( factorValue.getMeasurement().getUnit() ) );
+                }
             }
-
-            experimentalFactor.setFactorValues( createdFactorValues );
-
-            experimentalFactorDao.update( experimentalFactor );
-
         }
+
+        // Cascade=all on ExperimentalDesign.experimentalFactors and ExperimentalFactor.factorValues
+        // makes this one create() walk the whole subgraph; the EntityInsert listener attaches ACLs.
+        experimentalDesignDao.create( experimentalDesign );
     }
 
 }
