@@ -95,15 +95,21 @@ HB6-respecting patterns the factories enforce:
 |---|---|
 | `gemma-core/.../fixture/ExperimentFactory.java` | Done — `bulkRna()`, `singleCell()`, `.withSamples(N)`, `.withArrayDesign(ad)`, `.withTaxon(t)`, `.withShortName(s)`, `.includeRawDataQt(boolean)` |
 | `gemma-core/.../fixture/ExperimentFactoryTest.java` | Done — 4 tests, defaults + overrides |
+| `gemma-core/.../fixture/TaxonFactory.java` | Done — seeded shortcuts (`mouse()`, `human()`, `rat()`, `zebrafish()`, `fly()`, `worm()`, `yeast()`), parameterized resolvers (`byCommonName(s)`, `byScientificName(s)`, `byNcbiId(id)`), and admin-only `adHoc()` builder with `.withScientificName/CommonName/NcbiId/GenesUsable`. NCBI ids for ad-hoc taxa land in the 500k+ synthetic range so they never collide with real assignments. |
+| `gemma-core/.../fixture/TaxonFactoryTest.java` | Done — 10 tests, seeded shortcuts + ad-hoc + missing-seed error path |
+| `gemma-core/.../fixture/ArrayDesignFactory.java` | Done — `oneColor()`, `twoColor()`, `geneChip()`, `withTechnologyType(tt)`; `.withProbes(N)`, `.withSequences(boolean)`, `.withRandomProbeNames(boolean)`, `.withTaxon(t)`, `.withShortName(s)`, `.withName(n)`. CSes attach via cascade=all from AD; BioSequences are persisted first because CS→biologicalCharacteristic has no cascade. |
+| `gemma-core/.../fixture/ArrayDesignFactoryTest.java` | Done — 9 tests, defaults + technology types + probe shapes + biosequence attachment + taxon override |
 | `CuratableValueObjectTest` | Migrated (first migration off the helper) |
 
 ## What's planned
 
 * `BioMaterialFactory` — `.withTaxon(t).withCharacteristic(c).build()`.
-* `ArrayDesignFactory` — `.withProbes(N).withSequence(true).withTaxon(t).build()`.
 * `ExperimentalFactorFactory` — `.categorical().withLevels(2).attachTo(ee)`.
 * `FactorValueFactory` — paired with the above.
 * `DifferentialExpressionAnalysisFactory` — `.attachTo(ee).withProbes(N)`.
+* `BioAssayFactory` — `.withBioMaterial(bm).withArrayDesign(ad)` (currently
+  inlined inside `ExperimentFactory.Builder.build()`; split out once a
+  second caller materializes).
 * Single-cell vector population helpers split out of
   `RandomSingleCellDataUtils` into a `SingleCellVectorFactory` callable
   on the output of `experimentFactory.singleCell().build()`.
