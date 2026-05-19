@@ -1,6 +1,5 @@
 package ubic.gemma.core.security.authorization.acl;
 
-import gemma.gsec.acl.afterinvocation.AclEntryAfterInvocationByAssociationFilteringProvider;
 import org.springframework.security.acls.model.AclService;
 import org.springframework.security.acls.model.Permission;
 import ubic.gemma.model.expression.designElement.CompositeSequence;

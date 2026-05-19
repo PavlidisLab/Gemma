@@ -112,14 +112,26 @@ public class MethodSecurityConfig extends GlobalMethodSecurityConfiguration {
             //   mode, and the 17 call sites pervasively rely on null to distinguish "not
             //   found / not visible" (HTTP 404) from "found but denied" (HTTP 403).
             "gemmaAfterAclReadQuiet",
-            "afterAclCompositeSequenceCollectionRead", // Phase B — bulk fetch by ArrayDesign
-            "afterAclDataVectorCollectionRead", // Phase B — bulk fetch by ExpressionExperiment
-            "afterAclMyDataRead", // Phase B — needs ACL owner SpEL helper
-            "afterAclMyPrivateDataRead", // Phase B — needs ACL private SpEL helper
+            // afterAclCompositeSequenceCollectionRead and afterAclDataVectorCollectionRead are
+            //   Gemma-class beans whose base classes were ported into gemma-core in Phase B (the
+            //   ByAssociation / CollectionFiltering provider hierarchy now lives in
+            //   ubic.gemma.core.security.authorization.acl, not gemma.gsec.acl.afterinvocation).
+            //   Same bean ids — the wiring contract is unchanged.
+            "afterAclCompositeSequenceCollectionRead", // Phase B — bulk fetch by ArrayDesign (Gemma base class)
+            "afterAclDataVectorCollectionRead", // Phase B — bulk fetch by ExpressionExperiment (Gemma base class)
+            // afterAclMyDataRead / afterAclMyPrivateDataRead / afterAclStreamRead (gsec)
+            //   replaced in Phase B by Gemma-owned gemmaAfterAclMyDataRead /
+            //   gemmaAfterAclMyPrivateDataRead / gemmaAfterAclStreamRead beans, defined in
+            //   applicationContext-security.xml. Same semantics; no longer depend on the gsec
+            //   AclEntryAfterInvocationOwnedCollectionFilteringProvider /
+            //   AclEntryAfterInvocationPrivateCollectionFilteringProvider /
+            //   AclEntryAfterInvocationStreamFilteringProvider classes.
+            "gemmaAfterAclMyDataRead", // Phase B — owner-and-permission filter, Gemma-owned
+            "gemmaAfterAclMyPrivateDataRead", // Phase B — private-and-readable filter, Gemma-owned
             "afterAclValueObjectCollection", // Phase B — VO metadata side-effect
             "afterAclValueObjectMap", // Phase B — VO metadata side-effect
             "afterAclValueObject", // Phase B — VO metadata side-effect
-            "afterAclStreamRead", // Phase B — Stream<?> return type
+            "gemmaAfterAclStreamRead", // Phase B — Stream<?> return type, Gemma-owned
             "postInvocationAdviceProvider" // for @PostAuthorize / @PostFilter — REQUIRED for Phase A annotations
     );
 
