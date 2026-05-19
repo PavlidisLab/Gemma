@@ -1,12 +1,12 @@
 package ubic.gemma.core.util.test;
 
-import ubic.gemma.core.security.gsec.acl.AclAuthorizationStrategyImpl;
-import ubic.gemma.core.security.gsec.acl.AclSidRetrievalStrategyImpl;
-import ubic.gemma.core.security.gsec.acl.ObjectIdentityRetrievalStrategyImpl;
-import ubic.gemma.core.security.gsec.acl.domain.AclDao;
-import ubic.gemma.core.security.gsec.acl.domain.AclDaoImpl;
-import ubic.gemma.core.security.gsec.acl.domain.AclService;
-import ubic.gemma.core.security.gsec.acl.domain.AclServiceImpl;
+import ubic.gemma.core.security.acl.AclAuthorizationStrategyImpl;
+import ubic.gemma.core.security.acl.AclSidRetrievalStrategyImpl;
+import ubic.gemma.core.security.acl.ObjectIdentityRetrievalStrategyImpl;
+import ubic.gemma.core.security.acl.domain.AclDao;
+import ubic.gemma.core.security.acl.domain.AclDaoImpl;
+import ubic.gemma.core.security.acl.domain.AclService;
+import ubic.gemma.core.security.acl.domain.AclServiceImpl;
 import org.hibernate.SessionFactory;
 import org.springframework.cache.concurrent.ConcurrentMapCache;
 import org.springframework.context.annotation.Bean;

@@ -18,7 +18,7 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
-import ubic.gemma.core.security.gsec.util.SecurityUtil;
+import ubic.gemma.core.security.util.SecurityUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;

@@ -21,7 +21,7 @@ package ubic.gemma.model.genome.gene;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import ubic.gemma.core.security.gsec.model.SecureValueObject;
+import ubic.gemma.core.security.model.SecureValueObject;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import ubic.gemma.model.annotations.GemmaWebOnly;

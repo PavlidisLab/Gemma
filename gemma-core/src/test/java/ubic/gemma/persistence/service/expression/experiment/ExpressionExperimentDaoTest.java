@@ -1,7 +1,7 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
-import ubic.gemma.core.security.gsec.acl.domain.AclObjectIdentity;
-import ubic.gemma.core.security.gsec.acl.domain.AclService;
+import ubic.gemma.core.security.acl.domain.AclObjectIdentity;
+import ubic.gemma.core.security.acl.domain.AclService;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.hibernate.CacheMode;
 import org.hibernate.Hibernate;

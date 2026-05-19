@@ -18,11 +18,11 @@
  */
 package ubic.gemma.core.security.authorization;
 
-import ubic.gemma.core.security.gsec.AuthorityConstants;
-import ubic.gemma.core.security.gsec.SecurityService;
+import ubic.gemma.core.security.AuthorityConstants;
+import ubic.gemma.core.security.SecurityService;
 import org.springframework.security.acls.domain.GrantedAuthoritySid;
 import org.springframework.security.acls.domain.PrincipalSid;
-import ubic.gemma.core.security.gsec.authentication.UserDetailsImpl;
+import ubic.gemma.core.security.authentication.UserDetailsImpl;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -313,11 +313,11 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         for ( AccessControlEntry accessControl : entriesAfterDelete ) {
             Sid sid = accessControl.getSid();
             String key;
-            String p = ubic.gemma.core.security.gsec.acl.domain.Sids.principalName( sid );
+            String p = ubic.gemma.core.security.acl.domain.Sids.principalName( sid );
             if ( p != null ) {
                 key = "P:" + p;
             } else {
-                key = "G:" + ubic.gemma.core.security.gsec.acl.domain.Sids.grantedAuthority( sid );
+                key = "G:" + ubic.gemma.core.security.acl.domain.Sids.grantedAuthority( sid );
             }
             assertTrue( "Unexpected sid " + sid + " (key " + key + "), remaining expected: " + expectedNames,
                     expectedNames.contains( key ) );
@@ -339,7 +339,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         this.securityService.setOwner( ee, username );
 
         Sid owner = this.securityService.getOwner( ee );
-        String ownerName = ubic.gemma.core.security.gsec.acl.domain.Sids.principalName( owner );
+        String ownerName = ubic.gemma.core.security.acl.domain.Sids.principalName( owner );
         assertNotNull( "Owner sid was " + owner + " (not a principal sid)", ownerName );
         assertEquals( username, ownerName );
 

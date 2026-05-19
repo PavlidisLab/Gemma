@@ -1,7 +1,7 @@
 package ubic.gemma.core.security.authorization.acl;
 
-import ubic.gemma.core.security.gsec.acl.domain.AclObjectIdentity;
-import ubic.gemma.core.security.gsec.acl.domain.AclService;
+import ubic.gemma.core.security.acl.domain.AclObjectIdentity;
+import ubic.gemma.core.security.acl.domain.AclService;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.NativeQuery;
@@ -50,7 +50,7 @@ public class AclLinterServiceImpl implements AclLinterService {
     /**
      * Renovations Phase 3: gsec HQL deprecation. Direct JdbcTemplate access to the canonical
      * Spring Security ACL tables ({@code acl_class}, {@code acl_object_identity}, {@code acl_sid},
-     * {@code acl_entry}) lets us retire HQL references to {@code ubic.gemma.core.security.gsec.acl.domain.*} entity
+     * {@code acl_entry}) lets us retire HQL references to {@code ubic.gemma.core.security.acl.domain.*} entity
      * mappings one query at a time. Initialised lazily from the {@link DataSource} so the field
      * can be {@code @Autowired} without forcing the wiring into a constructor.
      */

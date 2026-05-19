@@ -1,8 +1,8 @@
 package ubic.gemma.core.security.authentication;
 
-import ubic.gemma.core.security.gsec.authentication.GroupManager;
-import ubic.gemma.core.security.gsec.authentication.UserDetailsImpl;
-import ubic.gemma.core.security.gsec.authentication.UserDetailsManager;
+import ubic.gemma.core.security.authentication.GroupManager;
+import ubic.gemma.core.security.authentication.UserDetailsImpl;
+import ubic.gemma.core.security.authentication.UserDetailsManager;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;

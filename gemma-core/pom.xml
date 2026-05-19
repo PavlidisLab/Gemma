@@ -260,7 +260,7 @@
         </dependency>
 
         <!-- jakarta.servlet-api + spring-security-web: previously test-scoped (only spring-security-test
-             needed them). Phase 3 gsec absorption: ubic.gemma.core.security.gsec.authentication.Ajax*Handler (formerly
+             needed them). Phase 3 gsec absorption: ubic.gemma.core.security.authentication.Ajax*Handler (formerly
              provided by the gemma-gsec JAR at compile time) now lives under gemma-core/src/main/java
              and references HttpServletRequest/Response + SavedRequestAwareAuthenticationSuccessHandler,
              so these deps are promoted to compile scope. servlet-api stays `provided` since the

@@ -1,7 +1,7 @@
 package ubic.gemma.core.security.authorization.acl;
 
-import ubic.gemma.core.security.gsec.acl.domain.AclObjectIdentity;
-import ubic.gemma.core.security.gsec.acl.domain.AclService;
+import ubic.gemma.core.security.acl.domain.AclObjectIdentity;
+import ubic.gemma.core.security.acl.domain.AclService;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 import org.apache.commons.logging.Log;

@@ -18,8 +18,8 @@
  */
 package ubic.gemma.core.security.authorization;
 
-import ubic.gemma.core.security.gsec.SecurityService;
-import ubic.gemma.core.security.gsec.authentication.UserDetailsImpl;
+import ubic.gemma.core.security.SecurityService;
+import ubic.gemma.core.security.authentication.UserDetailsImpl;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;

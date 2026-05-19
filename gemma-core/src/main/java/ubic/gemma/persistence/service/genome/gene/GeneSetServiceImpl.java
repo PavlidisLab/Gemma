@@ -18,7 +18,7 @@
  */
 package ubic.gemma.persistence.service.genome.gene;
 
-import ubic.gemma.core.security.gsec.SecurityService;
+import ubic.gemma.core.security.SecurityService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Hibernate;

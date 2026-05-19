@@ -1,6 +1,6 @@
 package ubic.gemma.persistence.util;
 
-import ubic.gemma.core.security.gsec.util.SecurityUtil;
+import ubic.gemma.core.security.util.SecurityUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.query.Query;
 import org.hibernate.QueryParameterException;
@@ -30,7 +30,7 @@ public class AclQueryUtils {
 
     /**
      * Alias used by {@link #formAclRestrictionClause(String, Permission)} and {@link #formNativeAclJoinClause(String)} for the
-     * object identity {@link ubic.gemma.core.security.gsec.acl.domain.AclObjectIdentity} and the owner identity {@link ubic.gemma.core.security.gsec.acl.domain.AclSid}.
+     * object identity {@link ubic.gemma.core.security.acl.domain.AclObjectIdentity} and the owner identity {@link ubic.gemma.core.security.acl.domain.AclSid}.
      */
     public static final String
             AOI_ALIAS = "aoi",
@@ -107,7 +107,7 @@ public class AclQueryUtils {
     }
 
     /**
-     * Create an HQL join clause for {@link ubic.gemma.core.security.gsec.acl.domain.AclObjectIdentity}, {@link ubic.gemma.core.security.gsec.acl.domain.AclGrantedAuthoritySid}
+     * Create an HQL join clause for {@link ubic.gemma.core.security.acl.domain.AclObjectIdentity}, {@link ubic.gemma.core.security.acl.domain.AclGrantedAuthoritySid}
      * and a restriction clause to limit the result only to objects the current user can access.
      * <p>
      * Ensure that you use {@link #addAclParameters(Query, Class)} afterward to bind the query parameters.

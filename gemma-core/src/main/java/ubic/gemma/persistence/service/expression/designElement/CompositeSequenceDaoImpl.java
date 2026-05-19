@@ -19,7 +19,7 @@
 
 package ubic.gemma.persistence.service.expression.designElement;
 
-import ubic.gemma.core.security.gsec.util.SecurityUtil;
+import ubic.gemma.core.security.util.SecurityUtil;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Hibernate;
 import org.hibernate.query.Query;

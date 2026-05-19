@@ -1,7 +1,7 @@
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
-import ubic.gemma.core.security.gsec.acl.domain.AclObjectIdentity;
-import ubic.gemma.core.security.gsec.acl.domain.AclService;
+import ubic.gemma.core.security.acl.domain.AclObjectIdentity;
+import ubic.gemma.core.security.acl.domain.AclService;
 import org.hibernate.SessionFactory;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;

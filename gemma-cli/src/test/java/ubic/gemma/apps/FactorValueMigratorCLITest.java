@@ -1,6 +1,6 @@
 package ubic.gemma.apps;
 
-import ubic.gemma.core.security.gsec.authentication.ManualAuthenticationService;
+import ubic.gemma.core.security.authentication.ManualAuthenticationService;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;

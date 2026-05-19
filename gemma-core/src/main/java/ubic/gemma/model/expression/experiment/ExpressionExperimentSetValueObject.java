@@ -18,7 +18,7 @@
  */
 package ubic.gemma.model.expression.experiment;
 
-import ubic.gemma.core.security.gsec.model.SecureValueObject;
+import ubic.gemma.core.security.model.SecureValueObject;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.auditAndSecurity.Securable;

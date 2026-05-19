@@ -18,8 +18,8 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
-import ubic.gemma.core.security.gsec.acl.domain.AclObjectIdentity;
-import ubic.gemma.core.security.gsec.acl.domain.AclSid;
+import ubic.gemma.core.security.acl.domain.AclObjectIdentity;
+import ubic.gemma.core.security.acl.domain.AclSid;
 import lombok.Value;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.NotImplementedException;

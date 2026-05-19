@@ -1,6 +1,6 @@
 package ubic.gemma.persistence.util;
 
-import ubic.gemma.core.security.gsec.util.SecurityUtil;
+import ubic.gemma.core.security.util.SecurityUtil;
 import org.hibernate.query.Query;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.springframework.security.acls.domain.BasePermission;

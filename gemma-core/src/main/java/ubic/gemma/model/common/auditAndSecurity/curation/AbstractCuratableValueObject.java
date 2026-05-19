@@ -1,6 +1,6 @@
 package ubic.gemma.model.common.auditAndSecurity.curation;
 
-import ubic.gemma.core.security.gsec.util.SecurityUtil;
+import ubic.gemma.core.security.util.SecurityUtil;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;

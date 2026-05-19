@@ -31,7 +31,7 @@ import java.util.List;
  * {@code ExpressionExperiment}.
  * <p>
  * Phase 3 AfterInvocation Phase B port: verbatim port of
- * {@code ubic.gemma.core.security.gsec.acl.afterinvocation.AclEntryAfterInvocationByAssociationCollectionFilteringProvider} into gemma-core
+ * {@code ubic.gemma.core.security.acl.afterinvocation.AclEntryAfterInvocationByAssociationCollectionFilteringProvider} into gemma-core
  * so the AfterInvocation provider chain has no remaining runtime dependency on the gsec class hierarchy. Behaviorally
  * identical to the gsec original.
  *

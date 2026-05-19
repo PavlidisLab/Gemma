@@ -20,7 +20,7 @@ import java.util.List;
  * returned single domain object), but {@linkplain AccessDeniedException denial} is converted
  * to a {@code null} return value rather than propagated.
  * <p>
- * Replaces {@code ubic.gemma.core.security.gsec.acl.afterinvocation.AclEntryAfterInvocationProvider} (the gsec
+ * Replaces {@code ubic.gemma.core.security.acl.afterinvocation.AclEntryAfterInvocationProvider} (the gsec
  * subclass with {@code quiet=true}) as part of the Phase 3 AfterInvocation modernization
  * (Phase B). Behaviorally identical to the gsec provider but lives in gemma-core so we can
  * retire the gsec class without touching the 17 {@code @Secured(..., "AFTER_ACL_READ_QUIET")}

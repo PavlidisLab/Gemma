@@ -18,12 +18,12 @@
  */
 package ubic.gemma.core.security.authorization.acl;
 
-import ubic.gemma.core.security.gsec.acl.BaseAclAdvice;
-import ubic.gemma.core.security.gsec.acl.domain.AclService;
-import ubic.gemma.core.security.gsec.model.GroupAuthority;
-import ubic.gemma.core.security.gsec.model.Securable;
-import ubic.gemma.core.security.gsec.model.User;
-import ubic.gemma.core.security.gsec.model.UserGroup;
+import ubic.gemma.core.security.acl.BaseAclAdvice;
+import ubic.gemma.core.security.acl.domain.AclService;
+import ubic.gemma.core.security.model.GroupAuthority;
+import ubic.gemma.core.security.model.Securable;
+import ubic.gemma.core.security.model.User;
+import ubic.gemma.core.security.model.UserGroup;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.SessionFactory;
@@ -45,7 +45,7 @@ import java.util.Collection;
  * Gemma-specific extension points for {@link BaseAclAdvice}: identifies User / UserGroup,
  * supplies their granted authority, marks the entity types that should keep private ACLs on
  * admin-driven creation, and runs the DEA → ExpressionAnalysisResultSet parent-ACL
- * special case. Triggered from {@link ubic.gemma.core.security.gsec.acl.AclEventListener} via the
+ * special case. Triggered from {@link ubic.gemma.core.security.acl.AclEventListener} via the
  * BaseAclAdvice protected hooks; no longer an AOP advice (Renovations Phase 3 dropped the
  * {@code @AfterReturning} wiring).
  *

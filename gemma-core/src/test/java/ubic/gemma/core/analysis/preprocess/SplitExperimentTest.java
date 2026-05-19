@@ -19,7 +19,7 @@
 
 package ubic.gemma.core.analysis.preprocess;
 
-import ubic.gemma.core.security.gsec.SecurityService;
+import ubic.gemma.core.security.SecurityService;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;

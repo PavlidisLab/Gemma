@@ -18,9 +18,9 @@
  */
 package ubic.gemma.core.security.authentication;
 
-import ubic.gemma.core.security.gsec.AuthorityConstants;
-import ubic.gemma.core.security.gsec.authentication.UserDetailsImpl;
-import ubic.gemma.core.security.gsec.authentication.UserExistsException;
+import ubic.gemma.core.security.AuthorityConstants;
+import ubic.gemma.core.security.authentication.UserDetailsImpl;
+import ubic.gemma.core.security.authentication.UserExistsException;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
@@ -125,10 +125,10 @@ public class UserManagerImpl implements UserManager, UserDetailsPasswordService 
     @Override
     @Transactional(readOnly = true)
     public Collection<String> findAllUsers() {
-        Collection<ubic.gemma.core.security.gsec.model.User> users = userService.loadAll();
+        Collection<ubic.gemma.core.security.model.User> users = userService.loadAll();
 
         List<String> result = new ArrayList<>();
-        for ( ubic.gemma.core.security.gsec.model.User u : users ) {
+        for ( ubic.gemma.core.security.model.User u : users ) {
             result.add( u.getUserName() );
         }
         return result;
@@ -168,9 +168,9 @@ public class UserManagerImpl implements UserManager, UserDetailsPasswordService 
         }
 
         User u = this.loadUser( userName );
-        Collection<ubic.gemma.core.security.gsec.model.UserGroup> groups = userService.findGroupsForUser( u );
+        Collection<ubic.gemma.core.security.model.UserGroup> groups = userService.findGroupsForUser( u );
 
-        for ( ubic.gemma.core.security.gsec.model.UserGroup g : groups ) {
+        for ( ubic.gemma.core.security.model.UserGroup g : groups ) {
             result.add( g.getName() );
         }
 
@@ -404,10 +404,10 @@ public class UserManagerImpl implements UserManager, UserDetailsPasswordService 
     @Override
     @Transactional(readOnly = true)
     public List<String> findAllGroups() {
-        Collection<ubic.gemma.core.security.gsec.model.UserGroup> groups = userService.listAvailableGroups();
+        Collection<ubic.gemma.core.security.model.UserGroup> groups = userService.listAvailableGroups();
 
         List<String> result = new ArrayList<>();
-        for ( ubic.gemma.core.security.gsec.model.UserGroup group : groups ) {
+        for ( ubic.gemma.core.security.model.UserGroup group : groups ) {
             result.add( group.getName() );
         }
         return result;
@@ -422,7 +422,7 @@ public class UserManagerImpl implements UserManager, UserDetailsPasswordService 
         Collection<User> groupMembers = group.getGroupMembers();
 
         List<String> result = new ArrayList<>();
-        for ( ubic.gemma.core.security.gsec.model.User u : groupMembers ) {
+        for ( ubic.gemma.core.security.model.User u : groupMembers ) {
             result.add( u.getUserName() );
         }
         return result;
@@ -495,7 +495,7 @@ public class UserManagerImpl implements UserManager, UserDetailsPasswordService 
         UserGroup group = this.loadGroup( groupToSearch );
 
         List<GrantedAuthority> result = new ArrayList<>();
-        for ( ubic.gemma.core.security.gsec.model.GroupAuthority ga : group.getAuthorities() ) {
+        for ( ubic.gemma.core.security.model.GroupAuthority ga : group.getAuthorities() ) {
             result.add( new SimpleGrantedAuthority( ga.getAuthority() ) );
         }
 
@@ -507,7 +507,7 @@ public class UserManagerImpl implements UserManager, UserDetailsPasswordService 
     public void addGroupAuthority( String groupName, GrantedAuthority authority ) {
         UserGroup g = this.loadGroup( groupName );
 
-        for ( ubic.gemma.core.security.gsec.model.GroupAuthority ga : g.getAuthorities() ) {
+        for ( ubic.gemma.core.security.model.GroupAuthority ga : g.getAuthorities() ) {
             if ( ga.getAuthority().equals( authority.getAuthority() ) ) {
                 logger.warn( "Group already has authority" + authority.getAuthority() );
                 return;
@@ -634,10 +634,10 @@ public class UserManagerImpl implements UserManager, UserDetailsPasswordService 
     }
 
     private List<GrantedAuthority> loadGroupAuthorities( User user ) {
-        Collection<ubic.gemma.core.security.gsec.model.GroupAuthority> authorities = userService.loadGroupAuthorities( user );
+        Collection<ubic.gemma.core.security.model.GroupAuthority> authorities = userService.loadGroupAuthorities( user );
 
         List<GrantedAuthority> result = new ArrayList<>();
-        for ( ubic.gemma.core.security.gsec.model.GroupAuthority ga : authorities ) {
+        for ( ubic.gemma.core.security.model.GroupAuthority ga : authorities ) {
             String roleName = AuthorityConstants.ROLE_PREFIX + ga.getAuthority();
             result.add( new SimpleGrantedAuthority( roleName ) );
         }
