@@ -51,24 +51,48 @@ retirement of the legacy `CurationDetails` write path.
 
 ## What's left (queued for follow-on sessions)
 
-### 1. `FactorValueNeedsAttentionServiceImpl`
+### 1. `FactorValueNeedsAttentionServiceImpl` — **DONE 2026-05-19**
 
-Two emitters at `gemma-core/.../FactorValueNeedsAttentionServiceImpl.java`
-remain on the legacy path:
+Migrated. `FACTOR_VALUE` added to `TicketTargetType` (the recce's suggested
+new enum value lands without a schema migration — the column is
+`VARCHAR(32)`). `FactorValueNeedsAttentionServiceImpl` now:
 
-| Method | Emits | Why it's tricky |
-|---|---|---|
-| `markAsNeedsAttention(FactorValue, note)` | `FactorValueNeedsAttentionEvent` (extends `NeedsAttentionEvent`) | Has cross-entity propagation logic: flipping a single FV's `needsAttention` flag should also raise the *owning EE's* needs-attention flag. The legacy event flows the EE flip through the audit-log + curation-details write hook. |
-| `clearNeedsAttentionFlag(FactorValue, note)` | `DoesNotNeedAttentionEvent` (conditionally — only when all sibling FVs are also OK) | Has a non-trivial "is this the last outstanding FV?" check that walks the experimental design before deciding whether to clear the EE-level flag. |
+- `markAsNeedsAttention(fv, note)`: flips `fv.needsAttention=true` (a
+  first-class field on FactorValue, NOT a CurationDetails projection — so
+  it stays), then opens a `GENERIC` ticket via `TicketService.openTicket`
+  whose targets are BOTH `FACTOR_VALUE`(fv.id) and
+  `EXPRESSION_EXPERIMENT`(ee.id). Title is `"{fv}: {note}"`. Idempotent:
+  no-op if an open GENERIC ticket already targets the FV.
+- `clearNeedsAttentionFlag(fv, note)`: flips `fv.needsAttention=false`,
+  then transitions every open FV-targeted ticket to `RESOLVED` via
+  `TicketService.transition`, using `note` as the reason. Tickets already
+  in `RESOLVED` / `CANCELLED` are skipped.
 
-**Suggested migration**: a `FactorValue` is not currently a `TicketTargetType`
-(Decision 2 picked `EXPRESSION_EXPERIMENT` and `ARRAY_DESIGN` only, with new
-values addable without schema migration). Add `FACTOR_VALUE` to `TicketTargetType`,
-then `markAsNeedsAttention` opens a `GENERIC` ticket targeting BOTH the FV and
-its owning EE; `clearNeedsAttentionFlag` resolves the FV-targeted ticket and,
-when no other FV-targeted tickets remain on the EE, also resolves the
-EE-targeted ticket (matches the existing "all FVs OK → clear EE flag"
-predicate). One session of work.
+The legacy `FactorValueNeedsAttentionEvent` / `DoesNotNeedAttentionEvent`
+emissions are gone — same pattern as the
+`DatasetsWebService.updateDatasetCurationDetails` migration in
+`f8496c04b4`. As with that migration, this leaves the embedded
+`ee.curationDetails.needsAttention` boolean stale for callers that flow
+through this service; per §3 the remaining ~5 read sites will be migrated
+to the read shim and the boolean retired.
+
+The legacy "is this the last outstanding FV?" cross-entity predicate is
+no longer needed: every per-FV ticket also targets the EE, so the
+aggregate "this EE has open tickets?" query
+(`ticketService.findOpenForTarget(EXPRESSION_EXPERIMENT, eeId)`)
+automatically reflects remaining sibling-FV work without a per-EE
+predicate.
+
+Files touched in this slice:
+
+```
+gemma-core/.../model/.../curation/TicketTargetType.java                 + FACTOR_VALUE enum value
+gemma-core/.../service/.../experiment/FactorValueNeedsAttentionService.java       Javadoc rewritten to point at TicketService
+gemma-core/.../service/.../experiment/FactorValueNeedsAttentionServiceImpl.java   ticket-based reimplementation
+gemma-core/.../service/.../experiment/FactorValueNeedsAttentionServiceTest.java   asserts ticket open/transition shape
+```
+
+`mvn -pl gemma-core test -Dtest='*FactorValue*,*Ticket*'` passes 57/57.
 
 ### 2. `curationNote` → ticket comment
 
@@ -159,15 +183,23 @@ Test fix (pre-existing breakage from aa18f8a323 ticket-write merge):
     + real TicketsWebService bean (mocks injected)
 
 Still on the legacy path (deferred):
-  gemma-core/.../FactorValueNeedsAttentionServiceImpl.java              (needs FACTOR_VALUE TicketTargetType + cross-entity logic)
   gemma-rest/.../DatasetsWebService.java::updateDatasetCurationDetails  curationNote branch (note-to-comment mapping TBD)
   gemma-core/.../AbstractCuratableDao.java::updateCurationDetailsFromAuditEvent  (the legacy write hook; retire when no callers emit Troubled/NeedsAttention/CurationNote events)
+
+Migrated 2026-05-19 (FactorValueNeedsAttention → Ticket):
+  gemma-core/.../FactorValueNeedsAttentionServiceImpl.java              → TicketService.openTicket / transition
+    - markAsNeedsAttention   → openTicket(GENERIC, targets=[FV, EE])
+    - clearNeedsAttentionFlag → transition(open FV-targeted tickets, RESOLVED)
+  gemma-core/.../model/.../curation/TicketTargetType.java               + FACTOR_VALUE enum value (no schema migration; VARCHAR(32))
 ```
 
 ## Status
 
 Phase 1 of the write-path retirement complete: legacy events deprecated with
 Javadoc breadcrumbs, the highest-traffic production caller (the REST PUT
-endpoint) migrated to the Ticket layer, doc filed. Remaining migration
-(FactorValueNeedsAttentionService, curationNote→comment, entity removal) is
-queued per §1–§4 above.
+endpoint) migrated to the Ticket layer, doc filed.
+
+**Update 2026-05-19**: §1 (`FactorValueNeedsAttentionService`) also migrated
+to the Ticket layer — see §1 above for details. Remaining migration
+(curationNote→comment, entity removal, read-side flag retirement) is
+queued per §2–§4.
