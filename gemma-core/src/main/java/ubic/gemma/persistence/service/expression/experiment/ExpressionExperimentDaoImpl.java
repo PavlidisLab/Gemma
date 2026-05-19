@@ -111,6 +111,37 @@ public class ExpressionExperimentDaoImpl
         extends AbstractCuratableDao<ExpressionExperiment, ExpressionExperimentValueObject>
         implements ExpressionExperimentDao {
 
+    /*
+     * Hibernate query-cache region sharding for this DAO.
+     *
+     * Background: by default every setCacheable(true) call lands in the single
+     * StandardQueryCache region. The L2 cache audit (HIBERNATE_L2_CACHE_AUDIT.md,
+     * recommendation #4) showed that ExpressionExperimentDaoImpl alone contributes
+     * roughly half of all cacheable-query sites, so the catalog filter / VO path
+     * was thrashing the shared region and evicting unrelated cached queries (taxon
+     * lookups, platform lookups, etc).
+     *
+     * The four regions below isolate eviction pressure per query family. Each region
+     * is bounded and TTL'd in EhcacheConfig.L2_CACHES. The corresponding callsites
+     * pair every setCacheable(true) with a setCacheRegion(...) using the appropriate
+     * constant so a query never silently falls back to StandardQueryCache.
+     *
+     *   FILTERED_VO_CACHE_REGION  - EE details VO filter path (the hot one).
+     *                               loadDetailsValueObjects*, loadWithRelationsAndCache,
+     *                               populateAnalysisInformation, populateArrayDesignCount,
+     *                               countBioMaterials.
+     *   ANNOTATIONS_CACHE_REGION  - getExperiment/BioMaterial/FactorValue annotations
+     *                               and the categories/terms usage-frequency rollups.
+     *   USAGE_FREQ_CACHE_REGION   - getTechnologyTypeUsageFrequency,
+     *                               getPlatformsUsageFrequency, getPerTaxonCount.
+     *   QUERIES_CACHE_REGION      - everything else cacheable in this DAO
+     *                               (blacklisted-VO load, per-sample element counts).
+     */
+    static final String FILTERED_VO_CACHE_REGION = "ExpressionExperiment.filteredVo";
+    static final String ANNOTATIONS_CACHE_REGION = "ExpressionExperiment.annotations";
+    static final String USAGE_FREQ_CACHE_REGION = "ExpressionExperiment.usageFrequency";
+    static final String QUERIES_CACHE_REGION = "ExpressionExperiment.queries";
+
     private static final String
             CHARACTERISTIC_ALIAS = "ch",
             BIO_MATERIAL_CHARACTERISTIC_ALIAS = "bmc",
@@ -160,6 +191,18 @@ public class ExpressionExperimentDaoImpl
         p.setProperty( "delimiter", "\\n" );
         t.setParameterValues( p );
         cellIdsUserType = t;
+    }
+
+    /**
+     * Shard the abstract filtered-VO query path (load / loadValueObjects / count /
+     * countWithCache via {@link ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao})
+     * into {@link #FILTERED_VO_CACHE_REGION} rather than the shared
+     * {@code StandardQueryCache}. See the class-level comment for the region inventory and the
+     * L2 cache audit (HIBERNATE_L2_CACHE_AUDIT.md recommendation #4) for the motivation.
+     */
+    @Override
+    protected String getQueryCacheRegion() {
+        return FILTERED_VO_CACHE_REGION;
     }
 
     @Override
@@ -729,6 +772,7 @@ public class ExpressionExperimentDaoImpl
                             + "where ee = :ee" )
                     .setParameter( "ee", expressionExperiment )
                     .setCacheable( true )
+                    .setCacheRegion( ANNOTATIONS_CACHE_REGION )
                     .list();
         }
     }
@@ -742,6 +786,7 @@ public class ExpressionExperimentDaoImpl
                         + "where subset.sourceExperiment = :ee" )
                 .setParameter( "ee", ee )
                 .setCacheable( true )
+                .setCacheRegion( ANNOTATIONS_CACHE_REGION )
                 .list();
     }
 
@@ -761,6 +806,7 @@ public class ExpressionExperimentDaoImpl
                             + "join bm.characteristics c where e = :ee" )
                     .setParameter( "ee", expressionExperiment )
                     .setCacheable( true )
+                    .setCacheRegion( ANNOTATIONS_CACHE_REGION )
                     .list();
         }
     }
@@ -775,6 +821,7 @@ public class ExpressionExperimentDaoImpl
                         + "where subset = :subset" )
                 .setParameter( "subset", subset )
                 .setCacheable( true )
+                .setCacheRegion( ANNOTATIONS_CACHE_REGION )
                 .list();
     }
 
@@ -796,6 +843,7 @@ public class ExpressionExperimentDaoImpl
                         + "join fv.characteristics c where e = :ee " )
                 .setParameter( "ee", ee )
                 .setCacheable( true )
+                .setCacheRegion( ANNOTATIONS_CACHE_REGION )
                 .list();
     }
 
@@ -811,6 +859,7 @@ public class ExpressionExperimentDaoImpl
                         + "group by c" )
                 .setParameter( "subset", subset )
                 .setCacheable( true )
+                .setCacheRegion( ANNOTATIONS_CACHE_REGION )
                 .list();
     }
 
@@ -910,6 +959,7 @@ public class ExpressionExperimentDaoImpl
             EE2CAclQueryUtils.addAclParameters( q, ExpressionExperiment.class );
         }
         q.setCacheable( true );
+        q.setCacheRegion( ANNOTATIONS_CACHE_REGION );
         List<Object[]> result;
         if ( eeIds != null ) {
             if ( eeIds.size() > MAX_PARAMETER_LIST_SIZE ) {
@@ -1118,6 +1168,7 @@ public class ExpressionExperimentDaoImpl
             EE2CAclQueryUtils.addAclParameters( q, ExpressionExperiment.class );
         }
         q.setCacheable( true );
+        q.setCacheRegion( ANNOTATIONS_CACHE_REGION );
         List<Object[]> result;
         if ( eeIds != null ) {
             if ( eeIds.size() > MAX_PARAMETER_LIST_SIZE ) {
@@ -1227,7 +1278,7 @@ public class ExpressionExperimentDaoImpl
                         + "join ee.bioAssays ba "
                         + "join ba.sampleUsed bm",
                 filters, null, null );
-        return ( Long ) query.setCacheable( true ).uniqueResult();
+        return ( Long ) query.setCacheable( true ).setCacheRegion( FILTERED_VO_CACHE_REGION ).uniqueResult();
     }
 
     @Override
@@ -1292,7 +1343,8 @@ public class ExpressionExperimentDaoImpl
                 .addSynchronizedQuerySpace( EE2AD_QUERY_SPACE )
                 .addSynchronizedEntityClass( ExpressionExperiment.class )
                 .addSynchronizedEntityClass( ArrayDesign.class )
-                .setCacheable( true );
+                .setCacheable( true )
+                .setCacheRegion( USAGE_FREQ_CACHE_REGION );
         EE2CAclQueryUtils.addAclParameters( q, ExpressionExperiment.class );
         //noinspection unchecked
         List<Object[]> results = q.list();
@@ -1314,7 +1366,8 @@ public class ExpressionExperimentDaoImpl
                 .addSynchronizedQuerySpace( EE2AD_QUERY_SPACE )
                 .addSynchronizedEntityClass( ExpressionExperiment.class )
                 .addSynchronizedEntityClass( ArrayDesign.class )
-                .setCacheable( true );
+                .setCacheable( true )
+                .setCacheRegion( USAGE_FREQ_CACHE_REGION );
         return QueryUtils.<Long, Object[]>streamByBatch( q, "ids", eeIds, getBatchSize() )
                 .collect( Collectors.groupingBy( row -> TechnologyType.valueOf( ( String ) row[0] ), Collectors.summingLong( row -> ( Long ) row[1] ) ) );
     }
@@ -1365,6 +1418,7 @@ public class ExpressionExperimentDaoImpl
         EE2CAclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
         EE2CAclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
         query.setCacheable( true );
+        query.setCacheRegion( USAGE_FREQ_CACHE_REGION );
         List<Object[]> result;
         //noinspection unchecked
         result = query
@@ -1398,6 +1452,7 @@ public class ExpressionExperimentDaoImpl
                 .addSynchronizedEntityClass( ArrayDesign.class );
         query.setParameter( "original", original );
         query.setCacheable( true );
+        query.setCacheRegion( USAGE_FREQ_CACHE_REGION );
         Stream<Object[]> result;
         if ( eeIds.size() > MAX_PARAMETER_LIST_SIZE ) {
             result = streamByBatch( query, "ids", eeIds, 2048 );
@@ -1644,6 +1699,7 @@ public class ExpressionExperimentDaoImpl
         //noinspection unchecked
         List<Object[]> list = query
                 .setCacheable( true )
+                .setCacheRegion( USAGE_FREQ_CACHE_REGION )
                 .list();
 
         return list.stream()
@@ -1659,7 +1715,8 @@ public class ExpressionExperimentDaoImpl
                 .createQuery( "select ee.taxon, count(distinct ee) as EE_COUNT from ExpressionExperiment ee "
                         + "where ee.id in :eeIds "
                         + "group by ee.taxon" )
-                .setCacheable( true );
+                .setCacheable( true )
+                .setCacheRegion( USAGE_FREQ_CACHE_REGION );
         return QueryUtils.<Long, Object[]>streamByBatch( query, "eeIds", ids, getBatchSize() )
                 .collect( Collectors.groupingBy( row -> ( Taxon ) row[0], Collectors.summingLong( row -> ( Long ) row[1] ) ) );
     }
@@ -1968,6 +2025,7 @@ public class ExpressionExperimentDaoImpl
                         + "group by ee, ad, op, oe" )
                 .setParameterList( "eeIds", optimizeParameterList( expressionExperimentIds ) )
                 .setCacheable( cacheable )
+                .setCacheRegion( FILTERED_VO_CACHE_REGION )
                 .list();
         return results.stream().collect(
                 groupingBy( row -> ( Long ) row[0],
@@ -1991,7 +2049,8 @@ public class ExpressionExperimentDaoImpl
                         + "left join ee.geeq as geeq "
                         + "where ee.id in :ids" )
                 .setParameterList( "ids", optimizeParameterList( ids ) )
-                .setCacheable( true ) );
+                .setCacheable( true )
+                .setCacheRegion( FILTERED_VO_CACHE_REGION ) );
     }
 
     @Override
@@ -2066,13 +2125,14 @@ public class ExpressionExperimentDaoImpl
         TypedResultTransformer<ExpressionExperimentDetailsValueObject> tr2 =
                 getDetailedValueObjectTransformer( cacheable, postProcessingTimer, detailsTimer, analysisInformationTimer );
         //noinspection unchecked
-        List<ExpressionExperimentDetailsValueObject> vos = tr2.list( query.setCacheable( cacheable ) );
+        List<ExpressionExperimentDetailsValueObject> vos = tr2.list( query.setCacheable( cacheable ).setCacheRegion( FILTERED_VO_CACHE_REGION ) );
 
         countingTimer.start();
         Long totalElements;
         if ( limit > 0 && ( vos.isEmpty() || vos.size() == limit ) ) {
             totalElements = ( Long ) this.getFilteringCountQuery( filters )
                     .setCacheable( cacheable )
+                    .setCacheRegion( FILTERED_VO_CACHE_REGION )
                     .uniqueResult();
         } else {
             totalElements = offset + ( long ) vos.size();
@@ -2184,6 +2244,7 @@ public class ExpressionExperimentDaoImpl
         List<Object[]> result = getSessionFactory().getCurrentSession()
                 .createQuery( "select be.shortName, ea.accession from BlacklistedExperiment be left join be.externalAccession ea" )
                 .setCacheable( true )
+                .setCacheRegion( QUERIES_CACHE_REGION )
                 .list();
         if ( result.isEmpty() ) {
             return new Slice<>( Collections.emptyList(), sort, offset, limit, 0L );
@@ -3786,6 +3847,7 @@ public class ExpressionExperimentDaoImpl
                         + "group by ba" )
                 .setParameter( "ee", expressionExperiment )
                 .setCacheable( true )
+                .setCacheRegion( QUERIES_CACHE_REGION )
                 .list();
         return result.stream()
                 .collect( Collectors.toMap( o -> ( BioAssay ) ( ( Object[] ) o )[0], o -> ( Long ) ( ( Object[] ) o )[1] ) );
@@ -4075,6 +4137,7 @@ public class ExpressionExperimentDaoImpl
         return this.getSessionFactory().getCurrentSession().createQuery(
                         "select experimentAnalyzed.id from DifferentialExpressionAnalysis" )
                 .setCacheable( cacheable )
+                .setCacheRegion( FILTERED_VO_CACHE_REGION )
                 .list();
     }
 
@@ -4087,7 +4150,8 @@ public class ExpressionExperimentDaoImpl
                         + "join ee.bioAssays as ba "
                         + "where ee.id in (:ids) "
                         + "group by ee" )
-                .setCacheable( true );
+                .setCacheable( true )
+                .setCacheRegion( FILTERED_VO_CACHE_REGION );
         Map<Long, Long> adCountById = QueryUtils.<Long, Object[]>streamByBatch( q, "ids", IdentifiableUtils.getIds( eevos ), 2048 )
                 .collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( Long ) row[1] ) );
         for ( ExpressionExperimentValueObject eevo : eevos ) {
