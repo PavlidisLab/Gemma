@@ -18,9 +18,9 @@
  */
 package ubic.gemma.core.loader.expression.simple;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
@@ -28,8 +28,7 @@ import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperiment
 import ubic.gemma.core.loader.expression.simple.model.SimplePlatformMetadata;
 import ubic.gemma.core.loader.expression.simple.model.SimpleQuantitationTypeMetadata;
 import ubic.gemma.core.loader.expression.simple.model.SimpleTaxonMetadata;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
-import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
@@ -44,14 +43,14 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Test for import that results in multiple factor values for the same factor on a single biomaterial.
  *
  * @author paul
  */
-public class ExperimentalDesignImportDuplicateValueTest extends BaseSpringContextTest {
+public class ExperimentalDesignImportDuplicateValueTest extends BaseSpringContextTest5 {
 
     private ExpressionExperiment ee;
 
@@ -64,7 +63,7 @@ public class ExperimentalDesignImportDuplicateValueTest extends BaseSpringContex
     @Autowired
     private ExperimentalDesignImporter experimentalDesignImporter;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         SimpleExpressionExperimentMetadata metaData = new SimpleExpressionExperimentMetadata();
 
@@ -100,7 +99,7 @@ public class ExperimentalDesignImportDuplicateValueTest extends BaseSpringContex
      * Note that this test will fail if you run it again on a dirty DB. Sorry!
      */
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
     public final void testParse() throws Exception {
 
         try ( InputStream is = this.getClass()

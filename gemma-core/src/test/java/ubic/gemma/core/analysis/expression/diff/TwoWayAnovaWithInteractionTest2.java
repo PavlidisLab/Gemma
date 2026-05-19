@@ -15,9 +15,9 @@
 package ubic.gemma.core.analysis.expression.diff;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
@@ -29,8 +29,7 @@ import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperiment
 import ubic.gemma.core.loader.expression.simple.model.SimplePlatformMetadata;
 import ubic.gemma.core.loader.expression.simple.model.SimpleQuantitationTypeMetadata;
 import ubic.gemma.core.loader.expression.simple.model.SimpleTaxonMetadata;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
-import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
@@ -46,7 +45,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import java.io.InputStream;
 import java.util.Collection;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils.determineAnalysisType;
 
 /**
@@ -54,7 +53,7 @@ import static ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils.deter
  *
  * @author paul
  */
-public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
+public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest5 {
 
     @Autowired
     private SimpleExpressionDataLoaderService dataLoaderService;
@@ -85,7 +84,7 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
 
     private ExpressionExperiment ee;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         SimpleExpressionExperimentMetadata metaData = new SimpleExpressionExperimentMetadata();
         metaData.setShortName( RandomStringUtils.insecure().nextAlphabetic( 10 ) );
@@ -142,7 +141,7 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
      * </pre>
      */
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
     public void test() {
 
         AnalysisType aa = determineAnalysisType( ee, ee.getExperimentalDesign().getExperimentalFactors(), null, true );
