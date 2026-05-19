@@ -26,7 +26,6 @@ import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
 import ubic.gemma.core.util.SimpleDownloader;
 import ubic.gemma.core.util.SimpleRetryPolicy;
 import ubic.gemma.core.util.concurrent.Executors;
-import ubic.gemma.core.util.concurrent.SimpleThreadFactory;
 import ubic.gemma.core.util.locking.FileLockManager;
 
 import java.io.BufferedReader;
@@ -132,7 +131,7 @@ public class UnifiedOntologyUpdaterCli extends AbstractCLI {
                 }
             }
         } else {
-            ExecutorService executor = Executors.newFixedThreadPool( getNumThreads(), new SimpleThreadFactory( "gemma-unified-ontology-downloader-thread-" ) );
+            ExecutorService executor = Executors.newVirtualThreadPerTaskExecutorIfAvailable();
             try {
                 SimpleDownloader downloader = new SimpleDownloader( new SimpleRetryPolicy( 3, 1000, 1.5 ) );
                 downloader.setFtpClientFactory( ftpClientFactory );

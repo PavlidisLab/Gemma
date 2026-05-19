@@ -32,7 +32,6 @@ import ubic.gemma.core.loader.util.mapper.BioAssayMapper;
 import ubic.gemma.core.util.ProgressReporterFactory;
 import ubic.gemma.core.util.SimpleRetryPolicy;
 import ubic.gemma.core.util.concurrent.Executors;
-import ubic.gemma.core.util.concurrent.SimpleThreadFactory;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -592,8 +591,8 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
 
     private synchronized ExecutorService getExecutor() {
         if ( executor == null ) {
-            log.info( "Created executor with " + numberOfFetchThreads + " threads" );
-            executor = Executors.newFixedThreadPool( numberOfFetchThreads, new SimpleThreadFactory( "gemma-geo-single-cell-fetch-thread-" ) );
+            log.info( "Created executor via VT-aware factory (numberOfFetchThreads=" + numberOfFetchThreads + " is no longer a hard cap; underlying HTTP/FTP client connection pool now governs concurrency)" );
+            executor = Executors.newVirtualThreadPerTaskExecutorIfAvailable();
         }
         return executor;
     }
