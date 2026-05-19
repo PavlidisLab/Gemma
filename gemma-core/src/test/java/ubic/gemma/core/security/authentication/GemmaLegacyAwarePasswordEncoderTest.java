@@ -15,12 +15,12 @@
  */
 package ubic.gemma.core.security.authentication;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Verifies {@link GemmaLegacyAwarePasswordEncoder} against fixtures lifted from
@@ -44,25 +44,25 @@ public class GemmaLegacyAwarePasswordEncoderTest {
     @Test
     public void legacyHash_isFlaggedForUpgrade() {
         String stored = "b7338dcc17d6b6c199a75540aab6d0506567b980";
-        assertTrue( "legacy hash should trigger re-encoding on next successful login",
-                encoder.upgradeEncoding( stored ) );
+        assertTrue( encoder.upgradeEncoding( stored ),
+                "legacy hash should trigger re-encoding on next successful login" );
     }
 
     @Test
     public void legacyHash_matchesIsFailClosed() {
         // matches() cannot verify legacy hashes (no username available) — fail closed.
         String stored = "b7338dcc17d6b6c199a75540aab6d0506567b980";
-        assertFalse( "encoder.matches must not verify legacy hashes (no username channel) — "
-                        + "LegacyAwareDaoAuthenticationProvider handles legacy verification before delegating",
-                encoder.matches( "administrator", stored ) );
+        assertFalse( encoder.matches( "administrator", stored ),
+                "encoder.matches must not verify legacy hashes (no username channel) — "
+                        + "LegacyAwareDaoAuthenticationProvider handles legacy verification before delegating" );
     }
 
     @Test
     public void encode_producesBcryptPrefixed_andMatchesBack() {
         String raw = "hunter2";
         String encoded = encoder.encode( raw );
-        assertTrue( "new encodings must carry the {bcrypt} prefix so the encoder can route them",
-                encoded.startsWith( GemmaLegacyAwarePasswordEncoder.BCRYPT_PREFIX ) );
+        assertTrue( encoded.startsWith( GemmaLegacyAwarePasswordEncoder.BCRYPT_PREFIX ),
+                "new encodings must carry the {bcrypt} prefix so the encoder can route them" );
         assertTrue( encoder.matches( raw, encoded ) );
         assertFalse( encoder.matches( "wrong", encoded ) );
     }

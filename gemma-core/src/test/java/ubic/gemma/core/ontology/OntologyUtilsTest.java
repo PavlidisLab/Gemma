@@ -1,8 +1,8 @@
 package ubic.gemma.core.ontology;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static ubic.gemma.core.ontology.OntologyUtils.termIdToUri;
 import static ubic.gemma.core.ontology.OntologyUtils.uriToTermId;
 

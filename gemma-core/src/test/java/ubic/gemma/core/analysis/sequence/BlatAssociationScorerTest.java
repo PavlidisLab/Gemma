@@ -19,7 +19,7 @@
 
 package ubic.gemma.core.analysis.sequence;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -32,7 +32,7 @@ import ubic.gemma.persistence.service.genome.ChromosomeUtils;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * {@link BlatAssociationScorer} tests

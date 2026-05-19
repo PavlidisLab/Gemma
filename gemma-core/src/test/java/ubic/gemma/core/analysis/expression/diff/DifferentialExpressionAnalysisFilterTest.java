@@ -1,7 +1,7 @@
 package ubic.gemma.core.analysis.expression.diff;
 
 import org.apache.commons.math3.distribution.PoissonDistribution;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.core.analysis.preprocess.filter.*;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
