@@ -111,7 +111,10 @@ public class PlatformsWebServiceTest extends BaseJerseyIntegrationTest {
         BlacklistedPlatform bp = blacklistedEntityService.blacklistPlatform( arrayDesign, "This is just a test, don't feel bad about it." );
         assertThat( blacklistedEntityService.isBlacklisted( arrayDesign ) ).isTrue();
         assertThat( bp.getShortName() ).isEqualTo( arrayDesign.getShortName() );
-        FilteredAndPaginatedResponseDataObject<ArrayDesignValueObject> payload = platformsWebService.getBlacklistedPlatforms( FilterArg.valueOf( "" ), SortArg.valueOf( "+id" ), OffsetArg.valueOf( "0" ), LimitArg.valueOf( "20" ) );
+        Object responseObj = platformsWebService.getBlacklistedPlatforms( FilterArg.valueOf( "" ), SortArg.valueOf( "+id" ), OffsetArg.valueOf( "0" ), LimitArg.valueOf( "20" ), null /* cursor */ );
+        assertThat( responseObj ).isInstanceOf( FilteredAndPaginatedResponseDataObject.class );
+        @SuppressWarnings("unchecked")
+        FilteredAndPaginatedResponseDataObject<ArrayDesignValueObject> payload = ( FilteredAndPaginatedResponseDataObject<ArrayDesignValueObject> ) responseObj;
         assertThat( payload.getData() )
                 .hasSize( 1 )
                 .first()
@@ -125,7 +128,7 @@ public class PlatformsWebServiceTest extends BaseJerseyIntegrationTest {
         assertThat( bp.getShortName() ).isEqualTo( arrayDesign.getShortName() );
         try {
             testAuthenticationUtils.runAsUser( "bob", true );
-            assertThatThrownBy( () -> platformsWebService.getBlacklistedPlatforms( FilterArg.valueOf( "" ), SortArg.valueOf( "+id" ), OffsetArg.valueOf( "0" ), LimitArg.valueOf( "20" ) ) )
+            assertThatThrownBy( () -> platformsWebService.getBlacklistedPlatforms( FilterArg.valueOf( "" ), SortArg.valueOf( "+id" ), OffsetArg.valueOf( "0" ), LimitArg.valueOf( "20" ), null /* cursor */ ) )
                     .isInstanceOf( AccessDeniedException.class );
         } finally {
             testAuthenticationUtils.runAsAdmin();
