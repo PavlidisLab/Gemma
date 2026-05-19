@@ -605,7 +605,10 @@ public class EeWriteServiceImpl implements EeWriteService {
      * Inlined from the former {@code CommonPersister.persistQuantitationType} during
      * the persister sweep.
      */
-    private QuantitationType findOrCreateQuantitationType( QuantitationType qType, Map<Integer, QuantitationType> qtCache ) {
+    // package-private so EeWriteServiceImplQtDedupTest can exercise the dedup
+    // semantic without standing up a full EE-graph fixture. Was the load-bearing
+    // behaviour of the former CommonPersister.persistQuantitationType.
+    QuantitationType findOrCreateQuantitationType( QuantitationType qType, Map<Integer, QuantitationType> qtCache ) {
         if ( qType.getName() == null )
             throw new IllegalArgumentException( "QuantitationType must have a name" );
         int key = qType.getName().hashCode();
