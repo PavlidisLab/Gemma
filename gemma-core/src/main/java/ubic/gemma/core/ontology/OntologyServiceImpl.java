@@ -63,6 +63,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.common.description.CharacteristicReadService;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 
@@ -112,6 +113,8 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
     @Autowired
     private CharacteristicService characteristicService;
+    @Autowired
+    private CharacteristicReadService characteristicReadService;
     @Autowired
     private SearchService searchService;
     @Autowired
@@ -184,7 +187,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 .map( String::toLowerCase ) // we can merge URIs with the same case
                 .collect( Collectors.toSet() );
 
-        Map<String, Long> existingCharacteristicsUsingTheseTerms = characteristicService.countByValueUri( uris, parentClasses, false );
+        Map<String, Long> existingCharacteristicsUsingTheseTerms = characteristicReadService.countByValueUri( uris, parentClasses, false );
 
         for ( Map.Entry<String, CharacteristicValueObject> entry : results.entrySet() ) {
             String k = entry.getKey();
@@ -223,7 +226,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         String wildcardQuery = prepareDatabaseLikeQuery( searchQuery );
         if ( wildcardQuery != null ) {
             Collection<CharacteristicValueObject> characteristicsFromDatabase = CharacteristicValueObject
-                    .characteristic2CharacteristicVO( this.characteristicService.findByValueLike( wildcardQuery, null, Collections.singleton( ExpressionExperiment.class ), false, maxResults ) );
+                    .characteristic2CharacteristicVO( this.characteristicReadService.findByValueLike( wildcardQuery, null, Collections.singleton( ExpressionExperiment.class ), false, maxResults ) );
             for ( CharacteristicValueObject characteristicInDatabase : characteristicsFromDatabase ) {
                 // flag to let know that it was found in the database
                 characteristicInDatabase.setAlreadyPresentInDatabase( true );
@@ -619,7 +622,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         int step = 5000;
 
         for ( int start = 0; ; start += step ) {
-            Collection<Characteristic> chars = characteristicService.browse( start, step );
+            Collection<Characteristic> chars = characteristicReadService.browse( start, step );
 
             if ( chars == null || chars.isEmpty() ) {
                 break;
@@ -717,7 +720,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         int numUpdated = 0;
         Map<String, OntologyTerm> mismatchedTerms = new HashMap<>(); // just for logging.
         for ( int start = 0; ; start += step ) {
-            Collection<Characteristic> chars = characteristicService.browse( start, step );
+            Collection<Characteristic> chars = characteristicReadService.browse( start, step );
 
             if ( chars == null || chars.isEmpty() ) {
                 break;
@@ -831,7 +834,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         StopWatch watch = new StopWatch();
         watch.start();
 
-        Map<String, Characteristic> foundChars = characteristicService.findByValueUriOrValueStartingWith( queryString, parentClasses, false );
+        Map<String, Characteristic> foundChars = characteristicReadService.findByValueUriOrValueStartingWith( queryString, parentClasses, false );
 
         /*
          * Want to flag in the web interface that these are already used by Gemma (also ignore capitalization; category
