@@ -38,9 +38,11 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
+import ubic.gemma.persistence.util.CursorPage;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.rest.annotations.GZIP;
+import ubic.gemma.rest.util.FilteredAndCursorPaginatedResponseDataObject;
 import ubic.gemma.rest.util.FilteredAndPaginatedResponseDataObject;
 import ubic.gemma.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.rest.util.ResponseDataObject;
@@ -91,14 +93,35 @@ public class PlatformsWebService {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve all platforms")
-    public FilteredAndPaginatedResponseDataObject<ArrayDesignValueObject> getPlatforms( // Params:
+    @Operation(summary = "Retrieve all platforms",
+            description = "Supports two pagination modes. Legacy mode: pass `offset` (and `limit`); response includes `offset` and `totalElements`. "
+                    + "Cursor mode (recommended for deep pagination and consistency under writes): pass an opaque `cursor` token from a previous response's `nextCursor` / `prevCursor` field. "
+                    + "`offset` and `cursor` are mutually exclusive — passing a non-null `cursor` selects cursor mode. "
+                    + "In cursor mode the result is always sorted by ascending `id` (the user `sort` arg is currently ignored, pending the indexed-column audit in phase B); `totalElements` is `null` by default (no count query per request).",
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(schema = @Schema(oneOf = {
+                                    PaginatedResponseDataObject.class,
+                                    FilteredAndCursorPaginatedResponseDataObject.class
+                            }))),
+            })
+    public Object getPlatforms( // Params:
             @QueryParam("filter") @DefaultValue("") FilterArg<ArrayDesign> filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
-            @QueryParam("sort") @DefaultValue("+id") SortArg<ArrayDesign> sort // Optional, default +id
+            @QueryParam("sort") @DefaultValue("+id") SortArg<ArrayDesign> sort, // Optional, default +id
+            @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg
     ) {
         Filters filters = arrayDesignArgService.getFilters( filter );
+        if ( cursorArg != null ) {
+            // Mutual-exclusion: a non-null cursor selects cursor mode. The default offset=0 is
+            // not considered user-supplied (parallels GET /genes step 1b). In cursor mode we
+            // currently force a +id sort (PlatformArgService.getPlatformsByCursor) — the DAO
+            // restricts cursors to single-component id sorts until the index audit lands.
+            CursorPage<ArrayDesignValueObject> page = arrayDesignArgService.getPlatformsByCursor(
+                    filters, cursorArg.getValue(), limit.getValue() );
+            return new FilteredAndCursorPaginatedResponseDataObject<>( page, filters, new String[] { "id" } );
+        }
         return paginate( arrayDesignService::loadValueObjects, filters, new String[] { "id" },
                 arrayDesignArgService.getSort( sort ), offset.getValue(), limit.getValue() );
     }

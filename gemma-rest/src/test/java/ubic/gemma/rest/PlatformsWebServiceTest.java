@@ -63,12 +63,14 @@ public class PlatformsWebServiceTest extends BaseJerseyIntegrationTest {
 
     @Test
     public void testAll() {
-        FilteredAndPaginatedResponseDataObject<ArrayDesignValueObject> response = platformsWebService.getPlatforms(
+        Object response = platformsWebService.getPlatforms(
                 FilterArg.valueOf( "" ),
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "20" ),
-                SortArg.valueOf( "+id" ) );
+                SortArg.valueOf( "+id" ),
+                null /* cursor */ );
         assertThat( response )
+                .isInstanceOf( FilteredAndPaginatedResponseDataObject.class )
                 .hasFieldOrPropertyWithValue( "offset", 0 )
                 .hasFieldOrPropertyWithValue( "limit", 20 );
     }
