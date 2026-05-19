@@ -113,6 +113,25 @@
 
     <!-- filters (gemma-specific) -->
 
+    <!-- Phase 3 AfterInvocation Phase B: Gemma-owned replacement for gsec's afterAclReadQuiet.
+         Same semantics (READ-or-ADMIN check, null on denial) but lives in gemma-core so we can
+         drop the gsec class without touching the 17 @Secured({..., "AFTER_ACL_READ_QUIET"})
+         call sites. See AclEntryAfterInvocationQuietReadProvider class javadoc for why null-on-
+         denial cannot be expressed as @PostAuthorize. -->
+    <bean id="gemmaAfterAclReadQuiet"
+          class="ubic.gemma.core.security.authorization.acl.AclEntryAfterInvocationQuietReadProvider">
+        <constructor-arg ref="aclService"/>
+        <constructor-arg>
+            <list>
+                <util:constant static-field="org.springframework.security.acls.domain.BasePermission.ADMINISTRATION"/>
+                <util:constant static-field="org.springframework.security.acls.domain.BasePermission.READ"/>
+            </list>
+        </constructor-arg>
+        <property name="objectIdentityRetrievalStrategy" ref="objectIdentityRetrievalStrategy"/>
+        <property name="sidRetrievalStrategy" ref="sidRetrievalStrategy"/>
+        <property name="processDomainObjectClass" value="gemma.gsec.model.Securable"/>
+    </bean>
+
     <!-- After reading collection of composite sequences -->
     <bean id="afterAclCompositeSequenceCollectionRead"
           class="ubic.gemma.core.security.authorization.acl.AclEntryAfterInvocationCompositeSequenceCollectionByArrayDesignFilteringProvider">
