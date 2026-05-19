@@ -20,6 +20,7 @@
 package ubic.gemma.core.search;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -30,6 +31,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import org.springframework.util.LinkedMultiValueMap;
+import ubic.gemma.core.search.source.CompositeSearchSource;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.blacklist.BlacklistedEntity;
 import ubic.gemma.model.blacklist.BlacklistedValueObject;
@@ -62,12 +64,18 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Stubbed search service for the post-Hibernate-Search era. Returns empty
- * results; preserves the VO-conversion path so callers can still convert
- * known results to their VO flavour.
+ * Free-text search service: delegates per-result-type lookups to a {@link CompositeSearchSource}
+ * composed of all registered {@link SearchSource} beans (e.g. {@code HibernateSearchSource},
+ * {@code DatabaseSearchSource}). Preserves the value-object conversion path on the way out.
  *
- * The full free-text/ontology/database search implementation lives in
- * git history (renovations branch, pre-phase2).
+ * <p>Restored as part of HS-7 search restoration Step 3 (see SEARCH_RECCE.md). The pre-strip
+ * convenience surface (taxon inference from query, dedicated blacklist gating, ontology
+ * single-term expansion) is deliberately deferred until the ontology source comes back in
+ * Step 3+ / Section 6.</p>
+ *
+ * @author klc
+ * @author paul
+ * @author keshav
  */
 @Service
 @Slf4j
@@ -100,29 +108,78 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
                     .flatMap( List::stream )
                     .collect( Collectors.toList() );
         }
+
+        private <T extends Identifiable> void addAll( Collection<SearchResult<T>> sr ) {
+            for ( SearchResult<T> r : sr ) {
+                super.add( r.getResultType(), r );
+            }
+        }
     }
+
+    @Autowired
+    private List<SearchSource> searchSources;
 
     @Autowired
     @Qualifier("valueObjectConversionService")
     private ConversionService valueObjectConversionService;
 
+    /** Composite source assembled from all registered {@link SearchSource} beans. */
+    private CompositeSearchSource searchSource;
+
     private final Map<Class<? extends Identifiable>, Class<? extends IdentifiableValueObject<?>>> supportedResultTypes = new HashMap<>();
 
     @Override
     public void afterPropertiesSet() {
+        searchSource = new CompositeSearchSource( searchSources );
         initializeSupportedResultTypes();
     }
 
     @Override
     public Set<String> getFields( Class<? extends Identifiable> resultType, SearchSettings.SearchMode searchMode ) {
-        return Collections.emptySet();
+        return searchSources.stream()
+                .filter( s -> s instanceof FieldAwareSearchSource )
+                .map( s -> ( ( FieldAwareSearchSource ) s ).getFields( resultType, searchMode ) )
+                .flatMap( Set::stream )
+                .collect( Collectors.toSet() );
     }
 
     @Override
     @Transactional(readOnly = true)
     public SearchResultMap search( SearchSettings settings, SearchContext context ) throws SearchException {
-        log.debug( "Search is disabled on this build; returning empty results." );
-        return new SearchResultMapImpl();
+        SearchResultMapImpl results = new SearchResultMapImpl();
+        if ( StringUtils.isBlank( settings.getQuery() ) ) {
+            return results;
+        }
+        // Note: per-result-type dispatch mirrors the pre-strip behaviour. Composite is responsible
+        // for actually fanning out to each accepting source (Hibernate Search + DAO fallback).
+        if ( settings.hasResultType( ArrayDesign.class ) ) {
+            results.addAll( searchSource.searchArrayDesign( settings, context ) );
+        }
+        if ( settings.hasResultType( BibliographicReference.class ) ) {
+            results.addAll( searchSource.searchBibliographicReference( settings, context ) );
+        }
+        if ( settings.hasResultType( ExpressionExperimentSet.class ) ) {
+            results.addAll( searchSource.searchExperimentSet( settings, context ) );
+        }
+        if ( settings.hasResultType( BioSequence.class ) ) {
+            results.addAll( searchSource.searchBioSequence( settings, context ) );
+        }
+        if ( settings.hasResultType( CompositeSequence.class ) ) {
+            results.addAll( searchSource.searchCompositeSequence( settings, context ) );
+        }
+        if ( settings.hasResultType( ExpressionExperiment.class ) ) {
+            results.addAll( searchSource.searchExpressionExperiment( settings, context ) );
+        }
+        if ( settings.hasResultType( Gene.class ) ) {
+            results.addAll( searchSource.searchGene( settings, context ) );
+        }
+        if ( settings.hasResultType( GeneSet.class ) ) {
+            results.addAll( searchSource.searchGeneSet( settings, context ) );
+        }
+        if ( settings.hasResultType( BlacklistedEntity.class ) ) {
+            results.addAll( searchSource.searchBlacklistedEntities( settings, context ) );
+        }
+        return results;
     }
 
     @Override
