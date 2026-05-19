@@ -28,7 +28,6 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.measurement.Unit;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailDao;
 import ubic.gemma.persistence.service.common.description.BibliographicReferenceDao;
 import ubic.gemma.persistence.service.common.description.DatabaseEntryDao;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseDao;
@@ -54,9 +53,6 @@ import java.util.Map;
 public abstract class CommonPersister extends AbstractPersister {
 
     @Autowired
-    private AuditTrailDao auditTrailDao;
-
-    @Autowired
     private BibliographicReferenceDao bibliographicReferenceDao;
 
     @Autowired
@@ -74,9 +70,7 @@ public abstract class CommonPersister extends AbstractPersister {
     @Override
     @SuppressWarnings("unchecked")
     protected <T extends Identifiable> T doPersist( T entity, Caches caches ) {
-        if ( entity instanceof AuditTrail ) {
-            return ( T ) this.persistAuditTrail( ( AuditTrail ) entity );
-        } else if ( entity instanceof User ) {
+        if ( entity instanceof User ) {
             throw new UnsupportedOperationException( "Don't persist users via this class; use the UserManager (core)" );
         } else if ( entity instanceof Unit ) {
             return ( T ) this.persistUnit( ( Unit ) entity );
@@ -104,18 +98,6 @@ public abstract class CommonPersister extends AbstractPersister {
         ExternalDatabase persistedDb = this.persistExternalDatabase( tempExternalDb, caches );
         databaseEntry.setExternalDatabase( persistedDb );
         assert databaseEntry.getExternalDatabase().getId() != null;
-    }
-
-    protected AuditTrail persistAuditTrail( AuditTrail entity ) {
-        // AuditTrail has no business key; events are persisted by composition.
-        // Most callers reach AuditTrail via the Auditable parent's cascade=all and
-        // never invoke this directly — preserved for the few that do.
-        for ( AuditEvent event : entity.getEvents() ) {
-            if ( event == null )
-                continue; // legacy of ordered-list which could end up with gaps; should not be needed
-            assert event.getPerformer() != null;
-        }
-        return auditTrailDao.create( entity );
     }
 
     protected ExternalDatabase persistExternalDatabase( ExternalDatabase database, Caches caches ) {
