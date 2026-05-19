@@ -116,7 +116,7 @@ public class GeoFamilyParser implements Parser<GeoParseResult> {
 
             GeoFamilyParser.log.debug( "Parsing...." );
 
-            final ExecutorService executor = Executors.newSingleThreadExecutor();
+            final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutorIfAvailable();
             Future<?> future = executor.submit( () -> doParse( dis ) );
             executor.shutdown();
 
