@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
 import ubic.gemma.core.util.matrix.DenseDoubleMatrix;
 import ubic.gemma.core.util.matrix.DoubleMatrix;
-import ubic.basecode.io.reader.DoubleMatrixReader;
+import ubic.gemma.core.util.matrix.DoubleMatrixReader;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -288,7 +288,7 @@ public class QuantitationTypeDetectionUtilsTest {
             ArrayDesign ad = ArrayDesign.Factory.newInstance();
             ad.setTechnologyType( technologyType );
             Set<BioAssay> bas = new HashSet<>();
-            DoubleMatrix<String, String> rawMatrix = ubic.gemma.core.util.matrix.MatrixUtil.fromBaseCode( new DoubleMatrixReader().read( is ) );
+            DoubleMatrix<String, String> rawMatrix = new DoubleMatrixReader().read( is );
             DenseDoubleMatrix<CompositeSequence, BioMaterial> matrix = new DenseDoubleMatrix<>( rawMatrix.getRawMatrix() );
             matrix.setRowNames( rawMatrix.getRowNames().stream().map( n -> CompositeSequence.Factory.newInstance( n, ad ) ).collect( Collectors.toList() ) );
             matrix.setColumnNames( rawMatrix.getColNames().stream().map( name -> {

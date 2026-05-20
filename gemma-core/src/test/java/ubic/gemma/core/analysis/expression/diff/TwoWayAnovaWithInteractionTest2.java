@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.matrix.DoubleMatrix;
-import ubic.basecode.io.reader.DoubleMatrixReader;
+import ubic.gemma.core.util.matrix.DoubleMatrixReader;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
@@ -106,7 +106,7 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest5 {
         DoubleMatrix<String, String> matrix;
         try ( InputStream io = this.getClass()
                 .getResourceAsStream( "/data/analysis/expression/GSE8441_expmat_8probes.txt" ) ) {
-            matrix = ubic.gemma.core.util.matrix.MatrixUtil.fromBaseCode( new DoubleMatrixReader().read( io ) );
+            matrix = new DoubleMatrixReader().read( io );
         }
 
         ee = dataLoaderService.create( metaData, matrix );

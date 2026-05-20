@@ -26,7 +26,7 @@ import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.matrix.DenseDoubleMatrix;
 import ubic.gemma.core.util.matrix.DoubleMatrix;
-import ubic.basecode.io.reader.DoubleMatrixReader;
+import ubic.gemma.core.util.matrix.DoubleMatrixReader;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.loader.entrez.EntrezUtils;
@@ -237,8 +237,8 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
 
                 InputStream rpkmData = this.getClass().getResourceAsStream(
                         "/data/loader/expression/flatfileload/GSE19166_expression_RPKM.test.txt" ) ) {
-            countMatrix = ubic.gemma.core.util.matrix.MatrixUtil.fromBaseCode( reader.read( countData ) );
-            rpkmMatrix = ubic.gemma.core.util.matrix.MatrixUtil.fromBaseCode( reader.read( rpkmData ) );
+            countMatrix = reader.read( countData );
+            rpkmMatrix = reader.read( rpkmData );
         }
 
         List<String> probeNames = countMatrix.getRowNames();
@@ -336,8 +336,8 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
 
                 InputStream rpkmData = this.getClass().getResourceAsStream(
                         "/data/loader/expression/flatfileload/GSE29006_expression_RPKM.test.txt" ) ) {
-            DoubleMatrix<String, String> countMatrix = ubic.gemma.core.util.matrix.MatrixUtil.fromBaseCode( reader.read( countData ) );
-            DoubleMatrix<String, String> rpkmMatrix = ubic.gemma.core.util.matrix.MatrixUtil.fromBaseCode( reader.read( rpkmData ) );
+            DoubleMatrix<String, String> countMatrix = reader.read( countData );
+            DoubleMatrix<String, String> rpkmMatrix = reader.read( rpkmData );
 
             List<String> probeNames = countMatrix.getRowNames();
 
