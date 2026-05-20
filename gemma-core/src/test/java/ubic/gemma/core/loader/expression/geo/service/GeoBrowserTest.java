@@ -20,16 +20,16 @@ package ubic.gemma.core.loader.expression.geo.service;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.w3c.dom.Document;
 import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.util.test.NetworkAvailable;
-import ubic.gemma.core.util.test.NetworkAvailableRule;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.core.util.test.category.GeoTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 
@@ -47,14 +47,12 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  */
 @Category(GeoTest.class)
 @NetworkAvailable(url = EntrezUtils.ESUMMARY)
+@ExtendWith(NetworkAvailableExtension.class)
 public class GeoBrowserTest {
 
     private static final Log log = LogFactory.getLog( GeoBrowserTest.class );
 
     private static final String ncbiApiKey = Settings.getString( "entrez.efetch.apikey" );
-
-    @Rule
-    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
 
     private final GeoBrowser b = new GeoBrowserImpl( ncbiApiKey );
 
@@ -109,7 +107,7 @@ public class GeoBrowserTest {
      *
      */
     @Test
-    @Ignore("This test started breaking around March 25 2025.")
+    @Disabled("This test started breaking around March 25 2025.")
     public void testRetrieveDetailedGeoRecords() throws IOException {
         GeoQuery query = b.searchGeoRecords( GeoRecordType.SERIES, null, null, null, null, null );
         // Check that the search has returned at least one record

@@ -1,13 +1,13 @@
 package ubic.gemma.core.loader.expression.geo.fetcher2;
 
-import org.junit.Rule;
-import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactoryImpl;
 import ubic.gemma.core.util.SimpleRetryPolicy;
 import ubic.gemma.core.util.test.NetworkAvailable;
-import ubic.gemma.core.util.test.NetworkAvailableRule;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.core.util.test.category.GeoTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 
@@ -19,10 +19,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @Category(GeoTest.class)
 @NetworkAvailable(url = EntrezUtils.ESEARCH)
+@ExtendWith(NetworkAvailableExtension.class)
 public class GeoFetcherTest {
-
-    @Rule
-    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
 
     @Test
     @Category(SlowTest.class)
