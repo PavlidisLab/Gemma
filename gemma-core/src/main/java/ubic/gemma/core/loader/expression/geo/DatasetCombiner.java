@@ -24,7 +24,7 @@ import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import ubic.basecode.math.StringDistance;
-import ubic.basecode.util.StringUtil;
+import ubic.gemma.core.util.StringUtil;
 import ubic.gemma.core.loader.entrez.EutilFetch;
 import ubic.gemma.core.loader.expression.geo.model.*;
 import ubic.gemma.core.util.XMLUtils;

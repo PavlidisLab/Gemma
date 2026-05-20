@@ -1100,7 +1100,7 @@ public class ExpressionExperimentQCController {
             if ( nonNullDates.isEmpty() )
                 break;
 
-            long secspan = ubic.basecode.util.DateUtil.numberOfSecondsBetweenDates( nonNullDates );
+            long secspan = ubic.gemma.core.util.DateUtil.numberOfSecondsBetweenDates( nonNullDates );
 
             if ( component >= MAX_COMP )
                 break;

@@ -23,7 +23,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ubic.basecode.util.StringUtil;
+import ubic.gemma.core.util.StringUtil;
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.core.analysis.sequence.Blat;
 import ubic.gemma.core.analysis.sequence.ProbeMapUtils;

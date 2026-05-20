@@ -69,7 +69,7 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
     private boolean useBioAssayIds = false;
     /**
      * Do not make the column names R-friendly.
-     * @see ubic.basecode.util.StringUtil#makeNames(String)
+     * @see ubic.gemma.core.util.StringUtil#makeNames(String)
      */
     private boolean useRawColumnNames = false;
     private boolean autoFlush = false;

@@ -3,7 +3,7 @@ package ubic.gemma.core.visualization.cellbrowser;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
-import ubic.basecode.util.StringUtil;
+import ubic.gemma.core.util.StringUtil;
 import ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils;
 import ubic.gemma.core.util.TsvUtils;
 import ubic.gemma.model.common.description.Category;

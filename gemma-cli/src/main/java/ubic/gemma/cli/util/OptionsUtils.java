@@ -8,7 +8,7 @@ import org.apache.commons.lang3.Strings;
 import org.ocpsoft.prettytime.nlp.PrettyTimeParser;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
-import ubic.basecode.util.DateUtil;
+import ubic.gemma.core.util.DateUtil;
 
 import org.springframework.lang.Nullable;
 import java.io.File;
