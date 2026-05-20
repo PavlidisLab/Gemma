@@ -27,8 +27,9 @@ import javax.annotation.Nullable;
  * Write service for {@link ExpressionExperiment} graphs.
  * <p>
  * This is the strangler-fig replacement for the EE-related portions of
- * {@code ExpressionPersister}. The full migration is tracked in
- * {@code EXPRESSIONPERSISTER_MIGRATION_PLAN.md}.
+ * the former {@code ExpressionPersister} (deleted in Persister-shrink S1;
+ * the remaining polymorphic EE dispatch arms used only by test fixtures
+ * have been folded into {@code PersisterHelperImpl.doPersist}).
  *
  * @author pavlidis
  */

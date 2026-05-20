@@ -50,7 +50,7 @@ import java.util.Map;
  *
  * @author pavlidis
  */
-public abstract class RelationshipPersister extends ExpressionPersister {
+public abstract class RelationshipPersister extends ArrayDesignPersister {
 
     @Autowired
     private Gene2GOAssociationDao gene2GoAssociationDao;
