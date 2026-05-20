@@ -71,15 +71,21 @@ public class TicketServiceImplTest {
         assignee.setId( 22L );
         assignee.setName( "Assignee" );
         eeTarget = TicketTarget.Factory.newInstance( TicketTargetType.EXPRESSION_EXPERIMENT, 100L );
+    }
 
-        // make ticketDao.create / save echo the argument back so the service
-        // returns the same object the test holds a reference to
+    /** Make ticketDao.create echo the argument back so the test holds a reference identical to what the service returned. */
+    private void stubDaoCreateEchoes() {
         when( ticketDao.create( any( Ticket.class ) ) ).thenAnswer( inv -> inv.getArgument( 0 ) );
+    }
+
+    /** Make ticketDao.save echo the argument back so the test holds a reference identical to what the service returned. */
+    private void stubDaoSaveEchoes() {
         when( ticketDao.save( any( Ticket.class ) ) ).thenAnswer( inv -> inv.getArgument( 0 ) );
     }
 
     @Test
     public void openTicket_seedsOpenedEvent_andDelegatesToCreate() {
+        stubDaoCreateEchoes();
         Ticket t = service.openTicket( reporter,
                 TicketType.BATCH_INFO_NEEDED,
                 "missing batch info",
@@ -118,6 +124,8 @@ public class TicketServiceImplTest {
 
     @Test
     public void assign_setsAssignee_andAppendsAssignedEvent() {
+        stubDaoCreateEchoes();
+        stubDaoSaveEchoes();
         Ticket t = openHelper();
         int eventsBefore = t.getEvents().size();
 
@@ -131,6 +139,8 @@ public class TicketServiceImplTest {
 
     @Test
     public void assign_withNullAssignee_clearsAssignment_andStillLogsEvent() {
+        stubDaoCreateEchoes();
+        stubDaoSaveEchoes();
         Ticket t = openHelper();
         t.setAssignee( assignee );
         int eventsBefore = t.getEvents().size();
@@ -144,6 +154,8 @@ public class TicketServiceImplTest {
 
     @Test
     public void addComment_appendsCommentedEvent_withPayload() {
+        stubDaoCreateEchoes();
+        stubDaoSaveEchoes();
         Ticket t = openHelper();
         int eventsBefore = t.getEvents().size();
 
@@ -178,6 +190,7 @@ public class TicketServiceImplTest {
 
     @Test
     public void transition_noop_is_silent() {
+        stubDaoCreateEchoes();
         Ticket t = openHelper();
         int eventsBefore = t.getEvents().size();
 
@@ -212,6 +225,8 @@ public class TicketServiceImplTest {
     }
 
     private void verifyTransitionEmitsEvent( TicketState from, TicketState to, TicketEventType expected ) {
+        stubDaoCreateEchoes();
+        stubDaoSaveEchoes();
         Ticket t = openHelper();
         t.setState( from );
         int eventsBefore = t.getEvents().size();
