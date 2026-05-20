@@ -21,7 +21,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.basecode.math.linearmodels.MeanVarianceEstimator;
+import ubic.gemma.core.util.math.linearmodels.MeanVarianceEstimator;
 import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
 import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionUtils;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;

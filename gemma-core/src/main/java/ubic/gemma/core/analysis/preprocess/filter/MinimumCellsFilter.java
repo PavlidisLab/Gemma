@@ -2,7 +2,7 @@ package ubic.gemma.core.analysis.preprocess.filter;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.Assert;
-import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.gemma.core.util.matrix.DoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;

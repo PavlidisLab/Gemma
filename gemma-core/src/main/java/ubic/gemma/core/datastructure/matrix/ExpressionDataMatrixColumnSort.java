@@ -21,7 +21,7 @@ package ubic.gemma.core.datastructure.matrix;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.util.Assert;
-import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.gemma.core.util.matrix.DoubleMatrix;
 import ubic.gemma.core.analysis.expression.diff.BaselineSelection;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.MeasurementUtils;

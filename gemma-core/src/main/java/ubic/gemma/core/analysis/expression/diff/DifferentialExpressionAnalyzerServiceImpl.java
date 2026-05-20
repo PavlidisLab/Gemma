@@ -27,7 +27,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
-import ubic.basecode.math.distribution.Histogram;
+import ubic.gemma.core.util.math.distribution.Histogram;
 import ubic.gemma.core.util.FileTools;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.util.locking.LockedPath;

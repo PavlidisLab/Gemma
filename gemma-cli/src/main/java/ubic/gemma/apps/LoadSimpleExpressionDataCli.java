@@ -208,7 +208,7 @@ public class LoadSimpleExpressionDataCli extends AbstractAuthenticatedCLI {
         if ( ( dataFile = getRecordField( record, "data_file" ) ) != null ) {
             this.configureQuantitationType( record, metaData );
             try ( InputStream data = openDataFile( shortName, dataFile ) ) {
-                eeLoaderService.create( metaData, new DoubleMatrixReader().read( data ) );
+                eeLoaderService.create( metaData, ubic.gemma.core.util.matrix.MatrixUtil.fromBaseCode( new DoubleMatrixReader().read( data ) ) );
             }
         } else {
             // only create with metadata

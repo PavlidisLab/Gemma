@@ -39,7 +39,7 @@ import org.hibernate.type.StandardBasicTypes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
-import ubic.basecode.math.distribution.Histogram;
+import ubic.gemma.core.util.math.distribution.Histogram;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.annotations.MayBeUninitialized;
 import ubic.gemma.model.common.description.Characteristic;

@@ -18,7 +18,7 @@
  */
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
-import ubic.basecode.math.distribution.Histogram;
+import ubic.gemma.core.util.math.distribution.Histogram;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.annotations.MayBeUninitialized;
 import ubic.gemma.model.common.Identifiable;

@@ -19,7 +19,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.gemma.core.util.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.analysis.service.ExpressionMetadataChangelogFileService;
@@ -199,11 +199,11 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
         DoubleMatrix<String, String> countMatrix = null;
         DoubleMatrix<String, String> rpkmMatrix = null;
         if ( this.countFile != null ) {
-            countMatrix = reader.read( countFile.toString() );
+            countMatrix = ubic.gemma.core.util.matrix.MatrixUtil.fromBaseCode( reader.read( countFile.toString() ) );
         }
 
         if ( this.rpkmFile != null ) {
-            rpkmMatrix = reader.read( rpkmFile.toString() );
+            rpkmMatrix = ubic.gemma.core.util.matrix.MatrixUtil.fromBaseCode( reader.read( rpkmFile.toString() ) );
         }
 
         // TODO: support per-assay read length and pairedness

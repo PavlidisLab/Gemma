@@ -22,7 +22,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
-import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.gemma.core.util.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.loader.expression.DataUpdater;
@@ -226,8 +226,8 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
 
                 InputStream rpkmData = this.getClass().getResourceAsStream(
                         "/data/loader/expression/flatfileload/GSE29006_expression_RPKM.test.txt" ) ) {
-            DoubleMatrix<String, String> countMatrix = reader.read( countData );
-            DoubleMatrix<String, String> rpkmMatrix = reader.read( rpkmData );
+            DoubleMatrix<String, String> countMatrix = ubic.gemma.core.util.matrix.MatrixUtil.fromBaseCode( reader.read( countData ) );
+            DoubleMatrix<String, String> rpkmMatrix = ubic.gemma.core.util.matrix.MatrixUtil.fromBaseCode( reader.read( rpkmData ) );
 
             List<String> probeNames = countMatrix.getRowNames();
 

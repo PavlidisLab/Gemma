@@ -15,7 +15,7 @@
 package ubic.gemma.persistence.service.analysis.expression.pca;
 
 import org.springframework.security.access.annotation.Secured;
-import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.gemma.core.util.matrix.DoubleMatrix;
 import ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis;
 import ubic.gemma.model.analysis.expression.pca.ProbeLoading;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;

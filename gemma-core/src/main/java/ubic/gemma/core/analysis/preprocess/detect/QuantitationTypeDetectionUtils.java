@@ -10,7 +10,7 @@ import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import org.hibernate.LazyInitializationException;
-import ubic.basecode.math.DescriptiveWithMissing;
+import ubic.gemma.core.util.math.DescriptiveWithMissing;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataDoubleMatrix;

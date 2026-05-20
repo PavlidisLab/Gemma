@@ -19,7 +19,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.gemma.core.util.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.gemma.core.loader.expression.DataUpdater;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -91,7 +91,7 @@ public class ReplaceDataCli extends ExpressionExperimentManipulatingCLI {
 
         DoubleMatrix<String, String> data;
         try {
-            data = reader.read( file );
+            data = ubic.gemma.core.util.matrix.MatrixUtil.fromBaseCode( reader.read( file ) );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }

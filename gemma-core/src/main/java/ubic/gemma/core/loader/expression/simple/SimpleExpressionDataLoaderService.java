@@ -14,7 +14,7 @@
  */
 package ubic.gemma.core.loader.expression.simple;
 
-import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.gemma.core.util.matrix.DoubleMatrix;
 import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetadata;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;

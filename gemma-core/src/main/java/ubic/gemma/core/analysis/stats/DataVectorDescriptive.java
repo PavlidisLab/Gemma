@@ -3,7 +3,7 @@ package ubic.gemma.core.analysis.stats;
 import cern.colt.list.DoubleArrayList;
 import cern.jet.stat.Descriptive;
 import org.springframework.util.Assert;
-import ubic.basecode.math.DescriptiveWithMissing;
+import ubic.gemma.core.util.math.DescriptiveWithMissing;
 import ubic.gemma.core.analysis.singleCell.SingleCellDescriptive;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeUtils;
@@ -17,7 +17,7 @@ import static ubic.gemma.model.common.quantitationtype.QuantitationTypeUtils.get
  * Compute descriptive statistics for {@link ubic.gemma.model.expression.bioAssayData.DataVector}.
  * @author poirigui
  * @see SingleCellDescriptive
- * @see ubic.basecode.math.DescriptiveWithMissing
+ * @see ubic.gemma.core.util.math.DescriptiveWithMissing
  */
 public class DataVectorDescriptive {
 

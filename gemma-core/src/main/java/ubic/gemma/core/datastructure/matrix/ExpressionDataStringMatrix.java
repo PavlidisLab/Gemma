@@ -20,7 +20,7 @@ package ubic.gemma.core.datastructure.matrix;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import ubic.basecode.dataStructure.matrix.StringMatrix;
+import ubic.gemma.core.util.matrix.StringMatrix;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
