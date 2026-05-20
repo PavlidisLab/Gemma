@@ -40,8 +40,8 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.core.security.audit.Audited;
 import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponentAnalysisService;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
@@ -76,9 +76,6 @@ public class SVDServiceImpl implements SVDService {
 
     @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
-
-    @Autowired
-    private AuditTrailService auditTrailService;
 
     @Autowired
     private PrincipalComponentAnalysisService principalComponentAnalysisService;
@@ -141,6 +138,7 @@ public class SVDServiceImpl implements SVDService {
 
     @Override
     @Transactional
+    @Audited(value = PCAAnalysisEvent.class, message = "SVD computation")
     public SVDResult svd( ExpressionExperiment ee ) throws SVDException {
         assert ee != null;
 
@@ -586,7 +584,7 @@ public class SVDServiceImpl implements SVDService {
                         SVDServiceImpl.MAX_LOADINGS_TO_PERSIST );
 
         ee = expressionExperimentService.thawLite( ee ); // I wish this wasn't needed.
-        auditTrailService.addUpdateEvent( ee, PCAAnalysisEvent.class, "SVD computation" );
+        // Audit event written by @Audited on svd() via AuditedAspect.
         return pca;
     }
 }
