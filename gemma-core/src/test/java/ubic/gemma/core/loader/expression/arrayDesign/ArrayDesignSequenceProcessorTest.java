@@ -19,13 +19,13 @@
 package ubic.gemma.core.loader.expression.arrayDesign;
 
 import org.apache.commons.lang3.StringUtils;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.FileTools;
 import ubic.gemma.core.config.Settings;
-import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
+import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest5;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.genome.SimpleFastaCmd;
@@ -41,13 +41,13 @@ import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashSet;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static ubic.gemma.core.util.test.Assumptions.assumeThatExecutableExists;
 
 /**
  * @author pavlidis
  */
-public class ArrayDesignSequenceProcessorTest extends AbstractGeoServiceTest {
+public class ArrayDesignSequenceProcessorTest extends AbstractGeoServiceTest5 {
 
     public static final String FASTA_CMD_CONFIG_NAME = "fastaCmd.exe";
     public static final String FASTA_CMD_EXE = Settings.getString( FASTA_CMD_CONFIG_NAME );
@@ -67,7 +67,7 @@ public class ArrayDesignSequenceProcessorTest extends AbstractGeoServiceTest {
     @Autowired
     private GeoService geoService;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
 
         taxon = taxonService.findByCommonName( "mouse" );
@@ -116,7 +116,7 @@ public class ArrayDesignSequenceProcessorTest extends AbstractGeoServiceTest {
                     fail( "Shouldn't have found a biological characteristic for this sequence" );
                 }
             } else {
-                assertNotNull( de.getName() + " biological sequence not found", de.getBiologicalCharacteristic() );
+                assertNotNull( de.getBiologicalCharacteristic(), de.getName() + " biological sequence not found" );
             }
 
         }
@@ -126,7 +126,7 @@ public class ArrayDesignSequenceProcessorTest extends AbstractGeoServiceTest {
     }
 
     @Test
-    @Ignore("See https://github.com/PavlidisLab/Gemma/issues/1082 for details")
+    @Disabled("See https://github.com/PavlidisLab/Gemma/issues/1082 for details")
     public void testFetchAndLoadWithIdentifiers() throws Exception {
         assumeThatExecutableExists( FASTA_CMD_EXE );
 

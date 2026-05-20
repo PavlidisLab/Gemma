@@ -14,16 +14,17 @@
  */
 package ubic.gemma.core.analysis.expression.diff;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.FileTools;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
+import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest5;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
@@ -40,11 +41,11 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import java.util.Collection;
 import java.util.HashSet;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils.determineAnalysisType;
 
-public class TwoWayAnovaWithInteractionsTest2 extends AbstractGeoServiceTest {
+public class TwoWayAnovaWithInteractionsTest2 extends AbstractGeoServiceTest5 {
 
     @Autowired
     private AnalysisSelectionAndExecutionService analysisService = null;
@@ -73,8 +74,9 @@ public class TwoWayAnovaWithInteractionsTest2 extends AbstractGeoServiceTest {
     private ExpressionExperiment ee;
 
     @Test
-    @Ignore
+    @Disabled
     @Category(SlowTest.class)
+    @Tag("slow")
     public void test() {
 
         ee = expressionExperimentService.thaw( ee );
@@ -107,13 +109,13 @@ public class TwoWayAnovaWithInteractionsTest2 extends AbstractGeoServiceTest {
 
     }
 
-    @After
+    @AfterEach
     public void teardown() {
         if ( ee != null )
             expressionExperimentService.remove( ee );
     }
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
 
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal(

@@ -14,14 +14,15 @@
  */
 package ubic.gemma.core.analysis.expression.diff;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.FileTools;
-import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
+import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest5;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
@@ -39,15 +40,15 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * for bug 3927
  *
  * @author Paul
  */
-public class DiffExWithInvalidInteraction2Test extends AbstractGeoServiceTest {
+public class DiffExWithInvalidInteraction2Test extends AbstractGeoServiceTest5 {
 
     @Autowired
     private DifferentialExpressionAnalyzerService analyzer;
@@ -69,7 +70,7 @@ public class DiffExWithInvalidInteraction2Test extends AbstractGeoServiceTest {
     @Autowired
     private GeoService geoService;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
 
         geoService.setGeoDomainObjectGenerator(
@@ -101,7 +102,7 @@ public class DiffExWithInvalidInteraction2Test extends AbstractGeoServiceTest {
 
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         if ( ee != null ) {
             expressionExperimentService.remove( ee );
@@ -109,8 +110,9 @@ public class DiffExWithInvalidInteraction2Test extends AbstractGeoServiceTest {
     }
 
     @Test
-    @Ignore("An UnknownLogScaleException is raised unpredictably. See https://github.com/PavlidisLab/Gemma/issues/582 for details.")
+    @Disabled("An UnknownLogScaleException is raised unpredictably. See https://github.com/PavlidisLab/Gemma/issues/582 for details.")
     @Category(SlowTest.class)
+    @Tag("slow")
     public void test() {
 
         ee = expressionExperimentService.thawLite( ee );

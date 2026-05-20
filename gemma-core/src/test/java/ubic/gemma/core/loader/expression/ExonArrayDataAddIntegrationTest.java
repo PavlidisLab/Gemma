@@ -19,12 +19,13 @@
 
 package ubic.gemma.core.loader.expression;
 
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
+import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest5;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
@@ -37,7 +38,7 @@ import java.io.File;
 import java.util.Collection;
 import java.util.List;
 
-import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * Uses the Affy Power Tools, and full-sized data sets.
@@ -45,8 +46,9 @@ import static org.junit.Assume.assumeTrue;
  * @author paul
  */
 @Category(SlowTest.class)
-@Ignore("These tests are broken and also way too slow to be included in the test suite by default.")
-public class ExonArrayDataAddIntegrationTest extends AbstractGeoServiceTest {
+@Tag("slow")
+@Disabled("These tests are broken and also way too slow to be included in the test suite by default.")
+public class ExonArrayDataAddIntegrationTest extends AbstractGeoServiceTest5 {
 
     @Autowired
     private GeoService geoService;
@@ -57,10 +59,10 @@ public class ExonArrayDataAddIntegrationTest extends AbstractGeoServiceTest {
     @Autowired
     private ExpressionExperimentService experimentService;
 
-    @BeforeClass
+    @BeforeAll
     public static void checkAptIsAvailable() {
         String apt = Settings.getString( "affy.power.tools.exec" );
-        assumeTrue( "Test skipped due to lack of Affy Power Tools executable", new File( apt ).canExecute() );
+        assumeTrue( new File( apt ).canExecute(), "Test skipped due to lack of Affy Power Tools executable" );
     }
 
     @Test
