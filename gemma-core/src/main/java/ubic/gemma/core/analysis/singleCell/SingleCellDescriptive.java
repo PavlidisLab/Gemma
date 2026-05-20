@@ -3,7 +3,7 @@ package ubic.gemma.core.analysis.singleCell;
 import cern.colt.list.DoubleArrayList;
 import cern.jet.stat.Descriptive;
 import org.springframework.util.Assert;
-import ubic.basecode.math.DescriptiveWithMissing;
+import ubic.gemma.core.util.math.DescriptiveWithMissing;
 import ubic.gemma.core.analysis.stats.DataVectorDescriptive;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.bioAssay.BioAssay;

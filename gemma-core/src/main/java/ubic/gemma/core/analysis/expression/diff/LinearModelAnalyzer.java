@@ -29,13 +29,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
-import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.basecode.dataStructure.matrix.ObjectMatrix;
-import ubic.basecode.math.DescriptiveWithMissing;
-import ubic.basecode.math.MultipleTestCorrection;
-import ubic.basecode.math.Rank;
+import ubic.gemma.core.util.matrix.DoubleMatrix;
+import ubic.gemma.core.util.matrix.ObjectMatrix;
+import ubic.gemma.core.util.math.DescriptiveWithMissing;
+import ubic.gemma.core.util.math.MultipleTestCorrection;
+import ubic.gemma.core.util.math.Rank;
 import ubic.gemma.core.util.math.MathUtil;
-import ubic.basecode.math.linearmodels.*;
+import ubic.gemma.core.util.math.linearmodels.*;
 import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
 import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionUtils;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
@@ -582,7 +582,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
 
             mw.write( dmatrix, ProcessedExpressionDataVector.class, writer );
 
-            ubic.basecode.io.writer.MatrixWriter<String, String> dem = new ubic.basecode.io.writer.MatrixWriter<>(
+            ubic.gemma.core.util.matrix.MatrixWriter<String, String> dem = new ubic.gemma.core.util.matrix.MatrixWriter<>(
                     out );
             dem.writeMatrix( designMatrix, true );
 
@@ -1433,32 +1433,32 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
             // String dir = "/Users/pzoot";
             //                        File file = File.createTempFile( "loess-fit-", ".txt", new File( dir ) );
             //                        OutputStream os = new PrintStream( file );
-            //                        ubic.basecode.io.writer.MatrixWriter w = new ubic.basecode.io.writer.MatrixWriter( os );
+            //                        ubic.gemma.core.util.matrix.MatrixWriter w = new ubic.gemma.core.util.matrix.MatrixWriter( os );
             //                        w.writeMatrix( mv.getLoess() );
             //
             //                        File f2 = File.createTempFile( "mv-", ".txt", new File( dir ) );
             //                        OutputStream os2 = new PrintStream( f2 );
-            //                        ubic.basecode.io.writer.MatrixWriter w2 = new ubic.basecode.io.writer.MatrixWriter( os2 );
+            //                        ubic.gemma.core.util.matrix.MatrixWriter w2 = new ubic.gemma.core.util.matrix.MatrixWriter( os2 );
             //                        w2.writeMatrix( mv.getMeanVariance() );
             //
             //                        File f3 = File.createTempFile( "prepared-data-", ".txt", new File( dir ) );
             //                        OutputStream os3 = new PrintStream( f3 );
-            //                        ubic.basecode.io.writer.MatrixWriter w3 = new ubic.basecode.io.writer.MatrixWriter( os3 );
+            //                        ubic.gemma.core.util.matrix.MatrixWriter w3 = new ubic.gemma.core.util.matrix.MatrixWriter( os3 );
             //                        w3.writeMatrix( new DenseDoubleMatrix2D( preparedData.asArray() ) );
             //
             //                        File f4 = File.createTempFile( "voom-weights-", ".txt", new File( dir ) );
             //                        OutputStream os4 = new PrintStream( f4 );
-            //                        ubic.basecode.io.writer.MatrixWriter w4 = new ubic.basecode.io.writer.MatrixWriter( os4 );
+            //                        ubic.gemma.core.util.matrix.MatrixWriter w4 = new ubic.gemma.core.util.matrix.MatrixWriter( os4 );
             //                        w4.writeMatrix( new DenseDoubleMatrix2D( preparedData.asArray() ) );
             //
             //                        File f5 = File.createTempFile( "designmatrix-", ".txt", new File( dir ) );
             //                        OutputStream os5 = new PrintStream( f5 );
-            //                        ubic.basecode.io.writer.MatrixWriter w5 = new ubic.basecode.io.writer.MatrixWriter( os5 );
+            //                        ubic.gemma.core.util.matrix.MatrixWriter w5 = new ubic.gemma.core.util.matrix.MatrixWriter( os5 );
             //                        w5.writeMatrix( designMatrix.getMatrix(), true );
             //
             //                        File f6 = File.createTempFile( "libsize-", ".txt", new File( dir ) );
             //                        OutputStream os6 = new PrintStream( f6 );
-            //                        ubic.basecode.io.writer.MatrixWriter w6 = new ubic.basecode.io.writer.MatrixWriter( os6 );
+            //                        ubic.gemma.core.util.matrix.MatrixWriter w6 = new ubic.gemma.core.util.matrix.MatrixWriter( os6 );
             //                        w6.writeMatrix( librarySize );
             //                    } catch ( Exception e ) {
             //                        ///
@@ -1524,7 +1524,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
     @Nullable
     private double[] benjaminiHochberg( Double[] pvalues ) {
         DoubleMatrix1D benjaminiHochberg = MultipleTestCorrection
-                .benjaminiHochberg( new ubic.basecode.dataStructure.matrix.DenseDoubleMatrix1D( ArrayUtils.toPrimitive( pvalues ) ) );
+                .benjaminiHochberg( new ubic.gemma.core.util.matrix.DenseDoubleMatrix1D( ArrayUtils.toPrimitive( pvalues ) ) );
         return benjaminiHochberg != null ? benjaminiHochberg.toArray() : null;
     }
 

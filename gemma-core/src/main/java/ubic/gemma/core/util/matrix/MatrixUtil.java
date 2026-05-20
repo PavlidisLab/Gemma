@@ -566,4 +566,41 @@ public class MatrixUtil {
         return new DoubleArrayList( vector.toArray() );
     }
 
+    /**
+     * Shim for callers that still receive a baseCode {@link ubic.basecode.dataStructure.matrix.DoubleMatrix} (e.g. from
+     * {@code ubic.basecode.io.reader.DoubleMatrixReader}, which has not yet been ported in-tree). Performs a value-wise
+     * copy into an in-tree {@link DenseDoubleMatrix}, preserving row / column names.
+     * <p>
+     * Delete once {@code DoubleMatrixReader} is ported in-tree (see {@code BASECODE_MATH_LINEARMODELS_RECCE.md}).
+     */
+    public static <R, C> DoubleMatrix<R, C> fromBaseCode( ubic.basecode.dataStructure.matrix.DoubleMatrix<R, C> src ) {
+        if ( src == null ) return null;
+        DenseDoubleMatrix<R, C> out = new DenseDoubleMatrix<>( src.rows(), src.columns() );
+        if ( src.hasRowNames() ) out.setRowNames( src.getRowNames() );
+        if ( src.hasColNames() ) out.setColumnNames( src.getColNames() );
+        for ( int i = 0; i < src.rows(); i++ ) {
+            for ( int j = 0; j < src.columns(); j++ ) {
+                out.set( i, j, src.get( i, j ) );
+            }
+        }
+        return out;
+    }
+
+    /**
+     * Companion shim to {@link #fromBaseCode(ubic.basecode.dataStructure.matrix.DoubleMatrix)} for string matrices
+     * (e.g. from {@code ubic.basecode.io.reader.StringMatrixReader}). Same caveat: delete once readers are ported in-tree.
+     */
+    public static <R, C> StringMatrix<R, C> fromBaseCode( ubic.basecode.dataStructure.matrix.StringMatrix<R, C> src ) {
+        if ( src == null ) return null;
+        StringMatrix<R, C> out = new StringMatrix<>( src.rows(), src.columns() );
+        if ( src.hasRowNames() ) out.setRowNames( src.getRowNames() );
+        if ( src.hasColNames() ) out.setColumnNames( src.getColNames() );
+        for ( int i = 0; i < src.rows(); i++ ) {
+            for ( int j = 0; j < src.columns(); j++ ) {
+                out.set( i, j, src.get( i, j ) );
+            }
+        }
+        return out;
+    }
+
 }

@@ -1,6 +1,6 @@
 package ubic.gemma.core.ontology;
 
-import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.gemma.core.util.matrix.DoubleMatrix;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationReadService;

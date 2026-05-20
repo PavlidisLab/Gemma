@@ -17,7 +17,7 @@ package ubic.gemma.persistence.service.analysis.expression.pca;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.gemma.core.util.matrix.DoubleMatrix;
 import ubic.gemma.model.analysis.expression.pca.Eigenvalue;
 import ubic.gemma.model.analysis.expression.pca.Eigenvector;
 import ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis;

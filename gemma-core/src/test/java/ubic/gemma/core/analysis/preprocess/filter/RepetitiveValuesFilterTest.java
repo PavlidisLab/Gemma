@@ -2,9 +2,9 @@ package ubic.gemma.core.analysis.preprocess.filter;
 
 import cern.colt.matrix.DoubleMatrix1D;
 import org.junit.jupiter.api.Test;
-import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
-import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.basecode.math.MatrixStats;
+import ubic.gemma.core.util.matrix.DenseDoubleMatrix;
+import ubic.gemma.core.util.matrix.DoubleMatrix;
+import ubic.gemma.core.util.math.MatrixStats;
 import ubic.gemma.core.analysis.preprocess.normalize.QuantileNormalizer;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.*;

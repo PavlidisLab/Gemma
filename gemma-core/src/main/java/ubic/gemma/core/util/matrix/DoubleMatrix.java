@@ -151,7 +151,7 @@ public abstract class DoubleMatrix<R, C> extends AbstractMatrix<R, C, Double> im
      * 
      * @see java.lang.Object#toString()
      * 
-     * @see ubic.basecode.io.writer.MatrixWriter
+     * @see ubic.gemma.core.util.matrix.MatrixWriter
      */
     @Override
     public final String toString() {

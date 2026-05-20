@@ -26,7 +26,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.context.ContextConfiguration;
-import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.gemma.core.util.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.gemma.core.util.RegressionTesting;
 import ubic.gemma.core.analysis.preprocess.svd.ExpressionDataSVD;
@@ -152,7 +152,7 @@ public class ExpressionDataSVDTest extends BaseTest {
         DoubleMatrix<String, String> matrix;
         try ( InputStream data = this.getClass()
                 .getResourceAsStream( "/data/loader/aov.results-2-monocyte-data-bytime.bypat.data.sort" ) ) {
-            matrix = new DoubleMatrixReader().read( data );
+            matrix = ubic.gemma.core.util.matrix.MatrixUtil.fromBaseCode( new DoubleMatrixReader().read( data ) );
         }
 
         Taxon mouseTaxon = new Taxon();

@@ -19,8 +19,8 @@
 package ubic.gemma.core.datastructure.matrix;
 
 import org.apache.commons.lang3.ArrayUtils;
-import ubic.basecode.dataStructure.matrix.AbstractMatrix;
-import ubic.basecode.dataStructure.matrix.ObjectMatrixImpl;
+import ubic.gemma.core.util.matrix.AbstractMatrix;
+import ubic.gemma.core.util.matrix.ObjectMatrixImpl;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;

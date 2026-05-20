@@ -2,10 +2,10 @@ package ubic.gemma.core.analysis.expression.diff;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.Assert;
-import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
-import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.basecode.dataStructure.matrix.ObjectMatrix;
-import ubic.basecode.dataStructure.matrix.ObjectMatrixImpl;
+import ubic.gemma.core.util.matrix.DenseDoubleMatrix;
+import ubic.gemma.core.util.matrix.DoubleMatrix;
+import ubic.gemma.core.util.matrix.ObjectMatrix;
+import ubic.gemma.core.util.matrix.ObjectMatrixImpl;
 import ubic.gemma.model.common.measurement.MeasurementUtils;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
