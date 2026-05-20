@@ -17,10 +17,10 @@
  */
 package ubic.gemma.core.util.test.fixture;
 
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.util.test.BaseIntegrationTest;
+import ubic.gemma.core.util.test.BaseIntegrationTest5;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -30,18 +30,18 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Verifies the Phase 3 typed {@link ArrayDesignFactory}.
  *
  * @see ArrayDesignFactory
  */
-public class ArrayDesignFactoryTest extends BaseIntegrationTest {
+public class ArrayDesignFactoryTest extends BaseIntegrationTest5 {
 
     @Autowired
     private ArrayDesignFactory arrayDesignFactory;
@@ -54,7 +54,7 @@ public class ArrayDesignFactoryTest extends BaseIntegrationTest {
 
     private final List<ArrayDesign> createdADs = new ArrayList<>();
 
-    @After
+    @AfterEach
     public void cleanUp() {
         for ( ArrayDesign ad : createdADs ) {
             try {
@@ -74,12 +74,12 @@ public class ArrayDesignFactoryTest extends BaseIntegrationTest {
         createdADs.add( ad );
 
         assertNotNull( ad );
-        assertNotNull( "AD id must be assigned by persist", ad.getId() );
+        assertNotNull( ad.getId(), "AD id must be assigned by persist" );
         assertNotNull( ad.getShortName() );
         assertNotNull( ad.getName() );
-        assertNotNull( "default oneColor() should attach a primary taxon", ad.getPrimaryTaxon() );
+        assertNotNull( ad.getPrimaryTaxon(), "default oneColor() should attach a primary taxon" );
         assertEquals( TechnologyType.ONECOLOR, ad.getTechnologyType() );
-        assertTrue( "default oneColor() should have no probes", ad.getCompositeSequences().isEmpty() );
+        assertTrue( ad.getCompositeSequences().isEmpty(), "default oneColor() should have no probes" );
     }
 
     @Test
@@ -104,8 +104,8 @@ public class ArrayDesignFactoryTest extends BaseIntegrationTest {
 
         assertEquals( n, ad.getCompositeSequences().size() );
         for ( CompositeSequence cs : ad.getCompositeSequences() ) {
-            assertNotNull( "every CS should be persisted via cascade", cs.getId() );
-            assertSame( "every CS should back-reference this AD", ad.getId(), cs.getArrayDesign().getId() );
+            assertNotNull( cs.getId(), "every CS should be persisted via cascade" );
+            assertSame( ad.getId(), cs.getArrayDesign().getId(), "every CS should back-reference this AD" );
             assertNotNull( cs.getName() );
         }
     }
@@ -128,7 +128,7 @@ public class ArrayDesignFactoryTest extends BaseIntegrationTest {
             }
         }
         for ( int i = 0; i < 3; i++ ) {
-            assertTrue( "expected probeset_" + i + " in deterministic names", seen[i] );
+            assertTrue( seen[i], "expected probeset_" + i + " in deterministic names" );
         }
     }
 
@@ -143,9 +143,9 @@ public class ArrayDesignFactoryTest extends BaseIntegrationTest {
 
         assertEquals( n, ad.getCompositeSequences().size() );
         for ( CompositeSequence cs : ad.getCompositeSequences() ) {
-            assertNotNull( "every CS should have a BioSequence attached", cs.getBiologicalCharacteristic() );
-            assertNotNull( "BioSequence should be persisted (id assigned)",
-                    cs.getBiologicalCharacteristic().getId() );
+            assertNotNull( cs.getBiologicalCharacteristic(), "every CS should have a BioSequence attached" );
+            assertNotNull( cs.getBiologicalCharacteristic().getId(),
+                    "BioSequence should be persisted (id assigned)" );
         }
     }
 
@@ -155,8 +155,8 @@ public class ArrayDesignFactoryTest extends BaseIntegrationTest {
         ArrayDesign ad = arrayDesignFactory.oneColor().withTaxon( human ).build();
         createdADs.add( ad );
 
-        assertEquals( "primaryTaxon should be the supplied human",
-                human.getId(), ad.getPrimaryTaxon().getId() );
+        assertEquals( human.getId(), ad.getPrimaryTaxon().getId(),
+                "primaryTaxon should be the supplied human" );
     }
 
     @Test
@@ -174,7 +174,7 @@ public class ArrayDesignFactoryTest extends BaseIntegrationTest {
                 .build();
         createdADs.add( ad );
 
-        assertFalse( "AD persisted", ad.getId() == null );
-        assertTrue( "no probes requested means no CSes", ad.getCompositeSequences().isEmpty() );
+        assertFalse( ad.getId() == null, "AD persisted" );
+        assertTrue( ad.getCompositeSequences().isEmpty(), "no probes requested means no CSes" );
     }
 }
