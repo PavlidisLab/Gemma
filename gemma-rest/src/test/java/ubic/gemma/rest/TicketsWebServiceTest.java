@@ -110,10 +110,15 @@ public class TicketsWebServiceTest {
                 .thenReturn( Collections.singletonList( ticket ) );
         when( ticketService.countTickets( eq( true ), eq( 42L ), eq( TicketPriority.HIGH ) ) ).thenReturn( 1L );
 
-        PaginatedResponseDataObject<TicketValueObject> resp = webService.getTickets(
+        // Cursor parameter added in step 1o (CURSOR_PAGINATION_STEP1_PLAN.md); legacy
+        // offset-mode tests pass null and cast the Object result back to the legacy
+        // PaginatedResponseDataObject (cursor-mode tests live in TicketsWebServiceCursorTest).
+        @SuppressWarnings("unchecked")
+        PaginatedResponseDataObject<TicketValueObject> resp = ( PaginatedResponseDataObject<TicketValueObject> ) webService.getTickets(
                 true, 42L, TicketPriority.HIGH,
                 ubic.gemma.rest.util.args.OffsetArg.valueOf( "0" ),
-                ubic.gemma.rest.util.args.LimitArg.valueOf( "20" ) );
+                ubic.gemma.rest.util.args.LimitArg.valueOf( "20" ),
+                null );
 
         assertThat( resp.getData() ).hasSize( 1 );
         assertThat( resp.getData().get( 0 ).getTitle() ).isEqualTo( "Test ticket" );
@@ -135,7 +140,8 @@ public class TicketsWebServiceTest {
         webService.getTickets(
                 false, null, null,
                 ubic.gemma.rest.util.args.OffsetArg.valueOf( "0" ),
-                ubic.gemma.rest.util.args.LimitArg.valueOf( "20" ) );
+                ubic.gemma.rest.util.args.LimitArg.valueOf( "20" ),
+                null );
 
         verify( ticketService ).findTickets( false, null, null, 0, 20 );
     }

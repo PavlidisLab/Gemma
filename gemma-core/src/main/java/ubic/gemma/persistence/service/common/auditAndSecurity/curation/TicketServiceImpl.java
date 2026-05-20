@@ -26,6 +26,8 @@ import ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
 import ubic.gemma.persistence.service.AbstractService;
+import ubic.gemma.persistence.util.Cursor;
+import ubic.gemma.persistence.util.CursorPage;
 
 import java.util.Collection;
 import java.util.Date;
@@ -153,6 +155,13 @@ public class TicketServiceImpl extends AbstractService<Ticket> implements Ticket
     @Transactional(readOnly = true)
     public long countTickets( boolean openOnly, @Nullable Long assigneeId, @Nullable TicketPriority priority ) {
         return ticketDao.countTickets( openOnly, assigneeId, priority );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CursorPage<Ticket> findTicketsByCursor( boolean openOnly, @Nullable Long assigneeId,
+            @Nullable TicketPriority priority, @Nullable Cursor cursor, int limit ) {
+        return ticketDao.findTicketsByCursor( openOnly, assigneeId, priority, cursor, limit );
     }
 
     private static void bumpUpdated( Ticket t ) {
