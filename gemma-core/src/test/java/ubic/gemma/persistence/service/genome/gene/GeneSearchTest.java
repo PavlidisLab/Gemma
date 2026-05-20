@@ -29,7 +29,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.persistence.persister.Persister;
+import ubic.gemma.persistence.persister.GenomePersister;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.util.Collection;
@@ -48,7 +48,7 @@ public class GeneSearchTest extends BaseIntegrationTest5 {
     private TaxonService taxonService;
 
     @Autowired
-    private Persister persisterHelper;
+    private GenomePersister genomePersister;
 
     @Autowired
     private PersistentDummyObjectHelper testHelper;
@@ -68,7 +68,7 @@ public class GeneSearchTest extends BaseIntegrationTest5 {
         PhysicalLocation pl1 = PhysicalLocation.Factory.newInstance();
         Chromosome chromosome = Chromosome.Factory.newInstance( "X", null, testHelper.getTestPersistentBioSequence(), human );
 
-        chromosome = persisterHelper.persist( chromosome );
+        chromosome = genomePersister.persistChromosome( chromosome );
         pl1.setChromosome( chromosome );
         pl1.setNucleotide( 10000010L );
         pl1.setNucleotideLength( 1001 );

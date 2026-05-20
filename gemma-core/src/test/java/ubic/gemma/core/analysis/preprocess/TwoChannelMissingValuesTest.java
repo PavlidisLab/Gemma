@@ -34,6 +34,8 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.expression.experiment.EeWriteService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentPrePersistService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.io.InputStream;
@@ -57,6 +59,12 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest5 {
     @Autowired
     private ExpressionExperimentService eeService;
 
+    @Autowired
+    private EeWriteService eeWriteService;
+
+    @Autowired
+    private ExpressionExperimentPrePersistService expressionExperimentPrePersistService;
+
     @Test
     @Tag("slow")
     public void testMissingValue() throws Exception {
@@ -75,7 +83,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest5 {
         assertNotNull( result );
         ExpressionExperiment expExp = ( ExpressionExperiment ) ( ( Collection<?> ) result ).iterator().next();
 
-        expExp = persisterHelper.persist( expExp, persisterHelper.prepare( expExp ) );
+        expExp = eeWriteService.create( expExp, expressionExperimentPrePersistService.prepare( expExp ) );
         Collection<RawExpressionDataVector> calls = tcmv.computeMissingValues( expExp, 2.0, new ArrayList<Double>() );
         assertEquals( 500, calls.size() );
         BioAssayDimension dim = calls.iterator().next().getBioAssayDimension();
@@ -131,7 +139,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest5 {
         assertNotNull( result );
         ExpressionExperiment expExp = ( ExpressionExperiment ) ( ( Collection<?> ) result ).iterator().next();
 
-        expExp = persisterHelper.persist( expExp, persisterHelper.prepare( expExp ) );
+        expExp = eeWriteService.create( expExp, expressionExperimentPrePersistService.prepare( expExp ) );
         Collection<RawExpressionDataVector> calls = tcmv.computeMissingValues( expExp, 2.0, new ArrayList<Double>() );
 
         assertEquals( 20, calls.size() );
@@ -163,7 +171,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest5 {
         assertNotNull( result );
         ExpressionExperiment expExp = ( ExpressionExperiment ) ( ( Collection<?> ) result ).iterator().next();
 
-        expExp = persisterHelper.persist( expExp, persisterHelper.prepare( expExp ) );
+        expExp = eeWriteService.create( expExp, expressionExperimentPrePersistService.prepare( expExp ) );
 
         Collection<RawExpressionDataVector> calls = tcmv.computeMissingValues( expExp, 2.0, new ArrayList<Double>() );
         // print( calls );
@@ -222,7 +230,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest5 {
         assertNotNull( result );
         ExpressionExperiment expExp = ( ExpressionExperiment ) ( ( Collection<?> ) result ).iterator().next();
 
-        expExp = persisterHelper.persist( expExp, persisterHelper.prepare( expExp ) );
+        expExp = eeWriteService.create( expExp, expressionExperimentPrePersistService.prepare( expExp ) );
         Collection<RawExpressionDataVector> calls = tcmv.computeMissingValues( expExp, 2.0, new ArrayList<Double>() );
 
         assertEquals( 10, calls.size() );

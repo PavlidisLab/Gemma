@@ -27,6 +27,7 @@ import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProduct;
+import ubic.gemma.persistence.persister.GenomePersister;
 
 import java.util.HashSet;
 
@@ -64,6 +65,9 @@ public class GeneWriteServiceTest extends BaseSpringContextTest5 {
     @Autowired
     private GeneWriteService geneWriteService;
 
+    @Autowired
+    private GenomePersister genomePersister;
+
     /**
      * Quirk 4.3 (migration plan): NCBI ID merge with comma-separated
      * previousNcbiGeneId. NCBI sometimes merges two formerly distinct gene
@@ -98,7 +102,7 @@ public class GeneWriteServiceTest extends BaseSpringContextTest5 {
         gp.setNcbiGi( RandomStringUtils.insecure().nextNumeric( 8 ) );
         existing.getProducts().add( gp );
 
-        Gene persisted = ( Gene ) this.persisterHelper.persist( existing );
+        Gene persisted = this.genomePersister.persistGene( existing );
         assertNotNull( persisted.getId() );
         assertEquals( Integer.valueOf( oldNcbiId ), persisted.getNcbiGeneId() );
 
@@ -153,7 +157,7 @@ public class GeneWriteServiceTest extends BaseSpringContextTest5 {
         gp.setNcbiGi( RandomStringUtils.insecure().nextNumeric( 8 ) );
         existing.getProducts().add( gp );
 
-        Gene persisted = ( Gene ) this.persisterHelper.persist( existing );
+        Gene persisted = this.genomePersister.persistGene( existing );
 
         Gene newInfo = Gene.Factory.newInstance();
         newInfo.setName( symbol );
@@ -249,7 +253,7 @@ public class GeneWriteServiceTest extends BaseSpringContextTest5 {
         gp.setNcbiGi( oldGi );
         existing.getProducts().add( gp );
 
-        Gene persisted = ( Gene ) this.persisterHelper.persist( existing );
+        Gene persisted = this.genomePersister.persistGene( existing );
         assertNotNull( persisted.getId() );
         assertEquals( 1, persisted.getProducts().size(), "fixture should have exactly one product before update" );
         assertEquals( oldGi, persisted.getProducts().iterator().next().getNcbiGi() );
