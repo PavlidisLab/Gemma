@@ -5,9 +5,9 @@ import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -63,7 +63,7 @@ import ubic.gemma.persistence.service.expression.experiment.SingleCellExpression
 import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 import ubic.gemma.persistence.util.*;
 import ubic.gemma.rest.analytics.AnalyticsProvider;
-import ubic.gemma.rest.util.BaseJerseyTest;
+import ubic.gemma.rest.util.BaseJerseyTest5;
 import ubic.gemma.rest.util.JacksonConfig;
 import ubic.gemma.rest.util.args.*;
 
@@ -91,7 +91,7 @@ import static ubic.gemma.rest.util.Assertions.assertThat;
 @ContextConfiguration
 @TestExecutionListeners(value = WithSecurityContextTestExecutionListener.class,
         mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
-public class DatasetsWebServiceTest extends BaseJerseyTest {
+public class DatasetsWebServiceTest extends BaseJerseyTest5 {
 
     @Import(JacksonConfig.class)
     @Configuration
@@ -338,7 +338,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
 
     private ExpressionExperiment ee;
 
-    @Before
+    @BeforeEach
     public void setUpMocks() throws TimeoutException {
         ee = ExpressionExperiment.Factory.newInstance();
         //noinspection unchecked
@@ -350,7 +350,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         when( expressionExperimentService.getSort( any(), any(), any() ) ).thenAnswer( a -> Sort.by( null, a.getArgument( 0 ), a.getArgument( 1 ), a.getArgument( 2 ) ) );
     }
 
-    @After
+    @AfterEach
     public void resetMocks() {
         reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService, taxonArgService, geneArgService, searchService );
     }

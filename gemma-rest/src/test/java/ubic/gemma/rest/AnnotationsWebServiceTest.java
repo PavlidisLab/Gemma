@@ -1,9 +1,9 @@
 package ubic.gemma.rest;
 
 import io.swagger.v3.oas.models.OpenAPI;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -38,7 +38,7 @@ import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.rest.analytics.AnalyticsProvider;
-import ubic.gemma.rest.util.BaseJerseyTest;
+import ubic.gemma.rest.util.BaseJerseyTest5;
 import ubic.gemma.rest.util.JacksonConfig;
 import ubic.gemma.rest.util.QueriedAndFilteredAndPaginatedResponseDataObject;
 import ubic.gemma.rest.util.SortValueObject;
@@ -62,7 +62,7 @@ import static ubic.gemma.rest.util.Assertions.assertThat;
 @ContextConfiguration
 @TestExecutionListeners(value = WithSecurityContextTestExecutionListener.class,
         mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
-public class AnnotationsWebServiceTest extends BaseJerseyTest {
+public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
 
     @Configuration
     @TestComponent
@@ -152,14 +152,14 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest {
     @Autowired
     private OntologyService ontologyService;
 
-    @Before
+    @BeforeEach
     public void setUpMocks() {
         Taxon taxon = Taxon.Factory.newInstance();
         taxon.setId( 1L );
         when( taxonService.findByCommonName( "human" ) ).thenReturn( taxon );
     }
 
-    @After
+    @AfterEach
     public void resetMocks() {
         reset( searchService, taxonService, ontologyService );
     }
