@@ -377,8 +377,10 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest5
         assertThat( scExpressionExperimentService.getSingleCellDimensions( ee ) )
                 .hasSize( 2 );
 
-        verify( auditTrailService ).addUpdateEvent( ee, DataAddedEvent.class, "Added 10 vectors for " + qt + " [Preferred] with dimension " + scd + ".", ( String ) null );
-        verify( auditTrailService ).addUpdateEvent( ee, DataAddedEvent.class, "Added 10 vectors for " + qt2 + " with dimension " + scd2 + ".", ( String ) null );
+        // DataAddedEvent rows are written by AuditedAspect under @Audited on
+        // addSingleCellDataVectors; this test context wires the impl bean
+        // directly with no AOP proxy, so aspect-level coverage lives in
+        // AuditedAspectTest.
     }
 
     @Test
@@ -419,7 +421,10 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest5
                     assertThat( matrix.getQuantitationType() ).isEqualTo( qt );
                 } );
 
-        verify( auditTrailService ).addUpdateEvent( ee, DataAddedEvent.class, "Added 10 vectors for " + qt + " with dimension " + scd + ".", ( String ) null );
+        // DataAddedEvent row is written by AuditedAspect under @Audited on
+        // addSingleCellDataVectors; this test context wires the impl bean
+        // directly with no AOP proxy, so aspect-level coverage lives in
+        // AuditedAspectTest.
     }
 
     @Test
@@ -432,7 +437,8 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest5
         assertThatThrownBy( () -> scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors, null, true, false ) )
                 .isInstanceOf( IllegalArgumentException.class )
                 .hasMessage( "There is already a quantitation type named counts in " + ee + "." );
-        verify( auditTrailService ).addUpdateEvent( ee, DataAddedEvent.class, "Added 10 vectors for " + qt + " with dimension " + scd + ".", ( String ) null );
+        // DataAddedEvent row is written by AuditedAspect under @Audited on
+        // addSingleCellDataVectors; aspect-level coverage lives in AuditedAspectTest.
     }
 
     @Test
@@ -459,9 +465,9 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest5
         ExperimentalFactor ctf2 = scExpressionExperimentService.getCellTypeFactor( ee ).orElseThrow( AssertionError::new );
         assertThat( ctf2.getName() ).isEqualTo( "cell type" );
         assertThat( ctf2.getDescription() ).isEqualTo( "Cell type factor pre-populated from " + ctl2 + "." );
-        verify( auditTrailService ).addUpdateEvent( ee, DataAddedEvent.class, "Added 10 vectors for " + qt + " [Preferred] with dimension " + scd + ".", ( String ) null );
+        // DataAddedEvent rows are written by AuditedAspect under @Audited on
+        // addSingleCellDataVectors; aspect-level coverage lives in AuditedAspectTest.
         verify( auditTrailService ).addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class, "Created a cell type factor " + ctf + " from preferred cell type assignment " + ctl + "." );
-        verify( auditTrailService ).addUpdateEvent( ee, DataAddedEvent.class, "Added 10 vectors for " + qt2 + " with dimension " + scd2 + ".", ( String ) null );
         verify( auditTrailService ).addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class, "Removed the cell type factor " + ctf + "." );
         verify( auditTrailService ).addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class, "Created a cell type factor " + ctf2 + " from preferred cell type assignment " + ctl2 + "." );
     }
@@ -492,8 +498,9 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest5
                 .doesNotContainAnyElementsOf( originalVectors )
                 .containsAll( vectors2 );
 
-        verify( auditTrailService ).addUpdateEvent( ee, DataAddedEvent.class, "Added 10 vectors for " + qt + " with dimension " + scd + ".", ( String ) null );
-        verify( auditTrailService ).addUpdateEvent( ee, DataReplacedEvent.class, "Replaced 10 vectors with 10 vectors for " + qt + " with dimension " + scd2 + "." );
+        // DataAddedEvent / DataReplacedEvent rows are written by AuditedAspect under
+        // @Audited on addSingleCellDataVectors / replaceSingleCellDataVectors;
+        // aspect-level coverage lives in AuditedAspectTest.
     }
 
     @Test
@@ -520,12 +527,10 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest5
         assertThat( ee.getSingleCellExpressionDataVectors() )
                 .hasSize( 10 );
 
-        verify( auditTrailService )
-                .addUpdateEvent( ee, DataAddedEvent.class, "Added 10 vectors for " + qt + " with dimension " + scd + ".", ( String ) null );
-        // Audit row for the removal is written by AuditedAspect under
-        // @AuditedConditional in production; this test context wires the impl
-        // bean directly with no AOP proxy, so the aspect doesn't run here.
-        // Aspect-level coverage lives in AuditedAspectTest.
+        // DataAddedEvent + DataRemovedEvent rows are written by AuditedAspect under
+        // @Audited / @AuditedConditional on the corresponding service methods; this
+        // test context wires the impl bean directly with no AOP proxy, so aspect-
+        // level coverage lives in AuditedAspectTest.
     }
 
     @Test
@@ -555,9 +560,10 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest5
         assertThat( ee.getSingleCellExpressionDataVectors() )
                 .hasSize( 10 );
 
-        verify( auditTrailService ).addUpdateEvent( ee, DataAddedEvent.class, "Added 10 vectors for " + qt + " with dimension " + scd + ".", ( String ) null );
-        // See testRemoveVectors: the removal audit is now driven by
-        // @AuditedConditional, which is inert in this AOP-less test context.
+        // DataAddedEvent + DataRemovedEvent rows are written by AuditedAspect under
+        // @Audited / @AuditedConditional on the corresponding service methods; this
+        // test context wires the impl bean directly with no AOP proxy, so aspect-
+        // level coverage lives in AuditedAspectTest.
     }
 
     @Test
