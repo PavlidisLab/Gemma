@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
-import ubic.basecode.util.FileTools;
+import ubic.gemma.core.util.FileTools;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.TsvUtils;
 import ubic.gemma.model.common.description.AnnotationValueObject;

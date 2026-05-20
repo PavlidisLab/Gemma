@@ -20,7 +20,7 @@ package ubic.gemma.core.loader.genome;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
-import ubic.basecode.util.FileTools;
+import ubic.gemma.core.util.FileTools;
 import ubic.gemma.core.config.Settings;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 

@@ -28,7 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Component;
-import ubic.basecode.util.FileTools;
+import ubic.gemma.core.util.FileTools;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;

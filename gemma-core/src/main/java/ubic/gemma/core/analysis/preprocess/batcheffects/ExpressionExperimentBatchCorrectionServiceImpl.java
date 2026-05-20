@@ -25,7 +25,7 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.dataStructure.matrix.ObjectMatrix;
 import ubic.basecode.dataStructure.matrix.ObjectMatrixImpl;
 import ubic.basecode.math.MatrixStats;
-import ubic.basecode.util.FileTools;
+import ubic.gemma.core.util.FileTools;
 import ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort;

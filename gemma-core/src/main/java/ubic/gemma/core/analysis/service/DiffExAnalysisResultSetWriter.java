@@ -3,7 +3,7 @@ package ubic.gemma.core.analysis.service;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
-import ubic.basecode.util.FileTools;
+import ubic.gemma.core.util.FileTools;
 import ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils;

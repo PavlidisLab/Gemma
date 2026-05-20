@@ -27,7 +27,7 @@ import org.apache.commons.logging.LogFactory;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.basecode.util.ConfigUtils;
-import ubic.basecode.util.FileTools;
+import ubic.gemma.core.util.FileTools;
 import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.profiling.StopWatchUtils;
 import ubic.gemma.core.util.ShellUtils;
