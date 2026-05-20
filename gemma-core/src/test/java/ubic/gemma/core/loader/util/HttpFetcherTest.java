@@ -18,10 +18,11 @@
  */
 package ubic.gemma.core.loader.util;
 
-import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.core.loader.util.fetcher.HttpFetcher;
 import ubic.gemma.core.util.test.category.SlowTest;
 
@@ -29,11 +30,14 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 /**
  * @author pavlidis
  */
 @Category(SlowTest.class)
-public class HttpFetcherTest extends TestCase {
+public class HttpFetcherTest {
 
     private static final Log log = LogFactory.getLog( HttpFetcherTest.class.getName() );
     private File f;
@@ -41,16 +45,17 @@ public class HttpFetcherTest extends TestCase {
     /*
      * Test method for 'ubic.gemma.core.loader.loaderutils.HttpFetcher.fetch(String)'
      */
+    @Test
     public void testFetch() {
         HttpFetcher hf = new HttpFetcher();
 
         try {
             hf.setForce( true );
             Collection<File> results = hf.fetch( "http://www.yahoo.com" );
-            TestCase.assertNotNull( results );
-            TestCase.assertTrue( results.size() > 0 && results.iterator().next() != null );
+            assertNotNull( results );
+            assertTrue( results.size() > 0 && results.iterator().next() != null );
             f = results.iterator().next();
-            TestCase.assertTrue( f.length() > 0 );
+            assertTrue( f.length() > 0 );
         } catch ( Exception e ) {
             if ( e.getCause() instanceof IOException ) {
                 HttpFetcherTest.log.error( "Got IOException, skipping test" );
@@ -59,9 +64,8 @@ public class HttpFetcherTest extends TestCase {
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored") // Does not matter
-    @Override
+    @AfterEach
     protected void tearDown() throws Exception {
-        super.tearDown();
         if ( f != null ) {
             f.delete();
             f.getParentFile().delete();
