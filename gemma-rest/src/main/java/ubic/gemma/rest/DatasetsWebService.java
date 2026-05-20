@@ -1315,12 +1315,24 @@ public class DatasetsWebService {
             @PathParam("dataset") DatasetArg<?> datasetArg
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
-        // Cache-aware lookup. generateSummary(id) is the heavyweight cache-miss path (single
-        // ~30-join SELECT + getStats fan-out, ~10s over a tunnel); retrieveSummaryObjects
-        // checks the EESTATS cache first and only falls back to generateSummary on miss.
-        ExpressionExperimentDetailsValueObject details = expressionExperimentReportService
-                .retrieveSummaryObjects( Collections.singleton( ee.getId() ) )
-                .stream().findFirst().orElse( null );
+        CurationDetails cd = ee.getCurationDetails();
+
+        // Skip ExpressionExperimentReportService.generateSummary(id) entirely. That call
+        // is the heavyweight ~30-join SELECT on INVESTIGATION/DATABASE_ENTRY/EXPERIMENTAL_DESIGN/
+        // CURATION_DETAILS/AUDIT_EVENT*3/AUDIT_EVENT_TYPE*3/GEEQ + ACL subselects + a getStats
+        // fan-out. It dominated the cold cost of /pipelineStatus (~10-14s against prod gemd
+        // through a tunnel). pipelineStatus only needs five fields out of the resulting VO;
+        // each can be computed from cheap, targeted queries.
+
+        // hasDifferentialExpressionAnalysis: one fast WHERE id IN (?) lookup on
+        // ANALYSIS.EXPERIMENT_FK rather than a separate cached-set materialization.
+        boolean hasDea = !differentialExpressionAnalysisService
+                .getExperimentsWithAnalysis( Collections.singleton( ee.getId() ), true ).isEmpty();
+
+        // hasCoexpressionAnalysis: the coexpression subsystem was removed in Phase 1c. The
+        // VO field was kept for API compatibility but is always false (see
+        // ExpressionExperimentDaoImpl.populateAnalysisInformation javadoc).
+        boolean hasCoex = false;
 
         // Batch-fetch every audit-event type the pipeline-step loop + GEEQ block need in a
         // single round-trip. Replaces ~13 individual getLastEvent(ee, type) calls — each of
@@ -1347,17 +1359,33 @@ public class DatasetsWebService {
         result.setExperimentId( ee.getId() );
         result.setSteps( steps );
         result.setHasBatchInformation( expressionExperimentBatchInformationService.checkHasBatchInfo( ee ) );
-        result.setHasDifferentialExpressionAnalysis( details != null && details.getHasDifferentialExpressionAnalysis() );
-        result.setHasCoexpressionAnalysis( details != null && details.getHasCoexpressionAnalysis() );
-        result.setTroubled( details != null && details.getTroubled() );
-        result.setTroubleDetails( details != null ? details.getTroubleDetails( false ) : "" );
-        CurationDetails cd = ee.getCurationDetails();
+        result.setHasDifferentialExpressionAnalysis( hasDea );
+        result.setHasCoexpressionAnalysis( hasCoex );
+        result.setTroubled( cd.getTroubled() );
+        // troubleDetails was sourced from ExpressionExperimentDetailsValueObject.getTroubleDetails(),
+        // which concatenated the EE's own trouble note with each troubled ArrayDesign's
+        // trouble details. Reconstructing the full string would re-introduce the array-design
+        // fetch cost. For pipelineStatus (a status-strip endpoint), empty string when not
+        // troubled is the common case; when troubled, surface the EE's CurationDetails note
+        // and leave per-AD enrichment to dedicated endpoints that already load the array
+        // designs.
+        result.setTroubleDetails( cd.getTroubled() && cd.getCurationNote() != null ? cd.getCurationNote() : "" );
         result.setNeedsAttention( cd.getNeedsAttention() );
         if ( SecurityUtil.isUserAdmin() ) {
             result.setCurationNote( cd.getCurationNote() );
         }
         result.setIsPublic( securityService.isPublic( ee ) );
-        GeeqValueObject geeq = details != null ? details.getGeeq() : null;
+
+        // Hydrate GEEQ via geeqService rather than touching ee.getGeeq() directly: the
+        // GEEQ field on ExpressionExperiment is lazy, and the @Transactional that loaded
+        // ee has already ended by the time this handler runs, so accessing it here would
+        // throw LazyInitializationException ("no session"). The proxy still exposes its
+        // ID without initialization, which we use to fetch the VO inside geeqService's
+        // own transaction.
+        Geeq geeqProxy = ee.getGeeq();
+        GeeqValueObject geeq = geeqProxy != null && geeqProxy.getId() != null
+                ? geeqService.loadValueObjectById( geeqProxy.getId() )
+                : null;
         if ( geeq != null ) {
             AuditEvent geeqEvent = lookupAuditEvent( auditEventsByType, GeeqEvent.class, ee );
             if ( geeqEvent != null ) {
