@@ -19,17 +19,17 @@
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.After;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
+import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest5;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.util.test.NetworkAvailable;
-import ubic.gemma.core.util.test.NetworkAvailableRule;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
@@ -39,16 +39,14 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import java.util.Collection;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author joseph
  */
-public class RawAndProcessedExpressionDataVectorServiceGeoTest extends AbstractGeoServiceTest {
-
-    @Rule
-    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
+@ExtendWith(NetworkAvailableExtension.class)
+public class RawAndProcessedExpressionDataVectorServiceGeoTest extends AbstractGeoServiceTest5 {
 
     @Autowired
     protected GeoService geoService;
@@ -59,7 +57,7 @@ public class RawAndProcessedExpressionDataVectorServiceGeoTest extends AbstractG
 
     private ExpressionExperiment newee = null;
 
-    @After
+    @AfterEach
     public void tearDown() {
         try {
             if ( newee != null && newee.getId() != null ) {
@@ -104,7 +102,7 @@ public class RawAndProcessedExpressionDataVectorServiceGeoTest extends AbstractG
             }
         }
 
-        assertNotNull( "QT is null", qt );
+        assertNotNull( qt, "QT is null" );
 
         Collection<BulkExpressionDataVector> preferredVectors = rawAndProcessedService.find( qt );
 
