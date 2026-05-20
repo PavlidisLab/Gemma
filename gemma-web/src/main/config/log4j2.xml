@@ -117,9 +117,10 @@
         <Logger name="org.springframework.security.authentication.event.LoggerListener" level="ERROR"/>
         <Logger name="org.springframework.web.servlet.PageNotFound" level="ERROR"/>
 
-        <Logger name="ubic.basecode" level="INFO"/>
-        <Logger name="ubic.basecode.ontology.model.PropertyFactory" level="ERROR"/>
-        <Logger name="ubic.basecode.ontology.providers" level="WARN"/>
+        <!-- baseCode classes were pulled in-tree in Phase 3 (ontology, util,
+             Configuration). Loggers updated to the new package names. -->
+        <Logger name="ubic.gemma.core.ontology.basecode.jena.PropertyFactory" level="ERROR"/>
+        <Logger name="ubic.gemma.core.ontology.basecode.providers" level="WARN"/>
 
         <Logger name="ubic.gemma" level="INFO">
             <AppenderRef ref="progressUpdate"/>

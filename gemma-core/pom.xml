@@ -151,14 +151,10 @@
             <artifactId>hibernate-search-backend-lucene</artifactId>
         </dependency>
 
-        <!-- Phase 3 ontology Step 1: in-Gemma baseCode ontology indexer port
-             (SEARCH_RECCE.md Section 6). baseCode 1.1.34-RENOVATIONS-SNAPSHOT still
-             transitively pulls Jena 2.13.0 / TDB 1.1.2. We add Jena 4.10.0's TDB2 +
-             text-index modules directly, and the parent POM dependencyManagement
-             pins every Jena artifact to 4.10.0 so the transitive 2.x leak gets
-             overridden across the whole graph. Step 1 is POM-only; the actual
-             OntologySearchService port (TextDataset wiring, OBO label indexing)
-             lands in Step 2. -->
+        <!-- Phase 3 ontology indexer (SEARCH_RECCE.md Section 6): the in-tree
+             baseCode-derived ontology classes need Jena 4.10.0's TDB2 +
+             text-index modules. Declared here at module scope; the parent POM
+             dependencyManagement pins every Jena artifact to 4.10.0. -->
         <dependency>
             <groupId>org.apache.jena</groupId>
             <artifactId>jena-tdb2</artifactId>
@@ -264,8 +260,10 @@
             <version>0.7.9</version>
         </dependency>
 
-        <!-- MTJ, for reading MatrixMarket formats -->
-        <!-- this is also declared in baseCode, but we use it explicitly for reading single-cell data -->
+        <!-- MTJ, for reading MatrixMarket formats (single-cell data).
+             Also reachable transitively via the in-tree port of baseCode's
+             CompressedSparseDoubleMatrix; declared here explicitly so the
+             intent is documented at the call site. -->
         <dependency>
             <groupId>com.googlecode.matrix-toolkits-java</groupId>
             <artifactId>mtj</artifactId>

@@ -1,10 +1,22 @@
 # baseCode dep audit — post-ontology pull-in
 
+> **STATUS: COMPLETE / superseded (2026-05-19).** The recommendation in this
+> doc ("Keep the dep") was overtaken by events. Between this audit and
+> `b6acd05c80`, the matrix, math, linearmodels, graphics, util, and
+> Configuration subsystems were all ported in-tree (see commit log:
+> `basecode-matrix-port`, `basecode-math-linearmodels-port`,
+> `basecode-readers-port`, `basecode-util-port` series, and
+> `basecode-configuration-port`). At `9f216558d5` (2026-05-19) the
+> `baseCode` Maven dep was removed; zero `import ubic.basecode.*` lines
+> remain in the source tree. Kept for historical context: the inventory
+> + per-package summary below documents what we ported and roughly where
+> each piece landed.
+
 **Date:** 2026-05-19
 **Branch:** `basecode-dep-audit` off `phase2-acl-migrate` @ `a37a7e73a9`
 **Question:** Now that the ontology classes are pulled in-tree, what `ubic.basecode.*` references remain in Gemma, and can we drop `baseCode-1.1.34-RENOVATIONS-SNAPSHOT` from the Maven graph?
 
-**TL;DR:** No. **Keep the dep.** baseCode is still the home of three substantial subsystems Gemma relies on (matrix + linear-algebra core, statistics + linear-models, FileTools), with **248 import sites across 142 files**. Pulling these in-tree is a multi-month project, not a session.
+**Original TL;DR (now obsolete — actual outcome: dep dropped):** No. **Keep the dep.** baseCode is still the home of three substantial subsystems Gemma relies on (matrix + linear-algebra core, statistics + linear-models, FileTools), with **248 import sites across 142 files**. Pulling these in-tree is a multi-month project, not a session.
 
 ---
 
