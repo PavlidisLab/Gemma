@@ -130,7 +130,7 @@ public class EeWriteServiceImpl implements EeWriteService {
      * {@code BeanNotOfRequiredTypeException}. The protected helpers used here
      * ({@code doPersist}, {@code persistTaxon}, {@code getSessionFactory},
      * {@code fillInDatabaseEntry}, {@code persistExternalDatabase}) live on
-     * {@link AbstractPersister} and are not part of the public interface;
+     * {@code AbstractPersister} (pre-S2e) and are not part of the public interface;
      * access them via {@link #persister()} which unwraps the proxy to the
      * underlying {@link PersisterHelperImpl}.
      */
@@ -143,7 +143,7 @@ public class EeWriteServiceImpl implements EeWriteService {
     /**
      * Returns the underlying {@link PersisterHelperImpl}, unwrapping the
      * Spring AOP proxy if necessary. Needed to reach the protected helpers
-     * inherited from {@link AbstractPersister} that are not on the
+     * inherited from {@code AbstractPersister} (pre-S2e) that are not on the
      * {@link PersisterHelper} interface. Goes away with the persister chain
      * in E5.
      */
