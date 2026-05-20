@@ -27,7 +27,6 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationMissingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationFetchingEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.SingleBatchDeterminationEvent;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -173,11 +172,13 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
 
         if ( bf != null ) {
             if ( bf.getId() == null ) { // hack to signal a single batch
-                this.auditTrailService.addUpdateEvent( ee, SingleBatchDeterminationEvent.class, "Single batch experiment",
-                        "RNA-seq experiment (most likely a single lane)" );
+                // Branch-extracted: dispatch through the helper bean so the @Audited
+                // aspect can emit a single deterministic event class per call.
+                batchInfoPopulationHelperService.recordSingleBatchDetermination( ee,
+                        "Single batch experiment (RNA-seq experiment, most likely a single lane)" );
             } else {
-                this.auditTrailService.addUpdateEvent( ee, BatchInformationFetchingEvent.class, bf.getFactorValues().size()
-                        + " batches." );
+                batchInfoPopulationHelperService.recordBatchInformationFetched( ee,
+                        bf.getFactorValues().size() + " batches." );
             }
         }
 
@@ -216,13 +217,17 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
                         + " batches." );
 
         if ( numberOfBatches == 1 ) {
-            this.auditTrailService.addUpdateEvent( ee, SingleBatchDeterminationEvent.class, "Single batch experiment",
-                    "Dates of sample runs: " + datesString );
+            // Branch-extracted: dispatch through the helper bean so the @Audited
+            // aspect can emit a single deterministic event class per call. The
+            // dates-of-runs detail string is folded into the note since the
+            // typed @Audited path uses addUpdateEventWithPayload, which has no
+            // separate detail column.
+            batchInfoPopulationHelperService.recordSingleBatchDetermination( ee,
+                    "Single batch experiment; dates of sample runs: " + datesString );
         } else {
-            this.auditTrailService.addUpdateEvent( ee, BatchInformationFetchingEvent.class,
+            batchInfoPopulationHelperService.recordBatchInformationFetched( ee,
                     batchInfoParser.getScanDateExtractor().getClass().getSimpleName() + "; " + numberOfBatches
-                            + " batches.",
-                    "Dates of sample runs: " + datesString );
+                            + " batches; dates of sample runs: " + datesString );
         }
     }
 
