@@ -18,12 +18,14 @@
  */
 package ubic.gemma.persistence.persister;
 
+import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.common.Identifiable;
@@ -35,9 +37,11 @@ import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.util.BusinessKey;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -168,6 +172,46 @@ public class RelationshipPersister {
         entity.getExperiments().addAll( setMembers );
 
         return expressionExperimentSetDao.create( entity );
+    }
+
+    /**
+     * Persister-shrink S3 public entry point: persist a single
+     * {@link Gene2GOAssociation}. Owns the {@link FlushMode#MANUAL} window
+     * formerly carried by {@link PersisterHelperImpl#persist(ubic.gemma.model.common.Identifiable)}.
+     */
+    @Transactional
+    public Gene2GOAssociation persistGene2GOAssociation( Gene2GOAssociation association ) {
+        try {
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.MANUAL );
+            Gene2GOAssociation result = this.persistGene2GOAssociation( association, new HashMap<>() );
+            sessionFactory.getCurrentSession().flush();
+            return result;
+        } finally {
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.AUTO );
+        }
+    }
+
+    /**
+     * Persister-shrink S3 public entry point: persist a batch of
+     * {@link Gene2GOAssociation}s. Equivalent to the {@code persist(Collection)}
+     * arm formerly routed through {@link PersisterHelperImpl#persist(Collection)}
+     * with each element dispatched through the Gene2GOAssociation arm.
+     * Shares a single xdbCache across the batch for efficiency.
+     */
+    @Transactional
+    public List<Gene2GOAssociation> persistGene2GOAssociations( Collection<Gene2GOAssociation> associations ) {
+        try {
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.MANUAL );
+            Map<String, ExternalDatabase> xdbCache = new HashMap<>();
+            List<Gene2GOAssociation> result = new ArrayList<>( associations.size() );
+            for ( Gene2GOAssociation a : associations ) {
+                result.add( this.persistGene2GOAssociation( a, xdbCache ) );
+            }
+            sessionFactory.getCurrentSession().flush();
+            return result;
+        } finally {
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.AUTO );
+        }
     }
 
     /**

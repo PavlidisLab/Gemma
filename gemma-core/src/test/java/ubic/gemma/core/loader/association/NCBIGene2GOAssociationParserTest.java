@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.core.io.ClassPathResource;
 import ubic.gemma.core.util.test.BaseSpringContextTest5;
+import ubic.gemma.persistence.persister.RelationshipPersister;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 
 import java.io.InputStream;
@@ -43,6 +44,9 @@ public class NCBIGene2GOAssociationParserTest extends BaseSpringContextTest5 {
     @Autowired
     private Gene2GOAssociationService gene2GOAssociationService;
 
+    @Autowired
+    private RelationshipPersister relationshipPersister;
+
     /*
      * Configure parser and loader. Injecting the parser and loader with their dependencies.
      */
@@ -51,7 +55,7 @@ public class NCBIGene2GOAssociationParserTest extends BaseSpringContextTest5 {
         gene2GOAssociationService.removeAll();
         gene2GOAssLoader = new NCBIGene2GOAssociationLoader();
         gene2GOAssLoader.setParser( new NCBIGene2GOAssociationParser( taxonService.loadAll() ) );
-        gene2GOAssLoader.setPersisterHelper( this.persisterHelper );
+        gene2GOAssLoader.setRelationshipPersister( relationshipPersister );
     }
 
     /*
