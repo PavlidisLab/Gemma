@@ -15,18 +15,18 @@
 package ubic.gemma.core.analysis.preprocess;
 
 import org.hibernate.ObjectNotFoundException;
-import org.junit.After;
-import org.junit.Assume;
-import org.junit.Rule;
-import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import ubic.gemma.core.util.matrix.DoubleMatrix;
 import ubic.gemma.core.util.matrix.DoubleMatrixReader;
 import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.loader.expression.DataUpdater;
-import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
+import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest5;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
@@ -34,7 +34,7 @@ import ubic.gemma.core.loader.expression.sequencing.SequencingMetadata;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.security.authorization.acl.AclTestUtils;
 import ubic.gemma.core.util.test.NetworkAvailable;
-import ubic.gemma.core.util.test.NetworkAvailableRule;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.core.util.test.category.GeoTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.quantitationtype.*;
@@ -51,16 +51,14 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import java.io.InputStream;
 import java.util.*;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author ptan
  */
 @Category(GeoTest.class)
-public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
-
-    @Rule
-    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
+@ExtendWith(NetworkAvailableExtension.class)
+public class MeanVarianceServiceTest extends AbstractGeoServiceTest5 {
 
     @Autowired
     private MeanVarianceService meanVarianceService;
@@ -81,7 +79,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
 
     private ExpressionExperiment ee;
 
-    @After
+    @AfterEach
     public void after() {
         if ( ee != null ) {
             eeService.remove( ee );
@@ -205,7 +203,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
             ee = ( ExpressionExperiment ) results.iterator().next();
         } catch ( AccessDeniedException e ) {
             // see https://github.com/PavlidisLab/Gemma/issues/206
-            Assume.assumeNoException( e );
+            Assumptions.abort( e.getMessage() );
         } catch ( AlreadyExistsInSystemException e ) {
             throw new IllegalStateException( "Need to remove this data set before test is run" );
         }
@@ -213,7 +211,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
         try {
             ee = eeService.thaw( ee );
         } catch ( ObjectNotFoundException e ) {
-            Assume.assumeNoException( e );
+            Assumptions.abort( e.getMessage() );
         }
 
         this.createOrUpdateQt( ScaleType.COUNT );
@@ -347,7 +345,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
             results = geoService.fetchAndLoad( "GSE2982", false, false, false );
         } catch ( AlreadyExistsInSystemException e ) {
             ee = ( ( Collection<ExpressionExperiment> ) e.getData() ).iterator().next();
-            Assume.assumeNoException( e );
+            Assumptions.abort( e.getMessage() );
             return;
         }
 

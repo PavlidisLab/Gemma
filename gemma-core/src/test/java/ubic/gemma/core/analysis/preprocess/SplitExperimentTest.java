@@ -20,10 +20,10 @@
 package ubic.gemma.core.analysis.preprocess;
 
 import ubic.gemma.core.security.SecurityService;
-import org.junit.After;
-import org.junit.Rule;
-import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.FileTools;
 import ubic.gemma.core.loader.entrez.EntrezUtils;
@@ -31,9 +31,9 @@ import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.core.util.test.NetworkAvailable;
-import ubic.gemma.core.util.test.NetworkAvailableRule;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -49,18 +49,16 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.*;
-import static org.junit.Assume.assumeNoException;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.abort;
 
 /**
  *
  *
  * @author paul
  */
-public class SplitExperimentTest extends BaseSpringContextTest {
-
-    @Rule
-    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
+@ExtendWith(NetworkAvailableExtension.class)
+public class SplitExperimentTest extends BaseSpringContextTest5 {
 
     @Autowired
     private SplitExperimentService splitService;
@@ -100,7 +98,7 @@ public class SplitExperimentTest extends BaseSpringContextTest {
         } catch ( AlreadyExistsInSystemException e ) {
             //noinspection unchecked
             ees = ( Collection<ExpressionExperiment> ) e.getData();
-            assumeNoException( e );
+            abort( e.getMessage() );
         }
 
         ExpressionExperiment ee = ees.iterator().next();
@@ -181,7 +179,7 @@ public class SplitExperimentTest extends BaseSpringContextTest {
         } catch ( AlreadyExistsInSystemException e ) {
             //noinspection unchecked
             ees = ( ( Collection<ExpressionExperiment> ) e.getData() );
-            assumeNoException( e );
+            abort( e.getMessage() );
         }
 
         ExpressionExperiment ee = ees.iterator().next();
@@ -212,7 +210,7 @@ public class SplitExperimentTest extends BaseSpringContextTest {
         assertEquals( splitOn.getFactorValues().size(), results.getExperiments().size() );
     }
 
-    @After
+    @AfterEach
     public void teardown() throws Exception {
         // remove original dataset
         if ( ees != null ) {
