@@ -20,11 +20,11 @@ package ubic.gemma.core.loader.entrez.pubmed;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.core.io.ClassPathResource;
 import ubic.gemma.core.util.test.NetworkAvailable;
-import ubic.gemma.core.util.test.NetworkAvailableRule;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Keyword;
 import ubic.gemma.model.common.description.MedicalSubjectHeading;
@@ -37,18 +37,16 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.zip.GZIPInputStream;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author pavlidis
  */
 @NetworkAvailable
+@ExtendWith(NetworkAvailableExtension.class)
 public class PubMedXMLParserTest {
 
     private static final Log log = LogFactory.getLog( PubMedXMLParserTest.class.getName() );
-
-    @Rule
-    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
 
     @Test
     public void testParse() throws Exception {

@@ -18,12 +18,12 @@
  */
 package ubic.gemma.core.loader.entrez.pubmed;
 
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.experimental.categories.Category;
 import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.util.test.NetworkAvailable;
-import ubic.gemma.core.util.test.NetworkAvailableRule;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.core.util.test.category.GeoTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -34,16 +34,14 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.io.IOException;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author pavlidis
  */
 @Category(GeoTest.class)
+@ExtendWith(NetworkAvailableExtension.class)
 public class ExpressionExperimentBibRefFinderTest {
-
-    @Rule
-    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
 
     @Test
     @Category(SlowTest.class)
