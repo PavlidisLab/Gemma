@@ -1,7 +1,7 @@
 package ubic.gemma.core.visualization;
 
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,7 +11,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.analysis.singleCell.aggregate.SingleCellDataVectorAggregatorUtils;
 import ubic.gemma.core.context.TestComponent;
-import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.model.common.description.Categories;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.*;
@@ -40,7 +40,7 @@ import static ubic.gemma.persistence.service.expression.experiment.RandomExperim
 @ContextConfiguration
 @TestExecutionListeners(value = WithSecurityContextTestExecutionListener.class,
         mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
-public class ExperimentalDesignVisualizationServiceTest extends BaseTest {
+public class ExperimentalDesignVisualizationServiceTest extends BaseTest5 {
 
     @Configuration
     @TestComponent
@@ -63,7 +63,7 @@ public class ExperimentalDesignVisualizationServiceTest extends BaseTest {
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
-    @After
+    @AfterEach
     public void resetMocks() {
         reset( expressionExperimentService );
     }

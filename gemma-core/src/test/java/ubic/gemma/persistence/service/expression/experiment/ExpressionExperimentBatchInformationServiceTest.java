@@ -1,8 +1,8 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,7 +13,7 @@ import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatc
 import ubic.gemma.core.analysis.preprocess.svd.SVDResult;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.context.TestComponent;
-import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
@@ -25,13 +25,13 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import java.util.Collections;
 import java.util.Date;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectUtils.getBatchEffectType;
 
 @ContextConfiguration
-public class ExpressionExperimentBatchInformationServiceTest extends BaseTest {
+public class ExpressionExperimentBatchInformationServiceTest extends BaseTest5 {
 
     @Configuration
     @TestComponent
@@ -71,12 +71,12 @@ public class ExpressionExperimentBatchInformationServiceTest extends BaseTest {
     @Autowired
     private SVDService svdService;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         when( expressionExperimentService.thawLiter( any() ) ).thenAnswer( a -> a.getArgument( 0 ) );
     }
 
-    @After
+    @AfterEach
     public void resetMocks() {
         reset( expressionExperimentService, svdService );
     }

@@ -1,9 +1,9 @@
 package ubic.gemma.core.analysis.singleCell.aggregate;
 
 import org.assertj.core.data.Offset;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.analysis.singleCell.SingleCellMaskUtils;
 import ubic.gemma.core.context.TestComponent;
-import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DataAddedEvent;
 import ubic.gemma.model.common.description.Categories;
 import ubic.gemma.model.common.description.Characteristic;
@@ -41,7 +41,7 @@ import static org.mockito.Mockito.*;
 import static ubic.gemma.persistence.service.expression.bioAssayData.RandomSingleCellDataUtils.randomSingleCellVectors;
 
 @ContextConfiguration
-public class SingleCellExpressionExperimentAggregateServiceTest extends BaseTest {
+public class SingleCellExpressionExperimentAggregateServiceTest extends BaseTest5 {
 
     @Autowired
     private QuantitationTypeService quantitationTypeService;
@@ -110,7 +110,7 @@ public class SingleCellExpressionExperimentAggregateServiceTest extends BaseTest
     private List<BioAssay> cellBAs;
     private Random random;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         RandomSingleCellDataUtils.setSeed( 123 );
         random = new Random( 123 );
@@ -153,7 +153,7 @@ public class SingleCellExpressionExperimentAggregateServiceTest extends BaseTest
         when( bioAssayDimensionService.findOrCreate( any() ) ).thenAnswer( a -> a.getArgument( 0 ) );
     }
 
-    @After
+    @AfterEach
     public void resetMocks() {
         reset( expressionExperimentService, bioAssayDimensionService, bioAssayService, singleCellExpressionExperimentService, auditTrailService );
     }
