@@ -19,6 +19,9 @@
 
 package ubic.gemma.model.analysis.expression.diff;
 
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.Setter;
 import ubic.gemma.core.security.model.SecureValueObject;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 
@@ -26,6 +29,8 @@ import ubic.gemma.model.common.auditAndSecurity.Securable;
  * @author frances
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
+@Getter
+@Setter
 public class GeneDifferentialExpressionMetaAnalysisSummaryValueObject implements SecureValueObject {
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -34,34 +39,24 @@ public class GeneDifferentialExpressionMetaAnalysisSummaryValueObject implements
 
     private String description;
     private Long id;
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
     private boolean isEditable;
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
     private boolean isOwnedByCurrentUser;
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
     private boolean isPublic;
 
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
     private boolean isShared;
     private String name;
     private Integer numGenesAnalyzed;
     private Integer numResults;
 
     private Integer numResultSetsIncluded;
-
-    public String getDescription() {
-        return this.description;
-    }
-
-    public void setDescription( String description ) {
-        this.description = description;
-    }
-
-
-    @Override
-    public Long getId() {
-        return this.id;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
-    }
 
     @Override
     public boolean getIsPublic() {
@@ -106,38 +101,6 @@ public class GeneDifferentialExpressionMetaAnalysisSummaryValueObject implements
     @Override
     public void setIsPublic( boolean isPublic ) {
         this.isPublic = isPublic;
-    }
-
-    public String getName() {
-        return this.name;
-    }
-
-    public void setName( String name ) {
-        this.name = name;
-    }
-
-    public Integer getNumGenesAnalyzed() {
-        return this.numGenesAnalyzed;
-    }
-
-    public void setNumGenesAnalyzed( Integer numGenesAnalyzed ) {
-        this.numGenesAnalyzed = numGenesAnalyzed;
-    }
-
-    public Integer getNumResults() {
-        return this.numResults;
-    }
-
-    public void setNumResults( Integer numResults ) {
-        this.numResults = numResults;
-    }
-
-    public Integer getNumResultSetsIncluded() {
-        return this.numResultSetsIncluded;
-    }
-
-    public void setNumResultSetsIncluded( Integer numResultSetsIncluded ) {
-        this.numResultSetsIncluded = numResultSetsIncluded;
     }
 
     @Deprecated
