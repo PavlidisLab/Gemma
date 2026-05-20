@@ -28,6 +28,7 @@ import ubic.gemma.model.association.GOEvidenceCode;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.ontology.basecode.model.OntologyTerm;
 import ubic.gemma.core.search.SearchException;
+import ubic.gemma.core.security.audit.AuditedConditional;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.common.description.*;
@@ -988,7 +989,10 @@ public class ExpressionExperimentServiceImpl
      */
     @Override
     @Transactional
-    public void updateAnnotations( ExpressionExperiment ee, Collection<Characteristic> desired ) {
+    @AuditedConditional( value = ManualAnnotationEvent.class,
+            when = "#result > 0",
+            messageSpel = "'Replaced annotations via API (' + #result + ' change(s))'" )
+    public int updateAnnotations( ExpressionExperiment ee, Collection<Characteristic> desired ) {
         Assert.notNull( desired, "Desired characteristic set must not be null (use an empty collection to clear)." );
         for ( Characteristic vc : desired ) {
             Assert.isTrue( StringUtils.isNotBlank( vc.getCategory() ), "Each desired characteristic must have a non-blank category." );
@@ -1036,7 +1040,7 @@ public class ExpressionExperimentServiceImpl
 
         if ( toRemove.isEmpty() && toAdd.isEmpty() ) {
             log.debug( "updateAnnotations: no change for " + ee.getShortName() + " (ID=" + ee.getId() + ")" );
-            return;
+            return 0;
         }
 
         if ( !toRemove.isEmpty() ) {
@@ -1053,8 +1057,13 @@ public class ExpressionExperimentServiceImpl
 
         log.info( "updateAnnotations: " + ee.getShortName() + " (ID=" + ee.getId() + ") added=" + toAdd.size()
                 + " removed=" + toRemove.size() );
-        auditTrailService.addUpdateEvent( ee, ManualAnnotationEvent.class,
-                "Replaced annotations via API (added=" + toAdd.size() + ", removed=" + toRemove.size() + ")" );
+        // Audit event written by @AuditedConditional via AuditedAspect; the
+        // SpEL guard `#result > 0` keeps the no-change early-return branch
+        // (return 0) from emitting a spurious row. Return value carries the
+        // total change count so the note text matches the prior behaviour as
+        // closely as possible (the added/removed breakdown is now in the log
+        // line above; AUDIT_EVENT.NOTE records the aggregate).
+        return toAdd.size() + toRemove.size();
     }
 
     private static boolean sameTag( Characteristic a, Characteristic b ) {

@@ -151,6 +151,43 @@ public class AuditedAspectTest extends BaseTest5 {
         public void brokenSpelFallsBack( FakeAuditable target ) {
             // no-op
         }
+
+        /**
+         * Phase C: {@link AuditedConditional} with a SpEL {@code when} that
+         * compares against {@code #result}. The aspect should emit only when
+         * the predicate is true.
+         */
+        @AuditedConditional( value = SampleRemovalEvent.class,
+                when = "#result > 0",
+                messageSpel = "'Removed ' + #result + ' samples.'" )
+        public int conditionalRemove( FakeAuditable target, int count ) {
+            return count;
+        }
+
+        /**
+         * Phase C: SpEL {@code when} predicate that references a method
+         * parameter by name. Exercises the same name-resolution machinery as
+         * {@code messageSpel}.
+         */
+        @AuditedConditional( value = SampleRemovalEvent.class,
+                when = "!#tags.isEmpty()",
+                messageSpel = "'Applied ' + #tags.size() + ' tags.'" )
+        public void conditionalOnArg( FakeAuditable target, List<String> tags ) {
+            // no-op
+        }
+
+        /**
+         * Phase C: broken {@code when} SpEL — aspect must SKIP emission (the
+         * safe default for an undecidable predicate; contrast with broken
+         * {@code messageSpel} which falls back to the literal message but
+         * still writes the row).
+         */
+        @AuditedConditional( value = SampleRemovalEvent.class,
+                when = "#nonexistent.foo.bar()",
+                message = "would-be-fallback" )
+        public void conditionalBrokenWhenSkips( FakeAuditable target ) {
+            // no-op
+        }
     }
 
     static class AuditedEventCollector {
@@ -317,6 +354,83 @@ public class AuditedAspectTest extends BaseTest5 {
                 eq( SampleRemovalEvent.class ),
                 eq( "fallback literal" ),
                 eq( null ) );
+    }
+
+    /**
+     * Phase C: {@link AuditedConditional} fires only when its {@code when}
+     * predicate is true. {@code #result > 0} → audit row written.
+     */
+    @Test
+    public void auditedConditional_firesWhenPredicateTrue() {
+        FakeAuditable target = new FakeAuditable( 200L );
+
+        int n = annotatedService.conditionalRemove( target, 4 );
+
+        assertThat( n ).isEqualTo( 4 );
+        verify( auditTrailService ).addUpdateEventWithPayload(
+                eq( target ),
+                eq( SampleRemovalEvent.class ),
+                eq( "Removed 4 samples." ),
+                eq( null ) );
+        assertThat( collector.received ).hasSize( 1 );
+    }
+
+    /**
+     * Phase C: when the predicate is false the aspect must skip emission
+     * entirely — no service call, no Spring event.
+     */
+    @Test
+    public void auditedConditional_skipsWhenPredicateFalse() {
+        FakeAuditable target = new FakeAuditable( 201L );
+
+        int n = annotatedService.conditionalRemove( target, 0 );
+
+        assertThat( n ).isEqualTo( 0 );
+        verifyNoInteractions( auditTrailService );
+        assertThat( collector.received ).isEmpty();
+    }
+
+    /**
+     * Phase C: predicate can reference a method parameter by name (same
+     * resolution as {@code messageSpel}).
+     */
+    @Test
+    public void auditedConditional_predicateCanReferenceArgs() {
+        FakeAuditable target = new FakeAuditable( 202L );
+
+        annotatedService.conditionalOnArg( target, List.of( "alpha", "beta" ) );
+
+        verify( auditTrailService ).addUpdateEventWithPayload(
+                eq( target ),
+                eq( SampleRemovalEvent.class ),
+                eq( "Applied 2 tags." ),
+                eq( null ) );
+
+        // And on the empty-tags path the aspect should skip.
+        reset( auditTrailService );
+        when( auditTrailService.addUpdateEventWithPayload( any(), any(), any(), any() ) )
+                .thenReturn( stubEvent );
+        collector.received.clear();
+
+        annotatedService.conditionalOnArg( target, List.of() );
+
+        verifyNoInteractions( auditTrailService );
+        assertThat( collector.received ).isEmpty();
+    }
+
+    /**
+     * Phase C: a broken {@code when} SpEL must SKIP emission (safe default —
+     * an undecidable predicate is closer to the no-op branch than to the
+     * emission branch).
+     */
+    @Test
+    public void auditedConditional_brokenWhenSpelSkipsEmission() {
+        FakeAuditable target = new FakeAuditable( 203L );
+
+        annotatedService.conditionalBrokenWhenSkips( target );
+
+        verifyNoInteractions( auditTrailService );
+        assertThat( collector.received ).isEmpty();
     }
 
 }

@@ -10,6 +10,7 @@ import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionExc
 import ubic.gemma.core.analysis.singleCell.SingleCellSlicerUtils;
 import ubic.gemma.core.analysis.singleCell.SingleCellSparsityMetrics;
 import ubic.gemma.core.security.audit.Audited;
+import ubic.gemma.core.security.audit.AuditedConditional;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataIntMatrix;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataMatrix;
@@ -1027,16 +1028,28 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional
+    @AuditedConditional( value = PreferredCellTypeAssignmentChangedEvent.class,
+            when = "#result.name() != 'UNCHANGED'",
+            messageSpel = "'Cleared the preferred cell type assignment from QT=' + #quantitationType + '.'" )
     public PreferredCellTypeAssignmentChangeOutcome clearPreferredCellTypeAssignment( ExpressionExperiment ee, QuantitationType quantitationType ) {
         SingleCellDimension dimension = getSingleCellDimension( ee, quantitationType );
         if ( dimension == null ) {
             throw new IllegalArgumentException( "There is no single-cell dimension for " + quantitationType + " in " + ee + "." );
         }
+        // Self-invocation: bypasses the Spring AOP proxy. The
+        // @AuditedConditional on THIS method (the QT entry-point) drives the
+        // audit row when this overload is called externally; the SCD
+        // overload's annotation drives the audit when *that* overload is
+        // called externally. Each external entry-point fires the aspect at
+        // most once — same behaviour as the old imperative call site.
         return clearPreferredCellTypeAssignment( ee, dimension );
     }
 
     @Override
     @Transactional
+    @AuditedConditional( value = PreferredCellTypeAssignmentChangedEvent.class,
+            when = "#result.name() != 'UNCHANGED'",
+            messageSpel = "'Cleared the preferred cell type assignment from ' + #dimension + '.'" )
     public PreferredCellTypeAssignmentChangeOutcome clearPreferredCellTypeAssignment( ExpressionExperiment ee, SingleCellDimension dimension ) {
         Assert.notNull( ee.getId() , "must not be null");
         Assert.notNull( dimension.getId() , "must not be null");
@@ -1053,7 +1066,10 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
             cta.setPreferred( false );
         }
         expressionExperimentDao.updateSingleCellDimension( ee, dimension );
-        auditTrailService.addUpdateEvent( ee, PreferredCellTypeAssignmentChangedEvent.class, "Cleared the preferred cell type assignment from " + dimension + "." );
+        // Audit event written by @AuditedConditional via AuditedAspect; the
+        // SpEL guard `#result.name() != 'UNCHANGED'` skips the early-return
+        // branch (return PreferredCellTypeAssignmentChangeOutcome.UNCHANGED)
+        // so this remains semantically identical to the prior imperative call.
 
         // if we are clearing the preferred CTA from the preferred dimension (the one that belongs to the preferred
         // single-cell vectors), remove the cell type factor
