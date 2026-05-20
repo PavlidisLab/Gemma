@@ -43,17 +43,26 @@
     </context-param>
 
     <!--
+        ApplicationContextInitializer. Activates the `web` Spring profile (so beans gated on
+        @Profile("web") — notably AnalyticsConfig and the <beans profile="web"> wrapper in
+        applicationContext-analytics.xml — kick in) and runs the standard SpringContextUtils
+        prepareContext work. The profile name is kept as `web` so existing @Profile("web") call
+        sites in gemma-rest don't need re-gating; this is the gemma-rest-owned counterpart to
+        gemma-web's ubic.gemma.web.context.InitializeContext (which stays in place for the
+        legacy UI).
+    -->
+    <context-param>
+        <param-name>contextInitializerClasses</param-name>
+        <param-value>ubic.gemma.rest.context.RestInitializeContext</param-value>
+    </context-param>
+
+    <!--
         Listeners. Kept:
           - IntrospectorCleanupListener — prevents PropertyDescriptor leaks on undeploy
           - HttpSessionEventPublisher    — Spring Security session-lifecycle events
         Dropped (gemma-web-specific):
           - ubic.gemma.web.listener.StartupListener
           - ubic.gemma.web.listener.UserCounterListener
-        InitializeContext (ApplicationContextInitializer) is also gemma-web-specific
-        and is NOT registered here. A gemma-rest-owned equivalent is a separate phase
-        (see GEMMA_REST_STANDALONE_ROADMAP.md §6 item 7) — until that lands, the
-        standalone WAR runs without active-profile injection, which is acceptable
-        for the first boot smoke test.
     -->
     <listener>
         <listener-class>org.springframework.web.util.IntrospectorCleanupListener</listener-class>
@@ -203,13 +212,52 @@
     </servlet-mapping>
 
     <!--
-        No <session-config>, no <error-page>, no <jsp-config>, no <mime-mapping>.
-        gemma-rest is JSON-API-only:
+        Static asset serving for the Swagger UI assets bundled under /resources/restapidocs/
+        (see gemma-rest/pom.xml's gemma-rest-war profile webResources block). Tomcat's
+        DefaultServlet handles the actual file I/O; the precompressed init-param lets it
+        serve the *.gz variants that ship alongside swagger-ui-bundle.js / style.css.
+        Mapping is /resources/* + extension globs, mirroring gemma-web/web.xml lines 244-278
+        but trimmed to the asset types swagger-ui actually ships.
+
+        NOTE: the swagger UI landing page (gemma-rest/src/main/resources/restapidocs/index.jsp)
+        is a JSP and CANNOT be served by this WAR — gemma-rest deliberately has no JSP
+        support (no DispatcherServlet, no <jsp-config>). Follow-up tracked in
+        GEMMA_REST_STANDALONE_RECCE.md §5 step 4: replace index.jsp with a static
+        index.html (the JSP variable interpolation is minimal — just contextPath) before
+        gemma-web is deleted. Direct hits to the .css / .js / .map / .gz files work today.
+    -->
+    <servlet>
+        <servlet-name>default</servlet-name>
+        <servlet-class>org.apache.catalina.servlets.DefaultServlet</servlet-class>
+        <init-param>
+            <param-name>precompressed</param-name>
+            <param-value>true</param-value>
+        </init-param>
+        <load-on-startup>0</load-on-startup>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>default</servlet-name>
+        <url-pattern>/resources/*</url-pattern>
+        <url-pattern>*.js</url-pattern>
+        <url-pattern>*.css</url-pattern>
+        <url-pattern>*.map</url-pattern>
+        <url-pattern>*.png</url-pattern>
+        <url-pattern>*.svg</url-pattern>
+        <url-pattern>*.ico</url-pattern>
+        <url-pattern>*.woff</url-pattern>
+        <url-pattern>*.woff2</url-pattern>
+        <url-pattern>*.ttf</url-pattern>
+    </servlet-mapping>
+
+    <!--
+        No <session-config>, no <error-page>, no <jsp-config>.
+        gemma-rest is JSON-API-first:
           - Authn flows via HTTP Basic on every request (RestSecurityConfig sets
             SessionCreationPolicy.STATELESS), so JSESSIONID config is moot.
           - Error responses are emitted as JSON ResponseErrorObject by
             RestAuthEntryPoint + Jersey ExceptionMappers — no JSP fallback page.
-          - No static assets are served from this WAR (restapidocs/ moves later;
-            see roadmap §6 item 6).
+          - Static assets under /resources/restapidocs/ are served by DefaultServlet
+            above; everything else is /rest/v2/** Jersey.
     -->
 </web-app>
