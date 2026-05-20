@@ -11,12 +11,12 @@
  */
 package ubic.gemma.rest;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.persistence.util.Cursor;
 import ubic.gemma.persistence.util.CursorPage;
@@ -58,7 +58,7 @@ import static org.mockito.Mockito.when;
  *
  * @author phase3
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class DatasetsWebServiceSubSetSamplesCursorTest {
 
     @Mock
@@ -72,7 +72,7 @@ public class DatasetsWebServiceSubSetSamplesCursorTest {
     private DatasetArg<?> datasetArg;
     private static final Long SUBSET_ID = 7L;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         ba1 = new BioAssayValueObject();
         ba1.setId( 10L );

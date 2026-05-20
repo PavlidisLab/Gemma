@@ -11,12 +11,12 @@
  */
 package ubic.gemma.rest;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -59,7 +59,7 @@ import static org.mockito.Mockito.when;
  *
  * @author phase3
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class DatasetsWebServiceBlacklistedCursorTest {
 
     @Mock
@@ -73,7 +73,7 @@ public class DatasetsWebServiceBlacklistedCursorTest {
     private ExpressionExperimentValueObject ee1;
     private ExpressionExperimentValueObject ee2;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         ee1 = new ExpressionExperimentValueObject( 100L );
         ee2 = new ExpressionExperimentValueObject( 200L );
