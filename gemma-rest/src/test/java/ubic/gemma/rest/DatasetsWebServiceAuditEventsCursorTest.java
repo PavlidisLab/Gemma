@@ -11,12 +11,12 @@
  */
 package ubic.gemma.rest;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
@@ -67,7 +67,7 @@ import static org.mockito.Mockito.when;
  *
  * @author phase3
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class DatasetsWebServiceAuditEventsCursorTest {
 
     @Mock
@@ -83,7 +83,7 @@ public class DatasetsWebServiceAuditEventsCursorTest {
     private AuditEvent event1;
     private AuditEvent event2;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         datasetArg = DatasetArg.valueOf( "GSE1234" );
 

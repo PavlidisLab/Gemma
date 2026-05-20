@@ -11,13 +11,13 @@
  */
 package ubic.gemma.rest;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import ubic.gemma.core.ontology.basecode.model.OntologyTerm;
 import ubic.gemma.model.expression.bioAssayData.ExperimentExpressionLevelsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -71,7 +71,7 @@ import static org.mockito.Mockito.when;
  *
  * @author phase3
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class DatasetsWebServiceExpressionLevelsForGeneCursorTest {
 
     @Mock
@@ -91,7 +91,7 @@ public class DatasetsWebServiceExpressionLevelsForGeneCursorTest {
     private ExperimentExpressionLevelsValueObject vo2;
     private ExperimentExpressionLevelsValueObject vo3;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         gene = Gene.Factory.newInstance();
         gene.setId( 42L );
