@@ -30,6 +30,7 @@ import ubic.gemma.core.util.math.MatrixStats;
 import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.analysis.preprocess.VectorMergingService;
+import ubic.gemma.core.security.audit.Audited;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.loader.expression.arrayDesign.AffyChipTypeExtractor;
 import ubic.gemma.core.loader.expression.geo.fetcher.RawDataFetcher;
@@ -561,6 +562,8 @@ public class DataUpdaterImpl implements DataUpdater {
      */
     @Override
     @Transactional(propagation = Propagation.NEVER)
+    @Audited( value = DataAddedEvent.class,
+            messageSpel = "'Data vectors added for ' + #targetPlatform + ', ' + #data.quantitationTypes.iterator().next()" )
     public void addData( ExpressionExperiment ee, ArrayDesign targetPlatform, ExpressionDataDoubleMatrix data ) {
 
         if ( data.rows() == 0 ) {
@@ -600,7 +603,7 @@ public class DataUpdaterImpl implements DataUpdater {
 
         experimentService.addRawDataVectors( ee, qt, vectors );
 
-        this.audit( ee, "Data vectors added for " + targetPlatform + ", " + qt, false );
+        // Audit event (DataAddedEvent) written by @Audited via AuditedAspect.
 
         experimentService.update( ee );
 
