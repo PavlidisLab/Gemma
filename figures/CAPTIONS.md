@@ -1,5 +1,53 @@
 # Figure captions
 
+## renovations_gantt.svg (v7 — 2026-05-19_1804, final-scope day-by-day view)
+
+**What it is.** The first Phase 3 Gantt chart drawn in
+"final-scope" form rather than "current state + queue". Each of
+the 93 rows is one item on the FULL Phase 3 plate — everything
+that ever had to be done — grouped by category (First wave, ACL &
+security, Maintainability, Framework bumps, Cleanups, Search,
+Cloud-ready, API/UI, AI/workflow, Recces & docs, Release plan).
+Bars run in real-time fractional days from 2026-05-18 00:00 (the
+Phase 3 vision commit) up to a dashed "now" line at 2026-05-19
+18:04 (~1.75 days elapsed). The x-axis grid shows major ticks at
+day boundaries and minor ticks every 6 hours. Provisional final =
+today.
+
+**How to read it.** Each bar's left edge is the timestamp of the
+first commit on that item; the right edge is the timestamp of the
+last commit (done, emerald) or "now" (in flight, amber). Queued
+items appear as a small gray pill at "now" — they're in the
+final-scope but haven't been worked. A handful of items have a
+recce-only window rendered as a dotted hatch (Audit Phase C,
+OpenTelemetry, Object storage, gemma-web retirement) showing
+that planning landed but the implementation is post-2.0.
+Deferred items (gsec Phase C, Streaming DAOs) get the dotted
+pattern explicitly. The single blocked item (Drop old uppercase
+ACL tables) gets a red-hatched marker. Phase-3-begins reference
+line at day-1, today's line dashed.
+
+**What it shows.**
+- **60/93 done, 14 in flight, 16 queued, 2 deferred, 1 blocked**
+  by the 1.75-day mark. The biggest categories — Cleanups, ACL
+  & security, Framework bumps — are >80% emerald. Maintainability
+  is mid-stream (persisterHelper retirement is the long amber
+  bar still walking forward).
+- **Compression of the framework climb is dramatic**: Spring
+  Framework 6.2, Spring Security 6.5, Hibernate 6.6, HikariCP 6,
+  and Spring Boot BOM 3.5 all landed within the same 6-hour
+  window in late day 1 — the visual signature is a vertical
+  cluster of emerald minimum-width bars.
+- **The cursor-pagination + Hibernate-Search-7 restoration + baseCode
+  in-tree port are the day-2 storyline** — three long amber/emerald
+  bars in the bottom half of the chart, all stitched together by
+  the search subsystem rework.
+- **Outstanding scope is dominated by post-2.0 plans** (vector
+  store, gemma-web retirement, LLM-friendly API surface, OPA/Cedar
+  ACL externalization) and the three release-plan gates. Almost
+  nothing is left in the "should have shipped by 2.0" bucket —
+  the four release-plan queued items are gates, not work.
+
 ## renovations_gantt.svg (v6 — 2026-05-19_1027)
 
 **What it is.** Phase 3 renovations Gantt updated for the 2026-05-19
