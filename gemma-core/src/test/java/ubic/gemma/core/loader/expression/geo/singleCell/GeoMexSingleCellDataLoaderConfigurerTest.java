@@ -1,10 +1,9 @@
 package ubic.gemma.core.loader.expression.geo.singleCell;
 
-import org.junit.Assume;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
@@ -25,9 +24,9 @@ import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellTransfor
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
 import ubic.gemma.core.loader.util.ftp.FTPConfig;
 import ubic.gemma.core.util.concurrent.Executors;
-import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.core.util.test.NetworkAvailable;
-import ubic.gemma.core.util.test.NetworkAvailableRule;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.core.util.test.category.SlowTest;
 
 import java.io.IOException;
@@ -39,15 +38,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.zip.GZIPInputStream;
 
 import static java.util.Objects.requireNonNull;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ContextConfiguration
 @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
-public class GeoMexSingleCellDataLoaderConfigurerTest extends BaseTest {
-
-    @Rule
-    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
+@ExtendWith(NetworkAvailableExtension.class)
+public class GeoMexSingleCellDataLoaderConfigurerTest extends BaseTest5 {
 
     @Configuration
     @TestComponent
@@ -176,7 +173,7 @@ public class GeoMexSingleCellDataLoaderConfigurerTest extends BaseTest {
     @Category(SlowTest.class)
     public void testParallelFiltering() throws IOException, NoSingleCellDataFoundException {
         SingleCell10xMexFilter filter = singleCellDataTransformationFactory.getTransformation( SingleCell10xMexFilter.class );
-        Assume.assumeTrue( "The current CPU does not support AVX instructions.", filter.isCpuSupported() );
+        Assumptions.assumeTrue( filter.isCpuSupported(), "The current CPU does not support AVX instructions." );
         GeoSeries series = readSeriesFromGeo( "GSE269482" );
         Path dataDir;
         ExecutorService executor = Executors.newFixedThreadPool( 4 );
