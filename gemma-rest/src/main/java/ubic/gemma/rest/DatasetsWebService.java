@@ -1640,6 +1640,45 @@ public class DatasetsWebService {
             @PathParam("dataset") DatasetArg<?> datasetArg,
             @Nullable DifferentialAnalysisRunRequest body
     ) {
+        return doRunDatasetDifferentialAnalysis( datasetArg, body );
+    }
+
+    /**
+     * Alias for {@link #runDatasetDifferentialAnalysis(DatasetArg, DifferentialAnalysisRunRequest)} that exposes the
+     * DEA dispatch under {@code /datasets/{id}/analyses/differential}.
+     * <p>
+     * Curation-UI compatibility shim: the curation-UI dispatch hook (apps/curation/.../workflow.ts:165) calls
+     * {@code POST /datasets/{id}/analyses/differential}; the canonical gemma-rest endpoint lives at
+     * {@code /tasks/differential}. Both paths delegate to the same handler so the UI's "dispatch DEA" button works
+     * without modification. See {@code CURATION_UI_HANDOFF_INVENTORY.md}.
+     */
+    @POST
+    @Path("/{dataset}/analyses/differential")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Run differential expression analysis for a dataset (alias of /tasks/differential)",
+            description = "Curation-UI compatibility alias for `POST /datasets/{id}/tasks/differential`. Behaviour "
+                    + "is identical to the canonical endpoint.",
+            security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
+            responses = {
+                    @ApiResponse(responseCode = "202", content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
+                    @ApiResponse(responseCode = "400", description = "The request body references factor ids that don't belong to the dataset, or names a subset factor that's also in `factorIds`.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public Response runDatasetDifferentialAnalysisAlias(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Nullable DifferentialAnalysisRunRequest body
+    ) {
+        return doRunDatasetDifferentialAnalysis( datasetArg, body );
+    }
+
+    private Response doRunDatasetDifferentialAnalysis(
+            DatasetArg<?> datasetArg,
+            @Nullable DifferentialAnalysisRunRequest body
+    ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         // experimental design / factors are lazy-loaded; thaw them before iterating outside a transaction.
         ee = expressionExperimentService.thawLite( ee );
