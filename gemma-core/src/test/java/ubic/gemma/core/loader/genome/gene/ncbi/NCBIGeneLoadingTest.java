@@ -69,7 +69,7 @@ public class NCBIGeneLoadingTest extends BaseSpringContextTest5 {
     @Test
     @Tag("slow")
     public void testGeneLoader() throws Exception {
-        NcbiGeneLoader loader = new NcbiGeneLoader( persisterHelper );
+        NcbiGeneLoader loader = new NcbiGeneLoader();
         loader.setGeneWriteService( geneWriteService );
         loader.setTaxonService( taxonService );
 

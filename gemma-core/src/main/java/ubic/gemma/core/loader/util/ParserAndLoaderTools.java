@@ -19,14 +19,10 @@
 package ubic.gemma.core.loader.util;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.persister.Persister;
 
 import java.lang.reflect.Method;
-import java.util.Collection;
 import java.util.Map;
 
 /**
@@ -37,33 +33,6 @@ import java.util.Map;
 @SuppressWarnings("unused") // Possible external use
 public class ParserAndLoaderTools {
     protected static final Log log = LogFactory.getLog( ParserAndLoaderTools.class );
-
-    /**
-     * User the loader to persist the collection.
-     *
-     * @param loader loader
-     * @param col    collection
-     */
-    public static void loadDatabase( Persister loader, Collection<? extends Identifiable> col ) {
-        assert ( loader != null );
-        assert ( col != null );
-        if ( col.size() == 0 )
-            return;
-
-        StopWatch stopWatch = new StopWatch();
-        stopWatch.start();
-
-        loader.persist( col );
-
-        stopWatch.stop();
-
-        long time = stopWatch.getTime();
-        if ( time < 1000 )
-            log.info( "Time taken: " + time + " ms." );
-        else {
-            log.info( "Time taken: " + time / 1000 + " s." );
-        }
-    }
 
     public static void objectsPersistedUpdate( int count, int modulus, String objectName ) {
         if ( count % modulus == 0 )

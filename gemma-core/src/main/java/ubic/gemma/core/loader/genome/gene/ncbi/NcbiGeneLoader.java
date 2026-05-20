@@ -25,7 +25,6 @@ import org.apache.commons.logging.LogFactory;
 import ubic.gemma.core.util.concurrent.ThreadUtils;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.genome.gene.GeneWriteService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
@@ -47,7 +46,6 @@ public class NcbiGeneLoader {
     private final AtomicBoolean generatorDone;
     private final AtomicBoolean converterDone;
     private final AtomicBoolean loaderDone;
-    private Persister persisterHelper;
     private GeneWriteService geneWriteService;
     private int loadedGeneCount = 0;
     private TaxonService taxonService;
@@ -60,11 +58,6 @@ public class NcbiGeneLoader {
         generatorDone = new AtomicBoolean( false );
         converterDone = new AtomicBoolean( false );
         loaderDone = new AtomicBoolean( false );
-    }
-
-    public NcbiGeneLoader( Persister persisterHelper ) {
-        this();
-        this.setPersisterHelper( persisterHelper );
     }
 
     /**
@@ -118,19 +111,6 @@ public class NcbiGeneLoader {
 
     public void load( Taxon t ) {
         this.load( "", "", "", "", t );
-    }
-
-    /**
-     * @param persisterHelper the persisterHelper to set
-     * @deprecated Phase 3 Chunk 5.4 — gene persistence has been cut over to
-     *         {@link GeneWriteService#upsert}. The persister setter is kept for
-     *         binary compatibility with callers that still construct a loader
-     *         the old way; the loader no longer dispatches gene writes through
-     *         it. Use {@link #setGeneWriteService(GeneWriteService)} instead.
-     */
-    @Deprecated
-    public void setPersisterHelper( Persister persisterHelper ) {
-        this.persisterHelper = persisterHelper;
     }
 
     /**
