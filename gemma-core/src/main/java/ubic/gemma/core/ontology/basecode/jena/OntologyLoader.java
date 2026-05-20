@@ -38,7 +38,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ubic.basecode.util.Configuration;
+import ubic.gemma.core.config.Configuration;
 
 import javax.annotation.Nullable;
 import java.io.*;
