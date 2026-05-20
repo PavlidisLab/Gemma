@@ -1,5 +1,6 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
+import org.hibernate.SessionFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -54,6 +55,11 @@ public class ExpressionExperimentBatchInformationServiceTest extends BaseTest5 {
 
         @Bean
         public AuditEventService auditEventService() {
+            return mock();
+        }
+
+        @Bean
+        public SessionFactory sessionFactory() {
             return mock();
         }
 
