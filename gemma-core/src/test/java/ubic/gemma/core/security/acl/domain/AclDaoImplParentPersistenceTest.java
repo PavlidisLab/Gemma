@@ -11,10 +11,11 @@
 package ubic.gemma.core.security.acl.domain;
 
 import org.hibernate.SessionFactory;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.acls.domain.AclAuthorizationStrategy;
@@ -22,15 +23,15 @@ import org.springframework.security.acls.domain.PrincipalSid;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.AbstractTransactionalJUnit4SpringContextTests;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.sql.DataSource;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Renovations Phase 2 contract test for {@link AclDaoImpl#update(MutableAcl)}: verifies that
@@ -72,9 +73,11 @@ import static org.junit.Assert.assertTrue;
 // either, so the context fails to load. Ignored until Phase B/C resolves the wiring (either the
 // test moves to a context that provides aclService, or it's deleted in favour of the upstream Gemma
 // integration tests called out in the javadoc above).
-@Ignore("Pre-existing failure inherited from upstream gsec; aclService bean missing from testContext.xml after the aclService-moved-to-Gemma cleanup")
+@Disabled("Pre-existing failure inherited from upstream gsec; aclService bean missing from testContext.xml after the aclService-moved-to-Gemma cleanup")
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration(locations = { "classpath*:ubic/gemma/core/security/applicationContext-*.xml", "classpath:ubic/gemma/core/security/testContext.xml" })
-public class AclDaoImplParentPersistenceTest extends AbstractTransactionalJUnit4SpringContextTests {
+@Transactional
+public class AclDaoImplParentPersistenceTest {
 
     @Autowired
     private AclDao aclDao;
@@ -92,13 +95,13 @@ public class AclDaoImplParentPersistenceTest extends AbstractTransactionalJUnit4
         this.jdbc = new JdbcTemplate( ds );
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
         SecurityContextHolder.getContext().setAuthentication(
             new TestingAuthenticationToken( "alice", "pw", "GROUP_USER" ) );
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         SecurityContextHolder.clearContext();
     }
@@ -114,7 +117,7 @@ public class AclDaoImplParentPersistenceTest extends AbstractTransactionalJUnit4
         // Set up the owner SID. Flush after creation so the H2 sequence assigns its id.
         AclSid ownerSid = aclDao.findOrCreate( new AclPrincipalSid( "alice" ) );
         sessionFactory.getCurrentSession().flush();
-        assertNotNull( "ownerSid.id is null after flush; ownerSid=" + ownerSid, ownerSid.getId() );
+        assertNotNull( ownerSid.getId(), "ownerSid.id is null after flush; ownerSid=" + ownerSid );
 
         // Create parent and child AclObjectIdentity rows directly via the DAO.
         AclObjectIdentity parentOi;
@@ -129,12 +132,13 @@ public class AclDaoImplParentPersistenceTest extends AbstractTransactionalJUnit4
 
         Long parentPk = parentOi.getId();
         Long childPk = childOi.getId();
-        assertNotNull( "parentPk is null; parent OI = " + parentOi, parentPk );
-        assertNotNull( "childPk is null; child OI = " + childOi, childPk );
+        assertNotNull( parentPk, "parentPk is null; parent OI = " + parentOi );
+        assertNotNull( childPk, "childPk is null; child OI = " + childOi );
 
         // Sanity: before update(), the child's parent_object_fk is NULL.
-        assertNull( "precondition: child has no parent FK yet",
-            jdbc.queryForObject( "select PARENT_OBJECT_FK from ACLOBJECTIDENTITY where ID = ?", Long.class, childPk ) );
+        assertNull(
+            jdbc.queryForObject( "select PARENT_OBJECT_FK from ACLOBJECTIDENTITY where ID = ?", Long.class, childPk ),
+            "precondition: child has no parent FK yet" );
 
         // CRITICAL: detach the OI instances from the session before we wrap them in AclImpl.
         // This reproduces the production flow where AclImpl wraps an OI loaded in a previous
@@ -170,8 +174,8 @@ public class AclDaoImplParentPersistenceTest extends AbstractTransactionalJUnit4
             "select ENTRIES_INHERITING from ACLOBJECTIDENTITY where ID = ?",
             Boolean.class, childPk );
 
-        assertNotNull( "parent_object_fk must be persisted (was NULL before the AclDaoImpl fix)", persistedParentFk );
-        assertEquals( "parent_object_fk must point at the parent ACL row", parentPk, persistedParentFk );
-        assertTrue( "entries_inheriting must be persisted as true", Boolean.TRUE.equals( entriesInheriting ) );
+        assertNotNull( persistedParentFk, "parent_object_fk must be persisted (was NULL before the AclDaoImpl fix)" );
+        assertEquals( parentPk, persistedParentFk, "parent_object_fk must point at the parent ACL row" );
+        assertTrue( Boolean.TRUE.equals( entriesInheriting ), "entries_inheriting must be persisted as true" );
     }
 }

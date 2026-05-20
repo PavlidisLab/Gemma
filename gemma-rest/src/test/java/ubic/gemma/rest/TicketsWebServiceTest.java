@@ -11,12 +11,12 @@
  */
 package ubic.gemma.rest;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.prepost.PreAuthorize;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.core.security.authentication.UserReadService;
@@ -64,7 +64,7 @@ import static org.mockito.Mockito.when;
  *
  * @author paul
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class TicketsWebServiceTest {
 
     @Mock
@@ -82,7 +82,7 @@ public class TicketsWebServiceTest {
     private User reporter;
     private Ticket ticket;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         reporter = new User();
         reporter.setId( 42L );

@@ -1,23 +1,25 @@
 package ubic.gemma.core.security;
 
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.security.access.SecurityConfig;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 // Phase 3 gsec absorption: fails identically in upstream gsec — applicationContext-gsec.xml's
 // aclService bean was commented out (Gemma's GemmaAclConfiguration provides it now), and the
 // testContext.xml doesn't supply one, so the context fails to load. Ignored until Phase B/C wiring
 // cleanup.
-@Ignore("Pre-existing failure inherited from upstream gsec; aclService bean missing from testContext.xml")
+@Disabled("Pre-existing failure inherited from upstream gsec; aclService bean missing from testContext.xml")
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration(locations = { "classpath*:ubic/gemma/core/security/applicationContext-*.xml", "classpath:ubic/gemma/core/security/testContext.xml" })
-public class ApplicationContextTest extends AbstractJUnit4SpringContextTests {
+public class ApplicationContextTest {
 
     @Autowired
     private AccessDecisionManager accessDecisionManager;

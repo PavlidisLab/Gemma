@@ -19,9 +19,9 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import ubic.gemma.core.security.SecurityService;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,7 +31,7 @@ import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.SearchService;
-import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -66,7 +66,7 @@ import static org.mockito.Mockito.*;
  * @author poirigui
  */
 @ContextConfiguration
-public class ExpressionExperimentServiceImplTest extends BaseTest {
+public class ExpressionExperimentServiceImplTest extends BaseTest5 {
 
     @Configuration
     @TestComponent
@@ -219,12 +219,12 @@ public class ExpressionExperimentServiceImplTest extends BaseTest {
     @Autowired
     private ExpressionExperimentDao eeDao;
 
-    @Before
+    @BeforeEach
     public void setupMocks() {
         when( eeDao.getElementClass() ).thenAnswer( a -> ExpressionExperiment.class );
     }
 
-    @After
+    @AfterEach
     public void resetMocks() {
         reset( bioAssayDimensionService, quantitationTypeService, eeDao );
     }

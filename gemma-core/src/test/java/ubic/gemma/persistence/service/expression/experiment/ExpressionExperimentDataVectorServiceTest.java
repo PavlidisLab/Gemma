@@ -11,11 +11,11 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -42,7 +42,7 @@ import static org.mockito.Mockito.when;
  * {@link BioAssayDimensionService} and {@link QuantitationTypeService}. Mirrors
  * {@link ExpressionExperimentSubSetReadServiceTest} in shape.
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class ExpressionExperimentDataVectorServiceTest {
 
     @Mock
@@ -56,7 +56,7 @@ public class ExpressionExperimentDataVectorServiceTest {
 
     private ExpressionExperimentDataVectorServiceImpl service;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         service = new ExpressionExperimentDataVectorServiceImpl( dao, bioAssayDimensionService, quantitationTypeService );
     }

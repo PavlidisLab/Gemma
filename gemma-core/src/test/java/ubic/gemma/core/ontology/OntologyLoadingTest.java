@@ -2,8 +2,10 @@ package ubic.gemma.core.ontology;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.StopWatch;
-import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
@@ -14,7 +16,7 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import ubic.gemma.core.ontology.basecode.providers.*;
 import ubic.gemma.core.ontology.basecode.providers.OntologyService;
 import ubic.gemma.core.context.TestComponent;
@@ -41,8 +43,9 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author poirigui
  */
 @Slf4j
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration
-public class OntologyLoadingTest extends AbstractJUnit4SpringContextTests {
+public class OntologyLoadingTest {
 
     @Configuration
     @TestComponent
@@ -129,6 +132,7 @@ public class OntologyLoadingTest extends AbstractJUnit4SpringContextTests {
 
     @Test
     @Category(SlowTest.class)
+    @Tag("slow")
     public void testInitializeAllOntologies() {
         // these are notoriously slow, so we skip them
         List<OntologyService> ignoredOntologies = Arrays.asList( efo, chebi, mp, mondo, clo, cl, hpo, uberon, obi, mdo, unified );
