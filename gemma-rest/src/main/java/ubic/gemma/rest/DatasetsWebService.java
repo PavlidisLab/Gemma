@@ -771,16 +771,43 @@ public class DatasetsWebService {
     @GET
     @Path("/{dataset}")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve datasets by their identifiers")
-    public FilteredAndInferredAndPaginatedResponseDataObject<ExpressionExperimentValueObject> getDatasetsByIds( // Params:
+    @Operation(summary = "Retrieve datasets by their identifiers",
+            description = "Supports two pagination modes. Legacy mode: pass `offset` (and `limit`); response includes `offset` and `totalElements`. "
+                    + "Cursor mode (recommended for deep pagination and consistency under writes): pass an opaque `cursor` token from a previous response's `nextCursor` / `prevCursor` field. "
+                    + "`offset` and `cursor` are mutually exclusive -- passing a non-null `cursor` selects cursor mode. "
+                    + "In cursor mode the result is always sorted by ascending `id` (the user `sort` arg is currently ignored, pending the indexed-column audit in phase B); "
+                    + "the path-derived dataset-id constraint is preserved on top of the user-supplied `?filter=`; `totalElements` is `null` by default (no count query per request). "
+                    + "Mirrors GET /datasets/blacklisted step 1t.",
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(schema = @Schema(oneOf = {
+                                    FilteredAndInferredAndPaginatedResponseDataObject.class,
+                                    FilteredAndInferredAndCursorPaginatedResponseDataObject.class
+                            }))),
+            })
+    public Object getDatasetsByIds( // Params:
             @PathParam("dataset") DatasetArrayArg datasetsArg, // Optional
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
-            @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sort // Optional, default +id
+            @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sort, // Optional, default +id
+            @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.")
+            @QueryParam("cursor") CursorArg cursorArg
     ) {
         Collection<OntologyTerm> inferredTerms = new HashSet<>();
         Filters filters = datasetArgService.getFilters( filter, null, inferredTerms ).and( datasetArgService.getFilters( datasetsArg ) );
+        if ( cursorArg != null ) {
+            // Mutual-exclusion: a non-null cursor selects cursor mode. The default offset=0 is
+            // not considered user-supplied (parallels step 1d /taxa/{taxon}/datasets and step 1t
+            // /datasets/blacklisted). In cursor mode we currently force a +id sort
+            // (DatasetArgService.getDatasetsByCursor) -- the DAO restricts cursors to
+            // single-component id sorts until the index audit lands. The path-derived
+            // dataset-id constraint composed into `filters` above still applies, so the
+            // {dataset} path scope is enforced identically in both modes.
+            CursorPage<ExpressionExperimentValueObject> page = datasetArgService.getDatasetsByCursor(
+                    filters, cursorArg.getValue(), limit.getValue() );
+            return new FilteredAndInferredAndCursorPaginatedResponseDataObject<>( page, filters, new String[] { "id" }, inferredTerms );
+        }
         return paginate( expressionExperimentService::loadValueObjectsWithCache, filters, new String[] { "id" },
                 datasetArgService.getSort( sort ), offset.getValue(), limit.getValue(), inferredTerms );
     }
