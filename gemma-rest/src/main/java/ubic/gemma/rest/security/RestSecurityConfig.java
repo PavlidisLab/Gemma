@@ -25,7 +25,7 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.expression.WebExpressionVoter;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
-import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import java.util.Arrays;
 import java.util.List;
@@ -150,23 +150,6 @@ public class RestSecurityConfig {
      * here will correctly grant access to any authority that the role hierarchy resolves
      * as &ge; {@code GROUP_USER}.
      */
-    /**
-     * Stub {@link HandlerMappingIntrospector} for the Jersey-only standalone WAR.
-     *
-     * <p>Spring Security's string-based {@code .securityMatcher(...)} / {@code .requestMatchers(...)}
-     * auto-pick {@code MvcRequestMatcher} when {@code spring-webmvc} is on the classpath
-     * (it is, transitively). {@code MvcRequestMatcher} then asks the context for a bean
-     * named {@code mvcHandlerMappingIntrospector}. In the gemma-web WAR that bean is
-     * registered by the {@code DispatcherServlet}; in the Jersey-only standalone WAR there
-     * is no DispatcherServlet so we must provide it ourselves. An empty introspector is
-     * sufficient: with no {@code HandlerMapping} beans to discover, the request matcher
-     * falls back to plain Ant-style path matching, which is what we want for {@code /rest/v2/**}.
-     */
-    @Bean(name = "mvcHandlerMappingIntrospector")
-    public HandlerMappingIntrospector mvcHandlerMappingIntrospector() {
-        return new HandlerMappingIntrospector();
-    }
-
     @Bean
     public SecurityFilterChain restSecurityFilterChain(
             HttpSecurity http,
@@ -174,14 +157,20 @@ public class RestSecurityConfig {
             TokenStore tokenStore
     ) throws Exception {
         return http
-                .securityMatcher( "/rest/v2/**" )
+                // Use AntPathRequestMatcher explicitly to avoid Spring Security's
+                // auto-pick of MvcRequestMatcher when spring-webmvc is on the classpath.
+                // The Jersey-only standalone WAR has no DispatcherServlet, so
+                // MvcRequestMatcher's HandlerMappingIntrospector dependency can't be
+                // satisfied — and crucially, a stub introspector still doesn't make
+                // the matcher match the right paths. Ant matching is unambiguous.
+                .securityMatcher( new AntPathRequestMatcher( "/rest/v2/**" ) )
                 .authorizeHttpRequests( auth -> auth
                         // /login is the credential-trade endpoint and must be reachable without
                         // an existing credential. Everything else under /users/** still requires
                         // GROUP_USER, satisfied by either a Bearer token (resolved by the filter
                         // below) or an HTTP Basic header.
-                        .requestMatchers( "/rest/v2/login" ).permitAll()
-                        .requestMatchers( "/rest/v2/users/**" ).hasAuthority( "GROUP_USER" )
+                        .requestMatchers( new AntPathRequestMatcher( "/rest/v2/login" ) ).permitAll()
+                        .requestMatchers( new AntPathRequestMatcher( "/rest/v2/users/**" ) ).hasAuthority( "GROUP_USER" )
                         .anyRequest().permitAll() )
                 // Bearer-token filter runs before the Basic-auth filter so a curator-UI request
                 // bearing Authorization: Bearer <opaque> short-circuits before Spring's BasicAuth
