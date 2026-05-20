@@ -19,7 +19,7 @@
 package ubic.gemma.core.datastructure.matrix.io;
 
 import org.springframework.util.Assert;
-import ubic.basecode.util.StringUtil;
+import ubic.gemma.core.util.StringUtil;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.TsvUtils;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;

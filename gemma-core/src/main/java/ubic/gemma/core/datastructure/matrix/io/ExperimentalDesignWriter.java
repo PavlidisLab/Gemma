@@ -20,7 +20,7 @@ package ubic.gemma.core.datastructure.matrix.io;
 
 import lombok.Setter;
 import org.springframework.util.Assert;
-import ubic.basecode.util.StringUtil;
+import ubic.gemma.core.util.StringUtil;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporterImpl;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.TsvUtils;
