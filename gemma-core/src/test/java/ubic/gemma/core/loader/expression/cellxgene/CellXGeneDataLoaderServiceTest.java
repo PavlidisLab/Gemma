@@ -1,11 +1,11 @@
 package ubic.gemma.core.loader.expression.cellxgene;
 
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.util.test.BaseIntegrationTest;
+import ubic.gemma.core.util.test.BaseIntegrationTest5;
 import ubic.gemma.core.util.test.NetworkAvailable;
-import ubic.gemma.core.util.test.NetworkAvailableRule;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
@@ -17,10 +17,8 @@ import java.io.IOException;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 @NetworkAvailable(url = "https://api.cellxgene.cziscience.com")
-public class CellXGeneDataLoaderServiceTest extends BaseIntegrationTest {
-
-    @Rule
-    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
+@ExtendWith(NetworkAvailableExtension.class)
+public class CellXGeneDataLoaderServiceTest extends BaseIntegrationTest5 {
 
     @Autowired
     private TaxonService taxonService;

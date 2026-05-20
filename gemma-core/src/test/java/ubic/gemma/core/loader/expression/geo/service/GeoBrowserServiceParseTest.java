@@ -14,8 +14,8 @@
  */
 package ubic.gemma.core.loader.expression.geo.service;
 
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,9 +28,9 @@ import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.loader.entrez.EntrezXmlUtils;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
-import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.core.util.test.NetworkAvailable;
-import ubic.gemma.core.util.test.NetworkAvailableRule;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
@@ -41,8 +41,8 @@ import ubic.gemma.persistence.util.EntityUrlBuilder;
 import java.io.IOException;
 import java.io.InputStream;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
@@ -50,10 +50,8 @@ import static org.mockito.Mockito.verify;
  * @author paul
  */
 @ContextConfiguration
-public class GeoBrowserServiceParseTest extends BaseTest {
-
-    @Rule
-    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
+@ExtendWith(NetworkAvailableExtension.class)
+public class GeoBrowserServiceParseTest extends BaseTest5 {
 
     @Configuration
     @TestComponent
