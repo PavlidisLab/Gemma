@@ -7,8 +7,9 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.lang3.time.StopWatch;
 import org.assertj.core.api.SoftAssertions;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.experimental.categories.Category;
 import ubic.gemma.core.ontology.basecode.model.OntologyTerm;
 import ubic.gemma.core.ontology.basecode.providers.*;
@@ -17,7 +18,7 @@ import ubic.gemma.core.ontology.providers.MondoOntologyService;
 import ubic.gemma.core.ontology.providers.PatoOntologyService;
 import ubic.gemma.core.util.concurrent.Executors;
 import ubic.gemma.core.util.test.NetworkAvailable;
-import ubic.gemma.core.util.test.NetworkAvailableRule;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.core.util.test.category.SlowTest;
 
 import java.io.BufferedReader;
@@ -32,7 +33,6 @@ import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assume.assumeNoException;
 
 /**
  * Test replacements for GEO terms.
@@ -40,10 +40,8 @@ import static org.junit.Assume.assumeNoException;
 @Slf4j
 @Category(SlowTest.class)
 @NetworkAvailable(url = "http://purl.obolibrary.org/")
+@ExtendWith(NetworkAvailableExtension.class)
 public class GeoTermReplacementTest {
-
-    @Rule
-    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
 
     private static final List<OntologyService> ontologies = new ArrayList<>();
     private static final Map<OntologyService, Collection<String>> prefixesByOntology = new HashMap<>();
@@ -171,7 +169,7 @@ public class GeoTermReplacementTest {
                 os = cs.take().get();
             } catch ( ExecutionException e ) {
                 // skip the test if ontologies cannot be loaded
-                assumeNoException( e );
+                Assumptions.abort( e.getMessage() );
                 return;
             }
             for ( Rec rec : records ) {
