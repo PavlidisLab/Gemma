@@ -18,20 +18,24 @@
  */
 package ubic.gemma.core.loader.util.fetcher;
 
-import junit.framework.TestCase;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 /**
  * @author pavlidis
  */
-public class AbstractFetcherTest extends TestCase {
+public class AbstractFetcherTest {
 
     private File f;
 
+    @Test
     public final void testMkdirAlreadyExists() throws Exception {
         TestFetcher tf = new TestFetcher();
         String name = RandomStringUtils.insecure().nextAlphabetic( 4 );
@@ -42,29 +46,29 @@ public class AbstractFetcherTest extends TestCase {
 
         tf.setLocalDataPath( usertempdir );
         f = tf.mkdir( RandomStringUtils.insecure().nextAlphabetic( 4 ) );
-        TestCase.assertTrue( f.canRead() );
+        assertTrue( f.canRead() );
     }
 
+    @Test
     public final void testMkdirMakeSubdirs() throws Exception {
         TestFetcher tf = new TestFetcher();
         String usertempdir = System.getProperty( "java.io.tmpdir" );
-        TestCase.assertTrue( usertempdir != null );
+        assertTrue( usertempdir != null );
         tf.setLocalDataPath( usertempdir );
         f = tf.mkdir( RandomStringUtils.insecure().nextAlphabetic( 4 ) );
-        TestCase.assertTrue( f.canRead() );
+        assertTrue( f.canRead() );
     }
 
+    @Test
     public final void testMkdirMakeTemp() throws Exception {
         TestFetcher tf = new TestFetcher();
         tf.setLocalDataPath( null );
         f = tf.mkdir( RandomStringUtils.insecure().nextAlphabetic( 4 ) );
-        TestCase.assertTrue( f.canRead() );
+        assertTrue( f.canRead() );
     }
 
-    @Override
+    @AfterEach
     protected void tearDown() throws Exception {
-
-        super.tearDown();
         if ( f != null && f.canRead() ) {
             if ( !f.delete() ) {
                 throw new IOException( "Could not delete file " + f.getPath() );

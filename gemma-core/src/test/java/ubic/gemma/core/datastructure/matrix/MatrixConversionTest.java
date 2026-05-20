@@ -18,8 +18,8 @@
  */
 package ubic.gemma.core.datastructure.matrix;
 
-import junit.framework.TestCase;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.jupiter.api.Test;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import ubic.gemma.core.loader.expression.arrayDesign.Reporter;
@@ -34,15 +34,20 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 import java.util.*;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 /**
  * @author pavlidis
  */
-public class MatrixConversionTest extends TestCase {
+public class MatrixConversionTest {
 
     private static final int NUM_BIOMATERIALS = 40;
     private static final int NUM_CS = 200;
     private static final Log log = LogFactory.getLog( MatrixConversionTest.class.getName() );
 
+    @Test
     public final void testColumnMapping() {
         Collection<QuantitationType> quantTypes = new HashSet<>();
 
@@ -54,15 +59,15 @@ public class MatrixConversionTest extends TestCase {
         ExpressionDataDoubleMatrix mat = new ExpressionDataDoubleMatrix( null, vectors );
         MatrixConversionTest.log.debug( vectors.size() + " vectors" );
 
-        TestCase.assertEquals( MatrixConversionTest.NUM_CS, mat.rows() );
-        TestCase.assertEquals( MatrixConversionTest.NUM_BIOMATERIALS, mat.columns() );
+        assertEquals( MatrixConversionTest.NUM_CS, mat.rows() );
+        assertEquals( MatrixConversionTest.NUM_BIOMATERIALS, mat.columns() );
 
         for ( int j = 0; j < mat.rows(); j++ ) {
             // System.err.print( mat.getRowElement( j ) );
             for ( int i = 0; i < mat.columns(); i++ ) {
                 Double r = mat.get( j, i );
-                TestCase.assertNotNull( "No value for at index " + i, r );
-                TestCase.assertTrue( "Expected " + i + ", got " + r, i == r.intValue() || r.equals( Double.NaN ) );
+                assertNotNull( r, "No value for at index " + i );
+                assertTrue( i == r.intValue() || r.equals( Double.NaN ), "Expected " + i + ", got " + r );
             }
         }
 

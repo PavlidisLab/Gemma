@@ -18,35 +18,39 @@
  */
 package ubic.gemma.core.loader.genome;
 
-import junit.framework.TestCase;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 
 import java.io.InputStream;
 import java.util.Collection;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 /**
  * @author pavlidis
  */
-public class BlatResultParserTest extends TestCase {
+public class BlatResultParserTest {
 
+    @Test
     public void testParseInputStreamNoheader() throws Exception {
         try (InputStream is = this.getClass().getResourceAsStream( "/data/loader/genome/blatResult.noheader.txt" )) {
             BlatResultParser bp = new BlatResultParser();
             bp.parse( is );
             Collection<BlatResult> res = bp.getResults();
-            TestCase.assertEquals( 18, res.size() );
+            assertEquals( 18, res.size() );
         }
     }
 
     /*
      * Test method for 'ubic.gemma.core.loader.loaderutils.BasicLineParser.parse(InputStream)'
      */
+    @Test
     public void testParseInputStreamWheader() throws Exception {
         try (InputStream is = this.getClass().getResourceAsStream( "/data/loader/genome/blatResult.wheader.txt" )) {
             BlatResultParser bp = new BlatResultParser();
             bp.parse( is );
             Collection<BlatResult> res = bp.getResults();
-            TestCase.assertEquals( 15, res.size() );
+            assertEquals( 15, res.size() );
         }
 
     }
