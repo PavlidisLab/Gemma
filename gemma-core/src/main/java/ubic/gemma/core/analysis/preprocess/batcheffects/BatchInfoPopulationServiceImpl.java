@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.loader.expression.geo.fetcher.RawDataFetcher;
+import ubic.gemma.core.security.audit.AuditedOnError;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationMissingEvent;
@@ -88,6 +89,15 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
 
     @Override
     @Transactional
+    // Repeatable @AuditedOnError: dispatch by exception type. A
+    // BatchInfoMissingException → BatchInformationMissingEvent (informational
+    // "we tried but couldn't find batch data"); any other Throwable →
+    // FailedBatchInformationFetchingEvent (actual failure). The aspect picks
+    // the MOST-SPECIFIC matching declaration, so BatchInfoMissingException
+    // (which extends BatchInfoPopulationException) routes correctly even
+    // though the default Throwable.class declaration also matches.
+    @AuditedOnError( value = BatchInformationMissingEvent.class, exception = BatchInfoMissingException.class )
+    @AuditedOnError( value = FailedBatchInformationFetchingEvent.class )
     public void fillBatchInformation( ExpressionExperiment ee, boolean force ) throws BatchInfoPopulationException {
 
         ee = expressionExperimentService.thawLite( ee );
@@ -113,14 +123,16 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
                 }
                 this.getBatchDataFromRawFiles( ee, files );
             }
-        } catch ( BatchInfoMissingException e ) {
-            this.auditTrailService.addUpdateEvent( ee, BatchInformationMissingEvent.class, e.getMessage(), e );
+        } catch ( BatchInfoPopulationException e ) {
+            // Re-throw verbatim (covers BatchInfoMissingException too). The
+            // @AuditedOnError aspect writes the appropriate Failed*/Missing
+            // event row after the @AfterThrowing advice fires.
             throw e;
         } catch ( Exception e ) {
-            this.auditTrailService.addUpdateEvent( ee, FailedBatchInformationFetchingEvent.class, e.getMessage(), e );
-            if ( e instanceof BatchInfoPopulationException ) {
-                throw e;
-            }
+            // Unexpected runtime — wrap so the declared throws clause is
+            // satisfied. The aspect will emit a FailedBatchInformationFetchingEvent
+            // for the WRAPPED BatchInfoPopulationException (matches the default
+            // Throwable.class declaration above).
             throw new BatchInfoPopulationException( ee, e );
         } finally {
             if ( BatchInfoPopulationServiceImpl.CLEAN_UP && files != null ) {
