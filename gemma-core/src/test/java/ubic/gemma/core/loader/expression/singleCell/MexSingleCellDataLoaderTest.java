@@ -1,9 +1,9 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
@@ -25,9 +25,9 @@ import ubic.gemma.core.loader.util.ftp.FTPConfig;
 import ubic.gemma.core.loader.util.mapper.MapBasedDesignElementMapper;
 import ubic.gemma.core.loader.util.mapper.SimpleBioAssayMapper;
 import ubic.gemma.core.loader.util.mapper.SimpleDesignElementMapper;
-import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.core.util.test.NetworkAvailable;
-import ubic.gemma.core.util.test.NetworkAvailableRule;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.core.util.test.category.GeoTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.quantitationtype.*;
@@ -53,10 +53,8 @@ import static ubic.gemma.core.loader.expression.singleCell.MexTestUtils.createEl
 import static ubic.gemma.core.loader.expression.singleCell.MexTestUtils.createLoaderForResourceDir;
 
 @ContextConfiguration
-public class MexSingleCellDataLoaderTest extends BaseTest {
-
-    @Rule
-    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
+@ExtendWith(NetworkAvailableExtension.class)
+public class MexSingleCellDataLoaderTest extends BaseTest5 {
 
     @Configuration
     @TestComponent
@@ -76,7 +74,7 @@ public class MexSingleCellDataLoaderTest extends BaseTest {
 
     private GeoSingleCellDetector detector;
 
-    @Before
+    @BeforeEach
     public void setUp() throws IOException {
         detector = new GeoSingleCellDetector();
         detector.setFTPClientFactory( ftpClientFactory );
