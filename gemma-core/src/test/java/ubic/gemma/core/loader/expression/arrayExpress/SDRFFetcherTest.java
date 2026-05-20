@@ -18,30 +18,28 @@
  */
 package ubic.gemma.core.loader.expression.arrayExpress;
 
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.experimental.categories.Category;
 import ubic.gemma.core.util.test.NetworkAvailable;
-import ubic.gemma.core.util.test.NetworkAvailableRule;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.core.util.test.category.SlowTest;
 
 import java.io.File;
 import java.util.Collection;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author paul
  */
 @Category(SlowTest.class)
+@Disabled("This test is broken due to a missing remote file. See https://github.com/PavlidisLab/Gemma/issues/766 for details.")
+@ExtendWith(NetworkAvailableExtension.class)
 public class SDRFFetcherTest {
 
-    @Rule
-    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
-
     @Test
-    @Ignore("This test is broken due to a missing remote file. See https://github.com/PavlidisLab/Gemma/issues/766 for details.")
     @Category(SlowTest.class)
     @NetworkAvailable(url = "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/SMDB/E-SMDB-1853/E-SMDB-1853.sdrf.txt")
     public final void testFetch() throws Exception {
