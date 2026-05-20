@@ -880,6 +880,8 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional
+    @Audited(value = CellTypeAssignmentAddedEvent.class,
+            messageSpel = "'Added ' + #result + ' to ' + #dimension + '.'")
     public CellTypeAssignment relabelCellTypes( ExpressionExperiment ee, QuantitationType qt, SingleCellDimension dimension, List<String> newCellTypeLabels, @Nullable Protocol protocol, @Nullable String description, boolean recreateCellTypeFactorIfNecessary, boolean ignoreCompatibleFactor ) {
         Assert.notNull( ee.getId(), "Dataset must be persistent." );
         Assert.notNull( dimension.getId(), "Single-cell dimension must be persistent." );
@@ -911,6 +913,8 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional
+    @Audited(value = CellTypeAssignmentAddedEvent.class,
+            messageSpel = "'Added ' + #cta + ' to ' + #dimension + '.'")
     public CellTypeAssignment addCellTypeAssignment( ExpressionExperiment ee, QuantitationType qt, SingleCellDimension dimension, CellTypeAssignment cta, boolean recreateCellTypeFactorIfNecessary, boolean ignoreCompatibleFactor ) {
         Assert.notNull( ee.getId(), "Dataset must be persistent." );
         Assert.notNull( dimension.getId(), "Single-cell dimension must be persistent." );
@@ -939,7 +943,9 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         }
         dimension.getCellTypeAssignments().add( cta );
         expressionExperimentDao.updateSingleCellDimension( ee, dimension );
-        auditTrailService.addUpdateEvent( ee, CellTypeAssignmentAddedEvent.class, "Added " + cta + " to " + dimension + "." );
+        // CellTypeAssignmentAddedEvent written by @Audited on the two public callers
+        // (relabelCellTypes, addCellTypeAssignment) via AuditedAspect — both have SpEL
+        // notes equivalent to "Added <cta> to <dimension>.".
         log.info( "Relabelled single-cell vectors for " + ee + " with: " + cta );
 
         if ( cta.isPreferred() ) {
