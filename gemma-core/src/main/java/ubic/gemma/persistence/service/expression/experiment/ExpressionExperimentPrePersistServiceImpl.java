@@ -27,8 +27,9 @@ import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.persistence.persister.ArrayDesignPersister;
 import ubic.gemma.persistence.persister.ArrayDesignsForExperimentCache;
-import ubic.gemma.persistence.persister.Persister;
+import ubic.gemma.persistence.persister.GenomePersister;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 
@@ -49,7 +50,10 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
     private static final Log log = LogFactory.getLog( ExpressionExperimentPrePersistServiceImpl.class );
 
     @Autowired
-    private Persister persisterHelper;
+    private GenomePersister genomePersister;
+
+    @Autowired
+    private ArrayDesignPersister arrayDesignPersister;
 
     @Autowired
     private ArrayDesignService arrayDesignService;
@@ -188,7 +192,7 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
         if ( biologicalCharacteristic.getId() == null ) {
             // transaction.
             designElement
-                    .setBiologicalCharacteristic( ( BioSequence ) persisterHelper.persist( biologicalCharacteristic ) );
+                    .setBiologicalCharacteristic( genomePersister.persistBioSequence( biologicalCharacteristic ) );
 
         }
 
@@ -259,7 +263,7 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
         timer.start();
 
         // transaction, but fast if the design already exists.
-        arrayDesign = ( ArrayDesign ) persisterHelper.persist( arrayDesign );
+        arrayDesign = arrayDesignPersister.persistArrayDesign( arrayDesign );
 
         // transaction (read-only). Wasteful, if this is an existing design.
         // arrayDesign = arrayDesignService.thawRawAndProcessed( arrayDesign );
