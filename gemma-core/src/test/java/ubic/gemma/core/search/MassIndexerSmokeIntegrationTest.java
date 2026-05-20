@@ -31,7 +31,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.persister.Persister;
+import ubic.gemma.persistence.persister.GenomePersister;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
@@ -114,7 +114,7 @@ public class MassIndexerSmokeIntegrationTest extends BaseSpringContextTest5 {
     private TaxonService taxonService;
 
     @Autowired
-    private Persister persisterHelper;
+    private GenomePersister genomePersister;
 
     private ExpressionExperiment persistedEe;
     private Gene persistedGene;
@@ -156,7 +156,7 @@ public class MassIndexerSmokeIntegrationTest extends BaseSpringContextTest5 {
         // Physical location is required by the gene persister path; build a throwaway one.
         Chromosome chromosome = Chromosome.Factory.newInstance(
                 "X", null, this.getTestPersistentBioSequence(), human );
-        chromosome = persisterHelper.persist( chromosome );
+        chromosome = genomePersister.persistChromosome( chromosome );
         PhysicalLocation pl = PhysicalLocation.Factory.newInstance();
         pl.setChromosome( chromosome );
         pl.setNucleotide( 100_000L );

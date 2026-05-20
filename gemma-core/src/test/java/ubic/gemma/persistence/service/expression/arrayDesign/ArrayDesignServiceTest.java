@@ -35,7 +35,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.persistence.persister.Persister;
+import ubic.gemma.persistence.persister.ArrayDesignPersister;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
@@ -74,7 +74,7 @@ public class ArrayDesignServiceTest extends BaseIntegrationTest5 {
     private ExternalDatabaseService externalDatabaseService;
 
     @Autowired
-    private Persister persisterHelper;
+    private ArrayDesignPersister arrayDesignPersister;
 
     @Autowired
     private PersistentDummyObjectHelper testHelper;
@@ -146,7 +146,7 @@ public class ArrayDesignServiceTest extends BaseIntegrationTest5 {
 
         this.assignExternalReference( ad, gplToFind );
         this.assignExternalReference( ad, this.getGpl() );
-        ad = persisterHelper.persist( ad );
+        ad = arrayDesignPersister.persistArrayDesign( ad );
         adsToRemove.add( ad );
 
         ArrayDesign toFind = ArrayDesign.Factory.newInstance();
@@ -170,7 +170,7 @@ public class ArrayDesignServiceTest extends BaseIntegrationTest5 {
         ad.setName( name );
         ad.setShortName( name );
         ad.setPrimaryTaxon( this.getTaxon( "mouse" ) );
-        ad = persisterHelper.persist( ad );
+        ad = arrayDesignPersister.persistArrayDesign( ad );
         adsToRemove.add( ad );
 
         ArrayDesign toFind = ArrayDesign.Factory.newInstance();
@@ -219,7 +219,7 @@ public class ArrayDesignServiceTest extends BaseIntegrationTest5 {
             ad.getCompositeSequences().add( c1 );
         }
 
-        ad = persisterHelper.persist( ad );
+        ad = arrayDesignPersister.persistArrayDesign( ad );
         adsToRemove.add( ad );
 
         Collection<Taxon> taxa = arrayDesignService.getTaxaFromBioSequences( ad );
@@ -390,7 +390,7 @@ public class ArrayDesignServiceTest extends BaseIntegrationTest5 {
 
         ad.setPrimaryTaxon( tax );
 
-        ad = persisterHelper.persist( ad );
+        ad = arrayDesignPersister.persistArrayDesign( ad );
         adsToRemove.add( ad );
         ad = arrayDesignService.thaw( ad );
 
@@ -405,7 +405,7 @@ public class ArrayDesignServiceTest extends BaseIntegrationTest5 {
         subsumedArrayDesign.getCompositeSequences().add( c2 );
         c2.setArrayDesign( subsumedArrayDesign );
 
-        subsumedArrayDesign = persisterHelper.persist( subsumedArrayDesign );
+        subsumedArrayDesign = arrayDesignPersister.persistArrayDesign( subsumedArrayDesign );
         adsToRemove.add( subsumedArrayDesign );
         subsumedArrayDesign = arrayDesignService.thaw( subsumedArrayDesign );
         // flushAndClearSession();
@@ -435,7 +435,7 @@ public class ArrayDesignServiceTest extends BaseIntegrationTest5 {
 
     private ArrayDesign getTestPersistentArrayDesign() {
         ArrayDesign ad = getTestArrayDesign();
-        ad = persisterHelper.persist( ad );
+        ad = arrayDesignPersister.persistArrayDesign( ad );
         adsToRemove.add( ad );
         return ad;
     }
