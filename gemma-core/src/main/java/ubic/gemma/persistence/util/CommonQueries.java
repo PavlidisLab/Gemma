@@ -74,6 +74,31 @@ public class CommonQueries {
                 + "group by ad" ), "ees", getExperiments( ees ), 2048 );
     }
 
+    /**
+     * Retrieve, in one query, a per-experiment map of array designs used.
+     * <p>
+     * Use this when you need to know which platform belongs to which EE (e.g. bulk
+     * pipeline-status assembly): the flat {@link #getArrayDesignsUsed(Collection, Session)}
+     * loses that mapping. EEs with no resolved bio-assays are absent from the map.
+     */
+    public static Map<ExpressionExperiment, Collection<ArrayDesign>> getArrayDesignsUsedByExperiment(
+            Collection<? extends @MayBeUninitialized BioAssaySet> ees, Session session ) {
+        if ( ees == null || ees.isEmpty() )
+            return Collections.emptyMap();
+        //noinspection unchecked
+        List<Object[]> rows = listByIdentifiableBatch( session.createQuery( "select ee, ad from ExpressionExperiment as ee "
+                + "join ee.bioAssays b join b.arrayDesignUsed ad "
+                + "where ee in (:ees) "
+                + "group by ee, ad" ), "ees", getExperiments( ees ), 2048 );
+        Map<ExpressionExperiment, Collection<ArrayDesign>> result = new HashMap<>();
+        for ( Object[] row : rows ) {
+            ExpressionExperiment ee = ( ExpressionExperiment ) row[0];
+            ArrayDesign ad = ( ArrayDesign ) row[1];
+            result.computeIfAbsent( ee, k -> new HashSet<>() ).add( ad );
+        }
+        return result;
+    }
+
     private static Collection<@MayBeUninitialized ExpressionExperiment> getExperiments( Collection<? extends @MayBeUninitialized BioAssaySet> bioAssaySets ) {
         return bioAssaySets.stream().map( CommonQueries::getExperiment ).collect( IdentifiableUtils.toIdentifiableSet() );
     }

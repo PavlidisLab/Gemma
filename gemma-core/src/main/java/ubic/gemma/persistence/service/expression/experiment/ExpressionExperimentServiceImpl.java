@@ -559,6 +559,15 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
+    public Map<ExpressionExperiment, Collection<ArrayDesign>> getArrayDesignsUsedByExperiment( Collection<ExpressionExperiment> expressionExperiments ) {
+        if ( expressionExperiments == null || expressionExperiments.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+        return this.expressionExperimentDao.getArrayDesignsUsedByExperiment( expressionExperiments );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperiment ee, QuantitationType qt ) {
         Class<? extends DataVector> dvt = quantitationTypeService.getDataVectorType( qt );
         if ( dvt == null ) {
