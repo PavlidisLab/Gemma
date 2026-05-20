@@ -23,6 +23,8 @@ import org.springframework.security.access.prepost.PostFilter;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.persistence.util.Cursor;
+import ubic.gemma.persistence.util.CursorPage;
 
 import org.springframework.lang.Nullable;
 import java.util.Collection;
@@ -43,6 +45,18 @@ public interface AuditEventService {
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     List<AuditEvent> getEventsWithType( Auditable auditable );
+
+    /**
+     * Keyset-pagination counterpart to {@link #getEvents(Auditable)} for the
+     * {@code GET /datasets/{dataset}/auditEvents} endpoint &mdash; see
+     * {@code CURSOR_PAGINATION_STEP1_PLAN.md} step 1q. Mirrors the
+     * {@link AuditEventDao#getEventsByCursor(Auditable, Cursor, int)} contract
+     * (id-asc keyset, {@code limit+1} probe for {@code hasMore},
+     * {@code totalElements} null by default). The auditable-trail scope and
+     * ACL check is preserved.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    CursorPage<AuditEvent> getEventsByCursor( Auditable auditable, @Nullable Cursor cursor, int limit );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
     <T extends Auditable> Map<T, AuditEvent> getCreateEvents( Collection<T> auditable );

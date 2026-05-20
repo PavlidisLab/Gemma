@@ -937,14 +937,38 @@ public class DatasetsWebService {
     @GET
     @Path("/{dataset}/auditEvents")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the audit events of a dataset", responses = {
-            @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
-            @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
-                    content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
-    public ResponseDataObject<List<AuditEventValueObject>> getDatasetAuditEvents(
-            @PathParam("dataset") DatasetArg<?> datasetArg
+    @Operation(summary = "Retrieve the audit events of a dataset",
+            description = "Legacy mode (no `cursor` parameter): returns the full unpaginated audit-event "
+                    + "list in the existing shape (no count query, full result set, sorted by `date, id`). "
+                    + "Cursor mode (recommended for datasets accumulating long curation/processing histories): "
+                    + "pass an opaque `cursor` token from a previous response's `nextCursor` / `prevCursor` "
+                    + "field along with a `limit`. In cursor mode the result is always sorted by ascending `id` "
+                    + "(cursor mode forces a single-component id sort pending the indexed-column audit in phase B; "
+                    + "audit events are append-only so id-asc tracks date-asc in practice); the path-derived "
+                    + "dataset (AuditTrail) scope is preserved; `totalElements` is `null` by default "
+                    + "(no count query per request).",
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(schema = @Schema(oneOf = {
+                                    ResponseDataObject.class,
+                                    CursorPaginatedResponseDataObject.class
+                            }))),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public Object getDatasetAuditEvents(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Opaque keyset-pagination cursor token.")
+            @QueryParam("cursor") CursorArg cursorArg,
+            @Parameter(description = "Page size for cursor mode (ignored when no `cursor` is supplied).")
+            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        if ( cursorArg != null ) {
+            CursorPage<AuditEventValueObject> page = auditEventService
+                    .getEventsByCursor( ee, cursorArg.getValue(), limitArg.getValue() )
+                    .map( AuditEventValueObject::new );
+            return paginateByCursor( page, new String[] { "id" } );
+        }
         List<AuditEventValueObject> out = auditEventService.getEvents( ee ).stream()
                 .map( AuditEventValueObject::new )
                 .collect( Collectors.toList() );
