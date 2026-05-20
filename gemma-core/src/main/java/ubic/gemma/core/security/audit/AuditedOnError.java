@@ -22,6 +22,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
+import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
@@ -74,9 +75,32 @@ import java.lang.annotation.Target;
  * <p>A method may carry {@link Audited} (or {@link AuditedConditional}) AND
  * {@code @AuditedOnError} simultaneously — the success annotation fires on
  * normal return, this one fires on throw, and they share no advice path.
+ *
+ * <p><b>Repeatable with exception-class dispatch.</b> The annotation is
+ * {@link Repeatable} via {@link AuditedOnErrors}, and exposes an
+ * {@link #exception()} filter so that a single method can record DIFFERENT
+ * {@code Failed…Event} types for different caught exception classes — the
+ * canonical multi-catch shape:
+ * <pre>{@code
+ *   @AuditedOnError(value = BatchInformationMissingEvent.class,
+ *                   exception = BatchInfoMissingException.class)
+ *   @AuditedOnError(value = FailedBatchInformationFetchingEvent.class)   // default Throwable.class → fallback
+ *   public void fillBatchInformation( ExpressionExperiment ee ) { ... }
+ * }</pre>
+ *
+ * <p><b>Dispatch rule:</b> at most ONE matching declaration emits per throw.
+ * When several declarations would match (e.g. a {@code Throwable.class}
+ * default-filter plus a specific subclass filter), the aspect picks the
+ * MOST-SPECIFIC match — the declaration whose {@link #exception()} class is
+ * lowest in the {@code instanceof} chain for the thrown throwable. Ties are
+ * resolved by declaration order (first wins) but ties are not expected in
+ * normal use. A default {@code Throwable.class} declaration therefore acts as
+ * the "catch-all" fallback in mirror to a Java {@code catch (Exception e)}
+ * block at the bottom of a multi-catch.
  */
 @Retention( RetentionPolicy.RUNTIME )
 @Target( ElementType.METHOD )
+@Repeatable( AuditedOnErrors.class )
 @Documented
 public @interface AuditedOnError {
 
@@ -86,6 +110,22 @@ public @interface AuditedOnError {
      * {@code Failed…Event} subtype.
      */
     Class<? extends AuditEventType> value();
+
+    /**
+     * Optional exception-class filter. The annotation fires only when the
+     * caught throwable is an {@code instanceof} this class. Default
+     * {@link Throwable} matches everything (backwards-compatible with the
+     * pre-repeatable shape — a single un-filtered {@code @AuditedOnError}
+     * behaves identically before and after this change).
+     *
+     * <p>When multiple repeated declarations could match a given throwable,
+     * the aspect picks the MOST-SPECIFIC declaration — the one whose
+     * {@code exception} class is the deepest in the {@code instanceof}
+     * chain. A default {@code Throwable.class} declaration on the same
+     * method therefore acts as a catch-all fallback that fires only when no
+     * more-specific declaration matches.
+     */
+    Class<? extends Throwable> exception() default Throwable.class;
 
     /**
      * Optional plain (non-SpEL) note string. Stored verbatim in

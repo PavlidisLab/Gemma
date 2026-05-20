@@ -37,6 +37,7 @@ import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.model.common.auditAndSecurity.AbstractAuditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Auditable;
+import ubic.gemma.model.common.auditAndSecurity.eventType.FailedSampleCorrelationAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEvent;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 
@@ -250,6 +251,76 @@ public class AuditedAspectTest extends BaseTest5 {
         @AuditedOnError( SampleRemovalEvent.class )
         public int dualAnnotatedFailure( FakeAuditable target ) {
             throw new IllegalStateException( "boom" );
+        }
+
+        /**
+         * Phase C ({@link AuditedOnError} repeatable): exception-class filter
+         * on a SINGLE declaration. {@code IllegalArgumentException} should
+         * match; an unrelated {@code IllegalStateException} should be a
+         * no-op (the advice skips when the throwable isn't an instance of
+         * the filter).
+         */
+        @AuditedOnError( value = SampleRemovalEvent.class, exception = IllegalArgumentException.class )
+        public void singleFilterMatches( FakeAuditable target ) {
+            throw new IllegalArgumentException( "bad-arg" );
+        }
+
+        @AuditedOnError( value = SampleRemovalEvent.class, exception = IllegalArgumentException.class )
+        public void singleFilterDoesNotMatch( FakeAuditable target ) {
+            throw new IllegalStateException( "state" );
+        }
+
+        /**
+         * Phase C: two repeatable {@link AuditedOnError} declarations dispatch
+         * to different event types per exception class. Two different
+         * concrete event types so we can verify which one was emitted.
+         */
+        @AuditedOnError( value = SampleRemovalEvent.class, exception = IllegalArgumentException.class )
+        @AuditedOnError( value = FailedSampleCorrelationAnalysisEvent.class, exception = IllegalStateException.class )
+        public void multiFilterArgException( FakeAuditable target ) {
+            throw new IllegalArgumentException( "arg" );
+        }
+
+        @AuditedOnError( value = SampleRemovalEvent.class, exception = IllegalArgumentException.class )
+        @AuditedOnError( value = FailedSampleCorrelationAnalysisEvent.class, exception = IllegalStateException.class )
+        public void multiFilterStateException( FakeAuditable target ) {
+            throw new IllegalStateException( "state" );
+        }
+
+        /**
+         * Phase C: most-specific match dispatch. A default-class
+         * ({@code Throwable.class}) declaration acts as the catch-all
+         * fallback; a more specific declaration wins when its filter
+         * matches. Here {@code IllegalArgumentException} (a RuntimeException
+         * descendant) should pick the IAE-specific declaration, NOT the
+         * Throwable fallback.
+         */
+        @AuditedOnError( value = SampleRemovalEvent.class, exception = IllegalArgumentException.class )
+        @AuditedOnError( value = FailedSampleCorrelationAnalysisEvent.class )   // default Throwable.class → fallback
+        public void mostSpecificWinsForMatchingType( FakeAuditable target ) {
+            throw new IllegalArgumentException( "arg" );
+        }
+
+        /**
+         * Phase C: default-class declaration acts as a fallback for
+         * exception types not covered by any more-specific declaration.
+         * {@code NullPointerException} doesn't match the IAE-specific
+         * declaration, so the {@code Throwable.class} fallback fires.
+         */
+        @AuditedOnError( value = SampleRemovalEvent.class, exception = IllegalArgumentException.class )
+        @AuditedOnError( value = FailedSampleCorrelationAnalysisEvent.class )   // default Throwable.class → fallback
+        public void fallbackFiresForUnmatchedType( FakeAuditable target ) {
+            throw new NullPointerException( "npe" );
+        }
+
+        /**
+         * Phase C: no declaration matches → no audit row, no Spring event.
+         * Mirrors a Java multi-catch where the thrown type isn't covered.
+         */
+        @AuditedOnError( value = SampleRemovalEvent.class, exception = IllegalArgumentException.class )
+        @AuditedOnError( value = FailedSampleCorrelationAnalysisEvent.class, exception = IllegalStateException.class )
+        public void noMatchEmitsNothing( FakeAuditable target ) {
+            throw new NullPointerException( "npe" );
         }
     }
 
@@ -628,5 +699,130 @@ public class AuditedAspectTest extends BaseTest5 {
                 eq( target ), eq( SampleRemovalEvent.class ), eq( "boom" ), any( Throwable.class ) );
         verify( auditTrailService, never() ).addUpdateEventWithPayload(
                 any(), any(), any(), any() );
+    }
+
+    /**
+     * Phase C (repeatable): a single {@link AuditedOnError} declaration with
+     * a default {@code Throwable.class} filter (back-compat) still fires for
+     * everything. Covered indirectly above; the explicit check here pins
+     * back-compat down so future refactors don't regress it.
+     */
+    @Test
+    public void singleAnnotation_defaultFilter_firesForAnyThrowable() {
+        FakeAuditable target = new FakeAuditable( 400L );
+
+        Throwable caught = catchThrowable( () -> annotatedService.erroringDefaultMessage( target ) );
+        assertThat( caught ).isInstanceOf( IllegalStateException.class );
+        verify( auditTrailService ).addUpdateEvent(
+                eq( target ), eq( SampleRemovalEvent.class ), eq( "boom" ), any( Throwable.class ) );
+    }
+
+    /**
+     * Phase C (repeatable): a single {@link AuditedOnError} declaration with
+     * a specific {@code exception} filter fires when the throwable matches.
+     */
+    @Test
+    public void singleAnnotation_specificFilter_firesForMatchingThrowable() {
+        FakeAuditable target = new FakeAuditable( 401L );
+
+        Throwable caught = catchThrowable( () -> annotatedService.singleFilterMatches( target ) );
+        assertThat( caught ).isInstanceOf( IllegalArgumentException.class );
+        verify( auditTrailService ).addUpdateEvent(
+                eq( target ), eq( SampleRemovalEvent.class ), eq( "bad-arg" ), any( Throwable.class ) );
+    }
+
+    /**
+     * Phase C (repeatable): a single {@link AuditedOnError} declaration with
+     * a specific {@code exception} filter SKIPS when the throwable doesn't
+     * match — the original exception still propagates (Spring AOP re-throws
+     * regardless).
+     */
+    @Test
+    public void singleAnnotation_specificFilter_skipsForNonMatchingThrowable() {
+        FakeAuditable target = new FakeAuditable( 402L );
+
+        Throwable caught = catchThrowable( () -> annotatedService.singleFilterDoesNotMatch( target ) );
+        assertThat( caught ).isInstanceOf( IllegalStateException.class );
+        verifyNoInteractions( auditTrailService );
+        assertThat( collector.received ).isEmpty();
+    }
+
+    /**
+     * Phase C (repeatable): two repeated declarations dispatch to different
+     * event types. IAE branch → SampleRemovalEvent.
+     */
+    @Test
+    public void repeatable_dispatchesToCorrectEventType_iae() {
+        FakeAuditable target = new FakeAuditable( 403L );
+
+        Throwable caught = catchThrowable( () -> annotatedService.multiFilterArgException( target ) );
+        assertThat( caught ).isInstanceOf( IllegalArgumentException.class );
+        verify( auditTrailService ).addUpdateEvent(
+                eq( target ), eq( SampleRemovalEvent.class ), eq( "arg" ), any( Throwable.class ) );
+        verify( auditTrailService, never() ).addUpdateEvent(
+                eq( target ), eq( FailedSampleCorrelationAnalysisEvent.class ), any(), any( Throwable.class ) );
+    }
+
+    /**
+     * Phase C (repeatable): two repeated declarations dispatch to different
+     * event types. ISE branch → FailedSampleCorrelationAnalysisEvent.
+     */
+    @Test
+    public void repeatable_dispatchesToCorrectEventType_ise() {
+        FakeAuditable target = new FakeAuditable( 404L );
+
+        Throwable caught = catchThrowable( () -> annotatedService.multiFilterStateException( target ) );
+        assertThat( caught ).isInstanceOf( IllegalStateException.class );
+        verify( auditTrailService ).addUpdateEvent(
+                eq( target ), eq( FailedSampleCorrelationAnalysisEvent.class ), eq( "state" ), any( Throwable.class ) );
+        verify( auditTrailService, never() ).addUpdateEvent(
+                eq( target ), eq( SampleRemovalEvent.class ), any(), any( Throwable.class ) );
+    }
+
+    /**
+     * Phase C (repeatable): most-specific match wins. IAE-specific
+     * declaration beats the Throwable.class fallback.
+     */
+    @Test
+    public void repeatable_mostSpecificMatchWins() {
+        FakeAuditable target = new FakeAuditable( 405L );
+
+        Throwable caught = catchThrowable( () -> annotatedService.mostSpecificWinsForMatchingType( target ) );
+        assertThat( caught ).isInstanceOf( IllegalArgumentException.class );
+        verify( auditTrailService ).addUpdateEvent(
+                eq( target ), eq( SampleRemovalEvent.class ), eq( "arg" ), any( Throwable.class ) );
+        verify( auditTrailService, never() ).addUpdateEvent(
+                eq( target ), eq( FailedSampleCorrelationAnalysisEvent.class ), any(), any( Throwable.class ) );
+    }
+
+    /**
+     * Phase C (repeatable): a default-class declaration acts as a fallback
+     * when no more-specific declaration matches.
+     */
+    @Test
+    public void repeatable_defaultClassFallback_firesForUnmatchedType() {
+        FakeAuditable target = new FakeAuditable( 406L );
+
+        Throwable caught = catchThrowable( () -> annotatedService.fallbackFiresForUnmatchedType( target ) );
+        assertThat( caught ).isInstanceOf( NullPointerException.class );
+        verify( auditTrailService ).addUpdateEvent(
+                eq( target ), eq( FailedSampleCorrelationAnalysisEvent.class ), any(), any( Throwable.class ) );
+        verify( auditTrailService, never() ).addUpdateEvent(
+                eq( target ), eq( SampleRemovalEvent.class ), any(), any( Throwable.class ) );
+    }
+
+    /**
+     * Phase C (repeatable): when no declaration matches the throwable,
+     * nothing is recorded — like a Java multi-catch where the thrown type
+     * isn't in the catch list. The original exception still propagates.
+     */
+    @Test
+    public void repeatable_noMatch_emitsNothing() {
+        FakeAuditable target = new FakeAuditable( 407L );
+
+        Throwable caught = catchThrowable( () -> annotatedService.noMatchEmitsNothing( target ) );
+        assertThat( caught ).isInstanceOf( NullPointerException.class );
+        verifyNoInteractions( auditTrailService );
+        assertThat( collector.received ).isEmpty();
     }
 }
