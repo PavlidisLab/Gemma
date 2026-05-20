@@ -19,24 +19,18 @@
 package ubic.gemma.core.loader.genome.gene.ncbi.homology;
 
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.Tag;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.util.Assert;
 import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.context.AbstractAsyncFactoryBean;
-import ubic.gemma.core.context.TestComponent;
-import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.core.util.test.NetworkAvailable;
 import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.core.util.test.category.SlowTest;
@@ -56,51 +50,39 @@ import static org.mockito.Mockito.mock;
 /**
  * Tests the homologeneService but only access methods that don't require a DB connection (using the gemma db).
  *
+ * <p>Note: this test deliberately does NOT use Spring (no {@code @ContextConfiguration},
+ * no {@link org.springframework.test.context.junit.jupiter.SpringExtension}). The factory under test is a
+ * {@link AbstractAsyncFactoryBean} (a Spring {@code FactoryBean}); registering it in a Spring context causes
+ * {@code MockitoResetTestExecutionListener} (spring-test 6.2) to call {@code getBean()} on it before each test,
+ * which eagerly triggers {@code getObject()} and initialises the factory, defeating per-test isolation. We
+ * sidestep that by constructing the factory directly in {@link #setUp()} with mocked collaborators.
+ *
  * @author klc
  */
-@ContextConfiguration
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @ExtendWith(NetworkAvailableExtension.class)
-public class HomologeneServiceTest extends BaseTest5 {
+public class HomologeneServiceTest {
 
-    @Configuration
-    @TestComponent
-    static class HomologeneServiceTestContextConfiguration {
-
-        @Bean
-        public HomologeneServiceFactory homologeneServiceFactory() {
-            return new HomologeneServiceFactory( geneService(), taxonService() ) {
-                @Override
-                protected HomologeneService createObject() throws Exception {
-                    // otherwise some test might fail because the object is created too quickly
-                    Thread.sleep( 10 );
-                    return super.createObject();
-                }
-            };
-        }
-
-        @Bean
-        public GeneService geneService() {
-            return mock( GeneService.class );
-        }
-
-        @Bean
-        public TaxonReadService taxonService() {
-            return mock( TaxonReadService.class );
-        }
-    }
-
-    /**
-     * Note: injecting {@link Future<HomologeneService>} works too, but would trigger the bean initialization and
-     * prevent us from setting the mocked resource.
-     */
-    @Autowired
     private HomologeneServiceFactory hgs;
 
     @BeforeEach
     public void setUp() throws Exception {
+        hgs = new HomologeneServiceFactory( mock( GeneService.class ), mock( TaxonReadService.class ) ) {
+            @Override
+            protected HomologeneService createObject() throws Exception {
+                // otherwise some test might fail because the object is created too quickly
+                Thread.sleep( 10 );
+                return super.createObject();
+            }
+        };
         hgs.setHomologeneFile( new ClassPathResource( "/data/loader/genome/homologene/homologene.testdata.txt" ) );
         hgs.setLoadHomologene( true ); // ignore setting from Gemma.properties
+    }
+
+    @AfterEach
+    public void tearDown() throws Exception {
+        if ( hgs != null ) {
+            hgs.destroy();
+        }
     }
 
     @Test
