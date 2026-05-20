@@ -1,7 +1,7 @@
 package ubic.gemma.core.ontology.providers;
 
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
 import ubic.gemma.core.ontology.basecode.model.OntologyTerm;
 import ubic.gemma.core.ontology.basecode.providers.DiseaseOntologyService;
@@ -12,7 +12,7 @@ import ubic.gemma.core.search.SearchException;
 import java.io.IOException;
 import java.util.Collection;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class DiseaseOntologyTest {
 
@@ -41,7 +41,7 @@ public class DiseaseOntologyTest {
         assertFalse( term.isObsolete() );
     }
 
-    @Ignore("Blocked on Phase 3 search-subsystem rebuild: baseCode's renovations branch gutted "
+    @Disabled("Blocked on Phase 3 search-subsystem rebuild: baseCode's renovations branch gutted "
             + "the Lucene 3 ontology indexer (a Lucene 9 / HS 7 / OpenSearch rebuild is its own "
             + "phase). DiseaseOntologyService.findTerm now returns an empty collection. "
             + "Tracked in PHASE3_TEST_TRIAGE.md.")

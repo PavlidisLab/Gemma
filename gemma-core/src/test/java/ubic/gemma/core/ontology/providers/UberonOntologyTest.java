@@ -1,21 +1,20 @@
 package ubic.gemma.core.ontology.providers;
 
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.core.ontology.basecode.model.OntologyTerm;
 import ubic.gemma.core.ontology.basecode.providers.UberonOntologyService;
-import ubic.gemma.core.util.test.category.SlowTest;
 
 import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class UberonOntologyTest {
 
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
     public void testSubstantiaNigraInUberon() {
         UberonOntologyService uberonOntologyService = new UberonOntologyService();
         assertEquals( ubic.gemma.core.ontology.basecode.providers.OntologyService.LanguageLevel.FULL, uberonOntologyService.getLanguageLevel() );

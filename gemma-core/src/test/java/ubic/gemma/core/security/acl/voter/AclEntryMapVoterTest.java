@@ -1,7 +1,7 @@
 package ubic.gemma.core.security.acl.voter;
 
 import ubic.gemma.core.security.model.Securable;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.security.acls.domain.ObjectIdentityRetrievalStrategyImpl;
 import org.springframework.security.acls.domain.SidRetrievalStrategyImpl;
@@ -12,7 +12,7 @@ import org.springframework.security.util.SimpleMethodInvocation;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 
 public class AclEntryMapVoterTest {
