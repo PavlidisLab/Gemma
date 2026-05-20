@@ -30,6 +30,7 @@ import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.SequenceType;
+import ubic.gemma.persistence.persister.GenomePersister;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -43,6 +44,9 @@ public class BioSequencePersistTest extends BaseSpringContextTest5 {
 
     @Autowired
     BioSequenceService bss;
+
+    @Autowired
+    GenomePersister genomePersister;
 
     private BioSequence bs;
 
@@ -74,7 +78,7 @@ public class BioSequencePersistTest extends BaseSpringContextTest5 {
 
     @Test
     public final void testPersistBioSequence() {
-        bs = ( BioSequence ) persisterHelper.persist( bs );
+        bs = genomePersister.persistBioSequence( bs );
         assertNotNull( bs.getId() );
         assertNotNull( bs.getType() );
         assertEquals( "WHOLE_CHROMOSOME", bs.getType().name() );

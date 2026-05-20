@@ -53,7 +53,7 @@ public class AuditEventServiceTest extends BaseSpringContextTest5 {
             ad.setName( "ffoo " + i );
             ad.setPrimaryTaxon( this.getTaxon( "mouse" ) );
 
-            ad = ( ArrayDesign ) persisterHelper.persist( ad );
+            ad = arrayDesignPersister.persistArrayDesign( ad );
 
             ad.setDescription( "arrrgh" );
             ads.update( ad );

@@ -95,7 +95,7 @@ public class AclAuthorizationTest extends BaseSpringContextTest5 {
         cs2.setArrayDesign( arrayDesign );
         arrayDesign.setCompositeSequences( col );
 
-        arrayDesign = ( ArrayDesign ) persisterHelper.persist( arrayDesign );// persister helper
+        arrayDesign = arrayDesignPersister.persistArrayDesign( arrayDesign );
 
         try {
             userManager.loadUserByUsername( aDifferentUsername );

@@ -67,7 +67,7 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest5 {
         auditable.setName( "testing audit " + RandomStringUtils.insecure().nextAlphanumeric( 32 ) );
         auditable.setShortName( RandomStringUtils.insecure().nextAlphanumeric( 8 ) );
         auditable.setPrimaryTaxon( this.getTaxon( "human" ) );
-        auditable = ( ArrayDesign ) this.persisterHelper.persist( auditable );
+        auditable = this.arrayDesignPersister.persistArrayDesign( auditable );
 
         assertNotNull( auditable.getAuditTrail() );
         assertNotNull( auditable.getCurationDetails() );

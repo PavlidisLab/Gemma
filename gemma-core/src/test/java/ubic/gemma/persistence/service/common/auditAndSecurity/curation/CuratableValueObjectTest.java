@@ -36,8 +36,10 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.persister.GenomePersister;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.experiment.EeWriteService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.util.Collections;
@@ -64,6 +66,12 @@ public class CuratableValueObjectTest extends BaseSpringContextTest5 {
     @Autowired
     private ExperimentFactory experimentFactory;
 
+    @Autowired
+    private GenomePersister genomePersister;
+
+    @Autowired
+    private EeWriteService eeWriteService;
+
     @BeforeEach
     public void setUp() throws Exception {
 
@@ -71,24 +79,24 @@ public class CuratableValueObjectTest extends BaseSpringContextTest5 {
         arrayDesign.setName( "testing audit " + RandomStringUtils.insecure().nextAlphanumeric( 32 ) );
         arrayDesign.setShortName( RandomStringUtils.insecure().nextAlphanumeric( 8 ) );
         arrayDesign.setPrimaryTaxon( this.getTaxon( "human" ) );
-        arrayDesign = ( ArrayDesign ) this.persisterHelper.persist( arrayDesign );
+        arrayDesign = this.arrayDesignPersister.persistArrayDesign( arrayDesign );
 
         assertTrue( arrayDesign.getAuditTrail() != null );
 
         Taxon taxon = Taxon.Factory
                 .newInstance( "text taxon scientific name " + RandomStringUtils.insecure().nextAlphanumeric( 8 ), "ttxn", 0,
                         true );
-        this.persisterHelper.persist( taxon );
+        this.genomePersister.persistTaxon( taxon );
 
         BioMaterial bm = BioMaterial.Factory.newInstance();
         bm.setName( RandomStringUtils.insecure().nextAlphanumeric( 8 ) );
         bm.setSourceTaxon( taxon );
-        this.persisterHelper.persist( bm );
+        this.eeWriteService.persistBioMaterial( bm );
 
         BioAssay bioAssay = BioAssay.Factory.newInstance();
         bioAssay.setArrayDesignUsed( arrayDesign );
         bioAssay.setSampleUsed( bm );
-        this.persisterHelper.persist( bioAssay );
+        this.eeWriteService.persistBioAssay( bioAssay );
 
         ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
         ed.setName( RandomStringUtils.insecure().nextAlphanumeric( 8 ) );
