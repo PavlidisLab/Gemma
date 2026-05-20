@@ -17,28 +17,28 @@
  */
 package ubic.gemma.core.util.test.fixture;
 
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.util.test.BaseIntegrationTest;
+import ubic.gemma.core.util.test.BaseIntegrationTest5;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Verifies the Phase 3 typed {@link TaxonFactory}.
  *
  * @see TaxonFactory
  */
-public class TaxonFactoryTest extends BaseIntegrationTest {
+public class TaxonFactoryTest extends BaseIntegrationTest5 {
 
     @Autowired
     private TaxonFactory taxonFactory;
@@ -48,7 +48,7 @@ public class TaxonFactoryTest extends BaseIntegrationTest {
 
     private final List<Taxon> adHocTaxa = new ArrayList<>();
 
-    @After
+    @AfterEach
     public void cleanUp() {
         for ( Taxon t : adHocTaxa ) {
             try {
@@ -66,7 +66,7 @@ public class TaxonFactoryTest extends BaseIntegrationTest {
     public void mouse_returnsSeededTaxonWithNcbi10090() {
         Taxon mouse = taxonFactory.mouse();
         assertNotNull( mouse );
-        assertNotNull( "seeded taxon must have a persistent id", mouse.getId() );
+        assertNotNull( mouse.getId(), "seeded taxon must have a persistent id" );
         assertEquals( "mouse", mouse.getCommonName() );
         assertEquals( Integer.valueOf( 10090 ), mouse.getNcbiId() );
     }
@@ -83,7 +83,7 @@ public class TaxonFactoryTest extends BaseIntegrationTest {
     public void seededShortcutsReturnSameRowAcrossCalls() {
         Taxon a = taxonFactory.mouse();
         Taxon b = taxonFactory.mouse();
-        assertSame( "seeded resolution should return identity-equal entities", a.getId(), b.getId() );
+        assertSame( a.getId(), b.getId(), "seeded resolution should return identity-equal entities" );
     }
 
     @Test
@@ -122,13 +122,13 @@ public class TaxonFactoryTest extends BaseIntegrationTest {
         Taxon t = taxonFactory.adHoc().build();
         adHocTaxa.add( t );
 
-        assertNotNull( "ad-hoc taxon should be persisted", t.getId() );
+        assertNotNull( t.getId(), "ad-hoc taxon should be persisted" );
         assertNotNull( t.getScientificName() );
         assertNotNull( t.getCommonName() );
         assertNotNull( t.getNcbiId() );
-        assertTrue( "default ad-hoc taxon should have genes usable", t.getIsGenesUsable() );
-        assertTrue( "ad-hoc NCBI id should be in the synthetic range",
-                t.getNcbiId() >= 500_000 );
+        assertTrue( t.getIsGenesUsable(), "default ad-hoc taxon should have genes usable" );
+        assertTrue( t.getNcbiId() >= 500_000,
+                "ad-hoc NCBI id should be in the synthetic range" );
     }
 
     @Test

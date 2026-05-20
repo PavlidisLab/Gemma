@@ -17,10 +17,10 @@
  */
 package ubic.gemma.core.util.test.fixture;
 
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.util.test.BaseIntegrationTest;
+import ubic.gemma.core.util.test.BaseIntegrationTest5;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProduct;
@@ -29,16 +29,16 @@ import ubic.gemma.persistence.service.genome.gene.GeneService;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Verifies the Phase 3 typed {@link GeneFactory}.
  *
  * @see GeneFactory
  */
-public class GeneFactoryTest extends BaseIntegrationTest {
+public class GeneFactoryTest extends BaseIntegrationTest5 {
 
     @Autowired
     private GeneFactory geneFactory;
@@ -51,7 +51,7 @@ public class GeneFactoryTest extends BaseIntegrationTest {
 
     private final List<Gene> createdGenes = new ArrayList<>();
 
-    @After
+    @AfterEach
     public void cleanUp() {
         for ( Gene g : createdGenes ) {
             try {
@@ -70,15 +70,15 @@ public class GeneFactoryTest extends BaseIntegrationTest {
         Gene g = geneFactory.builder().build();
         createdGenes.add( g );
 
-        assertNotNull( "gene must be persisted (id assigned)", g.getId() );
-        assertNotNull( "default gene should have a name", g.getName() );
-        assertNotNull( "default gene should have an official symbol", g.getOfficialSymbol() );
-        assertNotNull( "default gene should have an NCBI id", g.getNcbiGeneId() );
-        assertTrue( "synthetic NCBI ids must be >= 500_000",
-                g.getNcbiGeneId() >= 500_000 );
-        assertNotNull( "default gene should be on a taxon", g.getTaxon() );
-        assertEquals( "default taxon is mouse", "mouse", g.getTaxon().getCommonName() );
-        assertTrue( "default gene has no products", g.getProducts().isEmpty() );
+        assertNotNull( g.getId(), "gene must be persisted (id assigned)" );
+        assertNotNull( g.getName(), "default gene should have a name" );
+        assertNotNull( g.getOfficialSymbol(), "default gene should have an official symbol" );
+        assertNotNull( g.getNcbiGeneId(), "default gene should have an NCBI id" );
+        assertTrue( g.getNcbiGeneId() >= 500_000,
+                "synthetic NCBI ids must be >= 500_000" );
+        assertNotNull( g.getTaxon(), "default gene should be on a taxon" );
+        assertEquals( "mouse", g.getTaxon().getCommonName(), "default taxon is mouse" );
+        assertTrue( g.getProducts().isEmpty(), "default gene has no products" );
     }
 
     @Test
@@ -87,8 +87,8 @@ public class GeneFactoryTest extends BaseIntegrationTest {
         Gene g = geneFactory.builder().withTaxon( human ).build();
         createdGenes.add( g );
 
-        assertEquals( "gene taxon should be the supplied human",
-                human.getId(), g.getTaxon().getId() );
+        assertEquals( human.getId(), g.getTaxon().getId(),
+                "gene taxon should be the supplied human" );
     }
 
     @Test
@@ -119,14 +119,14 @@ public class GeneFactoryTest extends BaseIntegrationTest {
         Gene g = geneFactory.builder().withGeneProducts( 3 ).build();
         createdGenes.add( g );
 
-        assertEquals( "should have exactly 3 gene products", 3, g.getProducts().size() );
+        assertEquals( 3, g.getProducts().size(), "should have exactly 3 gene products" );
         for ( GeneProduct gp : g.getProducts() ) {
-            assertNotNull( "each gene product should be persisted (cascade from Gene)",
-                    gp.getId() );
+            assertNotNull( gp.getId(),
+                    "each gene product should be persisted (cascade from Gene)" );
             assertNotNull( gp.getName() );
             assertNotNull( gp.getNcbiGi() );
-            assertEquals( "each product should point back at the gene",
-                    g.getId(), gp.getGene().getId() );
+            assertEquals( g.getId(), gp.getGene().getId(),
+                    "each product should point back at the gene" );
         }
     }
 
@@ -136,8 +136,8 @@ public class GeneFactoryTest extends BaseIntegrationTest {
         createdGenes.add( g );
 
         assertNotNull( g.getId() );
-        assertTrue( "withGeneProducts(0) should produce empty products",
-                g.getProducts().isEmpty() );
+        assertTrue( g.getProducts().isEmpty(),
+                "withGeneProducts(0) should produce empty products" );
     }
 
     @Test
@@ -147,7 +147,7 @@ public class GeneFactoryTest extends BaseIntegrationTest {
         createdGenes.add( g );
 
         Gene found = geneService.findByNCBIId( ncbi );
-        assertNotNull( "freshly-created gene should be findable by NCBI id", found );
+        assertNotNull( found, "freshly-created gene should be findable by NCBI id" );
         assertEquals( g.getId(), found.getId() );
     }
 }

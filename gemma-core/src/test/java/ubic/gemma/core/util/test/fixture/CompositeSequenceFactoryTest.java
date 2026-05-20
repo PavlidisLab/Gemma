@@ -17,10 +17,10 @@
  */
 package ubic.gemma.core.util.test.fixture;
 
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.util.test.BaseIntegrationTest;
+import ubic.gemma.core.util.test.BaseIntegrationTest5;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
@@ -30,16 +30,16 @@ import ubic.gemma.persistence.service.expression.designElement.CompositeSequence
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * Verifies the Phase 3 typed {@link CompositeSequenceFactory}.
  *
  * @see CompositeSequenceFactory
  */
-public class CompositeSequenceFactoryTest extends BaseIntegrationTest {
+public class CompositeSequenceFactoryTest extends BaseIntegrationTest5 {
 
     @Autowired
     private CompositeSequenceFactory compositeSequenceFactory;
@@ -59,7 +59,7 @@ public class CompositeSequenceFactoryTest extends BaseIntegrationTest {
     private final List<CompositeSequence> createdCSes = new ArrayList<>();
     private final List<ArrayDesign> createdADs = new ArrayList<>();
 
-    @After
+    @AfterEach
     public void cleanUp() {
         for ( CompositeSequence cs : createdCSes ) {
             try {
@@ -89,15 +89,15 @@ public class CompositeSequenceFactoryTest extends BaseIntegrationTest {
         createdCSes.add( cs );
         createdADs.add( cs.getArrayDesign() );
 
-        assertNotNull( "CS must be persisted (id assigned)", cs.getId() );
-        assertNotNull( "default CS should have a name", cs.getName() );
-        assertNotNull( "default CS should have an ArrayDesign", cs.getArrayDesign() );
-        assertNotNull( "auto-created AD should be persisted", cs.getArrayDesign().getId() );
-        assertNotNull( "default CS should have a BioSequence", cs.getBiologicalCharacteristic() );
-        assertNotNull( "BioSequence should be persisted (no cascade from CS)",
-                cs.getBiologicalCharacteristic().getId() );
-        assertNotNull( "default BioSequence should carry a sequence-database link",
-                cs.getBiologicalCharacteristic().getSequenceDatabaseEntry() );
+        assertNotNull( cs.getId(), "CS must be persisted (id assigned)" );
+        assertNotNull( cs.getName(), "default CS should have a name" );
+        assertNotNull( cs.getArrayDesign(), "default CS should have an ArrayDesign" );
+        assertNotNull( cs.getArrayDesign().getId(), "auto-created AD should be persisted" );
+        assertNotNull( cs.getBiologicalCharacteristic(), "default CS should have a BioSequence" );
+        assertNotNull( cs.getBiologicalCharacteristic().getId(),
+                "BioSequence should be persisted (no cascade from CS)" );
+        assertNotNull( cs.getBiologicalCharacteristic().getSequenceDatabaseEntry(),
+                "default BioSequence should carry a sequence-database link" );
     }
 
     @Test
@@ -110,8 +110,8 @@ public class CompositeSequenceFactoryTest extends BaseIntegrationTest {
                 .build();
         createdCSes.add( cs );
 
-        assertEquals( "CS should reference the supplied AD",
-                ad.getId(), cs.getArrayDesign().getId() );
+        assertEquals( ad.getId(), cs.getArrayDesign().getId(),
+                "CS should reference the supplied AD" );
     }
 
     @Test
@@ -135,8 +135,8 @@ public class CompositeSequenceFactoryTest extends BaseIntegrationTest {
         createdADs.add( cs.getArrayDesign() );
 
         assertNotNull( cs.getId() );
-        assertNull( "biological characteristic should be omitted when withBioSequence(false)",
-                cs.getBiologicalCharacteristic() );
+        assertNull( cs.getBiologicalCharacteristic(),
+                "biological characteristic should be omitted when withBioSequence(false)" );
     }
 
     @Test
@@ -153,8 +153,8 @@ public class CompositeSequenceFactoryTest extends BaseIntegrationTest {
         createdCSes.add( cs );
 
         assertNotNull( cs.getBiologicalCharacteristic() );
-        assertEquals( "BioSequence taxon should be the supplied human",
-                human.getId(), cs.getBiologicalCharacteristic().getTaxon().getId() );
+        assertEquals( human.getId(), cs.getBiologicalCharacteristic().getTaxon().getId(),
+                "BioSequence taxon should be the supplied human" );
     }
 
     @Test

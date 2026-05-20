@@ -1,9 +1,9 @@
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultSetValueObject;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
@@ -21,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * {@link Filters} and {@link Sort} into proper {@link org.hibernate.Criteria} queries.
  * @author poirigui
  */
-public class ExpressionAnalysisResultSetServiceTest extends BaseSpringContextTest {
+public class ExpressionAnalysisResultSetServiceTest extends BaseSpringContextTest5 {
 
     @Autowired
     private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
@@ -48,7 +48,7 @@ public class ExpressionAnalysisResultSetServiceTest extends BaseSpringContextTes
     }
 
     @Test
-    @Ignore("See https://github.com/PavlidisLab/Gemma/issues/518")
+    @Disabled("See https://github.com/PavlidisLab/Gemma/issues/518")
     public void testFilterVosByNumberOfCharacteristics() {
         validateSizeProperty( "analysis.experimentAnalyzed.characteristics.size", "e", "characteristics.size" );
     }

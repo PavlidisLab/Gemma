@@ -17,10 +17,10 @@
  */
 package ubic.gemma.core.util.test.fixture;
 
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.util.test.BaseIntegrationTest;
+import ubic.gemma.core.util.test.BaseIntegrationTest5;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -33,18 +33,18 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Verifies the Phase 3 typed test-fixture factory.
  *
  * @see ExperimentFactory
  */
-public class ExperimentFactoryTest extends BaseIntegrationTest {
+public class ExperimentFactoryTest extends BaseIntegrationTest5 {
 
     @Autowired
     private ExperimentFactory experimentFactory;
@@ -61,7 +61,7 @@ public class ExperimentFactoryTest extends BaseIntegrationTest {
     private final List<ExpressionExperiment> createdEEs = new ArrayList<>();
     private final List<ArrayDesign> createdADs = new ArrayList<>();
 
-    @After
+    @AfterEach
     public void cleanUp() {
         for ( ExpressionExperiment ee : createdEEs ) {
             try {
@@ -91,15 +91,15 @@ public class ExperimentFactoryTest extends BaseIntegrationTest {
         createdEEs.add( ee );
 
         assertNotNull( ee );
-        assertNotNull( "EE id must be assigned by persist", ee.getId() );
+        assertNotNull( ee.getId(), "EE id must be assigned by persist" );
         assertNotNull( ee.getShortName() );
         assertNotNull( ee.getName() );
-        assertNotNull( "default bulkRna() should attach a taxon", ee.getTaxon() );
-        assertNotNull( "default bulkRna() should attach an experimental design", ee.getExperimentalDesign() );
-        assertFalse( "default bulkRna() should attach bioassays", ee.getBioAssays().isEmpty() );
-        assertFalse( "default bulkRna() should attach a preferred raw QT", ee.getQuantitationTypes().isEmpty() );
-        assertTrue( "default bulkRna() should mark a QT as preferred",
-                ee.getQuantitationTypes().stream().anyMatch( qt -> Boolean.TRUE.equals( qt.getIsPreferred() ) ) );
+        assertNotNull( ee.getTaxon(), "default bulkRna() should attach a taxon" );
+        assertNotNull( ee.getExperimentalDesign(), "default bulkRna() should attach an experimental design" );
+        assertFalse( ee.getBioAssays().isEmpty(), "default bulkRna() should attach bioassays" );
+        assertFalse( ee.getQuantitationTypes().isEmpty(), "default bulkRna() should attach a preferred raw QT" );
+        assertTrue( ee.getQuantitationTypes().stream().anyMatch( qt -> Boolean.TRUE.equals( qt.getIsPreferred() ) ),
+                "default bulkRna() should mark a QT as preferred" );
     }
 
     @Test
@@ -119,7 +119,7 @@ public class ExperimentFactoryTest extends BaseIntegrationTest {
     @Test
     public void withArrayDesign_usesSuppliedAD() {
         Taxon mouse = taxonService.findByCommonName( "mouse" );
-        assertNotNull( "test data must contain mouse taxon", mouse );
+        assertNotNull( mouse, "test data must contain mouse taxon" );
 
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
         ad.setName( "supplied AD test" );
@@ -137,8 +137,8 @@ public class ExperimentFactoryTest extends BaseIntegrationTest {
 
         assertFalse( ee.getBioAssays().isEmpty() );
         for ( BioAssay ba : ee.getBioAssays() ) {
-            assertSame( "every bioassay should reference the supplied AD",
-                    ad.getId(), ba.getArrayDesignUsed().getId() );
+            assertSame( ad.getId(), ba.getArrayDesignUsed().getId(),
+                    "every bioassay should reference the supplied AD" );
         }
     }
 
@@ -149,8 +149,8 @@ public class ExperimentFactoryTest extends BaseIntegrationTest {
 
         assertNotNull( ee );
         assertNotNull( ee.getId() );
-        assertTrue( "single-cell EE should have no raw bulk QTs by default",
-                ee.getQuantitationTypes().isEmpty() );
+        assertTrue( ee.getQuantitationTypes().isEmpty(),
+                "single-cell EE should have no raw bulk QTs by default" );
         assertFalse( ee.getBioAssays().isEmpty() );
     }
 }

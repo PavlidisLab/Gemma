@@ -20,11 +20,11 @@
 package ubic.gemma.persistence.service.common.auditAndSecurity.curation;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.core.util.test.fixture.ExperimentFactory;
 import ubic.gemma.model.common.auditAndSecurity.eventType.TroubledStatusFlagEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -42,12 +42,12 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 
 import java.util.Collections;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author tesarst
  */
-public class CuratableValueObjectTest extends BaseSpringContextTest {
+public class CuratableValueObjectTest extends BaseSpringContextTest5 {
 
     private ArrayDesign arrayDesign;
     private ExpressionExperiment expressionExperiment;
@@ -64,7 +64,7 @@ public class CuratableValueObjectTest extends BaseSpringContextTest {
     @Autowired
     private ExperimentFactory experimentFactory;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
 
         arrayDesign = ArrayDesign.Factory.newInstance();
@@ -99,7 +99,7 @@ public class CuratableValueObjectTest extends BaseSpringContextTest {
 
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
 
     }

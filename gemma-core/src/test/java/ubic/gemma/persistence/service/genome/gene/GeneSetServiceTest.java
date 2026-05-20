@@ -21,9 +21,9 @@ package ubic.gemma.persistence.service.genome.gene;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.annotation.DirtiesContext;
@@ -33,7 +33,7 @@ import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetMember;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.search.GeneSetSearch;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.common.description.Characteristic;
@@ -46,12 +46,12 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.zip.GZIPInputStream;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author klc
  */
-public class GeneSetServiceTest extends BaseSpringContextTest {
+public class GeneSetServiceTest extends BaseSpringContextTest5 {
 
     static private final String GOTERM_INDB = "GO_0000310";
     static private final String GOTERM_QUERY = "GO:0000310";
@@ -72,13 +72,13 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
     @Autowired
     private SessionFactory sessionFactory;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         g = this.getTestPersistentGene();
         g3 = this.getTestPersistentGene();
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         geneSetService.removeAll();
         gene2GoService.removeAll();

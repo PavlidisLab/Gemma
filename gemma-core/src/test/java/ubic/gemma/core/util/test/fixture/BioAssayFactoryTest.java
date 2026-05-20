@@ -17,10 +17,10 @@
  */
 package ubic.gemma.core.util.test.fixture;
 
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.util.test.BaseIntegrationTest;
+import ubic.gemma.core.util.test.BaseIntegrationTest5;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -32,17 +32,17 @@ import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 /**
  * Verifies the Phase 3 typed {@link BioAssayFactory}.
  *
  * @see BioAssayFactory
  */
-public class BioAssayFactoryTest extends BaseIntegrationTest {
+public class BioAssayFactoryTest extends BaseIntegrationTest5 {
 
     @Autowired
     private BioAssayFactory bioAssayFactory;
@@ -66,7 +66,7 @@ public class BioAssayFactoryTest extends BaseIntegrationTest {
     private final List<BioMaterial> createdBMs = new ArrayList<>();
     private final List<ArrayDesign> createdADs = new ArrayList<>();
 
-    @After
+    @AfterEach
     public void cleanUp() {
         for ( BioAssay ba : createdBAs ) {
             try {
@@ -105,13 +105,13 @@ public class BioAssayFactoryTest extends BaseIntegrationTest {
         BioAssay ba = bioAssayFactory.builder().build();
         createdBAs.add( ba );
 
-        assertNotNull( "BA must be persisted (id assigned)", ba.getId() );
+        assertNotNull( ba.getId(), "BA must be persisted (id assigned)" );
         assertNotNull( ba.getName() );
-        assertNotNull( "default BA should have a BioMaterial", ba.getSampleUsed() );
-        assertNotNull( "auto-created BM should be persisted", ba.getSampleUsed().getId() );
-        assertNotNull( "default BA should have an ArrayDesign", ba.getArrayDesignUsed() );
-        assertNotNull( "auto-created AD should be persisted", ba.getArrayDesignUsed().getId() );
-        assertNotNull( "default BA should attach a GEO accession", ba.getAccession() );
+        assertNotNull( ba.getSampleUsed(), "default BA should have a BioMaterial" );
+        assertNotNull( ba.getSampleUsed().getId(), "auto-created BM should be persisted" );
+        assertNotNull( ba.getArrayDesignUsed(), "default BA should have an ArrayDesign" );
+        assertNotNull( ba.getArrayDesignUsed().getId(), "auto-created AD should be persisted" );
+        assertNotNull( ba.getAccession(), "default BA should attach a GEO accession" );
 
         createdBMs.add( ba.getSampleUsed() );
         createdADs.add( ba.getArrayDesignUsed() );
@@ -132,8 +132,8 @@ public class BioAssayFactoryTest extends BaseIntegrationTest {
         createdBMs.add( persistedBm );
         createdADs.add( ba.getArrayDesignUsed() );
 
-        assertSame( "BA should reference the supplied BM",
-                persistedBm.getId(), ba.getSampleUsed().getId() );
+        assertSame( persistedBm.getId(), ba.getSampleUsed().getId(),
+                "BA should reference the supplied BM" );
     }
 
     @Test
@@ -147,8 +147,8 @@ public class BioAssayFactoryTest extends BaseIntegrationTest {
         createdBAs.add( ba );
         createdBMs.add( ba.getSampleUsed() );
 
-        assertEquals( "BA should reference the supplied AD",
-                ad.getId(), ba.getArrayDesignUsed().getId() );
+        assertEquals( ad.getId(), ba.getArrayDesignUsed().getId(),
+                "BA should reference the supplied AD" );
     }
 
     @Test
@@ -163,8 +163,8 @@ public class BioAssayFactoryTest extends BaseIntegrationTest {
 
         assertEquals( name, ba.getName() );
         assertNotNull( ba.getAccession() );
-        assertEquals( "default accession should mirror the BA name",
-                name, ba.getAccession().getAccession() );
+        assertEquals( name, ba.getAccession().getAccession(),
+                "default accession should mirror the BA name" );
     }
 
     @Test
@@ -176,19 +176,19 @@ public class BioAssayFactoryTest extends BaseIntegrationTest {
         createdBMs.add( ba.getSampleUsed() );
         createdADs.add( ba.getArrayDesignUsed() );
 
-        assertNull( "accession should be omitted when withAccession(false)",
-                ba.getAccession() );
+        assertNull( ba.getAccession(),
+                "accession should be omitted when withAccession(false)" );
     }
 
     @Test
     public void buildTransient_returnsUnpersistedBA_withPersistentBMAndAD() {
         BioAssay ba = bioAssayFactory.builder().buildTransient();
 
-        assertNull( "buildTransient should not persist the BA", ba.getId() );
-        assertNotNull( "BM should still be persisted (no cascade)",
-                ba.getSampleUsed().getId() );
-        assertNotNull( "AD should still be persisted (no cascade)",
-                ba.getArrayDesignUsed().getId() );
+        assertNull( ba.getId(), "buildTransient should not persist the BA" );
+        assertNotNull( ba.getSampleUsed().getId(),
+                "BM should still be persisted (no cascade)" );
+        assertNotNull( ba.getArrayDesignUsed().getId(),
+                "AD should still be persisted (no cascade)" );
 
         createdBMs.add( ba.getSampleUsed() );
         createdADs.add( ba.getArrayDesignUsed() );

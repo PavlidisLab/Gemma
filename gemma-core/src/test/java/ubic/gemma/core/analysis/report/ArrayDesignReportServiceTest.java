@@ -18,24 +18,24 @@
  */
 package ubic.gemma.core.analysis.report;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AlignmentBasedGeneMappingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceUpdateEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author pavlidis
  */
-public class ArrayDesignReportServiceTest extends BaseSpringContextTest {
+public class ArrayDesignReportServiceTest extends BaseSpringContextTest5 {
 
     private static ArrayDesign ad;
     private static boolean persisted = false;
@@ -45,7 +45,7 @@ public class ArrayDesignReportServiceTest extends BaseSpringContextTest {
     @Autowired
     ArrayDesignReportService arrayDesignReportService;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         if ( !ArrayDesignReportServiceTest.persisted ) {
             ArrayDesignReportServiceTest.ad = this

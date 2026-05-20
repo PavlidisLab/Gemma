@@ -17,10 +17,10 @@
  */
 package ubic.gemma.core.util.test.fixture;
 
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.util.test.BaseIntegrationTest;
+import ubic.gemma.core.util.test.BaseIntegrationTest5;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
@@ -29,18 +29,18 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Verifies the Phase 3 typed test-fixture factory for {@link BioMaterial}.
  *
  * @see BioMaterialFactory
  */
-public class BioMaterialFactoryTest extends BaseIntegrationTest {
+public class BioMaterialFactoryTest extends BaseIntegrationTest5 {
 
     @Autowired
     private BioMaterialFactory bioMaterialFactory;
@@ -53,7 +53,7 @@ public class BioMaterialFactoryTest extends BaseIntegrationTest {
 
     private final List<BioMaterial> createdBms = new ArrayList<>();
 
-    @After
+    @AfterEach
     public void cleanUp() {
         // best-effort cleanup; iterate children before parents
         for ( int i = createdBms.size() - 1; i >= 0; i-- ) {
@@ -75,24 +75,24 @@ public class BioMaterialFactoryTest extends BaseIntegrationTest {
         createdBms.add( bm );
 
         assertNotNull( bm );
-        assertNotNull( "BM id must be assigned by persist", bm.getId() );
+        assertNotNull( bm.getId(), "BM id must be assigned by persist" );
         assertNotNull( bm.getName() );
-        assertNotNull( "default build() should attach a source taxon", bm.getSourceTaxon() );
-        assertNull( "default build() should not attach a source BM", bm.getSourceBioMaterial() );
-        assertNull( "default build() should not attach an external accession", bm.getExternalAccession() );
+        assertNotNull( bm.getSourceTaxon(), "default build() should attach a source taxon" );
+        assertNull( bm.getSourceBioMaterial(), "default build() should not attach a source BM" );
+        assertNull( bm.getExternalAccession(), "default build() should not attach an external accession" );
     }
 
     @Test
     public void withTaxon_usesSuppliedTaxon() {
         Taxon human = taxonService.findByCommonName( "human" );
-        assertNotNull( "test data must contain human taxon", human );
+        assertNotNull( human, "test data must contain human taxon" );
 
         BioMaterial bm = bioMaterialFactory.withTaxon( human ).build();
         createdBms.add( bm );
 
         assertNotNull( bm.getId() );
-        assertEquals( "BM should reference the supplied taxon",
-                human.getId(), bm.getSourceTaxon().getId() );
+        assertEquals( human.getId(), bm.getSourceTaxon().getId(),
+                "BM should reference the supplied taxon" );
     }
 
     @Test
@@ -105,8 +105,8 @@ public class BioMaterialFactoryTest extends BaseIntegrationTest {
 
         assertNotNull( child.getId() );
         assertNotNull( child.getSourceBioMaterial() );
-        assertEquals( "child should reference the supplied parent BM",
-                parent.getId(), child.getSourceBioMaterial().getId() );
+        assertEquals( parent.getId(), child.getSourceBioMaterial().getId(),
+                "child should reference the supplied parent BM" );
     }
 
     @Test
@@ -127,7 +127,7 @@ public class BioMaterialFactoryTest extends BaseIntegrationTest {
         createdBms.add( bm );
 
         assertNotNull( bm.getId() );
-        assertNotNull( "withExternalAccession should attach an accession", bm.getExternalAccession() );
+        assertNotNull( bm.getExternalAccession(), "withExternalAccession should attach an accession" );
         assertNotNull( bm.getExternalAccession().getAccession() );
         assertNotNull( bm.getExternalAccession().getExternalDatabase() );
     }

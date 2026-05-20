@@ -20,22 +20,22 @@ package ubic.gemma.core.security.authentication;
 
 import ubic.gemma.core.security.authentication.ManualAuthenticationService;
 import ubic.gemma.core.security.authentication.UserDetailsImpl;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 
 import java.util.Date;
 
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author pavlidis
  */
-public class ManualAuthenticationProcessingTest extends BaseSpringContextTest {
+public class ManualAuthenticationProcessingTest extends BaseSpringContextTest5 {
 
     @Autowired
     ManualAuthenticationService manualAuthenticationService;
@@ -46,7 +46,7 @@ public class ManualAuthenticationProcessingTest extends BaseSpringContextTest {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    @Before
+    @BeforeEach
     public void before() {
 
         pwd = this.randomName();

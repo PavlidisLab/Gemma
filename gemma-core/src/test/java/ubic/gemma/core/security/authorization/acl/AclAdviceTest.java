@@ -23,7 +23,7 @@ import ubic.gemma.core.security.acl.domain.AclObjectIdentity;
 import ubic.gemma.core.security.acl.domain.AclService;
 import ubic.gemma.core.security.authentication.UserDetailsImpl;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.acls.model.Acl;
 import org.springframework.security.acls.model.Sid;
@@ -33,7 +33,7 @@ import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisCo
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.core.security.authentication.UserService;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
@@ -49,7 +49,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import java.util.Collections;
 import java.util.Date;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests of ACL management: adding and removing from objects during CRUD operations. (AclAdvice)
@@ -57,7 +57,7 @@ import static org.junit.Assert.*;
  * @author keshav
  * @author paul
  */
-public class AclAdviceTest extends BaseSpringContextTest {
+public class AclAdviceTest extends BaseSpringContextTest5 {
 
     @Autowired
     private AclService aclService;

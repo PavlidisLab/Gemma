@@ -22,15 +22,15 @@ import ubic.gemma.core.security.SecurityService;
 import ubic.gemma.core.security.authentication.UserDetailsImpl;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.acls.model.*;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import ubic.gemma.core.security.authentication.UserManager;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
@@ -41,13 +41,13 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author pavlidis
  * @author keshav
  */
-public class AclAuthorizationTest extends BaseSpringContextTest {
+public class AclAuthorizationTest extends BaseSpringContextTest5 {
 
     private final String aDifferentUsername = "AclAuthTest_" + RandomStringUtils.insecure().nextAlphabetic( 5 );
     private final String arrayDesignName =
@@ -73,7 +73,7 @@ public class AclAuthorizationTest extends BaseSpringContextTest {
     /* fixtures */
     private ArrayDesign arrayDesign;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
 
         arrayDesign = ArrayDesign.Factory.newInstance();
@@ -114,7 +114,7 @@ public class AclAuthorizationTest extends BaseSpringContextTest {
 
         Collection<CompositeSequence> col = compositeSequenceService.findByName( compositeSequenceName1 );
 
-        assertTrue( "User should have been able to get the composite sequences", col.size() > 0 );
+        assertTrue( col.size() > 0, "User should have been able to get the composite sequences" );
 
         securityService.makePrivate( arrayDesign );
 
@@ -126,8 +126,8 @@ public class AclAuthorizationTest extends BaseSpringContextTest {
         super.runAsUser( this.aDifferentUsername );
         col = compositeSequenceService.findByName( compositeSequenceName1 );
 
-        assertEquals( "User should not be authorized to access composite sequences  for array design .", 0,
-                col.size() );
+        assertEquals( 0, col.size(),
+                "User should not be authorized to access composite sequences  for array design ." );
 
         try {
             securityService.makePublic( arrayDesign );

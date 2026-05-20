@@ -19,10 +19,10 @@
 package ubic.gemma.persistence.service.genome.gene;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.search.SearchException;
-import ubic.gemma.core.util.test.BaseIntegrationTest;
+import ubic.gemma.core.util.test.BaseIntegrationTest5;
 import ubic.gemma.core.util.test.PersistentDummyObjectHelper;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Gene;
@@ -34,12 +34,12 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.util.Collection;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author cmcdonald
  */
-public class GeneSearchTest extends BaseIntegrationTest {
+public class GeneSearchTest extends BaseIntegrationTest5 {
 
     @Autowired
     private GeneService geneService;
