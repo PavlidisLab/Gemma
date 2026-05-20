@@ -47,6 +47,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.persistence.persister.ArrayDesignPersister;
 import ubic.gemma.persistence.persister.PersisterHelper;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
@@ -93,8 +94,15 @@ public abstract class BaseSpringContextTest5 extends BaseIntegrationTest5 {
     private DataSource dataSource;
     @Autowired
     protected ExternalDatabaseService externalDatabaseService;
+    /**
+     * Persister-shrink S4b: retained for subclasses that still inject directly via the
+     * inherited field (migrated alongside their own persisterHelper sites in the junit5
+     * batch agents). New code should prefer typed beans like {@link ArrayDesignPersister}.
+     */
     @Autowired
     protected PersisterHelper persisterHelper;
+    @Autowired
+    protected ArrayDesignPersister arrayDesignPersister;
     @Autowired
     protected TaxonService taxonService;
     @Autowired
@@ -221,7 +229,7 @@ public abstract class BaseSpringContextTest5 extends BaseIntegrationTest5 {
         }
         assert ( ad.getCompositeSequences().size() == probeNames.size() );
 
-        return ( ArrayDesign ) persisterHelper.persist( ad );
+        return arrayDesignPersister.persistArrayDesign( ad );
     }
 
     protected ExpressionExperiment getTestPersistentBasicExpressionExperiment() {
