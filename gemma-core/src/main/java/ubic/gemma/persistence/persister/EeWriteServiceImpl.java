@@ -170,6 +170,49 @@ public class EeWriteServiceImpl implements EeWriteService {
     }
 
     /**
+     * Persister-shrink S4c: public typed entry point for standalone
+     * {@link BioAssay} persistence. Opens a {@link FlushMode#MANUAL} window
+     * matching the prior {@code PersisterHelperImpl.persist(BioAssay)}
+     * semantics, allocates fresh per-call caches, and delegates to the
+     * package-private {@link #persistBioAssay(BioAssay, Map, ArrayDesignsForExperimentCache, Map)}
+     * helper. The {@link ArrayDesignsForExperimentCache} is {@code null}
+     * because the caller is providing an already-persistent platform on the
+     * {@link BioAssay}; see {@link #fillInBioAssayAssociations}.
+     */
+    @Override
+    @Transactional
+    public BioAssay persistBioAssay( BioAssay bioAssay ) {
+        try {
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.MANUAL );
+            BioAssay result = this.persistBioAssay( bioAssay, new HashMap<>(), null, new HashMap<>() );
+            sessionFactory.getCurrentSession().flush();
+            return result;
+        } finally {
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.AUTO );
+        }
+    }
+
+    /**
+     * Persister-shrink S4c: public typed entry point for standalone
+     * {@link BioMaterial} persistence. Opens a {@link FlushMode#MANUAL} window
+     * matching the prior {@code PersisterHelperImpl.persist(BioMaterial)}
+     * semantics, allocates fresh per-call caches, and delegates to the
+     * package-private {@link #persistBioMaterial(BioMaterial, Map, Map)} helper.
+     */
+    @Override
+    @Transactional
+    public BioMaterial persistBioMaterial( BioMaterial bioMaterial ) {
+        try {
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.MANUAL );
+            BioMaterial result = this.persistBioMaterial( bioMaterial, new HashMap<>(), new HashMap<>() );
+            sessionFactory.getCurrentSession().flush();
+            return result;
+        } finally {
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.AUTO );
+        }
+    }
+
+    /**
      * Persist the EE graph. Called both from {@link #create} and (during the
      * strangler-fig window) from {@link PersisterHelperImpl#doPersist} when an
      * EE is reached via the polymorphic dispatch (test fixtures only).

@@ -18,6 +18,8 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.persister.ArrayDesignsForExperimentCache;
 
@@ -63,4 +65,36 @@ public interface EeWriteService {
      * @return the persisted entity
      */
     ExpressionExperiment create( ExpressionExperiment ee );
+
+    /**
+     * Persist a standalone {@link BioAssay}.
+     * <p>
+     * Persister-shrink S4c: public typed entry point added so test fixtures
+     * (notably {@code PersistentDummyObjectHelper}) can stop routing through
+     * the polymorphic {@code PersisterHelper.persist(BioAssay)} dispatch. The
+     * caller's {@link BioAssay} must reference an already-persistent
+     * {@link ubic.gemma.model.expression.arrayDesign.ArrayDesign}; this entry
+     * point allocates fresh per-call caches (xdb / taxon) and a {@code null}
+     * {@link ArrayDesignsForExperimentCache} — matching the prior
+     * {@code persisterHelper.persist(BioAssay)} semantics for stand-alone BA
+     * fixtures.
+     *
+     * @param bioAssay the bioassay to persist
+     * @return the persisted entity
+     */
+    BioAssay persistBioAssay( BioAssay bioAssay );
+
+    /**
+     * Persist a standalone {@link BioMaterial}.
+     * <p>
+     * Persister-shrink S4c: public typed entry point added so test fixtures
+     * (notably {@code PersistentDummyObjectHelper}) can stop routing through
+     * the polymorphic {@code PersisterHelper.persist(BioMaterial)} dispatch.
+     * Allocates fresh per-call caches (xdb / taxon) — matches the prior
+     * {@code persisterHelper.persist(BioMaterial)} semantics.
+     *
+     * @param bioMaterial the biomaterial to persist
+     * @return the persisted entity
+     */
+    BioMaterial persistBioMaterial( BioMaterial bioMaterial );
 }
