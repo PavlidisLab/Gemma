@@ -36,15 +36,16 @@ public class ExperimentalFactorServiceImpl
         extends AbstractVoEnabledService<ExperimentalFactor, ExperimentalFactorValueObject>
         implements ExperimentalFactorService {
 
-    private final ExperimentalFactorDao experimentalFactorDao;
     private final DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
     private final BioMaterialService bioMaterialService;
+
+    @Autowired
+    private ExperimentalFactorReadService readService;
 
     @Autowired
     public ExperimentalFactorServiceImpl( ExperimentalFactorDao experimentalFactorDao,
             DifferentialExpressionAnalysisService differentialExpressionAnalysisService, BioMaterialService bioMaterialService ) {
         super( experimentalFactorDao );
-        this.experimentalFactorDao = experimentalFactorDao;
         this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
         this.bioMaterialService = bioMaterialService;
     }
@@ -106,10 +107,15 @@ public class ExperimentalFactorServiceImpl
         super.remove( experimentalFactors );
     }
 
+    // =====================================================================
+    // Read methods -- delegate to ExperimentalFactorReadService.
+    // ACL @Secured annotations live on the ExperimentalFactorService
+    // interface and apply at the facade proxy boundary.
+    // =====================================================================
+
     @Override
-    @Transactional(readOnly = true)
     public ExperimentalFactor thaw( ExperimentalFactor ef ) {
-        return this.experimentalFactorDao.thaw( ef );
+        return readService.thaw( ef );
     }
 
 }
