@@ -23,15 +23,14 @@ import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.api.Assertions;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
@@ -42,12 +41,12 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author pavlidis
  */
-public class AuditTrailServiceImplTest extends BaseSpringContextTest {
+public class AuditTrailServiceImplTest extends BaseSpringContextTest5 {
 
     @Autowired
     private AuditTrailService auditTrailService;
@@ -61,7 +60,7 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
     private ArrayDesign auditable;
     private int size;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
 
         auditable = ArrayDesign.Factory.newInstance();
@@ -76,7 +75,7 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         size = auditable.getAuditTrail().getEvents().size();
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         arrayDesignService.remove( auditable );
     }
@@ -258,7 +257,7 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         assertNotNull( auditable );
         AuditTrail auditTrail = auditable.getAuditTrail();
         AuditEvent e = auditTrail.getEvents().isEmpty() ? null : auditTrail.getEvents().get( auditTrail.getEvents().size() - 1 );
-        Assert.assertEquals( AuditAction.UPDATE, e.getAction() );
+        assertEquals( AuditAction.UPDATE, e.getAction() );
         assertEquals( "test", e.getNote() );
         assertNotNull( e.getDetail() );
         assertTrue( e.getDetail().contains( "RuntimeException" ) );

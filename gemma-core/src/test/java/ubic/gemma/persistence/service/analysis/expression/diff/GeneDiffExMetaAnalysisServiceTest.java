@@ -14,22 +14,22 @@
  */
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
 
 import java.util.List;
 import java.util.Vector;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Paul
  */
-public class GeneDiffExMetaAnalysisServiceTest extends BaseSpringContextTest {
+public class GeneDiffExMetaAnalysisServiceTest extends BaseSpringContextTest5 {
 
     @Autowired
     private GeneDiffExMetaAnalysisService geneDiffExMetaAnalysisService;
