@@ -47,7 +47,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Test of adding audit events when objects are created, updated or deleted.
@@ -235,11 +235,11 @@ public class AuditAdviceTest extends BaseSpringContextTest5 {
     private void checkAuditTrail( Auditable c, Collection<Long> trailIds, Collection<Long> eventIds ) {
 
         AuditTrail auditTrail = c.getAuditTrail();
-        assertNotNull( "No audit trail for " + c, auditTrail );
+        assertNotNull( auditTrail, "No audit trail for " + c );
 
         trailIds.add( auditTrail.getId() );
 
-        assertTrue( "Trail but no events for " + c, auditTrail.getEvents().size() > 0 );
+        assertTrue( auditTrail.getEvents().size() > 0, "Trail but no events for " + c );
 
         for ( AuditEvent ae : auditTrail.getEvents() ) {
             eventIds.add( ae.getId() );

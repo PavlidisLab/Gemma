@@ -39,8 +39,8 @@ import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultService;
 
 import java.util.Collection;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author pavlidis
@@ -128,10 +128,10 @@ public class BlatAssociationServiceTest extends BaseSpringContextTest5 {
         bs.setName( testSequenceName );
 
         BioSequence bsIn = this.bioSequenceService.find( bs );
-        assertNotNull( "Did not find " + bs, bsIn );
+        assertNotNull( bsIn, "Did not find " + bs );
 
         Collection<BlatAssociation> res = this.blatAssociationService.find( bs );
-        assertEquals( "Was seeking blatresults for sequence " + testSequenceName, 1, res.size() );
+        assertEquals( 1, res.size(), "Was seeking blatresults for sequence " + testSequenceName );
     }
 
     @Test
