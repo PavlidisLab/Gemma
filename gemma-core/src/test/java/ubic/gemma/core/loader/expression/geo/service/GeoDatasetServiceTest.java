@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.matrix.DoubleMatrix;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
@@ -135,6 +136,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest5 {
      * Has multiple species (mouse and human, one and two platforms respectively), also test publication entry.
      */
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     public void testFetchAndLoadGSE1133() throws Exception {
         geoService.setGeoDomainObjectGenerator(
@@ -160,6 +162,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest5 {
     }
 
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     public void testFetchAndLoadGSE16035() {
         setUpDatasetFromGeo( "GSE16035" );
@@ -179,6 +182,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest5 {
     }
 
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     public void testFetchAndLoadGSE12135EXON() {
         setUpDatasetFromGeo( "GSE12135" );
@@ -218,6 +222,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest5 {
     }
 
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     public void testFetchAndLoadGSE9048() throws Exception {
         setUpDatasetFromGeo( "GSE9048" );
@@ -368,6 +373,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest5 {
     }
 
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     public void testLoadGSE30521ExonArray() {
         setUpDatasetFromGeo( "GSE30521" );
@@ -412,6 +418,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest5 {
     }
 
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     public void testLoadGSE28383ExonArray() {
         setUpDatasetFromGeo( "GSE28383" );

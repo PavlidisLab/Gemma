@@ -19,6 +19,7 @@
 package ubic.gemma.core.loader.expression.arrayDesign;
 
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -51,6 +52,7 @@ public class ArrayDesignSequenceAlignmentandMappingTest extends AbstractArrayDes
     private ArrayDesignSequenceAlignmentService aligner;
 
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     public final void testProcessArrayDesign() throws Exception {

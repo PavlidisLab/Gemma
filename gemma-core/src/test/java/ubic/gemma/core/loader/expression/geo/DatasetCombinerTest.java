@@ -20,6 +20,7 @@ package ubic.gemma.core.loader.expression.geo;
 
 import lombok.extern.slf4j.Slf4j;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.core.io.ClassPathResource;
@@ -45,6 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author pavlidis
  */
 @Slf4j
+@Tag("slow")
 @Category(SlowTest.class)
 @ExtendWith(NetworkAvailableExtension.class)
 public class DatasetCombinerTest {

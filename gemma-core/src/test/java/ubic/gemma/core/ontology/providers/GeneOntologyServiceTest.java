@@ -21,6 +21,7 @@ package ubic.gemma.core.ontology.providers;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,6 +54,7 @@ import static ubic.gemma.core.ontology.providers.GeneOntologyUtils.asRegularGoId
 /**
  * @author Paul
  */
+@Tag("slow")
 @Category(SlowTest.class)
 @ContextConfiguration
 public class GeneOntologyServiceTest extends BaseTest5 implements InitializingBean {

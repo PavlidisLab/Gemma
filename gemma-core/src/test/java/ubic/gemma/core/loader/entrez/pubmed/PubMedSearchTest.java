@@ -21,6 +21,7 @@ package ubic.gemma.core.loader.entrez.pubmed;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.api.Assertions;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import ubic.gemma.core.config.Settings;
@@ -65,6 +66,7 @@ public class PubMedSearchTest {
     }
 
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     public void testSearchAndRetrieveByHTTPInChunks() throws Exception {
         Collection<String> searchTerms = new HashSet<>();

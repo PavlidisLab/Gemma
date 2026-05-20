@@ -1,6 +1,7 @@
 package ubic.gemma.core.loader.expression.geo.singleCell;
 
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -80,24 +81,28 @@ public class GeoMexSingleCellDataLoaderConfigurerTest extends BaseTest5 {
      * This is an older single-cell dataset with many typos in the GEO record.
      */
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     public void testGSE217511() throws IOException, NoSingleCellDataFoundException {
         testUnfiltered10xDataset( "GSE217511", "GSM6720852", "Homo sapiens", "SC3Pv3-polyA" );
     }
 
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     public void testGSE178226() throws NoSingleCellDataFoundException, IOException {
         testUnfiltered10xDataset( "GSE178226", "GSM5384778", "Mus musculus", "SC3Pv3-polyA" );
     }
 
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     public void testGSE280175() throws NoSingleCellDataFoundException, IOException {
         testUnfiltered10xDataset( "GSE280175", "GSM8591175", "Homo sapiens", null );
     }
 
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     public void testGSE221042() throws NoSingleCellDataFoundException, IOException {
         testUnfiltered10xDataset( "GSE221042", "GSM6841143", "Homo sapiens", "SC3Pv3-polyA" );
@@ -109,6 +114,7 @@ public class GeoMexSingleCellDataLoaderConfigurerTest extends BaseTest5 {
     }
 
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     public void testGSE143355() throws NoSingleCellDataFoundException, IOException {
         // the extraction protocol does not specify if it's 3' or 5' v3
@@ -121,12 +127,14 @@ public class GeoMexSingleCellDataLoaderConfigurerTest extends BaseTest5 {
     }
 
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     public void testGSE132355() throws NoSingleCellDataFoundException, IOException {
         testUnfiltered10xDataset( "GSE132355", "GSM3860733", "Mus musculus", null );
     }
 
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     public void testGSE295078() throws NoSingleCellDataFoundException, IOException {
         // TODO: this is a dataset with a 5' chemistry
@@ -170,6 +178,7 @@ public class GeoMexSingleCellDataLoaderConfigurerTest extends BaseTest5 {
     }
 
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     public void testParallelFiltering() throws IOException, NoSingleCellDataFoundException {
         SingleCell10xMexFilter filter = singleCellDataTransformationFactory.getTransformation( SingleCell10xMexFilter.class );

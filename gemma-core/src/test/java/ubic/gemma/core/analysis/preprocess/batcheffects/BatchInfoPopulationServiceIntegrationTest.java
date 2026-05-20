@@ -16,6 +16,7 @@ package ubic.gemma.core.analysis.preprocess.batcheffects;
 
 import org.junit.jupiter.api.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.loader.entrez.EntrezUtils;
@@ -57,6 +58,7 @@ public class BatchInfoPopulationServiceIntegrationTest extends AbstractGeoServic
     private ExpressionExperimentService eeService;
 
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testLoad() throws Exception {
@@ -81,6 +83,7 @@ public class BatchInfoPopulationServiceIntegrationTest extends AbstractGeoServic
      * Another Affymetrix format - GCOS
      */
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testLoadCommandConsoleFormat() throws Exception {

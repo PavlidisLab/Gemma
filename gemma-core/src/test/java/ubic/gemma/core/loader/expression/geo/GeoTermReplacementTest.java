@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
 import ubic.gemma.core.ontology.basecode.model.OntologyTerm;
 import ubic.gemma.core.ontology.basecode.providers.*;
 import ubic.gemma.core.ontology.providers.GemmaOntologyService;
@@ -38,6 +39,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Test replacements for GEO terms.
  */
 @Slf4j
+@Tag("slow")
 @Category(SlowTest.class)
 @NetworkAvailable(url = "http://purl.obolibrary.org/")
 @ExtendWith(NetworkAvailableExtension.class)

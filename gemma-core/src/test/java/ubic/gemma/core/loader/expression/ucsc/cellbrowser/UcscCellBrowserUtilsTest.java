@@ -3,6 +3,7 @@ package ubic.gemma.core.loader.expression.ucsc.cellbrowser;
 import org.apache.commons.collections4.Transformer;
 import org.apache.commons.collections4.map.DefaultedMap;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataMatrix;
@@ -57,6 +58,7 @@ public class UcscCellBrowserUtilsTest {
     }
 
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     @NetworkAvailable
     public void testGetDatasetDataMatrix() throws IOException {

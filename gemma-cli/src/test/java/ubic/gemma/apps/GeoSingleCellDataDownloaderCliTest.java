@@ -1,6 +1,7 @@
 package ubic.gemma.apps;
 
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -52,6 +53,7 @@ public class GeoSingleCellDataDownloaderCliTest extends BaseCliTest5 {
     private File singleCellDataBasePath;
 
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     public void testDownloadSingleSampleAccession() {
         assertThat( geoSingleCellDataDownloaderCli )

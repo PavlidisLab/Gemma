@@ -24,6 +24,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Assumptions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
@@ -70,6 +71,7 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * @author Paul
  */
+@Tag("slow")
 @Category(SlowTest.class)
 @ExtendWith(NetworkAvailableExtension.class)
 public class DiffExTest extends AbstractGeoServiceTest5 {

@@ -19,6 +19,7 @@
 package ubic.gemma.core.analysis.preprocess;
 
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -286,6 +287,7 @@ public class TwoChannelExpressionDataDoubleMatrixTest extends AbstractGeoService
     }
 
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testMatrixConversion() throws Exception {

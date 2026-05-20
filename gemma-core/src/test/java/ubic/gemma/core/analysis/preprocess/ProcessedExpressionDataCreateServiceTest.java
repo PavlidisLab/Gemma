@@ -21,6 +21,7 @@ package ubic.gemma.core.analysis.preprocess;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -112,6 +113,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
     }
 
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     @Disabled("This test randomly fails, see https://github.com/PavlidisLab/Gemma/issues/1158")
     public void testComputeDevRankForExpressionExperimentB() throws Exception {
@@ -171,6 +173,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
      */
     @SuppressWarnings("unchecked")
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testComputeDevRankForExpressionExperimentMultiArrayWithGaps() throws Exception {
@@ -275,6 +278,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
 
     @Test
     @Disabled
+    @Tag("slow")
     @Category(SlowTest.class)
     public void testReorder() throws Exception {
 

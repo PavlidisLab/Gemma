@@ -19,6 +19,7 @@
 package ubic.gemma.apps;
 
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,6 +50,7 @@ public class PubMedSearcherIntegrationTest extends BaseCliIntegrationTest5 {
      * Test method for {@link PubMedSearcher#executeCommand(CLIContext)}.
      */
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public final void testMain() {

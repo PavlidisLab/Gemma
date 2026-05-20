@@ -20,6 +20,7 @@ package ubic.gemma.core.loader.expression.simple;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -54,6 +55,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * @author Paul
  */
+@Tag("slow")
 @Category(SlowTest.class)
 public class ExperimentalDesignImporterTest extends BaseSpringContextTest5 {
 

@@ -21,6 +21,7 @@ package ubic.gemma.core.loader.entrez.pubmed;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
 import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.util.test.NetworkAvailable;
 import ubic.gemma.core.util.test.NetworkAvailableExtension;
@@ -44,6 +45,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class ExpressionExperimentBibRefFinderTest {
 
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     @NetworkAvailable(url = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi")
     public void testLocatePrimaryReference() throws IOException {
@@ -62,6 +64,7 @@ public class ExpressionExperimentBibRefFinderTest {
     }
 
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     @NetworkAvailable(url = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi")
     public void testLocatePrimaryReferenceInvalidGSE() throws IOException {
