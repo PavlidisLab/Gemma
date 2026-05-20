@@ -2308,12 +2308,11 @@ public class DatasetsWebService {
      */
     @GET
     @Path("/{dataset}/design")
-    // qs=0.9 keeps TSV (qs=1.0 implicit) as the default when the client sends Accept: */* or no Accept header
-    @Produces(MediaType.APPLICATION_JSON + ";qs=0.9")
-    // The @Operation block is duplicated verbatim on getDatasetDesign() below. swagger-jaxrs2 merges
-    // operations sharing path+verb and the merge order is reflection-dependent, so both methods carry the
-    // same comprehensive annotation to make the resulting OpenAPI deterministic and to keep the JSON
-    // return type scanned (so ResponseDataObjectExperimentalDesignValueObject schema is registered).
+    @Produces(MediaType.APPLICATION_JSON)
+    // The @Operation annotation is intentionally identical to the one on getDatasetDesign() below. The two
+    // JAX-RS methods collapse to a single OpenAPI operation under (GET, /{dataset}/design); duplicating the
+    // annotation makes the merge result deterministic regardless of reflection order, and keeps the JSON
+    // return type visible so swagger auto-registers the ResponseDataObjectExperimentalDesignValueObject schema.
     @Operation(summary = "Retrieve the design of a dataset", responses = {
             @ApiResponse(responseCode = "200", content = {
                     @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8, schema = @Schema(type = "string"),
@@ -2329,14 +2328,79 @@ public class DatasetsWebService {
     }
 
     /**
+     * Dry-run preflight for a proposed design replacement.
+     * <p>
+     * Accepts the same JSON shape that {@code GET /datasets/{id}/design} returns ({@link ExperimentalDesignValueObject}),
+     * with {@code id} fields treated as identity claims (existing entity) or {@code null} (new entity), and returns
+     * a {@link DesignPreflightReport} describing validation errors and the impact a real PUT would have.
+     * <p>
+     * The preflight never mutates state. POST is used (not GET) because the response depends on a non-trivial
+     * request body.
+     */
+    @POST
+    @Path("/{dataset}/designPreflight")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Dry-run preflight for a proposed experimental design replacement", responses = {
+            @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "ResponseDataObjectDesignPreflightReport"))),
+            @ApiResponse(responseCode = "400", description = "Request body is missing or malformed.",
+                    content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+            @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                    content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<DesignPreflightReport> previewDatasetDesignChange(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            ExperimentalDesignValueObject proposed
+    ) {
+        return respond( datasetArgService.previewDesignChange( datasetArg, proposed ) );
+    }
+
+    /**
+     * Apply a proposed {@link ExperimentalDesignValueObject} as the experiment's new design.
+     * <p>
+     * The same validation pass performed by {@code POST /datasets/{id}/designPreflight} is re-run server-side. If
+     * blockers are present, returns 400 with a {@link DesignPreflightReport} payload — fix the body and retry.
+     * If the change would delete one or more differential-expression analyses and {@code force=false}, returns 409
+     * with the report; admins may re-issue the request with {@code ?force=true} to consent to the cascade.
+     * On success, returns 200 with the freshly-rebuilt design.
+     */
+    @PUT
+    @Path("/{dataset}/design")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Secured("GROUP_ADMIN")
+    @Operation(summary = "Replace the experimental design of a dataset", responses = {
+            @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "ResponseDataObjectExperimentalDesignValueObject"))),
+            @ApiResponse(responseCode = "400", description = "The proposed design has validation blockers; see the report in the response body.",
+                    content = @Content(schema = @Schema(ref = "ResponseDataObjectDesignPreflightReport"))),
+            @ApiResponse(responseCode = "409", description = "The proposed change would delete differential-expression analyses; retry with ?force=true to consent.",
+                    content = @Content(schema = @Schema(ref = "ResponseDataObjectDesignPreflightReport"))),
+            @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                    content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public Response replaceDatasetDesign(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Set to true to consent to deleting differential-expression analyses that depend on factors or factor values affected by the change.") @QueryParam("force") @DefaultValue("false") Boolean force,
+            ExperimentalDesignValueObject proposed
+    ) {
+        ubic.gemma.rest.util.args.DatasetArgService.DesignChangeResult result =
+                datasetArgService.applyDesignChange( datasetArg, proposed, force );
+        if ( result.blockingReport != null ) {
+            Response.Status status = result.forceRequired ? Response.Status.CONFLICT : Response.Status.BAD_REQUEST;
+            return Response.status( status ).entity( respond( result.blockingReport ) ).build();
+        }
+        return Response.ok( respond( result.updated ) ).build();
+    }
+
+    /**
      * Retrieves the design for the given dataset.
      * <p>
      * Two response media types are supported on this path, selected via the {@code Accept} header:
      * <ul>
-     *     <li>{@code text/tab-separated-values; charset=UTF-8} (default) — the design matrix as TSV.</li>
-     *     <li>{@code application/json} — a structured {@link ExperimentalDesignValueObject} with factors,
-     *         factor values (statements with stable IDs), and biomaterial-to-factor-value assignments. The JSON
-     *         variant ignores the {@code quantitationType}/{@code useProcessedQuantitationType} parameters.</li>
+     *     <li>{@code application/json} (default) — a structured {@link ExperimentalDesignValueObject} with
+     *         factors, factor values (statements with stable IDs), and biomaterial-to-factor-value
+     *         assignments. The JSON variant ignores the {@code quantitationType}/
+     *         {@code useProcessedQuantitationType} parameters.</li>
+     *     <li>{@code text/tab-separated-values; charset=UTF-8} — the design matrix as TSV, served only when
+     *         requested explicitly via {@code Accept}.</li>
      * </ul>
      *
      * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
@@ -2345,7 +2409,8 @@ public class DatasetsWebService {
     @GZIP(mediaTypes = TEXT_TAB_SEPARATED_VALUES_UTF8, alreadyCompressed = true)
     @GET
     @Path("/{dataset}/design")
-    @Produces(TEXT_TAB_SEPARATED_VALUES_UTF8)
+    // lowering qs sets json to default
+    @Produces(TEXT_TAB_SEPARATED_VALUES_UTF8 + ";qs=0.9")
     @Operation(summary = "Retrieve the design of a dataset", responses = {
             @ApiResponse(responseCode = "200", content = {
                     @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8, schema = @Schema(type = "string"),
