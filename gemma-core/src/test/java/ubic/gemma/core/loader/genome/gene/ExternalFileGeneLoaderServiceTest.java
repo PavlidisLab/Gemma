@@ -18,7 +18,7 @@ package ubic.gemma.core.loader.genome.gene;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.basecode.util.FileTools;
+import ubic.gemma.core.util.FileTools;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.genome.Gene;

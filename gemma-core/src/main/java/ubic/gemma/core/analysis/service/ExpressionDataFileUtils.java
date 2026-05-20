@@ -2,7 +2,7 @@ package ubic.gemma.core.analysis.service;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
-import ubic.basecode.util.FileTools;
+import ubic.gemma.core.util.FileTools;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;

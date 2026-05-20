@@ -22,7 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import ubic.basecode.util.FileTools;
+import ubic.gemma.core.util.FileTools;
 import ubic.gemma.core.loader.expression.geo.model.*;
 import ubic.gemma.core.loader.util.parser.Parser;
 import ubic.gemma.core.util.concurrent.Executors;

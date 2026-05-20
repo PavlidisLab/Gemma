@@ -22,7 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import ubic.basecode.util.FileTools;
+import ubic.gemma.core.util.FileTools;
 
 import java.io.*;
 import java.util.Collection;
