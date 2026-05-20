@@ -21,13 +21,13 @@ package ubic.gemma.core.security.authorization;
 import ubic.gemma.core.security.SecurityService;
 import ubic.gemma.core.security.authentication.UserDetailsImpl;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import ubic.gemma.core.security.authentication.UserManager;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -36,13 +36,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author cmcdonald
  */
-public class SecureValueObjectAuthorizationTest extends BaseSpringContextTest {
+public class SecureValueObjectAuthorizationTest extends BaseSpringContextTest5 {
 
     private final String ownerUsername = RandomStringUtils.insecure().nextAlphabetic( 5 );
     private final String aDifferentUsername = RandomStringUtils.insecure().nextAlphabetic( 5 );
@@ -58,7 +58,7 @@ public class SecureValueObjectAuthorizationTest extends BaseSpringContextTest {
 
     private ExpressionExperiment ee;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
 
         ExpressionExperiment publicEe = super.getTestPersistentBasicExpressionExperiment();
