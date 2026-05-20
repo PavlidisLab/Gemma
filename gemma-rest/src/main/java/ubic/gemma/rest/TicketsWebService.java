@@ -13,6 +13,9 @@ package ubic.gemma.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.Nullable;
@@ -30,9 +33,12 @@ import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketValueObject;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketService;
+import ubic.gemma.persistence.util.CursorPage;
 import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.rest.util.CursorPaginatedResponseDataObject;
 import ubic.gemma.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.rest.util.ResponseDataObject;
+import ubic.gemma.rest.util.args.CursorArg;
 import ubic.gemma.rest.util.args.LimitArg;
 import ubic.gemma.rest.util.args.OffsetArg;
 
@@ -58,6 +64,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static ubic.gemma.rest.util.Responders.paginate;
+import static ubic.gemma.rest.util.Responders.paginateByCursor;
 import static ubic.gemma.rest.util.Responders.respond;
 
 /**
@@ -91,18 +98,40 @@ public class TicketsWebService {
     }
 
     /**
-     * List tickets with optional filters and offset/limit pagination.
+     * List tickets with optional filters and offset/limit or cursor pagination.
      * <p>
-     * Cursor pagination is a separate roadmap item
-     * ({@code CURSOR_PAGINATION_RECCE.md}); for now we use the same
-     * offset/limit shape as the rest of the v2 surface.
+     * Step 1o of {@code CURSOR_PAGINATION_STEP1_PLAN.md} adds opt-in keyset
+     * (cursor) pagination alongside the legacy offset path. Legacy mode keeps
+     * the {@code t.updatedAt desc} ordering used for human-readable
+     * dashboards; cursor mode forces a single-component ascending {@code id}
+     * sort because the cursor DAO restricts cursors to id-only sorts until
+     * the phase-B indexed-column audit lands.
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "List curation tickets",
             description = "Filterable, paginated list of curation tickets. "
-                    + "Event logs are NOT included for payload economy; fetch /{id} for events.")
-    public PaginatedResponseDataObject<TicketValueObject> getTickets(
+                    + "Event logs are NOT included for payload economy; fetch /{id} for events.\n\n"
+                    + "Supports two pagination modes. Legacy mode: pass `offset` (and `limit`); "
+                    + "response includes `offset` and `totalElements`; ordering is "
+                    + "`updatedAt` desc (the dashboard-friendly default). "
+                    + "Cursor mode (recommended for deep listings and consistency under writes "
+                    + "as the ticket table grows): pass an opaque `cursor` token from a "
+                    + "previous response's `nextCursor` / `prevCursor` field. "
+                    + "`offset` and `cursor` are mutually exclusive — passing a non-null "
+                    + "`cursor` selects cursor mode. In cursor mode the result is always "
+                    + "sorted by ascending `id` (cursor mode forces a single-component id "
+                    + "sort pending the indexed-column audit in phase B); the filter triple "
+                    + "(`openOnly`, `assignee`, `priority`) is honoured identically in both "
+                    + "modes; `totalElements` is `null` by default (no count query per request).",
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(schema = @Schema(oneOf = {
+                                    PaginatedResponseDataObject.class,
+                                    CursorPaginatedResponseDataObject.class
+                            }))),
+            })
+    public Object getTickets(
             @Parameter(description = "If true, restrict to OPEN/IN_PROGRESS tickets.")
             @QueryParam("openOnly") @DefaultValue("false") boolean openOnly,
             @Parameter(description = "Filter by current assignee (Contact id).")
@@ -110,10 +139,24 @@ public class TicketsWebService {
             @Parameter(description = "Filter by priority.")
             @QueryParam("priority") @Nullable TicketPriority priority,
             @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
-            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg
+            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg,
+            @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.")
+            @QueryParam("cursor") CursorArg cursorArg
     ) {
-        int offset = offsetArg.getValue();
         int limit = limitArg.getValue();
+        if ( cursorArg != null ) {
+            // Mutual-exclusion: a non-null cursor selects cursor mode. The default offset=0 is
+            // not considered user-supplied (parallels GET /genes step 1b and the other 1c-1n
+            // conversions). In cursor mode the filter triple (openOnly, assigneeId, priority)
+            // is honoured identically; the legacy updatedAt-desc sort is swapped for a
+            // single-component +id ascending sort because the DAO restricts cursors to
+            // id-only sorts until the phase-B index audit lands.
+            CursorPage<Ticket> page = ticketService.findTicketsByCursor(
+                    openOnly, assigneeId, priority, cursorArg.getValue(), limit );
+            CursorPage<TicketValueObject> voPage = page.map( TicketValueObject::from );
+            return paginateByCursor( voPage, new String[] { "id" } );
+        }
+        int offset = offsetArg.getValue();
         List<Ticket> tickets = ticketService.findTickets( openOnly, assigneeId, priority, offset, limit );
         long total = ticketService.countTickets( openOnly, assigneeId, priority );
         List<TicketValueObject> vos = tickets.stream()

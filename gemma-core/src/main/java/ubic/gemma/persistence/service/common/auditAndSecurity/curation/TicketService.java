@@ -20,6 +20,8 @@ import ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
 import ubic.gemma.persistence.service.BaseService;
+import ubic.gemma.persistence.util.Cursor;
+import ubic.gemma.persistence.util.CursorPage;
 
 import java.util.Collection;
 import java.util.List;
@@ -81,4 +83,8 @@ public interface TicketService extends BaseService<Ticket> {
 
     /** @see TicketDao#countTickets */
     long countTickets( boolean openOnly, @Nullable Long assigneeId, @Nullable TicketPriority priority );
+
+    /** @see TicketDao#findTicketsByCursor */
+    CursorPage<Ticket> findTicketsByCursor( boolean openOnly, @Nullable Long assigneeId,
+            @Nullable TicketPriority priority, @Nullable Cursor cursor, int limit );
 }
