@@ -1,6 +1,7 @@
 package ubic.gemma.core.loader.expression.cellxgene;
 
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,6 +60,7 @@ public class CellXGeneFetcherTest extends BaseTest5 {
     }
 
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     public void testFetchAllDatasetMetadata() throws IOException {
         List<DatasetMetadata> metadata = fetcher.fetchAllDatasetMetadata();
@@ -66,6 +68,7 @@ public class CellXGeneFetcherTest extends BaseTest5 {
     }
 
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     public void testFetchDatasetMetadata() throws IOException {
         DatasetMetadata datasetMetadata = fetcher.fetchDatasetMetadata( "860a9839-5d24-4073-9a67-6ad570f41da1" );

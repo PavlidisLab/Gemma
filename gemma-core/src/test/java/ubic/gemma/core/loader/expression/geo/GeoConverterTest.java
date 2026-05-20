@@ -22,6 +22,7 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import ubic.gemma.core.loader.expression.geo.model.GeoPlatform;
@@ -67,6 +68,7 @@ public class GeoConverterTest extends BaseIntegrationTest5 {
      *
      */
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     public final void test5C() {
@@ -850,6 +852,7 @@ public class GeoConverterTest extends BaseIntegrationTest5 {
      * Platform has IMAGE:CCCCC in CLONE_ID column, no genbank accessions anywhere.
      */
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     public final void testWithImageNoGenbank() throws Exception {
         InputStream is = new GZIPInputStream(

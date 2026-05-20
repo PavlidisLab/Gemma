@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
 import ubic.gemma.core.util.test.NetworkAvailable;
 import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.core.util.test.category.SlowTest;
@@ -34,12 +35,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author paul
  */
+@Tag("slow")
 @Category(SlowTest.class)
 @Disabled("This test is broken due to a missing remote file. See https://github.com/PavlidisLab/Gemma/issues/766 for details.")
 @ExtendWith(NetworkAvailableExtension.class)
 public class SDRFFetcherTest {
 
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     @NetworkAvailable(url = "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/SMDB/E-SMDB-1853/E-SMDB-1853.sdrf.txt")
     public final void testFetch() throws Exception {

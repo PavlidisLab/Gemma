@@ -16,6 +16,7 @@ package ubic.gemma.core.analysis.preprocess;
 
 import org.hibernate.ObjectNotFoundException;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
@@ -87,6 +88,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest5 {
     }
 
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     @NetworkAvailable(url = EntrezUtils.ESEARCH)
     final public void testServiceCreateTwoColor() throws Exception {
@@ -139,6 +141,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest5 {
     }
 
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     @NetworkAvailable(url = EntrezUtils.ESEARCH)
     final public void testServiceCreateOneColor() throws Exception {
@@ -187,6 +190,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest5 {
     }
 
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     final public void testServiceCreateCountData() throws Exception {
@@ -282,6 +286,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest5 {
     }
 
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     @NetworkAvailable(url = EntrezUtils.ESEARCH)
     final public void testServiceCreateExistingEe() throws Exception {

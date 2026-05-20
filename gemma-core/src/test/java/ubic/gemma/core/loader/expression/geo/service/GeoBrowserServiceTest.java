@@ -19,6 +19,7 @@
 package ubic.gemma.core.loader.expression.geo.service;
 
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,6 +46,7 @@ public class GeoBrowserServiceTest extends BaseSpringContextTest5 {
     private GeoBrowserService gbs;
 
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     @NetworkAvailable(url = "https://www.ncbi.nlm.nih.gov/geo/browse/")
     public final void testFillDetails() throws Exception {
@@ -83,6 +85,7 @@ public class GeoBrowserServiceTest extends BaseSpringContextTest5 {
     }
 
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     @NetworkAvailable(url = "https://www.ncbi.nlm.nih.gov/geo/browse/")
     public final void testGetRecentRecords() throws Exception {

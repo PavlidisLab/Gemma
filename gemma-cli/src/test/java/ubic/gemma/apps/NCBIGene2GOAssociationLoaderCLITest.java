@@ -2,6 +2,7 @@ package ubic.gemma.apps;
 
 import ubic.gemma.core.security.authentication.ManualAuthenticationService;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -86,6 +87,7 @@ public class NCBIGene2GOAssociationLoaderCLITest extends BaseCliTest5 {
     private ExternalDatabaseService externalDatabaseService;
 
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     @WithMockUser(authorities = { "GROUP_ADMIN" })
     @NetworkAvailable(url = "ftp://ftp.ncbi.nih.gov/gene/DATA/gene2go.gz")

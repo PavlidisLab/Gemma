@@ -19,6 +19,7 @@
 package ubic.gemma.core.loader.entrez;
 
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.w3c.dom.Document;
@@ -40,6 +41,7 @@ public class EutilFetchTest {
     private static final String ncbiApiKey = Settings.getString( "ncbi.efetch.apikey" );
 
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testFetch() throws Exception {

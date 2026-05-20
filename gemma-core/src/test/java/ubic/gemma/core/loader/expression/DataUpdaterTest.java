@@ -20,6 +20,7 @@
 package ubic.gemma.core.loader.expression;
 
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -97,6 +98,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest5 {
     }
 
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testAddData() throws Exception {
@@ -212,6 +214,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest5 {
      * More realistic test of RNA seq. GSE19166. Test re-loading as well.
      */
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     @NetworkAvailable(url = EntrezUtils.ESUMMARY)
     public void testLoadRNASeqData() throws Exception {
@@ -312,6 +315,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest5 {
      * Test case where some samples cannot be used.
      */
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     public void testLoadRNASeqDataWithMissingSamples() throws Exception {

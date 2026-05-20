@@ -1,6 +1,7 @@
 package ubic.gemma.core.loader.expression.geo.fetcher2;
 
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import ubic.gemma.core.loader.entrez.EntrezUtils;
@@ -23,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 public class GeoFetcherTest {
 
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     public void testGSE246121() throws IOException {
         Path tmpdir = java.nio.file.Files.createTempDirectory( "test" );
@@ -35,6 +37,7 @@ public class GeoFetcherTest {
      * This is a fallback if we encounter issues with the FTP server. It is slow, but it works.
      */
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testGSE246121ViaGeoQuery() throws IOException {
@@ -44,6 +47,7 @@ public class GeoFetcherTest {
     }
 
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     public void testNotFound() throws IOException {
         Path tmpdir = java.nio.file.Files.createTempDirectory( "test" );

@@ -17,6 +17,7 @@ package ubic.gemma.core.loader.expression.geo.service;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -99,6 +100,7 @@ public class GeoBrowserServiceParseTest extends BaseTest5 {
     private ExpressionExperimentService ees;
 
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     @NetworkAvailable
     public void testParse() throws IOException {
@@ -151,6 +153,7 @@ public class GeoBrowserServiceParseTest extends BaseTest5 {
     }
 
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     public void testSampleMINiMLParse() throws Exception {
         ClassPathResource resource = new ClassPathResource( "/data/loader/expression/geo/GSE171682.xml" );

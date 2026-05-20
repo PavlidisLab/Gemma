@@ -23,6 +23,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
@@ -116,6 +117,7 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest5 {
      *
      */
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testGetBatches() throws Exception {
@@ -158,6 +160,7 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest5 {
      * lane
      */
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testGSE14285OneBatch() throws Exception {
@@ -183,6 +186,7 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest5 {
      * batch info.
      */
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testGSE156689NoBatchinfo() throws Exception {

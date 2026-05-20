@@ -1,6 +1,7 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -114,6 +115,7 @@ public class MexSingleCellDataLoaderTest extends BaseTest5 {
     }
 
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     public void testGSE224438() throws IOException {
         // consider the first file for mapping to elements

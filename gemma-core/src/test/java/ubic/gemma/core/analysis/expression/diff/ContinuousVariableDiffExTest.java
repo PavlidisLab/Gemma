@@ -19,6 +19,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.FileTools;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
@@ -78,6 +79,7 @@ public class ContinuousVariableDiffExTest extends AbstractGeoServiceTest5 {
     private ExpressionExperiment ee;
 
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void test() {

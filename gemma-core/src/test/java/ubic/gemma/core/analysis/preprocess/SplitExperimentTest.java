@@ -21,6 +21,7 @@ package ubic.gemma.core.analysis.preprocess;
 
 import ubic.gemma.core.security.SecurityService;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -83,6 +84,7 @@ public class SplitExperimentTest extends BaseSpringContextTest5 {
     private ExpressionExperimentSet results;
 
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testSplitGSE17183ByOrganismPart() throws Exception {
@@ -164,6 +166,7 @@ public class SplitExperimentTest extends BaseSpringContextTest5 {
     }
 
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testSplitGSE123753ByCollectionOfMaterial() throws Exception {

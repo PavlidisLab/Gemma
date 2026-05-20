@@ -19,6 +19,7 @@
 package ubic.gemma.core.loader.expression.arrayDesign;
 
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,6 +54,7 @@ public class ArrayDesignSequenceProcessorFastacmdTest extends AbstractArrayDesig
     private ArrayDesignSequenceProcessingService app;
 
     @Test
+    @Tag("slow")
     @Category(SlowTest.class)
     @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     public void testProcessArrayDesignWithFastaCmdFetch() throws Exception {
