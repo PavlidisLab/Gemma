@@ -1140,6 +1140,13 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     ExpressionExperiment thawLite( ExpressionExperiment expressionExperiment );
 
+    /**
+     * @see ExpressionExperimentReadService#thawBioAssays(ExpressionExperiment)
+     */
+    @CheckReturnValue
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    ExpressionExperiment thawBioAssays( ExpressionExperiment expressionExperiment );
+
     boolean isBlackListed( String geoAccession );
 
     /**

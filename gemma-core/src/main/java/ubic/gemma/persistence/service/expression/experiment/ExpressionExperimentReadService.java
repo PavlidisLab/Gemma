@@ -31,6 +31,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.persistence.util.Thaws;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -213,6 +214,18 @@ public interface ExpressionExperimentReadService {
     ExpressionExperiment thawLite( ExpressionExperiment expressionExperiment );
 
     ExpressionExperiment thawLiter( ExpressionExperiment expressionExperiment );
+
+    /**
+     * Narrow thaw used by the {@code /samples} REST endpoint: initializes only the
+     * {@link ExpressionExperiment#getBioAssays() bioAssays} collection and applies
+     * {@link Thaws#thawBioAssay(BioAssay)} to each assay (which warms the array
+     * design, original platform, and biomaterial-with-factor-values shape that
+     * {@code BioAssayValueObject} reads). Skips the nine EE-level lazy collections
+     * warmed by {@link #thawLite(ExpressionExperiment)} — publications, otherParts,
+     * factors, factor values, quantitation types, characteristics, accession,
+     * mean-variance, geeq, curationDetails — none of which the assay-VO ctor reads.
+     */
+    ExpressionExperiment thawBioAssays( ExpressionExperiment expressionExperiment );
 
     /**
      * Included for cycle-break parity with the facade: the only read-method back-edge from

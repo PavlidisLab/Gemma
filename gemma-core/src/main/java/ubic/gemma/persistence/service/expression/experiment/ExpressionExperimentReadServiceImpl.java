@@ -592,6 +592,14 @@ public class ExpressionExperimentReadServiceImpl implements ExpressionExperiment
 
     @Override
     @Transactional(readOnly = true)
+    public ExpressionExperiment thawBioAssays( final ExpressionExperiment expressionExperiment ) {
+        ExpressionExperiment result = ensureInSession( expressionExperiment );
+        result.getBioAssays().forEach( Thaws::thawBioAssay );
+        return result;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Taxon getTaxon( final ExpressionExperiment ee ) {
         return expressionExperimentDao.getTaxon( ee );
     }
