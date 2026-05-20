@@ -1,22 +1,24 @@
 package ubic.gemma.cli.util;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.gemma.apps.TestCli;
-import ubic.gemma.cli.util.test.BaseCliIntegrationTest;
+import ubic.gemma.cli.util.test.BaseCliIntegrationTest5;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Test various behaviours of CLIs when injected as bean.
  * @author poirigui
  */
-public class MarkCLIsAsPrototypesTest extends BaseCliIntegrationTest {
+public class MarkCLIsAsPrototypesTest extends BaseCliIntegrationTest5 {
 
     @Autowired
     private BeanFactory beanFactory;
