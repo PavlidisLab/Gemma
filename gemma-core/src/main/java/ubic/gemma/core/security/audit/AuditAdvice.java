@@ -87,10 +87,17 @@ public class AuditAdvice {
      * <p>
      * This audit will cascade on {@link CascadeStyle#PERSIST}.
      *
+     * @deprecated Audit Phase C-1 — superseded by
+     * {@link ubic.gemma.persistence.audit.AuditTrailEventListener#onPostInsert} which
+     * emits CREATE rows via the Hibernate {@code POST_INSERT} event lifecycle and
+     * gets cascade for free (Hibernate fires per cascaded entity). Slated for removal
+     * in Phase C-2 once the listener is registered + IT-validated against gemdtest.
+     * Retained for now so the listener can be landed without doubling up audit rows.
      * @see Pointcuts#creator()
      * @see ubic.gemma.persistence.service.BaseDao#create(Identifiable)
      * @see ubic.gemma.persistence.service.BaseDao#create(Collection)
      */
+    @Deprecated
     @Order(4)
     @Before("ubic.gemma.persistence.util.Pointcuts.creator()")
     public void doCreateAdvice( JoinPoint pjp ) {
@@ -133,10 +140,17 @@ public class AuditAdvice {
      * <p>
      * This audit will cascade on {@link CascadeStyle#DELETE}.
      *
+     * @deprecated Audit Phase C-1 — superseded by
+     * {@link ubic.gemma.persistence.audit.AuditTrailEventListener#onPreDelete} which
+     * emits DELETE rows via the Hibernate {@code PRE_DELETE} event lifecycle and
+     * gets cascade for free (Hibernate fires per cascaded entity). Slated for removal
+     * in Phase C-2 once the listener is registered + IT-validated against gemdtest.
+     * Retained for now so the listener can be landed without doubling up audit rows.
      * @see Pointcuts#deleter()
      * @see ubic.gemma.persistence.service.BaseDao#remove(Identifiable)
      * @see ubic.gemma.persistence.service.BaseDao#remove(Collection)
      */
+    @Deprecated
     @Order(4)
     @Before("ubic.gemma.persistence.util.Pointcuts.deleter()")
     public void doDeleteAdvice( JoinPoint pjp ) {
