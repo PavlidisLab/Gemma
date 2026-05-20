@@ -31,6 +31,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.persistence.service.common.description.CharacteristicReadService;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 
@@ -67,6 +68,11 @@ public class OntologyServiceTest extends BaseTest5 {
         @Bean
         public CharacteristicService characteristicService() {
             return mock();
+        }
+
+        @Bean
+        public CharacteristicReadService characteristicReadService() {
+            return mock( CharacteristicReadService.class );
         }
 
         @Bean

@@ -91,6 +91,16 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest5
         }
 
         @Bean
+        public ExperimentalDesignReadService experimentalDesignReadService() {
+            return mock( ExperimentalDesignReadService.class );
+        }
+
+        @Bean
+        public ExperimentalFactorReadService experimentalFactorReadService() {
+            return mock( ExperimentalFactorReadService.class );
+        }
+
+        @Bean
         public AuditTrailService auditTrailService() {
             return mock();
         }

@@ -42,6 +42,11 @@ public class ExperimentalFactorServiceTest extends BaseDatabaseTest5 {
         public ExperimentalFactorDao experimentalFactorDao( SessionFactory sessionFactory ) {
             return new ExperimentalFactorDaoImpl( sessionFactory );
         }
+
+        @Bean
+        public ExperimentalFactorReadService experimentalFactorReadService() {
+            return mock( ExperimentalFactorReadService.class );
+        }
     }
 
     @Autowired
