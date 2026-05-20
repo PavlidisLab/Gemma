@@ -56,7 +56,6 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.persister.ArrayDesignPersister;
 import ubic.gemma.persistence.persister.ArrayDesignsForExperimentCache;
 import ubic.gemma.persistence.persister.GenomePersister;
-import ubic.gemma.persistence.persister.PersisterHelper;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
@@ -99,19 +98,6 @@ public class PersistentDummyObjectHelper {
 
     @Autowired
     private ExternalDatabaseService externalDatabaseService;
-
-    /**
-     * Persister-shrink S4b: retained only for the four entity arms with no public typed
-     * write-service yet — {@code BioAssay}, {@code BioMaterial}, {@code GeneProduct},
-     * {@code Chromosome}. Every other arm in this fixture now routes through the typed
-     * beans below ({@link EeWriteService}, {@link GenomePersister}, {@link ArrayDesignPersister},
-     * {@link BibliographicReferenceService}, {@link ExternalDatabaseService},
-     * {@link QuantitationTypeService}, {@link DifferentialExpressionAnalysisService},
-     * {@link ExpressionExperimentPrePersistService}). See PERSISTER_SHRINK_S4_PROGRESS.md
-     * for the four gap arms left for S4c.
-     */
-    @Autowired
-    private PersisterHelper persisterHelper;
 
     @Autowired
     private EeWriteService eeWriteService;
@@ -677,17 +663,17 @@ public class PersistentDummyObjectHelper {
             throw new IllegalArgumentException();
         }
         BioAssay ba = this.getTestNonPersistentBioAssay( ad, bm );
-        return persisterHelper.persist( ba );
+        return eeWriteService.persistBioAssay( ba );
     }
 
     public BioMaterial getTestPersistentBioMaterial() {
         BioMaterial bm = this.getTestNonPersistentBioMaterial();
-        return persisterHelper.persist( bm );
+        return eeWriteService.persistBioMaterial( bm );
     }
 
     public BioMaterial getTestPersistentBioMaterial( Taxon tax ) {
         BioMaterial bm = this.getTestNonPersistentBioMaterial( tax );
-        return persisterHelper.persist( bm );
+        return eeWriteService.persistBioMaterial( bm );
     }
 
     public BioSequence getTestPersistentBioSequence() {
@@ -728,7 +714,7 @@ public class PersistentDummyObjectHelper {
         }
         Chromosome chromosome = Chromosome.Factory.newInstance( "XXX", null, this.getTestPersistentBioSequence( taxon ), taxon );
         assert chromosome.getSequence() != null;
-        chromosome = persisterHelper.persist( chromosome );
+        chromosome = genomePersister.persistChromosome( chromosome );
         assert chromosome != null;
         assert chromosome.getSequence() != null;
         br.setTargetChromosome( chromosome );
@@ -884,7 +870,7 @@ public class PersistentDummyObjectHelper {
 
     public GeneProduct getTestPersistentGeneProduct( Gene gene ) {
         GeneProduct gp = getTestNonPersistentGeneProduct( gene );
-        return persisterHelper.persist( gp );
+        return genomePersister.persistGeneProduct( gp );
     }
 
     /**

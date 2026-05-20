@@ -305,6 +305,53 @@ public class GenomePersister {
     }
 
     /**
+     * Persist a {@link GeneProduct}. Equivalent to the
+     * {@code persist(GeneProduct)} arm formerly routed through
+     * {@link PersisterHelperImpl#persist} into the {@code GeneProduct}
+     * dispatch arm. Per-call caches are fresh; callers wanting cache reuse
+     * across a batch should drive the underlying helper directly.
+     * <p>
+     * Persister-shrink S4c: public no-cache overload added so test fixtures
+     * (notably {@code PersistentDummyObjectHelper}) can stop routing through
+     * the polymorphic {@link PersisterHelper#persist} dispatch.
+     */
+    @Transactional
+    public GeneProduct persistGeneProduct( GeneProduct geneProduct ) {
+        try {
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.MANUAL );
+            GeneProduct result = this.persistGeneProduct( geneProduct, new HashMap<>(), new HashMap<>(), new HashMap<>() );
+            sessionFactory.getCurrentSession().flush();
+            return result;
+        } finally {
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.AUTO );
+        }
+    }
+
+    /**
+     * Persist a {@link Chromosome}. Equivalent to the
+     * {@code persist(Chromosome)} arm formerly routed through
+     * {@link PersisterHelperImpl#persist} into the {@code Chromosome}
+     * dispatch arm. The chromosome's taxon is used as the lookup taxon
+     * (matches the {@code doGenome} dispatch which passes a {@code null}
+     * override). Per-call caches are fresh.
+     * <p>
+     * Persister-shrink S4c: public no-cache overload added so test fixtures
+     * (notably {@code PersistentDummyObjectHelper}) can stop routing through
+     * the polymorphic {@link PersisterHelper#persist} dispatch.
+     */
+    @Transactional
+    public Chromosome persistChromosome( Chromosome chromosome ) {
+        try {
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.MANUAL );
+            Chromosome result = this.persistChromosome( chromosome, null, new HashMap<>(), new HashMap<>(), new HashMap<>() );
+            sessionFactory.getCurrentSession().flush();
+            return result;
+        } finally {
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.AUTO );
+        }
+    }
+
+    /**
      * Persist a {@link BlatAssociation}. Equivalent to the
      * {@code persist(BlatAssociation)} arm formerly routed through
      * {@link PersisterHelperImpl#persist} into the
