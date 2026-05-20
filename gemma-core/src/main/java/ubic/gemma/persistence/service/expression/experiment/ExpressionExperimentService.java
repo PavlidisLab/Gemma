@@ -1130,9 +1130,15 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      * @param ee      the experiment whose characteristic set is being replaced
      * @param desired the desired characteristic set. Each member must have a non-blank category and
      *                value (URIs optional). The collection itself may be empty (to clear all tags).
+     * @return total number of characteristic changes applied (added + removed). Zero means the
+     *         desired set already matched the current set (no-op, no audit event written). Callers
+     *         that don't care about the count can safely ignore the value. The non-void return is
+     *         what lets {@code @AuditedConditional(when = "#result &gt; 0", ...)} fire the audit
+     *         event only on actual change branches — see {@code AUDIT_PHASE_C_RECCE.md}
+     *         candidate #2 and {@code AuditedConditional} javadoc.
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void updateAnnotations( ExpressionExperiment ee, Collection<Characteristic> desired );
+    int updateAnnotations( ExpressionExperiment ee, Collection<Characteristic> desired );
 
     /**
      * @see ExpressionExperimentDao#thaw(ExpressionExperiment)

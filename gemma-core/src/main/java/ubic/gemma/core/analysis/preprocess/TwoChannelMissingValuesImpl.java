@@ -25,6 +25,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.core.security.audit.AuditedConditional;
 import ubic.gemma.core.util.math.distribution.Histogram;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixRowElement;
@@ -37,7 +38,6 @@ import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
@@ -92,17 +92,21 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
     private RawExpressionDataVectorService rawExpressionDataVectorService;
     @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
-    @Autowired
-    private AuditTrailService auditTrailService;
 
     @Override
     @Transactional
+    @AuditedConditional( value = MissingValueAnalysisEvent.class,
+            when = "!#result.isEmpty()",
+            message = "Computed missing value data" )
     public Collection<RawExpressionDataVector> computeMissingValues( ExpressionExperiment ee ) {
         return this.computeMissingValues( ee, TwoChannelMissingValues.DEFAULT_SIGNAL_TO_NOISE_THRESHOLD, null );
     }
 
     @Override
     @Transactional
+    @AuditedConditional( value = MissingValueAnalysisEvent.class,
+            when = "!#result.isEmpty()",
+            message = "Computed missing value data" )
     public Collection<RawExpressionDataVector> computeMissingValues( ExpressionExperiment ee,
             double signalToNoiseThreshold, @Nullable Collection<Double> extraMissingValueIndicators ) {
 
@@ -256,8 +260,11 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
         source = expressionExperimentService.save( source );
         source.getRawExpressionDataVectors().addAll( results );
         source = expressionExperimentService.save( source );
-        auditTrailService.addUpdateEvent( source, MissingValueAnalysisEvent.class,
-                "Computed missing value data" );
+        // Audit event written by @AuditedConditional on the public
+        // computeMissingValues entry-points via AuditedAspect (Phase C). The
+        // SpEL guard `!#result.isEmpty()` keeps the no-data short-circuit
+        // (returning an empty HashSet) from emitting a spurious row, matching
+        // the old call-site behaviour exactly.
 
         return results;
     }

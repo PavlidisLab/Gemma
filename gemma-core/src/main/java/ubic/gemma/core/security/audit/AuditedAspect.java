@@ -103,32 +103,72 @@ public class AuditedAspect {
 
     @AfterReturning( pointcut = "@annotation(audited)", returning = "result" )
     public void afterAuditedMethod( JoinPoint joinPoint, Audited audited, @Nullable Object result ) {
+        emit( joinPoint, audited.value(), audited.message(), audited.messageSpel(), result, "@Audited" );
+    }
+
+    /**
+     * Phase C: {@link AuditedConditional} fires only when its SpEL
+     * {@link AuditedConditional#when()} predicate evaluates to {@code true}
+     * against the post-invocation context. Otherwise the method is a no-op
+     * from the audit-log's perspective.
+     *
+     * <p>Predicate-evaluation failure → log ERROR and skip emission (do NOT
+     * fall back to "always fire"; an undecidable predicate is closer to the
+     * no-op branch than to the emission branch — false negatives in the
+     * audit log are worse than missing rows in the message-string).
+     */
+    @AfterReturning( pointcut = "@annotation(auditedConditional)", returning = "result" )
+    public void afterAuditedConditionalMethod( JoinPoint joinPoint, AuditedConditional auditedConditional, @Nullable Object result ) {
+        String whenSpel = auditedConditional.when();
+        Boolean fire;
+        try {
+            fire = evaluateSpel( whenSpel, joinPoint, result, Boolean.class );
+        } catch ( RuntimeException e ) {
+            log.error( "Failed to evaluate @AuditedConditional.when='{}' on {}; SKIPPING emission (safe default).",
+                    whenSpel, joinPoint.getSignature(), e );
+            return;
+        }
+        if ( !Boolean.TRUE.equals( fire ) ) {
+            // Predicate false (or null) → caller intentionally signalled "no audit on this branch".
+            return;
+        }
+        emit( joinPoint, auditedConditional.value(), auditedConditional.message(),
+                auditedConditional.messageSpel(), result, "@AuditedConditional" );
+    }
+
+    /**
+     * Shared emission path for both {@link Audited} and
+     * {@link AuditedConditional}. The {@code label} is purely for log
+     * messages (so a hot stack trace tells you which annotation triggered).
+     */
+    private void emit( JoinPoint joinPoint, Class<? extends AuditEventType> eventType,
+            String literalMessage, String messageSpel, @Nullable Object result, String label ) {
         Object[] args = joinPoint.getArgs();
         Auditable target = findAuditable( args );
         if ( target == null ) {
-            log.warn( "@Audited method {} has no Auditable argument; no audit event will be written.",
-                    joinPoint.getSignature() );
+            log.warn( "{} method {} has no Auditable argument; no audit event will be written.",
+                    label, joinPoint.getSignature() );
             return;
         }
         AuditEventPayload payload = findPayload( args );
         String payloadJson = serialisePayload( payload, joinPoint );
-        String note = resolveMessage( audited, joinPoint, result );
+        String note = resolveMessage( literalMessage, messageSpel, joinPoint, result );
         AuditEvent ev;
         try {
-            ev = auditTrailService.addUpdateEventWithPayload( target, audited.value(), note, payloadJson );
+            ev = auditTrailService.addUpdateEventWithPayload( target, eventType, note, payloadJson );
         } catch ( RuntimeException e ) {
-            log.error( "Failed to persist audit event for @Audited method {} (type={}); rethrowing.",
-                    joinPoint.getSignature(), audited.value().getSimpleName(), e );
+            log.error( "Failed to persist audit event for {} method {} (type={}); rethrowing.",
+                    label, joinPoint.getSignature(), eventType.getSimpleName(), e );
             throw e;
         }
-        AuditEventType resolvedType = eventTypeCache.computeIfAbsent( audited.value(), AuditedAspect::instantiateEventType );
+        AuditEventType resolvedType = eventTypeCache.computeIfAbsent( eventType, AuditedAspect::instantiateEventType );
         try {
             eventPublisher.publishEvent( new AuditedEvent( this, target, resolvedType, payload, ev ) );
         } catch ( RuntimeException e ) {
             // Publishing failure must NOT roll back the audit row. The row is
             // already in the AuditTrail bag and will be flushed at commit.
             log.warn( "AuditedEvent listener threw for {} on {}; audit row is unaffected.",
-                    audited.value().getSimpleName(), target, e );
+                    eventType.getSimpleName(), target, e );
         }
     }
 
@@ -169,9 +209,8 @@ public class AuditedAspect {
     }
 
     @Nullable
-    private String resolveMessage( Audited audited, JoinPoint joinPoint, @Nullable Object returnValue ) {
-        String spel = audited.messageSpel();
-        if ( !spel.isEmpty() ) {
+    private String resolveMessage( String literalMessage, String messageSpel, JoinPoint joinPoint, @Nullable Object returnValue ) {
+        if ( !messageSpel.isEmpty() ) {
             // Phase B-2: SpEL support. spring-expression was widened to compile
             // scope in gemma-core/pom.xml so we can wire a SpelExpressionParser
             // + StandardEvaluationContext directly. Method parameters resolve by
@@ -179,32 +218,44 @@ public class AuditedAspect {
             // access via #root.args[i] also works (root object is the args array).
             // The method's return value is exposed as #result.
             try {
-                MethodSignature sig = ( MethodSignature ) joinPoint.getSignature();
-                StandardEvaluationContext ctx = new StandardEvaluationContext();
-                Object[] args = joinPoint.getArgs();
-                ctx.setRootObject( args );
-                ctx.setVariable( "result", returnValue );
-                String[] paramNames = sig.getParameterNames();
-                if ( paramNames != null ) {
-                    for ( int i = 0; i < paramNames.length && i < args.length; i++ ) {
-                        if ( paramNames[i] != null ) {
-                            ctx.setVariable( paramNames[i], args[i] );
-                        }
-                    }
-                }
-                Expression expr = spelCache.computeIfAbsent( spel, spelParser::parseExpression );
-                String evaluated = expr.getValue( ctx, String.class );
+                String evaluated = evaluateSpel( messageSpel, joinPoint, returnValue, String.class );
                 if ( evaluated != null && !evaluated.isEmpty() ) {
                     return evaluated;
                 }
             } catch ( RuntimeException e ) {
                 // Don't drop the audit row over a SpEL hiccup, but make it loud.
-                log.error( "Failed to evaluate @Audited.messageSpel='{}' on {}; falling back to literal message().",
-                        spel, joinPoint.getSignature(), e );
+                log.error( "Failed to evaluate messageSpel='{}' on {}; falling back to literal message().",
+                        messageSpel, joinPoint.getSignature(), e );
             }
         }
-        String literal = audited.message();
-        return literal.isEmpty() ? null : literal;
+        return literalMessage.isEmpty() ? null : literalMessage;
+    }
+
+    /**
+     * Evaluate a SpEL expression against the join-point context: root object
+     * is the args array (so positional access via {@code #root.args[i]} works),
+     * named parameters are bound as variables (requires javac {@code -parameters}),
+     * and the method's return value is bound as {@code #result}. Caches the
+     * parsed expression keyed by source. Any thrown exception is propagated;
+     * the caller is responsible for the fall-back / skip policy.
+     */
+    @Nullable
+    private <T> T evaluateSpel( String spel, JoinPoint joinPoint, @Nullable Object returnValue, Class<T> desiredType ) {
+        MethodSignature sig = ( MethodSignature ) joinPoint.getSignature();
+        StandardEvaluationContext ctx = new StandardEvaluationContext();
+        Object[] args = joinPoint.getArgs();
+        ctx.setRootObject( args );
+        ctx.setVariable( "result", returnValue );
+        String[] paramNames = sig.getParameterNames();
+        if ( paramNames != null ) {
+            for ( int i = 0; i < paramNames.length && i < args.length; i++ ) {
+                if ( paramNames[i] != null ) {
+                    ctx.setVariable( paramNames[i], args[i] );
+                }
+            }
+        }
+        Expression expr = spelCache.computeIfAbsent( spel, spelParser::parseExpression );
+        return expr.getValue( ctx, desiredType );
     }
 
     private static AuditEventType instantiateEventType( Class<? extends AuditEventType> type ) {
