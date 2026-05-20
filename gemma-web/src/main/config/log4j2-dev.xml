@@ -44,8 +44,10 @@
         <Logger name="org.hibernate.cache.ReadWriteCache" level="ERROR"/>
         <Logger name="org.hibernate.engine.loading.LoadContexts" level="ERROR"/>
 
-        <Logger name="ubic.basecode.ontology.model.PropertyFactory" level="ERROR"/>
-        <Logger name="ubic.basecode.ontology.providers" level="WARN"/>
+        <!-- baseCode ontology classes were pulled in-tree in Phase 3; loggers
+             updated to the new package names (ubic.gemma.core.ontology.basecode.*). -->
+        <Logger name="ubic.gemma.core.ontology.basecode.jena.PropertyFactory" level="ERROR"/>
+        <Logger name="ubic.gemma.core.ontology.basecode.providers" level="WARN"/>
 
         <Logger name="org.glassfish.jersey.internal.Errors" level="ERROR"/>
         <Logger name="org.glassfish.jersey.server.ServerRuntime$Responder" level="INFO"/>
@@ -60,8 +62,6 @@
         <Logger name="org.springframework.security.access.event.LoggerListener" level="INFO"/>
         <Logger name="org.springframework.security.authentication.event.LoggerListener" level="ERROR"/>
         <Logger name="org.springframework.web.servlet.PageNotFound" level="ERROR"/>
-
-        <Logger name="ubic.basecode" level="INFO"/>
 
         <Logger name="ubic.gemma" level="INFO">
             <AppenderRef ref="progressUpdate"/>

@@ -1,5 +1,14 @@
 # baseCode `math` + `linearmodels` (+ neighbours) — pull-in recce
 
+> **STATUS: DONE (2026-05-19).** The pull-in described below was
+> executed; the math / linearmodels / linalg / distribution /
+> metaanalysis classes live in-tree under `ubic.gemma.core.util.math.*`
+> (with `linearmodels`, `linalg`, `distribution`, `metaanalysis`
+> sub-packages), the graphics subset under
+> `ubic.gemma.core.util.graphics.*`, and `MatrixWriter` under
+> `ubic.gemma.core.util.matrix.*`. The baseCode Maven dep was retired
+> at `9f216558d5`. Kept for historical reference.
+
 **Date:** 2026-05-19
 **Branch:** `basecode-math-linearmodels-recce` off `phase2-acl-migrate` @ `c4b88913f01ee74b85e8fd066f7353c3102487fd`
 **Question:** The matrix port (`4be748f512`) is dormant in-tree under `ubic.gemma.core.util.matrix`. Consumer rewiring is blocked by 11 of 60 consumers that pass `DoubleMatrix` into baseCode helpers (`MatrixStats`, `MatrixRowStats`, `LeastSquaresFit`, `DesignMatrix`, `MeanVarianceEstimator`, `SingularValueDecomposition`, `MatrixWriter`, `ColorMatrix`). Until those helpers also live in-tree, the rewrite is type-mismatched. What's the actual shape of the remaining math + linearmodels subsystem, and what's the smallest viable port that unblocks the consumer rewire?

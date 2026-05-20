@@ -1,5 +1,10 @@
 # baseCode `dataStructure.matrix` subsystem — pull-in recce
 
+> **STATUS: DONE (2026-05-19).** The pull-in described below was
+> executed; the matrix classes live in-tree under
+> `ubic.gemma.core.util.matrix.*` and the baseCode Maven dep was
+> retired at `9f216558d5`. Kept for historical reference.
+
 **Date:** 2026-05-19
 **Branch:** `basecode-matrix-recce` off `phase2-acl-migrate` @ `c187831d2baa2dbf7f585a251354149cef554e45`
 **Question:** Per `BASECODE_DEP_AUDIT.md`, the matrix subsystem is the next big-ticket pull-in target (93 imports). The math pilot pulled `Constants` / `MathUtil` / `StringDistance` in-tree under `ubic.gemma.core.util.math` and found the remaining 41 math imports are all `DoubleMatrix`-bound — so matrix is now the gate. What's the actual shape of the subsystem, how does it interlock with `cern.colt`, and what would a clean pull-in look like?
