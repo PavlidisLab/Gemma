@@ -1,9 +1,9 @@
 package ubic.gemma.apps;
 
 import ubic.gemma.core.security.authentication.ManualAuthenticationService;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -15,7 +15,7 @@ import org.springframework.security.test.context.support.WithSecurityContextTest
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.cli.util.EntityLocator;
-import ubic.gemma.cli.util.test.BaseCliTest;
+import ubic.gemma.cli.util.test.BaseCliTest5;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.analysis.service.ExpressionMetadataChangelogFileService;
 import ubic.gemma.core.context.TestComponent;
@@ -46,7 +46,7 @@ import static ubic.gemma.cli.util.test.Assertions.assertThat;
 @ContextConfiguration
 @TestExecutionListeners(value = WithSecurityContextTestExecutionListener.class,
         mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
-public class RNASeqDataAddCliTest extends BaseCliTest {
+public class RNASeqDataAddCliTest extends BaseCliTest5 {
 
     @Configuration
     @TestComponent
@@ -153,7 +153,7 @@ public class RNASeqDataAddCliTest extends BaseCliTest {
     private ExpressionExperiment ee;
     private String rpkmFile;
 
-    @Before
+    @BeforeEach
     public void setUp() throws IOException {
         ad = new ArrayDesign();
         ee = new ExpressionExperiment();
@@ -167,7 +167,7 @@ public class RNASeqDataAddCliTest extends BaseCliTest {
         when( entityLocator.locateArrayDesign( "test" ) ).thenReturn( ad );
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         reset( expressionExperimentService, arrayDesignService );
     }
