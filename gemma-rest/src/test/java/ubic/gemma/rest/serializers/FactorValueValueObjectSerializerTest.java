@@ -3,13 +3,12 @@ package ubic.gemma.rest.serializers;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonassert.JsonAssert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
-import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
@@ -20,7 +19,7 @@ import ubic.gemma.rest.util.JacksonConfig;
 import java.text.ParseException;
 
 @ContextConfiguration
-public class FactorValueValueObjectSerializerTest extends BaseTest {
+public class FactorValueValueObjectSerializerTest extends BaseTest5 {
 
     @Configuration
     @TestComponent

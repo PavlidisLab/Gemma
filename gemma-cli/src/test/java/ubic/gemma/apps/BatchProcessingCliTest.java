@@ -2,7 +2,7 @@ package ubic.gemma.apps;
 
 import org.apache.commons.cli.Options;
 import org.assertj.core.api.Assertions;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.cli.util.AbstractCLI;
 
 import java.io.IOException;

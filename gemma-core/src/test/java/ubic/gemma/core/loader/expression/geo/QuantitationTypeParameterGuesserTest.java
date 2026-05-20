@@ -20,8 +20,8 @@ package ubic.gemma.core.loader.expression.geo;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.core.util.FileTools;
 import ubic.gemma.model.common.quantitationtype.*;
 
@@ -32,7 +32,9 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Paul
@@ -56,7 +58,7 @@ public class QuantitationTypeParameterGuesserTest {
         String a = "AREA";
         String b = "Number of pixels used to calculate a feature's intensity";
         StandardQuantitationType s = QuantitationTypeParameterGuesser.guessType( a.toLowerCase(), b.toLowerCase() );
-        assertEquals( "got " + s, StandardQuantitationType.OTHER, s );
+        assertEquals( StandardQuantitationType.OTHER, s, "got " + s );
     }
 
     @Test
@@ -64,19 +66,19 @@ public class QuantitationTypeParameterGuesserTest {
         String a = "B635_MEDIAN";
         String b = "median Cy5 feature background intensity";
         Boolean s = QuantitationTypeParameterGuesser.guessIsBackground( a.toLowerCase(), b.toLowerCase() );
-        assertEquals( "got " + s, Boolean.TRUE, s );
+        assertEquals( Boolean.TRUE, s, "got " + s );
     }
 
     @Test
     public void testgcrma() {
         ScaleType s = QuantitationTypeParameterGuesser.guessScaleType( "VALUE", "gcRMA-calculated Signal intensity" );
-        assertEquals( "got " + s, ScaleType.LOG2, s );
+        assertEquals( ScaleType.LOG2, s, "got " + s );
     }
 
     @Test
     public void testrma() {
         ScaleType s = QuantitationTypeParameterGuesser.guessScaleType( "VALUE", "Signals calculated by RMA" );
-        assertEquals( "got " + s, ScaleType.LOG2, s );
+        assertEquals( ScaleType.LOG2, s, "got " + s );
     }
 
     @Test
@@ -85,7 +87,7 @@ public class QuantitationTypeParameterGuesserTest {
         String b = "Percent of feature pixels that were greater than two standard deviations of the background over the background signal";
         Boolean s = QuantitationTypeParameterGuesser.guessIsBackground( a.toLowerCase(), b.toLowerCase() )
                 && QuantitationTypeParameterGuesser.maybeBackground( a.toLowerCase(), b.toLowerCase() );
-        assertEquals( "got " + s, Boolean.FALSE, s );
+        assertEquals( Boolean.FALSE, s, "got " + s );
 
     }
 
@@ -94,7 +96,7 @@ public class QuantitationTypeParameterGuesserTest {
         String a = "CH2_BKD_ SD";
         String b = "NChannel 2 background standard deviation";
         StandardQuantitationType s = QuantitationTypeParameterGuesser.guessType( a.toLowerCase(), b.toLowerCase() );
-        assertEquals( "got " + s, StandardQuantitationType.CONFIDENCEINDICATOR, s );
+        assertEquals( StandardQuantitationType.CONFIDENCEINDICATOR, s, "got " + s );
     }
 
     @Test
@@ -116,7 +118,7 @@ public class QuantitationTypeParameterGuesserTest {
         String b = "percentage of feature pixels with intensities more than one standard deviation above the background pixel intensity, at wavelength #2 (532 nm, Cy3)";
 
         ScaleType s = QuantitationTypeParameterGuesser.guessScaleType( a.toLowerCase(), b.toLowerCase() );
-        assertEquals( "got " + s, ScaleType.PERCENT, s );
+        assertEquals( ScaleType.PERCENT, s, "got " + s );
     }
 
     @Test
@@ -124,7 +126,7 @@ public class QuantitationTypeParameterGuesserTest {
         String a = "B Pixels";
         String b = "number of background pixels";
         PrimitiveType s = QuantitationTypeParameterGuesser.guessPrimitiveType( a.toLowerCase(), b.toLowerCase(), null );
-        assertEquals( "got " + s, PrimitiveType.INT, s );
+        assertEquals( PrimitiveType.INT, s, "got " + s );
     }
 
     @Test
@@ -150,7 +152,7 @@ public class QuantitationTypeParameterGuesserTest {
         String a = "VALUE";
         String b = "green_processed_Signal; the signal left after all the Feature extraction processing steps have been completed (e.g. background substraction)";
         PrimitiveType s = QuantitationTypeParameterGuesser.guessPrimitiveType( a.toLowerCase(), b.toLowerCase(), 1.0 );
-        assertEquals( "got " + s, PrimitiveType.DOUBLE, s );
+        assertEquals( PrimitiveType.DOUBLE, s, "got " + s );
     }
 
     @Test
@@ -158,7 +160,7 @@ public class QuantitationTypeParameterGuesserTest {
         String a = "VALUE";
         String b = "green_processed_Signal; the signal left after all the Feature extraction processing steps have been completed (e.g. background substraction)";
         PrimitiveType s = QuantitationTypeParameterGuesser.guessPrimitiveType( a.toLowerCase(), b.toLowerCase(), "a" );
-        assertFalse( "got " + s, PrimitiveType.DOUBLE.equals( s ) );
+        assertFalse( PrimitiveType.DOUBLE.equals( s ), "got " + s );
     }
 
     @Test
@@ -167,7 +169,7 @@ public class QuantitationTypeParameterGuesserTest {
         String b = "number of background pixels";
         PrimitiveType s = QuantitationTypeParameterGuesser
                 .guessPrimitiveType( a.toLowerCase(), b.toLowerCase(), 12232 );
-        assertTrue( "got " + s, s.equals( PrimitiveType.INT ) );
+        assertTrue( s.equals( PrimitiveType.INT ), "got " + s );
     }
 
     @Test
@@ -176,7 +178,7 @@ public class QuantitationTypeParameterGuesserTest {
         String b = "number of background pixels";
         PrimitiveType s = QuantitationTypeParameterGuesser
                 .guessPrimitiveType( a.toLowerCase(), b.toLowerCase(), 12232.00 );
-        assertTrue( "got " + s, s.equals( PrimitiveType.DOUBLE ) );
+        assertTrue( s.equals( PrimitiveType.DOUBLE ), "got " + s );
     }
 
     @Test
@@ -184,7 +186,7 @@ public class QuantitationTypeParameterGuesserTest {
         String a = "RAT1_MEAN";
         String b = "ratio of CH1D_MEAN to CH2D_MEAN";
         StandardQuantitationType s = QuantitationTypeParameterGuesser.guessType( a.toLowerCase(), b.toLowerCase() );
-        assertEquals( "got " + s, StandardQuantitationType.AMOUNT, s );
+        assertEquals( StandardQuantitationType.AMOUNT, s, "got " + s );
     }
 
     @Test
@@ -193,7 +195,7 @@ public class QuantitationTypeParameterGuesserTest {
         String b = "Log2 ratio (CH_1 Median-CH1_B/CH2_Median-CH2_B)";
         PrimitiveType s = QuantitationTypeParameterGuesser
                 .guessPrimitiveType( a.toLowerCase(), b.toLowerCase(), "null" );
-        assertEquals( "got " + s, PrimitiveType.DOUBLE, s );
+        assertEquals( PrimitiveType.DOUBLE, s, "got " + s );
     }
 
     @Test
@@ -287,7 +289,7 @@ public class QuantitationTypeParameterGuesserTest {
         QuantitationTypeParameterGuesserTest.log.info( buf );
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
         qt = QuantitationType.Factory.newInstance();
         qt.setIsBackground( false );

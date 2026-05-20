@@ -17,11 +17,11 @@ package ubic.gemma.core.analysis.preprocess.batcheffects;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.*;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Unit tests. Note that these depend on BatchInfoPopulationService.MAX_GAP_BETWEEN_SAMPLES_TO_BE_SAME_BATCH

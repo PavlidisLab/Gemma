@@ -1,6 +1,7 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -13,7 +14,7 @@ import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.loader.expression.singleCell.transform.*;
 import ubic.gemma.core.loader.util.hdf5.H5Attribute;
 import ubic.gemma.core.loader.util.hdf5.H5File;
-import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.core.util.test.category.SlowTest;
 
 import java.io.IOException;
@@ -22,13 +23,14 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 @Category(SlowTest.class)
+@Tag("slow")
 @ContextConfiguration
-public class SingleCellDataTransformationsTest extends BaseTest {
+public class SingleCellDataTransformationsTest extends BaseTest5 {
 
     @Autowired
     private SingleCellDataTransformationFactory singleCellDataTransformationFactory;
@@ -130,13 +132,13 @@ public class SingleCellDataTransformationsTest extends BaseTest {
     private static final ConcurrentHashMap<String, Boolean> isPackageInstalled = new ConcurrentHashMap<>();
 
     private void checkIfPackageIsInstalled( String packageName ) {
-        assumeTrue( packageName + " is required to run this test", isPackageInstalled.computeIfAbsent( packageName, ignored -> {
+        assumeTrue( isPackageInstalled.computeIfAbsent( packageName, ignored -> {
             SingleCellDataTranspose transpose = ctx.getBean( SingleCellDataTranspose.class );
             try {
                 return transpose.isPackageInstalled( packageName );
             } catch ( IOException e ) {
                 throw new RuntimeException( e );
             }
-        } ) );
+        } ), packageName + " is required to run this test" );
     }
 }
