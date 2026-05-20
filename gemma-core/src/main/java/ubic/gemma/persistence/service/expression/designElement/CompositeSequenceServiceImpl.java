@@ -124,6 +124,23 @@ public class CompositeSequenceServiceImpl
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public CursorPage<CompositeSequenceValueObject> loadValueObjectsForGeneByCursor( Gene gene, @Nullable Cursor cursor, int limit, boolean useGene2Cs ) {
+        CursorPage<CompositeSequence> probes = this.compositeSequenceDao.findByGeneByCursor( gene, cursor, limit, useGene2Cs );
+        Set<ArrayDesign> platforms = probes.stream().map( CompositeSequence::getArrayDesign ).collect( Collectors.toSet() );
+        Map<Long, ArrayDesignValueObject> platformVos = arrayDesignService.loadValueObjects( platforms ).stream()
+                .collect( Collectors.toMap( ArrayDesignValueObject::getId, Function.identity() ) );
+        // FIXME: deal with potential null return values of loadValueObject (matches the offset variant)
+        return probes.map( probe -> {
+            CompositeSequenceValueObject probeVo = loadValueObject( probe );
+            if ( probeVo != null ) {
+                probeVo.setArrayDesign( platformVos.get( probe.getArrayDesign().getId() ) );
+            }
+            return probeVo;
+        } );
+    }
+
+    @Override
     public Collection<CompositeSequence> findByGene( Gene gene, ArrayDesign arrayDesign, boolean useGene2Cs ) {
         return compositeSequenceReadService.findByGene( gene, arrayDesign, useGene2Cs );
     }

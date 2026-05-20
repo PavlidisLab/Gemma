@@ -215,6 +215,104 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
     }
 
     @Override
+    public CursorPage<CompositeSequence> findByGeneByCursor( Gene gene, @Nullable Cursor cursor, int limit, boolean useGene2Cs ) {
+        if ( limit <= 0 ) {
+            throw new IllegalArgumentException( "Cursor page limit must be > 0." );
+        }
+        // Cursors carry their sort spec so the client can't silently switch sorts between
+        // pages — step 1b convention. The only sort we support here is ascending cs.id
+        // (the primary key, indexed and unique); see the doLoadValueObjectsByCursor
+        // restriction in AbstractQueryFilteringVoEnabledDao step 1b. Symmetric to
+        // getGenesByCursor (which keysets on gene.id under the same join).
+        String expectedSortSpec = "+id";
+        Sort sort = Sort.by( null, "id", Sort.Direction.ASC, Sort.NullMode.LAST, "id" );
+        boolean backward = cursor != null && cursor.getDirection() == Cursor.Direction.BACKWARD;
+        Long lastSeenId = null;
+        if ( cursor != null ) {
+            if ( !expectedSortSpec.equals( cursor.getSortSpec() ) ) {
+                throw new IllegalArgumentException( "Cursor sort spec '" + cursor.getSortSpec()
+                        + "' does not match the requested sort '" + expectedSortSpec + "'." );
+            }
+            Object[] key = cursor.getKeyTuple();
+            if ( key.length != 1 ) {
+                throw new IllegalArgumentException( "Cursor key tuple must have exactly 1 component for sort '"
+                        + expectedSortSpec + "'; got " + key.length + "." );
+            }
+            try {
+                lastSeenId = ( ( Number ) key[0] ).longValue();
+            } catch ( ClassCastException e ) {
+                throw new IllegalArgumentException( "Cursor key component must be numeric for sort '" + expectedSortSpec + "'.", e );
+            }
+        }
+        // ASC forward → id > :lastId; ASC backward → id < :lastId ORDER BY id DESC (then reversed
+        // for client-visible order). Mirrors AbstractQueryFilteringVoEnabledDao#doLoadValueObjectsByCursor.
+        String orderDirection;
+        boolean appendComparator = cursor != null;
+        if ( cursor == null || !backward ) {
+            orderDirection = "asc";
+        } else {
+            orderDirection = "desc";
+        }
+        List<CompositeSequence> rows;
+        if ( useGene2Cs ) {
+            // gets all kinds of associations, not just blat — same scope as the offset variant.
+            // Hibernate 6 NativeQuery can't auto-coerce an entity parameter to its identifier the way
+            // HB 5 did — bind the ID directly.
+            String comparator = appendComparator
+                    ? ( backward ? " and cs.ID < :cursorId" : " and cs.ID > :cursorId" )
+                    : "";
+            //noinspection unchecked
+            Query<CompositeSequence> q = this.getSessionFactory().getCurrentSession()
+                    .createNativeQuery( "select {cs.*} " + CS_BY_GENE_GENE2CS_QUERY
+                            + " and gene.ID = :geneId" + comparator
+                            + " group by cs.ID order by cs.ID " + orderDirection )
+                    .addEntity( "cs", CompositeSequence.class );
+            q.setParameter( "geneId", gene.getId() );
+            if ( lastSeenId != null ) {
+                q.setParameter( "cursorId", lastSeenId );
+            }
+            q.setMaxResults( limit + 1 );
+            rows = q.list();
+        } else {
+            String comparator = appendComparator
+                    ? ( backward ? " and cs.id < :cursorId" : " and cs.id > :cursorId" )
+                    : "";
+            //noinspection unchecked
+            Query<CompositeSequence> q = ( Query<CompositeSequence> ) this.getSessionFactory().getCurrentSession()
+                    .createQuery( "select cs " + CS_BY_GENE_QUERY + " and gene = :gene" + comparator
+                            + " group by cs order by cs.id " + orderDirection );
+            q.setParameter( "gene", gene );
+            if ( lastSeenId != null ) {
+                q.setParameter( "cursorId", lastSeenId );
+            }
+            q.setMaxResults( limit + 1 );
+            rows = q.list();
+        }
+
+        boolean hasMore = rows.size() > limit;
+        if ( hasMore ) {
+            rows = new ArrayList<>( rows.subList( 0, limit ) );
+        }
+        if ( backward ) {
+            Collections.reverse( rows );
+        }
+
+        String nextCursor = null;
+        String prevCursor = null;
+        if ( !rows.isEmpty() ) {
+            Long lastId = rows.get( rows.size() - 1 ).getId();
+            Long firstId = rows.get( 0 ).getId();
+            if ( backward || hasMore ) {
+                nextCursor = new Cursor( expectedSortSpec, new Object[] { lastId }, Cursor.Direction.FORWARD ).encode();
+            }
+            if ( cursor != null ) {
+                prevCursor = new Cursor( expectedSortSpec, new Object[] { firstId }, Cursor.Direction.BACKWARD ).encode();
+            }
+        }
+        return new CursorPage<>( rows, sort, limit, nextCursor, prevCursor, null );
+    }
+
+    @Override
     public Collection<CompositeSequence> findByGene( Gene gene, ArrayDesign arrayDesign, boolean useGene2Cs ) {
         if ( useGene2Cs ) {
             //noinspection unchecked

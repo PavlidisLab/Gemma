@@ -98,6 +98,20 @@ public interface CompositeSequenceService
 
     Slice<CompositeSequenceValueObject> loadValueObjectsForGene( Gene gene, int start, int limit, boolean useGene2Cs );
 
+    /**
+     * Cursor-mode counterpart to {@link #loadValueObjectsForGene(Gene, int, int, boolean)}
+     * &mdash; see {@code CURSOR_PAGINATION_STEP1_PLAN.md} step 1m. Always sorts by ascending
+     * {@code cs.id} (the primary key, indexed and unique); the cursor DAO restricts cursors
+     * to single-component id sorts until the index audit lands.
+     * <p>
+     * Same value-object shape as the offset variant: the per-row {@link CompositeSequenceValueObject}
+     * carries the {@link ArrayDesign} VO populated via a single {@code loadValueObjects}
+     * call over the platforms touched by the page (matching the offset implementation).
+     *
+     * @see CompositeSequenceDao#findByGeneByCursor(Gene, Cursor, int, boolean)
+     */
+    CursorPage<CompositeSequenceValueObject> loadValueObjectsForGeneByCursor( Gene gene, @Nullable Cursor cursor, int limit, boolean useGene2Cs );
+
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COMPOSITE_SEQUENCE_COLLECTION_READ" })
     Collection<CompositeSequence> findByName( String name );
 
