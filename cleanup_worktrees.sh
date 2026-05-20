@@ -3,14 +3,21 @@
 # cleanup_worktrees.sh — remove worktrees whose branches are already merged
 # into phase2-acl-migrate and whose working trees are clean and unlocked.
 #
-# Generated alongside WORKTREE_CLEANUP_PLAN.md. Re-run the planning agent to
-# regenerate after lock files clear or unmerged work gets merged.
+# Regenerated alongside WORKTREE_CLEANUP_PLAN_v2.md (2026-05-19, 110 SAFE).
+# Re-run the planning agent to regenerate after lock files clear or unmerged
+# work gets merged.
 #
 # Safety rails:
 #   * Hard-coded SAFE list — anything outside this list is untouched.
 #   * Idempotent: skips entries already gone.
 #   * Asks for confirmation before doing anything destructive.
 #   * Bails out on the first unexpected error.
+#   * Avoid-list: bc-math-lm, junit5-batch11, shrink-s2exec — never in SAFE.
+#   * Self-protection: this agent's own worktree never appears in SAFE.
+#
+# Ordering note: the SAFE list is sorted to put NESTED child worktrees first,
+# so they get removed before their parent worktree. (Three known nested
+# entries live inside agent-branch-merge-plan and agent-expression-chunk-e2.)
 #
 # Usage:
 #   bash cleanup_worktrees.sh                # interactive
@@ -21,8 +28,12 @@ set -euo pipefail
 REPO_ROOT="/Users/pzoot/Dev/eclipseworkspace/Gemma"
 
 # SAFE: path|branch pairs. Categorized as merged-into-phase2-acl-migrate,
-# working tree clean, and no locked file. See WORKTREE_CLEANUP_PLAN.md.
+# working tree clean, no locked file, not in avoid-list, not SELF.
+# See WORKTREE_CLEANUP_PLAN_v2.md.
 SAFE=(
+    "/Users/pzoot/Dev/eclipseworkspace/Gemma/.claude/worktrees/agent-branch-merge-plan/.claude/worktrees/agent-container-recce|worktree-container-recce"
+    "/Users/pzoot/Dev/eclipseworkspace/Gemma/.claude/worktrees/agent-branch-merge-plan/.claude/worktrees/agent-validation-optin|worktree-validation-optin"
+    "/Users/pzoot/Dev/eclipseworkspace/Gemma/.claude/worktrees/agent-expression-chunk-e2/.claude/worktrees/agent-junit5-phase-a|worktree-junit5-phase-a"
     "/Users/pzoot/Dev/eclipseworkspace/Gemma/.claude/worktrees/agent-aclentryvoter-recce|worktree-aclentryvoter-recce"
     "/Users/pzoot/Dev/eclipseworkspace/Gemma/.claude/worktrees/agent-aclvoter-x1-wrappers|worktree-aclvoter-x1-wrappers"
     "/Users/pzoot/Dev/eclipseworkspace/Gemma/.claude/worktrees/agent-actuator-impl|worktree-actuator-impl"
@@ -41,8 +52,8 @@ SAFE=(
     "/Users/pzoot/Dev/eclipseworkspace/Gemma/.claude/worktrees/agent-bk-consolidation|worktree-bk-consolidation"
     "/Users/pzoot/Dev/eclipseworkspace/Gemma/.claude/worktrees/agent-cacheable-audit|worktree-cacheable-audit"
     "/Users/pzoot/Dev/eclipseworkspace/Gemma/.claude/worktrees/agent-commonslog-to-slf4j|worktree-commonslog-to-slf4j"
-    "/Users/pzoot/Dev/eclipseworkspace/Gemma/.claude/worktrees/agent-branch-merge-plan/.claude/worktrees/agent-container-recce|worktree-container-recce"
     "/Users/pzoot/Dev/eclipseworkspace/Gemma/.claude/worktrees/agent-curation-ui-contract|worktree-curation-ui-contract"
+    "/Users/pzoot/Dev/eclipseworkspace/Gemma/.claude/worktrees/agent-cursor-1s|cursor-step1s"
     "/Users/pzoot/Dev/eclipseworkspace/Gemma/.claude/worktrees/agent-ee-proxy-fix|worktree-ee-proxy-fix"
     "/Users/pzoot/Dev/eclipseworkspace/Gemma/.claude/worktrees/agent-ee-svc-decomp-p1|worktree-ee-svc-decomp-p1"
     "/Users/pzoot/Dev/eclipseworkspace/Gemma/.claude/worktrees/agent-ee-svc-decomp-p15|worktree-ee-svc-decomp-p15"
@@ -53,6 +64,7 @@ SAFE=(
     "/Users/pzoot/Dev/eclipseworkspace/Gemma/.claude/worktrees/agent-executor-vt-callers|worktree-executor-vt-callers"
     "/Users/pzoot/Dev/eclipseworkspace/Gemma/.claude/worktrees/agent-executor-vt-callers-2|worktree-executor-vt-callers-2"
     "/Users/pzoot/Dev/eclipseworkspace/Gemma/.claude/worktrees/agent-expression-chunk-e1|worktree-expression-chunk-e1"
+    "/Users/pzoot/Dev/eclipseworkspace/Gemma/.claude/worktrees/agent-expression-chunk-e2|worktree-expression-chunk-e2"
     "/Users/pzoot/Dev/eclipseworkspace/Gemma/.claude/worktrees/agent-expression-chunk-e3|worktree-expression-chunk-e3"
     "/Users/pzoot/Dev/eclipseworkspace/Gemma/.claude/worktrees/agent-expression-chunk-e4|worktree-expression-chunk-e4"
     "/Users/pzoot/Dev/eclipseworkspace/Gemma/.claude/worktrees/agent-expression-chunk-e5|worktree-expression-chunk-e5"
@@ -85,7 +97,6 @@ SAFE=(
     "/Users/pzoot/Dev/eclipseworkspace/Gemma/.claude/worktrees/agent-java21-readiness|worktree-java21-readiness"
     "/Users/pzoot/Dev/eclipseworkspace/Gemma/.claude/worktrees/agent-jsr305-cleanup|worktree-jsr305-cleanup"
     "/Users/pzoot/Dev/eclipseworkspace/Gemma/.claude/worktrees/agent-jstl-jakarta|worktree-jstl-jakarta"
-    "/Users/pzoot/Dev/eclipseworkspace/Gemma/.claude/worktrees/agent-expression-chunk-e2/.claude/worktrees/agent-junit5-phase-a|worktree-junit5-phase-a"
     "/Users/pzoot/Dev/eclipseworkspace/Gemma/.claude/worktrees/agent-junit5-phase-b0|worktree-junit5-phase-b0"
     "/Users/pzoot/Dev/eclipseworkspace/Gemma/.claude/worktrees/agent-junit5-recce|worktree-junit5-recce"
     "/Users/pzoot/Dev/eclipseworkspace/Gemma/.claude/worktrees/agent-l2-cache-bound|worktree-l2-cache-bound"
@@ -123,22 +134,13 @@ SAFE=(
     "/Users/pzoot/Dev/eclipseworkspace/Gemma/.claude/worktrees/agent-static-analysis-audit|worktree-static-analysis-audit"
     "/Users/pzoot/Dev/eclipseworkspace/Gemma/.claude/worktrees/agent-test-failure-triage|worktree-test-failure-triage"
     "/Users/pzoot/Dev/eclipseworkspace/Gemma/.claude/worktrees/agent-validation-audit|worktree-validation-audit"
-    "/Users/pzoot/Dev/eclipseworkspace/Gemma/.claude/worktrees/agent-branch-merge-plan/.claude/worktrees/agent-validation-optin|worktree-validation-optin"
     "/Users/pzoot/Dev/eclipseworkspace/Gemma/.claude/worktrees/agent-xml-config-kickoff|worktree-xml-config-kickoff"
     "/Users/pzoot/Dev/eclipseworkspace/Gemma/.claude/worktrees/agent-xml-datasource|worktree-xml-datasource"
     "/Users/pzoot/Dev/eclipseworkspace/Gemma/.claude/worktrees/agent-xml-gemma-cli|worktree-xml-gemma-cli"
     "/Users/pzoot/Dev/eclipseworkspace/Gemma/.claude/worktrees/agent-xml-gemma-rest|worktree-xml-gemma-rest"
     "/Users/pzoot/Dev/eclipseworkspace/Gemma/.claude/worktrees/agent-xml-hibernate|worktree-xml-hibernate"
     "/Users/pzoot/Dev/eclipseworkspace/Gemma/.claude/worktrees/agent-xml-schedule|worktree-xml-schedule"
-)
-
-# Admin-only orphans: .git/worktrees/<name>/ exists but the physical dir is
-# gone. We just delete the corresponding branches; `git worktree prune` clears
-# the admin entries.
-ORPHAN_BRANCHES=(
-    "worktree-container-recce"
-    "worktree-junit5-phase-a"
-    "worktree-validation-optin"
+    "/Users/pzoot/Dev/eclipseworkspace/Gemma/.claude/worktrees/agent-xml-security|worktree-xml-security"
 )
 
 cd "$REPO_ROOT"
@@ -149,9 +151,9 @@ if [ "${1:-}" = "--yes" ] || [ "${1:-}" = "-y" ]; then
 fi
 
 echo "Will remove ${#SAFE[@]} merged-and-clean worktrees from $REPO_ROOT/.claude/worktrees/"
-echo "Plus prune ${#ORPHAN_BRANCHES[@]} admin-only orphan branches."
+echo "Then runs 'git worktree prune' to clear any admin-only orphans left behind."
 echo
-echo "First 5 worktrees that will be removed:"
+echo "First 5 worktrees that will be removed (nested children first):"
 for entry in "${SAFE[@]:0:5}"; do
     path="${entry%%|*}"
     branch="${entry##*|}"
@@ -161,7 +163,7 @@ echo "  ... and $((${#SAFE[@]} - 5)) more."
 echo
 
 if [ "$assume_yes" -ne 1 ]; then
-    read -r -p "About to remove ${#SAFE[@]} worktrees and ${#ORPHAN_BRANCHES[@]} orphan branches. Continue? [y/N] " ans
+    read -r -p "About to remove ${#SAFE[@]} worktrees. Continue? [y/N] " ans
     case "$ans" in
         y|Y|yes|YES) ;;
         *) echo "Aborted."; exit 0 ;;
@@ -216,18 +218,6 @@ done
 echo
 echo "Pruning admin-only orphan entries..."
 git worktree prune -v || true
-
-for branch in "${ORPHAN_BRANCHES[@]}"; do
-    if git show-ref --verify --quiet "refs/heads/$branch"; then
-        echo "-- $branch (orphan)"
-        if git branch -D "$branch" >/dev/null 2>&1; then
-            removed=$((removed + 1))
-        else
-            echo "   branch delete failed for $branch"
-            errors=$((errors + 1))
-        fi
-    fi
-done
 
 echo
 echo "Done."
