@@ -19,10 +19,10 @@
 package ubic.gemma.core.loader.expression.simple;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.matrix.DoubleMatrix;
 import ubic.gemma.core.util.matrix.DoubleMatrixReader;
@@ -31,7 +31,7 @@ import ubic.gemma.core.loader.expression.simple.model.SimplePlatformMetadata;
 import ubic.gemma.core.loader.expression.simple.model.SimpleQuantitationTypeMetadata;
 import ubic.gemma.core.loader.expression.simple.model.SimpleTaxonMetadata;
 import ubic.gemma.core.security.authorization.acl.AclTestUtils;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
@@ -49,13 +49,13 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author Paul
  */
 @Category(SlowTest.class)
-public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
+public class ExperimentalDesignImporterTest extends BaseSpringContextTest5 {
 
     private final String adName = RandomStringUtils.insecure().nextAlphabetic( 10 );
     private ExpressionExperiment ee;
@@ -77,18 +77,18 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
             assertNotNull( c.getValue() );
             assertNotNull( c.getCategoryUri() );
         } else {
-            assertNotNull( fv.getValue() + " should have a measurement or a characteristic", fv.getMeasurement() );
+            assertNotNull( fv.getMeasurement(), fv.getValue() + " should have a measurement or a characteristic" );
         }
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         if ( ee != null ) {
             eeService.remove( ee );
         }
     }
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         SimpleExpressionExperimentMetadata metaData = new SimpleExpressionExperimentMetadata();
 
@@ -150,17 +150,17 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
 
     }
 
-    @Test(expected = Exception.class)
+    @Test
     public final void testParseFailedDryRun() throws Exception {
+        assertThrows( Exception.class, () -> {
+            try ( InputStream is = this.getClass()
+                    .getResourceAsStream( "/data/loader/expression/experimentalDesignTestBad.txt" ) ) {
 
-        try ( InputStream is = this.getClass()
-                .getResourceAsStream( "/data/loader/expression/experimentalDesignTestBad.txt" ) ) {
+                experimentalDesignImporter.importDesign( ee, is );
+                fail( "Should have gotten an Exception" );
 
-            experimentalDesignImporter.importDesign( ee, is );
-            fail( "Should have gotten an Exception" );
-
-        }
-
+            }
+        } );
     }
 
     /*
