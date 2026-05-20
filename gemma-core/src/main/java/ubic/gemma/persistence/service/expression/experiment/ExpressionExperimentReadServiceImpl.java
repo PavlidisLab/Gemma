@@ -129,6 +129,9 @@ public class ExpressionExperimentReadServiceImpl implements ExpressionExperiment
     private ExpressionExperimentFilterRewriteHelperService filterRewriteService;
 
     @Autowired
+    private FactorValueDao factorValueDao;
+
+    @Autowired
     public ExpressionExperimentReadServiceImpl( ExpressionExperimentDao expressionExperimentDao ) {
         this.expressionExperimentDao = expressionExperimentDao;
     }
@@ -669,15 +672,13 @@ public class ExpressionExperimentReadServiceImpl implements ExpressionExperiment
         if ( ed == null ) {
             return null;
         }
-        // initialize the bits the VO ctor will touch
+        // Warm the L1 cache with all FVs for this design + their characteristics in one query,
+        // so the per-FV ef.getFactorValues() walk below doesn't trigger an N+1
+        // (one collection-init per FV's characteristics). Measurement is mapped fetch="join"
+        // on FactorValue itself so it loads alongside the FV row. See FactorValue.hbm.xml.
+        factorValueDao.loadByExperimentalDesignWithCharacteristics( ed );
         for ( ExperimentalFactor ef : ed.getExperimentalFactors() ) {
             Hibernate.initialize( ef.getFactorValues() );
-            for ( FactorValue fv : ef.getFactorValues() ) {
-                Hibernate.initialize( fv.getCharacteristics() );
-                if ( fv.getMeasurement() != null ) {
-                    Hibernate.initialize( fv.getMeasurement() );
-                }
-            }
         }
         Hibernate.initialize( ee.getBioAssays() );
         for ( BioAssay ba : ee.getBioAssays() ) {

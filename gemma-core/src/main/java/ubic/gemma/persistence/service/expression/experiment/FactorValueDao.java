@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
@@ -68,6 +69,17 @@ public interface FactorValueDao extends FilteringVoEnabledDao<FactorValue, Facto
 
     @Deprecated
     FactorValue loadWithOldStyleCharacteristics( Long id, boolean readOnly );
+
+    /**
+     * Load all {@link FactorValue}s belonging to the given {@link ExperimentalDesign} with their
+     * {@code characteristics} (and {@code measurement}, which is mapped {@code fetch="join"} so it
+     * is loaded with the FV itself) fetched in a single round-trip.
+     * <p>
+     * This is used to warm the first-level cache before navigating
+     * {@code ed.getExperimentalFactors() → ef.getFactorValues() → fv.getCharacteristics()},
+     * avoiding the per-FV {@code Hibernate.initialize(fv.getCharacteristics())} N+1.
+     */
+    Collection<FactorValue> loadByExperimentalDesignWithCharacteristics( ExperimentalDesign ed );
 
     /**
      * Load all the factor values IDs with their number of old-style characteristics.
