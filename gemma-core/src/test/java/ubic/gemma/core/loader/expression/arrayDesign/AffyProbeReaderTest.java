@@ -19,22 +19,29 @@
 
 package ubic.gemma.core.loader.expression.arrayDesign;
 
-import junit.framework.TestCase;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 import java.io.InputStream;
 import java.util.Collection;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 /**
  * @author pavlidis
  */
-public class AffyProbeReaderTest extends TestCase {
+public class AffyProbeReaderTest {
     private AffyProbeReader apr;
     private InputStream is;
 
     /*
      * Class under test for Map read(InputStream)
      */
+    @Test
     public final void testReadInputStream() throws Exception {
 
         is = AffyProbeReaderTest.class.getResourceAsStream( "/data/loader/affymetrix-probes-test.txt" );
@@ -44,21 +51,22 @@ public class AffyProbeReaderTest extends TestCase {
         String expectedValue = "GCCCCCGTGAGGATGTCACTCAGAT"; // 10
         CompositeSequence cs = this.getProbeMatchingName( "1004_at" );
 
-        TestCase.assertNotNull( "CompositeSequence was null", cs );
+        assertNotNull( cs, "CompositeSequence was null" );
 
         boolean foundIt = false;
         for ( Reporter element : apr.get( cs ) ) {
             if ( element.getName().equals( "1004_at#2:557:275" ) ) {
                 String actualValue = element.getImmobilizedCharacteristic().getSequence();
 
-                TestCase.assertEquals( expectedValue, actualValue );
+                assertEquals( expectedValue, actualValue );
                 foundIt = true;
                 break;
             }
         }
-        TestCase.assertTrue( "Didn't find the probe ", foundIt );
+        assertTrue( foundIt, "Didn't find the probe " );
     }
 
+    @Test
     public final void testReadInputStreamNew() throws Exception {
         is = AffyProbeReaderTest.class.getResourceAsStream( "/data/loader/affymetrix-newprobes-example.txt" );
         apr.setSequenceField( 4 );
@@ -66,31 +74,29 @@ public class AffyProbeReaderTest extends TestCase {
 
         String expectedValue = "AGCTCAGGTGGCCCCAGTTCAATCT"; // 4
         CompositeSequence cs = this.getProbeMatchingName( "1000_at" );
-        TestCase.assertNotNull( "CompositeSequence was null", cs );
+        assertNotNull( cs, "CompositeSequence was null" );
 
         boolean foundIt = false;
         for ( Reporter element : apr.get( cs ) ) {
             if ( element.getName().equals( "1000_at:617:349" ) ) {
                 String actualValue = element.getImmobilizedCharacteristic().getSequence();
 
-                TestCase.assertEquals( expectedValue, actualValue );
+                assertEquals( expectedValue, actualValue );
                 foundIt = true;
                 break;
             }
         }
-        TestCase.assertTrue( "Didn't find the probe ", foundIt );
+        assertTrue( foundIt, "Didn't find the probe " );
     }
 
-    @Override
+    @BeforeEach
     protected void setUp() throws Exception {
-        super.setUp();
         apr = new AffyProbeReader();
 
     }
 
-    @Override
+    @AfterEach
     protected void tearDown() throws Exception {
-        super.tearDown();
         apr = null;
         if ( is != null )
             is.close();

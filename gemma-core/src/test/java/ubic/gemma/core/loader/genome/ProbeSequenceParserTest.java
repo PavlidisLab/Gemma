@@ -18,28 +18,32 @@
  */
 package ubic.gemma.core.loader.genome;
 
-import junit.framework.TestCase;
+import org.junit.jupiter.api.Test;
 
 import java.io.InputStream;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author paul
  */
-public class ProbeSequenceParserTest extends TestCase {
+public class ProbeSequenceParserTest {
 
+    @Test
     public void testParseInputStream() throws Exception {
         ProbeSequenceParser p = new ProbeSequenceParser();
         try (InputStream i = this.getClass().getResourceAsStream( "/data/loader/genome/probesequence.test.txt" )) {
             p.parse( i );
         }
-        TestCase.assertNotNull( p.get( "117" ) );
-        TestCase.assertEquals( "GE59978", p.get( "117" ).getName() );
-        TestCase.assertEquals( "ATGGGTGCTTATTGGTATTGTCTCCTGGGG", p.get( "117" ).getSequence() );
-        TestCase.assertEquals( 9, p.getResults().size() );
+        assertNotNull( p.get( "117" ) );
+        assertEquals( "GE59978", p.get( "117" ).getName() );
+        assertEquals( "ATGGGTGCTTATTGGTATTGTCTCCTGGGG", p.get( "117" ).getSequence() );
+        assertEquals( 9, p.getResults().size() );
 
-        TestCase.assertEquals( "GE59979", p.get( "118" ).getName() );
-        TestCase.assertEquals( "ATGGGTGCTTATTGGTATTGTCTCCTGGGG", p.get( "118" ).getSequence() );
-        TestCase.assertEquals( 9, p.getResults().size() );
+        assertEquals( "GE59979", p.get( "118" ).getName() );
+        assertEquals( "ATGGGTGCTTATTGGTATTGTCTCCTGGGG", p.get( "118" ).getSequence() );
+        assertEquals( 9, p.getResults().size() );
     }
 
 }

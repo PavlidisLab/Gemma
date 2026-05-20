@@ -1,14 +1,16 @@
 package ubic.gemma.model.genome.biosequence;
 
-import junit.framework.TestCase;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.biosequence.BioSequence;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Paul
  */
-public class BioSequenceTest extends TestCase {
+public class BioSequenceTest {
 
+    @Test
     public void testEqualsID() {
         BioSequence a = BioSequence.Factory.newInstance();
         BioSequence b = BioSequence.Factory.newInstance();
@@ -19,9 +21,10 @@ public class BioSequenceTest extends TestCase {
         a.setName( "foo" );
         b.setName( "goo" );
 
-        TestCase.assertTrue( a.equals( b ) );
+        assertTrue( a.equals( b ) );
     }
 
+    @Test
     public void testEqualsName() {
         BioSequence a = BioSequence.Factory.newInstance();
         BioSequence b = BioSequence.Factory.newInstance();
@@ -29,9 +32,10 @@ public class BioSequenceTest extends TestCase {
         a.setName( "foo" );
         b.setName( "goo" );
 
-        TestCase.assertTrue( !a.equals( b ) );
+        assertTrue( !a.equals( b ) );
     }
 
+    @Test
     public void testEqualsSeq() {
         BioSequence a = BioSequence.Factory.newInstance();
         BioSequence b = BioSequence.Factory.newInstance();
@@ -42,9 +46,10 @@ public class BioSequenceTest extends TestCase {
         a.setSequence( "AAAAAAAAAAAAAAAA" );
         b.setSequence( "BBBBBBBBBBBBB" );
 
-        TestCase.assertTrue( !a.equals( b ) );
+        assertTrue( !a.equals( b ) );
     }
 
+    @Test
     public void testEqualsTaxon() {
         BioSequence a = BioSequence.Factory.newInstance();
         BioSequence b = BioSequence.Factory.newInstance();
@@ -66,9 +71,10 @@ public class BioSequenceTest extends TestCase {
         a.setTaxon( m );
         b.setTaxon( h );
 
-        TestCase.assertTrue( !a.equals( b ) );
+        assertTrue( !a.equals( b ) );
     }
 
+    @Test
     public void testNotEqualsID() {
         BioSequence a = BioSequence.Factory.newInstance();
         BioSequence b = BioSequence.Factory.newInstance();
@@ -79,6 +85,6 @@ public class BioSequenceTest extends TestCase {
         a.setName( "foo" );
         b.setName( "foo" );
 
-        TestCase.assertTrue( !a.equals( b ) );
+        assertTrue( !a.equals( b ) );
     }
 }
