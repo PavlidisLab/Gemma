@@ -19,12 +19,12 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -56,13 +56,13 @@ import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author kkeshav
  * @author pavlidis
  */
-public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContextTest {
+public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContextTest5 {
 
     private static final String EE_NAME = RandomStringUtils.insecure().nextAlphanumeric( 20 );
 
@@ -86,12 +86,12 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
      */
     private List<ExpressionExperiment> ees;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         ees = new ArrayList<>();
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         expressionExperimentService.remove( ees );
         ees.clear();
@@ -430,14 +430,16 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
         expressionExperimentService.getFilter( "geeq.publicSuitabilityScore", Filter.Operator.greaterOrEq, "0.9" );
     }
 
-    @Test(expected = AccessDeniedException.class)
+    @Test
     public void testFilterBySuitabilityScoreAsNonAdmin() {
-        try {
-            runAsAnonymous();
-            expressionExperimentService.getFilter( "geeq.publicSuitabilityScore", Filter.Operator.greaterOrEq, "0.9" );
-        } finally {
-            runAsAdmin(); // for cleanups
-        }
+        assertThrows( AccessDeniedException.class, () -> {
+            try {
+                runAsAnonymous();
+                expressionExperimentService.getFilter( "geeq.publicSuitabilityScore", Filter.Operator.greaterOrEq, "0.9" );
+            } finally {
+                runAsAdmin(); // for cleanups
+            }
+        } );
     }
 
     @Test
