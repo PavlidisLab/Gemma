@@ -18,28 +18,26 @@
  */
 package ubic.gemma.core.loader.entrez;
 
-import org.junit.Rule;
-import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.w3c.dom.Document;
 import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.util.test.NetworkAvailable;
-import ubic.gemma.core.util.test.NetworkAvailableRule;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.core.util.test.category.GeoTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author paul
  */
 @Category(GeoTest.class)
+@ExtendWith(NetworkAvailableExtension.class)
 public class EutilFetchTest {
 
     private static final String ncbiApiKey = Settings.getString( "ncbi.efetch.apikey" );
-
-    @Rule
-    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
 
     @Test
     @Category(SlowTest.class)

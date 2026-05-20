@@ -20,13 +20,13 @@ package ubic.gemma.core.loader.entrez.pubmed;
 
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.api.Assertions;
-import org.junit.Rule;
-import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.util.test.NetworkAvailable;
-import ubic.gemma.core.util.test.NetworkAvailableRule;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.core.util.test.category.PubMedTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -35,17 +35,15 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author pavlidis
  */
 @Category(PubMedTest.class)
 @NetworkAvailable(url = EntrezUtils.ESEARCH)
+@ExtendWith(NetworkAvailableExtension.class)
 public class PubMedSearchTest {
-
-    @Rule
-    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
 
     private final PubMedSearch pms = new PubMedSearch( Settings.getString( "entrez.efetch.apikey" ) );
 
@@ -57,7 +55,7 @@ public class PubMedSearchTest {
         searchTerms.add( "habenula" );
         searchTerms.add( "glucose" );
         Collection<BibliographicReference> actualResult = pms.searchAndRetrieve( StringUtils.join( " ", searchTerms ), 100 );
-        assertTrue( "Expected at least 5 results, got " + actualResult.size(), actualResult.size() >= 5 );
+        assertTrue( actualResult.size() >= 5, "Expected at least 5 results, got " + actualResult.size() );
         /*
          * at least, this was the result on 4/2008.
          */
@@ -77,7 +75,7 @@ public class PubMedSearchTest {
         /*
          * at least, this was the result on 4/2008.
          */
-        assertTrue( "Expected at least 10, got " + actualResult.size(), actualResult.size() >= 10 );
+        assertTrue( actualResult.size() >= 10, "Expected at least 10, got " + actualResult.size() );
     }
 
     @Test
@@ -96,7 +94,7 @@ public class PubMedSearchTest {
         searchTerms.add( "habenula" );
         searchTerms.add( "glucose" );
         Collection<String> actualResult = pms.search( searchTerms, 100 );
-        assertTrue( "Expect at least 5 results, got " + actualResult.size(), actualResult.size() >= 5 );
+        assertTrue( actualResult.size() >= 5, "Expect at least 5 results, got " + actualResult.size() );
     }
 
     @Test
