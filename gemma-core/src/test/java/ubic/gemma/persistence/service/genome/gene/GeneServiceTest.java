@@ -19,10 +19,10 @@
 package ubic.gemma.persistence.service.genome.gene;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.util.test.BaseIntegrationTest;
+import ubic.gemma.core.util.test.BaseIntegrationTest5;
 import ubic.gemma.core.util.test.PersistentDummyObjectHelper;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -39,12 +39,12 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author jsantos
  */
-public class GeneServiceTest extends BaseIntegrationTest {
+public class GeneServiceTest extends BaseIntegrationTest5 {
 
     private static final String TEST_GENE_NAME = "test_genedao" + RandomStringUtils.insecure().next( 3 );
 
@@ -63,7 +63,7 @@ public class GeneServiceTest extends BaseIntegrationTest {
     @Autowired
     private PersistentDummyObjectHelper testHelper;
 
-    @After
+    @AfterEach
     public void tearDown() {
         Collection<Gene> testGene = geneService.findByOfficialSymbol( GeneServiceTest.TEST_GENE_NAME );
         for ( Gene gene : testGene ) {
