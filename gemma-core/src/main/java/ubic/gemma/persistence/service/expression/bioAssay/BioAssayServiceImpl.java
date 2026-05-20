@@ -25,6 +25,7 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDao;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialDao;
@@ -165,6 +166,13 @@ public class BioAssayServiceImpl extends AbstractFilteringVoEnabledService<BioAs
     public CursorPage<BioAssayValueObject> loadValueObjectsByCursorForExpressionExperiment(
             ExpressionExperiment ee, @Nullable Cursor cursor, int limit ) {
         return bioAssayDao.loadValueObjectsByCursorForExpressionExperiment( ee, cursor, limit );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CursorPage<BioAssayValueObject> loadValueObjectsByCursorForSubSet(
+            ExpressionExperimentSubSet subset, @Nullable Cursor cursor, int limit ) {
+        return bioAssayDao.loadValueObjectsByCursorForSubSet( subset, cursor, limit );
     }
 
     private void handleAddBioMaterialAssociation( BioAssay bioAssay, BioMaterial bioMaterial ) {

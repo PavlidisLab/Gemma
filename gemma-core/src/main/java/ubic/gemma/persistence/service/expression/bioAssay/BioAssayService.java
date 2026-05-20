@@ -29,6 +29,7 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableBaseService;
@@ -132,4 +133,18 @@ public interface BioAssayService extends SecurableBaseService<BioAssay>, Securab
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     CursorPage<BioAssayValueObject> loadValueObjectsByCursorForExpressionExperiment(
             ExpressionExperiment ee, @Nullable Cursor cursor, int limit );
+
+    /**
+     * Cursor-mode counterpart to the legacy unpaginated subset-scoped sample listing —
+     * see {@code CURSOR_PAGINATION_STEP1_PLAN.md} step 1u. Always sorts by ascending
+     * {@code id} (primary key, indexed and unique). The service layer is responsible
+     * for populating any {@code assay2sourceAssayMap} the caller wants surfaced on the
+     * returned {@link BioAssayValueObject}s after this call returns (the DAO does not
+     * build it).
+     *
+     * @see BioAssayDao#loadValueObjectsByCursorForSubSet(ExpressionExperimentSubSet, Cursor, int)
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    CursorPage<BioAssayValueObject> loadValueObjectsByCursorForSubSet(
+            ExpressionExperimentSubSet subset, @Nullable Cursor cursor, int limit );
 }

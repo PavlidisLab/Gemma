@@ -335,6 +335,71 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
         return bioAssayValueObjects;
     }
 
+    /**
+     * Cursor-mode counterpart to {@link #getSubSetSamples(DatasetArg, Long)} for the
+     * {@code GET /datasets/{dataset}/subSets/{subSet}/samples} endpoint — see
+     * {@code CURSOR_PAGINATION_STEP1_PLAN.md} step 1u (the subset-scoped twin of step 1k
+     * for {@code GET /datasets/{dataset}/samples}). Walks the
+     * {@code ExpressionExperimentSubSet→bioAssays} association directly via
+     * {@link BioAssayService#loadValueObjectsByCursorForSubSet(ExpressionExperimentSubSet, Cursor, int)};
+     * always sorts by ascending {@code id} (primary key, indexed and unique).
+     * <p>
+     * The assay→source-assay mapping (used to populate the VO's {@code sourceBioAssayId})
+     * is built post-hoc against the subset's source experiment so the VO shape matches
+     * offset mode exactly. Outliers are also populated post-hoc on the returned page.
+     * <p>
+     * Subset existence is validated up-front (mirroring the offset variant's
+     * {@link NotFoundException} on unknown {@code subSetId}); the
+     * {@code getSubSetByIdWithCharacteristicsAndBioAssays} loader is reused intentionally
+     * — it returns the subset entity with its source experiment populated, which the
+     * source-assay map and outlier helpers both need, without forcing the full
+     * {@code subset.bioAssays} collection to materialise (Hibernate lazy-loads on access).
+     */
+    public CursorPage<BioAssayValueObject> getSubSetSamplesByCursor( DatasetArg<?> datasetArg, Long subSetId, @Nullable Cursor cursor, int limit ) {
+        ExpressionExperiment ee = getEntity( datasetArg );
+        ExpressionExperimentSubSet subset = service.getSubSetByIdWithCharacteristicsAndBioAssays( ee, subSetId );
+        if ( subset == null ) {
+            throw new NotFoundException( "No subset found with ID " + subSetId );
+        }
+        CursorPage<BioAssayValueObject> rawPage = baService.loadValueObjectsByCursorForSubSet( subset, cursor, limit );
+        // The DAO returns VOs without sourceBioAssayId populated (the source-assay map needs
+        // the source experiment's bioAssays as a filter set, which only the service layer has).
+        // Build the source-assay map against subset.getSourceExperiment() and rewrite the
+        // VOs so the shape matches the offset mode caller (sourceBioAssayId /
+        // sourceBioAssayShortName populated). createBioAssayToSourceBioAssayMap uses
+        // subset.getBioAssays() as the *filter* (not iteration), so it is bounded to the
+        // subset's assay set (not the page's, intentionally — a subset's assay set is
+        // already finite by construction).
+        CursorPage<BioAssayValueObject> page;
+        if ( !rawPage.isEmpty() ) {
+            Map<Long, BioAssay> byId = new HashMap<>();
+            for ( BioAssay ba : subset.getBioAssays() ) {
+                byId.put( ba.getId(), ba );
+            }
+            List<BioAssay> pageAssays = new ArrayList<>( rawPage.size() );
+            for ( BioAssayValueObject vo : rawPage ) {
+                BioAssay ba = byId.get( vo.getId() );
+                if ( ba != null ) {
+                    pageAssays.add( ba );
+                }
+            }
+            Map<BioAssay, BioAssay> assay2sourceAssayMap = BioAssayUtils.createBioAssayToSourceBioAssayMap( subset.getSourceExperiment(), pageAssays );
+            // Use CursorPage#map to project the VOs while preserving cursor tokens/limit/sort.
+            page = rawPage.map( vo -> {
+                BioAssay ba = byId.get( vo.getId() );
+                if ( ba == null ) {
+                    return vo;
+                }
+                BioAssay src = assay2sourceAssayMap.get( ba );
+                return new BioAssayValueObject( ba, null, src, true, true );
+            } );
+        } else {
+            page = rawPage;
+        }
+        populateOutliers( subset.getSourceExperiment(), page );
+        return page;
+    }
+
     public QuantitationType getPreferredQuantitationType( DatasetArg<?> datasetArg ) {
         return service.getPreferredQuantitationType( getEntity( datasetArg ) )
                 .orElseThrow( () -> new NotFoundException( "No preferred quantitation type found for dataset with ID " + datasetArg + "." ) );

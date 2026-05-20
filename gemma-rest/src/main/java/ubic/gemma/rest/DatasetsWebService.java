@@ -3200,14 +3200,47 @@ public class DatasetsWebService {
         return respond( new ExpressionExperimentSubSetWithGroupsValueObject( subset, subSetGroups ) );
     }
 
+    /**
+     * Retrieves the samples of a specific subset of a dataset.
+     * <p>
+     * Step 1u of {@code CURSOR_PAGINATION_STEP1_PLAN.md} adds an opt-in cursor-mode branch
+     * parallel to step 1k ({@code /datasets/{dataset}/samples}). The legacy mode (no
+     * {@code cursor}) is preserved byte-for-byte: an unpaginated
+     * {@link ResponseDataObject}{@code <List<BioAssayValueObject>>} with the full subset
+     * sample list. Cursor mode is recommended for deep listings — single-cell subsets can
+     * have many thousands of assays — and always sorts by ascending {@code id}; the
+     * path-derived {@code subSet.id = ?} constraint is preserved across modes;
+     * {@code totalElements} is {@code null} by default (no count query per request).
+     */
     @GET
     @Path("/{dataset}/subSets/{subSet}/samples")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Obtain the samples of a specific subset of a dataset")
-    public ResponseDataObject<List<BioAssayValueObject>> getDatasetSubSetSamples(
+    @Operation(summary = "Obtain the samples of a specific subset of a dataset",
+            description = "Legacy mode (no `cursor` parameter): returns the full unpaginated assay list in the existing shape. "
+                    + "Cursor mode (recommended for deep listings — single-cell subsets can have many thousands of assays): "
+                    + "pass an opaque `cursor` token from a previous response's `nextCursor` / `prevCursor` field along with a `limit`. "
+                    + "In cursor mode the result is always sorted by ascending `id` (cursor mode forces a single-component id sort pending the indexed-column audit in phase B); "
+                    + "the path-derived `subSet.id = ?` constraint is preserved; `totalElements` is `null` by default (no count query per request).",
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(schema = @Schema(oneOf = {
+                                    ResponseDataObject.class,
+                                    CursorPaginatedResponseDataObject.class
+                            }))),
+                    @ApiResponse(responseCode = "404", description = "The dataset or subset does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public Object getDatasetSubSetSamples(
             @PathParam("dataset") DatasetArg<?> datasetArg,
-            @PathParam("subSet") Long subSetId
+            @PathParam("subSet") Long subSetId,
+            @Parameter(description = "Opaque keyset-pagination cursor token.")
+            @QueryParam("cursor") CursorArg cursorArg,
+            @Parameter(description = "Page size for cursor mode (ignored when no `cursor` is supplied).")
+            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg
     ) {
+        if ( cursorArg != null ) {
+            CursorPage<BioAssayValueObject> page = datasetArgService.getSubSetSamplesByCursor( datasetArg, subSetId, cursorArg.getValue(), limitArg.getValue() );
+            return paginateByCursor( page, new String[] { "id" } );
+        }
         return respond( datasetArgService.getSubSetSamples( datasetArg, subSetId ) );
     }
 
