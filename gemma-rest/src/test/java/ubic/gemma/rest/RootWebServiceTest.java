@@ -1,13 +1,13 @@
 package ubic.gemma.rest;
 
 import io.swagger.v3.oas.models.OpenAPI;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import ubic.gemma.core.util.concurrent.FutureUtils;
 import ubic.gemma.rest.util.Assertions;
-import ubic.gemma.rest.util.BaseJerseyIntegrationTest;
+import ubic.gemma.rest.util.BaseJerseyIntegrationTest5;
 
 import jakarta.ws.rs.core.Response;
 import java.util.List;
@@ -16,7 +16,7 @@ import java.util.concurrent.Future;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.InstanceOfAssertFactories.list;
 
-public class RootWebServiceTest extends BaseJerseyIntegrationTest {
+public class RootWebServiceTest extends BaseJerseyIntegrationTest5 {
 
     @Autowired
     @Qualifier("openApi")
