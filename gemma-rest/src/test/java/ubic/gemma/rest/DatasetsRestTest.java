@@ -79,10 +79,15 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
 
     @Test
     public void testSomeByShortName() {
-        ResponseDataObject<List<ExpressionExperimentValueObject>> response = datasetsWebService.getDatasetsByIds( DatasetArrayArg.valueOf(
-                        ees.get( 0 ).getShortName() + ", BAD_NAME, " + ees.get( 2 )
-                                .getShortName() ), FilterArg.valueOf( "" ), OffsetArg.valueOf( "0" ),
-                LimitArg.valueOf( "10" ), SortArg.valueOf( "+id" ) );
+        // The endpoint return type widened to Object in step 1w to support cursor mode; pass
+        // null for the new ?cursor= arg so we still get the offset-mode response shape (a
+        // FilteredAndInferredAndPaginatedResponseDataObject, a ResponseDataObject<List<...>>).
+        @SuppressWarnings("unchecked")
+        ResponseDataObject<List<ExpressionExperimentValueObject>> response =
+                ( ResponseDataObject<List<ExpressionExperimentValueObject>> ) datasetsWebService.getDatasetsByIds(
+                        DatasetArrayArg.valueOf( ees.get( 0 ).getShortName() + ", BAD_NAME, " + ees.get( 2 ).getShortName() ),
+                        FilterArg.valueOf( "" ), OffsetArg.valueOf( "0" ),
+                        LimitArg.valueOf( "10" ), SortArg.valueOf( "+id" ), null );
         ExpressionExperiment ee = ees.get( 0 );
         assertThat( ee ).isNotNull();
         assertThat( ee.getAccession() ).isNotNull();
@@ -94,10 +99,12 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
 
     @Test
     public void testSomeById() {
-        ResponseDataObject<List<ExpressionExperimentValueObject>> response = datasetsWebService.getDatasetsByIds( DatasetArrayArg.valueOf(
-                        ees.get( 0 ).getId() + ", 12310, " + ees.get( 2 )
-                                .getId() ), FilterArg.valueOf( "" ), OffsetArg.valueOf( "0" ),
-                LimitArg.valueOf( "10" ), SortArg.valueOf( "+id" ) );
+        @SuppressWarnings("unchecked")
+        ResponseDataObject<List<ExpressionExperimentValueObject>> response =
+                ( ResponseDataObject<List<ExpressionExperimentValueObject>> ) datasetsWebService.getDatasetsByIds(
+                        DatasetArrayArg.valueOf( ees.get( 0 ).getId() + ", 12310, " + ees.get( 2 ).getId() ),
+                        FilterArg.valueOf( "" ), OffsetArg.valueOf( "0" ),
+                        LimitArg.valueOf( "10" ), SortArg.valueOf( "+id" ), null );
         ExpressionExperiment ee = ees.get( 0 );
         assertThat( ee ).isNotNull();
         assertThat( ee.getAccession() ).isNotNull();
