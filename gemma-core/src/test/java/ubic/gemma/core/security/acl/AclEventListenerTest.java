@@ -24,9 +24,9 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.security.acls.domain.ObjectIdentityRetrievalStrategyImpl;
 import org.springframework.security.acls.model.Acl;
 import org.springframework.security.acls.model.NotFoundException;
@@ -102,7 +102,7 @@ public class AclEventListenerTest {
      */
     private StubPersisterRegistry persisters;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         // Owner sid + admin authority — addOrUpdateAcl checks SecurityContext for both.
         TestingAuthenticationToken auth = new TestingAuthenticationToken(
@@ -116,7 +116,7 @@ public class AclEventListenerTest {
         listener = new AclEventListener( aclAdvice, persisters.sessionFactory );
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         SecurityContextHolder.clearContext();
         // Reset listener thread-local stash so a leftover entry from one test can't taint the next.
