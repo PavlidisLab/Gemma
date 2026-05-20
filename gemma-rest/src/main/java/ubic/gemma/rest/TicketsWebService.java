@@ -186,17 +186,52 @@ public class TicketsWebService {
     /**
      * Retrieve only the event log for a ticket. Intended for client-side
      * polling — cheaper than re-fetching the whole ticket.
+     * <p>
+     * Step 1r of {@code CURSOR_PAGINATION_STEP1_PLAN.md} adds opt-in
+     * keyset (cursor) pagination alongside the legacy unpaginated path.
+     * Legacy mode (no {@code cursor}) returns the full event list as a
+     * {@link ResponseDataObject} (occurredAt-asc ordering); cursor mode
+     * pages by ascending {@code id} (the cursor DAO restricts cursors to
+     * single-component id sorts until the phase-B indexed-column audit
+     * lands &mdash; events on a ticket are appended monotonically so
+     * id-asc tracks occurredAt-asc in practice).
      */
     @GET
     @Path("/{id}/events")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve only the event log for a ticket")
-    public ResponseDataObject<List<TicketEventValueObject>> getTicketEvents(
-            @PathParam("id") Long id
+    @Operation(summary = "Retrieve only the event log for a ticket",
+            description = "Legacy mode (no `cursor` parameter): returns the full unpaginated event "
+                    + "list in the existing shape (no count query, full result set, sorted by `occurredAt`). "
+                    + "Cursor mode (recommended for tickets accumulating long workflow histories): "
+                    + "pass an opaque `cursor` token from a previous response's `nextCursor` / `prevCursor` "
+                    + "field along with a `limit`. In cursor mode the result is always sorted by ascending `id` "
+                    + "(cursor mode forces a single-component id sort pending the indexed-column audit in phase B; "
+                    + "ticket events are append-only so id-asc tracks occurredAt-asc in practice); the path-derived "
+                    + "ticket scope is preserved; `totalElements` is `null` by default (no count query per request).",
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(schema = @Schema(oneOf = {
+                                    ResponseDataObject.class,
+                                    CursorPaginatedResponseDataObject.class
+                            }))),
+                    @ApiResponse(responseCode = "404", description = "The ticket does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class))) })
+    public Object getTicketEvents(
+            @PathParam("id") Long id,
+            @Parameter(description = "Opaque keyset-pagination cursor token.")
+            @QueryParam("cursor") CursorArg cursorArg,
+            @Parameter(description = "Page size for cursor mode (ignored when no `cursor` is supplied).")
+            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg
     ) {
         Ticket t = ticketService.load( id );
         if ( t == null ) {
             throw new NotFoundException( "No ticket with id " + id );
+        }
+        if ( cursorArg != null ) {
+            CursorPage<TicketEventValueObject> page = ticketService
+                    .findEventsByCursor( t, cursorArg.getValue(), limitArg.getValue() )
+                    .map( TicketEventValueObject::from );
+            return paginateByCursor( page, new String[] { "id" } );
         }
         TicketValueObject vo = TicketValueObject.from( t, true );
         return respond( vo.getEvents() );

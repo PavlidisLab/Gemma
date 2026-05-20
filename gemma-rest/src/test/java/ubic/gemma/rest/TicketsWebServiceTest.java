@@ -34,6 +34,7 @@ import ubic.gemma.model.common.auditAndSecurity.curation.TicketValueObject;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketService;
 import ubic.gemma.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.rest.util.ResponseDataObject;
+import ubic.gemma.rest.util.args.LimitArg;
 
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
@@ -170,7 +171,12 @@ public class TicketsWebServiceTest {
     public void testGetTicketEvents_returnsEventList() {
         when( ticketService.load( 1L ) ).thenReturn( ticket );
 
-        ResponseDataObject<List<TicketEventValueObject>> resp = webService.getTicketEvents( 1L );
+        // Legacy mode (cursor=null) returns a ResponseDataObject<List<TicketEventValueObject>>.
+        // Step 1r widened the static return type to Object; the legacy JSON shape is unchanged.
+        @SuppressWarnings("unchecked")
+        ResponseDataObject<List<TicketEventValueObject>> resp =
+                ( ResponseDataObject<List<TicketEventValueObject>> ) webService
+                        .getTicketEvents( 1L, null, LimitArg.valueOf( "20" ) );
 
         assertThat( resp.getData() ).hasSize( 1 );
         assertThat( resp.getData().get( 0 ).getType() ).isEqualTo( TicketEventType.OPENED );
@@ -179,7 +185,7 @@ public class TicketsWebServiceTest {
     @Test
     public void testGetTicketEvents_notFound() {
         when( ticketService.load( 999L ) ).thenReturn( null );
-        assertThatThrownBy( () -> webService.getTicketEvents( 999L ) )
+        assertThatThrownBy( () -> webService.getTicketEvents( 999L, null, LimitArg.valueOf( "20" ) ) )
                 .isInstanceOf( NotFoundException.class );
     }
 
