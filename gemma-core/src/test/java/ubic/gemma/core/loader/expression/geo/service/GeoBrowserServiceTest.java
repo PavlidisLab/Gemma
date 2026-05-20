@@ -18,30 +18,28 @@
  */
 package ubic.gemma.core.loader.expression.geo.service;
 
-import org.junit.Rule;
-import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.core.util.test.NetworkAvailable;
-import ubic.gemma.core.util.test.NetworkAvailableRule;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.core.util.test.category.GeoTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 
 import java.net.UnknownHostException;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author paul
  */
 @Category(GeoTest.class)
-public class GeoBrowserServiceTest extends BaseSpringContextTest {
-
-    @Rule
-    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
+@ExtendWith(NetworkAvailableExtension.class)
+public class GeoBrowserServiceTest extends BaseSpringContextTest5 {
 
     @Autowired
     private GeoBrowserService gbs;
@@ -53,17 +51,17 @@ public class GeoBrowserServiceTest extends BaseSpringContextTest {
 
         try {
             String details = gbs.getDetails( "GSE15904", "" );
-            assertTrue( "Got: " + details, details.contains( "GSE15904" ) );
+            assertTrue( details.contains( "GSE15904" ), "Got: " + details );
 
             details = gbs.getDetails( "GSE1295", "" );
-            assertTrue( "Got: " + details, details.contains( "GSE1295" ) );
+            assertTrue( details.contains( "GSE1295" ), "Got: " + details );
 
             // log.info( details );
             details = gbs.getDetails( "GSE2565", "" );
-            assertTrue( "Got: " + details, details.contains( "GSE2565" ) );
+            assertTrue( details.contains( "GSE2565" ), "Got: " + details );
 
             // occurs in a "accessioned in GEO as..."
-            assertFalse( "Got: " + details, details.contains( "<strong>GPL8321" ) );
+            assertFalse( details.contains( "<strong>GPL8321" ), "Got: " + details );
         } catch ( Exception e ) {
             if ( e.getMessage().contains( "500" ) || e.getMessage().contains( "502" ) || e.getMessage()
                     .contains( "503" ) || e.getMessage().contains( "GEO returned an error" ) ) {
