@@ -462,15 +462,45 @@ public class PlatformsWebService {
 
     /**
      * Retrieves the open curation tickets for a given platform.
+     * <p>
+     * Step 1s of {@code CURSOR_PAGINATION_STEP1_PLAN.md} adds an opt-in
+     * cursor-mode branch parallel to step 1p (the
+     * {@code /datasets/{dataset}/tickets} endpoint). The legacy mode is
+     * preserved byte-for-byte for callers that do not supply {@code ?cursor=}.
      */
     @GET
     @Path("/{platform}/tickets")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the open curation tickets for a platform")
-    public ResponseDataObject<java.util.List<TicketValueObject>> getPlatformTickets(
-            @PathParam("platform") PlatformArg<?> platformArg
+    @Operation(summary = "Retrieve the open curation tickets for a platform",
+            description = "Legacy mode (no `cursor` parameter): returns the full unpaginated open-ticket list "
+                    + "in the existing shape (no count query, full result set). "
+                    + "Cursor mode (recommended for platforms accumulating long curation histories): "
+                    + "pass an opaque `cursor` token from a previous response's `nextCursor` / `prevCursor` "
+                    + "field along with a `limit`. In cursor mode the result is always sorted by ascending `id` "
+                    + "(cursor mode forces a single-component id sort pending the indexed-column audit in phase B); "
+                    + "the path-derived `targetType = ARRAY_DESIGN, targetId = {platform}` constraint and "
+                    + "the open-state restriction (OPEN/IN_PROGRESS) are preserved; `totalElements` is `null` by "
+                    + "default (no count query per request).",
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(schema = @Schema(oneOf = {
+                                    ResponseDataObject.class,
+                                    CursorPaginatedResponseDataObject.class
+                            })))
+            })
+    public Object getPlatformTickets(
+            @PathParam("platform") PlatformArg<?> platformArg,
+            @Parameter(description = "Opaque keyset-pagination cursor token.")
+            @QueryParam("cursor") CursorArg cursorArg,
+            @Parameter(description = "Page size for cursor mode (ignored when no `cursor` is supplied).")
+            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg
     ) {
         ArrayDesign ad = arrayDesignArgService.getEntity( platformArg );
+        if ( cursorArg != null ) {
+            CursorPage<TicketValueObject> page = ticketsWebService.openTicketsForArrayDesignByCursor(
+                    ad.getId(), cursorArg.getValue(), limitArg.getValue() );
+            return paginateByCursor( page, new String[] { "id" } );
+        }
         return respond( ticketsWebService.openTicketsForArrayDesign( ad.getId() ) );
     }
 
