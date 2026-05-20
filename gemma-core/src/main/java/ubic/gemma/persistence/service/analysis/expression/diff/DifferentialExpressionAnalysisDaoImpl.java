@@ -20,6 +20,7 @@ package ubic.gemma.persistence.service.analysis.expression.diff;
 
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.lang3.tuple.Pair;
+import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -670,7 +671,7 @@ class DifferentialExpressionAnalysisDaoImpl extends AbstractDao<DifferentialExpr
     }
 
     private ExpressionExperiment getSourceExperiment( DifferentialExpressionAnalysis analysis ) {
-        BioAssaySet experimentAnalyzed = analysis.getExperimentAnalyzed();
+        BioAssaySet experimentAnalyzed = ( BioAssaySet ) Hibernate.unproxy( analysis.getExperimentAnalyzed() );
         if ( experimentAnalyzed instanceof ExpressionExperiment ) {
             return ( ExpressionExperiment ) experimentAnalyzed;
         } else if ( experimentAnalyzed instanceof ExpressionExperimentSubSet ) {
