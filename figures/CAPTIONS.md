@@ -1,5 +1,43 @@
 # Figure captions
 
+## renovations_gantt.svg (v8 — 2026-05-19_1901, done-only, day-0 anchored)
+
+**What it is.** The Phase 3 renovations Gantt reframed in response
+to user feedback on v7. v7 was too tall (93 rows), had pre-day-0
+negative axis (Phase 2 residual work on 2026-05-17), and rendered
+in-flight / queued / blocked / deferred items that extended past
+"now" into the future. v8 drops all of that. The chart now shows
+only the **60 items that are actually done** as of 2026-05-19
+19:01. X-axis starts hard at day 0 = 2026-05-18 00:00 (no
+negatives; pre-day-0 starts clipped to 0) and ends at the dashed
+"now" line — nothing is rendered to the right of today.
+
+**How to read it.** Each row is one shipped item, grouped by
+category (First wave, ACL & security, Maintainability, Framework
+bumps, Cleanups, Cloud-ready, AI/workflow, Recces & docs, Release
+plan). Each bar's left edge is the timestamp of the first commit
+on that item; the right edge is the timestamp of the last commit.
+Single-commit items get a minimum visible width. All bars are
+emerald — the lab's "done / good" colour. Six items rooted in
+Phase 2 (2026-05-17 starts) appear with their left edge flush at
+day 0 because the chart clips to non-negative time. The dashed
+"now" line is at ~day 1.79.
+
+**What it shows.**
+- **60 done in ~1.8 days.** Categories are tighter and the dense
+  emerald clusters along day 1 dawn (framework bumps: Spring 6.2,
+  Spring Security 6.5, Hibernate 6.6, HikariCP 6, Spring Boot BOM
+  3.5 — all within a single 6-hour window) and along day 1.5
+  (gsec absorption, audit foundation, ticket REST) are the
+  visual signature.
+- **The longest individual arcs are in Maintainability** —
+  AbstractDao idempotent create, @Ignore'd test triage, and the
+  Service decomp series each span well over a day, threading
+  through multiple sessions.
+- **What's left out is the headline.** v7's queued / in-flight /
+  blocked / deferred bars are gone. The chart now answers a
+  single question: what shipped, and when.
+
 ## renovations_gantt.svg (v7 — 2026-05-19_1804, final-scope day-by-day view)
 
 **What it is.** The first Phase 3 Gantt chart drawn in
