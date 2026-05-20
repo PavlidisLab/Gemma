@@ -89,6 +89,10 @@
             <param-value>${cors.allowedOrigins}</param-value>
         </init-param>
         <init-param>
+            <param-name>allowedMethods</param-name>
+            <param-value>GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD</param-value>
+        </init-param>
+        <init-param>
             <param-name>allowedHeaders</param-name>
             <param-value>Authorization,Content-Type,X-Gemma-Client-ID,X-Requested-With</param-value>
         </init-param>
