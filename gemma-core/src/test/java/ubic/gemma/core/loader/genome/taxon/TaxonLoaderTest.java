@@ -21,8 +21,10 @@ package ubic.gemma.core.loader.genome.taxon;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.core.util.test.BaseSpringContextTest5;
+import ubic.gemma.persistence.persister.GenomePersister;
 
 import java.io.InputStream;
 
@@ -33,6 +35,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  *
  */
 public class TaxonLoaderTest extends BaseSpringContextTest5 {
+
+    @Autowired
+    private GenomePersister genomePersister;
+
     private InputStream is;
 
     @AfterEach
@@ -48,7 +54,7 @@ public class TaxonLoaderTest extends BaseSpringContextTest5 {
     @Test
     public void testLoadInputStream() throws Exception {
         TaxonLoader tl = new TaxonLoader();
-        tl.setPersisterHelper( persisterHelper );
+        tl.setGenomePersister( genomePersister );
         int actualValue = tl.load( is );
         assertEquals( 75, actualValue );
     }

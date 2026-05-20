@@ -19,10 +19,12 @@
 package ubic.gemma.persistence.persister;
 
 import org.apache.commons.lang3.StringUtils;
+import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.sequence.SequenceBinUtils;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.Identifiable;
@@ -184,6 +186,140 @@ public class GenomePersister {
             return ( T ) this.persistOrUpdateGeneProduct( ( GeneProduct ) entity, xdbCache, taxonCache, chromosomeCache );
         }
         return null;
+    }
+
+    // -----------------------------------------------------------------------
+    // Persister-shrink S3 public entry points.
+    //
+    // External callers (Section 2.1 of PERSISTER_SHRINK_RECCE.md) used to inject
+    // the polymorphic {@link Persister} / {@link PersisterHelper} and route through
+    // {@link PersisterHelperImpl#persist}, which opened the {@link FlushMode#MANUAL}
+    // window and dispatched by instanceof. Step S3 inlines that dispatch: each
+    // typed entry point below owns its own flush-mode window and calls the typed
+    // helper directly. Per-call caches are fresh (matches the prior
+    // {@link PersisterHelperImpl} semantics — callers wanting cache reuse across
+    // a batch should drive the underlying helpers themselves).
+    // -----------------------------------------------------------------------
+
+    /**
+     * Persist a {@link Taxon}: find by business key, else create.
+     */
+    @Transactional
+    public Taxon persistTaxon( Taxon taxon ) {
+        try {
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.MANUAL );
+            Taxon result = this.persistTaxon( taxon, new HashMap<>() );
+            sessionFactory.getCurrentSession().flush();
+            return result;
+        } finally {
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.AUTO );
+        }
+    }
+
+    /**
+     * Persist a {@link Gene}: find by business key, else create.
+     */
+    @Transactional
+    public Gene persistGene( Gene gene ) {
+        try {
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.MANUAL );
+            Gene result = this.persistGene( gene, new HashMap<>(), new HashMap<>(), new HashMap<>() );
+            sessionFactory.getCurrentSession().flush();
+            return result;
+        } finally {
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.AUTO );
+        }
+    }
+
+    /**
+     * Persist a {@link BioSequence}: find by business key, else create.
+     */
+    @Transactional
+    public BioSequence persistBioSequence( BioSequence bioSequence ) {
+        try {
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.MANUAL );
+            BioSequence result = this.persistBioSequence( bioSequence, new HashMap<>(), new HashMap<>(), new HashMap<>() );
+            sessionFactory.getCurrentSession().flush();
+            return result;
+        } finally {
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.AUTO );
+        }
+    }
+
+    /**
+     * Persist-or-update a {@link BioSequence}: equivalent to the
+     * {@code persistOrUpdate(BioSequence)} arm formerly routed through
+     * {@link PersisterHelperImpl#persistOrUpdate}.
+     */
+    @Transactional
+    public BioSequence persistOrUpdateBioSequence( BioSequence bioSequence ) {
+        try {
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.MANUAL );
+            BioSequence result = this.persistOrUpdateBioSequence( bioSequence, new HashMap<>(), new HashMap<>(), new HashMap<>() );
+            sessionFactory.getCurrentSession().flush();
+            return result;
+        } finally {
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.AUTO );
+        }
+    }
+
+    /**
+     * Persist-or-update a {@link Gene}: equivalent to the
+     * {@code persistOrUpdate(Gene)} arm formerly routed through
+     * {@link PersisterHelperImpl#persistOrUpdate}.
+     */
+    @Transactional
+    public Gene persistOrUpdateGene( Gene gene ) {
+        try {
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.MANUAL );
+            Gene result = this.persistOrUpdateGene( gene, new HashMap<>(), new HashMap<>(), new HashMap<>() );
+            sessionFactory.getCurrentSession().flush();
+            return result;
+        } finally {
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.AUTO );
+        }
+    }
+
+    /**
+     * Persist a collection of {@link BlatResult}s. Equivalent to the
+     * {@code persist(Collection&lt;BlatResult&gt;)} arm formerly routed
+     * through {@link PersisterHelperImpl#persist(Collection)} into the
+     * {@code SequenceSimilaritySearchResult} dispatch arm.
+     */
+    @Transactional
+    public Collection<BlatResult> persistBlatResults( Collection<BlatResult> blatResults ) {
+        try {
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.MANUAL );
+            Map<String, ExternalDatabase> xdbCache = new HashMap<>();
+            Map<Object, Taxon> taxonCache = new HashMap<>();
+            Map<Integer, Chromosome> chromosomeCache = new HashMap<>();
+            List<BlatResult> result = new ArrayList<>( blatResults.size() );
+            for ( BlatResult br : blatResults ) {
+                result.add( ( BlatResult ) this.persistSequenceSimilaritySearchResult( br, xdbCache, taxonCache, chromosomeCache ) );
+            }
+            sessionFactory.getCurrentSession().flush();
+            return result;
+        } finally {
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.AUTO );
+        }
+    }
+
+    /**
+     * Persist a {@link BlatAssociation}. Equivalent to the
+     * {@code persist(BlatAssociation)} arm formerly routed through
+     * {@link PersisterHelperImpl#persist} into the
+     * {@code BioSequence2GeneProduct} dispatch arm.
+     */
+    @Transactional
+    public BlatAssociation persistBlatAssociation( BlatAssociation association ) {
+        try {
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.MANUAL );
+            BlatAssociation result = ( BlatAssociation ) this.persistBlatAssociation( association, new HashMap<>(), new HashMap<>(), new HashMap<>() );
+            sessionFactory.getCurrentSession().flush();
+            return result;
+        } finally {
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.AUTO );
+        }
     }
 
     /**

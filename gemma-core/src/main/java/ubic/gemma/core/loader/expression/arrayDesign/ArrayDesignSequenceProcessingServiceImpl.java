@@ -40,7 +40,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.PolymerType;
 import ubic.gemma.model.genome.biosequence.SequenceType;
-import ubic.gemma.persistence.persister.Persister;
+import ubic.gemma.persistence.persister.GenomePersister;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
@@ -73,19 +73,19 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
     private final ArrayDesignService arrayDesignService;
     private final BioSequenceService bioSequenceService;
     private final ExternalDatabaseService externalDatabaseService;
-    private final Persister persisterHelper;
+    private final GenomePersister genomePersister;
     private final String fastaCmdExe;
 
     @Autowired
     public ArrayDesignSequenceProcessingServiceImpl( ArrayDesignReportService arrayDesignReportService,
             ArrayDesignService arrayDesignService, BioSequenceService bioSequenceService,
-            ExternalDatabaseService externalDatabaseService, Persister persisterHelper,
+            ExternalDatabaseService externalDatabaseService, GenomePersister genomePersister,
             @Value("${fastaCmd.exe}") String fastaCmdExe ) {
         this.arrayDesignReportService = arrayDesignReportService;
         this.arrayDesignService = arrayDesignService;
         this.bioSequenceService = bioSequenceService;
         this.externalDatabaseService = externalDatabaseService;
-        this.persisterHelper = persisterHelper;
+        this.genomePersister = genomePersister;
         this.fastaCmdExe = fastaCmdExe;
     }
 
@@ -970,7 +970,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
      * If the sequence already exists
      */
     private BioSequence persistSequence( BioSequence sequence ) {
-        return ( BioSequence ) persisterHelper.persistOrUpdate( sequence );
+        return genomePersister.persistOrUpdateBioSequence( sequence );
     }
 
     /**

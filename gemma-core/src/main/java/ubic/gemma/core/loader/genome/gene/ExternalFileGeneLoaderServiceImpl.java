@@ -27,7 +27,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
-import ubic.gemma.persistence.persister.Persister;
+import ubic.gemma.persistence.persister.GenomePersister;
 import ubic.gemma.persistence.service.genome.gene.GeneProductService;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
@@ -55,7 +55,7 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
     private GeneService geneService;
 
     @Autowired
-    private Persister persisterHelper;
+    private GenomePersister genomePersister;
 
     @Autowired
     private TaxonService taxonService;
@@ -141,7 +141,7 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
         gene.setDescription( "Imported from external annotation file" );
         gene.setTaxon( taxon );
         gene.getProducts().add( createGeneProduct( gene ) );
-        gene = ( Gene ) persisterHelper.persistOrUpdate( gene );
+        gene = genomePersister.persistOrUpdateGene( gene );
         return gene;
     }
 
