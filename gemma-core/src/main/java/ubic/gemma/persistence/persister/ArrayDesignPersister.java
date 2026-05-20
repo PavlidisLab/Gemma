@@ -68,14 +68,14 @@ public abstract class ArrayDesignPersister extends GenomePersister {
 
     @Override
     @SuppressWarnings("unchecked")
-    protected <T extends Identifiable> T doPersist( T entity, Caches caches, Map<String, ExternalDatabase> xdbCache ) {
+    protected <T extends Identifiable> T doPersist( T entity, Map<String, ExternalDatabase> xdbCache ) {
         if ( entity instanceof ArrayDesign ) {
             // Phase 3 lift: taxonCache and chromosomeCache are now explicit per-call
             // parameters on the ArrayDesignPersister-internal helpers; allocate fresh
             // maps at this polymorphic dispatch entry point.
-            return ( T ) this.findOrPersistArrayDesign( ( ArrayDesign ) entity, caches, xdbCache, new HashMap<>(), new HashMap<>() );
+            return ( T ) this.findOrPersistArrayDesign( ( ArrayDesign ) entity, xdbCache, new HashMap<>(), new HashMap<>() );
         } else {
-            return super.doPersist( entity, caches, xdbCache );
+            return super.doPersist( entity, xdbCache );
         }
     }
 
@@ -83,7 +83,7 @@ public abstract class ArrayDesignPersister extends GenomePersister {
      * Look up an existing ArrayDesign by business key (shortName, alternate names, or name —
      * see {@link BusinessKey#matches}); otherwise create a new one along with its full graph.
      */
-    private ArrayDesign findOrPersistArrayDesign( ArrayDesign arrayDesign, Caches caches, Map<String, ExternalDatabase> xdbCache, Map<Object, Taxon> taxonCache, Map<Integer, Chromosome> chromosomeCache ) {
+    private ArrayDesign findOrPersistArrayDesign( ArrayDesign arrayDesign, Map<String, ExternalDatabase> xdbCache, Map<Object, Taxon> taxonCache, Map<Integer, Chromosome> chromosomeCache ) {
         if ( arrayDesign.getId() != null ) {
             AbstractPersister.log.debug( "Platform " + arrayDesign + " already exists, returning..." );
             return arrayDesign;
@@ -98,7 +98,7 @@ public abstract class ArrayDesignPersister extends GenomePersister {
         }
 
         AbstractPersister.log.debug( arrayDesign + " is new, processing..." );
-        return this.persistNewArrayDesign( arrayDesign, caches, xdbCache, taxonCache, chromosomeCache );
+        return this.persistNewArrayDesign( arrayDesign, xdbCache, taxonCache, chromosomeCache );
     }
 
     /**
@@ -108,7 +108,7 @@ public abstract class ArrayDesignPersister extends GenomePersister {
      * many-to-one associations (BioSequence, ExternalDatabase) and the AD's own owning
      * associations (designProvider, primaryTaxon) need explicit BK resolution here.
      */
-    private ArrayDesign persistNewArrayDesign( ArrayDesign arrayDesign, Caches caches, Map<String, ExternalDatabase> xdbCache, Map<Object, Taxon> taxonCache, Map<Integer, Chromosome> chromosomeCache ) {
+    private ArrayDesign persistNewArrayDesign( ArrayDesign arrayDesign, Map<String, ExternalDatabase> xdbCache, Map<Object, Taxon> taxonCache, Map<Integer, Chromosome> chromosomeCache ) {
         AbstractPersister.log.debug( "Persisting new platform " + arrayDesign.getName() );
 
         if ( arrayDesign.getDesignProvider() != null ) {
@@ -142,7 +142,7 @@ public abstract class ArrayDesignPersister extends GenomePersister {
             compositeSequence.setArrayDesign( arrayDesign );
             BioSequence biologicalCharacteristic = compositeSequence.getBiologicalCharacteristic();
             if ( biologicalCharacteristic != null ) {
-                compositeSequence.setBiologicalCharacteristic( this.persistBioSequence( biologicalCharacteristic, caches, xdbCache, taxonCache, chromosomeCache ) );
+                compositeSequence.setBiologicalCharacteristic( this.persistBioSequence( biologicalCharacteristic, xdbCache, taxonCache, chromosomeCache ) );
             }
             if ( ++examined % REPORT_BATCH_SIZE == 0 ) {
                 AbstractPersister.log.info( examined + "/" + numElements

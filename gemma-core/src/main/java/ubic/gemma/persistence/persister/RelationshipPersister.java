@@ -60,17 +60,17 @@ public abstract class RelationshipPersister extends ExpressionPersister {
 
     @Override
     @SuppressWarnings("unchecked")
-    protected <T extends Identifiable> T doPersist( T entity, Caches caches, Map<String, ExternalDatabase> xdbCache ) {
+    protected <T extends Identifiable> T doPersist( T entity, Map<String, ExternalDatabase> xdbCache ) {
         if ( entity instanceof Gene2GOAssociation ) {
-            return ( T ) this.persistGene2GOAssociation( ( Gene2GOAssociation ) entity, caches, xdbCache );
+            return ( T ) this.persistGene2GOAssociation( ( Gene2GOAssociation ) entity, xdbCache );
         } else if ( entity instanceof ExpressionExperimentSet ) {
-            return ( T ) this.persistExpressionExperimentSet( ( ExpressionExperimentSet ) entity, caches, xdbCache );
+            return ( T ) this.persistExpressionExperimentSet( ( ExpressionExperimentSet ) entity, xdbCache );
         } else {
-            return super.doPersist( entity, caches, xdbCache );
+            return super.doPersist( entity, xdbCache );
         }
     }
 
-    private ExpressionExperimentSet persistExpressionExperimentSet( ExpressionExperimentSet entity, Caches caches, Map<String, ExternalDatabase> xdbCache ) {
+    private ExpressionExperimentSet persistExpressionExperimentSet( ExpressionExperimentSet entity, Map<String, ExternalDatabase> xdbCache ) {
         // No static BusinessKey.find for ExpressionExperimentSet (the DAO-level find()
         // takes an ExpressionExperiment with different semantics — "sets containing this
         // EE"), so we keep the explicit member-persistence + create flow. Members
@@ -80,7 +80,7 @@ public abstract class RelationshipPersister extends ExpressionPersister {
 
         for ( ExpressionExperiment baSet : entity.getExperiments() ) {
             if ( baSet.getId() == null ) {
-                baSet = this.doPersist( baSet, caches, xdbCache );
+                baSet = this.doPersist( baSet, xdbCache );
             }
             setMembers.add( baSet );
         }
@@ -90,7 +90,7 @@ public abstract class RelationshipPersister extends ExpressionPersister {
         return expressionExperimentSetDao.create( entity );
     }
 
-    private Gene2GOAssociation persistGene2GOAssociation( Gene2GOAssociation association, Caches caches, Map<String, ExternalDatabase> xdbCache ) {
+    private Gene2GOAssociation persistGene2GOAssociation( Gene2GOAssociation association, Map<String, ExternalDatabase> xdbCache ) {
         // Gene first — Gene2GOAssociation BK matches on gene + ontologyEntry, so the
         // gene side must be resolved to a managed instance before the lookup.
         // Phase 3 lift: taxonCache and chromosomeCache are per-call; allocate fresh
@@ -98,7 +98,7 @@ public abstract class RelationshipPersister extends ExpressionPersister {
         // no shared cache to thread.
         Map<Object, Taxon> taxonCache = new HashMap<>();
         Map<Integer, Chromosome> chromosomeCache = new HashMap<>();
-        association.setGene( this.persistGene( association.getGene(), caches, xdbCache, taxonCache, chromosomeCache ) );
+        association.setGene( this.persistGene( association.getGene(), xdbCache, taxonCache, chromosomeCache ) );
         Session session = getSessionFactory().getCurrentSession();
         Gene2GOAssociation existing = BusinessKey.find( session, association );
         return existing != null ? existing : gene2GoAssociationDao.create( association );

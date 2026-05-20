@@ -18,7 +18,6 @@
  */
 package ubic.gemma.persistence.persister;
 
-import lombok.Value;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.FlushMode;
@@ -28,7 +27,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 
 import javax.annotation.OverridingMethodsMustInvokeSuper;
 import java.util.*;
@@ -39,6 +37,15 @@ import java.util.*;
  * Important note: persisting is a somewhat complicated process, and for some reason we cannot afford to let Hibernate
  * flush changes to the database until the whole operation is completed. This is why we use the {@link FlushMode#MANUAL},
  * manually flush, and we subsequently restore it to the default {@link FlushMode#AUTO} when done.
+ * <p>
+ * Phase 3 persister-retirement note: this base class no longer carries any per-call
+ * cache POJO. All caches ({@code externalDatabaseCache}, {@code arrayDesignCache},
+ * {@code taxonCache}, {@code chromosomeCache}, {@code bioAssayDimensionCache}) are
+ * now plumbed through helper-method signatures as explicit {@code Map<KEY, VALUE>}
+ * parameters allocated by the entry point (typically {@link EeWriteServiceImpl#create}).
+ * The former {@code Caches} POJO has been deleted; {@code doPersist} now takes only
+ * the {@code Map<String, ExternalDatabase> xdbCache} parameter (the one cache the
+ * polymorphic dispatch surface actually needs).
  *
  * @author pavlidis
  */
@@ -50,32 +57,11 @@ public abstract class AbstractPersister implements Persister {
     protected static final Log log = LogFactory.getLog( AbstractPersister.class.getName() );
 
     /**
-     * Size if batch to report when persisting multiple entities with {@link #doPersist(Collection, Caches, Map)}.
+     * Size if batch to report when persisting multiple entities with {@link #doPersist(Collection, Map)}.
      * <p>
      * Implementations can use this to have a consistent batch size when reporting.
      */
     protected static final int REPORT_BATCH_SIZE = 100;
-
-    /**
-     * Various caches to refer back to not-yet persisted entities (and thus not easily obtainable from the persistence
-     * context).
-     * <p>
-     * Phase 3 persister-retirement note: the {@code externalDatabaseCache},
-     * {@code arrayDesignCache}, {@code taxonCache}, and {@code chromosomeCache}
-     * fields have been removed from this container and are now plumbed through
-     * helper-method signatures as explicit parameters (a
-     * {@code Map<String, ExternalDatabase>}, an {@link ArrayDesignsForExperimentCache},
-     * a {@code Map<Object, Taxon>}, and a {@code Map<Integer, Chromosome>}
-     * respectively). The remaining field (bioAssayDimensionCache) still rides on
-     * this POJO; once it is similarly lifted this Caches POJO can be deleted.
-     */
-    @Value(staticConstructor = "empty")
-    protected static class Caches {
-        /**
-         * Keys are custom hash codes.
-         */
-        Map<Integer, BioAssayDimension> bioAssayDimensionCache = new HashMap<>();
-    }
 
     @Autowired
     private SessionFactory sessionFactory;
@@ -86,7 +72,7 @@ public abstract class AbstractPersister implements Persister {
         try {
             sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.MANUAL );
             AbstractPersister.log.trace( String.format( "Persisting a %s.", formatEntity( entity ) ) );
-            T persistedEntity = doPersist( entity, Caches.empty(), new HashMap<>() );
+            T persistedEntity = doPersist( entity, new HashMap<>() );
             sessionFactory.getCurrentSession().flush();
             return persistedEntity;
         } finally {
@@ -100,7 +86,7 @@ public abstract class AbstractPersister implements Persister {
         try {
             sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.MANUAL );
             AbstractPersister.log.trace( String.format( "Persisting or updating a %s.", formatEntity( entity ) ) );
-            T persistedEntity = doPersistOrUpdate( entity, Caches.empty(), new HashMap<>() );
+            T persistedEntity = doPersistOrUpdate( entity, new HashMap<>() );
             sessionFactory.getCurrentSession().flush();
             return persistedEntity;
         } finally {
@@ -114,7 +100,7 @@ public abstract class AbstractPersister implements Persister {
         try {
             sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.MANUAL );
             AbstractPersister.log.trace( String.format( "Persisting a collection of %d entities.", col.size() ) );
-            List<T> result = doPersist( col, Caches.empty(), new HashMap<>() );
+            List<T> result = doPersist( col, new HashMap<>() );
             sessionFactory.getCurrentSession().flush();
             return result;
         } finally {
@@ -127,15 +113,15 @@ public abstract class AbstractPersister implements Persister {
     }
 
     @OverridingMethodsMustInvokeSuper
-    protected <T extends Identifiable> T doPersist( T entity, Caches caches, Map<String, ExternalDatabase> xdbCache ) {
+    protected <T extends Identifiable> T doPersist( T entity, Map<String, ExternalDatabase> xdbCache ) {
         throw new UnsupportedOperationException( String.format( "Don't know how to persist a %s.", formatEntity( entity ) ) );
     }
 
-    protected final <T extends Identifiable> Set<T> doPersist( Set<T> entities, Caches caches, Map<String, ExternalDatabase> xdbCache ) {
+    protected final <T extends Identifiable> Set<T> doPersist( Set<T> entities, Map<String, ExternalDatabase> xdbCache ) {
         Set<T> result = new HashSet<>( entities.size() );
         int i = 0;
         for ( T entity : entities ) {
-            result.add( this.doPersist( entity, caches, xdbCache ) );
+            result.add( this.doPersist( entity, xdbCache ) );
             if ( i++ % REPORT_BATCH_SIZE == 0 ) {
                 AbstractPersister.log.debug( String.format( "Persisted %d/%d entities.", result.size(), entities.size() ) );
             }
@@ -143,11 +129,11 @@ public abstract class AbstractPersister implements Persister {
         return result;
     }
 
-    protected final <T extends Identifiable> List<T> doPersist( Collection<T> entities, Caches caches, Map<String, ExternalDatabase> xdbCache ) {
+    protected final <T extends Identifiable> List<T> doPersist( Collection<T> entities, Map<String, ExternalDatabase> xdbCache ) {
         List<T> result = new ArrayList<>( entities.size() );
         int i = 0;
         for ( T entity : entities ) {
-            result.add( this.doPersist( entity, caches, xdbCache ) );
+            result.add( this.doPersist( entity, xdbCache ) );
             if ( i++ % REPORT_BATCH_SIZE == 0 ) {
                 AbstractPersister.log.debug( String.format( "Persisted %d/%d entities.", result.size(), entities.size() ) );
             }
@@ -156,7 +142,7 @@ public abstract class AbstractPersister implements Persister {
     }
 
     @OverridingMethodsMustInvokeSuper
-    protected <T extends Identifiable> T doPersistOrUpdate( T entity, Caches caches, Map<String, ExternalDatabase> xdbCache ) {
+    protected <T extends Identifiable> T doPersistOrUpdate( T entity, Map<String, ExternalDatabase> xdbCache ) {
         throw new UnsupportedOperationException( String.format( "Don't know how to persist or update a %s.", formatEntity( entity ) ) );
     }
 
