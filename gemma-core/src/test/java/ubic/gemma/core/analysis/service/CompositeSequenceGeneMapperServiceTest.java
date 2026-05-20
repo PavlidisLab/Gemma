@@ -18,10 +18,11 @@
  */
 package ubic.gemma.core.analysis.service;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
@@ -31,7 +32,7 @@ import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignProbeMapperServi
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignProbeMapperServiceImpl;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService;
-import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
+import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest5;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.genome.gene.ncbi.NcbiGeneLoader;
@@ -57,7 +58,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * This test makes use of the {@link ArrayDesignProbeMapperServiceImpl}. These tests add array data and gene data to the
@@ -66,7 +67,8 @@ import static org.junit.Assert.*;
  * @author keshav
  */
 @Category({ GoldenPathTest.class, SlowTest.class })
-public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTest {
+@Tag("slow")
+public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTest5 {
 
     private final String arrayAccession = "GPL96";
     private final ShellDelegatingBlat blat = new ShellDelegatingBlat();
@@ -102,7 +104,7 @@ public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTe
     @Value("${entrez.efetch.apikey}")
     private String ncbiApiKey;
 
-    @After
+    @AfterEach
     public void cleanup() {
 
         ad = arrayDesignService.findByShortName( arrayAccession );
@@ -125,7 +127,7 @@ public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTe
         }
     }
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         this.cleanup();
         geoService.setGeoDomainObjectGenerator(

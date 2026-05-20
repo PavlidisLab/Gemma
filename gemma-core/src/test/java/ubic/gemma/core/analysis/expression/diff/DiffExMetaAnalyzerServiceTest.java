@@ -15,15 +15,16 @@
 package ubic.gemma.core.analysis.expression.diff;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
-import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
+import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest5;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
@@ -58,7 +59,7 @@ import java.io.InputStream;
 import java.util.*;
 
 import static java.util.Objects.requireNonNull;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * This is a test that requires complex setup: loading several data sets, information on genes, array design
@@ -67,7 +68,7 @@ import static org.junit.Assert.*;
  *
  * @author Paul
  */
-public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
+public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest5 {
 
     @Autowired
     private GeneDiffExMetaAnalysisService analysisService;
@@ -125,7 +126,7 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
     @Autowired
     private TableMaintenanceUtil tableMaintenanceUtil;
 
-    @Before
+    @BeforeEach
     public void before() throws Exception {
         this.cleanup();
 
@@ -148,14 +149,15 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         this.addGenes();
     }
 
-    @After
+    @AfterEach
     public void teardown() {
         this.cleanup();
     }
 
     @Test
-    @Ignore
+    @Disabled
     @Category(SlowTest.class)
+    @Tag("slow")
     public void testAnalyze() throws Exception {
 
         ExpressionExperiment ds1 = experimentService.findByShortName( "GSE2018" );
@@ -307,7 +309,7 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
                 case "CAPRIN1":
                     foundTests++;
                     assertTrue( r.getUpperTail() );
-                    assertEquals( this.logComponentResults( r, gene ), 0.003375654, r.getMetaPvalue(), 0.00001 );
+                    assertEquals( 0.003375654, r.getMetaPvalue(), 0.00001, this.logComponentResults( r, gene ) );
                     found[0] = true;
                     break;
                 case "ABCF1":
@@ -316,46 +318,46 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
                 case "ACLY":
                     foundTests++;
                     found[1] = true;
-                    assertEquals( this.logComponentResults( r, gene ), 1.505811e-06, r.getMetaPvalue(), 0.00001 );
+                    assertEquals( 1.505811e-06, r.getMetaPvalue(), 0.00001, this.logComponentResults( r, gene ) );
                     break;
                 case "ACTA2":
                     foundTests++;
                     found[2] = true;
-                    assertEquals( this.logComponentResults( r, gene ), 0.0002415006, r.getMetaPvalue(), 0.00001 );
+                    assertEquals( 0.0002415006, r.getMetaPvalue(), 0.00001, this.logComponentResults( r, gene ) );
                     break;
                 case "ACO2":
                     foundTests++;
                     found[3] = true;
-                    assertEquals( this.logComponentResults( r, gene ), 0.003461225, r.getMetaPvalue(), 0.00001 );
+                    assertEquals( 0.003461225, r.getMetaPvalue(), 0.00001, this.logComponentResults( r, gene ) );
                     break;
                 case "THRA":
                     foundTests++;
                     found[4] = true;
                     assertFalse( r.getUpperTail() );
-                    assertEquals( this.logComponentResults( r, gene ), 0.008188016, r.getMetaPvalue(), 0.00001 );
+                    assertEquals( 0.008188016, r.getMetaPvalue(), 0.00001, this.logComponentResults( r, gene ) );
                     break;
                 case "PPM1G":
                     foundTests++;
                     found[5] = true;
                     assertFalse( r.getUpperTail() );
-                    assertEquals( this.logComponentResults( r, gene ), 0.001992656, r.getMetaPvalue(), 0.00001 );
+                    assertEquals( 0.001992656, r.getMetaPvalue(), 0.00001, this.logComponentResults( r, gene ) );
                     break;
                 case "SEPW1":
                     foundTests++;
                     found[6] = true;
                     assertTrue( r.getUpperTail() );
-                    assertEquals( this.logComponentResults( r, gene ), 0.006142644, r.getMetaPvalue(), 0.0001 );
+                    assertEquals( 0.006142644, r.getMetaPvalue(), 0.0001, this.logComponentResults( r, gene ) );
                     break;
                 case "GUK1":
                     found[7] = true;
                     foundTests++;
-                    assertEquals( this.logComponentResults( r, gene ), 1.65675107E-6, r.getMetaPvalue(), 1e-8 );
+                    assertEquals( 1.65675107E-6, r.getMetaPvalue(), 1e-8, this.logComponentResults( r, gene ) );
                     break;
                 case "KXD1":
                     foundTests++;
                     found[8] = true;
                     assertTrue( r.getUpperTail() );
-                    assertEquals( this.logComponentResults( r, gene ), 4.027476e-06, r.getMetaPvalue(), 1e-8 );
+                    assertEquals( 4.027476e-06, r.getMetaPvalue(), 1e-8, this.logComponentResults( r, gene ) );
                     break;
                 default:
             }
@@ -368,15 +370,15 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
                 numDown++;
             }
         }
-        assertTrue( "Failed to find caprin1", found[0] );
-        assertTrue( "Failed to find acly", found[1] );
-        assertTrue( "Failed to find acta2", found[2] );
-        assertTrue( "Failed to find aco2", found[3] );
-        assertTrue( "Failed to find thra", found[4] );
-        assertTrue( "Failed to find ppm1g", found[5] );
-        assertTrue( "Failed to find sepw1", found[6] );
-        assertTrue( "Failed to find guk1", found[7] );
-        assertTrue( "Failed to find kxd1", found[8] );
+        assertTrue( found[0], "Failed to find caprin1" );
+        assertTrue( found[1], "Failed to find acly" );
+        assertTrue( found[2], "Failed to find acta2" );
+        assertTrue( found[3], "Failed to find aco2" );
+        assertTrue( found[4], "Failed to find thra" );
+        assertTrue( found[5], "Failed to find ppm1g" );
+        assertTrue( found[6], "Failed to find sepw1" );
+        assertTrue( found[7], "Failed to find guk1" );
+        assertTrue( found[8], "Failed to find kxd1" );
 
         assertEquals( 230, numUp ); // R gives 235; minus 5 that we skip due to conflicting results.
         assertEquals( 91, numDown ); // R gives 96, minus 5

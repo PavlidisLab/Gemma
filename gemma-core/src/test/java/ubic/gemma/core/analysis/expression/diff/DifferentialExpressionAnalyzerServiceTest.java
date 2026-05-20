@@ -18,17 +18,19 @@
  */
 package ubic.gemma.core.analysis.expression.diff;
 
-import org.junit.After;
-import org.junit.Ignore;
-import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.matrix.DoubleMatrix;
 import ubic.gemma.core.util.matrix.DoubleMatrixReader;
 import ubic.gemma.core.util.math.distribution.Histogram;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
-import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
+import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest5;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
@@ -60,15 +62,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
-import static org.junit.Assert.*;
-import static org.junit.Assume.assumeNoException;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author keshav, paul
  */
-@Ignore("These tests randomly fail on the CI")
+@Disabled("These tests randomly fail on the CI")
 @Category(SlowTest.class)
-public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServiceTest {
+@Tag("slow")
+public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServiceTest5 {
 
     @Autowired
     private GeoService geoService;
@@ -109,7 +111,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
     /* fixtures */
     private ExpressionExperiment ee;
 
-    @After
+    @AfterEach
     public void tearDown() {
         if ( ee != null ) {
             expressionExperimentService.remove( ee );
@@ -164,7 +166,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
     }
 
     @Test
-    @Ignore
+    @Disabled
     public void testAnalyzeAndDelete() throws Exception {
         prepareGSE1611();
 
@@ -237,7 +239,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         } catch ( AlreadyExistsInSystemException e ) {
             //noinspection unchecked
             ee = ( ( Collection<ExpressionExperiment> ) e.getData() ).iterator().next();
-            assumeNoException( e );
+            Assumptions.abort( e.getMessage() );
         }
         processedDataVectorService.createProcessedDataVectors( ee, false );
 
@@ -284,13 +286,13 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalyzerService
                 .runDifferentialExpressionAnalyses( ee, config );
 
-        assertEquals( "Should have quietly ignored one of the subsets that is not analyzable", 1, analyses.size() );
+        assertEquals( 1, analyses.size(), "Should have quietly ignored one of the subsets that is not analyzable" );
 
         DifferentialExpressionAnalysis analysis = analyses.iterator().next();
-        assertEquals( "Subsetting was not done correctly", subsetFactor,
-                analysis.getSubsetFactorValue().getExperimentalFactor() );
+        assertEquals( subsetFactor,
+                analysis.getSubsetFactorValue().getExperimentalFactor(), "Subsetting was not done correctly" );
         // FIXME: use an assertion here, see https://github.com/PavlidisLab/Gemma/issues/419
-        assertEquals( "Interaction was not retained in the analyzed subset", 3, analysis.getResultSets().size() );
+        assertEquals( 3, analysis.getResultSets().size(), "Interaction was not retained in the analyzed subset" );
 
         ExpressionExperimentSubSet eeset = ( ExpressionExperimentSubSet ) analysis.getExperimentAnalyzed();
 
@@ -399,7 +401,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
         for ( BioAssay ba : ee.getBioAssays() ) {
             BioMaterial bm = ba.getSampleUsed();
-            assertEquals( bm + " " + ba, 2, bm.getFactorValues().size() );
+            assertEquals( 2, bm.getFactorValues().size(), bm + " " + ba );
         }
     }
 }
