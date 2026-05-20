@@ -1,10 +1,10 @@
 package ubic.gemma.apps;
 
 import ubic.gemma.core.security.authentication.ManualAuthenticationService;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,10 +13,10 @@ import org.springframework.security.test.context.support.WithSecurityContextTest
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.cli.util.TestCLIContext;
-import ubic.gemma.cli.util.test.BaseCliTest;
+import ubic.gemma.cli.util.test.BaseCliTest5;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.util.test.NetworkAvailable;
-import ubic.gemma.core.util.test.NetworkAvailableRule;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -32,10 +32,9 @@ import static org.mockito.Mockito.*;
 @ContextConfiguration
 @TestExecutionListeners(value = WithSecurityContextTestExecutionListener.class,
         mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
-public class NCBIGene2GOAssociationLoaderCLITest extends BaseCliTest {
-
-    @Rule
-    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
+@ExtendWith(NetworkAvailableExtension.class)
+@Disabled("This test is too slow, see https://github.com/PavlidisLab/Gemma/issues/1056 for details")
+public class NCBIGene2GOAssociationLoaderCLITest extends BaseCliTest5 {
 
     @Configuration
     @TestComponent
@@ -87,7 +86,6 @@ public class NCBIGene2GOAssociationLoaderCLITest extends BaseCliTest {
     private ExternalDatabaseService externalDatabaseService;
 
     @Test
-    @Ignore("This test is too slow, see https://github.com/PavlidisLab/Gemma/issues/1056 for details")
     @Category(SlowTest.class)
     @WithMockUser(authorities = { "GROUP_ADMIN" })
     @NetworkAvailable(url = "ftp://ftp.ncbi.nih.gov/gene/DATA/gene2go.gz")
