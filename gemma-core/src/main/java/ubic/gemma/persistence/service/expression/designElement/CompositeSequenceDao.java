@@ -61,6 +61,27 @@ public interface CompositeSequenceDao extends FilteringVoEnabledDao<CompositeSeq
     Slice<CompositeSequence> findByGene( Gene gene, int start, int limit, boolean useGene2Cs );
 
     /**
+     * Cursor-paged listing of {@link CompositeSequence}s associated with a single
+     * {@link Gene} across all platforms &mdash; see {@code CURSOR_PAGINATION_STEP1_PLAN.md}
+     * step 1m. Always sorted by ascending {@code cs.id} (the primary key, indexed and
+     * unique); the cursor DAO currently restricts cursors to single-component id sorts
+     * until the index audit lands.
+     * <p>
+     * Mirrors the structure of {@link #findByGene(Gene, int, int, boolean)} but appends an
+     * {@code id > :cursorId} (ASC forward) / {@code id < :cursorId} (ASC backward)
+     * predicate to the existing gene&rarr;probe join query and fetches {@code limit + 1}
+     * rows to detect the next page; {@code totalElements} is left {@code null} (cursor
+     * mode skips the {@code COUNT(*)} per request, matching the rest of the cursor
+     * surface). Symmetric to {@link #getGenesByCursor(CompositeSequence, Cursor, int, boolean)}
+     * which walks the same join structure in the opposite direction.
+     *
+     * @param useGene2Cs whether to use the denormalized {@code GENE2CS} mapping table for
+     *                   a faster (but potentially less accurate) lookup, matching the
+     *                   semantics of the offset variant.
+     */
+    CursorPage<CompositeSequence> findByGeneByCursor( Gene gene, @Nullable Cursor cursor, int limit, boolean useGene2Cs );
+
+    /**
      * Find composite sequences mapped to a given gene, restricted to a given platform.
      *
      * @param useGene2Cs whether to use the {@code GENE2CS} mapping table for faster, but potentially less

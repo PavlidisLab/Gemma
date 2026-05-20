@@ -148,12 +148,36 @@ public class GeneWebService {
     @GET
     @Path("/{gene}/probes")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the probes associated to a genes across all platforms")
-    public PaginatedResponseDataObject<CompositeSequenceValueObject> getGeneProbes( // Params:
+    @Operation(summary = "Retrieve the probes associated to a genes across all platforms",
+            description = "Supports two pagination modes. Legacy mode: pass `offset` (and `limit`); response includes `offset` and `totalElements`. "
+                    + "Cursor mode (recommended for deep pagination and consistency under writes — a single gene can map to many probes across multi-platform inventories): "
+                    + "pass an opaque `cursor` token from a previous response's `nextCursor` / `prevCursor` field. "
+                    + "`offset` and `cursor` are mutually exclusive — passing a non-null `cursor` selects cursor mode. "
+                    + "In cursor mode the result is always sorted by ascending `cs.id` (cursor mode forces a single-component id sort pending the indexed-column audit in phase B); "
+                    + "the path-derived `{gene}` constraint is preserved; `totalElements` is `null` by default (no count query per request).",
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(schema = @Schema(oneOf = {
+                                    PaginatedResponseDataObject.class,
+                                    CursorPaginatedResponseDataObject.class
+                            }))),
+            })
+    public Object getGeneProbes( // Params:
             @PathParam("gene") GeneArg<?> geneArg, // Required
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
-            @QueryParam("limit") @DefaultValue("20") LimitArg limit // Optional, default 20
+            @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
+            @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg
     ) {
+        if ( cursorArg != null ) {
+            // Mutual-exclusion: a non-null cursor selects cursor mode. The default offset=0 is
+            // not considered user-supplied (parallels GET /platforms/{platform}/elements/{probe}/genes step 1l).
+            // In cursor mode we currently force a +id sort (GeneArgService.getGeneProbesByCursor)
+            // — the DAO restricts cursors to single-component id sorts until the index audit lands.
+            // The path-derived gene.id constraint is preserved by the DAO query (the keyset HQL walks
+            // the same gene→probe join structure as the offset variant, scoped to the resolved Gene).
+            CursorPage<CompositeSequenceValueObject> page = geneArgService.getGeneProbesByCursor( geneArg, cursorArg.getValue(), limit.getValue() );
+            return paginateByCursor( page, new String[] { "id" } );
+        }
         return paginate( geneArgService.getGeneProbes( geneArg, offset.getValue(), limit.getValue() ), new String[] { "id" } );
     }
 

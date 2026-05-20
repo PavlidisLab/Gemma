@@ -176,6 +176,23 @@ public class GeneArgService extends AbstractEntityArgService<Gene, GeneService> 
     }
 
     /**
+     * Cursor-mode counterpart to {@link #getGeneProbes(GeneArg, int, int)}: keyset
+     * pagination over the probes (composite sequences) mapped to a single gene across
+     * all platforms &mdash; see {@code CURSOR_PAGINATION_STEP1_PLAN.md} step 1m. Always
+     * sorted by ascending {@code cs.id} (the primary key, indexed and unique) because
+     * the cursor DAO restricts cursors to single-component id sorts until the index
+     * audit lands.
+     * <p>
+     * Resolves the gene from the {@link GeneArg} (matching the offset call
+     * {@code getEntity(geneArg)} in {@link #getGeneProbes(GeneArg, int, int)}) before
+     * delegating to the service. {@code useGene2Cs} is held at {@code true} to match
+     * the offset variant.
+     */
+    public CursorPage<CompositeSequenceValueObject> getGeneProbesByCursor( GeneArg<?> geneArg, @Nullable Cursor cursor, int limit ) {
+        return compositeSequenceService.loadValueObjectsForGeneByCursor( getEntity( geneArg ), cursor, limit, true );
+    }
+
+    /**
      * Obtain probes for the gene in the given taxon across all platforms.
      */
     public Slice<CompositeSequenceValueObject> getGeneProbesInTaxon( GeneArg<?> geneArg, Taxon taxon, int offset, int limit ) {
