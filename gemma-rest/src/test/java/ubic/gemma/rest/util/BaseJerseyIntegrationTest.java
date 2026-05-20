@@ -12,11 +12,11 @@ import ubic.gemma.core.util.test.category.IntegrationTest;
 /**
  * Base class for Jersey-based integration tests.
  * <p>
- * Unfortunately, it's not possible to inherit from {@link ubic.gemma.core.util.test.BaseIntegrationTest} so we have to
+ * Unfortunately, it's not possible to inherit from {@link ubic.gemma.core.util.test.BaseIntegrationTest5} so we have to
  * duplicate some of the setup and teardown code.
  *
  * @author poirigui
- * @see ubic.gemma.core.util.test.BaseIntegrationTest
+ * @see ubic.gemma.core.util.test.BaseIntegrationTest5
  */
 @Category(IntegrationTest.class)
 @ContextConfiguration(locations = { "classpath*:ubic/gemma/applicationContext-*.xml" })

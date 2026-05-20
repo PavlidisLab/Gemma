@@ -53,7 +53,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static ubic.gemma.persistence.util.ByteArrayUtils.*;
 
 /**
- * Unit test for GeoConversion Added extension BaseSpringContextTest as want Taxon Service to be called
+ * Unit test for GeoConversion Added extension BaseIntegrationTest5 as want Taxon Service to be called
  *
  * @author pavlidis
  */

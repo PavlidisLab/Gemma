@@ -44,8 +44,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * </ul>
  * Deliberately uses a tiny inline {@code @Configuration} so the pilot does
  * not depend on the full Gemma application context (no DB, no network).
- * Delete during Phase C cleanup once {@link BaseIntegrationTest} itself runs
- * on Jupiter.
+ * Retained post-Phase-C-cleanup as a minimal Jupiter+Spring smoke-test
+ * exemplar; the legacy JUnit 4 chain it once pre-empted has been retired.
  *
  * @author Phase 3 JUnit 5 migration
  */
