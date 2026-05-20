@@ -200,6 +200,96 @@ public class TicketDaoImpl extends AbstractDao<Ticket> implements TicketDao {
     }
 
     @Override
+    public CursorPage<Ticket> findOpenForTargetByCursor( TicketTargetType targetType, Long targetId,
+            @Nullable Cursor cursor, int limit ) {
+        // Step 1p: keyset pagination over /datasets/{dataset}/tickets and
+        // /platforms/{platform}/tickets. Mirrors findOpenForTarget's scope
+        // (non-terminal tickets matching the (targetType, targetId) pair via
+        // the t.targets collection) but adds id-asc ordering and an
+        // id > lastSeenId / id < lastSeenId predicate when a cursor is supplied.
+        // Single-component +id sort enforced (cursor DAO restricts cursors to
+        // id-only sorts until the phase-B index audit lands). Fetches limit+1
+        // to detect hasMore without a separate COUNT(*).
+        if ( limit <= 0 ) {
+            throw new IllegalArgumentException( "Cursor page limit must be > 0." );
+        }
+        final String expectedSortSpec = "+id";
+        if ( cursor != null ) {
+            if ( !expectedSortSpec.equals( cursor.getSortSpec() ) ) {
+                throw new IllegalArgumentException( "Cursor sort spec '" + cursor.getSortSpec()
+                        + "' does not match the requested sort '" + expectedSortSpec + "'." );
+            }
+            Object[] key = cursor.getKeyTuple();
+            if ( key.length != 1 ) {
+                throw new IllegalArgumentException( "Cursor key tuple must have exactly 1 component for sort '"
+                        + expectedSortSpec + "'; got " + key.length + "." );
+            }
+        }
+        boolean backward = cursor != null && cursor.getDirection() == Cursor.Direction.BACKWARD;
+        Long lastSeenId = null;
+        if ( cursor != null ) {
+            try {
+                lastSeenId = ( ( Number ) cursor.getKeyTuple()[0] ).longValue();
+            } catch ( ClassCastException e ) {
+                throw new IllegalArgumentException( "Cursor key component must be numeric for sort '"
+                        + expectedSortSpec + "'.", e );
+            }
+        }
+
+        StringBuilder hql = new StringBuilder( "select distinct t from Ticket t "
+                + "join t.targets tt "
+                + "where tt.targetType = :tt "
+                + "and tt.targetId = :tid "
+                + "and t.state in :openStates" );
+        if ( lastSeenId != null ) {
+            // forward: id > x; backward: id < x (id-asc client-visible order). When backward,
+            // we reverse the order in the driver query and reverse the returned page below.
+            hql.append( backward ? " and t.id < :lastSeenId" : " and t.id > :lastSeenId" );
+        }
+        // backward cursor: order by id DESC in the driver query, reverse the returned page.
+        hql.append( backward ? " order by t.id desc" : " order by t.id asc" );
+
+        org.hibernate.query.Query<?> q = this.getSessionFactory().getCurrentSession().createQuery( hql.toString() )
+                .setParameter( "tt", targetType )
+                .setParameter( "tid", targetId )
+                .setParameterList( "openStates", Arrays.asList( TicketState.OPEN, TicketState.IN_PROGRESS ) );
+        if ( lastSeenId != null ) {
+            q.setParameter( "lastSeenId", lastSeenId );
+        }
+        q.setMaxResults( limit + 1 );
+        //noinspection unchecked
+        List<Ticket> data = ( List<Ticket> ) q.list();
+
+        boolean hasMore = data.size() > limit;
+        if ( hasMore ) {
+            data = new ArrayList<>( data.subList( 0, limit ) );
+        } else {
+            data = new ArrayList<>( data );
+        }
+        if ( backward ) {
+            Collections.reverse( data );
+        }
+
+        String nextCursor = null;
+        String prevCursor = null;
+        if ( !data.isEmpty() ) {
+            Ticket last = data.get( data.size() - 1 );
+            Ticket first = data.get( 0 );
+            // emit nextCursor only when there's another page in the forward direction
+            if ( backward || hasMore ) {
+                nextCursor = new Cursor( expectedSortSpec, new Object[] { last.getId() }, Cursor.Direction.FORWARD ).encode();
+            }
+            // emit prevCursor whenever we have a cursor (at least one page is behind us)
+            if ( cursor != null ) {
+                prevCursor = new Cursor( expectedSortSpec, new Object[] { first.getId() }, Cursor.Direction.BACKWARD ).encode();
+            }
+        }
+
+        Sort idSort = Sort.by( null, "id", Sort.Direction.ASC, Sort.NullMode.LAST, "id" );
+        return new CursorPage<>( data, idSort, limit, nextCursor, prevCursor, null );
+    }
+
+    @Override
     public long countTickets( boolean openOnly, @Nullable Long assigneeId, @Nullable TicketPriority priority ) {
         StringBuilder hql = new StringBuilder( "select count(t) from Ticket t where 1=1" );
         if ( openOnly ) {

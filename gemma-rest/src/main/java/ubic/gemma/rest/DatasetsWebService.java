@@ -900,14 +900,37 @@ public class DatasetsWebService {
     @GET
     @Path("/{dataset}/tickets")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the open curation tickets for a dataset", responses = {
-            @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
-            @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
-                    content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
-    public ResponseDataObject<List<TicketValueObject>> getDatasetTickets(
-            @PathParam("dataset") DatasetArg<?> datasetArg
+    @Operation(summary = "Retrieve the open curation tickets for a dataset",
+            description = "Legacy mode (no `cursor` parameter): returns the full unpaginated open-ticket list "
+                    + "in the existing shape (no count query, full result set). "
+                    + "Cursor mode (recommended for noisy datasets accumulating long curation histories): "
+                    + "pass an opaque `cursor` token from a previous response's `nextCursor` / `prevCursor` "
+                    + "field along with a `limit`. In cursor mode the result is always sorted by ascending `id` "
+                    + "(cursor mode forces a single-component id sort pending the indexed-column audit in phase B); "
+                    + "the path-derived `targetType = EXPRESSION_EXPERIMENT, targetId = {dataset}` constraint and "
+                    + "the open-state restriction (OPEN/IN_PROGRESS) are preserved; `totalElements` is `null` by "
+                    + "default (no count query per request).",
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(schema = @Schema(oneOf = {
+                                    ResponseDataObject.class,
+                                    CursorPaginatedResponseDataObject.class
+                            }))),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public Object getDatasetTickets(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Opaque keyset-pagination cursor token.")
+            @QueryParam("cursor") CursorArg cursorArg,
+            @Parameter(description = "Page size for cursor mode (ignored when no `cursor` is supplied).")
+            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        if ( cursorArg != null ) {
+            CursorPage<TicketValueObject> page = ticketsWebService.openTicketsForExpressionExperimentByCursor(
+                    ee.getId(), cursorArg.getValue(), limitArg.getValue() );
+            return paginateByCursor( page, new String[] { "id" } );
+        }
         return respond( ticketsWebService.openTicketsForExpressionExperiment( ee.getId() ) );
     }
 

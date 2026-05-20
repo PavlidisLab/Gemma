@@ -407,6 +407,20 @@ public class TicketsWebService {
         return loadOpenTargetingVOs( TicketTargetType.ARRAY_DESIGN, adId );
     }
 
+    /**
+     * Cursor-mode counterpart to {@link #openTicketsForExpressionExperiment(Long)}
+     * (step 1p of {@code CURSOR_PAGINATION_STEP1_PLAN.md}). Returns a
+     * {@link CursorPage} of {@link TicketValueObject} so the
+     * {@link DatasetsWebService} can forward it directly through
+     * {@link ubic.gemma.rest.util.Responders#paginateByCursor}.
+     */
+    public CursorPage<TicketValueObject> openTicketsForExpressionExperimentByCursor( Long eeId,
+            @org.springframework.lang.Nullable ubic.gemma.persistence.util.Cursor cursor, int limit ) {
+        CursorPage<Ticket> page = ticketService.findOpenForTargetByCursor(
+                TicketTargetType.EXPRESSION_EXPERIMENT, eeId, cursor, limit );
+        return page.map( TicketValueObject::from );
+    }
+
     /* ====== Request DTOs (kept inner-class for proximity to the endpoints) ====== */
 
     /**

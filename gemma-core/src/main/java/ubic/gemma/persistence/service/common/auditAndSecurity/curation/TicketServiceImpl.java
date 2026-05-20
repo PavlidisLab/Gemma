@@ -164,6 +164,15 @@ public class TicketServiceImpl extends AbstractService<Ticket> implements Ticket
         return ticketDao.findTicketsByCursor( openOnly, assigneeId, priority, cursor, limit );
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public CursorPage<Ticket> findOpenForTargetByCursor( TicketTargetType targetType, Long targetId,
+            @Nullable Cursor cursor, int limit ) {
+        Assert.notNull( targetType, "TargetType cannot be null." );
+        Assert.notNull( targetId, "TargetId cannot be null." );
+        return ticketDao.findOpenForTargetByCursor( targetType, targetId, cursor, limit );
+    }
+
     private static void bumpUpdated( Ticket t ) {
         t.setUpdatedAt( new Date() );
     }

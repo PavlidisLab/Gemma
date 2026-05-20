@@ -87,4 +87,8 @@ public interface TicketService extends BaseService<Ticket> {
     /** @see TicketDao#findTicketsByCursor */
     CursorPage<Ticket> findTicketsByCursor( boolean openOnly, @Nullable Long assigneeId,
             @Nullable TicketPriority priority, @Nullable Cursor cursor, int limit );
+
+    /** @see TicketDao#findOpenForTargetByCursor */
+    CursorPage<Ticket> findOpenForTargetByCursor( TicketTargetType targetType, Long targetId,
+            @Nullable Cursor cursor, int limit );
 }
