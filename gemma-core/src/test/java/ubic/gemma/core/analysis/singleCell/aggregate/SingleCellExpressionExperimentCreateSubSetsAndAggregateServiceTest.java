@@ -1,10 +1,10 @@
 package ubic.gemma.core.analysis.singleCell.aggregate;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.util.test.BaseIntegrationTest;
+import ubic.gemma.core.util.test.BaseIntegrationTest5;
 import ubic.gemma.core.util.test.PersistentDummyObjectHelper;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -15,7 +15,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class SingleCellExpressionExperimentCreateSubSetsAndAggregateServiceTest extends BaseIntegrationTest {
+public class SingleCellExpressionExperimentCreateSubSetsAndAggregateServiceTest extends BaseIntegrationTest5 {
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
@@ -31,12 +31,12 @@ public class SingleCellExpressionExperimentCreateSubSetsAndAggregateServiceTest 
 
     private ExpressionExperiment ee;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         ee = testHelper.getTestPersistentSingleCellExpressionExperiment();
     }
 
-    @After
+    @AfterEach
     public void cleanUp() {
         // FIXME: experiment with single-cell data cannot be deleted due to some constraint violation
         // if ( ee != null ) {

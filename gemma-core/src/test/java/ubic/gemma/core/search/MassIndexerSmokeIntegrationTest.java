@@ -19,12 +19,12 @@
 package ubic.gemma.core.search;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.After;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.search.indexer.IndexerService;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
@@ -83,9 +83,9 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * @author Phase 3 search restoration, Step 6
  */
-@Ignore("Step 6: destructive against gemma.search.dir + gemdtest; invoke manually for cutover validation. "
+@Disabled("Step 6: destructive against gemma.search.dir + gemdtest; invoke manually for cutover validation. "
         + "See class Javadoc and SEARCH_INDEX_OPERATIONS.md.")
-public class MassIndexerSmokeIntegrationTest extends BaseSpringContextTest {
+public class MassIndexerSmokeIntegrationTest extends BaseSpringContextTest5 {
 
     /**
      * Random alphanumeric token embedded in fixture names. Unique per test run so the
@@ -119,7 +119,7 @@ public class MassIndexerSmokeIntegrationTest extends BaseSpringContextTest {
     private ExpressionExperiment persistedEe;
     private Gene persistedGene;
 
-    @After
+    @AfterEach
     public void tearDown() {
         // Best-effort cleanup so re-runs don't accumulate fixtures. Failures here must not
         // mask the actual test result.

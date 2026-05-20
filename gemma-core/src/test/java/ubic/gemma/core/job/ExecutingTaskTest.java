@@ -16,19 +16,19 @@ package ubic.gemma.core.job;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.concurrent.DelegatingSecurityContextCallable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.core.util.concurrent.Executors;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -36,7 +36,7 @@ import static org.mockito.Mockito.verify;
 /**
  * @author anton
  */
-public class ExecutingTaskTest extends BaseSpringContextTest {
+public class ExecutingTaskTest extends BaseSpringContextTest5 {
 
     @Test
     public void testOrderOfExecutionFailure() {

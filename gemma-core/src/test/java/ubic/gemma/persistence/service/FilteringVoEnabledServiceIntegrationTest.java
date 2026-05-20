@@ -1,13 +1,12 @@
 package ubic.gemma.persistence.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.MessageSourceResolvable;
-import ubic.gemma.core.util.test.BaseIntegrationTest;
-import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.core.util.test.BaseIntegrationTest5;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.util.*;
 
@@ -25,8 +24,8 @@ import static org.assertj.core.api.Assertions.assertThatNoException;
  * @author poirigui
  */
 @Slf4j
-@Category(SlowTest.class)
-public class FilteringVoEnabledServiceIntegrationTest extends BaseIntegrationTest {
+@Tag("slow")
+public class FilteringVoEnabledServiceIntegrationTest extends BaseIntegrationTest5 {
 
     @Autowired
     private Map<String, FilteringVoEnabledService<?, ?>> filteringServices;

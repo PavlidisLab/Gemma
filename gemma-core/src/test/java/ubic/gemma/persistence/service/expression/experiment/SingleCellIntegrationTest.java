@@ -1,14 +1,14 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.singleCell.aggregate.SingleCellAggregationConfig;
 import ubic.gemma.core.analysis.singleCell.aggregate.SingleCellExperimentSubSetsCreationConfig;
 import ubic.gemma.core.analysis.singleCell.aggregate.SingleCellExpressionExperimentAggregateService;
 import ubic.gemma.core.analysis.singleCell.aggregate.SingleCellExpressionExperimentSubSetService;
-import ubic.gemma.core.util.test.BaseIntegrationTest;
+import ubic.gemma.core.util.test.BaseIntegrationTest5;
 import ubic.gemma.core.util.test.PersistentDummyObjectHelper;
 import ubic.gemma.model.common.description.Categories;
 import ubic.gemma.model.common.quantitationtype.*;
@@ -28,7 +28,7 @@ import java.util.Random;
 import static org.assertj.core.api.Assertions.assertThat;
 import static ubic.gemma.persistence.service.expression.bioAssayData.RandomSingleCellDataUtils.randomSingleCellVectors;
 
-public class SingleCellIntegrationTest extends BaseIntegrationTest {
+public class SingleCellIntegrationTest extends BaseIntegrationTest5 {
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
@@ -45,13 +45,13 @@ public class SingleCellIntegrationTest extends BaseIntegrationTest {
     private ArrayDesign ad;
     private ExpressionExperiment ee;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         ad = helper.getTestPersistentArrayDesign( 100, true, false );
         ee = helper.getTestPersistentBasicExpressionExperiment( ad );
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         // FIXME:
         // if ( ee != null ) {

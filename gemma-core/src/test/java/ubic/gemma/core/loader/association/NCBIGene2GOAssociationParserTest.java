@@ -18,25 +18,25 @@
  */
 package ubic.gemma.core.loader.association;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.core.io.ClassPathResource;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 
 import java.io.InputStream;
 import java.util.zip.GZIPInputStream;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests multiple both parsing and loading.
  *
  * @author keshav
  */
-public class NCBIGene2GOAssociationParserTest extends BaseSpringContextTest {
+public class NCBIGene2GOAssociationParserTest extends BaseSpringContextTest5 {
 
     private NCBIGene2GOAssociationLoader gene2GOAssLoader = null;
 
@@ -46,7 +46,7 @@ public class NCBIGene2GOAssociationParserTest extends BaseSpringContextTest {
     /*
      * Configure parser and loader. Injecting the parser and loader with their dependencies.
      */
-    @Before
+    @BeforeEach
     public void setup() {
         gene2GOAssociationService.removeAll();
         gene2GOAssLoader = new NCBIGene2GOAssociationLoader();
