@@ -1,9 +1,9 @@
 package ubic.gemma.apps;
 
 import ubic.gemma.core.security.authentication.ManualAuthenticationService;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,7 +14,7 @@ import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.core.util.GemmaRestApiClient;
-import ubic.gemma.cli.util.test.BaseCliTest;
+import ubic.gemma.cli.util.test.BaseCliTest5;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -31,7 +31,7 @@ import static ubic.gemma.cli.util.test.Assertions.assertThat;
 @ContextConfiguration
 @TestExecutionListeners(value = WithSecurityContextTestExecutionListener.class,
         mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
-public class ExternalDatabaseUpdaterCliTest extends BaseCliTest {
+public class ExternalDatabaseUpdaterCliTest extends BaseCliTest5 {
 
     @Configuration
     @TestComponent
@@ -79,13 +79,13 @@ public class ExternalDatabaseUpdaterCliTest extends BaseCliTest {
 
     private ExternalDatabase ed, ed2;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         ed = ExternalDatabase.Factory.newInstance( "test", DatabaseType.OTHER );
         ed2 = ExternalDatabase.Factory.newInstance( "test2", DatabaseType.OTHER );
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         externalDatabaseService.remove( ed );
     }
