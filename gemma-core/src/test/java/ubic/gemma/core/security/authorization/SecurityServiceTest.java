@@ -24,8 +24,8 @@ import org.springframework.security.acls.domain.GrantedAuthoritySid;
 import org.springframework.security.acls.domain.PrincipalSid;
 import ubic.gemma.core.security.authentication.UserDetailsImpl;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.acls.domain.BasePermission;
@@ -36,7 +36,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.core.security.authorization.acl.AclTestUtils;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -45,14 +45,14 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
 import java.util.*;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests the SecurityService: making objects public or private and testing the permissions.
  *
  * @author keshav
  */
-public class SecurityServiceTest extends BaseSpringContextTest {
+public class SecurityServiceTest extends BaseSpringContextTest5 {
 
     private static final String compositeSequenceName1 = "Design Element Bar1";
     private static final String compositeSequenceName2 = "Design Element Bar2";
@@ -69,7 +69,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
     @Autowired
     private AclTestUtils aclTestUtils;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         this.arrayDesignName = "AD_" + RandomStringUtils.insecure().nextAlphabetic( 5 );
 
@@ -215,23 +215,23 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         for ( int i = 0; i < 5; i++ ) {
             this.securityService.makePrivate( ee );
 
-            assertTrue( "ExpressionExperiment not private, acl was: " + aclTestUtils.getAcl( ee ),
-                    this.securityService.isPrivate( ee ) );
+            assertTrue( this.securityService.isPrivate( ee ),
+                    "ExpressionExperiment not private, acl was: " + aclTestUtils.getAcl( ee ) );
 
             for ( BioAssay ba : ee.getBioAssays() ) {
-                assertTrue(
+                assertTrue( this.securityService.isPrivate( ba ),
                         "BioAssay not private, acl of ee was: " + aclTestUtils.getAcl( ee ) + "\nacl of bioassay was: "
-                                + aclTestUtils.getAcl( ba ), this.securityService.isPrivate( ba ) );
+                                + aclTestUtils.getAcl( ba ) );
             }
 
             this.securityService.makePublic( ee );
 
-            assertTrue( "ExpressionExperiment still private, acl was: " + aclTestUtils.getAcl( ee ),
-                    this.securityService.isPublic( ee ) );
+            assertTrue( this.securityService.isPublic( ee ),
+                    "ExpressionExperiment still private, acl was: " + aclTestUtils.getAcl( ee ) );
 
             for ( BioAssay ba : ee.getBioAssays() ) {
-                assertTrue( "BioAssay not public, acl of ee was: " + aclTestUtils.getAcl( ee ),
-                        this.securityService.isPublic( ba ) );
+                assertTrue( this.securityService.isPublic( ba ),
+                        "BioAssay not public, acl of ee was: " + aclTestUtils.getAcl( ee ) );
             }
         }
     }
@@ -319,8 +319,8 @@ public class SecurityServiceTest extends BaseSpringContextTest {
             } else {
                 key = "G:" + ubic.gemma.core.security.acl.domain.Sids.grantedAuthority( sid );
             }
-            assertTrue( "Unexpected sid " + sid + " (key " + key + "), remaining expected: " + expectedNames,
-                    expectedNames.contains( key ) );
+            assertTrue( expectedNames.contains( key ),
+                    "Unexpected sid " + sid + " (key " + key + "), remaining expected: " + expectedNames );
             expectedNames.remove( key );
         }
         // clean up the groups
@@ -340,7 +340,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
 
         Sid owner = this.securityService.getOwner( ee );
         String ownerName = ubic.gemma.core.security.acl.domain.Sids.principalName( owner );
-        assertNotNull( "Owner sid was " + owner + " (not a principal sid)", ownerName );
+        assertNotNull( ownerName, "Owner sid was " + owner + " (not a principal sid)" );
         assertEquals( username, ownerName );
 
     }
