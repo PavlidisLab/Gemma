@@ -24,6 +24,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.expression.WebExpressionVoter;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
 import java.util.Arrays;
 import java.util.List;
@@ -151,13 +152,25 @@ public class RestSecurityConfig {
     @Bean
     public SecurityFilterChain restSecurityFilterChain(
             HttpSecurity http,
-            @Qualifier("restAuthEntryPoint") AuthenticationEntryPoint restAuthEntryPoint
+            @Qualifier("restAuthEntryPoint") AuthenticationEntryPoint restAuthEntryPoint,
+            TokenStore tokenStore
     ) throws Exception {
         return http
                 .securityMatcher( "/rest/v2/**" )
                 .authorizeHttpRequests( auth -> auth
+                        // /login is the credential-trade endpoint and must be reachable without
+                        // an existing credential. Everything else under /users/** still requires
+                        // GROUP_USER, satisfied by either a Bearer token (resolved by the filter
+                        // below) or an HTTP Basic header.
+                        .requestMatchers( "/rest/v2/login" ).permitAll()
                         .requestMatchers( "/rest/v2/users/**" ).hasAuthority( "GROUP_USER" )
                         .anyRequest().permitAll() )
+                // Bearer-token filter runs before the Basic-auth filter so a curator-UI request
+                // bearing Authorization: Bearer <opaque> short-circuits before Spring's BasicAuth
+                // tries to decode the same header. If the token is absent / unknown the filter is
+                // a no-op and BasicAuth gets its normal shot — preserves the legacy CLI flow.
+                // See AUTH_FOR_SPA_RECCE.md Option C.
+                .addFilterBefore( new BearerTokenAuthenticationFilter( tokenStore ), BasicAuthenticationFilter.class )
                 .httpBasic( basic -> basic
                         .realmName( "Gemma RESTful API" )
                         .authenticationEntryPoint( restAuthEntryPoint ) )

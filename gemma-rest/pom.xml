@@ -69,6 +69,17 @@
             <version>${spring.security.version}</version>
         </dependency>
 
+        <!-- Caffeine: bearer-token store backing the curation-UI SPA login flow
+             (see AUTH_FOR_SPA_RECCE.md Option C, ubic.gemma.rest.security.TokenStore).
+             3.2.2 is the version already converged across the reactor via yauaa; declared
+             explicitly here so the auth surface owns its dep rather than relying on a
+             user-agent parser to pull it in. -->
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+            <version>3.2.2</version>
+        </dependency>
+
         <!-- Jersey (latest for Spring 3) -->
         <dependency>
             <groupId>org.glassfish.jersey.core</groupId>
