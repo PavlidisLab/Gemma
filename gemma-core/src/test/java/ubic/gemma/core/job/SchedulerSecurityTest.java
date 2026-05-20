@@ -19,7 +19,7 @@
 package ubic.gemma.core.job;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -32,15 +32,16 @@ import org.springframework.stereotype.Component;
 import ubic.gemma.core.analysis.report.WhatsNewService;
 import ubic.gemma.core.scheduler.SecureMethodInvokingJobDetailFactoryBean;
 import ubic.gemma.core.scheduler.SecureQuartzJobBean;
-import ubic.gemma.core.util.test.BaseIntegrationTest;
+import ubic.gemma.core.util.test.BaseIntegrationTest5;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 
 import java.lang.reflect.InvocationTargetException;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 /**
@@ -48,7 +49,7 @@ import static org.mockito.Mockito.*;
  *
  * @author keshav
  */
-public class SchedulerSecurityTest extends BaseIntegrationTest {
+public class SchedulerSecurityTest extends BaseIntegrationTest5 {
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
@@ -108,7 +109,7 @@ public class SchedulerSecurityTest extends BaseIntegrationTest {
      * Confirm that we can't run methods that GROUP_AGENT doesn't have access to, namely deleting experiments.
      *
      */
-    @Test(expected = InvocationTargetException.class)
+    @Test
     public void runUnauthorizedMethodOnSchedule() throws Exception {
 
         String jobName = "testJobDetail";
@@ -123,7 +124,7 @@ public class SchedulerSecurityTest extends BaseIntegrationTest {
         jobDetail.setConcurrent( false );
         jobDetail.setBeanName( jobName );
         jobDetail.afterPropertiesSet(); // needed when we do this programatically.
-        jobDetail.invoke();
+        assertThrows( InvocationTargetException.class, jobDetail::invoke );
 
     }
 
