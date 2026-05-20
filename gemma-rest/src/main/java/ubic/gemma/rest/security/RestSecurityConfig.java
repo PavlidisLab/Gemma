@@ -25,6 +25,7 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.expression.WebExpressionVoter;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 
 import java.util.Arrays;
 import java.util.List;
@@ -149,6 +150,23 @@ public class RestSecurityConfig {
      * here will correctly grant access to any authority that the role hierarchy resolves
      * as &ge; {@code GROUP_USER}.
      */
+    /**
+     * Stub {@link HandlerMappingIntrospector} for the Jersey-only standalone WAR.
+     *
+     * <p>Spring Security's string-based {@code .securityMatcher(...)} / {@code .requestMatchers(...)}
+     * auto-pick {@code MvcRequestMatcher} when {@code spring-webmvc} is on the classpath
+     * (it is, transitively). {@code MvcRequestMatcher} then asks the context for a bean
+     * named {@code mvcHandlerMappingIntrospector}. In the gemma-web WAR that bean is
+     * registered by the {@code DispatcherServlet}; in the Jersey-only standalone WAR there
+     * is no DispatcherServlet so we must provide it ourselves. An empty introspector is
+     * sufficient: with no {@code HandlerMapping} beans to discover, the request matcher
+     * falls back to plain Ant-style path matching, which is what we want for {@code /rest/v2/**}.
+     */
+    @Bean(name = "mvcHandlerMappingIntrospector")
+    public HandlerMappingIntrospector mvcHandlerMappingIntrospector() {
+        return new HandlerMappingIntrospector();
+    }
+
     @Bean
     public SecurityFilterChain restSecurityFilterChain(
             HttpSecurity http,

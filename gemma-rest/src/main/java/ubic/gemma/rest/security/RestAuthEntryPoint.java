@@ -17,6 +17,7 @@ package ubic.gemma.rest.security;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.models.OpenAPI;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
@@ -58,7 +59,7 @@ public class RestAuthEntryPoint implements AuthenticationEntryPoint {
     private final Future<OpenAPI> openAPI;
     private final BuildInfo buildInfo;
 
-    public RestAuthEntryPoint( ObjectMapper objectMapper, Future<OpenAPI> openAPI, BuildInfo buildInfo ) {
+    public RestAuthEntryPoint( ObjectMapper objectMapper, @Qualifier("openApi") Future<OpenAPI> openAPI, BuildInfo buildInfo ) {
         this.objectMapper = objectMapper;
         this.openAPI = openAPI;
         this.buildInfo = buildInfo;
