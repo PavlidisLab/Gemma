@@ -18,7 +18,11 @@
  */
 package ubic.gemma.core.loader.expression.geo.service;
 
-import org.junit.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.matrix.DoubleMatrix;
@@ -30,13 +34,13 @@ import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.TwoChannelExpressionDataMatrixBuilder;
 import ubic.gemma.core.loader.entrez.EntrezUtils;
-import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
+import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest5;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.security.authorization.acl.AclTestUtils;
 import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.core.util.test.NetworkAvailable;
-import ubic.gemma.core.util.test.NetworkAvailableRule;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.core.util.test.category.GeoTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
@@ -65,8 +69,8 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Set;
 
-import static org.junit.Assert.*;
-import static org.junit.Assume.assumeNoException;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.abort;
 
 /**
  * Test full procedure of loading GEO data, focus on corner cases. Tests deletion of data sets as well.
@@ -75,10 +79,8 @@ import static org.junit.Assume.assumeNoException;
  */
 @Category({ GeoTest.class, SlowTest.class })
 @NetworkAvailable(url = EntrezUtils.ESEARCH)
-public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
-
-    @Rule
-    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
+@ExtendWith(NetworkAvailableExtension.class)
+public class GeoDatasetServiceTest extends AbstractGeoServiceTest5 {
 
     @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
@@ -106,7 +108,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
     private Collection<ExpressionExperiment> ees;
     private ExpressionExperiment ee;
 
-    @Before
+    @BeforeEach
     public void setUp() throws URISyntaxException {
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath() ) );
     }
@@ -117,12 +119,12 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
             ees = ( Collection<ExpressionExperiment> ) results;
         } catch ( AlreadyExistsInSystemException e ) {
             ees = ( Collection<ExpressionExperiment> ) e.getData();
-            assumeNoException( String.format( "%s is already loaded in the database.", geoAccession ), e );
+            abort( String.format( "%s is already loaded in the database.", geoAccession ) + ": " + e.getMessage() );
         }
         ee = ees.iterator().next();
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         if ( ees != null ) {
             eeService.remove( ees );
@@ -187,10 +189,11 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
      * Left out quantitation types due to bug in how quantitation types were cached during persisting, if the QTs didn't
      * have descriptions. Converted into a test of taxon filtering.
      */
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testFetchAndLoadGSE13657() {
-        setUpDatasetFromGeo( "GSE13657" );
-        fail( "Expected an exception for no supported taxa" );
+        assertThrows( IllegalStateException.class, () -> {
+            setUpDatasetFromGeo( "GSE13657" );
+            fail( "Expected an exception for no supported taxa" );
 
         // part of original test, for checking QT inclusion
         //        ee = this.eeService.thawLite( ee );
@@ -211,6 +214,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
         //
         //        }
 
+        } );
     }
 
     @Test
@@ -322,7 +326,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
     }
 
     @Test
-    @Ignore("This test fails randomly on the CI.")
+    @Disabled("This test fails randomly on the CI.")
     public void testFetchAndLoadMultiChipPerSeriesShort() throws Exception {
         geoService.setGeoDomainObjectGenerator(
                 new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath( "shortTest" ) ) );
@@ -470,7 +474,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
             fail( "didn't find values for " + sampleToTest );
 
         Double actualValue = matrix.get( soughtDesignElement, soughtBioAssay );
-        assertNotNull( "No value for " + soughtBioAssay, actualValue );
+        assertNotNull( actualValue, "No value for " + soughtBioAssay );
         assertEquals( expectedValue, actualValue, 0.00001 );
 
     }
