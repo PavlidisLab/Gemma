@@ -3,13 +3,12 @@ package ubic.gemma.rest.analytics.ga4;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.assertj.core.api.InstanceOfAssertFactories;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.web.client.RestClient;
 import ubic.gemma.core.util.concurrent.Executors;
-import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.rest.analytics.AnalyticsProvider;
 
 import java.nio.charset.StandardCharsets;
@@ -29,7 +28,7 @@ public class GoogleAnalytics4ProviderTest {
 
     private GoogleAnalytics4Provider provider;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         RestClient restClient = RestClient.builder()
                 .requestInterceptor( ( request, body, execution ) -> {
@@ -45,7 +44,7 @@ public class GoogleAnalytics4ProviderTest {
         provider.setPollingIntervalMillis( 1000 );
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         provider.destroy();
     }
@@ -59,7 +58,7 @@ public class GoogleAnalytics4ProviderTest {
     }
 
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
     public void test() throws Exception {
         ExecutorService executor = Executors.newFixedThreadPool( 16 );
         Collection<Future<?>> futures = new ArrayList<>();

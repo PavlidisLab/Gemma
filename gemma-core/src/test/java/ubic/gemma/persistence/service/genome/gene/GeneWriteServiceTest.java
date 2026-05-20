@@ -30,10 +30,10 @@ import ubic.gemma.model.genome.gene.GeneProduct;
 
 import java.util.HashSet;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Quirk-pinning tests for {@link GeneWriteService}. Each test pins one of the
@@ -121,9 +121,9 @@ public class GeneWriteServiceTest extends BaseSpringContextTest5 {
 
         Gene updated = geneWriteService.updateGene( persisted, newInfo );
 
-        assertEquals( "newNcbiGeneId should swap in", Integer.valueOf( newNcbiId ), updated.getNcbiGeneId() );
-        assertEquals( "previousNcbiGeneId should record the old id we had",
-                String.valueOf( oldNcbiId ), updated.getPreviousNcbiGeneId() );
+        assertEquals( Integer.valueOf( newNcbiId ), updated.getNcbiGeneId(), "newNcbiGeneId should swap in" );
+        assertEquals( String.valueOf( oldNcbiId ), updated.getPreviousNcbiGeneId(),
+                "previousNcbiGeneId should record the old id we had" );
         assertEquals( symbol + " merged", updated.getOfficialName() );
     }
 
@@ -168,8 +168,8 @@ public class GeneWriteServiceTest extends BaseSpringContextTest5 {
             geneWriteService.updateGene( persisted, newInfo );
             fail( "Expected IllegalStateException when previousNcbiGeneId does not list our existing id" );
         } catch ( IllegalStateException expected ) {
-            assertTrue( "exception message should mention previous NCBI id",
-                    expected.getMessage().contains( "previous NCBI id" ) );
+            assertTrue( expected.getMessage().contains( "previous NCBI id" ),
+                    "exception message should mention previous NCBI id" );
         }
     }
 
@@ -251,7 +251,7 @@ public class GeneWriteServiceTest extends BaseSpringContextTest5 {
 
         Gene persisted = ( Gene ) this.persisterHelper.persist( existing );
         assertNotNull( persisted.getId() );
-        assertEquals( "fixture should have exactly one product before update", 1, persisted.getProducts().size() );
+        assertEquals( 1, persisted.getProducts().size(), "fixture should have exactly one product before update" );
         assertEquals( oldGi, persisted.getProducts().iterator().next().getNcbiGi() );
 
         // Incoming "rotated GI" gene info: same name + same NCBI gene id, with one product
@@ -274,10 +274,10 @@ public class GeneWriteServiceTest extends BaseSpringContextTest5 {
         Gene updated = geneWriteService.updateGene( persisted, newInfo );
 
         assertNotNull( updated );
-        assertEquals( "GI rotation must not create or remove products", 1, updated.getProducts().size() );
+        assertEquals( 1, updated.getProducts().size(), "GI rotation must not create or remove products" );
         GeneProduct rotated = updated.getProducts().iterator().next();
-        assertEquals( "GP name must be unchanged", productName, rotated.getName() );
-        assertEquals( "GP NcbiGi must be rotated to the new value", newGi, rotated.getNcbiGi() );
+        assertEquals( productName, rotated.getName(), "GP name must be unchanged" );
+        assertEquals( newGi, rotated.getNcbiGi(), "GP NcbiGi must be rotated to the new value" );
         assertEquals( symbol + " rotated", updated.getOfficialName() );
     }
 
