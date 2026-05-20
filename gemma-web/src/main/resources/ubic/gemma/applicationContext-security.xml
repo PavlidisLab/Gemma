@@ -36,15 +36,16 @@
 		(picked up by gemma-rest's component-scan in ubic.gemma.rest). Removing the XML duplicate
 		here means the bean is producible in standalone gemma-rest mode without this file on the
 		classpath; the entry-point-ref="restAuthEntryPoint" references below still resolve.
-	-->
 
-	<s:http access-decision-manager-ref="httpAccessDecisionManager" pattern="/rest/v2/**"
-			entry-point-ref="restAuthEntryPoint" realm="Gemma RESTful API">
-		<s:anonymous granted-authority="IS_AUTHENTICATED_ANONYMOUSLY"/>
-		<s:http-basic entry-point-ref="restAuthEntryPoint"/>
-		<!-- accessing user details requires at the very least a user role -->
-		<s:intercept-url pattern="/rest/v2/users/**" access="GROUP_USER"/>
-	</s:http>
+		Phase 1 of GEMMA_REST_STANDALONE_RECCE.md, section 2.2: the duplicate
+		<s:http pattern="/rest/v2/**"> filter chain previously defined here was removed. The
+		equivalent Spring Security 6 chain now lives in
+		ubic.gemma.rest.security.RestSecurityConfig#restSecurityFilterChain (a @Bean producing
+		a SecurityFilterChain with .securityMatcher("/rest/v2/**")). Running both definitions
+		side-by-side was unsupported — Spring Security would register two chains for the same
+		pattern and resolution depended on registration order. The Java config is now the sole
+		producer; the catch-all <s:http pattern="/**"> UI chain below is unaffected.
+	-->
 
 	<!-- Notes. 1) The auto-config doesn't do much since we customize most things. 2) We provide a custom accessDecisionManager
 		so we can get the role hierarchy and GROUP_ prefix applied to http request. -->
