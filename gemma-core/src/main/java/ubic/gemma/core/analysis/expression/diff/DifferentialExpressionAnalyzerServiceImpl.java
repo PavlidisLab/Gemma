@@ -18,7 +18,6 @@
  */
 package ubic.gemma.core.analysis.expression.diff;
 
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -27,6 +26,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
+import ubic.gemma.core.security.audit.AuditedOnError;
 import ubic.gemma.core.util.math.distribution.Histogram;
 import ubic.gemma.core.util.FileTools;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
@@ -203,33 +203,30 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     }
 
     @Override
+    @AuditedOnError(FailedDifferentialExpressionAnalysisEvent.class)
     public Collection<DifferentialExpressionAnalysis> runDifferentialExpressionAnalyses(
             ExpressionExperiment expressionExperiment, DifferentialExpressionAnalysisConfig config ) {
-        try {
-            // This might be redundant in some cases.
-            boolean rnaSeq = this.expressionExperimentService.isRNASeq( expressionExperiment );
-            config.setUseWeights( rnaSeq );
+        // Failure audit event written by @AuditedOnError on this method (REQUIRES_NEW
+        // via the 4-arg Throwable overload of AuditTrailService.addUpdateEvent; the
+        // full stack trace lands in AUDIT_EVENT.DETAIL, and the exception's short
+        // message in AUDIT_EVENT.NOTE via the default messageSpel="#exception.message".
+        // Previously the stack trace was crammed into NOTE via the 3-arg form and
+        // truncated to MAX_NOTE_LENGTH; DETAIL is the correct column for it).
+        //
+        // This might be redundant in some cases.
+        boolean rnaSeq = this.expressionExperimentService.isRNASeq( expressionExperiment );
+        config.setUseWeights( rnaSeq );
 
-            Collection<DifferentialExpressionAnalysis> diffExpressionAnalyses = analysisSelectionAndExecutionService
-                    .analyze( expressionExperiment, config );
+        Collection<DifferentialExpressionAnalysis> diffExpressionAnalyses = analysisSelectionAndExecutionService
+                .analyze( expressionExperiment, config );
 
-            if ( config.isPersist() ) {
-                diffExpressionAnalyses = this.persistAnalyses( expressionExperiment, diffExpressionAnalyses, config );
-            } else {
-                DifferentialExpressionAnalyzerServiceImpl.log.info( "Will not persist results" );
-            }
-
-            return diffExpressionAnalyses;
-        } catch ( Exception e ) {
-            try {
-                auditTrailService.addUpdateEvent( expressionExperiment,
-                        FailedDifferentialExpressionAnalysisEvent.class,
-                        ExceptionUtils.getStackTrace( e ) );
-            } catch ( Exception e2 ) {
-                DifferentialExpressionAnalyzerServiceImpl.log.error( "Could not attach failure audit event", e2 );
-            }
-            throw e;
+        if ( config.isPersist() ) {
+            diffExpressionAnalyses = this.persistAnalyses( expressionExperiment, diffExpressionAnalyses, config );
+        } else {
+            DifferentialExpressionAnalyzerServiceImpl.log.info( "Will not persist results" );
         }
+
+        return diffExpressionAnalyses;
     }
 
     /**
