@@ -17,11 +17,9 @@ package ubic.gemma.core.loader.expression.arrayDesign;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignMergeEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.persistence.persister.ArrayDesignPersister;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
 import java.util.Collection;
@@ -37,7 +35,7 @@ public class ArrayDesignMergeHelperServiceImpl implements ArrayDesignMergeHelper
     @Autowired
     private ArrayDesignPersister arrayDesignPersister;
     @Autowired
-    private AuditTrailService auditTrailService;
+    private ArrayDesignMergeAuditService arrayDesignMergeAuditService;
 
     @Override
     @Transactional
@@ -47,7 +45,7 @@ public class ArrayDesignMergeHelperServiceImpl implements ArrayDesignMergeHelper
 
         for ( ArrayDesign otherArrayDesign : otherArrayDesigns ) {
             otherArrayDesign.setMergedInto( result );
-            this.audit( otherArrayDesign, "Merged into " + result );
+            arrayDesignMergeAuditService.recordMerge( otherArrayDesign, "Merged into " + result );
         }
 
         result.getMergees().addAll( otherArrayDesigns );
@@ -59,7 +57,7 @@ public class ArrayDesignMergeHelperServiceImpl implements ArrayDesignMergeHelper
             assert result.getId() != null;
             assert !result.getCompositeSequences().isEmpty();
 
-            this.audit( result, "More array design(s) added to merge" );
+            arrayDesignMergeAuditService.recordMerge( result, "More array design(s) added to merge" );
 
             arrayDesignService.update( result );
         } else {
@@ -69,22 +67,12 @@ public class ArrayDesignMergeHelperServiceImpl implements ArrayDesignMergeHelper
 
             result.getMergees().add( arrayDesign );
             arrayDesign.setMergedInto( result );
-            this.audit( arrayDesign, "Merged into " + result );
+            arrayDesignMergeAuditService.recordMerge( arrayDesign, "Merged into " + result );
 
             result = arrayDesignPersister.persistArrayDesign( result );
         }
 
         return result;
-    }
-
-    /**
-     * Add an ArrayDesignMergeEvent event to the audit trail. Does not persist it.
-     *
-     * @param arrayDesign array design
-     * @param note        note
-     */
-    private void audit( ArrayDesign arrayDesign, String note ) {
-        auditTrailService.addUpdateEvent( arrayDesign, ArrayDesignMergeEvent.class, note );
     }
 
 }
