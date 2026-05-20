@@ -3,8 +3,8 @@ package ubic.gemma.core.security.acl.afterinvocation;
 import ubic.gemma.core.security.acl.domain.AclObjectIdentity;
 import ubic.gemma.core.security.acl.domain.AclService;
 import ubic.gemma.core.security.model.Securable;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.security.access.ConfigAttribute;
 import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.security.acls.domain.ObjectIdentityRetrievalStrategyImpl;
@@ -21,8 +21,8 @@ import java.util.Collections;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.*;
@@ -34,7 +34,7 @@ public class AclEntryAfterInvocationCollectionFilteringProviderTest {
     private ConfigAttribute ca;
     private Authentication auth;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         aclService = mock( AclService.class );
         voter = new AclEntryAfterInvocationCollectionFilteringProvider( aclService, "ACL_SECURABLE_COLLECTION_READ", Collections.singletonList( BasePermission.READ ) );

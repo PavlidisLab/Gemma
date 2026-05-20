@@ -4,8 +4,8 @@ import ubic.gemma.core.security.acl.ObjectTransientnessRetrievalStrategyImpl;
 import ubic.gemma.core.security.acl.domain.AclService;
 import ubic.gemma.core.security.model.Securable;
 import org.assertj.core.api.Assertions;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.security.access.ConfigAttribute;
 import org.springframework.security.access.SecurityConfig;
 import org.springframework.security.acls.domain.BasePermission;
@@ -20,8 +20,8 @@ import javax.annotation.Nullable;
 import java.lang.reflect.Method;
 import java.util.Collections;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.Mockito.mock;
 
 public class AclEntryVoterTest {
@@ -53,7 +53,7 @@ public class AclEntryVoterTest {
         }
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
         aclService = mock( AclService.class );
         voter = new AclEntryVoter( aclService, "ACL_SECURABLE_READ", new Permission[] { BasePermission.READ } );

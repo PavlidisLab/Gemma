@@ -1,12 +1,11 @@
 package ubic.gemma.core.ontology.providers;
 
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.core.ontology.basecode.model.OntologyTerm;
 import ubic.gemma.core.ontology.basecode.providers.CellLineOntologyService;
 import ubic.gemma.core.ontology.basecode.search.OntologySearchException;
 import ubic.gemma.core.ontology.basecode.search.OntologySearchResult;
-import ubic.gemma.core.util.test.category.SlowTest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.util.Sets.set;
@@ -14,7 +13,7 @@ import static org.assertj.core.util.Sets.set;
 public class CellLineOntologyTest {
 
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
     public void test() throws OntologySearchException {
         CellLineOntologyService clo = new CellLineOntologyService();
         clo.setExcludedWordsFromStemming( set( "connectivity", "connective" ) );

@@ -3,7 +3,7 @@ package ubic.gemma.core.security.acl;
 import ubic.gemma.core.security.model.Securable;
 import ubic.gemma.core.security.model.SecureValueObject;
 import ubic.gemma.core.security.model.SecuredChild;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.security.acls.model.ObjectIdentityRetrievalStrategy;
 
 import static org.assertj.core.api.Assertions.assertThat;

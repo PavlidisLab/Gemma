@@ -1,19 +1,18 @@
 package ubic.gemma.core.ontology.providers;
 
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.core.ontology.basecode.search.OntologySearchException;
-import ubic.gemma.core.util.test.category.SlowTest;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Slf4j
 public class PatoOntologyServiceTest {
 
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
     public void test() throws OntologySearchException {
         PatoOntologyService pato = new PatoOntologyService();
         pato.initialize( true, true );

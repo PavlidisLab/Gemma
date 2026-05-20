@@ -1,6 +1,6 @@
 package ubic.gemma.core.loader.expression;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.util.ResourceUtils;
 import ubic.gemma.core.loader.expression.sequencing.SequencingMetadata;
 import ubic.gemma.core.loader.expression.sequencing.SequencingMetadataFileDataLoader;

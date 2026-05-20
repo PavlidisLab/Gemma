@@ -2,8 +2,8 @@ package ubic.gemma.core.security.acl.afterinvocation;
 
 import ubic.gemma.core.security.acl.domain.AclService;
 import ubic.gemma.core.security.model.Securable;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.SecurityConfig;
 import org.springframework.security.acls.domain.BasePermission;
@@ -18,7 +18,7 @@ import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -29,7 +29,7 @@ public class AclEntryAfterInvocationProviderTest {
     private AclEntryAfterInvocationProvider voter;
     private Authentication auth;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         aclService = mock( AclService.class );
         voter = new AclEntryAfterInvocationProvider( aclService, Collections.singletonList( BasePermission.READ ) );

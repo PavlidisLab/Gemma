@@ -38,14 +38,14 @@ package ubic.gemma.core.analysis.preprocess;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.gemma.core.analysis.preprocess.normalize.QuantileNormalizer;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author pavlidis
@@ -56,7 +56,7 @@ public class QuantileNormalizerTest {
     private DoubleMatrix<String, String> tester;
     private QuantileNormalizer<String, String> qn;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         DoubleMatrixReader reader = new DoubleMatrixReader();
         tester = reader.read( this.getClass().getResourceAsStream( "/data/testdata.txt" ) );
@@ -66,7 +66,7 @@ public class QuantileNormalizerTest {
         QuantileNormalizerTest.log.debug( "Setup done" );
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         tester = null;
     }

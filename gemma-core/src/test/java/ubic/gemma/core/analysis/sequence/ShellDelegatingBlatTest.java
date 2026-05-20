@@ -1,24 +1,23 @@
 package ubic.gemma.core.analysis.sequence;
 
-import org.junit.After;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import ubic.gemma.core.util.test.category.SlowTest;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
 import java.io.IOException;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static ubic.gemma.core.util.test.Assumptions.assumeThatExecutableExists;
 
 public class ShellDelegatingBlatTest {
 
     private ShellDelegatingBlat sdb;
 
-    @After
+    @AfterEach
     public void shutdownBlatServer() {
         if ( sdb != null ) {
             sdb.stopServer();
@@ -29,7 +28,7 @@ public class ShellDelegatingBlatTest {
     public void testClient() throws IOException {
         sdb = new ShellDelegatingBlat();
         assumeThatExecutableExists( sdb.getGfClientExe() );
-        assumeTrue( "The gfServer for human is not reachable.", sdb.isServerReachable( ShellDelegatingBlat.BlattableGenome.HUMAN, false ) );
+        assumeTrue( sdb.isServerReachable( ShellDelegatingBlat.BlattableGenome.HUMAN, false ), "The gfServer for human is not reachable." );
         Taxon taxon = Taxon.Factory.newInstance( "human" );
         BioSequence bs = BioSequence.Factory.newInstance( "bs1", taxon );
         bs.setSequence( "GTCCTCGGAACCAGGACCTCGGCGTGGCCTAGCG" );
@@ -37,8 +36,8 @@ public class ShellDelegatingBlatTest {
     }
 
     @Test
-    @Category(SlowTest.class)
-    @Ignore("This works, but it is way too slow.")
+    @Tag("slow")
+    @Disabled("This works, but it is way too slow.")
     public void testServer() throws IOException {
         sdb = new ShellDelegatingBlat();
         assumeThatExecutableExists( sdb.getGfClientExe() );
