@@ -58,6 +58,14 @@ public abstract class RelationshipPersister extends ArrayDesignPersister {
     @Autowired
     private ExpressionExperimentSetDao expressionExperimentSetDao;
 
+    /**
+     * Persister-shrink S2c lead-in: Relationship reaches GenomePersister via explicit
+     * autowire rather than inheritance, ahead of the S2d {@code extends
+     * ArrayDesignPersister} removal. Used by {@link #persistGene2GOAssociation}.
+     */
+    @Autowired
+    private GenomePersister genome;
+
     @Override
     @SuppressWarnings("unchecked")
     protected <T extends Identifiable> T doPersist( T entity, Map<String, ExternalDatabase> xdbCache ) {
@@ -98,7 +106,8 @@ public abstract class RelationshipPersister extends ArrayDesignPersister {
         // no shared cache to thread.
         Map<Object, Taxon> taxonCache = new HashMap<>();
         Map<Integer, Chromosome> chromosomeCache = new HashMap<>();
-        association.setGene( this.persistGene( association.getGene(), xdbCache, taxonCache, chromosomeCache ) );
+        // S2c lead-in: routed through @Autowired GenomePersister.
+        association.setGene( genome.persistGene( association.getGene(), xdbCache, taxonCache, chromosomeCache ) );
         Session session = getSessionFactory().getCurrentSession();
         Gene2GOAssociation existing = BusinessKey.find( session, association );
         return existing != null ? existing : gene2GoAssociationDao.create( association );

@@ -95,6 +95,15 @@ public class PersisterHelperImpl extends RelationshipPersister implements Persis
     private CommonPersister commonPersister;
 
     /**
+     * Persister-shrink S2c: PHI no longer inherits {@link GenomePersister}'s
+     * {@code persistTaxon} through the chain (AD detached from Genome). Autowire
+     * directly so the {@link #persistTaxon} forwarder keeps {@link EeWriteServiceImpl}
+     * compiling until S2f rewires the consumer.
+     */
+    @Autowired
+    private GenomePersister genomePersister;
+
+    /**
      * Returns the underlying {@link EeWriteServiceImpl}, unwrapping the Spring
      * AOP proxy if necessary. Needed to reach the package-private dispatch
      * helpers ({@code persistExpressionExperiment}, {@code persistBioAssay},
@@ -214,6 +223,15 @@ public class PersisterHelperImpl extends RelationshipPersister implements Persis
      */
     ExternalDatabase persistExternalDatabase( ExternalDatabase database, Map<String, ExternalDatabase> xdbCache ) {
         return commonPersister.persistExternalDatabase( database, xdbCache );
+    }
+
+    /**
+     * S2c forwarder: AD no longer extends GenomePersister so PHI no longer inherits
+     * {@code persistTaxon} through the chain. Routed directly to the autowired
+     * {@code genomePersister}.
+     */
+    Taxon persistTaxon( Taxon taxon, Map<Object, Taxon> taxonCache ) {
+        return genomePersister.persistTaxon( taxon, taxonCache );
     }
 
     @Override
