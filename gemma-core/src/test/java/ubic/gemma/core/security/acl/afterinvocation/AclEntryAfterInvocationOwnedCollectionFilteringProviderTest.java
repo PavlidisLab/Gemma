@@ -13,9 +13,9 @@ package ubic.gemma.core.security.acl.afterinvocation;
 
 import ubic.gemma.core.security.acl.InMemoryAclService;
 import ubic.gemma.core.security.model.Securable;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.security.access.ConfigAttribute;
 import org.springframework.security.access.SecurityConfig;
 import org.springframework.security.acls.domain.BasePermission;
@@ -51,7 +51,7 @@ public class AclEntryAfterInvocationOwnedCollectionFilteringProviderTest {
     private AclEntryAfterInvocationOwnedCollectionFilteringProvider provider;
     private Collection<ConfigAttribute> config;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         aclService = new InMemoryAclService();
         provider = new AclEntryAfterInvocationOwnedCollectionFilteringProvider(
@@ -64,7 +64,7 @@ public class AclEntryAfterInvocationOwnedCollectionFilteringProviderTest {
         config = Collections.singletonList( new SecurityConfig( CONFIG_ATTR ) );
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         SecurityContextHolder.clearContext();
     }

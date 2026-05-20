@@ -11,7 +11,7 @@
 package ubic.gemma.core.security.authorization.acl;
 
 import org.aopalliance.intercept.MethodInvocation;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.security.access.AccessDecisionVoter;
 import org.springframework.security.access.ConfigAttribute;
 import org.springframework.security.authorization.AuthorizationDecision;
@@ -20,11 +20,11 @@ import org.springframework.security.core.Authentication;
 import java.util.Collection;
 import java.util.function.Supplier;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.Mockito.mock;
@@ -63,7 +63,7 @@ public class AclVoterAuthorizationManagerTest {
 
         AuthorizationDecision decision = mgr.check( auth(), mock( MethodInvocation.class ) );
 
-        assertNotNull( "GRANTED must produce a non-null AuthorizationDecision", decision );
+        assertNotNull( decision, "GRANTED must produce a non-null AuthorizationDecision" );
         assertTrue( decision.isGranted() );
     }
 
@@ -75,7 +75,7 @@ public class AclVoterAuthorizationManagerTest {
 
         AuthorizationDecision decision = mgr.check( auth(), mock( MethodInvocation.class ) );
 
-        assertNotNull( "DENIED must produce a non-null AuthorizationDecision", decision );
+        assertNotNull( decision, "DENIED must produce a non-null AuthorizationDecision" );
         assertFalse( decision.isGranted() );
     }
 
@@ -87,7 +87,7 @@ public class AclVoterAuthorizationManagerTest {
 
         AuthorizationDecision decision = mgr.check( auth(), mock( MethodInvocation.class ) );
 
-        assertNull( "ABSTAIN must map to null per AuthorizationManager contract", decision );
+        assertNull( decision, "ABSTAIN must map to null per AuthorizationManager contract" );
     }
 
     @Test

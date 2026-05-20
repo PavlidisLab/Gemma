@@ -15,8 +15,8 @@
  */
 package ubic.gemma.core.security.authentication;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -29,10 +29,10 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import java.util.concurrent.atomic.AtomicReference;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Verifies {@link LegacyAwareDaoAuthenticationProvider} can authenticate legacy
@@ -46,7 +46,7 @@ public class LegacyAwareDaoAuthenticationProviderTest {
     private AtomicReference<String> upgradedHash;
     private UserDetails storedUser;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         encoder = new GemmaLegacyAwarePasswordEncoder();
         upgradedHash = new AtomicReference<>();
@@ -85,19 +85,19 @@ public class LegacyAwareDaoAuthenticationProviderTest {
 
         Authentication result = provider.authenticate( request );
 
-        assertNotNull( "auth must succeed against the legacy fixture hash", result );
+        assertNotNull( result, "auth must succeed against the legacy fixture hash" );
         assertTrue( result.isAuthenticated() );
         assertEquals( "administrator", result.getName() );
 
         // The framework must have invoked the password-upgrade hook with a bcrypt-prefixed
         // new hash — no ThreadLocal anywhere in this code path.
         String upgraded = upgradedHash.get();
-        assertNotNull( "UserDetailsPasswordService.updatePassword must be called for legacy logins",
-                upgraded );
-        assertTrue( "upgraded hash must be bcrypt-prefixed",
-                upgraded.startsWith( GemmaLegacyAwarePasswordEncoder.BCRYPT_PREFIX ) );
-        assertTrue( "upgraded hash must verify the same raw password",
-                encoder.matches( "administrator", upgraded ) );
+        assertNotNull( upgraded,
+                "UserDetailsPasswordService.updatePassword must be called for legacy logins" );
+        assertTrue( upgraded.startsWith( GemmaLegacyAwarePasswordEncoder.BCRYPT_PREFIX ),
+                "upgraded hash must be bcrypt-prefixed" );
+        assertTrue( encoder.matches( "administrator", upgraded ),
+                "upgraded hash must verify the same raw password" );
     }
 
     @Test
@@ -134,7 +134,7 @@ public class LegacyAwareDaoAuthenticationProviderTest {
         // (upgradedHash is shared between tests via setUp; here we just confirm no further
         // write happened on this path beyond what bcrypt stored.)
         // upgradeEncoding(bcrypt) returns false, so updatePassword should NOT fire.
-        assertEquals( "bcrypt logins must not trigger password upgrade",
-                null, upgradedHash.get() );
+        assertEquals( null, upgradedHash.get(),
+                "bcrypt logins must not trigger password upgrade" );
     }
 }
