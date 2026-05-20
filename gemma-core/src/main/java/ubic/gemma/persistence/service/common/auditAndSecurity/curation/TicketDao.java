@@ -65,6 +65,31 @@ public interface TicketDao extends BaseDao<Ticket> {
     long countTickets( boolean openOnly, @Nullable Long assigneeId, @Nullable TicketPriority priority );
 
     /**
+     * Keyset-pagination counterpart to {@link #findOpenForTarget(TicketTargetType, Long)}
+     * &mdash; cursor mode for {@code GET /datasets/{dataset}/tickets} and the
+     * {@code GET /platforms/{platform}/tickets} sibling (step 1p of
+     * {@code CURSOR_PAGINATION_STEP1_PLAN.md}).
+     * <p>
+     * Same scope as {@link #findOpenForTarget}: tickets in a non-terminal state
+     * ({@code OPEN}/{@code IN_PROGRESS}) whose {@link TicketTarget} matches
+     * {@code (targetType, targetId)}. Cursor mode forces a single-component
+     * ascending {@code t.id} sort; the {@code targetType}/{@code targetId}
+     * scope is preserved across pages. Fetches {@code limit+1} rows internally
+     * to detect {@code hasMore} without a separate {@code COUNT(*)};
+     * {@code totalElements} on the returned page is {@code null} by default.
+     *
+     * @param targetType the {@link TicketTargetType} (e.g. EXPRESSION_EXPERIMENT, ARRAY_DESIGN)
+     * @param targetId   the target entity id
+     * @param cursor     previous-response cursor token (nullable for the first page);
+     *                   must have {@code sortSpec == "+id"} and a single-component
+     *                   numeric {@code keyTuple} or the call throws
+     *                   {@link IllegalArgumentException}.
+     * @param limit      page size; must be {@code > 0}
+     */
+    CursorPage<Ticket> findOpenForTargetByCursor( TicketTargetType targetType, Long targetId,
+            @Nullable Cursor cursor, int limit );
+
+    /**
      * Keyset-pagination counterpart to {@link #findTickets(boolean, Long, TicketPriority, int, int)}
      * &mdash; cursor mode for {@code GET /tickets} (step 1o of
      * {@code CURSOR_PAGINATION_STEP1_PLAN.md}).
