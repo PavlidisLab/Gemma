@@ -15,10 +15,9 @@
 package ubic.gemma.persistence.service.expression.bioAssay;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -27,20 +26,17 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDao;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialDao;
-import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.util.Cursor;
 import ubic.gemma.persistence.util.CursorPage;
 
-import org.springframework.lang.Nullable;
-import java.util.*;
-import java.util.function.Function;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
-import static ubic.gemma.persistence.util.Thaws.thawBioAssay;
 
 /**
  * @author pavlidis
@@ -56,14 +52,14 @@ public class BioAssayServiceImpl extends AbstractFilteringVoEnabledService<BioAs
 
     private final BioMaterialDao bioMaterialDao;
 
-    private final ArrayDesignDao arrayDesignDao;
+    @Autowired
+    private BioAssayReadService readService;
 
     @Autowired
-    public BioAssayServiceImpl( BioAssayDao bioAssayDao, BioMaterialDao bioMaterialDao, ArrayDesignDao arrayDesignDao ) {
+    public BioAssayServiceImpl( BioAssayDao bioAssayDao, BioMaterialDao bioMaterialDao ) {
         super( bioAssayDao );
         this.bioAssayDao = bioAssayDao;
         this.bioMaterialDao = bioMaterialDao;
-        this.arrayDesignDao = arrayDesignDao;
     }
 
     @Override
@@ -75,50 +71,6 @@ public class BioAssayServiceImpl extends AbstractFilteringVoEnabledService<BioAs
     }
 
     /**
-     * @see BioAssayService#findBioAssayDimensions(BioAssay)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public java.util.Collection<BioAssayDimension> findBioAssayDimensions( final BioAssay bioAssay ) {
-        return this.handleFindBioAssayDimensions( bioAssay );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public BioAssay findByShortName( String shortName ) {
-        return bioAssayDao.findByShortName( shortName );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<BioAssay> findByAccession( String accession ) {
-        return this.bioAssayDao.findByAccession( accession );
-    }
-
-    @Autowired
-    private BioMaterialService bioMaterialService;
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<BioAssay> findSubBioAssays( BioAssay bioAssay, boolean direct ) {
-        Collection<BioMaterial> bms = bioMaterialService.findSubBioMaterials( bioAssay.getSampleUsed(), direct );
-        return bms.stream().map( BioMaterial::getBioAssaysUsedIn ).flatMap( Collection::stream ).collect( Collectors.toSet() );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<BioAssay> findSiblings( BioAssay bioAssay ) {
-        Collection<BioMaterial> bms = bioMaterialService.findSiblings( bioAssay.getSampleUsed() );
-        return bms.stream().map( BioMaterial::getBioAssaysUsedIn ).flatMap( Collection::stream ).collect( Collectors.toSet() );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<BioAssaySet> getBioAssaySets( BioAssay bioAssay ) {
-        return bioAssayDao.getBioAssaySets( bioAssay );
-    }
-
-    /**
      * @see BioAssayService#removeBioMaterialAssociation(BioAssay, ubic.gemma.model.expression.biomaterial.BioMaterial)
      */
     @Override
@@ -127,53 +79,75 @@ public class BioAssayServiceImpl extends AbstractFilteringVoEnabledService<BioAs
         this.handleRemoveBioMaterialAssociation( bioAssay, bioMaterial );
     }
 
+    // =====================================================================
+    // Read methods -- delegate to BioAssayReadService.
+    // ACL @Secured annotations live on the BioAssayService interface
+    // and apply at the facade proxy boundary.
+    // =====================================================================
+
+    /**
+     * @see BioAssayService#findBioAssayDimensions(BioAssay)
+     */
     @Override
-    @Transactional(readOnly = true)
+    public Collection<BioAssayDimension> findBioAssayDimensions( final BioAssay bioAssay ) {
+        return readService.findBioAssayDimensions( bioAssay );
+    }
+
+    @Override
+    public BioAssay findByShortName( String shortName ) {
+        return readService.findByShortName( shortName );
+    }
+
+    @Override
+    public Collection<BioAssay> findByAccession( String accession ) {
+        return readService.findByAccession( accession );
+    }
+
+    @Override
+    public Collection<BioAssay> findSubBioAssays( BioAssay bioAssay, boolean direct ) {
+        return readService.findSubBioAssays( bioAssay, direct );
+    }
+
+    @Override
+    public Collection<BioAssay> findSiblings( BioAssay bioAssay ) {
+        return readService.findSiblings( bioAssay );
+    }
+
+    @Override
+    public Collection<BioAssaySet> getBioAssaySets( BioAssay bioAssay ) {
+        return readService.getBioAssaySets( bioAssay );
+    }
+
+    @Override
     public BioAssay thaw( BioAssay ba ) {
-        ba = ensureInSession( ba );
-        thawBioAssay( ba );
-        return ba;
+        return readService.thaw( ba );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<BioAssay> thaw( Collection<BioAssay> bioAssays ) {
-        bioAssays = ensureInSession( bioAssays );
-        for ( BioAssay ba : bioAssays ) {
-            thawBioAssay( ba );
-        }
-        return bioAssays;
+        return readService.thaw( bioAssays );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<BioAssayValueObject> loadValueObjects( Collection<BioAssay> entities, @Nullable Map<BioAssay, BioAssay> assay2sourceAssayMap, boolean basic, boolean allFactorValues ) {
-        Map<Long, ArrayDesign> arrayDesigns = new HashMap<>();
-        for ( BioAssay ba : entities ) {
-            arrayDesigns.put( ba.getArrayDesignUsed().getId(), ba.getArrayDesignUsed() );
-            if ( ba.getOriginalPlatform() != null ) {
-                arrayDesigns.put( ba.getOriginalPlatform().getId(), ba.getOriginalPlatform() );
-            }
-        }
-        Map<ArrayDesign, ArrayDesignValueObject> ba2vo = arrayDesignDao.loadValueObjects( arrayDesigns.values() )
-                .stream()
-                .collect( Collectors.toMap( vo -> arrayDesigns.get( vo.getId() ), Function.identity() ) );
-        return bioAssayDao.loadValueObjects( entities, ba2vo, assay2sourceAssayMap, basic, allFactorValues );
+        return readService.loadValueObjects( entities, assay2sourceAssayMap, basic, allFactorValues );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public CursorPage<BioAssayValueObject> loadValueObjectsByCursorForExpressionExperiment(
             ExpressionExperiment ee, @Nullable Cursor cursor, int limit ) {
-        return bioAssayDao.loadValueObjectsByCursorForExpressionExperiment( ee, cursor, limit );
+        return readService.loadValueObjectsByCursorForExpressionExperiment( ee, cursor, limit );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public CursorPage<BioAssayValueObject> loadValueObjectsByCursorForSubSet(
             ExpressionExperimentSubSet subset, @Nullable Cursor cursor, int limit ) {
-        return bioAssayDao.loadValueObjectsByCursorForSubSet( subset, cursor, limit );
+        return readService.loadValueObjectsByCursorForSubSet( subset, cursor, limit );
     }
+
+    // =====================================================================
+    // Write helpers (stay on the facade).
+    // =====================================================================
 
     private void handleAddBioMaterialAssociation( BioAssay bioAssay, BioMaterial bioMaterial ) {
         // add bioMaterial to bioAssay
@@ -198,12 +172,6 @@ public class BioAssayServiceImpl extends AbstractFilteringVoEnabledService<BioAs
 
         this.update( bioAssay );
         this.bioMaterialDao.update( bioMaterial );
-    }
-
-    private Collection<BioAssayDimension> handleFindBioAssayDimensions( BioAssay bioAssay ) {
-        if ( bioAssay.getId() == null )
-            throw new IllegalArgumentException( "BioAssay must be persistent" );
-        return this.bioAssayDao.findBioAssayDimensions( bioAssay );
     }
 
     // TODO: Refactor so that it accepts ids and does security check later.
