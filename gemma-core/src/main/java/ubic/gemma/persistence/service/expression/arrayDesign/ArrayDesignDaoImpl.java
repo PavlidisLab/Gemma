@@ -860,11 +860,38 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         arrayDesign.getMergees().clear();
         arrayDesign.getSubsumedArrayDesigns().clear();
 
-        Iterator<CompositeSequence> iterator = arrayDesign.getCompositeSequences().iterator();
-        while ( iterator.hasNext() ) {
-            CompositeSequence cs = iterator.next();
-            iterator.remove();
-            this.getSessionFactory().getCurrentSession().delete( cs );
+        /*
+         * Hibernate 6 fix (HIBERNATE6_CASCADE_AUDIT.md MEDIUM #7).
+         *
+         * Old shape: Iterator<CompositeSequence>#remove() interleaved with
+         * session.delete(cs) per element, then super.remove(arrayDesign).
+         * The CompositeSequence set is mapped cascade="all" on ArrayDesign
+         * (not delete-orphan), so iterator.remove() alone does NOT delete
+         * the row; the explicit session.delete(cs) is what removes it.
+         * Under HB6 the mid-iteration mutation of the managed collection
+         * leaves cleared children in DELETING state inside the
+         * PersistenceContext; the subsequent session.remove(arrayDesign)
+         * cascade walk through compositeSequences then re-visits the same
+         * children and ACTION_CHECK_ON_FLUSH raises TransientObjectException
+         * (same family as the EE-DAO vector bug, c99be75b47, and the DEA
+         * resultSet bug, 10ffc16627).
+         *
+         * Safe pattern: snapshot the children, clear the collection in one
+         * shot, session.delete() each captured child, then session.evict()
+         * it so the dangling managed orphan is gone before super.remove
+         * cascades. By the time super.remove(arrayDesign) runs the parent's
+         * compositeSequences collection is empty and the PersistenceContext
+         * no longer holds the deleted children, so the cascade walk has
+         * nothing to re-visit. Pattern A + safe-clear from the audit doc.
+         */
+        Session session = this.getSessionFactory().getCurrentSession();
+        List<CompositeSequence> toDelete = new ArrayList<>( arrayDesign.getCompositeSequences() );
+        arrayDesign.getCompositeSequences().clear();
+        for ( CompositeSequence cs : toDelete ) {
+            session.delete( cs );
+            if ( session.contains( cs ) ) {
+                session.evict( cs );
+            }
         }
 
         super.remove( arrayDesign );
