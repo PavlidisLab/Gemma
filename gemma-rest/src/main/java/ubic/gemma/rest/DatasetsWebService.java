@@ -2823,18 +2823,31 @@ public class DatasetsWebService {
     @GET
     @Path("/expressions/genes/{gene}")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the expression levels of a gene among datasets matching the provided query and filter")
-    public PaginatedResponseDataObject<ExperimentExpressionLevelsValueObject> getDatasetsExpressionLevelsForGene(
+    @Operation(summary = "Retrieve the expression levels of a gene among datasets matching the provided query and filter",
+            description = "Supports two pagination modes. Legacy mode: pass `offset` (and `limit`); response includes `offset` and `totalElements`. "
+                    + "Cursor mode (recommended for deep pagination when many datasets carry the gene of interest): pass an opaque `cursor` token from a previous response's `nextCursor` / `prevCursor` field. "
+                    + "`offset` and `cursor` are mutually exclusive -- passing a non-null `cursor` selects cursor mode. "
+                    + "In cursor mode the dataset list is always sorted by ascending `datasetId` (the underlying dataset-id list is +id sorted, matching the existing groupBy=datasetId contract); "
+                    + "the user-supplied `?filter=` and optional `?query=` constraints are preserved (both modes intersect the search-resolved dataset ids identically); "
+                    + "`totalElements` is `null` by default (no count query per request).",
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(schema = @Schema(oneOf = {
+                                    PaginatedResponseDataObject.class,
+                                    CursorPaginatedResponseDataObject.class
+                            }))),
+            })
+    public Object getDatasetsExpressionLevelsForGene(
             @PathParam("gene") GeneArg<?> geneArg,
             @QueryParam("query") QueryArg queryArg,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg,
             @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
             @QueryParam("limit") @DefaultValue("20") LimitArg limitArg,
             @QueryParam("keepNonSpecific") @DefaultValue("false") Boolean keepNonSpecific, // Optional, default false
-            @QueryParam("consolidate") ExpLevelConsolidationArg consolidate // Optional, default everything is returned
-
+            @QueryParam("consolidate") ExpLevelConsolidationArg consolidate, // Optional, default everything is returned
+            @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg
     ) {
-        return getDatasetsExpressionLevelsForGeneInTaxonInternal( geneArgService.getEntity( geneArg ), queryArg, filterArg, offsetArg, limitArg, keepNonSpecific, consolidate );
+        return getDatasetsExpressionLevelsForGeneInTaxonInternal( geneArgService.getEntity( geneArg ), queryArg, filterArg, offsetArg, limitArg, keepNonSpecific, consolidate, cursorArg );
     }
 
     /**
@@ -2843,8 +2856,20 @@ public class DatasetsWebService {
     @GET
     @Path("/expressions/taxa/{taxon}/genes/{gene}")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the expression levels of a gene and taxa among datasets matching the provided query and filter")
-    public PaginatedResponseDataObject<ExperimentExpressionLevelsValueObject> getDatasetsExpressionLevelsForGeneInTaxon(
+    @Operation(summary = "Retrieve the expression levels of a gene and taxa among datasets matching the provided query and filter",
+            description = "Supports two pagination modes. Legacy mode: pass `offset` (and `limit`); response includes `offset` and `totalElements`. "
+                    + "Cursor mode (recommended for deep pagination): pass an opaque `cursor` token from a previous response's `nextCursor` / `prevCursor` field. "
+                    + "`offset` and `cursor` are mutually exclusive -- passing a non-null `cursor` selects cursor mode. "
+                    + "In cursor mode the dataset list is always sorted by ascending `datasetId`; the path-derived `{taxon}` scope is preserved at gene-resolution time identically to the offset variant; "
+                    + "`totalElements` is `null` by default (no count query per request).",
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(schema = @Schema(oneOf = {
+                                    PaginatedResponseDataObject.class,
+                                    CursorPaginatedResponseDataObject.class
+                            }))),
+            })
+    public Object getDatasetsExpressionLevelsForGeneInTaxon(
             @PathParam("taxon") TaxonArg<?> taxonArg,
             @PathParam("gene") GeneArg<?> geneArg,
             @QueryParam("query") QueryArg queryArg,
@@ -2852,13 +2877,13 @@ public class DatasetsWebService {
             @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
             @QueryParam("limit") @DefaultValue("20") LimitArg limitArg,
             @QueryParam("keepNonSpecific") @DefaultValue("false") Boolean keepNonSpecific, // Optional, default false
-            @QueryParam("consolidate") ExpLevelConsolidationArg consolidate // Optional, default everything is returned
-
+            @QueryParam("consolidate") ExpLevelConsolidationArg consolidate, // Optional, default everything is returned
+            @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg
     ) {
-        return getDatasetsExpressionLevelsForGeneInTaxonInternal( geneArgService.getEntityWithTaxon( geneArg, taxonArgService.getEntity( taxonArg ) ), queryArg, filterArg, offsetArg, limitArg, keepNonSpecific, consolidate );
+        return getDatasetsExpressionLevelsForGeneInTaxonInternal( geneArgService.getEntityWithTaxon( geneArg, taxonArgService.getEntity( taxonArg ) ), queryArg, filterArg, offsetArg, limitArg, keepNonSpecific, consolidate, cursorArg );
     }
 
-    private QueriedAndFilteredAndInferredAndPaginatedResponseDataObject<ExperimentExpressionLevelsValueObject> getDatasetsExpressionLevelsForGeneInTaxonInternal( Gene gene, @Nullable QueryArg queryArg, FilterArg<ExpressionExperiment> filterArg, OffsetArg offsetArg, LimitArg limitArg, boolean keepNonSpecific, @Nullable ExpLevelConsolidationArg consolidate ) {
+    private Object getDatasetsExpressionLevelsForGeneInTaxonInternal( Gene gene, @Nullable QueryArg queryArg, FilterArg<ExpressionExperiment> filterArg, OffsetArg offsetArg, LimitArg limitArg, boolean keepNonSpecific, @Nullable ExpLevelConsolidationArg consolidate, @Nullable CursorArg cursorArg ) {
         Collection<OntologyTerm> inferredTerms = new HashSet<>();
         Filters filter = datasetArgService.getFilters( filterArg, null, inferredTerms );
         Sort sort = datasetArgService.getSort( SortArg.valueOf( "+id" ) );
@@ -2866,6 +2891,20 @@ public class DatasetsWebService {
         LinkedHashSet<Throwable> warnings = new LinkedHashSet<>();
         if ( queryArg != null ) {
             datasetIds.retainAll( datasetArgService.getIdsForSearchQuery( queryArg, warnings ) );
+        }
+        if ( cursorArg != null ) {
+            // Mutual-exclusion: a non-null cursor selects cursor mode. The default offset=0 is
+            // not considered user-supplied (parallels step 1u /datasets/{dataset}/subSets/{subSet}/samples
+            // and earlier steps). In cursor mode the sortSpec is fixed at "+datasetId" -- the
+            // underlying datasetIds list is loaded +id sorted (loadIdsWithCache(filter, +id)) and
+            // the cursor pages over that in-memory list. The filter and (optional) search-query
+            // intersection are applied identically to the offset variant; only the slicing
+            // strategy changes. totalElements is omitted (cursor mode does not count per request).
+            CursorPage<ExperimentExpressionLevelsValueObject> page = sliceExpressionLevelsByCursor(
+                    datasetIds, gene, keepNonSpecific, consolidate, cursorArg.getValue(), limitArg.getValue() );
+            return new QueriedAndFilteredAndInferredAndCursorPaginatedResponseDataObject<>(
+                    page, queryArg != null ? queryArg.getValue() : null, filter, new String[] { "datasetId" }, inferredTerms )
+                    .addWarnings( warnings, "query", LocationType.QUERY );
         }
         int offset = offsetArg.getValue();
         int limit = limitArg.getValue();
@@ -2876,6 +2915,106 @@ public class DatasetsWebService {
                         consolidate == null ? null : consolidate.getValue() ), sort, offset, limit, ( long ) datasetIds.size() );
         return paginate( slice, queryArg != null ? queryArg.getValue() : null, filter, new String[] { "datasetId" }, inferredTerms )
                 .addWarnings( warnings, "query", LocationType.QUERY );
+    }
+
+    /**
+     * In-memory keyset-paginate the +id-sorted {@code datasetIds} list, then materialize the
+     * expression-level value objects for that window. Mirrors the offset variant's
+     * {@link #sliceIds(List, int, int)} + {@link ProcessedExpressionDataVectorService#getExpressionLevelsByIds(Collection, Collection, boolean, String)}
+     * pipeline but routes through cursor semantics (lastSeenId + direction) instead of (offset, limit).
+     * <p>
+     * The cursor sortSpec is "+datasetId" -- that's the field name exposed in the response
+     * payload's groupBy contract. The DAO-side ee.id-asc ordering produced by
+     * {@code loadIdsWithCache(filter, +id sort)} is the same canonical ordering this cursor
+     * pages over, so cursor and offset modes scan the same sequence.
+     */
+    private CursorPage<ExperimentExpressionLevelsValueObject> sliceExpressionLevelsByCursor(
+            List<Long> datasetIds, Gene gene, boolean keepNonSpecific,
+            @Nullable ExpLevelConsolidationArg consolidate, @Nullable Cursor cursor, int limit ) {
+        if ( limit <= 0 ) {
+            throw new MalformedArgException( "Cursor page limit must be > 0.", null );
+        }
+        final String expectedSortSpec = "+datasetId";
+        boolean backward = false;
+        Long lastSeenId = null;
+        if ( cursor != null ) {
+            if ( !expectedSortSpec.equals( cursor.getSortSpec() ) ) {
+                throw new MalformedArgException( "Cursor sort spec '" + cursor.getSortSpec()
+                        + "' does not match the requested sort '" + expectedSortSpec + "'.", null );
+            }
+            Object[] key = cursor.getKeyTuple();
+            if ( key.length != 1 ) {
+                throw new MalformedArgException( "Cursor key tuple must have exactly 1 component for sort '"
+                        + expectedSortSpec + "'; got " + key.length + ".", null );
+            }
+            try {
+                lastSeenId = ( ( Number ) key[0] ).longValue();
+            } catch ( ClassCastException e ) {
+                throw new MalformedArgException( "Cursor key component must be numeric for sort '"
+                        + expectedSortSpec + "'.", e );
+            }
+            backward = cursor.getDirection() == Cursor.Direction.BACKWARD;
+        }
+
+        // Walk the +id sorted in-memory list, applying the cursor's window predicate. Pull
+        // limit+1 ids to detect hasMore; reverse the slice when the request was BACKWARD so
+        // the returned page is always ascending datasetId in client-visible order.
+        List<Long> windowIds = new ArrayList<>( limit + 1 );
+        if ( backward ) {
+            // BACKWARD: take ids strictly less than lastSeenId, scanning from the tail.
+            // datasetIds is +id sorted; walk it in reverse to fill up to limit+1 ids whose
+            // value is less than the cursor key.
+            for ( int i = datasetIds.size() - 1; i >= 0 && windowIds.size() < limit + 1; i-- ) {
+                Long id = datasetIds.get( i );
+                if ( lastSeenId == null || id < lastSeenId ) {
+                    windowIds.add( id );
+                }
+            }
+            // Collected in descending id order; reverse for ascending client-visible output.
+            Collections.reverse( windowIds );
+        } else {
+            for ( int i = 0; i < datasetIds.size() && windowIds.size() < limit + 1; i++ ) {
+                Long id = datasetIds.get( i );
+                if ( lastSeenId == null || id > lastSeenId ) {
+                    windowIds.add( id );
+                }
+            }
+        }
+        boolean hasMore = windowIds.size() > limit;
+        if ( hasMore ) {
+            windowIds = backward
+                    // backward over-read sits at the FRONT (smaller ids); drop the head item.
+                    ? new ArrayList<>( windowIds.subList( 1, windowIds.size() ) )
+                    // forward over-read sits at the TAIL; drop the tail item.
+                    : new ArrayList<>( windowIds.subList( 0, limit ) );
+        }
+
+        List<ExperimentExpressionLevelsValueObject> data = windowIds.isEmpty()
+                ? Collections.emptyList()
+                : processedExpressionDataVectorService.getExpressionLevelsByIds( windowIds,
+                Collections.singleton( gene ), keepNonSpecific,
+                consolidate == null ? null : consolidate.getValue() );
+
+        String nextCursor = null;
+        String prevCursor = null;
+        if ( !windowIds.isEmpty() ) {
+            Long lastId = windowIds.get( windowIds.size() - 1 );
+            Long firstId = windowIds.get( 0 );
+            // forward: emit nextCursor only when there's another page in the forward direction
+            // backward: we know at least one page exists ahead (we just came from there), so
+            // always emit nextCursor when navigating backward.
+            if ( backward || hasMore ) {
+                nextCursor = new Cursor( expectedSortSpec, new Object[] { lastId }, Cursor.Direction.FORWARD ).encode();
+            }
+            // emit prevCursor whenever we have a cursor (at least one page is behind us) OR
+            // when the forward over-read indicated we already advanced past the first page.
+            if ( cursor != null ) {
+                prevCursor = new Cursor( expectedSortSpec, new Object[] { firstId }, Cursor.Direction.BACKWARD ).encode();
+            }
+        }
+
+        Sort idSort = Sort.by( null, "datasetId", Sort.Direction.ASC, Sort.NullMode.LAST, "datasetId" );
+        return new CursorPage<>( data, idSort, limit, nextCursor, prevCursor, null );
     }
 
     /**
@@ -3420,6 +3559,27 @@ public class DatasetsWebService {
         private final List<CharacteristicValueObject> inferredTerms;
 
         public QueriedAndFilteredAndInferredAndPaginatedResponseDataObject( Slice<T> payload, @Nullable String query, @Nullable Filters filters, String[] groupBy, Collection<OntologyTerm> inferredTerms ) {
+            super( payload, query, filters, groupBy );
+            this.inferredTerms = inferredTerms.stream()
+                    .map( t -> new CharacteristicValueObject( t.getLabel(), t.getUri() ) )
+                    .collect( Collectors.toList() );
+        }
+    }
+
+    /**
+     * Cursor-mode counterpart to {@link QueriedAndFilteredAndInferredAndPaginatedResponseDataObject}.
+     * Drops {@code offset}; adds {@code nextCursor} / {@code prevCursor}; keeps the echoed
+     * {@code query}, {@code filter} and {@code inferredTerms} fields. See {@code CURSOR_PAGINATION_STEP1_PLAN.md}
+     * step 1v (the /datasets/expressions/genes/{gene} pair). Mirrors the existing
+     * {@link FilteredAndInferredAndCursorPaginatedResponseDataObject} pattern from step 1t,
+     * adding the {@code query} field on top.
+     */
+    @Getter
+    public static class QueriedAndFilteredAndInferredAndCursorPaginatedResponseDataObject<T> extends QueriedAndFilteredAndCursorPaginatedResponseDataObject<T> {
+
+        private final List<CharacteristicValueObject> inferredTerms;
+
+        public QueriedAndFilteredAndInferredAndCursorPaginatedResponseDataObject( CursorPage<T> payload, @Nullable String query, @Nullable Filters filters, @Nullable String[] groupBy, Collection<OntologyTerm> inferredTerms ) {
             super( payload, query, filters, groupBy );
             this.inferredTerms = inferredTerms.stream()
                     .map( t -> new CharacteristicValueObject( t.getLabel(), t.getUri() ) )
