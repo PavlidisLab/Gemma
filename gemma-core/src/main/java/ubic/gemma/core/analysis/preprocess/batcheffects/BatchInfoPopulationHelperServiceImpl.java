@@ -21,7 +21,10 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.core.security.audit.Audited;
 import ubic.gemma.model.association.GOEvidenceCode;
+import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.SingleBatchDeterminationEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.SingletonBatchInvalidEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.UninformativeFASTQHeadersForBatchingEvent;
 import ubic.gemma.model.common.description.Categories;
@@ -137,6 +140,34 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
         bioMaterialService.associateBatchFactor( dates, d2fv );
 
         return ef;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p>The {@link Audited} annotation drives emission through the
+     * {@code AuditedAspect}; this method body is intentionally a logging-only
+     * marker so the proxy-intercepted return triggers exactly one
+     * {@link SingleBatchDeterminationEvent}.
+     */
+    @Override
+    @Transactional
+    @Audited(value = SingleBatchDeterminationEvent.class, messageSpel = "#note")
+    public void recordSingleBatchDetermination( ExpressionExperiment ee, String note ) {
+        log.info( "Single-batch determination for " + ee.getShortName() + ": " + note );
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Companion to {@link #recordSingleBatchDetermination(ExpressionExperiment, String)};
+     * see that method for the dispatch rationale.
+     */
+    @Override
+    @Transactional
+    @Audited(value = BatchInformationFetchingEvent.class, messageSpel = "#note")
+    public void recordBatchInformationFetched( ExpressionExperiment ee, String note ) {
+        log.info( "Batch information fetched for " + ee.getShortName() + ": " + note );
     }
 
     /**

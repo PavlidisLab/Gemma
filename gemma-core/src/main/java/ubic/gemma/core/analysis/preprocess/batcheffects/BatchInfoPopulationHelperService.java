@@ -28,7 +28,7 @@ public interface BatchInfoPopulationHelperService {
 
     /**
      * For RNA-seq, we based the batching on the available device/run/flowcell/lane information
-     * 
+     *
      * @param  ee      experiment
      * @param  headers map of biomaterial to a string. If there was no usable FASTQ header, we just use the GPL ID
      * @return         factor
@@ -36,5 +36,28 @@ public interface BatchInfoPopulationHelperService {
     ExperimentalFactor createRnaSeqBatchFactor( ExpressionExperiment ee, Map<BioMaterial, String> headers );
 
     ExperimentalFactor createBatchFactor( ExpressionExperiment ee, Map<BioMaterial, Date> dates );
+
+    /**
+     * Record a {@code SingleBatchDeterminationEvent} on {@code ee}. Exists so the
+     * branch in {@code BatchInfoPopulationServiceImpl} that chooses between a
+     * single-batch and a multi-batch event can dispatch through a Spring proxy
+     * carrying a single, deterministic {@link ubic.gemma.core.security.audit.Audited}
+     * annotation -- the {@code @Audited} aspect requires one event class per
+     * method, so the original multi-branch private method had to be split.
+     *
+     * @param ee   experiment
+     * @param note short summary stored in {@code AUDIT_EVENT.NOTE}
+     */
+    void recordSingleBatchDetermination( ExpressionExperiment ee, String note );
+
+    /**
+     * Record a {@code BatchInformationFetchingEvent} on {@code ee}. Companion to
+     * {@link #recordSingleBatchDetermination(ExpressionExperiment, String)} for the
+     * multi-batch branch; see that method's javadoc for rationale.
+     *
+     * @param ee   experiment
+     * @param note short summary stored in {@code AUDIT_EVENT.NOTE}
+     */
+    void recordBatchInformationFetched( ExpressionExperiment ee, String note );
 
 }
