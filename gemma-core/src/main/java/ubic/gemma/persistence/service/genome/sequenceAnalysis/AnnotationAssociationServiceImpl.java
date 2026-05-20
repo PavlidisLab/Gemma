@@ -16,24 +16,28 @@ import java.util.Collection;
 public class AnnotationAssociationServiceImpl extends AbstractService<AnnotationAssociation>
         implements AnnotationAssociationService {
 
-    private final AnnotationAssociationDao annotationAssociationDao;
+    @Autowired
+    private AnnotationAssociationReadService annotationAssociationReadService;
 
     @Autowired
     public AnnotationAssociationServiceImpl( AnnotationAssociationDao annotationAssociationDao ) {
         super( annotationAssociationDao );
-        this.annotationAssociationDao = annotationAssociationDao;
     }
 
+    // =====================================================================
+    // Read methods -- delegate to AnnotationAssociationReadService.
+    // ACL @Secured annotations live on the AnnotationAssociationService
+    // interface and apply at the facade proxy boundary.
+    // =====================================================================
+
     @Override
-    @Transactional(readOnly = true)
     public Collection<AnnotationAssociation> find( BioSequence bioSequence ) {
-        return this.annotationAssociationDao.find( bioSequence );
+        return annotationAssociationReadService.find( bioSequence );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<AnnotationAssociation> find( Gene gene ) {
-        return this.annotationAssociationDao.find( gene );
+        return annotationAssociationReadService.find( gene );
     }
 
     /**
