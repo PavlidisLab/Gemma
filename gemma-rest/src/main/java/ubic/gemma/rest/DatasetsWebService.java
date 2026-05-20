@@ -1315,13 +1315,32 @@ public class DatasetsWebService {
             @PathParam("dataset") DatasetArg<?> datasetArg
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
-        ExpressionExperimentDetailsValueObject details = expressionExperimentReportService.generateSummary( ee.getId() );
+        // Cache-aware lookup. generateSummary(id) is the heavyweight cache-miss path (single
+        // ~30-join SELECT + getStats fan-out, ~10s over a tunnel); retrieveSummaryObjects
+        // checks the EESTATS cache first and only falls back to generateSummary on miss.
+        ExpressionExperimentDetailsValueObject details = expressionExperimentReportService
+                .retrieveSummaryObjects( Collections.singleton( ee.getId() ) )
+                .stream().findFirst().orElse( null );
+
+        // Batch-fetch every audit-event type the pipeline-step loop + GEEQ block need in a
+        // single round-trip. Replaces ~13 individual getLastEvent(ee, type) calls — each of
+        // which is its own DB round-trip — with one getLastEvents call returning a nested map.
+        Set<Class<? extends AuditEventType>> auditTypes = new LinkedHashSet<>();
+        for ( PipelineStepDescriptor desc : PIPELINE_STEPS ) {
+            auditTypes.add( desc.successType );
+            if ( desc.failedType != null ) {
+                auditTypes.add( desc.failedType );
+            }
+        }
+        auditTypes.add( GeeqEvent.class );
+        Map<Class<? extends AuditEventType>, Map<ExpressionExperiment, AuditEvent>> auditEventsByType =
+                auditEventService.getLastEvents( Collections.singleton( ee ), auditTypes );
 
         boolean missingValueApplicable = hasTwoColorOrDualModePlatform( ee );
         List<PipelineStatusValueObject.PipelineStepValueObject> steps = new ArrayList<>( PIPELINE_STEPS.size() );
         for ( PipelineStepDescriptor desc : PIPELINE_STEPS ) {
             boolean applicable = !"missingValue".equals( desc.stepKey ) || missingValueApplicable;
-            steps.add( buildPipelineStep( ee, desc, applicable ) );
+            steps.add( buildPipelineStep( ee, desc, applicable, auditEventsByType ) );
         }
 
         PipelineStatusValueObject result = new PipelineStatusValueObject();
@@ -1340,7 +1359,7 @@ public class DatasetsWebService {
         result.setIsPublic( securityService.isPublic( ee ) );
         GeeqValueObject geeq = details != null ? details.getGeeq() : null;
         if ( geeq != null ) {
-            AuditEvent geeqEvent = auditEventService.getLastEvent( ee, GeeqEvent.class );
+            AuditEvent geeqEvent = lookupAuditEvent( auditEventsByType, GeeqEvent.class, ee );
             if ( geeqEvent != null ) {
                 geeq.setLastComputed( geeqEvent.getDate() );
             }
@@ -1351,9 +1370,11 @@ public class DatasetsWebService {
     }
 
     private PipelineStatusValueObject.PipelineStepValueObject buildPipelineStep( ExpressionExperiment ee,
-            PipelineStepDescriptor desc, boolean applicable ) {
-        AuditEvent successEvent = auditEventService.getLastEvent( ee, desc.successType );
-        AuditEvent failedEvent = desc.failedType != null ? auditEventService.getLastEvent( ee, desc.failedType ) : null;
+            PipelineStepDescriptor desc, boolean applicable,
+            Map<Class<? extends AuditEventType>, Map<ExpressionExperiment, AuditEvent>> auditEventsByType ) {
+        AuditEvent successEvent = lookupAuditEvent( auditEventsByType, desc.successType, ee );
+        AuditEvent failedEvent = desc.failedType != null
+                ? lookupAuditEvent( auditEventsByType, desc.failedType, ee ) : null;
         AuditEvent winner = pickLatestEvent( successEvent, failedEvent );
         if ( winner == null ) {
             return new PipelineStatusValueObject.PipelineStepValueObject( desc.stepKey,
@@ -1364,6 +1385,14 @@ public class DatasetsWebService {
         String state = eventTypeName != null && eventTypeName.startsWith( "Failed" ) ? "failed" : "ok";
         return new PipelineStatusValueObject.PipelineStepValueObject( desc.stepKey, state,
                 winner.getDate(), eventTypeName, winner.getNote() );
+    }
+
+    @Nullable
+    private static AuditEvent lookupAuditEvent(
+            Map<Class<? extends AuditEventType>, Map<ExpressionExperiment, AuditEvent>> eventsByType,
+            Class<? extends AuditEventType> type, ExpressionExperiment ee ) {
+        Map<ExpressionExperiment, AuditEvent> forType = eventsByType.get( type );
+        return forType != null ? forType.get( ee ) : null;
     }
 
     @Nullable
