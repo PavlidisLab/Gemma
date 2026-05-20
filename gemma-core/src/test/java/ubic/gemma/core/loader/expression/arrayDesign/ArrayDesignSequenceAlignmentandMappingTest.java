@@ -18,14 +18,14 @@
  */
 package ubic.gemma.core.loader.expression.arrayDesign;
 
-import org.junit.After;
-import org.junit.Rule;
-import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.sequence.Blat;
 import ubic.gemma.core.util.test.NetworkAvailable;
-import ubic.gemma.core.util.test.NetworkAvailableRule;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.core.util.test.category.GoldenPathTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -33,16 +33,16 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 
 import java.util.Collection;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author pavlidis
  */
 @Category(GoldenPathTest.class)
+@ExtendWith(NetworkAvailableExtension.class)
 public class ArrayDesignSequenceAlignmentandMappingTest extends AbstractArrayDesignProcessingTest {
-
-    @Rule
-    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
 
     @Autowired
     private ArrayDesignSequenceProcessingService app;
@@ -74,7 +74,7 @@ public class ArrayDesignSequenceAlignmentandMappingTest extends AbstractArrayDes
     }
 
     @Override
-    @After
+    @AfterEach
     public final void tearDown() {
         super.tearDown();
     }
