@@ -1,7 +1,7 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.security.authentication.UserManager;
-import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketState;
@@ -25,9 +25,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -41,7 +41,7 @@ import static org.mockito.Mockito.*;
  * to {@link TicketState#RESOLVED}.
  */
 @ContextConfiguration
-public class FactorValueNeedsAttentionServiceTest extends BaseTest {
+public class FactorValueNeedsAttentionServiceTest extends BaseTest5 {
 
     @Configuration
     @TestComponent
@@ -87,7 +87,7 @@ public class FactorValueNeedsAttentionServiceTest extends BaseTest {
 
     private final User actor = new User();
 
-    @After
+    @AfterEach
     public void tearDown() {
         reset( expressionExperimentService, ticketService, userManager );
     }
@@ -117,9 +117,9 @@ public class FactorValueNeedsAttentionServiceTest extends BaseTest {
         Set<TicketTargetType> types = targets.getValue().stream()
                 .map( TicketTarget::getTargetType )
                 .collect( Collectors.toSet() );
-        assertEquals( "ticket must target both FV and EE",
-                Set.of( TicketTargetType.FACTOR_VALUE, TicketTargetType.EXPRESSION_EXPERIMENT ),
-                types );
+        assertEquals( Set.of( TicketTargetType.FACTOR_VALUE, TicketTargetType.EXPRESSION_EXPERIMENT ),
+                types,
+                "ticket must target both FV and EE" );
 
         // FV target carries FV id, EE target carries EE id.
         for ( TicketTarget t : targets.getValue() ) {

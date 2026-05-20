@@ -11,13 +11,13 @@
  */
 package ubic.gemma.persistence.service.common.auditAndSecurity.curation;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketEvent;
@@ -32,11 +32,11 @@ import java.util.EnumMap;
 import java.util.Map;
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -49,7 +49,7 @@ import static org.mockito.Mockito.when;
  * tests; persistence is exercised in a follow-on DAO test once the schema
  * lands.
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class TicketServiceImplTest {
 
     @Mock
@@ -62,7 +62,7 @@ public class TicketServiceImplTest {
     private Contact assignee;
     private TicketTarget eeTarget;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         reporter = new Contact();
         reporter.setId( 11L );
@@ -184,7 +184,7 @@ public class TicketServiceImplTest {
         Ticket result = service.transition( t, TicketState.OPEN, reporter, null );
 
         assertSame( t, result );
-        assertEquals( "no-op transitions must not append events", eventsBefore, result.getEvents().size() );
+        assertEquals( eventsBefore, result.getEvents().size(), "no-op transitions must not append events" );
     }
 
     @Test
@@ -221,7 +221,7 @@ public class TicketServiceImplTest {
         assertEquals( to, result.getState() );
         assertEquals( eventsBefore + 1, result.getEvents().size() );
         TicketEvent latest = mostRecentEventOfType( result, expected );
-        assertNotNull( "Expected an event of type " + expected + " after " + from + "->" + to, latest );
+        assertNotNull( latest, "Expected an event of type " + expected + " after " + from + "->" + to );
         assertEquals( "because", latest.getPayload() );
     }
 

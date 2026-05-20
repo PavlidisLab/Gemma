@@ -18,8 +18,9 @@
  */
 package ubic.gemma.core.analysis.preprocess;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -41,7 +42,7 @@ import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperiment
 import ubic.gemma.core.loader.expression.simple.model.SimplePlatformMetadata;
 import ubic.gemma.core.loader.expression.simple.model.SimpleQuantitationTypeMetadata;
 import ubic.gemma.core.loader.expression.simple.model.SimpleTaxonMetadata;
-import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
@@ -61,7 +62,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -69,7 +70,7 @@ import static org.mockito.Mockito.when;
  * @author paul
  */
 @ContextConfiguration
-public class ExpressionDataSVDTest extends BaseTest {
+public class ExpressionDataSVDTest extends BaseTest5 {
 
     @Configuration
     @TestComponent
@@ -125,7 +126,7 @@ public class ExpressionDataSVDTest extends BaseTest {
     private ExpressionDataDoubleMatrix testData = null;
     private ExpressionDataSVD svd = null;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         SimpleExpressionExperimentMetadata metaData = new SimpleExpressionExperimentMetadata();
 
@@ -263,6 +264,7 @@ public class ExpressionDataSVDTest extends BaseTest {
      */
     @Test
     @Category(SlowTest.class)
+    @Tag("slow")
     public void testMatrixReconstructB() throws Exception {
         GeoConverter gc = new GeoConverterImpl();
         gc.setElementLimitForStrictness( 15000 );
