@@ -73,8 +73,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  *     -DfailIfNoTests=false
  * }</pre>
  *
- * <p>The {@code @Tag("integration")} inherited from {@link BaseSpringContextTest} →
- * {@link ubic.gemma.core.util.test.BaseIntegrationTest} ensures this class is routed to
+ * <p>The {@code @Tag("integration")} inherited from {@link ubic.gemma.core.util.test.BaseSpringContextTest5} →
+ * {@link ubic.gemma.core.util.test.BaseIntegrationTest5} ensures this class is routed to
  * Failsafe (i.e. {@code mvn verify}), not Surefire ({@code mvn test}), independent of
  * the {@code @Ignore}.
  *

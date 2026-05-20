@@ -6,7 +6,7 @@ import ubic.gemma.core.util.test.BaseTest;
 /**
  * Base class for CLI tests.
  * <p>
- * Use {@link BaseCliIntegrationTest} for integration tests.
+ * Use {@link BaseCliIntegrationTest5} for integration tests.
  */
 @ActiveProfiles("cli")
 public abstract class BaseCliTest extends BaseTest {
