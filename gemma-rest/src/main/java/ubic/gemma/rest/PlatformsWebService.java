@@ -154,16 +154,41 @@ public class PlatformsWebService {
     @GET
     @Path("/{platform}")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve all platforms matching a set of platform identifiers")
-    public FilteredAndPaginatedResponseDataObject<ArrayDesignValueObject> getPlatformsByIds( // Params:
+    @Operation(summary = "Retrieve all platforms matching a set of platform identifiers",
+            description = "Supports two pagination modes. Legacy mode: pass `offset` (and `limit`); response includes `offset` and `totalElements`. "
+                    + "Cursor mode (recommended for deep pagination and consistency under writes): pass an opaque `cursor` token from a previous response's `nextCursor` / `prevCursor` field. "
+                    + "`offset` and `cursor` are mutually exclusive — passing a non-null `cursor` selects cursor mode. "
+                    + "In cursor mode the result is always sorted by ascending `id` (the user `sort` arg is currently ignored, pending the indexed-column audit in phase B); "
+                    + "the path-derived platform-identifier predicate is preserved on top of the user-supplied `?filter=`; `totalElements` is `null` by default (no count query per request).",
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(schema = @Schema(oneOf = {
+                                    FilteredAndPaginatedResponseDataObject.class,
+                                    FilteredAndCursorPaginatedResponseDataObject.class
+                            }))),
+            })
+    public Object getPlatformsByIds( // Params:
             @PathParam("platform") PlatformArrayArg platformsArg, // Optional
             @QueryParam("filter") @DefaultValue("") FilterArg<ArrayDesign> filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
-            @QueryParam("sort") @DefaultValue("+id") SortArg<ArrayDesign> sort // Optional, default +id
+            @QueryParam("sort") @DefaultValue("+id") SortArg<ArrayDesign> sort, // Optional, default +id
+            @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg
     ) {
         Filters filters = arrayDesignArgService.getFilters( filter )
                 .and( arrayDesignArgService.getFilters( platformsArg ) );
+        if ( cursorArg != null ) {
+            // Mutual-exclusion: a non-null cursor selects cursor mode. The default offset=0 is
+            // not considered user-supplied (parallels GET /platforms step 1c). In cursor mode we
+            // currently force a +id sort (PlatformArgService.getPlatformsByCursor) — the DAO
+            // restricts cursors to single-component id sorts until the index audit lands.
+            // The path-derived id-set predicate is preserved by composing it into `filters`
+            // before the DAO call, so the cursor-mode result is restricted to the same set of
+            // platform identifiers that the offset-mode result would be.
+            CursorPage<ArrayDesignValueObject> page = arrayDesignArgService.getPlatformsByCursor(
+                    filters, cursorArg.getValue(), limit.getValue() );
+            return new FilteredAndCursorPaginatedResponseDataObject<>( page, filters, new String[] { "id" } );
+        }
         return paginate( arrayDesignService::loadValueObjects, filters, new String[] { "id" },
                 arrayDesignArgService.getSort( sort ), offset.getValue(), limit.getValue() );
     }
