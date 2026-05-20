@@ -19,23 +19,23 @@
 
 package ubic.gemma.persistence.service.expression.experiment;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * @author paul
  */
-public class FactorValueServiceIntegrationTest extends BaseSpringContextTest {
+public class FactorValueServiceIntegrationTest extends BaseSpringContextTest5 {
 
     @Autowired
     private FactorValueService factorValueService;
@@ -48,12 +48,12 @@ public class FactorValueServiceIntegrationTest extends BaseSpringContextTest {
 
     private ExpressionExperiment ee;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         ee = getTestPersistentCompleteExpressionExperiment( false );
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         expressionExperimentService.remove( ee );
     }

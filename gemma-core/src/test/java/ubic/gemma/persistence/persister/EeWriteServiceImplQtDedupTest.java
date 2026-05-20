@@ -18,11 +18,11 @@
  */
 package ubic.gemma.persistence.persister;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.aop.framework.AopProxyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -33,9 +33,9 @@ import ubic.gemma.persistence.service.expression.experiment.EeWriteService;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 /**
  * Pins the behaviourally load-bearing QuantitationType dedup semantic that was
@@ -52,7 +52,7 @@ import static org.junit.Assert.assertSame;
  *
  * @author Phase 3 (persister QT cache lift)
  */
-public class EeWriteServiceImplQtDedupTest extends BaseSpringContextTest {
+public class EeWriteServiceImplQtDedupTest extends BaseSpringContextTest5 {
 
     @Autowired
     private EeWriteService eeWriteService;
@@ -96,8 +96,8 @@ public class EeWriteServiceImplQtDedupTest extends BaseSpringContextTest {
 
         // Exactly one row was inserted into QUANTITATION_TYPE — not three.
         int after = countRowsInTable( "QUANTITATION_TYPE" );
-        assertEquals( "QT dedup failed: expected 1 new QT row, got " + ( after - before ),
-                1, after - before );
+        assertEquals( 1, after - before,
+                "QT dedup failed: expected 1 new QT row, got " + ( after - before ) );
     }
 
     /**
@@ -123,8 +123,8 @@ public class EeWriteServiceImplQtDedupTest extends BaseSpringContextTest {
         assertNotNull( pa.getId() );
         assertNotNull( pb.getId() );
         // Distinct (name, description) → distinct rows.
-        assertEquals( "QT dedup keyed wrong: distinct descriptions collapsed to one row",
-                2, countRowsInTable( "QUANTITATION_TYPE" ) - before );
+        assertEquals( 2, countRowsInTable( "QUANTITATION_TYPE" ) - before,
+                "QT dedup keyed wrong: distinct descriptions collapsed to one row" );
         // And the entities returned should not be the same instance.
         if ( pa.getId().equals( pb.getId() ) ) {
             throw new AssertionError( "Different (name, description) QTs collapsed to same row" );

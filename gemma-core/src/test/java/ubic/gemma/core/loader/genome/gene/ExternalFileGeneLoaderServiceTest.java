@@ -15,12 +15,12 @@
 
 package ubic.gemma.core.loader.genome.gene;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.FileTools;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.persistence.service.genome.gene.GeneProductService;
@@ -28,8 +28,8 @@ import ubic.gemma.persistence.service.genome.gene.GeneProductService;
 import java.io.IOException;
 import java.util.Collection;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Test that Gemma can load genes from an external gene file with format : #GeneSymbol GeneName Uniprot ZYX ZYXIN Q15942
@@ -37,7 +37,7 @@ import static org.junit.Assert.fail;
  *
  * @author ldonnison
  */
-public class ExternalFileGeneLoaderServiceTest extends BaseSpringContextTest {
+public class ExternalFileGeneLoaderServiceTest extends BaseSpringContextTest5 {
 
     private static final String TAXON_NAME = "human";
 
@@ -52,7 +52,7 @@ public class ExternalFileGeneLoaderServiceTest extends BaseSpringContextTest {
     @Autowired
     private GeneProductService geneProductService;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         geneFile = FileTools.resourceToPath( "/data/loader/genome/gene/externalGeneFileLoadTest.txt" );
         try {

@@ -1,8 +1,8 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
 import org.hibernate.SessionFactory;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,8 +11,7 @@ import ubic.gemma.core.analysis.singleCell.SingleCellSparsityMetrics;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.loader.util.mapper.MapBasedDesignElementMapper;
 import ubic.gemma.core.loader.util.mapper.SimpleBioAssayMapper;
-import ubic.gemma.core.util.test.BaseDatabaseTest;
-import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.core.util.test.BaseDatabaseTest5;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -39,7 +38,7 @@ import static ubic.gemma.core.loader.expression.singleCell.MexTestUtils.createLo
  * Load and persist single-cell data stored in the MEX format.
  */
 @ContextConfiguration
-public class MexSingleCellDataLoaderPersistenceTest extends BaseDatabaseTest {
+public class MexSingleCellDataLoaderPersistenceTest extends BaseDatabaseTest5 {
 
     @Configuration
     @TestComponent
@@ -84,7 +83,7 @@ public class MexSingleCellDataLoaderPersistenceTest extends BaseDatabaseTest {
     private SingleCellExpressionExperimentService singleCellExpressionExperimentService;
 
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
     public void test() throws IOException {
         MexSingleCellDataLoader loader = createLoaderForResourceDir( "/data/loader/expression/singleCell/GSE224438" );
         loader.setBioAssayToSampleNameMapper( new SimpleBioAssayMapper() );

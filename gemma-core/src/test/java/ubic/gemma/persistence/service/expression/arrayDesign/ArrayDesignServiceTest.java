@@ -21,10 +21,10 @@ package ubic.gemma.persistence.service.expression.arrayDesign;
 import ubic.gemma.core.security.SecurityService;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.hibernate.Hibernate;
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.util.test.BaseIntegrationTest;
+import ubic.gemma.core.util.test.BaseIntegrationTest5;
 import ubic.gemma.core.util.test.PersistentDummyObjectHelper;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -46,12 +46,12 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import static java.util.Objects.requireNonNull;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author pavlidis
  */
-public class ArrayDesignServiceTest extends BaseIntegrationTest {
+public class ArrayDesignServiceTest extends BaseIntegrationTest5 {
 
     private static final String DEFAULT_TAXON = "Mus musculus";
 
@@ -81,7 +81,7 @@ public class ArrayDesignServiceTest extends BaseIntegrationTest {
 
     private final Collection<ArrayDesign> adsToRemove = new HashSet<>();
 
-    @After
+    @AfterEach
     public void tearDown() {
         arrayDesignService.remove( adsToRemove );
         adsToRemove.clear();
@@ -229,9 +229,9 @@ public class ArrayDesignServiceTest extends BaseIntegrationTest {
         for ( Taxon taxon : taxa ) {
             list.add( taxon.getScientificName() );
         }
-        assertTrue( "Should have found " + taxonName2, list.contains( taxonName2 ) );
-        assertTrue( "Should have found " + ArrayDesignServiceTest.DEFAULT_TAXON,
-                list.contains( ArrayDesignServiceTest.DEFAULT_TAXON ) );
+        assertTrue( list.contains( taxonName2 ), "Should have found " + taxonName2 );
+        assertTrue( list.contains( ArrayDesignServiceTest.DEFAULT_TAXON ),
+                "Should have found " + ArrayDesignServiceTest.DEFAULT_TAXON );
     }
 
     /*
