@@ -22,8 +22,8 @@ import org.junit.jupiter.api.Test;
 import ubic.gemma.core.util.matrix.DoubleMatrix;
 import ubic.gemma.core.util.matrix.ObjectMatrix;
 import ubic.gemma.core.util.matrix.StringMatrix;
-import ubic.basecode.io.reader.DoubleMatrixReader;
-import ubic.basecode.io.reader.StringMatrixReader;
+import ubic.gemma.core.util.matrix.DoubleMatrixReader;
+import ubic.gemma.core.util.matrix.StringMatrixReader;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -39,11 +39,11 @@ public class ComBatTest {
     @Test
     public void test1() throws Exception {
         DoubleMatrixReader f = new DoubleMatrixReader();
-        DoubleMatrix<String, String> testMatrix = ubic.gemma.core.util.matrix.MatrixUtil.fromBaseCode( f.read( this.getClass()
-                .getResourceAsStream( "/data/analysis/preprocess/batcheffects/example.madata.small.txt" ) ) );
+        DoubleMatrix<String, String> testMatrix = f.read( this.getClass()
+                .getResourceAsStream( "/data/analysis/preprocess/batcheffects/example.madata.small.txt" ) );
         StringMatrixReader of = new StringMatrixReader();
-        StringMatrix<String, String> sampleInfo = ubic.gemma.core.util.matrix.MatrixUtil.fromBaseCode( of.read( this.getClass()
-                .getResourceAsStream( "/data/analysis/preprocess/batcheffects/example.metadata.small.txt" ) ) );
+        StringMatrix<String, String> sampleInfo = of.read( this.getClass()
+                .getResourceAsStream( "/data/analysis/preprocess/batcheffects/example.metadata.small.txt" ) );
         @SuppressWarnings({ "unchecked", "rawtypes" }) ComBat<String, String> comBat = new ComBat( testMatrix,
                 sampleInfo );
         DoubleMatrix2D X = comBat.getDesignMatrix();
@@ -67,11 +67,11 @@ public class ComBatTest {
     @Test
     public void test2WithMissingValues() throws Exception {
         DoubleMatrixReader f = new DoubleMatrixReader();
-        DoubleMatrix<String, String> testMatrix = ubic.gemma.core.util.matrix.MatrixUtil.fromBaseCode( f.read( this.getClass()
-                .getResourceAsStream( "/data/analysis/preprocess/batcheffects/example.madata.withmissing.small.txt" ) ) );
+        DoubleMatrix<String, String> testMatrix = f.read( this.getClass()
+                .getResourceAsStream( "/data/analysis/preprocess/batcheffects/example.madata.withmissing.small.txt" ) );
         StringMatrixReader of = new StringMatrixReader();
-        StringMatrix<String, String> sampleInfo = ubic.gemma.core.util.matrix.MatrixUtil.fromBaseCode( of.read( this.getClass()
-                .getResourceAsStream( "/data/analysis/preprocess/batcheffects/example.metadata.small.txt" ) ) );
+        StringMatrix<String, String> sampleInfo = of.read( this.getClass()
+                .getResourceAsStream( "/data/analysis/preprocess/batcheffects/example.metadata.small.txt" ) );
         @SuppressWarnings({ "unchecked", "rawtypes" }) ComBat<String, String> comBat = new ComBat( testMatrix,
                 sampleInfo );
         DoubleMatrix2D X = comBat.getDesignMatrix();
@@ -124,11 +124,11 @@ public class ComBatTest {
     @Test
     public final void test3() throws Exception {
         DoubleMatrixReader f = new DoubleMatrixReader();
-        DoubleMatrix<String, String> testMatrix = ubic.gemma.core.util.matrix.MatrixUtil.fromBaseCode( f.read( this.getClass()
-                .getResourceAsStream( "/data/analysis/preprocess/batcheffects/comat.test.data.txt" ) ) );
+        DoubleMatrix<String, String> testMatrix = f.read( this.getClass()
+                .getResourceAsStream( "/data/analysis/preprocess/batcheffects/comat.test.data.txt" ) );
         StringMatrixReader of = new StringMatrixReader();
-        StringMatrix<String, String> sampleInfo = ubic.gemma.core.util.matrix.MatrixUtil.fromBaseCode( of.read( this.getClass()
-                .getResourceAsStream( "/data/analysis/preprocess/batcheffects/combat.test.design.txt" ) ) );
+        StringMatrix<String, String> sampleInfo = of.read( this.getClass()
+                .getResourceAsStream( "/data/analysis/preprocess/batcheffects/combat.test.design.txt" ) );
         @SuppressWarnings({ "unchecked", "rawtypes" }) ComBat<String, String> comBat = new ComBat( testMatrix,
                 sampleInfo );
         DoubleMatrix2D result = comBat.run();
@@ -142,11 +142,11 @@ public class ComBatTest {
     @Test
     public void test3NoCovariate() throws Exception {
         DoubleMatrixReader f = new DoubleMatrixReader();
-        DoubleMatrix<String, String> testMatrix = ubic.gemma.core.util.matrix.MatrixUtil.fromBaseCode( f.read( this.getClass()
-                .getResourceAsStream( "/data/analysis/preprocess/batcheffects/example.madata.small.txt" ) ) );
+        DoubleMatrix<String, String> testMatrix = f.read( this.getClass()
+                .getResourceAsStream( "/data/analysis/preprocess/batcheffects/example.madata.small.txt" ) );
         StringMatrixReader of = new StringMatrixReader();
-        StringMatrix<String, String> sampleInfo = ubic.gemma.core.util.matrix.MatrixUtil.fromBaseCode( of.read( this.getClass()
-                .getResourceAsStream( "/data/analysis/preprocess/batcheffects/example.metadata.nocov.small.txt" ) ) );
+        StringMatrix<String, String> sampleInfo = of.read( this.getClass()
+                .getResourceAsStream( "/data/analysis/preprocess/batcheffects/example.metadata.nocov.small.txt" ) );
         @SuppressWarnings({ "unchecked", "rawtypes" }) ComBat<String, String> comBat = new ComBat( testMatrix,
                 sampleInfo );
         DoubleMatrix2D X = comBat.getDesignMatrix();
@@ -192,11 +192,11 @@ public class ComBatTest {
     @Test
     public void test4() throws Exception {
         DoubleMatrixReader f = new DoubleMatrixReader();
-        DoubleMatrix<String, String> testMatrix = ubic.gemma.core.util.matrix.MatrixUtil.fromBaseCode( f.read( this.getClass()
-                .getResourceAsStream( "/data/analysis/preprocess/batcheffects/GSE492.test.dat.txt" ) ) );
+        DoubleMatrix<String, String> testMatrix = f.read( this.getClass()
+                .getResourceAsStream( "/data/analysis/preprocess/batcheffects/GSE492.test.dat.txt" ) );
         StringMatrixReader of = new StringMatrixReader();
-        ObjectMatrix<String, String, String> sampleInfo = ubic.gemma.core.util.matrix.MatrixUtil.fromBaseCode( of.read( this.getClass()
-                .getResourceAsStream( "/data/analysis/preprocess/batcheffects/100_GSE492_expdesign.data.txt" ) ) );
+        ObjectMatrix<String, String, String> sampleInfo = of.read( this.getClass()
+                .getResourceAsStream( "/data/analysis/preprocess/batcheffects/100_GSE492_expdesign.data.txt" ) );
         @SuppressWarnings({ "unchecked", "rawtypes" }) ComBat<String, String> comBat = new ComBat( testMatrix,
                 sampleInfo );
 
@@ -225,11 +225,11 @@ public class ComBatTest {
     @Test
     public void test5NonParametric() throws Exception {
         DoubleMatrixReader f = new DoubleMatrixReader();
-        DoubleMatrix<String, String> testMatrix = ubic.gemma.core.util.matrix.MatrixUtil.fromBaseCode( f.read( this.getClass()
-                .getResourceAsStream( "/data/analysis/preprocess/batcheffects/GSE492.test.dat.txt" ) ) );
+        DoubleMatrix<String, String> testMatrix = f.read( this.getClass()
+                .getResourceAsStream( "/data/analysis/preprocess/batcheffects/GSE492.test.dat.txt" ) );
         StringMatrixReader of = new StringMatrixReader();
-        StringMatrix<String, String> sampleInfo = ubic.gemma.core.util.matrix.MatrixUtil.fromBaseCode( of.read( this.getClass()
-                .getResourceAsStream( "/data/analysis/preprocess/batcheffects/100_GSE492_expdesign.data.txt" ) ) );
+        StringMatrix<String, String> sampleInfo = of.read( this.getClass()
+                .getResourceAsStream( "/data/analysis/preprocess/batcheffects/100_GSE492_expdesign.data.txt" ) );
         @SuppressWarnings({ "unchecked", "rawtypes" }) ComBat<String, String> comBat = new ComBat( testMatrix,
                 sampleInfo );
         DoubleMatrix2D X = comBat.getDesignMatrix();

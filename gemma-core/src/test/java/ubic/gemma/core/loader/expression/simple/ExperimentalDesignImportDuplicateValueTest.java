@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.matrix.DoubleMatrix;
-import ubic.basecode.io.reader.DoubleMatrixReader;
+import ubic.gemma.core.util.matrix.DoubleMatrixReader;
 import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetadata;
 import ubic.gemma.core.loader.expression.simple.model.SimplePlatformMetadata;
 import ubic.gemma.core.loader.expression.simple.model.SimpleQuantitationTypeMetadata;
@@ -87,7 +87,7 @@ public class ExperimentalDesignImportDuplicateValueTest extends BaseSpringContex
         DoubleMatrix<String, String> matrix;
         try ( InputStream data = this.getClass()
                 .getResourceAsStream( "/data/loader/expression/expdesign.import.testfull.data.txt" ) ) {
-            matrix = ubic.gemma.core.util.matrix.MatrixUtil.fromBaseCode( new DoubleMatrixReader().read( data ) );
+            matrix = new DoubleMatrixReader().read( data );
         }
 
         ee = s.create( metaData, matrix );

@@ -25,7 +25,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.matrix.DoubleMatrix;
-import ubic.basecode.io.reader.DoubleMatrixReader;
+import ubic.gemma.core.util.matrix.DoubleMatrixReader;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.analysis.service.OutlierFlaggingService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
@@ -128,7 +128,7 @@ public class TwoChannelExpressionDataDoubleMatrixTest extends AbstractGeoService
 
         try ( InputStream data = this.getClass()
                 .getResourceAsStream( "/data/loader/aov.results-2-monocyte-data-bytime.bypat.data.sort" ) ) {
-            DoubleMatrix<String, String> matrix = ubic.gemma.core.util.matrix.MatrixUtil.fromBaseCode( new DoubleMatrixReader().read( data ) );
+            DoubleMatrix<String, String> matrix = new DoubleMatrixReader().read( data );
             ee = simpleExpressionDataLoaderService.convert( metaData, matrix );
         }
 

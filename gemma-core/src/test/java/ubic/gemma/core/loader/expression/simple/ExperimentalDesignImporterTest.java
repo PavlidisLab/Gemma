@@ -25,7 +25,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.matrix.DoubleMatrix;
-import ubic.basecode.io.reader.DoubleMatrixReader;
+import ubic.gemma.core.util.matrix.DoubleMatrixReader;
 import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetadata;
 import ubic.gemma.core.loader.expression.simple.model.SimplePlatformMetadata;
 import ubic.gemma.core.loader.expression.simple.model.SimpleQuantitationTypeMetadata;
@@ -113,7 +113,7 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
         DoubleMatrix<String, String> matrix;
         try ( InputStream data = this.getClass()
                 .getResourceAsStream( "/data/loader/expression/experimentalDesignTestData.txt" ) ) {
-            matrix = ubic.gemma.core.util.matrix.MatrixUtil.fromBaseCode( new DoubleMatrixReader().read( data ) );
+            matrix = new DoubleMatrixReader().read( data );
         }
         ee = simpleExpressionDataLoaderService.create( metaData, matrix );
         ee = this.eeService.thawLite( ee );

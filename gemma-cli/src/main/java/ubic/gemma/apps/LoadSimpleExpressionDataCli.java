@@ -29,7 +29,7 @@ import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.basecode.io.reader.DoubleMatrixReader;
+import ubic.gemma.core.util.matrix.DoubleMatrixReader;
 import ubic.gemma.cli.util.AbstractAuthenticatedCLI;
 import ubic.gemma.cli.util.EnumConverter;
 import ubic.gemma.core.loader.expression.simple.SimpleExpressionDataLoaderService;
@@ -208,7 +208,7 @@ public class LoadSimpleExpressionDataCli extends AbstractAuthenticatedCLI {
         if ( ( dataFile = getRecordField( record, "data_file" ) ) != null ) {
             this.configureQuantitationType( record, metaData );
             try ( InputStream data = openDataFile( shortName, dataFile ) ) {
-                eeLoaderService.create( metaData, ubic.gemma.core.util.matrix.MatrixUtil.fromBaseCode( new DoubleMatrixReader().read( data ) ) );
+                eeLoaderService.create( metaData, new DoubleMatrixReader().read( data ) );
             }
         } else {
             // only create with metadata

@@ -24,7 +24,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.matrix.DoubleMatrix;
-import ubic.basecode.io.reader.DoubleMatrixReader;
+import ubic.gemma.core.util.matrix.DoubleMatrixReader;
 import ubic.gemma.core.util.math.distribution.Histogram;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
@@ -212,7 +212,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
         assertTrue( Files.exists( outputLocation ) );
 
-        DoubleMatrix<String, String> readIn = ubic.gemma.core.util.matrix.MatrixUtil.fromBaseCode( r.read( outputLocation.toAbsolutePath().toString() ) );
+        DoubleMatrix<String, String> readIn = r.read( outputLocation.toAbsolutePath().toString() );
 
         assertTrue( readIn.rows() > 0 );
         assertEquals( 9, readIn.columns() );

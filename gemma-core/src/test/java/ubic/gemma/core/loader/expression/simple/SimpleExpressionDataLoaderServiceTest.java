@@ -24,7 +24,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.matrix.DoubleMatrix;
-import ubic.basecode.io.reader.DoubleMatrixReader;
+import ubic.gemma.core.util.matrix.DoubleMatrixReader;
 import ubic.gemma.core.loader.expression.simple.model.*;
 import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.common.description.ExternalDatabases;
@@ -90,7 +90,7 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
 
         DoubleMatrix<String, String> matrix;
         try ( InputStream data = this.getClass().getResourceAsStream( "/data/testdata.txt" ) ) {
-            matrix = ubic.gemma.core.util.matrix.MatrixUtil.fromBaseCode( new DoubleMatrixReader().read( data ) );
+            matrix = new DoubleMatrixReader().read( data );
         }
         ee = service.create( metaData, matrix );
         ee = eeService.thaw( ee );
@@ -127,7 +127,7 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
         DoubleMatrix<String, String> matrix;
         try ( InputStream data = this.getClass()
                 .getResourceAsStream( "/data/loader/aov.results-2-monocyte-data-bytime.bypat.data.sort" ) ) {
-            matrix = ubic.gemma.core.util.matrix.MatrixUtil.fromBaseCode( new DoubleMatrixReader().read( data ) );
+            matrix = new DoubleMatrixReader().read( data );
         }
 
         ee = service.create( metaData, matrix );
@@ -167,7 +167,7 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
         assertThatThrownBy( () -> {
             DoubleMatrix<String, String> matrix;
             try ( InputStream data = this.getClass().getResourceAsStream( "/data/testdata.duprow.txt" ) ) {
-                matrix = ubic.gemma.core.util.matrix.MatrixUtil.fromBaseCode( new DoubleMatrixReader().read( data ) );
+                matrix = new DoubleMatrixReader().read( data );
             }
             service.create( metaData, matrix );
         } )

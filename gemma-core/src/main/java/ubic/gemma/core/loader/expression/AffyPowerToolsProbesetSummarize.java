@@ -25,7 +25,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import ubic.gemma.core.util.matrix.DoubleMatrix;
-import ubic.basecode.io.reader.DoubleMatrixReader;
+import ubic.gemma.core.util.matrix.DoubleMatrixReader;
 import ubic.gemma.core.util.ConfigUtils;
 import ubic.gemma.core.util.FileTools;
 import ubic.gemma.core.config.Settings;
@@ -567,7 +567,7 @@ public class AffyPowerToolsProbesetSummarize {
 
     private DoubleMatrix<String, String> parse( InputStream data ) throws IOException {
         DoubleMatrixReader reader = new DoubleMatrixReader();
-        return ubic.gemma.core.util.matrix.MatrixUtil.fromBaseCode( reader.read( data ) );
+        return reader.read( data );
     }
 
     /**

@@ -28,7 +28,7 @@ import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import ubic.gemma.core.util.matrix.DoubleMatrix;
-import ubic.basecode.io.reader.DoubleMatrixReader;
+import ubic.gemma.core.util.matrix.DoubleMatrixReader;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.loader.entrez.EntrezUtils;
@@ -149,7 +149,7 @@ public class DiffExTest extends AbstractGeoServiceTest {
         ArrayDesign targetArrayDesign;
         try ( InputStream countData = this.getClass()
                 .getResourceAsStream( "/data/loader/expression/flatfileload/GSE29006_expression_count.test.txt" ) ) {
-            DoubleMatrix<String, String> countMatrix = ubic.gemma.core.util.matrix.MatrixUtil.fromBaseCode( reader.read( countData ) );
+            DoubleMatrix<String, String> countMatrix = reader.read( countData );
 
             Collection<ExperimentalFactor> experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();
             assertEquals( 1, experimentalFactors.size() );
