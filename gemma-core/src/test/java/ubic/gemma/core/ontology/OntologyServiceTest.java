@@ -1,7 +1,7 @@
 package ubic.gemma.core.ontology;
 
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -23,7 +23,7 @@ import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchService;
-import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -39,11 +39,11 @@ import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ContextConfiguration
-public class OntologyServiceTest extends BaseTest {
+public class OntologyServiceTest extends BaseTest5 {
 
     @Configuration
     @TestComponent
@@ -132,7 +132,7 @@ public class OntologyServiceTest extends BaseTest {
     @Autowired
     private CharacteristicService characteristicService;
 
-    @After
+    @AfterEach
     public void tearDown() {
         reset( chebiOntologyService, obiService, searchService );
     }

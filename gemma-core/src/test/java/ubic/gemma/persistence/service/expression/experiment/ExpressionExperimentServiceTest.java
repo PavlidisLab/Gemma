@@ -1,8 +1,8 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import ubic.gemma.core.security.SecurityService;
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,7 +13,7 @@ import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.SearchService;
-import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponentAnalysisService;
@@ -42,7 +42,7 @@ import static org.mockito.Mockito.*;
  * @author poirigui
  */
 @ContextConfiguration
-public class ExpressionExperimentServiceTest extends BaseTest {
+public class ExpressionExperimentServiceTest extends BaseTest5 {
 
     @Configuration
     @TestComponent
@@ -199,7 +199,7 @@ public class ExpressionExperimentServiceTest extends BaseTest {
     @Autowired
     private SecurityService securityService;
 
-    @After
+    @AfterEach
     public void tearDown() {
         reset( ontologyService, securityService, expressionExperimentReadService );
     }
