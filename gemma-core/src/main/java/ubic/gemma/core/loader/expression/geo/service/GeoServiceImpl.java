@@ -48,7 +48,8 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.persister.ArrayDesignsForExperimentCache;
-import ubic.gemma.persistence.persister.PersisterHelper;
+import ubic.gemma.persistence.persister.ArrayDesignPersister;
+import ubic.gemma.persistence.persister.GenomePersister;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
@@ -75,7 +76,9 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
 
     static final Log log = LogFactory.getLog( GeoServiceImpl.class );
     @Autowired
-    private PersisterHelper persisterHelper;
+    private GenomePersister genomePersister;
+    @Autowired
+    private ArrayDesignPersister arrayDesignPersister;
     @Autowired
     private EeWriteService eeWriteService;
     @Autowired
@@ -144,7 +147,7 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
         for ( CompositeSequence cs : els ) {
             cs.setArrayDesign( targetPlatform );
             cs.setBiologicalCharacteristic(
-                    ( BioSequence ) persisterHelper.persist( cs.getBiologicalCharacteristic() ) );
+                    genomePersister.persistBioSequence( cs.getBiologicalCharacteristic() ) );
         }
 
         GeoServiceImpl.log.info( "Adding " + els.size() + " elements to " + targetPlatform );
@@ -211,7 +214,13 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
             }
 
             Collection<ArrayDesign> arrayDesigns = geoConverter.convert( platforms, ArrayDesign.class );
-            return persisterHelper.persist( arrayDesigns );
+            // Persister-shrink S3: was persisterHelper.persist(arrayDesigns) into the
+            // polymorphic ArrayDesign dispatch arm; now drive the typed bean directly.
+            Collection<ArrayDesign> persistedAds = new ArrayList<>( arrayDesigns.size() );
+            for ( ArrayDesign ad : arrayDesigns ) {
+                persistedAds.add( arrayDesignPersister.persistArrayDesign( ad ) );
+            }
+            return persistedAds;
         }
 
         Collection<? extends GeoData> parseResult = geoDomainObjectGenerator.generate( geoAccession );
