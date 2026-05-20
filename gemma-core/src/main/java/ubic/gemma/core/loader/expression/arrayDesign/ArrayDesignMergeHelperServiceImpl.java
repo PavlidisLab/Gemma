@@ -20,7 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignMergeEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.persistence.persister.Persister;
+import ubic.gemma.persistence.persister.ArrayDesignPersister;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
@@ -35,7 +35,7 @@ public class ArrayDesignMergeHelperServiceImpl implements ArrayDesignMergeHelper
     @Autowired
     private ArrayDesignService arrayDesignService;
     @Autowired
-    private Persister arrayDesignPersiter;
+    private ArrayDesignPersister arrayDesignPersister;
     @Autowired
     private AuditTrailService auditTrailService;
 
@@ -71,7 +71,7 @@ public class ArrayDesignMergeHelperServiceImpl implements ArrayDesignMergeHelper
             arrayDesign.setMergedInto( result );
             this.audit( arrayDesign, "Merged into " + result );
 
-            result = ( ArrayDesign ) arrayDesignPersiter.persist( result );
+            result = arrayDesignPersister.persistArrayDesign( result );
         }
 
         return result;
