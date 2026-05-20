@@ -25,11 +25,13 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
+import ubic.gemma.core.security.audit.AuditedConditional;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
@@ -379,7 +381,11 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
     @Override
     @Transactional
-    public void recalculateExperimentBatchEffect( ExpressionExperiment ee ) {
+    @AuditedConditional( value = BatchProblemsUpdateEvent.class,
+            when = "#result != null",
+            messageSpel = "'" + ExpressionExperimentReportServiceImpl.NOTE_UPDATED_EFFECT + ": ' + #result" )
+    @Nullable
+    public String recalculateExperimentBatchEffect( ExpressionExperiment ee ) {
         BatchEffectDetails details = expressionExperimentBatchInformationService.getBatchEffectDetails( ee );
         BatchEffectType effect = getBatchEffectType( details );
         String effectStatistics = getBatchEffectStatistics( details );
@@ -389,27 +395,40 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         if ( !Objects.equals( effect, ee.getBatchEffect() ) || !Objects.equals( effectStatistics, ee.getBatchEffectStatistics() ) ) {
             ee.setBatchEffect( effect );
             ee.setBatchEffectStatistics( effectStatistics );
-            auditTrailService.addUpdateEvent( ee, BatchProblemsUpdateEvent.class,
-                    ExpressionExperimentReportServiceImpl.NOTE_UPDATED_EFFECT, effectSummary );
             log.info( "New batch effect for " + ee + ": " + effectSummary );
-        } else {
-            log.debug( "Batch effect for " + ee + " remains unchanged: " + effectSummary );
+            // Audit row written by @AuditedConditional via AuditedAspect; the
+            // SpEL guard `#result != null` skips the no-change branch and the
+            // returned summary is folded into the NOTE column ("Updated batch
+            // effect: <summary>"). Phase C #7: the legacy 4-arg call wrote the
+            // summary into the DETAIL column; the AuditEventPayload-backed
+            // typed-payload refactor will re-split note/detail once it lands.
+            return effectSummary;
         }
+        log.debug( "Batch effect for " + ee + " remains unchanged: " + effectSummary );
+        return null;
     }
 
     @Override
     @Transactional
-    public void recalculateExperimentBatchConfound( ExpressionExperiment ee ) {
+    @AuditedConditional( value = BatchProblemsUpdateEvent.class,
+            when = "#result != null",
+            messageSpel = "'" + ExpressionExperimentReportServiceImpl.NOTE_UPDATED_CONFOUND + ": ' + #result" )
+    @Nullable
+    public String recalculateExperimentBatchConfound( ExpressionExperiment ee ) {
         String confound = expressionExperimentBatchInformationService.getBatchConfoundAsHtmlString( ee );
         String confoundSummary = confound != null ? confound : escapeHtml4( "<no confound>" );
         if ( !Objects.equals( confound, ee.getBatchConfound() ) ) {
             ee.setBatchConfound( confound );
-            auditTrailService.addUpdateEvent( ee, BatchProblemsUpdateEvent.class,
-                    ExpressionExperimentReportServiceImpl.NOTE_UPDATED_CONFOUND, confoundSummary );
             log.info( "New batch confound for " + ee + ": " + confoundSummary );
-        } else {
-            log.debug( "Batch confound for " + ee + " remains unchanged: " + confoundSummary );
+            // Audit row written by @AuditedConditional via AuditedAspect; the
+            // SpEL guard `#result != null` skips the no-change branch and the
+            // returned summary is folded into the NOTE column ("Updated batch
+            // confound: <summary>"). Phase C #8: same DETAIL-to-NOTE motion as
+            // the sibling batch-effect method above.
+            return confoundSummary;
         }
+        log.debug( "Batch confound for " + ee + " remains unchanged: " + confoundSummary );
+        return null;
     }
 
     private Map<Long, Collection<AuditEvent>> getSampleRemovalEvents( Collection<ExpressionExperiment> ees ) {

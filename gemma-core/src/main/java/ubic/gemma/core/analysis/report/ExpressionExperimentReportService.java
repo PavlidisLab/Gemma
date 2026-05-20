@@ -18,6 +18,7 @@
  */
 package ubic.gemma.core.analysis.report;
 
+import org.springframework.lang.Nullable;
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
@@ -95,9 +96,32 @@ public interface ExpressionExperimentReportService {
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void recalculateExperimentBatchInfo( ExpressionExperiment ee );
 
+    /**
+     * Recompute the batch confound for {@code ee} and persist it; emit a
+     * {@code BatchProblemsUpdateEvent} only when the value actually changed.
+     *
+     * @return the new batch-confound summary string when an update was
+     *         recorded, or {@code null} when the existing value already
+     *         matched the freshly computed one. The non-null return is what
+     *         lets {@code @AuditedConditional(when = "#result != null", ...)}
+     *         fire the audit row.
+     */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void recalculateExperimentBatchConfound( ExpressionExperiment ee );
+    @Nullable
+    String recalculateExperimentBatchConfound( ExpressionExperiment ee );
 
+    /**
+     * Recompute the batch effect for {@code ee} and persist it; emit a
+     * {@code BatchProblemsUpdateEvent} only when the effect or its
+     * statistics actually changed.
+     *
+     * @return the new batch-effect summary string when an update was
+     *         recorded, or {@code null} when neither the effect nor its
+     *         statistics differed from the persisted values. The non-null
+     *         return drives the {@code @AuditedConditional} predicate on
+     *         the implementation.
+     */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void recalculateExperimentBatchEffect( ExpressionExperiment ee );
+    @Nullable
+    String recalculateExperimentBatchEffect( ExpressionExperiment ee );
 }
