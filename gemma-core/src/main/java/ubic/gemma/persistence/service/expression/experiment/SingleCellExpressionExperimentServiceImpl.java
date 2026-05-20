@@ -661,6 +661,9 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional
+    @AuditedConditional( value = DataRemovedEvent.class,
+            when = "#result > 0",
+            messageSpel = "'Removed ' + #result + ' vectors for ' + #quantitationType + '.'" )
     public int removeSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType ) {
         Assert.notNull( ee.getId(), "The dataset must be persistent." );
         Assert.notNull( quantitationType.getId(), "The quantitation type must be persistent." );
@@ -683,10 +686,12 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
             clearBioAssaySparsityMetrics( ee );
         }
         expressionExperimentDao.update( ee );
-        if ( removedVectors > 0 ) {
-            auditTrailService.addUpdateEvent( ee, DataRemovedEvent.class,
-                    String.format( "Removed %d vectors for %s with dimension %s.", removedVectors, quantitationType, scd ) );
-        }
+        // Audit event written by @AuditedConditional via AuditedAspect; the
+        // SpEL guard `#result > 0` skips the no-op branch (no dimension found
+        // / nothing removed) so this remains semantically identical to the
+        // prior imperative call. Note the SpEL message drops the `scd` token
+        // since the SingleCellDimension is a local — that detail moves into
+        // log lines.
         return removedVectors;
     }
 

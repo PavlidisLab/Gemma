@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.expression.AnalysisUtilService;
+import ubic.gemma.core.security.audit.AuditedConditional;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentVectorMergeEvent;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -34,7 +35,6 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
@@ -77,9 +77,6 @@ public class VectorMergingServiceImpl
     private AnalysisUtilService analysisUtilService;
 
     @Autowired
-    private AuditTrailService auditTrailService;
-
-    @Autowired
     private BioAssayDimensionService bioAssayDimensionService;
 
     @Autowired
@@ -96,6 +93,9 @@ public class VectorMergingServiceImpl
 
     @Override
     @Transactional
+    @AuditedConditional( value = ExpressionExperimentVectorMergeEvent.class,
+            when = "#result > 0",
+            messageSpel = "'Vector merging performed; ' + #result + ' quantitation type(s) merged.'" )
     public int mergeVectors( ExpressionExperiment ee ) {
         ee = expressionExperimentService.thaw( ee );
 
@@ -242,15 +242,18 @@ public class VectorMergingServiceImpl
 
         this.cleanUp( ee, allOldBioAssayDims, newBioAd );
 
-        this.audit( ee,
-                "Vector merging performed, merged " + allOldBioAssayDims + " old bioassay dimensions for " + qts.size()
-                        + " quantitation types." );
+        // Audit event written by @AuditedConditional via AuditedAspect; the
+        // SpEL guard `#result > 0` skips the `return 0` early-exit branch (no
+        // merger needed) so this remains semantically identical to the prior
+        // imperative call. The original note interpolated the
+        // `allOldBioAssayDims` Collection and `qts.size()`; both are locals
+        // not reachable from the SpEL context, so the migrated note carries
+        // the merger count (`#result`) only — finer detail moves into log
+        // lines (see the "Creating %d merged raw data vectors..." log above).
+        log.info( String.format( "Vector merging performed; merged %d old bioassay dimensions for %d quantitation types.",
+                allOldBioAssayDims.size(), qts.size() ) );
 
         return numSuccessfulMergers;
-    }
-
-    private void audit( ExpressionExperiment ee, String note ) {
-        auditTrailService.addUpdateEvent( ee, ExpressionExperimentVectorMergeEvent.class, note );
     }
 
     private void cleanUp( ExpressionExperiment expExp, Collection<BioAssayDimension> allOldBioAssayDims,
