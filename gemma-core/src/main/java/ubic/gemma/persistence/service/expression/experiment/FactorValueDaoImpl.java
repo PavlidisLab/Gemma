@@ -26,6 +26,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
@@ -139,6 +140,18 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
         return query
                 .setParameter( "q", escapeLike( valuePrefix ) + "%" )
                 .setMaxResults( maxResults > 0 ? maxResults : Integer.MAX_VALUE )
+                .list();
+    }
+
+    @Override
+    public Collection<FactorValue> loadByExperimentalDesignWithCharacteristics( ExperimentalDesign ed ) {
+        //noinspection unchecked
+        return getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct fv from FactorValue fv "
+                        + "join fv.experimentalFactor ef "
+                        + "left join fetch fv.characteristics "
+                        + "where ef.experimentalDesign = :ed" )
+                .setParameter( "ed", ed )
                 .list();
     }
 
