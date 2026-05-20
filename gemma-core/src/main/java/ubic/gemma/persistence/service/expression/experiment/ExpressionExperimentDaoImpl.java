@@ -3798,15 +3798,37 @@ public class ExpressionExperimentDaoImpl
         Assert.notNull( quantitationType.getId(), "The quantitation type must be persistent." );
         Assert.isTrue( ee.getQuantitationTypes().contains( quantitationType ) || ee.getSingleCellExpressionDataVectors().stream().anyMatch( v -> v.getQuantitationType().equals( quantitationType ) ),
                 "The quantitation must belong to at least one single-cell vector from experiment." );
+        // Hibernate 6: vectors removed from the in-memory collection (or whose DB rows are bulk-deleted
+        // below) remain managed in the PersistenceContext and still reference both their QT and their
+        // SingleCellDimension. The subsequent `session.delete(qt)` (when deleteQt=true) puts the QT
+        // into DELETING state, and the caller `removeSingleCellVectorsAndDimensionIfNecessary` follows
+        // up with `deleteSingleCellDimension(ee, scd)` that puts the SCD into DELETING state as well.
+        // The next autoflush (eg. the `getNumberOfSingleCellDataVectors(ee, scd)` probe between those
+        // two delete steps, or any explicit flush() in the caller's test) walks those orphan vectors
+        // via ACTION_CHECK_ON_FLUSH and throws TransientObjectException on QT or SCD. Capture them so
+        // we can evict() after the bulk delete (see HIBERNATE6_CASCADE_AUDIT.md HIGH #1 + the parallel
+        // raw/processed fix in c99be75b47).
+        Collection<SingleCellExpressionDataVector> vectorsToEvict;
         if ( Hibernate.isInitialized( ee.getSingleCellExpressionDataVectors() ) ) {
+            vectorsToEvict = ee.getSingleCellExpressionDataVectors().stream()
+                    .filter( v -> v.getQuantitationType().equals( quantitationType ) )
+                    .collect( Collectors.toList() );
             ee.getSingleCellExpressionDataVectors()
                     .removeIf( v -> v.getQuantitationType().equals( quantitationType ) );
+        } else {
+            vectorsToEvict = Collections.emptyList();
         }
         int deletedVectors = getSessionFactory().getCurrentSession()
                 .createQuery( "delete from SingleCellExpressionDataVector v where v.expressionExperiment = :ee and v.quantitationType = :qt" )
                 .setParameter( "ee", ee )
                 .setParameter( "qt", quantitationType )
                 .executeUpdate();
+        // Evict the now-stale vectors from the PersistenceContext: their DB rows are gone, but the
+        // managed instances still hold many-to-one refs to the QT and SCD that the caller is about
+        // to delete. Without this, HB6's ACTION_CHECK_ON_FLUSH cascade walk hits the dangling refs.
+        for ( SingleCellExpressionDataVector v : vectorsToEvict ) {
+            getSessionFactory().getCurrentSession().evict( v );
+        }
         if ( deleteQt ) {
             log.info( "Deleting " + quantitationType + "..." );
             if ( !ee.getQuantitationTypes().remove( quantitationType ) ) {
@@ -3827,13 +3849,23 @@ public class ExpressionExperimentDaoImpl
         Set<QuantitationType> qtsToRemove = ee.getSingleCellExpressionDataVectors().stream()
                 .map( SingleCellExpressionDataVector::getQuantitationType )
                 .collect( Collectors.toSet() );
+        // see comment in removeSingleCellDataVectors above; same HB6 cascade hazard applies here
+        // since this method also detaches vectors then session.delete()s each QT (and ultimately
+        // each unused SCD via removeUnusedSingleCellDimensions).
+        Collection<SingleCellExpressionDataVector> vectorsToEvict;
         if ( Hibernate.isInitialized( ee.getSingleCellExpressionDataVectors() ) ) {
+            vectorsToEvict = new ArrayList<>( ee.getSingleCellExpressionDataVectors() );
             ee.getSingleCellExpressionDataVectors().clear();
+        } else {
+            vectorsToEvict = Collections.emptyList();
         }
         int deletedVectors = getSessionFactory().getCurrentSession()
                 .createQuery( "delete from SingleCellExpressionDataVector v where v.expressionExperiment = :ee" )
                 .setParameter( "ee", ee )
                 .executeUpdate();
+        for ( SingleCellExpressionDataVector v : vectorsToEvict ) {
+            getSessionFactory().getCurrentSession().evict( v );
+        }
         for ( QuantitationType qt : qtsToRemove ) {
             if ( !ee.getQuantitationTypes().remove( qt ) ) {
                 log.warn( qt + " was not attached to " + ee + ", but was attached to at least one of its single-cell data vectors, it will be removed." );
