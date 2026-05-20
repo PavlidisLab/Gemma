@@ -1,14 +1,14 @@
 package ubic.gemma.apps;
 
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.cli.authentication.CLIAuthenticationManager;
-import ubic.gemma.cli.util.test.BaseCliTest;
+import ubic.gemma.cli.util.test.BaseCliTest5;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.persistence.service.common.protocol.ProtocolService;
@@ -18,7 +18,7 @@ import static org.mockito.Mockito.*;
 import static ubic.gemma.cli.util.test.Assertions.assertThat;
 
 @ContextConfiguration
-public class ProtocolAdderCliTest extends BaseCliTest {
+public class ProtocolAdderCliTest extends BaseCliTest5 {
 
     @Configuration
     @TestComponent
@@ -46,7 +46,7 @@ public class ProtocolAdderCliTest extends BaseCliTest {
     @Autowired
     private ProtocolService protocolService;
 
-    @After
+    @AfterEach
     public void resetMocks() {
         reset( protocolService );
     }
