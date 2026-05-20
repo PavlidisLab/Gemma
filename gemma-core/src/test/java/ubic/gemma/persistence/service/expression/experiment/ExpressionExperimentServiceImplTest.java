@@ -142,6 +142,11 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
         }
 
         @Bean
+        public ExperimentalDesignService experimentalDesignService() {
+            return mock( ExperimentalDesignService.class );
+        }
+
+        @Bean
         public FactorValueService factorValueService() {
             return mock( FactorValueService.class );
         }

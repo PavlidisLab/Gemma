@@ -11,6 +11,7 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -42,6 +43,7 @@ import java.util.stream.Collectors;
  */
 @Getter
 @Setter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ExperimentalDesignValueObject extends IdentifiableValueObject<ExperimentalDesign> {
 
     private static final long serialVersionUID = 1L;
@@ -112,6 +114,7 @@ public class ExperimentalDesignValueObject extends IdentifiableValueObject<Exper
     @Getter
     @Setter
     @EqualsAndHashCode
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class ExperimentalFactorEntry {
 
         private Long id;
@@ -157,13 +160,24 @@ public class ExperimentalDesignValueObject extends IdentifiableValueObject<Exper
     /**
      * Assignment of a single {@link BioMaterial} (sample) to its assigned {@link FactorValue}s.
      */
-    @Data
+    @Getter
+    @Setter
     @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class BioMaterialFactorValueAssignment {
 
-        private final Long bioMaterialId;
+        private Long bioMaterialId;
         @Nullable
-        private final String bioMaterialName;
-        private final List<Long> factorValueIds;
+        private String bioMaterialName;
+        private List<Long> factorValueIds = new ArrayList<>();
+
+        public BioMaterialFactorValueAssignment() {
+        }
+
+        public BioMaterialFactorValueAssignment( Long bioMaterialId, @Nullable String bioMaterialName, List<Long> factorValueIds ) {
+            this.bioMaterialId = bioMaterialId;
+            this.bioMaterialName = bioMaterialName;
+            this.factorValueIds = factorValueIds;
+        }
     }
 }

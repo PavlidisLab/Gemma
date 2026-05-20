@@ -567,6 +567,37 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     ExperimentalDesignValueObject getExperimentalDesignValueObject( ExpressionExperiment ee );
 
     /**
+     * Predict what would happen if {@code proposed} were applied as the experiment's new design via PUT.
+     * Performs both validation (blockers) and impact analysis (deletions, dependent analyses, affected
+     * subsets). Never mutates state.
+     *
+     * @param ee       the target experiment
+     * @param proposed the candidate design as it would be sent to {@code PUT /datasets/{id}/design}
+     * @return a {@link DesignPreflightReport} describing the diff and its consequences
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    DesignPreflightReport previewDesignChange( ExpressionExperiment ee, ExperimentalDesignValueObject proposed );
+
+    /**
+     * Apply {@code proposed} as the experiment's new {@link ExperimentalDesign}.
+     * <p>
+     * Performs the same validation as {@link #previewDesignChange(ExpressionExperiment, ExperimentalDesignValueObject)}
+     * and throws {@link IllegalArgumentException} when blockers are present; the caller is expected to surface
+     * preflight feedback before invoking this method. Statements on kept factor values are replaced wholesale
+     * (any statement not echoed in the payload is deleted); factor values and factors not echoed are deleted.
+     * Differential expression analyses whose factors or factor values are affected are cascaded.
+     * <p>
+     * Emits a single {@link ubic.gemma.model.common.auditAndSecurity.eventType.ExperimentalDesignUpdatedEvent}
+     * summarising the change.
+     *
+     * @param ee       the target experiment
+     * @param proposed the new design
+     * @return the freshly-rebuilt {@link ExperimentalDesignValueObject} after the update
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    ExperimentalDesignValueObject applyDesignChange( ExpressionExperiment ee, ExperimentalDesignValueObject proposed );
+
+    /**
      * Perform various transformation to the provided filters to enhance it.
      * <ul>
      *     <li>rewrite clauses over objects and predicates to include second/third, etc... predicates/objects</li>
