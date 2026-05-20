@@ -138,6 +138,9 @@ public class OntologyServiceTest extends BaseTest5 {
     @Autowired
     private CharacteristicService characteristicService;
 
+    @Autowired
+    private CharacteristicReadService characteristicReadService;
+
     @AfterEach
     public void tearDown() {
         reset( chebiOntologyService, obiService, searchService );
@@ -150,7 +153,7 @@ public class OntologyServiceTest extends BaseTest5 {
         when( searchService.search( any() ) ).thenReturn( srm );
         when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
         ontologyService.findTermsInexact( "9-chloro-5-phenyl-3-prop-2-enyl-1,2,4,5-tetrahydro-3-benzazepine-7,8-diol", 5000, null, 5000, TimeUnit.MILLISECONDS );
-        verify( characteristicService ).findByValueUriOrValueStartingWith( eq( "9-chloro-5-phenyl-3-prop-2-enyl-1,2,4,5-tetrahydro-3-benzazepine-7,8-diol" ), eq( Arrays.asList( ExpressionExperiment.class, ExperimentalDesign.class, FactorValue.class, BioMaterial.class ) ), eq( false ) );
+        verify( characteristicReadService ).findByValueUriOrValueStartingWith( eq( "9-chloro-5-phenyl-3-prop-2-enyl-1,2,4,5-tetrahydro-3-benzazepine-7,8-diol" ), eq( Arrays.asList( ExpressionExperiment.class, ExperimentalDesign.class, FactorValue.class, BioMaterial.class ) ), eq( false ) );
         ArgumentCaptor<SearchSettings> captor = ArgumentCaptor.forClass( SearchSettings.class );
         verify( searchService ).search( captor.capture() );
         SearchSettings settings = captor.getValue();
