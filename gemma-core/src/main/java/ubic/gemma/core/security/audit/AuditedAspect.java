@@ -156,6 +156,74 @@ public class AuditedAspect {
      */
     @AfterThrowing( pointcut = "@annotation(auditedOnError)", throwing = "ex" )
     public void afterAuditedOnErrorMethod( JoinPoint joinPoint, AuditedOnError auditedOnError, Throwable ex ) {
+        // Apply the exception-class filter: a single un-filtered declaration
+        // (default Throwable.class) matches everything (back-compat). A
+        // narrower filter SKIPs when the throwable is not an instanceof —
+        // Spring AOP still re-throws the original by virtue of @AfterThrowing
+        // not swallowing.
+        if ( !auditedOnError.exception().isInstance( ex ) ) {
+            return;
+        }
+        emitOnError( joinPoint, auditedOnError, ex );
+    }
+
+    /**
+     * Phase C: repeated {@link AuditedOnError} declarations (wrapped by the
+     * compiler in {@link AuditedOnErrors}) — multi-catch shape. The aspect
+     * picks the MOST-SPECIFIC matching declaration (the one whose
+     * {@code exception()} class is the deepest in the instanceof chain for
+     * the thrown throwable) and emits at most ONE audit row per throw. A
+     * default {@code Throwable.class} declaration acts as the catch-all
+     * fallback. Ties are resolved by declaration order (first wins) but
+     * ties are not expected in normal use.
+     *
+     * <p>When NO declaration matches the throwable (every {@code exception()}
+     * filter excludes it), nothing is recorded — same behaviour as a Java
+     * multi-catch where the thrown type isn't one of the listed catch
+     * branches.
+     */
+    @AfterThrowing( pointcut = "@annotation(auditedOnErrors)", throwing = "ex" )
+    public void afterAuditedOnErrorsMethod( JoinPoint joinPoint, AuditedOnErrors auditedOnErrors, Throwable ex ) {
+        AuditedOnError best = pickMostSpecific( auditedOnErrors.value(), ex );
+        if ( best == null ) {
+            return;
+        }
+        emitOnError( joinPoint, best, ex );
+    }
+
+    /**
+     * Pick the most-specific {@link AuditedOnError} declaration for
+     * {@code ex}: highest-depth {@code exception()} class wins; ties are
+     * resolved by declaration order (first match wins).
+     */
+    @Nullable
+    private static AuditedOnError pickMostSpecific( AuditedOnError[] decls, Throwable ex ) {
+        AuditedOnError best = null;
+        int bestDepth = -1;
+        for ( AuditedOnError d : decls ) {
+            Class<? extends Throwable> filter = d.exception();
+            if ( !filter.isInstance( ex ) ) {
+                continue;
+            }
+            int depth = 0;
+            for ( Class<?> c = filter; c != null && c != Object.class; c = c.getSuperclass() ) {
+                depth++;
+            }
+            if ( depth > bestDepth ) {
+                best = d;
+                bestDepth = depth;
+            }
+        }
+        return best;
+    }
+
+    /**
+     * Shared emission path for {@link AuditedOnError} (singular or selected
+     * from a repeated set). Writes the audit row via the 4-arg Throwable
+     * overload (REQUIRES_NEW) and publishes an {@link AuditedEvent} for
+     * downstream listeners.
+     */
+    private void emitOnError( JoinPoint joinPoint, AuditedOnError auditedOnError, Throwable ex ) {
         Object[] args = joinPoint.getArgs();
         Auditable target = findAuditable( args );
         if ( target == null ) {
