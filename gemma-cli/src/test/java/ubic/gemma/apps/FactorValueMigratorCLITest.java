@@ -2,8 +2,8 @@ package ubic.gemma.apps;
 
 import ubic.gemma.core.security.authentication.ManualAuthenticationService;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,7 +13,7 @@ import org.springframework.security.test.context.support.WithSecurityContextTest
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.transaction.PlatformTransactionManager;
-import ubic.gemma.cli.util.test.BaseCliTest;
+import ubic.gemma.cli.util.test.BaseCliTest5;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.util.GemmaRestApiClient;
 import ubic.gemma.model.common.description.Characteristic;
@@ -34,7 +34,7 @@ import static ubic.gemma.cli.util.test.Assertions.assertThat;
 @ContextConfiguration
 @TestExecutionListeners(value = WithSecurityContextTestExecutionListener.class,
         mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
-public class FactorValueMigratorCLITest extends BaseCliTest {
+public class FactorValueMigratorCLITest extends BaseCliTest5 {
 
     @Configuration
     @TestComponent
@@ -108,7 +108,7 @@ public class FactorValueMigratorCLITest extends BaseCliTest {
         return getObjectById( fvId, id ).getValue();
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
         when( factorValueService.loadWithOldStyleCharacteristics( any(), anyBoolean() ) )
                 .thenAnswer( a -> fvs[a.getArgument( 0, Long.class ).intValue() - 1] );
