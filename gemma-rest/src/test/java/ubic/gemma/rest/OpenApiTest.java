@@ -224,6 +224,13 @@ public class OpenApiTest extends BaseTest implements InitializingBean {
                     String code = e.getKey();
                     ApiResponse response = e.getValue();
                     if ( code.startsWith( "4" ) || code.startsWith( "5" ) ) {
+                        // PUT /datasets/{dataset}/design intentionally returns a DesignPreflightReport
+                        // on 400 (blockers) and 409 (force required) so admins can act on the cascade.
+                        if ( method == PathItem.HttpMethod.PUT
+                                && "/datasets/{dataset}/design".equals( path )
+                                && ( "400".equals( code ) || "409".equals( code ) ) ) {
+                            continue;
+                        }
                         assertions.assertThat( response.getContent() )
                                 .describedAs( "%s %s -> %s", method, path, code )
                                 .hasEntrySatisfying( "application/json", content -> {
