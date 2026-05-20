@@ -111,6 +111,8 @@ public class ExpressionExperimentServiceImpl
     @Autowired
     private ExperimentalFactorService experimentalFactorService;
     @Autowired
+    private ExperimentalDesignService experimentalDesignService;
+    @Autowired
     private FactorValueService factorValueService;
     @Autowired
     private OntologyService ontologyService;
@@ -1102,6 +1104,555 @@ public class ExpressionExperimentServiceImpl
         summary.setBiomaterialsWithChangedAssignments( changedBmCount );
 
         return report;
+    }
+
+    @Override
+    @Transactional
+    public ExperimentalDesignValueObject applyDesignChange( ExpressionExperiment ee, ExperimentalDesignValueObject proposed ) {
+        Assert.notNull( proposed, "A proposed design must be supplied." );
+        ee = expressionExperimentDao.reload( ee );
+
+        // Re-run preflight as the authoritative gate. The REST layer also runs it for client feedback, but we
+        // re-check here so direct service callers can't bypass validation.
+        DesignPreflightReport report = previewDesignChange( ee, proposed );
+        if ( !report.getBlockers().isEmpty() ) {
+            throw new IllegalArgumentException( "Cannot apply proposed design: "
+                    + report.getBlockers().get( 0 ).getMessage() );
+        }
+
+        ExperimentalDesign ed = ee.getExperimentalDesign();
+        Assert.notNull( ed, "Experiment has no experimental design after reload; preflight should have caught this." );
+
+        // Thaw what we'll mutate. Mirrors previewDesignChange.
+        for ( ExperimentalFactor ef : ed.getExperimentalFactors() ) {
+            Hibernate.initialize( ef.getFactorValues() );
+            for ( FactorValue fv : ef.getFactorValues() ) {
+                Hibernate.initialize( fv.getCharacteristics() );
+                if ( fv.getMeasurement() != null ) {
+                    Hibernate.initialize( fv.getMeasurement() );
+                }
+            }
+        }
+        Hibernate.initialize( ee.getBioAssays() );
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            BioMaterial bm = ba.getSampleUsed();
+            if ( bm != null ) {
+                Thaws.thawBioMaterial( bm );
+            }
+        }
+
+        Map<Long, ExperimentalFactor> currentFactorsById = new HashMap<>();
+        Map<Long, FactorValue> currentFvsById = new HashMap<>();
+        for ( ExperimentalFactor ef : ed.getExperimentalFactors() ) {
+            currentFactorsById.put( ef.getId(), ef );
+            for ( FactorValue fv : ef.getFactorValues() ) {
+                currentFvsById.put( fv.getId(), fv );
+            }
+        }
+        Map<Long, BioMaterial> currentBmsById = new HashMap<>();
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            BioMaterial bm = ba.getSampleUsed();
+            if ( bm != null && bm.getId() != null ) {
+                currentBmsById.put( bm.getId(), bm );
+            }
+        }
+
+        Set<Long> proposedFactorIds = new HashSet<>();
+        Set<Long> proposedFvIds = new HashSet<>();
+        if ( proposed.getExperimentalFactors() != null ) {
+            for ( ExperimentalDesignValueObject.ExperimentalFactorEntry pf : proposed.getExperimentalFactors() ) {
+                if ( pf.getId() != null ) {
+                    proposedFactorIds.add( pf.getId() );
+                }
+                if ( pf.getValues() != null ) {
+                    for ( FactorValueBasicValueObject pv : pf.getValues() ) {
+                        if ( pv.getId() != null ) {
+                            proposedFvIds.add( pv.getId() );
+                        }
+                    }
+                }
+            }
+        }
+
+        // ---- step 1: drop biomaterial -> deleted-FV links eagerly so subsequent FV removes don't trip FKs ----
+        Set<Long> fvIdsBeingDeleted = currentFvsById.keySet().stream()
+                .filter( id -> !proposedFvIds.contains( id ) )
+                .collect( Collectors.toCollection( HashSet::new ) );
+        // Also fold in FVs whose parent factor is being deleted.
+        for ( Map.Entry<Long, ExperimentalFactor> e : currentFactorsById.entrySet() ) {
+            if ( !proposedFactorIds.contains( e.getKey() ) ) {
+                for ( FactorValue fv : e.getValue().getFactorValues() ) {
+                    if ( fv.getId() != null ) {
+                        fvIdsBeingDeleted.add( fv.getId() );
+                    }
+                }
+            }
+        }
+        Set<BioMaterial> dirtyBms = new HashSet<>();
+        for ( BioMaterial bm : currentBmsById.values() ) {
+            if ( bm.getFactorValues().removeIf( fv -> fvIdsBeingDeleted.contains( fv.getId() ) ) ) {
+                dirtyBms.add( bm );
+            }
+        }
+
+        // ---- step 2: remove diff-ex analyses dependent on factors being deleted (or that become invalid) ----
+        // Step 3 (factor removal) will also cascade DE analyses through ExperimentalFactorService#remove, so we
+        // only explicitly remove analyses tied to surviving factors whose membership / structure changed in a way
+        // that the FV/factor cascade won't reach. The preflight already enumerated these (see factorIdsAffected).
+        Set<Long> factorIdsAffected = computeAffectedFactorIds( currentFactorsById, currentFvsById,
+                proposedFactorIds, fvIdsBeingDeleted, proposed, currentBmsById );
+        Set<Long> removedAnalysisIds = new HashSet<>();
+        for ( Long efId : factorIdsAffected ) {
+            ExperimentalFactor ef = currentFactorsById.get( efId );
+            if ( ef == null ) continue;
+            for ( DifferentialExpressionAnalysis a : differentialExpressionAnalysisService.findByFactor( ef ) ) {
+                if ( removedAnalysisIds.add( a.getId() ) ) {
+                    differentialExpressionAnalysisService.remove( a );
+                }
+            }
+        }
+        // Subset-anchored analyses pointing at deleted FVs would dangle.
+        for ( DifferentialExpressionAnalysis a : differentialExpressionAnalysisService.findByExperiment( ee, true ) ) {
+            FactorValue subsetFv = a.getSubsetFactorValue();
+            if ( subsetFv != null && fvIdsBeingDeleted.contains( subsetFv.getId() )
+                    && removedAnalysisIds.add( a.getId() ) ) {
+                differentialExpressionAnalysisService.remove( a );
+            }
+        }
+
+        // ---- step 3: delete factor values whose parent factor survives but the FV itself was dropped ----
+        Set<Long> standaloneFvDeletes = new HashSet<>();
+        for ( Long fvId : fvIdsBeingDeleted ) {
+            FactorValue fv = currentFvsById.get( fvId );
+            if ( fv == null ) continue;
+            ExperimentalFactor parent = fv.getExperimentalFactor();
+            if ( parent != null && proposedFactorIds.contains( parent.getId() ) ) {
+                standaloneFvDeletes.add( fvId );
+            }
+        }
+        for ( Long fvId : standaloneFvDeletes ) {
+            FactorValue fv = currentFvsById.get( fvId );
+            ExperimentalFactor parent = fv.getExperimentalFactor();
+            parent.getFactorValues().remove( fv );
+            factorValueService.remove( fv );
+        }
+
+        // ---- step 4: delete factors that were dropped (cascades remaining FVs and any tied analyses) ----
+        List<ExperimentalFactor> factorsToRemove = new ArrayList<>();
+        for ( ExperimentalFactor ef : ed.getExperimentalFactors() ) {
+            if ( !proposedFactorIds.contains( ef.getId() ) ) {
+                factorsToRemove.add( ef );
+            }
+        }
+        for ( ExperimentalFactor ef : factorsToRemove ) {
+            ed.getExperimentalFactors().remove( ef );
+            experimentalFactorService.remove( ef );
+        }
+
+        // ---- step 5: update kept factors and create new ones ----
+        if ( proposed.getExperimentalFactors() != null ) {
+            for ( ExperimentalDesignValueObject.ExperimentalFactorEntry pf : proposed.getExperimentalFactors() ) {
+                if ( pf.getId() != null ) {
+                    ExperimentalFactor ef = currentFactorsById.get( pf.getId() );
+                    updateFactorMetadata( ef, pf );
+                    applyFactorValueChanges( ef, pf, currentFvsById );
+                } else {
+                    ExperimentalFactor created = createFactor( ed, ee, pf );
+                    ed.getExperimentalFactors().add( created );
+                    currentFactorsById.put( created.getId(), created );
+                    for ( FactorValue fv : created.getFactorValues() ) {
+                        currentFvsById.put( fv.getId(), fv );
+                    }
+                }
+            }
+        }
+
+        // ---- step 6: apply biomaterial -> FV assignments ----
+        if ( proposed.getBioMaterialAssignments() != null ) {
+            for ( ExperimentalDesignValueObject.BioMaterialFactorValueAssignment a : proposed.getBioMaterialAssignments() ) {
+                BioMaterial bm = currentBmsById.get( a.getBioMaterialId() );
+                if ( bm == null ) continue; // preflight should have caught this
+                Set<Long> targetFvIds = a.getFactorValueIds() != null
+                        ? new HashSet<>( a.getFactorValueIds() )
+                        : Collections.emptySet();
+                // Inherited (sourceBioMaterial) FVs are not part of this BM's directly-owned set and cannot be
+                // mutated here; treat them as immutable and reconcile only what bm.factorValues directly holds.
+                Set<Long> inheritedFvIds = bm.getAllFactorValues().stream()
+                        .map( FactorValue::getId )
+                        .filter( java.util.Objects::nonNull )
+                        .collect( Collectors.toSet() );
+                inheritedFvIds.removeAll( bm.getFactorValues().stream().map( FactorValue::getId )
+                        .filter( java.util.Objects::nonNull ).collect( Collectors.toSet() ) );
+
+                Set<Long> desiredOwn = new HashSet<>( targetFvIds );
+                desiredOwn.removeAll( inheritedFvIds );
+                Set<Long> currentOwn = bm.getFactorValues().stream().map( FactorValue::getId )
+                        .filter( java.util.Objects::nonNull ).collect( Collectors.toSet() );
+                if ( !desiredOwn.equals( currentOwn ) ) {
+                    bm.getFactorValues().removeIf( fv -> !desiredOwn.contains( fv.getId() ) );
+                    Set<Long> toAdd = new HashSet<>( desiredOwn );
+                    toAdd.removeAll( currentOwn );
+                    for ( Long fvId : toAdd ) {
+                        FactorValue fv = currentFvsById.get( fvId );
+                        if ( fv != null ) {
+                            bm.getFactorValues().add( fv );
+                        }
+                    }
+                    dirtyBms.add( bm );
+                }
+            }
+        }
+        if ( !dirtyBms.isEmpty() ) {
+            bioMaterialService.update( dirtyBms );
+        }
+
+        // ---- step 7: update design-level metadata ----
+        boolean edMetadataChanged = false;
+        if ( !Objects.equals( ed.getName(), proposed.getName() ) ) {
+            ed.setName( proposed.getName() );
+            edMetadataChanged = true;
+        }
+        if ( !Objects.equals( ed.getDescription(), proposed.getDescription() ) ) {
+            ed.setDescription( proposed.getDescription() );
+            edMetadataChanged = true;
+        }
+        if ( !Objects.equals( ed.getReplicateDescription(), proposed.getReplicateDescription() ) ) {
+            ed.setReplicateDescription( proposed.getReplicateDescription() );
+            edMetadataChanged = true;
+        }
+        if ( !Objects.equals( ed.getQualityControlDescription(), proposed.getQualityControlDescription() ) ) {
+            ed.setQualityControlDescription( proposed.getQualityControlDescription() );
+            edMetadataChanged = true;
+        }
+        if ( !Objects.equals( ed.getNormalizationDescription(), proposed.getNormalizationDescription() ) ) {
+            ed.setNormalizationDescription( proposed.getNormalizationDescription() );
+            edMetadataChanged = true;
+        }
+        if ( edMetadataChanged ) {
+            experimentalDesignService.update( ed );
+        }
+
+        // ---- step 8: audit event ----
+        DesignPreflightReport.Summary s = report.getSummary();
+        String note = String.format(
+                "Design replaced via REST: factors +%d / -%d, factor values +%d / -%d, biomaterial assignments changed: %d, analyses removed: %d.",
+                s.getFactorsToCreate(), s.getFactorsToDelete(),
+                s.getFactorValuesToCreate(), s.getFactorValuesToDelete(),
+                s.getBiomaterialsWithChangedAssignments(),
+                s.getDifferentialExpressionAnalysesToDelete() );
+        auditTrailService.addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class, note );
+
+        return getExperimentalDesignValueObject( ee );
+    }
+
+    private Set<Long> computeAffectedFactorIds( Map<Long, ExperimentalFactor> currentFactorsById,
+            Map<Long, FactorValue> currentFvsById, Set<Long> proposedFactorIds, Set<Long> fvIdsBeingDeleted,
+            ExperimentalDesignValueObject proposed, Map<Long, BioMaterial> currentBmsById ) {
+        Set<Long> affected = new HashSet<>();
+        // factor being deleted -> handled by experimentalFactorService.remove later; not in this set
+        // factor losing a FV but staying -> affected
+        for ( Long fvId : fvIdsBeingDeleted ) {
+            FactorValue fv = currentFvsById.get( fvId );
+            if ( fv != null && fv.getExperimentalFactor() != null
+                    && proposedFactorIds.contains( fv.getExperimentalFactor().getId() ) ) {
+                affected.add( fv.getExperimentalFactor().getId() );
+            }
+        }
+        // new FV under existing factor -> affected
+        if ( proposed.getExperimentalFactors() != null ) {
+            for ( ExperimentalDesignValueObject.ExperimentalFactorEntry pf : proposed.getExperimentalFactors() ) {
+                if ( pf.getId() == null || pf.getValues() == null ) continue;
+                for ( FactorValueBasicValueObject pv : pf.getValues() ) {
+                    if ( pv.getId() == null ) {
+                        affected.add( pf.getId() );
+                        break;
+                    }
+                }
+            }
+        }
+        // biomaterial assignment changes -> affected (only via parent factor of changed FVs)
+        Map<Long, Set<Long>> proposedAssignByBmId = new HashMap<>();
+        if ( proposed.getBioMaterialAssignments() != null ) {
+            for ( ExperimentalDesignValueObject.BioMaterialFactorValueAssignment a : proposed.getBioMaterialAssignments() ) {
+                if ( a.getBioMaterialId() != null && a.getFactorValueIds() != null ) {
+                    proposedAssignByBmId.put( a.getBioMaterialId(), new HashSet<>( a.getFactorValueIds() ) );
+                }
+            }
+        }
+        for ( Map.Entry<Long, BioMaterial> e : currentBmsById.entrySet() ) {
+            Set<Long> currentFvIds = e.getValue().getAllFactorValues().stream()
+                    .map( FactorValue::getId ).collect( Collectors.toSet() );
+            Set<Long> proposedFvIdsForBm = proposedAssignByBmId.getOrDefault( e.getKey(), Collections.emptySet() );
+            if ( currentFvIds.equals( proposedFvIdsForBm ) ) continue;
+            Set<Long> changed = new HashSet<>( currentFvIds );
+            changed.addAll( proposedFvIdsForBm );
+            Set<Long> common = new HashSet<>( currentFvIds );
+            common.retainAll( proposedFvIdsForBm );
+            changed.removeAll( common );
+            for ( Long fvId : changed ) {
+                FactorValue fv = currentFvsById.get( fvId );
+                if ( fv != null && fv.getExperimentalFactor() != null
+                        && proposedFactorIds.contains( fv.getExperimentalFactor().getId() ) ) {
+                    affected.add( fv.getExperimentalFactor().getId() );
+                }
+            }
+        }
+        return affected;
+    }
+
+    private void updateFactorMetadata( ExperimentalFactor ef, ExperimentalDesignValueObject.ExperimentalFactorEntry pf ) {
+        if ( pf.getName() != null ) {
+            ef.setName( pf.getName() );
+        }
+        if ( pf.getDescription() != null ) {
+            ef.setDescription( pf.getDescription() );
+        }
+        if ( pf.getType() != null ) {
+            FactorType proposedType = "continuous".equalsIgnoreCase( pf.getType() )
+                    ? FactorType.CONTINUOUS : FactorType.CATEGORICAL;
+            // Switching type with values is blocked at preflight; only takes effect when the factor has no FVs.
+            if ( ef.getFactorValues().isEmpty() ) {
+                ef.setType( proposedType );
+            }
+        }
+        if ( pf.getCategory() != null && ef.getCategory() != null ) {
+            ef.getCategory().setCategory( pf.getCategory().getCategory() );
+            ef.getCategory().setCategoryUri( pf.getCategory().getCategoryUri() );
+            ef.getCategory().setValue( pf.getCategory().getValue() );
+            ef.getCategory().setValueUri( pf.getCategory().getValueUri() );
+        }
+        experimentalFactorService.update( ef );
+    }
+
+    private void applyFactorValueChanges( ExperimentalFactor ef,
+            ExperimentalDesignValueObject.ExperimentalFactorEntry pf,
+            Map<Long, FactorValue> currentFvsById ) {
+        if ( pf.getValues() == null ) return;
+        for ( FactorValueBasicValueObject pv : pf.getValues() ) {
+            if ( pv.getId() == null ) {
+                FactorValue created = createFactorValue( ef, pv );
+                ef.getFactorValues().add( created );
+                currentFvsById.put( created.getId(), created );
+            } else {
+                FactorValue existing = currentFvsById.get( pv.getId() );
+                if ( existing == null ) continue; // preflight should have caught this
+                updateFactorValueStatements( existing, pv );
+                // Honour the deprecated `value` field on the FactorValue payload. Null is treated as "no change"
+                // so that a client which omits the field round-trips safely.
+                if ( pv.getValue() != null ) {
+                    //noinspection deprecation
+                    existing.setValue( pv.getValue() );
+                }
+            }
+        }
+    }
+
+    private ExperimentalFactor createFactor( ExperimentalDesign ed, ExpressionExperiment ee,
+            ExperimentalDesignValueObject.ExperimentalFactorEntry pf ) {
+        FactorType type = "continuous".equalsIgnoreCase( pf.getType() )
+                ? FactorType.CONTINUOUS : FactorType.CATEGORICAL;
+        ExperimentalFactor ef = ExperimentalFactor.Factory.newInstance();
+        ef.setName( pf.getName() );
+        ef.setDescription( pf.getDescription() );
+        ef.setType( type );
+        ef.setExperimentalDesign( ed );
+        ef.setSecurityOwner( ee );
+        if ( pf.getCategory() != null ) {
+            Characteristic cat = Characteristic.Factory.newInstance();
+            cat.setCategory( pf.getCategory().getCategory() );
+            cat.setCategoryUri( pf.getCategory().getCategoryUri() );
+            cat.setValue( pf.getCategory().getValue() );
+            cat.setValueUri( pf.getCategory().getValueUri() );
+            ef.setCategory( cat );
+        }
+        ef = experimentalFactorService.create( ef );
+        if ( pf.getValues() != null ) {
+            for ( FactorValueBasicValueObject pv : pf.getValues() ) {
+                if ( pv.getId() != null ) {
+                    // a new factor cannot reference pre-existing FVs by id; preflight permits the payload but we ignore here
+                    continue;
+                }
+                FactorValue fv = createFactorValue( ef, pv );
+                ef.getFactorValues().add( fv );
+            }
+        }
+        return ef;
+    }
+
+    private FactorValue createFactorValue( ExperimentalFactor ef, FactorValueBasicValueObject pv ) {
+        FactorValue fv = new FactorValue();
+        fv.setExperimentalFactor( ef );
+        fv.setSecurityOwner( ef.getSecurityOwner() );
+        if ( pv.getValue() != null ) {
+            //noinspection deprecation
+            fv.setValue( pv.getValue() );
+        }
+        if ( pv.getStatements() != null ) {
+            for ( StatementValueObject ps : pv.getStatements() ) {
+                fv.getCharacteristics().add( buildStatement( ps ) );
+            }
+        }
+        if ( pv.getMeasurementObject() != null ) {
+            ubic.gemma.model.common.measurement.Measurement m = ubic.gemma.model.common.measurement.Measurement.Factory.newInstance();
+            m.setValue( pv.getMeasurementObject().getValue() );
+            if ( pv.getMeasurementObject().getRepresentation() != null ) {
+                m.setRepresentation( ubic.gemma.model.common.quantitationtype.PrimitiveType.valueOf( pv.getMeasurementObject().getRepresentation() ) );
+            }
+            if ( pv.getMeasurementObject().getType() != null ) {
+                m.setType( ubic.gemma.model.common.measurement.MeasurementType.valueOf( pv.getMeasurementObject().getType() ) );
+            }
+            fv.setMeasurement( m );
+        }
+        return factorValueService.create( fv );
+    }
+
+    private void updateFactorValueStatements( FactorValue existing, FactorValueBasicValueObject pv ) {
+        List<StatementValueObject> proposedStatements = pv.getStatements() != null ? pv.getStatements() : Collections.emptyList();
+        List<CharacteristicValueObject> proposedCharacteristics = pv.getCharacteristics() != null ? pv.getCharacteristics() : Collections.emptyList();
+
+        Map<Long, Statement> existingById = existing.getCharacteristics().stream()
+                .filter( s -> s.getId() != null )
+                .collect( Collectors.toMap( Statement::getId, s -> s, ( a, b ) -> a ) );
+
+        // Resolve claims over existing entities in priority order. Each existing entity is claimed at most
+        // once. Statements outrank characteristics, so an id-less statement that content-matches an entity
+        // already referenced by a proposed characteristic id (deployed serializers exposing characteristic
+        // ids but hiding statement ids) doesn't double-write the entity.
+        Map<StatementValueObject, Long> stmtClaims = new IdentityHashMap<>();
+        Map<CharacteristicValueObject, Long> charClaims = new IdentityHashMap<>();
+        Set<Long> claimedIds = new HashSet<>();
+
+        // Tier 1: proposed statements with id -> claim that entity by id.
+        for ( StatementValueObject ps : proposedStatements ) {
+            if ( ps.getId() == null || !existingById.containsKey( ps.getId() ) ) continue;
+            claimedIds.add( ps.getId() );
+            stmtClaims.put( ps, ps.getId() );
+        }
+
+        // Tier 2: id-less proposed statements -> content-match against any remaining existing entity, even one
+        // that a characteristic also references by id (statements win over characteristics for the same
+        // underlying entity). When a content bucket has multiple candidates, prefer the one whose id is also
+        // mentioned in the payload's characteristics, so the two projections align on the same DB row.
+        Set<Long> characteristicIds = proposedCharacteristics.stream()
+                .map( CharacteristicValueObject::getId )
+                .filter( Objects::nonNull )
+                .collect( Collectors.toSet() );
+        Map<String, Deque<Long>> remainingByContent = new HashMap<>();
+        for ( Statement s : existing.getCharacteristics() ) {
+            if ( s.getId() == null || claimedIds.contains( s.getId() ) ) continue;
+            remainingByContent
+                    .computeIfAbsent( statementContentKey( s ), k -> new ArrayDeque<>() )
+                    .add( s.getId() );
+        }
+        for ( StatementValueObject ps : proposedStatements ) {
+            if ( ps.getId() != null ) continue;
+            Deque<Long> bucket = remainingByContent.get( statementContentKey( ps ) );
+            if ( bucket == null || bucket.isEmpty() ) continue;
+            Long claimed = null;
+            for ( Iterator<Long> it = bucket.iterator(); it.hasNext(); ) {
+                Long candidate = it.next();
+                if ( characteristicIds.contains( candidate ) ) {
+                    claimed = candidate;
+                    it.remove();
+                    break;
+                }
+            }
+            if ( claimed == null ) {
+                claimed = bucket.poll();
+            }
+            claimedIds.add( claimed );
+            stmtClaims.put( ps, claimed );
+        }
+
+        // Tier 3: proposed characteristics with id -> claim leftover entities (deletion protection +
+        // subject-side writes). Skip ids already covered by a statement claim above.
+        for ( CharacteristicValueObject pc : proposedCharacteristics ) {
+            if ( pc.getId() == null || !existingById.containsKey( pc.getId() ) ) continue;
+            if ( claimedIds.contains( pc.getId() ) ) continue;
+            claimedIds.add( pc.getId() );
+            charClaims.put( pc, pc.getId() );
+        }
+
+        // Delete entities not claimed.
+        List<Statement> toDelete = existing.getCharacteristics().stream()
+                .filter( s -> s.getId() != null && !claimedIds.contains( s.getId() ) )
+                .collect( Collectors.toList() );
+        for ( Statement s : toDelete ) {
+            factorValueService.removeStatement( existing, s );
+        }
+
+        // Statement claims (id-matched or content-matched): full field application.
+        for ( Map.Entry<StatementValueObject, Long> e : stmtClaims.entrySet() ) {
+            Statement target = existingById.get( e.getValue() );
+            if ( target != null ) {
+                applyStatementFields( target, e.getKey() );
+            }
+        }
+        // Characteristic claims: subject-side only. Predicate/object on the existing entity are preserved
+        // because the characteristic projection doesn't carry them.
+        for ( Map.Entry<CharacteristicValueObject, Long> e : charClaims.entrySet() ) {
+            Statement target = existingById.get( e.getValue() );
+            if ( target != null ) {
+                applyCharacteristicSubjectFields( target, e.getKey() );
+            }
+        }
+
+        // Create new statements: id-less statements that didn't find a content match.
+        for ( StatementValueObject ps : proposedStatements ) {
+            if ( ps.getId() != null || stmtClaims.containsKey( ps ) ) continue;
+            Statement s = buildStatement( ps );
+            factorValueService.saveStatement( existing, s );
+        }
+    }
+
+    private void applyCharacteristicSubjectFields( Statement s, CharacteristicValueObject pc ) {
+        s.setCategory( pc.getCategory() );
+        s.setCategoryUri( pc.getCategoryUri() );
+        s.setSubject( pc.getValue() );
+        s.setSubjectUri( pc.getValueUri() );
+    }
+
+    private static String statementContentKey( StatementValueObject s ) {
+        return statementContentKey( s.getCategory(), s.getCategoryUri(),
+                s.getSubject(), s.getSubjectUri(),
+                s.getPredicate(), s.getPredicateUri(),
+                s.getObject(), s.getObjectUri(),
+                s.getSecondPredicate(), s.getSecondPredicateUri(),
+                s.getSecondObject(), s.getSecondObjectUri() );
+    }
+
+    private static String statementContentKey( Statement s ) {
+        return statementContentKey( s.getCategory(), s.getCategoryUri(),
+                s.getSubject(), s.getSubjectUri(),
+                s.getPredicate(), s.getPredicateUri(),
+                s.getObject(), s.getObjectUri(),
+                s.getSecondPredicate(), s.getSecondPredicateUri(),
+                s.getSecondObject(), s.getSecondObjectUri() );
+    }
+
+    private static String statementContentKey( String... fields ) {
+        return Stream.of( fields ).map( f -> f == null ? " " : f ).collect( Collectors.joining( "" ) );
+    }
+
+    private Statement buildStatement( StatementValueObject ps ) {
+        Statement s = Statement.Factory.newInstance();
+        applyStatementFields( s, ps );
+        return s;
+    }
+
+    private void applyStatementFields( Statement s, StatementValueObject ps ) {
+        s.setCategory( ps.getCategory() );
+        s.setCategoryUri( ps.getCategoryUri() );
+        s.setSubject( ps.getSubject() );
+        s.setSubjectUri( ps.getSubjectUri() );
+        s.setPredicate( ps.getPredicate() );
+        s.setPredicateUri( ps.getPredicateUri() );
+        s.setObject( ps.getObject() );
+        s.setObjectUri( ps.getObjectUri() );
+        s.setSecondPredicate( ps.getSecondPredicate() );
+        s.setSecondPredicateUri( ps.getSecondPredicateUri() );
+        s.setSecondObject( ps.getSecondObject() );
+        s.setSecondObjectUri( ps.getSecondObjectUri() );
     }
 
     @Override
