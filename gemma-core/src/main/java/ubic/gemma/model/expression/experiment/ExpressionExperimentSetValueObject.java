@@ -18,6 +18,9 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.Setter;
 import ubic.gemma.core.security.model.SecureValueObject;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.IdentifiableValueObject;
@@ -30,6 +33,8 @@ import java.util.HashSet;
  * @author tvrossum
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
+@Getter
+@Setter
 public class ExpressionExperimentSetValueObject extends IdentifiableValueObject<ExpressionExperimentSet>
         implements SecureValueObject, Comparable<ExpressionExperimentSetValueObject> {
 
@@ -37,6 +42,11 @@ public class ExpressionExperimentSetValueObject extends IdentifiableValueObject<
 
     private String description = "";
     private Collection<Long> expressionExperimentIds = new HashSet<>();
+    /**
+     * Accessor names are constrained by {@link SecureValueObject}; keep these getters/setters manual.
+     */
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
     private boolean isPublic = false;
     /**
      * If modifying the set is constrained by existing analyses.
@@ -46,10 +56,25 @@ public class ExpressionExperimentSetValueObject extends IdentifiableValueObject<
     private Integer size = 0;
     private Integer numWithCoexpressionAnalysis = 0;
     private Integer numWithDifferentialExpressionAnalysis = 0;
+    /**
+     * Accessor names are constrained by {@link SecureValueObject}; keep these getters/setters manual.
+     */
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
     private boolean shared = false;
     private Long taxonId;
     private String taxonName;
+    /**
+     * Accessor names are constrained by {@link SecureValueObject}; keep these getters/setters manual.
+     */
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
     private boolean userCanWrite = false;
+    /**
+     * Accessor names are constrained by {@link SecureValueObject}; keep these getters/setters manual.
+     */
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
     private boolean userOwned = false;
 
     /**
@@ -84,22 +109,6 @@ public class ExpressionExperimentSetValueObject extends IdentifiableValueObject<
             return other.id == null;
         } else
             return id.equals( other.id );
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription( String description ) {
-        this.description = description;
-    }
-
-    public Collection<Long> getExpressionExperimentIds() {
-        return expressionExperimentIds;
-    }
-
-    public void setExpressionExperimentIds( Collection<Long> expressionExperimentIds ) {
-        this.expressionExperimentIds = expressionExperimentIds;
     }
 
     @Override
@@ -147,54 +156,6 @@ public class ExpressionExperimentSetValueObject extends IdentifiableValueObject<
         this.userOwned = isUserOwned;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName( String name ) {
-        this.name = name;
-    }
-
-    public Integer getSize() {
-        return size;
-    }
-
-    public void setSize( Integer numExperiments ) {
-        this.size = numExperiments;
-    }
-
-    public Integer getNumWithCoexpressionAnalysis() {
-        return numWithCoexpressionAnalysis;
-    }
-
-    public void setNumWithCoexpressionAnalysis( Integer numWithCoexpressionAnalysis ) {
-        this.numWithCoexpressionAnalysis = numWithCoexpressionAnalysis;
-    }
-
-    public Integer getNumWithDifferentialExpressionAnalysis() {
-        return numWithDifferentialExpressionAnalysis;
-    }
-
-    public void setNumWithDifferentialExpressionAnalysis( Integer numWithDifferentialExpressionAnalysis ) {
-        this.numWithDifferentialExpressionAnalysis = numWithDifferentialExpressionAnalysis;
-    }
-
-    public Long getTaxonId() {
-        return taxonId;
-    }
-
-    public void setTaxonId( Long taxonId ) {
-        this.taxonId = taxonId;
-    }
-
-    public String getTaxonName() {
-        return taxonName;
-    }
-
-    public void setTaxonName( String taxonName ) {
-        this.taxonName = taxonName;
-    }
-
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -202,13 +163,4 @@ public class ExpressionExperimentSetValueObject extends IdentifiableValueObject<
         result = prime * result + ( ( id == null ) ? 0 : id.hashCode() );
         return result;
     }
-
-    public boolean isModifiable() {
-        return modifiable;
-    }
-
-    public void setModifiable( boolean modifiable ) {
-        this.modifiable = modifiable;
-    }
-
 }
