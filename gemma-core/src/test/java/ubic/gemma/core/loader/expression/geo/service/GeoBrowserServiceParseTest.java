@@ -36,6 +36,7 @@ import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonReadService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.EntityUrlBuilder;
 
@@ -76,6 +77,11 @@ public class GeoBrowserServiceParseTest extends BaseTest5 {
         @Bean
         public TaxonService taxonService() {
             return mock();
+        }
+
+        @Bean
+        public TaxonReadService taxonReadService() {
+            return mock( TaxonReadService.class );
         }
 
         @Bean
