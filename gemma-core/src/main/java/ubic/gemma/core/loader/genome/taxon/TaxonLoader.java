@@ -23,7 +23,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import ubic.gemma.core.util.FileTools;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.persister.Persister;
+import ubic.gemma.persistence.persister.GenomePersister;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,10 +39,15 @@ public class TaxonLoader {
 
     private static final Log log = LogFactory.getLog( TaxonLoader.class.getName() );
 
-    private Persister persisterHelper;
+    private GenomePersister genomePersister;
 
-    public void setPersisterHelper( Persister persisterHelper ) {
-        this.persisterHelper = persisterHelper;
+    /**
+     * Persister-shrink S3: was {@code setPersisterHelper(Persister)}; now takes the
+     * typed {@link GenomePersister} bean directly. The {@code persist(taxon)} call in
+     * {@link #load(InputStream)} routes through {@link GenomePersister#persistTaxon(Taxon)}.
+     */
+    public void setGenomePersister( GenomePersister genomePersister ) {
+        this.genomePersister = genomePersister;
     }
 
     public int load( File file ) throws IOException {
@@ -78,7 +83,7 @@ public class TaxonLoader {
 
             if ( TaxonLoader.log.isDebugEnabled() )
                 TaxonLoader.log.debug( "Loading " + taxon );
-            persisterHelper.persist( taxon );
+            genomePersister.persistTaxon( taxon );
             count++;
 
         }

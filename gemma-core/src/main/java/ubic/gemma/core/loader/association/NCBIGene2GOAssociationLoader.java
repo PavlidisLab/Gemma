@@ -23,7 +23,7 @@ import org.apache.commons.logging.LogFactory;
 import ubic.gemma.core.util.FileTools;
 import ubic.gemma.core.util.concurrent.ThreadUtils;
 import ubic.gemma.model.association.Gene2GOAssociation;
-import ubic.gemma.persistence.persister.Persister;
+import ubic.gemma.persistence.persister.RelationshipPersister;
 
 import java.io.File;
 import java.io.IOException;
@@ -45,7 +45,7 @@ public class NCBIGene2GOAssociationLoader {
     private static final int BATCH_SIZE = 12000;
     private final AtomicBoolean producerDone = new AtomicBoolean( false );
     private final AtomicBoolean consumerDone = new AtomicBoolean( false );
-    private Persister persisterHelper;
+    private RelationshipPersister relationshipPersister;
     private NCBIGene2GOAssociationParser parser = null;
     private int count;
 
@@ -126,8 +126,13 @@ public class NCBIGene2GOAssociationLoader {
         this.parser = parser;
     }
 
-    public void setPersisterHelper( Persister persisterHelper ) {
-        this.persisterHelper = persisterHelper;
+    /**
+     * Persister-shrink S3: was {@code setPersisterHelper(Persister)}; now takes the
+     * typed {@link RelationshipPersister} bean directly. The {@code persist(itemsToPersist)}
+     * calls route through {@link RelationshipPersister#persistGene2GOAssociations(Collection)}.
+     */
+    public void setRelationshipPersister( RelationshipPersister relationshipPersister ) {
+        this.relationshipPersister = relationshipPersister;
     }
 
     private void load( BlockingQueue<Gene2GOAssociation> queue ) {
@@ -149,7 +154,7 @@ public class NCBIGene2GOAssociationLoader {
 
                 itemsToPersist.add( association );
                 if ( ++count % NCBIGene2GOAssociationLoader.BATCH_SIZE == 0 ) {
-                    persisterHelper.persist( itemsToPersist );
+                    relationshipPersister.persistGene2GOAssociations( itemsToPersist );
                     itemsToPersist.clear();
                 }
 
@@ -174,7 +179,7 @@ public class NCBIGene2GOAssociationLoader {
         }
 
         // finish up.
-        persisterHelper.persist( itemsToPersist );
+        relationshipPersister.persistGene2GOAssociations( itemsToPersist );
 
         NCBIGene2GOAssociationLoader.log.info( "Finished, loaded total of " + count + " GO associations" );
         consumerDone.set( true );

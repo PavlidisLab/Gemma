@@ -37,7 +37,7 @@ import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import ubic.gemma.persistence.persister.Persister;
+import ubic.gemma.persistence.persister.GenomePersister;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 
@@ -61,15 +61,15 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
     private final ArrayDesignReportService arrayDesignReportService;
     private final ArrayDesignService arrayDesignService;
     private final BioSequenceService bioSequenceService;
-    private final Persister persisterHelper;
+    private final GenomePersister genomePersister;
 
     @Autowired
     public ArrayDesignSequenceAlignmentServiceImpl( ArrayDesignReportService arrayDesignReportService,
-            ArrayDesignService arrayDesignService, BioSequenceService bioSequenceService, Persister persisterHelper ) {
+            ArrayDesignService arrayDesignService, BioSequenceService bioSequenceService, GenomePersister genomePersister ) {
         this.arrayDesignReportService = arrayDesignReportService;
         this.arrayDesignService = arrayDesignService;
         this.bioSequenceService = bioSequenceService;
-        this.persisterHelper = persisterHelper;
+        this.genomePersister = genomePersister;
     }
 
     /**
@@ -389,7 +389,7 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
             ArrayDesignSequenceAlignmentServiceImpl.log.info( duplicates + " duplicate BLAT hits skipped" );
         }
 
-        return ( Collection<BlatResult> ) persisterHelper.persist( brs );
+        return genomePersister.persistBlatResults( brs );
     }
 
     private Collection<BlatResult> processArrayDesign( ArrayDesign ad, boolean sensitive, Blat blat ) {

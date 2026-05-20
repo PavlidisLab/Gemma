@@ -18,11 +18,13 @@
  */
 package ubic.gemma.persistence.persister;
 
+import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -139,6 +141,24 @@ public class ArrayDesignPersister {
             return persistArrayDesign( ( ArrayDesign ) entity, xdbCache, new HashMap<>(), new HashMap<>() );
         }
         return null;
+    }
+
+    /**
+     * Persister-shrink S3 public entry point: find an existing ArrayDesign by business
+     * key, else create. Owns the {@link FlushMode#MANUAL} window formerly carried by
+     * {@link PersisterHelperImpl#persist(ubic.gemma.model.common.Identifiable)}; caches
+     * are fresh per call (matches prior PHI semantics).
+     */
+    @Transactional
+    public ArrayDesign persistArrayDesign( ArrayDesign arrayDesign ) {
+        try {
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.MANUAL );
+            ArrayDesign result = this.persistArrayDesign( arrayDesign, new HashMap<>(), new HashMap<>(), new HashMap<>() );
+            sessionFactory.getCurrentSession().flush();
+            return result;
+        } finally {
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.AUTO );
+        }
     }
 
     /**
