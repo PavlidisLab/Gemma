@@ -3,8 +3,8 @@ package ubic.gemma.core.security.acl.voter;
 import ubic.gemma.core.security.acl.ObjectTransientnessRetrievalStrategyImpl;
 import ubic.gemma.core.security.model.Securable;
 import org.assertj.core.api.Assertions;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.security.access.AccessDecisionVoter;
 import org.springframework.security.access.ConfigAttribute;
 import org.springframework.security.access.SecurityConfig;
@@ -26,7 +26,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.mock;
@@ -72,7 +75,7 @@ public class AclEntryCollectionVoterTest {
     private ConfigAttribute ca, caIgnoreTransient;
     private Authentication auth;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         aclService = mock( AclService.class );
         voter = new AclEntryCollectionVoter( aclService, "ACL_SECURABLE_COLLECTION_READ", new Permission[] { BasePermission.READ } );

@@ -12,9 +12,9 @@ package ubic.gemma.core.security.acl;
 
 import ubic.gemma.core.security.AuthorityConstants;
 import ubic.gemma.core.security.model.Securable;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.acls.AclPermissionEvaluator;
@@ -62,7 +62,7 @@ public class AdminAclEvaluationTest {
     private InMemoryAclService aclService;
     private AclPermissionEvaluator evaluator;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         aclService = new InMemoryAclService();
         RoleHierarchy hierarchy = RoleHierarchyImpl.fromHierarchy(
@@ -79,7 +79,7 @@ public class AdminAclEvaluationTest {
         evaluator.setSidRetrievalStrategy( sids );
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         SecurityContextHolder.clearContext();
     }

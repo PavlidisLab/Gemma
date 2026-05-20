@@ -19,8 +19,8 @@ import org.hibernate.event.spi.PostInsertEvent;
 import org.hibernate.event.spi.PostInsertEventListener;
 import org.hibernate.event.spi.PreDeleteEvent;
 import org.hibernate.event.spi.PreDeleteEventListener;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -65,7 +65,7 @@ public class AuditTrailEventListenerTest {
     private SessionFactory sessionFactory;
     private Session session;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         userManager = mock( UserManager.class );
         sessionFactory = mock( SessionFactory.class );

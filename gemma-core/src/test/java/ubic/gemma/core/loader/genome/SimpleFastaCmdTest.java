@@ -18,8 +18,8 @@
  */
 package ubic.gemma.core.loader.genome;
 
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.core.util.FileTools;
 import ubic.gemma.core.config.Settings;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -30,7 +30,9 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static ubic.gemma.core.util.test.Assumptions.assumeThatExecutableExists;
 
 /**
@@ -45,7 +47,7 @@ public class SimpleFastaCmdTest {
     private static final String TESTBLASTDB = "testblastdb";
     private static Path testBlastDbPath;
 
-    @BeforeClass
+    @BeforeAll
     public static void checkFastaCmdExecutableExists() throws URISyntaxException {
         assumeThatExecutableExists( FASTA_CMD_EXE );
         testBlastDbPath = Paths.get( FileTools.resourceToPath( "/data/loader/genome/blast" ) );
@@ -123,7 +125,7 @@ public class SimpleFastaCmdTest {
         String accession = "AA000002";
 
         BioSequence bs = fastaCmd.getByAccession( accession, SimpleFastaCmdTest.TESTBLASTDB );
-        assertNotNull( "fastacmd failed to find " + accession, bs );
+        assertNotNull( bs, "fastacmd failed to find " + accession );
         String expected = "CCACCTTTCCCTCCACTCCTCACGTTCTCACCTGTAAAGCGTCCCTCCCTCATCCCCATGCCCCCTTACCCTGCAGGGTA"
                 + "GAGTAGGCTAGAAACCAGAGAGCTCCAAGCTCCATCTGTGGAGAGGTGCCATCCTTGGGCTGCAGAGAGAGGAGAATTTG"
                 + "CCCCAAAGCTGCCTGCAGAGCTTCACCACCCTTAGTCTCACAAAGCCTTGAGTTCATAGCATTTCTTGAGTTTTCACCCT"

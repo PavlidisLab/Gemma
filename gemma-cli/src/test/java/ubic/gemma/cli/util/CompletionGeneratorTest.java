@@ -2,8 +2,8 @@ package ubic.gemma.cli.util;
 
 import org.apache.commons.cli.Options;
 import org.apache.commons.io.IOUtils;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.cli.completion.BashCompletionGenerator;
 import ubic.gemma.cli.completion.CompletionGenerator;
 import ubic.gemma.cli.completion.FishCompletionGenerator;
@@ -18,7 +18,7 @@ import java.util.Locale;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assumptions.assumeThat;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.Assume.assumeNoException;
 import static org.mockito.Mockito.mock;
 
@@ -31,7 +31,7 @@ public class CompletionGeneratorTest {
             writeCompletionScript( new BashCompletionGenerator( "gemma-cli", new HashSet<>( Arrays.asList( "a", "b", "c" ) ) ), writer );
         }
         String error = IOUtils.toString( process.getErrorStream(), StandardCharsets.UTF_8 );
-        assertEquals( error, 0, process.waitFor() );
+        assertEquals( 0, process.waitFor(), error );
     }
 
     @Test
@@ -58,11 +58,11 @@ public class CompletionGeneratorTest {
             writeCompletionScript( new FishCompletionGenerator( "gemma-cli", new HashSet<>( Arrays.asList( "a", "b", "c" ) ), mock(), Locale.getDefault() ), writer );
         }
         String error = IOUtils.toString( process.getErrorStream(), StandardCharsets.UTF_8 );
-        assertEquals( error, 0, process.waitFor() );
+        assertEquals( 0, process.waitFor(), error );
     }
 
     @Test
-    @Ignore("This test simple does't work on the CI.")
+    @Disabled("This test simple does't work on the CI.")
     public void testFishCompletions() throws IOException, InterruptedException {
         Process process;
         try {
