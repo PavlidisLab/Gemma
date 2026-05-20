@@ -4,20 +4,20 @@
                    xsi:schemaLocation="http://www.hibernate.org/xsd/hibernate-mapping http://hibernate.org/xsd/hibernate-mapping-4.0.xsd">
 
     <!--
-        Hibernate 6 visibility regression fix: the L2 entity cache directive
-        `<cache usage="read-only"/>` was removed here because, combined with the
-        unidirectional AuditTrail.events bag (no back-reference from AuditEvent
-        to AuditTrail), it served STALE empty-bag results to fresh-session HQL
-        reads after a cross-transaction insert. The AUDIT_EVENT rows existed in
-        the DB and the SQL emitted by `select e from AuditTrail t join t.events e
-        where t=:at` was correct, but Hibernate's cached read-only-entity state
-        served from L2 was preferred over re-materialising from the result set.
-        AuditEvent rows ARE still write-once-immutable (`mutable="false"` is
-        retained), we just no longer cache them in L2. The full investigation is
-        in notable_cases.md (ArrayDesignReportServiceTest baseline failures,
-        2026-05-19).
+        Audit Phase C-2 (per AUDIT_MIGRATION_PHASE_C_RECCE.md): the
+        `mutable="false"` attribute was dropped in conjunction with the
+        PostInsert/PreDelete listener cutover on AuditTrailEventListener.
+        Both `mutable="false"` and the prior L2 `<cache usage="read-only"/>`
+        contributed to a stale-empty-bag bug: read-only/immutable AuditEvents
+        in L2 were returned by HQL on a fresh session in preference to the
+        actual SQL result set after a cross-tx insert. The cache directive
+        was removed earlier (notable_cases.md, ArrayDesignReportServiceTest
+        baseline failures, 2026-05-19); `mutable="false"` is now also removed
+        to fully retire the bug class. AuditEvent rows are conceptually
+        write-once (no UPDATE flow exists on them) but we no longer instruct
+        Hibernate to assume so.
     -->
-    <class mutable="false" name="ubic.gemma.model.common.auditAndSecurity.AuditEvent" table="AUDIT_EVENT">
+    <class name="ubic.gemma.model.common.auditAndSecurity.AuditEvent" table="AUDIT_EVENT">
         <id access="field" name="id" type="java.lang.Long">
             <column name="ID" sql-type="BIGINT"/>
             <generator class="native"/>

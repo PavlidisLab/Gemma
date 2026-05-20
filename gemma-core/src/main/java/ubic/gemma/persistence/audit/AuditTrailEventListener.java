@@ -56,12 +56,15 @@ import java.util.Date;
  * Hibernate persists the AuditTrail ahead of its parent, satisfying the
  * {@code AUDIT_TRAIL_FK NOT NULL} constraint on the parent table.
  *
- * <h3>Audit Phase C-1: auto-CREATE / auto-DELETE via Hibernate listeners</h3>
+ * <h3>Audit Phase C-2: auto-CREATE / auto-DELETE via Hibernate listeners</h3>
  *
- * As of Phase C-1 (per AUDIT_MIGRATION_PHASE_C_RECCE.md §2.1) this class additionally
- * implements {@link PostInsertEventListener} and {@link PreDeleteEventListener} to take
- * over the auto-CREATE / auto-DELETE emission that {@code AuditAdvice.creator()} and
- * {@code AuditAdvice.deleter()} currently perform via {@code @Before} AOP advices.
+ * As of Phase C-2 (per AUDIT_MIGRATION_PHASE_C_RECCE.md §2.1) this class additionally
+ * implements {@link PostInsertEventListener} and {@link PreDeleteEventListener} and
+ * is registered for the corresponding Hibernate event types in
+ * {@link AuditTrailEventListenerConfig}. It has taken over the auto-CREATE /
+ * auto-DELETE emission that {@code AuditAdvice.doCreateAdvice} and
+ * {@code AuditAdvice.doDeleteAdvice} previously performed via {@code @Before} AOP
+ * advices (those advices were deleted in the C-2 commit).
  * <p>
  * Why PostInsert (not PersistEventListener) for CREATE: at PostInsert the entity's
  * {@code AuditTrail} row already has its DB-assigned id, so adding an {@code AuditEvent}
@@ -74,13 +77,6 @@ import java.util.Date;
  * has already been removed from the session — we cannot write a DELETE row into a trail
  * that no longer exists. PreDelete fires before the SQL DELETE; the trail is still
  * attached, the AuditEvent insert fits into the same flush as the parent's removal.
- * <p>
- * <b>Spring registration is intentionally not enabled in C-1.</b> Wiring CREATE/DELETE
- * emission via this listener WHILE {@code AuditAdvice.creator()/deleter()} are also
- * firing would produce duplicate AuditEvent rows. C-2 retires those AOP advices and
- * registers the listener for {@code POST_INSERT} + {@code PRE_DELETE} in the same
- * commit, after IT validation against gemdtest. See
- * {@link AuditTrailEventListenerConfig} for the gated registration.
  *
  * @author phase3-agent
  * @see ubic.gemma.persistence.audit.AuditTrailEventListenerConfig
@@ -107,9 +103,9 @@ public class AuditTrailEventListener implements PersistEventListener, PostInsert
 
     /**
      * Full-fat constructor: persist-side guard PLUS auto-CREATE / auto-DELETE emission
-     * (Phase C-1). Pass a non-null {@link UserManager} + {@link SessionFactory} to enable
-     * the Hibernate-listener-driven CREATE/DELETE rows that will replace
-     * {@code AuditAdvice.creator()/deleter()} in C-2.
+     * (Phase C-2). Pass a non-null {@link UserManager} + {@link SessionFactory} to enable
+     * the Hibernate-listener-driven CREATE/DELETE rows that replace the deleted
+     * {@code AuditAdvice.doCreateAdvice()/doDeleteAdvice()} AOP advices.
      */
     public AuditTrailEventListener( @Nullable UserManager userManager, @Nullable SessionFactory sessionFactory ) {
         this.userManager = userManager;
@@ -149,7 +145,7 @@ public class AuditTrailEventListener implements PersistEventListener, PostInsert
     }
 
     // ----------------------------------------------------------------------------------
-    // PostInsertEventListener — auto-CREATE emission (Phase C-1)
+    // PostInsertEventListener — auto-CREATE emission (Phase C-2)
     // ----------------------------------------------------------------------------------
 
     @Override
@@ -162,7 +158,7 @@ public class AuditTrailEventListener implements PersistEventListener, PostInsert
     }
 
     // ----------------------------------------------------------------------------------
-    // PreDeleteEventListener — auto-DELETE emission (Phase C-1)
+    // PreDeleteEventListener — auto-DELETE emission (Phase C-2)
     // ----------------------------------------------------------------------------------
 
     @Override
