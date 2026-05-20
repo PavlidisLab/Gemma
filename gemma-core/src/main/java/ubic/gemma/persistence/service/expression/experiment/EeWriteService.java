@@ -45,4 +45,21 @@ public interface EeWriteService {
      * @return the persisted entity
      */
     ExpressionExperiment create( ExpressionExperiment ee, @Nullable ArrayDesignsForExperimentCache cache );
+
+    /**
+     * Persist an {@link ExpressionExperiment} graph, synthesising the
+     * {@link ArrayDesignsForExperimentCache} via
+     * {@link ExpressionExperimentPrePersistService#prepare} in the same
+     * transaction.
+     * <p>
+     * Prefer the two-argument {@link #create(ExpressionExperiment, ArrayDesignsForExperimentCache)}
+     * overload when a cache is available from a prior, separate transaction
+     * (recommended for large platforms). This single-argument overload exists
+     * for the few callers (CellXGene, SplitExperiment, etc.) that build the
+     * EE graph in one transaction and accept the in-transaction prepare.
+     *
+     * @param ee the expression experiment to persist
+     * @return the persisted entity
+     */
+    ExpressionExperiment create( ExpressionExperiment ee );
 }

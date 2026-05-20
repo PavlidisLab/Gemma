@@ -55,6 +55,7 @@ import ubic.gemma.persistence.service.expression.experiment.EeWriteService;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalDesignDao;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorDao;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentPrePersistService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetDao;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueDao;
 
@@ -134,6 +135,9 @@ public class EeWriteServiceImpl implements EeWriteService {
     @Autowired
     private PersisterHelper persisterHelper;
 
+    @Autowired
+    private ExpressionExperimentPrePersistService expressionExperimentPrePersistService;
+
     /**
      * Returns the underlying {@link PersisterHelperImpl}, unwrapping the
      * Spring AOP proxy if necessary. Needed to reach the protected helpers
@@ -157,6 +161,22 @@ public class EeWriteServiceImpl implements EeWriteService {
         } finally {
             persister().getSessionFactory().getCurrentSession().setHibernateFlushMode( FlushMode.AUTO );
         }
+    }
+
+    /**
+     * No-cache overload: synthesises the {@link ArrayDesignsForExperimentCache}
+     * via {@link ExpressionExperimentPrePersistService#prepare} in the same
+     * transaction. Matches the historical behaviour of the polymorphic
+     * {@code persisterHelper.persist(ee)} dispatch (the {@code ExpressionPersister.doPersist}
+     * EE arm did the same synthesis and emitted a warning recommending a separate
+     * transaction). The warning is preserved here.
+     */
+    @Override
+    @Transactional
+    public ExpressionExperiment create( ExpressionExperiment ee ) {
+        log.warn( "Consider doing the 'prepare' step in a separate transaction." );
+        ArrayDesignsForExperimentCache cache = expressionExperimentPrePersistService.prepare( ee );
+        return create( ee, cache );
     }
 
     /**

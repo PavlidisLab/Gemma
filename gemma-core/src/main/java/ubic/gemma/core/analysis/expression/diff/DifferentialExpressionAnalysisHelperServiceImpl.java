@@ -23,11 +23,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
-import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.common.protocol.ProtocolDao;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetService;
 
 /**
  * Transactional methods for dealing with differential expression analyses.
@@ -42,10 +41,10 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
 
     @Autowired
-    private Persister persisterHelper = null;
+    private ProtocolDao protocolDao;
 
     @Autowired
-    private ProtocolDao protocolDao;
+    private ExpressionExperimentSubSetService expressionExperimentSubSetService;
 
     @Override
     @Transactional
@@ -57,9 +56,13 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
         }
 
         // Sometimes we have made a new EESubSet as part of the analysis.
-        if ( ExpressionExperimentSubSet.class.isAssignableFrom( entity.getExperimentAnalyzed().getClass() )
+        // Persister-shrink S1: replaces persisterHelper.persist(subset) with a direct
+        // call to ExpressionExperimentSubSetService.findOrCreate (matches the
+        // findOrCreate semantic of the former EeWriteServiceImpl.persistExpressionExperimentSubSet).
+        if ( entity.getExperimentAnalyzed() instanceof ExpressionExperimentSubSet
                 && entity.getId() == null ) {
-            entity.setExperimentAnalyzed( ( BioAssaySet ) persisterHelper.persist( entity.getExperimentAnalyzed() ) );
+            ExpressionExperimentSubSet subset = ( ExpressionExperimentSubSet ) entity.getExperimentAnalyzed();
+            entity.setExperimentAnalyzed( expressionExperimentSubSetService.findOrCreate( subset ) );
         }
 
         entity = differentialExpressionAnalysisService.create( entity );
