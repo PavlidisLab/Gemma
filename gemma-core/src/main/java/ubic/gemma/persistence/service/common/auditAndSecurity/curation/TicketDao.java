@@ -14,6 +14,7 @@ package ubic.gemma.persistence.service.common.auditAndSecurity.curation;
 import org.springframework.lang.Nullable;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketPriority;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType;
 import ubic.gemma.persistence.service.BaseDao;
@@ -114,4 +115,31 @@ public interface TicketDao extends BaseDao<Ticket> {
      */
     CursorPage<Ticket> findTicketsByCursor( boolean openOnly, @Nullable Long assigneeId,
             @Nullable TicketPriority priority, @Nullable Cursor cursor, int limit );
+
+    /**
+     * Keyset-pagination counterpart to the {@code Ticket.events} collection on a
+     * single ticket &mdash; cursor mode for {@code GET /tickets/{id}/events}
+     * (step 1r of {@code CURSOR_PAGINATION_STEP1_PLAN.md}).
+     * <p>
+     * Same scope as iterating {@link Ticket#getEvents()}: every
+     * {@link TicketEvent} whose {@code ticket} FK matches the supplied ticket.
+     * Cursor mode forces a single-component ascending {@code id} sort
+     * (different from the legacy {@code occurredAt} ordering &mdash; {@code id}
+     * is the unique primary key and the only column safe for keyset pagination
+     * under the step 1b single-component-sort restriction; events on a ticket
+     * are appended monotonically over time so {@code id} order tracks
+     * {@code occurredAt} order in practice). The ticket scope is preserved
+     * across pages. Fetches {@code limit+1} rows internally to detect
+     * {@code hasMore} without a separate {@code COUNT(*)};
+     * {@code totalElements} on the returned page is {@code null} by default.
+     *
+     * @param ticket the ticket whose events are being browsed; must have a
+     *               persistent id
+     * @param cursor previous-response cursor token (nullable for the first
+     *               page); must have {@code sortSpec == "+id"} and a
+     *               single-component numeric {@code keyTuple} or the call
+     *               throws {@link IllegalArgumentException}.
+     * @param limit  page size; must be {@code > 0}
+     */
+    CursorPage<TicketEvent> findEventsByCursor( Ticket ticket, @Nullable Cursor cursor, int limit );
 }

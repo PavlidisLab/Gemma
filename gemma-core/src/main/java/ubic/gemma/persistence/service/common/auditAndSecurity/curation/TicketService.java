@@ -14,6 +14,7 @@ package ubic.gemma.persistence.service.common.auditAndSecurity.curation;
 import org.springframework.lang.Nullable;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketPriority;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketState;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget;
@@ -91,4 +92,7 @@ public interface TicketService extends BaseService<Ticket> {
     /** @see TicketDao#findOpenForTargetByCursor */
     CursorPage<Ticket> findOpenForTargetByCursor( TicketTargetType targetType, Long targetId,
             @Nullable Cursor cursor, int limit );
+
+    /** @see TicketDao#findEventsByCursor */
+    CursorPage<TicketEvent> findEventsByCursor( Ticket ticket, @Nullable Cursor cursor, int limit );
 }
