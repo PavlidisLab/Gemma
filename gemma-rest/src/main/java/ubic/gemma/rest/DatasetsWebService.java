@@ -50,6 +50,7 @@ import ubic.gemma.core.analysis.preprocess.filter.NoDesignElementsException;
 import ubic.gemma.core.analysis.preprocess.svd.SVDResult;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
+import ubic.gemma.core.analysis.service.OutlierFlaggingService;
 import ubic.gemma.core.job.SubmittedTask;
 import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.core.tasks.analysis.diffex.DifferentialExpressionAnalysisRemoveTaskCommand;
@@ -123,6 +124,7 @@ import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpre
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.GeeqService;
@@ -246,6 +248,10 @@ public class DatasetsWebService {
     private TicketService ticketService;
     @Autowired
     private UserManager userManager;
+    @Autowired
+    private BioAssayService bioAssayService;
+    @Autowired
+    private OutlierFlaggingService outlierFlaggingService;
 
     @Context
     private UriInfo uriInfo;
@@ -933,6 +939,84 @@ public class DatasetsWebService {
             return respond( datasetArgService.getSamples( datasetArg, qt ) );
         }
         return respond( datasetArgService.getSamples( datasetArg ) );
+    }
+
+    /**
+     * Request body for {@link #markDatasetSampleOutlier}. {@code outlier=true} flags the sample as an
+     * outlier (delegating to {@link OutlierFlaggingService#markAsMissing(Collection)}); {@code outlier=false}
+     * reverts an existing flag (delegating to {@link OutlierFlaggingService#unmarkAsMissing(Collection)}).
+     */
+    public static class SampleOutlierRequest {
+        @Nullable
+        private Boolean outlier;
+
+        @Nullable
+        public Boolean getOutlier() {
+            return outlier;
+        }
+
+        public void setOutlier( @Nullable Boolean outlier ) {
+            this.outlier = outlier;
+        }
+    }
+
+    /**
+     * Mark (or unmark) a BioAssay as a sample outlier.
+     * <p>
+     * Curation-UI workflow-step endpoint: the experiment-page "flag/unflag outlier" buttons call this. Flagging
+     * sets the assay's processed-data values to missing via {@link OutlierFlaggingService#markAsMissing}; the
+     * inverse reverts that. The endpoint validates that the supplied bioAssay belongs to the path-derived
+     * dataset before mutating, returning {@code 400} otherwise.
+     */
+    @PUT
+    @Path("/{dataset}/samples/{bioAssayId}/outlier")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Mark or unmark a BioAssay as a sample outlier",
+            description = "Body: `{\"outlier\": true|false}`. `true` flags the assay as an outlier (its processed-data "
+                    + "values are set to missing); `false` reverts that. Returns the updated `BioAssayValueObject` "
+                    + "for the flipped assay. The bioAssay must belong to the path-derived dataset; otherwise a "
+                    + "`400` is returned.",
+            security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "400", description = "The request body is missing the `outlier` field, or the bioAssay does not belong to the dataset.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "404", description = "The dataset or bioAssay does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<BioAssayValueObject> markDatasetSampleOutlier(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @PathParam("bioAssayId") Long bioAssayId,
+            @Nullable SampleOutlierRequest body
+    ) {
+        if ( body == null || body.getOutlier() == null ) {
+            throw new BadRequestException( "A request body with a non-null `outlier` field is required." );
+        }
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        ee = expressionExperimentService.thawBioAssays( ee );
+        BioAssay target = null;
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            if ( bioAssayId.equals( ba.getId() ) ) {
+                target = ba;
+                break;
+            }
+        }
+        if ( target == null ) {
+            throw new BadRequestException( "BioAssay " + bioAssayId + " does not belong to dataset " + ee.getShortName() + "." );
+        }
+        Collection<BioAssay> assays = Collections.singleton( target );
+        if ( body.getOutlier() ) {
+            outlierFlaggingService.markAsMissing( assays );
+        } else {
+            outlierFlaggingService.unmarkAsMissing( assays );
+        }
+        // Reload the assay so the VO reflects the flip (markAsMissing toggles isOutlier on the BioAssay).
+        BioAssay refreshed = bioAssayService.loadOrFail( bioAssayId );
+        refreshed = bioAssayService.thaw( refreshed );
+        BioAssayValueObject vo = new BioAssayValueObject( refreshed, false );
+        return respond( vo );
     }
 
     @GET
@@ -1652,6 +1736,61 @@ public class DatasetsWebService {
             @PathParam("dataset") DatasetArg<?> datasetArg,
             @QueryParam("mode") @DefaultValue("all") GeeqService.ScoreMode mode
     ) {
+        return doRecomputeDatasetGeeq( datasetArg, mode );
+    }
+
+    /**
+     * Request body for {@link #recomputeDatasetGeeqViaPost}. All fields optional; an empty / missing body
+     * triggers a full ({@code mode=all}) recompute.
+     */
+    public static class GeeqRecomputeRequest {
+        @Nullable
+        private GeeqService.ScoreMode mode;
+
+        @Nullable
+        public GeeqService.ScoreMode getMode() {
+            return mode;
+        }
+
+        public void setMode( @Nullable GeeqService.ScoreMode mode ) {
+            this.mode = mode;
+        }
+    }
+
+    /**
+     * Alias for {@link #recomputeDatasetGeeq(DatasetArg, GeeqService.ScoreMode)} that exposes the GEEQ
+     * recompute under {@code POST /datasets/{id}/geeq/recompute} with a JSON body.
+     * <p>
+     * Curation-UI compatibility shim: the curation-UI workflow-step "recompute GEEQ" button posts to this
+     * path. Behaviour is identical to {@code PUT /datasets/{id}/geeq} — both delegate to the same handler.
+     * The {@code mode} defaults to {@code all} when the body is omitted. See {@code
+     * CURATION_UI_HANDOFF_INVENTORY.md}.
+     */
+    @POST
+    @Path("/{dataset}/geeq/recompute")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Recompute GEEQ scores for a dataset (alias of PUT /geeq)",
+            description = "Curation-UI compatibility alias for `PUT /datasets/{id}/geeq`. Body: optional "
+                    + "`{\"mode\": \"all\"|\"batch\"|\"reps\"|\"pub\"}` (defaults to `all`). Behaviour is identical "
+                    + "to the canonical endpoint.",
+            security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<GeeqValueObject> recomputeDatasetGeeqViaPost(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Nullable GeeqRecomputeRequest body
+    ) {
+        GeeqService.ScoreMode mode = ( body != null && body.getMode() != null )
+                ? body.getMode() : GeeqService.ScoreMode.all;
+        return doRecomputeDatasetGeeq( datasetArg, mode );
+    }
+
+    private ResponseDataObject<GeeqValueObject> doRecomputeDatasetGeeq( DatasetArg<?> datasetArg, GeeqService.ScoreMode mode ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         Geeq updated = geeqService.calculateScore( ee, mode );
         GeeqValueObject vo = new GeeqAdminValueObject( updated );
@@ -2390,6 +2529,84 @@ public class DatasetsWebService {
     @Operation(summary = "Retrieve quantitation types of a dataset")
     public ResponseDataObject<Set<QuantitationTypeValueObject>> getDatasetQuantitationTypes( @PathParam("dataset") DatasetArg<?> datasetArg ) {
         return respond( datasetArgService.getQuantitationTypes( datasetArg ) );
+    }
+
+    /**
+     * Request body for {@link #setDatasetQuantitationTypePreferred}. {@code preferred} defaults to {@code true}
+     * when the body or field is omitted, matching the curation-UI "mark as preferred" button semantics.
+     */
+    public static class QuantitationTypePreferredRequest {
+        @Nullable
+        private Boolean preferred;
+
+        @Nullable
+        public Boolean getPreferred() {
+            return preferred;
+        }
+
+        public void setPreferred( @Nullable Boolean preferred ) {
+            this.preferred = preferred;
+        }
+    }
+
+    /**
+     * Mark a QuantitationType as the preferred one (within its vector-type bucket) for the given dataset.
+     * <p>
+     * Curation-UI workflow-step endpoint: the experiment-page "set preferred QT" button calls this. The
+     * {@link ExpressionExperimentService#updateQuantitationType} handler takes care of the
+     * "unmark every other QT of the same vector type" book-keeping and emits the appropriate
+     * {@code PreferredDataChangedEvent}. Body may be omitted (defaults to {@code preferred=true}) or
+     * supplied as {@code {"preferred": false}} to clear the flag.
+     */
+    @PATCH
+    @Path("/{dataset}/quantitationTypes/{qtId}/preferred")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Set (or clear) a quantitation type's preferred flag",
+            description = "Body: optional `{\"preferred\": true|false}` (defaults to `true`). Marks the named "
+                    + "QT as preferred for its vector-type bucket on the given dataset; any other QT that was "
+                    + "previously preferred in the same bucket is automatically unmarked. Returns the updated "
+                    + "`QuantitationTypeValueObject`.",
+            security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "400", description = "The QT has no data vectors / no resolvable vector type.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "404", description = "The dataset or quantitation type does not exist (or the QT does not belong to the dataset).",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<QuantitationTypeValueObject> setDatasetQuantitationTypePreferred(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @PathParam("qtId") Long qtId,
+            @Nullable QuantitationTypePreferredRequest body
+    ) {
+        boolean preferred = body == null || body.getPreferred() == null || body.getPreferred();
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        QuantitationType qt = quantitationTypeService.loadById( qtId, ee );
+        if ( qt == null ) {
+            throw new NotFoundException( "Quantitation type " + qtId + " does not belong to dataset " + ee.getShortName() + "." );
+        }
+        Class<? extends DataVector> vectorType = quantitationTypeService.getDataVectorType( qt );
+        if ( vectorType == null ) {
+            throw new BadRequestException( "Quantitation type " + qtId + " has no resolvable vector type "
+                    + "(likely no data vectors); cannot toggle its preferred flag." );
+        }
+        // Capture the previous preferred QT in this vector-type bucket so the write service can emit the
+        // appropriate audit event (PreferredRawDataChangedEvent / PreferredSingleCellDataChangedEvent).
+        QuantitationType previousPreferred = null;
+        for ( QuantitationType other : ee.getQuantitationTypes() ) {
+            if ( !other.equals( qt ) ) {
+                Class<? extends DataVector> otherVt = quantitationTypeService.getDataVectorType( other );
+                if ( otherVt != null && otherVt.equals( vectorType ) && other.isPreferred( vectorType ) ) {
+                    previousPreferred = other;
+                    break;
+                }
+            }
+        }
+        qt.setIsPreferred( preferred, vectorType );
+        expressionExperimentService.updateQuantitationType( ee, qt, previousPreferred );
+        return respond( new QuantitationTypeValueObject( qt, ee, vectorType ) );
     }
 
     /**
