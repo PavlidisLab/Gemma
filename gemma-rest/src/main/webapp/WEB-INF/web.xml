@@ -223,12 +223,12 @@
         Mapping is /resources/* + extension globs, mirroring gemma-web/web.xml lines 244-278
         but trimmed to the asset types swagger-ui actually ships.
 
-        NOTE: the swagger UI landing page (gemma-rest/src/main/resources/restapidocs/index.jsp)
-        is a JSP and CANNOT be served by this WAR — gemma-rest deliberately has no JSP
-        support (no DispatcherServlet, no <jsp-config>). Follow-up tracked in
-        GEMMA_REST_STANDALONE_RECCE.md §5 step 4: replace index.jsp with a static
-        index.html (the JSP variable interpolation is minimal — just contextPath) before
-        gemma-web is deleted. Direct hits to the .css / .js / .map / .gz files work today.
+        The swagger UI landing page (gemma-rest/src/main/resources/restapidocs/index.html)
+        is now a static HTML file served directly by the DefaultServlet — gemma-rest
+        deliberately has no JSP support (no DispatcherServlet, no <jsp-config>). The
+        page derives the context path client-side from window.location.pathname so the
+        same file works for any deploy path. See RestapidocsIndexRewriteFilter for the
+        /resources/restapidocs/ -> /resources/restapidocs/index.html rewrite.
     -->
     <servlet>
         <servlet-name>default</servlet-name>

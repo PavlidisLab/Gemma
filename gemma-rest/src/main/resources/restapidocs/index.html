@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <title>RESTful API documentation | Gemma</title>
+    <link rel="stylesheet" type="text/css" href="swagger-ui.css"/>
+    <link rel="stylesheet" type="text/css" href="style.css"/>
+</head>
+<body>
+<header class="header">
+    <a id="gemma-home-link" href="../../home.html" class="logo">
+        <img id="gemma-logo" src="../../images/logo/gemma-logo-text.png" height="60" alt="Gemma Logo"/>
+    </a>
+    <a href="https://www.ubc.ca/" class="right-logo">
+        <img id="ubc-logo" src="../../images/logo/ubc-logo.png" height="40" alt="UBC Logo"/>
+    </a>
+</header>
+<div id="swagger-ui"></div>
+<script src="swagger-ui-bundle.js"></script>
+<script>
+    // Derive context path from the current URL. This page lives at
+    // <contextPath>/resources/restapidocs/index.html (or .../resources/restapidocs/),
+    // so strip the trailing "/resources/restapidocs/..." to recover the app context.
+    (function () {
+        var path = window.location.pathname;
+        var marker = '/resources/restapidocs';
+        var idx = path.indexOf( marker );
+        var contextPath = idx >= 0 ? path.substring( 0, idx ) : '';
+
+        // Fix up header links that need the context path. The href/src above use
+        // relative ../../ which works for both gemma-web (contextPath=/Gemma) and
+        // gemma-rest standalone (contextPath=/ or /gemma-rest); these absolute
+        // overrides keep behaviour identical to the old JSP.
+        var homeLink = document.getElementById( 'gemma-home-link' );
+        if ( homeLink ) {
+            homeLink.href = contextPath + '/home.html';
+        }
+        var gemmaLogo = document.getElementById( 'gemma-logo' );
+        if ( gemmaLogo ) {
+            gemmaLogo.src = contextPath + '/images/logo/gemma-logo-text.png';
+        }
+        var ubcLogo = document.getElementById( 'ubc-logo' );
+        if ( ubcLogo ) {
+            ubcLogo.src = contextPath + '/images/logo/ubc-logo.png';
+        }
+
+        window.ui = SwaggerUIBundle( {
+            url: contextPath + '/rest/v2/openapi.json',
+            dom_id: '#swagger-ui',
+            deepLinking: true,
+            tagsSorter: 'alpha',
+            operationsSorter: 'alpha',
+            presets: [
+                SwaggerUIBundle.presets.apis
+            ]
+        } );
+    })();
+</script>
+</body>
+</html>
