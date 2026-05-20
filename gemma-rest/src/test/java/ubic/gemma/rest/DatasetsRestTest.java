@@ -1,18 +1,16 @@
 package ubic.gemma.rest;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.test.PersistentDummyObjectHelper;
-import ubic.gemma.core.util.test.category.IntegrationTest;
-import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.rest.util.BaseJerseyIntegrationTest;
+import ubic.gemma.rest.util.BaseJerseyIntegrationTest5;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.ResponseErrorObject;
 import ubic.gemma.rest.util.args.*;
@@ -31,8 +29,9 @@ import static ubic.gemma.rest.util.Assertions.assertThat;
 /**
  * @author tesarst
  */
-@Category({ SlowTest.class, IntegrationTest.class })
-public class DatasetsRestTest extends BaseJerseyIntegrationTest {
+@Tag("integration")
+@Tag("slow")
+public class DatasetsRestTest extends BaseJerseyIntegrationTest5 {
 
     @Autowired
     private DatasetsWebService datasetsWebService;
@@ -49,7 +48,7 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
     /* fixtures */
     private final ArrayList<ExpressionExperiment> ees = new ArrayList<>( 10 );
 
-    @Before
+    @BeforeEach
     public void setUpMocks() {
         for ( int i = 0; i < 10; i++ ) {
             testHelper.resetSeed();
@@ -57,7 +56,7 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
         }
     }
 
-    @After
+    @AfterEach
     public void resetMocks() {
         expressionExperimentService.remove( ees );
     }

@@ -1,22 +1,22 @@
 package ubic.gemma.rest;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.rest.util.BaseJerseyIntegrationTest;
+import ubic.gemma.rest.util.BaseJerseyIntegrationTest5;
 
 import jakarta.ws.rs.core.Response;
 import java.util.Random;
 
 import static ubic.gemma.rest.util.Assertions.assertThat;
 
-public class GeneWebServiceTest extends BaseJerseyIntegrationTest {
+public class GeneWebServiceTest extends BaseJerseyIntegrationTest5 {
 
     @Autowired
     private TaxonService taxonService;
@@ -28,7 +28,7 @@ public class GeneWebServiceTest extends BaseJerseyIntegrationTest {
     private Taxon taxon;
     private Gene gene, gene2;
 
-    @Before
+    @BeforeEach
     public void createFixtures() {
         Random random = new Random( 123L );
         taxon = new Taxon();
@@ -45,7 +45,7 @@ public class GeneWebServiceTest extends BaseJerseyIntegrationTest {
         gene = geneService.create( gene );
     }
 
-    @After
+    @AfterEach
     public void removeFixtures() {
         geneService.remove( gene );
         if ( gene2 != null ) {
