@@ -10,6 +10,8 @@
  */
 package ubic.gemma.persistence.hibernate;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
@@ -27,6 +29,8 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 import ubic.gemma.persistence.retry.RetryLogger;
 
 import javax.sql.DataSource;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -95,6 +99,8 @@ import java.util.Properties;
 @EnableTransactionManagement(order = 3)
 @EnableCaching(order = 2)
 public class HibernateConfig {
+
+    private static final Log log = LogFactory.getLog( HibernateConfig.class );
 
     // ---------------------------------------------------------------------------------------------
     // Hibernate property placeholders (resolved from PropertySourcesConfiguration / hibernate.properties)
@@ -214,7 +220,12 @@ public class HibernateConfig {
         // Local filesystem directory storage (vs. heap / NIO mmap variants).
         props.setProperty( "hibernate.search.backend.directory.type", "local-filesystem" );
         // Index root directory (HS 7 successor to HS 5's hibernate.search.default.indexBase).
-        props.setProperty( "hibernate.search.backend.directory.root", searchIndexBase );
+        // Defensive guard: HS 7 treats a blank / relative directory.root as CWD, which during
+        // tests (Surefire CWD = module dir) leaves per-entity Lucene index sub-directories
+        // littered at the top of gemma-core/ (one dir per @Indexed entity: AlternateName/,
+        // ArrayDesign/, Gene/, ...). Force an absolute path here so a misconfigured
+        // gemma.search.dir can't dump Lucene segments into the working tree.
+        props.setProperty( "hibernate.search.backend.directory.root", resolveSearchIndexBase( searchIndexBase ) );
         // See block comment above: listeners off, manual reindex pattern.
         props.setProperty( "hibernate.search.indexing.listeners.enabled", "false" );
         // Synchronize indexing-plan commits with the surrounding transaction so post-reindex
@@ -227,6 +238,35 @@ public class HibernateConfig {
 
         factory.setHibernateProperties( props );
         return factory;
+    }
+
+    /**
+     * Coerce the configured search-index base into an absolute filesystem path.
+     * <p>
+     * If {@code raw} is null, blank, the literal placeholder {@code ${gemma.search.dir}}
+     * (unresolved), or any relative path, fall back to
+     * {@code ${java.io.tmpdir}/gemmaData/searchIndices} and log a warning. This
+     * guards against Hibernate Search 7 littering the working tree with one
+     * sub-directory per {@code @Indexed} entity when the property is misconfigured.
+     * <p>
+     * The fallback intentionally matches {@code default.properties}' default expansion
+     * so dev / CI runs that lose the property at injection time still land somewhere
+     * sane and self-cleaning ({@code java.io.tmpdir}) instead of polluting
+     * {@code gemma-core/}.
+     */
+    static String resolveSearchIndexBase( String raw ) {
+        if ( raw != null && !raw.trim().isEmpty()
+                && !raw.contains( "${" )
+                && Paths.get( raw ).isAbsolute() ) {
+            return raw;
+        }
+        Path fallback = Paths.get( System.getProperty( "java.io.tmpdir" ), "gemmaData", "searchIndices" );
+        log.warn( "gemma.search.dir resolved to " + ( raw == null ? "<null>" : "'" + raw + "'" )
+                + " (blank / unresolved placeholder / relative path); "
+                + "falling back to " + fallback + " for the Hibernate Search 7 directory.root. "
+                + "Set gemma.search.dir to an absolute path in your environment / Gemma.properties "
+                + "to silence this warning." );
+        return fallback.toString();
     }
 
     // ---------------------------------------------------------------------------------------------

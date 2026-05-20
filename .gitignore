@@ -157,8 +157,36 @@ figures/__pycache__/
 
 # Hibernate Search 7 Lucene index dirs (when gemma.search.dir resolves
 # to a relative path during tests, HS 7 creates per-entity subdirs at
-# that root). Follow-up: make gemma.search.dir absolute in test contexts
-# so this can't happen, then remove these patterns.
+# that root). HibernateConfig.resolveSearchIndexBase() now coerces a
+# misconfigured value back to ${java.io.tmpdir}/gemmaData/searchIndices,
+# but these patterns stay as a defensive belt against future regressions
+# and to cover any leftover indexes from earlier runs.
 /searchIndices/
 /gemma-core/searchIndices/
 /gemma-core/target/searchIndices/
+# Per-entity Hibernate Search 7 index directories — one dir per @Indexed
+# entity root. Each contains a Lucene segments_* file and a write.lock.
+# See HibernateConfig.resolveSearchIndexBase() for the upstream guard.
+/gemma-core/AlternateName/
+/gemma-core/ArrayDesign/
+/gemma-core/BibliographicReference/
+/gemma-core/BioAssay/
+/gemma-core/BioMaterial/
+/gemma-core/BioSequence/
+/gemma-core/Characteristic/
+/gemma-core/CompositeSequence/
+/gemma-core/Compound/
+/gemma-core/DatabaseEntry/
+/gemma-core/ExperimentalDesign/
+/gemma-core/ExperimentalFactor/
+/gemma-core/ExpressionExperiment/
+/gemma-core/ExpressionExperimentSet/
+/gemma-core/FactorValue/
+/gemma-core/Gene/
+/gemma-core/GeneAlias/
+/gemma-core/GeneProduct/
+/gemma-core/GeneSet/
+/gemma-core/GeneSetMember/
+/gemma-core/Keyword/
+/gemma-core/MedicalSubjectHeading/
+/gemma-core/Statement/
