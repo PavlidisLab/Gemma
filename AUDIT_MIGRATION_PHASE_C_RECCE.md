@@ -444,3 +444,72 @@ audit-event publishing for the Spring Modulith readiness story").
 That keeps Phase C's PR diff focused: the AuditAdvice deletion + the
 listener addition + the cache HBM fix + the mechanical sweep, nothing
 else.
+
+---
+
+## 6. C-2 landing note (2026-05-19)
+
+C-2 landed on branch `audit-phasec-c2` (off
+`phase2-acl-migrate@893ee3545b`). Slices that shipped:
+
+1. `AuditTrailEventListenerConfig`: switched to two-arg constructor
+   (`@Autowired UserManager` + `@Autowired SessionFactory`),
+   registered `POST_INSERT` + `PRE_DELETE` event types on
+   `AuditTrailEventListener` in addition to `PERSIST` /
+   `PERSIST_ONFLUSH`.
+2. `AuditAdvice.doCreateAdvice` + `doDeleteAdvice` deleted, along
+   with their dead-code helpers (`addCreateAuditEvent`,
+   `addDeleteAuditEvent`) and the `OperationType.CREATE` /
+   `OperationType.DELETE` switch arms. The class collapses from
+   373 LoC → ~280 LoC. `doSaveAdvice` + `doUpdateAdvice` retained
+   per the conservative C-2 brief; the transient-save CREATE
+   cascade is absorbed by the listener's duplicate-CREATE guard.
+3. `mutable="false"` dropped from both `AuditTrail.hbm.xml` and
+   `AuditEvent.hbm.xml`. The L2 `<cache usage="read-only"/>` on
+   AuditEvent was already gone from C-1.
+4. `WhatsNewServiceImpl` + `DatasetsWebService.getDatasetAuditEvents`:
+   inspected, no hardcoded references to the removed
+   `AuditAdvice.doCreateAdvice` / `doDeleteAdvice` methods (both
+   use the read-side `AuditEventService` API, which is unchanged).
+   No migration needed.
+
+Deferred to a follow-on (per conservative brief):
+
+- **The 28-site `@Audited` mechanical sweep** (recce §1 bucket 1 + 12).
+  Each site needs case-by-case analysis to confirm:
+  (a) the Auditable is the first parameter of the enclosing method;
+  (b) the method exits through a single normal return (no
+  catch-block emit);
+  (c) the event type is a literal class (no
+  parameterized/dynamic dispatch). Risky to do in bulk without IT
+  validation against gemdtest. The 28 sites are:
+
+  CLI bucket (6 sites — bucket 12):
+  - `ArrayDesignBlatCli:187`, `ArrayDesignSequenceAssociationCli:243`,
+    `MakeExperimentPrivateCli:26`, `ArrayDesignBioSequenceDetachCli:114`,
+    `ArrayDesignSubsumptionTesterCli:152`, `ArrayDesignRepeatScanCli:159`.
+
+  Service bucket (representative 22 sites — bucket 1):
+  - `MeanVarianceServiceImpl:93`, `VectorMergingServiceImpl:253`,
+    `SVDServiceImpl:589`, `ArrayDesignMergeHelperServiceImpl:87`,
+    `GeoServiceImpl:462`, `ExternalDatabaseServiceImpl:107/116`,
+    `SingleCellExpressionExperimentServiceImpl:388/680/936/994/1044/1452/1479`,
+    `ExpressionExperimentServiceImpl:1056`,
+    `OutlierFlaggingServiceImpl:96/135`,
+    `SingleCellExpressionExperimentSubSetServiceImpl:118`,
+    `SingleCellExpressionExperimentAggregateServiceImpl:313`,
+    `GeeqServiceImpl:566`, `ExperimentalDesignController:765`,
+    `ExpressionExperimentController:1273`,
+    `ExpressionExperimentEditController:854`.
+
+- **`AuditAdviceTest` update** (recce §3.2): expects rewriting to
+  assert the listener-driven CREATE/DELETE path rather than the
+  deleted advice. Belongs to the same PR as the IT validation gate.
+
+**IT validation gate** (per recce §3.3, memory
+`feedback_parallel_gemma_agents.md`): single-tenant gemdtest, so
+`mvn verify -pl gemma-core` against gemdtest MUST run green before
+the C-2 commit merges. The dual-emission behavioural claim (listener
+duplicate-CREATE guard absorbs the AuditAdvice save-cascade CREATE
+in the same flush) is verified by code inspection only; gemdtest is
+the verification of record.
