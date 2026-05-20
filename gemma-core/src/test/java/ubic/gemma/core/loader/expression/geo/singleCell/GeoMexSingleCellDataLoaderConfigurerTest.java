@@ -39,6 +39,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.zip.GZIPInputStream;
 
 import static java.util.Objects.requireNonNull;
+import static org.assertj.core.api.Assumptions.assumeThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -62,6 +63,9 @@ public class GeoMexSingleCellDataLoaderConfigurerTest extends BaseTest5 {
 
     @Value("${gemma.download.path}/singleCellData/GEO")
     private Path downloadDir;
+
+    @Value("${cellranger.dir}")
+    private Path cellRangerPrefix;
 
     @Test
     public void testDetect10xUnfiltered10XData() throws IOException {
@@ -183,6 +187,9 @@ public class GeoMexSingleCellDataLoaderConfigurerTest extends BaseTest5 {
     public void testParallelFiltering() throws IOException, NoSingleCellDataFoundException {
         SingleCell10xMexFilter filter = singleCellDataTransformationFactory.getTransformation( SingleCell10xMexFilter.class );
         Assumptions.assumeTrue( filter.isCpuSupported(), "The current CPU does not support AVX instructions." );
+        // The actual filter step shells out to the Cell Ranger binary; skip on hosts (e.g. dev Macs) without it.
+        assumeThat( cellRangerPrefix.resolve( "bin/cellranger" ) ).exists();
+        assumeThat( cellRangerPrefix.resolve( "external/anaconda/bin/python" ) ).exists();
         GeoSeries series = readSeriesFromGeo( "GSE269482" );
         Path dataDir;
         ExecutorService executor = Executors.newFixedThreadPool( 4 );
