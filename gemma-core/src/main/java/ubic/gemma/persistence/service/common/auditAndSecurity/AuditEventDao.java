@@ -22,6 +22,8 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.persistence.service.BaseDao;
+import ubic.gemma.persistence.util.Cursor;
+import ubic.gemma.persistence.util.CursorPage;
 
 import org.springframework.lang.Nullable;
 import java.util.Collection;
@@ -48,6 +50,33 @@ public interface AuditEventDao extends BaseDao<AuditEvent> {
      * Events are sorted by date in ascending order.
      */
     List<AuditEvent> getEventsWithType( Auditable auditable );
+
+    /**
+     * Keyset-pagination counterpart to {@link #getEvents(Auditable)} &mdash;
+     * cursor mode for {@code GET /datasets/{dataset}/auditEvents} (step 1q of
+     * {@code CURSOR_PAGINATION_STEP1_PLAN.md}).
+     * <p>
+     * Same scope as {@link #getEvents(Auditable)}: every {@link AuditEvent} on
+     * the supplied {@link Auditable}'s {@link AuditTrail}. Cursor mode forces a
+     * single-component ascending {@code id} sort (different from the legacy
+     * {@code date, id} ordering &mdash; {@code id} is the unique primary key
+     * and the only column safe for keyset pagination under the step 1b
+     * single-component-sort restriction; events on a trail are appended over
+     * time so {@code id} order tracks {@code date} order in practice). The
+     * auditable-trail scope is preserved across pages. Fetches {@code limit+1}
+     * rows internally to detect {@code hasMore} without a separate
+     * {@code COUNT(*)}; {@code totalElements} on the returned page is
+     * {@code null} by default.
+     *
+     * @param auditable the auditable whose trail is being browsed; must have a
+     *                  persistent {@link AuditTrail}
+     * @param cursor    previous-response cursor token (nullable for the first
+     *                  page); must have {@code sortSpec == "+id"} and a
+     *                  single-component numeric {@code keyTuple} or the call
+     *                  throws {@link IllegalArgumentException}.
+     * @param limit     page size; must be {@code > 0}
+     */
+    CursorPage<AuditEvent> getEventsByCursor( Auditable auditable, @Nullable Cursor cursor, int limit );
 
     /**
      * Obtain the creation events for the given auditables.

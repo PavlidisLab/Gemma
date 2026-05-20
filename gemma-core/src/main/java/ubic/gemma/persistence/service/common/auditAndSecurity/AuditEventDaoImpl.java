@@ -30,7 +30,10 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.persistence.service.AbstractDao;
+import ubic.gemma.persistence.util.Cursor;
+import ubic.gemma.persistence.util.CursorPage;
 import ubic.gemma.persistence.util.IdentifiableUtils;
+import ubic.gemma.persistence.util.Sort;
 
 import org.springframework.lang.Nullable;
 import java.util.*;
@@ -71,6 +74,90 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
                 .createQuery( "select e from AuditTrail t join t.events e where t = :at and e.eventType is not null order by e.date, e.id " )
                 .setParameter( "at", auditable.getAuditTrail() )
                 .list();
+    }
+
+    @Override
+    public CursorPage<AuditEvent> getEventsByCursor( Auditable auditable, @org.springframework.lang.Nullable Cursor cursor, int limit ) {
+        // Step 1q: keyset pagination over /datasets/{dataset}/auditEvents (and any
+        // future entity-typed audit-event listings). Mirrors getEvents()'s scope
+        // (events on the auditable's AuditTrail) but switches the sort from the
+        // legacy (date, id) ordering to a single-component +id sort so the cursor
+        // DAO restriction (id-only keyset, pending the phase-B index audit) is
+        // honoured. AuditEvents are append-only over time, so id-asc tracks
+        // date-asc in practice.
+        Assert.notNull( auditable.getAuditTrail(), "Auditable did not have an audit trail: " + auditable );
+        Assert.notNull( auditable.getAuditTrail().getId(), "Auditable did not have a persistent audit trail: " + auditable );
+        if ( limit <= 0 ) {
+            throw new IllegalArgumentException( "Cursor page limit must be > 0." );
+        }
+        final String expectedSortSpec = "+id";
+        if ( cursor != null ) {
+            if ( !expectedSortSpec.equals( cursor.getSortSpec() ) ) {
+                throw new IllegalArgumentException( "Cursor sort spec '" + cursor.getSortSpec()
+                        + "' does not match the requested sort '" + expectedSortSpec + "'." );
+            }
+            Object[] key = cursor.getKeyTuple();
+            if ( key.length != 1 ) {
+                throw new IllegalArgumentException( "Cursor key tuple must have exactly 1 component for sort '"
+                        + expectedSortSpec + "'; got " + key.length + "." );
+            }
+        }
+        boolean backward = cursor != null && cursor.getDirection() == Cursor.Direction.BACKWARD;
+        Long lastSeenId = null;
+        if ( cursor != null ) {
+            try {
+                lastSeenId = ( ( Number ) cursor.getKeyTuple()[0] ).longValue();
+            } catch ( ClassCastException e ) {
+                throw new IllegalArgumentException( "Cursor key component must be numeric for sort '"
+                        + expectedSortSpec + "'.", e );
+            }
+        }
+
+        StringBuilder hql = new StringBuilder( "select e from AuditTrail t join t.events e where t = :at" );
+        if ( lastSeenId != null ) {
+            // forward: id > x; backward: id < x (id-asc client-visible order). When backward,
+            // we reverse the order in the driver query and reverse the returned page below.
+            hql.append( backward ? " and e.id < :lastSeenId" : " and e.id > :lastSeenId" );
+        }
+        // backward cursor: order by id DESC in the driver query, reverse the returned page.
+        hql.append( backward ? " order by e.id desc" : " order by e.id asc" );
+
+        org.hibernate.query.Query<?> q = this.getSessionFactory().getCurrentSession().createQuery( hql.toString() )
+                .setParameter( "at", auditable.getAuditTrail() );
+        if ( lastSeenId != null ) {
+            q.setParameter( "lastSeenId", lastSeenId );
+        }
+        q.setMaxResults( limit + 1 );
+        //noinspection unchecked
+        List<AuditEvent> data = ( List<AuditEvent> ) q.list();
+
+        boolean hasMore = data.size() > limit;
+        if ( hasMore ) {
+            data = new ArrayList<>( data.subList( 0, limit ) );
+        } else {
+            data = new ArrayList<>( data );
+        }
+        if ( backward ) {
+            Collections.reverse( data );
+        }
+
+        String nextCursor = null;
+        String prevCursor = null;
+        if ( !data.isEmpty() ) {
+            AuditEvent last = data.get( data.size() - 1 );
+            AuditEvent first = data.get( 0 );
+            // emit nextCursor only when there's another page in the forward direction
+            if ( backward || hasMore ) {
+                nextCursor = new Cursor( expectedSortSpec, new Object[] { last.getId() }, Cursor.Direction.FORWARD ).encode();
+            }
+            // emit prevCursor whenever we have a cursor (at least one page is behind us)
+            if ( cursor != null ) {
+                prevCursor = new Cursor( expectedSortSpec, new Object[] { first.getId() }, Cursor.Direction.BACKWARD ).encode();
+            }
+        }
+
+        Sort idSort = Sort.by( null, "id", Sort.Direction.ASC, Sort.NullMode.LAST, "id" );
+        return new CursorPage<>( data, idSort, limit, nextCursor, prevCursor, null );
     }
 
     @Nullable

@@ -26,7 +26,10 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.persistence.util.Cursor;
+import ubic.gemma.persistence.util.CursorPage;
 
+import org.springframework.lang.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -54,6 +57,12 @@ public class AuditEventServiceImpl implements AuditEventService {
     @Transactional(readOnly = true)
     public List<AuditEvent> getEventsWithType( Auditable auditable ) {
         return this.auditEventDao.getEventsWithType( auditable );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CursorPage<AuditEvent> getEventsByCursor( Auditable auditable, @Nullable Cursor cursor, int limit ) {
+        return this.auditEventDao.getEventsByCursor( auditable, cursor, limit );
     }
 
     @Override
