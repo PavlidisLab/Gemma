@@ -18,15 +18,15 @@
  */
 package ubic.gemma.apps;
 
-import org.junit.Rule;
-import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.cli.util.CLIContext;
-import ubic.gemma.cli.util.test.BaseCliIntegrationTest;
+import ubic.gemma.cli.util.test.BaseCliIntegrationTest5;
 import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.util.test.NetworkAvailable;
-import ubic.gemma.core.util.test.NetworkAvailableRule;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.core.util.test.category.SlowTest;
 
 import java.io.ByteArrayOutputStream;
@@ -39,10 +39,8 @@ import static ubic.gemma.cli.util.test.Assertions.assertThat;
  *
  * @author pavlidis
  */
-public class PubMedSearcherIntegrationTest extends BaseCliIntegrationTest {
-
-    @Rule
-    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
+@ExtendWith(NetworkAvailableExtension.class)
+public class PubMedSearcherIntegrationTest extends BaseCliIntegrationTest5 {
 
     @Autowired
     private PubMedSearcher p;
