@@ -19,11 +19,11 @@
 
 package ubic.gemma.persistence.service.expression.experiment;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
@@ -34,14 +34,14 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests for methods that perform operations on or with expressionExperiment sets
  *
  * @author tvrossum
  */
-public class ExpressionExperimentSetServiceTest extends BaseSpringContextTest {
+public class ExpressionExperimentSetServiceTest extends BaseSpringContextTest5 {
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
@@ -58,7 +58,7 @@ public class ExpressionExperimentSetServiceTest extends BaseSpringContextTest {
     private ExpressionExperimentSet eeSet = null;
     private ExpressionExperimentSet eeSetAutoGen = null;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
 
         // need persistent entities so that experiment's taxon can be
@@ -89,7 +89,7 @@ public class ExpressionExperimentSetServiceTest extends BaseSpringContextTest {
 
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         expressionExperimentService.remove( ee1 );
         expressionExperimentService.remove( ee2 );
@@ -128,22 +128,23 @@ public class ExpressionExperimentSetServiceTest extends BaseSpringContextTest {
 
     }
 
-    @Test(expected = Exception.class)
+    @Test
     public void testAddingExperimentOfWrongTaxonUpdate() {
         Set<ExpressionExperiment> newMembers = new HashSet<>();
         newMembers.add( ee1 );
         newMembers.add( eeMouse );
         eeSet.setExperiments( newMembers );
 
-        expressionExperimentSetService.update( eeSet );
+        assertThrows( Exception.class, () -> expressionExperimentSetService.update( eeSet ) );
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testAddingExperimentOfWrongTaxonUpdateDatabaseEntityMembers() {
         Collection<Long> newMemberIds = new LinkedList<>();
         newMemberIds.add( ee1.getId() );
         newMemberIds.add( eeMouse.getId() );
-        expressionExperimentSetValueObjectHelper.updateMembers( eeSet.getId(), newMemberIds );
+        assertThrows( IllegalArgumentException.class,
+                () -> expressionExperimentSetValueObjectHelper.updateMembers( eeSet.getId(), newMemberIds ) );
     }
 
     //
