@@ -214,9 +214,18 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
 
     /**
      * @return a collection of BioAssays that represent the experiments samples.
+     * <p>
+     * Uses the narrow {@link ExpressionExperimentService#thawBioAssays(ExpressionExperiment)}
+     * thaw rather than the broader {@code thawLite}: the {@code BioAssayValueObject}
+     * ctor only reads the per-assay shape (array design, original platform,
+     * biomaterial-with-factor-values), so warming the nine EE-level lazy
+     * collections that {@code thawLite} touches (publications, otherParts,
+     * factors, factor values, quantitation types, characteristics, accession,
+     * mean-variance, geeq, curationDetails) is dead pre-fetch on this code
+     * path. See {@code SAMPLES_DESIGN_PERF_RECCE.md} for the measurement.
      */
     public List<BioAssayValueObject> getSamples( DatasetArg<?> arg ) {
-        ExpressionExperiment ee = service.thawLite( this.getEntity( arg ) );
+        ExpressionExperiment ee = service.thawBioAssays( this.getEntity( arg ) );
         List<BioAssayValueObject> bioAssayValueObjects = baService.loadValueObjects( ee.getBioAssays(), null, true, true );
         populateOutliers( ee, bioAssayValueObjects );
         return bioAssayValueObjects;

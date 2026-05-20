@@ -1077,6 +1077,11 @@ public class ExpressionExperimentServiceImpl
         return readService.thawLiter( expressionExperiment );
     }
 
+    @Override
+    public ExpressionExperiment thawBioAssays( final ExpressionExperiment expressionExperiment ) {
+        return readService.thawBioAssays( expressionExperiment );
+    }
+
     /**
      * Deletes an experiment and all of its associated objects, including coexpression links. Some types of associated
      * objects may need to be deleted before this can be run (example: analyses involving multiple experiments; these
