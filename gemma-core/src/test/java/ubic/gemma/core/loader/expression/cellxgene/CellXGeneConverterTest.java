@@ -1,8 +1,8 @@
 package ubic.gemma.core.loader.expression.cellxgene;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
@@ -19,9 +19,9 @@ import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataTran
 import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellTransformationConfig;
 import ubic.gemma.core.loader.util.mapper.SimpleDesignElementMapper;
 import ubic.gemma.core.util.SimpleRetryPolicy;
-import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.core.util.test.NetworkAvailable;
-import ubic.gemma.core.util.test.NetworkAvailableRule;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -43,8 +43,9 @@ import static org.mockito.Mockito.when;
 import static ubic.gemma.core.util.test.Assumptions.assumeThatFreeMemoryIsGreaterOrEqualTo;
 
 @ContextConfiguration
+@ExtendWith(NetworkAvailableExtension.class)
 @NetworkAvailable(url = "https://api.cellxgene.cziscience.com")
-public class CellXGeneConverterTest extends BaseTest {
+public class CellXGeneConverterTest extends BaseTest5 {
 
     @Configuration
     @TestComponent
@@ -61,14 +62,11 @@ public class CellXGeneConverterTest extends BaseTest {
     @Value("${entrez.efetch.apikey}")
     private String ncbiApiKey;
 
-    @Rule
-    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
-
     private CellXGeneConverter cellxgeneConverter;
     private CellXGeneFetcher fetcher;
     private Taxon human;
 
-    @Before
+    @BeforeEach
     public void setUp() throws IOException {
         ExternalDatabaseService eds = mock();
         ExternalDatabase cellxGeneDatabase = ExternalDatabase.Factory.newInstance( "CELLxGENE", DatabaseType.EXPRESSION );

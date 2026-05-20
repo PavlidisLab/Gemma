@@ -1,14 +1,14 @@
 package ubic.gemma.core.loader.expression.sra;
 
 import org.assertj.core.data.Offset;
-import org.junit.Rule;
-import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.loader.expression.sra.model.*;
 import ubic.gemma.core.util.SimpleRetryPolicy;
 import ubic.gemma.core.util.test.NetworkAvailable;
-import ubic.gemma.core.util.test.NetworkAvailableRule;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.core.util.test.category.SlowTest;
 
 import java.io.IOException;
@@ -16,11 +16,9 @@ import java.io.StringReader;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@ExtendWith(NetworkAvailableExtension.class)
 @NetworkAvailable(url = EntrezUtils.ESEARCH)
 public class SraFetcherTest {
-
-    @Rule
-    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
 
     private final SraFetcher sraFetcher = new SraFetcher( new SimpleRetryPolicy( 3, 1000, 1.5 ), null );
 
