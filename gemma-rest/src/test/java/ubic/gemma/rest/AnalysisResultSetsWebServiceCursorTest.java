@@ -11,12 +11,12 @@
  */
 package ubic.gemma.rest;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import ubic.gemma.core.analysis.service.ExpressionAnalysisResultSetFileService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultSetValueObject;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
@@ -57,7 +57,7 @@ import static org.mockito.Mockito.when;
  * WebService routes cursor vs offset modes to the right helper and emits the right
  * response wrapper, not to retest the DAO.
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class AnalysisResultSetsWebServiceCursorTest {
 
     @Mock
@@ -83,7 +83,7 @@ public class AnalysisResultSetsWebServiceCursorTest {
     private DifferentialExpressionAnalysisResultSetValueObject vo1;
     private DifferentialExpressionAnalysisResultSetValueObject vo2;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         vo1 = makeVo( 100L );
         vo2 = makeVo( 200L );
