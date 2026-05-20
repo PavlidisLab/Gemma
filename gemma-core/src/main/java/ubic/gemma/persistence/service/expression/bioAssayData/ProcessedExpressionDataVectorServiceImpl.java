@@ -9,6 +9,7 @@ import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionExc
 import ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionException;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.security.audit.Audited;
+import ubic.gemma.core.security.audit.AuditedOnError;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedProcessedVectorComputationEvent;
@@ -86,33 +87,29 @@ public class ProcessedExpressionDataVectorServiceImpl
 
     @Override
     @Transactional(rollbackFor = { QuantitationTypeDetectionException.class, QuantitationTypeConversionException.class })
+    @AuditedOnError(value = FailedProcessedVectorComputationEvent.class, message = "Failed to create processed expression data vectors.")
     public QuantitationType createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean updateRanks, boolean ignoreQuantitationMismatch ) throws QuantitationTypeDetectionException, QuantitationTypeConversionException {
         QuantitationType qt;
-        try {
-            ProcessedExpressionDataVectorCreationSummary summary = new ProcessedExpressionDataVectorCreationSummary();
-            qt = this.processedExpressionDataVectorCreationHelperService.createProcessedDataVectors( expressionExperiment, ignoreQuantitationMismatch, summary );
-            StringBuilder details = new StringBuilder();
-            details.append( "QuantitationType: " ).append( summary.getRawQuantitationType() ).append( "\n" );
-            details.append( "QuantitationType: " ).append( qt ).append( "\n" );
-            if ( summary.getNumberOfMaskedMissingValues() > 0 ) {
-                details.append( "Number of masked missing values: " ).append( summary.getNumberOfMaskedMissingValues() ).append( "\n" );
-            }
-            if ( summary.getNumberOfMaskedOutliers() > 0 ) {
-                details.append( "Number of masked outliers: " ).append( summary.getNumberOfMaskedOutliers() ).append( "\n" );
-            }
-            if ( summary.isQuantileNormalized() ) {
-                details.append( "Data was quantile normalized.\n" );
-            }
-            if ( StringUtils.isNotBlank( summary.getComment() ) ) {
-                details.append( summary.getComment() ).append( "\n" );
-            }
-            auditTrailService.addUpdateEvent( expressionExperiment, ProcessedVectorComputationEvent.class, String.format( "Created processed expression data for %s.", expressionExperiment ), details.toString() );
-        } catch ( Exception e ) {
-            // Note: addUpdateEvent with an exception uses REQUIRES_NEW, which will create an audit event that cannot be
-            //       rolled back
-            auditTrailService.addUpdateEvent( expressionExperiment, FailedProcessedVectorComputationEvent.class, "Failed to create processed expression data vectors.", e );
-            throw e;
+        ProcessedExpressionDataVectorCreationSummary summary = new ProcessedExpressionDataVectorCreationSummary();
+        qt = this.processedExpressionDataVectorCreationHelperService.createProcessedDataVectors( expressionExperiment, ignoreQuantitationMismatch, summary );
+        StringBuilder details = new StringBuilder();
+        details.append( "QuantitationType: " ).append( summary.getRawQuantitationType() ).append( "\n" );
+        details.append( "QuantitationType: " ).append( qt ).append( "\n" );
+        if ( summary.getNumberOfMaskedMissingValues() > 0 ) {
+            details.append( "Number of masked missing values: " ).append( summary.getNumberOfMaskedMissingValues() ).append( "\n" );
         }
+        if ( summary.getNumberOfMaskedOutliers() > 0 ) {
+            details.append( "Number of masked outliers: " ).append( summary.getNumberOfMaskedOutliers() ).append( "\n" );
+        }
+        if ( summary.isQuantileNormalized() ) {
+            details.append( "Data was quantile normalized.\n" );
+        }
+        if ( StringUtils.isNotBlank( summary.getComment() ) ) {
+            details.append( summary.getComment() ).append( "\n" );
+        }
+        // Success path: 4-arg detail form retained pending the AuditEventPayload
+        // refactor (bucket 2f). The failure path is now handled by @AuditedOnError above.
+        auditTrailService.addUpdateEvent( expressionExperiment, ProcessedVectorComputationEvent.class, String.format( "Created processed expression data for %s.", expressionExperiment ), details.toString() );
         if ( updateRanks ) {
             updateRanks( expressionExperiment );
         }
@@ -124,16 +121,11 @@ public class ProcessedExpressionDataVectorServiceImpl
     @Override
     @Transactional
     @Audited(value = ProcessedVectorComputationEvent.class, message = "Replaced processed expression data.")
+    @AuditedOnError(value = FailedProcessedVectorComputationEvent.class, message = "Failed to replace processed expression data vectors.")
     public int replaceProcessedDataVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> vectors, boolean updateRanks ) {
-        int replaced;
-        try {
-            replaced = expressionExperimentService.replaceProcessedDataVectors( ee, vectors );
-            // Success audit event written by @Audited on this method via AuditedAspect.
-        } catch ( Exception e ) {
-            // Throwable form retained (REQUIRES_NEW semantics, stack-trace detail) — out of scope for @Audited Phase B.
-            auditTrailService.addUpdateEvent( ee, FailedProcessedVectorComputationEvent.class, "Failed to replace processed expression data vectors.", e );
-            throw e;
-        }
+        // Success audit event written by @Audited on this method via AuditedAspect.
+        // Failure audit event written by @AuditedOnError (REQUIRES_NEW, stack trace in DETAIL).
+        int replaced = expressionExperimentService.replaceProcessedDataVectors( ee, vectors );
         if ( updateRanks ) {
             updateRanks( ee );
         }
@@ -144,16 +136,11 @@ public class ProcessedExpressionDataVectorServiceImpl
     @Override
     @Transactional
     @Audited(value = ProcessedVectorComputationEvent.class, message = "Removed processed expression data.")
+    @AuditedOnError(value = FailedProcessedVectorComputationEvent.class, message = "Failed to remove processed expression data vectors.")
     public int removeProcessedDataVectors( ExpressionExperiment ee ) {
-        int removed;
-        try {
-            removed = expressionExperimentService.removeProcessedDataVectors( ee );
-            // Success audit event written by @Audited on this method via AuditedAspect.
-        } catch ( Exception e ) {
-            // Throwable form retained (REQUIRES_NEW semantics, stack-trace detail) — out of scope for @Audited Phase B.
-            auditTrailService.addUpdateEvent( ee, FailedProcessedVectorComputationEvent.class, "Failed to remove processed expression data vectors.", e );
-            throw e;
-        }
+        // Success audit event written by @Audited on this method via AuditedAspect.
+        // Failure audit event written by @AuditedOnError (REQUIRES_NEW, stack trace in DETAIL).
+        int removed = expressionExperimentService.removeProcessedDataVectors( ee );
         cachedProcessedExpressionDataVectorService.evict( ee );
         return removed;
     }
@@ -168,14 +155,10 @@ public class ProcessedExpressionDataVectorServiceImpl
 
     @Override
     @Transactional
+    @AuditedOnError(value = FailedProcessedVectorComputationEvent.class, message = "Failed to update ranks for expression data vectors.")
     public void updateRanks( ExpressionExperiment ee ) {
-        try {
-            helperService.updateRanks( ee );
-            cachedProcessedExpressionDataVectorService.evict( ee );
-        } catch ( Exception e ) {
-            auditTrailService.addUpdateEvent( ee, FailedProcessedVectorComputationEvent.class, "Failed to update ranks for expression data vectors.", e );
-            throw e;
-        }
+        helperService.updateRanks( ee );
+        cachedProcessedExpressionDataVectorService.evict( ee );
     }
 
     @Override
