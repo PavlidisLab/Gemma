@@ -43,6 +43,9 @@ public class GenomePersisterTest extends BaseSpringContextTest5 {
     @Autowired
     BioSequenceService biosequenceService;
 
+    @Autowired
+    GenomePersister genomePersister;
+
     @Test
     public void testPersistGene() {
 
@@ -61,7 +64,7 @@ public class GenomePersisterTest extends BaseSpringContextTest5 {
 
         gene.setProducts( gps );
 
-        gene = ( Gene ) this.persisterHelper.persistOrUpdate( gene );
+        gene = this.genomePersister.persistOrUpdateGene( gene );
 
         assertNotNull( gene.getId() );
         assertNotNull( gene.getName() );
@@ -88,7 +91,7 @@ public class GenomePersisterTest extends BaseSpringContextTest5 {
         gp.setNcbiGi( RandomStringUtils.insecure().nextAlphabetic( 10 ) );
         gene.getProducts().add( gp );
 
-        gp = ( GeneProduct ) this.persisterHelper.persist( gp );
+        gp = this.genomePersister.persistGeneProduct( gp );
 
         assertNotNull( gp.getId() );
         assertNotNull( gp.getGene().getId() );
@@ -103,13 +106,13 @@ public class GenomePersisterTest extends BaseSpringContextTest5 {
         b.setSequence( "A" );
         b.setTaxon( h );
 
-        Long id = ( ( BioSequence ) this.persisterHelper.persist( b ) ).getId();
+        Long id = this.genomePersister.persistBioSequence( b ).getId();
 
         BioSequence br = BioSequence.Factory.newInstance();
         br.setName( "foo" );
         br.setSequence( "T" );
         br.setTaxon( h );
-        this.persisterHelper.persistOrUpdate( br ); /// this is what we are testing.
+        this.genomePersister.persistOrUpdateBioSequence( br ); /// this is what we are testing.
 
         BioSequence bc = BioSequence.Factory.newInstance();
         bc.setName( "foo" );

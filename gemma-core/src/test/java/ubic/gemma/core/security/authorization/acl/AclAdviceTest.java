@@ -41,6 +41,7 @@ import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.persistence.persister.RelationshipPersister;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -48,6 +49,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -88,6 +90,9 @@ public class AclAdviceTest extends BaseSpringContextTest5 {
 
     @Autowired
     private SecurityService securityService;
+
+    @Autowired
+    private RelationshipPersister relationshipPersister;
 
     @Test
     public void testSecuredNotChild() {
@@ -269,7 +274,7 @@ public class AclAdviceTest extends BaseSpringContextTest5 {
         ees.getExperiments().add( ee );
         ees.setName( this.randomName() );
 
-        ees = ( ExpressionExperimentSet ) persisterHelper.persist( ees );
+        ees = relationshipPersister.persistExpressionExperimentSet( ees, new HashMap<>() );
 
         // make sure the ACL for objects are there (throws an exception if not).
 
