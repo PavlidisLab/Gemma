@@ -44,6 +44,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.assertj.core.api.Assertions.catchThrowableOfType;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -188,6 +190,67 @@ public class AuditedAspectTest extends BaseTest5 {
         public void conditionalBrokenWhenSkips( FakeAuditable target ) {
             // no-op
         }
+
+        /**
+         * Phase C ({@link AuditedOnError}): default {@code messageSpel}
+         * captures {@code #exception.message}. The aspect must (a) write a
+         * Failed* event via the 4-arg Throwable overload (REQUIRES_NEW), and
+         * (b) re-throw the original exception — Spring AOP's
+         * {@code @AfterThrowing} does that by default.
+         */
+        @AuditedOnError( SampleRemovalEvent.class )
+        public void erroringDefaultMessage( FakeAuditable target ) {
+            throw new IllegalStateException( "boom" );
+        }
+
+        /**
+         * Phase C: custom {@code messageSpel} can interpolate
+         * {@code #exception} and method parameters by name.
+         */
+        @AuditedOnError( value = SampleRemovalEvent.class,
+                messageSpel = "'reason=' + #reason + '; cause=' + #exception.message" )
+        public void erroringWithSpel( FakeAuditable target, String reason ) {
+            throw new IllegalArgumentException( "details" );
+        }
+
+        /**
+         * Phase C: a method returning normally must NOT trigger
+         * {@code @AuditedOnError}.
+         */
+        @AuditedOnError( SampleRemovalEvent.class )
+        public String erroringHappyPath( FakeAuditable target ) {
+            return "ok";
+        }
+
+        /**
+         * Phase C: broken {@code messageSpel} on the throwing path must
+         * fall back to the literal {@code message()} and STILL write the
+         * audit row — losing a Failed* row would hide the failure. Contrast
+         * with {@code @AuditedConditional.when} which SKIPs on broken SpEL.
+         */
+        @AuditedOnError( value = SampleRemovalEvent.class,
+                message = "fallback literal note",
+                messageSpel = "#nonexistent.foo.bar()" )
+        public void erroringBrokenSpelFallsBack( FakeAuditable target ) {
+            throw new RuntimeException( "boom" );
+        }
+
+        /**
+         * Phase C: a single method may carry BOTH {@link Audited} (success)
+         * AND {@link AuditedOnError} (failure) — the two annotations have
+         * disjoint advice paths (after-returning vs after-throwing).
+         */
+        @Audited( value = SampleRemovalEvent.class, message = "success path" )
+        @AuditedOnError( SampleRemovalEvent.class )
+        public int dualAnnotatedSuccess( FakeAuditable target ) {
+            return 7;
+        }
+
+        @Audited( value = SampleRemovalEvent.class, message = "success path" )
+        @AuditedOnError( SampleRemovalEvent.class )
+        public int dualAnnotatedFailure( FakeAuditable target ) {
+            throw new IllegalStateException( "boom" );
+        }
     }
 
     static class AuditedEventCollector {
@@ -238,6 +301,15 @@ public class AuditedAspectTest extends BaseTest5 {
         reset( auditTrailService );
         collector.received.clear();
         when( auditTrailService.addUpdateEventWithPayload( any(), any(), any(), any() ) )
+                .thenReturn( stubEvent );
+        // The @AuditedOnError advice routes through the 4-arg Throwable overload,
+        // which on the production impl is @Transactional(propagation=REQUIRES_NEW).
+        // In this unit test the AuditTrailService is mocked so the REQUIRES_NEW
+        // semantics are exercised at the integration level (see AuditTrailServiceImpl);
+        // here we just verify the aspect calls the right overload with the right args.
+        when( auditTrailService.addUpdateEvent( any( Auditable.class ),
+                org.mockito.ArgumentMatchers.<Class<? extends ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType>>any(),
+                any(), any( Throwable.class ) ) )
                 .thenReturn( stubEvent );
     }
 
@@ -433,4 +505,128 @@ public class AuditedAspectTest extends BaseTest5 {
         assertThat( collector.received ).isEmpty();
     }
 
+    /**
+     * Phase C ({@link AuditedOnError}): the aspect must (a) write a Failed*
+     * event via the 4-arg Throwable overload (REQUIRES_NEW in production),
+     * (b) re-throw the original exception, and (c) publish an
+     * {@link AuditedEvent} for downstream listeners.
+     */
+    @Test
+    public void auditedOnError_writesEventAndRethrowsOriginal() {
+        FakeAuditable target = new FakeAuditable( 300L );
+
+        IllegalStateException caught = catchThrowableOfType(
+                () -> annotatedService.erroringDefaultMessage( target ),
+                IllegalStateException.class );
+        assertThat( caught ).hasMessage( "boom" );
+
+        ArgumentCaptor<Throwable> thrCap = ArgumentCaptor.forClass( Throwable.class );
+        verify( auditTrailService ).addUpdateEvent(
+                eq( target ),
+                eq( SampleRemovalEvent.class ),
+                eq( "boom" ), // default messageSpel = "#exception.message"
+                thrCap.capture() );
+        assertThat( thrCap.getValue() ).isSameAs( caught );
+
+        // No-payload publication path on the throwing branch.
+        assertThat( collector.received ).hasSize( 1 );
+        AuditedEvent ev = collector.received.get( 0 );
+        assertThat( ev.getTarget() ).isSameAs( target );
+        assertThat( ev.getPayload() ).isNull();
+        assertThat( ev.getAuditEvent() ).isSameAs( stubEvent );
+    }
+
+    /**
+     * Phase C: SpEL on the throwing path can reference both
+     * {@code #exception} and method parameters by name.
+     */
+    @Test
+    public void auditedOnError_messageSpelCanReferenceExceptionAndArgs() {
+        FakeAuditable target = new FakeAuditable( 301L );
+
+        Throwable caught = catchThrowable( () -> annotatedService.erroringWithSpel( target, "manual" ) );
+        assertThat( caught ).isInstanceOf( IllegalArgumentException.class ).hasMessage( "details" );
+
+        verify( auditTrailService ).addUpdateEvent(
+                eq( target ),
+                eq( SampleRemovalEvent.class ),
+                eq( "reason=manual; cause=details" ),
+                any( Throwable.class ) );
+    }
+
+    /**
+     * Phase C: a method returning normally must NOT trigger
+     * {@code @AuditedOnError} (the advice is {@code @AfterThrowing}-only).
+     */
+    @Test
+    public void auditedOnError_happyPathDoesNotEmit() {
+        FakeAuditable target = new FakeAuditable( 302L );
+
+        String result = annotatedService.erroringHappyPath( target );
+
+        assertThat( result ).isEqualTo( "ok" );
+        verifyNoInteractions( auditTrailService );
+        assertThat( collector.received ).isEmpty();
+    }
+
+    /**
+     * Phase C: broken {@code messageSpel} on the throwing path must fall
+     * back to the literal {@code message()} and STILL write the audit row.
+     * Contrast with {@code @AuditedConditional.when} which SKIPS on broken
+     * SpEL — losing a Failed* row would hide the failure.
+     */
+    @Test
+    public void auditedOnError_brokenSpelFallsBackAndStillWritesRow() {
+        FakeAuditable target = new FakeAuditable( 303L );
+
+        Throwable caught = catchThrowable( () -> annotatedService.erroringBrokenSpelFallsBack( target ) );
+        assertThat( caught ).isInstanceOf( RuntimeException.class );
+
+        verify( auditTrailService ).addUpdateEvent(
+                eq( target ),
+                eq( SampleRemovalEvent.class ),
+                eq( "fallback literal note" ),
+                any( Throwable.class ) );
+    }
+
+    /**
+     * Phase C: a method may carry BOTH {@link Audited} AND
+     * {@link AuditedOnError} — the two advice paths are disjoint. On
+     * success, only the {@code @Audited} path fires.
+     */
+    @Test
+    public void dualAnnotated_successPath_firesOnlyAuditedNotOnError() {
+        FakeAuditable target = new FakeAuditable( 304L );
+
+        int n = annotatedService.dualAnnotatedSuccess( target );
+        assertThat( n ).isEqualTo( 7 );
+
+        // @Audited path → addUpdateEventWithPayload
+        verify( auditTrailService ).addUpdateEventWithPayload(
+                eq( target ), eq( SampleRemovalEvent.class ), eq( "success path" ), eq( null ) );
+        // @AuditedOnError path → addUpdateEvent(...Throwable) must NOT fire
+        verify( auditTrailService, never() ).addUpdateEvent(
+                any( Auditable.class ),
+                org.mockito.ArgumentMatchers.<Class<? extends ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType>>any(),
+                any(),
+                any( Throwable.class ) );
+    }
+
+    /**
+     * Phase C: dual-annotated method on the failure path — only the
+     * {@code @AuditedOnError} path fires; the {@code @Audited}
+     * {@code @AfterReturning} advice does not.
+     */
+    @Test
+    public void dualAnnotated_failurePath_firesOnlyAuditedOnError() {
+        FakeAuditable target = new FakeAuditable( 305L );
+
+        Throwable caught = catchThrowable( () -> annotatedService.dualAnnotatedFailure( target ) );
+        assertThat( caught ).isInstanceOf( IllegalStateException.class );
+
+        verify( auditTrailService ).addUpdateEvent(
+                eq( target ), eq( SampleRemovalEvent.class ), eq( "boom" ), any( Throwable.class ) );
+        verify( auditTrailService, never() ).addUpdateEventWithPayload(
+                any(), any(), any(), any() );
+    }
 }

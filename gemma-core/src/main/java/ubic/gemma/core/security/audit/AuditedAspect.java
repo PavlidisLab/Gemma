@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
+import org.aspectj.lang.annotation.AfterThrowing;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -122,7 +123,7 @@ public class AuditedAspect {
         String whenSpel = auditedConditional.when();
         Boolean fire;
         try {
-            fire = evaluateSpel( whenSpel, joinPoint, result, Boolean.class );
+            fire = evaluateSpel( whenSpel, joinPoint, result, null, Boolean.class );
         } catch ( RuntimeException e ) {
             log.error( "Failed to evaluate @AuditedConditional.when='{}' on {}; SKIPPING emission (safe default).",
                     whenSpel, joinPoint.getSignature(), e );
@@ -134,6 +135,60 @@ public class AuditedAspect {
         }
         emit( joinPoint, auditedConditional.value(), auditedConditional.message(),
                 auditedConditional.messageSpel(), result, "@AuditedConditional" );
+    }
+
+    /**
+     * Phase C: {@link AuditedOnError} fires when the annotated method exits
+     * by throwing. The audit row is written via the 4-arg {@code Throwable}
+     * overload of {@link AuditTrailService#addUpdateEvent}, which carries
+     * {@code @Transactional(propagation = REQUIRES_NEW)} so the row survives
+     * the rollback of the wrapping transaction and the full stack trace is
+     * persisted in {@code AUDIT_EVENT.DETAIL}.
+     *
+     * <p>{@code @AfterThrowing} does NOT swallow the throwable — Spring AOP
+     * re-throws it after the advice returns.
+     *
+     * <p>SpEL context here exposes the caught throwable as {@code #exception};
+     * {@code #result} is undefined (the method did not return). A
+     * SpEL-evaluation failure falls back to the literal {@link
+     * AuditedOnError#message()} but the audit row is STILL written so that a
+     * thrown exception never silently leaves the audit log empty.
+     */
+    @AfterThrowing( pointcut = "@annotation(auditedOnError)", throwing = "ex" )
+    public void afterAuditedOnErrorMethod( JoinPoint joinPoint, AuditedOnError auditedOnError, Throwable ex ) {
+        Object[] args = joinPoint.getArgs();
+        Auditable target = findAuditable( args );
+        if ( target == null ) {
+            log.warn( "@AuditedOnError method {} has no Auditable argument; no audit event will be written.",
+                    joinPoint.getSignature() );
+            return;
+        }
+        Class<? extends AuditEventType> eventType = auditedOnError.value();
+        String note = resolveMessageOnError( auditedOnError.message(), auditedOnError.messageSpel(), joinPoint, ex );
+        AuditEvent ev;
+        try {
+            // The 4-arg Throwable overload of addUpdateEvent uses
+            // REQUIRES_NEW: the audit row commits even though the
+            // surrounding transaction is rolling back. Stack trace is
+            // persisted to AUDIT_EVENT.DETAIL via ExceptionUtils.
+            ev = auditTrailService.addUpdateEvent( target, eventType, note, ex );
+        } catch ( RuntimeException e ) {
+            // Don't mask the original exception with an audit-row failure;
+            // log loudly and let the AfterThrowing re-throw the original.
+            log.error( "Failed to persist @AuditedOnError event for {} (type={}, original cause: {}); " +
+                            "the original exception will still be propagated.",
+                    joinPoint.getSignature(), eventType.getSimpleName(), ex, e );
+            return;
+        }
+        AuditEventType resolvedType = eventTypeCache.computeIfAbsent( eventType, AuditedAspect::instantiateEventType );
+        try {
+            // No AuditEventPayload on the throwing path (the method didn't
+            // get to populate one); pass null.
+            eventPublisher.publishEvent( new AuditedEvent( this, target, resolvedType, null, ev ) );
+        } catch ( RuntimeException e ) {
+            log.warn( "AuditedEvent listener threw for @AuditedOnError({}) on {}; audit row is unaffected.",
+                    eventType.getSimpleName(), target, e );
+        }
     }
 
     /**
@@ -218,7 +273,7 @@ public class AuditedAspect {
             // access via #root.args[i] also works (root object is the args array).
             // The method's return value is exposed as #result.
             try {
-                String evaluated = evaluateSpel( messageSpel, joinPoint, returnValue, String.class );
+                String evaluated = evaluateSpel( messageSpel, joinPoint, returnValue, null, String.class );
                 if ( evaluated != null && !evaluated.isEmpty() ) {
                     return evaluated;
                 }
@@ -232,20 +287,50 @@ public class AuditedAspect {
     }
 
     /**
+     * Phase C ({@link AuditedOnError}): resolve the note for the throwing
+     * path. Differs from {@link #resolveMessage} in that the SpEL context
+     * binds {@code #exception} (the caught throwable) and {@code #result} is
+     * undefined. SpEL-evaluation failure falls back to the literal
+     * {@link AuditedOnError#message()}; the audit row is still written
+     * (unlike {@link AuditedConditional#when()}, a broken note must never
+     * SKIP emission on the throwing path — losing a Failed* row would hide
+     * the error).
+     */
+    @Nullable
+    private String resolveMessageOnError( String literalMessage, String messageSpel, JoinPoint joinPoint, Throwable exception ) {
+        if ( !messageSpel.isEmpty() ) {
+            try {
+                String evaluated = evaluateSpel( messageSpel, joinPoint, null, exception, String.class );
+                if ( evaluated != null && !evaluated.isEmpty() ) {
+                    return evaluated;
+                }
+            } catch ( RuntimeException e ) {
+                log.error( "Failed to evaluate @AuditedOnError messageSpel='{}' on {}; falling back to literal message().",
+                        messageSpel, joinPoint.getSignature(), e );
+            }
+        }
+        return literalMessage.isEmpty() ? null : literalMessage;
+    }
+
+    /**
      * Evaluate a SpEL expression against the join-point context: root object
      * is the args array (so positional access via {@code #root.args[i]} works),
      * named parameters are bound as variables (requires javac {@code -parameters}),
-     * and the method's return value is bound as {@code #result}. Caches the
-     * parsed expression keyed by source. Any thrown exception is propagated;
-     * the caller is responsible for the fall-back / skip policy.
+     * the method's return value is bound as {@code #result}, and an optional
+     * caught throwable is bound as {@code #exception} (used by
+     * {@link AuditedOnError}). Caches the parsed expression keyed by source.
+     * Any thrown exception is propagated; the caller is responsible for the
+     * fall-back / skip policy.
      */
     @Nullable
-    private <T> T evaluateSpel( String spel, JoinPoint joinPoint, @Nullable Object returnValue, Class<T> desiredType ) {
+    private <T> T evaluateSpel( String spel, JoinPoint joinPoint, @Nullable Object returnValue,
+            @Nullable Throwable exception, Class<T> desiredType ) {
         MethodSignature sig = ( MethodSignature ) joinPoint.getSignature();
         StandardEvaluationContext ctx = new StandardEvaluationContext();
         Object[] args = joinPoint.getArgs();
         ctx.setRootObject( args );
         ctx.setVariable( "result", returnValue );
+        ctx.setVariable( "exception", exception );
         String[] paramNames = sig.getParameterNames();
         if ( paramNames != null ) {
             for ( int i = 0; i < paramNames.length && i < args.length; i++ ) {
