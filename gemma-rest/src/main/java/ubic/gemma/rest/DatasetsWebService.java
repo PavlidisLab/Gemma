@@ -2355,6 +2355,42 @@ public class DatasetsWebService {
     }
 
     /**
+     * Apply a proposed {@link ExperimentalDesignValueObject} as the experiment's new design.
+     * <p>
+     * The same validation pass performed by {@code POST /datasets/{id}/designPreflight} is re-run server-side. If
+     * blockers are present, returns 400 with a {@link DesignPreflightReport} payload — fix the body and retry.
+     * If the change would delete one or more differential-expression analyses and {@code force=false}, returns 409
+     * with the report; admins may re-issue the request with {@code ?force=true} to consent to the cascade.
+     * On success, returns 200 with the freshly-rebuilt design.
+     */
+    @PUT
+    @Path("/{dataset}/design")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Secured("GROUP_ADMIN")
+    @Operation(summary = "Replace the experimental design of a dataset", responses = {
+            @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "ResponseDataObjectExperimentalDesignValueObject"))),
+            @ApiResponse(responseCode = "400", description = "The proposed design has validation blockers; see the report in the response body.",
+                    content = @Content(schema = @Schema(ref = "ResponseDataObjectDesignPreflightReport"))),
+            @ApiResponse(responseCode = "409", description = "The proposed change would delete differential-expression analyses; retry with ?force=true to consent.",
+                    content = @Content(schema = @Schema(ref = "ResponseDataObjectDesignPreflightReport"))),
+            @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                    content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public Response replaceDatasetDesign(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Set to true to consent to deleting differential-expression analyses that depend on factors or factor values affected by the change.") @QueryParam("force") @DefaultValue("false") Boolean force,
+            ExperimentalDesignValueObject proposed
+    ) {
+        ubic.gemma.rest.util.args.DatasetArgService.DesignChangeResult result =
+                datasetArgService.applyDesignChange( datasetArg, proposed, force );
+        if ( result.blockingReport != null ) {
+            Response.Status status = result.forceRequired ? Response.Status.CONFLICT : Response.Status.BAD_REQUEST;
+            return Response.status( status ).entity( respond( result.blockingReport ) ).build();
+        }
+        return Response.ok( respond( result.updated ) ).build();
+    }
+
+    /**
      * Retrieves the design for the given dataset.
      * <p>
      * Two response media types are supported on this path, selected via the {@code Accept} header:
