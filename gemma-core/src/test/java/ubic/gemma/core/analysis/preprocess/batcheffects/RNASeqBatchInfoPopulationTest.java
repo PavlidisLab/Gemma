@@ -19,22 +19,22 @@
 
 package ubic.gemma.core.analysis.preprocess.batcheffects;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.annotation.DirtiesContext;
 import ubic.gemma.core.util.FileTools;
 import ubic.gemma.core.loader.entrez.EntrezUtils;
-import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
+import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest5;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.util.test.NetworkAvailable;
-import ubic.gemma.core.util.test.NetworkAvailableRule;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationFetchingEvent;
@@ -49,17 +49,15 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
  * @author paul
  */
 @DirtiesContext
-public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
-
-    @Rule
-    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
+@ExtendWith(NetworkAvailableExtension.class)
+public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest5 {
 
     @Autowired
     private BatchInfoPopulationService batchInfoPopulationService;
@@ -80,7 +78,7 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
 
     private ExpressionExperiment ee;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         fastqHeadersDir = new ClassPathResource( "/data/analysis/preprocess/batcheffects/fastqheaders" ).getFile().toPath();
         // this is the dirty part
@@ -208,11 +206,13 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
         assertFalse( this.eeBatchService.checkHasUsableBatchInfo( ee ) );
     }
 
-    @Test(expected = FASTQHeadersPresentButNotUsableException.class)
+    @Test
     public void testBatchA() throws Exception {
-        // GSE21161; no good headers, we can't form batches 
+        // GSE21161; no good headers, we can't form batches
         Map<String, String> h = readFastqHeaders( "GSE21161" );
-        BatchInfoPopulationHelperServiceImpl.convertHeadersToBatches( h.values() );
+        assertThrows( FASTQHeadersPresentButNotUsableException.class, () -> {
+            BatchInfoPopulationHelperServiceImpl.convertHeadersToBatches( h.values() );
+        } );
     }
 
     @Test
@@ -231,13 +231,15 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
         assertEquals( 2, batches.size() );
     }
 
-    @Test(expected = FASTQHeadersPresentButNotUsableException.class)
+    @Test
     public void testBatchD() throws Exception {
         //GSE68376 - insufficient headers, all identical, one platform - probably should mark it as "no batch information"
         Map<String, String> h = readFastqHeaders( "GSE68376" );
 
-        Map<String, Collection<String>> batches = BatchInfoPopulationHelperServiceImpl.convertHeadersToBatches( h.values() );
-        assertEquals( 0, batches.size() );
+        assertThrows( FASTQHeadersPresentButNotUsableException.class, () -> {
+            Map<String, Collection<String>> batches = BatchInfoPopulationHelperServiceImpl.convertHeadersToBatches( h.values() );
+            assertEquals( 0, batches.size() );
+        } );
     }
 
     @Test
@@ -272,21 +274,22 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
 
     }
 
-    @Test(expected = SingletonBatchesException.class)
+    @Test
     public void testBatchMixedHeadersSinglePlatformSingleton() throws Exception {
         // only one sample has a usable header. There are two lines in the header file for this sample.
         Map<String, String> h = readFastqHeaders( "GSE160025" );
-        Map<String, Collection<String>> batches = BatchInfoPopulationHelperServiceImpl.convertHeadersToBatches( h.values() );
+        assertThrows( SingletonBatchesException.class, () -> {
+            Map<String, Collection<String>> batches = BatchInfoPopulationHelperServiceImpl.convertHeadersToBatches( h.values() );
 
-        //        for ( String b : batches.keySet() ) {
-        //            log.info( "Batch: " + b );
-        //            for ( String batchmember : batches.get( b ) ) {
-        //                log.info( "   " + batchmember );
-        //            }
-        //        }
-        // we don't assign batches when this happens
-        assertEquals( 0, batches.size() );
-
+            //        for ( String b : batches.keySet() ) {
+            //            log.info( "Batch: " + b );
+            //            for ( String batchmember : batches.get( b ) ) {
+            //                log.info( "   " + batchmember );
+            //            }
+            //        }
+            // we don't assign batches when this happens
+            assertEquals( 0, batches.size() );
+        } );
     }
 
     @Test
@@ -298,12 +301,14 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
         assertEquals( 2, batches.size() );
     }
 
-    @Test(expected = SingletonBatchesException.class)
+    @Test
     public void testBatchE() throws Exception {
         //GSE70484 - has FAILUREs, so we should get no batches (but has singletons as well)
         Map<String, String> h = readFastqHeaders( "GSE70484" );
-        Map<String, Collection<String>> batches = BatchInfoPopulationHelperServiceImpl.convertHeadersToBatches( h.values() );
-        assertEquals( 0, batches.size() );
+        assertThrows( SingletonBatchesException.class, () -> {
+            Map<String, Collection<String>> batches = BatchInfoPopulationHelperServiceImpl.convertHeadersToBatches( h.values() );
+            assertEquals( 0, batches.size() );
+        } );
     }
 
     @Test
@@ -314,12 +319,14 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
         assertEquals( 2, batches.size() );
     }
 
-    @Test(expected = SingletonBatchesException.class)
+    @Test
     public void testBatchG() throws Exception {
         //GSE77891; only has 4 samples. There are two devices, but one of the batches is a singleton
         Map<String, String> h = readFastqHeaders( "GSE77891" );
-        Map<String, Collection<String>> batches = BatchInfoPopulationHelperServiceImpl.convertHeadersToBatches( h.values() );
-        assertEquals( 0, batches.size() );
+        assertThrows( SingletonBatchesException.class, () -> {
+            Map<String, Collection<String>> batches = BatchInfoPopulationHelperServiceImpl.convertHeadersToBatches( h.values() );
+            assertEquals( 0, batches.size() );
+        } );
     }
 
     @Test
@@ -355,20 +362,24 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
         assertEquals( 7, batches.size() );
     }
 
-    @Test(expected = FASTQHeadersPresentButNotUsableException.class)
+    @Test
     public void testBatchL() throws Exception {
         //GSE51827 - has underscore format, three fields, considered unusable (ABI)
         Map<String, String> h = readFastqHeaders( "GSE51827" );
-        Map<String, Collection<String>> batches = BatchInfoPopulationHelperServiceImpl.convertHeadersToBatches( h.values() );
-        assertEquals( 0, batches.size() );
+        assertThrows( FASTQHeadersPresentButNotUsableException.class, () -> {
+            Map<String, Collection<String>> batches = BatchInfoPopulationHelperServiceImpl.convertHeadersToBatches( h.values() );
+            assertEquals( 0, batches.size() );
+        } );
     }
 
-    @Test(expected = SingletonBatchesException.class)
+    @Test
     public void testBatchM() throws Exception {
         //GSE62826 - was yielding an npe, has singletons, should yield no batches
         Map<String, String> h = readFastqHeaders( "GSE62826" );
-        Map<String, Collection<String>> batches = BatchInfoPopulationHelperServiceImpl.convertHeadersToBatches( h.values() );
-        assertEquals( 0, batches.size() );
+        assertThrows( SingletonBatchesException.class, () -> {
+            Map<String, Collection<String>> batches = BatchInfoPopulationHelperServiceImpl.convertHeadersToBatches( h.values() );
+            assertEquals( 0, batches.size() );
+        } );
     }
 
     @Test
@@ -379,12 +390,14 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
         assertEquals( 8, batches.size() );
     }
 
-    @Test(expected = SingletonBatchesException.class)
+    @Test
     public void testBatchP() throws Exception {
         //GSE111979 - this has a nine-field header, we don't handle this correctly but it's not supported anyway (single-cell)
         // [GTTCCCGT, @NS500264, 224, HWJ37BGXY, 1, 11101, 2193, 3352, TGCGTAAGCTTAGCCATCGCATTGCTATTTCTACCTCTGAGCTGAAACCCAAACGGTTCCCGTGACTT]
         Map<String, String> h = readFastqHeaders( "GSE111979" );
-        BatchInfoPopulationHelperServiceImpl.convertHeadersToBatches( h.values() );
+        assertThrows( SingletonBatchesException.class, () -> {
+            BatchInfoPopulationHelperServiceImpl.convertHeadersToBatches( h.values() );
+        } );
     }
 
     @Test
@@ -403,19 +416,21 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
         assertEquals( 2, batches.size() );
     }
 
-    @Test(expected = SingletonBatchesException.class)
+    @Test
     public void testBatchS() throws Exception {
         // GSE173615
         Map<String, String> h = readFastqHeaders( "GSE173615" );
 
-        Map<String, Collection<String>> batches = BatchInfoPopulationHelperServiceImpl.convertHeadersToBatches( h.values() );
+        assertThrows( SingletonBatchesException.class, () -> {
+            Map<String, Collection<String>> batches = BatchInfoPopulationHelperServiceImpl.convertHeadersToBatches( h.values() );
+        } );
     }
 
     private Map<String, String> readFastqHeaders( String gse173615 ) throws IOException {
         return BatchInfoPopulationServiceImpl.readFastqHeaders( fastqHeadersDir.resolve( gse173615 + BatchInfoPopulationServiceImpl.FASTQHEADERSFILE_SUFFIX ) );
     }
 
-    @After
+    @AfterEach
     public void teardown() {
         if ( ee != null )
             eeService.remove( ee );
