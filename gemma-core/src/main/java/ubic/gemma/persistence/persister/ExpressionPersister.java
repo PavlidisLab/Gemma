@@ -133,32 +133,33 @@ public abstract class ExpressionPersister extends ArrayDesignPersister implement
 
     @Override
     @SuppressWarnings("unchecked")
-    protected <T extends Identifiable> T doPersist( T entity, Caches caches, Map<String, ExternalDatabase> xdbCache ) {
+    protected <T extends Identifiable> T doPersist( T entity, Map<String, ExternalDatabase> xdbCache ) {
         EeWriteServiceImpl impl = eeWriteServiceImpl();
-        // Phase 3 lift: taxonCache is now an explicit per-call parameter. Allocate a
+        // Phase 3 lift: taxonCache is an explicit per-call parameter. Allocate a
         // fresh map at this polymorphic dispatch entry point; the modern
         // EeWriteService.create(ee, cache) path allocates its own.
         Map<Object, Taxon> taxonCache = new HashMap<>();
         if ( entity instanceof ExpressionExperiment ) {
-            // Phase 3 lift: adCache is now an explicit per-call parameter rather
-            // than a field on Caches. The polymorphic doPersist entry point has no
-            // adCache available, so we synthesise one via prepare(); the modern
-            // EeWriteService.create(ee, cache) path supplies it directly.
+            // Phase 3 lift: adCache is an explicit per-call parameter (was
+            // formerly a field on the now-deleted Caches POJO). The polymorphic
+            // doPersist entry point has no adCache available, so we synthesise
+            // one via prepare(); the modern EeWriteService.create(ee, cache) path
+            // supplies it directly.
             AbstractPersister.log.warn( "Consider doing the 'prepare' step in a separate transaction." );
             ArrayDesignsForExperimentCache adCache = this.prepare( ( ExpressionExperiment ) entity );
-            return ( T ) impl.persistExpressionExperiment( ( ExpressionExperiment ) entity, caches, xdbCache, adCache, taxonCache );
+            return ( T ) impl.persistExpressionExperiment( ( ExpressionExperiment ) entity, xdbCache, adCache, taxonCache );
         } else if ( entity instanceof BioAssayDimension ) {
-            return ( T ) impl.persistBioAssayDimension( ( BioAssayDimension ) entity, caches, xdbCache, null, taxonCache );
+            return ( T ) impl.persistBioAssayDimension( ( BioAssayDimension ) entity, xdbCache, null, taxonCache );
         } else if ( entity instanceof BioMaterial ) {
-            return ( T ) impl.persistBioMaterial( ( BioMaterial ) entity, caches, xdbCache, taxonCache );
+            return ( T ) impl.persistBioMaterial( ( BioMaterial ) entity, xdbCache, taxonCache );
         } else if ( entity instanceof BioAssay ) {
-            return ( T ) impl.persistBioAssay( ( BioAssay ) entity, caches, xdbCache, null, taxonCache );
+            return ( T ) impl.persistBioAssay( ( BioAssay ) entity, xdbCache, null, taxonCache );
         } else if ( entity instanceof Compound ) {
             return ( T ) impl.persistCompound( ( Compound ) entity );
         } else if ( entity instanceof ExpressionExperimentSubSet ) {
             return ( T ) impl.persistExpressionExperimentSubSet( ( ExpressionExperimentSubSet ) entity );
         } else {
-            return super.doPersist( entity, caches, xdbCache );
+            return super.doPersist( entity, xdbCache );
         }
     }
 

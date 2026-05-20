@@ -57,7 +57,7 @@ public abstract class CommonPersister extends AbstractPersister {
 
     @Override
     @SuppressWarnings("unchecked")
-    protected <T extends Identifiable> T doPersist( T entity, Caches caches, Map<String, ExternalDatabase> xdbCache ) {
+    protected <T extends Identifiable> T doPersist( T entity, Map<String, ExternalDatabase> xdbCache ) {
         if ( entity instanceof User ) {
             throw new UnsupportedOperationException( "Don't persist users via this class; use the UserManager (core)" );
         } else if ( entity instanceof Characteristic ) {
@@ -66,7 +66,7 @@ public abstract class CommonPersister extends AbstractPersister {
             // characteristics collection in HBM). Nothing to do here.
             return null;
         } else {
-            return super.doPersist( entity, caches, xdbCache );
+            return super.doPersist( entity, xdbCache );
         }
     }
 
