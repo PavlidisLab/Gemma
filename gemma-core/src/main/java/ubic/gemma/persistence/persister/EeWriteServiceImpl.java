@@ -55,6 +55,7 @@ import ubic.gemma.persistence.service.expression.experiment.EeWriteService;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalDesignDao;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorDao;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentPrePersistService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetDao;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueDao;
 
@@ -69,18 +70,20 @@ import java.util.Set;
 
 /**
  * Strangler-fig replacement for the EE-graph write path historically owned by
- * {@code ExpressionPersister}. Lives in the {@code persister} package (rather than
- * {@code service.expression.experiment}) so it can reach the protected helper
- * methods on the persister chain ({@code persistTaxon}, {@code persistExternalDatabase},
+ * {@code ExpressionPersister} (now removed; the polymorphic EE dispatch arms
+ * have been folded into {@link PersisterHelperImpl#doPersist}). Lives in the
+ * {@code persister} package (rather than {@code service.expression.experiment})
+ * so it can reach the protected helper methods on the persister chain
+ * ({@code persistTaxon}, {@code persistExternalDatabase},
  * {@code fillInDatabaseEntry}). Per-call caches are plumbed as explicit
  * {@code Map<KEY, VALUE>} parameters (Phase 3 lift; formerly all carried on the
  * now-deleted {@code AbstractPersister.Caches} POJO).
  * <p>
- * Until the persister chain is fully retired (E5), this class collaborates with
- * {@link ExpressionPersister} via the injected {@link PersisterHelper}: the helper
- * provides {@code doPersist}-routed access to those inherited helpers through the
- * dispatch table. ExpressionPersister's body methods delegate here; this class
- * holds the canonical implementations.
+ * Until the persister chain is fully retired (Persister-shrink S2+), this
+ * class collaborates with {@link PersisterHelperImpl} via the injected
+ * {@link PersisterHelper}: the helper provides {@code doPersist}-routed access
+ * to those inherited helpers through the dispatch table. The helper's body
+ * methods delegate back here; this class holds the canonical implementations.
  *
  * @see EeWriteService
  * @author pavlidis
@@ -134,6 +137,9 @@ public class EeWriteServiceImpl implements EeWriteService {
     @Autowired
     private PersisterHelper persisterHelper;
 
+    @Autowired
+    private ExpressionExperimentPrePersistService expressionExperimentPrePersistService;
+
     /**
      * Returns the underlying {@link PersisterHelperImpl}, unwrapping the
      * Spring AOP proxy if necessary. Needed to reach the protected helpers
@@ -160,9 +166,26 @@ public class EeWriteServiceImpl implements EeWriteService {
     }
 
     /**
+     * No-cache overload: synthesises the {@link ArrayDesignsForExperimentCache}
+     * via {@link ExpressionExperimentPrePersistService#prepare} in the same
+     * transaction. Matches the historical behaviour of the polymorphic
+     * {@code persisterHelper.persist(ee)} dispatch (the former
+     * {@code ExpressionPersister.doPersist} EE arm did the same synthesis and
+     * emitted a warning recommending a separate transaction). The warning is
+     * preserved here.
+     */
+    @Override
+    @Transactional
+    public ExpressionExperiment create( ExpressionExperiment ee ) {
+        log.warn( "Consider doing the 'prepare' step in a separate transaction." );
+        ArrayDesignsForExperimentCache cache = expressionExperimentPrePersistService.prepare( ee );
+        return create( ee, cache );
+    }
+
+    /**
      * Persist the EE graph. Called both from {@link #create} and (during the
-     * strangler-fig window) from {@link ExpressionPersister#doPersist} when an
-     * EE is reached via the polymorphic dispatch.
+     * strangler-fig window) from {@link PersisterHelperImpl#doPersist} when an
+     * EE is reached via the polymorphic dispatch (test fixtures only).
      */
     ExpressionExperiment persistExpressionExperiment( ExpressionExperiment ee, Map<String, ExternalDatabase> xdbCache, @Nullable ArrayDesignsForExperimentCache adCache, Map<Object, Taxon> taxonCache ) {
         ExpressionExperiment existingEE = expressionExperimentDao.findByShortName( ee.getShortName() );

@@ -19,9 +19,9 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.experiment.EeWriteService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonReadService;
 
@@ -40,14 +40,14 @@ public class CellXGeneDataLoaderServiceImpl implements CellXGeneDataLoaderServic
 
     private final CellXGeneFetcher cellXGeneFetcher;
     private final CellXGeneConverter cellXGeneConverter;
-    private final Persister persister;
+    private final EeWriteService eeWriteService;
     private final ExpressionExperimentService expressionExperimentService;
     private final ArrayDesignService arrayDesignService;
     private final SingleCellDataTransformationFactory singleCellDataTransformationFactory;
 
     @Autowired
     public CellXGeneDataLoaderServiceImpl(
-            Persister persister, ArrayDesignService arrayDesignService,
+            EeWriteService eeWriteService, ArrayDesignService arrayDesignService,
             ExpressionExperimentService expressionExperimentService,
             ExternalDatabaseService externalDatabaseService, TaxonReadService taxonReadService,
             SingleCellDataTransformationFactory singleCellDataTransformationFactory,
@@ -57,7 +57,7 @@ public class CellXGeneDataLoaderServiceImpl implements CellXGeneDataLoaderServic
         this.cellXGeneFetcher = new CellXGeneFetcher( new SimpleRetryPolicy( 3, 1000, 3 ), cellXGeneDownloadPath );
         this.singleCellDataTransformationFactory = singleCellDataTransformationFactory;
         this.cellXGeneConverter = new CellXGeneConverter( externalDatabaseService, taxonReadService, new PubMedSearch( ncbiApiKey ) );
-        this.persister = persister;
+        this.eeWriteService = eeWriteService;
         this.arrayDesignService = arrayDesignService;
         this.expressionExperimentService = expressionExperimentService;
     }
@@ -120,7 +120,7 @@ public class CellXGeneDataLoaderServiceImpl implements CellXGeneDataLoaderServic
             ee = cellXGeneConverter.convert( cm, metadata, platform, datasetShortName, dataLoader, loadSingleCellData );
         }
 
-        return persister.persist( ee );
+        return eeWriteService.create( ee );
     }
 
     @Override

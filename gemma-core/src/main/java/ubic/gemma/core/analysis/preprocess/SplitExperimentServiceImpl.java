@@ -44,8 +44,8 @@ import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.Treatment;
 import ubic.gemma.model.expression.experiment.*;
-import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
+import ubic.gemma.persistence.service.expression.experiment.EeWriteService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
@@ -80,7 +80,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
     private RawExpressionDataVectorService rawExpressionDataVectorService;
 
     @Autowired
-    private Persister persister;
+    private EeWriteService eeWriteService;
 
     @Autowired
     private SecurityService securityService;
@@ -298,7 +298,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
                 split.getRawExpressionDataVectors().addAll( rawDataVectors );
             }
 
-            split = ( ExpressionExperiment ) persister.persist( split );
+            split = eeWriteService.create( split );
 
             // securityService.makePublic( split ); // temporary 
             result.add( split );
