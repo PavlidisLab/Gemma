@@ -1616,13 +1616,37 @@ public class DatasetsWebService {
         Set<Long> hasDeaIds = new HashSet<>( differentialExpressionAnalysisService
                 .getExperimentsWithAnalysis( visibleIds, true ) );
 
+        // ONE per-EE platform fetch: replaces N expressionExperimentService.getArrayDesignsUsed(ee)
+        // round-trips with one HQL. Used only to decide whether the "missing value" pipeline step
+        // is applicable (it's two-colour/dual-mode only).
+        Map<ExpressionExperiment, Collection<ArrayDesign>> adsByEe =
+                expressionExperimentService.getArrayDesignsUsedByExperiment( visibleEEs );
+
+        // ONE batched batch-info probe: replaces N expressionExperimentBatchInformationService
+        // .checkHasBatchInfo(ee) round-trips (each of which thawLiters the EE for its factors).
+        Map<ExpressionExperiment, Boolean> hasBatchInfoByEe =
+                expressionExperimentBatchInformationService.checkHasBatchInfo( visibleEEs );
+
+        // ONE batched GEEQ VO load: collect every visible EE's geeq id from the proxy (no
+        // initialization required), then one geeqService.loadValueObjectsByIds() call.
+        Map<Long, Long> geeqIdByEeId = new HashMap<>( visibleEEs.size() );
+        for ( ExpressionExperiment ee : visibleEEs ) {
+            Geeq geeqProxy = ee.getGeeq();
+            if ( geeqProxy != null && geeqProxy.getId() != null ) {
+                geeqIdByEeId.put( ee.getId(), geeqProxy.getId() );
+            }
+        }
+        Map<Long, GeeqValueObject> geeqVoById = new HashMap<>();
+        if ( !geeqIdByEeId.isEmpty() ) {
+            for ( GeeqValueObject vo : geeqService.loadValueObjectsByIds( geeqIdByEeId.values() ) ) {
+                if ( vo != null && vo.getId() != null ) {
+                    geeqVoById.put( vo.getId(), vo );
+                }
+            }
+        }
+
         boolean isAdmin = SecurityUtil.isUserAdmin();
 
-        // Per-EE work below: array-design fetch (twoColor/dualMode applicability), batch-info
-        // probe, and geeq VO load. No batch APIs exist for those today (see GeeqService — no
-        // bulk loadValueObjects; ExpressionExperimentService.getArrayDesignsUsed is per-EE).
-        // The batched audit-event + DEA calls above are where the dominant N-round-trip cost
-        // lived; the residual per-EE calls are each a single fast query.
         Map<Long, PipelineStatusValueObject> result = new LinkedHashMap<>( visibleEEs.size() );
         // Walk requestedIds so insertion order matches the caller's request (visibleEEs is sorted by id).
         Map<Long, ExpressionExperiment> eeById = new HashMap<>( visibleEEs.size() );
@@ -1634,22 +1658,34 @@ public class DatasetsWebService {
             if ( ee == null ) {
                 continue; // ACL-dropped or missing
             }
-            result.put( ee.getId(), buildPipelineStatus( ee, auditEventsByType, hasDeaIds.contains( ee.getId() ), isAdmin ) );
+            result.put( ee.getId(), buildPipelineStatus( ee, auditEventsByType, hasDeaIds.contains( ee.getId() ),
+                    isAdmin, adsByEe.getOrDefault( ee, Collections.emptySet() ),
+                    Boolean.TRUE.equals( hasBatchInfoByEe.get( ee ) ),
+                    resolveGeeqVo( ee, geeqIdByEeId, geeqVoById ) ) );
         }
         return respond( result );
     }
 
+    @Nullable
+    private static GeeqValueObject resolveGeeqVo( ExpressionExperiment ee,
+            Map<Long, Long> geeqIdByEeId, Map<Long, GeeqValueObject> geeqVoById ) {
+        Long geeqId = geeqIdByEeId.get( ee.getId() );
+        return geeqId != null ? geeqVoById.get( geeqId ) : null;
+    }
+
     /**
-     * Build a {@link PipelineStatusValueObject} for one EE, reusing pre-batched audit-event
-     * and DEA-existence inputs. Extracted from the single-EE
+     * Build a {@link PipelineStatusValueObject} for one EE, reusing pre-batched audit-event,
+     * DEA-existence, array-design, batch-info, and GEEQ inputs. Extracted from the single-EE
      * {@link #getDatasetPipelineStatus} handler so both paths share the same per-step,
-     * curation, and GEEQ assembly logic.
+     * curation, and GEEQ assembly logic; bulk callers pre-batch the inputs to avoid per-EE
+     * round-trips through the tunnel.
      */
     private PipelineStatusValueObject buildPipelineStatus( ExpressionExperiment ee,
             Map<Class<? extends AuditEventType>, Map<ExpressionExperiment, AuditEvent>> auditEventsByType,
-            boolean hasDea, boolean isAdmin ) {
+            boolean hasDea, boolean isAdmin, Collection<ArrayDesign> arrayDesignsUsed,
+            boolean hasBatchInfo, @Nullable GeeqValueObject geeq ) {
         CurationDetails cd = ee.getCurationDetails();
-        boolean missingValueApplicable = hasTwoColorOrDualModePlatform( ee );
+        boolean missingValueApplicable = hasTwoColorOrDualModePlatform( arrayDesignsUsed );
         List<PipelineStatusValueObject.PipelineStepValueObject> steps = new ArrayList<>( PIPELINE_STEPS.size() );
         for ( PipelineStepDescriptor desc : PIPELINE_STEPS ) {
             boolean applicable = !"missingValue".equals( desc.stepKey ) || missingValueApplicable;
@@ -1658,7 +1694,7 @@ public class DatasetsWebService {
         PipelineStatusValueObject result = new PipelineStatusValueObject();
         result.setExperimentId( ee.getId() );
         result.setSteps( steps );
-        result.setHasBatchInformation( expressionExperimentBatchInformationService.checkHasBatchInfo( ee ) );
+        result.setHasBatchInformation( hasBatchInfo );
         result.setHasDifferentialExpressionAnalysis( hasDea );
         // Coexpression was removed in Phase 1c; field retained on the VO for back-compat, always false.
         result.setHasCoexpressionAnalysis( false );
@@ -1669,10 +1705,6 @@ public class DatasetsWebService {
             result.setCurationNote( cd.getCurationNote() );
         }
         result.setIsPublic( securityService.isPublic( ee ) );
-        Geeq geeqProxy = ee.getGeeq();
-        GeeqValueObject geeq = geeqProxy != null && geeqProxy.getId() != null
-                ? geeqService.loadValueObjectById( geeqProxy.getId() )
-                : null;
         if ( geeq != null ) {
             AuditEvent geeqEvent = lookupAuditEvent( auditEventsByType, GeeqEvent.class, ee );
             if ( geeqEvent != null ) {
@@ -1681,6 +1713,21 @@ public class DatasetsWebService {
         }
         result.setGeeq( geeq );
         return result;
+    }
+
+    /**
+     * Variant of {@link #hasTwoColorOrDualModePlatform(ExpressionExperiment)} that operates on
+     * a pre-fetched platform collection — avoids the per-EE getArrayDesignsUsed round-trip
+     * when bulk callers have already batched the lookup.
+     */
+    private boolean hasTwoColorOrDualModePlatform( Collection<ArrayDesign> ads ) {
+        for ( ArrayDesign ad : ads ) {
+            TechnologyType t = ad.getTechnologyType();
+            if ( t == TechnologyType.TWOCOLOR || t == TechnologyType.DUALMODE ) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @GET

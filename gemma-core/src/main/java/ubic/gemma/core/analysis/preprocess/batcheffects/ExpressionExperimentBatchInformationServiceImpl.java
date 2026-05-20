@@ -2,6 +2,7 @@ package ubic.gemma.core.analysis.preprocess.batcheffects;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.math3.exception.NotStrictlyPositiveException;
+import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +15,7 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.util.QueryUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -32,6 +34,8 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
     private SVDService svdService;
     @Autowired
     private AuditEventService auditEventService;
+    @Autowired
+    private SessionFactory sessionFactory;
 
     @Override
     @Transactional(readOnly = true)
@@ -53,6 +57,57 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
         }
 
         return lastBatchInfoEvent.getEventType() instanceof BatchInformationFetchingEvent;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<ExpressionExperiment, Boolean> checkHasBatchInfo( Collection<ExpressionExperiment> ees ) {
+        if ( ees == null || ees.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+        // One HQL to learn which input EEs have a batch ExperimentalFactor — replaces an
+        // expressionExperimentService.thawLiter() round-trip per EE.
+        Set<Long> hasBatchFactorIds = new HashSet<>();
+        //noinspection unchecked
+        List<Object[]> factorRows = QueryUtils.listByIdentifiableBatch( sessionFactory.getCurrentSession()
+                        .createQuery( "select ee.id, ef from ExpressionExperiment ee "
+                                + "join ee.experimentalDesign ed "
+                                + "join ed.experimentalFactors ef "
+                                + "left join fetch ef.category "
+                                + "where ee in (:ees)" ),
+                "ees", ees, 2048 );
+        for ( Object[] row : factorRows ) {
+            Long eeId = ( Long ) row[0];
+            ExperimentalFactor ef = ( ExperimentalFactor ) row[1];
+            if ( ExperimentFactorUtils.isBatchFactor( ef ) ) {
+                hasBatchFactorIds.add( eeId );
+            }
+        }
+        // One batched audit-event lookup for BatchInformationEvent across all input EEs.
+        Map<ExpressionExperiment, AuditEvent> lastBatchEvents =
+                auditEventService.getLastEvents( ees, Collections.singletonList( BatchInformationEvent.class ) )
+                        .getOrDefault( BatchInformationEvent.class, Collections.emptyMap() );
+        Map<ExpressionExperiment, Boolean> result = new HashMap<>( ees.size() );
+        for ( ExpressionExperiment ee : ees ) {
+            if ( ee.getId() != null && hasBatchFactorIds.contains( ee.getId() ) ) {
+                result.put( ee, Boolean.TRUE );
+                continue;
+            }
+            AuditEvent ev = lastBatchEvents.get( ee );
+            if ( ev == null ) {
+                result.put( ee, Boolean.FALSE );
+                continue;
+            }
+            // Mirror the single-EE logic: pre-fix legacy "No header file for" notes were
+            // mis-typed as failures; treat them as no-info.
+            if ( ev.getEventType() instanceof FailedBatchInformationFetchingEvent
+                    && ev.getNote() != null && ev.getNote().contains( "No header file for" ) ) {
+                result.put( ee, Boolean.FALSE );
+                continue;
+            }
+            result.put( ee, ev.getEventType() instanceof BatchInformationFetchingEvent );
+        }
+        return result;
     }
 
     @Override

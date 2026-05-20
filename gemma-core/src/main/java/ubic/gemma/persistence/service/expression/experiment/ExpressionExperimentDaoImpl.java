@@ -1292,6 +1292,11 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public Map<ExpressionExperiment, Collection<ArrayDesign>> getArrayDesignsUsedByExperiment( Collection<ExpressionExperiment> ees ) {
+        return CommonQueries.getArrayDesignsUsedByExperiment( ees, this.getSessionFactory().getCurrentSession() );
+    }
+
+    @Override
     public Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperiment ee, QuantitationType qt, Class<? extends DataVector> dataVectorType ) {
         //noinspection unchecked
         List<Long> adIds = getSessionFactory().getCurrentSession()

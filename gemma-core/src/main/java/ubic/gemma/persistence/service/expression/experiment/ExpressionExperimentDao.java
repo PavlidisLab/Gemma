@@ -178,6 +178,13 @@ public interface ExpressionExperimentDao
 
     Collection<ArrayDesign> getArrayDesignsUsed( Collection<ExpressionExperiment> ees );
 
+    /**
+     * Per-experiment map variant of {@link #getArrayDesignsUsed(Collection)}: one HQL covers all
+     * supplied EEs, the result preserves which platform belongs to which EE. EEs absent from the
+     * map have no resolved bio-assays.
+     */
+    Map<ExpressionExperiment, Collection<ArrayDesign>> getArrayDesignsUsedByExperiment( Collection<ExpressionExperiment> ees );
+
     Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperiment ee, QuantitationType qt, Class<? extends DataVector> dataVectorType );
 
     /**

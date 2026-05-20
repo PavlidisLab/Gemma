@@ -665,6 +665,21 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperiment expressionExperiment );
 
     /**
+     * Per-experiment map of array designs used: one HQL covers all supplied EEs and the result
+     * preserves which platform belongs to which EE.
+     * <p>
+     * Use this when N EEs need their platforms inspected as part of one assembly step (e.g.
+     * bulk pipeline-status), where calling {@link #getArrayDesignsUsed(ExpressionExperiment)}
+     * once per EE would serialize a query per dataset. EEs with no resolved bio-assays are
+     * absent from the map; the caller should default to "no platforms" in that case.
+     * <p>
+     * The {@code "ACL_SECURABLE_COLLECTION_READ"} guard mirrors the bulk read pattern used by
+     * other collection-shaped APIs in this service.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
+    Map<ExpressionExperiment, Collection<ArrayDesign>> getArrayDesignsUsedByExperiment( Collection<ExpressionExperiment> expressionExperiments );
+
+    /**
      * Obtain a collection of {@link ArrayDesign} used by a specific set of vectors.
      * <p>
      * The type of vectors is inferred.
