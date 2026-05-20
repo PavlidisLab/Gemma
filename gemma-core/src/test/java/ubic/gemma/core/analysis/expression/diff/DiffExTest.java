@@ -24,7 +24,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.experimental.categories.Category;
-import org.junit.Assume;
+import org.junit.jupiter.api.Assumptions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import ubic.gemma.core.util.matrix.DoubleMatrix;
@@ -116,8 +116,8 @@ public class DiffExTest extends AbstractGeoServiceTest5 {
     @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testCountData() throws Exception {
         ee = eeService.findByShortName( "GSE29006" );
-        Assume.assumeTrue( String.format( "%s was not properly cleaned up by another test.", ee ),
-                ee == null );
+        Assumptions.assumeTrue( ee == null,
+                () -> String.format( "%s was not properly cleaned up by another test.", ee ) );
 
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
 
@@ -126,7 +126,7 @@ public class DiffExTest extends AbstractGeoServiceTest5 {
             ee = ( ExpressionExperiment ) results.iterator().next();
         } catch ( AccessDeniedException e ) {
             // see https://github.com/PavlidisLab/Gemma/issues/206
-            Assume.assumeNoException( e );
+            Assumptions.abort( e.getMessage() );
         } catch ( AlreadyExistsInSystemException e ) {
             throw new IllegalStateException( "Need to remove this data set before test is run" );
         }
@@ -249,8 +249,8 @@ public class DiffExTest extends AbstractGeoServiceTest5 {
     @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testGSE35930() throws Exception {
         ee = eeService.findByShortName( "GSE35930" );
-        Assume.assumeTrue( String.format( "%s was not properly cleaned up by another test.", ee ),
-                ee == null );
+        Assumptions.assumeTrue( ee == null,
+                () -> String.format( "%s was not properly cleaned up by another test.", ee ) );
 
         try {
             geoService.setGeoDomainObjectGenerator(
