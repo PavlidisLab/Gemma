@@ -25,6 +25,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 import ubic.gemma.persistence.util.Cursor;
 import ubic.gemma.persistence.util.CursorPage;
@@ -75,4 +76,21 @@ public interface BioAssayDao extends FilteringVoEnabledDao<BioAssay, BioAssayVal
      */
     CursorPage<BioAssayValueObject> loadValueObjectsByCursorForExpressionExperiment(
             ExpressionExperiment ee, @Nullable Cursor cursor, int limit );
+
+    /**
+     * Cursor-paged listing of {@link BioAssayValueObject}s for a single
+     * {@link ExpressionExperimentSubSet}, sorted by ascending {@code id} — see
+     * {@code CURSOR_PAGINATION_STEP1_PLAN.md} step 1u (the subset-scoped twin of step
+     * 1k).
+     * <p>
+     * Walks {@code subset.bioAssays} directly via a focused keyset HQL
+     * ({@code from ExpressionExperimentSubSet bas join bas.bioAssays ba where bas.id = ?}),
+     * matching the EE variant's structure and the same single-column ascending {@code id}
+     * cursor restriction. The {@code assay2sourceAssayMap} (used to populate the VO's
+     * {@code sourceBioAssayId}) is built post-hoc by the service layer against the
+     * subset's source experiment so the VO shape matches the legacy offset-mode caller
+     * exactly.
+     */
+    CursorPage<BioAssayValueObject> loadValueObjectsByCursorForSubSet(
+            ExpressionExperimentSubSet subset, @Nullable Cursor cursor, int limit );
 }
