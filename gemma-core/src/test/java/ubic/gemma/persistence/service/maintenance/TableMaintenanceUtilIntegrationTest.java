@@ -1,15 +1,15 @@
 package ubic.gemma.persistence.service.maintenance;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
 import org.springframework.test.context.TestExecutionListeners;
-import ubic.gemma.core.util.test.BaseIntegrationTest;
+import ubic.gemma.core.util.test.BaseIntegrationTest5;
 import ubic.gemma.core.util.test.TestAuthenticationUtils;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -23,13 +23,14 @@ import java.util.Date;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author poirigui
  */
 @TestExecutionListeners(value = WithSecurityContextTestExecutionListener.class,
         mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
-public class TableMaintenanceUtilIntegrationTest extends BaseIntegrationTest {
+public class TableMaintenanceUtilIntegrationTest extends BaseIntegrationTest5 {
 
     @Autowired
     private TableMaintenanceUtil tableMaintenanceUtil;
@@ -40,8 +41,8 @@ public class TableMaintenanceUtilIntegrationTest extends BaseIntegrationTest {
     @Value("${gemma.gene2cs.path}")
     private Path gene2CsPath;
 
-    @Before
-    @After
+    @BeforeEach
+    @AfterEach
     public void removeGene2CsStatusFileAndDirectory() {
         File f = gene2CsPath.toFile();
         if ( f.exists() ) {
@@ -70,10 +71,10 @@ public class TableMaintenanceUtilIntegrationTest extends BaseIntegrationTest {
         assertThat( gene2CsPath ).exists();
     }
 
-    @Test(expected = AccessDeniedException.class)
+    @Test
     public void testWhenUserIsAnonymous() {
         testAuthenticationUtils.runAsAnonymous();
-        tableMaintenanceUtil.updateGene2CsEntries();
+        assertThrows( AccessDeniedException.class, () -> tableMaintenanceUtil.updateGene2CsEntries() );
     }
 
     @Test
@@ -94,10 +95,10 @@ public class TableMaintenanceUtilIntegrationTest extends BaseIntegrationTest {
         tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( ee, ExperimentalDesign.class );
     }
 
-    @Test(expected = AccessDeniedException.class)
+    @Test
     public void testUpdateEE2CAsUser() {
         testAuthenticationUtils.runAsAnonymous();
-        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
+        assertThrows( AccessDeniedException.class, () -> tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false ) );
     }
 
     @Test
