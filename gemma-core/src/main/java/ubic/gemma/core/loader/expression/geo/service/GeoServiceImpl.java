@@ -35,7 +35,6 @@ import ubic.gemma.core.loader.expression.geo.*;
 import ubic.gemma.core.loader.expression.geo.model.*;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentUpdateFromGEOEvent;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
 import ubic.gemma.model.common.description.Characteristic;
@@ -50,7 +49,6 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.persister.ArrayDesignsForExperimentCache;
 import ubic.gemma.persistence.persister.ArrayDesignPersister;
 import ubic.gemma.persistence.persister.GenomePersister;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
@@ -102,9 +100,9 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
     @Autowired
     private BioMaterialService bioMaterialService;
     @Autowired
-    private AuditTrailService auditTrailService;
-    @Autowired
     private BibliographicReferenceService bibliographicReferenceService;
+    @Autowired
+    private GeoUpdateAuditService geoUpdateAuditService;
 
     @Value("${geo.minimumSamplesToLoad}")
     private int minimumSampleCountToLoad;
@@ -457,13 +455,13 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
 
         if ( numNewCharacteristics > 0 || pubUpdate ) {
             expressionExperimentService.update( ee );
-            String message = " Updated from GEO; " + numNewCharacteristics + " characteristics added/replaced" + ( pubUpdate ? "; Publication added" : "" );
-            log.info( ee.getShortName() + message );
-            auditTrailService.addUpdateEvent( ee, ExpressionExperimentUpdateFromGEOEvent.class, message );
+            log.info( ee.getShortName() + " updated from GEO" );
         } else {
             // that's okay but probably shouldn't do anything
             log.debug( "No new characteristics for " + ee );
         }
+        // Audit emission gated by @AuditedConditional's when= predicate on the helper -- a no-op call (both args zero/false) writes no audit row, mirroring the legacy guard.
+        geoUpdateAuditService.recordGeoUpdate( ee, numNewCharacteristics, pubUpdate );
     }
 
     @Override
