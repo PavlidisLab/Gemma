@@ -19,9 +19,9 @@
 package ubic.gemma.core.loader.genome.gene.ncbi.homology;
 
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -35,9 +35,9 @@ import org.springframework.util.Assert;
 import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.context.AbstractAsyncFactoryBean;
 import ubic.gemma.core.context.TestComponent;
-import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.core.util.test.NetworkAvailable;
-import ubic.gemma.core.util.test.NetworkAvailableRule;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonReadService;
@@ -48,8 +48,8 @@ import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;
 
 /**
@@ -59,10 +59,8 @@ import static org.mockito.Mockito.mock;
  */
 @ContextConfiguration
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-public class HomologeneServiceTest extends BaseTest {
-
-    @Rule
-    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
+@ExtendWith(NetworkAvailableExtension.class)
+public class HomologeneServiceTest extends BaseTest5 {
 
     @Configuration
     @TestComponent
@@ -98,7 +96,7 @@ public class HomologeneServiceTest extends BaseTest {
     @Autowired
     private HomologeneServiceFactory hgs;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         hgs.setHomologeneFile( new ClassPathResource( "/data/loader/genome/homologene/homologene.testdata.txt" ) );
         hgs.setLoadHomologene( true ); // ignore setting from Gemma.properties
