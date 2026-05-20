@@ -19,10 +19,10 @@
 
 package ubic.gemma.core.loader.expression;
 
-import org.junit.After;
-import org.junit.Rule;
-import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.matrix.DenseDoubleMatrix;
 import ubic.gemma.core.util.matrix.DoubleMatrix;
@@ -30,7 +30,7 @@ import ubic.gemma.core.util.matrix.DoubleMatrixReader;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.loader.entrez.EntrezUtils;
-import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
+import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest5;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
@@ -38,7 +38,7 @@ import ubic.gemma.core.loader.expression.sequencing.SequencingMetadata;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.loader.util.TestUtils;
 import ubic.gemma.core.util.test.NetworkAvailable;
-import ubic.gemma.core.util.test.NetworkAvailableRule;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -57,16 +57,14 @@ import java.io.InputStream;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.*;
-import static org.junit.Assume.assumeNoException;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.abort;
 
 /**
  * @author paul
  */
-public class DataUpdaterTest extends AbstractGeoServiceTest {
-
-    @Rule
-    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
+@ExtendWith(NetworkAvailableExtension.class)
+public class DataUpdaterTest extends AbstractGeoServiceTest5 {
 
     @Autowired
     private GeoService geoService;
@@ -89,7 +87,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
     private ExpressionExperiment ee;
     private ArrayDesign targetArrayDesign;
 
-    @After
+    @AfterEach
     public void tearDown() {
         if ( ee != null ) {
             experimentService.remove( ee );
@@ -113,7 +111,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
             ee = ( ExpressionExperiment ) results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
             ee = ( ( Collection<ExpressionExperiment> ) e.getData() ).iterator().next();
-            assumeNoException( "Test skipped because GSE37646 was not removed from the system prior to test", e );
+            abort( "Test skipped because GSE37646 was not removed from the system prior to test: " + e.getMessage() );
         }
 
         ee = experimentService.thaw( ee );
@@ -223,7 +221,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
             ee = ( ExpressionExperiment ) results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
             ee = ( ( Collection<ExpressionExperiment> ) e.getData() ).iterator().next();
-            assumeNoException( "Need to remove this data set before test is run", e );
+            abort( "Need to remove this data set before test is run: " + e.getMessage() );
         }
 
         ee = experimentService.thaw( ee );
@@ -286,8 +284,8 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
         assertEquals( 199, ee.getProcessedExpressionDataVectors().size() );
 
         for ( ProcessedExpressionDataVector v : ee.getProcessedExpressionDataVectors() ) {
-            assertNotNull( "Vector rank was not populated (max)", v.getRankByMax() );
-            assertNotNull( "Vector rank was not populated (mean)", v.getRankByMean() );
+            assertNotNull( v.getRankByMax(), "Vector rank was not populated (max)" );
+            assertNotNull( v.getRankByMean(), "Vector rank was not populated (mean)" );
         }
 
         Collection<DoubleVectorValueObject> processedDataArrays = dataVectorService.getProcessedDataArrays( ee );
@@ -323,7 +321,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
             ee = ( ExpressionExperiment ) results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
             ee = ( ( Collection<ExpressionExperiment> ) e.getData() ).iterator().next();
-            assumeNoException( "Need to remove this data set before test is run", e );
+            abort( "Need to remove this data set before test is run: " + e.getMessage() );
         }
 
         ee = experimentService.thaw( ee );
