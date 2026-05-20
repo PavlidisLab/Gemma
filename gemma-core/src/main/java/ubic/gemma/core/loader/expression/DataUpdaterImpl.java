@@ -31,6 +31,7 @@ import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.analysis.preprocess.VectorMergingService;
 import ubic.gemma.core.security.audit.Audited;
+import ubic.gemma.core.security.audit.AuditedOnError;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.loader.expression.arrayDesign.AffyChipTypeExtractor;
 import ubic.gemma.core.loader.expression.geo.fetcher.RawDataFetcher;
@@ -388,6 +389,19 @@ public class DataUpdaterImpl implements DataUpdater {
      */
     @Override
     @Transactional(propagation = Propagation.NEVER)
+    // @AuditedOnError replaces two imperative auditTrailService.addUpdateEvent(...)
+    // calls that previously sat in front of guard-clause throws (multi-platform-
+    // merged check and missing-CEL-files check). With this annotation the aspect
+    // emits FailedDataReplacedEvent for ANY exception thrown by this method via the
+    // 4-arg Throwable overload of AuditTrailService.addUpdateEvent (REQUIRES_NEW),
+    // putting #exception.message in NOTE and the full stack trace in DETAIL. This
+    // is a coverage improvement: previously failures past the two guards (apt
+    // processing failure, vector replacement failure, etc.) wrote nothing to the
+    // audit log; now every throw exits cleanly stamped. The two original guard
+    // messages still surface verbatim because the IllegalArgumentException and
+    // RuntimeException thrown below carry them and the default messageSpel
+    // ("#exception.message") picks them up.
+    @AuditedOnError( FailedDataReplacedEvent.class )
     public void reprocessAffyDataFromCel( ExpressionExperiment ee ) {
         DataUpdaterImpl.log.info( "------  Begin processing: " + ee + " -----" );
         Collection<ArrayDesign> associatedPlats = experimentService.getArrayDesignsUsed( ee );
@@ -402,10 +416,8 @@ public class DataUpdaterImpl implements DataUpdater {
         for ( ArrayDesign ad : associatedPlats ) {
             isOnMergedPlatform = merged.get( ad.getId() );
             if ( isOnMergedPlatform && associatedPlats.size() > 1 ) {
-                // should be rare; normally after merge we have just one platform
-                auditTrailService.addUpdateEvent( ee, FailedDataReplacedEvent.class, "Cannot reprocess datasets that include a "
-                        + "merged platform and is still on multiple platforms" );
-
+                // should be rare; normally after merge we have just one platform.
+                // Failure audit row written by @AuditedOnError on this method.
                 throw new IllegalArgumentException( "Cannot reprocess datasets that include a "
                         + "merged platform and is still on multiple platforms" );
             }
@@ -418,7 +430,7 @@ public class DataUpdaterImpl implements DataUpdater {
         Collection<File> files = f.fetch( ee.getAccession().getAccession() );
 
         if ( files == null || files.isEmpty() ) {
-            auditTrailService.addUpdateEvent( ee, FailedDataReplacedEvent.class, "Data was apparently not available" );
+            // Failure audit row written by @AuditedOnError on this method.
             throw new RuntimeException( "Data was apparently not available" );
         }
         ee = experimentService.thawLite( ee );
