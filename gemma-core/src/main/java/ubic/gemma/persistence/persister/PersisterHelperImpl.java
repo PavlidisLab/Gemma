@@ -18,12 +18,15 @@
  */
 package ubic.gemma.persistence.persister;
 
+import org.hibernate.FlushMode;
 import org.springframework.aop.framework.AopProxyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -36,7 +39,10 @@ import ubic.gemma.persistence.service.expression.experiment.EeWriteService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentPrePersistService;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -79,6 +85,16 @@ public class PersisterHelperImpl extends RelationshipPersister implements Persis
     private ExpressionExperimentPrePersistService expressionExperimentPrePersistService;
 
     /**
+     * Persister-shrink S2b: PHI no longer inherits {@link CommonPersister}'s public
+     * helpers through the (now-broken) chain — autowire {@link CommonPersister}
+     * directly so the forwarders {@link #persistBibliographicReference},
+     * {@link #fillInDatabaseEntry}, {@link #persistExternalDatabase} below can
+     * keep {@link EeWriteServiceImpl} compiling until S2f rewires the consumer.
+     */
+    @Autowired
+    private CommonPersister commonPersister;
+
+    /**
      * Returns the underlying {@link EeWriteServiceImpl}, unwrapping the Spring
      * AOP proxy if necessary. Needed to reach the package-private dispatch
      * helpers ({@code persistExpressionExperiment}, {@code persistBioAssay},
@@ -115,6 +131,89 @@ public class PersisterHelperImpl extends RelationshipPersister implements Persis
     @Secured("GROUP_USER")
     public ArrayDesignsForExperimentCache prepare( ExpressionExperiment ee ) {
         return expressionExperimentPrePersistService.prepare( ee );
+    }
+
+    /**
+     * Persister-shrink S2b: the {@code persist(T)} / {@code persistOrUpdate(T)} /
+     * {@code persist(Collection<T>)} entry points formerly lived on
+     * {@code AbstractPersister} and reached PHI via inheritance. With CommonPersister
+     * peeled off, PHI now owns them directly — same FlushMode.MANUAL window logic,
+     * just located here. S2e collapses them into the single dispatch table.
+     */
+    @Override
+    @Transactional
+    public <T extends Identifiable> T persist( T entity ) {
+        try {
+            getSessionFactory().getCurrentSession().setHibernateFlushMode( FlushMode.MANUAL );
+            T persistedEntity = doPersist( entity, new HashMap<>() );
+            getSessionFactory().getCurrentSession().flush();
+            return persistedEntity;
+        } finally {
+            getSessionFactory().getCurrentSession().setHibernateFlushMode( FlushMode.AUTO );
+        }
+    }
+
+    @Override
+    @Transactional
+    public <T extends Identifiable> T persistOrUpdate( T entity ) {
+        try {
+            getSessionFactory().getCurrentSession().setHibernateFlushMode( FlushMode.MANUAL );
+            T persistedEntity = doPersistOrUpdate( entity, new HashMap<>() );
+            getSessionFactory().getCurrentSession().flush();
+            return persistedEntity;
+        } finally {
+            getSessionFactory().getCurrentSession().setHibernateFlushMode( FlushMode.AUTO );
+        }
+    }
+
+    @Override
+    @Transactional
+    public <T extends Identifiable> List<T> persist( Collection<T> col ) {
+        try {
+            getSessionFactory().getCurrentSession().setHibernateFlushMode( FlushMode.MANUAL );
+            List<T> result = doPersist( col, new HashMap<>() );
+            getSessionFactory().getCurrentSession().flush();
+            return result;
+        } finally {
+            getSessionFactory().getCurrentSession().setHibernateFlushMode( FlushMode.AUTO );
+        }
+    }
+
+    /**
+     * Cascade helper formerly on {@code AbstractPersister} as {@code protected final};
+     * reached by {@link EeWriteServiceImpl} for {@link DatabaseEntry} characteristics
+     * collections. Does NOT manage FlushMode — the caller's outer FlushMode window
+     * (from {@link EeWriteServiceImpl#create}) is in effect.
+     */
+    protected final <T extends Identifiable> List<T> doPersist( Collection<T> entities, Map<String, ExternalDatabase> xdbCache ) {
+        List<T> result = new ArrayList<>( entities.size() );
+        for ( T entity : entities ) {
+            result.add( this.doPersist( entity, xdbCache ) );
+        }
+        return result;
+    }
+
+    /**
+     * S2b forwarder to {@link CommonPersister#persistBibliographicReference} so
+     * {@link EeWriteServiceImpl#persister()} keeps compiling until S2f rewires it
+     * to call {@code commonPersister} directly.
+     */
+    BibliographicReference persistBibliographicReference( BibliographicReference reference, Map<String, ExternalDatabase> xdbCache ) {
+        return commonPersister.persistBibliographicReference( reference, xdbCache );
+    }
+
+    /**
+     * S2b forwarder; see {@link #persistBibliographicReference}.
+     */
+    void fillInDatabaseEntry( DatabaseEntry databaseEntry, Map<String, ExternalDatabase> xdbCache ) {
+        commonPersister.fillInDatabaseEntry( databaseEntry, xdbCache );
+    }
+
+    /**
+     * S2b forwarder; see {@link #persistBibliographicReference}.
+     */
+    ExternalDatabase persistExternalDatabase( ExternalDatabase database, Map<String, ExternalDatabase> xdbCache ) {
+        return commonPersister.persistExternalDatabase( database, xdbCache );
     }
 
     @Override

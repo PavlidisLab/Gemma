@@ -66,6 +66,17 @@ public abstract class ArrayDesignPersister extends GenomePersister {
     @Autowired
     private ContactDao contactDao;
 
+    /**
+     * Persister-shrink S2b lead-in: AD reaches CommonPersister and GenomePersister via
+     * explicit autowire rather than inheritance, ahead of the S2c {@code extends
+     * GenomePersister} removal. These two fields are the only collaboration AD needs
+     * outside its own arm.
+     */
+    @Autowired
+    private CommonPersister common;
+    @Autowired
+    private GenomePersister genome;
+
     @Override
     @SuppressWarnings("unchecked")
     protected <T extends Identifiable> T doPersist( T entity, Map<String, ExternalDatabase> xdbCache ) {
@@ -123,12 +134,15 @@ public abstract class ArrayDesignPersister extends GenomePersister {
         }
         // Phase 3 lift: was doPersist (instanceof Taxon arm); now a direct call to persistTaxon
         // so the threaded taxonCache stays alive across the AD graph.
-        arrayDesign.setPrimaryTaxon( this.persistTaxon( arrayDesign.getPrimaryTaxon(), taxonCache ) );
+        // S2b lead-in: routed through @Autowired GenomePersister rather than this.persistTaxon
+        // (which used to inherit through CommonPersister).
+        arrayDesign.setPrimaryTaxon( genome.persistTaxon( arrayDesign.getPrimaryTaxon(), taxonCache ) );
 
         for ( DatabaseEntry externalRef : arrayDesign.getExternalReferences() ) {
             // Phase 3 lift: helper takes the per-call Map<String, ExternalDatabase>
             // threaded through this persist (formerly carried on Caches).
-            externalRef.setExternalDatabase( this.persistExternalDatabase( externalRef.getExternalDatabase(), xdbCache ) );
+            // S2b lead-in: routed through @Autowired CommonPersister.
+            externalRef.setExternalDatabase( common.persistExternalDatabase( externalRef.getExternalDatabase(), xdbCache ) );
         }
 
         // Resolve BioSequence for each CompositeSequence before saving the AD.
@@ -142,7 +156,8 @@ public abstract class ArrayDesignPersister extends GenomePersister {
             compositeSequence.setArrayDesign( arrayDesign );
             BioSequence biologicalCharacteristic = compositeSequence.getBiologicalCharacteristic();
             if ( biologicalCharacteristic != null ) {
-                compositeSequence.setBiologicalCharacteristic( this.persistBioSequence( biologicalCharacteristic, xdbCache, taxonCache, chromosomeCache ) );
+                // S2b lead-in: routed through @Autowired GenomePersister.
+                compositeSequence.setBiologicalCharacteristic( genome.persistBioSequence( biologicalCharacteristic, xdbCache, taxonCache, chromosomeCache ) );
             }
             if ( ++examined % REPORT_BATCH_SIZE == 0 ) {
                 AbstractPersister.log.info( examined + "/" + numElements
