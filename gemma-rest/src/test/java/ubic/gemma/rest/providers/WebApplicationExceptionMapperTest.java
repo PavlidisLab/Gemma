@@ -7,7 +7,9 @@ import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.inmemory.InMemoryTestContainerFactory;
 import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -80,6 +82,26 @@ public class WebApplicationExceptionMapperTest extends JerseyTest {
     }
 
     private static AnnotationConfigWebApplicationContext ctx;
+
+    /**
+     * Bridge Jersey's JUnit 4 lifecycle into Jupiter's. {@link JerseyTest#setUp()}
+     * and {@link JerseyTest#tearDown()} are plain {@code public} methods (no
+     * JUnit 4 annotations baked into the bytecode), so re-annotating them here is
+     * safe and does not double-fire. We don't extend {@code BaseJerseyTest5}
+     * because its {@code configure()} is {@code final} and conflicts with the
+     * custom {@link ResourceConfig} this test needs.
+     */
+    @BeforeEach
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
+    }
+
+    @AfterEach
+    @Override
+    public void tearDown() throws Exception {
+        super.tearDown();
+    }
 
     @Override
     protected TestContainerFactory getTestContainerFactory() throws TestContainerException {
