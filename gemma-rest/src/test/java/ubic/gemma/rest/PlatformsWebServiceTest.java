@@ -1,8 +1,8 @@
 package ubic.gemma.rest;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import ubic.gemma.core.util.test.PersistentDummyObjectHelper;
@@ -15,7 +15,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.blacklist.BlacklistedEntityService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.rest.util.BaseJerseyIntegrationTest;
+import ubic.gemma.rest.util.BaseJerseyIntegrationTest5;
 import ubic.gemma.rest.util.FilteredAndPaginatedResponseDataObject;
 import ubic.gemma.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.rest.util.args.*;
@@ -23,7 +23,7 @@ import ubic.gemma.rest.util.args.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-public class PlatformsWebServiceTest extends BaseJerseyIntegrationTest {
+public class PlatformsWebServiceTest extends BaseJerseyIntegrationTest5 {
 
     @Autowired
     private PlatformsWebService platformsWebService;
@@ -47,13 +47,13 @@ public class PlatformsWebServiceTest extends BaseJerseyIntegrationTest {
     private ExpressionExperiment expressionExperiment;
     private ArrayDesign arrayDesign;
 
-    @Before
+    @BeforeEach
     public void setUpMocks() {
         expressionExperiment = testHelper.getTestPersistentBasicExpressionExperiment();
         arrayDesign = expressionExperiment.getBioAssays().iterator().next().getArrayDesignUsed();
     }
 
-    @After
+    @AfterEach
     public void removeFixtures() {
         eeService.remove( expressionExperiment );
         arrayDesignService.remove( arrayDesign );

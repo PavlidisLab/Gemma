@@ -3,9 +3,9 @@ package ubic.gemma.rest;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.test.PersistentDummyObjectHelper;
 import ubic.gemma.model.analysis.expression.diff.*;
@@ -20,7 +20,7 @@ import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.rest.util.BaseJerseyIntegrationTest;
+import ubic.gemma.rest.util.BaseJerseyIntegrationTest5;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.args.*;
 
@@ -32,10 +32,10 @@ import java.io.InputStreamReader;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static ubic.gemma.rest.util.Assertions.assertThat;
 
-public class AnalysisResultSetsWebServiceTest extends BaseJerseyIntegrationTest {
+public class AnalysisResultSetsWebServiceTest extends BaseJerseyIntegrationTest5 {
 
     @Autowired
     private AnalysisResultSetsWebService service;
@@ -65,7 +65,7 @@ public class AnalysisResultSetsWebServiceTest extends BaseJerseyIntegrationTest 
     @Autowired
     private PersistentDummyObjectHelper testHelper;
 
-    @Before
+    @BeforeEach
     public void setupMocks() {
 
         ee = testHelper.getTestPersistentBasicExpressionExperiment();
@@ -110,7 +110,7 @@ public class AnalysisResultSetsWebServiceTest extends BaseJerseyIntegrationTest 
         databaseEntry2 = databaseEntryService.create( databaseEntry2 );
     }
 
-    @After
+    @AfterEach
     public void removeFixtures() {
         differentialExpressionAnalysisService.remove( dea );
         expressionExperimentService.remove( ee );
