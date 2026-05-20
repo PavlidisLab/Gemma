@@ -18,20 +18,20 @@
  */
 package ubic.gemma.core.datastructure.matrix.io;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.loader.entrez.EntrezUtils;
-import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
+import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest5;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.test.NetworkAvailable;
-import ubic.gemma.core.util.test.NetworkAvailableRule;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -41,16 +41,14 @@ import java.io.StringWriter;
 import java.util.Collection;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assume.assumeNoException;
-import static org.junit.Assume.assumeNotNull;
+import static org.junit.jupiter.api.Assumptions.abort;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * @author keshav
  */
-public class ExperimentalDesignWriterTest extends AbstractGeoServiceTest {
-
-    @Rule
-    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
+@ExtendWith(NetworkAvailableExtension.class)
+public class ExperimentalDesignWriterTest extends AbstractGeoServiceTest5 {
 
     @Autowired
     private ExpressionExperimentService eeService = null;
@@ -63,7 +61,7 @@ public class ExperimentalDesignWriterTest extends AbstractGeoServiceTest {
 
     private ExpressionExperiment ee = null;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         try {
             geoService.setGeoDomainObjectGenerator(
@@ -72,12 +70,12 @@ public class ExperimentalDesignWriterTest extends AbstractGeoServiceTest {
             ee = ( ExpressionExperiment ) results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
             ee = ( ( Collection<ExpressionExperiment> ) e.getData() ).iterator().next();
-            assumeNoException( e );
+            abort( e.getMessage() );
         }
         ee = eeService.thaw( ee );
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         if ( ee != null ) {
             this.eeService.remove( ee );
@@ -88,7 +86,7 @@ public class ExperimentalDesignWriterTest extends AbstractGeoServiceTest {
     @Category(SlowTest.class)
     @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testGSE1611() throws Exception {
-        assumeNotNull( ee, "Could not find experiment GSE1611." );
+        assumeTrue( ee != null, "Could not find experiment GSE1611." );
         ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter( entityUrlBuilder, buildInfo, false );
         StringWriter writer = new StringWriter();
         edWriter.write( ee, writer );
