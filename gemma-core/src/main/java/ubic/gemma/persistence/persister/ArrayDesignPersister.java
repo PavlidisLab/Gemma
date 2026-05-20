@@ -148,19 +148,19 @@ public class ArrayDesignPersister {
      */
     public ArrayDesign persistArrayDesign( ArrayDesign arrayDesign, Map<String, ExternalDatabase> xdbCache, Map<Object, Taxon> taxonCache, Map<Integer, Chromosome> chromosomeCache ) {
         if ( arrayDesign.getId() != null ) {
-            AbstractPersister.log.debug( "Platform " + arrayDesign + " already exists, returning..." );
+            CommonPersister.log.debug( "Platform " + arrayDesign + " already exists, returning..." );
             return arrayDesign;
         }
 
         Session session = getSessionFactory().getCurrentSession();
         ArrayDesign existing = BusinessKey.find( session, arrayDesign );
         if ( existing != null ) {
-            AbstractPersister.log.info( String.format( "Platform exactly matching %s doesn't exist, but found %s; returning",
+            CommonPersister.log.info( String.format( "Platform exactly matching %s doesn't exist, but found %s; returning",
                     arrayDesign, existing ) );
             return existing;
         }
 
-        AbstractPersister.log.debug( arrayDesign + " is new, processing..." );
+        CommonPersister.log.debug( arrayDesign + " is new, processing..." );
         return this.persistNewArrayDesign( arrayDesign, xdbCache, taxonCache, chromosomeCache );
     }
 
@@ -172,7 +172,7 @@ public class ArrayDesignPersister {
      * associations (designProvider, primaryTaxon) need explicit BK resolution here.
      */
     private ArrayDesign persistNewArrayDesign( ArrayDesign arrayDesign, Map<String, ExternalDatabase> xdbCache, Map<Object, Taxon> taxonCache, Map<Integer, Chromosome> chromosomeCache ) {
-        AbstractPersister.log.debug( "Persisting new platform " + arrayDesign.getName() );
+        CommonPersister.log.debug( "Persisting new platform " + arrayDesign.getName() );
 
         if ( arrayDesign.getDesignProvider() != null ) {
             // BK lookup covers Person (Person extends Contact) — see BusinessKey.find(Session, Contact).
@@ -212,16 +212,16 @@ public class ArrayDesignPersister {
                 compositeSequence.setBiologicalCharacteristic( genome.persistBioSequence( biologicalCharacteristic, xdbCache, taxonCache, chromosomeCache ) );
             }
             if ( ++examined % REPORT_BATCH_SIZE == 0 ) {
-                AbstractPersister.log.info( examined + "/" + numElements
+                CommonPersister.log.info( examined + "/" + numElements
                         + " compositeSequence sequences examined for " + arrayDesign );
             }
         }
         if ( examined > 0 ) {
-            AbstractPersister.log.info( "Total of " + examined
+            CommonPersister.log.info( "Total of " + examined
                     + " compositeSequence sequences examined for " + arrayDesign );
         }
 
-        AbstractPersister.log.debug( "Persisting " + arrayDesign );
+        CommonPersister.log.debug( "Persisting " + arrayDesign );
         return arrayDesignDao.create( arrayDesign );
     }
 

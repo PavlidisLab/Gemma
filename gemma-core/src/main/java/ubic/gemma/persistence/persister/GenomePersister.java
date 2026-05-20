@@ -205,7 +205,7 @@ public class GenomePersister {
         // NCBI id can be null if gene has been loaded from a gene info file.
         Integer existingNcbiId = existingGene.getNcbiGeneId();
         if ( existingNcbiId != null && !existingNcbiId.equals( newGeneInfo.getNcbiGeneId() ) ) {
-            AbstractPersister.log
+            CommonPersister.log
                     .info( "NCBI ID Change for " + existingGene + ", new id =" + newGeneInfo.getNcbiGeneId() );
 
             String previousIdString = newGeneInfo.getPreviousNcbiGeneId();
@@ -296,11 +296,11 @@ public class GenomePersister {
         Map<String, GeneProduct> usedGIs = new HashMap<>();
         for ( GeneProduct newGeneProductInfo : newGeneInfo.getProducts() ) {
             if ( updatedGpMap.containsKey( newGeneProductInfo.getName() ) ) {
-                AbstractPersister.log.debug( "Updating gene product based on name: " + newGeneProductInfo );
+                CommonPersister.log.debug( "Updating gene product based on name: " + newGeneProductInfo );
                 GeneProduct existingGeneProduct = updatedGpMap.get( newGeneProductInfo.getName() );
                 this.updateGeneProduct( existingGeneProduct, newGeneProductInfo, xdbCache, taxonCache, chromosomeCache );
             } else if ( updatedGpMap.containsKey( newGeneProductInfo.getNcbiGi() ) ) {
-                AbstractPersister.log.debug( "Updating gene product based on GI: " + newGeneProductInfo );
+                CommonPersister.log.debug( "Updating gene product based on GI: " + newGeneProductInfo );
                 GeneProduct existingGeneProduct = updatedGpMap.get( newGeneProductInfo.getNcbiGi() );
                 this.updateGeneProduct( existingGeneProduct, newGeneProductInfo, xdbCache, taxonCache, chromosomeCache );
             } else {
@@ -309,7 +309,7 @@ public class GenomePersister {
                     // it is, in fact, new, so far as we can tell.
                     newGeneProductInfo.setGene( existingGene );
                     this.fillInGeneProductAssociations( newGeneProductInfo, xdbCache, taxonCache, chromosomeCache );
-                    AbstractPersister.log.debug( "New product for " + existingGene + ": " + newGeneProductInfo );
+                    CommonPersister.log.debug( "New product for " + existingGene + ": " + newGeneProductInfo );
                     existingGene.getProducts().add( newGeneProductInfo );
                 } else {
                     /*
@@ -326,7 +326,7 @@ public class GenomePersister {
                         Gene geneInfo = newGeneProductInfo.getGene(); // transient.
                         if ( !oldGeneForExistingGeneProduct.equals( geneInfo ) ) {
 
-                            AbstractPersister.log
+                            CommonPersister.log
                                     .warn( "Switching gene product from one gene to another: " + existingGeneProduct
                                             + " switching to " + geneInfo
                                             + " (this can also happen if an mRNA is associated with two genes, which we don't allow, so we switch it arbitrarily)" );
@@ -334,12 +334,12 @@ public class GenomePersister {
                             // Here we just remove its old association.
                             oldGeneForExistingGeneProduct = geneDao.thaw( oldGeneForExistingGeneProduct );
                             oldGeneForExistingGeneProduct.getProducts().remove( existingGeneProduct );
-                            AbstractPersister.log.debug( "Switch: Removing " + existingGeneProduct + " from " + oldGeneForExistingGeneProduct + " GI="
+                            CommonPersister.log.debug( "Switch: Removing " + existingGeneProduct + " from " + oldGeneForExistingGeneProduct + " GI="
                                     + existingGeneProduct.getNcbiGi() );
                             geneDao.update( oldGeneForExistingGeneProduct );
 
                             if ( oldGeneForExistingGeneProduct.getProducts().isEmpty() ) {
-                                AbstractPersister.log
+                                CommonPersister.log
                                         .warn( "Gene has no products left after removing that gene product (but it might change later): "
                                                 + oldGeneForExistingGeneProduct );
 
@@ -357,7 +357,7 @@ public class GenomePersister {
 
                         assert !oldGeneForExistingGeneProduct.getProducts().contains( existingGeneProduct );
                     } else {
-                        AbstractPersister.log.debug( "Attaching orphaned gene product to " + existingGene + " : "
+                        CommonPersister.log.debug( "Attaching orphaned gene product to " + existingGene + " : "
                                 + existingGeneProduct );
                     }
 
@@ -387,7 +387,7 @@ public class GenomePersister {
         }
 
         if ( existingGene.getProducts().isEmpty() ) {
-            AbstractPersister.log.debug( "No products left for: " + existingGene );
+            CommonPersister.log.debug( "No products left for: " + existingGene );
         }
 
         return existingGene;
@@ -403,8 +403,8 @@ public class GenomePersister {
 
         // try to avoid making the instance 'dirty' if we don't have to, to avoid updates.
         if ( existingBioSequence != null ) {
-            if ( AbstractPersister.log.isDebugEnabled() )
-                AbstractPersister.log.debug( "Found existing: " + existingBioSequence );
+            if ( CommonPersister.log.isDebugEnabled() )
+                CommonPersister.log.debug( "Found existing: " + existingBioSequence );
             return existingBioSequence;
         }
 
@@ -448,8 +448,8 @@ public class GenomePersister {
             assert fTaxon != null;
             assert fTaxon.getId() != null;
 
-            if ( AbstractPersister.log.isDebugEnabled() )
-                AbstractPersister.log.debug( "Fetched or created taxon " + fTaxon );
+            if ( CommonPersister.log.isDebugEnabled() )
+                CommonPersister.log.debug( "Fetched or created taxon " + fTaxon );
 
             if ( fTaxon.getScientificName() != null ) {
                 seenTaxa.put( fTaxon.getScientificName().toLowerCase(), fTaxon );
@@ -468,7 +468,7 @@ public class GenomePersister {
     private void removeGeneProducts( Collection<GeneProduct> toRemove ) {
         Collection<BlatAssociation> associations = this.blatAssociationDao.find( toRemove );
         if ( !associations.isEmpty() ) {
-            AbstractPersister.log
+            CommonPersister.log
                     .info( "Removing " + associations.size() + " blat associations involving up to " + toRemove.size()
                             + " products." );
             this.blatAssociationDao.remove( associations );
@@ -476,7 +476,7 @@ public class GenomePersister {
 
         Collection<AnnotationAssociation> annotationAssociations = this.annotationAssociationDao.find( toRemove );
         if ( !annotationAssociations.isEmpty() ) {
-            AbstractPersister.log
+            CommonPersister.log
                     .info( "Removing " + annotationAssociations.size() + " annotationAssociations involving up to "
                             + toRemove.size() + " products." );
             this.annotationAssociationDao.remove( annotationAssociations );
@@ -526,8 +526,8 @@ public class GenomePersister {
         if ( blatResult.getId() == null ) {
             association.setBlatResult( blatResultDao.create( blatResult ) );
         }
-        if ( AbstractPersister.log.isDebugEnabled() ) {
-            AbstractPersister.log.debug( "Persisting " + association );
+        if ( CommonPersister.log.isDebugEnabled() ) {
+            CommonPersister.log.debug( "Persisting " + association );
         }
         association.setGeneProduct( this.persistGeneProduct( association.getGeneProduct(), xdbCache, taxonCache, chromosomeCache ) );
         association.setBioSequence( this.persistBioSequence( association.getBioSequence(), xdbCache, taxonCache, chromosomeCache ) );
@@ -539,8 +539,8 @@ public class GenomePersister {
             Gene existingGene = geneDao.find( gene );
 
             if ( existingGene != null ) {
-                if ( AbstractPersister.log.isDebugEnabled() )
-                    AbstractPersister.log.debug( "Gene exists, will not update" );
+                if ( CommonPersister.log.isDebugEnabled() )
+                    CommonPersister.log.debug( "Gene exists, will not update" );
                 return existingGene;
             }
         }
@@ -561,8 +561,8 @@ public class GenomePersister {
             this.fillChromosomeLocationAssociations( gene.getPhysicalLocation(), gene.getTaxon(), xdbCache, taxonCache, chromosomeCache );
         }
 
-        if ( AbstractPersister.log.isDebugEnabled() )
-            AbstractPersister.log.debug( "New gene: " + gene );
+        if ( CommonPersister.log.isDebugEnabled() )
+            CommonPersister.log.debug( "New gene: " + gene );
         gene = geneDao.create( gene );
 
         Set<GeneProduct> geneProductsForNewGene = new HashSet<>();
@@ -578,7 +578,7 @@ public class GenomePersister {
                 existingProduct.setGene( gene );
                 geneProductsForNewGene.add( existingProduct );
 
-                AbstractPersister.log.warn( "While creating new gene: Gene product: [New=" + product
+                CommonPersister.log.warn( "While creating new gene: Gene product: [New=" + product
                         + "] is already associated with a gene [Old=" + existingProduct
                         + "], will move to associate with new gene: " + gene );
             } else {
@@ -601,7 +601,7 @@ public class GenomePersister {
             geneDao.update( gene );
             return gene;
         } catch ( Exception e ) {
-            AbstractPersister.log.error( "**** Error while creating gene: " + gene + "; products:" );
+            CommonPersister.log.error( "**** Error while creating gene: " + gene + "; products:" );
             for ( GeneProduct gp : gene.getProducts() ) {
                 System.err.println( gp );
             }
@@ -614,13 +614,13 @@ public class GenomePersister {
         GeneProduct existing = geneProductDao.find( geneProduct );
 
         if ( existing != null ) {
-            if ( AbstractPersister.log.isDebugEnabled() )
-                AbstractPersister.log.debug( geneProduct + " exists, will not update" );
+            if ( CommonPersister.log.isDebugEnabled() )
+                CommonPersister.log.debug( geneProduct + " exists, will not update" );
             return existing;
         }
 
-        if ( AbstractPersister.log.isDebugEnabled() )
-            AbstractPersister.log.debug( "*** New: " + geneProduct + " *** " );
+        if ( CommonPersister.log.isDebugEnabled() )
+            CommonPersister.log.debug( "*** New: " + geneProduct + " *** " );
 
         this.fillInGeneProductAssociations( geneProduct, xdbCache, taxonCache, chromosomeCache );
 
@@ -645,19 +645,19 @@ public class GenomePersister {
         BioSequence existingBioSequence = bioSequenceDao.find( bioSequence );
 
         if ( existingBioSequence == null ) {
-            if ( AbstractPersister.log.isDebugEnabled() )
-                AbstractPersister.log.debug( "Creating new: " + bioSequence );
+            if ( CommonPersister.log.isDebugEnabled() )
+                CommonPersister.log.debug( "Creating new: " + bioSequence );
             return this.persistNewBioSequence( bioSequence, xdbCache, taxonCache, chromosomeCache );
         }
 
-        if ( AbstractPersister.log.isDebugEnabled() )
-            AbstractPersister.log.debug( "Found existing: " + existingBioSequence );
+        if ( CommonPersister.log.isDebugEnabled() )
+            CommonPersister.log.debug( "Found existing: " + existingBioSequence );
 
         // the sequence is the main field we might update.
         if ( bioSequence.getSequence() != null && !bioSequence.getSequence()
                 .equals( existingBioSequence.getSequence() ) ) {
-            if ( AbstractPersister.log.isDebugEnabled() )
-                AbstractPersister.log.debug( "Updating sequence:" + bioSequence.getName() + "\nFROM:" + existingBioSequence.getSequence()
+            if ( CommonPersister.log.isDebugEnabled() )
+                CommonPersister.log.debug( "Updating sequence:" + bioSequence.getName() + "\nFROM:" + existingBioSequence.getSequence()
                         + "\nTO:" + bioSequence.getSequence() + "\n" );
             existingBioSequence.setSequence( bioSequence.getSequence() );
         }
@@ -722,8 +722,8 @@ public class GenomePersister {
             return this.persistGene( gene, false, xdbCache, taxonCache, chromosomeCache );
         }
 
-        if ( AbstractPersister.log.isDebugEnabled() )
-            AbstractPersister.log.debug( "Updating " + existingGene );
+        if ( CommonPersister.log.isDebugEnabled() )
+            CommonPersister.log.debug( "Updating " + existingGene );
 
         return this.updateGene( existingGene, gene, xdbCache, taxonCache, chromosomeCache );
     }
@@ -847,14 +847,14 @@ public class GenomePersister {
                      * remove the duplicate. This is due to cruft, we shouldn't have such duplicates.
                      */
                     if ( switchedGis.contains( ngp.getNcbiGi() ) ) {
-                        AbstractPersister.log.warn( "Another gene product with the same intended GI will be deleted: "
+                        CommonPersister.log.warn( "Another gene product with the same intended GI will be deleted: "
                                 + existingGp );
                         deleteIt = true;
                         continue;
                     }
 
                     // ok
-                    AbstractPersister.log.warn( "Updating the GI for " + existingGp + " -> GI:" + ngp.getNcbiGi() );
+                    CommonPersister.log.warn( "Updating the GI for " + existingGp + " -> GI:" + ngp.getNcbiGi() );
                     existingGp.setNcbiGi( ngp.getNcbiGi() );
                     deleteIt = false;
                     switchedGis.add( ngp.getNcbiGi() );
@@ -867,7 +867,7 @@ public class GenomePersister {
 
                 Gene oldGeneForExistingGeneProduct = otherGpUsingThisGi.getGene();
                 if ( oldGeneForExistingGeneProduct == null ) {
-                    AbstractPersister.log.warn( "Updating the GI for " + existingGp + " -> GI:" + ngp.getNcbiGi()
+                    CommonPersister.log.warn( "Updating the GI for " + existingGp + " -> GI:" + ngp.getNcbiGi()
                             + " and deleting orphan GP with same GI: " + otherGpUsingThisGi );
 
                     existingGp.setNcbiGi( ngp.getNcbiGi() );
@@ -876,7 +876,7 @@ public class GenomePersister {
                     deleteIt = false;
                 } else if ( oldGeneForExistingGeneProduct.equals( existingGene ) ) {
                     // this is the common case, for crufted database.
-                    AbstractPersister.log
+                    CommonPersister.log
                             .warn( "Removing outdated gp for which there is already an existing copy: " + existingGp
                                     + " (already have " + otherGpUsingThisGi + ")" );
                     deleteIt = true;
@@ -885,7 +885,7 @@ public class GenomePersister {
                      * That GI is associated with another gene's products. In effect, switch it to this gene. This
                      * should not generally happen.
                      */
-                    AbstractPersister.log
+                    CommonPersister.log
                             .warn( "Removing gene product: " + otherGpUsingThisGi + " and effectively switching to "
                                     + existingGene + " -- detected during GI update checks " );
 
@@ -905,7 +905,7 @@ public class GenomePersister {
                 toRemove.add( existingGp );
                 existingGp.setGene( null ); // we are erasing this association as we assume it is no longer
                 // valid.
-                AbstractPersister.log.warn( "Removing gene product from system: " + existingGp
+                CommonPersister.log.warn( "Removing gene product from system: " + existingGp
                         + ", it is no longer listed as a product of " + existingGene );
             }
         } // over this gene's gene products.
@@ -1010,8 +1010,8 @@ public class GenomePersister {
     }
 
     private BioSequence persistNewBioSequence( BioSequence bioSequence, Map<String, ExternalDatabase> xdbCache, Map<Object, Taxon> taxonCache, Map<Integer, Chromosome> chromosomeCache ) {
-        if ( AbstractPersister.log.isDebugEnabled() )
-            AbstractPersister.log.debug( "Creating new: " + bioSequence );
+        if ( CommonPersister.log.isDebugEnabled() )
+            CommonPersister.log.debug( "Creating new: " + bioSequence );
 
         this.persistBioSequenceAssociations( bioSequence, xdbCache, taxonCache, chromosomeCache );
 

@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.persister;
 
 import org.hibernate.FlushMode;
+import org.hibernate.SessionFactory;
 import org.springframework.aop.framework.AopProxyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
@@ -50,6 +51,15 @@ import java.util.Map;
  * Where appropriate, objects are only created anew if they don't already exist in the database, according to rules
  * documented elsewhere.
  * <p>
+ * Persister-shrink S2e: the multi-level inheritance chain
+ * (PHI → RelationshipPersister → ArrayDesignPersister → GenomePersister → CommonPersister →
+ * AbstractPersister) is gone. PHI is now a standalone {@code @Service} that owns the
+ * {@link FlushMode#MANUAL} window on the public entry points and dispatches in turn through
+ * each typed {@code @Autowired} persister bean:
+ * EE arms (via {@link EeWriteServiceImpl}) → {@link RelationshipPersister#doRelationship}
+ * → {@link ArrayDesignPersister#doArrayDesign} → {@link GenomePersister#doGenome} →
+ * {@link CommonPersister#doCommon} → throws.
+ * <p>
  * Phase 3 persister-retirement note: the audit-trail priming that used to live in {@code doPersist}
  * has moved to {@link ubic.gemma.persistence.audit.AuditTrailEventListener}, a Hibernate {@code PERSIST}
  * event listener that runs ahead of cascade. Every {@code session.persist} of an {@code Auditable} now
@@ -68,7 +78,7 @@ import java.util.Map;
  * @author keshav
  */
 @Service
-public class PersisterHelperImpl extends RelationshipPersister implements PersisterHelper {
+public class PersisterHelperImpl implements PersisterHelper {
 
     /**
      * Autowired as the {@link EeWriteService} interface (not the {@code Impl})
@@ -84,24 +94,24 @@ public class PersisterHelperImpl extends RelationshipPersister implements Persis
     @Autowired
     private ExpressionExperimentPrePersistService expressionExperimentPrePersistService;
 
-    /**
-     * Persister-shrink S2b: PHI no longer inherits {@link CommonPersister}'s public
-     * helpers through the (now-broken) chain — autowire {@link CommonPersister}
-     * directly so the forwarders {@link #persistBibliographicReference},
-     * {@link #fillInDatabaseEntry}, {@link #persistExternalDatabase} below can
-     * keep {@link EeWriteServiceImpl} compiling until S2f rewires the consumer.
-     */
+    @Autowired
+    private SessionFactory sessionFactory;
+
     @Autowired
     private CommonPersister commonPersister;
 
-    /**
-     * Persister-shrink S2c: PHI no longer inherits {@link GenomePersister}'s
-     * {@code persistTaxon} through the chain (AD detached from Genome). Autowire
-     * directly so the {@link #persistTaxon} forwarder keeps {@link EeWriteServiceImpl}
-     * compiling until S2f rewires the consumer.
-     */
     @Autowired
     private GenomePersister genomePersister;
+
+    @Autowired
+    private ArrayDesignPersister arrayDesignPersister;
+
+    @Autowired
+    private RelationshipPersister relationshipPersister;
+
+    SessionFactory getSessionFactory() {
+        return sessionFactory;
+    }
 
     /**
      * Returns the underlying {@link EeWriteServiceImpl}, unwrapping the Spring
@@ -143,22 +153,20 @@ public class PersisterHelperImpl extends RelationshipPersister implements Persis
     }
 
     /**
-     * Persister-shrink S2b: the {@code persist(T)} / {@code persistOrUpdate(T)} /
-     * {@code persist(Collection<T>)} entry points formerly lived on
-     * {@code AbstractPersister} and reached PHI via inheritance. With CommonPersister
-     * peeled off, PHI now owns them directly — same FlushMode.MANUAL window logic,
-     * just located here. S2e collapses them into the single dispatch table.
+     * Persister-shrink S2e: PHI owns the {@link FlushMode#MANUAL} window on the
+     * polymorphic public entry points. Inside the window, {@link #doPersist} dispatches
+     * to typed beans in order: EE arms → Relationship → ArrayDesign → Genome → Common.
      */
     @Override
     @Transactional
     public <T extends Identifiable> T persist( T entity ) {
         try {
-            getSessionFactory().getCurrentSession().setHibernateFlushMode( FlushMode.MANUAL );
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.MANUAL );
             T persistedEntity = doPersist( entity, new HashMap<>() );
-            getSessionFactory().getCurrentSession().flush();
+            sessionFactory.getCurrentSession().flush();
             return persistedEntity;
         } finally {
-            getSessionFactory().getCurrentSession().setHibernateFlushMode( FlushMode.AUTO );
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.AUTO );
         }
     }
 
@@ -166,12 +174,12 @@ public class PersisterHelperImpl extends RelationshipPersister implements Persis
     @Transactional
     public <T extends Identifiable> T persistOrUpdate( T entity ) {
         try {
-            getSessionFactory().getCurrentSession().setHibernateFlushMode( FlushMode.MANUAL );
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.MANUAL );
             T persistedEntity = doPersistOrUpdate( entity, new HashMap<>() );
-            getSessionFactory().getCurrentSession().flush();
+            sessionFactory.getCurrentSession().flush();
             return persistedEntity;
         } finally {
-            getSessionFactory().getCurrentSession().setHibernateFlushMode( FlushMode.AUTO );
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.AUTO );
         }
     }
 
@@ -179,12 +187,12 @@ public class PersisterHelperImpl extends RelationshipPersister implements Persis
     @Transactional
     public <T extends Identifiable> List<T> persist( Collection<T> col ) {
         try {
-            getSessionFactory().getCurrentSession().setHibernateFlushMode( FlushMode.MANUAL );
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.MANUAL );
             List<T> result = doPersist( col, new HashMap<>() );
-            getSessionFactory().getCurrentSession().flush();
+            sessionFactory.getCurrentSession().flush();
             return result;
         } finally {
-            getSessionFactory().getCurrentSession().setHibernateFlushMode( FlushMode.AUTO );
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.AUTO );
         }
     }
 
@@ -194,7 +202,7 @@ public class PersisterHelperImpl extends RelationshipPersister implements Persis
      * collections. Does NOT manage FlushMode — the caller's outer FlushMode window
      * (from {@link EeWriteServiceImpl#create}) is in effect.
      */
-    protected final <T extends Identifiable> List<T> doPersist( Collection<T> entities, Map<String, ExternalDatabase> xdbCache ) {
+    final <T extends Identifiable> List<T> doPersist( Collection<T> entities, Map<String, ExternalDatabase> xdbCache ) {
         List<T> result = new ArrayList<>( entities.size() );
         for ( T entity : entities ) {
             result.add( this.doPersist( entity, xdbCache ) );
@@ -234,13 +242,20 @@ public class PersisterHelperImpl extends RelationshipPersister implements Persis
         return genomePersister.persistTaxon( taxon, taxonCache );
     }
 
-    @Override
+    /**
+     * Persister-shrink S2e dispatch table. EE arms reach {@link EeWriteServiceImpl}
+     * through the AOP-unwrap helper {@link #eeWriteServiceImpl()}; the typed-bean
+     * arms ({@link RelationshipPersister#doRelationship},
+     * {@link ArrayDesignPersister#doArrayDesign}, {@link GenomePersister#doGenome},
+     * {@link CommonPersister#doCommon}) each return {@code null} when the entity
+     * isn't theirs, so we fall through in turn and throw at the bottom.
+     */
     @SuppressWarnings("unchecked")
-    protected <T extends Identifiable> T doPersist( T entity, Map<String, ExternalDatabase> xdbCache ) {
+    <T extends Identifiable> T doPersist( T entity, Map<String, ExternalDatabase> xdbCache ) {
         EeWriteServiceImpl impl = eeWriteServiceImpl();
         Map<Object, Taxon> taxonCache = new HashMap<>();
         if ( entity instanceof ExpressionExperiment ) {
-            AbstractPersister.log.warn( "Consider doing the 'prepare' step in a separate transaction." );
+            CommonPersister.log.warn( "Consider doing the 'prepare' step in a separate transaction." );
             ArrayDesignsForExperimentCache adCache = this.prepare( ( ExpressionExperiment ) entity );
             return ( T ) impl.persistExpressionExperiment( ( ExpressionExperiment ) entity, xdbCache, adCache, taxonCache );
         } else if ( entity instanceof BioAssayDimension ) {
@@ -253,9 +268,39 @@ public class PersisterHelperImpl extends RelationshipPersister implements Persis
             return ( T ) impl.persistCompound( ( Compound ) entity );
         } else if ( entity instanceof ExpressionExperimentSubSet ) {
             return ( T ) impl.persistExpressionExperimentSubSet( ( ExpressionExperimentSubSet ) entity );
-        } else {
-            return super.doPersist( entity, xdbCache );
         }
+        T rel = relationshipPersister.doRelationship( entity, xdbCache );
+        if ( rel != null ) {
+            return rel;
+        }
+        T ad = ( T ) arrayDesignPersister.doArrayDesign( entity, xdbCache );
+        if ( ad != null ) {
+            return ad;
+        }
+        T genome = genomePersister.doGenome( entity, xdbCache );
+        if ( genome != null || entity instanceof Taxon ) {
+            return genome;
+        }
+        T common = ( T ) commonPersister.doCommon( entity, xdbCache );
+        if ( common != null || entity instanceof ubic.gemma.model.common.description.Characteristic
+                || entity instanceof ubic.gemma.model.common.auditAndSecurity.User ) {
+            return common;
+        }
+        throw new UnsupportedOperationException( String.format( "Don't know how to persist a %s.", entity.getClass().getSimpleName() ) );
+    }
+
+    /**
+     * Persist-or-update dispatch table. Only Genome owns update arms today
+     * (BioSequence, Gene, GeneProduct); the other layers throw via the chain
+     * fall-through here.
+     */
+    @SuppressWarnings("unchecked")
+    <T extends Identifiable> T doPersistOrUpdate( T entity, Map<String, ExternalDatabase> xdbCache ) {
+        T genome = genomePersister.doGenomeUpdate( entity, xdbCache );
+        if ( genome != null ) {
+            return genome;
+        }
+        throw new UnsupportedOperationException( String.format( "Don't know how to persist or update a %s.", entity.getClass().getSimpleName() ) );
     }
 
 }
