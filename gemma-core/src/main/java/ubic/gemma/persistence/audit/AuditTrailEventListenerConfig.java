@@ -36,6 +36,28 @@ import org.springframework.context.annotation.Configuration;
  * before Hibernate's default {@code DefaultPersistEventListener} and cascade
  * machinery — the AuditTrail has to be non-null on the parent before cascade
  * walks into it.
+ *
+ * <h3>Audit Phase C-1 status</h3>
+ * The listener now ALSO implements {@code PostInsertEventListener} +
+ * {@code PreDeleteEventListener} to take over auto-CREATE / auto-DELETE emission
+ * from {@code AuditAdvice.creator()/deleter()} (see
+ * {@code AUDIT_MIGRATION_PHASE_C_RECCE.md} §2.1). However, those two Hibernate
+ * event types are intentionally NOT registered here yet, and the listener
+ * instance is built with the legacy no-arg constructor (which makes
+ * {@code onPostInsert} / {@code onPreDelete} no-ops).
+ * <p>
+ * <b>FIXME (Phase C-2):</b> once {@code AuditAdvice.doCreateAdvice} and
+ * {@code AuditAdvice.doDeleteAdvice} are deleted and IT-validation against
+ * gemdtest is green, switch this config to:
+ * <ol>
+ *   <li>autowire {@code UserManager} and construct the listener with
+ *       {@code new AuditTrailEventListener(userManager, sessionFactory)};</li>
+ *   <li>{@code registry.appendListeners(EventType.POST_INSERT, listener)} +
+ *       {@code registry.appendListeners(EventType.PRE_DELETE, listener)}.</li>
+ * </ol>
+ * Landing those two lines while {@code AuditAdvice.creator/deleter} still fire
+ * would produce duplicate AUDIT_EVENT rows on every Auditable insert/delete —
+ * that's the dual-emission risk this gate is preventing.
  */
 @Configuration
 public class AuditTrailEventListenerConfig implements InitializingBean {
@@ -47,6 +69,9 @@ public class AuditTrailEventListenerConfig implements InitializingBean {
 
     @Override
     public void afterPropertiesSet() {
+        // No-arg constructor: persist-guard only. The C-1 PostInsert/PreDelete
+        // lifecycle hooks on AuditTrailEventListener stay dormant — see class
+        // javadoc for the C-2 wiring switch.
         AuditTrailEventListener listener = new AuditTrailEventListener();
         SessionFactoryImplementor sfi = sessionFactory.unwrap( SessionFactoryImplementor.class );
         EventListenerRegistry registry = sfi.getServiceRegistry().getService( EventListenerRegistry.class );
@@ -59,6 +84,7 @@ public class AuditTrailEventListenerConfig implements InitializingBean {
         // into the session along with its parent.
         registry.prependListeners( EventType.PERSIST, listener );
         registry.prependListeners( EventType.PERSIST_ONFLUSH, listener );
-        log.info( "Registered AuditTrailEventListener on Hibernate PERSIST and PERSIST_ONFLUSH." );
+        log.info( "Registered AuditTrailEventListener on Hibernate PERSIST and PERSIST_ONFLUSH "
+                + "(PostInsert/PreDelete deferred to Phase C-2 to avoid dual-emit with AuditAdvice)." );
     }
 }
