@@ -1447,6 +1447,158 @@ public class DatasetsWebService {
         return false;
     }
 
+    /**
+     * Request body for {@link #getDatasetPipelineStatusBulk}. Field is named on the wire as
+     * {@code dataset_ids} (snake_case) to match the curation-UI's workflow list view client
+     * (see {@code apps/curation/src/api/workflow.ts::usePipelineStatusBulk}).
+     */
+    public static class PipelineStatusBulkRequest {
+        @Nullable
+        private List<Long> datasetIds;
+
+        @Nullable
+        @com.fasterxml.jackson.annotation.JsonProperty("dataset_ids")
+        public List<Long> getDatasetIds() {
+            return datasetIds;
+        }
+
+        @com.fasterxml.jackson.annotation.JsonProperty("dataset_ids")
+        public void setDatasetIds( @Nullable List<Long> datasetIds ) {
+            this.datasetIds = datasetIds;
+        }
+    }
+
+    /**
+     * Maximum number of dataset IDs accepted in a single bulk pipeline-status request. The
+     * workflow list view paginates at 50 rows; 500 leaves comfortable headroom while bounding
+     * the worst-case per-EE fan-out (batch-info / array-designs / geeq).
+     */
+    private static final int MAX_PIPELINE_STATUS_BULK = 500;
+
+    @POST
+    @Path("/pipeline-status")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Bulk per-step pipeline status for many datasets in one round-trip",
+            description = "Returns a map of dataset ID → {@link PipelineStatusValueObject}, one entry per requested ID that the caller can read. "
+                    + "Mirrors the single-EE `GET /{dataset}/pipelineStatus` handler in response shape, but batches the underlying audit-event lookup and "
+                    + "DEA-existence query so that loading a workflow-list page of 20–50 experiments takes one DB round-trip per concern rather than 20–50. "
+                    + "ACL behaviour: IDs the caller cannot read are silently dropped from the result map (no 403 for the batch). "
+                    + "Hard cap: " + MAX_PIPELINE_STATUS_BULK + " IDs per request.",
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "400", description = "The request body is missing, empty, or exceeds the per-request ID cap.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<Map<Long, PipelineStatusValueObject>> getDatasetPipelineStatusBulk(
+            @Nullable PipelineStatusBulkRequest body
+    ) {
+        if ( body == null || body.getDatasetIds() == null || body.getDatasetIds().isEmpty() ) {
+            throw new BadRequestException( "A request body with non-empty 'dataset_ids' is required." );
+        }
+        // Deduplicate but preserve caller-supplied order on the way out (for predictable client iteration).
+        List<Long> requestedIds = new ArrayList<>( new LinkedHashSet<>( body.getDatasetIds() ) );
+        if ( requestedIds.size() > MAX_PIPELINE_STATUS_BULK ) {
+            throw new BadRequestException( "At most " + MAX_PIPELINE_STATUS_BULK + " dataset IDs may be requested per call (got " + requestedIds.size() + ")." );
+        }
+
+        // ACL-pre-filtered load: load(Filters, Sort) on EE service uses in-query ACL filtering
+        // (see SecurableFilteringVoEnabledService), so the returned list contains only EEs the
+        // caller can read. Missing IDs (truly absent, blacklisted, or invisible) are dropped
+        // silently per the @Operation description.
+        Filters filters = Filters.by( expressionExperimentService.getFilter( "id", Long.class, Filter.Operator.in, requestedIds ) );
+        List<ExpressionExperiment> visibleEEs = expressionExperimentService.load( filters, null );
+        if ( visibleEEs.isEmpty() ) {
+            return respond( Collections.emptyMap() );
+        }
+        Set<Long> visibleIds = new LinkedHashSet<>( visibleEEs.size() );
+        for ( ExpressionExperiment ee : visibleEEs ) {
+            visibleIds.add( ee.getId() );
+        }
+
+        // ONE batched audit-event call covering every step + GEEQ across every visible EE.
+        // Replaces O(steps × EEs) individual getLastEvent calls with one DB round-trip.
+        Set<Class<? extends AuditEventType>> auditTypes = new LinkedHashSet<>();
+        for ( PipelineStepDescriptor desc : PIPELINE_STEPS ) {
+            auditTypes.add( desc.successType );
+            if ( desc.failedType != null ) {
+                auditTypes.add( desc.failedType );
+            }
+        }
+        auditTypes.add( GeeqEvent.class );
+        Map<Class<? extends AuditEventType>, Map<ExpressionExperiment, AuditEvent>> auditEventsByType =
+                auditEventService.getLastEvents( visibleEEs, auditTypes );
+
+        // ONE batched DEA-existence call. Returns the subset of visibleIds that have a DEA.
+        Set<Long> hasDeaIds = new HashSet<>( differentialExpressionAnalysisService
+                .getExperimentsWithAnalysis( visibleIds, true ) );
+
+        boolean isAdmin = SecurityUtil.isUserAdmin();
+
+        // Per-EE work below: array-design fetch (twoColor/dualMode applicability), batch-info
+        // probe, and geeq VO load. No batch APIs exist for those today (see GeeqService — no
+        // bulk loadValueObjects; ExpressionExperimentService.getArrayDesignsUsed is per-EE).
+        // The batched audit-event + DEA calls above are where the dominant N-round-trip cost
+        // lived; the residual per-EE calls are each a single fast query.
+        Map<Long, PipelineStatusValueObject> result = new LinkedHashMap<>( visibleEEs.size() );
+        // Walk requestedIds so insertion order matches the caller's request (visibleEEs is sorted by id).
+        Map<Long, ExpressionExperiment> eeById = new HashMap<>( visibleEEs.size() );
+        for ( ExpressionExperiment ee : visibleEEs ) {
+            eeById.put( ee.getId(), ee );
+        }
+        for ( Long requestedId : requestedIds ) {
+            ExpressionExperiment ee = eeById.get( requestedId );
+            if ( ee == null ) {
+                continue; // ACL-dropped or missing
+            }
+            result.put( ee.getId(), buildPipelineStatus( ee, auditEventsByType, hasDeaIds.contains( ee.getId() ), isAdmin ) );
+        }
+        return respond( result );
+    }
+
+    /**
+     * Build a {@link PipelineStatusValueObject} for one EE, reusing pre-batched audit-event
+     * and DEA-existence inputs. Extracted from the single-EE
+     * {@link #getDatasetPipelineStatus} handler so both paths share the same per-step,
+     * curation, and GEEQ assembly logic.
+     */
+    private PipelineStatusValueObject buildPipelineStatus( ExpressionExperiment ee,
+            Map<Class<? extends AuditEventType>, Map<ExpressionExperiment, AuditEvent>> auditEventsByType,
+            boolean hasDea, boolean isAdmin ) {
+        CurationDetails cd = ee.getCurationDetails();
+        boolean missingValueApplicable = hasTwoColorOrDualModePlatform( ee );
+        List<PipelineStatusValueObject.PipelineStepValueObject> steps = new ArrayList<>( PIPELINE_STEPS.size() );
+        for ( PipelineStepDescriptor desc : PIPELINE_STEPS ) {
+            boolean applicable = !"missingValue".equals( desc.stepKey ) || missingValueApplicable;
+            steps.add( buildPipelineStep( ee, desc, applicable, auditEventsByType ) );
+        }
+        PipelineStatusValueObject result = new PipelineStatusValueObject();
+        result.setExperimentId( ee.getId() );
+        result.setSteps( steps );
+        result.setHasBatchInformation( expressionExperimentBatchInformationService.checkHasBatchInfo( ee ) );
+        result.setHasDifferentialExpressionAnalysis( hasDea );
+        // Coexpression was removed in Phase 1c; field retained on the VO for back-compat, always false.
+        result.setHasCoexpressionAnalysis( false );
+        result.setTroubled( cd.getTroubled() );
+        result.setTroubleDetails( cd.getTroubled() && cd.getCurationNote() != null ? cd.getCurationNote() : "" );
+        result.setNeedsAttention( cd.getNeedsAttention() );
+        if ( isAdmin ) {
+            result.setCurationNote( cd.getCurationNote() );
+        }
+        result.setIsPublic( securityService.isPublic( ee ) );
+        Geeq geeqProxy = ee.getGeeq();
+        GeeqValueObject geeq = geeqProxy != null && geeqProxy.getId() != null
+                ? geeqService.loadValueObjectById( geeqProxy.getId() )
+                : null;
+        if ( geeq != null ) {
+            AuditEvent geeqEvent = lookupAuditEvent( auditEventsByType, GeeqEvent.class, ee );
+            if ( geeqEvent != null ) {
+                geeq.setLastComputed( geeqEvent.getDate() );
+            }
+        }
+        result.setGeeq( geeq );
+        return result;
+    }
+
     @GET
     @Path("/{dataset}/geeq")
     @Produces(MediaType.APPLICATION_JSON)
