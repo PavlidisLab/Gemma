@@ -4,8 +4,19 @@
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 				   xsi:schemaLocation="http://www.hibernate.org/xsd/hibernate-mapping http://hibernate.org/xsd/hibernate-mapping-4.0.xsd">
 
-	<class name="ubic.gemma.model.common.auditAndSecurity.AuditTrail" table="AUDIT_TRAIL" mutable="false"
-    >
+	<!--
+	    Audit Phase C-2 (per AUDIT_MIGRATION_PHASE_C_RECCE.md): the
+	    `mutable="false"` attribute was removed in conjunction with the
+	    PostInsert/PreDelete listener cutover on AuditTrailEventListener.
+	    The `mutable="false"` flag told Hibernate the entity is write-once;
+	    combined with the events bag (cascade="all") and the L2 read-only
+	    AuditEvent cache (now also gone, see AuditEvent.hbm.xml), it served
+	    stale empty-bag results to fresh-session reads after a cross-tx
+	    insert. AuditTrail rows in practice ARE updated (the events bag
+	    grows on every UPDATE/CREATE/DELETE event append), so the flag was
+	    a misnomer anyway. The full investigation is in notable_cases.md.
+	-->
+	<class name="ubic.gemma.model.common.auditAndSecurity.AuditTrail" table="AUDIT_TRAIL">
 		<id name="id" type="java.lang.Long" unsaved-value="null">
 			<column name="ID" sql-type="BIGINT" />
 			<generator class="native">

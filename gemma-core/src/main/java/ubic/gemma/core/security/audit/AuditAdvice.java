@@ -52,8 +52,16 @@ import static ubic.gemma.core.util.StringUtils.abbreviateInBytes;
 /**
  * Manage audit trails on objects.
  * <p>
- * When an auditable entity is created, updated or deleted, this advice will automatically populate the audit trail with
- * appropriate audit events before the operation occurs.
+ * When an auditable entity is updated or saved, this advice automatically populates the
+ * audit trail with appropriate audit events before the operation occurs.
+ * <p>
+ * <b>Audit Phase C-2:</b> the CREATE / DELETE @Before advices were retired; auto-CREATE
+ * and auto-DELETE rows are now driven by
+ * {@link ubic.gemma.persistence.audit.AuditTrailEventListener} on Hibernate's
+ * {@code POST_INSERT} / {@code PRE_DELETE} events. This class is now scoped to
+ * generic auto-UPDATE on DAO {@code update*} calls and the transient-save CREATE
+ * cascade (whose CREATE rows are absorbed by the listener's duplicate-CREATE guard).
+ *
  * @author pavlidis
  * @author poirigui
  */
@@ -65,10 +73,8 @@ import static ubic.gemma.core.util.StringUtils.abbreviateInBytes;
 public class AuditAdvice {
 
     private enum OperationType {
-        CREATE,
         UPDATE,
-        SAVE,
-        DELETE
+        SAVE
     }
 
     @Autowired
@@ -81,28 +87,6 @@ public class AuditAdvice {
     private SessionFactory sessionFactory;
 
     private final AuditLogger auditLogger = new AuditLogger();
-
-    /**
-     * Perform the audit advice on when entities are created.
-     * <p>
-     * This audit will cascade on {@link CascadeStyle#PERSIST}.
-     *
-     * @deprecated Audit Phase C-1 — superseded by
-     * {@link ubic.gemma.persistence.audit.AuditTrailEventListener#onPostInsert} which
-     * emits CREATE rows via the Hibernate {@code POST_INSERT} event lifecycle and
-     * gets cascade for free (Hibernate fires per cascaded entity). Slated for removal
-     * in Phase C-2 once the listener is registered + IT-validated against gemdtest.
-     * Retained for now so the listener can be landed without doubling up audit rows.
-     * @see Pointcuts#creator()
-     * @see ubic.gemma.persistence.service.BaseDao#create(Identifiable)
-     * @see ubic.gemma.persistence.service.BaseDao#create(Collection)
-     */
-    @Deprecated
-    @Order(4)
-    @Before("ubic.gemma.persistence.util.Pointcuts.creator()")
-    public void doCreateAdvice( JoinPoint pjp ) {
-        doAuditAdvice( pjp, OperationType.CREATE );
-    }
 
     /**
      * Perform auditing when entities are updated.
@@ -124,6 +108,15 @@ public class AuditAdvice {
      * <p>
      * This audit will cascade on {@link CascadeStyle#PERSIST} if the audited entity is transient else
      * {@link CascadeStyle#MERGE}.
+     * <p>
+     * Note (Audit Phase C-2): when the saved entity is transient, this advice still
+     * emits a CREATE row via {@code addSaveAuditEvent} + {@code cascadeAuditEvent}.
+     * The listener-driven CREATE on {@code POST_INSERT} (see
+     * {@link ubic.gemma.persistence.audit.AuditTrailEventListener#onPostInsert})
+     * fires AFTER this advice, finds the trail's events list already non-empty, and
+     * skips via its duplicate-CREATE guard. Net: no dual-emission. Retiring the save
+     * advice + folding its transient-CREATE cascade into the listener is a follow-on
+     * (the recce's C-3 / later session).
      *
      * @see Pointcuts#saver()
      * @see ubic.gemma.persistence.service.BaseDao#save(Identifiable)
@@ -133,28 +126,6 @@ public class AuditAdvice {
     @Before("ubic.gemma.persistence.util.Pointcuts.saver()")
     public void doSaveAdvice( JoinPoint pjp ) {
         doAuditAdvice( pjp, OperationType.SAVE );
-    }
-
-    /**
-     * Perform auditing when entities are deleted.
-     * <p>
-     * This audit will cascade on {@link CascadeStyle#DELETE}.
-     *
-     * @deprecated Audit Phase C-1 — superseded by
-     * {@link ubic.gemma.persistence.audit.AuditTrailEventListener#onPreDelete} which
-     * emits DELETE rows via the Hibernate {@code PRE_DELETE} event lifecycle and
-     * gets cascade for free (Hibernate fires per cascaded entity). Slated for removal
-     * in Phase C-2 once the listener is registered + IT-validated against gemdtest.
-     * Retained for now so the listener can be landed without doubling up audit rows.
-     * @see Pointcuts#deleter()
-     * @see ubic.gemma.persistence.service.BaseDao#remove(Identifiable)
-     * @see ubic.gemma.persistence.service.BaseDao#remove(Collection)
-     */
-    @Deprecated
-    @Order(4)
-    @Before("ubic.gemma.persistence.util.Pointcuts.deleter()")
-    public void doDeleteAdvice( JoinPoint pjp ) {
-        doAuditAdvice( pjp, OperationType.DELETE );
     }
 
     private void doAuditAdvice( JoinPoint pjp, OperationType operationType ) {
@@ -204,14 +175,10 @@ public class AuditAdvice {
         if ( AuditAdvice.log.isTraceEnabled() ) {
             AuditAdvice.log.trace( String.format( "***********  Start Audit %s of %s by %s (via %s) *************", operationType, auditable, user.getUserName(), method ) );
         }
-        if ( operationType == OperationType.CREATE ) {
-            this.addCreateAuditEvent( method, auditable, user, date );
-        } else if ( operationType == OperationType.UPDATE ) {
+        if ( operationType == OperationType.UPDATE ) {
             this.addUpdateAuditEvent( method, auditable, user, date );
         } else if ( operationType == OperationType.SAVE ) {
             this.addSaveAuditEvent( method, auditable, user, date );
-        } else if ( operationType == OperationType.DELETE ) {
-            this.addDeleteAuditEvent( method, auditable, user, date );
         } else {
             throw new IllegalArgumentException( String.format( "Unsupported operation type %s.", operationType ) );
         }
@@ -219,14 +186,6 @@ public class AuditAdvice {
             AuditAdvice.log.trace( String.format( "============  End Audit %s of %s by %s (via %s) ==============", operationType, auditable, user.getUserName(), method ) );
     }
 
-
-    /**
-     * Adds 'create' AuditEvent to audit trail of the passed Auditable.
-     */
-    private void addCreateAuditEvent( Signature method, Auditable auditable, User user, Date date ) {
-        addAuditEvent( method, auditable, AuditAction.CREATE, "", user, date );
-        cascadeAuditEvent( method, AuditAction.CREATE, auditable, user, date, CascadingActions.PERSIST );
-    }
 
     private void addSaveAuditEvent( Signature method, Auditable auditable, User user, Date date ) {
         AuditAction auditAction;
@@ -260,14 +219,6 @@ public class AuditAdvice {
         // we only propagate a CREATE event through cascade for entities that were created in the update
         // Note: CREATE events are skipped if the audit trail already contains one
         cascadeAuditEvent( method, AuditAction.CREATE, auditable, user, date, CascadingActions.SAVE_UPDATE );
-    }
-
-    private void addDeleteAuditEvent( Signature method, Auditable auditable, User user, Date date ) {
-        if ( auditable.getId() == null ) {
-            throw new IllegalArgumentException( String.format( "Transient instance passed to delete auditing [%s on %s by %s]", method, auditable, user.getUserName() ) );
-        }
-        addAuditEvent( method, auditable, AuditAction.DELETE, "", user, date );
-        cascadeAuditEvent( method, AuditAction.DELETE, auditable, user, date, CascadingActions.DELETE );
     }
 
     /**
