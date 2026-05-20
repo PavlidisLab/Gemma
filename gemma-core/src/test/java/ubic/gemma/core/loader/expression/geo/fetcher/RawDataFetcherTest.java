@@ -18,33 +18,39 @@
  */
 package ubic.gemma.core.loader.expression.geo.fetcher;
 
-import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.core.loader.util.TestUtils;
 import ubic.gemma.core.util.test.category.SlowTest;
 
 import java.io.File;
 import java.util.Collection;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 /**
  * @author pavlidis
  */
 @Category(SlowTest.class)
-public class RawDataFetcherTest extends TestCase {
+@Tag("slow")
+public class RawDataFetcherTest {
     private static final Log log = LogFactory.getLog( RawDataFetcherTest.class.getName() );
 
     /**
      * Test method for 'ubic.gemma.core.loader.expression.geo.RawDataFetcher.fetch(String)'. This is kind of a slow test
      * because the file is big.
      */
+    @Test
     public void testFetch() {
         RawDataFetcher rdf = new RawDataFetcher();
         try {
             Collection<File> result = rdf.fetch( "GSE1105" );
-            TestCase.assertNotNull( result );
-            TestCase.assertEquals( 8, result.size() );
+            assertNotNull( result );
+            assertEquals( 8, result.size() );
         } catch ( Exception e ) {
             if ( !TestUtils.LogNcbiError( RawDataFetcherTest.log, e ) )
                 throw e;
@@ -52,6 +58,7 @@ public class RawDataFetcherTest extends TestCase {
 
     }
 
+    @Test
     public void testFetchNothingThere() {
         RawDataFetcher rdf = new RawDataFetcher();
 
