@@ -9,7 +9,7 @@ import org.springframework.core.env.PropertySource;
 import org.springframework.core.env.PropertySources;
 import org.springframework.core.env.PropertySourcesPropertyResolver;
 import org.springframework.util.Assert;
-import ubic.basecode.util.Configuration;
+// Configuration is ubic.gemma.core.config.Configuration (same package), no explicit import needed.
 
 import java.io.IOException;
 import java.io.InputStream;

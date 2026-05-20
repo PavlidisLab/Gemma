@@ -263,6 +263,17 @@
 				<artifactId>jena-core</artifactId>
 				<version>${jena.version}</version>
 			</dependency>
+			<!-- baseCode dep retirement: commons-cli used to be excluded on the
+			     baseCode path; with baseCode gone, jena-core (transitively, via
+			     jena-text -> jena-arq -> jena-core) is now the source of an older
+			     commons-cli 1.5.0. Pin commons-cli at 1.11.0 here so the gemma-cli
+			     direct dependency (1.11.0) and the Jena transitive both converge.
+			     The maven-enforcer dependencyConvergence rule requires this. -->
+			<dependency>
+				<groupId>commons-cli</groupId>
+				<artifactId>commons-cli</artifactId>
+				<version>1.11.0</version>
+			</dependency>
 			<dependency>
 				<groupId>org.apache.jena</groupId>
 				<artifactId>jena-arq</artifactId>
@@ -590,36 +601,20 @@
 		</dependencies>
 	</dependencyManagement>
 	<dependencies>
+		<!-- baseCode dependency retired in Phase 3 (ontology / util / Configuration
+		     ports). All required classes now live in-tree under
+		     ubic.gemma.core.util.*, ubic.gemma.core.ontology.basecode.*,
+		     and ubic.gemma.core.config.Configuration. The final piece, the
+		     classpath-loaded basecode.properties, ships from
+		     gemma-core/src/main/resources/basecode.properties. -->
+		<!--
 		<dependency>
 			<groupId>baseCode</groupId>
 			<artifactId>baseCode</artifactId>
 			<version>1.1.34-RENOVATIONS-SNAPSHOT</version>
-			<exclusions>
-				<!-- Phase 3 ontology Step 1: baseCode transitively pulls Jena (now
-				     pinned to 4.10.0 in our dependencyManagement). Jena 4.10's
-				     jena-base bundles older commons-* declarations than Gemma's
-				     direct pins; exclude them on the baseCode path so the enforcer
-				     dependencyConvergence rule passes. The correct versions
-				     (commons-compress 1.28.0, commons-io 2.21.0, commons-csv
-				     1.14.1) are supplied by Gemma's direct dependencyManagement. -->
-				<exclusion>
-					<groupId>org.apache.commons</groupId>
-					<artifactId>commons-compress</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>commons-io</groupId>
-					<artifactId>commons-io</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.apache.commons</groupId>
-					<artifactId>commons-csv</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>commons-cli</groupId>
-					<artifactId>commons-cli</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
+		-->
+
 
 		<!-- pavlab:gemma-gsec dependency removed in Phase 3 absorption: gsec source now lives
 		     under gemma-core/src/main/java/ubic/gemma/core/security/ (Phase D-1 intermediate

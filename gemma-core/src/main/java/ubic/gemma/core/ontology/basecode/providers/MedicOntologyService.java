@@ -26,7 +26,7 @@
 package ubic.gemma.core.ontology.basecode.providers;
 
 import ubic.gemma.core.ontology.basecode.jena.ClasspathOntologyService;
-import ubic.basecode.util.Configuration;
+import ubic.gemma.core.config.Configuration;
 
 /**
  * MEDIC ONTOLOGY USED BY PHENOCARTA, its represents MESH terms as a tree so with can use the parent structure that a
