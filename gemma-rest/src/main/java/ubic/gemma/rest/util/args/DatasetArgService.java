@@ -132,6 +132,19 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
     }
 
     /**
+     * Cursor-mode counterpart to {@link ExpressionExperimentService#loadBlacklistedValueObjects(Filters, Sort, int, int)}.
+     * Always sorts by ascending {@code id} (the primary key, indexed and unique) — see
+     * {@code CURSOR_PAGINATION_STEP1_PLAN.md} step 1t (the EE-targeted twin of step 1h).
+     * The caller's {@code Filters} still applies on top of the blacklist short-name/accession
+     * predicate composed inside the DAO. The user's {@code ?sort=} arg is intentionally not
+     * honoured in cursor mode because the DAO currently restricts cursors to single-component
+     * id sorts (recce §3.4 — to be lifted in phase B once the index audit is complete).
+     */
+    public CursorPage<ExpressionExperimentValueObject> getBlacklistedDatasetsByCursor( @Nullable Filters filters, @Nullable Cursor cursor, int limit ) {
+        return service.loadBlacklistedValueObjectsByCursor( filters, service.getSort( "id", Sort.Direction.ASC, Sort.NullMode.LAST ), cursor, limit );
+    }
+
+    /**
      * Obtain the search results for a given query and highlighter.
      *
      * @param highlighter   a highlighter to use for the query or null to ignore

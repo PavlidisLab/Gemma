@@ -792,15 +792,42 @@ public class DatasetsWebService {
     @Path("/blacklisted")
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasAuthority('GROUP_ADMIN')")
-    @Operation(summary = "Retrieve all blacklisted datasets", hidden = true)
-    public FilteredAndInferredAndPaginatedResponseDataObject<ExpressionExperimentValueObject> getBlacklistedDatasets(
+    @Operation(summary = "Retrieve all blacklisted datasets", hidden = true,
+            description = "Supports two pagination modes. Legacy mode: pass `offset` (and `limit`); response includes `offset` and `totalElements`. "
+                    + "Cursor mode (recommended for deep pagination and consistency under writes): pass an opaque `cursor` token from a previous response's `nextCursor` / `prevCursor` field. "
+                    + "`offset` and `cursor` are mutually exclusive -- passing a non-null `cursor` selects cursor mode. "
+                    + "In cursor mode the result is always sorted by ascending `id` (the user `sort` arg is currently ignored, pending the indexed-column audit in phase B); "
+                    + "the blacklist short-name/accession predicate is preserved on top of the user-supplied `?filter=`; `totalElements` is `null` by default (no count query per request). "
+                    + "Mirrors GET /platforms/blacklisted step 1h.",
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(schema = @Schema(oneOf = {
+                                    FilteredAndInferredAndPaginatedResponseDataObject.class,
+                                    FilteredAndInferredAndCursorPaginatedResponseDataObject.class
+                            }))),
+            })
+    public Object getBlacklistedDatasets(
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg,
             @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sortArg,
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset,
-            @QueryParam("limit") @DefaultValue("20") LimitArg limit ) {
+            @QueryParam("limit") @DefaultValue("20") LimitArg limit,
+            @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.")
+            @QueryParam("cursor") CursorArg cursorArg ) {
         Collection<OntologyTerm> inferredTerms = new HashSet<>();
+        Filters filters = datasetArgService.getFilters( filterArg, null, inferredTerms );
+        if ( cursorArg != null ) {
+            // Mutual-exclusion: a non-null cursor selects cursor mode. The default offset=0 is
+            // not considered user-supplied (parallels step 1h /platforms/blacklisted). In cursor
+            // mode we currently force a +id sort (DatasetArgService.getBlacklistedDatasetsByCursor) --
+            // the DAO restricts cursors to single-component id sorts until the index audit lands.
+            // The blacklist short-name/accession predicate is composed inside the DAO so the
+            // blacklist scope is enforced identically in both modes.
+            CursorPage<ExpressionExperimentValueObject> page = datasetArgService.getBlacklistedDatasetsByCursor(
+                    filters, cursorArg.getValue(), limit.getValue() );
+            return new FilteredAndInferredAndCursorPaginatedResponseDataObject<>( page, filters, new String[] { "id" }, inferredTerms );
+        }
         return paginate( expressionExperimentService::loadBlacklistedValueObjects,
-                datasetArgService.getFilters( filterArg, null, inferredTerms ), new String[] { "id" }, datasetArgService.getSort( sortArg ),
+                filters, new String[] { "id" }, datasetArgService.getSort( sortArg ),
                 offset.getValue(), limit.getValue(), inferredTerms );
     }
 
@@ -3327,6 +3354,26 @@ public class DatasetsWebService {
         private final List<CharacteristicValueObject> inferredTerms;
 
         public FilteredAndInferredAndPaginatedResponseDataObject( Slice<T> payload, @Nullable Filters filters, @Nullable String[] groupBy, Collection<OntologyTerm> inferredTerms ) {
+            super( payload, filters, groupBy );
+            this.inferredTerms = inferredTerms.stream()
+                    .map( t -> new CharacteristicValueObject( t.getLabel(), t.getUri() ) )
+                    .collect( Collectors.toList() );
+        }
+    }
+
+    /**
+     * Cursor-mode counterpart to {@link FilteredAndInferredAndPaginatedResponseDataObject}.
+     * Drops {@code offset}; adds {@code nextCursor} / {@code prevCursor}; keeps the echoed
+     * {@code filter} and {@code inferredTerms} fields. See {@code CURSOR_PAGINATION_STEP1_PLAN.md}
+     * step 1t (the EE-targeted twin of step 1h's {@link FilteredAndCursorPaginatedResponseDataObject}
+     * shape).
+     */
+    @Getter
+    public static class FilteredAndInferredAndCursorPaginatedResponseDataObject<T> extends FilteredAndCursorPaginatedResponseDataObject<T> {
+
+        private final List<CharacteristicValueObject> inferredTerms;
+
+        public FilteredAndInferredAndCursorPaginatedResponseDataObject( CursorPage<T> payload, @Nullable Filters filters, @Nullable String[] groupBy, Collection<OntologyTerm> inferredTerms ) {
             super( payload, filters, groupBy );
             this.inferredTerms = inferredTerms.stream()
                     .map( t -> new CharacteristicValueObject( t.getLabel(), t.getUri() ) )
