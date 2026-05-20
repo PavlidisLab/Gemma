@@ -141,6 +141,7 @@ public class DifferentialExpressionResultReadServiceImpl implements Differential
      * @return an expression experiment value object.
      */
     private BioAssaySetValueObject createValueObject( BioAssaySet bioAssaySet ) {
+        bioAssaySet = ( BioAssaySet ) Hibernate.unproxy( bioAssaySet );
         if ( bioAssaySet instanceof ExpressionExperiment ) {
             return new ExpressionExperimentValueObject( ( ExpressionExperiment ) bioAssaySet );
         } else if ( bioAssaySet instanceof ExpressionExperimentSubSet ) {

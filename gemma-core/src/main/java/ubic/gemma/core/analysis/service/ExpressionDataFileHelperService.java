@@ -2,6 +2,7 @@ package ubic.gemma.core.analysis.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.StopWatch;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -179,6 +180,7 @@ class ExpressionDataFileHelperService {
      */
     public Map<CompositeSequence, String[]> getGeneAnnotationsAsStrings( BioAssaySet experimentAnalyzed ) {
         Collection<ArrayDesign> ads;
+        experimentAnalyzed = ( BioAssaySet ) Hibernate.unproxy( experimentAnalyzed );
         if ( experimentAnalyzed instanceof ExpressionExperiment ) {
             ads = this.expressionExperimentService.getArrayDesignsUsed( ( ExpressionExperiment ) experimentAnalyzed );
         } else if ( experimentAnalyzed instanceof ExpressionExperimentSubSet ) {
@@ -229,6 +231,7 @@ class ExpressionDataFileHelperService {
 
     private ExpressionExperiment experimentForBioAssaySet( BioAssaySet bas ) {
         ExpressionExperiment ee;
+        bas = ( BioAssaySet ) Hibernate.unproxy( bas );
         if ( bas instanceof ExpressionExperimentSubSet ) {
             ee = ( ( ExpressionExperimentSubSet ) bas ).getSourceExperiment();
         } else {
