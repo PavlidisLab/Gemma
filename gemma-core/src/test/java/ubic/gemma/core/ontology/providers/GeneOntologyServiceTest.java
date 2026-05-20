@@ -20,9 +20,8 @@ package ubic.gemma.core.ontology.providers;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.junit.Ignore;
-import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
@@ -32,12 +31,11 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.gemma.core.ontology.basecode.model.OntologyTerm;
 import ubic.gemma.core.ontology.basecode.search.OntologySearchException;
 import ubic.gemma.core.ontology.basecode.search.OntologySearchResult;
 import ubic.gemma.core.context.TestComponent;
-import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationReadService;
@@ -48,7 +46,7 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.zip.GZIPInputStream;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static ubic.gemma.core.ontology.providers.GeneOntologyUtils.asRegularGoId;
 
@@ -57,7 +55,7 @@ import static ubic.gemma.core.ontology.providers.GeneOntologyUtils.asRegularGoId
  */
 @Category(SlowTest.class)
 @ContextConfiguration
-public class GeneOntologyServiceTest extends BaseTest implements InitializingBean {
+public class GeneOntologyServiceTest extends BaseTest5 implements InitializingBean {
     private static final Log log = LogFactory.getLog( GeneOntologyServiceTest.class.getName() );
 
     @Configuration
@@ -128,9 +126,9 @@ public class GeneOntologyServiceTest extends BaseTest implements InitializingBea
         assertEquals( 1, matches.size() );
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testFindTermWithEmptyQuery() throws OntologySearchException {
-        gos.findTerm( " ", 500 );
+    @Test
+    public void testFindTermWithEmptyQuery() {
+        assertThrows( IllegalArgumentException.class, () -> gos.findTerm( " ", 500 ) );
     }
 
     @Test
