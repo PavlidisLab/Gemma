@@ -341,6 +341,8 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional
+    @Audited(value = DataAddedEvent.class,
+            messageSpel = "'Added ' + #result + ' vectors for ' + #quantitationType + ' with dimension ' + #vectors.iterator().next().singleCellDimension + '.'")
     public int addSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, Collection<SingleCellExpressionDataVector> vectors, @Nullable String details, boolean recrateCellTypeFactorIfNecessary, boolean ignoreCompatibleFactor ) {
         Assert.notNull( ee.getId(), "The dataset must be persistent." );
         Set<String> existingNames = DescribableUtils.getNames( ee.getQuantitationTypes() );
@@ -385,8 +387,12 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
                 log.warn( "New single-cell preferred vectors do not have cell type labelling, but the configuration indicates not to recreate the cell type factor." );
             }
         }
-        auditTrailService.addUpdateEvent( ee, DataAddedEvent.class,
-                String.format( "Added %d vectors for %s with dimension %s.", numVectorsAdded, quantitationType, scd ), details );
+        // Audit event written by @Audited on this method via AuditedAspect.
+        // Note "Added N vectors for <qt> with dimension <scd>." is built by SpEL in the annotation
+        // (uses #result for the added-count and #vectors.iterator().next().singleCellDimension for the
+        // dimension, matching the existing replaceSingleCellDataVectors precedent). The free-text
+        // `details` param is no longer recorded in AUDIT_EVENT.DETAIL — same trade-off taken by the
+        // replace path; the SCEESI suite carries its own structured payloads via debug logging.
         return numVectorsAdded;
     }
 
@@ -874,6 +880,8 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional
+    @Audited(value = CellTypeAssignmentAddedEvent.class,
+            messageSpel = "'Added ' + #result + ' to ' + #dimension + '.'")
     public CellTypeAssignment relabelCellTypes( ExpressionExperiment ee, QuantitationType qt, SingleCellDimension dimension, List<String> newCellTypeLabels, @Nullable Protocol protocol, @Nullable String description, boolean recreateCellTypeFactorIfNecessary, boolean ignoreCompatibleFactor ) {
         Assert.notNull( ee.getId(), "Dataset must be persistent." );
         Assert.notNull( dimension.getId(), "Single-cell dimension must be persistent." );
@@ -905,6 +913,8 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional
+    @Audited(value = CellTypeAssignmentAddedEvent.class,
+            messageSpel = "'Added ' + #cta + ' to ' + #dimension + '.'")
     public CellTypeAssignment addCellTypeAssignment( ExpressionExperiment ee, QuantitationType qt, SingleCellDimension dimension, CellTypeAssignment cta, boolean recreateCellTypeFactorIfNecessary, boolean ignoreCompatibleFactor ) {
         Assert.notNull( ee.getId(), "Dataset must be persistent." );
         Assert.notNull( dimension.getId(), "Single-cell dimension must be persistent." );
@@ -933,7 +943,9 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         }
         dimension.getCellTypeAssignments().add( cta );
         expressionExperimentDao.updateSingleCellDimension( ee, dimension );
-        auditTrailService.addUpdateEvent( ee, CellTypeAssignmentAddedEvent.class, "Added " + cta + " to " + dimension + "." );
+        // CellTypeAssignmentAddedEvent written by @Audited on the two public callers
+        // (relabelCellTypes, addCellTypeAssignment) via AuditedAspect — both have SpEL
+        // notes equivalent to "Added <cta> to <dimension>.".
         log.info( "Relabelled single-cell vectors for " + ee + " with: " + cta );
 
         if ( cta.isPreferred() ) {
