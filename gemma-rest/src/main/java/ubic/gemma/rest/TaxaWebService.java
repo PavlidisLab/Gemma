@@ -216,14 +216,40 @@ public class TaxaWebService {
     }
 
     /**
-     * @see GeneWebService#getGeneProbes(GeneArg, OffsetArg, LimitArg)
+     * @see GeneWebService#getGeneProbes(GeneArg, OffsetArg, LimitArg, CursorArg)
      */
     @GET
     @Path("/{taxon}/genes/{gene}/probes")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the probes associated to a genes across all platforms in a given taxon")
-    public PaginatedResponseDataObject<CompositeSequenceValueObject> getTaxonGeneProbes( @PathParam("taxon") TaxonArg<?> taxonArg, @PathParam("gene") GeneArg<?> geneArg, @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg, @QueryParam("limit") @DefaultValue("20") LimitArg limitArg ) {
-        return paginate( geneArgService.getGeneProbesInTaxon( geneArg, taxonArgService.getEntity( taxonArg ), offsetArg.getValue(), limitArg.getValue() ), new String[] { "id" } );
+    @Operation(summary = "Retrieve the probes associated to a genes across all platforms in a given taxon",
+            description = "Supports two pagination modes. Legacy mode: pass `offset` (and `limit`); response includes `offset` and `totalElements`. "
+                    + "Cursor mode (recommended for deep pagination and consistency under writes — a single gene can map to many probes across multi-platform inventories): "
+                    + "pass an opaque `cursor` token from a previous response's `nextCursor` / `prevCursor` field. "
+                    + "`offset` and `cursor` are mutually exclusive — passing a non-null `cursor` selects cursor mode. "
+                    + "In cursor mode the result is always sorted by ascending `cs.id` (cursor mode forces a single-component id sort pending the indexed-column audit in phase B); "
+                    + "the path-derived `{taxon}` + `{gene}` constraints are preserved (taxon enforced at gene-resolution time, identical scope to the offset variant); "
+                    + "`totalElements` is `null` by default (no count query per request).",
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(schema = @Schema(oneOf = {
+                                    PaginatedResponseDataObject.class,
+                                    CursorPaginatedResponseDataObject.class
+                            }))),
+            })
+    public Object getTaxonGeneProbes( @PathParam("taxon") TaxonArg<?> taxonArg, @PathParam("gene") GeneArg<?> geneArg, @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg, @QueryParam("limit") @DefaultValue("20") LimitArg limitArg,
+            @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg ) {
+        Taxon taxon = taxonArgService.getEntity( taxonArg );
+        if ( cursorArg != null ) {
+            // Mutual-exclusion: a non-null cursor selects cursor mode. The default offset=0 is
+            // not considered user-supplied (parallels GET /genes/{gene}/probes step 1m).
+            // In cursor mode we currently force a +id sort (GeneArgService.getGeneProbesInTaxonByCursor)
+            // — the DAO restricts cursors to single-component id sorts until the index audit lands.
+            // The path-derived taxon scope is enforced inside getGeneProbesInTaxonByCursor at
+            // gene-resolution time (getEntityWithTaxon), identical to the offset variant.
+            CursorPage<CompositeSequenceValueObject> page = geneArgService.getGeneProbesInTaxonByCursor( geneArg, taxon, cursorArg.getValue(), limitArg.getValue() );
+            return paginateByCursor( page, new String[] { "id" } );
+        }
+        return paginate( geneArgService.getGeneProbesInTaxon( geneArg, taxon, offsetArg.getValue(), limitArg.getValue() ), new String[] { "id" } );
     }
 
     /**
