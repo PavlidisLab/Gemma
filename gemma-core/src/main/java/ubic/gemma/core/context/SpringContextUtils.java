@@ -46,6 +46,20 @@ public class SpringContextUtils {
     private static final Log log = LogFactory.getLog( SpringContextUtils.class.getName() );
 
     /**
+     * System property / environment variable that, when set to {@code true}, makes
+     * {@link #prepareContext(ApplicationContext)} fail-fast instead of silently falling
+     * back to the {@code dev} profile when no environment profile is active.
+     * <p>
+     * The env-var form ({@code GEMMA_REQUIRE_EXPLICIT_PROFILE}) is intended for container
+     * deployments as an extra safety net; the Dockerfile already sets
+     * {@code -Dspring.profiles.active=production}, so the fallback path should never be
+     * hit in production. The system-property form ({@code gemma.profile.requireExplicit})
+     * lets developers opt in locally without polluting their shell environment.
+     */
+    static final String REQUIRE_EXPLICIT_PROFILE_PROPERTY = "gemma.profile.requireExplicit";
+    static final String REQUIRE_EXPLICIT_PROFILE_ENV = "GEMMA_REQUIRE_EXPLICIT_PROFILE";
+
+    /**
      * Obtain an application context for Gemma.
      *
      * @param activeProfiles list of active profiles, for testing use {@link EnvironmentProfiles#TEST}
@@ -97,7 +111,9 @@ public class SpringContextUtils {
      * Perform the following steps:
      * <ul>
      * <li>ensure that the security context holder strategy is set to {@link SecurityContextHolder#MODE_INHERITABLETHREADLOCAL}</li>
-     * <li>activate the {@code dev} profile as a fallback if no profile are active</li>
+     * <li>activate the {@code dev} profile as a fallback if no profile are active, unless
+     * {@code -Dgemma.profile.requireExplicit=true} or {@code GEMMA_REQUIRE_EXPLICIT_PROFILE=true}
+     * is set, in which case startup fails with an {@link IllegalStateException}</li>
      * <li>activate the {@code scheduler} profile if {@code quartzOn} is set</li>
      * <li>verify that exactly one environment profile is active (see {@link EnvironmentProfiles})</li>
      * <li>log an informative message with the context version and active profiles</li>
@@ -112,7 +128,20 @@ public class SpringContextUtils {
         if ( context instanceof ConfigurableApplicationContext ) {
             ConfigurableApplicationContext cac = ( ConfigurableApplicationContext ) context;
             if ( !cac.getEnvironment().acceptsProfiles( EnvironmentProfiles.PRODUCTION, EnvironmentProfiles.DEV, EnvironmentProfiles.TEST ) ) {
-                log.warn( "No profiles were detected, activating the 'dev' profile as a fallback. Use -Dspring.profiles.active=dev explicitly to remove this warning." );
+                if ( requireExplicitProfile() ) {
+                    throw new IllegalStateException( String.format(
+                            "No Spring environment profile is active and explicit profiles are required (%s / %s is true). "
+                                    + "Set -Dspring.profiles.active=<%s|%s|%s> explicitly.",
+                            REQUIRE_EXPLICIT_PROFILE_PROPERTY, REQUIRE_EXPLICIT_PROFILE_ENV,
+                            EnvironmentProfiles.PRODUCTION, EnvironmentProfiles.DEV, EnvironmentProfiles.TEST ) );
+                }
+                log.warn( String.format(
+                        "No Spring environment profile is active; falling back to '%s'. "
+                                + "This is a foot-gun if Gemma.properties points at a production database. "
+                                + "Set -Dspring.profiles.active=<%s|%s|%s> explicitly, or set %s=true (or -D%s=true) to fail-fast instead.",
+                        EnvironmentProfiles.DEV,
+                        EnvironmentProfiles.PRODUCTION, EnvironmentProfiles.DEV, EnvironmentProfiles.TEST,
+                        REQUIRE_EXPLICIT_PROFILE_ENV, REQUIRE_EXPLICIT_PROFILE_PROPERTY ) );
                 cac.getEnvironment().addActiveProfile( EnvironmentProfiles.DEV );
             }
             // enable the scheduler profile if quartzOn is set to true
@@ -141,5 +170,19 @@ public class SpringContextUtils {
                 buildInfo,
                 context.getEnvironment().getActiveProfiles().length > 0 ?
                         " (active profiles: " + String.join( ", ", context.getEnvironment().getActiveProfiles() ) + ")" : "" ) );
+    }
+
+    /**
+     * @return {@code true} if either the {@link #REQUIRE_EXPLICIT_PROFILE_PROPERTY} system
+     * property or the {@link #REQUIRE_EXPLICIT_PROFILE_ENV} environment variable is set to
+     * {@code true} (case-insensitive). The system property takes precedence.
+     */
+    private static boolean requireExplicitProfile() {
+        String sys = System.getProperty( REQUIRE_EXPLICIT_PROFILE_PROPERTY );
+        if ( sys != null ) {
+            return Boolean.parseBoolean( sys );
+        }
+        String env = System.getenv( REQUIRE_EXPLICIT_PROFILE_ENV );
+        return env != null && Boolean.parseBoolean( env );
     }
 }
