@@ -53,11 +53,15 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.persistence.persister.ArrayDesignPersister;
 import ubic.gemma.persistence.persister.ArrayDesignsForExperimentCache;
+import ubic.gemma.persistence.persister.GenomePersister;
 import ubic.gemma.persistence.persister.PersisterHelper;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
+import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
+import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RandomSingleCellDataUtils;
 import ubic.gemma.persistence.service.expression.experiment.*;
@@ -96,8 +100,36 @@ public class PersistentDummyObjectHelper {
     @Autowired
     private ExternalDatabaseService externalDatabaseService;
 
+    /**
+     * Persister-shrink S4b: retained only for the four entity arms with no public typed
+     * write-service yet — {@code BioAssay}, {@code BioMaterial}, {@code GeneProduct},
+     * {@code Chromosome}. Every other arm in this fixture now routes through the typed
+     * beans below ({@link EeWriteService}, {@link GenomePersister}, {@link ArrayDesignPersister},
+     * {@link BibliographicReferenceService}, {@link ExternalDatabaseService},
+     * {@link QuantitationTypeService}, {@link DifferentialExpressionAnalysisService},
+     * {@link ExpressionExperimentPrePersistService}). See PERSISTER_SHRINK_S4_PROGRESS.md
+     * for the four gap arms left for S4c.
+     */
     @Autowired
     private PersisterHelper persisterHelper;
+
+    @Autowired
+    private EeWriteService eeWriteService;
+
+    @Autowired
+    private ExpressionExperimentPrePersistService expressionExperimentPrePersistService;
+
+    @Autowired
+    private GenomePersister genomePersister;
+
+    @Autowired
+    private ArrayDesignPersister arrayDesignPersister;
+
+    @Autowired
+    private BibliographicReferenceService bibliographicReferenceService;
+
+    @Autowired
+    private QuantitationTypeService quantitationTypeService;
 
     @Autowired
     private ubic.gemma.persistence.service.common.auditAndSecurity.ContactDao contactDao;
@@ -215,7 +247,7 @@ public class PersistentDummyObjectHelper {
         expressionAnalysis.setProtocol( protocol );
         expressionAnalysis.setExperimentAnalyzed( ee );
 
-        analyses.add( persisterHelper.persist( expressionAnalysis ) );
+        analyses.add( differentialExpressionAnalysisService.create( expressionAnalysis ) );
 
         return analyses;
     }
@@ -306,8 +338,8 @@ public class PersistentDummyObjectHelper {
 
         ee.setRawExpressionDataVectors( vectors );
 
-        ArrayDesignsForExperimentCache c = persisterHelper.prepare( ee );
-        ee = persisterHelper.persist( ee, c );
+        ArrayDesignsForExperimentCache c = expressionExperimentPrePersistService.prepare( ee );
+        ee = eeWriteService.create( ee, c );
 
         return ee;
     }
@@ -359,8 +391,8 @@ public class PersistentDummyObjectHelper {
 
         ee.setRawExpressionDataVectors( vectors );
 
-        ArrayDesignsForExperimentCache c = persisterHelper.prepare( ee );
-        ee = persisterHelper.persist( ee, c );
+        ArrayDesignsForExperimentCache c = expressionExperimentPrePersistService.prepare( ee );
+        ee = eeWriteService.create( ee, c );
 
         return ee;
     }
@@ -508,7 +540,7 @@ public class PersistentDummyObjectHelper {
         gp.setGene( gene );
         gp.setName( RandomStringUtils.insecure().nextNumeric( 5 ) + "_test" );
         gene.getProducts().add( gp );
-        return persisterHelper.persist( gene );
+        return genomePersister.persistGene( gene );
     }
 
     /**
@@ -562,7 +594,7 @@ public class PersistentDummyObjectHelper {
         }
         assert ( ad.getCompositeSequences().size() == numCompositeSequences );
 
-        return persisterHelper.persist( ad );
+        return arrayDesignPersister.persistArrayDesign( ad );
     }
 
     public ExpressionExperiment getTestPersistentBasicExpressionExperiment() {
@@ -614,7 +646,7 @@ public class PersistentDummyObjectHelper {
             ee.setQuantitationTypes( this.getRawQuantitationTypes() );
         }
 
-        ee = persisterHelper.persist( ee );
+        ee = eeWriteService.create( ee );
 
         return ee;
     }
@@ -625,7 +657,7 @@ public class PersistentDummyObjectHelper {
             pubmed = externalDatabaseService.findByName( ExternalDatabases.PUBMED );
         }
         br.setPubAccession( this.getTestPersistentDatabaseEntry( accession, pubmed ) );
-        return persisterHelper.persist( br );
+        return bibliographicReferenceService.findOrCreate( br );
     }
 
     public BioAssay getTestPersistentBioAssay( ArrayDesign ad ) {
@@ -661,33 +693,31 @@ public class PersistentDummyObjectHelper {
     public BioSequence getTestPersistentBioSequence() {
         BioSequence bs = getTestNonPersistentBioSequence( null );
 
-        return persisterHelper.persist( bs );
+        return genomePersister.persistBioSequence( bs );
     }
 
     public BioSequence getTestPersistentBioSequence( Taxon taxon ) {
         BioSequence bs = getTestNonPersistentBioSequence( taxon );
 
-        return persisterHelper.persist( bs );
+        return genomePersister.persistBioSequence( bs );
     }
 
     /**
      * @param bioSequence bio sequence
      * @return bio sequence to gene products
      */
-    @SuppressWarnings("unchecked")
     public Set<BioSequence2GeneProduct> getTestPersistentBioSequence2GeneProducts( BioSequence bioSequence ) {
 
-        Collection<BioSequence2GeneProduct> b2gCol = new HashSet<>();
+        Set<BioSequence2GeneProduct> b2gCol = new HashSet<>();
 
         BlatAssociation b2g = BlatAssociation.Factory.newInstance();
         b2g.setScore( this.randomizer.nextDouble() );
         b2g.setBioSequence( bioSequence );
         b2g.setGeneProduct( this.getTestPersistentGeneProduct( this.getTestPersistentGene() ) );
         b2g.setBlatResult( this.getTestPersistentBlatResult( bioSequence, null ) );
-        b2gCol.add( b2g );
+        b2gCol.add( genomePersister.persistBlatAssociation( b2g ) );
 
-        //noinspection unchecked
-        return new HashSet<>( persisterHelper.persist( b2gCol ) );
+        return b2gCol;
     }
 
     public BlatResult getTestPersistentBlatResult( BioSequence querySequence, Taxon taxon ) {
@@ -711,7 +741,7 @@ public class PersistentDummyObjectHelper {
         targetAlignedRegion.setNucleotide( 10000010L );
         targetAlignedRegion.setNucleotideLength( 1001 );
         targetAlignedRegion.setStrand( "-" );
-        return persisterHelper.persist( br );
+        return genomePersister.persistBlatResults( Collections.singleton( br ) ).iterator().next();
     }
 
     /**
@@ -763,7 +793,7 @@ public class PersistentDummyObjectHelper {
             ed = ExternalDatabase.Factory.newInstance();
             ed.setName(
                     RandomStringUtils.insecure().nextNumeric( PersistentDummyObjectHelper.RANDOM_STRING_LENGTH ) + "_testdb" );
-            ed = persisterHelper.persist( ed );
+            ed = externalDatabaseService.findOrCreate( ed );
         }
 
         result.setExternalDatabase( ed );
@@ -784,7 +814,7 @@ public class PersistentDummyObjectHelper {
             default:
                 ExternalDatabase edp = ExternalDatabase.Factory.newInstance();
                 edp.setName( databaseName );
-                edp = persisterHelper.persist( edp );
+                edp = externalDatabaseService.findOrCreate( edp );
                 return this.getTestPersistentDatabaseEntry( accession, edp );
         }
     }
@@ -801,7 +831,7 @@ public class PersistentDummyObjectHelper {
         ee.setShortName( shortName );
         ee.setName( shortName );
         ee.setTaxon( this.getTestPersistentTaxon() );
-        ee = persisterHelper.persist( ee );
+        ee = eeWriteService.create( ee );
         return ee;
     }
 
@@ -848,8 +878,8 @@ public class PersistentDummyObjectHelper {
         ee.setTaxon( taxon );
         ee.setRawExpressionDataVectors( vectors );
 
-        ArrayDesignsForExperimentCache c = persisterHelper.prepare( ee );
-        return persisterHelper.persist( ee, c );
+        ArrayDesignsForExperimentCache c = expressionExperimentPrePersistService.prepare( ee );
+        return eeWriteService.create( ee, c );
     }
 
     public GeneProduct getTestPersistentGeneProduct( Gene gene ) {
@@ -865,7 +895,7 @@ public class PersistentDummyObjectHelper {
      */
     public QuantitationType getTestPersistentQuantitationType() {
         QuantitationType qt = getTestNonPersistentQuantitationType();
-        return persisterHelper.persist( qt );
+        return quantitationTypeService.create( qt );
     }
 
     public Taxon getTestPersistentTaxon() {
@@ -875,8 +905,7 @@ public class PersistentDummyObjectHelper {
             testTaxon.setScientificName( "Loxodonta" );
             testTaxon.setNcbiId( 1245 );
             testTaxon.setIsGenesUsable( true );
-            testTaxon = persisterHelper
-                    .persist( testTaxon );
+            testTaxon = genomePersister.persistTaxon( testTaxon );
             assert testTaxon != null
                     && testTaxon.getId() != null;
         }
