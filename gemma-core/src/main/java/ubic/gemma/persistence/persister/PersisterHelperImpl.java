@@ -26,7 +26,6 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -208,38 +207,6 @@ public class PersisterHelperImpl implements PersisterHelper {
             result.add( this.doPersist( entity, xdbCache ) );
         }
         return result;
-    }
-
-    /**
-     * S2b forwarder to {@link CommonPersister#persistBibliographicReference} so
-     * {@link EeWriteServiceImpl#persister()} keeps compiling until S2f rewires it
-     * to call {@code commonPersister} directly.
-     */
-    BibliographicReference persistBibliographicReference( BibliographicReference reference, Map<String, ExternalDatabase> xdbCache ) {
-        return commonPersister.persistBibliographicReference( reference, xdbCache );
-    }
-
-    /**
-     * S2b forwarder; see {@link #persistBibliographicReference}.
-     */
-    void fillInDatabaseEntry( DatabaseEntry databaseEntry, Map<String, ExternalDatabase> xdbCache ) {
-        commonPersister.fillInDatabaseEntry( databaseEntry, xdbCache );
-    }
-
-    /**
-     * S2b forwarder; see {@link #persistBibliographicReference}.
-     */
-    ExternalDatabase persistExternalDatabase( ExternalDatabase database, Map<String, ExternalDatabase> xdbCache ) {
-        return commonPersister.persistExternalDatabase( database, xdbCache );
-    }
-
-    /**
-     * S2c forwarder: AD no longer extends GenomePersister so PHI no longer inherits
-     * {@code persistTaxon} through the chain. Routed directly to the autowired
-     * {@code genomePersister}.
-     */
-    Taxon persistTaxon( Taxon taxon, Map<Object, Taxon> taxonCache ) {
-        return genomePersister.persistTaxon( taxon, taxonCache );
     }
 
     /**

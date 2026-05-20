@@ -22,12 +22,13 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.FlushMode;
-import org.springframework.aop.framework.AopProxyUtils;
+import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.measurement.Unit;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -71,19 +72,14 @@ import java.util.Set;
 /**
  * Strangler-fig replacement for the EE-graph write path historically owned by
  * {@code ExpressionPersister} (now removed; the polymorphic EE dispatch arms
- * have been folded into {@link PersisterHelperImpl#doPersist}). Lives in the
- * {@code persister} package (rather than {@code service.expression.experiment})
- * so it can reach the protected helper methods on the persister chain
- * ({@code persistTaxon}, {@code persistExternalDatabase},
- * {@code fillInDatabaseEntry}). Per-call caches are plumbed as explicit
- * {@code Map<KEY, VALUE>} parameters (Phase 3 lift; formerly all carried on the
- * now-deleted {@code AbstractPersister.Caches} POJO).
+ * have been folded into {@link PersisterHelperImpl#doPersist}). Per-call caches
+ * are plumbed as explicit {@code Map<KEY, VALUE>} parameters (Phase 3 lift;
+ * formerly all carried on the now-deleted {@code AbstractPersister.Caches} POJO).
  * <p>
- * Until the persister chain is fully retired (Persister-shrink S2+), this
- * class collaborates with {@link PersisterHelperImpl} via the injected
- * {@link PersisterHelper}: the helper provides {@code doPersist}-routed access
- * to those inherited helpers through the dispatch table. The helper's body
- * methods delegate back here; this class holds the canonical implementations.
+ * Persister-shrink S4a: this class autowires the typed leaf persister beans
+ * ({@link CommonPersister}, {@link GenomePersister}) directly rather than
+ * routing through {@link PersisterHelperImpl}. The former {@code persister()}
+ * AOP-unwrap helper and the {@link PersisterHelper} field are gone.
  *
  * @see EeWriteService
  * @author pavlidis
@@ -118,50 +114,41 @@ public class EeWriteServiceImpl implements EeWriteService {
     @Autowired
     private QuantitationTypeDao quantitationTypeDao;
     /**
-     * Used to call back into the persister chain for the inherited helpers
-     * ({@code persistTaxon}, {@code persistExternalDatabase},
-     * {@code fillInDatabaseEntry}) and for {@code doPersist} dispatch on
-     * non-EE associations (Publications, Persons, ...).
-     * When the persister chain is deleted in E5, these calls become direct
-     * collaborator-DAO calls.
-     * <p>
-     * Field type is the {@link PersisterHelper} interface (not the impl) so
-     * Spring can inject the {@code @Transactional} JDK proxy without a
-     * {@code BeanNotOfRequiredTypeException}. The protected helpers used here
-     * ({@code doPersist}, {@code persistTaxon}, {@code getSessionFactory},
-     * {@code fillInDatabaseEntry}, {@code persistExternalDatabase}) live on
-     * {@code AbstractPersister} (pre-S2e) and are not part of the public interface;
-     * access them via {@link #persister()} which unwraps the proxy to the
-     * underlying {@link PersisterHelperImpl}.
+     * S4a: direct autowires of the typed leaf persister beans (formerly reached
+     * through {@code persisterHelper} + AOP-unwrap). {@link CommonPersister} owns
+     * {@code persistBibliographicReference}, {@code persistExternalDatabase},
+     * {@code fillInDatabaseEntry}, and the {@code doCommon} dispatch terminator
+     * (User / Characteristic). {@link GenomePersister} owns {@code persistTaxon}.
      */
     @Autowired
-    private PersisterHelper persisterHelper;
+    private CommonPersister commonPersister;
+
+    @Autowired
+    private GenomePersister genomePersister;
+
+    /**
+     * S4a: direct autowire (formerly reached via
+     * {@code persisterHelper.getSessionFactory()}). Used to manage the
+     * {@link FlushMode#MANUAL} window on {@link #create} and for the
+     * {@code session.load} / {@code session.merge} calls inside the dispatch
+     * helpers.
+     */
+    @Autowired
+    private SessionFactory sessionFactory;
 
     @Autowired
     private ExpressionExperimentPrePersistService expressionExperimentPrePersistService;
-
-    /**
-     * Returns the underlying {@link PersisterHelperImpl}, unwrapping the
-     * Spring AOP proxy if necessary. Needed to reach the protected helpers
-     * inherited from {@code AbstractPersister} (pre-S2e) that are not on the
-     * {@link PersisterHelper} interface. Goes away with the persister chain
-     * in E5.
-     */
-    private PersisterHelperImpl persister() {
-        Object target = AopProxyUtils.getSingletonTarget( persisterHelper );
-        return ( PersisterHelperImpl ) ( target != null ? target : persisterHelper );
-    }
 
     @Override
     @Transactional
     public ExpressionExperiment create( ExpressionExperiment ee, @Nullable ArrayDesignsForExperimentCache cache ) {
         try {
-            persister().getSessionFactory().getCurrentSession().setHibernateFlushMode( FlushMode.MANUAL );
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.MANUAL );
             ExpressionExperiment persistedEntity = persistExpressionExperiment( ee, new HashMap<>(), cache, new HashMap<>() );
-            persister().getSessionFactory().getCurrentSession().flush();
+            sessionFactory.getCurrentSession().flush();
             return persistedEntity;
         } finally {
-            persister().getSessionFactory().getCurrentSession().setHibernateFlushMode( FlushMode.AUTO );
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.AUTO );
         }
     }
 
@@ -200,7 +187,7 @@ public class EeWriteServiceImpl implements EeWriteService {
         if ( ee.getPrimaryPublication() != null ) {
             // Phase 3 lift: was doPersist (instanceof BibliographicReference arm); now a
             // direct call to the per-call-Map persistBibliographicReference helper.
-            ee.setPrimaryPublication( persister().persistBibliographicReference( ee.getPrimaryPublication(), xdbCache ) );
+            ee.setPrimaryPublication( commonPersister.persistBibliographicReference( ee.getPrimaryPublication(), xdbCache ) );
         }
         if ( ee.getOwner() != null ) {
             // BK lookup via ContactDao.find (which delegates to BusinessKey.find(Session, Contact));
@@ -210,7 +197,7 @@ public class EeWriteServiceImpl implements EeWriteService {
             ee.setOwner( existingOwner != null ? existingOwner : contactDao.create( owner ) );
         }
         if ( ee.getTaxon() != null ) {
-            ee.setTaxon( persister().persistTaxon( ee.getTaxon(), taxonCache ) );
+            ee.setTaxon( genomePersister.persistTaxon( ee.getTaxon(), taxonCache ) );
         }
 
         // Phase 3 lift: was doPersist (instanceof QuantitationType arm in CommonPersister);
@@ -228,14 +215,14 @@ public class EeWriteServiceImpl implements EeWriteService {
             // direct call to the per-call-Map persistBibliographicReference helper.
             Set<BibliographicReference> persistedOther = new HashSet<>();
             for ( BibliographicReference pub : ee.getOtherRelevantPublications() ) {
-                persistedOther.add( persister().persistBibliographicReference( pub, xdbCache ) );
+                persistedOther.add( commonPersister.persistBibliographicReference( pub, xdbCache ) );
             }
             ee.setOtherRelevantPublications( persistedOther );
         }
 
         if ( ee.getAccession() != null ) {
             // Phase 3 lift: per-call Map; see fillInBioAssayAssociations note.
-            persister().fillInDatabaseEntry( ee.getAccession(), xdbCache );
+            commonPersister.fillInDatabaseEntry( ee.getAccession(), xdbCache );
         }
 
         // This has to come first and be persisted, so our FactorValues get persisted before we process the
@@ -338,7 +325,7 @@ public class EeWriteServiceImpl implements EeWriteService {
                 throw new IllegalStateException( "You must provide the platform in the cache object" );
             }
 
-            arrayDesignUsed = ( ArrayDesign ) persister().getSessionFactory().getCurrentSession()
+            arrayDesignUsed = ( ArrayDesign ) sessionFactory.getCurrentSession()
                     .load( ArrayDesign.class, arrayDesignUsed.getId() );
 
             if ( arrayDesignUsed == null ) {
@@ -367,7 +354,7 @@ public class EeWriteServiceImpl implements EeWriteService {
             // Phase 3 lift: helper takes the per-call Map<String, ExternalDatabase>
             // threaded through this persist (formerly carried on Caches).
             bioAssay.getAccession().setExternalDatabase(
-                    persister().persistExternalDatabase( bioAssay.getAccession().getExternalDatabase(), xdbCache ) );
+                    commonPersister.persistExternalDatabase( bioAssay.getAccession().getExternalDatabase(), xdbCache ) );
             log.debug( "external database done" );
         }
 
@@ -415,7 +402,7 @@ public class EeWriteServiceImpl implements EeWriteService {
 
         assert dataVector.getQuantitationType() != null;
         QuantitationType qt = findOrCreateQuantitationType( dataVector.getQuantitationType(), qtCache );
-        qt = ( QuantitationType ) persister().getSessionFactory().getCurrentSession().merge( qt );
+        qt = ( QuantitationType ) sessionFactory.getCurrentSession().merge( qt );
         dataVector.setQuantitationType( qt );
 
         return bioAssayDimension;
@@ -508,7 +495,12 @@ public class EeWriteServiceImpl implements EeWriteService {
      */
     void processExperimentalDesign( ExperimentalDesign experimentalDesign, Map<String, ExternalDatabase> xdbCache ) {
 
-        persister().doPersist( experimentalDesign.getTypes(), xdbCache );
+        // S4a: was persister().doPersist(Collection, Map); Characteristic is cascade-only
+        // (CommonPersister.doCommon returns null), but route through doCommon to preserve
+        // the User-arm throw and the cascade-only signalling.
+        for ( Characteristic c : experimentalDesign.getTypes() ) {
+            commonPersister.doCommon( c, xdbCache );
+        }
 
         if ( experimentalDesign.getExperimentalFactors() == null ) {
             experimentalDesign.setExperimentalFactors( new HashSet<>() );
@@ -547,11 +539,11 @@ public class EeWriteServiceImpl implements EeWriteService {
         log.debug( "Persisting " + entity );
         if ( entity.getExternalAccession() != null ) {
             // Phase 3 lift: per-call Map; see fillInBioAssayAssociations note.
-            persister().fillInDatabaseEntry( entity.getExternalAccession(), xdbCache );
+            commonPersister.fillInDatabaseEntry( entity.getExternalAccession(), xdbCache );
         }
 
         log.debug( "db entry done" );
-        entity.setSourceTaxon( persister().persistTaxon( entity.getSourceTaxon(), taxonCache ) );
+        entity.setSourceTaxon( genomePersister.persistTaxon( entity.getSourceTaxon(), taxonCache ) );
 
         log.debug( "taxon done" );
 
@@ -603,7 +595,10 @@ public class EeWriteServiceImpl implements EeWriteService {
     }
 
     void fillInExperimentalFactorAssociations( ExperimentalFactor experimentalFactor, Map<String, ExternalDatabase> xdbCache ) {
-        persister().doPersist( experimentalFactor.getAnnotations(), xdbCache );
+        // S4a: was persister().doPersist(Collection, Map); see processExperimentalDesign note.
+        for ( Characteristic c : experimentalFactor.getAnnotations() ) {
+            commonPersister.doCommon( c, xdbCache );
+        }
     }
 
     void fillInFactorValueAssociations( FactorValue factorValue, Map<String, ExternalDatabase> xdbCache ) {
