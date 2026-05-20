@@ -2240,6 +2240,32 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Slice<ExpressionExperimentValueObject> loadBlacklistedValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
+        Filters composed = composeBlacklistFilters( filters );
+        if ( composed == null ) {
+            return new Slice<>( Collections.emptyList(), sort, offset, limit, 0L );
+        }
+        return loadValueObjects( composed, sort, offset, limit );
+    }
+
+    @Override
+    public CursorPage<ExpressionExperimentValueObject> loadBlacklistedValueObjectsByCursor( @Nullable Filters filters, Sort sort, @Nullable Cursor cursor, int limit ) {
+        Filters composed = composeBlacklistFilters( filters );
+        if ( composed == null ) {
+            return new CursorPage<>( Collections.emptyList(), sort, limit, null, null, 0L );
+        }
+        return loadValueObjectsByCursor( composed, sort, cursor, limit );
+    }
+
+    /**
+     * Compose the blacklist filter (matching either {@code shortName} or {@code accession}) on
+     * top of the caller-supplied {@link Filters}. Returns {@code null} when there are no
+     * blacklisted experiments — both {@link #loadBlacklistedValueObjects} and
+     * {@link #loadBlacklistedValueObjectsByCursor} short-circuit to an empty page in that case.
+     * The {@link Filters} input is defensively copied so the blacklist list never leaks back
+     * into the caller's filter graph.
+     */
+    @Nullable
+    private Filters composeBlacklistFilters( @Nullable Filters filters ) {
         //noinspection unchecked
         List<Object[]> result = getSessionFactory().getCurrentSession()
                 .createQuery( "select be.shortName, ea.accession from BlacklistedExperiment be left join be.externalAccession ea" )
@@ -2247,12 +2273,12 @@ public class ExpressionExperimentDaoImpl
                 .setCacheRegion( QUERIES_CACHE_REGION )
                 .list();
         if ( result.isEmpty() ) {
-            return new Slice<>( Collections.emptyList(), sort, offset, limit, 0L );
+            return null;
         }
         if ( filters == null ) {
             filters = Filters.empty();
         } else {
-            // we create a copy because we don't want to leak the lits of blacklisted EEs in the filter
+            // we create a copy because we don't want to leak the list of blacklisted EEs in the filter
             filters = Filters.by( filters );
         }
         Set<String> blacklistedShortNames = result.stream().map( row -> ( String ) row[0] ).filter( Objects::nonNull ).collect( Collectors.toSet() );
@@ -2263,7 +2289,7 @@ public class ExpressionExperimentDaoImpl
         if ( !blacklistedAccessions.isEmpty() )
             clause = clause.or( "ee", "accession.accession", String.class, Filter.Operator.in, blacklistedAccessions );
         clause.build();
-        return loadValueObjects( filters, sort, offset, limit );
+        return filters;
     }
 
     @Override

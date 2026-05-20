@@ -58,6 +58,8 @@ import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.persistence.util.Cursor;
+import ubic.gemma.persistence.util.CursorPage;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
@@ -1168,6 +1170,12 @@ public class ExpressionExperimentReadServiceImpl implements ExpressionExperiment
     @Transactional(readOnly = true)
     public Slice<ExpressionExperimentValueObject> loadBlacklistedValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
         return expressionExperimentDao.loadBlacklistedValueObjects( filters, sort, offset, limit );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CursorPage<ExpressionExperimentValueObject> loadBlacklistedValueObjectsByCursor( @Nullable Filters filters, Sort sort, @Nullable Cursor cursor, int limit ) {
+        return expressionExperimentDao.loadBlacklistedValueObjectsByCursor( filters, sort, cursor, limit );
     }
 
     @Override
