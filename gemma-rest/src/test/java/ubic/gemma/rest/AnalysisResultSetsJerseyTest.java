@@ -3,14 +3,14 @@ package ubic.gemma.rest;
 import io.swagger.v3.core.util.Json;
 import io.swagger.v3.oas.models.OpenAPI;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.rest.util.Assertions;
-import ubic.gemma.rest.util.BaseJerseyIntegrationTest;
+import ubic.gemma.rest.util.BaseJerseyIntegrationTest5;
 
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -26,7 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author poirigui
  */
 @Slf4j
-public class AnalysisResultSetsJerseyTest extends BaseJerseyIntegrationTest {
+public class AnalysisResultSetsJerseyTest extends BaseJerseyIntegrationTest5 {
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
@@ -34,13 +34,13 @@ public class AnalysisResultSetsJerseyTest extends BaseJerseyIntegrationTest {
     /* fixture */
     private ExpressionExperiment ee;
 
-    @Before
+    @BeforeEach
     public void setUpMocks() {
         ee = ExpressionExperiment.Factory.newInstance();
         ee = expressionExperimentService.create( ee );
     }
 
-    @After
+    @AfterEach
     public void removeFixtures() {
         expressionExperimentService.remove( ee );
     }
