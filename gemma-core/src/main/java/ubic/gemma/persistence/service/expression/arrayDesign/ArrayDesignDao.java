@@ -35,6 +35,25 @@ public interface ArrayDesignDao extends CuratableDao<ArrayDesign>,
 
     String OBJECT_ALIAS = "ad";
 
+    /**
+     * Load a batch of {@link ArrayDesign}s by ID and return them keyed by ID for O(1) per-id
+     * lookup. Issues a single {@code WHERE id IN (...)} fetch (delegating to the base DAO's
+     * {@link #load(Collection)}), then collects to a map.
+     * <p>
+     * Use this in place of N×{@code Session.get(ArrayDesign.class, id)} loop patterns — see
+     * round-2 perf probe finding #8 ({@code PERF_PROBE_REPORT_ROUND2.md}): 20 sequential PK
+     * lookups (~138 ms each on the prod tunnel) cost ~2,766 ms, vs ~121 ms for a single
+     * batched fetch.
+     * <p>
+     * The returned map preserves no ordering. The base loader fetches the AD root entity only —
+     * lazy collections (e.g. {@code designElements}, {@code compositeSequences}) are NOT
+     * initialised; callers that need them must thaw explicitly to avoid a secondary N+1.
+     *
+     * @param ids platform IDs to load; an empty collection returns an empty map
+     * @return a map of id → {@link ArrayDesign} for every id that resolved to a row
+     */
+    Map<Long, ArrayDesign> loadAsMap( Collection<Long> ids );
+
     Collection<ArrayDesign> loadAllGenericGenePlatforms();
 
     void addProbes( ArrayDesign arrayDesign, Collection<CompositeSequence> newProbes );

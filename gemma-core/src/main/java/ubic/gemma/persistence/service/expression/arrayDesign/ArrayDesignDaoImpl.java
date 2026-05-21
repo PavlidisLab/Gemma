@@ -55,6 +55,7 @@ import ubic.gemma.persistence.util.Filter;
 import org.springframework.lang.Nullable;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -86,6 +87,18 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Autowired
     public ArrayDesignDaoImpl( SessionFactory sessionFactory ) {
         super( ArrayDesignDao.OBJECT_ALIAS, ArrayDesign.class, sessionFactory );
+    }
+
+    @Override
+    public Map<Long, ArrayDesign> loadAsMap( Collection<Long> ids ) {
+        if ( ids.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+        // Delegates to AbstractDao.load(Collection<Long>) which already issues a single
+        // WHERE id IN (...) fetch (with parameter optimisation + per-batch chunking when
+        // batchSize is set). See AbstractDao#loadByIds.
+        return load( ids ).stream()
+                .collect( Collectors.toMap( ArrayDesign::getId, Function.identity() ) );
     }
 
     @Override

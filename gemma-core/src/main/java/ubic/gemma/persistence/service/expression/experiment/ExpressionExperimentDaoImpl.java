@@ -167,6 +167,16 @@ public class ExpressionExperimentDaoImpl
 
     private final CompressedStringListType cellIdsUserType;
 
+    /**
+     * Used to batch-load {@link ArrayDesign}s by id during EE detail-VO post-processing,
+     * replacing per-id {@code Session.get(ArrayDesign.class, id)} loops (round-2 probe #8).
+     * Field-injected to avoid widening the existing ctor signature and to dodge the (theoretical)
+     * circular-dep that a ctor-injected ArrayDesignDao could introduce as the dependency graph
+     * grows.
+     */
+    @Autowired
+    private ArrayDesignDao arrayDesignDao;
+
     @Autowired
     public ExpressionExperimentDaoImpl( SessionFactory sessionFactory ) {
         super( ExpressionExperimentDao.OBJECT_ALIAS, ExpressionExperiment.class, sessionFactory );
@@ -1308,8 +1318,13 @@ public class ExpressionExperimentDaoImpl
                 .setParameter( "ee", ee )
                 .setParameter( "qt", qt )
                 .list();
+        // Round-2 probe #8: batched IN-fetch (~121 ms) replaces N×Session.get (~138 ms each).
+        // Preserve adIds ordering so callers that rely on the group-by-id order see the same
+        // sequence after the migration.
+        Map<Long, ArrayDesign> byId = arrayDesignDao.loadAsMap( adIds );
         return adIds.stream()
-                .map( id -> ( ArrayDesign ) getSessionFactory().getCurrentSession().get( ArrayDesign.class, id ) )
+                .map( byId::get )
+                .filter( Objects::nonNull )
                 .collect( Collectors.toList() );
     }
 
@@ -2202,6 +2217,24 @@ public class ExpressionExperimentDaoImpl
                 Map<Long, List<ExpressionExperimentDetail>> detailsByEE = getExpressionExperimentDetailsById( expressionExperimentIds, cacheable );
                 detailsTimer.stop();
 
+                // Round-2 probe #8: batch-load every ArrayDesign referenced across this page of
+                // VOs in a single WHERE id IN (...) fetch, then index by id for O(1) per-VO
+                // lookup below. Replaces N_ee × N_ad-per-ee Session.get(ArrayDesign.class, id)
+                // calls (~2,766 ms for 20 sequential PK lookups on the prod tunnel) with one
+                // ~121 ms batched fetch.
+                Set<Long> allPlatformIds = new HashSet<>();
+                for ( List<ExpressionExperimentDetail> details : detailsByEE.values() ) {
+                    for ( ExpressionExperimentDetail d : details ) {
+                        if ( d.getArrayDesignUsedId() != null ) {
+                            allPlatformIds.add( d.getArrayDesignUsedId() );
+                        }
+                        if ( d.getOriginalPlatformId() != null ) {
+                            allPlatformIds.add( d.getOriginalPlatformId() );
+                        }
+                    }
+                }
+                Map<Long, ArrayDesign> platformsById = arrayDesignDao.loadAsMap( allPlatformIds );
+
                 for ( ExpressionExperimentDetailsValueObject vo : vos ) {
                     List<ExpressionExperimentDetail> details = detailsByEE.get( vo.getId() );
 
@@ -2212,7 +2245,8 @@ public class ExpressionExperimentDaoImpl
 
                     // we need those later for computing original platforms
                     Collection<ArrayDesignValueObject> adVos = arrayDesignsUsedIds.stream()
-                            .map( id -> ( ArrayDesign ) getSessionFactory().getCurrentSession().get( ArrayDesign.class, id ) )
+                            .map( platformsById::get )
+                            .filter( Objects::nonNull )
                             .map( ArrayDesignValueObject::new )
                             .collect( Collectors.toSet() );
                     vo.setArrayDesigns( adVos ); // also sets taxon name, technology type, and number of ADs.
@@ -2223,7 +2257,8 @@ public class ExpressionExperimentDaoImpl
                             .filter( Objects::nonNull ) // on original platform for the bioAssay
                             .distinct()
                             .filter( op -> !arrayDesignsUsedIds.contains( op ) ) // omit noop switches
-                            .map( id -> ( ArrayDesign ) getSessionFactory().getCurrentSession().get( ArrayDesign.class, id ) )
+                            .map( platformsById::get )
+                            .filter( Objects::nonNull )
                             .map( ArrayDesignValueObject::new )
                             .collect( Collectors.toSet() );
                     vo.setOriginalPlatforms( originalPlatformsVos );
