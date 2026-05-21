@@ -85,6 +85,38 @@ public class GemmaAclConfiguration {
         return new DefaultPermissionGrantingStrategy( auditLogger );
     }
 
+    /**
+     * Role hierarchy used by ACL authorization (and any other consumer that injects
+     * {@link org.springframework.security.access.hierarchicalroles.RoleHierarchy}).
+     * Hierarchy preserved verbatim from the pre-Java-config wiring in
+     * {@code applicationContext-gsec.xml} (bean id {@code roleHierarchy}). Note:
+     * {@code IS_AUTHENTICATED_ANONYMOUSLY} is not recognised by the role voter but is
+     * honoured by other consumers of this hierarchy.
+     * <p>
+     * Defined here (rather than relying on the {@code <bean id="roleHierarchy">} formerly
+     * in {@code applicationContext-gsec.xml}) so the {@code aclAuthorizationStrategy} bean
+     * below resolves its {@code RoleHierarchy} dependency from the same {@code @Configuration}
+     * class — the XML-defined bean was not visible during the early eager creation triggered
+     * when a {@code BeanPostProcessor} (e.g. {@code taskExecutorThreadContextInheritPostProcessor})
+     * forces {@code methodSecurityConfig} &rarr; {@code permissionEvaluator} &rarr; {@code aclService}
+     * &rarr; {@code lookupStrategy} &rarr; {@code aclCache} &rarr; {@code aclAuthorizationStrategy}
+     * to instantiate before the {@code @ImportResource}'d gsec XML beans had registered.
+     */
+    @Bean
+    public org.springframework.security.access.hierarchicalroles.RoleHierarchy roleHierarchy() {
+        org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl rh =
+                new org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl();
+        rh.setHierarchy(
+                "GROUP_ADMIN > GROUP_USER\n"
+                        + "GROUP_RUN_AS_ADMIN > GROUP_ADMIN\n"
+                        + "GROUP_USER > IS_AUTHENTICATED_ANONYMOUSLY\n"
+                        + "GROUP_RUN_AS_USER > GROUP_USER\n"
+                        + "GROUP_ADMIN > GROUP_AGENT\n"
+                        + "GROUP_AGENT > IS_AUTHENTICATED_ANONYMOUSLY\n"
+                        + "GROUP_RUN_AS_AGENT > GROUP_AGENT" );
+        return rh;
+    }
+
     @Bean
     public AclAuthorizationStrategy aclAuthorizationStrategy(
             org.springframework.security.access.hierarchicalroles.RoleHierarchy roleHierarchy ) {

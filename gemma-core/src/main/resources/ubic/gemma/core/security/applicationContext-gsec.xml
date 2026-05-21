@@ -251,23 +251,15 @@
 		<property name="grantOnTransient" value="true"/>
 	</bean>
 
-	<!-- Check: 'RUN_AS_' guys are so we can allow some exposed methods to be run by users with lower privileges - such
-		as servers or certain user operations that need to happen when users are logging in or signing up. Note that IS_AUTHENTICATED_ANONYMOUSLY
-		is not recognized by the role voter, but it is by other uses of this hierarchy. -->
-	<bean id="roleHierarchy" class="org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl">
-		<property name="hierarchy">
-			<value>[CDATA[
-				GROUP_ADMIN > GROUP_USER
-				GROUP_RUN_AS_ADMIN > GROUP_ADMIN
-				GROUP_USER > IS_AUTHENTICATED_ANONYMOUSLY
-				GROUP_RUN_AS_USER > GROUP_USER
-				GROUP_ADMIN > GROUP_AGENT
-				GROUP_AGENT > IS_AUTHENTICATED_ANONYMOUSLY
-				GROUP_RUN_AS_AGENT > GROUP_AGENT
-				]]
-			</value>
-		</property>
-	</bean>
+	<!-- roleHierarchy moved to ubic.gemma.core.security.acl.GemmaAclConfiguration as a @Bean so the
+	     aclAuthorizationStrategy @Bean (and any other consumer) can satisfy its RoleHierarchy
+	     dependency without depending on @ImportResource ordering. The bean is needed during the
+	     early eager creation triggered when BeanPostProcessor registration forces the ACL stack to
+	     instantiate before this XML's bean definitions are visible in the registry. Hierarchy
+	     preserved verbatim there. XML refs to "roleHierarchy" below (sidRetrievalStrategy,
+	     roleHierarchyVoter, securityExpressionHandler) resolve via the shared bean namespace since
+	     this XML is @ImportResource'd into the same context. See gsec-absorption roadmap. -->
+
 
 
 	<!-- ACL configuration. This controls how/who can modify ACLs.
