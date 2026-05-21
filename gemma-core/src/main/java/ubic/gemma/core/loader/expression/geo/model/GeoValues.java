@@ -344,8 +344,7 @@ public class GeoValues implements Serializable {
 
         } else {
             Map<Integer, LinkedHashSet<GeoSample>> samplePlatformMap = sampleDimensions.get( platform );
-            for ( Integer quantitationTypeIndex : samplePlatformMap.keySet() ) {
-                LinkedHashSet<GeoSample> sampleQtMap = samplePlatformMap.get( quantitationTypeIndex );
+            for ( LinkedHashSet<GeoSample> sampleQtMap : samplePlatformMap.values() ) {
                 sampleQtMap.add( sample );
             }
         }
@@ -607,9 +606,11 @@ public class GeoValues implements Serializable {
         /*
          * Then, subset the data.
          */
-        for ( GeoPlatform p : v.sampleDimensions.keySet() ) {
-            for ( Integer o : v.sampleDimensions.get( p ).keySet() ) {
-                LinkedHashSet<GeoSample> dimsamples = v.sampleDimensions.get( p ).get( o );
+        for ( Map.Entry<GeoPlatform, Map<Integer, LinkedHashSet<GeoSample>>> sdEntry : v.sampleDimensions.entrySet() ) {
+            GeoPlatform p = sdEntry.getKey();
+            for ( Map.Entry<Integer, LinkedHashSet<GeoSample>> qtEntry : sdEntry.getValue().entrySet() ) {
+                Integer o = qtEntry.getKey();
+                LinkedHashSet<GeoSample> dimsamples = qtEntry.getValue();
 
                 int i = 0;
                 for ( Iterator<GeoSample> it = dimsamples.iterator(); it.hasNext(); ) {
@@ -618,8 +619,8 @@ public class GeoValues implements Serializable {
                     if ( samples.contains( geoSample ) ) {
 
                         Map<String, List<String>> newmap = v.data.get( p ).get( o );
-                        for ( String probeId : newmap.keySet() ) {
-                            newmap.get( probeId ).add( this.data.get( p ).get( o ).get( probeId ).get( i ) );
+                        for ( Map.Entry<String, List<String>> nmEntry : newmap.entrySet() ) {
+                            nmEntry.getValue().add( this.data.get( p ).get( o ).get( nmEntry.getKey() ).get( i ) );
                         }
 
                     } else {
@@ -646,12 +647,14 @@ public class GeoValues implements Serializable {
     public String toString() {
         StringBuilder buf = new StringBuilder();
 
-        for ( GeoPlatform platform : sampleDimensions.keySet() ) {
+        for ( Map.Entry<GeoPlatform, Map<Integer, LinkedHashSet<GeoSample>>> sdEntry : sampleDimensions.entrySet() ) {
+            GeoPlatform platform = sdEntry.getKey();
+            Map<Integer, LinkedHashSet<GeoSample>> qtSamples = sdEntry.getValue();
 
             assert data.get( platform ) != null : platform;
 
             buf.append( "============== " ).append( platform ).append( " =================\n" );
-            List<Integer> ar = new ArrayList<>( sampleDimensions.get( platform ).keySet() );
+            List<Integer> ar = new ArrayList<>( qtSamples.keySet() );
             Collections.sort( ar );
             for ( Integer qType : ar ) {
                 String qTName = StringUtils.join( quantitationTypeIndexMap.get( platform ).get( qType ), "/" );
@@ -659,7 +662,7 @@ public class GeoValues implements Serializable {
                         .append( qType ).append( " (" ).append( qTName ).append( ") ------------------\n" );
                 buf.append( "DeEl" );
 
-                for ( GeoSample sam : sampleDimensions.get( platform ).get( qType ) ) {
+                for ( GeoSample sam : qtSamples.get( qType ) ) {
                     buf.append( "\t" ).append( sam.getGeoAccession() );
                 }
                 buf.append( "\n" );
@@ -695,14 +698,17 @@ public class GeoValues implements Serializable {
      * started.
      */
     public void validate() {
-        for ( GeoPlatform platform : sampleDimensions.keySet() ) {
+        for ( Map.Entry<GeoPlatform, Map<Integer, LinkedHashSet<GeoSample>>> sdEntry : sampleDimensions.entrySet() ) {
+            GeoPlatform platform = sdEntry.getKey();
+            Map<Integer, LinkedHashSet<GeoSample>> qtSamples = sdEntry.getValue();
 
             Map<Integer, Map<String, List<String>>> d = data.get( platform );
 
-            for ( Integer qType : sampleDimensions.get( platform ).keySet() ) {
+            for ( Map.Entry<Integer, LinkedHashSet<GeoSample>> qtEntry : qtSamples.entrySet() ) {
+                Integer qType = qtEntry.getKey();
 
                 // This is the number of samples that have been processed so far for the given quantitation type.
-                int numSamples = sampleDimensions.get( platform ).get( qType ).size();
+                int numSamples = qtEntry.getValue().size();
 
                 Map<Integer, Collection<String>> qtMap = quantitationTypeIndexMap.get( platform );
                 if ( qtMap == null ) {

@@ -434,8 +434,9 @@ public class QuantitationTypeParameterGuesser {
     }
 
     protected static Boolean guessIsBackground( String name, String description ) {
-        for ( Boolean type : QuantitationTypeParameterGuesser.isBackgroundDescPatterns.keySet() ) {
-            for ( String patt : QuantitationTypeParameterGuesser.isBackgroundDescPatterns.get( type ) ) {
+        for ( Map.Entry<Boolean, Set<String>> ibEntry : QuantitationTypeParameterGuesser.isBackgroundDescPatterns.entrySet() ) {
+            Boolean type = ibEntry.getKey();
+            for ( String patt : ibEntry.getValue() ) {
                 if ( description.matches( patt ) ) {
                     return type;
                 }
@@ -505,14 +506,15 @@ public class QuantitationTypeParameterGuesser {
     }
 
     protected static ScaleType guessScaleType( String name, String description ) {
-        for ( ScaleType type : QuantitationTypeParameterGuesser.scaleDescPatterns.keySet() ) {
+        for ( Map.Entry<ScaleType, Set<String>> sdpEntry : QuantitationTypeParameterGuesser.scaleDescPatterns.entrySet() ) {
+            ScaleType type = sdpEntry.getKey();
             for ( String patt : QuantitationTypeParameterGuesser.scaleNamePatterns.get( type ) ) {
                 if ( name.matches( patt ) ) {
                     QuantitationTypeParameterGuesser.log.debug( "!!!!!name=" + name + " matched " + patt );
                     return type;
                 }
             }
-            for ( String patt : QuantitationTypeParameterGuesser.scaleDescPatterns.get( type ) ) {
+            for ( String patt : sdpEntry.getValue() ) {
                 if ( description.toLowerCase().matches( patt ) ) {
                     QuantitationTypeParameterGuesser.log
                             .debug( "!!!!!description=" + description + " matched " + patt );
@@ -526,7 +528,8 @@ public class QuantitationTypeParameterGuesser {
     }
 
     protected static StandardQuantitationType guessType( String name, String description ) {
-        for ( StandardQuantitationType type : QuantitationTypeParameterGuesser.typeDescPatterns.keySet() ) {
+        for ( Map.Entry<StandardQuantitationType, Set<String>> tdpEntry : QuantitationTypeParameterGuesser.typeDescPatterns.entrySet() ) {
+            StandardQuantitationType type = tdpEntry.getKey();
 
             boolean isQuant = type == StandardQuantitationType.AMOUNT || type == StandardQuantitationType.COUNT;
 
@@ -545,7 +548,7 @@ public class QuantitationTypeParameterGuesser {
                 }
             }
 
-            for ( String patt : QuantitationTypeParameterGuesser.typeDescPatterns.get( type ) ) {
+            for ( String patt : tdpEntry.getValue() ) {
                 QuantitationTypeParameterGuesser.log.debug( "description=" + description + " test " + patt );
                 if ( description.matches( patt ) ) {
                     QuantitationTypeParameterGuesser.log
@@ -623,8 +626,9 @@ public class QuantitationTypeParameterGuesser {
         if ( !QuantitationTypeParameterGuesser.maybeRatio( name ) )
             return false;
 
-        for ( Boolean type : QuantitationTypeParameterGuesser.isRatioNamePatterns.keySet() ) {
-            for ( String patt : QuantitationTypeParameterGuesser.isRatioNamePatterns.get( type ) ) {
+        for ( Map.Entry<Boolean, Set<String>> irnpEntry : QuantitationTypeParameterGuesser.isRatioNamePatterns.entrySet() ) {
+            Boolean type = irnpEntry.getKey();
+            for ( String patt : irnpEntry.getValue() ) {
                 QuantitationTypeParameterGuesser.log.debug( name + " test " + patt );
                 if ( name.matches( patt ) ) {
                     return type;

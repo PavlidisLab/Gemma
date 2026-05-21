@@ -198,11 +198,13 @@ public class NcbiGeneDomainObjectGenerator {
         }
         supportedTaxaWithNCBIGenes = new HashSet<>();
         if ( supportedTaxa != null ) {
-            for ( Integer taxId : taxaCount.keySet() ) {
+            for ( Map.Entry<Integer, Integer> tcEntry : taxaCount.entrySet() ) {
+                Integer taxId = tcEntry.getKey();
+                Integer count = tcEntry.getValue();
 
-                if ( taxaCount.get( taxId ) > 0 ) {
+                if ( count > 0 ) {
                     NcbiGeneDomainObjectGenerator.log
-                            .debug( "Taxon " + taxId + ": " + taxaCount.get( taxId ) + " genes" );
+                            .debug( "Taxon " + taxId + ": " + count + " genes" );
                     Taxon t = supportedTaxa.get( taxId );
                     supportedTaxaWithNCBIGenes.add( t );
                 }

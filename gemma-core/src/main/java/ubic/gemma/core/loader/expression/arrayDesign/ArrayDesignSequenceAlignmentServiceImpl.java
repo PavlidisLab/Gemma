@@ -214,8 +214,8 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
 
         Map<BioSequence, Collection<BlatResult>> goldenPathAlignments = new HashMap<>();
         this.getGoldenPathAlignments( sequencesToBlat, taxon, goldenPathAlignments );
-        for ( BioSequence sequence : goldenPathAlignments.keySet() ) {
-            rawBlatResults.addAll( goldenPathAlignments.get( sequence ) );
+        for ( Collection<BlatResult> alignments : goldenPathAlignments.values() ) {
+            rawBlatResults.addAll( alignments );
         }
 
         Collection<BlatResult> results = this.persistBlatResults( rawBlatResults );

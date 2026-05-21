@@ -827,8 +827,9 @@ public class DataUpdaterImpl implements DataUpdater {
          * Reverse the map (probably should just make this part of getChipTypes)
          */
         Map<String, Collection<BioAssay>> chip2bms = new HashMap<>();
-        for ( BioAssay ba : bm2chips.keySet() ) {
-            String c = bm2chips.get( ba );
+        for ( Map.Entry<BioAssay, String> bcEntry : bm2chips.entrySet() ) {
+            BioAssay ba = bcEntry.getKey();
+            String c = bcEntry.getValue();
             if ( !chip2bms.containsKey( c ) ) {
                 chip2bms.put( c, new HashSet<BioAssay>() );
             }
@@ -837,7 +838,9 @@ public class DataUpdaterImpl implements DataUpdater {
         Map<String, String> chipNames2GPL = AffyPowerToolsProbesetSummarize
                 .loadMapFromConfig( AffyPowerToolsProbesetSummarize.AFFY_CHIPNAME_PROPERTIES_FILE_NAME );
         Map<ArrayDesign, Collection<BioAssay>> targetPlatform2BioAssays = new HashMap<>();
-        for ( String chipname : chip2bms.keySet() ) {
+        for ( Map.Entry<String, Collection<BioAssay>> cbEntry : chip2bms.entrySet() ) {
+            String chipname = cbEntry.getKey();
+            Collection<BioAssay> baForChip = cbEntry.getValue();
 
             /*
              * Original.
@@ -850,8 +853,8 @@ public class DataUpdaterImpl implements DataUpdater {
             ArrayDesign originalPlatform = arrayDesignService.findByShortName( originalPlatName );
             ArrayDesign targetPlatform = this.getAffymetrixTargetPlatform( originalPlatform );
 
-            log.info( targetPlatform + " associated with " + chip2bms.get( chipname ).size() + " samples based on CEL files ('" + chipname + "')" );
-            targetPlatform2BioAssays.put( targetPlatform, chip2bms.get( chipname ) );
+            log.info( targetPlatform + " associated with " + baForChip.size() + " samples based on CEL files ('" + chipname + "')" );
+            targetPlatform2BioAssays.put( targetPlatform, baForChip );
         }
         return targetPlatform2BioAssays;
     }
