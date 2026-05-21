@@ -528,6 +528,19 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
 
     @Override
     public Collection<Characteristic> findByValueLike( String search, @Nullable String category, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, int maxResults ) {
+        // Fast path: EE-scoped autocomplete (the OntologyServiceImpl callsite). Route the
+        // VALUE LIKE prefix scan through the denormalized EE2C table (~2.5M rows) instead of
+        // CHARACTERISTIC (~12M rows). EE2C is populated by TableMaintenanceUtilImpl with one
+        // row per (EE, category, value) triple where the characteristic resolves to an
+        // ExpressionExperiment - the exact set the legacy createOwningEntityConstraint with
+        // parentClasses={ExpressionExperiment} produces (via the EE2C_EE_QUERY population).
+        // EE2C carries the same VALUE / CATEGORY / *_URI columns as CHARACTERISTIC so the
+        // CharacteristicValueObject the autocomplete builds is unaffected.
+        if ( parentClasses != null && parentClasses.size() == 1
+                && parentClasses.contains( ExpressionExperiment.class )
+                && !includeNoParents ) {
+            return findByValueLikeViaEE2C( search, category, maxResults );
+        }
         Query q = this.getSessionFactory().getCurrentSession()
                 .createNativeQuery( "select {C.*} from CHARACTERISTIC as C where C.`VALUE` like :search"
                         + ( category != null ? " and " + createCategoryConstraint( "C", "category", category ) : "" )
@@ -539,6 +552,38 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
         }
         //noinspection unchecked
         return q.setMaxResults( maxResults > 0 ? maxResults : Integer.MAX_VALUE )
+                .list();
+    }
+
+    /**
+     * Two-step EE2C-rooted autocomplete: probe EE2C.VALUE (already EE-scoped, ~5x smaller
+     * than CHARACTERISTIC.VALUE), collect distinct Characteristic IDs, then load the
+     * Characteristic entities by ID. The second step is bounded by maxResults so the
+     * Characteristic load is a cheap by-id batch.
+     */
+    private Collection<Characteristic> findByValueLikeViaEE2C( String search, @Nullable String category, int maxResults ) {
+        NativeQuery<?> idQuery = this.getSessionFactory().getCurrentSession()
+                .createNativeQuery( "select distinct T.ID from EXPRESSION_EXPERIMENT2CHARACTERISTIC T where T.`VALUE` like :search and T.LEVEL = :level"
+                        + ( category != null ? " and " + createCategoryConstraint( "T", "category", category ) : "" ) )
+                .addScalar( "ID", StandardBasicTypes.LONG )
+                .setParameter( "search", search )
+                .setParameter( "level", ExpressionExperiment.class )
+                // invalidate when EE2C is repopulated
+                .addSynchronizedQuerySpace( EE2C_QUERY_SPACE )
+                .addSynchronizedEntityClass( Characteristic.class );
+        if ( category != null ) {
+            idQuery.setParameter( "category", category );
+        }
+        idQuery.setMaxResults( maxResults > 0 ? maxResults : Integer.MAX_VALUE );
+        //noinspection unchecked
+        List<Long> ids = ( List<Long> ) idQuery.list();
+        if ( ids.isEmpty() ) {
+            return Collections.emptyList();
+        }
+        //noinspection unchecked
+        return ( Collection<Characteristic> ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select c from Characteristic c where c.id in :ids" )
+                .setParameterList( "ids", ids )
                 .list();
     }
 
