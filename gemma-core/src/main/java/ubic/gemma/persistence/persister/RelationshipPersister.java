@@ -26,6 +26,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.core.architecture.SuppressArchUnit;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.common.Identifiable;
@@ -87,7 +88,15 @@ public class RelationshipPersister {
      * In production no caller routes a raw {@code ExpressionExperimentSet} through
      * {@code persist} (see recce §2.2); this field exists for the test-fixture path
      * that does.
+     *
+     * <p>The {@code Impl} type is required: {@code PersisterHelperImpl} exposes
+     * the protected {@code doPersist} dispatch method not present on any
+     * narrower interface, and the {@code @Lazy} proxy is what lets Spring
+     * tolerate the {@code Relationship ↔ PHI} DI cycle. The
+     * {@link SuppressArchUnit} marker tells {@code AutowireImplRuleTest} this
+     * exception is intentional.
      */
+    @SuppressArchUnit("AutowireImpl")
     @Lazy
     @Autowired
     private PersisterHelperImpl dispatcher;
