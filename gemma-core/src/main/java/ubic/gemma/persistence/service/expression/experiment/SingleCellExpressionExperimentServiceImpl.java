@@ -51,6 +51,15 @@ import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataV
 @Slf4j
 public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpressionExperimentService {
 
+    /**
+     * Vector-count ceiling above which {@link #getSingleCellExpressionDataMatrix} refuses to materialize.
+     *
+     * <p>The matrix wrapper holds every vector's {@code data} / {@code dataIndices} blob in memory; on the
+     * biggest live single-cell experiments that is multi-GB territory and will reliably OOM the JVM. Callers
+     * that need to iterate vectors at this scale must use {@link #streamSingleCellDataVectors} instead.</p>
+     */
+    public static final long SC_MATRIX_VECTOR_COUNT_LIMIT = 1_000_000L;
+
     @Autowired
     private ExpressionExperimentDao expressionExperimentDao;
 
@@ -301,6 +310,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     @Override
     @Transactional(readOnly = true)
     public SingleCellExpressionDataMatrix<?> getSingleCellExpressionDataMatrix( ExpressionExperiment expressionExperiment, List<BioAssay> samples, QuantitationType quantitationType ) {
+        assertVectorCountUnderMatrixLimit( expressionExperiment, quantitationType );
         Collection<SingleCellExpressionDataVector> vectors = getSingleCellDataVectors( expressionExperiment, samples, quantitationType );
         if ( vectors.isEmpty() ) {
             throw new IllegalStateException( "No vector for " + quantitationType + " in " + expressionExperiment );
@@ -322,6 +332,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     @Override
     @Transactional(readOnly = true)
     public SingleCellExpressionDataMatrix<?> getSingleCellExpressionDataMatrix( ExpressionExperiment expressionExperiment, QuantitationType quantitationType ) {
+        assertVectorCountUnderMatrixLimit( expressionExperiment, quantitationType );
         Collection<SingleCellExpressionDataVector> vectors = getSingleCellDataVectors( expressionExperiment, quantitationType );
         if ( vectors.isEmpty() ) {
             throw new IllegalStateException( "No vector for " + quantitationType + " in " + expressionExperiment );
@@ -337,6 +348,22 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
             } catch ( QuantitationTypeConversionException e ) {
                 throw new RuntimeException( e );
             }
+        }
+    }
+
+    /**
+     * Refuse to build a full single-cell matrix when the vector count exceeds {@link #SC_MATRIX_VECTOR_COUNT_LIMIT}.
+     * The biggest live experiment (46k vectors / 2.6 GB blob payload) already pushes the JVM hard; anything beyond
+     * the limit is guaranteed OOM territory and the caller should switch to
+     * {@link #streamSingleCellDataVectors} instead.
+     */
+    private void assertVectorCountUnderMatrixLimit( ExpressionExperiment ee, QuantitationType quantitationType ) {
+        long count = expressionExperimentDao.getNumberOfSingleCellDataVectors( ee, quantitationType );
+        if ( count > SC_MATRIX_VECTOR_COUNT_LIMIT ) {
+            throw new IllegalStateException( String.format(
+                    "Refusing to materialize a single-cell matrix for %s in %s: %d vectors exceeds the %d ceiling. "
+                            + "Use streamSingleCellDataVectors(...) instead.",
+                    quantitationType, ee, count, SC_MATRIX_VECTOR_COUNT_LIMIT ) );
         }
     }
 
