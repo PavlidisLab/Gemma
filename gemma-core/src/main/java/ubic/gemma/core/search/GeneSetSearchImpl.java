@@ -295,9 +295,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
         Map<Taxon, Collection<Gene>> genesByTaxon = this.gene2GoService.findByGOTermUrisPerTaxon( termsToFetch );
 
         Collection<GeneSet> results = new HashSet<>();
-        for ( Taxon t : genesByTaxon.keySet() ) {
-            Collection<Gene> genes = genesByTaxon.get( t );
-
+        for ( Collection<Gene> genes : genesByTaxon.values() ) {
             if ( genes.isEmpty() || ( maxGeneSetSize != null && genes.size() > maxGeneSetSize ) ) {
                 continue;
             }

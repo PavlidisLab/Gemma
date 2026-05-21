@@ -233,8 +233,8 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
         log.info( "Done getting probe specificity" );
 
         boolean hasAtLeastOneGene = false;
-        for ( CompositeSequence c : genesWithSpecificity.keySet() ) {
-            if ( genesWithSpecificity.get( c ).isEmpty() ) {
+        for ( Collection<BioSequence2GeneProduct> gs : genesWithSpecificity.values() ) {
+            if ( gs.isEmpty() ) {
                 continue;
             }
             hasAtLeastOneGene = true;
@@ -374,9 +374,10 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
 
         Map<Gene, Collection<Characteristic>> goMappings = this.getGOMappings( genesWithSpecificity );
 
-        for ( CompositeSequence cs : genesWithSpecificity.keySet() ) {
+        for ( Map.Entry<CompositeSequence, Collection<BioSequence2GeneProduct>> gwsEntry : genesWithSpecificity.entrySet() ) {
+            CompositeSequence cs = gwsEntry.getKey();
 
-            Collection<BioSequence2GeneProduct> geneclusters = genesWithSpecificity.get( cs );
+            Collection<BioSequence2GeneProduct> geneclusters = gwsEntry.getValue();
 
             if ( ++compositeSequencesProcessed % 10000 == 0 && ArrayDesignAnnotationServiceImpl.log.isInfoEnabled() ) {
                 ArrayDesignAnnotationServiceImpl.log
@@ -467,9 +468,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
             Map<CompositeSequence, Collection<BioSequence2GeneProduct>> genesWithSpecificity ) {
         ArrayDesignAnnotationServiceImpl.log.info( "Fetching GO mappings" );
         Collection<Gene> allGenes = new HashSet<>();
-        for ( CompositeSequence cs : genesWithSpecificity.keySet() ) {
-
-            Collection<BioSequence2GeneProduct> geneclusters = genesWithSpecificity.get( cs );
+        for ( Collection<BioSequence2GeneProduct> geneclusters : genesWithSpecificity.values() ) {
             for ( BioSequence2GeneProduct bioSequence2GeneProduct : geneclusters ) {
 
                 Gene g = bioSequence2GeneProduct.getGeneProduct().getGene();

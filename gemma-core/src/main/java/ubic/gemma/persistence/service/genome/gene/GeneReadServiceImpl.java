@@ -133,8 +133,8 @@ public class GeneReadServiceImpl implements GeneReadService {
     public Map<String, GeneValueObject> findByOfficialSymbols( Collection<String> query, Long taxonId ) {
         Map<String, GeneValueObject> result = new HashMap<>();
         Map<String, Gene> genes = this.geneDao.findByOfficialSymbols( query, taxonId );
-        for ( String q : genes.keySet() ) {
-            result.put( q, new GeneValueObject( genes.get( q ) ) );
+        for ( Map.Entry<String, Gene> gEntry : genes.entrySet() ) {
+            result.put( gEntry.getKey(), new GeneValueObject( gEntry.getValue() ) );
         }
         return result;
     }

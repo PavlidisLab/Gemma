@@ -251,9 +251,10 @@ public class ArrayDesignMergeServiceImpl implements ArrayDesignMergeService {
         ArrayDesignMergeServiceImpl.log.info( globalBsMap.size() + " unique sequences" );
 
         Collection<String> probeNames = new HashSet<>();
-        for ( BioSequence bs : globalBsMap.keySet() ) {
+        for ( Map.Entry<BioSequence, Collection<CompositeSequence>> bsEntry : globalBsMap.entrySet() ) {
+            BioSequence bs = bsEntry.getKey();
             assert bs != null; // should be the placeholder NULL_BIOSEQUENCE
-            for ( CompositeSequence cs : globalBsMap.get( bs ) ) {
+            for ( CompositeSequence cs : bsEntry.getValue() ) {
 
                 if ( mergeWithExisting && cs.getArrayDesign().equals( arrayDesign ) ) {
                     assert arrayDesign.getId() != null;

@@ -353,9 +353,9 @@ public class Rank {
              */
             Map<K, Double> finalResult = new HashMap<K, Double>();
             double mr = result.size();
-            for ( K k : result.keySet() ) {
-                double d = result.get( k );
-                finalResult.put( k, mr - d - 1.0 );
+            for ( Map.Entry<K, Double> rEntry : result.entrySet() ) {
+                double d = rEntry.getValue();
+                finalResult.put( rEntry.getKey(), mr - d - 1.0 );
             }
             return finalResult;
         }

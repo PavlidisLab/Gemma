@@ -232,8 +232,7 @@ class GenericAnovaResultImpl implements Serializable, GenericAnovaResult {
         }
 
         if ( hasInteractions() ) {
-            for ( TreeSet<String> ifa : interactionEffects.keySet() ) {
-                AnovaEffect a = this.interactionEffects.get( ifa );
+            for ( AnovaEffect a : this.interactionEffects.values() ) {
                 buf.append( a ).append( "\n" );
             }
         }

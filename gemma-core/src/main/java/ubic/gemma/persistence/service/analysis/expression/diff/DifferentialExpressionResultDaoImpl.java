@@ -637,8 +637,9 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         // Add the DB results to the cached results.
         this.addToCache( resultsFromDb, resultSetsNeeded, geneIds );
 
-        for ( Long resultSetId : resultsFromDb.keySet() ) {
-            Map<Long, DiffExprGeneSearchResult> geneResults = resultsFromDb.get( resultSetId );
+        for ( Map.Entry<Long, Map<Long, DiffExprGeneSearchResult>> rfdEntry : resultsFromDb.entrySet() ) {
+            Long resultSetId = rfdEntry.getKey();
+            Map<Long, DiffExprGeneSearchResult> geneResults = rfdEntry.getValue();
             if ( results.containsKey( resultSetId ) ) {
                 results.get( resultSetId ).putAll( geneResults );
             } else {

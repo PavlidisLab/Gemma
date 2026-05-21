@@ -319,11 +319,12 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
         /*
          * Check if every biomaterial got used. Worth a warning, at least.
          */
-        for ( ExperimentalFactor ef : factorsAssociatedWithBioMaterials.keySet() ) {
-            if ( !factorsAssociatedWithBioMaterials.get( ef ).containsAll( experimentBioMaterials ) ) {
+        for ( Map.Entry<ExperimentalFactor, Collection<BioMaterial>> fEntry : factorsAssociatedWithBioMaterials.entrySet() ) {
+            Collection<BioMaterial> bms = fEntry.getValue();
+            if ( !bms.containsAll( experimentBioMaterials ) ) {
                 ExperimentalDesignImporterImpl.log
                         .warn( "File did not contain values for all factor - biomaterial combinations: Missing at least one for "
-                                + ef + " [populated " + factorsAssociatedWithBioMaterials.get( ef ).size() + "/"
+                                + fEntry.getKey() + " [populated " + bms.size() + "/"
                                 + experimentBioMaterials.size() + " ]" );
             }
         }

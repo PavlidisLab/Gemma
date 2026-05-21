@@ -216,8 +216,9 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
 
         Collection<FactorValue> updatedFactorValues = new HashSet<>();
         Map<String, String> factorIdToFactorValueId = bmvo.getFactorIdToFactorValueId(); // all of them.
-        for ( String factorIdString : factorIdToFactorValueId.keySet() ) {
-            String factorValueString = factorIdToFactorValueId.get( factorIdString );
+        for ( Map.Entry<String, String> fEntry : factorIdToFactorValueId.entrySet() ) {
+            String factorIdString = fEntry.getKey();
+            String factorValueString = fEntry.getValue();
 
             assert factorIdString.matches( "factor\\d+" );
             Long factorId = Long.parseLong( factorIdString.substring( 6 ) );

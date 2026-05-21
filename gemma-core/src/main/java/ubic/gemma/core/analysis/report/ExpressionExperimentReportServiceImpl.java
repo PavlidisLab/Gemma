@@ -435,8 +435,8 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         Map<Long, Collection<AuditEvent>> result = new HashMap<>();
         Map<ExpressionExperiment, Collection<AuditEvent>> rawr = expressionExperimentService
                 .getSampleRemovalEvents( ees );
-        for ( ExpressionExperiment e : rawr.keySet() ) {
-            result.put( e.getId(), rawr.get( e ) );
+        for ( Map.Entry<ExpressionExperiment, Collection<AuditEvent>> entry : rawr.entrySet() ) {
+            result.put( entry.getKey().getId(), entry.getValue() );
         }
         return result;
     }

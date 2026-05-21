@@ -405,8 +405,9 @@ public class DesignMatrix {
         }
 
         int i = 0;
-        for ( String factorName : valuesForFactors.keySet() ) {
-            List<Object> factorValues = valuesForFactors.get( factorName );
+        for ( Map.Entry<String, List<Object>> vffEntry : valuesForFactors.entrySet() ) {
+            String factorName = vffEntry.getKey();
+            List<Object> factorValues = vffEntry.getValue();
             this.valuesForFactors.put( factorName, factorValues );
 
             if ( factorValues.get( 0 ) instanceof String && !this.levelsForFactors.containsKey( factorName ) ) {

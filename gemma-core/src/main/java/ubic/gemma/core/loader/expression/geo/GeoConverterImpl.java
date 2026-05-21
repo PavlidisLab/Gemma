@@ -319,12 +319,14 @@ public class GeoConverterImpl implements GeoConverter {
 
         String primaryTaxonName = "";
         Integer highestScore = 0;
-        for ( String taxon : taxonProbeNumberList.keySet() ) {
+        for ( Map.Entry<String, Integer> tpnEntry : taxonProbeNumberList.entrySet() ) {
+            String taxon = tpnEntry.getKey();
+            Integer count = tpnEntry.getValue();
             // filter out those probes that have no taxon set control spots. Here's that 'n/a' again, kind of
             // ugly but we see it in some arrays
-            if ( !taxon.equals( "n/a" ) && StringUtils.isNotBlank( taxon ) && taxonProbeNumberList.get( taxon ) > highestScore ) {
+            if ( !taxon.equals( "n/a" ) && StringUtils.isNotBlank( taxon ) && count > highestScore ) {
                 primaryTaxonName = taxon;
-                highestScore = taxonProbeNumberList.get( taxon );
+                highestScore = count;
             }
         }
         if ( StringUtils.isNotBlank( primaryTaxonName ) ) {
@@ -500,8 +502,8 @@ public class GeoConverterImpl implements GeoConverter {
             }
             tally.put( clazz, tally.get( clazz ) + 1 );
         }
-        for ( String clazz : tally.keySet() ) {
-            buf.append( tally.get( clazz ) ).append( " " ).append( clazz ).append( "s\n" );
+        for ( Map.Entry<String, Integer> tEntry : tally.entrySet() ) {
+            buf.append( tEntry.getValue() ).append( " " ).append( tEntry.getKey() ).append( "s\n" );
         }
 
         return buf.toString();
@@ -1773,8 +1775,9 @@ public class GeoConverterImpl implements GeoConverter {
          */
         Map<GeoPlatform, List<GeoSample>> platformSamples = DatasetCombiner.getPlatformSampleMap( geoSeries );
 
-        for ( GeoPlatform platform : platformSamples.keySet() ) {
-            List<GeoSample> samples = platformSamples.get( platform );
+        for ( Map.Entry<GeoPlatform, List<GeoSample>> psEntry : platformSamples.entrySet() ) {
+            GeoPlatform platform = psEntry.getKey();
+            List<GeoSample> samples = psEntry.getValue();
             GeoConverterImpl.log.debug( samples.size() + " samples on " + platform );
             this.convertVectorsForPlatform( geoSeries.getValues(), expExp, samples, platform );
             geoSeries.getValues().clear( platform );
@@ -2190,11 +2193,11 @@ public class GeoConverterImpl implements GeoConverter {
          */
         if ( series.getSampleCorrespondence() != null ) {
             GeoSampleCorrespondence sampleCorrespondence = series.getSampleCorrespondence().copy();
-            for ( String o : organismSampleMap.keySet() ) {
-                if ( o.equals( organism ) ) {
+            for ( Map.Entry<String, Collection<GeoSample>> osEntry : organismSampleMap.entrySet() ) {
+                if ( osEntry.getKey().equals( organism ) ) {
                     continue;
                 }
-                for ( GeoSample s : organismSampleMap.get( o ) ) {
+                for ( GeoSample s : osEntry.getValue() ) {
                     sampleCorrespondence.removeSample( s.getGeoAccession() );
                 }
             }
@@ -2483,8 +2486,9 @@ public class GeoConverterImpl implements GeoConverter {
 
             int count = 0;
             int skipped = 0;
-            for ( String designElementName : dataVectors.keySet() ) {
-                String[] dataVector = dataVectors.get( designElementName );
+            for ( Map.Entry<String, String[]> dvEntry : dataVectors.entrySet() ) {
+                String designElementName = dvEntry.getKey();
+                String[] dataVector = dvEntry.getValue();
                 if ( dataVector == null || dataVector.length == 0 ) continue;
 
                 RawExpressionDataVector vector = this.convertDesignElementDataVector( geoPlatform, expExp, bioAssayDimension, designElementName, dataVector, qt );

@@ -480,8 +480,8 @@ abstract public class AbstractMultiAssayExpressionDataMatrix<T> extends Abstract
         }
 
         if ( AbstractMultiAssayExpressionDataMatrix.log.isDebugEnabled() ) {
-            for ( BioAssay o : this.columnAssayMap.keySet() ) {
-                AbstractMultiAssayExpressionDataMatrix.log.debug( o + " " + this.columnAssayMap.get( o ) );
+            for ( Map.Entry<BioAssay, Integer> camEntry : this.columnAssayMap.entrySet() ) {
+                AbstractMultiAssayExpressionDataMatrix.log.debug( camEntry.getKey() + " " + camEntry.getValue() );
             }
         }
 

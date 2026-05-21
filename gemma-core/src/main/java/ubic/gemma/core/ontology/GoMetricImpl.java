@@ -424,9 +424,9 @@ public class GoMetricImpl implements GoMetric {
     private Map<String, Integer> getTermOccurrence( Map<Long, Collection<String>> Gene2GOMap ) {
 
         Map<String, Integer> countMap = new HashMap<>();
-        for ( Long gene : Gene2GOMap.keySet() ) {
+        for ( Collection<String> goUris : Gene2GOMap.values() ) {
 
-            for ( String uri : Gene2GOMap.get( gene ) ) {
+            for ( String uri : goUris ) {
 
                 if ( ( uri.equalsIgnoreCase( GoMetricImpl.BASE_GO_URI + "GO_0008150" ) ) || ( uri
                         .equalsIgnoreCase( GoMetricImpl.BASE_GO_URI + "GO_0003674" ) )
@@ -612,9 +612,9 @@ public class GoMetricImpl implements GoMetric {
     private Map<String, Double> createWeightMap( Map<String, Integer> GOFreq, Integer N ) {
 
         Map<String, Double> weightMap = new HashMap<>();
-        for ( String id : GOFreq.keySet() ) {
-            Double weightedGO = Math.log10( ( double ) N / GOFreq.get( id ) );
-            weightMap.put( id, weightedGO );
+        for ( Map.Entry<String, Integer> fEntry : GOFreq.entrySet() ) {
+            Double weightedGO = Math.log10( ( double ) N / fEntry.getValue() );
+            weightMap.put( fEntry.getKey(), weightedGO );
         }
         return weightMap;
     }

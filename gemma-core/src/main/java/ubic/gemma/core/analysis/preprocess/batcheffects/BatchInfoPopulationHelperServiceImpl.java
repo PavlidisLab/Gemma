@@ -380,13 +380,12 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
         }
 
         // switch to using string keys for batch identifiers, this forms the final set of batches
-        for ( FastqHeaderData fhd : batchInfos.keySet() ) {
-            String batchIdentifier = fhd.toString();
+        for ( Map.Entry<FastqHeaderData, Collection<String>> bEntry : batchInfos.entrySet() ) {
+            String batchIdentifier = bEntry.getKey().toString();
             if ( !result.containsKey( batchIdentifier ) ) {
                 result.put( batchIdentifier, new HashSet<String>() );
             }
-            Collection<String> headersInBatch = batchInfos.get( fhd );
-            result.get( batchIdentifier ).addAll( headersInBatch );
+            result.get( batchIdentifier ).addAll( bEntry.getValue() );
         }
 
         // DEBUG CODE
@@ -414,8 +413,8 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
         } else {
             //check for singleton batches
             boolean singleton = false;
-            for ( String batchid : result.keySet() ) {
-                if ( result.get( batchid ).size() == 1 ) {
+            for ( Collection<String> batchMembers : result.values() ) {
+                if ( batchMembers.size() == 1 ) {
                     singleton = true;
                 }
             }
@@ -456,8 +455,8 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
         int numBatches = batchInfos.size();
 
         boolean anyTooSmallBatches = false;
-        for ( FastqHeaderData hd : batchInfos.keySet() ) {
-            if ( batchInfos.get( hd ).size() < MINIMUM_SAMPLES_PER_RNASEQ_BATCH ) {
+        for ( Collection<String> batchMembers : batchInfos.values() ) {
+            if ( batchMembers.size() < MINIMUM_SAMPLES_PER_RNASEQ_BATCH ) {
                 anyTooSmallBatches = true;
                 break;
             }
@@ -500,7 +499,8 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
     private static Map<FastqHeaderData, Collection<String>> dropResolution( Map<FastqHeaderData, Collection<String>> batchInfos ) {
 
         Map<FastqHeaderData, Collection<String>> result = new HashMap<>();
-        for ( FastqHeaderData fhd : batchInfos.keySet() ) {
+        for ( Map.Entry<FastqHeaderData, Collection<String>> bEntry : batchInfos.entrySet() ) {
+            FastqHeaderData fhd = bEntry.getKey();
 
             FastqHeaderData updated = fhd.dropResolution();
 
@@ -514,7 +514,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
             }
 
             // reassociate the samples with the new batch info
-            result.get( updated ).addAll( batchInfos.get( fhd ) );
+            result.get( updated ).addAll( bEntry.getValue() );
             // make sure the old one is gone.
             result.remove( fhd );
         }
@@ -918,7 +918,8 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
 
             ef = this.makeFactorForBatch( ee );
 
-            for ( String batchId : descriptorsToBatch.keySet() ) {
+            for ( Map.Entry<String, Collection<T>> dEntry : descriptorsToBatch.entrySet() ) {
+                String batchId = dEntry.getKey();
                 FactorValue fv = FactorValue.Factory.newInstance();
                 fv.setIsBaseline( false ); /* we could set true for the first batch, but nobody cares. */
                 fv.setValue( batchId );
@@ -939,7 +940,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
                 fv.setCharacteristics( chars );
                 experimentService.addFactorValue( ee, fv );
 
-                for ( T d : descriptorsToBatch.get( batchId ) ) {
+                for ( T d : dEntry.getValue() ) {
                     d2fv.put( d, fv );
                 }
             }

@@ -295,8 +295,9 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
         // This won't always be present.
         double minP = 1.0;
         if ( svd.getDatePVals() != null ) {
-            for ( Integer component : svd.getDatePVals().keySet() ) {
-                Double pVal = svd.getDatePVals().get( component );
+            for ( Map.Entry<Integer, Double> dpvEntry : svd.getDatePVals().entrySet() ) {
+                Integer component = dpvEntry.getKey();
+                Double pVal = dpvEntry.getValue();
                 if ( pVal != null && pVal < minP ) {
                     details.setBatchEffectStatistics( pVal, component + 1, svd.getVariances()[component] );
                     minP = pVal;
@@ -306,8 +307,9 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
 
         // we can override the date-based p-value with the factor-based p-value if it is lower.
         // The reason to do this is it can be underpowered. The date-based one is more sensitive.
-        for ( Integer component : svd.getFactorPVals().keySet() ) {
-            Map<ExperimentalFactor, Double> cmpEffects = svd.getFactorPVals().get( component );
+        for ( Map.Entry<Integer, Map<ExperimentalFactor, Double>> fpvEntry : svd.getFactorPVals().entrySet() ) {
+            Integer component = fpvEntry.getKey();
+            Map<ExperimentalFactor, Double> cmpEffects = fpvEntry.getValue();
 
             // could use the effect size instead of the p-values (or in addition)
             //Map<Long, Double> cmpEffectSizes = svd.getFactorCorrelations().get( component );

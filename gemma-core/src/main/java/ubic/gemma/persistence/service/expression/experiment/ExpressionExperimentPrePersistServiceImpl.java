@@ -137,8 +137,8 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
             } else {
 
                 // don't forget to cache them.
-                for ( ArrayDesign ad : newprobes.keySet() ) {
-                    for ( CompositeSequence cs : newprobes.get( ad ) ) {
+                for ( Collection<CompositeSequence> probesForAd : newprobes.values() ) {
+                    for ( CompositeSequence cs : probesForAd ) {
                         cache.addToCache( cs );
                     }
                 }
@@ -211,13 +211,14 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
 
         Map<ArrayDesign, Collection<CompositeSequence>> result = new HashMap<>();
 
-        for ( ArrayDesign ad : toAdd.keySet() ) {
+        for ( Map.Entry<ArrayDesign, Collection<CompositeSequence>> taEntry : toAdd.entrySet() ) {
+            ArrayDesign ad = taEntry.getKey();
 
             assert ad.getId() != null;
             result.put( ad, new HashSet<>() );
             Collection<CompositeSequence> newprobes = new HashSet<>();
 
-            Collection<CompositeSequence> probesToAdd = toAdd.get( ad );
+            Collection<CompositeSequence> probesToAdd = taEntry.getValue();
 
             ExpressionExperimentPrePersistServiceImpl.log
                     .info( "Adding " + probesToAdd.size() + " new probes to " + ad );

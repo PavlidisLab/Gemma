@@ -58,13 +58,15 @@ public class CellXGeneAnnDataSingleCellDataLoader extends AnnDataSingleCellDataL
         Map<String, Set<Characteristic>> characteristicsByCategory = cs.stream()
                 .filter( c -> c.getCategory() != null )
                 .collect( Collectors.groupingBy( Characteristic::getCategory, Collectors.toSet() ) );
-        for ( String category : characteristicsByCategory.keySet() ) {
+        for ( Map.Entry<String, Set<Characteristic>> cbcEntry : characteristicsByCategory.entrySet() ) {
+            String category = cbcEntry.getKey();
+            Set<Characteristic> characteristicsForCategory = cbcEntry.getValue();
             if ( category.endsWith( "_ontology_term_id" ) ) {
-                if ( characteristicsByCategory.get( category ).size() > 1 ) {
+                if ( characteristicsForCategory.size() > 1 ) {
                     log.warn( "Multiple characteristics for category " + category + ", skipping merging ontology terms." );
                     continue;
                 }
-                Characteristic ontologyTerm = characteristicsByCategory.get( category ).iterator().next();
+                Characteristic ontologyTerm = characteristicsForCategory.iterator().next();
                 String labelColumn = Strings.CS.removeEnd( category, "_ontology_term_id" );
                 if ( characteristicsByCategory.containsKey( labelColumn ) ) {
                     if ( characteristicsByCategory.get( labelColumn ).size() > 1 ) {

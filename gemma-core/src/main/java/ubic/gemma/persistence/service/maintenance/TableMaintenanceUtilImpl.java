@@ -486,8 +486,9 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
 
         // check if any platform has had gene mapping update since the last GENE2CS update
         Map<ArrayDesign, AuditEvent> updatedObj = auditEventService.getLastEvents( ArrayDesign.class, ArrayDesignGeneMappingEvent.class );
-        for ( ArrayDesign a : updatedObj.keySet() ) {
-            AuditEvent ae = updatedObj.get( a );
+        for ( Map.Entry<ArrayDesign, AuditEvent> uoEntry : updatedObj.entrySet() ) {
+            ArrayDesign a = uoEntry.getKey();
+            AuditEvent ae = uoEntry.getValue();
             // not be needed any more
             if ( ae.getDate().after( status.getLastUpdate() ) ) {
                 String annotation = a + " had probe mapping done since: " + status.getLastUpdate();

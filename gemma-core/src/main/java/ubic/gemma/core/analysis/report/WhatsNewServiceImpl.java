@@ -297,8 +297,9 @@ public class WhatsNewServiceImpl implements WhatsNewService {
         Map<ExpressionExperiment, Taxon> taxa = expressionExperimentService.getTaxa( publicEEs );
 
         // invert the map.
-        for ( ExpressionExperiment ee : taxa.keySet() ) {
-            Taxon t = taxa.get( ee );
+        for ( Map.Entry<ExpressionExperiment, Taxon> entry : taxa.entrySet() ) {
+            ExpressionExperiment ee = entry.getKey();
+            Taxon t = entry.getValue();
             Collection<Long> ids;
             if ( eesPerTaxon.containsKey( t ) ) {
                 ids = eesPerTaxon.get( t );

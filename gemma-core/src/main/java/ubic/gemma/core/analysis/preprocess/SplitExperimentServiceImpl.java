@@ -275,14 +275,15 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
             }
 
             log.info( "Building vectors for " + qt2mat.size() + " quantitation types ..." );
-            for ( QuantitationType qt : qt2mat.keySet() ) {
+            for ( Map.Entry<QuantitationType, BulkExpressionDataMatrix<?>> qtEntry : qt2mat.entrySet() ) {
+                QuantitationType qt = qtEntry.getKey();
 
                 QuantitationType clonedQt = this.cloneQt( qt, split );
 
                 split.getQuantitationTypes().add( clonedQt );
 
                 // these bms are same as the ones associated with the vectors, not the clones
-                BulkExpressionDataMatrix<?> expressionDataMatrix = qt2mat.get( qt ).sliceColumns( bms, newBAD );
+                BulkExpressionDataMatrix<?> expressionDataMatrix = qtEntry.getValue().sliceColumns( bms, newBAD );
 
                 Collection<RawExpressionDataVector> rawDataVectors = BulkExpressionDataMatrixUtils.toVectors( expressionDataMatrix, RawExpressionDataVector.class );
                 for ( RawExpressionDataVector v : rawDataVectors ) {

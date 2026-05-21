@@ -37,9 +37,10 @@ public class SraRuninfoParser {
                         .add( parseRun( record ) );
             }
             List<SraExperimentPackage> packages = new ArrayList<>();
-            for ( String experiment : id2e.keySet() ) {
+            for ( Map.Entry<String, SraExperiment> e2eEntry : id2e.entrySet() ) {
+                String experiment = e2eEntry.getKey();
                 SraExperimentPackage p = new SraExperimentPackage();
-                p.setExperiment( id2e.get( experiment ) );
+                p.setExperiment( e2eEntry.getValue() );
                 p.setSubmission( id2s.get( experiment ) );
                 p.setOrganization( id2o.get( experiment ) );
                 List<SraRun> runs = id2r.get( experiment );

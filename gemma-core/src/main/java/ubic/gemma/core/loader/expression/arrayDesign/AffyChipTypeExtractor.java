@@ -106,8 +106,9 @@ public class AffyChipTypeExtractor {
      */
     private static Map<BioAssay, String> getChipTypesFromFiles( Map<BioAssay, File> bioAssays2Files ) throws IOException {
         Map<BioAssay, String> result = new HashMap<>();
-        for ( BioAssay ba : bioAssays2Files.keySet() ) {
-            File f = bioAssays2Files.get( ba );
+        for ( Map.Entry<BioAssay, File> entry : bioAssays2Files.entrySet() ) {
+            BioAssay ba = entry.getKey();
+            File f = entry.getValue();
             try ( InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( f.getAbsolutePath() ) ) {
 
                 String chiptype = extract( is );

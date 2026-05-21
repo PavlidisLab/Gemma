@@ -34,11 +34,12 @@ public class ExperimentExpressionLevelsValueObject implements Serializable {
             @Nullable String conslidationMode ) {
         this.datasetId = datasetId;
 
-        for ( Gene g : vectorsPerGene.keySet() ) {
+        for ( Map.Entry<Gene, List<DoubleVectorValueObject>> vpgEntry : vectorsPerGene.entrySet() ) {
+            Gene g = vpgEntry.getKey();
             if ( g != null ) {
                 this.geneExpressionLevels
                         .add( new GeneElementExpressionsValueObject( g.getOfficialSymbol(), g.getNcbiGeneId(),
-                                vectorsPerGene.get( g ), keepGeneNonSpecific, conslidationMode ) );
+                                vpgEntry.getValue(), keepGeneNonSpecific, conslidationMode ) );
             }
         }
     }

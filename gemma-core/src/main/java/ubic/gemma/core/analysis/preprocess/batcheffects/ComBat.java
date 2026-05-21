@@ -300,8 +300,8 @@ class ComBat<R, C> {
 
         int batchIndex = 0;
         DoubleMatrix2D bba = new DenseDoubleMatrix2D( 1, numBatches );
-        for ( String batchId : batches.keySet() ) {
-            bba.set( 0, batchIndex++, ( double ) batches.get( batchId ).size() / numSamples );
+        for ( Collection<C> batchMembers : batches.values() ) {
+            bba.set( 0, batchIndex++, ( double ) batchMembers.size() / numSamples );
         }
 
         /*
@@ -662,8 +662,8 @@ class ComBat<R, C> {
         /*
          * Make sure all batches have at least 2 samples, or else this won't work.
          */
-        for ( String batchId : batches.keySet() ) {
-            if ( batches.get( batchId ).size() < 2 ) {
+        for ( Collection<C> batchMembers : batches.values() ) {
+            if ( batchMembers.size() < 2 ) {
                 throw new IllegalArgumentException( "Batch correction not possible with less than 2 samples in any batch. Consider combining batches." );
             }
         }

@@ -779,10 +779,10 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
 
         String bestCol = "";
         int bestMatchSize = 0;
-        for ( String colName : countMatches.keySet() ) {
-            if ( countMatches.get( colName ) > bestMatchSize ) {
-                bestMatchSize = countMatches.get( colName );
-                bestCol = colName;
+        for ( Map.Entry<String, Integer> cmEntry : countMatches.entrySet() ) {
+            if ( cmEntry.getValue() > bestMatchSize ) {
+                bestMatchSize = cmEntry.getValue();
+                bestCol = cmEntry.getKey();
             }
         }
 
@@ -997,8 +997,7 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
         }
 
         Collection<GeoDataset> finishedDatasets = new HashSet<>();
-        for ( GeoPlatform platform : seenPlatforms.keySet() ) {
-            Collection<GeoDataset> datasetsForPlatform = seenPlatforms.get( platform );
+        for ( Collection<GeoDataset> datasetsForPlatform : seenPlatforms.values() ) {
             if ( datasetsForPlatform.size() > 1 ) {
                 GeoDataset combined = this.combineDatasets( datasetsForPlatform );
                 finishedDatasets.add( combined );

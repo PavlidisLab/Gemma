@@ -116,9 +116,7 @@ public class KruskalWallis {
     private static double kwStatistic( int n, Map<Integer, Collection<Integer>> groupedRanks ) {
         double scale = 12.0 / ( n * ( n + 1.0 ) );
         double sum = 0.0;
-        for ( Integer g : groupedRanks.keySet() ) {
-
-            Collection<Integer> gr = groupedRanks.get( g );
+        for ( Collection<Integer> gr : groupedRanks.values() ) {
 
             double m = gr.size();
 

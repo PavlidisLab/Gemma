@@ -107,9 +107,9 @@ public class SecurityServiceImpl implements SecurityService {
             acls = Collections.emptyMap();
         }
 
-        for ( ObjectIdentity oi : acls.keySet() ) {
-            Acl a = acls.get( oi );
-            result.put( objectIdentities.get( oi ), a != null && SecurityUtil.isPrivate( a ) );
+        for ( Map.Entry<ObjectIdentity, Acl> aclEntry : acls.entrySet() ) {
+            Acl a = aclEntry.getValue();
+            result.put( objectIdentities.get( aclEntry.getKey() ), a != null && SecurityUtil.isPrivate( a ) );
         }
         return result;
     }
@@ -129,9 +129,9 @@ public class SecurityServiceImpl implements SecurityService {
             acls = Collections.emptyMap();
         }
 
-        for ( ObjectIdentity oi : acls.keySet() ) {
-            Acl a = acls.get( oi );
-            result.put( objectIdentities.get( oi ), a != null && SecurityUtil.isShared( a ) );
+        for ( Map.Entry<ObjectIdentity, Acl> aclEntry : acls.entrySet() ) {
+            Acl a = aclEntry.getValue();
+            result.put( objectIdentities.get( aclEntry.getKey() ), a != null && SecurityUtil.isShared( a ) );
         }
         return result;
     }
@@ -369,11 +369,11 @@ public class SecurityServiceImpl implements SecurityService {
             acls = Collections.emptyMap();
         }
 
-        for ( ObjectIdentity oi : acls.keySet() ) {
-            Acl a = acls.get( oi );
+        for ( Map.Entry<ObjectIdentity, Acl> aclEntry : acls.entrySet() ) {
+            Acl a = aclEntry.getValue();
             if ( a != null ) {
                 Sid owner = a.getOwner();
-                result.put( objectIdentities.get( oi ), owner );
+                result.put( objectIdentities.get( aclEntry.getKey() ), owner );
             }
         }
         return result;
@@ -820,12 +820,13 @@ public class SecurityServiceImpl implements SecurityService {
         } catch ( NotFoundException e ) {
             acls = Collections.emptyMap();
         }
-        for ( ObjectIdentity oi : acls.keySet() ) {
-            Acl a = acls.get( oi );
+        for ( Map.Entry<ObjectIdentity, Acl> aclEntry : acls.entrySet() ) {
+            Acl a = aclEntry.getValue();
+            T entity = objectIdentities.get( aclEntry.getKey() );
             try {
-                result.put( objectIdentities.get( oi ), a != null && a.isGranted( requiredPermissions, getGroupSids( groupName ), true ) );
+                result.put( entity, a != null && a.isGranted( requiredPermissions, getGroupSids( groupName ), true ) );
             } catch ( NotFoundException ignore ) {
-                result.put( objectIdentities.get( oi ), false );
+                result.put( entity, false );
             }
         }
         return result;
@@ -862,9 +863,9 @@ public class SecurityServiceImpl implements SecurityService {
     }
 
     private <T extends Securable> void populateGroupPermissions( Map<T, Collection<String>> result, String groupName, Map<T, Boolean> groupHasPermission ) {
-        for ( T s : groupHasPermission.keySet() ) {
-            if ( groupHasPermission.get( s ) ) {
-                result.computeIfAbsent( s, k -> new HashSet<>() ).add( groupName );
+        for ( Map.Entry<T, Boolean> ghpEntry : groupHasPermission.entrySet() ) {
+            if ( ghpEntry.getValue() ) {
+                result.computeIfAbsent( ghpEntry.getKey(), k -> new HashSet<>() ).add( groupName );
             }
         }
     }
