@@ -74,7 +74,21 @@ public class ExternalUrlReachabilityTest {
     private static final int CONNECT_TIMEOUT_MS = 5000;
     private static final int READ_TIMEOUT_MS = 5000;
 
-    private record Endpoint(String label, String category, String url, boolean ftp) {}
+    /**
+     * NCBI's documented eutils rate cap is 3 req/s without an API key, 10 req/s with one. Probing
+     * every eutils endpoint in parallel via ForkJoinPool blows past that and the server returns
+     * HTTP 429. We serialize the eutils probes and sleep this many ms between them to stay under
+     * the anonymous cap with a safety margin.
+     */
+    private static final long EUTILS_INTERVAL_MS = 400;
+
+    private record Endpoint(String label, String category, String url, boolean ftp) {
+
+        /** True for NCBI eutils endpoints — these must be probed serially under the 3 req/s cap. */
+        boolean isEutils() {
+            return url.contains( "eutils.ncbi.nlm.nih.gov" );
+        }
+    }
 
     /**
      * Curated inventory of external endpoints Gemma depends on. Not exhaustive — covers the
@@ -194,16 +208,42 @@ public class ExternalUrlReachabilityTest {
     @Test
     void probeAll() throws IOException {
         Instant when = Instant.now();
-        ForkJoinPool pool = new ForkJoinPool( Math.min( 16, ENDPOINTS.size() ) );
-        List<ProbeResult> results;
+
+        // Split into eutils (must be serialized to stay under NCBI's 3 req/s anonymous cap) and
+        // everything else (safe to probe in parallel).
+        List<Endpoint> eutils = ENDPOINTS.stream()
+                .filter( Endpoint::isEutils )
+                .collect( Collectors.toList() );
+        List<Endpoint> rest = ENDPOINTS.stream()
+                .filter( e -> !e.isEutils() )
+                .collect( Collectors.toList() );
+
+        List<ProbeResult> results = new ArrayList<>( ENDPOINTS.size() );
+
+        // Parallel pass over everything that doesn't rate-limit us.
+        ForkJoinPool pool = new ForkJoinPool( Math.min( 16, Math.max( 1, rest.size() ) ) );
         try {
-            results = pool.submit( () ->
-                    ENDPOINTS.parallelStream()
+            List<ProbeResult> parallelResults = pool.submit( () ->
+                    rest.parallelStream()
                             .map( ExternalUrlReachabilityTest::probe )
                             .collect( Collectors.toList() )
             ).join();
+            results.addAll( parallelResults );
         } finally {
             pool.shutdown();
+        }
+
+        // Serial pass over NCBI eutils with a sleep between calls so we honour the 3 req/s cap.
+        for ( int i = 0; i < eutils.size(); i++ ) {
+            if ( i > 0 ) {
+                try {
+                    Thread.sleep( EUTILS_INTERVAL_MS );
+                } catch ( InterruptedException ie ) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+            }
+            results.add( probe( eutils.get( i ) ) );
         }
 
         writeJsonReport( when, results );
