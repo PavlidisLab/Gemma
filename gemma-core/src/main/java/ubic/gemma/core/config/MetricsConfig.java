@@ -30,6 +30,7 @@ import org.springframework.core.task.TaskExecutor;
 import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.core.metrics.GenericMeterRegistryConfigurer;
 import ubic.gemma.core.metrics.binder.GenericTaskExecutorMetrics;
+import ubic.gemma.core.metrics.binder.VirtualThreadExecutorMetrics;
 import ubic.gemma.core.metrics.binder.database.HikariCPMetrics;
 import ubic.gemma.core.metrics.binder.jpa.Hibernate4Metrics;
 import ubic.gemma.core.metrics.binder.jpa.Hibernate4QueryMetrics;
@@ -75,7 +76,8 @@ public class MetricsConfig {
             SessionFactory sessionFactory,
             DataSource dataSource,
             TaskExecutor taskExecutor,
-            TaskRunningService taskRunningService ) {
+            TaskRunningService taskRunningService,
+            List<VirtualThreadExecutorMetrics> vtExecutorMetrics ) {
         List<MeterBinder> binders = new ArrayList<>();
         // basic JVM metrics
         binders.add( new ClassLoaderMetrics() );
@@ -92,6 +94,10 @@ public class MetricsConfig {
         GenericTaskExecutorMetrics localTasksMetrics = new GenericTaskExecutorMetrics( taskExecutor );
         localTasksMetrics.setPoolName( "gemmaLocalTasks" );
         binders.add( localTasksMetrics );
+        // virtual-thread-per-task executor metrics (JDK 21 migration). Each VT executor that
+        // can't be observed via GenericExecutorMetrics (ThreadPoolExecutor-only) registers its
+        // own VirtualThreadExecutorMetrics bean next to the executor; they are aggregated here.
+        binders.addAll( vtExecutorMetrics );
         // job-submission service is itself a MeterBinder
         binders.add( taskRunningService );
         return new GenericMeterRegistryConfigurer( meterRegistry, binders );

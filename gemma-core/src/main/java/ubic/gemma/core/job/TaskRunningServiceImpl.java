@@ -28,6 +28,7 @@ import org.springframework.security.concurrent.DelegatingSecurityContextCallable
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import ubic.gemma.core.job.notification.TaskPostProcessing;
+import ubic.gemma.core.metrics.binder.VirtualThreadExecutorMetrics;
 import ubic.gemma.core.util.concurrent.Executors;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -53,6 +54,7 @@ public class TaskRunningServiceImpl implements TaskRunningService, InitializingB
     private TaskPostProcessing taskPostProcessing;
 
     private ExecutorService executorService;
+    private final VirtualThreadExecutorMetrics metrics = new VirtualThreadExecutorMetrics( "taskRunningService" );
     private final Map<String, SubmittedTask> submittedTasks = new ConcurrentHashMap<>();
 
     @Override
@@ -61,7 +63,7 @@ public class TaskRunningServiceImpl implements TaskRunningService, InitializingB
         // gemma.backgroundTasks.numberOfThreads platform threads is gone — VT submissions are not
         // bounded by a thread count. Background tasks here are largely I/O / DB-bound and benefit
         // from unbounded VT concurrency.
-        executorService = Executors.newVirtualThreadPerTaskExecutorIfAvailable();
+        executorService = metrics.wrap( Executors.newVirtualThreadPerTaskExecutorIfAvailable() );
     }
 
     @Override
@@ -154,9 +156,9 @@ public class TaskRunningServiceImpl implements TaskRunningService, InitializingB
 
     @Override
     public void bindTo( MeterRegistry meterRegistry ) {
-        // TODO(metrics): no Micrometer binder for per-task VT executors yet — see GenericExecutorMetrics.java:34
-        // The previous binder relied on the executor being a ThreadPoolExecutor; the virtual-thread-per-task
-        // executor produced by `Executors.newVirtualThreadPerTaskExecutor()` is not one, so we skip metrics
-        // registration here rather than fake-bind.
+        // Delegate to the VT-aware binder created in afterPropertiesSet(); it wraps the underlying
+        // VT executor with submission/execution/duration instrumentation. The previous GenericExecutorMetrics
+        // path only supported ThreadPoolExecutor; VirtualThreadExecutorMetrics handles any ExecutorService.
+        metrics.bindTo( meterRegistry );
     }
 }
