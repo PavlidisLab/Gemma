@@ -52,9 +52,17 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
     @Override
     public Collection<ProcessedExpressionDataVector> getProcessedVectors( ExpressionExperiment ee ) {
         StopWatch timer = StopWatch.createStarted();
+        // join fetch designElement + its arrayDesign + biologicalCharacteristic to avoid an N+1
+        // storm: arrayDesign is mapped lazy="false" fetch="select" (one extra SELECT per row),
+        // and biologicalCharacteristic is a lazy proxy that the matrix-builder filter
+        // (RowsWithSequencesFilter) triggers per row via a null check.
+        // See PERF_PROBE_REPORT_ROUND3 Category A1.
         //noinspection unchecked
         List<ProcessedExpressionDataVector> result = this.getSessionFactory().getCurrentSession().createQuery(
                         "select dedv from ProcessedExpressionDataVector dedv "
+                                + "join fetch dedv.designElement cs "
+                                + "join fetch cs.arrayDesign "
+                                + "left join fetch cs.biologicalCharacteristic "
                                 + "where dedv.expressionExperiment = :ee" )
                 .setParameter( "ee", ee )
                 .list();
@@ -67,6 +75,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
                         "select dedv from ProcessedExpressionDataVector dedv "
+                                + "join fetch dedv.designElement cs "
+                                + "join fetch cs.arrayDesign "
                                 + "where dedv.expressionExperiment = :ee and dedv.bioAssayDimension = :dimension" )
                 .setParameter( "ee", ee )
                 .setParameter( "dimension", dimension )
@@ -83,10 +93,13 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
 
         StopWatch timer = StopWatch.createStarted();
 
-        // Do not do in clause for experiments, as it can't use the indices
+        // Do not do in clause for experiments, as it can't use the indices.
+        // join fetch designElement + arrayDesign: see getProcessedVectors(ee) for the N+1 rationale.
         Query queryObject = this.getSessionFactory().getCurrentSession().createQuery(
                         "select dedv from ProcessedExpressionDataVector dedv "
-                                + "where dedv.designElement.id in ( :cs )"
+                                + "join fetch dedv.designElement cs "
+                                + "join fetch cs.arrayDesign "
+                                + "where cs.id in ( :cs )"
                                 + ( ees != null ? " and dedv.expressionExperiment in :ees" : "" ) )
                 .setParameterList( "cs", optimizeParameterList( cs2gene.keySet() ) );
         List<ProcessedExpressionDataVector> results;
@@ -137,9 +150,12 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
             // cannot fix this here, because we're read-only.
         }
 
+        // join fetch designElement + arrayDesign: see getProcessedVectors(ee) for the N+1 rationale.
         //noinspection unchecked
         List<ProcessedExpressionDataVector> result = this.getSessionFactory().getCurrentSession()
-                .createQuery( " from ProcessedExpressionDataVector dedv "
+                .createQuery( "select dedv from ProcessedExpressionDataVector dedv "
+                        + "join fetch dedv.designElement cs "
+                        + "join fetch cs.arrayDesign "
                         + "where dedv.expressionExperiment = :ee and dedv.rankByMean > 0.5 order by RAND()" ) // order by rand() works?
                 .setParameter( "ee", ee )
                 .setMaxResults( limit )
@@ -149,7 +165,9 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
         if ( result.isEmpty() ) {
             //noinspection unchecked
             result = this.getSessionFactory().getCurrentSession()
-                    .createQuery( " from ProcessedExpressionDataVector dedv "
+                    .createQuery( "select dedv from ProcessedExpressionDataVector dedv "
+                            + "join fetch dedv.designElement cs "
+                            + "join fetch cs.arrayDesign "
                             + "where dedv.expressionExperiment = :ee order by RAND()" )
                     .setParameter( "ee", ee )
                     .setMaxResults( limit )
