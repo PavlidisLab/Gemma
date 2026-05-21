@@ -13,6 +13,7 @@ package ubic.gemma.core.config;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.FilterType;
+import org.springframework.context.annotation.ImportResource;
 import ubic.gemma.core.context.BeanNameGenerator;
 import ubic.gemma.core.context.TestComponent;
 
@@ -43,5 +44,13 @@ import ubic.gemma.core.context.TestComponent;
         excludeFilters = @ComponentScan.Filter(
                 type = FilterType.ANNOTATION,
                 classes = TestComponent.class ) )
+// gsec security XML imported at THIS level (not deferred to SecurityConfig's own
+// @ImportResource) so the gsec beans register alongside the component scan, before
+// BeanPostProcessor-driven eager creation (e.g. taskExecutorThreadContextInheritPostProcessor)
+// triggers ACL stack instantiation. SecurityConfig is reached too late in the load
+// order to satisfy those early autowires. See the RoleHierarchy regression that
+// commit 7d39e00731 introduced (and a parallel chain through AccessDecisionManager,
+// the ACL voters, etc).
+@ImportResource("classpath*:ubic/gemma/core/security/applicationContext-*.xml")
 public class ComponentScanConfig {
 }
