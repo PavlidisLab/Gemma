@@ -12,7 +12,9 @@ import ubic.gemma.core.util.test.BaseDatabaseTest5;
 import ubic.gemma.model.analysis.expression.diff.ContrastResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
+import ubic.gemma.model.analysis.expression.diff.Direction;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.diff.HitListSize;
 import ubic.gemma.model.analysis.expression.diff.PvalueDistribution;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -20,6 +22,8 @@ import ubic.gemma.model.genome.Taxon;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -175,9 +179,88 @@ public class AnalysisResultSetCacheStalenessTest extends BaseDatabaseTest5 {
                 "Contrasts bag must reflect the original three contrasts after flush+clear+reload" );
     }
 
+    /**
+     * Cross-session-reload pin for the third leg of the {@code 02c87a91ed} fix:
+     * the {@code hitListSizes} child bag on {@link ExpressionAnalysisResultSet}.
+     * <p>
+     * Pre-fix, the parent set carried {@code <cache usage="read-only"/>} on a
+     * {@code mutable="false"} bag inside a {@code mutable="false"} parent — the
+     * same shape as the {@code results} bag. The fix dropped the bag-level
+     * cache directive; this test pins that the bag survives flush+clear+reload
+     * with its persisted contents intact, so any regression that re-adds the
+     * read-only cache directive (or otherwise breaks bag reload semantics) is
+     * caught here in addition to the {@code results}-bag guard above.
+     * <p>
+     * {@code HitListSize} rows are {@code mutable="false"} and the bag is
+     * unidirectional with no setter back-reference, so the cross-session-ADD
+     * pattern used by {@link #testResultSetReflectsLaterAddedResultAcrossSessions()}
+     * does not apply (Hibernate refuses immutable-collection mutation). We
+     * therefore exercise the same shape used by
+     * {@link #testContrastsSurviveFlushClearReload()}: persist N hit-list-size
+     * rows together with the parent, flush+clear, and assert a fresh-session
+     * load reads back all N rows from the database (not from a stale empty
+     * cache snapshot).
+     */
+    @Test
+    public void testHitListSizesSurviveFlushClearReload() {
+        DifferentialExpressionAnalysis analysis = createAnalysisWithHitListSizes( 1, 1, 0, 3 );
+        ExpressionAnalysisResultSet resultSet = analysis.getResultSets().iterator().next();
+        Long resultSetId = resultSet.getId();
+        assertNotNull( resultSetId );
+        assertEquals( 3, resultSet.getHitListSizes().size() );
+
+        flushAndClear();
+
+        ExpressionAnalysisResultSet reloaded = sessionFactory.getCurrentSession()
+                .get( ExpressionAnalysisResultSet.class, resultSetId );
+        assertNotNull( reloaded );
+        assertEquals( 3, reloaded.getHitListSizes().size(),
+                "hitListSizes bag must reflect the original three rows after flush+clear+reload; "
+                        + "a regression that re-adds <cache usage=\"read-only\"/> on the bag or breaks "
+                        + "the cascade='all' eager load would trip this assertion" );
+
+        // Sanity: every persisted direction is observable.
+        Set<Direction> observedDirections = reloaded.getHitListSizes().stream()
+                .map( HitListSize::getDirection )
+                .collect( Collectors.toSet() );
+        assertTrue( observedDirections.containsAll(
+                        Set.of( Direction.UP, Direction.DOWN, Direction.EITHER ) ),
+                "All three Direction values must be observable in the reloaded bag" );
+    }
+
     private void flushAndClear() {
         sessionFactory.getCurrentSession().flush();
         sessionFactory.getCurrentSession().clear();
+    }
+
+    private DifferentialExpressionAnalysis createAnalysisWithHitListSizes( int numResultSets, int numResults,
+            int numContrasts, int numHitListSizes ) {
+        DifferentialExpressionAnalysis analysis = new DifferentialExpressionAnalysis();
+        List<CompositeSequence> probes = createPlatform( Math.max( numResults, 1 ) );
+        Direction[] directions = { Direction.UP, Direction.DOWN, Direction.EITHER };
+        for ( int j = 0; j < numResultSets; j++ ) {
+            ExpressionAnalysisResultSet resultSet = new ExpressionAnalysisResultSet();
+            resultSet.setAnalysis( analysis );
+            PvalueDistribution pvalueDist = new PvalueDistribution();
+            pvalueDist.setNumBins( 2 );
+            pvalueDist.setBinCounts( new double[2] );
+            for ( int i = 0; i < numResults; i++ ) {
+                DifferentialExpressionAnalysisResult der = new DifferentialExpressionAnalysisResult();
+                der.setProbe( probes.get( i ) );
+                der.setResultSet( resultSet );
+                for ( int k = 0; k < numContrasts; k++ ) {
+                    der.getContrasts().add( ContrastResult.Factory.newInstance() );
+                }
+                resultSet.getResults().add( der );
+            }
+            for ( int h = 0; h < numHitListSizes; h++ ) {
+                resultSet.getHitListSizes().add( HitListSize.Factory.newInstance(
+                        0.01, h + 1, directions[h % directions.length], h + 1 ) );
+            }
+            resultSet.setPvalueDistribution( pvalueDist );
+            analysis.getResultSets().add( resultSet );
+        }
+        return differentialExpressionAnalysisDao.create( analysis );
     }
 
     private DifferentialExpressionAnalysis createAnalysis( int numResultSets, int numResults, int numContrasts ) {
