@@ -97,28 +97,17 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
     }
 
     /**
-     * If the filters or sort refer to one of the one-to-many relations, multiple rows will be returned per datasets, so
-     * the query has to use a "distinct" clause make pagination work properly.
+     * If the sort refers to one of the one-to-many relations, multiple rows will be returned per entity, so the query
+     * has to use a {@code group by} clause to keep pagination correct.
      * <p>
-     * Using "distinct" otherwise has a steep performance penalty when combined with "order by".
+     * Returns the object alias to group by, or {@code null} when no grouping is needed.
      * <p>
-     * Note that non-admin users always need a group by because of the jointure on ACL entries.
-     */
-    protected String distinctIfNecessary() {
-        if ( AclQueryUtils.requiresCountDistinct() ) {
-            return "distinct ";
-        } else {
-            return "";
-        }
-    }
-
-    /**
-     * Similar logic to {@link #distinctIfNecessary()}, but using a group by since it's more efficient. It does
-     * not work for the counting queries, however.
+     * Note: post the ACL EXISTS rewrite (Session 2), the ACL filter no longer multiplies rows, so the only remaining
+     * trigger is sort-driven joins on one-to-many associations.
      */
     @Nullable
     protected String groupByIfNecessary( @Nullable Sort sort, String... oneToManyAliases ) {
-        if ( FiltersUtils.containsAnyAlias( null, sort, oneToManyAliases ) || AclQueryUtils.requiresGroupBy() ) {
+        if ( FiltersUtils.containsAnyAlias( null, sort, oneToManyAliases ) ) {
             return objectAlias;
         } else {
             return null;
