@@ -1,9 +1,10 @@
 -- Initialize the database with some scraps of data. See also init-entities.sql and init-acls.sql
 
 -- all of these are used.
-insert into AUDIT_TRAIL VALUES (1);
-insert into AUDIT_TRAIL VALUES (2);
-insert into AUDIT_TRAIL VALUES (3);
+-- Explicit column list (the AuditTrail.lastEvent denormalisation added LAST_EVENT_FK; column-less insert is no longer single-column).
+insert into AUDIT_TRAIL (ID) VALUES (1);
+insert into AUDIT_TRAIL (ID) VALUES (2);
+insert into AUDIT_TRAIL (ID) VALUES (3);
 
 set @n:=now();
 
