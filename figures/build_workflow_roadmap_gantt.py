@@ -238,7 +238,7 @@ TASKS: list[GanttTask] = [
               w(date(2026, 6, 4)), w(date(2026, 6, 25)),
               0.0, "planned", "UI",
               note="gemma-ui browser app"),
-    GanttTask("Gene-page rework (legacy → new shape)",
+    GanttTask("Gene-page rework (legacy -> new shape)",
               w(date(2026, 6, 25)), w(date(2026, 8, 6)),
               0.0, "deferred", "UI",
               note="Paul: 'heavily redo' — design pending"),
