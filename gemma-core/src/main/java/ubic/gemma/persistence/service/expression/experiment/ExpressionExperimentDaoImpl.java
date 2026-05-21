@@ -177,6 +177,15 @@ public class ExpressionExperimentDaoImpl
     @Autowired
     private ArrayDesignDao arrayDesignDao;
 
+    /**
+     * Maintains the {@code SINGLE_CELL_DIMENSION_EXPERIMENT} link table that backs the migration
+     * of the 30+ scan-SCEDV-group-by-dim queries to single-row link-table lookups
+     * (PERF_PROBE_REPORT_ROUND4 finding B1). Field-injected for the same reason as
+     * {@link #arrayDesignDao}.
+     */
+    @Autowired
+    private SingleCellDimensionExperimentDao singleCellDimensionExperimentDao;
+
     @Autowired
     public ExpressionExperimentDaoImpl( SessionFactory sessionFactory ) {
         super( ExpressionExperimentDao.OBJECT_ALIAS, ExpressionExperiment.class, sessionFactory );
@@ -3078,6 +3087,10 @@ public class ExpressionExperimentDaoImpl
     @Override
     public void deleteSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension ) {
         log.info( "Removing " + singleCellDimension + " from " + ee + "..." );
+        // PERF_PROBE_REPORT_ROUND4 B1: clear any link-table row that references this dimension
+        // BEFORE deleting the dimension itself, otherwise the FK constraint on
+        // SINGLE_CELL_DIMENSION_EXPERIMENT.SINGLE_CELL_DIMENSION_FK rejects the delete.
+        singleCellDimensionExperimentDao.removeBySingleCellDimension( singleCellDimension );
         getSessionFactory().getCurrentSession().delete( singleCellDimension );
     }
 
@@ -3887,6 +3900,9 @@ public class ExpressionExperimentDaoImpl
                 .setParameter( "ee", ee )
                 .setParameter( "qt", quantitationType )
                 .executeUpdate();
+        // PERF_PROBE_REPORT_ROUND4 B1: maintain the SC dimension-experiment link table. After the
+        // bulk-delete above no SC vectors remain for (ee, qt), so the link row is now stale.
+        singleCellDimensionExperimentDao.removeByEEAndQt( ee, quantitationType );
         // Evict the now-stale vectors from the PersistenceContext: their DB rows are gone, but the
         // managed instances still hold many-to-one refs to the QT and SCD that the caller is about
         // to delete. Without this, HB6's ACTION_CHECK_ON_FLUSH cascade walk hits the dangling refs.
@@ -3927,6 +3943,10 @@ public class ExpressionExperimentDaoImpl
                 .createQuery( "delete from SingleCellExpressionDataVector v where v.expressionExperiment = :ee" )
                 .setParameter( "ee", ee )
                 .executeUpdate();
+        // PERF_PROBE_REPORT_ROUND4 B1: maintain the SC dimension-experiment link table. After the
+        // EE-wide bulk-delete above no SC vectors remain for the EE, so every link row for this EE
+        // is now stale.
+        singleCellDimensionExperimentDao.removeByEE( ee );
         for ( SingleCellExpressionDataVector v : vectorsToEvict ) {
             getSessionFactory().getCurrentSession().evict( v );
         }
