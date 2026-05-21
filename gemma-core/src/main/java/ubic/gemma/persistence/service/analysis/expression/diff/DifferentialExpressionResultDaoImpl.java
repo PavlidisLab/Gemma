@@ -150,9 +150,24 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         probeInitializationTimer.stop();
 
         StopWatch contrastInitializationTimer = StopWatch.createStarted();
-        for ( Object[] row : result ) {
-            DifferentialExpressionAnalysisResult r = ( DifferentialExpressionAnalysisResult ) row[0];
-            Hibernate.initialize( r.getContrasts() );
+        // Batched fetch-join keyed on dear IDs: collapses ~230 per-collection
+        // SELECTs (one per default_batch_fetch_size=128 chunk) into a handful
+        // of left-join-fetch queries. The query result is discarded; its side
+        // effect is to hydrate each dear.contrasts set in the Hibernate
+        // session, so subsequent r.getContrasts() calls hit the session cache.
+        // Kept as a separate query rather than folded into the main HQL
+        // because the main HQL uses `group by dears` (one dear per resultSet),
+        // which is awkward to combine with a left-join-fetch on contrasts.
+        if ( !result.isEmpty() ) {
+            Set<Long> dearIds = new HashSet<>( result.size() );
+            for ( Object[] row : result ) {
+                dearIds.add( ( ( DifferentialExpressionAnalysisResult ) row[0] ).getId() );
+            }
+            Query contrastQuery = getSessionFactory().getCurrentSession()
+                    .createQuery( "select distinct dear from DifferentialExpressionAnalysisResult dear "
+                            + "left join fetch dear.contrasts "
+                            + "where dear.id in :dearIds" );
+            QueryUtils.listByBatch( contrastQuery, "dearIds", dearIds, 2048 );
         }
         contrastInitializationTimer.stop();
 
