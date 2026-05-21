@@ -3508,16 +3508,14 @@ public class ExpressionExperimentDaoImpl
     @Override
     public List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment expressionExperiment, QuantitationType qt ) {
         // PERF_PROBE_REPORT_ROUND4 B1: dimension lookup via link table (was: scan SCEDV).
-        // NOTE: preserving the pre-existing behaviour where the `qt` argument is IGNORED in the
-        // WHERE clause — the prior HQL filtered on ee only despite the method taking a qt arg.
-        // Flagged for orchestrator review; not silently fixed in this perf-migration commit.
         //noinspection unchecked
         return getSessionFactory().getCurrentSession()
                 .createQuery( "select distinct clc from SingleCellDimensionExperiment e "
                         + "join e.singleCellDimension scd "
                         + "join scd.cellLevelCharacteristics clc join clc.characteristics c "
-                        + "where e.expressionExperiment = :ee" )
+                        + "where e.expressionExperiment = :ee and e.quantitationType = :qt" )
                 .setParameter( "ee", expressionExperiment )
+                .setParameter( "qt", qt )
                 .list();
     }
 
