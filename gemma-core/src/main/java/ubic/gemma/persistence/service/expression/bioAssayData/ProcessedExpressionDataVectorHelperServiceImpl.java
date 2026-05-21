@@ -148,6 +148,12 @@ class ProcessedExpressionDataVectorHelperServiceImpl
     @Override
     @Transactional
     public void updateRanks( ExpressionExperiment ee ) {
+        // The caller may pass a detached EE whose processedExpressionDataVectors snapshot pre-dates
+        // the freshly persisted vectors (this is the path used by createProcessedDataVectors, which
+        // re-fetches a managed EE inside the DAO via ensureEeInSession and adds vectors to it -- but
+        // never propagates that managed instance back to the caller). Reload here so we read the
+        // collection from the session-managed entity rather than from the stale detached snapshot.
+        ee = eeService.reload( ee );
         Set<ProcessedExpressionDataVector> processedVectors = ee.getProcessedExpressionDataVectors();
         StopWatch timer = new StopWatch();
         timer.start();
