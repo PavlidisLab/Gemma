@@ -1572,8 +1572,14 @@
 		     junit-platform-* at 1.12.2; an older pin here (e.g. 5.11.4) splits the JUnit jars
 		     across versions and breaks the surefire fork with NoClassDefFoundError. -->
 		<junit.jupiter.version>5.12.2</junit.jupiter.version>
-		<!-- this ensures that -DexcludedGroups works properly -->
-		<excludedGroups/>
+		<!--
+		Default surefire excluded tag set. "network" excludes
+		ExternalUrlReachabilityTest (and any other @Tag("network") probe)
+		from the day-to-day mvn verify pass. To run a network-tagged test
+		explicitly, override with -DexcludedGroups= (empty) — which clears
+		this default — or with a different tag list.
+		-->
+		<excludedGroups>network</excludedGroups>
 		<skipJavadoc>false</skipJavadoc>
 		<skipWebpack>false</skipWebpack>
 		<maven.javadoc.skip>${skipJavadoc}</maven.javadoc.skip>
