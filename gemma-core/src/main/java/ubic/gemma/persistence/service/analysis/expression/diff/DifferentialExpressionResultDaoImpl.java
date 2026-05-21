@@ -141,35 +141,30 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         retrieveResultsTimer.stop();
         List<DifferentialExpressionAnalysisResult> rs = new ArrayList<>( result.size() );
         int warns = 0;
-        // using separate loops ensure that hibernate can batch-initialize without interleaving queries
-        StopWatch probeInitializationTimer = StopWatch.createStarted();
-        for ( Object[] row : result ) {
-            DifferentialExpressionAnalysisResult r = ( DifferentialExpressionAnalysisResult ) row[0];
-            Hibernate.initialize( r.getProbe() );
-        }
-        probeInitializationTimer.stop();
-
-        StopWatch contrastInitializationTimer = StopWatch.createStarted();
-        // Batched fetch-join keyed on dear IDs: collapses ~230 per-collection
-        // SELECTs (one per default_batch_fetch_size=128 chunk) into a handful
-        // of left-join-fetch queries. The query result is discarded; its side
-        // effect is to hydrate each dear.contrasts set in the Hibernate
-        // session, so subsequent r.getContrasts() calls hit the session cache.
+        // Batched fetch-join keyed on dear IDs: collapses two prior N+1 chains
+        // (probe many-to-one, contrasts one-to-many) into a single batched
+        // query per chunk. The query result is discarded; its side effect is
+        // to hydrate dear.probe AND dear.contrasts in the Hibernate session,
+        // so subsequent r.getProbe()/r.getContrasts() calls hit the session
+        // cache. Cartesian blow-up is modest (~2-3 contrasts × 1 probe per
+        // dear) and `distinct` collapses duplicates.
         // Kept as a separate query rather than folded into the main HQL
         // because the main HQL uses `group by dears` (one dear per resultSet),
-        // which is awkward to combine with a left-join-fetch on contrasts.
+        // which is awkward to combine with left-join-fetch on child rows.
+        StopWatch probeAndContrastInitializationTimer = StopWatch.createStarted();
         if ( !result.isEmpty() ) {
             Set<Long> dearIds = new HashSet<>( result.size() );
             for ( Object[] row : result ) {
                 dearIds.add( ( ( DifferentialExpressionAnalysisResult ) row[0] ).getId() );
             }
-            Query contrastQuery = getSessionFactory().getCurrentSession()
+            Query hydrateQuery = getSessionFactory().getCurrentSession()
                     .createQuery( "select distinct dear from DifferentialExpressionAnalysisResult dear "
+                            + "left join fetch dear.probe "
                             + "left join fetch dear.contrasts "
                             + "where dear.id in :dearIds" );
-            QueryUtils.listByBatch( contrastQuery, "dearIds", dearIds, 2048 );
+            QueryUtils.listByBatch( hydrateQuery, "dearIds", dearIds, 2048 );
         }
-        contrastInitializationTimer.stop();
+        probeAndContrastInitializationTimer.stop();
 
         StopWatch factorInitializationTimer = StopWatch.createStarted();
         if ( initializeFactorValues ) {
@@ -239,13 +234,12 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         // because of batching, results must be resorted
         rs.sort( Comparator.comparing( DifferentialExpressionAnalysisResult::getCorrectedPvalue, Comparator.nullsLast( Comparator.naturalOrder() ) ) );
         if ( timer.getTime() > 1000 ) {
-            log.warn( String.format( "Retrieving %d diffex results for %s took %d ms (retrieving probes from genes: %d ms, retrieving subsets: %d ms, retrieving results: %d ms, initializing contrasts: %d ms, initializing probes: %d ms, initializing factors: %d ms)",
+            log.warn( String.format( "Retrieving %d diffex results for %s took %d ms (retrieving probes from genes: %d ms, retrieving subsets: %d ms, retrieving results: %d ms, initializing probes+contrasts: %d ms, initializing factors: %d ms)",
                     rs.size(), gene, timer.getTime(),
                     retrieveProbesTimer.getTime(),
                     retrieveBioAssayIdsTimer.getTime(),
                     retrieveResultsTimer.getTime(),
-                    contrastInitializationTimer.getTime(),
-                    probeInitializationTimer.getTime(),
+                    probeAndContrastInitializationTimer.getTime(),
                     factorInitializationTimer.getTime() ) );
         }
         return rs;
