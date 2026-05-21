@@ -131,7 +131,13 @@ public class AuditTrailServiceImpl extends AbstractService<AuditTrail> implement
         if ( ( auditable instanceof Curatable ) && updateCurationDetails ) {
             curatableDao.updateCurationDetailsFromAuditEvent( ( Curatable ) auditable, auditEvent );
         }
-        trail.getEvents().add( auditEvent );
+        // AuditTrail.addEvent appends to the bag AND repoints the denormalised
+        // AuditTrail.lastEvent pointer under (date desc, id desc) ordering —
+        // see the entity-level docs + V6 migration. Whole-corpus "last event of
+        // type T" queries (dashboard report services on the ExpressionExperiment
+        // and ArrayDesign corpora) JOIN through this FK to skip a 1.5 M-row scan
+        // of AUDIT_EVENT.
+        trail.addEvent( auditEvent );
         // event will be created in cascade
         auditTrailDao.update( trail );
         auditLogger.log( auditable, auditEvent );

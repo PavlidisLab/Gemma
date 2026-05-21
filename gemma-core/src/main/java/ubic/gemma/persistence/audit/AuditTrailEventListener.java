@@ -235,7 +235,13 @@ public class AuditTrailEventListener implements PersistEventListener, PostInsert
             return;
         }
         AuditEvent ev = AuditEvent.Factory.newInstance( new Date(), action, null, null, user, null );
-        auditable.getAuditTrail().getEvents().add( ev );
+        // AuditTrail#addEvent appends to the events bag AND repoints the
+        // denormalised lastEvent pointer (perf hotspot B fix; see V6 migration
+        // + AuditEventDaoImpl#getLastEvents rewrite). The cascade insert that
+        // runs on flush assigns ev.id strictly greater than any sibling, so by
+        // the (date desc, id desc) ordering this append wins; addEvent handles
+        // the pre-flush id-null edge case explicitly.
+        auditable.getAuditTrail().addEvent( ev );
         auditLogger.log( auditable, ev );
     }
 
