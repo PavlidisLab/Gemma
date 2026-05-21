@@ -65,9 +65,11 @@ public class Executors {
      * Detection is via reflection on {@code java.util.concurrent.Executors#newVirtualThreadPerTaskExecutor},
      * which compiles cleanly on JDK 17 because the symbol is resolved at runtime, not compile time.
      * <p>
-     * <strong>No callsite has been migrated to this factory yet.</strong> Migration should happen
-     * once the platform is on JDK 21, on a per-callsite basis, after auditing for {@code synchronized}
-     * blocks that hold the carrier thread (a known virtual-thread pitfall; prefer
+     * Active callsites (JDK 21 migration): TaskRunningServiceImpl background-tasks executor,
+     * ServiceBeansConfig#expressionDataFileTaskExecutor, OntologyConfig#ontologyTaskExecutor,
+     * plus the earlier I/O-bound sites already on this factory. Further migration should
+     * continue per-callsite after auditing for {@code synchronized} blocks that hold the
+     * carrier thread (a known virtual-thread pitfall; prefer
      * {@code java.util.concurrent.locks.ReentrantLock} in long-pinned regions).
      *
      * @return a {@link ExecutorService} backed by virtual threads on JDK 21+, otherwise by a cached

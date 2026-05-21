@@ -14,6 +14,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.core.task.AsyncTaskExecutor;
+import org.springframework.scheduling.concurrent.ConcurrentTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import ubic.gemma.persistence.util.EntityUrlBuilder;
 
@@ -61,17 +63,24 @@ public class ServiceBeansConfig {
     }
 
     /**
-     * Executor for generating data files (CEL / count matrices / TSVs). Bounded queue;
-     * separate from the local-tasks executor so heavy I/O jobs can't starve short-lived ones.
+     * Executor for generating data files (CEL / count matrices / TSVs).
+     * <p>
+     * JDK 21 migration: backed by a virtual-thread-per-task executor wrapped through Spring's
+     * {@link ConcurrentTaskExecutor} so it still implements
+     * {@link AsyncTaskExecutor} (callers {@code execute}/{@code submit} via that interface).
+     * <p>
+     * Behavioural change vs. the previous {@link ThreadPoolTaskExecutor}: submission never blocks
+     * and never throws {@code TaskRejectedException}, because there is no bounded queue and no
+     * fixed worker pool. Concurrency is bounded only by the number of in-flight VTs the JVM is
+     * willing to mount. The {@code gemma.expressionDataFileTasks.corePoolSize} and
+     * {@code .queueCapacity} properties no longer constrain this executor. The two consumers
+     * (DifferentialExpressionAnalyzerServiceImpl, ExpressionDataFileServiceImpl) both treat
+     * {@code TaskRejectedException} as a soft failure ("archive will be rebuilt on next read"),
+     * so dropping queue-based backpressure is safe.
      */
     @Bean(name = "expressionDataFileTaskExecutor")
-    public ThreadPoolTaskExecutor expressionDataFileTaskExecutor(
-            @Value("${gemma.expressionDataFileTasks.corePoolSize}") int corePoolSize,
-            @Value("${gemma.expressionDataFileTasks.queueCapacity}") int queueCapacity ) {
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setThreadNamePrefix( "gemma-expression-data-file-tasks-thread-" );
-        executor.setCorePoolSize( corePoolSize );
-        executor.setQueueCapacity( queueCapacity );
-        return executor;
+    public AsyncTaskExecutor expressionDataFileTaskExecutor() {
+        return new ConcurrentTaskExecutor(
+                ubic.gemma.core.util.concurrent.Executors.newVirtualThreadPerTaskExecutorIfAvailable() );
     }
 }

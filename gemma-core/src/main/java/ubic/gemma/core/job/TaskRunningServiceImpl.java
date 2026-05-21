@@ -24,14 +24,11 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.concurrent.DelegatingSecurityContextCallable;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import ubic.gemma.core.job.notification.TaskPostProcessing;
-import ubic.gemma.core.metrics.binder.GenericExecutorMetrics;
 import ubic.gemma.core.util.concurrent.Executors;
-import ubic.gemma.core.util.concurrent.SimpleThreadFactory;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
@@ -55,15 +52,16 @@ public class TaskRunningServiceImpl implements TaskRunningService, InitializingB
     @Autowired
     private TaskPostProcessing taskPostProcessing;
 
-    @Value("${gemma.backgroundTasks.numberOfThreads}")
-    private int numberOfThreads;
-
     private ExecutorService executorService;
     private final Map<String, SubmittedTask> submittedTasks = new ConcurrentHashMap<>();
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        executorService = Executors.newFixedThreadPool( numberOfThreads, new SimpleThreadFactory( "gemma-background-tasks-thread-" ) );
+        // JDK 21 virtual-thread-per-task executor. The previous fixed pool of
+        // gemma.backgroundTasks.numberOfThreads platform threads is gone — VT submissions are not
+        // bounded by a thread count. Background tasks here are largely I/O / DB-bound and benefit
+        // from unbounded VT concurrency.
+        executorService = Executors.newVirtualThreadPerTaskExecutorIfAvailable();
     }
 
     @Override
@@ -156,7 +154,9 @@ public class TaskRunningServiceImpl implements TaskRunningService, InitializingB
 
     @Override
     public void bindTo( MeterRegistry meterRegistry ) {
-        new GenericExecutorMetrics( executorService, "gemmaBackgroundTasks" )
-                .bindTo( meterRegistry );
+        // TODO(metrics): no Micrometer binder for per-task VT executors yet — see GenericExecutorMetrics.java:34
+        // The previous binder relied on the executor being a ThreadPoolExecutor; the virtual-thread-per-task
+        // executor produced by `Executors.newVirtualThreadPerTaskExecutor()` is not one, so we skip metrics
+        // registration here rather than fake-bind.
     }
 }
