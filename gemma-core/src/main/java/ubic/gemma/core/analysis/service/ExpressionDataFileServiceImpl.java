@@ -18,6 +18,8 @@
  */
 package ubic.gemma.core.analysis.service;
 
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.commons.io.file.PathUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -591,19 +593,55 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         return writeMexSingleCellExpressionDataInternal( ee, samples, qt, scaleType, useEnsemblIds, stream );
     }
 
+    /**
+     * Default fetch size used by the OutputStream MEX overload, which has no caller-supplied size.
+     * Matches the CLI's default (see {@code SingleCellDataWriterCli#fetchSize}).
+     */
+    private static final int DEFAULT_MEX_STREAM_FETCH_SIZE = 30;
+
     private int writeMexSingleCellExpressionDataInternal( ExpressionExperiment ee, @Nullable List<BioAssay> samples, QuantitationType qt, @Nullable ScaleType scaleType, boolean useEnsemblIds, OutputStream stream ) throws IOException {
-        Map<CompositeSequence, Set<Gene>> cs2gene = new HashMap<>();
-        Collection<SingleCellExpressionDataVector> vectors = helperService.getSingleCellVectors( ee, samples, qt, cs2gene );
-        log.info( "Will write MEX data for " + qt + " to a stream " + ( useEnsemblIds ? " using Ensembl IDs" : "" ) + "." );
-        if ( scaleType != null && qt.getScale() != scaleType ) {
-            log.info( "Data will be converted from " + qt.getScale() + " to " + scaleType + "." );
+        // MEX-to-stream cannot avoid building a single TAR archive over the OutputStream, but the matrix
+        // itself does NOT have to be held in JVM heap: stage per-sample MEX files to a temp dir using the
+        // streaming Path writer (one vector at a time), then re-pack the dir into a TAR over the stream.
+        Path tempDir = Files.createTempDirectory( "gemma-mex-stream-" );
+        // writeMexSingleCellExpressionDataInternal(...,Path) requires the destination NOT to exist
+        Files.delete( tempDir );
+        try {
+            int written = writeMexSingleCellExpressionDataInternal( ee, samples, qt, scaleType, useEnsemblIds,
+                    DEFAULT_MEX_STREAM_FETCH_SIZE, false, tempDir, false, null );
+            tarDirectoryToStream( tempDir, stream );
+            return written;
+        } finally {
+            if ( Files.exists( tempDir ) ) {
+                PathUtils.deleteDirectory( tempDir );
+            }
         }
-        SingleCellExpressionDataDoubleMatrix matrix = new SingleCellExpressionDataDoubleMatrix( vectors );
-        MexMatrixWriter writer = new MexMatrixWriter();
-        writer.setScaleType( scaleType );
-        writer.setUseEnsemblIds( useEnsemblIds );
-        writer.setExecutorService( taskExecutor );
-        return writer.write( matrix, cs2gene, stream );
+    }
+
+    /**
+     * TAR a per-sample MEX directory tree to an output stream, mirroring the layout
+     * {@link MexMatrixWriter#write(SingleCellExpressionDataMatrix, java.util.Map, OutputStream)} produces.
+     */
+    private void tarDirectoryToStream( Path dir, OutputStream stream ) throws IOException {
+        try ( TarArchiveOutputStream aos = new TarArchiveOutputStream( stream ) ) {
+            try ( Stream<Path> sampleDirs = Files.list( dir ).sorted() ) {
+                for ( Path sampleDir : ( Iterable<Path> ) sampleDirs::iterator ) {
+                    if ( !Files.isDirectory( sampleDir ) ) {
+                        continue;
+                    }
+                    try ( Stream<Path> files = Files.list( sampleDir ).sorted() ) {
+                        for ( Path file : ( Iterable<Path> ) files::iterator ) {
+                            String entryName = sampleDir.getFileName().toString() + "/" + file.getFileName().toString();
+                            TarArchiveEntry entry = new TarArchiveEntry( entryName );
+                            entry.setSize( Files.size( file ) );
+                            aos.putArchiveEntry( entry );
+                            Files.copy( file, aos );
+                            aos.closeArchiveEntry();
+                        }
+                    }
+                }
+            }
+        }
     }
 
     @Override
