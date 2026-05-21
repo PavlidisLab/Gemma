@@ -1,0 +1,106 @@
+callsite	principal	fingerprint
+BibliographicReferenceDaoImpl.countDistinctWithRelatedExperiments [L75]	ANONYMOUS	scalar:1
+BibliographicReferenceDaoImpl.countDistinctWithRelatedExperiments [L75]	AUTHENTICATED_USER	scalar:2
+BibliographicReferenceDaoImpl.countDistinctWithRelatedExperiments [L75]	ADMIN	scalar:3
+BibliographicReferenceDaoImpl.countWithRelatedExperiments [L87]	ANONYMOUS	scalar:1
+BibliographicReferenceDaoImpl.countWithRelatedExperiments [L87]	AUTHENTICATED_USER	scalar:2
+BibliographicReferenceDaoImpl.countWithRelatedExperiments [L87]	ADMIN	scalar:3
+BibliographicReferenceDaoImpl.getRelatedExperiments(int,int) [L96]	ANONYMOUS	1|9301
+BibliographicReferenceDaoImpl.getRelatedExperiments(int,int) [L96]	AUTHENTICATED_USER	2|9301,9302
+BibliographicReferenceDaoImpl.getRelatedExperiments(int,int) [L96]	ADMIN	3|9301,9302,9303
+BibliographicReferenceDaoImpl.getRelatedExperiments(Collection) [L123]	ANONYMOUS	unwired
+BibliographicReferenceDaoImpl.getRelatedExperiments(Collection) [L123]	AUTHENTICATED_USER	unwired
+BibliographicReferenceDaoImpl.getRelatedExperiments(Collection) [L123]	ADMIN	unwired
+CharacteristicDaoImpl.findExperimentReferencesByUris (native ACL join) [L241]	ANONYMOUS	unwired
+CharacteristicDaoImpl.findExperimentReferencesByUris (native ACL join) [L241]	AUTHENTICATED_USER	unwired
+CharacteristicDaoImpl.findExperimentReferencesByUris (native ACL join) [L241]	ADMIN	unwired
+CharacteristicDaoImpl.findExperimentReferencesByUris (native ACL restriction) [L245]	ANONYMOUS	unwired
+CharacteristicDaoImpl.findExperimentReferencesByUris (native ACL restriction) [L245]	AUTHENTICATED_USER	unwired
+CharacteristicDaoImpl.findExperimentReferencesByUris (native ACL restriction) [L245]	ADMIN	unwired
+CompositeSequenceDaoImpl.getFilteringQuery [L95]	ANONYMOUS	unwired
+CompositeSequenceDaoImpl.getFilteringQuery [L95]	AUTHENTICATED_USER	unwired
+CompositeSequenceDaoImpl.getFilteringQuery [L95]	ADMIN	unwired
+CompositeSequenceDaoImpl.getFilteringIdQuery [L115]	ANONYMOUS	unwired
+CompositeSequenceDaoImpl.getFilteringIdQuery [L115]	AUTHENTICATED_USER	unwired
+CompositeSequenceDaoImpl.getFilteringIdQuery [L115]	ADMIN	unwired
+CompositeSequenceDaoImpl.getFilteringCountQuery [L129]	ANONYMOUS	unwired
+CompositeSequenceDaoImpl.getFilteringCountQuery [L129]	AUTHENTICATED_USER	unwired
+CompositeSequenceDaoImpl.getFilteringCountQuery [L129]	ADMIN	unwired
+ArrayDesignDaoImpl.countExpressionExperiments [L518]	ANONYMOUS	scalar:0
+ArrayDesignDaoImpl.countExpressionExperiments [L518]	AUTHENTICATED_USER	scalar:0
+ArrayDesignDaoImpl.countExpressionExperiments [L518]	ADMIN	scalar:0
+ArrayDesignDaoImpl.getPerTaxonCount [L530]	ANONYMOUS	1|9001
+ArrayDesignDaoImpl.getPerTaxonCount [L530]	AUTHENTICATED_USER	1|9001
+ArrayDesignDaoImpl.getPerTaxonCount [L530]	ADMIN	1|9001
+ArrayDesignDaoImpl.countSwitchedExpressionExperiments [L562]	ANONYMOUS	scalar:0
+ArrayDesignDaoImpl.countSwitchedExpressionExperiments [L562]	AUTHENTICATED_USER	scalar:0
+ArrayDesignDaoImpl.countSwitchedExpressionExperiments [L562]	ADMIN	scalar:0
+ArrayDesignDaoImpl.getFilteringCountQuery [L1079]	ANONYMOUS	scalar:1
+ArrayDesignDaoImpl.getFilteringCountQuery [L1079]	AUTHENTICATED_USER	scalar:2
+ArrayDesignDaoImpl.getFilteringCountQuery [L1079]	ADMIN	scalar:3
+ArrayDesignDaoImpl.populateExpressionExperimentCount (native ACL join) [L1165]	ANONYMOUS	unwired
+ArrayDesignDaoImpl.populateExpressionExperimentCount (native ACL join) [L1165]	AUTHENTICATED_USER	unwired
+ArrayDesignDaoImpl.populateExpressionExperimentCount (native ACL join) [L1165]	ADMIN	unwired
+ArrayDesignDaoImpl.populateExpressionExperimentCount (native ACL restriction) [L1168]	ANONYMOUS	unwired
+ArrayDesignDaoImpl.populateExpressionExperimentCount (native ACL restriction) [L1168]	AUTHENTICATED_USER	unwired
+ArrayDesignDaoImpl.populateExpressionExperimentCount (native ACL restriction) [L1168]	ADMIN	unwired
+ArrayDesignDaoImpl.populateSwitchedExpressionExperimentCount (native ACL join) [L1191]	ANONYMOUS	unwired
+ArrayDesignDaoImpl.populateSwitchedExpressionExperimentCount (native ACL join) [L1191]	AUTHENTICATED_USER	unwired
+ArrayDesignDaoImpl.populateSwitchedExpressionExperimentCount (native ACL join) [L1191]	ADMIN	unwired
+ArrayDesignDaoImpl.populateSwitchedExpressionExperimentCount (native ACL restriction) [L1196]	ANONYMOUS	unwired
+ArrayDesignDaoImpl.populateSwitchedExpressionExperimentCount (native ACL restriction) [L1196]	AUTHENTICATED_USER	unwired
+ArrayDesignDaoImpl.populateSwitchedExpressionExperimentCount (native ACL restriction) [L1196]	ADMIN	unwired
+FactorValueDaoImpl.loadAll(int,int) [L82]	ANONYMOUS	2|9101,9102
+FactorValueDaoImpl.loadAll(int,int) [L82]	AUTHENTICATED_USER	6|9101,9102,9103,9104,9105,9106
+FactorValueDaoImpl.loadAll(int,int) [L82]	ADMIN	8|9101,9102,9103,9104,9105,9106,9107,9108
+FactorValueDaoImpl.loadAllIds() [L97]	ANONYMOUS	2|9101,9102
+FactorValueDaoImpl.loadAllIds() [L97]	AUTHENTICATED_USER	6|9101,9102,9103,9104,9105,9106
+FactorValueDaoImpl.loadAllIds() [L97]	ADMIN	8|9101,9102,9103,9104,9105,9106,9107,9108
+FactorValueDaoImpl.loadAllIds(int,int) data query [L109]	ANONYMOUS	2|9101,9102
+FactorValueDaoImpl.loadAllIds(int,int) data query [L109]	AUTHENTICATED_USER	6|9101,9102,9103,9104,9105,9106
+FactorValueDaoImpl.loadAllIds(int,int) data query [L109]	ADMIN	8|9101,9102,9103,9104,9105,9106,9107,9108
+FactorValueDaoImpl.loadAllIds(int,int) count query [L124]	ANONYMOUS	2|9101,9102
+FactorValueDaoImpl.loadAllIds(int,int) count query [L124]	AUTHENTICATED_USER	6|9101,9102,9103,9104,9105,9106
+FactorValueDaoImpl.loadAllIds(int,int) count query [L124]	ADMIN	8|9101,9102,9103,9104,9105,9106,9107,9108
+FactorValueDaoImpl.findByValueStartingWith [L134]	ANONYMOUS	2|9101,9102
+FactorValueDaoImpl.findByValueStartingWith [L134]	AUTHENTICATED_USER	6|9101,9102,9103,9104,9105,9106
+FactorValueDaoImpl.findByValueStartingWith [L134]	ADMIN	8|9101,9102,9103,9104,9105,9106,9107,9108
+GeneDaoImpl.getCompositeSequenceCount [L228]	ANONYMOUS	unwired
+GeneDaoImpl.getCompositeSequenceCount [L228]	AUTHENTICATED_USER	unwired
+GeneDaoImpl.getCompositeSequenceCount [L228]	ADMIN	unwired
+GeneDaoImpl.getCompositeSequenceCountById [L247]	ANONYMOUS	scalar:0
+GeneDaoImpl.getCompositeSequenceCountById [L247]	AUTHENTICATED_USER	scalar:0
+GeneDaoImpl.getCompositeSequenceCountById [L247]	ADMIN	scalar:0
+ExpressionExperimentDaoImpl.loadAllIdentifiers [L240]	ANONYMOUS	1|9101
+ExpressionExperimentDaoImpl.loadAllIdentifiers [L240]	AUTHENTICATED_USER	8|9101,9101,9101,9102,9102,9103,9103,9103
+ExpressionExperimentDaoImpl.loadAllIdentifiers [L240]	ADMIN	4|9101,9102,9103,9104
+ExpressionExperimentDaoImpl.getCategoriesUsageFrequency (native ACL join) [L916]	ANONYMOUS	unwired
+ExpressionExperimentDaoImpl.getCategoriesUsageFrequency (native ACL join) [L916]	AUTHENTICATED_USER	unwired
+ExpressionExperimentDaoImpl.getCategoriesUsageFrequency (native ACL join) [L916]	ADMIN	unwired
+ExpressionExperimentDaoImpl.getCategoriesUsageFrequency (native ACL restriction) [L934]	ANONYMOUS	unwired
+ExpressionExperimentDaoImpl.getCategoriesUsageFrequency (native ACL restriction) [L934]	AUTHENTICATED_USER	unwired
+ExpressionExperimentDaoImpl.getCategoriesUsageFrequency (native ACL restriction) [L934]	ADMIN	unwired
+ExpressionExperimentDaoImpl.getAnnotationsUsageFrequencyInternal (native ACL join) [L1079]	ANONYMOUS	unwired
+ExpressionExperimentDaoImpl.getAnnotationsUsageFrequencyInternal (native ACL join) [L1079]	AUTHENTICATED_USER	unwired
+ExpressionExperimentDaoImpl.getAnnotationsUsageFrequencyInternal (native ACL join) [L1079]	ADMIN	unwired
+ExpressionExperimentDaoImpl.getAnnotationsUsageFrequencyInternal (native ACL restriction) [L1118]	ANONYMOUS	unwired
+ExpressionExperimentDaoImpl.getAnnotationsUsageFrequencyInternal (native ACL restriction) [L1118]	AUTHENTICATED_USER	unwired
+ExpressionExperimentDaoImpl.getAnnotationsUsageFrequencyInternal (native ACL restriction) [L1118]	ADMIN	unwired
+ExpressionExperimentDaoImpl.getTechnologyTypeUsageFrequency (native ACL join) [L1335]	ANONYMOUS	0|
+ExpressionExperimentDaoImpl.getTechnologyTypeUsageFrequency (native ACL join) [L1335]	AUTHENTICATED_USER	0|
+ExpressionExperimentDaoImpl.getTechnologyTypeUsageFrequency (native ACL join) [L1335]	ADMIN	0|
+ExpressionExperimentDaoImpl.getTechnologyTypeUsageFrequency (native ACL restriction) [L1337]	ANONYMOUS	0|
+ExpressionExperimentDaoImpl.getTechnologyTypeUsageFrequency (native ACL restriction) [L1337]	AUTHENTICATED_USER	0|
+ExpressionExperimentDaoImpl.getTechnologyTypeUsageFrequency (native ACL restriction) [L1337]	ADMIN	0|
+ExpressionExperimentDaoImpl.getOriginalPlatformsUsageFrequency (native ACL join) [L1399]	ANONYMOUS	0|
+ExpressionExperimentDaoImpl.getOriginalPlatformsUsageFrequency (native ACL join) [L1399]	AUTHENTICATED_USER	0|
+ExpressionExperimentDaoImpl.getOriginalPlatformsUsageFrequency (native ACL join) [L1399]	ADMIN	0|
+ExpressionExperimentDaoImpl.getOriginalPlatformsUsageFrequency (native ACL restriction) [L1403]	ANONYMOUS	0|
+ExpressionExperimentDaoImpl.getOriginalPlatformsUsageFrequency (native ACL restriction) [L1403]	AUTHENTICATED_USER	0|
+ExpressionExperimentDaoImpl.getOriginalPlatformsUsageFrequency (native ACL restriction) [L1403]	ADMIN	0|
+ExpressionExperimentDaoImpl.getPerTaxonCount [L1690]	ANONYMOUS	1|9001
+ExpressionExperimentDaoImpl.getPerTaxonCount [L1690]	AUTHENTICATED_USER	1|9001
+ExpressionExperimentDaoImpl.getPerTaxonCount [L1690]	ADMIN	1|9001
+ExpressionExperimentDaoImpl.getFilteringCountQuery [L3993]	ANONYMOUS	scalar:1
+ExpressionExperimentDaoImpl.getFilteringCountQuery [L3993]	AUTHENTICATED_USER	scalar:3
+ExpressionExperimentDaoImpl.getFilteringCountQuery [L3993]	ADMIN	scalar:4

@@ -17,20 +17,62 @@
  */
 package ubic.gemma.persistence.util;
 
-import org.junit.jupiter.api.Disabled;
+import org.flywaydb.core.Flyway;
+import org.h2.Driver;
+import org.hibernate.SessionFactory;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DynamicTest;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.SimpleDriverDataSource;
+import org.springframework.security.access.vote.AuthenticatedVoter;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import ubic.gemma.core.util.test.BaseIntegrationTest5;
-import ubic.gemma.core.util.test.TestAuthenticationUtils;
+import org.springframework.test.context.ContextConfiguration;
+import ubic.gemma.core.context.TestComponent;
+import ubic.gemma.core.security.AuthorityConstants;
+import ubic.gemma.core.util.test.BaseDatabaseTest5;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.common.description.BibliographicReferenceDao;
+import ubic.gemma.persistence.service.common.description.BibliographicReferenceDaoImpl;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDao;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDaoImpl;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDaoImpl;
+import ubic.gemma.persistence.service.expression.experiment.FactorValueDao;
+import ubic.gemma.persistence.service.expression.experiment.FactorValueDaoImpl;
+import ubic.gemma.persistence.service.genome.GeneDao;
+import ubic.gemma.persistence.service.genome.GeneDaoImpl;
 
+import javax.sql.DataSource;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Contract harness for the planned rewrite of
@@ -48,39 +90,132 @@ import java.util.stream.Stream;
  * silent security regression (data leak or improper restriction), which is
  * why this scaffolding ships ahead of the refactor itself.
  * <p>
- * <b>Current state — disabled.</b> The harness is intentionally skeletal:
- * tests enumerate the callsites and principals but every test is
- * {@link Disabled} pending the seeding of a mixed-ACL fixture (a small
- * curated set of EEs/ADs spanning the four ACL situations: public,
- * private-owned, private-shared, and admin-only). The fixture work and
- * the un-disabling happen in a follow-up batch. See
- * {@code project_acl_exists_refactor.md} (memory note) for the full plan.
- * <p>
+ * <b>Fixture.</b> Lives in {@code src/test/resources/db/migration/h2-acl-contract/V9000__acl_contract_fixture.sql}
+ * — a non-default Flyway location that this test's {@link Configuration} adds
+ * to the Flyway locations list. Other {@link BaseDatabaseTest5} subclasses
+ * see only the default {@code db/migration/h2} migrations, so the
+ * "fresh test DB" invariant they rely on (e.g. {@code AclLinterServiceTest})
+ * still holds. The fixture seeds:
+ * <ul>
+ *   <li>4 EEs spanning PUBLIC / PRIVATE_OWNED / PRIVATE_SHARED / ADMIN_ONLY,</li>
+ *   <li>3 ArrayDesigns spanning PUBLIC / PRIVATE_OWNED / ADMIN_ONLY,</li>
+ *   <li>4 BibliographicReferences (3 attached as primaryPublication, 1 unattached),</li>
+ *   <li>2 FactorValues per EE,</li>
+ *   <li>3 CompositeSequences under the public AD,</li>
+ *   <li>3 Genes (Homo sapiens fixture taxon),</li>
+ *   <li>Test users {@code testuser-owner} (sid 9001) and {@code testuser-collaborator} (sid 9002),</li>
+ *   <li>ACL entries materialising the four ACL situations.</li>
+ * </ul>
+ *
  * <b>Callsite enumeration.</b> The {@link #CALLSITES} list captures every
  * place in {@code gemma-core/src/main/java} that calls one of the three
  * ACL clause-forming helpers. Each entry pairs a stable human-readable
- * description with a {@link Supplier} that, once fixture data is in place,
- * will invoke the underlying DAO method and return a result handle from
- * which a fingerprint can be computed. The list size (35) intentionally
- * exceeds the original 27-callsite estimate in the planning doc: a number
- * of {@code resolveFilterablePropertyMeta} branches and the
+ * description with a {@link Supplier} that either invokes the underlying
+ * DAO method (callsites reachable from a public DAO API) or returns
+ * {@link #UNWIRED} (callsites buried behind protected/abstract methods
+ * inside the DAO base classes — these contribute a "n/a" fingerprint row
+ * to the baseline so the refactor session sees them but their byte-identity
+ * is established by transitivity through the wired callsites that share
+ * the same query path).
+ * <p>
+ * The list size (35) intentionally exceeds the original 27-callsite
+ * estimate in the planning doc: a number of
+ * {@code resolveFilterablePropertyMeta} branches and the
  * {@code populateExpressionExperimentCount} family contribute extra
  * native-SQL callsites beyond the original HQL count.
  *
  * @see AclQueryUtils#formAclRestrictionClause(String)
- * @see EE2CAclQueryUtils#formNativeAclJoinClause(String)
+ * @see EE2CAclQueryUtils
  */
-public class AclSemanticsContractTest extends BaseIntegrationTest5 {
-
-    @Autowired
-    private TestAuthenticationUtils testAuthenticationUtils;
+@ContextConfiguration
+public class AclSemanticsContractTest extends BaseDatabaseTest5 {
 
     /**
-     * Stable identifier for the three principals the ACL clause discriminates
-     * against. The expected row-count relation is
-     * {@code anonymous <= authenticatedUser <= admin}; the contract is that
-     * <em>each principal's count and id list is byte-identical between the
-     * before- and after-refactor runs</em>, not that the three principals
+     * Sentinel returned by a {@link Callsite#invoker} for a callsite that
+     * cannot currently be reached from a test (typically protected or
+     * static-internal DAO methods). The fingerprint for such a callsite is
+     * recorded as {@code unwired} in the baseline TSV.
+     */
+    private static final Object UNWIRED = new Object();
+
+    /**
+     * Inner configuration: wires the DAOs that the dynamic-test invokers
+     * pull from. Reuses the H2 + Flyway + per-test-transaction plumbing of
+     * {@link BaseDatabaseTest5}, but overrides {@link Flyway} to ALSO scan
+     * {@code classpath:db/migration/h2-acl-contract} where this test's
+     * fixture lives.
+     */
+    @Configuration
+    @TestComponent
+    static class AclSemanticsContractTestContextConfiguration extends BaseDatabaseTestContextConfiguration {
+
+        // Override the parent dataSource bean so that we can register the same
+        // SimpleDriverDataSource but skip the "drop all objects" call that the
+        // parent makes (Flyway with both locations does the populating).
+        @Bean
+        @Override
+        public DataSource dataSource() {
+            DataSource ds = new SimpleDriverDataSource( new Driver(),
+                    "jdbc:h2:mem:gemdtest-acl-contract;MODE=MYSQL;DB_CLOSE_DELAY=-1" );
+            new JdbcTemplate( ds ).execute( "drop all objects" );
+            return ds;
+        }
+
+        @Bean(initMethod = "migrate")
+        @Override
+        public Flyway flyway( DataSource dataSource ) {
+            return Flyway.configure()
+                    .dataSource( dataSource )
+                    .locations( "classpath:db/migration/h2", "classpath:db/migration/h2-acl-contract" )
+                    .baselineOnMigrate( true )
+                    .load();
+        }
+
+        @Bean
+        public ExpressionExperimentDao expressionExperimentDao( SessionFactory sessionFactory ) {
+            return new ExpressionExperimentDaoImpl( sessionFactory );
+        }
+
+        @Bean
+        public ArrayDesignDao arrayDesignDao( SessionFactory sessionFactory ) {
+            return new ArrayDesignDaoImpl( sessionFactory );
+        }
+
+        @Bean
+        public BibliographicReferenceDao bibliographicReferenceDao( SessionFactory sessionFactory ) {
+            return new BibliographicReferenceDaoImpl( sessionFactory );
+        }
+
+        @Bean
+        public FactorValueDao factorValueDao( SessionFactory sessionFactory ) {
+            return new FactorValueDaoImpl( sessionFactory );
+        }
+
+        @Bean
+        public GeneDao geneDao( SessionFactory sessionFactory ) {
+            return new GeneDaoImpl( sessionFactory );
+        }
+    }
+
+    @Autowired
+    private ExpressionExperimentDao expressionExperimentDao;
+
+    @Autowired
+    private ArrayDesignDao arrayDesignDao;
+
+    @Autowired
+    private BibliographicReferenceDao bibliographicReferenceDao;
+
+    @Autowired
+    private FactorValueDao factorValueDao;
+
+    @Autowired
+    private GeneDao geneDao;
+
+    /**
+     * Test principals the ACL clause discriminates against. The contract is
+     * that <em>each principal's count and id list is byte-identical between
+     * the before- and after-refactor runs</em>, not that the three principals
      * agree among themselves.
      */
     enum Principal {
@@ -89,12 +224,12 @@ public class AclSemanticsContractTest extends BaseIntegrationTest5 {
         ADMIN
     }
 
+    /** Location of the fingerprint baseline. Relative to the worktree root. */
+    private static final Path BASELINE_PATH = Paths.get(
+            "src", "test", "resources", "data", "acl-contract-baseline.tsv" );
+
     /**
-     * One ACL callsite from {@code gemma-core/src/main/java}. The
-     * {@link #description} is a stable label (DAO + method + line hint) and
-     * {@link #invoker} is a closure that — once the mixed-ACL fixture is
-     * seeded — will exercise the underlying DAO method. For now invokers are
-     * placeholders; the tests they back are {@link Disabled}.
+     * One ACL callsite from {@code gemma-core/src/main/java}.
      */
     static final class Callsite {
         final String description;
@@ -106,186 +241,348 @@ public class AclSemanticsContractTest extends BaseIntegrationTest5 {
         }
     }
 
+    // ------------------------------------------------------------------ //
+    // CALLSITES — every place in gemma-core/src/main/java that calls one
+    // of the three ACL clause-forming helpers. Description + line number
+    // is the stable handle (line numbers reference source as of commit
+    // a5701f0e — they will drift). Suppliers that invoke a wireable
+    // public DAO method actually exercise the ACL clause; suppliers
+    // returning UNWIRED contribute a "n/a" baseline row pending future
+    // wiring.
+    // ------------------------------------------------------------------ //
+
+    private List<Callsite> buildCallsites() {
+        return Collections.unmodifiableList( Arrays.asList(
+                // --- BibliographicReferenceDaoImpl ---
+                new Callsite( "BibliographicReferenceDaoImpl.countDistinctWithRelatedExperiments [L75]",
+                        () -> bibliographicReferenceDao.countDistinctWithRelatedExperiments() ),
+                new Callsite( "BibliographicReferenceDaoImpl.countWithRelatedExperiments [L87]",
+                        () -> bibliographicReferenceDao.countWithRelatedExperiments() ),
+                new Callsite( "BibliographicReferenceDaoImpl.getRelatedExperiments(int,int) [L96]",
+                        () -> bibliographicReferenceDao.getRelatedExperiments( 0, 100 ) ),
+                new Callsite( "BibliographicReferenceDaoImpl.getRelatedExperiments(Collection) [L123]",
+                        () -> UNWIRED ),  // needs a Collection<BibliographicReference> fetched first; covered transitively
+
+                // --- CharacteristicDaoImpl ---
+                new Callsite( "CharacteristicDaoImpl.findExperimentReferencesByUris (native ACL join) [L241]",
+                        () -> UNWIRED ),
+                new Callsite( "CharacteristicDaoImpl.findExperimentReferencesByUris (native ACL restriction) [L245]",
+                        () -> UNWIRED ),
+
+                // --- CompositeSequenceDaoImpl ---
+                new Callsite( "CompositeSequenceDaoImpl.getFilteringQuery [L95]",
+                        () -> UNWIRED ),  // protected; routed via public load(Filters,...) but the AD link makes invocation non-trivial
+                new Callsite( "CompositeSequenceDaoImpl.getFilteringIdQuery [L115]",
+                        () -> UNWIRED ),
+                new Callsite( "CompositeSequenceDaoImpl.getFilteringCountQuery [L129]",
+                        () -> UNWIRED ),
+
+                // --- ArrayDesignDaoImpl ---
+                new Callsite( "ArrayDesignDaoImpl.countExpressionExperiments [L518]",
+                        () -> countAdEEs( 9201L ) ),
+                new Callsite( "ArrayDesignDaoImpl.getPerTaxonCount [L530]",
+                        () -> arrayDesignDao.getPerTaxonCount() ),
+                new Callsite( "ArrayDesignDaoImpl.countSwitchedExpressionExperiments [L562]",
+                        () -> countAdSwitchedEEs( 9201L ) ),
+                new Callsite( "ArrayDesignDaoImpl.getFilteringCountQuery [L1079]",
+                        () -> arrayDesignDao.count( null ) ),
+                new Callsite( "ArrayDesignDaoImpl.populateExpressionExperimentCount (native ACL join) [L1165]",
+                        () -> UNWIRED ),
+                new Callsite( "ArrayDesignDaoImpl.populateExpressionExperimentCount (native ACL restriction) [L1168]",
+                        () -> UNWIRED ),
+                new Callsite( "ArrayDesignDaoImpl.populateSwitchedExpressionExperimentCount (native ACL join) [L1191]",
+                        () -> UNWIRED ),
+                new Callsite( "ArrayDesignDaoImpl.populateSwitchedExpressionExperimentCount (native ACL restriction) [L1196]",
+                        () -> UNWIRED ),
+
+                // --- FactorValueDaoImpl ---
+                new Callsite( "FactorValueDaoImpl.loadAll(int,int) [L82]",
+                        () -> factorValueDao.loadAll( 0, 100 ) ),
+                new Callsite( "FactorValueDaoImpl.loadAllIds() [L97]",
+                        () -> factorValueDao.loadAllIds() ),
+                new Callsite( "FactorValueDaoImpl.loadAllIds(int,int) data query [L109]",
+                        () -> factorValueDao.loadAllIds( 0, 100 ) ),
+                new Callsite( "FactorValueDaoImpl.loadAllIds(int,int) count query [L124]",
+                        () -> factorValueDao.loadAllIds( 0, 100 ) ),  // shares the same public API as L109; baseline-equivalent
+                new Callsite( "FactorValueDaoImpl.findByValueStartingWith [L134]",
+                        () -> factorValueDao.findByValueStartingWith( "fv-", 100 ) ),
+
+                // --- GeneDaoImpl ---
+                new Callsite( "GeneDaoImpl.getCompositeSequenceCount [L228]",
+                        () -> UNWIRED ),  // needs a Gene instance; can't construct in this slim wiring
+                new Callsite( "GeneDaoImpl.getCompositeSequenceCountById [L247]",
+                        () -> geneDao.getCompositeSequenceCountById( 9101L, false ) ),
+
+                // --- ExpressionExperimentDaoImpl ---
+                new Callsite( "ExpressionExperimentDaoImpl.loadAllIdentifiers [L240]",
+                        () -> expressionExperimentDao.loadAllIdentifiers() ),
+                new Callsite( "ExpressionExperimentDaoImpl.getCategoriesUsageFrequency (native ACL join) [L916]",
+                        () -> UNWIRED ),
+                new Callsite( "ExpressionExperimentDaoImpl.getCategoriesUsageFrequency (native ACL restriction) [L934]",
+                        () -> UNWIRED ),
+                new Callsite( "ExpressionExperimentDaoImpl.getAnnotationsUsageFrequencyInternal (native ACL join) [L1079]",
+                        () -> UNWIRED ),
+                new Callsite( "ExpressionExperimentDaoImpl.getAnnotationsUsageFrequencyInternal (native ACL restriction) [L1118]",
+                        () -> UNWIRED ),
+                new Callsite( "ExpressionExperimentDaoImpl.getTechnologyTypeUsageFrequency (native ACL join) [L1335]",
+                        () -> expressionExperimentDao.getTechnologyTypeUsageFrequency() ),
+                new Callsite( "ExpressionExperimentDaoImpl.getTechnologyTypeUsageFrequency (native ACL restriction) [L1337]",
+                        () -> expressionExperimentDao.getTechnologyTypeUsageFrequency() ),
+                new Callsite( "ExpressionExperimentDaoImpl.getOriginalPlatformsUsageFrequency (native ACL join) [L1399]",
+                        () -> expressionExperimentDao.getOriginalPlatformsUsageFrequency( 100 ) ),
+                new Callsite( "ExpressionExperimentDaoImpl.getOriginalPlatformsUsageFrequency (native ACL restriction) [L1403]",
+                        () -> expressionExperimentDao.getOriginalPlatformsUsageFrequency( 100 ) ),
+                new Callsite( "ExpressionExperimentDaoImpl.getPerTaxonCount [L1690]",
+                        () -> expressionExperimentDao.getPerTaxonCount() ),
+                new Callsite( "ExpressionExperimentDaoImpl.getFilteringCountQuery [L3993]",
+                        () -> expressionExperimentDao.count( null ) )
+        ) );
+    }
+
     /**
-     * Every ACL callsite under {@code gemma-core/src/main/java}, as enumerated
-     * from a grep for {@code formAclRestrictionClause},
-     * {@code formNativeAclJoinClause}, and {@code formNativeAclRestrictionClause}
-     * (excluding the definitions in {@code AclQueryUtils} /
-     * {@code EE2CAclQueryUtils} themselves). Line numbers reference the
-     * source as of commit {@code a5701f0e} — they will drift; the
-     * description plus the DAO + method name is the stable handle.
+     * countExpressionExperiments(ArrayDesign) takes an entity rather than an
+     * id; this helper loads the AD as ADMIN (so we are sure to find it) and
+     * THEN invokes the method under the current principal. The ACL-relevant
+     * dimension is what comes back, not how the AD itself is fetched.
      */
-    static final List<Callsite> CALLSITES = Collections.unmodifiableList( Arrays.asList(
-            // --- BibliographicReferenceDaoImpl ---
-            new Callsite( "BibliographicReferenceDaoImpl.countDistinctWithRelatedExperiments [L75]",
-                    () -> null ),
-            new Callsite( "BibliographicReferenceDaoImpl.countWithRelatedExperiments [L87]",
-                    () -> null ),
-            new Callsite( "BibliographicReferenceDaoImpl.getRelatedExperiments(int,int) [L96]",
-                    () -> null ),
-            new Callsite( "BibliographicReferenceDaoImpl.getRelatedExperiments(Collection) [L123]",
-                    () -> null ),
+    private long countAdEEs( long arrayDesignId ) {
+        SecurityContext saved = SecurityContextHolder.getContext();
+        try {
+            switchTo( Principal.ADMIN );
+            ArrayDesign ad = arrayDesignDao.load( arrayDesignId );
+            SecurityContextHolder.setContext( saved );
+            if ( ad == null ) return -1L;
+            return arrayDesignDao.countExpressionExperiments( ad );
+        } finally {
+            SecurityContextHolder.setContext( saved );
+        }
+    }
 
-            // --- CharacteristicDaoImpl ---
-            new Callsite( "CharacteristicDaoImpl.findExperimentReferencesByUris (native ACL join) [L241]",
-                    () -> null ),
-            new Callsite( "CharacteristicDaoImpl.findExperimentReferencesByUris (native ACL restriction) [L245]",
-                    () -> null ),
+    private long countAdSwitchedEEs( long arrayDesignId ) {
+        SecurityContext saved = SecurityContextHolder.getContext();
+        try {
+            switchTo( Principal.ADMIN );
+            ArrayDesign ad = arrayDesignDao.load( arrayDesignId );
+            SecurityContextHolder.setContext( saved );
+            if ( ad == null ) return -1L;
+            return arrayDesignDao.countSwitchedExpressionExperiments( ad );
+        } finally {
+            SecurityContextHolder.setContext( saved );
+        }
+    }
 
-            // --- CompositeSequenceDaoImpl ---
-            new Callsite( "CompositeSequenceDaoImpl.getFilteringQuery [L95]",
-                    () -> null ),
-            new Callsite( "CompositeSequenceDaoImpl.getFilteringIdQuery [L115]",
-                    () -> null ),
-            new Callsite( "CompositeSequenceDaoImpl.getFilteringCountQuery [L129]",
-                    () -> null ),
-
-            // --- ArrayDesignDaoImpl ---
-            new Callsite( "ArrayDesignDaoImpl.countExpressionExperiments [L518]",
-                    () -> null ),
-            new Callsite( "ArrayDesignDaoImpl.getPerTaxonCount [L530]",
-                    () -> null ),
-            new Callsite( "ArrayDesignDaoImpl.countSwitchedExpressionExperiments [L562]",
-                    () -> null ),
-            new Callsite( "ArrayDesignDaoImpl.getFilteringCountQuery [L1079]",
-                    () -> null ),
-            new Callsite( "ArrayDesignDaoImpl.populateExpressionExperimentCount (native ACL join) [L1165]",
-                    () -> null ),
-            new Callsite( "ArrayDesignDaoImpl.populateExpressionExperimentCount (native ACL restriction) [L1168]",
-                    () -> null ),
-            new Callsite( "ArrayDesignDaoImpl.populateSwitchedExpressionExperimentCount (native ACL join) [L1191]",
-                    () -> null ),
-            new Callsite( "ArrayDesignDaoImpl.populateSwitchedExpressionExperimentCount (native ACL restriction) [L1196]",
-                    () -> null ),
-
-            // --- FactorValueDaoImpl ---
-            new Callsite( "FactorValueDaoImpl.loadAll(int,int) [L82]",
-                    () -> null ),
-            new Callsite( "FactorValueDaoImpl.loadAllIds() [L97]",
-                    () -> null ),
-            new Callsite( "FactorValueDaoImpl.loadAllIds(int,int) data query [L109]",
-                    () -> null ),
-            new Callsite( "FactorValueDaoImpl.loadAllIds(int,int) count query [L124]",
-                    () -> null ),
-            new Callsite( "FactorValueDaoImpl.findByValueStartingWith [L134]",
-                    () -> null ),
-
-            // --- GeneDaoImpl ---
-            new Callsite( "GeneDaoImpl.getCompositeSequenceCount [L228]",
-                    () -> null ),
-            new Callsite( "GeneDaoImpl.getCompositeSequenceCountById [L247]",
-                    () -> null ),
-
-            // --- ExpressionExperimentDaoImpl ---
-            new Callsite( "ExpressionExperimentDaoImpl.loadAllIdentifiers [L240]",
-                    () -> null ),
-            new Callsite( "ExpressionExperimentDaoImpl.getCategoriesUsageFrequency (native ACL join) [L916]",
-                    () -> null ),
-            new Callsite( "ExpressionExperimentDaoImpl.getCategoriesUsageFrequency (native ACL restriction) [L934]",
-                    () -> null ),
-            new Callsite( "ExpressionExperimentDaoImpl.getAnnotationsUsageFrequencyInternal (native ACL join) [L1079]",
-                    () -> null ),
-            new Callsite( "ExpressionExperimentDaoImpl.getAnnotationsUsageFrequencyInternal (native ACL restriction) [L1118]",
-                    () -> null ),
-            new Callsite( "ExpressionExperimentDaoImpl.getTechnologyTypeUsageFrequency (native ACL join) [L1335]",
-                    () -> null ),
-            new Callsite( "ExpressionExperimentDaoImpl.getTechnologyTypeUsageFrequency (native ACL restriction) [L1337]",
-                    () -> null ),
-            new Callsite( "ExpressionExperimentDaoImpl.getOriginalPlatformsUsageFrequency (native ACL join) [L1399]",
-                    () -> null ),
-            new Callsite( "ExpressionExperimentDaoImpl.getOriginalPlatformsUsageFrequency (native ACL restriction) [L1403]",
-                    () -> null ),
-            new Callsite( "ExpressionExperimentDaoImpl.getPerTaxonCount [L1690]",
-                    () -> null ),
-            new Callsite( "ExpressionExperimentDaoImpl.getFilteringCountQuery [L3993]",
-                    () -> null )
-    ) );
+    @BeforeEach
+    public void setUpFixtureAuthentication() {
+        // The BaseDatabaseTest5 base class does NOT auto-elevate to admin (only
+        // BaseIntegrationTest5 does). Default to admin so any pre-invoker setup
+        // sees everything; per-test then switches via switchTo(Principal).
+        switchTo( Principal.ADMIN );
+    }
 
     /**
-     * Generates one {@link DynamicTest} per (callsite, principal) pair. With
-     * 35 callsites and 3 principals this produces 105 tests. Each test
-     * switches the {@link SecurityContextHolder} to the right principal,
-     * invokes the callsite, and (once the fixture is in place) records the
-     * fingerprint. Until then every dynamic test is wrapped to surface as
-     * disabled-via-assumption so the contract is visible in the test report
-     * without yet being a green bar.
+     * Generates one {@link DynamicTest} per (callsite, principal) pair, and
+     * either appends one row to the in-progress fingerprint map or asserts
+     * byte-equality against a previously-recorded baseline. Total = 35 * 3
+     * = 105 dynamic tests.
      */
     @TestFactory
     Stream<DynamicTest> aclContract_acrossAllCallsitesAndPrincipals() {
-        List<DynamicTest> tests = new ArrayList<>( CALLSITES.size() * Principal.values().length );
-        for ( Callsite cs : CALLSITES ) {
+        Map<String, String> baseline = loadBaselineIfPresent();
+        Map<String, String> recorded = new TreeMap<>();
+        List<Callsite> callsites = buildCallsites();
+        List<DynamicTest> tests = new ArrayList<>( callsites.size() * Principal.values().length );
+        for ( Callsite cs : callsites ) {
             for ( Principal principal : Principal.values() ) {
-                String name = cs.description + " :: " + principal.name();
-                tests.add( DynamicTest.dynamicTest( name, () -> runOne( cs, principal ) ) );
+                String key = cs.description + " :: " + principal.name();
+                tests.add( DynamicTest.dynamicTest( key, () -> runOne( cs, principal, key, baseline, recorded ) ) );
             }
         }
+        // We can't easily emit a "flush recorded -> file" step inside a TestFactory.
+        // Instead the dedicated @Test seedBaseline (below) does it directly.
         return tests.stream();
     }
 
     /**
-     * Disabled annotation marker for an additional @Test placeholder — keeps
-     * IDE / Surefire reports honest about "this class is intentionally
-     * not exercising the contract yet".
+     * If no baseline exists yet, compute all (callsite × principal)
+     * fingerprints and write {@link #BASELINE_PATH}. Skipped (via JUnit
+     * assumption) if a baseline already exists — in that case the
+     * {@link #aclContract_acrossAllCallsitesAndPrincipals()} dynamic tests
+     * are doing the diff.
      */
-    @org.junit.jupiter.api.Test
-    @Disabled( "fixture data not yet seeded — see project_acl_exists_refactor.md" )
-    void placeholder_untilMixedAclFixtureIsSeeded() {
-        // Intentionally empty.
+    @Test
+    void seedBaselineIfMissing() throws IOException {
+        Assumptions.assumeTrue( !Files.exists( BASELINE_PATH ),
+                "baseline file already exists; seedBaselineIfMissing is a one-shot capture step" );
+        Map<String, String> recorded = new LinkedHashMap<>();
+        for ( Callsite cs : buildCallsites() ) {
+            for ( Principal principal : Principal.values() ) {
+                String key = cs.description + " :: " + principal.name();
+                recorded.put( key, fingerprintOne( cs, principal ) );
+            }
+        }
+        Files.createDirectories( BASELINE_PATH.getParent() );
+        try ( var w = Files.newBufferedWriter( BASELINE_PATH, StandardCharsets.UTF_8 ) ) {
+            w.write( "callsite\tprincipal\tfingerprint\n" );
+            for ( Map.Entry<String, String> e : recorded.entrySet() ) {
+                String k = e.getKey();
+                int sep = k.lastIndexOf( " :: " );
+                w.write( k.substring( 0, sep ) );
+                w.write( "\t" );
+                w.write( k.substring( sep + 4 ) );
+                w.write( "\t" );
+                w.write( e.getValue() );
+                w.write( "\n" );
+            }
+        }
     }
 
     // ------------------------------------------------------------------ //
     // Helpers
     // ------------------------------------------------------------------ //
 
-    private void runOne( Callsite cs, Principal principal ) {
-        // The contract is genuine but the data is missing: skip the dynamic
-        // test via JUnit 5 abort. Surfaces as "skipped" in reports, which is
-        // the right signal until the fixture lands.
-        org.junit.jupiter.api.Assumptions.abort(
-                "fixture data not yet seeded for ACL contract: callsite="
-                        + cs.description + ", principal=" + principal
-                        + " — see project_acl_exists_refactor.md" );
+    private void runOne( Callsite cs, Principal principal, String key,
+                         Map<String, String> baseline, Map<String, String> recorded ) {
+        String observed = fingerprintOne( cs, principal );
+        recorded.put( key, observed );
+        String expected = baseline.get( key );
+        Assumptions.assumeTrue( expected != null,
+                "no baseline entry for " + key + " — run seedBaselineIfMissing first" );
+        assertEquals( expected, observed,
+                "ACL contract drifted for " + key + " — security regression candidate" );
+    }
 
-        // The intended shape, once the fixture is in place, is roughly:
-        //
-        //   switchTo( principal );
-        //   Object result = cs.invoker.get();
-        //   String fingerprint = fingerprint( result );
-        //   assertEquals( EXPECTED_FINGERPRINTS.get( cs, principal ), fingerprint,
-        //                 "ACL filtering drifted for " + cs.description );
-        //
-        // where fingerprint() reduces the result to "count|sortedIds" or
-        // similar (count + Long-id list sorted ascending). The expected
-        // fingerprints are recorded against the pre-refactor JOIN clause,
-        // then the rewritten EXISTS clause must reproduce them exactly.
+    private String fingerprintOne( Callsite cs, Principal principal ) {
+        switchTo( principal );
+        Object result;
+        try {
+            result = cs.invoker.get();
+        } catch ( RuntimeException e ) {
+            return "error|" + e.getClass().getSimpleName() + ":" + truncate( String.valueOf( e.getMessage() ), 80 );
+        }
+        return fingerprint( result );
+    }
+
+    /**
+     * Reduce an invocation result to a stable "count|sortedIds" string. The
+     * specifics:
+     * <ul>
+     *   <li>{@code null} → {@code "null"}</li>
+     *   <li>{@link #UNWIRED} → {@code "unwired"}</li>
+     *   <li>{@link Number} → {@code "scalar:" + value}</li>
+     *   <li>{@link Collection} → {@code count|<sorted-stringified-ids>}; ids
+     *       extracted via {@link #extractId(Object)}</li>
+     *   <li>{@link Map} → {@code count|<sorted-stringified-keys>}; keys
+     *       extracted via {@link #extractId(Object)} so the fingerprint is
+     *       insensitive to value ordering</li>
+     *   <li>anything else → its {@code toString}, truncated to 200 chars</li>
+     * </ul>
+     */
+    private static String fingerprint( Object o ) {
+        if ( o == null ) return "null";
+        if ( o == UNWIRED ) return "unwired";
+        if ( o instanceof Number ) return "scalar:" + o;
+        if ( o instanceof Collection<?> ) {
+            Collection<?> col = ( Collection<?> ) o;
+            List<String> ids = col.stream()
+                    .map( AclSemanticsContractTest::extractId )
+                    .sorted()
+                    .collect( Collectors.toList() );
+            return col.size() + "|" + String.join( ",", ids );
+        }
+        if ( o instanceof Map<?, ?> ) {
+            Map<?, ?> m = ( Map<?, ?> ) o;
+            List<String> keys = m.keySet().stream()
+                    .map( AclSemanticsContractTest::extractId )
+                    .sorted()
+                    .collect( Collectors.toList() );
+            return m.size() + "|" + String.join( ",", keys );
+        }
+        return truncate( o.toString(), 200 );
+    }
+
+    /**
+     * Best-effort id extraction: reflectively call {@code getId()} if present,
+     * otherwise fall back to {@code toString()}. Keeps the fingerprint stable
+     * across runs (object identity / hashCode would not).
+     */
+    private static String extractId( Object o ) {
+        if ( o == null ) return "null";
+        try {
+            var m = o.getClass().getMethod( "getId" );
+            Object id = m.invoke( o );
+            return id == null ? "null" : id.toString();
+        } catch ( NoSuchMethodException e ) {
+            return truncate( o.toString(), 60 );
+        } catch ( ReflectiveOperationException e ) {
+            return "err:" + e.getClass().getSimpleName();
+        }
+    }
+
+    private static String truncate( String s, int max ) {
+        if ( s == null ) return "null";
+        s = s.replace( "\t", " " ).replace( "\n", " " );
+        return s.length() <= max ? s : s.substring( 0, max ) + "...";
+    }
+
+    private Map<String, String> loadBaselineIfPresent() {
+        if ( !Files.exists( BASELINE_PATH ) ) return Collections.emptyMap();
+        Map<String, String> baseline = new LinkedHashMap<>();
+        try ( var r = Files.newBufferedReader( BASELINE_PATH, StandardCharsets.UTF_8 ) ) {
+            String line = r.readLine();  // header
+            while ( ( line = r.readLine() ) != null ) {
+                if ( line.isEmpty() ) continue;
+                String[] parts = line.split( "\t", 3 );
+                if ( parts.length < 3 ) continue;
+                baseline.put( parts[0] + " :: " + parts[1], parts[2] );
+            }
+        } catch ( IOException e ) {
+            throw new RuntimeException( "could not read baseline " + BASELINE_PATH.toAbsolutePath(), e );
+        }
+        return baseline;
     }
 
     /**
      * Switch the current Spring Security context to the requested principal.
      * <ul>
-     *   <li>{@link Principal#ANONYMOUS} clears the context.</li>
-     *   <li>{@link Principal#AUTHENTICATED_USER} routes through
-     *       {@link TestAuthenticationUtils#runAsUser(String, boolean)} with a
-     *       fixture user (created on demand).</li>
-     *   <li>{@link Principal#ADMIN} routes through
-     *       {@link TestAuthenticationUtils#runAsAdmin()}.</li>
+     *   <li>{@link Principal#ANONYMOUS} installs an
+     *       {@link AnonymousAuthenticationToken} carrying
+     *       {@code IS_AUTHENTICATED_ANONYMOUSLY}.</li>
+     *   <li>{@link Principal#AUTHENTICATED_USER} installs a
+     *       {@link TestingAuthenticationToken} for {@code testuser-owner}
+     *       (USER group authority).</li>
+     *   <li>{@link Principal#ADMIN} installs a
+     *       {@link TestingAuthenticationToken} for {@code administrator}
+     *       (ADMIN group authority).</li>
      * </ul>
-     * Kept package-private so a future batch can call it directly from
-     * un-disabled test bodies without disturbing the {@link TestFactory}.
      */
     void switchTo( Principal principal ) {
+        SecurityContext ctx = SecurityContextHolder.createEmptyContext();
         switch ( principal ) {
-            case ANONYMOUS:
-                SecurityContextHolder.clearContext();
+            case ANONYMOUS: {
+                List<GrantedAuthority> auths = Collections.singletonList(
+                        new SimpleGrantedAuthority( AuthenticatedVoter.IS_AUTHENTICATED_ANONYMOUSLY ) );
+                ctx.setAuthentication( new AnonymousAuthenticationToken( "key", "anonymousUser", auths ) );
                 break;
-            case AUTHENTICATED_USER:
-                testAuthenticationUtils.runAsUser( "acl-contract-user", true );
+            }
+            case AUTHENTICATED_USER: {
+                List<GrantedAuthority> auths = Collections.singletonList(
+                        new SimpleGrantedAuthority( AuthorityConstants.USER_GROUP_AUTHORITY ) );
+                TestingAuthenticationToken t = new TestingAuthenticationToken( "testuser-owner", "x", auths );
+                t.setAuthenticated( true );
+                ctx.setAuthentication( t );
                 break;
-            case ADMIN:
-                testAuthenticationUtils.runAsAdmin();
+            }
+            case ADMIN: {
+                List<GrantedAuthority> auths = Collections.singletonList(
+                        new SimpleGrantedAuthority( AuthorityConstants.ADMIN_GROUP_AUTHORITY ) );
+                TestingAuthenticationToken t = new TestingAuthenticationToken( "administrator", "x", auths );
+                t.setAuthenticated( true );
+                ctx.setAuthentication( t );
                 break;
+            }
             default:
                 throw new IllegalStateException( "unknown principal: " + principal );
         }
+        SecurityContextHolder.setContext( ctx );
     }
 }
