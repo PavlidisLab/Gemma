@@ -348,3 +348,83 @@ fix; flag for a focused HB6-cache-staleness session.
    grows further.
 5. **#11 (PCA)** — keep as the canonical reference pattern; reference from
    any future fix for #1-#5.
+
+## Residual reassessment 2026-05-20 (session)
+
+Re-checked items #8 + #11-#17 against current `HEAD`
+(`74e4dd1f00`, branch `phase2-acl-migrate`). Audit doc landed at
+`6a4d4c8dcc` on 2026-05-19. Checked `git log` on each cited file since
+the audit landing — none of the residual files have been touched. The
+intervening week's churn (audit migration Phase C, service decomposition,
+JUnit 5 cleanup, lucene placeholder fix, `02c87a91ed` AnalysisResultSet
+L2-cache drop for #6) did not move the residual-finding code.
+
+| # | risk | file | new verdict |
+|---|------|------|---|
+| 8 | MEDIUM | `GeneDaoImpl.remove`/`removeAll` | still-deferred |
+| 11 | LOW | `PrincipalComponentAnalysisDaoImpl.remove` | still-deferred (mitigation intact) |
+| 12 | LOW | `AuditTrailDaoImpl.removeByIds` | still-deferred (still clean) |
+| 13 | LOW | `BlacklistedEntityDaoImpl.removeAll` | still-deferred (still clean) |
+| 14 | LOW | `Gene2GOAssociationDaoImpl.removeAll` | still-deferred (still clean) |
+| 15 | LOW | `GeneSetDaoImpl.removeAll` | still-deferred (still clean) |
+| 16 | LOW | `RawAndProcessedExpressionDataVectorDaoImpl.removeByCompositeSequence` | still-deferred (still clean) |
+| 17 | LOW | `ExpressionExperimentSubSetDaoImpl.remove` | still-deferred (still safe-order) |
+
+### Per-item notes
+
+- **#8 `GeneDaoImpl`** — re-read: `remove(gene)` does HQL bulk-deletes
+  only on tables NOT in Gene's cascading collections (`BioSequence2GeneProduct`,
+  `GeneSetMember`, `Gene2GOAssociation`, dummy `GeneProduct`). The actual
+  cascading collections (`products`, `aliases`, `accessions` per
+  `ChromosomeFeature.hbm.xml:71/78/88`) are handled by the `super.remove(gene)`
+  cascade walk, which IS the normal HB-safe path. The original audit's
+  "stale collections" concern overstates the risk — those collections are
+  NOT bulk-deleted underneath. `removeAll()` does `delete from Gene`
+  followed by `delete from PhysicalLocation`; risk only materialises if a
+  caller holds session-attached Gene refs concurrently, and there are NO
+  in-tree callers of `geneService.removeAll`/`remove` beyond test code
+  (`grep -rn` confirmed only `GeneServiceImpl.removeAll` delegates).
+  Verdict: keep deferred — the PCA-style fix is small (5-10 lines) but
+  the production trigger surface is empty; revisit only if NCBI-gene-reload
+  is reactivated.
+- **#11 PCA** — `session.evict(entity)` at line 77 + `setEigenValues/Vectors/ProbeLoadings(new HashSet<>())`
+  at 83/89/95 + `super.remove(entity)` at 97 still intact. Canonical
+  reference; no changes needed.
+- **#12 AuditTrailDao.removeByIds** — bulk-only deletes (AuditEvent →
+  AuditEventType → AuditTrail), no in-session parent merge follows. Still
+  clean.
+- **#13 BlacklistedEntityDao.removeAll** — bulk delete BE then DE by id
+  list collected pre-delete. Still clean.
+- **#14 Gene2GOAssociationDao.removeAll** — bulk delete G2G then
+  Characteristic by id list. Still clean. (G2G is `mutable="false"` but
+  has no child collections, so Pattern C does not apply.)
+- **#15 GeneSetDao.removeAll** — bulk deletes + delegates audit cleanup
+  to `auditTrailDao.removeByIds` (#12). No in-session parent merge. Still
+  clean.
+- **#16 RawAndProcessedDataVectorDao.removeByCompositeSequence** — two
+  HQL bulk-deletes, no parent merge. Still clean.
+- **#17 EE-SubSet.remove** — `super.remove(entity)` at 151 BEFORE the
+  explicit `session.delete(ba)`/`session.delete(bm)` at 155/161; child
+  sets `bioAssaysToRemove`/`samplesToRemove` are computed BEFORE
+  `super.remove`. Safe order preserved.
+
+### Net
+
+No fixes applied. All 8 residual items remain in their previously
+assessed state — the mitigations cited in the original audit are still
+in place, no surrounding code has shifted, and #8 (`GeneDaoImpl`) on
+closer inspection has a narrower risk surface than the original audit
+text suggested. The deferral decision for Gemma 2.0 still stands.
+
+### To discuss next session
+
+1. **#8 GeneDaoImpl** — the original audit's "stale collections walk on
+   `super.remove(gene)`" concern can be tightened or downgraded. The
+   genuine risk is restricted to `removeAll()`'s bulk-Gene-then-bulk-PhysicalLocation
+   ordering when other session callers hold Gene refs; in tree there are
+   none. Worth either downgrading to LOW or attaching a HB6 cross-session
+   regression guard like the #6 AnalysisResultSet fix.
+2. **#6 AnalysisResultSet** — the L2 cache drop landed at `02c87a91ed`
+   but no regression test pins the cross-tx-write invariant yet; the
+   audit's "highest-priority production read path" status is still open.
+   Worth pairing with the EE-DAO 18-failure family fix.
