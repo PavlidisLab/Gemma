@@ -28,5 +28,21 @@
 			</key>
 			<one-to-many class="ubic.gemma.model.common.auditAndSecurity.AuditEvent" />
 		</bag>
+		<!--
+		    Denormalised "last event" pointer (perf hotspot B fix; see
+		    AuditEventDaoImpl#getLastEvents(Class, Class)). lazy="proxy" so a
+		    trail load doesn't drag the AuditEvent in — readers that want the
+		    event request it explicitly. The FK column has ON DELETE SET NULL
+		    at the DB level (see V6__audit_trail_last_event_id.sql) so a stray
+		    event delete cannot leave a dangling FK; writers must repoint the
+		    pointer on append (AuditTrailServiceImpl, AuditTrailEventListener).
+		-->
+		<many-to-one name="lastEvent"
+		             class="ubic.gemma.model.common.auditAndSecurity.AuditEvent"
+		             column="LAST_EVENT_FK"
+		             lazy="proxy"
+		             not-null="false"
+		             foreign-key="FK_AUDIT_TRAIL_LAST_EVENT"
+		             index="IDX_AUDIT_TRAIL_LAST_EVENT" />
 	</class>
 </hibernate-mapping>
