@@ -877,6 +877,91 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     }
 
     @Test
+    public void testPreviewDatasetDesignChangeNoOp() {
+        DesignPreflightReport report = new DesignPreflightReport();
+        report.getSummary().setBiomaterialsWithChangedAssignments( 0 );
+        when( expressionExperimentService.previewDesignChange( eq( ee ), any( ExperimentalDesignValueObject.class ) ) ).thenReturn( report );
+
+        ExperimentalDesignValueObject payload = new ExperimentalDesignValueObject();
+        assertThat( target( "/datasets/1/designPreflight" ).request().post( javax.ws.rs.client.Entity.json( payload ) ) )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .entity()
+                .hasFieldOrProperty( "data" )
+                .hasFieldOrPropertyWithValue( "data.summary.factorsToDelete", 0 )
+                .hasFieldOrPropertyWithValue( "data.summary.factorValuesToDelete", 0 )
+                .hasFieldOrPropertyWithValue( "data.summary.differentialExpressionAnalysesToDelete", 0 )
+                .hasFieldOrPropertyWithValue( "data.summary.biomaterialsWithChangedAssignments", 0 );
+
+        ArgumentCaptor<ExperimentalDesignValueObject> captor = ArgumentCaptor.forClass( ExperimentalDesignValueObject.class );
+        verify( expressionExperimentService ).previewDesignChange( eq( ee ), captor.capture() );
+        verify( expressionExperimentService ).load( 1L );
+    }
+
+    @Test
+    public void testPreviewDatasetDesignChangeWithBlockers() {
+        DesignPreflightReport report = new DesignPreflightReport();
+        DesignPreflightReport.Blocker b = new DesignPreflightReport.Blocker(
+                "ASSIGNMENT_REFERENCES_UNKNOWN_FV",
+                "Biomaterial 42 is assigned to factor value 999 which is not present in the proposed design." );
+        b.setBioMaterialId( 42L );
+        b.setFactorValueId( 999L );
+        report.getBlockers().add( b );
+        when( expressionExperimentService.previewDesignChange( eq( ee ), any( ExperimentalDesignValueObject.class ) ) ).thenReturn( report );
+
+        assertThat( target( "/datasets/1/designPreflight" ).request().post( javax.ws.rs.client.Entity.json( new ExperimentalDesignValueObject() ) ) )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data.blockers", list( Map.class ) )
+                .hasSize( 1 )
+                .first()
+                .hasFieldOrPropertyWithValue( "type", "ASSIGNMENT_REFERENCES_UNKNOWN_FV" )
+                .hasFieldOrPropertyWithValue( "bioMaterialId", 42 )
+                .hasFieldOrPropertyWithValue( "factorValueId", 999 );
+    }
+
+    @Test
+    public void testPreviewDatasetDesignChangeReportsDeletions() {
+        DesignPreflightReport report = new DesignPreflightReport();
+        report.getFactorsToDelete().add( new DesignPreflightReport.EntityRef( 7L, "treatment" ) );
+        report.getFactorValuesToDelete().add( new DesignPreflightReport.EntityRef( 70L, "control" ) );
+        report.getDifferentialExpressionAnalysesToDelete().add( new DesignPreflightReport.AnalysisRef( 500L, "control vs treatment", null ) );
+        report.getSummary().setFactorsToDelete( 1 );
+        report.getSummary().setFactorValuesToDelete( 1 );
+        report.getSummary().setDifferentialExpressionAnalysesToDelete( 1 );
+        report.getSummary().setBiomaterialsWithChangedAssignments( 3 );
+        when( expressionExperimentService.previewDesignChange( eq( ee ), any( ExperimentalDesignValueObject.class ) ) ).thenReturn( report );
+
+        assertThat( target( "/datasets/1/designPreflight" ).request().post( javax.ws.rs.client.Entity.json( new ExperimentalDesignValueObject() ) ) )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.summary.factorsToDelete", 1 )
+                .hasFieldOrPropertyWithValue( "data.summary.factorValuesToDelete", 1 )
+                .hasFieldOrPropertyWithValue( "data.summary.differentialExpressionAnalysesToDelete", 1 )
+                .hasFieldOrPropertyWithValue( "data.summary.biomaterialsWithChangedAssignments", 3 )
+                .extracting( "data.differentialExpressionAnalysesToDelete", list( Map.class ) )
+                .hasSize( 1 )
+                .first()
+                .hasFieldOrPropertyWithValue( "id", 500 )
+                .hasFieldOrPropertyWithValue( "name", "control vs treatment" );
+    }
+
+    @Test
+    public void testPreviewDatasetDesignChangeWithEmptyBodyIs400() {
+        assertThat( target( "/datasets/1/designPreflight" ).request().post( javax.ws.rs.client.Entity.json( null ) ) )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        verify( expressionExperimentService, never() ).previewDesignChange( any(), any() );
+    }
+
+    @Test
+    public void testPreviewDatasetDesignChangeWithUnknownDatasetIs404() {
+        // expressionExperimentService.load( 1L ) returns ee per setUpMocks(); load for an unknown id returns null.
+        assertThat( target( "/datasets/999/designPreflight" ).request().post( javax.ws.rs.client.Entity.json( new ExperimentalDesignValueObject() ) ) )
+                .hasStatus( Response.Status.NOT_FOUND );
+        verify( expressionExperimentService, never() ).previewDesignChange( any(), any() );
+    }
+
+    @Test
     public void testGetDatasetAllPublications() {
         when( expressionExperimentService.loadWithPrimaryPublicationAndOtherRelevantPublications( 1L ) ).thenReturn( ee );
         BibliographicReference prim_ref = new BibliographicReference();
