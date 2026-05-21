@@ -20,12 +20,12 @@ package ubic.gemma.core.util.math.linalg;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.FutureTask;
-
-import org.apache.commons.lang3.time.StopWatch;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import cern.colt.matrix.DoubleMatrix2D;
 import cern.colt.matrix.impl.DenseDoubleMatrix2D;
@@ -156,38 +156,28 @@ public class SingularValueDecomposition<R, C> {
      */
     private void computeSVD( final DoubleMatrix2D dm ) {
         /*
-         * This fails to converge some times, we have to bail.
+         * Colt's SVD occasionally fails to converge on degenerate matrices; run it on a worker thread so we can bail
+         * via a wall-clock timeout. The executor MUST be shut down on every path (success, timeout, exception) — the
+         * previous implementation leaked a thread per call because it never invoked shutdown().
          */
-        FutureTask<cern.colt.matrix.linalg.SingularValueDecomposition> svdFuture = new FutureTask<>(
-                new Callable<cern.colt.matrix.linalg.SingularValueDecomposition>() {
-                    @Override
-                    public cern.colt.matrix.linalg.SingularValueDecomposition call() {
-                        return new cern.colt.matrix.linalg.SingularValueDecomposition( dm );
-                    }
-                } );
-
-        StopWatch timer = new StopWatch();
-        timer.start();
-        Executors.newSingleThreadExecutor().execute( svdFuture );
-
-        while ( !svdFuture.isDone() && !svdFuture.isCancelled() ) {
-            try {
-                Thread.sleep( 100 );
-            } catch ( InterruptedException ie ) {
-                throw new RuntimeException( "SVD cancelled" );
-            }
-            if ( timer.getTime() > MAX_COMPUTE_TIME ) {
-                svdFuture.cancel( true );
-                throw new RuntimeException( "SVD failed to converge within " + MAX_COMPUTE_TIME + "ms, bailing" );
-            }
-        }
-        timer.stop();
+        ExecutorService executor = Executors.newSingleThreadExecutor();
         try {
-            this.svd = svdFuture.get();
-        } catch ( InterruptedException e ) {
-            throw new RuntimeException( e );
-        } catch ( ExecutionException e ) {
-            throw new RuntimeException( e );
+            Future<cern.colt.matrix.linalg.SingularValueDecomposition> svdFuture = executor.submit(
+                    () -> new cern.colt.matrix.linalg.SingularValueDecomposition( dm ) );
+            try {
+                this.svd = svdFuture.get( MAX_COMPUTE_TIME, TimeUnit.MILLISECONDS );
+            } catch ( TimeoutException te ) {
+                svdFuture.cancel( true );
+                throw new RuntimeException( "SVD failed to converge within " + MAX_COMPUTE_TIME + "ms, bailing", te );
+            } catch ( InterruptedException e ) {
+                svdFuture.cancel( true );
+                Thread.currentThread().interrupt();
+                throw new RuntimeException( e );
+            } catch ( ExecutionException e ) {
+                throw new RuntimeException( e );
+            }
+        } finally {
+            executor.shutdownNow();
         }
 
         assert this.svd != null;

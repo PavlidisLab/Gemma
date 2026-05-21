@@ -75,6 +75,15 @@ public class ShellDelegatingBlat implements Blat {
 
     private static final int STEPSIZE = 7;
 
+    /**
+     * Max time to wait for {@code gfServer} to become reachable after launch (millis).
+     */
+    private static final long SERVER_STARTUP_TIMEOUT_MS = 60_000L;
+    /**
+     * Backoff between reachability probes while waiting for {@code gfServer} startup (millis).
+     */
+    private static final long SERVER_STARTUP_POLL_MS = 200L;
+
     // typical values.
     private final String gfClientExe;
     private final String gfServerExe;
@@ -300,12 +309,20 @@ public class ShellDelegatingBlat implements Blat {
 
         if ( waitForFullInitialization ) {
             log.info( "Waiting for gfServer to be fully initialized on " + serverHost + ":" + serverPort + "..." );
-            while ( true ) {
-                if ( isServerReachable( serverHost, serverPort ) ) {
-                    log.info( "gfServer is listening on " + serverHost + ":" + serverPort + "." );
-                    break;
+            long deadlineNanos = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos( SERVER_STARTUP_TIMEOUT_MS );
+            while ( !isServerReachable( serverHost, serverPort ) ) {
+                if ( System.nanoTime() > deadlineNanos ) {
+                    throw new IOException( "gfServer did not become reachable on " + serverHost + ":" + serverPort
+                            + " within " + SERVER_STARTUP_TIMEOUT_MS + " ms." );
+                }
+                try {
+                    Thread.sleep( SERVER_STARTUP_POLL_MS );
+                } catch ( InterruptedException e ) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException( e );
                 }
             }
+            log.info( "gfServer is listening on " + serverHost + ":" + serverPort + "." );
         }
     }
 

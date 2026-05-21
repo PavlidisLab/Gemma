@@ -53,6 +53,14 @@ public class CorrelationStats {
 
     private static DoubleMatrix2D spearmanPvalLookup;
 
+    /**
+     * Monitors for the static p-value lookup caches. {@link SparseDoubleMatrix2D} is not thread-safe, so concurrent
+     * {@code setQuick} from multiple correlation-computing threads can corrupt internal state. Each cache has its own
+     * monitor (they're independent) to avoid needless contention between Pearson and Spearman call sites.
+     */
+    private static final Object correlationPvalLookupLock = new Object();
+    private static final Object spearmanPvalLookupLock = new Object();
+
     static {
         int numbins = ( int ) Math.ceil( 1.0 / BINSIZE );
         correlationPvalLookup = new SparseDoubleMatrix2D( numbins, MAXCOUNT + 1 );
@@ -283,8 +291,13 @@ public class CorrelationStats {
         }
 
         int bin = ( int ) Math.ceil( acorrel / BINSIZE );
-        if ( count <= MAXCOUNT && correlationPvalLookup.getQuick( bin, dof ) != 0.0 ) {
-            return correlationPvalLookup.getQuick( bin, dof );
+        if ( count <= MAXCOUNT ) {
+            synchronized ( correlationPvalLookupLock ) {
+                double cached = correlationPvalLookup.getQuick( bin, dof );
+                if ( cached != 0.0 ) {
+                    return cached;
+                }
+            }
         }
         double t = correlationTstat( acorrel, dof );
         double p = Probability.studentT( dof, -t );
@@ -299,7 +312,9 @@ public class CorrelationStats {
         // + String.format( "%.2g", altp ) );
 
         if ( count < MAXCOUNT ) {
-            correlationPvalLookup.setQuick( bin, dof, p );
+            synchronized ( correlationPvalLookupLock ) {
+                correlationPvalLookup.setQuick( bin, dof, p );
+            }
         }
 
         return p;
@@ -339,8 +354,13 @@ public class CorrelationStats {
             return 1.0;
         }
         int bin = ( int ) Math.ceil( acorrel / BINSIZE );
-        if ( count <= MAXCOUNT && spearmanPvalLookup.getQuick( bin, dof ) != 0.0 ) {
-            return spearmanPvalLookup.getQuick( bin, dof );
+        if ( count <= MAXCOUNT ) {
+            synchronized ( spearmanPvalLookupLock ) {
+                double cached = spearmanPvalLookup.getQuick( bin, dof );
+                if ( cached != 0.0 ) {
+                    return cached;
+                }
+            }
         }
 
         double p;
@@ -357,7 +377,9 @@ public class CorrelationStats {
                 + ", expected value less than 0.5";
         p = Math.min( 1.0, 2.0 * p ); // two-tailed.
         if ( count < MAXCOUNT ) {
-            spearmanPvalLookup.setQuick( bin, dof, p );
+            synchronized ( spearmanPvalLookupLock ) {
+                spearmanPvalLookup.setQuick( bin, dof, p );
+            }
         }
         return p;
     }
