@@ -3046,6 +3046,70 @@ public class DatasetsWebService {
                 .build();
     }
 
+    /**
+     * Retrieve the differential-expression analysis archive for a dataset.
+     * <p>
+     * Builds (or, on cache hit, locates) the ZIP archive containing the analysis result + per-result-set contrast
+     * files for a single differential-expression analysis on this dataset, and sendfile-s the cached file directly.
+     * <p>
+     * The archive is generated lazily on first access by {@link ExpressionDataFileService#writeOrLocateDiffExAnalysisArchiveFile};
+     * subsequent accesses skip the rebuild.
+     * <p>
+     * If the dataset has more than one differential-expression analysis, the caller must disambiguate by passing
+     * {@code analysisId}; otherwise the response is 409 Conflict.
+     */
+    @GET
+    @Path("/{dataset}/data/dea")
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    @Operation(summary = "Retrieve the differential expression analysis archive of a dataset",
+            description = "Returns a ZIP archive (one per analysis) containing the analysis result and per-result-set "
+                    + "contrast files. The archive is cached on disk under <dataDir> and rebuilt on first access; "
+                    + "for datasets with multiple differential-expression analyses, pass `analysisId` to select one.",
+            responses = {
+                    @ApiResponse(responseCode = "200", content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM,
+                            schema = @Schema(type = "string", format = "binary"))),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not have any differential-expression analyses, or the supplied analysis ID does not belong to this dataset.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "409", description = "The dataset has more than one differential-expression analysis; pass `analysisId` to select one.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public Response getDatasetDiffExAnalysisArchive(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Identifier of the differential-expression analysis to retrieve. Required when the dataset has more than one analysis.") @QueryParam("analysisId") Long analysisId,
+            @Parameter(hidden = true) @QueryParam("download") @DefaultValue("false") Boolean download,
+            @Parameter(hidden = true) @QueryParam("force") @DefaultValue("false") Boolean force
+    ) {
+        if ( force ) {
+            checkIsAdmin();
+        }
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        DifferentialExpressionAnalysis analysis;
+        if ( analysisId != null ) {
+            analysis = differentialExpressionAnalysisService.findByExperimentAndAnalysisId( ee, true, analysisId );
+            if ( analysis == null ) {
+                throw new NotFoundException( "No differential-expression analysis with ID " + analysisId + " was found for " + ee.getShortName() + "." );
+            }
+        } else {
+            Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalysisService.findByExperiment( ee, true );
+            if ( analyses.isEmpty() ) {
+                throw new NotFoundException( ee.getShortName() + " does not have any differential-expression analyses." );
+            }
+            if ( analyses.size() > 1 ) {
+                throw new ClientErrorException( ee.getShortName() + " has " + analyses.size() + " differential-expression analyses; pass ?analysisId= to select one.", Response.Status.CONFLICT );
+            }
+            analysis = analyses.iterator().next();
+        }
+        try ( LockedPath p = expressionDataFileService.writeOrLocateDiffExAnalysisArchiveFile( analysis, force ) ) {
+            String filename = p.getPath().getFileName().toString();
+            return sendfile( p.getPath() )
+                    .type( MediaType.APPLICATION_OCTET_STREAM_TYPE )
+                    .header( "Content-Disposition", "attachment; filename=\"" + filename + "\"" )
+                    .build();
+        } catch ( IOException e ) {
+            log.error( "Failed to locate or create the DEA archive for " + analysis + ".", e );
+            throw new InternalServerErrorException( e );
+        }
+    }
+
     @GZIP(mediaTypes = TEXT_TAB_SEPARATED_VALUES_UTF8, alreadyCompressed = true)
     @GET
     @Path("/{dataset}/data/singleCell")
