@@ -317,74 +317,51 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
         String entityName = ubic.gemma.persistence.hibernate.HibernateUtils.getEntityName( getSessionFactory(), auditableClass );
 
         // Whole-corpus path (e.g. ArrayDesignReportServiceImpl, ExpressionExperimentReportServiceImpl
-        // dashboards, scheduled stats). The legacy form pulled every matching event into the JVM
-        // and reduced to per-trail max in Java — 1.5 M event rows transferred for ~25k EEs in the
-        // worst case (PERF_PROBE_REPORT.md probe 3b, 8.7 s wall). The rewrite issues a SQL-side
-        // aggregate that returns exactly one (auditable.id, winning event.id) tuple per trail —
-        // the date-max followed by id-max-on-tied-date pair — then a second query loads the
-        // winning events with eventType joined. Tie-breaker on equal timestamps: MAX(id) wins (a
-        // bulk-insert can give two events on the same trail the same DATETIME(3) and the legacy
-        // Java-side `order by date desc, id desc` already picked the larger id; this preserves
-        // that semantics).
+        // dashboards, scheduled stats). Rewrite chain:
         //
-        // Step 1: per-trail aggregate. Returns (auditable.id, winning event.id) — one row per
-        // matching trail. Uses a correlated MAX(date) subquery and breaks ties by MAX(id).
+        //   round-3 baseline   8.7 s  — pulled 1.5 M AUDIT_EVENT rows into the JVM, reduced
+        //                                 in Java to one event per trail.
+        //   commit 0570c46416  5.3 s  — SQL-side per-trail MAX(date) + MAX(id) aggregate;
+        //                                 still scans the full AUDIT_EVENT bag once per trail.
+        //   this rewrite       O(trails)  via AUDIT_TRAIL.LAST_EVENT_FK denormalised pointer
+        //                                 (V6 migration). Each trail contributes one index-
+        //                                 resolved row; no per-trail aggregate; no second
+        //                                 hydration query because lastEvent is fetched in the
+        //                                 same select via inner join.
+        //
+        // Semantics preserved: the writers (AuditTrailServiceImpl.doAddUpdateEvent +
+        // AuditTrailEventListener.emitLifecycleEvent) repoint lastEvent under the same
+        // (date desc, id desc) ordering the prior MAX rewrite used. The migration backfill
+        // uses MAX(id) per trail, which on monotonically-growing AUDIT_EVENT ids is equivalent
+        // to date-max+id-max-on-tie (and matches the prior rewrite's tie-breaker convention).
+        //
+        // Type filter: we still join through ae.eventType and restrict by type(et). Trails
+        // whose lastEvent isn't of the requested type (the more common case) are simply
+        // absent from the result map. This matches the prior contract: getLastEvents only
+        // returns auditables whose LATEST event matches the type filter.
+        //
+        // The exception is the eventType-IS-NULL case (generic auto-UPDATE rows): if a trail's
+        // lastEvent has no eventType, the inner-join on ae.eventType drops it. That's the
+        // pre-rewrite behaviour too — both old and new forms required typed events to filter
+        // by class.
         //language=HQL
-        final String idsQuery = "select a.id, max(ae.id) from " + entityName + " a "
+        final String query = "select a, ae from " + entityName + " a "
                 + "join a.auditTrail trail "
-                + "join trail.events ae "
-                + "join ae.eventType et "
-                + "where type(et) in :classes "
-                + "and ae.date = ( "
-                + "  select max(ae2.date) from " + entityName + " a2 "
-                + "  join a2.auditTrail trail2 "
-                + "  join trail2.events ae2 "
-                + "  join ae2.eventType et2 "
-                + "  where a2 = a and type(et2) in :classes "
-                + ") "
-                + "group by a.id";
+                + "join trail.lastEvent ae "
+                + "join fetch ae.eventType et "
+                + "where type(et) in :classes";
 
         @SuppressWarnings("unchecked")
-        List<Object[]> idPairs = this.getSessionFactory().getCurrentSession()
-                .createQuery( idsQuery )
+        List<Object[]> rows = this.getSessionFactory().getCurrentSession()
+                .createQuery( query )
                 .setParameterList( "classes", classes )
                 .list();
 
-        if ( idPairs.isEmpty() ) {
-            return result;
-        }
-
-        // Step 2: hydrate the winning events with eventType joined. One row per auditable.
-        List<Long> eventIds = new ArrayList<>( idPairs.size() );
-        for ( Object[] row : idPairs ) {
-            eventIds.add( ( Long ) row[1] );
-        }
-
-        //language=HQL
-        final String eventsQuery = "select ae from AuditEvent ae "
-                + "join fetch ae.eventType "
-                + "where ae.id in :ids";
-
-        @SuppressWarnings("unchecked")
-        List<AuditEvent> events = this.getSessionFactory().getCurrentSession()
-                .createQuery( eventsQuery )
-                .setParameterList( "ids", optimizeParameterList( eventIds ) )
-                .list();
-
-        Map<Long, AuditEvent> eventById = new HashMap<>( events.size() );
-        for ( AuditEvent ae : events ) {
-            eventById.put( ae.getId(), ae );
-        }
-
-        for ( Object[] row : idPairs ) {
-            Long auditableId = ( Long ) row[0];
-            Long winningEventId = ( Long ) row[1];
-            AuditEvent ae = eventById.get( winningEventId );
-            if ( ae == null ) {
-                continue; // shouldn't happen; defensive
-            }
-            //noinspection unchecked
-            result.put( ( T ) getSessionFactory().getCurrentSession().getReference( auditableClass, auditableId ), ae );
+        for ( Object[] row : rows ) {
+            @SuppressWarnings("unchecked")
+            T auditable = ( T ) row[0];
+            AuditEvent ae = ( AuditEvent ) row[1];
+            result.put( auditable, ae );
         }
 
         timer.stop();
