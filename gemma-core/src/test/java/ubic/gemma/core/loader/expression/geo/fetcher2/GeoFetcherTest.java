@@ -18,6 +18,7 @@ import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+@Tag("integration")
 @Category(GeoTest.class)
 @NetworkAvailable(url = EntrezUtils.ESEARCH)
 @ExtendWith(NetworkAvailableExtension.class)

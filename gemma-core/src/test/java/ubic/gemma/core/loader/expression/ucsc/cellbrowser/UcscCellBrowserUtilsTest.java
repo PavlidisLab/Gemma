@@ -29,6 +29,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class UcscCellBrowserUtilsTest {
 
     @Test
+    @Tag("integration")
     @NetworkAvailable
     public void testGetDatasets() throws IOException {
         assertThat( UcscCellBrowserUtils.getDatasets() )
@@ -41,12 +42,14 @@ public class UcscCellBrowserUtilsTest {
     }
 
     @Test
+    @Tag("integration")
     @NetworkAvailable
     public void testGetDataset() throws IOException {
         UcscCellBrowserUtils.getDataset( "aging-brain" );
     }
 
     @Test
+    @Tag("integration")
     @NetworkAvailable
     public void testGetDatasetDescription() throws IOException {
         UcscCellBrowserUtils.getDatasetDescription( "aging-brain" );
@@ -59,6 +62,7 @@ public class UcscCellBrowserUtilsTest {
 
     @Test
     @Tag("slow")
+    @Tag("integration")
     @Category(SlowTest.class)
     @NetworkAvailable
     public void testGetDatasetDataMatrix() throws IOException {

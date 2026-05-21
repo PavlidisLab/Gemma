@@ -29,6 +29,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 @Category(SlowTest.class)
 @Tag("slow")
+@Tag("integration")
 @ContextConfiguration
 public class SingleCellDataTransformationsTest extends BaseTest5 {
 

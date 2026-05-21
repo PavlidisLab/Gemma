@@ -44,6 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ContextConfiguration
+@Tag("integration")
 @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
 @ExtendWith(NetworkAvailableExtension.class)
 public class GeoMexSingleCellDataLoaderConfigurerTest extends BaseTest5 {
