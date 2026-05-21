@@ -4584,9 +4584,18 @@ public class ExpressionExperimentDaoImpl
         if ( qt == null ) {
             return null;
         }
+        // join fetch designElement + its arrayDesign + biologicalCharacteristic (BioSequence) to
+        // avoid an N+1 hydration storm: CompositeSequence.arrayDesign is mapped lazy="false"
+        // fetch="select" (one extra SELECT per row), and biologicalCharacteristic is a lazy proxy
+        // that the matrix-builder filter (RowsWithSequencesFilter) triggers per row via a null
+        // check. See PERF_PROBE_REPORT_ROUND3 Category A1.
         //noinspection unchecked
         return getSessionFactory().getCurrentSession()
-                .createQuery( "select vec from ProcessedExpressionDataVector vec where vec.expressionExperiment = :ee and vec.quantitationType = :qt" )
+                .createQuery( "select vec from ProcessedExpressionDataVector vec "
+                        + "join fetch vec.designElement cs "
+                        + "join fetch cs.arrayDesign "
+                        + "left join fetch cs.biologicalCharacteristic "
+                        + "where vec.expressionExperiment = :ee and vec.quantitationType = :qt" )
                 .setParameter( "ee", ee )
                 .setParameter( "qt", qt )
                 .list();
