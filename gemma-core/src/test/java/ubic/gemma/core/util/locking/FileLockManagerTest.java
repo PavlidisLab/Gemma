@@ -2,6 +2,8 @@ package ubic.gemma.core.util.locking;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import ubic.gemma.core.util.concurrent.ThreadUtils;
 
 import java.io.IOException;
@@ -23,7 +25,11 @@ public class FileLockManagerTest {
         assertThat( fileLockManager.getAllLockInfos() ).isEmpty();
     }
 
+    /**
+     * Relies on the {@code /proc/locks} pseudo-file, which only exists on Linux.
+     */
     @Test
+    @EnabledOnOs(OS.LINUX)
     public void testGetLockInfo() throws IOException {
         Path dir = Files.createTempDirectory( "test" );
         try ( LockedPath lock = fileLockManager.acquirePathLock( dir.resolve( "foo" ), false ) ) {

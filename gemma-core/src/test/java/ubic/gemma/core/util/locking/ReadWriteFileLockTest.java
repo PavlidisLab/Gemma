@@ -1,6 +1,8 @@
 package ubic.gemma.core.util.locking;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import ubic.gemma.core.util.concurrent.ThreadUtils;
 
 import java.io.IOException;
@@ -18,7 +20,11 @@ import static ubic.gemma.core.util.test.TestProcessUtils.startJavaProcess;
 
 public class ReadWriteFileLockTest {
 
+    /**
+     * Relies on the {@code /proc/locks} pseudo-file, which only exists on Linux.
+     */
     @Test
+    @EnabledOnOs(OS.LINUX)
     public void test() throws IOException, InterruptedException {
         Path tempDir = Files.createTempDirectory( "test" );
         ReadWriteFileLock lock = ReadWriteFileLock.open( tempDir.resolve( "test.txt" ), false );
