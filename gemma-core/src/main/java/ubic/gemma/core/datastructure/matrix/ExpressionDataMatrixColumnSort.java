@@ -249,8 +249,7 @@ public class ExpressionDataMatrixColumnSort {
          * Sanity check
          */
         int total = 0;
-        for ( FactorValue fv : chunks.keySet() ) {
-            List<BioMaterial> chunk = chunks.get( fv );
+        for ( List<BioMaterial> chunk : chunks.values() ) {
             total += chunk.size();
         }
 
@@ -411,8 +410,7 @@ public class ExpressionDataMatrixColumnSort {
          * Process each chunk.
          */
         List<BioMaterial> result = new ArrayList<>();
-        for ( FactorValue fv : chunks.keySet() ) {
-            List<BioMaterial> chunk = chunks.get( fv );
+        for ( List<BioMaterial> chunk : chunks.values() ) {
             result.addAll( orderBiomaterialsBySortedFactors( chunk, factorsStillToDo ) );
         }
 

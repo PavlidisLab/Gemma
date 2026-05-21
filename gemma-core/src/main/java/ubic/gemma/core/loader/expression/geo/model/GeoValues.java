@@ -585,18 +585,20 @@ public class GeoValues implements Serializable {
                 v.sampleDimensions.put( p, new HashMap<>() );
 
                 // deep copy.
-                for ( Integer o : this.sampleDimensions.get( p ).keySet() ) {
+                for ( Map.Entry<Integer, LinkedHashSet<GeoSample>> sdpEntry : this.sampleDimensions.get( p ).entrySet() ) {
+                    Integer o = sdpEntry.getKey();
                     v.sampleDimensions.get( p ).put( o, new LinkedHashSet<>() );
-                    for ( GeoSample ss : this.sampleDimensions.get( p ).get( o ) ) {
+                    for ( GeoSample ss : sdpEntry.getValue() ) {
                         v.sampleDimensions.get( p ).get( o ).add( ss ); // could use add all
                     }
                 }
 
                 v.data.put( p, new HashMap<>() );
-                for ( Integer o : this.data.get( p ).keySet() ) {
+                for ( Map.Entry<Integer, Map<String, List<String>>> dpEntry : this.data.get( p ).entrySet() ) {
+                    Integer o = dpEntry.getKey();
                     v.data.get( p ).put( o, new HashMap<>() );
 
-                    for ( String probeId : this.data.get( p ).get( o ).keySet() ) {
+                    for ( String probeId : dpEntry.getValue().keySet() ) {
                         v.data.get( p ).get( o ).put( probeId, new ArrayList<>() );
                     }
                 }

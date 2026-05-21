@@ -16,6 +16,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 import static java.util.Objects.requireNonNull;
 import static ubic.gemma.core.util.StringUtils.urlEncode;
@@ -80,10 +81,10 @@ public class OntologyExternalLinks {
         String prefix = null;
         String pattern = null;
         synchronized ( externalLinks ) {
-            for ( String ontologyPrefix : externalLinks.keySet() ) {
-                if ( resource.getUri().startsWith( ontologyPrefix ) ) {
-                    prefix = ontologyPrefix;
-                    pattern = externalLinks.get( ontologyPrefix );
+            for ( Map.Entry<String, String> elEntry : externalLinks.entrySet() ) {
+                if ( resource.getUri().startsWith( elEntry.getKey() ) ) {
+                    prefix = elEntry.getKey();
+                    pattern = elEntry.getValue();
                     break;
                 }
             }

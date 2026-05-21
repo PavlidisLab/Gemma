@@ -346,8 +346,9 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
                         settings.getMode().isAtMost( SearchSettings.SearchMode.BALANCED ) );
             }
 
-            for ( Gene gene : gr.keySet() ) {
-                results.addAll( toSearchResults( settings, CompositeSequence.class, gr.get( gene ), INDIRECT_HIT_PENALTY * geneToScore.get( gene ), "CompositeSequenceService.findByGenes" ) );
+            for ( Map.Entry<Gene, Collection<CompositeSequence>> grEntry : gr.entrySet() ) {
+                Gene gene = grEntry.getKey();
+                results.addAll( toSearchResults( settings, CompositeSequence.class, grEntry.getValue(), INDIRECT_HIT_PENALTY * geneToScore.get( gene ), "CompositeSequenceService.findByGenes" ) );
             }
 
             if ( geneResults != null ) {
