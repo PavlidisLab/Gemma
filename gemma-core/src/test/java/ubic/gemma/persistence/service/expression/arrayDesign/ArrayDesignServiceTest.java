@@ -79,9 +79,6 @@ public class ArrayDesignServiceTest extends BaseIntegrationTest5 {
     @Autowired
     private PersistentDummyObjectHelper testHelper;
 
-    @Autowired
-    private org.hibernate.SessionFactory sessionFactory;
-
     private final Collection<ArrayDesign> adsToRemove = new HashSet<>();
 
     @AfterEach
@@ -331,12 +328,6 @@ public class ArrayDesignServiceTest extends BaseIntegrationTest5 {
         ArrayDesign ad = getTestPersistentArrayDesign( 5, true );
 
         assertNotNull( ad.getId() );
-        // Evict the persisted instance + its CompositeSequences from the first-level cache so
-        // the subsequent load returns a proxy whose `compositeSequences` bag is uninitialized.
-        // Without this, BaseDatabaseTest5's L2-cache-disabled context still returns the same
-        // managed instance whose bag was hydrated during persist, and the "before thaw"
-        // initialization assertion below fails.
-        sessionFactory.getCurrentSession().clear();
         ad = arrayDesignService.load( ad.getId() );
 
         assertNotNull( ad );
