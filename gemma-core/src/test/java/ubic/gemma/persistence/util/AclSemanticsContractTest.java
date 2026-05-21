@@ -41,12 +41,19 @@ import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.security.AuthorityConstants;
 import ubic.gemma.core.util.test.BaseDatabaseTest5;
+import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.common.description.BibliographicReferenceDao;
 import ubic.gemma.persistence.service.common.description.BibliographicReferenceDaoImpl;
+import ubic.gemma.persistence.service.common.description.CharacteristicDao;
+import ubic.gemma.persistence.service.common.description.CharacteristicDaoImpl;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDao;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDaoImpl;
+import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceDao;
+import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceDaoImpl;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDaoImpl;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueDao;
@@ -195,6 +202,16 @@ public class AclSemanticsContractTest extends BaseDatabaseTest5 {
         public GeneDao geneDao( SessionFactory sessionFactory ) {
             return new GeneDaoImpl( sessionFactory );
         }
+
+        @Bean
+        public CharacteristicDao characteristicDao( SessionFactory sessionFactory ) {
+            return new CharacteristicDaoImpl( sessionFactory );
+        }
+
+        @Bean
+        public CompositeSequenceDao compositeSequenceDao( SessionFactory sessionFactory ) {
+            return new CompositeSequenceDaoImpl( sessionFactory );
+        }
     }
 
     @Autowired
@@ -211,6 +228,12 @@ public class AclSemanticsContractTest extends BaseDatabaseTest5 {
 
     @Autowired
     private GeneDao geneDao;
+
+    @Autowired
+    private CharacteristicDao characteristicDao;
+
+    @Autowired
+    private CompositeSequenceDao compositeSequenceDao;
 
     /**
      * Test principals the ACL clause discriminates against. The contract is
@@ -261,21 +284,30 @@ public class AclSemanticsContractTest extends BaseDatabaseTest5 {
                 new Callsite( "BibliographicReferenceDaoImpl.getRelatedExperiments(int,int) [L96]",
                         () -> bibliographicReferenceDao.getRelatedExperiments( 0, 100 ) ),
                 new Callsite( "BibliographicReferenceDaoImpl.getRelatedExperiments(Collection) [L123]",
-                        () -> UNWIRED ),  // needs a Collection<BibliographicReference> fetched first; covered transitively
+                        () -> bibliographicReferenceDao.getRelatedExperiments( loadAllFixtureBibRefs() ) ),
 
                 // --- CharacteristicDaoImpl ---
+                // Both the native ACL join (L241) and the native ACL restriction (L245) emit from
+                // the SAME findExperimentsByUrisInternal call. Wiring both rows to the same public
+                // invocation captures the combined effect; the fixture has no EE2C seeds so both
+                // expect an empty result (0|) — still a useful "ACL clause doesn't add spurious
+                // rows" baseline.
                 new Callsite( "CharacteristicDaoImpl.findExperimentReferencesByUris (native ACL join) [L241]",
-                        () -> UNWIRED ),
+                        () -> characteristicDao.findExperimentReferencesByUris(
+                                Collections.singletonList( "http://example.org/acl-fixture-uri" ),
+                                true, true, true, null, 0, false ) ),
                 new Callsite( "CharacteristicDaoImpl.findExperimentReferencesByUris (native ACL restriction) [L245]",
-                        () -> UNWIRED ),
+                        () -> characteristicDao.findExperimentReferencesByUris(
+                                Collections.singletonList( "http://example.org/acl-fixture-uri" ),
+                                true, true, true, null, 0, false ) ),
 
                 // --- CompositeSequenceDaoImpl ---
                 new Callsite( "CompositeSequenceDaoImpl.getFilteringQuery [L95]",
-                        () -> UNWIRED ),  // protected; routed via public load(Filters,...) but the AD link makes invocation non-trivial
+                        () -> compositeSequenceDao.load( ( Filters ) null, null ) ),
                 new Callsite( "CompositeSequenceDaoImpl.getFilteringIdQuery [L115]",
-                        () -> UNWIRED ),
+                        () -> compositeSequenceDao.loadIds( null, null ) ),
                 new Callsite( "CompositeSequenceDaoImpl.getFilteringCountQuery [L129]",
-                        () -> UNWIRED ),
+                        () -> compositeSequenceDao.count( null ) ),
 
                 // --- ArrayDesignDaoImpl ---
                 new Callsite( "ArrayDesignDaoImpl.countExpressionExperiments [L518]",
@@ -286,14 +318,20 @@ public class AclSemanticsContractTest extends BaseDatabaseTest5 {
                         () -> countAdSwitchedEEs( 9201L ) ),
                 new Callsite( "ArrayDesignDaoImpl.getFilteringCountQuery [L1079]",
                         () -> arrayDesignDao.count( null ) ),
+                // The populate* methods are private but fire as a side effect of
+                // loadValueObjects(Filters,Sort) -> postProcessValueObjects. Each pair (join +
+                // restriction) is part of the SAME native SQL query, so two of the four rows are
+                // redundant but kept for parity with the source-line enumeration. Fingerprints
+                // project the populated count field (NOT the AD id) so the row tracks what the
+                // populate query actually returned per principal.
                 new Callsite( "ArrayDesignDaoImpl.populateExpressionExperimentCount (native ACL join) [L1165]",
-                        () -> UNWIRED ),
+                        () -> populateAdEeCountFingerprint( /*switched=*/false ) ),
                 new Callsite( "ArrayDesignDaoImpl.populateExpressionExperimentCount (native ACL restriction) [L1168]",
-                        () -> UNWIRED ),
+                        () -> populateAdEeCountFingerprint( /*switched=*/false ) ),
                 new Callsite( "ArrayDesignDaoImpl.populateSwitchedExpressionExperimentCount (native ACL join) [L1191]",
-                        () -> UNWIRED ),
+                        () -> populateAdEeCountFingerprint( /*switched=*/true ) ),
                 new Callsite( "ArrayDesignDaoImpl.populateSwitchedExpressionExperimentCount (native ACL restriction) [L1196]",
-                        () -> UNWIRED ),
+                        () -> populateAdEeCountFingerprint( /*switched=*/true ) ),
 
                 // --- FactorValueDaoImpl ---
                 new Callsite( "FactorValueDaoImpl.loadAll(int,int) [L82]",
@@ -309,21 +347,27 @@ public class AclSemanticsContractTest extends BaseDatabaseTest5 {
 
                 // --- GeneDaoImpl ---
                 new Callsite( "GeneDaoImpl.getCompositeSequenceCount [L228]",
-                        () -> UNWIRED ),  // needs a Gene instance; can't construct in this slim wiring
+                        () -> countCsForGene( 9101L ) ),
                 new Callsite( "GeneDaoImpl.getCompositeSequenceCountById [L247]",
                         () -> geneDao.getCompositeSequenceCountById( 9101L, false ) ),
 
                 // --- ExpressionExperimentDaoImpl ---
                 new Callsite( "ExpressionExperimentDaoImpl.loadAllIdentifiers [L240]",
                         () -> expressionExperimentDao.loadAllIdentifiers() ),
+                // Both join (L916) + restriction (L934) clauses emit only when eeIds==null
+                // (the ACL-filtering branch). Wired via the public getCategoriesUsageFrequency
+                // with eeIds=null. The fixture has no EE2C seeds so the map is empty across all
+                // principals — still pins the "no spurious rows under ACL" contract.
                 new Callsite( "ExpressionExperimentDaoImpl.getCategoriesUsageFrequency (native ACL join) [L916]",
-                        () -> UNWIRED ),
+                        () -> expressionExperimentDao.getCategoriesUsageFrequency( null, null, null, null, 0 ) ),
                 new Callsite( "ExpressionExperimentDaoImpl.getCategoriesUsageFrequency (native ACL restriction) [L934]",
-                        () -> UNWIRED ),
+                        () -> expressionExperimentDao.getCategoriesUsageFrequency( null, null, null, null, 0 ) ),
+                // Same story for getAnnotationsUsageFrequency — clauses fire only when
+                // eeIds==null. The public getAnnotationsUsageFrequency wraps the internal call.
                 new Callsite( "ExpressionExperimentDaoImpl.getAnnotationsUsageFrequencyInternal (native ACL join) [L1079]",
-                        () -> UNWIRED ),
+                        () -> expressionExperimentDao.getAnnotationsUsageFrequency( null, null, 0, 0, null, null, null, null, false, false ) ),
                 new Callsite( "ExpressionExperimentDaoImpl.getAnnotationsUsageFrequencyInternal (native ACL restriction) [L1118]",
-                        () -> UNWIRED ),
+                        () -> expressionExperimentDao.getAnnotationsUsageFrequency( null, null, 0, 0, null, null, null, null, false, false ) ),
                 new Callsite( "ExpressionExperimentDaoImpl.getTechnologyTypeUsageFrequency (native ACL join) [L1335]",
                         () -> expressionExperimentDao.getTechnologyTypeUsageFrequency() ),
                 new Callsite( "ExpressionExperimentDaoImpl.getTechnologyTypeUsageFrequency (native ACL restriction) [L1337]",
@@ -369,6 +413,66 @@ public class AclSemanticsContractTest extends BaseDatabaseTest5 {
         } finally {
             SecurityContextHolder.setContext( saved );
         }
+    }
+
+    /**
+     * Load every fixture BibRef (admin-elevated so we get all 4), restore the original
+     * SecurityContext, then return them. Used to drive the
+     * {@code getRelatedExperiments(Collection)} callsite, whose ACL clause restricts the JOINed
+     * EE side (so the OUT side reflects what the current principal can see).
+     */
+    private Collection<BibliographicReference> loadAllFixtureBibRefs() {
+        SecurityContext saved = SecurityContextHolder.getContext();
+        try {
+            switchTo( Principal.ADMIN );
+            List<BibliographicReference> refs = new ArrayList<>();
+            for ( long id : new long[] { 9301L, 9302L, 9303L, 9304L } ) {
+                BibliographicReference r = bibliographicReferenceDao.load( id );
+                if ( r != null ) refs.add( r );
+            }
+            return refs;
+        } finally {
+            SecurityContextHolder.setContext( saved );
+        }
+    }
+
+    /**
+     * Drive the {@code GeneDaoImpl.getCompositeSequenceCount(Gene,boolean)} callsite by loading
+     * the Gene as admin (so the lookup itself succeeds), switching back, then invoking the
+     * method under the current principal. ACL filtering is on the CompositeSequence side via
+     * {@code cs.arrayDesign.id}, not on the Gene.
+     */
+    private long countCsForGene( long geneId ) {
+        SecurityContext saved = SecurityContextHolder.getContext();
+        try {
+            switchTo( Principal.ADMIN );
+            Gene gene = geneDao.load( geneId );
+            SecurityContextHolder.setContext( saved );
+            if ( gene == null ) return -1L;
+            return geneDao.getCompositeSequenceCount( gene, false );
+        } finally {
+            SecurityContextHolder.setContext( saved );
+        }
+    }
+
+    /**
+     * Invoke {@code arrayDesignDao.loadValueObjects(null,null)} — which triggers
+     * {@code postProcessValueObjects -> populateExpressionExperimentCount /
+     * populateSwitchedExpressionExperimentCount} — then project each VO down to
+     * {@code adId:eeCount} (or {@code adId:switchedEeCount}) so the fingerprint reflects what
+     * the populate query actually returned for each AD under the current principal.
+     * <p>
+     * Sorted list-of-strings is the return type so the existing {@link #fingerprint(Object)}
+     * Collection branch renders it as {@code count|sorted-comma-joined}. The strings already
+     * encode the per-AD count value so the fingerprint is sensitive to ACL drift in the
+     * populate query (not just to the count of ADs visible).
+     */
+    private List<String> populateAdEeCountFingerprint( boolean switched ) {
+        List<ArrayDesignValueObject> vos = arrayDesignDao.loadValueObjects( null, null );
+        return vos.stream()
+                .map( vo -> vo.getId() + ":" + ( switched ? vo.getSwitchedExpressionExperimentCount() : vo.getExpressionExperimentCount() ) )
+                .sorted()
+                .collect( Collectors.toList() );
     }
 
     @BeforeEach
