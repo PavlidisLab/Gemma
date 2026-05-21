@@ -499,7 +499,13 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
                 throw new IllegalStateException( "There is not single-cell dimension associated to " + preferredQt + "." );
             }
             long numVecs = expressionExperimentDao.getNumberOfSingleCellDataVectors( ee, preferredQt.get() );
-            try ( Stream<SingleCellExpressionDataVector> vecs = expressionExperimentDao.streamSingleCellDataVectors( ee, preferredQt.get(), 30, false, false ) ) {
+            // The streaming sparsity-metrics consumer reads the (externally-provided) dimension from its
+            // second argument, NOT from per-vector dim accessors, so the CELL_IDS LONGBLOB does not need
+            // to ride along on each vector's dim. Switch from the eager-CELL_IDS DAO overload to the
+            // includeCellIds=false initializer path.
+            try ( Stream<SingleCellExpressionDataVector> vecs = expressionExperimentDao.streamSingleCellDataVectors(
+                    ee, preferredQt.get(), 30, false, false,
+                    false, false, true, true ) ) {
                 log.info( "Recomputing single-cell sparsity metrics for " + preferredQt.get() + "..." );
                 applyBioAssaySparsityMetrics( ee, dimension, vecs.peek( createStreamMonitor( ee, preferredQt.get(), SingleCellExpressionExperimentServiceImpl.class.getName(), 100, numVecs, null ) ) );
             }
