@@ -330,3 +330,28 @@ are coupled by the test fixture's behavioural expectation.
    (`CuratableDao.java:38`).** This annotation is only ever consulted by
    `AuditAdvice.java:133`. Once AuditAdvice is gone, the annotation is silently dead —
    strip the import + annotation to keep the codebase honest. Trivial follow-up.
+
+## 8. Post-retirement note (2026-05-20): WhatsNew dashboard
+
+The retirement landed on branch `auditadvice-retire`. `AuditAdvice.java`,
+`IgnoreAudit.java`, and the orphaned `Pointcuts.{daoMethod,loader,creator,updater,
+saver,deleter,modifier}` were deleted. Generic `action='U', eventType=null` rows are
+no longer produced by the framework.
+
+`WhatsNewServiceImpl.java:218-219` calls `auditEventService.getUpdatedSinceDate(...)`.
+The recce predicted this would drop to near-zero. **In fact
+`AuditEventDaoImpl.getUpdatedSinceDate` was pre-emptively migrated during Phase C-2**
+to filter on `ae.eventType is not null` (see `AuditEventDaoImpl.java:204-221`), so it
+had already stopped depending on the blanket auto-UPDATE rows. The WhatsNew dashboard
+now reflects "any TYPED UPDATE event in the window" rather than "any DAO update in
+the window".
+
+**Curator/product decision required:** confirm this semantic shift is acceptable.
+Concretely, the dashboard will surface only entities that received a typed event via
+`@Audited` / `@AuditedConditional` / imperative
+`addUpdateEvent(entity, EventType.class, ...)`. Entities mutated via a bare DAO
+`update(...)` with no accompanying typed audit row will NOT appear. As Phase B sweeps
+the 53 remaining imperative call sites onto `@Audited` (and as more services adopt
+the annotations), coverage broadens naturally.
+
+No code change required for retirement; this is a documentation/product follow-up only.

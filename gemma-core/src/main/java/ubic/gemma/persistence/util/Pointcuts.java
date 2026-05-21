@@ -45,55 +45,6 @@ public class Pointcuts {
     }
 
     /**
-     * A DAO method, public and within a class annotated with {@link org.springframework.stereotype.Repository}.
-     */
-    @Pointcut("inGemma() && @target(org.springframework.stereotype.Repository) && anyPublicMethod()")
-    public void daoMethod() {
-    }
-
-    /**
-     * CRUD-like method that modifies the database (i.e. not a read operation).
-     */
-    @Pointcut("creator() || updater() || saver() || deleter()")
-    public void modifier() {
-    }
-
-    /**
-     * Methods that load (read) from the persistent store
-     */
-    @Pointcut("daoMethod() && (execution(* load*(..)) || execution(* find*(..)) || execution(* read*(..)))")
-    public void loader() {
-    }
-
-    /**
-     * Methods that create new objects in the persistent store
-     */
-    @Pointcut("daoMethod() && (execution(* create*(*, ..)) || execution(* findOrCreate*(*, ..)) || execution(* persist*(*, ..)) || execution(* add*(*, ..)))")
-    public void creator() {
-    }
-
-    /**
-     * Methods that update items in the persistent store
-     */
-    @Pointcut("daoMethod() && execution(* update*(*, ..))")
-    public void updater() {
-    }
-
-    /**
-     * This is a specially behaved method that create transient entities or save persistent one.
-     */
-    @Pointcut("daoMethod() && execution(* save*(*, ..))")
-    public void saver() {
-    }
-
-    /**
-     * Methods that remove items in the persistent store
-     */
-    @Pointcut("daoMethod() && (execution(* remove*(*, ..)) || execution(* delete*(*, ..)))")
-    public void deleter() {
-    }
-
-    /**
      * A public method defined in a service.
      */
     @Pointcut("inGemma() && @target(org.springframework.stereotype.Service) && anyPublicMethod()")
