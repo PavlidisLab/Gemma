@@ -30,7 +30,9 @@ import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.rdf.model.StmtIterator;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.CharArraySet;
+import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;
@@ -53,6 +55,7 @@ import ubic.gemma.core.ontology.basecode.search.OntologySearchException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -71,11 +74,11 @@ class LuceneOntologySearchIndex implements SearchIndex {
     private static final String TEXT_FIELD = "text";
 
     private final Directory directory;
-    private final StandardAnalyzer analyzer;
+    private final Analyzer analyzer;
     private final DirectoryReader reader;
     private final IndexSearcher searcher;
 
-    LuceneOntologySearchIndex( Directory directory, StandardAnalyzer analyzer ) throws IOException {
+    LuceneOntologySearchIndex( Directory directory, Analyzer analyzer ) throws IOException {
         this.directory = directory;
         this.analyzer = analyzer;
         this.reader = DirectoryReader.open( directory );
@@ -147,14 +150,24 @@ class LuceneOntologySearchIndex implements SearchIndex {
     }
 
     /**
-     * Build a fresh in-memory Lucene 9 index over the given {@link OntModel},
-     * indexing the literal values of the given properties under a single
+     * Build a fresh in-memory Lucene 9 index over the given {@link OntModel}
+     * using an English Porter-stem analyzer with the given stem-exclusion set
+     * so protected words (e.g. ontology terms a caller wants to match verbatim)
+     * are indexed verbatim while other words collapse to their Porter stem.
+     * Literal values of the given properties are concatenated under a single
      * analyzed text field keyed by the subject URI.
      */
     static LuceneOntologySearchIndex build( OntModel model, Collection<OntologyIndexer.IndexableProperty> properties, Set<String> excludedFromStemming ) throws IOException {
         // ByteBuffersDirectory is Lucene 9's drop-in for the removed RAMDirectory.
         Directory dir = new ByteBuffersDirectory();
-        StandardAnalyzer analyzer = new StandardAnalyzer();
+        CharArraySet stemExclusion = new CharArraySet(
+                excludedFromStemming == null ? Collections.emptySet() : excludedFromStemming,
+                false /* not case-sensitive */
+        );
+        EnglishAnalyzer analyzer = new EnglishAnalyzer(
+                EnglishAnalyzer.getDefaultStopSet(),
+                stemExclusion
+        );
         IndexWriterConfig cfg = new IndexWriterConfig( analyzer );
         cfg.setOpenMode( IndexWriterConfig.OpenMode.CREATE );
         int docCount = 0;
