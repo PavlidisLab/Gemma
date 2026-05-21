@@ -1,0 +1,7 @@
+-- Add curator/agent baseline-relevance hint columns to EXPERIMENTAL_FACTOR.
+-- Mirrors the curation-ui Factor shape; H2 twin of mysql V5.
+
+ALTER TABLE EXPERIMENTAL_FACTOR
+    ADD COLUMN BASELINE_RELEVANCE VARCHAR(32) NULL;
+ALTER TABLE EXPERIMENTAL_FACTOR
+    ADD COLUMN BASELINE_RELEVANCE_REASON CLOB NULL;

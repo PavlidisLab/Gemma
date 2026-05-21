@@ -52,6 +52,24 @@ public class ExperimentalFactorValueObject extends IdentifiableValueObject<Exper
     private String category;
     private String categoryUri;
 
+    /**
+     * Curator/agent hint about baseline relevance. Mirrors the curation-ui {@code Factor.baseline_relevance}
+     * field. Allowed values: {@code "required"}, {@code "not_applicable"}, {@code "uncertain"}.
+     * {@code null} when the curation pipeline has not set it.
+     */
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Schema(description = "Curator/agent baseline-relevance hint: \"required\" | \"not_applicable\" | \"uncertain\"; null when unset.",
+            allowableValues = { "required", "not_applicable", "uncertain" })
+    private String baselineRelevance;
+
+    /**
+     * Free-text rationale paired with {@link #baselineRelevance}. {@code null} when unset.
+     */
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String baselineRelevanceReason;
+
     @Nullable
     @Deprecated
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -89,6 +107,9 @@ public class ExperimentalFactorValueObject extends IdentifiableValueObject<Exper
             this.category = factor.getCategory().getCategory();
             this.categoryUri = factor.getCategory().getCategoryUri();
         }
+
+        this.baselineRelevance = factor.getBaselineRelevance();
+        this.baselineRelevanceReason = factor.getBaselineRelevanceReason();
 
         if ( factor.getType() != null ) {
             this.type = factor.getType().equals( FactorType.CATEGORICAL ) ? "categorical" : "continuous";
