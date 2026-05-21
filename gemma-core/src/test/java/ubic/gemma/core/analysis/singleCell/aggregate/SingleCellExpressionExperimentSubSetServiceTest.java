@@ -12,6 +12,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
+import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
@@ -88,6 +89,7 @@ public class SingleCellExpressionExperimentSubSetServiceTest extends BaseTest5 {
         ExperimentalFactor cf = new ExperimentalFactor();
         cf.setType( FactorType.CATEGORICAL );
         ArrayDesign ad = new ArrayDesign();
+        SingleCellDimension scd = new SingleCellDimension();
         // create 4 samples
         for ( int i = 0; i < 4; i++ ) {
             BioAssay ba = new BioAssay();
@@ -101,6 +103,7 @@ public class SingleCellExpressionExperimentSubSetServiceTest extends BaseTest5 {
             ba.setSampleUsed( bm );
             bm.getBioAssaysUsedIn().add( ba );
             ee.getBioAssays().add( ba );
+            scd.getBioAssays().add( ba );
         }
         // create 10 cell types
         for ( int i = 0; i < 10; i++ ) {
@@ -114,6 +117,8 @@ public class SingleCellExpressionExperimentSubSetServiceTest extends BaseTest5 {
                 .thenReturn( Optional.of( cta ) );
         when( singleCellExpressionExperimentService.getCellTypeFactor( ee ) )
                 .thenReturn( Optional.of( cf ) );
+        when( singleCellExpressionExperimentService.getPreferredSingleCellDimensionWithoutCellIds( ee ) )
+                .thenReturn( Optional.of( scd ) );
         when( expressionExperimentSubSetService.create( any( ExpressionExperimentSubSet.class ) ) )
                 .thenAnswer( a -> a.getArgument( 0 ) );
         List<ExpressionExperimentSubSet> subsets = service.createSubSetsByCellType( ee, SingleCellExperimentSubSetsCreationConfig.builder().build() );
@@ -169,6 +174,7 @@ public class SingleCellExpressionExperimentSubSetServiceTest extends BaseTest5 {
         ExperimentalFactor cf = new ExperimentalFactor();
         cf.setType( FactorType.CATEGORICAL );
         ArrayDesign ad = new ArrayDesign();
+        SingleCellDimension scd = new SingleCellDimension();
         // create 4 samples
         for ( int i = 0; i < 4; i++ ) {
             BioAssay ba = new BioAssay();
@@ -179,6 +185,7 @@ public class SingleCellExpressionExperimentSubSetServiceTest extends BaseTest5 {
             ba.setSampleUsed( bm );
             bm.getBioAssaysUsedIn().add( ba );
             ee.getBioAssays().add( ba );
+            scd.getBioAssays().add( ba );
         }
         // create 10 cell types
         for ( int i = 0; i < 10; i++ ) {
@@ -194,6 +201,8 @@ public class SingleCellExpressionExperimentSubSetServiceTest extends BaseTest5 {
                 .thenReturn( Optional.of( cta ) );
         when( singleCellExpressionExperimentService.getCellTypeFactor( ee ) )
                 .thenReturn( Optional.of( cf ) );
+        when( singleCellExpressionExperimentService.getPreferredSingleCellDimensionWithoutCellIds( ee ) )
+                .thenReturn( Optional.of( scd ) );
         when( expressionExperimentSubSetService.create( any( ExpressionExperimentSubSet.class ) ) )
                 .thenAnswer( a -> a.getArgument( 0 ) );
         SingleCellExperimentSubSetsCreationConfig config = SingleCellExperimentSubSetsCreationConfig.builder().ignoreUnmatchedCharacteristics( true ).build();
