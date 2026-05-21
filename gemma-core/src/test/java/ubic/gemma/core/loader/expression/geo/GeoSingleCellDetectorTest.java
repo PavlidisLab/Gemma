@@ -62,6 +62,7 @@ import static org.assertj.core.api.InstanceOfAssertFactories.type;
 @Category({ GeoTest.class, SlowTest.class })
 @ContextConfiguration
 @ExtendWith(NetworkAvailableExtension.class)
+@NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
 public class GeoSingleCellDetectorTest extends BaseTest5 {
 
     private static final SingleCellDataLoaderConfig DEFAULT_SINGLE_CELL_DATA_LOADER_CONFIG = SingleCellDataLoaderConfig.builder().build();
