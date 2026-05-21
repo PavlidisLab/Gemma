@@ -236,14 +236,17 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     }
 
     private Map<Class<? extends Identifiable>, Map<String, Set<Long>>> findExperimentsByUrisInternal( Collection<String> uris, boolean includeSubjects, boolean includePredicates, boolean includeObjects, @Nullable Taxon taxon, boolean rankByLevel, int limit ) {
-        String qs = "select T.`LEVEL`, T.VALUE_URI, T.PREDICATE_URI, T.OBJECT_URI, T.SECOND_PREDICATE_URI, T.SECOND_OBJECT_URI, T.EXPRESSION_EXPERIMENT_FK from EXPRESSION_EXPERIMENT2CHARACTERISTIC T"
-                + ( taxon != null ? " join INVESTIGATION I on T.EXPRESSION_EXPERIMENT_FK = I.ID " : "" )
-                + EE2CAclQueryUtils.formNativeAclJoinClause( "T.EXPRESSION_EXPERIMENT_FK" ) + " "
-                + "where "
-                + createPredicates( "T", "uris", includeSubjects, includePredicates, includeObjects )
-                + ( taxon != null ? " and I.TAXON_FK = :taxonId" : "" )
-                + EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "T.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" )
-                + ( rankByLevel ? " order by FIELD(T.LEVEL, :eeClass, :edClass, :bmClass)" : "" );
+        // Use UNION ALL of per-column range scans instead of a 5-column OR.
+        // MySQL gives up on index_merge once the per-column row estimate exceeds a threshold
+        // and falls back to a full scan on EE2C (~2.18M rows). Each UNION arm picks the
+        // arm-specific composite index (EE2C_VALUE_URI_VALUE, EE2C_OBJECT_URI_OBJECT, ...)
+        // and runs as a 'range' lookup. Live-measured: 10 URIs 3.07s -> 0.16s (19x);
+        // 200 URIs 3.94s -> 1.08s (3.6x). See PERF_PROBE_SEARCH.md.
+        //
+        // Duplicate-row note: a single EE2C row whose URI appears in multiple columns is
+        // emitted once per matching arm. The downstream loop (lines below) deduplicates
+        // implicitly because it builds Set<Long> of EE IDs per (clazz, uri).
+        String qs = buildFindExperimentsByUrisUnionAll( includeSubjects, includePredicates, includeObjects, taxon, rankByLevel );
 
         Query query = getSessionFactory().getCurrentSession().createNativeQuery( qs )
                 .addScalar( "LEVEL", StandardBasicTypes.CLASS )
@@ -316,21 +319,50 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
         return result2;
     }
 
-    private String createPredicates( String tableAlias, String paramName, boolean includeSubjects, boolean includePredicates, boolean includeObjects ) {
+    /**
+     * Build the {@code findExperimentsByUris} query as a {@code UNION ALL} of per-column
+     * range scans, one arm per URI column the caller asked for. Each arm references the
+     * shared {@code :uris} parameter binding (and {@code :taxonId} / ACL params when set),
+     * so the parameter list signature matches the legacy single-statement form.
+     */
+    private String buildFindExperimentsByUrisUnionAll( boolean includeSubjects, boolean includePredicates, boolean includeObjects, @Nullable Taxon taxon, boolean rankByLevel ) {
         Assert.isTrue( includeSubjects || includePredicates || includeObjects, "At least one of the source URIs must be included." );
-        List<String> p = new ArrayList<>();
+        List<String> uriColumns = new ArrayList<>( 5 );
         if ( includeSubjects ) {
-            p.add( tableAlias + ".VALUE_URI in (:" + paramName + ")" );
+            uriColumns.add( "VALUE_URI" );
         }
         if ( includePredicates ) {
-            p.add( tableAlias + ".PREDICATE_URI in (:uris)" );
-            p.add( tableAlias + ".SECOND_PREDICATE_URI in (:" + paramName + ")" );
+            uriColumns.add( "PREDICATE_URI" );
+            uriColumns.add( "SECOND_PREDICATE_URI" );
         }
         if ( includeObjects ) {
-            p.add( tableAlias + ".OBJECT_URI in (:uris)" );
-            p.add( tableAlias + ".SECOND_OBJECT_URI in (:" + paramName + ")" );
+            uriColumns.add( "OBJECT_URI" );
+            uriColumns.add( "SECOND_OBJECT_URI" );
         }
-        return "(" + String.join( " or ", p ) + ")";
+        String aclJoin = EE2CAclQueryUtils.formNativeAclJoinClause( "T.EXPRESSION_EXPERIMENT_FK" );
+        String aclWhere = EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "T.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" );
+        String taxonJoin = taxon != null ? " join INVESTIGATION I on T.EXPRESSION_EXPERIMENT_FK = I.ID " : "";
+        String taxonWhere = taxon != null ? " and I.TAXON_FK = :taxonId" : "";
+        StringBuilder sb = new StringBuilder();
+        if ( rankByLevel ) {
+            // wrap the UNION ALL so ORDER BY applies to the combined result
+            sb.append( "select U.`LEVEL`, U.VALUE_URI, U.PREDICATE_URI, U.OBJECT_URI, U.SECOND_PREDICATE_URI, U.SECOND_OBJECT_URI, U.EXPRESSION_EXPERIMENT_FK from (" );
+        }
+        for ( int i = 0; i < uriColumns.size(); i++ ) {
+            if ( i > 0 ) {
+                sb.append( " union all " );
+            }
+            sb.append( "select T.`LEVEL`, T.VALUE_URI, T.PREDICATE_URI, T.OBJECT_URI, T.SECOND_PREDICATE_URI, T.SECOND_OBJECT_URI, T.EXPRESSION_EXPERIMENT_FK from EXPRESSION_EXPERIMENT2CHARACTERISTIC T" )
+                    .append( taxonJoin )
+                    .append( aclJoin )
+                    .append( " where T." ).append( uriColumns.get( i ) ).append( " in (:uris)" )
+                    .append( taxonWhere )
+                    .append( aclWhere );
+        }
+        if ( rankByLevel ) {
+            sb.append( ") U order by FIELD(U.`LEVEL`, :eeClass, :edClass, :bmClass)" );
+        }
+        return sb.toString();
     }
 
     private int rankClass( Class<?> clazz ) {
