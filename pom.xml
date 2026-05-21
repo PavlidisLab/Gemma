@@ -1215,6 +1215,19 @@
 					<yarnAuditAnalyzerEnabled>false</yarnAuditAnalyzerEnabled>
 				</configuration>
 			</plugin>
+			<!--
+			    SpotBugs + FindSecBugs. Opt-in only: invoke with
+			        mvn spotbugs:spotbugs  (generate report)
+			        mvn spotbugs:check     (drives <failOnError>)
+			    NOT bound to a phase, so day-to-day builds stay fast. CI / scheduled
+			    runs invoke explicitly. Version + configuration centralised in
+			    pluginManagement below; this entry is the active opt-in registration
+			    so child modules inherit the configuration without re-declaring it.
+			-->
+			<plugin>
+				<groupId>com.github.spotbugs</groupId>
+				<artifactId>spotbugs-maven-plugin</artifactId>
+			</plugin>
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>versions-maven-plugin</artifactId>
@@ -1307,6 +1320,42 @@
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-dependency-plugin</artifactId>
 					<version>3.10.0</version>
+				</plugin>
+				<!--
+				    SpotBugs + FindSecBugs. Opt-in only: invoke with
+				        mvn spotbugs:spotbugs   (generate report)
+				        mvn spotbugs:check      (fail-or-report driven by <failOnError>)
+				    Not bound to the verify phase so day-to-day builds stay fast.
+				    The exclude filter at ${main.basedir}/spotbugs-exclude.xml
+				    suppresses the well-known false positives on entity classes that
+				    inherit equals/hashCode from AbstractIdentifiable /
+				    AbstractDescribable.
+				    findsecbugs-plugin adds OWASP-style detectors (relevant to the
+				    JAX-RS layer in gemma-rest).
+				-->
+				<plugin>
+					<groupId>com.github.spotbugs</groupId>
+					<artifactId>spotbugs-maven-plugin</artifactId>
+					<version>${spotbugs.maven.plugin.version}</version>
+					<configuration>
+						<effort>Max</effort>
+						<threshold>Medium</threshold>
+						<!-- Start non-blocking; can tighten to true once the backlog clears. -->
+						<failOnError>false</failOnError>
+						<includeTests>false</includeTests>
+						<!-- effort=Max + the gemma-core class graph blows the default 768m heap.
+						     4 GB suffices on amazon-corretto-17. -->
+						<fork>true</fork>
+						<maxHeap>4096</maxHeap>
+						<excludeFilterFile>${project.parent.basedir}/spotbugs-exclude.xml</excludeFilterFile>
+						<plugins>
+							<plugin>
+								<groupId>com.h3xstream.findsecbugs</groupId>
+								<artifactId>findsecbugs-plugin</artifactId>
+								<version>${findsecbugs.plugin.version}</version>
+							</plugin>
+						</plugins>
+					</configuration>
 				</plugin>
 			</plugins>
 		</pluginManagement>
@@ -1549,5 +1598,11 @@
 		</testJvmOptions>
 		<delombok.output>${project.build.directory}/delombok</delombok.output>
 		<javadocSourcePaths>${delombok.output}</javadocSourcePaths>
+		<!-- SpotBugs / FindSecBugs pinned versions; see pluginManagement entry below.
+		     The exclude filter lives at ${project.parent.basedir}/spotbugs-exclude.xml;
+		     all direct children of this top-level pom (gemma-core, gemma-rest, gemma-cli,
+		     gemma-web) resolve project.parent.basedir to this repo root. -->
+		<spotbugs.maven.plugin.version>4.8.6.4</spotbugs.maven.plugin.version>
+		<findsecbugs.plugin.version>1.13.0</findsecbugs.plugin.version>
 	</properties>
 </project>
