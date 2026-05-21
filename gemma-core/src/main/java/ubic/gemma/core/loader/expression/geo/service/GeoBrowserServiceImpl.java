@@ -67,6 +67,9 @@ public class GeoBrowserServiceImpl implements GeoBrowserService, InitializingBea
     private static final String GEO_DATA_STORE_FILE_NAME = "GEODataStore";
     private static final Log log = LogFactory.getLog( GeoBrowserServiceImpl.class.getName() );
 
+    private static final ObjectInputFilter GEO_DESERIALIZATION_FILTER = ObjectInputFilter.Config.createFilter(
+            "ubic.gemma.**;java.util.**;java.lang.**;java.time.**;java.math.**;java.sql.**;!*" );
+
     // private static final XPathExpression xgds = XMLUtils.compile( "/eSummaryResult/DocSum/Item[@Name=\"GDS\"][1]/text()" );
     private static final XPathExpression xgse = XMLUtils.compile( "/eSummaryResult/DocSum/Item[@Name=\"GSE\"][1]/text()" );
     private static final XPathExpression xtitle = XMLUtils.compile( "/eSummaryResult/DocSum/Item[@Name=\"title\"][1]/text()" );
@@ -289,6 +292,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService, InitializingBea
             GeoBrowserServiceImpl.log.info( String.format( "Loading GEO browser info from %s...", f.getAbsolutePath() ) );
             StopWatch timer = StopWatch.createStarted();
             try ( FileInputStream fis = new FileInputStream( f ); ObjectInputStream ois = new ObjectInputStream( fis ) ) {
+                ois.setObjectInputFilter( GEO_DESERIALIZATION_FILTER );
                 //noinspection unchecked
                 Map<String, GeoRecord> records = ( ( Map<String, GeoRecord> ) ois.readObject() );
                 for ( Map.Entry<String, GeoRecord> e : records.entrySet() ) {

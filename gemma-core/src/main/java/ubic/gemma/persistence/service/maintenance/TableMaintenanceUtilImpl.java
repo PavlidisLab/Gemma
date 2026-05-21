@@ -74,6 +74,9 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
      */
     private static final String CD_LAST_UPDATED_SINCE = "(CD.LAST_UPDATED is null or :since is null or CD.LAST_UPDATED >= :since)";
 
+    private static final java.io.ObjectInputFilter GENE2CS_DESERIALIZATION_FILTER = java.io.ObjectInputFilter.Config.createFilter(
+            "ubic.gemma.**;java.util.**;java.lang.**;java.time.**;java.math.**;java.sql.**;!*" );
+
     /**
      * The query used to repopulate the contents of the GENE2CS table.
      */
@@ -554,6 +557,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
     @Nullable
     private Gene2CsStatus getLastGene2CsUpdateStatus() {
         try ( ObjectInputStream ois = new ObjectInputStream( Files.newInputStream( gene2CsInfoPath ) ) ) {
+            ois.setObjectInputFilter( GENE2CS_DESERIALIZATION_FILTER );
             return ( Gene2CsStatus ) ois.readObject();
         } catch ( NoSuchFileException e ) {
             return null;
