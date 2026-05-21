@@ -54,8 +54,8 @@ TODAY = date(2026, 5, 21)
 
 
 def w(d: date) -> float:
-    """Convert a calendar date to "weeks from EPOCH" — fractional OK."""
-    return (d - EPOCH).days / 7.0
+    """Convert a calendar date to "days from EPOCH"."""
+    return float((d - EPOCH).days)
 
 
 TODAY_X = w(TODAY)
@@ -296,6 +296,28 @@ TASKS: list[GanttTask] = [
               note="216k of 236k trails backfilled"),
 ]
 
+
+# ----------------------------------------------------------------------
+# Bar-width normalization: make every "done" task render at least 1 day
+# wide so the eye can read it next to multi-week planned bars.
+# ----------------------------------------------------------------------
+_MIN_DONE_WIDTH = 1.0  # days
+_normalized: list[GanttTask] = []
+for _t in TASKS:
+    if _t.status == "done":
+        _w = _t.plan_end - _t.plan_start
+        if _w < _MIN_DONE_WIDTH:
+            _mid = (_t.plan_start + _t.plan_end) / 2.0
+            _new_start = _mid - _MIN_DONE_WIDTH / 2.0
+            _new_end = _mid + _MIN_DONE_WIDTH / 2.0
+            _normalized.append(GanttTask(
+                _t.label, _new_start, _new_end, _new_end,
+                _t.status, _t.category, _t.note,
+            ))
+            continue
+    _normalized.append(_t)
+TASKS = _normalized
+
 # ----------------------------------------------------------------------
 # Status palette (drives the bottom legend)
 # ----------------------------------------------------------------------
@@ -306,6 +328,22 @@ STATUS_COLOR = {
     "blocked":  ACCENT_4,
     "deferred": SUBTLE,
 }
+
+
+# Plan horizon — tasks that extend beyond this are clipped + flagged.
+X_MAX = w(date(2026, 7, 17))  # ~60 days
+# Clip any plan_end beyond the horizon and flag those tasks visually.
+_clipped: list[GanttTask] = []
+for _t in TASKS:
+    if _t.plan_end > X_MAX:
+        _clipped.append(GanttTask(
+            _t.label + "  (continues Q3+)",
+            _t.plan_start, X_MAX, _t.done_end,
+            _t.status, _t.category, _t.note,
+        ))
+    else:
+        _clipped.append(_t)
+TASKS = _clipped
 
 # ----------------------------------------------------------------------
 # Group tasks by category in input order for top-to-bottom rendering
@@ -359,7 +397,6 @@ for i, (cat, y_lo, y_hi) in enumerate(cat_bands):
                    zorder=0)
 
 # Right-margin category labels.
-X_MAX = w(date(2026, 9, 17))  # plan horizon end
 for cat, y_lo, y_hi in cat_bands:
     ax.text(
         X_MAX + 0.3, (y_lo + y_hi) / 2,
@@ -392,12 +429,12 @@ today_line(ax, x=TODAY_X, label="today")
 # X axis — weekly ticks
 # ----------------------------------------------------------------------
 ax.set_xlim(-0.3, X_MAX + 0.15)
-# Tick every two weeks; label as ISO date.
-n_weeks = int(X_MAX) + 1
-tick_weeks = list(range(0, n_weeks + 1, 2))
-ax.set_xticks(tick_weeks)
+# Tick every 7 days; label as ISO date.
+n_days = int(X_MAX) + 1
+tick_days = list(range(0, n_days + 1, 7))
+ax.set_xticks(tick_days)
 ax.set_xticklabels(
-    [(EPOCH + timedelta(weeks=k)).strftime("%b %d") for k in tick_weeks],
+    [(EPOCH + timedelta(days=k)).strftime("%b %d") for k in tick_days],
     fontsize=7.5, color=SUBTLE,
 )
 
