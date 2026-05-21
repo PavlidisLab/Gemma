@@ -282,8 +282,34 @@ public class HibernateSearchSource implements FieldAwareSearchSource {
             List<List<?>> rows = hits.hits();
             DoubleSummaryStatistics stats = rows.stream().mapToDouble( r -> ( Float ) r.get( 1 ) ).summaryStatistics();
 
+            // Batch-fetch entities by id when callers asked for filled results — replaces a
+            // per-hit session.get(clazz, id) loop with one byMultipleIds().multiLoad(...) call.
+            // For N hits this collapses N round-trips to 1, plus the L1-cache fast path via
+            // enableSessionCheck(true) when the same id was already loaded earlier in the session.
+            Map<Long, T> entitiesById = null;
+            if ( settings.isFillResults() ) {
+                List<Long> ids = rows.stream()
+                        .map( HibernateSearchSource::extractId )
+                        .filter( java.util.Objects::nonNull )
+                        .collect( Collectors.toList() );
+                if ( !ids.isEmpty() ) {
+                    List<T> entities = session.byMultipleIds( clazz )
+                            .enableSessionCheck( true )
+                            .multiLoad( ids );
+                    entitiesById = new HashMap<>( entities.size() );
+                    for ( T e : entities ) {
+                        if ( e != null && e.getId() != null ) {
+                            entitiesById.put( e.getId(), e );
+                        }
+                    }
+                } else {
+                    entitiesById = Collections.emptyMap();
+                }
+            }
+            final Map<Long, T> entitiesByIdFinal = entitiesById;
+
             List<ubic.gemma.model.common.search.SearchResult<T>> results = rows.stream()
-                    .map( r -> rowToSearchResult( r, settings, clazz, stats, highlighter, highlightFields ) )
+                    .map( r -> rowToSearchResult( r, settings, clazz, stats, highlighter, highlightFields, entitiesByIdFinal ) )
                     .filter( java.util.Objects::nonNull )
                     .collect( Collectors.toList() );
 
@@ -297,10 +323,24 @@ public class HibernateSearchSource implements FieldAwareSearchSource {
         }
     }
 
+    /**
+     * Pull the Long id out of an HS 7 projection row's entity-reference column. Returns null
+     * for rows whose first projection isn't an {@code EntityReference} — callers filter those
+     * out the same way {@link #rowToSearchResult} drops them. Kept package-static so both the
+     * id-collection pre-pass and the per-row mapping share the same parse logic.
+     */
+    private static Long extractId( List<?> row ) {
+        Object refObj = row.get( 0 );
+        if ( refObj instanceof org.hibernate.search.engine.common.EntityReference ) {
+            Object raw = ( ( org.hibernate.search.engine.common.EntityReference ) refObj ).id();
+            return ( raw instanceof Long ) ? ( Long ) raw : Long.valueOf( raw.toString() );
+        }
+        return null;
+    }
+
     private <T extends Identifiable> ubic.gemma.model.common.search.SearchResult<T> rowToSearchResult(
             List<?> row, SearchSettings settings, Class<T> clazz, DoubleSummaryStatistics stats,
-            Highlighter highlighter, String[] highlightFields ) {
-        Object refObj = row.get( 0 );
+            Highlighter highlighter, String[] highlightFields, Map<Long, T> entitiesById ) {
         Float scoreF = ( Float ) row.get( 1 );
         double score;
         if ( stats.getMax() == stats.getMin() ) {
@@ -309,11 +349,8 @@ public class HibernateSearchSource implements FieldAwareSearchSource {
             score = FULL_TEXT_SCORE_PENALTY * ( scoreF - stats.getMin() ) / ( stats.getMax() - stats.getMin() );
         }
         // entity reference exposes the id as Object — entities use Long primary keys throughout Gemma.
-        Long id;
-        if ( refObj instanceof org.hibernate.search.engine.common.EntityReference ) {
-            Object raw = ( ( org.hibernate.search.engine.common.EntityReference ) refObj ).id();
-            id = ( raw instanceof Long ) ? ( Long ) raw : Long.valueOf( raw.toString() );
-        } else {
+        Long id = extractId( row );
+        if ( id == null ) {
             return null;
         }
         Map<String, String> highlights = null;
@@ -330,7 +367,7 @@ public class HibernateSearchSource implements FieldAwareSearchSource {
             }
         }
         if ( settings.isFillResults() ) {
-            T entity = sessionFactory.getCurrentSession().get( clazz, id );
+            T entity = entitiesById != null ? entitiesById.get( id ) : null;
             if ( entity == null || entity.getId() == null ) {
                 // entity vanished out from under the index — skip the stale hit.
                 return null;
