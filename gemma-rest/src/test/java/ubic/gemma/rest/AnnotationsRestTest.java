@@ -43,4 +43,22 @@ public class AnnotationsRestTest extends BaseJerseyIntegrationTest {
         assertThat( target( "/annotations/search" ).request().get() )
                 .hasStatus( Response.Status.BAD_REQUEST );
     }
+
+    @Test
+    public void testGetAnnotationTermWithUnknownUriIs404() {
+        assertThat( target( "/annotations/term" ).queryParam( "uri", "http://example.com/definitely-not-a-real-uri-" + System.nanoTime() ).request().get() )
+                .hasStatus( Response.Status.NOT_FOUND );
+    }
+
+    @Test
+    public void testGetAnnotationTermWithBlankUriIs400() {
+        assertThat( target( "/annotations/term" ).queryParam( "uri", "" ).request().get() )
+                .hasStatus( Response.Status.BAD_REQUEST );
+    }
+
+    @Test
+    public void testGetAnnotationTermWithMissingUriIs400() {
+        assertThat( target( "/annotations/term" ).request().get() )
+                .hasStatus( Response.Status.BAD_REQUEST );
+    }
 }

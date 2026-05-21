@@ -409,6 +409,113 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest {
     }
 
     @Test
+    public void testGetAnnotationTerm() throws TimeoutException {
+        OntologyTerm term = mock( OntologyTerm.class );
+        when( term.getUri() ).thenReturn( "http://example.com/diabetes" );
+        when( term.getLabel() ).thenReturn( "diabetes" );
+        when( term.isObsolete() ).thenReturn( false );
+        when( ontologyService.getTerm( eq( "http://example.com/diabetes" ), anyLong(), any() ) ).thenReturn( term );
+        when( ontologyService.getDefinition( eq( "http://example.com/diabetes" ), anyLong(), any() ) )
+                .thenReturn( "a metabolic disease" );
+
+        ExpressionExperiment ee1 = ExpressionExperiment.Factory.newInstance();
+        ee1.setId( 1L );
+        ExpressionExperiment ee2 = ExpressionExperiment.Factory.newInstance();
+        ee2.setId( 2L );
+        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> hits = new HashMap<>();
+        hits.put( ExpressionExperiment.class, Collections.singletonMap( "http://example.com/diabetes", new HashSet<>( Arrays.asList( ee1, ee2 ) ) ) );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( hits );
+
+        assertThat( target( "/annotations/term" ).queryParam( "uri", "http://example.com/diabetes" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.uri", "http://example.com/diabetes" )
+                .hasFieldOrPropertyWithValue( "data.label", "diabetes" )
+                .hasFieldOrPropertyWithValue( "data.definition", "a metabolic disease" )
+                .hasFieldOrPropertyWithValue( "data.obsolete", false )
+                .hasFieldOrPropertyWithValue( "data.usageCount", 2 );
+
+        verify( ontologyService ).getTerm( eq( "http://example.com/diabetes" ), longThat( l -> l <= 30000 ), eq( TimeUnit.MILLISECONDS ) );
+        verify( ontologyService ).getDefinition( eq( "http://example.com/diabetes" ), longThat( l -> l <= 30000 ), eq( TimeUnit.MILLISECONDS ) );
+        verify( characteristicService ).findExperimentsByUris(
+                eq( Collections.singleton( "http://example.com/diabetes" ) ),
+                eq( true ), eq( true ), eq( true ), isNull(), eq( -1 ), eq( false ), eq( false ) );
+    }
+
+    @Test
+    public void testGetAnnotationTermReportsZeroWhenNoExperimentsMatch() throws TimeoutException {
+        OntologyTerm term = mock( OntologyTerm.class );
+        when( term.getUri() ).thenReturn( "http://example.com/orphan" );
+        when( term.getLabel() ).thenReturn( "orphan" );
+        when( ontologyService.getTerm( eq( "http://example.com/orphan" ), anyLong(), any() ) ).thenReturn( term );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/annotations/term" ).queryParam( "uri", "http://example.com/orphan" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.usageCount", 0 );
+    }
+
+    @Test
+    public void testGetAnnotationTermSkipsCountLookupWhenTermHasNoUri() throws TimeoutException {
+        OntologyTerm term = mock( OntologyTerm.class );
+        when( term.getUri() ).thenReturn( null );
+        when( term.getLabel() ).thenReturn( "uri-less" );
+        when( ontologyService.getTerm( eq( "http://example.com/foo" ), anyLong(), any() ) ).thenReturn( term );
+
+        assertThat( target( "/annotations/term" ).queryParam( "uri", "http://example.com/foo" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.usageCount", null );
+
+        verify( characteristicService, never() ).findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() );
+    }
+
+    @Test
+    public void testGetAnnotationTermNotFound() throws TimeoutException {
+        when( ontologyService.getTerm( eq( "http://example.com/missing" ), anyLong(), any() ) ).thenReturn( null );
+
+        assertThat( target( "/annotations/term" ).queryParam( "uri", "http://example.com/missing" ).request().get() )
+                .hasStatus( Response.Status.NOT_FOUND )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
+
+        verify( ontologyService ).getTerm( eq( "http://example.com/missing" ), anyLong(), any() );
+        verifyNoMoreInteractions( ontologyService );
+        verify( characteristicService, never() ).findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() );
+    }
+
+    @Test
+    public void testGetAnnotationTermWithBlankUriIs400() throws TimeoutException {
+        assertThat( target( "/annotations/term" ).queryParam( "uri", "" ).request().get() )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        assertThat( target( "/annotations/term" ).queryParam( "uri", "   " ).request().get() )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        verify( ontologyService, never() ).getTerm( any(), anyLong(), any() );
+    }
+
+    @Test
+    public void testGetAnnotationTermWithMissingUriIs400() throws TimeoutException {
+        assertThat( target( "/annotations/term" ).request().get() )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        verify( ontologyService, never() ).getTerm( any(), anyLong(), any() );
+    }
+
+    @Test
+    public void testGetAnnotationTermWhenLookupTimesOut() throws TimeoutException {
+        when( ontologyService.getTerm( eq( "http://example.com/slow" ), anyLong(), any() ) )
+                .thenThrow( new TimeoutException( "ontology lookup timed out" ) );
+
+        assertThat( target( "/annotations/term" ).queryParam( "uri", "http://example.com/slow" ).request().get() )
+                .hasStatus( Response.Status.SERVICE_UNAVAILABLE )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
+
+        verify( characteristicService, never() ).findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() );
+    }
+
+    @Test
     public void testSearchAnnotationsCollapsesDuplicateEeIdsAcrossClasses() throws SearchException, TimeoutException {
         CharacteristicValueObject hit = new CharacteristicValueObject( "diabetes", "http://example.com/diabetes", "disease", "http://example.com/disease" );
         when( ontologyService.findExperimentsCharacteristicTags( eq( "diabetes" ), anyInt(), anyBoolean(), anyLong(), any() ) )
