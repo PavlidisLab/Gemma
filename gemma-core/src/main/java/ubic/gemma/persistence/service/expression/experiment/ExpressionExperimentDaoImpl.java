@@ -3994,6 +3994,7 @@ public class ExpressionExperimentDaoImpl
                     .createQuery( "select vec.quantitationType from SingleCellExpressionDataVector vec "
                             + "where vec.expressionExperiment = :ee and vec.singleCellDimension = :dim "
                             + "group by vec.quantitationType" )
+                    .setParameter( "ee", ee )
                     .setParameter( "dim", scd ) );
             if ( !otherUsers.isEmpty() ) {
                 log.warn( scd + " is used by " + otherUsers.size() + " sets of vectors, it will not be deleted." );
