@@ -483,14 +483,12 @@ public class ExpressionExperimentServiceImpl
         DesignPreflightReport.Summary summary = report.getSummary();
 
         ExperimentalDesign ed = ee.getExperimentalDesign();
-        if ( ed == null ) {
-            report.getBlockers().add( new DesignPreflightReport.Blocker( "NO_EXISTING_DESIGN",
-                    "Experiment has no experimental design; preflight cannot diff against current state." ) );
-            return report;
-        }
+        // If the current ee is lacking a design, set currentFactors to empty
+        Collection<ExperimentalFactor> currentFactors = ed != null
+                ? ed.getExperimentalFactors() : Collections.emptyList();
 
         // ---- thaw what we need to walk ----
-        for ( ExperimentalFactor ef : ed.getExperimentalFactors() ) {
+        for ( ExperimentalFactor ef : currentFactors ) {
             Hibernate.initialize( ef.getFactorValues() );
         }
         Hibernate.initialize( ee.getBioAssays() );
@@ -505,7 +503,7 @@ public class ExpressionExperimentServiceImpl
         Map<Long, ExperimentalFactor> currentFactorsById = new HashMap<>();
         Map<Long, FactorValue> currentFvsById = new HashMap<>();
         Map<Long, ExperimentalFactor> currentFvParentByFvId = new HashMap<>();
-        for ( ExperimentalFactor ef : ed.getExperimentalFactors() ) {
+        for ( ExperimentalFactor ef : currentFactors ) {
             currentFactorsById.put( ef.getId(), ef );
             for ( FactorValue fv : ef.getFactorValues() ) {
                 currentFvsById.put( fv.getId(), fv );
@@ -624,7 +622,7 @@ public class ExpressionExperimentServiceImpl
 
         // ---- impact: deletions ----
         List<ExperimentalFactor> factorsBeingDeleted = new ArrayList<>();
-        for ( ExperimentalFactor ef : ed.getExperimentalFactors() ) {
+        for ( ExperimentalFactor ef : currentFactors ) {
             if ( !proposedFactorIds.contains( ef.getId() ) ) {
                 factorsBeingDeleted.add( ef );
                 report.getFactorsToDelete().add( new DesignPreflightReport.EntityRef( ef.getId(), ef.getName() ) );
@@ -786,7 +784,12 @@ public class ExpressionExperimentServiceImpl
         }
 
         ExperimentalDesign ed = ee.getExperimentalDesign();
-        Assert.notNull( ed, "Experiment has no experimental design after reload; preflight should have caught this." );
+        if ( ed == null ) {
+            // if experiment doesn't have a design, create one.
+            ed = ExperimentalDesign.Factory.newInstance();
+            ed = experimentalDesignService.save( ed );
+            ee.setExperimentalDesign( ed );
+        }
 
         // Thaw what we'll mutate. Mirrors previewDesignChange.
         for ( ExperimentalFactor ef : ed.getExperimentalFactors() ) {

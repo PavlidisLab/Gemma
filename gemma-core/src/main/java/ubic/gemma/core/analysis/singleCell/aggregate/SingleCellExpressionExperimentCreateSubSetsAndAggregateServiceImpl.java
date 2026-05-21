@@ -11,12 +11,14 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 import ubic.gemma.persistence.util.EntityUrlBuilder;
 
 import org.springframework.lang.Nullable;
@@ -43,6 +45,8 @@ public class SingleCellExpressionExperimentCreateSubSetsAndAggregateServiceImpl 
     private EntityUrlBuilder entityUrlBuilder;
     @Autowired
     private BioAssayDimensionService bioAssayDimensionService;
+    @Autowired
+    private SingleCellExpressionExperimentService singleCellExpressionExperimentService;
 
     @Override
     @Transactional
@@ -65,7 +69,11 @@ public class SingleCellExpressionExperimentCreateSubSetsAndAggregateServiceImpl 
     @Override
     @Transactional
     public QuantitationType createSubSetsAndAggregate( ExpressionExperiment expressionExperiment, QuantitationType scQt, CellLevelCharacteristics clc, ExperimentalFactor cellTypeFactor, Map<Characteristic, FactorValue> c2f, SingleCellExperimentSubSetsCreationConfig singleCellExperimentSubSetsCreationConfig, SingleCellAggregationConfig config ) {
-        List<ExpressionExperimentSubSet> subsets = singleCellExpressionExperimentSubSetService.createSubSets( expressionExperiment, clc, cellTypeFactor, c2f, singleCellExperimentSubSetsCreationConfig );
+        SingleCellDimension scd = singleCellExpressionExperimentService.getSingleCellDimensionWithoutCellIds( expressionExperiment, scQt );
+        if ( scd == null ) {
+            throw new IllegalStateException( "No single-cell dimension found for " + expressionExperiment + " and " + scQt + "." );
+        }
+        List<ExpressionExperimentSubSet> subsets = singleCellExpressionExperimentSubSetService.createSubSets( expressionExperiment, scd, clc, cellTypeFactor, c2f, singleCellExperimentSubSetsCreationConfig );
         int longestSubsetName = subsets.stream().map( ExpressionExperimentSubSet::getName ).mapToInt( String::length ).max().orElse( 0 );
         log.info( String.format( "Created %d subsets of %s for each cell type:\n\t%s", subsets.size(), expressionExperiment,
                 subsets.stream().map( subset -> StringUtils.rightPad( subset.getName(), longestSubsetName ) + "\t" + entityUrlBuilder.fromHostUrl().entity( subset ).web().toUri() ).collect( Collectors.joining( "\n\t" ) ) ) );

@@ -369,6 +369,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
             CategoricalArray<String> cellTypes = var.getCategoricalColumn( cellTypeFactorName, String.class );
             CategoricalArray<String> cellTypeUris = cellTypeUriFactorName != null ? var.getCategoricalColumn( cellTypeUriFactorName, String.class ) : null;
             CellTypeAssignment assignment = new CellTypeAssignment();
+            assignment.setName( cellTypeFactorName );
             int unknownCellTypeCode = CellTypeAssignment.UNKNOWN_CELL_TYPE;
             for ( int i = 0; i < cellTypes.getCategories().length; i++ ) {
                 String ct = cellTypes.getCategories()[i];
