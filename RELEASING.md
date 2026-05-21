@@ -42,9 +42,9 @@ rule.
 3. Commit with message `Update versions for release` (or
    `Update versions for hotfix`).
 
-4. Pre-release verification (JDK 17 corretto):
+4. Pre-release verification (JDK 21 corretto):
    ```
-   JAVA_HOME=$(/usr/libexec/java_home -v 17) mvn verify
+   JAVA_HOME=$(/usr/libexec/java_home -v 21) mvn verify
    ```
    This runs the full unit + integration test suite. Do not skip.
 
