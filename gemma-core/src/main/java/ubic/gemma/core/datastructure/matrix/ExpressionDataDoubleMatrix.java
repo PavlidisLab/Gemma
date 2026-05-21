@@ -643,18 +643,17 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
         int numRows = rows();
         int numColumns = columns();
 
-        DoubleMatrix<CompositeSequence, BioMaterial> mat = new DenseDoubleMatrix<>( numRows, numColumns );
+        DenseDoubleMatrix<CompositeSequence, BioMaterial> mat = new DenseDoubleMatrix<>( numRows, numColumns );
 
         for ( int j = 0; j < mat.columns(); j++ ) {
             mat.addColumnName( this.getBioMaterialForColumn( j ) );
         }
 
-        // initialize the matrix to -Infinity; this marks values that are not yet initialized.
-        for ( int i = 0; i < mat.rows(); i++ ) {
-            for ( int j = 0; j < mat.columns(); j++ ) {
-                mat.set( i, j, Double.NEGATIVE_INFINITY );
-            }
-        }
+        // Initialize the matrix to NaN in a single primitive pass, then overwrite cells with the data from each vector.
+        // (Previously: fill every cell with -Infinity in a double loop, then scan every cell and rewrite -Infinity to NaN.
+        // Both passes did O(rows*cols) work through DoubleMatrix.set(int,int,Double), each call boxing a Double.)
+        // Vectors that themselves contain NaN-valued cells are unaffected: those NaNs are written on top of NaN.
+        mat.fill( Double.NaN );
 
         Map<Integer, CompositeSequence> rowNames = new TreeMap<>();
         for ( BulkExpressionDataVector vector : vectors ) {
@@ -678,7 +677,11 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
 
             Iterator<BioAssay> it = bioAssays.iterator();
 
-            this.setMatBioAssayValues( mat, rowIndex, ArrayUtils.toObject( vals ), bioAssays, it );
+            // Primitive path: no double[] -> Double[] boxing (was ArrayUtils.toObject(vals), which allocated
+            // one Double per cell -- ~17.5M for a 175k x 100 matrix, all garbage). vals comes from
+            // DataVector.getDataAsDoubles() which returns a fresh double[] decoded from the byte payload,
+            // so we may read it directly without copying.
+            this.setMatBioAssayValuesAsDoubles( mat, rowIndex, vals, bioAssays, it );
         }
 
         /*
@@ -689,15 +692,6 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
         }
         assert mat.getRowNames().size() == mat.rows();
 
-        // fill in remaining missing values.
-        for ( int i = 0; i < mat.rows(); i++ ) {
-            for ( int j = 0; j < mat.columns(); j++ ) {
-                if ( mat.get( i, j ) == Double.NEGATIVE_INFINITY ) {
-                    // log.debug( "Missing value at " + i + " " + j );
-                    mat.set( i, j, Double.NaN );
-                }
-            }
-        }
         ExpressionDataDoubleMatrix.log.debug( "Created a " + mat.rows() + " x " + mat.columns() + " matrix" );
         return mat;
     }
@@ -719,6 +713,20 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
 
     private <R, C, V> void setMatBioAssayValues( AbstractMatrix<R, C, V> mat, Integer rowIndex, V[] vals,
             Collection<BioAssay> bioAssays, Iterator<BioAssay> it ) {
+        for ( int j = 0; j < bioAssays.size(); j++ ) {
+            BioAssay bioAssay = it.next();
+            int column = getColumnIndex( bioAssay );
+            assert column != -1;
+            mat.set( rowIndex, column, vals[j] );
+        }
+    }
+
+    /**
+     * Primitive-double variant of {@link #setMatBioAssayValues}: avoids the per-cell Double allocation that
+     * would result from boxing the row's values before assignment.
+     */
+    private void setMatBioAssayValuesAsDoubles( DenseDoubleMatrix<CompositeSequence, BioMaterial> mat, int rowIndex,
+            double[] vals, Collection<BioAssay> bioAssays, Iterator<BioAssay> it ) {
         for ( int j = 0; j < bioAssays.size(); j++ ) {
             BioAssay bioAssay = it.next();
             int column = getColumnIndex( bioAssay );

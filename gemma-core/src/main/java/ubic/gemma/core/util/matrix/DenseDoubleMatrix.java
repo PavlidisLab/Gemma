@@ -267,6 +267,23 @@ public class DenseDoubleMatrix<R, C> extends DoubleMatrix<R, C> {
     }
 
     /**
+     * Primitive overload of {@link #set(int, int, Double)} that avoids autoboxing on hot paths.
+     */
+    public void set( int row, int column, double value ) {
+        matrix.set( row, column, value );
+    }
+
+    /**
+     * Set every cell to {@code value} using the backing Colt matrix's primitive {@code assign} loop.
+     * <p>
+     * Avoids both autoboxing and the {@code O(rows*cols)} per-call overhead of doing this with {@link #set(int, int, double)}
+     * — useful for initialising a sparse matrix to NaN before populating it from vectors with shorter dimensions.
+     */
+    public void fill( double value ) {
+        matrix.assign( value );
+    }
+
+    /**
      * @return int
      * @see AbstractMatrix2D#size()
      */
