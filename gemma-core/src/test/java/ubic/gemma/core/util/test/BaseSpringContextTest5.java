@@ -169,7 +169,7 @@ public abstract class BaseSpringContextTest5 extends BaseIntegrationTest5 {
      * @return the number of rows in the table
      */
     protected int countRowsInTable( String tableName ) {
-        return JdbcTestUtils.countRowsInTable( this.jdbcTemplate, tableName );
+        return JdbcTestUtils.countRowsInTable( this.getJdbcTemplate(), tableName );
     }
 
     /**
@@ -179,7 +179,7 @@ public abstract class BaseSpringContextTest5 extends BaseIntegrationTest5 {
      * @return the total number of rows deleted from all specified tables
      */
     protected int deleteFromTables( String... names ) {
-        return JdbcTestUtils.deleteFromTables( this.jdbcTemplate, names );
+        return JdbcTestUtils.deleteFromTables( this.getJdbcTemplate(), names );
     }
 
     protected Gene getTestPersistentGene() {

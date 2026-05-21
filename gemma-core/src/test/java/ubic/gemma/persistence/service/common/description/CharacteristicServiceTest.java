@@ -20,7 +20,6 @@ package ubic.gemma.persistence.service.common.description;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.hibernate.Hibernate;
-import org.hibernate.QueryException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -118,7 +117,9 @@ public class CharacteristicServiceTest extends BaseSpringContextTest5 {
 
     @Test
     public void testBrowseWithInvalidField() {
-        assertThrows( QueryException.class, () -> characteristicService.browse( 10, 10, "foo", true ) );
+        // HB6 wraps the underlying UnknownPathException in an IllegalArgumentException
+        // before it reaches the caller (was a bare QueryException on HB5).
+        assertThrows( IllegalArgumentException.class, () -> characteristicService.browse( 10, 10, "foo", true ) );
     }
 
     @Autowired

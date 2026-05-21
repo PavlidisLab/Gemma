@@ -265,7 +265,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         StopWatch timer = StopWatch.createStarted();
         try {
             //noinspection unchecked
-            List<Object[]> qResult = ( List<Object[]> ) getSessionFactory().getCurrentSession()
+            org.hibernate.query.Query<Object[]> q = ( org.hibernate.query.Query<Object[]> ) getSessionFactory().getCurrentSession()
                     .createQuery( "select e, r from DifferentialExpressionAnalysis a "
                             + "join a.experimentAnalyzed e "
                             + "join a.resultSets rs join rs.results r "
@@ -277,9 +277,13 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
                     .setParameterList( "probeIds", optimizeParameterList( probeIds ) )
                     .setParameterList( "experimentAnalyzedIds", optimizeParameterList( experimentAnalyzedIds ) )
                     .setParameter( "threshold", threshold )
-                    .setMaxResults( limit )
-                    .setCacheable( true )
-                    .list();
+                    .setCacheable( true );
+            // HB6 rejects setMaxResults with a negative value (HB5 silently ignored it).
+            // Callers pass 0 or negative to mean "no limit" — preserve that contract.
+            if ( limit > 0 ) {
+                q.setMaxResults( limit );
+            }
+            List<Object[]> qResult = q.list();
 
             Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> results = groupDiffExResults( qResult );
             log.info( String.format( "Num experiments with probe analysis results (with limit = %d) : %d. Number of probes returned in total: %d",

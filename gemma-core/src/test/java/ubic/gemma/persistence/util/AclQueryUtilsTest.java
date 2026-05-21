@@ -47,29 +47,33 @@ public class AclQueryUtilsTest extends BaseSpringContextTest5 {
     @Test
     public void testFormAclJoinClauseAsAdmin() {
         super.runAsAdmin();
+        // EXISTS rewrite: admin bypass emits " where (1=1)" as a placeholder so the caller's
+        // " and X" concatenation idiom stays well-formed.
         String clause = formAclRestrictionClause( "ee.id" );
         assertThat( clause )
-                .startsWith( "," )
-                .contains( "AclObjectIdentity as aoi" )
-                .contains( "aoi.identifier = ee.id" )
-                .contains( "join aoi.ownerSid sid" )
-                .doesNotContain( "join aoi.entries ace" );
+                .isEqualTo( " where (1=1)" );
     }
 
     @Test
     public void testFormAclJoinClauseAsNonAdminIncludesAoiEntriesInnerJointure() {
         super.runAsAnonymous();
+        // EXISTS rewrite: emission is " where (exists (select 1 from AclObjectIdentity aoi ...))"
+        // instead of the old Cartesian ", AclObjectIdentity aoi ... where ..." join.
         String clause = formAclRestrictionClause( "ee.id" );
         assertThat( clause )
-                .startsWith( "," )
-                .contains( "AclObjectIdentity as aoi" )
+                .startsWith( " where (exists (" )
+                .contains( "from AclObjectIdentity aoi" )
                 .contains( "aoi.identifier = ee.id" )
                 .contains( "join aoi.ownerSid sid" )
-                .contains( "join aoi.entries ace" );
+                .contains( "join aoi.entries ace" )
+                .endsWith( "))" );
     }
 
     @Test
     public void testAddAclJoinParameters() {
+        // EXISTS rewrite: admin bypass binds no ACL parameters at all (no filter is applied).
+        // Switch to anonymous so the aoiType parameter is bound.
+        runAsAnonymous();
         Query query = mock( Query.class );
         addAclParameters( query, ExpressionExperiment.class );
         verify( query ).setParameter( "aclQueryUtils_aoiType", "ubic.gemma.model.expression.experiment.ExpressionExperiment" );
@@ -77,37 +81,43 @@ public class AclQueryUtilsTest extends BaseSpringContextTest5 {
 
     @Test
     public void testFormNativeAclJoinClause() {
-        assertThat( formNativeAclJoinClause( "EE.ID" ) )
-                .startsWith( " " )
-                .contains( "join acl_object_identity aoi" )
-                .contains( "join acl_class aoi_cls" )
-                .contains( "aoi_cls.class = :" )
-                .contains( "aoi.object_id_identity = EE.ID" )
-                .doesNotContain( "left join acl_entry ace" );
+        // EXISTS rewrite: the native join clause now stashes the id-column on a thread-local
+        // and emits the empty string. The actual EXISTS sub-query is produced by
+        // formNativeAclRestrictionClause. Drain the thread-local so we don't leak into the
+        // next test (it's cleared on next read by formNativeAclRestrictionClause anyway, but
+        // for an isolated test we don't want the side-effect to persist).
+        assertThat( formNativeAclJoinClause( "EE.ID" ) ).isEmpty();
+        // drain thread-local
+        formNativeAclRestrictionClause( ( SessionFactoryImplementor ) sessionFactory );
     }
 
     @Test
     public void testFormNativeAclJoinClauseAsAnonymous() {
         this.runAsAnonymous();
-        assertThat( formNativeAclJoinClause( "EE.ID" ) )
-                .startsWith( " " )
-                .contains( "join acl_object_identity aoi" )
-                .contains( "join acl_class aoi_cls" )
-                .contains( "aoi_cls.class = :" )
-                .contains( "aoi.object_id_identity = EE.ID" )
-                .contains( "left join acl_entry ace on (aoi.id = ace.acl_object_identity)" );
+        // Same as above: native join clause is now an empty string post-EXISTS rewrite.
+        assertThat( formNativeAclJoinClause( "EE.ID" ) ).isEmpty();
+        // drain thread-local
+        formNativeAclRestrictionClause( ( SessionFactoryImplementor ) sessionFactory );
     }
 
     @Test
     public void testFormNativeRestrictionClause() {
+        // Admin bypass emits empty (no filter needed). Must still call the join clause first
+        // to satisfy the contract that the id-column is stashed.
+        formNativeAclJoinClause( "EE.ID" );
         assertThat( formNativeAclRestrictionClause( ( SessionFactoryImplementor ) sessionFactory ) ).isEmpty();
     }
 
     @Test
     public void testFormNativeRestrictionClauseAsAnonymous() {
         this.runAsAnonymous();
+        // Must call the join clause first so the EXISTS body knows which outer column to
+        // correlate against.
+        formNativeAclJoinClause( "EE.ID" );
         assertThat( formNativeAclRestrictionClause( ( SessionFactoryImplementor ) sessionFactory ) )
-                .startsWith( " " )
+                .startsWith( " and exists (" )
+                .contains( "from acl_object_identity aoi" )
+                .contains( "aoi.object_id_identity = EE.ID" )
                 .contains( "(ace.mask & 1) <> 0" )
                 .contains( "ace.sid in" )
                 .contains( "select sid.id from acl_sid sid where sid.principal = 0 and sid.sid = 'IS_AUTHENTICATED_ANONYMOUSLY'" );
