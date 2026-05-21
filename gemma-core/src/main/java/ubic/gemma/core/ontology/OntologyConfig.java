@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.task.TaskExecutor;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.scheduling.concurrent.ConcurrentTaskExecutor;
 import ubic.gemma.core.ontology.basecode.jena.TdbOntologyService;
 import ubic.gemma.core.ontology.basecode.providers.*;
 import ubic.gemma.core.ontology.basecode.providers.OntologyService;
@@ -33,9 +33,6 @@ public class OntologyConfig {
     @Value("${load.ontologies}")
     private boolean loadOntologies;
 
-    @Value("${gemma.ontology.loader.corePoolSize}")
-    private int corePoolSize;
-
     // FIXME: inject it as a Set<String>, but Spring interpret this as a set of String beans
     @Autowired
     @Qualifier("excludedWordsFromStemming")
@@ -43,13 +40,20 @@ public class OntologyConfig {
 
     /**
      * Executor used for loading ontologies in background.
+     * <p>
+     * JDK 21 migration: backed by a virtual-thread-per-task executor wrapped through Spring's
+     * {@link ConcurrentTaskExecutor}. The {@code gemma.ontology.loader.corePoolSize} property no
+     * longer constrains this executor.
+     * <p>
+     * Risk note: ontology loaders delegate into baseCode's {@code OntologyService}, whose locking
+     * posture is not controlled by Gemma. The first production boot on JDK 21 should run with
+     * {@code -Djdk.tracePinnedThreads=full} so any carrier-thread pinning in the baseCode loader
+     * is caught early.
      */
     @Bean
     public TaskExecutor ontologyTaskExecutor() {
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize( corePoolSize );
-        executor.setThreadNamePrefix( "gemma-ontology-loader-thread-" );
-        return executor;
+        return new ConcurrentTaskExecutor(
+                ubic.gemma.core.util.concurrent.Executors.newVirtualThreadPerTaskExecutorIfAvailable() );
     }
 
     @Bean
