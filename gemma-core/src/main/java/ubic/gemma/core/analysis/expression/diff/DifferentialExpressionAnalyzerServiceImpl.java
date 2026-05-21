@@ -22,6 +22,8 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -75,6 +77,9 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     private ExpressionExperimentService expressionExperimentService;
     @Autowired
     private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
+    @Autowired
+    @Qualifier("expressionDataFileTaskExecutor")
+    private AsyncTaskExecutor expressionDataFileTaskExecutor;
 
     @Override
     public int deleteAnalyses( ExpressionExperiment expressionExperiment ) {
@@ -258,15 +263,36 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         DifferentialExpressionAnalyzerServiceImpl.log.info( "Saving results" );
         analysis = helperService.persistStub( analysis );
 
-        log.info( "Done persisting, creating archive file" );
+        log.info( "Done persisting, scheduling archive file write" );
 
         // we do this here because now we have IDs for everything.
+        // Best-effort async write: the DEA task slot is freed 5-20s sooner; the archive
+        // gets rebuilt next time someone calls writeOrLocateDiffExAnalysisArchiveFile
+        // (which is the only ingress used downstream) if this submission fails or the
+        // executor queue is saturated. helperService.persistStub above committed in its
+        // own @Transactional(REQUIRED) — outer class is Propagation.NEVER — so the
+        // freshly-persisted analysis is visible to the async task with no extra
+        // synchronization required.
         if ( config.isMakeArchiveFile() ) {
-            try ( LockedPath lockedPath = expressionDataFileService.writeOrLocateDiffExAnalysisArchiveFile( analysis, true ) ) {
-                log.info( "Create archive file at " + lockedPath.getPath() );
-            } catch ( IOException e ) {
+            final DifferentialExpressionAnalysis analysisRef = analysis;
+            try {
+                expressionDataFileTaskExecutor.execute( () -> {
+                    try ( LockedPath lockedPath = expressionDataFileService.writeOrLocateDiffExAnalysisArchiveFile( analysisRef, true ) ) {
+                        log.info( "Create archive file at " + lockedPath.getPath() );
+                    } catch ( IOException e ) {
+                        DifferentialExpressionAnalyzerServiceImpl.log
+                                .warn( "Async DEA archive write failed for analysis " + analysisRef.getId()
+                                        + "; archive will be rebuilt on next read: " + e.getMessage() );
+                    } catch ( Exception e ) {
+                        DifferentialExpressionAnalyzerServiceImpl.log
+                                .warn( "Async DEA archive write failed for analysis " + analysisRef.getId()
+                                        + "; archive will be rebuilt on next read", e );
+                    }
+                } );
+            } catch ( org.springframework.core.task.TaskRejectedException e ) {
                 DifferentialExpressionAnalyzerServiceImpl.log
-                        .error( "Unable to save the data to a file: " + e.getMessage() );
+                        .warn( "expressionDataFileTaskExecutor rejected archive-write for analysis " + analysis.getId()
+                                + " (queue full); archive will be rebuilt on next read: " + e.getMessage() );
             }
         }
 
