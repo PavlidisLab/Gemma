@@ -3993,7 +3993,7 @@ public class ExpressionExperimentDaoImpl
     @Override
     protected Query getFilteringCountQuery( @Nullable Filters filters ) {
         //language=HQL
-        return finishFilteringQuery( "select count(" + distinctIfNecessary() + "ee) "
+        return finishFilteringQuery( "select count(ee) "
                 + "from ExpressionExperiment as ee "
                 + "left join ee.accession acc "
                 + "left join ee.experimentalDesign as EDES "

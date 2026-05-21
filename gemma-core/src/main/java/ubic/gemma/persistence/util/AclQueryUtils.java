@@ -29,18 +29,16 @@ import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
  * {@link #formAclRestrictionClause(String, Permission)} historically emitted a Cartesian
  * {@code , AclObjectIdentity as aoi join aoi.ownerSid sid [left join aoi.entries ace] where (...)}
  * fragment that multiplied result rows whenever an AOI had more than one matching ACE. Callers
- * worked around the row multiplication by sprinkling {@code distinct} and {@code group by}
- * via {@link #requiresCountDistinct()} / {@link #requiresGroupBy()}.
+ * worked around the row multiplication by sprinkling {@code distinct} and {@code group by}.
  * <p>
  * The emitted clause is now a correlated {@code EXISTS} sub-query against
  * {@link ubic.gemma.core.security.acl.domain.AclObjectIdentity}. Semantics are identical
  * (anonymous role check, group-grant check, owner-principal check, admin bypass) but no
- * row multiplication can occur, so {@link #requiresCountDistinct()} and
- * {@link #requiresGroupBy()} now always return {@code false}. The {@code aoi} / {@code sid}
- * HQL aliases that the old clause exposed in scope are <strong>no longer visible</strong>
- * to the surrounding query — callers that need the ACL info (only
- * {@code ExpressionExperimentDaoImpl.getFilteringQuery}) must post-fetch via
- * {@link #loadAclInfoFor(org.hibernate.Session, java.util.Collection, Class)}.
+ * row multiplication can occur, so the {@code distinct} / {@code group by} compensations have
+ * been removed (Session 3 cleanup). The {@code aoi} / {@code sid} HQL aliases that the old
+ * clause exposed in scope are <strong>no longer visible</strong> to the surrounding query —
+ * callers that need the ACL info (only {@code ExpressionExperimentDaoImpl.getFilteringQuery})
+ * must post-fetch via {@link #loadAclInfoFor(org.hibernate.Session, java.util.Collection, Class)}.
  *
  * @author poirigui
  */
@@ -103,28 +101,6 @@ public class AclQueryUtils {
     static final String ANONYMOUS_SID_SQL = "select sid.id from acl_sid sid where sid.principal = 0 and sid.sid = 'IS_AUTHENTICATED_ANONYMOUSLY'";
 
     /**
-     * Indicate if the ACL query requires a {@code count(distinct ...)} clause.
-     * <p>
-     * After the EXISTS rewrite (Session 2 of the ACL EXISTS refactor), the ACL filter no
-     * longer multiplies rows, so this always returns {@code false}. Kept as a no-op
-     * compatibility shim for callers that still consult it.
-     */
-    public static boolean requiresCountDistinct() {
-        return false;
-    }
-
-    /**
-     * Indicate if the ACL query requires a {@code group by} clause.
-     * <p>
-     * After the EXISTS rewrite (Session 2 of the ACL EXISTS refactor), the ACL filter no
-     * longer multiplies rows, so this always returns {@code false}. Kept as a no-op
-     * compatibility shim for callers that still consult it.
-     */
-    public static boolean requiresGroupBy() {
-        return false;
-    }
-
-    /**
      * Create an HQL restriction clause with the {@link BasePermission#READ} permission.
      * @see #formAclRestrictionClause(String, Permission)
      */
@@ -141,9 +117,9 @@ public class AclQueryUtils {
      * owner-principal check, admin bypass) but does <strong>not</strong> multiply rows the
      * way the old Cartesian join did. As a consequence:
      * <ul>
-     *     <li>{@link #requiresCountDistinct()} and {@link #requiresGroupBy()} both return
-     *     {@code false} unconditionally; existing callers that gate {@code distinct} /
-     *     {@code group by} on those helpers degrade gracefully to a no-op.</li>
+     *     <li>Callers no longer need {@code distinct} / {@code group by} compensations; the
+     *     historical {@code requiresCountDistinct()} / {@code requiresGroupBy()} helpers have
+     *     been removed (Session 3 cleanup).</li>
      *     <li>The {@code aoi} / {@code sid} HQL aliases are <strong>no longer in scope</strong>
      *     in the surrounding query (the sub-query has its own scope). Callers that need to
      *     project ACL info must post-fetch via
