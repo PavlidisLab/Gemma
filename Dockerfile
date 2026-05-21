@@ -86,6 +86,11 @@ VOLUME ["/data/gemma"]
 #   limit (do NOT set -Xmx; let cgroup memory drive sizing on k8s).
 # - ExitOnOutOfMemoryError so the orchestrator restarts on OOM instead of
 #   leaving a poisoned heap.
+# - UseZGC + ZGenerational: JDK 21 generational ZGC. Trades a bit of throughput
+#   for sub-millisecond pause times — well-matched to Gemma's allocation profile
+#   (large transient matrices, ResultSet streaming). Needs >2GB heap to benefit;
+#   production deploys multi-GB heaps. Memory observability dashboards keyed
+#   on "G1 Old Gen" need to be updated to "ZGC Old Generation".
 # - gemma.appdata.home pointed at the VOLUME path above.
 # - spring.profiles.active=production to avoid the SpringContextUtils 'dev'
 #   profile fallback documented in CONFIG_AUDIT.md HIGH #3.
@@ -94,7 +99,9 @@ ENV GEMMA_APPDATA_HOME=/data/gemma \
                    -Dspring.profiles.active=production \
                    -Djava.security.egd=file:/dev/./urandom \
                    -XX:MaxRAMPercentage=75.0 \
-                   -XX:+ExitOnOutOfMemoryError"
+                   -XX:+ExitOnOutOfMemoryError \
+                   -XX:+UseZGC \
+                   -XX:+ZGenerational"
 
 # Non-root runtime user. UID/GID 1000 by convention. The tomcat base image
 # does not pre-create this user, so do it here. /data/gemma and the Tomcat
