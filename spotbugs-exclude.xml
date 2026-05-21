@@ -39,4 +39,58 @@
         <Class name="~.*Tests$"/>
     </Match>
 
+    <!--
+        ubic.gemma.model.* entity classes throw IllegalArgumentException /
+        IllegalStateException from constructors as input validation. The
+        Hibernate-3-era concern was about partially-constructed Serializable
+        instances being attack vectors via finalizers — irrelevant since
+        JDK 17's finaliser deprecation and not actually triggered by
+        HibernateProxy interception. Suppress so the priority-1 list focuses
+        on real bugs. See SPOTBUGS_FIRST_PASS.md (114 findings).
+    -->
+    <Match>
+        <Class name="~ubic\.gemma\.model\..*"/>
+        <Bug pattern="CT_CONSTRUCTOR_THROW"/>
+    </Match>
+
+    <!--
+        SQL_INJECTION_HIBERNATE findings in *DaoImpl classes are exclusively
+        safe-by-construction:
+          - Class.getSimpleName() / SessionFactory.getMetamodel().entity(class).getName()
+            type dispatch
+          - private static final String HQL constants
+          - asc/desc literals from typed booleans
+          - column names validated by FilterArg.getFilterableProperties()
+            (throws on unknown)
+        See SQL_INJECTION_HIBERNATE_TRIAGE.md for the full per-finding analysis
+        (80/80 of DAO-layer findings reviewed). Suppressing at the DAO layer
+        keeps any NEW SQL_INJECTION_HIBERNATE finding visible (most likely
+        candidates: gemma-rest layer, which has 0 today).
+    -->
+    <Match>
+        <Class name="~ubic\.gemma\.persistence\.service\..*DaoImpl"/>
+        <Bug pattern="SQL_INJECTION_HIBERNATE"/>
+    </Match>
+    <!--
+        AclLinterServiceImpl concatenates metamodel entity names into HQL
+        (4 hits) — same safe-by-construction pattern as the DAO layer.
+    -->
+    <Match>
+        <Class name="ubic.gemma.core.security.acl.AclLinterServiceImpl"/>
+        <Bug pattern="SQL_INJECTION_HIBERNATE"/>
+    </Match>
+
+    <!--
+        Entity getters/setters expose mutable collections (Set, List, Map)
+        because Hibernate's PersistentSet/Bag/Map wrappers REQUIRE that
+        reference identity for lazy-init and dirty tracking. Defensive copy /
+        Collections.unmodifiableX wrapping breaks Hibernate semantics. The
+        findings are correct from a pure-Java OOP standpoint but inapplicable
+        to JPA entities. ~1,475 combined findings (SPOTBUGS_FIRST_PASS.md).
+    -->
+    <Match>
+        <Class name="~ubic\.gemma\.model\..*"/>
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
+    </Match>
+
 </FindBugsFilter>
