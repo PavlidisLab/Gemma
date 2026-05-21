@@ -704,10 +704,6 @@ public class GeoValues implements Serializable {
                 // This is the number of samples that have been processed so far for the given quantitation type.
                 int numSamples = sampleDimensions.get( platform ).get( qType ).size();
 
-                // FIXME! this is not comparing the QT index, not its value!
-                if ( GeoValues.skippableQuantitationTypes.contains( qType ) )
-                    continue;
-
                 Map<Integer, Collection<String>> qtMap = quantitationTypeIndexMap.get( platform );
                 if ( qtMap == null ) {
                     // for data sets where there is no data, this could happen.
@@ -718,6 +714,20 @@ public class GeoValues implements Serializable {
 
                 }
                 Collection<String> qtNames = qtMap.get( qType );
+
+                // Resolve QT index to its name(s) and skip if any name is in the skippable set.
+                // skippableQuantitationTypes is keyed by QT name (String); qType here is the QT index (Integer).
+                if ( qtNames != null ) {
+                    boolean skip = false;
+                    for ( String qtName : qtNames ) {
+                        if ( GeoValues.skippableQuantitationTypes.contains( qtName ) ) {
+                            skip = true;
+                            break;
+                        }
+                    }
+                    if ( skip )
+                        continue;
+                }
 
                 Map<String, List<String>> q = d.get( qType );
                 boolean warned = false;

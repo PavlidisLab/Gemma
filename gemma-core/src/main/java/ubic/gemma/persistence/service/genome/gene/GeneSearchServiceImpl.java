@@ -255,7 +255,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
                 }
                 isSetOwnedByUser.put( gs.getId(), securityService.isOwnedByCurrentUser( gs ) );
 
-                taxon = geneSetReadService.getTaxon( gs );
+                Taxon geneSetTaxon = geneSetReadService.getTaxon( gs );
                 GeneSetValueObject gsVo;
                 try {
                     gsVo = geneSetValueObjectHelper.convertToValueObject( gs );
@@ -264,13 +264,13 @@ public class GeneSearchServiceImpl implements GeneSearchService {
                     continue;
                 }
                 srDo = new SearchResultDisplayObject( gsVo );
-                if ( taxon != null ) {
-                    srDo.setTaxonId( taxon.getId() );
-                    srDo.setTaxonName( taxon.getCommonName() );
+                if ( geneSetTaxon != null ) {
+                    srDo.setTaxonId( geneSetTaxon.getId() );
+                    srDo.setTaxonName( geneSetTaxon.getCommonName() );
                 }
                 geneSets.add( srDo );
             }
-            taxon = null;
+            // taxon stays null on this branch — the caller did not supply a taxon constraint
         }
 
         // if a geneSet is owned by the user, mark it as such (used for giving it a special background colour in

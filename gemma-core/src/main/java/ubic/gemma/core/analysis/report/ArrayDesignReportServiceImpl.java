@@ -53,6 +53,15 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
     // For all array designs
     private final static String ARRAY_DESIGN_SUMMARY = "AllArrayDesignsSummary";
 
+    /**
+     * Allow-list filter for ObjectInputStream deserialization of cached report files.
+     * Only Gemma value objects and JDK collection / base types are permitted; everything
+     * else is rejected to prevent gadget-chain attacks if the cache directory is ever
+     * shared or mounted from less-trusted storage.
+     */
+    private static final ObjectInputFilter REPORT_DESERIALIZATION_FILTER = ObjectInputFilter.Config.createFilter(
+            "ubic.gemma.**;java.util.**;java.lang.**;java.time.**;java.math.**;java.sql.**;!*" );
+
     @Autowired
     private ArrayDesignService arrayDesignService;
 
@@ -211,7 +220,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
                         + id );
         if ( f.exists() ) {
             try ( FileInputStream fis = new FileInputStream( f ); ObjectInputStream ois = new ObjectInputStream( fis ) ) {
-
+                ois.setObjectInputFilter( REPORT_DESERIALIZATION_FILTER );
                 adVo = ( ArrayDesignValueObject ) ois.readObject();
 
             } catch ( Throwable e ) {
@@ -234,6 +243,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
                 + ArrayDesignReportServiceImpl.ARRAY_DESIGN_SUMMARY );
         if ( f.exists() ) {
             try ( FileInputStream fis = new FileInputStream( f ); ObjectInputStream ois = new ObjectInputStream( fis ) ) {
+                ois.setObjectInputFilter( REPORT_DESERIALIZATION_FILTER );
                 adVo = ( ArrayDesignValueObject ) ois.readObject();
             } catch ( Throwable e ) {
                 return null;
