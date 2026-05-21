@@ -65,6 +65,21 @@ public class ExperimentalFactor extends AbstractDescribable implements SecuredCh
     private ExpressionExperiment securityOwner;
 
     /**
+     * Curator/agent hint about whether this factor warrants picking a baseline factor value. Mirrors the
+     * curation-ui {@code Factor.baseline_relevance} field. Allowed values: {@code "required"},
+     * {@code "not_applicable"}, {@code "uncertain"}. {@code null} when not set (legacy data,
+     * factors not yet visited by the proposer pipeline).
+     */
+    @Nullable
+    private String baselineRelevance;
+
+    /**
+     * Free-text rationale for the baselineRelevance value. {@code null} when not set.
+     */
+    @Nullable
+    private String baselineRelevanceReason;
+
+    /**
      * No-arg constructor added to satisfy javabean contract
      */
     public ExperimentalFactor() {
@@ -156,6 +171,24 @@ public class ExperimentalFactor extends AbstractDescribable implements SecuredCh
     @Deprecated
     public void setAnnotations( Set<Characteristic> annotations ) {
         this.annotations = annotations;
+    }
+
+    @Nullable
+    public String getBaselineRelevance() {
+        return baselineRelevance;
+    }
+
+    public void setBaselineRelevance( @Nullable String baselineRelevance ) {
+        this.baselineRelevance = baselineRelevance;
+    }
+
+    @Nullable
+    public String getBaselineRelevanceReason() {
+        return baselineRelevanceReason;
+    }
+
+    public void setBaselineRelevanceReason( @Nullable String baselineRelevanceReason ) {
+        this.baselineRelevanceReason = baselineRelevanceReason;
     }
 
     @Override

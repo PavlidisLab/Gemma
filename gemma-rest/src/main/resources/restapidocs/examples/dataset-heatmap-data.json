@@ -1,0 +1,130 @@
+{
+  "data": {
+    "datasetId": 12345,
+    "datasetShortName": "GSE6789",
+    "matrix": {
+      "values": [
+        [1.0, 2.0, 3.0, 4.0],
+        [0.5, 0.6, 0.7, 0.8],
+        [5.0, 6.0, 7.0, 8.0]
+      ],
+      "encoding": "json",
+      "rowsCount": 3,
+      "colsCount": 4,
+      "quantitationType": {
+        "id": 999,
+        "name": "Log2 ratio",
+        "isPreferred": true,
+        "isRatio": true,
+        "scale": "LOG2"
+      }
+    },
+    "rows": [
+      {
+        "designElementId": 101,
+        "designElementName": "ILMN_1",
+        "genes": [
+          { "id": 672, "officialSymbol": "BRCA1", "name": "BRCA1 DNA repair associated" }
+        ]
+      },
+      {
+        "designElementId": 102,
+        "designElementName": "ILMN_2",
+        "genes": [
+          { "id": 672, "officialSymbol": "BRCA1", "name": "BRCA1 DNA repair associated" }
+        ],
+        "annotations": {
+          "logFC": 1.42,
+          "module": "purple",
+          "isMultifunctional": false
+        }
+      },
+      {
+        "designElementId": 103,
+        "designElementName": "ILMN_3"
+      }
+    ],
+    "columns": [
+      {
+        "bioAssayId": 8000,
+        "bioMaterialId": 7000,
+        "name": "GSM12345",
+        "outlier": false,
+        "factorValueIds": { "78": 1235 }
+      },
+      {
+        "bioAssayId": 8001,
+        "bioMaterialId": 7001,
+        "name": "GSM12346",
+        "outlier": false,
+        "factorValueIds": { "78": 1234 }
+      },
+      {
+        "bioAssayId": 8002,
+        "bioMaterialId": 7002,
+        "name": "GSM12347",
+        "outlier": false,
+        "factorValueIds": { "78": 1235 }
+      },
+      {
+        "bioAssayId": 8003,
+        "bioMaterialId": 7003,
+        "name": "GSM12348",
+        "outlier": false,
+        "factorValueIds": { "78": 1234 }
+      }
+    ],
+    "factors": [
+      {
+        "factor": {
+          "id": 78,
+          "name": "tissue",
+          "type": "categorical",
+          "category": "OrganismPart",
+          "categoryUri": "http://purl.obolibrary.org/obo/CARO_0000000",
+          "baselineRelevance": "required",
+          "values": [
+            {
+              "id": 1234,
+              "isBaseline": false,
+              "summary": "liver",
+              "statements": [
+                { "subject": "liver", "category": "OrganismPart" }
+              ]
+            },
+            {
+              "id": 1235,
+              "isBaseline": true,
+              "summary": "kidney",
+              "statements": [
+                { "subject": "kidney", "category": "OrganismPart" }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "factor": {
+          "id": 92,
+          "name": "age",
+          "type": "continuous",
+          "baselineRelevance": "not_applicable",
+          "baselineRelevanceReason": "Continuous factors have no baseline."
+        },
+        "measurements": {
+          "8000": 24.0,
+          "8001": 36.0,
+          "8002": 48.0,
+          "8003": 60.0
+        }
+      }
+    ],
+    "quantitationType": {
+      "id": 999,
+      "name": "Log2 ratio",
+      "isPreferred": true,
+      "isRatio": true,
+      "scale": "LOG2"
+    }
+  }
+}

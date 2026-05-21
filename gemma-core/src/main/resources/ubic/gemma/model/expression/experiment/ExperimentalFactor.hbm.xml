@@ -22,6 +22,14 @@
             <param name="useNamed">true</param>
          </type>
       </property>
+      <!-- Curator/agent baseline-relevance hints; mirror the curation-ui Factor shape. Nullable -->
+      <!-- because legacy / pre-proposer factors won't have them populated. -->
+      <property name="baselineRelevance" type="java.lang.String">
+         <column name="BASELINE_RELEVANCE" not-null="false" unique="false" sql-type="VARCHAR(32)"/>
+      </property>
+      <property name="baselineRelevanceReason" type="org.hibernate.type.MaterializedClobType">
+         <column name="BASELINE_RELEVANCE_REASON" not-null="false" unique="false" sql-type="text"/>
+      </property>
       <!-- we always need those cached, thus a select -->
       <set name="factorValues" lazy="false" fetch="select" inverse="true" cascade="all">
          <cache usage="read-write"/>
