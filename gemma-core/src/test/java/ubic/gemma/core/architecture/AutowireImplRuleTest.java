@@ -18,7 +18,9 @@
 package ubic.gemma.core.architecture;
 
 import com.tngtech.archunit.base.DescribedPredicate;
+import com.tngtech.archunit.core.domain.JavaAnnotation;
 import com.tngtech.archunit.core.domain.JavaClass;
+import com.tngtech.archunit.core.domain.JavaField;
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
@@ -26,8 +28,10 @@ import com.tngtech.archunit.junit.ArchUnitRunner;
 import com.tngtech.archunit.lang.ArchRule;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.core.architecture.SuppressArchUnit;
 
 import java.util.List;
+import java.util.Optional;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noConstructors;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noFields;
@@ -79,14 +83,39 @@ public class AutowireImplRuleTest {
                 }
             };
 
+    /**
+     * Fields explicitly marked {@code @SuppressArchUnit("AutowireImpl")} are
+     * exempt: the marker documents an intentional, justified exception (e.g.
+     * {@code @Lazy @Autowired ImplType} fields used to break a Spring DI
+     * cycle where the Impl reference is required to reach a non-interface
+     * method). The value attribute scopes the suppression to this rule
+     * alone — a marker for any other rule does NOT exempt the field here.
+     */
+    private static final DescribedPredicate<JavaField> SUPPRESSED_AUTOWIRE_IMPL =
+            new DescribedPredicate<JavaField>( "annotated with @SuppressArchUnit(\"AutowireImpl\")" ) {
+                @Override
+                public boolean test( JavaField field ) {
+                    Optional<JavaAnnotation<JavaField>> marker =
+                            field.tryGetAnnotationOfType( SuppressArchUnit.class.getName() );
+                    if ( !marker.isPresent() ) {
+                        return false;
+                    }
+                    Optional<Object> value = marker.get().tryGetExplicitlyDeclaredProperty( "value" );
+                    return value.isPresent() && "AutowireImpl".equals( value.get() );
+                }
+            };
+
     @ArchTest
     public static final ArchRule autowired_fields_must_not_be_impl_typed =
             noFields()
                     .that().areAnnotatedWith( Autowired.class )
+                    .and( DescribedPredicate.not( SUPPRESSED_AUTOWIRE_IMPL ) )
                     .should().haveRawType( IMPL_TYPED )
                     .because( "@Autowired on Impl-typed fields breaks when Spring wraps the bean in a "
                             + "JDK dynamic proxy (BeanNotOfRequiredTypeException) or causes aliasing "
-                            + "bugs under CGLIB. Declare the field with the interface type instead." );
+                            + "bugs under CGLIB. Declare the field with the interface type instead. "
+                            + "Targeted exceptions (e.g. @Lazy circular-DI bridges) must carry "
+                            + "@SuppressArchUnit(\"AutowireImpl\") with a Javadoc rationale." );
 
     @ArchTest
     public static final ArchRule constructor_parameters_must_not_be_impl_typed =
