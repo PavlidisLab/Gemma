@@ -64,9 +64,12 @@ public class BioAssayDaoImpl extends AbstractNoopFilteringVoEnabledDao<BioAssay,
 
     @Override
     public Collection<BioAssayDimension> findBioAssayDimensions( BioAssay bioAssay ) {
+        // HB6 rejects scalar IN over a joined collection alias ("Right operand for in-array
+        // predicate must be a basic plural type expression"). Equivalent: compare the join
+        // row directly with =, since each joined row IS one collection element.
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                        "select bad from BioAssayDimension bad inner join bad.bioAssays as ba where :bioAssay in ba " )
+                        "select bad from BioAssayDimension bad inner join bad.bioAssays as ba where ba = :bioAssay " )
                 .setParameter( "bioAssay", bioAssay ).list();
     }
 

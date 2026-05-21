@@ -49,6 +49,8 @@ public class ProcessedExpressionDataVectorCreationHelperServiceTest extends Base
     private ArrayDesignService arrayDesignService;
     @Autowired
     private BioMaterialService bioMaterialService;
+    @Autowired
+    private org.hibernate.SessionFactory sessionFactory;
 
     @Test
     public void testCreateProcessedDataVectors() throws QuantitationTypeDetectionException, QuantitationTypeConversionException {
@@ -108,6 +110,12 @@ public class ProcessedExpressionDataVectorCreationHelperServiceTest extends Base
 
         Collection<ProcessedExpressionDataVector> reloadedVectors;
 
+        // Clear the first-level session cache so getProcessedDataVectors returns vectors
+        // whose ExpressionExperiment is a proxy (uninitialized), as the "before thaw" check
+        // requires. Without this clear, the EE just created in this transaction remains in
+        // the session as a fully managed instance and Hibernate.isInitialized returns true.
+        sessionFactory.getCurrentSession().clear();
+
         // thaw a single vector
         reloadedVectors = processedExpressionDataVectorDao.getProcessedDataVectors( ee );
         ProcessedExpressionDataVector oneVector = reloadedVectors.iterator().next();
@@ -115,7 +123,8 @@ public class ProcessedExpressionDataVectorCreationHelperServiceTest extends Base
         oneVector = processedExpressionDataVectorDao.thaw( oneVector );
         checkVectorInitializationAfterThaw( oneVector );
 
-        // thaw all vectors in bulk
+        // thaw all vectors in bulk — second clear so the bulk path also sees uninitialized EE.
+        sessionFactory.getCurrentSession().clear();
         reloadedVectors = processedExpressionDataVectorDao.getProcessedDataVectors( ee );
         assertThat( reloadedVectors ).allSatisfy( ProcessedExpressionDataVectorCreationHelperServiceTest::checkVectorInitializationBeforeThaw );
         reloadedVectors = processedExpressionDataVectorDao.thaw( reloadedVectors );

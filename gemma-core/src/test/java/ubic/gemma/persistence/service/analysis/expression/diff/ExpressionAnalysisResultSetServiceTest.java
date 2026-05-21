@@ -58,8 +58,11 @@ public class ExpressionAnalysisResultSetServiceTest extends BaseSpringContextTes
      */
     @Test
     public void testFilterBySize() {
-        validateSizeProperty( "analysis.subsetFactorValue.characteristics.size", "sfv", "characteristics.size" );
-        validateSizeProperty( "baselineGroup.characteristics.size", "b", "characteristics.size" );
+        // Object aliases set by ExpressionAnalysisResultSetDaoImpl.configureFilterableProperties:
+        //   "analysis.subsetFactorValue.characteristics." -> "sfvc"
+        //   "baselineGroup.characteristics." -> "bc"
+        validateSizeProperty( "analysis.subsetFactorValue.characteristics.size", "sfvc", "characteristics.size" );
+        validateSizeProperty( "baselineGroup.characteristics.size", "bc", "characteristics.size" );
     }
 
     private void validateSizeProperty( String property, @Nullable String expectedAlias, String expectedPropertyName ) {
@@ -78,7 +81,10 @@ public class ExpressionAnalysisResultSetServiceTest extends BaseSpringContextTes
                 .contains( "analysis.subsetFactorValue.characteristics.id" )
                 .contains( "baselineGroup.characteristics.id" )
                 .contains( "baselineGroup.measurement.type", "baselineGroup.measurement.kindCV", "baselineGroup.measurement.representation" )
-                .doesNotContain( "analysis.name", "analysis.description" )
+                // ExpressionAnalysisResultSetDaoImpl.configureFilterableProperties only
+                // unregisters analysis.name ("this column is mostly null"); analysis.description
+                // remains a valid filterable property.
+                .doesNotContain( "analysis.name" )
                 .doesNotContain( "protocol.id", "protocol.name", "protocol.description" );
     }
 }
