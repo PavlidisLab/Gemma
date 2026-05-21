@@ -421,7 +421,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
 
                 Gene g = bioSequence2GeneProduct.getGeneProduct().getGene();
 
-                if ( genes.contains( g ) ) continue;
+                if ( genes.contains( g.getOfficialSymbol() ) ) continue;
 
                 genes.add( g.getOfficialSymbol() );
                 geneDescriptions.add( g.getOfficialName() );
