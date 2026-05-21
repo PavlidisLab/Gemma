@@ -15,6 +15,7 @@ public class UberonOntologyTest {
 
     @Test
     @Tag("slow")
+    @Tag("integration")
     public void testSubstantiaNigraInUberon() {
         UberonOntologyService uberonOntologyService = new UberonOntologyService();
         assertEquals( ubic.gemma.core.ontology.basecode.providers.OntologyService.LanguageLevel.FULL, uberonOntologyService.getLanguageLevel() );
