@@ -159,6 +159,7 @@ public class RelationshipPersister {
      * {@code @Lazy} dispatcher proxy so Spring tolerates the {@code Relationship ↔ PHI}
      * DI cycle. Public after S2d.
      */
+    @Transactional
     public ExpressionExperimentSet persistExpressionExperimentSet( ExpressionExperimentSet entity, Map<String, ExternalDatabase> xdbCache ) {
         // No static BusinessKey.find for ExpressionExperimentSet (the DAO-level find()
         // takes an ExpressionExperiment with different semantics — "sets containing this
