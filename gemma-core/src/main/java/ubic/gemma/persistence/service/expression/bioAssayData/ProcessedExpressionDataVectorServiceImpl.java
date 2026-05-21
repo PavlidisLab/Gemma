@@ -78,7 +78,7 @@ public class ProcessedExpressionDataVectorServiceImpl
     @Transactional(rollbackFor = { QuantitationTypeConversionException.class })
     public QuantitationType createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean updateRanks ) throws QuantitationTypeConversionException {
         try {
-            return createProcessedDataVectors( expressionExperiment, true, true );
+            return createProcessedDataVectors( expressionExperiment, updateRanks, true );
         } catch ( QuantitationTypeDetectionException e ) {
             // never happening
             throw new RuntimeException( e );
