@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    SpotBugs exclude filter for Gemma.
+
+    Wired via spotbugs-maven-plugin in the parent pom.xml. Invoked on-demand
+    with `mvn spotbugs:spotbugs` or `mvn spotbugs:check`; NOT bound to the
+    default verify phase (kept off the hot path).
+
+    Suppression rationale lives next to each Match block. Add new blocks
+    narrowly — never blanket-suppress a Bug pattern across the whole tree.
+-->
+<FindBugsFilter>
+
+    <!--
+        ubic.gemma.model.* entity classes inherit equals + hashCode from
+        AbstractIdentifiable / AbstractDescribable, which declare both methods
+        abstract. SpotBugs flags each subclass individually for "equals
+        without hashCode" / "doesn't override equals" because it inspects only
+        the subclass bytecode; the contract is honoured via the abstract
+        declaration. ~33 false positives suppressed here.
+    -->
+    <Match>
+        <Class name="~ubic\.gemma\.model\..*"/>
+        <Bug pattern="EQ_DOESNT_OVERRIDE_EQUALS,HE_EQUALS_USE_HASHCODE,HE_INHERITS_EQUALS_USE_HASHCODE,HE_HASHCODE_NO_EQUALS,HE_EQUALS_NO_HASHCODE"/>
+    </Match>
+
+    <!--
+        Test sources are not on the static-analysis hot path. Surefire / JUnit
+        idioms (deliberate nulls, fake credentials, swallowed exceptions in
+        @Test stubs) generate too much noise to be useful.
+    -->
+    <Match>
+        <Source name="~.*/src/test/.*"/>
+    </Match>
+    <Match>
+        <Class name="~.*Test$"/>
+    </Match>
+    <Match>
+        <Class name="~.*Tests$"/>
+    </Match>
+
+</FindBugsFilter>
