@@ -188,6 +188,12 @@ public class AclSemanticsContractTest extends BaseDatabaseTest5 {
             return new ArrayDesignDaoImpl( sessionFactory );
         }
 
+        // PERF_PROBE_REPORT_ROUND4 B1: EE DAO field-injects SingleCellDimensionExperimentDao.
+        @Bean
+        public ubic.gemma.persistence.service.expression.experiment.SingleCellDimensionExperimentDao singleCellDimensionExperimentDao( SessionFactory sessionFactory ) {
+            return new ubic.gemma.persistence.service.expression.experiment.SingleCellDimensionExperimentDaoImpl( sessionFactory );
+        }
+
         @Bean
         public BibliographicReferenceDao bibliographicReferenceDao( SessionFactory sessionFactory ) {
             return new BibliographicReferenceDaoImpl( sessionFactory );

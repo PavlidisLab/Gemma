@@ -76,6 +76,12 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest5
             return new ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDaoImpl( sessionFactory );
         }
 
+        // PERF_PROBE_REPORT_ROUND4 B1: SCEESI + EE DAO field-inject SingleCellDimensionExperimentDao.
+        @Bean
+        public SingleCellDimensionExperimentDao singleCellDimensionExperimentDao( SessionFactory sessionFactory ) {
+            return new SingleCellDimensionExperimentDaoImpl( sessionFactory );
+        }
+
         @Bean
         public ExperimentalFactorService experimentalFactorService( ExperimentalFactorDao experimentalFactorDao ) {
             return new ExperimentalFactorServiceImpl( experimentalFactorDao, mock(), mock() );
