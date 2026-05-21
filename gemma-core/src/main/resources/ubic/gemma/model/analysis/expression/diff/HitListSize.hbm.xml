@@ -4,6 +4,23 @@
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    xsi:schemaLocation="http://www.hibernate.org/xsd/hibernate-mapping http://hibernate.org/xsd/hibernate-mapping-4.0.xsd">
 
+   <!--
+      Entity-level read-only L2 cache retained intentionally. The sibling fix
+      `02c87a91ed` dropped the L2 cache on `AnalysisResultSet` and its
+      `hitListSizes` collection because the stale-empty-bag amplifier
+      (mutable=false parent + cached child collection + cross-tx writes) bit
+      that shape. HitListSize itself does NOT share that shape: the entity is
+      value-like (4 primitive columns), has zero child collections, has no
+      back-reference to its parent ExpressionAnalysisResultSet, and is never
+      mutated in place — all writes happen via cascade=all from the parent
+      result-set, and removals go through session.delete (which invalidates
+      the L2 entity cache). The parent collection cache that DID cause the
+      bug is gone; the entity cache here only stores per-id immutable rows
+      that LinearModelAnalyzer produces once and never updates. This is
+      exactly the shape `<cache usage="read-only"/>` was designed for, so it
+      stays. See HIBERNATE6_CASCADE_AUDIT.md residual finding for the
+      decision rationale.
+   -->
    <class name="ubic.gemma.model.analysis.expression.diff.HitListSize" table="HIT_LIST_SIZE" mutable="false">
       <cache usage="read-only" />
       <id name="id" type="java.lang.Long" unsaved-value="null">
