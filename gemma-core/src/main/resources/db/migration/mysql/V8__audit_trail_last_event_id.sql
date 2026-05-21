@@ -16,12 +16,17 @@
 -- Auditable removes the trail and its events together, so the SET NULL path
 -- is a defensive backstop rather than a hot path.
 
+-- The FK gets InnoDB's auto-generated supporting index (named after the
+-- constraint, `FK_AUDIT_TRAIL_LAST_EVENT`) for free — no explicit ADD INDEX
+-- needed. Earlier drafts of this migration added a redundant
+-- `IDX_AUDIT_TRAIL_LAST_EVENT` which surfaced as "duplicate key in temp
+-- table" on multi-clause online ALTERs in some MySQL versions; the FK's
+-- supporting index covers the same column shape, so we just rely on it.
 ALTER TABLE AUDIT_TRAIL
     ADD COLUMN LAST_EVENT_FK BIGINT NULL,
     ADD CONSTRAINT FK_AUDIT_TRAIL_LAST_EVENT
         FOREIGN KEY (LAST_EVENT_FK) REFERENCES AUDIT_EVENT(ID)
-        ON DELETE SET NULL,
-    ADD INDEX IDX_AUDIT_TRAIL_LAST_EVENT (LAST_EVENT_FK);
+        ON DELETE SET NULL;
 
 -- One-shot backfill of existing trails. Trails with zero events stay NULL
 -- (the LEFT JOIN below filters them out; UPDATE...JOIN is an inner join
