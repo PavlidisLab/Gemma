@@ -1344,7 +1344,7 @@
 						<failOnError>false</failOnError>
 						<includeTests>false</includeTests>
 						<!-- effort=Max + the gemma-core class graph blows the default 768m heap.
-						     4 GB suffices on amazon-corretto-17. -->
+						     4 GB suffices on amazon-corretto-21. -->
 						<fork>true</fork>
 						<maxHeap>4096</maxHeap>
 						<excludeFilterFile>${project.parent.basedir}/spotbugs-exclude.xml</excludeFilterFile>
@@ -1485,12 +1485,13 @@
 	</reporting>
 	<properties>
 		<!--
-		Renovations Phase 2: target bytecode 17 (was 11 during Phase 0/1; was Java 8 from
-		pavlab-starter-parent originally). Spring 6 requires JDK 17 at build + runtime, and its
-		bundled CGLIB/ASM is class-file-version-current, so we no longer need to hold bytecode
-		below the runtime JVM. Build + runtime JDK is amazon-corretto-17 (see RENOVATIONS.md).
+		Renovations Phase 3: target bytecode 21 (was 17 during Phase 2; 11 during Phase 0/1;
+		Java 8 from pavlab-starter-parent originally). Spring 6.2 / Hibernate 6.6 / Jersey 3
+		are all JDK 21 LTS compatible. Their bundled CGLIB/ASM/ByteBuddy are
+		class-file-version-current, so we no longer need to hold bytecode below the runtime
+		JVM. Build + runtime JDK is amazon-corretto-21 (see RENOVATIONS.md).
 		-->
-		<maven.compiler.release>17</maven.compiler.release>
+		<maven.compiler.release>21</maven.compiler.release>
 		<!-- Renovations Phase 3: emit parameter names in bytecode so Spring's
 		     DefaultParameterNameDiscoverer can resolve @PreAuthorize SpEL named bindings
 		     like `hasPermission(#group, 'administration')`. Without -parameters the

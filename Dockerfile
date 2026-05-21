@@ -9,7 +9,7 @@
 # Maven profile (landed in c02334416e). Output: /build/gemma-rest/target/gemma-rest.war
 #
 # Stage 2 (runtime): drop the WAR onto Tomcat 10.1 (jakarta.servlet 6) running
-# Temurin JDK 17. Deployed at the ROOT context so REST endpoints land at
+# Temurin JDK 21. Deployed at the ROOT context so REST endpoints land at
 # /rest/v2/... (matching web.xml's <url-pattern>/rest/v2/*</url-pattern>).
 #
 # Config: SettingsConfig (23be090ba2) tolerates a missing Gemma.properties; all
@@ -19,7 +19,7 @@
 # ---------------------------------------------------------------------------
 # Stage 1: build the WAR
 # ---------------------------------------------------------------------------
-FROM maven:3.9-eclipse-temurin-17 AS build
+FROM maven:3.9-eclipse-temurin-21 AS build
 
 WORKDIR /build
 
@@ -54,7 +54,7 @@ RUN ls -lh /build/gemma-rest/target/gemma-rest.war
 # Tomcat 10.1 is the jakarta.servlet 6 baseline. Tomcat 9 ships javax.servlet 4
 # and will NOT load gemma-rest -- after the servlet6 cutover the war references
 # jakarta.* packages exclusively.
-FROM tomcat:10.1-jdk17-temurin AS runtime
+FROM tomcat:10.1-jdk21-temurin AS runtime
 
 # Strip the stock Tomcat sample apps; we do not want them exposed and they
 # get in the way of deploying our WAR as ROOT.
@@ -121,4 +121,4 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=10s --start-period=180s --retries=3 \
   CMD curl -fsS "http://localhost:8080/rest/v2/datasets?limit=1" || exit 1
 
-# tomcat:10.1-jdk17-temurin's default CMD is `catalina.sh run`; inherit it.
+# tomcat:10.1-jdk21-temurin's default CMD is `catalina.sh run`; inherit it.

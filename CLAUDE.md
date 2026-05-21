@@ -4,9 +4,9 @@ Ground rules for adding features and tests in this repo. Project-specific; suppl
 
 ## Build
 
-- **JDK 17** (amazon-corretto-17). Builds fail with cryptic enforcer errors on other JDKs. Set `JAVA_HOME` before invoking `mvn` from a fresh shell:
+- **JDK 21** (amazon-corretto-21). Builds fail with cryptic enforcer errors on JDKs older than the source level. Set `JAVA_HOME` before invoking `mvn` from a fresh shell:
   ```bash
-  export JAVA_HOME="$HOME/Library/Java/JavaVirtualMachines/amazon-corretto-17.jdk/Contents/Home"
+  export JAVA_HOME="/Library/Java/JavaVirtualMachines/amazon-corretto-21.jdk/Contents/Home"
   export PATH="$JAVA_HOME/bin:$PATH"
   ```
 - **`mvn verify` canonical invocation** (full IT pass against MySQL gemdtest):
