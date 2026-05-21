@@ -33,7 +33,14 @@ public class FileLockManagerImpl implements FileLockManager {
     public Collection<FileLockInfo> getAllLockInfos() throws IOException {
         Map<Long, List<ubic.gemma.core.util.runtime.FileLockInfo>> lockMetadata = Arrays.stream( ExtendedRuntime.getRuntime().getFileLockInfo() )
                 .collect( Collectors.groupingBy( ubic.gemma.core.util.runtime.FileLockInfo::getInode, Collectors.toList() ) );
-        return fileLocks.entrySet().stream()
+        // Snapshot under explicit synchronization before iterating the synchronized-map view; see
+        // Collections.synchronizedMap javadoc. Writers (acquirePathLock / tryAcquirePathLock) can mutate
+        // fileLocks concurrently via computeIfAbsent from request threads.
+        List<Map.Entry<Path, ReadWriteFileLock>> snapshot;
+        synchronized ( fileLocks ) {
+            snapshot = new ArrayList<>( fileLocks.entrySet() );
+        }
+        return snapshot.stream()
                 // only display files with active locks
                 .filter( e -> e.getValue().getChannelHoldCount() > 0 )
                 .map( e -> createLockInfo( e.getKey(), e.getValue(), lockMetadata ) )
