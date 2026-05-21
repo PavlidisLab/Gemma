@@ -96,11 +96,11 @@ public class NetUtils {
             return true;
         }
 
-        OutputStream os = new FileOutputStream( outputFile );
-
         log.debug( "Seeking file " + seekFile + " with size " + expectedSize + " bytes" );
-        success = f.retrieveFile( seekFile, os );
-        os.close();
+        // try-with-resources so a thrown IOException from retrieveFile does not leak the FileOutputStream
+        try ( OutputStream os = new FileOutputStream( outputFile ) ) {
+            success = f.retrieveFile( seekFile, os );
+        }
         if ( !success ) {
             throw new IOException( "Failed to complete download of " + seekFile );
         }

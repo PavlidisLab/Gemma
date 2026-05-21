@@ -59,7 +59,7 @@ public class AgilentScanDateExtractorTest {
 
             Date actual = extractor.extract( is );
 
-            DateFormat formatter = AgilentScanDateExtractor.AGILENT_DATE_FORMAT;
+            DateFormat formatter = AgilentScanDateExtractor.newAgilentDateFormat();
             Date expected = formatter.parse( "10-18-2005 13:02:36" );
 
             assertEquals( expected, actual );
@@ -74,7 +74,7 @@ public class AgilentScanDateExtractorTest {
 
             Date actual = extractor.extract( is );
 
-            DateFormat formatter =  AgilentScanDateExtractor.AGILENT_DATE_FORMAT;
+            DateFormat formatter = AgilentScanDateExtractor.newAgilentDateFormat();
             Date expected = formatter.parse( "02-27-2014 09:32:52" );
 
             assertEquals( expected, actual );
