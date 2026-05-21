@@ -75,6 +75,14 @@ public class ExternalUrlReachabilityTest {
     private static final int READ_TIMEOUT_MS = 5000;
 
     /**
+     * Some endpoints have a known-long tail on cold-cache transient latency (Ensembl GRCh37 query
+     * service, NCBI GEO acc.cgi). For those we bump the read budget so the probe doesn't flag
+     * slow-but-alive endpoints as drift. Connect timeout stays at 5s — connect-slow is still a
+     * real signal.
+     */
+    private static final int READ_TIMEOUT_SLOW_MS = 10000;
+
+    /**
      * NCBI's documented eutils rate cap is 3 req/s without an API key, 10 req/s with one. Probing
      * every eutils endpoint in parallel via ForkJoinPool blows past that and the server returns
      * HTTP 429. We serialize the eutils probes and sleep this many ms between them to stay under
@@ -87,6 +95,12 @@ public class ExternalUrlReachabilityTest {
         /** True for NCBI eutils endpoints — these must be probed serially under the 3 req/s cap. */
         boolean isEutils() {
             return url.contains( "eutils.ncbi.nlm.nih.gov" );
+        }
+
+        /** Use the longer read budget for endpoints with a documented long tail on transient latency. */
+        boolean isSlowRead() {
+            return url.contains( "ensembl.org" )
+                    || url.contains( "/geo/query/acc.cgi" );
         }
     }
 
@@ -279,11 +293,12 @@ public class ExternalUrlReachabilityTest {
     }
 
     private static ProbeResult probeHttp( Endpoint e, long start ) throws IOException {
+        int readTimeout = e.isSlowRead() ? READ_TIMEOUT_SLOW_MS : READ_TIMEOUT_MS;
         URL url = URI.create( e.url() ).toURL();
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         try {
             conn.setConnectTimeout( CONNECT_TIMEOUT_MS );
-            conn.setReadTimeout( READ_TIMEOUT_MS );
+            conn.setReadTimeout( readTimeout );
             conn.setRequestMethod( "HEAD" );
             conn.setInstanceFollowRedirects( true );
             conn.setRequestProperty( "User-Agent", "Gemma-URL-Reachability-Probe/1.0" );
@@ -294,7 +309,7 @@ public class ExternalUrlReachabilityTest {
                 HttpURLConnection get = (HttpURLConnection) url.openConnection();
                 try {
                     get.setConnectTimeout( CONNECT_TIMEOUT_MS );
-                    get.setReadTimeout( READ_TIMEOUT_MS );
+                    get.setReadTimeout( readTimeout );
                     get.setRequestMethod( "GET" );
                     get.setInstanceFollowRedirects( true );
                     get.setRequestProperty( "User-Agent", "Gemma-URL-Reachability-Probe/1.0" );
