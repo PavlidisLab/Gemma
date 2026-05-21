@@ -881,6 +881,19 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
+    public Future<Path> writeOrLocateProcessedDataFileAsync( ExpressionExperiment ee, boolean filtered, boolean forceWrite ) {
+        return expressionDataFileTaskExecutor.submit( () -> {
+            Optional<LockedPath> opt = writeOrLocateProcessedDataFile( ee, filtered, forceWrite );
+            if ( opt.isPresent() ) {
+                try ( LockedPath lockedPath = opt.get() ) {
+                    return lockedPath.getPath();
+                }
+            }
+            return null;
+        } );
+    }
+
+    @Override
     public LockedPath writeOrLocateRawExpressionDataFile( ExpressionExperiment ee, QuantitationType type, boolean forceWrite ) throws IOException {
         try ( LockedPath f = this.getOutputFile( getDataOutputFilename( ee, type, TABULAR_BULK_DATA_FILE_SUFFIX ), false ) ) {
             if ( !forceWrite && Files.exists( f.getPath() ) ) {
@@ -918,6 +931,15 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
                 throw e;
             }
         }
+    }
+
+    @Override
+    public Future<Path> writeOrLocateRawExpressionDataFileAsync( ExpressionExperiment ee, QuantitationType qt, boolean forceWrite ) {
+        return expressionDataFileTaskExecutor.submit( () -> {
+            try ( LockedPath lockedPath = writeOrLocateRawExpressionDataFile( ee, qt, forceWrite ) ) {
+                return lockedPath.getPath();
+            }
+        } );
     }
 
     @Override

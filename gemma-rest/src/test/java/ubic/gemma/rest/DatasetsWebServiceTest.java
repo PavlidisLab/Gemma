@@ -602,16 +602,18 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
 
     @Test
     public void testGetDatasetProcessedExpression() throws IOException, URISyntaxException, InterruptedException, TimeoutException, FilteringException {
+        // New async-build flow: endpoint probes the cache via getDataFile(filename, false, 5, SECONDS),
+        // sendfile-s the path when it exists, otherwise streams in-band while the cache is being built.
         when( expressionExperimentService.hasProcessedExpressionData( eq( ee ) ) ).thenReturn( true );
-        when( expressionDataFileService.writeOrLocateProcessedDataFile( ee, false, false, 5, TimeUnit.SECONDS ) )
-                .thenReturn( Optional.of( new DummyLockedPath( Paths.get( requireNonNull( getClass().getResource( "/data.txt.gz" ) ).toURI() ), true ) ) );
+        when( expressionDataFileService.getDataFile( anyString(), eq( false ), eq( 5L ), eq( TimeUnit.SECONDS ) ) )
+                .thenReturn( new DummyLockedPath( Paths.get( requireNonNull( getClass().getResource( "/data.txt.gz" ) ).toURI() ), true ) );
         assertThat( target( "/datasets/1/data/processed" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
                 .hasHeaderWithValue( "Content-Disposition", "attachment; filename=\"data.txt\"" )
                 .hasEncoding( "gzip" );
         verify( expressionExperimentService ).hasProcessedExpressionData( ee );
-        verify( expressionDataFileService ).writeOrLocateProcessedDataFile( ee, false, false, 5, TimeUnit.SECONDS );
+        verify( expressionDataFileService ).getDataFile( anyString(), eq( false ), eq( 5L ), eq( TimeUnit.SECONDS ) );
     }
 
     @Test
@@ -631,7 +633,8 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         QuantitationType qt = QuantitationType.Factory.newInstance();
         when( expressionExperimentService.getPreferredQuantitationType( ee ) )
                 .thenReturn( Optional.of( qt ) );
-        when( expressionDataFileService.writeOrLocateRawExpressionDataFile( ee, qt, false, 5, TimeUnit.SECONDS ) )
+        // New async-build flow: cache probe is via getDataFile(filename, false, 5, SECONDS).
+        when( expressionDataFileService.getDataFile( anyString(), eq( false ), eq( 5L ), eq( TimeUnit.SECONDS ) ) )
                 .thenReturn( new DummyLockedPath( Paths.get( requireNonNull( getClass().getResource( "/data.txt.gz" ) ).toURI() ), true ) );
         assertThat( target( "/datasets/1/data/raw" ).request().get() )
                 .hasStatus( Response.Status.OK )
@@ -640,7 +643,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
                 .hasEncoding( "gzip" );
         verify( expressionExperimentService ).getPreferredQuantitationType( ee );
         verifyNoInteractions( quantitationTypeService );
-        verify( expressionDataFileService ).writeOrLocateRawExpressionDataFile( ee, qt, false, 5, TimeUnit.SECONDS );
+        verify( expressionDataFileService ).getDataFile( anyString(), eq( false ), eq( 5L ), eq( TimeUnit.SECONDS ) );
     }
 
     @Test
@@ -665,12 +668,12 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         when( quantitationTypeService.load( 12L ) ).thenReturn( qt );
         when( quantitationTypeService.loadByIdAndVectorType( 12L, ee, RawExpressionDataVector.class ) ).thenReturn( qt );
 
-        when( expressionDataFileService.writeOrLocateRawExpressionDataFile( ee, qt, false, 5, TimeUnit.SECONDS ) )
+        when( expressionDataFileService.getDataFile( anyString(), eq( false ), eq( 5L ), eq( TimeUnit.SECONDS ) ) )
                 .thenReturn( new DummyLockedPath( Paths.get( requireNonNull( getClass().getResource( "/data.txt.gz" ) ).toURI() ), true ) );
         Response res = target( "/datasets/1/data/raw" )
                 .queryParam( "quantitationType", "12" ).request().get();
         verify( quantitationTypeService ).loadByIdAndVectorType( 12L, ee, RawExpressionDataVector.class );
-        verify( expressionDataFileService ).writeOrLocateRawExpressionDataFile( ee, qt, false, 5, TimeUnit.SECONDS );
+        verify( expressionDataFileService ).getDataFile( anyString(), eq( false ), eq( 5L ), eq( TimeUnit.SECONDS ) );
         assertThat( res ).hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
                 .hasHeaderWithValue( "Content-Disposition", "attachment; filename=\"data.txt\"" )
