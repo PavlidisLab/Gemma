@@ -61,6 +61,14 @@ The reusable sub-agent brief skeleton lives in user memory (`feedback_agent_brie
 
 Anything slow / network-bound / env-dependent stays in the codebase but is *tagged* so it doesn't fire by default. Surefire's `excludedGroups` (parent `pom.xml` line ~1121) already excludes `@Tag("integration")`.
 
+**Tag taxonomy** (the `excludedGroups` default at the bottom of parent `pom.xml` and the failsafe `<excludedGroups>` both consume `${excludedGroups}` = `network,slow,ubic.gemma.core.util.test.category.SlowTest`):
+
+- `@Tag("integration")` / `@Category(IntegrationTest.class)` — runs in failsafe only, skipped from surefire. Day-to-day `mvn verify` runs these.
+- `@Tag("network")` — cheap external-URL reachability probe. Excluded by default; opt-in with `-DexcludedGroups=` (run everything) or a different list.
+- `@Tag("slow")` / `@Category(SlowTest.class)` — heavy in-JVM work or large external download (GEO archives, Uberon OWL, UCSC matrices, BLAT alignments, Python subprocesses, etc.). Excluded from BOTH surefire and failsafe by default. Run explicitly with `mvn verify -DexcludedGroups=network` (keep the network exclusion, drop slow) or `-DexcludedGroups=` (clear everything).
+
+When you add a tag, prefer to pair Jupiter `@Tag("slow")` with the JUnit 4 `@Category(SlowTest.class)` (the vintage exposure path) so both engines see it consistently.
+
 The diagnostic ladder for moving a test off the default-run network/env path:
 
 1. **OS/binary-bound** → `@EnabledOnOs(OS.LINUX)` or `assumeThat(binary).exists()` skip-guard.

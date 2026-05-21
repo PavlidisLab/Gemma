@@ -1143,6 +1143,15 @@
 					@Tag("integration"). The | operator is JUnit Platform OR.
 					-->
 					<groups>ubic.gemma.core.util.test.category.IntegrationTest | integration</groups>
+					<!--
+					Failsafe exclusions mirror surefire's: anything tagged
+					@Tag("slow") (or @Category(SlowTest.class)) is skipped from
+					the default `mvn verify` run. The `${excludedGroups}` default
+					(set lower in this pom) is `network,slow,ubic.gemma.core.util.test.category.SlowTest`.
+					Override with -DexcludedGroups=network (run slow tests) or
+					-DexcludedGroups= (clear all exclusions, run everything).
+					-->
+					<excludedGroups>${excludedGroups}</excludedGroups>
 					<!--suppress MavenModelInspection -->
 					<skip>${skipIntegrationTests}</skip>
 				</configuration>
@@ -1645,13 +1654,28 @@
 		     across versions and breaks the surefire fork with NoClassDefFoundError. -->
 		<junit.jupiter.version>5.12.2</junit.jupiter.version>
 		<!--
-		Default surefire excluded tag set. "network" excludes
-		ExternalUrlReachabilityTest (and any other @Tag("network") probe)
-		from the day-to-day mvn verify pass. To run a network-tagged test
-		explicitly, override with -DexcludedGroups= (empty) — which clears
-		this default — or with a different tag list.
+		Default surefire + failsafe excluded tag set.
+
+		Tag taxonomy:
+		  - @Tag("integration") / @Category(IntegrationTest.class):
+		      runs in failsafe only, skipped from surefire. The day-to-day
+		      mvn verify entry point.
+		  - @Tag("network") / ExternalUrlReachabilityTest:
+		      cheap reachability probe; opt-in via -DexcludedGroups= or a
+		      different tag list. Excluded by default to keep verify offline.
+		  - @Tag("slow") / @Category(SlowTest.class):
+		      heavy in-JVM work or large external download (GEO archives,
+		      Uberon OWL, UCSC matrices, etc.). Excluded from BOTH phases
+		      by default — run explicitly with
+		      `-DexcludedGroups=network` (drop the slow exclusion, keep
+		      network excluded) or `-DexcludedGroups=` (clear everything).
+
+		The JUnit Vintage engine exposes JUnit 4 @Category interfaces as
+		tags named by their fully-qualified class name, so the FQCN entry
+		below catches the legacy SlowTest category alongside the Jupiter
+		@Tag("slow") marker.
 		-->
-		<excludedGroups>network</excludedGroups>
+		<excludedGroups>network,slow,ubic.gemma.core.util.test.category.SlowTest</excludedGroups>
 		<skipJavadoc>false</skipJavadoc>
 		<skipWebpack>false</skipWebpack>
 		<maven.javadoc.skip>${skipJavadoc}</maven.javadoc.skip>
