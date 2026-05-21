@@ -15,7 +15,14 @@ Ground rules for adding features and tests in this repo. Project-specific; suppl
       -Dgemma.testdb.password=$(security find-generic-password -s mysql-root -w) \
       -Dgemma.hibernate.hbm2ddl.auto=create
   ```
-- **gemdtest schema reconciliation** — DROP and recreate `gemdtest` BEFORE every `mvn verify` on `phase2-acl-migrate` so Flyway rebuilds cleanly. The sandbox blocks the destructive DB op, so the user runs it via `!` in the prompt:
+- **gemdtest auto-reset** — `CreateDatabasePopulator` runs at test context startup (default `gemma.testdb.initialize=true`) and drops+recreates `gemdtest` before Flyway + Hibernate rebuild it. This requires the test user (`gemmatest`) to hold the server-level CREATE privilege on top of the database-scoped grant; one-time fix:
+  ```sql
+  -- Run once as root; lets `gemmatest` recreate gemdtest after the populator drops it
+  GRANT CREATE ON *.* TO 'gemmatest'@'localhost';
+  FLUSH PRIVILEGES;
+  ```
+  Without this grant, `mvn verify` fails on the CREATE DATABASE step inside the populator and you have to drop/recreate manually via root (the legacy procedure below).
+- **Manual schema reset (fallback only)** — if the populator can't run (e.g. test user grants missing, or the DB is wedged in a state Flyway can't reconcile), drop+recreate `gemdtest` from a root session. The sandbox blocks credentialed destructive DB ops, so the user runs it via `!` in the prompt:
   ```bash
   mysql -h 127.0.0.1 -uroot -p$(security find-generic-password -s mysql-root -w) \
       -e 'DROP DATABASE IF EXISTS gemdtest; CREATE DATABASE gemdtest;'
