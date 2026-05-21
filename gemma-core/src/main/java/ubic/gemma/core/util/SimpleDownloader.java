@@ -201,7 +201,9 @@ public class SimpleDownloader {
     }
 
     private long downloadFtp( URL url, Path dest, boolean force ) throws IOException {
-        Assert.notNull( ftpClientFactory, "A FTPClientFactory must be set to download files from FTP servers." );
+        if ( ftpClientFactory == null ) {
+            throw new IllegalStateException( "FTP client factory not configured; call setFtpClientFactory() before downloading from FTP." );
+        }
         FTPClient client = ftpClientFactory.getFtpClient( url );
         try {
             String remoteFile = url.getFile();
