@@ -23,7 +23,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -145,8 +144,11 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     @Override
     public void deleteGeneProductAlignmentAssociations( ArrayDesign arrayDesign ) {
-        this.getSessionFactory().getCurrentSession().buildLockRequest( LockOptions.UPGRADE )
-                .setLockMode( LockMode.PESSIMISTIC_WRITE ).lock( arrayDesign );
+        // HB6: the legacy buildLockRequest(LockOptions.UPGRADE).setLockMode(LockMode.PESSIMISTIC_WRITE)
+        // pattern calls .setLockMode on the IMMUTABLE LockOptions.UPGRADE singleton (see
+        // SessionImpl$LockRequestImpl.setLockMode), which fails in HB6.6+. Use the modern
+        // Session.lock(entity, LockMode) overload directly.
+        this.getSessionFactory().getCurrentSession().lock( arrayDesign, LockMode.PESSIMISTIC_WRITE );
 
         //noinspection unchecked
         List<BlatAssociation> blatAssociations = this.getSessionFactory().getCurrentSession()
@@ -165,8 +167,8 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     @Override
     public void deleteGeneProductAnnotationAssociations( ArrayDesign arrayDesign ) {
-        this.getSessionFactory().getCurrentSession().buildLockRequest( LockOptions.UPGRADE )
-                .setLockMode( LockMode.PESSIMISTIC_WRITE ).lock( arrayDesign );
+        // See deleteGeneProductAlignmentAssociations for the HB6 buildLockRequest rationale.
+        this.getSessionFactory().getCurrentSession().lock( arrayDesign, LockMode.PESSIMISTIC_WRITE );
 
         //noinspection unchecked
         List<AnnotationAssociation> annotAssociations = this.getSessionFactory().getCurrentSession()
@@ -238,8 +240,8 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Override
     public void deleteGeneProductAssociations( ArrayDesign arrayDesign ) {
 
-        this.getSessionFactory().getCurrentSession().buildLockRequest( LockOptions.UPGRADE )
-                .setLockMode( LockMode.PESSIMISTIC_WRITE ).lock( arrayDesign );
+        // See deleteGeneProductAlignmentAssociations for the HB6 buildLockRequest rationale.
+        this.getSessionFactory().getCurrentSession().lock( arrayDesign, LockMode.PESSIMISTIC_WRITE );
 
         // these two queries could be combined by using BioSequence2GeneProduct.
         //noinspection unchecked
