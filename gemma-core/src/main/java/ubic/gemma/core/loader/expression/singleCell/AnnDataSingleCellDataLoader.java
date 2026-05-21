@@ -793,7 +793,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
             }
         }
 
-        Map<BioAssay, SequencingMetadata> result = new HashMap<>( scd.getBioAssays().size() );
+        Map<BioAssay, SequencingMetadata> result = HashMap.newHashMap( scd.getBioAssays().size() );
         for ( int i = 0; i < scd.getBioAssays().size(); i++ ) {
             result.put( scd.getBioAssays().get( i ), SequencingMetadata.builder().readCount( Math.round( librarySize[i] ) ).build() );
         }
@@ -979,7 +979,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
         // build a sample offset index for efficiently selecting samples
         // if a sample does not have a corresponding BioAssay (i.e. an unwanted sample), it is set to null
         List<BioAssay> samplesBioAssay = new ArrayList<>( numberOfSamples );
-        Map<BioAssay, Integer> samplesBioAssayIndex = new HashMap<>( numberOfSamples );
+        Map<BioAssay, Integer> samplesBioAssayIndex = HashMap.newHashMap( numberOfSamples );
         List<String> samplesName = new ArrayList<>( numberOfSamples );
         int[] samplesBioAssayOffset = new int[numberOfSamples];
         int W = 0;

@@ -292,7 +292,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
         Map<Long, Collection<Long>> cs2gene = CommonQueries
                 .getCs2GeneMapForProbes( probes, this.getSessionFactory().getCurrentSession() );
 
-        Map<ProcessedExpressionDataVector, Collection<Long>> vector2gene = new HashMap<>( cs2gene.size() );
+        Map<ProcessedExpressionDataVector, Collection<Long>> vector2gene = HashMap.newHashMap( cs2gene.size() );
         for ( ProcessedExpressionDataVector pedv : vectors ) {
             vector2gene.put( pedv, cs2gene.getOrDefault( pedv.getDesignElement().getId(), Collections.emptySet() ) );
         }

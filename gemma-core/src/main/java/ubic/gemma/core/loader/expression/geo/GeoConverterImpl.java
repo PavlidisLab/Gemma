@@ -2953,7 +2953,7 @@ public class GeoConverterImpl implements GeoConverter {
      * @throws IllegalArgumentException if the columnNumber is not valid
      */
     private Map<String, String[]> makeDataVectors( GeoValues values, List<GeoSample> datasetSamples, int quantitationTypeIndex ) {
-        Map<String, String[]> dataVectors = new HashMap<>( GeoConverterImpl.INITIAL_VECTOR_CAPACITY );
+        Map<String, String[]> dataVectors = HashMap.newHashMap( GeoConverterImpl.INITIAL_VECTOR_CAPACITY );
         Collections.sort( datasetSamples );
         GeoPlatform platform = this.getPlatformForSamples( datasetSamples );
 

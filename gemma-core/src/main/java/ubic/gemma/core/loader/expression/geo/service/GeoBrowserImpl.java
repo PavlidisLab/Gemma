@@ -300,7 +300,7 @@ public class GeoBrowserImpl implements GeoBrowser {
         }
 
         // if start > count, it should be empty
-        int expectedRecords = Math.min( pageSize, Math.max( count - start, 0 ) );
+        int expectedRecords = Math.clamp( count - start, 0, pageSize );
 
         URL fetchUrl = EntrezUtils.summary( "gds", query, EntrezRetmode.XML, start, pageSize, ncbiApiKey );
 

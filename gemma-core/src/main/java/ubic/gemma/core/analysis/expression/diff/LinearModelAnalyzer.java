@@ -732,8 +732,8 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
          */
 
         // this used to be a Set, but a List is much faster.
-        Map<String, List<DifferentialExpressionAnalysisResult>> resultLists = new HashMap<>( properDesignMatrix.getTerms().size() );
-        Map<String, List<Double>> pvaluesForQvalue = new HashMap<>( properDesignMatrix.getTerms().size() );
+        Map<String, List<DifferentialExpressionAnalysisResult>> resultLists = HashMap.newHashMap( properDesignMatrix.getTerms().size() );
+        Map<String, List<Double>> pvaluesForQvalue = HashMap.newHashMap( properDesignMatrix.getTerms().size() );
 
         // We use the design matrix to ensure that we only consider terms that actually ended up in the model. 
         for ( String factorName : properDesignMatrix.getTerms() ) {
@@ -1327,7 +1327,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
                     "You cannot analyze a factor and use it for subsetting at the same time." );
         }
 
-        Map<FactorValue, List<BioMaterial>> subSetSamples = new HashMap<>( subsetFactor.getFactorValues().size() );
+        Map<FactorValue, List<BioMaterial>> subSetSamples = HashMap.newHashMap( subsetFactor.getFactorValues().size() );
         for ( FactorValue fv : subsetFactor.getFactorValues() ) {
             assert fv.getMeasurement() == null;
             subSetSamples.put( fv, new ArrayList<>() );

@@ -87,7 +87,7 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
         Map<ExpressionExperiment, AuditEvent> lastBatchEvents =
                 auditEventService.getLastEvents( ees, Collections.singletonList( BatchInformationEvent.class ) )
                         .getOrDefault( BatchInformationEvent.class, Collections.emptyMap() );
-        Map<ExpressionExperiment, Boolean> result = new HashMap<>( ees.size() );
+        Map<ExpressionExperiment, Boolean> result = HashMap.newHashMap( ees.size() );
         for ( ExpressionExperiment ee : ees ) {
             if ( ee.getId() != null && hasBatchFactorIds.contains( ee.getId() ) ) {
                 result.put( ee, Boolean.TRUE );

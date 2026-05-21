@@ -609,7 +609,7 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
             means.add( DescriptiveWithMissing.mean( matrix.getRowArrayList( i ) ) );
         }
         DoubleArrayList ranks = Rank.rankTransform( means );
-        Map<CompositeSequence, Double> rankMap = new HashMap<>( matrix.rows() );
+        Map<CompositeSequence, Double> rankMap = HashMap.newHashMap( matrix.rows() );
         for ( int i = 0; i < matrix.rows(); i++ ) {
             rankMap.put( matrix.getRowName( i ), ranks.get( i ) / matrix.rows() );
         }

@@ -296,7 +296,7 @@ public class HibernateSearchSource implements FieldAwareSearchSource {
                     List<T> entities = session.byMultipleIds( clazz )
                             .enableSessionCheck( true )
                             .multiLoad( ids );
-                    entitiesById = new HashMap<>( entities.size() );
+                    entitiesById = HashMap.newHashMap( entities.size() );
                     for ( T e : entities ) {
                         if ( e != null && e.getId() != null ) {
                             entitiesById.put( e.getId(), e );

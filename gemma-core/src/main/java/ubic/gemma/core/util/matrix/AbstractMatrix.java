@@ -118,28 +118,24 @@ public abstract class AbstractMatrix<R, C, V> implements Matrix2D<R, C, V>, java
 
                 if ( isMissing( i, j ) ) {
                     result[i][j] = Double.NaN;
-                } else if ( value instanceof Integer ) {
-                    result[i][j] = ( ( Integer ) value ).doubleValue();
-                } else if ( value instanceof Long ) {
-                    result[i][j] = ( ( Long ) value ).doubleValue();
-                } else if ( value instanceof Double ) {
-                    result[i][j] = ( Double ) value;
-                } else if ( value instanceof Boolean ) {
-                    result[i][j] = ( ( Boolean ) value ) ? 1.0 : 0.0;
-                } else if ( value instanceof String ) {
-                    try {
-                        result[i][j] = Double.parseDouble( ( String ) value );
-                    } catch ( NumberFormatException e ) {
-                        result[i][j] = value.hashCode();
-                    }
-                } else if ( value instanceof BigDecimal ) {
-                    result[i][j] = ( ( BigDecimal ) value ).doubleValue();
-                } else if ( value instanceof BigInteger ) {
-                    result[i][j] = ( ( BigInteger ) value ).doubleValue();
-                } else if ( value instanceof Date ) {
-                    result[i][j] = ( ( Date ) value ).getTime();
                 } else {
-                    result[i][j] = value.hashCode();
+                    result[i][j] = switch ( value ) {
+                        case Integer iv -> iv.doubleValue();
+                        case Long lv -> lv.doubleValue();
+                        case Double dv -> dv;
+                        case Boolean bv -> bv ? 1.0 : 0.0;
+                        case String sv -> {
+                            try {
+                                yield Double.parseDouble( sv );
+                            } catch ( NumberFormatException e ) {
+                                yield sv.hashCode();
+                            }
+                        }
+                        case BigDecimal bd -> bd.doubleValue();
+                        case BigInteger bi -> bi.doubleValue();
+                        case Date d -> d.getTime();
+                        default -> value.hashCode();
+                    };
                 }
             }
         }

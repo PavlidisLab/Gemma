@@ -218,13 +218,11 @@ public class QuantitationTypeDetectionUtils {
     }
 
     private static double getMaximum( Object matrix ) {
-        if ( matrix instanceof DoubleMatrix2D ) {
-            return getMaximum( ( DoubleMatrix2D ) matrix );
-        } else if ( matrix instanceof CompRowMatrix ) {
-            return getMaximum( ( CompRowMatrix ) matrix );
-        } else {
-            throw new UnsupportedOperationException();
-        }
+        return switch ( matrix ) {
+            case DoubleMatrix2D m -> getMaximum( m );
+            case CompRowMatrix m -> getMaximum( m );
+            default -> throw new UnsupportedOperationException();
+        };
     }
 
     private static double getMaximum( DoubleMatrix2D matrix ) {
@@ -243,13 +241,11 @@ public class QuantitationTypeDetectionUtils {
     }
 
     private static double getMinimum( Object matrix ) {
-        if ( matrix instanceof DoubleMatrix2D ) {
-            return getMinimum( ( DoubleMatrix2D ) matrix );
-        } else if ( matrix instanceof CompRowMatrix ) {
-            return getMinimum( ( CompRowMatrix ) matrix );
-        } else {
-            throw new UnsupportedOperationException();
-        }
+        return switch ( matrix ) {
+            case DoubleMatrix2D m -> getMinimum( m );
+            case CompRowMatrix m -> getMinimum( m );
+            default -> throw new UnsupportedOperationException();
+        };
     }
 
     private static double getMinimum( DoubleMatrix2D matrix ) {
@@ -290,13 +286,11 @@ public class QuantitationTypeDetectionUtils {
      * Check if the given matrix is empty.
      */
     private static boolean isEmpty( Object matrix ) {
-        if ( matrix instanceof DoubleMatrix2D ) {
-            return isEmpty( ( DoubleMatrix2D ) matrix );
-        } else if ( matrix instanceof CompRowMatrix ) {
-            return isEmpty( ( CompRowMatrix ) matrix );
-        } else {
-            throw new UnsupportedOperationException( "Cannot check if matrix of type " + matrix.getClass().getName() + " is empty." );
-        }
+        return switch ( matrix ) {
+            case DoubleMatrix2D m -> isEmpty( m );
+            case CompRowMatrix m -> isEmpty( m );
+            default -> throw new UnsupportedOperationException( "Cannot check if matrix of type " + matrix.getClass().getName() + " is empty." );
+        };
     }
 
     private static boolean isEmpty( DoubleMatrix2D matrix ) {
