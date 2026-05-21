@@ -170,7 +170,11 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest5 {
         assertNotNull( auditable.getCurationDetails() );
         assertEquals( size + 1, auditTrail.getEvents().size() );
         assertNotNull( auditable.getCurationDetails().getLastUpdated() );
-        assertEquals( ev.getDate(), auditable.getCurationDetails().getLastUpdated() );
+        // After the lastEvent denorm work + MySQL datetime(3) precision, ev.getDate() comes
+        // back as java.util.Date but CurationDetails.lastUpdated reloads as java.sql.Timestamp.
+        // Timestamp.equals(Date) is asymmetric / false even for matching epoch millis, so
+        // compare via getTime() (same instant) rather than Object.equals.
+        assertEquals( ev.getDate().getTime(), auditable.getCurationDetails().getLastUpdated().getTime() );
         assertFalse( auditable.getCurationDetails().getTroubled() );
         assertTrue( auditable.getCurationDetails().getNeedsAttention() );
 
@@ -196,7 +200,8 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest5 {
         assertNotNull( auditable.getCurationDetails() );
         assertEquals( size + 1, auditTrail.getEvents().size() );
         assertNotNull( auditable.getCurationDetails().getLastUpdated() );
-        assertEquals( ev.getDate(), auditable.getCurationDetails().getLastUpdated() );
+        // Date vs Timestamp epoch-millis comparison (see testAddNeedsAttentionEvent).
+        assertEquals( ev.getDate().getTime(), auditable.getCurationDetails().getLastUpdated().getTime() );
         assertFalse( auditable.getCurationDetails().getTroubled() );
         assertFalse( auditable.getCurationDetails().getNeedsAttention() );
 

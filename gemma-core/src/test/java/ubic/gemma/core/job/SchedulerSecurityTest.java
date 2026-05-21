@@ -25,6 +25,7 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -60,8 +61,15 @@ public class SchedulerSecurityTest extends BaseIntegrationTest5 {
     @Autowired
     private TableMaintenanceUtil tableMaintenanceUtil;
 
+    /*
+     * Lazy proxy so the underlying factory bean's createInstance() (which authenticates
+     * against UserManagerImpl.updatePassword) is NOT triggered during test-instance
+     * autowiring (before @BeforeEach setUpAuthentication runs admin). The proxy resolves
+     * on first method invocation, by which point the admin authentication is in place.
+     */
     @Autowired
     @Qualifier("groupAgentSecurityContext")
+    @Lazy
     private SecurityContext securityContext;
 
     /*
