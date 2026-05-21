@@ -11,6 +11,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.concurrent.ConcurrentTaskExecutor;
+import ubic.gemma.core.metrics.binder.VirtualThreadExecutorMetrics;
 import ubic.gemma.core.ontology.basecode.jena.TdbOntologyService;
 import ubic.gemma.core.ontology.basecode.providers.*;
 import ubic.gemma.core.ontology.basecode.providers.OntologyService;
@@ -38,6 +39,10 @@ public class OntologyConfig {
     @Qualifier("excludedWordsFromStemming")
     private TextResourceToSetOfLinesFactoryBean excludedWordsFromStemming;
 
+    @Autowired
+    @Qualifier("ontologyTaskExecutorMetrics")
+    private VirtualThreadExecutorMetrics ontologyTaskExecutorMetrics;
+
     /**
      * Executor used for loading ontologies in background.
      * <p>
@@ -52,8 +57,17 @@ public class OntologyConfig {
      */
     @Bean
     public TaskExecutor ontologyTaskExecutor() {
-        return new ConcurrentTaskExecutor(
-                ubic.gemma.core.util.concurrent.Executors.newVirtualThreadPerTaskExecutorIfAvailable() );
+        return new ConcurrentTaskExecutor( ontologyTaskExecutorMetrics.wrap(
+                ubic.gemma.core.util.concurrent.Executors.newVirtualThreadPerTaskExecutorIfAvailable() ) );
+    }
+
+    /**
+     * Micrometer binder for the {@link #ontologyTaskExecutor} VT executor. Picked up by
+     * {@code MetricsConfig#genericMeterRegistryConfigurer} when the {@code metrics} profile is active.
+     */
+    @Bean
+    public VirtualThreadExecutorMetrics ontologyTaskExecutorMetrics() {
+        return new VirtualThreadExecutorMetrics( "ontologyTaskExecutor" );
     }
 
     @Bean

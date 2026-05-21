@@ -17,6 +17,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.scheduling.concurrent.ConcurrentTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import ubic.gemma.core.metrics.binder.VirtualThreadExecutorMetrics;
 import ubic.gemma.persistence.util.EntityUrlBuilder;
 
 /**
@@ -79,8 +80,19 @@ public class ServiceBeansConfig {
      * so dropping queue-based backpressure is safe.
      */
     @Bean(name = "expressionDataFileTaskExecutor")
-    public AsyncTaskExecutor expressionDataFileTaskExecutor() {
-        return new ConcurrentTaskExecutor(
-                ubic.gemma.core.util.concurrent.Executors.newVirtualThreadPerTaskExecutorIfAvailable() );
+    public AsyncTaskExecutor expressionDataFileTaskExecutor( VirtualThreadExecutorMetrics expressionDataFileTaskExecutorMetrics ) {
+        return new ConcurrentTaskExecutor( expressionDataFileTaskExecutorMetrics.wrap(
+                ubic.gemma.core.util.concurrent.Executors.newVirtualThreadPerTaskExecutorIfAvailable() ) );
+    }
+
+    /**
+     * Micrometer binder for the {@link #expressionDataFileTaskExecutor} VT executor. Picked up by
+     * {@code MetricsConfig#genericMeterRegistryConfigurer} when the {@code metrics} profile is active.
+     * Defined as its own bean so the wrap-with-metrics path is exercised regardless of profile
+     * (a no-op {@code bindTo} when no registry is calling it).
+     */
+    @Bean
+    public VirtualThreadExecutorMetrics expressionDataFileTaskExecutorMetrics() {
+        return new VirtualThreadExecutorMetrics( "expressionDataFileTaskExecutor" );
     }
 }
