@@ -164,6 +164,31 @@ public class AuditTrailEventListener implements PersistEventListener, PostInsert
     @Override
     public boolean onPreDelete( PreDeleteEvent event ) {
         Object entity = event.getEntity();
+        if ( entity instanceof AuditTrail ) {
+            // Phase C-2 cascade fix: AUDIT_TRAIL.LAST_EVENT_FK has ON DELETE SET NULL
+            // in the Flyway V8 migration so a stray AuditEvent delete cannot leave
+            // a dangling FK. Hibernate's hbm2ddl=create (driving the test schema)
+            // does NOT emit ON DELETE SET NULL — it generates a plain FK with no
+            // cascade — so cascade-deleting an Auditable (which cascades to its
+            // AuditTrail, which cascades to its events bag) trips the FK before
+            // the bag's row deletes commit. Null the pointer at the DB level here
+            // via a native UPDATE that runs ahead of the cascaded AuditEvent
+            // deletes in the same flush; the trail itself is about to go away so
+            // dropping the lastEvent reference is semantically irrelevant.
+            AuditTrail trail = ( AuditTrail ) entity;
+            if ( trail.getId() != null && trail.getLastEvent() != null ) {
+                final Long trailId = trail.getId();
+                event.getSession().doWork( connection -> {
+                    try ( java.sql.PreparedStatement ps = connection.prepareStatement(
+                            "UPDATE AUDIT_TRAIL SET LAST_EVENT_FK = NULL WHERE ID = ?" ) ) {
+                        ps.setLong( 1, trailId );
+                        ps.executeUpdate();
+                    }
+                } );
+                trail.setLastEvent( null );
+            }
+            return false;
+        }
         if ( !isLifecycleTarget( entity ) ) {
             return false;
         }
