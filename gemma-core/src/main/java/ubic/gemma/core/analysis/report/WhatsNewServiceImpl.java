@@ -59,6 +59,15 @@ public class WhatsNewServiceImpl implements WhatsNewService {
     private static final String WHATS_NEW_DIR = "WhatsNew";
     private static final String WHATS_NEW_FILE = "WhatsNew";
 
+    /**
+     * Allow-list filter for ObjectInputStream deserialization of cached WhatsNew files.
+     * Only Gemma value objects and JDK collection / base types are permitted; everything
+     * else is rejected to prevent gadget-chain attacks if the cache directory is ever
+     * shared or mounted from less-trusted storage.
+     */
+    private static final ObjectInputFilter WHATS_NEW_DESERIALIZATION_FILTER = ObjectInputFilter.Config.createFilter(
+            "ubic.gemma.**;java.util.**;java.lang.**;java.time.**;java.math.**;java.sql.**;!*" );
+
     @Autowired
     private ArrayDesignService arrayDesignService;
     @Autowired
@@ -335,6 +344,7 @@ public class WhatsNewServiceImpl implements WhatsNewService {
     private Collection<AuditableObject> loadAuditableObjects( File newObjects ) {
         try ( FileInputStream fis = new FileInputStream( newObjects );
                 ObjectInputStream ois = new ObjectInputStream( fis ) ) {
+            ois.setObjectInputFilter( WHATS_NEW_DESERIALIZATION_FILTER );
             @SuppressWarnings("unchecked")
             Collection<AuditableObject> aos = ( Collection<AuditableObject> ) ois
                     .readObject();
