@@ -58,6 +58,12 @@ public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest5 {
             return new ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDaoImpl( sessionFactory );
         }
 
+        // PERF_PROBE_REPORT_ROUND4 B1: EE DAO field-injects SingleCellDimensionExperimentDao.
+        @Bean
+        public ubic.gemma.persistence.service.expression.experiment.SingleCellDimensionExperimentDao singleCellDimensionExperimentDao( SessionFactory sessionFactory ) {
+            return new ubic.gemma.persistence.service.expression.experiment.SingleCellDimensionExperimentDaoImpl( sessionFactory );
+        }
+
         @Bean
         public QuantitationTypeDao quantitationTypeDao( SessionFactory sessionFactory ) {
             return new QuantitationTypeDaoImpl( sessionFactory );

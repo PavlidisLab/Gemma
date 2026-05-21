@@ -177,6 +177,15 @@ public class ExpressionExperimentDaoImpl
     @Autowired
     private ArrayDesignDao arrayDesignDao;
 
+    /**
+     * Maintains the {@code SINGLE_CELL_DIMENSION_EXPERIMENT} link table that backs the migration
+     * of the 30+ scan-SCEDV-group-by-dim queries to single-row link-table lookups
+     * (PERF_PROBE_REPORT_ROUND4 finding B1). Field-injected for the same reason as
+     * {@link #arrayDesignDao}.
+     */
+    @Autowired
+    private SingleCellDimensionExperimentDao singleCellDimensionExperimentDao;
+
     @Autowired
     public ExpressionExperimentDaoImpl( SessionFactory sessionFactory ) {
         super( ExpressionExperimentDao.OBJECT_ALIAS, ExpressionExperiment.class, sessionFactory );
@@ -1825,10 +1834,10 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public QuantitationType getPreferredSingleCellQuantitationType( ExpressionExperiment ee ) {
+        // PERF_PROBE_REPORT_ROUND4 B1: dimension lookup via link table (was: scan SCEDV)
         return ( QuantitationType ) getSessionFactory().getCurrentSession()
-                .createQuery( "select v.quantitationType from SingleCellExpressionDataVector v "
-                        + "where v.quantitationType.isSingleCellPreferred = true and v.expressionExperiment = :ee "
-                        + "group by v.quantitationType" )
+                .createQuery( "select e.quantitationType from SingleCellDimensionExperiment e "
+                        + "where e.quantitationType.isSingleCellPreferred = true and e.expressionExperiment = :ee" )
                 .setParameter( "ee", ee )
                 .uniqueResult();
     }
@@ -2621,11 +2630,11 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public List<SingleCellDimension> getSingleCellDimensions( ExpressionExperiment ee ) {
+        // PERF_PROBE_REPORT_ROUND4 B1: dimension lookup via link table (was: scan SCEDV)
         //noinspection unchecked
         return getSessionFactory().getCurrentSession()
-                .createQuery( "select scedv.singleCellDimension from SingleCellExpressionDataVector scedv "
-                        + "where scedv.expressionExperiment = :ee "
-                        + "group by scedv.singleCellDimension" )
+                .createQuery( "select distinct e.singleCellDimension from SingleCellDimensionExperiment e "
+                        + "where e.expressionExperiment = :ee" )
                 .setParameter( "ee", ee )
                 .list();
     }
@@ -2639,11 +2648,12 @@ public class ExpressionExperimentDaoImpl
     public List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices ) {
         SingleCellDimensionWithoutCellIdsInitializer initializer = new SingleCellDimensionWithoutCellIdsInitializer(
                 includeBioAssays, includeCtas, includeClcs, includeProtocol, includeCharacteristics, includeIndices );
+        // PERF_PROBE_REPORT_ROUND4 B1: dimension lookup via link table (was: scan SCEDV)
         List<Object> raw = initializer.list( getSessionFactory().getCurrentSession()
                 .createQuery( initializer.createSelect( "dimension" ) + " "
-                        + "from SingleCellExpressionDataVector scedv "
-                        + "join scedv.singleCellDimension dimension "
-                        + "where scedv.expressionExperiment = :ee "
+                        + "from SingleCellDimensionExperiment e "
+                        + "join e.singleCellDimension dimension "
+                        + "where e.expressionExperiment = :ee "
                         + "group by dimension" )
                 .setParameter( "ee", ee ) );
         List<SingleCellDimension> result = new ArrayList<>( raw.size() );
@@ -2657,11 +2667,12 @@ public class ExpressionExperimentDaoImpl
     public SingleCellDimension getSingleCellDimensionWithoutCellIdsById( ExpressionExperiment expressionExperiment, Long dimensionId, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices ) {
         SingleCellDimensionWithoutCellIdsInitializer initializer = new SingleCellDimensionWithoutCellIdsInitializer(
                 includeBioAssays, includeCtas, includeClcs, includeProtocol, includeCharacteristics, includeIndices );
+        // PERF_PROBE_REPORT_ROUND4 B1: dimension lookup via link table (was: scan SCEDV)
         return ( SingleCellDimension ) initializer.uniqueResult( getSessionFactory().getCurrentSession()
                 .createQuery( initializer.createSelect( "dimension" ) + " "
-                        + "from SingleCellExpressionDataVector scedv "
-                        + "join scedv.singleCellDimension dimension "
-                        + "where scedv.expressionExperiment = :ee and dimension.id = :dimensionId "
+                        + "from SingleCellDimensionExperiment e "
+                        + "join e.singleCellDimension dimension "
+                        + "where e.expressionExperiment = :ee and dimension.id = :dimensionId "
                         + "group by dimension" )
                 .setParameter( "ee", expressionExperiment )
                 .setParameter( "dimensionId", dimensionId ) );
@@ -2674,19 +2685,20 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public SingleCellDimension getSingleCellDimensionById( ExpressionExperiment expressionExperiment, Long dimensionId ) {
-        return ( SingleCellDimension ) getSessionFactory().getCurrentSession().createQuery( "select scedv.singleCellDimension from SingleCellExpressionDataVector scedv "
-                        + "where scedv.expressionExperiment = :ee and scedv.singleCellDimension.id = :dimensionId "
-                        + "group by scedv.singleCellDimension" )
+        // PERF_PROBE_REPORT_ROUND4 B1: dimension lookup via link table (was: scan SCEDV)
+        return ( SingleCellDimension ) getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct e.singleCellDimension from SingleCellDimensionExperiment e "
+                        + "where e.expressionExperiment = :ee and e.singleCellDimension.id = :dimensionId" )
                 .setParameter( "ee", expressionExperiment )
                 .setParameter( "dimensionId", dimensionId )
                 .uniqueResult();
     }
 
     private SingleCellDimension getSingleCellDimension( ExpressionExperiment ee, QuantitationType qt, Session session ) {
+        // PERF_PROBE_REPORT_ROUND4 B1: dimension lookup via link table (was: scan SCEDV)
         return ( SingleCellDimension ) session
-                .createQuery( "select scedv.singleCellDimension from SingleCellExpressionDataVector scedv "
-                        + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt "
-                        + "group by scedv.singleCellDimension" )
+                .createQuery( "select e.singleCellDimension from SingleCellDimensionExperiment e "
+                        + "where e.expressionExperiment = :ee and e.quantitationType = :qt" )
                 .setParameter( "ee", ee )
                 .setParameter( "qt", qt )
                 .uniqueResult();
@@ -2700,23 +2712,23 @@ public class ExpressionExperimentDaoImpl
     @Override
     public SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices ) {
         SingleCellDimensionWithoutCellIdsInitializer initializer = new SingleCellDimensionWithoutCellIdsInitializer( includeBioAssays, includeCtas, includeClcs, includeProtocol, includeCharacteristics, includeIndices );
+        // PERF_PROBE_REPORT_ROUND4 B1: dimension lookup via link table (was: scan SCEDV)
         return ( SingleCellDimension ) initializer.uniqueResult( getSessionFactory().getCurrentSession()
                 .createQuery( initializer.createSelect( "dimension" ) + " "
-                        + "from SingleCellExpressionDataVector scedv "
-                        + "join scedv.singleCellDimension dimension "
-                        + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt "
-                        + "group by dimension" )
+                        + "from SingleCellDimensionExperiment e "
+                        + "join e.singleCellDimension dimension "
+                        + "where e.expressionExperiment = :ee and e.quantitationType = :qt" )
                 .setParameter( "ee", ee )
                 .setParameter( "qt", qt ) );
     }
 
     @Override
     public SingleCellDimension getSingleCellDimensionForCellTypeAssignmentById( ExpressionExperiment ee, Long ctaId ) {
+        // PERF_PROBE_REPORT_ROUND4 B1: dimension lookup via link table (was: scan SCEDV)
         return ( SingleCellDimension ) getSessionFactory().getCurrentSession()
-                .createQuery( "select dim from SingleCellExpressionDataVector scdv "
-                        + "join scdv.singleCellDimension dim join dim.cellTypeAssignments cta "
-                        + "where scdv.expressionExperiment = :ee and cta.id = :ctaId "
-                        + "group by dim" )
+                .createQuery( "select distinct dim from SingleCellDimensionExperiment e "
+                        + "join e.singleCellDimension dim join dim.cellTypeAssignments cta "
+                        + "where e.expressionExperiment = :ee and cta.id = :ctaId" )
                 .setParameter( "ee", ee )
                 .setParameter( "ctaId", ctaId )
                 .uniqueResult();
@@ -2724,11 +2736,11 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public SingleCellDimension getSingleCellDimensionForCellLevelCharacteristicsById( ExpressionExperiment ee, Long clcId ) {
+        // PERF_PROBE_REPORT_ROUND4 B1: dimension lookup via link table (was: scan SCEDV)
         return ( SingleCellDimension ) getSessionFactory().getCurrentSession()
-                .createQuery( "select dim from SingleCellExpressionDataVector scdv "
-                        + "join scdv.singleCellDimension dim join dim.cellLevelCharacteristics clc "
-                        + "where scdv.expressionExperiment = :ee and clc.id = :clcId "
-                        + "group by dim" )
+                .createQuery( "select distinct dim from SingleCellDimensionExperiment e "
+                        + "join e.singleCellDimension dim join dim.cellLevelCharacteristics clc "
+                        + "where e.expressionExperiment = :ee and clc.id = :clcId" )
                 .setParameter( "ee", ee )
                 .setParameter( "clcId", clcId )
                 .uniqueResult();
@@ -2736,10 +2748,10 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public SingleCellDimension getPreferredSingleCellDimension( ExpressionExperiment ee ) {
+        // PERF_PROBE_REPORT_ROUND4 B1: dimension lookup via link table (was: scan SCEDV)
         return ( SingleCellDimension ) getSessionFactory().getCurrentSession()
-                .createQuery( "select scedv.singleCellDimension from SingleCellExpressionDataVector scedv "
-                        + "where scedv.quantitationType.isSingleCellPreferred = true and scedv.expressionExperiment = :ee "
-                        + "group by scedv.singleCellDimension" )
+                .createQuery( "select e.singleCellDimension from SingleCellDimensionExperiment e "
+                        + "where e.quantitationType.isSingleCellPreferred = true and e.expressionExperiment = :ee" )
                 .setParameter( "ee", ee )
                 .uniqueResult();
     }
@@ -2752,11 +2764,12 @@ public class ExpressionExperimentDaoImpl
     @Override
     public SingleCellDimension getPreferredSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices ) {
         SingleCellDimensionWithoutCellIdsInitializer initializer = new SingleCellDimensionWithoutCellIdsInitializer( includeBioAssays, includeCtas, includeClcs, includeProtocol, includeCharacteristics, includeIndices );
+        // PERF_PROBE_REPORT_ROUND4 B1: dimension lookup via link table (was: scan SCEDV)
         return ( SingleCellDimension ) initializer.uniqueResult( getSessionFactory().getCurrentSession()
                 .createQuery( initializer.createSelect( "dimension" ) + " "
-                        + "from SingleCellExpressionDataVector scedv "
-                        + "join scedv.singleCellDimension dimension "
-                        + "where scedv.quantitationType.isSingleCellPreferred = true and scedv.expressionExperiment = :ee "
+                        + "from SingleCellDimensionExperiment e "
+                        + "join e.singleCellDimension dimension "
+                        + "where e.quantitationType.isSingleCellPreferred = true and e.expressionExperiment = :ee "
                         + "group by dimension" )
                 .setParameter( "ee", ee ) );
     }
@@ -3078,6 +3091,10 @@ public class ExpressionExperimentDaoImpl
     @Override
     public void deleteSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension ) {
         log.info( "Removing " + singleCellDimension + " from " + ee + "..." );
+        // PERF_PROBE_REPORT_ROUND4 B1: clear any link-table row that references this dimension
+        // BEFORE deleting the dimension itself, otherwise the FK constraint on
+        // SINGLE_CELL_DIMENSION_EXPERIMENT.SINGLE_CELL_DIMENSION_FK rejects the delete.
+        singleCellDimensionExperimentDao.removeBySingleCellDimension( singleCellDimension );
         getSessionFactory().getCurrentSession().delete( singleCellDimension );
     }
 
@@ -3286,26 +3303,26 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public List<CellTypeAssignment> getCellTypeAssignments( ExpressionExperiment ee ) {
+        // PERF_PROBE_REPORT_ROUND4 B1: dimension lookup via link table (was: scan SCEDV)
         //noinspection unchecked
         return getSessionFactory().getCurrentSession()
-                .createQuery( "select cta from SingleCellExpressionDataVector scedv "
-                        + "join scedv.singleCellDimension scd "
+                .createQuery( "select distinct cta from SingleCellDimensionExperiment e "
+                        + "join e.singleCellDimension scd "
                         + "join scd.cellTypeAssignments cta "
-                        + "where scedv.expressionExperiment = :ee "
-                        + "group by cta" )
+                        + "where e.expressionExperiment = :ee" )
                 .setParameter( "ee", ee )
                 .list();
     }
 
     @Override
     public List<CellTypeAssignment> getCellTypeAssignments( ExpressionExperiment expressionExperiment, QuantitationType qt ) {
+        // PERF_PROBE_REPORT_ROUND4 B1: dimension lookup via link table (was: scan SCEDV)
         //noinspection unchecked
         return getSessionFactory().getCurrentSession()
-                .createQuery( "select cta from SingleCellExpressionDataVector scedv "
-                        + "join scedv.singleCellDimension scd "
+                .createQuery( "select cta from SingleCellDimensionExperiment e "
+                        + "join e.singleCellDimension scd "
                         + "join scd.cellTypeAssignments cta "
-                        + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt "
-                        + "group by cta" )
+                        + "where e.expressionExperiment = :ee and e.quantitationType = :qt" )
                 .setParameter( "ee", expressionExperiment )
                 .setParameter( "qt", qt )
                 .list();
@@ -3314,24 +3331,24 @@ public class ExpressionExperimentDaoImpl
     @Override
     public Collection<CellTypeAssignment> getCellTypeAssignmentsWithoutIndices( ExpressionExperiment ee, QuantitationType qt ) {
         CtaInitializer ctaInitializer = new CtaInitializer( true, true, false );
+        // PERF_PROBE_REPORT_ROUND4 B1: dimension lookup via link table (was: scan SCEDV)
         return ctaInitializer.list( getSessionFactory().getCurrentSession()
-                .createQuery( ctaInitializer.createSelect( "cta" ) + " from SingleCellExpressionDataVector scedv "
-                        + "join scedv.singleCellDimension scd "
+                .createQuery( ctaInitializer.createSelect( "cta" ) + " from SingleCellDimensionExperiment e "
+                        + "join e.singleCellDimension scd "
                         + "join scd.cellTypeAssignments cta "
-                        + "where scedv.quantitationType = :qt and scedv.expressionExperiment = :ee "
-                        + "group by cta" )
+                        + "where e.quantitationType = :qt and e.expressionExperiment = :ee" )
                 .setParameter( "ee", ee )
                 .setParameter( "qt", qt ) );
     }
 
     @Override
     public CellTypeAssignment getPreferredCellTypeAssignment( ExpressionExperiment ee, QuantitationType qt ) throws NonUniqueResultException {
+        // PERF_PROBE_REPORT_ROUND4 B1: dimension lookup via link table (was: scan SCEDV)
         return ( CellTypeAssignment ) getSessionFactory().getCurrentSession()
-                .createQuery( "select cta from SingleCellExpressionDataVector scedv "
-                        + "join scedv.singleCellDimension scd "
+                .createQuery( "select cta from SingleCellDimensionExperiment e "
+                        + "join e.singleCellDimension scd "
                         + "join scd.cellTypeAssignments cta "
-                        + "where scedv.quantitationType = :qt and cta.preferred = true and scedv.expressionExperiment = :ee "
-                        + "group by cta" )
+                        + "where e.quantitationType = :qt and cta.preferred = true and e.expressionExperiment = :ee" )
                 .setParameter( "ee", ee )
                 .setParameter( "qt", qt )
                 .uniqueResult();
@@ -3340,24 +3357,24 @@ public class ExpressionExperimentDaoImpl
     @Override
     public CellTypeAssignment getPreferredCellTypeAssignmentWithoutIndices( ExpressionExperiment ee, QuantitationType qt ) throws NonUniqueResultException {
         CtaInitializer ctaInitializer = new CtaInitializer( true, true, false );
+        // PERF_PROBE_REPORT_ROUND4 B1: dimension lookup via link table (was: scan SCEDV)
         return ctaInitializer.uniqueResult( getSessionFactory().getCurrentSession()
-                .createQuery( ctaInitializer.createSelect( "cta" ) + " from SingleCellExpressionDataVector scedv "
-                        + "join scedv.singleCellDimension scd "
+                .createQuery( ctaInitializer.createSelect( "cta" ) + " from SingleCellDimensionExperiment e "
+                        + "join e.singleCellDimension scd "
                         + "join scd.cellTypeAssignments cta "
-                        + "where scedv.quantitationType = :qt and cta.preferred = true and scedv.expressionExperiment = :ee "
-                        + "group by cta" )
+                        + "where e.quantitationType = :qt and cta.preferred = true and e.expressionExperiment = :ee" )
                 .setParameter( "ee", ee )
                 .setParameter( "qt", qt ) );
     }
 
     @Override
     public CellTypeAssignment getCellTypeAssignment( ExpressionExperiment expressionExperiment, QuantitationType qt, Long ctaId ) {
+        // PERF_PROBE_REPORT_ROUND4 B1: dimension lookup via link table (was: scan SCEDV)
         return ( CellTypeAssignment ) getSessionFactory().getCurrentSession()
-                .createQuery( "select cta from SingleCellExpressionDataVector scedv "
-                        + "join scedv.singleCellDimension scd "
+                .createQuery( "select cta from SingleCellDimensionExperiment e "
+                        + "join e.singleCellDimension scd "
                         + "join scd.cellTypeAssignments cta "
-                        + "where scedv.quantitationType = :qt and cta.id = :ctaId and scedv.expressionExperiment = :ee "
-                        + "group by cta" )
+                        + "where e.quantitationType = :qt and cta.id = :ctaId and e.expressionExperiment = :ee" )
                 .setParameter( "ee", expressionExperiment )
                 .setParameter( "qt", qt )
                 .setParameter( "ctaId", ctaId )
@@ -3367,12 +3384,12 @@ public class ExpressionExperimentDaoImpl
     @Override
     public CellTypeAssignment getCellTypeAssignmentWithoutIndices( ExpressionExperiment expressionExperiment, QuantitationType qt, Long ctaId ) {
         CtaInitializer ctaInitializer = new CtaInitializer( true, true, false );
+        // PERF_PROBE_REPORT_ROUND4 B1: dimension lookup via link table (was: scan SCEDV)
         return ctaInitializer.uniqueResult( getSessionFactory().getCurrentSession()
-                .createQuery( ctaInitializer.createSelect( "cta" ) + " from SingleCellExpressionDataVector scedv "
-                        + "join scedv.singleCellDimension scd "
+                .createQuery( ctaInitializer.createSelect( "cta" ) + " from SingleCellDimensionExperiment e "
+                        + "join e.singleCellDimension scd "
                         + "join scd.cellTypeAssignments cta "
-                        + "where scedv.quantitationType = :qt and cta.id = :ctaId and scedv.expressionExperiment = :ee "
-                        + "group by cta" )
+                        + "where e.quantitationType = :qt and cta.id = :ctaId and e.expressionExperiment = :ee" )
                 .setParameter( "ee", expressionExperiment )
                 .setParameter( "qt", qt )
                 .setParameter( "ctaId", ctaId ) );
@@ -3380,12 +3397,12 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public CellTypeAssignment getCellTypeAssignment( ExpressionExperiment expressionExperiment, QuantitationType qt, String ctaName ) {
+        // PERF_PROBE_REPORT_ROUND4 B1: dimension lookup via link table (was: scan SCEDV)
         return ( CellTypeAssignment ) getSessionFactory().getCurrentSession()
-                .createQuery( "select cta from SingleCellExpressionDataVector scedv "
-                        + "join scedv.singleCellDimension scd "
+                .createQuery( "select cta from SingleCellDimensionExperiment e "
+                        + "join e.singleCellDimension scd "
                         + "join scd.cellTypeAssignments cta "
-                        + "where scedv.quantitationType = :qt and cta.name = :ctaName and scedv.expressionExperiment = :ee "
-                        + "group by cta" )
+                        + "where e.quantitationType = :qt and cta.name = :ctaName and e.expressionExperiment = :ee" )
                 .setParameter( "ee", expressionExperiment )
                 .setParameter( "qt", qt )
                 .setParameter( "ctaName", ctaName )
@@ -3403,14 +3420,14 @@ public class ExpressionExperimentDaoImpl
     @Nullable
     @Override
     public Collection<CellTypeAssignment> getCellTypeAssignmentByProtocol( ExpressionExperiment ee, QuantitationType qt, String protocolName ) {
+        // PERF_PROBE_REPORT_ROUND4 B1: dimension lookup via link table (was: scan SCEDV)
         //noinspection unchecked
         return ( List<CellTypeAssignment> ) getSessionFactory().getCurrentSession()
-                .createQuery( "select cta from SingleCellExpressionDataVector scedv "
-                        + "join scedv.singleCellDimension scd "
+                .createQuery( "select cta from SingleCellDimensionExperiment e "
+                        + "join e.singleCellDimension scd "
                         + "join scd.cellTypeAssignments cta "
                         + "join cta.protocol protocol "
-                        + "where scedv.quantitationType = :qt and protocol.name = :protocolName and scedv.expressionExperiment = :ee "
-                        + "group by cta" )
+                        + "where e.quantitationType = :qt and protocol.name = :protocolName and e.expressionExperiment = :ee" )
                 .setParameter( "ee", ee )
                 .setParameter( "qt", qt )
                 .setParameter( "protocolName", protocolName )
@@ -3420,12 +3437,12 @@ public class ExpressionExperimentDaoImpl
     @Override
     public CellTypeAssignment getCellTypeAssignmentWithoutIndices( ExpressionExperiment expressionExperiment, QuantitationType qt, String ctaName ) {
         CtaInitializer ctaInitializer = new CtaInitializer( true, true, false );
+        // PERF_PROBE_REPORT_ROUND4 B1: dimension lookup via link table (was: scan SCEDV)
         return ctaInitializer.uniqueResult( getSessionFactory().getCurrentSession()
-                .createQuery( ctaInitializer.createSelect( "cta" ) + " from SingleCellExpressionDataVector scedv "
-                        + "join scedv.singleCellDimension scd "
+                .createQuery( ctaInitializer.createSelect( "cta" ) + " from SingleCellDimensionExperiment e "
+                        + "join e.singleCellDimension scd "
                         + "join scd.cellTypeAssignments cta "
-                        + "where scedv.quantitationType = :qt and cta.name = :ctaName and scedv.expressionExperiment = :ee "
-                        + "group by cta" )
+                        + "where e.quantitationType = :qt and cta.name = :ctaName and e.expressionExperiment = :ee" )
                 .setParameter( "ee", expressionExperiment )
                 .setParameter( "qt", qt )
                 .setParameter( "ctaName", ctaName ) );
@@ -3434,12 +3451,12 @@ public class ExpressionExperimentDaoImpl
     @Override
     public List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment ee ) {
         List<CellLevelCharacteristics> results = new ArrayList<>( getCellTypeAssignments( ee ) );
+        // PERF_PROBE_REPORT_ROUND4 B1: dimension lookup via link table (was: scan SCEDV)
         //noinspection unchecked
         results.addAll( getSessionFactory().getCurrentSession()
-                .createQuery( "select clc from SingleCellExpressionDataVector scedv "
-                        + "join scedv.singleCellDimension scd join scd.cellLevelCharacteristics clc "
-                        + "where scedv.expressionExperiment = :ee "
-                        + "group by clc" )
+                .createQuery( "select distinct clc from SingleCellDimensionExperiment e "
+                        + "join e.singleCellDimension scd join scd.cellLevelCharacteristics clc "
+                        + "where e.expressionExperiment = :ee" )
                 .setParameter( "ee", ee )
                 .list() );
         return results;
@@ -3451,9 +3468,10 @@ public class ExpressionExperimentDaoImpl
         if ( category.equals( Categories.CELL_TYPE ) ) {
             results.addAll( getCellTypeAssignments( ee ) );
         }
+        // PERF_PROBE_REPORT_ROUND4 B1: dimension lookup via link table (was: scan SCEDV)
         //noinspection unchecked
         results.addAll( getSessionFactory().getCurrentSession()
-                .createQuery( "select clc from SingleCellExpressionDataVector scedv join scedv.singleCellDimension scd join scd.cellLevelCharacteristics clc join clc.characteristics c where scedv.expressionExperiment = :ee and coalesce(c.categoryUri, c.category) = :c group by clc" )
+                .createQuery( "select distinct clc from SingleCellDimensionExperiment e join e.singleCellDimension scd join scd.cellLevelCharacteristics clc join clc.characteristics c where e.expressionExperiment = :ee and coalesce(c.categoryUri, c.category) = :c" )
                 .setParameter( "ee", ee )
                 .setParameter( "c", category.getCategoryUri() != null ? category.getCategoryUri() : category.getCategory() )
                 .list() );
@@ -3462,12 +3480,12 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public CellLevelCharacteristics getCellLevelCharacteristics( ExpressionExperiment ee, QuantitationType qt, Long clcId ) {
+        // PERF_PROBE_REPORT_ROUND4 B1: dimension lookup via link table (was: scan SCEDV)
         return ( CellLevelCharacteristics ) getSessionFactory().getCurrentSession()
-                .createQuery( "select clc from SingleCellExpressionDataVector scedv "
-                        + "join scedv.singleCellDimension scd "
+                .createQuery( "select clc from SingleCellDimensionExperiment e "
+                        + "join e.singleCellDimension scd "
                         + "join scd.cellLevelCharacteristics clc join clc.characteristics c "
-                        + "where scedv.expressionExperiment = :ee and c.id = :clcId "
-                        + "group by clc" )
+                        + "where e.expressionExperiment = :ee and c.id = :clcId" )
                 .setParameter( "ee", ee )
                 .setParameter( "clcId", clcId )
                 .uniqueResult();
@@ -3476,12 +3494,12 @@ public class ExpressionExperimentDaoImpl
     @Nullable
     @Override
     public CellLevelCharacteristics getCellLevelCharacteristics( ExpressionExperiment ee, QuantitationType qt, String clcName ) {
+        // PERF_PROBE_REPORT_ROUND4 B1: dimension lookup via link table (was: scan SCEDV)
         return ( CellLevelCharacteristics ) getSessionFactory().getCurrentSession()
-                .createQuery( "select clc from SingleCellExpressionDataVector scedv "
-                        + "join scedv.singleCellDimension scd "
+                .createQuery( "select clc from SingleCellDimensionExperiment e "
+                        + "join e.singleCellDimension scd "
                         + "join scd.cellLevelCharacteristics clc join clc.characteristics c "
-                        + "where scedv.expressionExperiment = :ee and c.name = :clcName "
-                        + "group by clc" )
+                        + "where e.expressionExperiment = :ee and c.name = :clcName" )
                 .setParameter( "ee", ee )
                 .setParameter( "clcName", clcName )
                 .uniqueResult();
@@ -3489,28 +3507,31 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment expressionExperiment, QuantitationType qt ) {
+        // PERF_PROBE_REPORT_ROUND4 B1: dimension lookup via link table (was: scan SCEDV).
+        // NOTE: preserving the pre-existing behaviour where the `qt` argument is IGNORED in the
+        // WHERE clause — the prior HQL filtered on ee only despite the method taking a qt arg.
+        // Flagged for orchestrator review; not silently fixed in this perf-migration commit.
         //noinspection unchecked
         return getSessionFactory().getCurrentSession()
-                .createQuery( "select clc from SingleCellExpressionDataVector scedv "
-                        + "join scedv.singleCellDimension scd "
+                .createQuery( "select distinct clc from SingleCellDimensionExperiment e "
+                        + "join e.singleCellDimension scd "
                         + "join scd.cellLevelCharacteristics clc join clc.characteristics c "
-                        + "where scedv.expressionExperiment = :ee "
-                        + "group by clc" )
+                        + "where e.expressionExperiment = :ee" )
                 .setParameter( "ee", expressionExperiment )
                 .list();
     }
 
     @Override
     public List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment expressionExperiment, QuantitationType qt, Category category ) {
+        // PERF_PROBE_REPORT_ROUND4 B1: dimension lookup via link table (was: scan SCEDV)
         //noinspection unchecked
         return getSessionFactory().getCurrentSession()
-                .createQuery( "select clc from SingleCellExpressionDataVector scedv "
-                        + "join scedv.singleCellDimension scd "
+                .createQuery( "select distinct clc from SingleCellDimensionExperiment e "
+                        + "join e.singleCellDimension scd "
                         + "join scd.cellLevelCharacteristics clc join clc.characteristics c "
-                        + "where scedv.expressionExperiment = :ee "
-                        + "and scedv.quantitationType = :qt "
-                        + "and coalesce(c.categoryUri, c.category) = :c "
-                        + "group by clc" )
+                        + "where e.expressionExperiment = :ee "
+                        + "and e.quantitationType = :qt "
+                        + "and coalesce(c.categoryUri, c.category) = :c" )
                 .setParameter( "ee", expressionExperiment )
                 .setParameter( "qt", qt )
                 .setParameter( "c", category.getCategoryUri() != null ? category.getCategoryUri() : category.getCategory() )
@@ -3520,13 +3541,13 @@ public class ExpressionExperimentDaoImpl
     @Override
     public CellLevelCharacteristics getCellLevelCharacteristicsWithoutIndices( ExpressionExperiment ee, QuantitationType qt, Long clcId ) {
         ClcInitializer clcInitializer = new ClcInitializer( true, false );
+        // PERF_PROBE_REPORT_ROUND4 B1: dimension lookup via link table (was: scan SCEDV)
         return clcInitializer.uniqueResult( getSessionFactory().getCurrentSession()
                 .createQuery( clcInitializer.createSelect( "clc" ) + " "
-                        + "from SingleCellExpressionDataVector scedv "
-                        + "join scedv.singleCellDimension scd "
+                        + "from SingleCellDimensionExperiment e "
+                        + "join e.singleCellDimension scd "
                         + "join scd.cellLevelCharacteristics clc "
-                        + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt and clc.id = :clcId "
-                        + "group by clc" )
+                        + "where e.expressionExperiment = :ee and e.quantitationType = :qt and clc.id = :clcId" )
                 .setParameter( "ee", ee )
                 .setParameter( "qt", qt )
                 .setParameter( "clcId", clcId ) );
@@ -3535,13 +3556,13 @@ public class ExpressionExperimentDaoImpl
     @Override
     public CellLevelCharacteristics getCellLevelCharacteristicsWithoutIndices( ExpressionExperiment ee, QuantitationType qt, String clcName ) {
         ClcInitializer clcInitializer = new ClcInitializer( true, false );
+        // PERF_PROBE_REPORT_ROUND4 B1: dimension lookup via link table (was: scan SCEDV)
         return clcInitializer.uniqueResult( getSessionFactory().getCurrentSession()
                 .createQuery( clcInitializer.createSelect( "clc" ) + " "
-                        + "from SingleCellExpressionDataVector scedv "
-                        + "join scedv.singleCellDimension scd "
+                        + "from SingleCellDimensionExperiment e "
+                        + "join e.singleCellDimension scd "
                         + "join scd.cellLevelCharacteristics clc "
-                        + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt and clc.name = :clcName "
-                        + "group by clc" )
+                        + "where e.expressionExperiment = :ee and e.quantitationType = :qt and clc.name = :clcName" )
                 .setParameter( "ee", ee )
                 .setParameter( "qt", qt )
                 .setParameter( "clcName", clcName ) );
@@ -3550,38 +3571,38 @@ public class ExpressionExperimentDaoImpl
     @Override
     public Collection<CellLevelCharacteristics> getCellLevelCharacteristicsWithoutIndices( ExpressionExperiment ee, QuantitationType qt ) {
         ClcInitializer clcInitializer = new ClcInitializer( true, false );
+        // PERF_PROBE_REPORT_ROUND4 B1: dimension lookup via link table (was: scan SCEDV)
         return new ArrayList<>( clcInitializer.list( getSessionFactory().getCurrentSession()
                 .createQuery( clcInitializer.createSelect( "clc" ) + " "
-                        + "from SingleCellExpressionDataVector scedv "
-                        + "join scedv.singleCellDimension scd "
+                        + "from SingleCellDimensionExperiment e "
+                        + "join e.singleCellDimension scd "
                         + "join scd.cellLevelCharacteristics clc "
-                        + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt "
-                        + "group by clc" )
+                        + "where e.expressionExperiment = :ee and e.quantitationType = :qt" )
                 .setParameter( "ee", ee )
                 .setParameter( "qt", qt ) ) );
     }
 
     @Override
     public List<Characteristic> getCellTypes( ExpressionExperiment ee ) {
+        // PERF_PROBE_REPORT_ROUND4 B1: dimension lookup via link table (was: scan SCEDV)
         //noinspection unchecked
         return getSessionFactory().getCurrentSession()
-                .createQuery( "select ct from SingleCellExpressionDataVector scedv "
-                        + "join scedv.singleCellDimension scd "
+                .createQuery( "select distinct ct from SingleCellDimensionExperiment e "
+                        + "join e.singleCellDimension scd "
                         + "join scd.cellTypeAssignments cta "
                         + "join cta.cellTypes ct "
-                        + "where scedv.expressionExperiment = :ee and scedv.quantitationType.isSingleCellPreferred = true and cta.preferred = true "
-                        + "group by ct" )
+                        + "where e.expressionExperiment = :ee and e.quantitationType.isSingleCellPreferred = true and cta.preferred = true" )
                 .setParameter( "ee", ee )
                 .list();
     }
 
     @Override
     public List<QuantitationType> getSingleCellQuantitationTypes( ExpressionExperiment ee ) {
+        // PERF_PROBE_REPORT_ROUND4 B1: dimension lookup via link table (was: scan SCEDV)
         //noinspection unchecked
         return getSessionFactory().getCurrentSession()
-                .createQuery( "select scedv.quantitationType from SingleCellExpressionDataVector scedv "
-                        + "where scedv.expressionExperiment = :ee "
-                        + "group by scedv.quantitationType" )
+                .createQuery( "select distinct e.quantitationType from SingleCellDimensionExperiment e "
+                        + "where e.expressionExperiment = :ee" )
                 .setParameter( "ee", ee )
                 .list();
     }
@@ -3589,11 +3610,12 @@ public class ExpressionExperimentDaoImpl
     @Override
     public Map<SingleCellDimension, Set<QuantitationType>> getSingleCellQuantitationTypesBySingleCellDimensionWithoutCellIds( ExpressionExperiment ee, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices ) {
         SingleCellDimensionWithoutCellIdsInitializer initializer = new SingleCellDimensionWithoutCellIdsInitializer( includeBioAssays, includeCtas, includeClcs, includeProtocol, includeCharacteristics, includeIndices );
+        // PERF_PROBE_REPORT_ROUND4 B1: dimension lookup via link table (was: scan SCEDV)
         List<Object> raw = initializer.list( getSessionFactory().getCurrentSession()
                 .createQuery( initializer.createSelect( "scd" ) + ", qt " +
-                        "from SingleCellExpressionDataVector scedv "
-                        + "join scedv.quantitationType as qt join scedv.singleCellDimension as scd "
-                        + "where scedv.expressionExperiment = :ee "
+                        "from SingleCellDimensionExperiment e "
+                        + "join e.quantitationType as qt join e.singleCellDimension as scd "
+                        + "where e.expressionExperiment = :ee "
                         + "group by scd, qt" )
                 .setParameter( "ee", ee ) );
         return raw.stream()
@@ -3603,9 +3625,10 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public boolean hasSingleCellQuantitationTypes( ExpressionExperiment ee ) {
+        // PERF_PROBE_REPORT_ROUND4 B1: dimension lookup via link table (was: scan SCEDV)
         return ( Boolean ) getSessionFactory().getCurrentSession()
-                .createQuery( "select count(*) > 0 from SingleCellExpressionDataVector scedv "
-                        + "where scedv.expressionExperiment = :ee" )
+                .createQuery( "select count(*) > 0 from SingleCellDimensionExperiment e "
+                        + "where e.expressionExperiment = :ee" )
                 .setParameter( "ee", ee )
                 .uniqueResult();
     }
@@ -3893,6 +3916,12 @@ public class ExpressionExperimentDaoImpl
         for ( SingleCellExpressionDataVector v : vectorsToEvict ) {
             getSessionFactory().getCurrentSession().evict( v );
         }
+        // PERF_PROBE_REPORT_ROUND4 B1: maintain the SC dimension-experiment link table. After the
+        // bulk-delete + evict above the (ee, qt) link row is stale; clean it before any QT/SCD
+        // delete that follows so the FK from SINGLE_CELL_DIMENSION_EXPERIMENT.SINGLE_CELL_DIMENSION_FK
+        // doesn't block the subsequent deleteSingleCellDimension call. Running this AFTER the evict
+        // avoids tripping the HB6 cascade walk on the soon-to-be-evicted vectors.
+        singleCellDimensionExperimentDao.removeByEEAndQt( ee, quantitationType );
         if ( deleteQt ) {
             log.info( "Deleting " + quantitationType + "..." );
             if ( !ee.getQuantitationTypes().remove( quantitationType ) ) {
@@ -3913,6 +3942,12 @@ public class ExpressionExperimentDaoImpl
         Set<QuantitationType> qtsToRemove = ee.getSingleCellExpressionDataVectors().stream()
                 .map( SingleCellExpressionDataVector::getQuantitationType )
                 .collect( Collectors.toSet() );
+        // PERF_PROBE_REPORT_ROUND4 B1: capture the dimensions BEFORE we wipe the link table —
+        // removeUnusedSingleCellDimensions below needs to know which SCDs were attached, and once
+        // the link rows are gone getSingleCellDimensions(ee) returns empty.
+        Collection<SingleCellDimension> dimensionsBeforeRemoval = keepDimensions
+                ? Collections.emptyList()
+                : getSingleCellDimensions( ee );
         // see comment in removeSingleCellDataVectors above; same HB6 cascade hazard applies here
         // since this method also detaches vectors then session.delete()s each QT (and ultimately
         // each unused SCD via removeUnusedSingleCellDimensions).
@@ -3930,6 +3965,9 @@ public class ExpressionExperimentDaoImpl
         for ( SingleCellExpressionDataVector v : vectorsToEvict ) {
             getSessionFactory().getCurrentSession().evict( v );
         }
+        // PERF_PROBE_REPORT_ROUND4 B1: maintain the SC dimension-experiment link table — run
+        // AFTER the evict so the autoflush doesn't trip on the in-flight cascade walk.
+        singleCellDimensionExperimentDao.removeByEE( ee );
         for ( QuantitationType qt : qtsToRemove ) {
             if ( !ee.getQuantitationTypes().remove( qt ) ) {
                 log.warn( qt + " was not attached to " + ee + ", but was attached to at least one of its single-cell data vectors, it will be removed." );
@@ -3937,7 +3975,7 @@ public class ExpressionExperimentDaoImpl
             getSessionFactory().getCurrentSession().delete( qt );
         }
         if ( !keepDimensions ) {
-            removeUnusedSingleCellDimensions( ee );
+            removeUnusedSingleCellDimensions( ee, dimensionsBeforeRemoval );
         }
         if ( deletedVectors > 0 ) {
             log.info( "Removed " + deletedVectors + " single-cell data vectors from " + ee );
@@ -3947,9 +3985,12 @@ public class ExpressionExperimentDaoImpl
 
     /**
      * Remove all unused single-cell dimensions.
+     * <p>
+     * PERF_PROBE_REPORT_ROUND4 B1: the caller passes the dimensions it captured BEFORE the link
+     * table got wiped (see {@link #removeAllSingleCellDataVectors}); we can no longer recover the
+     * (ee → dim) set from {@link #getSingleCellDimensions(ExpressionExperiment)} at this point.
      */
-    private void removeUnusedSingleCellDimensions( ExpressionExperiment ee ) {
-        Collection<SingleCellDimension> dimensions = getSingleCellDimensions( ee );
+    private void removeUnusedSingleCellDimensions( ExpressionExperiment ee, Collection<SingleCellDimension> dimensions ) {
         for ( SingleCellDimension scd : dimensions ) {
             List<QuantitationType> otherUsers = list( getSessionFactory().getCurrentSession()
                     .createQuery( "select vec.quantitationType from SingleCellExpressionDataVector vec "

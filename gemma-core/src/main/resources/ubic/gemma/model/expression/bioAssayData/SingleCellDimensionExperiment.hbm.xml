@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<hibernate-mapping xmlns="http://www.hibernate.org/xsd/hibernate-mapping"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.hibernate.org/xsd/hibernate-mapping http://hibernate.org/xsd/hibernate-mapping-4.0.xsd">
+    <class name="ubic.gemma.model.expression.bioAssayData.SingleCellDimensionExperiment"
+           table="SINGLE_CELL_DIMENSION_EXPERIMENT">
+        <id name="id" type="java.lang.Long" unsaved-value="null">
+            <column name="ID" sql-type="BIGINT"/>
+            <generator class="native"/>
+        </id>
+        <many-to-one name="expressionExperiment"
+                     class="ubic.gemma.model.expression.experiment.ExpressionExperiment"
+                     lazy="proxy" fetch="select"
+                     foreign-key="FK_SCDE_EXPRESSION_EXPERIMENT">
+            <column name="EXPRESSION_EXPERIMENT_FK" not-null="true" sql-type="BIGINT"/>
+        </many-to-one>
+        <many-to-one name="quantitationType"
+                     class="ubic.gemma.model.common.quantitationtype.QuantitationType"
+                     lazy="proxy" fetch="select"
+                     foreign-key="FK_SCDE_QUANTITATION_TYPE">
+            <column name="QUANTITATION_TYPE_FK" not-null="true" sql-type="BIGINT"/>
+        </many-to-one>
+        <many-to-one name="singleCellDimension"
+                     class="ubic.gemma.model.expression.bioAssayData.SingleCellDimension"
+                     lazy="proxy" fetch="select"
+                     foreign-key="FK_SCDE_SINGLE_CELL_DIMENSION">
+            <column name="SINGLE_CELL_DIMENSION_FK" not-null="true" sql-type="BIGINT"/>
+        </many-to-one>
+    </class>
+</hibernate-mapping>

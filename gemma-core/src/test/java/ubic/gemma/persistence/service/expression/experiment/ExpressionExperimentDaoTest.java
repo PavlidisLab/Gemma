@@ -65,6 +65,13 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest5 {
         public ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDao arrayDesignDao( SessionFactory sessionFactory ) {
             return new ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDaoImpl( sessionFactory );
         }
+
+        // PERF_PROBE_REPORT_ROUND4 B1: EE DAO field-injects SingleCellDimensionExperimentDao
+        // to maintain the link table on SC vector add/remove flows.
+        @Bean
+        public SingleCellDimensionExperimentDao singleCellDimensionExperimentDao( SessionFactory sessionFactory ) {
+            return new SingleCellDimensionExperimentDaoImpl( sessionFactory );
+        }
     }
 
     @Autowired

@@ -66,6 +66,17 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     @Autowired
     private QuantitationTypeService quantitationTypeService;
 
+    /**
+     * Maintains the {@code SINGLE_CELL_DIMENSION_EXPERIMENT} link table introduced by V7 / V9.
+     * Called after add / replace flows commit the new SC vectors so the link row stays in sync
+     * with the (EE, QT, SCD) triple actually present in SCEDV. Remove-side maintenance lives in
+     * {@link ExpressionExperimentDaoImpl} alongside the bulk SC delete code paths.
+     * <p>
+     * See PERF_PROBE_REPORT_ROUND4 finding B1.
+     */
+    @Autowired
+    private SingleCellDimensionExperimentDao singleCellDimensionExperimentDao;
+
     @Override
     @Transactional(readOnly = true)
     public ExpressionExperiment loadWithSingleCellVectors( Long id ) {
@@ -376,6 +387,11 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
             applyBioAssaySparsityMetrics( ee, scd, vectors );
         }
         expressionExperimentDao.update( ee ); // will take care of creating vectors
+        // PERF_PROBE_REPORT_ROUND4 B1: record the (ee, qt, scd) triple in the link table so the
+        // 30+ dimension/CTA/CLC lookups in ExpressionExperimentDaoImpl can resolve via a single
+        // indexed row instead of scanning SCEDV. record() is idempotent under the unique
+        // constraint on (EE_FK, QT_FK); a no-op when the row is already present from a backfill.
+        singleCellDimensionExperimentDao.record( ee, quantitationType, scd );
         if ( quantitationType.getIsSingleCellPreferred() && scdCreated ) {
             CellTypeAssignment preferredLabelling = scd.getCellTypeAssignments().stream().filter( CellTypeAssignment::isPreferred ).findFirst().orElse( null );
             if ( preferredLabelling != null ) {
@@ -442,6 +458,10 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
             applyBioAssaySparsityMetrics( ee, scd, vectors );
         }
         expressionExperimentDao.update( ee );
+        // PERF_PROBE_REPORT_ROUND4 B1: maintain the link table. The remove half (clearing the row
+        // that pointed at the old SCD) ran inside removeSingleCellVectorsAndDimensionIfNecessary
+        // via the DAO-side hook in removeSingleCellDataVectors. Now write the new (ee, qt, scd).
+        singleCellDimensionExperimentDao.record( ee, quantitationType, scd );
         if ( quantitationType.getIsSingleCellPreferred() && scdCreated ) {
             CellTypeAssignment preferredLabelling = scd.getCellTypeAssignments().stream().filter( CellTypeAssignment::isPreferred ).findFirst().orElse( null );
             if ( preferredLabelling != null ) {
