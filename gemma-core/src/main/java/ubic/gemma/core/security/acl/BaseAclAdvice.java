@@ -447,20 +447,18 @@ public abstract class BaseAclAdvice {
     }
 
     /**
-     * Recursively locate the actual secured parent.
+     * Locate the immediate secured parent: the value of {@link SecuredChild#getSecurityOwner()}.
+     * <p>
+     * Returns the direct security owner even when it is itself a {@link SecuredChild}; Spring's
+     * ACL framework already handles transitive permission inheritance through the parent chain
+     * (e.g. ExpressionAnalysisResultSet -> DifferentialExpressionAnalysis -> ExpressionExperiment),
+     * so the parent ACL pointer should be the immediate owner — flattening to the top-level
+     * Securable here breaks AclClassMetadata's registered child->parent type contract
+     * (e.g. ExpressionAnalysisResultSet's parent is registered as DifferentialExpressionAnalysis,
+     * not as ExpressionExperiment).
      */
     private Securable locateSecuredParent( SecuredChild s ) {
-        if ( s.getSecurityOwner() == null ) {
-            return null;
-
-        }
-        Securable securityOwner = s.getSecurityOwner();
-
-        if ( securityOwner instanceof SecuredChild ) {
-            return locateSecuredParent( ( SecuredChild ) securityOwner );
-        }
-        return securityOwner;
-
+        return s.getSecurityOwner();
     }
 
     /**

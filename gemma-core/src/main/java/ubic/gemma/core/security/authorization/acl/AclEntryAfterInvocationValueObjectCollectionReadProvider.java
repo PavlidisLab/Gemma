@@ -106,7 +106,17 @@ public class AclEntryAfterInvocationValueObjectCollectionReadProvider extends Ac
         for ( ObjectIdentity oi : ois ) {
             Acl acl = aclsById.get( oi );
             if ( acl != null ) {
-                perms[i] = acl.isGranted( requirePermission, sids, false );
+                try {
+                    perms[i] = acl.isGranted( requirePermission, sids, false );
+                } catch ( NotFoundException nfe ) {
+                    // No ACE matched any required permission for any of the user's sids
+                    // (typical for anonymous reads against non-public objects). Treat as
+                    // "no permission" so the per-row filter drops the value object rather
+                    // than aborting the entire filter pass with an exception. Mirrors
+                    // sibling AclEntryAfterInvocationValueObjectCollectionFilteringProvider.
+                    log.trace( String.format( "No matching ACE for %s; filtering out.", oi ) );
+                    perms[i] = false;
+                }
                 Object domainObject = domainObjects.get( i );
                 if ( domainObject instanceof SecureValueObject ) {
                     populateValueObject( ( SecureValueObject ) domainObject, acl, sids, requirePermission, currentUsername, isAdmin );

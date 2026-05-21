@@ -101,8 +101,8 @@ public class HibernateSearchSource implements FieldAwareSearchSource {
 
     private static final String[] GENE_FIELDS = {
             "name", "accessions.accession", "aliases.alias",
-            "ensemblId", "ncbiGeneId", "officialName", "officialSymbol", "products.name",
-            "products.ncbiGi", "products.accessions.accession", "products.previousNcbiId"
+            "ensemblId", "ncbiGeneId", "previousNcbiGeneId", "officialName", "officialSymbol",
+            "products.name", "products.ncbiGi", "products.accessions.accession"
     };
     private static final String[] GENE_EXACT_FIELDS = {
             "name", "accessions.accession", "aliases.alias", "ensemblId", "ncbiGeneId", "officialName", "officialSymbol"
