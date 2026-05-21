@@ -11,18 +11,29 @@ import java.io.IOException;
 @Slf4j
 public abstract class ExtendedRuntime {
 
-    private static ExtendedRuntime currentRuntime;
+    // Double-checked locking with volatile: getRuntime() is hit from multiple request threads
+    // (FileLockManagerImpl.getAllLockInfos, getLockInfo). Without volatile, a reader could
+    // observe a partially-constructed LinuxRuntime; without sync, two threads can each
+    // construct an instance and race on the assignment.
+    private static volatile ExtendedRuntime currentRuntime;
 
     public static ExtendedRuntime getRuntime() {
-        if ( currentRuntime == null ) {
-            if ( SystemUtils.IS_OS_LINUX ) {
-                currentRuntime = new LinuxRuntime();
-            } else {
-                log.warn( "Unsupported OS: " + SystemUtils.OS_NAME + " for extended runtime features, a dummy runtime will be created." );
-                currentRuntime = new DummyRuntime();
+        ExtendedRuntime local = currentRuntime;
+        if ( local == null ) {
+            synchronized ( ExtendedRuntime.class ) {
+                local = currentRuntime;
+                if ( local == null ) {
+                    if ( SystemUtils.IS_OS_LINUX ) {
+                        local = new LinuxRuntime();
+                    } else {
+                        log.warn( "Unsupported OS: " + SystemUtils.OS_NAME + " for extended runtime features, a dummy runtime will be created." );
+                        local = new DummyRuntime();
+                    }
+                    currentRuntime = local;
+                }
             }
         }
-        return currentRuntime;
+        return local;
     }
 
     public abstract int getPid() throws IOException;

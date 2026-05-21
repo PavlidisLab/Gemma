@@ -71,8 +71,11 @@ public class SlackAppender extends AbstractAppender {
         return new Builder();
     }
 
+    // volatile: written under synchronized in getSlackInstance() / setSlackInstance(),
+    // but read unsynchronized in stop() — without volatile, stop() may observe a stale null
+    // (and skip close()) or an under-published reference on another thread's first access.
     @Nullable
-    private Slack slackInstance;
+    private volatile Slack slackInstance;
 
     private final String token;
     private final String channel;
