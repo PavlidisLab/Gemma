@@ -24,6 +24,7 @@ import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentServiceImpl;
 
 import org.springframework.lang.Nullable;
 import java.io.Console;
@@ -85,6 +86,17 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
                 .build();
         log.info( "Loading single-cell data vectors for aggregation for " + qt + "..." );
         long numVecs = singleCellExpressionExperimentService.getNumberOfSingleCellDataVectors( ee, qt );
+        // Vectors are iterated TWICE downstream: once in computeLibrarySize (line ~189, log2cpm branch only),
+        // and once in the main aggregation loop. The aggregation algorithm needs a fully materialized
+        // collection for the two-pass access pattern, so the streaming fetch-size only controls the JDBC
+        // cursor / batch size while still ending in collect-to-list. Size-guard against catastrophic OOM:
+        // anything past the SC matrix ceiling is hopeless regardless of which branch we pick.
+        if ( numVecs > SingleCellExpressionExperimentServiceImpl.SC_MATRIX_VECTOR_COUNT_LIMIT ) {
+            throw new IllegalStateException( String.format(
+                    "Refusing to aggregate single-cell vectors for %s in %s: %d vectors exceeds the %d ceiling "
+                            + "and the two-pass aggregation algorithm requires fully materialized vectors.",
+                    qt, ee, numVecs, SingleCellExpressionExperimentServiceImpl.SC_MATRIX_VECTOR_COUNT_LIMIT ) );
+        }
         Collection<SingleCellExpressionDataVector> vectors;
         if ( config.getFetchSize() > 0 ) {
             vectors = singleCellExpressionExperimentService.streamSingleCellDataVectors( ee, qt, config.getFetchSize(), config.isUseCursorFetchIfSupported(), false, vectorInitConfig )
