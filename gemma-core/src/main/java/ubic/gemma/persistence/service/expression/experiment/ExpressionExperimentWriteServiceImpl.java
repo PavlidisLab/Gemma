@@ -157,8 +157,9 @@ public class ExpressionExperimentWriteServiceImpl implements ExpressionExperimen
         }
         Collection<ExperimentalFactor> efs = experiment.getExperimentalDesign().getExperimentalFactors();
         int count = 0;
-        for ( BioMaterial bm : fvs.keySet() ) {
-            FactorValue fv = fvs.get( bm );
+        for ( Map.Entry<BioMaterial, FactorValue> fvEntry : fvs.entrySet() ) {
+            BioMaterial bm = fvEntry.getKey();
+            FactorValue fv = fvEntry.getValue();
             fv.setSecurityOwner( experiment );
             fv = this.factorValueService.create( fv );
 

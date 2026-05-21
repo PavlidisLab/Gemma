@@ -309,8 +309,8 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
          * To Check the cache we need the list of genes 1st. Get from CS2Gene list then check the cache.
          */
         Collection<Long> genes = new HashSet<>();
-        for ( Long cs : cs2gene.keySet() ) {
-            genes.addAll( cs2gene.get( cs ) );
+        for ( Collection<Long> csGenes : cs2gene.values() ) {
+            genes.addAll( csGenes );
         }
 
         // this will be populated with experiments for which we don't have all the needed results cached
@@ -422,10 +422,11 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
          */
         Map<Long, Map<Long, Collection<DoubleVectorValueObject>>> mapForCache = this.makeCacheMap( newResults );
         int i = 0;
-        for ( Long eeid : mapForCache.keySet() ) {
-            for ( Long g : mapForCache.get( eeid ).keySet() ) {
+        for ( Map.Entry<Long, Map<Long, Collection<DoubleVectorValueObject>>> mfcEntry : mapForCache.entrySet() ) {
+            Long eeid = mfcEntry.getKey();
+            for ( Map.Entry<Long, Collection<DoubleVectorValueObject>> gEntry : mfcEntry.getValue().entrySet() ) {
                 i++;
-                this.processedDataVectorByGeneCache.putById( eeid, g, mapForCache.get( eeid ).get( g ) );
+                this.processedDataVectorByGeneCache.putById( eeid, gEntry.getKey(), gEntry.getValue() );
             }
         }
         // WARNING cache size() can be slow, esp. terracotta.
@@ -560,10 +561,11 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
                 ProcessedExpressionDataVector::getBioAssayDimension, BioAssayDimensionValueObject::new );
         Map<ArrayDesign, ArrayDesignValueObject> adVos = createValueObjectCache( data.keySet(),
                 vec -> vec.getDesignElement().getArrayDesign(), ArrayDesignValueObject::new );
-        for ( ProcessedExpressionDataVector v : data.keySet() ) {
+        for ( Map.Entry<ProcessedExpressionDataVector, Collection<Long>> dEntry : data.entrySet() ) {
+            ProcessedExpressionDataVector v = dEntry.getKey();
             result.add( new DoubleVectorValueObject( v, eeVos.get( v.getExpressionExperiment() ),
                     qtVos.get( v.getQuantitationType() ), badVos.get( v.getBioAssayDimension() ),
-                    adVos.get( v.getDesignElement().getArrayDesign() ), data.get( v ) ) );
+                    adVos.get( v.getDesignElement().getArrayDesign() ), dEntry.getValue() ) );
         }
         return result;
     }
@@ -580,10 +582,11 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
         Map<ArrayDesign, ArrayDesignValueObject> adVos = createValueObjectCache( data.keySet(),
                 vec -> vec.getDesignElement().getArrayDesign(), ArrayDesignValueObject::new );
         BioAssayDimensionValueObject dimToMatch = new BioAssayDimensionValueObject( longestBad );
-        for ( ProcessedExpressionDataVector v : data.keySet() ) {
+        for ( Map.Entry<ProcessedExpressionDataVector, Collection<Long>> dEntry : data.entrySet() ) {
+            ProcessedExpressionDataVector v = dEntry.getKey();
             result.add( new DoubleVectorValueObject( v, eeVos.get( v.getExpressionExperiment() ),
                     qtVos.get( v.getQuantitationType() ), badVos.get( v.getBioAssayDimension() ),
-                    adVos.get( v.getDesignElement().getArrayDesign() ), data.get( v ), dimToMatch ) );
+                    adVos.get( v.getDesignElement().getArrayDesign() ), dEntry.getValue(), dimToMatch ) );
         }
         return result;
     }
