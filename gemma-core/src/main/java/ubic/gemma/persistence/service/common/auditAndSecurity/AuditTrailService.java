@@ -33,8 +33,11 @@ import java.util.Date;
 /**
  * Create and manipulate audit trails.
  * <p>
- * This service is mainly intended to create audit events manually. Part of the auditing is done automatically using
- * aspects via {@link ubic.gemma.core.security.audit.AuditAdvice}.
+ * This service is the imperative API for emitting audit events. Typed UPDATE rows are
+ * also emitted via the {@link ubic.gemma.core.security.audit.Audited @Audited} aspect;
+ * CREATE / DELETE rows are emitted automatically by the Hibernate
+ * {@link ubic.gemma.persistence.audit.AuditTrailEventListener} on
+ * {@code POST_INSERT} / {@code PRE_DELETE}.
  *
  * @author kelsey
  */

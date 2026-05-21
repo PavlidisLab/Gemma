@@ -40,16 +40,15 @@ import java.lang.annotation.Target;
  * deserialization is carried by Jackson's
  * {@code @JsonTypeInfo(use = NAME, property = "@type")} discriminator.
  *
- * <p>Replaces the {@code AuditAdvice} generic auto-UPDATE aspect, which fires
- * on every DAO mutation regardless of intent and records every event with a
- * {@code null} event type. See {@code AUDIT_SYSTEM_AUDIT.md} Phase A.
+ * <p>Replaces the (now-retired) {@code AuditAdvice} generic auto-UPDATE aspect,
+ * which fired on every DAO mutation regardless of intent and recorded every
+ * event with a {@code null} event type. See {@code AUDIT_SYSTEM_AUDIT.md}
+ * Phase A; the terminal Phase C step (see {@code AUDIT_ADVICE_RETIREMENT_PLAN.md})
+ * deleted {@code AuditAdvice} and the blanket DAO pointcuts that drove it.
  *
- * <p>Co-existence: this annotation runs through the new {@code AuditedAspect}
- * and is independent of the legacy {@link AuditAdvice}. During the migration
- * both code paths are active; the legacy aspect can be safely opted out of via
- * {@link IgnoreAudit} on the annotated method (it does NOT fire when the call
- * does not match a DAO pointcut, which is the usual case for service-layer
- * methods).
+ * <p>This annotation runs through {@code AuditedAspect}; it is the supported
+ * mechanism for emitting typed UPDATE rows from service-layer methods. Generic
+ * (eventType=null) auto-UPDATE rows are no longer produced by the framework.
  */
 @Retention( RetentionPolicy.RUNTIME )
 @Target( ElementType.METHOD )

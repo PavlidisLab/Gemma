@@ -70,10 +70,11 @@ import java.util.concurrent.ConcurrentMap;
  * <p>{@code @AfterReturning} — not {@code @Before} or {@code @Around} — so a
  * throwing method records nothing.
  *
- * <p>Phase A of {@code AUDIT_SYSTEM_AUDIT.md}. The aspect is independent of
- * (and coexists with) the legacy generic {@code AuditAdvice}. Phase C will
- * retire that legacy aspect once Phase B has swept all 77 typed-hardcoded
- * imperative callers to {@code @Audited}.
+ * <p>Phase A of {@code AUDIT_SYSTEM_AUDIT.md}. Phase C (terminal step,
+ * see {@code AUDIT_ADVICE_RETIREMENT_PLAN.md}) retired the legacy generic
+ * {@code AuditAdvice} aspect; this aspect is now the sole AOP path for
+ * audit-event emission, alongside the imperative {@code AuditTrailService}
+ * API and the Hibernate {@code AuditTrailEventListener} (CREATE/DELETE).
  */
 @Aspect
 @Component

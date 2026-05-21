@@ -54,13 +54,16 @@ public class ExternalDatabaseServiceTest extends BaseSpringContextTest5 {
                 .hasFieldOrPropertyWithValue( "name", "test" )
                 .hasFieldOrPropertyWithValue( "releaseVersion", "123" )
                 .hasFieldOrPropertyWithValue( "releaseUrl", new URL( "http://example.com/test" ) );
+        // Audit Phase C retired the blanket DAO advices. Trail now carries:
+        //   [0] CREATE — from AuditTrailEventListener on POST_INSERT;
+        //   [1] UPDATE — from the imperative addUpdateEvent call inside updateReleaseDetails.
+        // The third row ("from AuditAdvice on update()") no longer exists.
         assertThat( externalDatabase.getAuditTrail().getEvents() )
-                .hasSize( 3 )
+                .hasSize( 2 )
                 .extracting( "action", "performer" )
                 .containsExactly(
-                        tuple( AuditAction.CREATE, currentUser ), // from AuditAdvice on create()
-                        tuple( AuditAction.UPDATE, currentUser ), // manually inserted
-                        tuple( AuditAction.UPDATE, currentUser ) ); // from AuditAdvice on update()
+                        tuple( AuditAction.CREATE, currentUser ),
+                        tuple( AuditAction.UPDATE, currentUser ) );
         assertThat( externalDatabase.getAuditTrail().getEvents().get( 1 ).getNote() )
                 .isEqualTo( "Yep" );
         // make sure that the last updated date is properly stored
@@ -100,7 +103,9 @@ public class ExternalDatabaseServiceTest extends BaseSpringContextTest5 {
         ed2.setDescription( "1234" );
         externalDatabaseService.update( ed2 );
         assertThat( ed2.getExternalDatabases() ).contains( ed );
-        assertThat( ed2.getAuditTrail().getEvents() ).hasSize( 2 );
+        // Audit Phase C retired the blanket DAO update advice. Only the CREATE row from
+        // the initial create() remains; the bare update() emits nothing.
+        assertThat( ed2.getAuditTrail().getEvents() ).hasSize( 1 );
         ed = externalDatabaseService.findByNameWithAuditTrail( ed.getName() );
         assertThat( ed.getAuditTrail().getEvents() ).hasSize( 1 );
     }
