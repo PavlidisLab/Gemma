@@ -9,6 +9,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
+import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -55,13 +56,15 @@ public class SingleCellExpressionExperimentSubSetServiceImpl implements SingleCe
                 .orElseThrow( IllegalStateException::new );
         ExperimentalFactor cellTypeFactor = singleCellExpressionExperimentService.getCellTypeFactor( ee )
                 .orElseThrow( () -> new IllegalStateException( ee + " does not have a cell type factor." ) );
+        SingleCellDimension scd = singleCellExpressionExperimentService.getPreferredSingleCellDimensionWithoutCellIds( ee )
+                .orElseThrow( () -> new IllegalStateException( ee + " does not have a preferred single-cell dimension." ) );
         Map<Characteristic, FactorValue> mappedCellTypeFactors = createMappingByFactorValueCharacteristics( cta, cellTypeFactor );
-        return createSubSets( ee, cta, cellTypeFactor, mappedCellTypeFactors, config );
+        return createSubSets( ee, scd, cta, cellTypeFactor, mappedCellTypeFactors, config );
     }
 
     @Override
     @Transactional
-    public List<ExpressionExperimentSubSet> createSubSets( ExpressionExperiment ee, CellLevelCharacteristics clc, ExperimentalFactor factor, Map<Characteristic, FactorValue> mappedCellTypeFactors,
+    public List<ExpressionExperimentSubSet> createSubSets( ExpressionExperiment ee, SingleCellDimension scd, CellLevelCharacteristics clc, ExperimentalFactor factor, Map<Characteristic, FactorValue> mappedCellTypeFactors,
             SingleCellExperimentSubSetsCreationConfig config ) {
         Set<FactorValue> unmappedFactorValues = new HashSet<>( factor.getFactorValues() );
         unmappedFactorValues.removeAll( mappedCellTypeFactors.values() );
@@ -73,6 +76,22 @@ public class SingleCellExpressionExperimentSubSetServiceImpl implements SingleCe
                 throw new IllegalStateException( String.format( "Not all factor values in %s are mapped to cell types in %s. Remove these factor values or set allowUnmappedFactorValues to true:\n\t%s",
                         factor, clc, unmappedFactorValues.stream().map( FactorValue::toString ).collect( Collectors.joining( "\n\t" ) ) ) );
             }
+        }
+        // only create pseudo-bulk assays for sources that actually contributed cells to the single-cell dimension
+        Set<BioAssay> assaysInScd = new HashSet<>( scd.getBioAssays() );
+        List<BioAssay> samplesToSubset = new ArrayList<>( assaysInScd.size() );
+        List<BioAssay> samplesWithoutData = new ArrayList<>();
+        for ( BioAssay sample : ee.getBioAssays() ) {
+            if ( assaysInScd.contains( sample ) ) {
+                samplesToSubset.add( sample );
+            } else {
+                samplesWithoutData.add( sample );
+            }
+        }
+        if ( !samplesWithoutData.isEmpty() ) {
+            log.warn( String.format( "%d sample(s) of %s are not present in %s and will be excluded from pseudo-bulk aggregation:\n\t%s",
+                    samplesWithoutData.size(), ee, scd,
+                    samplesWithoutData.stream().map( BioAssay::toString ).collect( Collectors.joining( "\n\t" ) ) ) );
         }
         List<ExpressionExperimentSubSet> results = new ArrayList<>( clc.getCharacteristics().size() );
         // create sample by cell type populations
@@ -90,7 +109,7 @@ public class SingleCellExpressionExperimentSubSetServiceImpl implements SingleCe
             ExpressionExperimentSubSet subset = ExpressionExperimentSubSet.Factory.newInstance( cellTypeName, ee );
             subset.setSourceExperiment( ee );
             subset.getCharacteristics().add( Characteristic.Factory.newInstance( characteristic ) );
-            for ( BioAssay sample : ee.getBioAssays() ) {
+            for ( BioAssay sample : samplesToSubset ) {
                 subset.getBioAssays().add( createBioAssayForCellPopulation( sample, factorValue, characteristic, cellTypeName ) );
             }
             results.add( expressionExperimentSubSetService.create( subset ) );
