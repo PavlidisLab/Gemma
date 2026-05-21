@@ -70,7 +70,7 @@ public class BibliographicReferenceDaoImpl
     @Override
     public long countDistinctWithRelatedExperiments() {
         Query q = this.getSessionFactory().getCurrentSession()
-                .createQuery( "select count(" + ( AclQueryUtils.requiresCountDistinct() ? "distinct " : "" ) + " b)" + " "
+                .createQuery( "select count(b) "
                         + "from ExpressionExperiment e join e.primaryPublication b "
                         + AclQueryUtils.formAclRestrictionClause( "e.id" ) );
         AclQueryUtils.addAclParameters( q, ExpressionExperiment.class );
@@ -82,7 +82,7 @@ public class BibliographicReferenceDaoImpl
         Query q = this.getSessionFactory().getCurrentSession()
                 // the slight difference here is that we count the number of distinct experiment, which is equivalent to
                 // the number of ref-experiment pairs due to the one-to-many relation
-                .createQuery( "select count(" + ( AclQueryUtils.requiresCountDistinct() ? "distinct " : "" ) + " e)" + " "
+                .createQuery( "select count(e) "
                         + "from ExpressionExperiment e join e.primaryPublication b"
                         + AclQueryUtils.formAclRestrictionClause( "e.id" ) );
         AclQueryUtils.addAclParameters( q, ExpressionExperiment.class );
@@ -94,7 +94,6 @@ public class BibliographicReferenceDaoImpl
         Query q = this.getSessionFactory().getCurrentSession()
                 .createQuery( "select b, e.id, e.shortName from ExpressionExperiment e join e.primaryPublication b "
                         + AclQueryUtils.formAclRestrictionClause( "e.id" ) + " "
-                        + ( AclQueryUtils.requiresGroupBy() ? "group by b, e " : "" )
                         + "order by b.authorList nulls last, b.title nulls last"
                 );
         AclQueryUtils.addAclParameters( q, ExpressionExperiment.class );
@@ -122,7 +121,6 @@ public class BibliographicReferenceDaoImpl
                 .createQuery( "select b, e from ExpressionExperiment e join e.primaryPublication b "
                         + AclQueryUtils.formAclRestrictionClause( "e.id" ) + " "
                         + "and b in (:recs) "
-                        + ( AclQueryUtils.requiresGroupBy() ? "group by b, e " : "" )
                         + "order by b.authorList nulls last, b.title nulls last" );
         AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
         List<Object[]> os = QueryUtils.listByIdentifiableBatch( query, "recs", records, eeBatchSize );
