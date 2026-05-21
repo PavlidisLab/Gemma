@@ -500,19 +500,23 @@ public class ArrayDesignReadServiceImpl implements ArrayDesignReadService {
 
     private void getMostRecentEvents( Map<Long, Collection<AuditEvent>> eventMap, Map<Long, AuditEvent> lastEventMap,
             Set<Long> aaIds, Class<? extends ArrayDesignAnalysisEvent> eventclass ) {
+        // Hoist the per-id load out of the loop: the original body did two
+        // arrayDesignDao.load(id) calls per iteration (one for the audit-event
+        // probe, one for the subsuming/mergedInto probe) — both returned the
+        // same ArrayDesign. A single batched fetch turns 2*N round-trips into 1.
+        Map<Long, ArrayDesign> arrayDesignsById = arrayDesignDao.loadAsMap( aaIds );
         for ( Long arrayDesignId : aaIds ) {
 
             Collection<AuditEvent> events = eventMap.get( arrayDesignId );
-            AuditEvent lastEvent;
+            ArrayDesign arrayDesign = arrayDesignsById.get( arrayDesignId );
 
             if ( events == null ) {
                 lastEventMap.put( arrayDesignId, null );
             } else {
-                ArrayDesign ad = arrayDesignDao.load( arrayDesignId );
-                if ( ad == null ) {
+                if ( arrayDesign == null ) {
                     throw new NullPointerException( String.format( "No %s with ID %d.", ArrayDesign.class.getName(), arrayDesignId ) );
                 }
-                lastEvent = auditEventDao.getLastEvent( ad, eventclass );
+                AuditEvent lastEvent = auditEventDao.getLastEvent( arrayDesign, eventclass );
                 lastEventMap.put( arrayDesignId, lastEvent );
             }
 
@@ -520,7 +524,6 @@ public class ArrayDesignReadServiceImpl implements ArrayDesignReadService {
              * Check if the subsuming or merged array (if any) was updated more recently. To do this: 1) load the AA; 2)
              * check for merged; check for subsumed; check events for those.
              */
-            ArrayDesign arrayDesign = arrayDesignDao.load( arrayDesignId );
             if ( arrayDesign != null && arrayDesign.getSubsumingArrayDesign() != null ) {
                 ArrayDesign subsumedInto = arrayDesign.getSubsumingArrayDesign();
                 checkForMoreRecentMethod( lastEventMap, eventclass, arrayDesignId, subsumedInto );

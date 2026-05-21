@@ -428,3 +428,39 @@ text suggested. The deferral decision for Gemma 2.0 still stands.
    but no regression test pins the cross-tx-write invariant yet; the
    audit's "highest-priority production read path" status is still open.
    Worth pairing with the EE-DAO 18-failure family fix.
+
+## HitListSize entity cache — decision
+
+The `02c87a91ed` fix dropped the L2 entity cache on
+`AnalysisResultSet` and the L2 collection cache on its `hitListSizes`
+bag, but the entity-level `<cache usage="read-only"/>` on `HitListSize`
+itself (`HitListSize.hbm.xml:8`, plus the matching `L2_CACHES.put` in
+`EhcacheConfig.java:153`) was not touched at the time. Revisit the
+completeness of the fix.
+
+**Verdict: KEEP the entity cache on `HitListSize`.** Reasoning against
+the four-criteria check for the AuditTrail-style stale-empty-bag bug:
+
+1. **Value-like row?** Yes — four primitive columns (`Double thresholdQvalue`,
+   `Integer numberOfProbes`, `Direction direction`, `Integer numberOfGenes`).
+2. **Unidirectional?** Yes — no back-reference from `HitListSize` to its
+   parent `ExpressionAnalysisResultSet`.
+3. **Child collections?** No — zero `<set>`/`<list>`/`<bag>` declarations in
+   `HitListSize.hbm.xml`. The bag amplifier requires a cached collection
+   inside a cached parent; this entity has no collections to begin with.
+4. **In-place mutation?** No — `LinearModelAnalyzer.computeHitListSizes`
+   (line 240-242) constructs `HitListSize` instances once via the static
+   factory; no in-tree caller invokes a setter on an already-persisted
+   row or `session.evict(hitListSize)` on it. Removal happens only via
+   `cascade="all"` from the parent result-set, which routes through
+   `session.delete` and DOES invalidate the L2 entity cache for the
+   removed id.
+
+The bug the parent + collection cache caused was "empty bag served to
+fresh session for a result-set that has new HitListSize rows in DB".
+The entity cache cannot reproduce that symptom: it stores individual
+rows by primary key, and primary-key reads of an immutable, never-mutated
+entity are the textbook safe case for `<cache usage="read-only"/>`.
+
+HBM-level rationale comment added at `HitListSize.hbm.xml` so the next
+auditor doesn't re-litigate this.
