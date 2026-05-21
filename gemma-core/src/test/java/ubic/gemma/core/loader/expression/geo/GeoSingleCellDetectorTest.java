@@ -59,6 +59,7 @@ import static org.assertj.core.api.InstanceOfAssertFactories.type;
 /**
  * TODO: Phase 2 — trim and cache per-test download data so the integration-tagged methods can move to fully offline @Test. SOFT files are now cached in test resources (Phase 1).
  */
+@Tag("slow")
 @Category({ GeoTest.class, SlowTest.class })
 @ContextConfiguration
 @ExtendWith(NetworkAvailableExtension.class)

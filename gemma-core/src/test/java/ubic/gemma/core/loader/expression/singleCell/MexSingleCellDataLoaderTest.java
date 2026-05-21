@@ -303,6 +303,7 @@ public class MexSingleCellDataLoaderTest extends BaseTest5 {
      * This dataset does not filter empty droplets and thus many barcodes are simply unused and can be discarded.
      */
     @Test
+    @Tag("slow")
     @Tag("integration")
     @Category({ GeoTest.class, SlowTest.class })
     @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
@@ -434,6 +435,7 @@ public class MexSingleCellDataLoaderTest extends BaseTest5 {
      * This GEO series inclues cell types in the barcodes.tsv.gz files.
      */
     @Test
+    @Tag("slow")
     @Tag("integration")
     @Category({ GeoTest.class, SlowTest.class })
     @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
