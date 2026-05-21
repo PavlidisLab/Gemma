@@ -3,6 +3,7 @@ package ubic.gemma.persistence.service.expression.bioAssayData;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
@@ -45,6 +46,42 @@ public class RawAndProcessedExpressionDataVectorDaoImpl extends AbstractDesignEl
         } else {
             throw new UnsupportedOperationException( "Only raw and processed vectors can be used with this service." );
         }
+    }
+
+    @Override
+    public Collection<BulkExpressionDataVector> find( QuantitationType quantitationType ) {
+        // BulkExpressionDataVector is not a JPA entity (the inheritance is plain Java, not <subclass/>),
+        // so the AbstractDao.findByProperty Criteria query against it fails on Hibernate 6's stricter
+        // JPA Metamodel ("Not an entity: BulkExpressionDataVector"). Issue two HQL queries against the
+        // real concrete entities and merge.
+        Collection<BulkExpressionDataVector> result = new ArrayList<>();
+        result.addAll( this.getSessionFactory().getCurrentSession()
+                .createQuery( "from RawExpressionDataVector v where v.quantitationType = :qt", RawExpressionDataVector.class )
+                .setParameter( "qt", quantitationType )
+                .list() );
+        result.addAll( this.getSessionFactory().getCurrentSession()
+                .createQuery( "from ProcessedExpressionDataVector v where v.quantitationType = :qt", ProcessedExpressionDataVector.class )
+                .setParameter( "qt", quantitationType )
+                .list() );
+        return result;
+    }
+
+    @Override
+    public Collection<BulkExpressionDataVector> find( Collection<QuantitationType> quantitationTypes ) {
+        // Same rationale as the single-QT overload: BulkExpressionDataVector is not a JPA entity.
+        if ( quantitationTypes.isEmpty() ) {
+            return new ArrayList<>();
+        }
+        Collection<BulkExpressionDataVector> result = new ArrayList<>();
+        result.addAll( this.getSessionFactory().getCurrentSession()
+                .createQuery( "from RawExpressionDataVector v where v.quantitationType in :qts", RawExpressionDataVector.class )
+                .setParameter( "qts", quantitationTypes )
+                .list() );
+        result.addAll( this.getSessionFactory().getCurrentSession()
+                .createQuery( "from ProcessedExpressionDataVector v where v.quantitationType in :qts", ProcessedExpressionDataVector.class )
+                .setParameter( "qts", quantitationTypes )
+                .list() );
+        return result;
     }
 
     @Override
