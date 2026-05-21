@@ -58,7 +58,9 @@ def w(d: date) -> float:
     return float((d - EPOCH).days)
 
 
-TODAY_X = w(TODAY)
+# "today" boundary = end of TODAY (so all of today's work falls in the
+# linear half of the chart).
+TODAY_X = w(TODAY) + 1.0
 
 # ----------------------------------------------------------------------
 # Task list — ordered top-to-bottom for the chart.
@@ -70,230 +72,278 @@ TODAY_X = w(TODAY)
 #   "blocked"  — red hatched fill (needs product / ops / external answer)
 #   "deferred" — dotted hatched fill (parked for a focused later session)
 
+def _done(d_start: date, d_end: date | None = None) -> tuple[float, float, float]:
+    """Helper: (plan_start, plan_end, done_end) for a 'done' task spanning d_start..d_end."""
+    end = d_end or d_start
+    return (w(d_start), w(end) + 0.95, w(end) + 0.95)
+
+
+def _plan(d_start: date, d_end: date) -> tuple[float, float, float]:
+    return (w(d_start), w(d_end), 0.0)
+
+
+D18, D19, D20, D21 = (date(2026, 5, d) for d in (18, 19, 20, 21))
+
 TASKS: list[GanttTask] = [
-    # ----- Perf — DEA -------------------------------------------------
-    GanttTask("DEA findByGene cold-cache recce",
-              w(date(2026, 5, 20)), w(date(2026, 5, 20)) + 0.05,
-              w(date(2026, 5, 20)) + 0.05,
-              "done", "DEA"),
-    GanttTask("DEA getContrasts N+1 collapse",
-              w(date(2026, 5, 20)) + 0.10, w(date(2026, 5, 20)) + 0.15,
-              w(date(2026, 5, 20)) + 0.15,
-              "done", "DEA"),
-    GanttTask("DEA probe-init N+1 (fold w/ contrasts)",
-              w(date(2026, 5, 21)) + 0.05, w(date(2026, 5, 21)) + 0.10,
-              w(date(2026, 5, 21)) + 0.10,
-              "done", "DEA"),
-    GanttTask("DEA warm-up service (@Scheduled)",
-              w(date(2026, 5, 21)) + 0.10, w(date(2026, 5, 21)) + 0.20,
-              w(date(2026, 5, 21)) + 0.20,
-              "done", "DEA"),
-    GanttTask("DEA archive ZIP async write",
-              w(date(2026, 5, 21)) + 0.20, w(date(2026, 5, 21)) + 0.25,
-              w(date(2026, 5, 21)) + 0.25,
-              "done", "DEA"),
-    GanttTask("/datasets/{id}/data/dea endpoint",
-              w(date(2026, 5, 21)) + 0.30, w(date(2026, 5, 28)),
-              0.0, "inflight", "DEA",
-              note="Agent #59 still in flight"),
+    # ----- Foundations (test infra, build hygiene, JUnit5) ----------
+    GanttTask("Retire JUnit 4 base-test chain (Base*Test families)",
+              *_done(D19), "done", "Foundations"),
+    GanttTask("HomologeneServiceTest isolation (spring-test 6.2 trap)",
+              *_done(D19), "done", "Foundations"),
+    GanttTask("HibernateConfig: coerce searchIndexBase off CWD",
+              *_done(D19), "done", "Foundations"),
+    GanttTask("Lucene 9 EnglishAnalyzer + stem-exclusion fix",
+              *_done(D19), "done", "Foundations"),
+    GanttTask("CLO ontology trim + cached fixture (ROBOT)",
+              *_done(D19), "done", "Foundations"),
+    GanttTask("Cache 38 SOFT files + @Tag('integration')",
+              *_done(D19), "done", "Foundations"),
+    GanttTask("@EnabledOnOs(LINUX) on /proc/locks tests",
+              *_done(D19), "done", "Foundations"),
+    GanttTask("ArchUnit: @SuppressArchUnit + RelationshipPersister",
+              *_done(D19), "done", "Foundations"),
+    GanttTask("Repo-level CLAUDE.md (build/test/feature rules)",
+              *_done(D19), "done", "Foundations"),
 
-    # ----- Perf — Data + matrix --------------------------------------
-    GanttTask("Matrix in-JVM boxing + single-pass init",
-              w(date(2026, 5, 20)) + 0.10, w(date(2026, 5, 20)) + 0.15,
-              w(date(2026, 5, 20)) + 0.15,
-              "done", "Data + matrix"),
-    GanttTask("Processed-vector blob fast-path",
-              w(date(2026, 5, 20)) + 0.15, w(date(2026, 5, 20)) + 0.20,
-              w(date(2026, 5, 20)) + 0.20,
-              "done", "Data + matrix"),
+    # ----- ACL — JOIN -> EXISTS refactor -----------------------------
+    GanttTask("Mixed-ACL fixture seed + contract baseline",
+              *_done(D20), "done", "ACL refactor"),
+    GanttTask("formAclRestrictionClause -> EXISTS (S2)",
+              *_done(D20), "done", "ACL refactor",
+              note="19x cold / 3x warm validated"),
+    GanttTask("EE DAO filtering migrated to post-fetch ACL loader",
+              *_done(D20), "done", "ACL refactor"),
+    GanttTask("Delete dead JOIN scaffolding (6 commits)",
+              *_done(D20), "done", "ACL refactor"),
+    GanttTask("Wire 12 remaining ACL callsites in contract test",
+              *_done(D20), "done", "ACL refactor"),
+
+    # ----- Audit Phase C migrations + AuditAdvice retire -------------
+    GanttTask("@AuditedOnError + @Repeatable + AfterThrowing",
+              *_done(D20), "done", "Audit Phase C"),
+    GanttTask("Bucket 2e: 5 catch-block sites -> @AuditedOnError",
+              *_done(D20), "done", "Audit Phase C"),
+    GanttTask("Bucket 2d: BatchInfo + Preprocessor + reprocessAffy",
+              *_done(D20), "done", "Audit Phase C"),
+    GanttTask("Bucket 2c-ii: BatchInfoPopulation branch-extract",
+              *_done(D20), "done", "Audit Phase C"),
+    GanttTask("Bucket 2g: DataUpdater.addData / ADMerge / GEO update",
+              *_done(D20), "done", "Audit Phase C"),
+    GanttTask("@AuditedConditional batch effect/confound (#7+#8)",
+              *_done(D20), "done", "Audit Phase C"),
+    GanttTask("AuditAdvice retire (-765 LoC) — Phase C terminal",
+              *_done(D20), "done", "Audit Phase C"),
+
+    # ----- Audit lastEvent denorm + getLastEvents perf ---------------
+    GanttTask("audit_trail.last_event_id denorm + entity + migration",
+              *_done(D20), "done", "Audit perf"),
+    GanttTask("AuditTrail.addEvent helper; writers + tests migrated",
+              *_done(D20), "done", "Audit perf"),
+    GanttTask("getLastEvents whole-corpus -> denormalised FK",
+              *_done(D20), "done", "Audit perf"),
+    GanttTask("getLastEvents SQL-side MAX (8.7s -> 5.3s)",
+              *_done(D20), "done", "Audit perf"),
+    GanttTask("V8/V10 migration deconflict (collision resolved)",
+              *_done(D20), "done", "Audit perf"),
+
+    # ----- HB6 cascade audit + regression guards ---------------------
+    GanttTask("HB6 cascade audit doc + 2026-05-20 reassessment",
+              *_done(D20), "done", "HB6"),
+    GanttTask("ArrayDesign DAO remove() cascade fix",
+              *_done(D20), "done", "HB6"),
+    GanttTask("SC vector DAO cleanup cascade fix",
+              *_done(D20), "done", "HB6"),
+    GanttTask("Regression guards: SCD / BAD / AnalysisResultSet",
+              *_done(D20), "done", "HB6"),
+    GanttTask("hitListSizes cross-session-reload guard",
+              *_done(D20), "done", "HB6"),
+    GanttTask("HitListSize cache KEEP decision + doc",
+              *_done(D20), "done", "HB6"),
+    GanttTask("ArrayDesign getMostRecentEvents 2N -> 1 batch",
+              *_done(D20), "done", "HB6"),
+
+    # ----- Perf - DEA -----------------------------------------------
+    GanttTask("DEA findByGene cold-cache recce (A/B/C strategies)",
+              *_done(D20), "done", "DEA"),
+    GanttTask("getContrasts N+1 collapse (~1.5s cold)",
+              *_done(D20), "done", "DEA"),
+    GanttTask("probe-init N+1 folded with contrasts",
+              *_done(D20), "done", "DEA"),
+    GanttTask("@Scheduled top-50 warm-up (gated on scheduler profile)",
+              *_done(D21), "done", "DEA"),
+    GanttTask("DEA archive ZIP async via expressionDataFileTaskExecutor",
+              *_done(D21), "done", "DEA"),
+    GanttTask("/datasets/{id}/data/dea endpoint (sendfile)",
+              *_done(D21), "done", "DEA"),
+
+    # ----- Perf - Data + matrix --------------------------------------
+    GanttTask("perf-probe rounds 1-4 (live gemd hot paths)",
+              *_done(D20), "done", "Data + matrix"),
+    GanttTask("Matrix: kill double[]->Double[] boxing + single-pass NaN",
+              *_done(D20), "done", "Data + matrix"),
+    GanttTask("Processed-vector blob fast-path (JOIN FETCH +CS)",
+              *_done(D20), "done", "Data + matrix",
+              note="kills 425 N+1 hydration"),
     GanttTask("RAW vector (EE,QT) composite index",
-              w(date(2026, 5, 20)) + 0.20, w(date(2026, 5, 20)) + 0.22,
-              w(date(2026, 5, 20)) + 0.22,
-              "done", "Data + matrix"),
-    GanttTask("ArrayDesign batch load-as-map",
-              w(date(2026, 5, 20)) + 0.05, w(date(2026, 5, 20)) + 0.10,
-              w(date(2026, 5, 20)) + 0.10,
-              "done", "Data + matrix"),
-    GanttTask("/samples + /design N+1 fixes",
-              w(date(2026, 5, 20)), w(date(2026, 5, 20)) + 0.05,
-              w(date(2026, 5, 20)) + 0.05,
-              "done", "Data + matrix"),
-    GanttTask("Data exports async-build (processed/raw/resultSets)",
-              w(date(2026, 5, 21)) + 0.20, w(date(2026, 6, 4)),
-              0.0, "inflight", "Data + matrix",
-              note="Agent #59 in flight"),
+              *_done(D20), "done", "Data + matrix"),
+    GanttTask("ArrayDesign loadAsMap + 3 callsites migrated",
+              *_done(D20), "done", "Data + matrix"),
+    GanttTask("BioMaterial source-chain thaw (15.8s -> 150ms)",
+              *_done(D20), "done", "Data + matrix"),
+    GanttTask("/design fv.measurement defensive fetch",
+              *_done(D20), "done", "Data + matrix"),
+    GanttTask("Data exports async-build: /data/processed + /data/raw",
+              *_done(D21), "done", "Data + matrix"),
+    GanttTask("/resultSets/{id} TSV disk-cache + sendfile",
+              *_done(D21), "done", "Data + matrix"),
 
-    # ----- Perf — Annotation + Search --------------------------------
-    GanttTask("Annotation hot-path probe",
-              w(date(2026, 5, 21)) - 0.05, w(date(2026, 5, 21)),
-              w(date(2026, 5, 21)),
-              "done", "Annotation + Search"),
-    GanttTask("Search hot-path probe",
-              w(date(2026, 5, 21)) - 0.05, w(date(2026, 5, 21)),
-              w(date(2026, 5, 21)),
-              "done", "Annotation + Search"),
-    GanttTask("UNION ALL: findExperimentsByUris (19x)",
-              w(date(2026, 5, 21)) + 0.15, w(date(2026, 5, 21)) + 0.25,
-              w(date(2026, 5, 21)) + 0.25,
-              "done", "Annotation + Search"),
-    GanttTask("EE2C fast-path: autocomplete LIKE",
-              w(date(2026, 5, 21)) + 0.20, w(date(2026, 5, 21)) + 0.25,
-              w(date(2026, 5, 21)) + 0.25,
-              "done", "Annotation + Search"),
+    # ----- Perf - Annotation + Search --------------------------------
+    GanttTask("perf-probe: annotations + characteristic",
+              *_done(D20), "done", "Annotation + Search"),
+    GanttTask("perf-probe: search service (5-URI cliff)",
+              *_done(D20), "done", "Annotation + Search"),
+    GanttTask("findExperimentsByUris -> UNION ALL (19x at 10 URIs)",
+              *_done(D21), "done", "Annotation + Search"),
+    GanttTask("findByValueLike autocomplete via EE2C.VALUE",
+              *_done(D21), "done", "Annotation + Search"),
     GanttTask("Server-side LRU on /annotations/search",
-              w(date(2026, 5, 28)), w(date(2026, 6, 4)),
-              0.0, "planned", "Annotation + Search"),
+              *_plan(date(2026, 5, 28), date(2026, 6, 4)),
+              "planned", "Annotation + Search"),
     GanttTask("Hibernate Search auto-indexing decision",
-              w(date(2026, 5, 28)), w(date(2026, 6, 11)),
-              0.0, "blocked", "Annotation + Search",
+              *_plan(date(2026, 5, 28), date(2026, 6, 11)),
+              "blocked", "Annotation + Search",
               note="Listeners off today; need product call"),
     GanttTask("Per-hit session.get N+1 in HibernateSearchSource",
-              w(date(2026, 6, 4)), w(date(2026, 6, 11)),
-              0.0, "planned", "Annotation + Search"),
+              *_plan(date(2026, 6, 4), date(2026, 6, 11)),
+              "planned", "Annotation + Search"),
 
-    # ----- Perf — Single-cell ---------------------------------------
-    GanttTask("SCDE link table — migration + scaffold",
-              w(date(2026, 5, 20)) + 0.30, w(date(2026, 5, 20)) + 0.45,
-              w(date(2026, 5, 20)) + 0.45,
-              "done", "Single-cell"),
+    # ----- Perf - Single-cell ---------------------------------------
+    GanttTask("SC filtering inventory recce",
+              *_done(D20), "done", "Single-cell"),
+    GanttTask("perf-probe round 4 — SC vector hot paths",
+              *_done(D20), "done", "Single-cell"),
+    GanttTask("SCDE link table: entity + HBM + DAO + 30-callsite migrate",
+              *_done(D20), "done", "Single-cell",
+              note="528 rows backfilled to prod"),
     GanttTask("SCEDV (EE,QT) composite index",
-              w(date(2026, 5, 20)) + 0.45, w(date(2026, 5, 20)) + 0.47,
-              w(date(2026, 5, 20)) + 0.47,
-              "done", "Single-cell"),
+              *_done(D20), "done", "Single-cell"),
     GanttTask("SC streaming hygiene (4 foot-gun fixes)",
-              w(date(2026, 5, 21)) + 0.05, w(date(2026, 5, 21)) + 0.15,
-              w(date(2026, 5, 21)) + 0.15,
-              "done", "Single-cell"),
-    GanttTask("SC DAO pre-existing bugs (qt + :ee)",
-              w(date(2026, 5, 21)) + 0.10, w(date(2026, 5, 21)) + 0.15,
-              w(date(2026, 5, 21)) + 0.15,
-              "done", "Single-cell"),
+              *_done(D20), "done", "Single-cell"),
+    GanttTask("SC DAO bugs: qt filter + :ee bind",
+              *_done(D20), "done", "Single-cell"),
 
-    # ----- Curation workflow -----------------------------------------
-    GanttTask("Curation call-surface inventory",
-              w(date(2026, 5, 21)) - 0.05, w(date(2026, 5, 21)),
-              w(date(2026, 5, 21)),
-              "done", "Curation workflow"),
+    # ----- Curation workflow ----------------------------------------
+    GanttTask("Curation call-surface inventory (15 URLs)",
+              *_done(D20), "done", "Curation workflow"),
     GanttTask("Curation feature wishlist (30 gaps)",
-              w(date(2026, 5, 21)), w(date(2026, 5, 21)) + 0.05,
-              w(date(2026, 5, 21)) + 0.05,
-              "done", "Curation workflow"),
+              *_done(D20), "done", "Curation workflow"),
+    GanttTask("Heatmap rewrite recce (client-driven)",
+              *_done(D20), "done", "Curation workflow"),
+    GanttTask("Gene-page legacy DWR surface recce",
+              *_done(D20), "done", "Curation workflow"),
+    GanttTask("Curator workflow vision figure",
+              *_done(D21), "done", "Curation workflow"),
     GanttTask("POST /datasets/{id}/curation-proposals",
-              w(date(2026, 5, 28)), w(date(2026, 6, 18)),
-              0.0, "planned", "Curation workflow",
-              note="Wishlist #1; replaces FastAPI mock"),
+              *_plan(date(2026, 5, 28), date(2026, 6, 18)),
+              "planned", "Curation workflow",
+              note="Wishlist #1"),
     GanttTask("POST /datasets/{id}/audits",
-              w(date(2026, 6, 4)), w(date(2026, 6, 18)),
-              0.0, "planned", "Curation workflow",
+              *_plan(date(2026, 6, 4), date(2026, 6, 18)),
+              "planned", "Curation workflow",
               note="Wishlist #2"),
     GanttTask("Bulk gene resolver: /genes?officialSymbol IN (...)",
-              w(date(2026, 5, 28)), w(date(2026, 6, 4)),
-              0.0, "planned", "Curation workflow"),
+              *_plan(date(2026, 5, 28), date(2026, 6, 4)),
+              "planned", "Curation workflow"),
     GanttTask("Bulk URI lookup: /annotations/term?uri IN (...)",
-              w(date(2026, 6, 4)), w(date(2026, 6, 11)),
-              0.0, "planned", "Curation workflow"),
+              *_plan(date(2026, 6, 4), date(2026, 6, 11)),
+              "planned", "Curation workflow"),
     GanttTask("Fat-VO: /datasets/{id}/skeleton",
-              w(date(2026, 6, 4)), w(date(2026, 6, 18)),
-              0.0, "planned", "Curation workflow",
-              note="Collapses 4-5 round-trips per EE"),
+              *_plan(date(2026, 6, 4), date(2026, 6, 18)),
+              "planned", "Curation workflow"),
     GanttTask("Whole-design PUT (wishlist keystone)",
-              w(date(2026, 6, 11)), w(date(2026, 7, 2)),
-              0.0, "planned", "Curation workflow",
-              note="Read-only without it"),
+              *_plan(date(2026, 6, 11), date(2026, 7, 2)),
+              "planned", "Curation workflow"),
     GanttTask("WhatsNew dashboard semantics decision",
-              w(date(2026, 5, 28)), w(date(2026, 6, 25)),
-              0.0, "blocked", "Curation workflow",
+              *_plan(date(2026, 5, 28), date(2026, 6, 25)),
+              "blocked", "Curation workflow",
               note="Needs curator-team sign-off"),
 
-    # ----- Pipelines + scheduler -------------------------------------
-    GanttTask("Pipelines + scheduler arch recce",
-              w(date(2026, 5, 21)), w(date(2026, 5, 21)) + 0.05,
-              w(date(2026, 5, 21)) + 0.05,
-              "done", "Pipelines + scheduler"),
+    # ----- Pipelines + scheduler ------------------------------------
+    GanttTask("Pipelines + scheduler architecture recce",
+              *_done(D21), "done", "Pipelines + scheduler"),
     GanttTask("PIPELINE_RUN table + executor SPI",
-              w(date(2026, 6, 4)), w(date(2026, 6, 25)),
-              0.0, "planned", "Pipelines + scheduler"),
+              *_plan(date(2026, 6, 4), date(2026, 6, 25)),
+              "planned", "Pipelines + scheduler"),
     GanttTask("Slurm/Nextflow dispatch (sc-annotation PoC)",
-              w(date(2026, 6, 25)), w(date(2026, 7, 16)),
-              0.0, "planned", "Pipelines + scheduler",
-              note="Replaces Jenkins button"),
+              *_plan(date(2026, 6, 25), date(2026, 7, 16)),
+              "planned", "Pipelines + scheduler"),
     GanttTask("rnaseq Luigi -> Nextflow port",
-              w(date(2026, 7, 16)), w(date(2026, 9, 10)),
-              0.0, "planned", "Pipelines + scheduler",
-              note="GO after scheduler skeleton"),
+              *_plan(date(2026, 7, 16), date(2026, 9, 10)),
+              "planned", "Pipelines + scheduler",
+              note="After scheduler skeleton"),
     GanttTask("Curator UI: per-EE Pipelines tab",
-              w(date(2026, 6, 25)), w(date(2026, 7, 30)),
-              0.0, "planned", "Pipelines + scheduler"),
+              *_plan(date(2026, 6, 25), date(2026, 7, 30)),
+              "planned", "Pipelines + scheduler"),
 
-    # ----- UI --------------------------------------------------------
-    GanttTask("Heatmap endpoint scaffold (S2)",
-              w(date(2026, 5, 20)) + 0.40, w(date(2026, 5, 20)) + 0.55,
-              w(date(2026, 5, 20)) + 0.55,
-              "done", "UI"),
-    GanttTask("Heatmap UI spec (continuous strips + grouping)",
-              w(date(2026, 5, 20)) + 0.55, w(date(2026, 5, 20)) + 0.60,
-              w(date(2026, 5, 20)) + 0.60,
-              "done", "UI"),
+    # ----- UI -------------------------------------------------------
+    GanttTask("Heatmap endpoint scaffold + baseline_relevance feature",
+              *_done(D20), "done", "UI"),
     GanttTask("Heatmap S3: widget against new endpoint",
-              w(date(2026, 6, 4)), w(date(2026, 6, 25)),
-              0.0, "planned", "UI",
-              note="gemma-ui browser app"),
+              *_plan(date(2026, 6, 4), date(2026, 6, 25)),
+              "planned", "UI",
+              note="gemma-curation-ui"),
     GanttTask("Gene-page rework (legacy -> new shape)",
-              w(date(2026, 6, 25)), w(date(2026, 8, 6)),
-              0.0, "deferred", "UI",
-              note="Paul: 'heavily redo' — design pending"),
+              *_plan(date(2026, 6, 25), date(2026, 8, 6)),
+              "deferred", "UI"),
     GanttTask("Curator dashboard: shared live tickets",
-              w(date(2026, 6, 11)), w(date(2026, 7, 16)),
-              0.0, "planned", "UI"),
+              *_plan(date(2026, 6, 11), date(2026, 7, 16)),
+              "planned", "UI"),
 
-    # ----- Static analysis / sweeps ----------------------------------
-    GanttTask("Concurrency sweep (post-Collections.sync*)",
-              w(date(2026, 5, 21)), w(date(2026, 5, 21)) + 0.05,
-              w(date(2026, 5, 21)) + 0.05,
-              "done", "Static analysis"),
+    # ----- Static analysis / concurrency ----------------------------
+    GanttTask("Static analysis sweep (3 critical fixes)",
+              *_done(D20), "done", "Static analysis",
+              note="Agilent SDF race + 2 FD leaks"),
+    GanttTask("Concurrency sweep + 2 volatile fixes",
+              *_done(D20), "done", "Static analysis",
+              note="SlackAppender + ExtendedRuntime DCL"),
     GanttTask("3 HIGH-RISK concurrency fixes",
-              w(date(2026, 5, 21)) + 0.10, w(date(2026, 5, 21)) + 0.15,
-              w(date(2026, 5, 21)) + 0.15,
-              "done", "Static analysis"),
+              *_done(D20), "done", "Static analysis",
+              note="BLAT busy-spin / CorrelationStats / SVD"),
+    GanttTask("CorrelationStats concurrency regression guard",
+              *_done(D21), "done", "Static analysis"),
     GanttTask("Wire spotbugs-maven-plugin + findsecbugs",
-              w(date(2026, 5, 21)) + 0.15, w(date(2026, 5, 21)) + 0.25,
-              w(date(2026, 5, 21)) + 0.25,
-              "done", "Static analysis"),
+              *_done(D21), "done", "Static analysis"),
+    GanttTask("SpotBugs first-pass report (187 priority-1)",
+              *_done(D21), "done", "Static analysis"),
     GanttTask("SpotBugs Top-5 priority-1 fixes",
-              w(date(2026, 5, 28)), w(date(2026, 6, 4)),
-              0.0, "planned", "Static analysis",
-              note="Set.contains wrong type; NPE on no-factory; ..."),
+              *_plan(date(2026, 5, 28), date(2026, 6, 4)),
+              "planned", "Static analysis"),
     GanttTask("SQL_INJECTION_HIBERNATE triage (85 hits)",
-              w(date(2026, 6, 4)), w(date(2026, 6, 25)),
-              0.0, "planned", "Static analysis",
-              note="Pre-Gemma-2.0 security"),
+              *_plan(date(2026, 6, 4), date(2026, 6, 25)),
+              "planned", "Static analysis"),
     GanttTask("OBJECT_DESERIALIZATION allow-list (5 hits)",
-              w(date(2026, 5, 28)), w(date(2026, 6, 4)),
-              0.0, "planned", "Static analysis"),
-    GanttTask("CorrelationStats concurrency regression test",
-              w(date(2026, 5, 21)) + 0.20, w(date(2026, 5, 21)) + 0.25,
-              w(date(2026, 5, 21)) + 0.25,
-              "done", "Static analysis"),
+              *_plan(date(2026, 5, 28), date(2026, 6, 4)),
+              "planned", "Static analysis"),
 
     # ----- Ops / schema ---------------------------------------------
+    GanttTask("Drop 2 redundant FK indexes (~25-30 MB reclaim)",
+              *_done(D20), "done", "Ops / schema"),
+    GanttTask("Coexpression orphan recce (~146 GB drop pending)",
+              *_done(D20), "done", "Ops / schema"),
     GanttTask("Coexpression tables drop (~146 GB)",
-              w(date(2026, 6, 4)), w(date(2026, 6, 18)),
-              0.0, "blocked", "Ops / schema",
-              note="Needs ops sign-off; recce done"),
+              *_plan(date(2026, 6, 4), date(2026, 6, 18)),
+              "blocked", "Ops / schema",
+              note="Needs ops sign-off"),
     GanttTask("Flyway prod baseline reconciliation",
-              w(date(2026, 6, 18)), w(date(2026, 7, 9)),
-              0.0, "planned", "Ops / schema",
-              note="gemd has no flyway_schema_history today"),
-    GanttTask("Dup-index drops + RAW/SCEDV indexes deployed",
-              w(date(2026, 5, 20)), w(date(2026, 5, 21)) + 0.30,
-              w(date(2026, 5, 21)) + 0.30,
-              "done", "Ops / schema",
-              note="Applied to prod"),
-    GanttTask("AuditTrail.lastEvent denorm + backfill",
-              w(date(2026, 5, 21)), w(date(2026, 5, 21)) + 0.20,
-              w(date(2026, 5, 21)) + 0.20,
-              "done", "Ops / schema",
-              note="216k of 236k trails backfilled"),
+              *_plan(date(2026, 6, 18), date(2026, 7, 9)),
+              "planned", "Ops / schema"),
+
+    # ----- Hotfix / catch-up ----------------------------------------
+    GanttTask("hotfix-1.32.7 catch-up merge (empty-design / dataless)",
+              *_done(D20), "done", "Hotfix"),
+    GanttTask("PUT /datasets/{id}/design + DesignPreflightReport",
+              *_done(D20), "done", "Hotfix",
+              note="PR #1657"),
 ]
 
 
@@ -330,8 +380,35 @@ STATUS_COLOR = {
 }
 
 
-# Plan horizon — tasks that extend beyond this are clipped + flagged.
-X_MAX = w(date(2026, 7, 17))  # ~60 days
+
+# ----------------------------------------------------------------------
+# Piecewise x-axis transform: keep [0, today] linear, compress
+# [today, real X_MAX] into [today, 2*today] so today lands at 50% width.
+# ----------------------------------------------------------------------
+REAL_X_MAX = float((date(2026, 7, 17) - EPOCH).days)   # 60 days
+COMPRESSED_HALF = TODAY_X                              # display width for post-today
+DISPLAY_X_MAX = TODAY_X + COMPRESSED_HALF              # = 2 * TODAY_X = 6
+_POST_TODAY_SCALE = COMPRESSED_HALF / (REAL_X_MAX - TODAY_X)  # ~0.053
+
+def _xt(x: float) -> float:
+    """Map real-time x (days from EPOCH) to display x."""
+    if x <= TODAY_X:
+        return x
+    return TODAY_X + (min(x, REAL_X_MAX) - TODAY_X) * _POST_TODAY_SCALE
+
+_transformed: list[GanttTask] = []
+for _t in TASKS:
+    _transformed.append(GanttTask(
+        _t.label,
+        _xt(_t.plan_start),
+        _xt(_t.plan_end),
+        _xt(_t.done_end) if _t.done_end else 0.0,
+        _t.status, _t.category, _t.note,
+    ))
+TASKS = _transformed
+
+# Plan horizon (display space) — clipping now happens via the transform.
+X_MAX = DISPLAY_X_MAX
 # Clip any plan_end beyond the horizon and flag those tasks visually.
 _clipped: list[GanttTask] = []
 for _t in TASKS:
@@ -350,6 +427,11 @@ TASKS = _clipped
 # (we reverse later so the first category sits at the top of the chart)
 # ----------------------------------------------------------------------
 CATEGORIES = [
+    "Foundations",
+    "ACL refactor",
+    "Audit Phase C",
+    "Audit perf",
+    "HB6",
     "DEA",
     "Data + matrix",
     "Annotation + Search",
@@ -359,6 +441,7 @@ CATEGORIES = [
     "UI",
     "Static analysis",
     "Ops / schema",
+    "Hotfix",
 ]
 # Sort tasks: by category index then by plan_start within category.
 cat_index = {c: i for i, c in enumerate(CATEGORIES)}
@@ -428,15 +511,22 @@ today_line(ax, x=TODAY_X, label="today")
 # ----------------------------------------------------------------------
 # X axis — weekly ticks
 # ----------------------------------------------------------------------
-ax.set_xlim(-0.3, X_MAX + 0.15)
-# Tick every 7 days; label as ISO date.
-n_days = int(X_MAX) + 1
-tick_days = list(range(0, n_days + 1, 7))
-ax.set_xticks(tick_days)
-ax.set_xticklabels(
-    [(EPOCH + timedelta(days=k)).strftime("%b %d") for k in tick_days],
-    fontsize=7.5, color=SUBTLE,
+ax.set_xlim(-0.3, X_MAX + 0.05)
+# Faint divider where the time scale changes from linear to compressed.
+ax.axvline(TODAY_X, color=GRID, linewidth=0.5, linestyle=(0, (1, 2)), zorder=1)
+# Ticks: linear in the pre-today half (every 1 day, weekday-only labels),
+# then a handful of milestone ticks in the compressed post-today half
+# showing weekday + date.
+pre_tick_days = list(range(0, int(TODAY_X) + 1))
+post_milestones_real = [TODAY_X + 7, TODAY_X + 14, TODAY_X + 30, REAL_X_MAX]
+post_tick_positions = [_xt(d) for d in post_milestones_real]
+all_ticks = pre_tick_days + post_tick_positions
+all_labels = (
+    [(EPOCH + timedelta(days=d)).strftime("%a %b %d") for d in pre_tick_days]
+    + [(EPOCH + timedelta(days=int(d))).strftime("%a %b %d") for d in post_milestones_real]
 )
+ax.set_xticks(all_ticks)
+ax.set_xticklabels(all_labels, fontsize=7.5, color=SUBTLE)
 
 ax.set_ylim(-0.7, n_rows - 0.3)
 
@@ -467,6 +557,16 @@ fig.text(
     fontsize=8.5, color=SUBTLE, style="italic",
 )
 
+
+# Annotate the compressed half so readers know the scale shifts there.
+ax.text(
+    TODAY_X + COMPRESSED_HALF * 0.5,
+    n_rows + 0.5,
+    f"horizon compressed: real {int(REAL_X_MAX - TODAY_X)} days -> half-width "
+    f"(scale {_POST_TODAY_SCALE:.2f}x)",
+    ha="center", va="bottom",
+    fontsize=7.5, color=SUBTLE, style="italic",
+)
 legend_specs = [
     ("done",     "Done"),
     ("inflight", "In flight"),
