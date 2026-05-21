@@ -54,7 +54,7 @@ public class AuditEventDaoTest extends BaseDatabaseTest5 {
         ExpressionExperiment auditable = new ExpressionExperiment();
         sessionFactory.getCurrentSession().persist( auditable );
         assertNull( auditEventDao.getLastEvent( auditable, BatchInformationFetchingEvent.class ) );
-        auditable.getAuditTrail().getEvents().add( AuditEvent.Factory.newInstance( new Date(), AuditAction.U, null, null, null, new BatchInformationFetchingEvent() ) );
+        auditable.getAuditTrail().addEvent( AuditEvent.Factory.newInstance( new Date(), AuditAction.U, null, null, null, new BatchInformationFetchingEvent() ) );
         sessionFactory.getCurrentSession().flush();
         sessionFactory.getCurrentSession().clear();
         Assertions.assertThat( auditEventDao.getEvents( auditable ) )
@@ -66,7 +66,7 @@ public class AuditEventDaoTest extends BaseDatabaseTest5 {
         ExpressionExperiment auditable = new ExpressionExperiment();
         sessionFactory.getCurrentSession().persist( auditable );
         assertNull( auditEventDao.getLastEvent( auditable, BatchInformationFetchingEvent.class ) );
-        auditable.getAuditTrail().getEvents().add( AuditEvent.Factory.newInstance( new Date(), AuditAction.U, null, null, null, new BatchInformationFetchingEvent() ) );
+        auditable.getAuditTrail().addEvent( AuditEvent.Factory.newInstance( new Date(), AuditAction.U, null, null, null, new BatchInformationFetchingEvent() ) );
         sessionFactory.getCurrentSession().flush();
         sessionFactory.getCurrentSession().clear();
         // should also work on detached entities
@@ -82,7 +82,7 @@ public class AuditEventDaoTest extends BaseDatabaseTest5 {
         ExpressionExperiment auditable = new ExpressionExperiment();
         sessionFactory.getCurrentSession().persist( auditable );
         assertNull( auditEventDao.getLastEvent( auditable, BatchInformationFetchingEvent.class ) );
-        auditable.getAuditTrail().getEvents().add( AuditEvent.Factory.newInstance( new Date(), AuditAction.U, null, null, null, new BatchInformationFetchingEvent() ) );
+        auditable.getAuditTrail().addEvent( AuditEvent.Factory.newInstance( new Date(), AuditAction.U, null, null, null, new BatchInformationFetchingEvent() ) );
         sessionFactory.getCurrentSession().flush();
         sessionFactory.getCurrentSession().clear();
         // should also work on detached entities
@@ -96,10 +96,10 @@ public class AuditEventDaoTest extends BaseDatabaseTest5 {
     @Test
     public void testGetLastEventsByType() {
         ExpressionExperiment auditable = new ExpressionExperiment();
-        auditable.getAuditTrail().getEvents().add( AuditEvent.Factory.newInstance( new Date(), AuditAction.U, null, null, null, new BatchInformationFetchingEvent() ) );
+        auditable.getAuditTrail().addEvent( AuditEvent.Factory.newInstance( new Date(), AuditAction.U, null, null, null, new BatchInformationFetchingEvent() ) );
         sessionFactory.getCurrentSession().persist( auditable );
         ExpressionExperiment auditable2 = new ExpressionExperiment();
-        auditable2.getAuditTrail().getEvents().add( AuditEvent.Factory.newInstance( new Date(), AuditAction.U, null, null, null, new DataReplacedEvent() ) );
+        auditable2.getAuditTrail().addEvent( AuditEvent.Factory.newInstance( new Date(), AuditAction.U, null, null, null, new DataReplacedEvent() ) );
         sessionFactory.getCurrentSession().persist( auditable2 );
         sessionFactory.getCurrentSession().flush();
         sessionFactory.getCurrentSession().clear();
@@ -111,10 +111,10 @@ public class AuditEventDaoTest extends BaseDatabaseTest5 {
     @Test
     public void testGetLastEventsByType2() {
         ExpressionExperiment auditable = new ExpressionExperiment();
-        auditable.getAuditTrail().getEvents().add( AuditEvent.Factory.newInstance( new Date(), AuditAction.U, null, null, null, new BatchInformationFetchingEvent() ) );
+        auditable.getAuditTrail().addEvent( AuditEvent.Factory.newInstance( new Date(), AuditAction.U, null, null, null, new BatchInformationFetchingEvent() ) );
         sessionFactory.getCurrentSession().persist( auditable );
         ExpressionExperiment auditable2 = new ExpressionExperiment();
-        auditable2.getAuditTrail().getEvents().add( AuditEvent.Factory.newInstance( new Date(), AuditAction.U, null, null, null, new DataReplacedEvent() ) );
+        auditable2.getAuditTrail().addEvent( AuditEvent.Factory.newInstance( new Date(), AuditAction.U, null, null, null, new DataReplacedEvent() ) );
         sessionFactory.getCurrentSession().persist( auditable2 );
         sessionFactory.getCurrentSession().flush();
         sessionFactory.getCurrentSession().clear();
@@ -146,9 +146,9 @@ public class AuditEventDaoTest extends BaseDatabaseTest5 {
                     AuditAction.U, "latest", null, null, new BatchInformationFetchingEvent() );
             AuditEvent middle = AuditEvent.Factory.newInstance( new Date( t0 + 10L * i + 2 ),
                     AuditAction.U, "middle", null, null, new BatchInformationFetchingEvent() );
-            ee.getAuditTrail().getEvents().add( older );
-            ee.getAuditTrail().getEvents().add( latest );
-            ee.getAuditTrail().getEvents().add( middle );
+            ee.getAuditTrail().addEvent( older );
+            ee.getAuditTrail().addEvent( latest );
+            ee.getAuditTrail().addEvent( middle );
             sessionFactory.getCurrentSession().persist( ee );
             eeFive[ i ] = ee;
             expectedLatest[ i ] = latest;
@@ -159,8 +159,8 @@ public class AuditEventDaoTest extends BaseDatabaseTest5 {
         Date tieDate = new Date( t0 + 99L );
         AuditEvent tieA = AuditEvent.Factory.newInstance( tieDate, AuditAction.U, "tieA", null, null, new BatchInformationFetchingEvent() );
         AuditEvent tieB = AuditEvent.Factory.newInstance( tieDate, AuditAction.U, "tieB", null, null, new BatchInformationFetchingEvent() );
-        eeTied.getAuditTrail().getEvents().add( tieA );
-        eeTied.getAuditTrail().getEvents().add( tieB );
+        eeTied.getAuditTrail().addEvent( tieA );
+        eeTied.getAuditTrail().addEvent( tieB );
         sessionFactory.getCurrentSession().persist( eeTied );
 
         sessionFactory.getCurrentSession().flush();
@@ -196,8 +196,8 @@ public class AuditEventDaoTest extends BaseDatabaseTest5 {
         ExpressionExperiment auditable = new ExpressionExperiment();
         sessionFactory.getCurrentSession().persist( auditable );
         assertNull( auditEventDao.getLastEvent( auditable, BatchInformationFetchingEvent.class ) );
-        auditable.getAuditTrail().getEvents().add( AuditEvent.Factory.newInstance( new Date(), AuditAction.C, null, null, null, null ) );
-        auditable.getAuditTrail().getEvents().add( AuditEvent.Factory.newInstance( new Date(), AuditAction.U, null, null, null, new BatchInformationFetchingEvent() ) );
+        auditable.getAuditTrail().addEvent( AuditEvent.Factory.newInstance( new Date(), AuditAction.C, null, null, null, null ) );
+        auditable.getAuditTrail().addEvent( AuditEvent.Factory.newInstance( new Date(), AuditAction.U, null, null, null, new BatchInformationFetchingEvent() ) );
         sessionFactory.getCurrentSession().flush();
         sessionFactory.getCurrentSession().clear();
         Assertions.assertThat( auditEventDao.getNewSinceDate( ExpressionExperiment.class, before ) )
@@ -213,17 +213,17 @@ public class AuditEventDaoTest extends BaseDatabaseTest5 {
         ExpressionExperiment withTyped = new ExpressionExperiment();
         sessionFactory.getCurrentSession().persist( withTyped );
         // Typed update event — should be picked up.
-        withTyped.getAuditTrail().getEvents().add( AuditEvent.Factory.newInstance( new Date(), AuditAction.U, null, null, null, new BatchInformationFetchingEvent() ) );
+        withTyped.getAuditTrail().addEvent( AuditEvent.Factory.newInstance( new Date(), AuditAction.U, null, null, null, new BatchInformationFetchingEvent() ) );
 
         ExpressionExperiment onlyGenericUpdate = new ExpressionExperiment();
         sessionFactory.getCurrentSession().persist( onlyGenericUpdate );
         // Generic auto-UPDATE (eventType == null) — must NOT be picked up under the new semantics.
-        onlyGenericUpdate.getAuditTrail().getEvents().add( AuditEvent.Factory.newInstance( new Date(), AuditAction.U, null, null, null, null ) );
+        onlyGenericUpdate.getAuditTrail().addEvent( AuditEvent.Factory.newInstance( new Date(), AuditAction.U, null, null, null, null ) );
 
         ExpressionExperiment onlyCreate = new ExpressionExperiment();
         sessionFactory.getCurrentSession().persist( onlyCreate );
         // Plain create with no typed event — must NOT be picked up.
-        onlyCreate.getAuditTrail().getEvents().add( AuditEvent.Factory.newInstance( new Date(), AuditAction.C, null, null, null, null ) );
+        onlyCreate.getAuditTrail().addEvent( AuditEvent.Factory.newInstance( new Date(), AuditAction.C, null, null, null, null ) );
 
         sessionFactory.getCurrentSession().flush();
         sessionFactory.getCurrentSession().clear();

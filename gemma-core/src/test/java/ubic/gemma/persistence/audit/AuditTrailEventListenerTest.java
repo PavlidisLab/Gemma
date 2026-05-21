@@ -232,7 +232,7 @@ public class AuditTrailEventListenerTest {
         // dual-emission window, or by a previous flush in a cascade).
         AuditEvent pre = AuditEvent.Factory.newInstance( new java.util.Date(), AuditAction.CREATE,
                 "pre", null, alice, null );
-        auditable.getAuditTrail().getEvents().add( pre );
+        auditable.getAuditTrail().addEvent( pre );
 
         invokeOnPostInsert( listener, auditable );
 
