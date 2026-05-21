@@ -141,11 +141,15 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
 
     @Override
     public Collection<FactorValue> loadByExperimentalDesignWithCharacteristics( ExperimentalDesign ed ) {
+        // fv.measurement is mapped fetch="join" lazy="false" on FactorValue itself, so it would already
+        // ride along with the FV SELECT, but include it explicitly so the intent (and the round-trip
+        // count: one) is obvious in the query and survives future mapping changes.
         //noinspection unchecked
         return getSessionFactory().getCurrentSession()
                 .createQuery( "select distinct fv from FactorValue fv "
                         + "join fv.experimentalFactor ef "
                         + "left join fetch fv.characteristics "
+                        + "left join fetch fv.measurement "
                         + "where ef.experimentalDesign = :ed" )
                 .setParameter( "ed", ed )
                 .list();
