@@ -1411,6 +1411,78 @@
 				<skipDelombok>true</skipDelombok>
 			</properties>
 		</profile>
+		<!--
+			testdb-reset: opt-in profile that wires flyway-maven-plugin's `clean` goal
+			to the pre-integration-test phase, so `mvn verify -Dtestdb.reset ...` will
+			drop the gemdtest schema before Failsafe runs the integration tests. The
+			schema is then rebuilt by Flyway + Hibernate inside the Spring test context.
+
+			Default `mvn verify` does NOT activate this profile — activation requires
+			the `testdb.reset` system property to be set, so production builds and
+			day-to-day `mvn install` invocations cannot trigger a destructive clean.
+
+			Requires `gemmatest` to hold `DROP ON gemdtest.*` (already granted via
+			the one-time `GRANT ALL PRIVILEGES ON gemdtest.*` documented in CLAUDE.md).
+			flyway-mysql is declared as a plugin dependency since the Flyway 10 split
+			moved MySQL support out of flyway-core.
+		-->
+		<profile>
+			<id>testdb-reset</id>
+			<activation>
+				<property>
+					<name>testdb.reset</name>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.flywaydb</groupId>
+						<artifactId>flyway-maven-plugin</artifactId>
+						<version>${flyway.version}</version>
+						<dependencies>
+							<dependency>
+								<groupId>org.flywaydb</groupId>
+								<artifactId>flyway-mysql</artifactId>
+								<version>${flyway.version}</version>
+							</dependency>
+							<dependency>
+								<groupId>com.mysql</groupId>
+								<artifactId>mysql-connector-j</artifactId>
+								<version>${mysql.version}</version>
+							</dependency>
+						</dependencies>
+						<configuration>
+							<url>jdbc:mysql://${gemma.testdb.host}:${gemma.testdb.port}/${gemma.testdb.name}?useSSL=false&amp;allowPublicKeyRetrieval=true</url>
+							<user>${gemma.testdb.user}</user>
+							<password>${gemma.testdb.password}</password>
+							<schemas>
+								<schema>${gemma.testdb.name}</schema>
+							</schemas>
+							<!-- Flyway 7+ disables clean by default as a safety; opt in explicitly. -->
+							<cleanDisabled>false</cleanDisabled>
+						</configuration>
+						<executions>
+							<execution>
+								<id>testdb-clean</id>
+								<phase>pre-integration-test</phase>
+								<goals>
+									<goal>clean</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+			<properties>
+				<!-- Default testdb coordinates; override via -Dgemma.testdb.* if needed.
+				     These mirror gemma-core/src/main/resources/default.properties so the
+				     plugin and the Spring test context agree on where gemdtest lives. -->
+				<gemma.testdb.host>localhost</gemma.testdb.host>
+				<gemma.testdb.port>3307</gemma.testdb.port>
+				<gemma.testdb.name>gemdtest</gemma.testdb.name>
+				<gemma.testdb.user>gemmatest</gemma.testdb.user>
+			</properties>
+		</profile>
 	</profiles>
 	<distributionManagement>
 		<site>
