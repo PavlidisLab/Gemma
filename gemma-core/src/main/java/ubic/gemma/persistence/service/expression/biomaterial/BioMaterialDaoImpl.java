@@ -158,6 +158,63 @@ public class BioMaterialDaoImpl extends AbstractVoEnabledDao<BioMaterial, BioMat
     }
 
     @Override
+    public void thawBioMaterialsForBioAssays( Collection<BioAssay> bas ) {
+        if ( bas.isEmpty() ) {
+            return;
+        }
+        // Seed with the directly-attached sample BMs (BA.sampleUsed is eager-fetched per the HBM).
+        Set<Long> allBmIds = new HashSet<>();
+        for ( BioAssay ba : bas ) {
+            BioMaterial bm = ba.getSampleUsed();
+            if ( bm != null && bm.getId() != null ) {
+                allBmIds.add( bm.getId() );
+            }
+        }
+        if ( allBmIds.isEmpty() ) {
+            return;
+        }
+        // Breadth-first walk of the sourceBioMaterial chain via ID-only HQL, one query per
+        // level. The HBM caps no depth so this loop adapts to whatever prod actually has;
+        // a safety bound prevents accidental runaway in a circular-graph scenario (the
+        // create-time validator in BioMaterialDaoImpl#validate already rejects cycles, but
+        // be defensive here against data that pre-dates the validator).
+        Set<Long> frontier = new HashSet<>( allBmIds );
+        int safetyBound = 16;
+        while ( !frontier.isEmpty() && safetyBound-- > 0 ) {
+            //noinspection unchecked
+            List<Long> nextLevel = getSessionFactory().getCurrentSession()
+                    .createQuery( "select bm.sourceBioMaterial.id from BioMaterial bm "
+                            + "where bm.id in :ids and bm.sourceBioMaterial is not null" )
+                    .setParameterList( "ids", frontier )
+                    .list();
+            frontier = new HashSet<>( nextLevel );
+            frontier.removeAll( allBmIds );
+            allBmIds.addAll( frontier );
+        }
+        // One query: thaw treatments (lazy collection) and sourceTaxon (lazy proxy) for the
+        // whole chain. Distinct keyword is required because Hibernate's join-fetch otherwise
+        // duplicates the parent row per joined-collection element.
+        getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct bm from BioMaterial bm "
+                        + "left join fetch bm.sourceTaxon "
+                        + "left join fetch bm.treatments "
+                        + "where bm.id in :ids" )
+                .setParameterList( "ids", allBmIds )
+                .list();
+        // Separate query: thaw factorValues.experimentalFactor (lazy proxy per FV) for the
+        // whole chain. Split from the treatments fetch to keep each result-set linear in BM
+        // count rather than treatments&times;factorValues per BM (Cartesian explosion when
+        // both collections are non-trivial).
+        getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct bm from BioMaterial bm "
+                        + "left join fetch bm.factorValues fv "
+                        + "left join fetch fv.experimentalFactor "
+                        + "where bm.id in :ids" )
+                .setParameterList( "ids", allBmIds )
+                .list();
+    }
+
+    @Override
     public Map<BioMaterial, Map<BioAssay, ExpressionExperiment>> getExpressionExperiments( BioMaterial bm ) {
         Set<BioMaterial> bms = new HashSet<>();
         visitBioMaterials( bm, bms::add );

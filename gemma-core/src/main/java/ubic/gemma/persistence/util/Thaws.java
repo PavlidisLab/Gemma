@@ -41,14 +41,28 @@ public class Thaws {
      * The corresponding biomaterial is also thawed with {@link #thawBioMaterial(BioMaterial)}.
      */
     public static void thawBioAssay( BioAssay ba ) {
+        thawBioAssayPlatforms( ba );
+        // also initialize the other side of the relationship since we're thawing assays
+        thawBioMaterial( ba.getSampleUsed(), true );
+    }
+
+    /**
+     * Thaw the platform-side associations of a {@link BioAssay} without walking its
+     * {@code sampleUsed} {@link BioMaterial} chain.
+     * <p>
+     * Used by callers that batch-thaw the BioMaterial side via
+     * {@code BioMaterialDao#thawBioMaterialsForBioAssays}, where the per-BA
+     * source-chain walk in {@link #thawBioAssay(BioAssay)} would re-introduce the N+1
+     * pattern the batched call exists to eliminate. The platform-side init remains a
+     * cheap proxy/eager touch (one or two round-trips per BA at most).
+     */
+    public static void thawBioAssayPlatforms( BioAssay ba ) {
         Hibernate.initialize( ba.getArrayDesignUsed() );
         Hibernate.initialize( ba.getArrayDesignUsed().getDesignProvider() );
         if ( ba.getOriginalPlatform() != null ) {
             Hibernate.initialize( ba.getOriginalPlatform() );
             Hibernate.initialize( ba.getOriginalPlatform().getDesignProvider() );
         }
-        // also initialize the other side of the relationship since we're thawing assays
-        thawBioMaterial( ba.getSampleUsed(), true );
     }
 
     /**
