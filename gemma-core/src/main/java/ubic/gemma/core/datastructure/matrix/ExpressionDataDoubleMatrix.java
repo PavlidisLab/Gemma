@@ -724,6 +724,11 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
     /**
      * Primitive-double variant of {@link #setMatBioAssayValues}: avoids the per-cell Double allocation that
      * would result from boxing the row's values before assignment.
+     * <p>
+     * -Infinity sentinel: the legacy two-pass path filled cells with -Infinity then scanned-and-rewrote them
+     * to NaN at the end. That replaced both unwritten sentinels AND any actual -Infinity values produced by
+     * upstream conversions (e.g. log2(0) for a count of 0). The single-pass path here preserves the same
+     * end-state by substituting NaN for -Infinity at write time.
      */
     private void setMatBioAssayValuesAsDoubles( DenseDoubleMatrix<CompositeSequence, BioMaterial> mat, int rowIndex,
             double[] vals, Collection<BioAssay> bioAssays, Iterator<BioAssay> it ) {
@@ -731,7 +736,8 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
             BioAssay bioAssay = it.next();
             int column = getColumnIndex( bioAssay );
             assert column != -1;
-            mat.set( rowIndex, column, vals[j] );
+            double v = vals[j];
+            mat.set( rowIndex, column, v == Double.NEGATIVE_INFINITY ? Double.NaN : v );
         }
     }
 }
