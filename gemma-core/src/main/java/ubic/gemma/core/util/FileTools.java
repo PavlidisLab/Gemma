@@ -261,17 +261,17 @@ public class FileTools {
     }
 
     /**
-     * On completion both streams are closed.
+     * On completion both streams are closed; both are still closed if a read or write throws part-way through.
      */
     private static void copy( InputStream input, OutputStream output ) throws IOException {
-        if ( input.available() == 0 ) return;
-        byte[] buf = new byte[1024];
-        int len;
-        while ( ( len = input.read( buf ) ) > 0 ) {
-            output.write( buf, 0, len );
+        try ( InputStream in = input; OutputStream out = output ) {
+            if ( in.available() == 0 ) return;
+            byte[] buf = new byte[1024];
+            int len;
+            while ( ( len = in.read( buf ) ) > 0 ) {
+                out.write( buf, 0, len );
+            }
         }
-        input.close();
-        output.close();
     }
 
     @SuppressWarnings("resource")
