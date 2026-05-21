@@ -162,8 +162,8 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
             eeId2FactorCommand.put( dsfc.getEeId(), dsfc );
         }
 
-        for ( BioAssaySetValueObject ee : rawDiffEx.keySet() ) {
-            for ( DifferentialExpressionValueObject raw : rawDiffEx.get( ee ) ) {
+        for ( List<DifferentialExpressionValueObject> rawForEe : rawDiffEx.values() ) {
+            for ( DifferentialExpressionValueObject raw : rawForEe ) {
                 if ( eeId2FactorCommand.containsKey( raw.getExpressionExperiment().getId() ) ) {
                     DiffExpressionSelectedFactorCommand factorCommandForEE = eeId2FactorCommand
                             .get( raw.getExpressionExperiment().getId() );
@@ -239,11 +239,12 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
 
         Collection<Long> eesThatMetThreshold = new HashSet<>();
 
-        for ( BioAssaySetValueObject ee : resultsMap.keySet() ) {
+        for ( Map.Entry<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> entry : resultsMap.entrySet() ) {
+            BioAssaySetValueObject ee = entry.getKey();
 
             BioAssaySetValueObject eevo = this.configExpressionExperimentValueObject( ee );
 
-            Collection<DifferentialExpressionValueObject> proberesults = resultsMap.get( ee );
+            Collection<DifferentialExpressionValueObject> proberesults = entry.getValue();
 
             Collection<DifferentialExpressionValueObject> filteredResults = new HashSet<>();
             for ( DifferentialExpressionValueObject r : proberesults ) {
@@ -399,9 +400,7 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
         /*
          * convert to DEVOs
          */
-        for ( BioAssaySetValueObject eevo : results.keySet() ) {
-
-            Collection<DifferentialExpressionValueObject> probeResults = results.get( eevo );
+        for ( List<DifferentialExpressionValueObject> probeResults : results.values() ) {
 
             assert probeResults != null && !probeResults.isEmpty();
 

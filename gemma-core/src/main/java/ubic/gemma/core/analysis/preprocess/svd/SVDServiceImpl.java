@@ -266,10 +266,12 @@ public class SVDServiceImpl implements SVDService {
             return importantFactors;
         }
         Map<Integer, Map<ExperimentalFactor, Double>> factorPVals = svdFactorAnalysis.getFactorPVals();
-        for ( Integer cmp : factorPVals.keySet() ) {
-            Map<ExperimentalFactor, Double> factorPv = factorPVals.get( cmp );
-            for ( ExperimentalFactor ef : factorPv.keySet() ) {
-                Double pvalue = factorPv.get( ef );
+        for ( Map.Entry<Integer, Map<ExperimentalFactor, Double>> cmpEntry : factorPVals.entrySet() ) {
+            Integer cmp = cmpEntry.getKey();
+            Map<ExperimentalFactor, Double> factorPv = cmpEntry.getValue();
+            for ( Map.Entry<ExperimentalFactor, Double> efEntry : factorPv.entrySet() ) {
+                ExperimentalFactor ef = efEntry.getKey();
+                Double pvalue = efEntry.getValue();
 
                 if ( pvalue < importanceThreshold ) {
                     SVDServiceImpl.log
@@ -352,8 +354,8 @@ public class SVDServiceImpl implements SVDService {
         // since we use rank correlation/anova, we just use the casted ids (two-groups) or dates as the covariate
 
         int numWithDates = 0;
-        for ( BioMaterial bm : bioMaterialDates.keySet() ) {
-            if ( bioMaterialDates.get( bm ) != null ) {
+        for ( Date d : bioMaterialDates.values() ) {
+            if ( d != null ) {
                 numWithDates++;
             }
         }
@@ -411,8 +413,9 @@ public class SVDServiceImpl implements SVDService {
          * Compare each factor (including batch information that is somewhat redundant with the dates) to the
          * eigen-genes. Using rank statistics.
          */
-        for ( ExperimentalFactor ef : bioMaterialFactorMap.keySet() ) {
-            Map<BioMaterial, Number> bmToFv = bioMaterialFactorMap.get( ef );
+        for ( Map.Entry<ExperimentalFactor, Map<BioMaterial, Number>> efEntry : bioMaterialFactorMap.entrySet() ) {
+            ExperimentalFactor ef = efEntry.getKey();
+            Map<BioMaterial, Number> bmToFv = efEntry.getValue();
 
             double[] fvs = new double[svdBioMaterials.size()];
             assert fvs.length > 0;
@@ -531,8 +534,10 @@ public class SVDServiceImpl implements SVDService {
             List<BioMaterial> svdBioMaterials ) {
 
         for ( BioMaterial bm : svdBioMaterials ) {
-            for ( ExperimentalFactor ef : bioMaterialFactorMap.keySet() ) {
-                if ( !bioMaterialFactorMap.get( ef ).containsKey( bm ) ) {
+            for ( Map.Entry<ExperimentalFactor, Map<BioMaterial, Number>> efEntry : bioMaterialFactorMap.entrySet() ) {
+                ExperimentalFactor ef = efEntry.getKey();
+                Map<BioMaterial, Number> bmMap = efEntry.getValue();
+                if ( !bmMap.containsKey( bm ) ) {
                     /*
                      * Missing values in factors, not fatal but not great either.
                      */
@@ -540,7 +545,7 @@ public class SVDServiceImpl implements SVDService {
                         SVDServiceImpl.log
                                 .debug( "Incomplete factorvalue information for " + ef + " (" + bm
                                         + " missing a value)" );
-                    bioMaterialFactorMap.get( ef ).put( bm, Double.NaN );
+                    bmMap.put( bm, Double.NaN );
                 }
             }
         }

@@ -234,17 +234,20 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
         List<double[]> rows = new ArrayList<>();
         boolean first = true;
         int i = 0;
-        for ( BioAssayValueObject ba : layout.keySet() ) {
+        for ( Map.Entry<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>> baEntry : layout.entrySet() ) {
+            BioAssayValueObject ba = baEntry.getKey();
+            LinkedHashMap<ExperimentalFactor, Double> efMap = baEntry.getValue();
             baStrings.add( ba.getName() );
 
             int j = 0;
-            for ( ExperimentalFactor ef : layout.get( ba ).keySet() ) {
+            for ( Map.Entry<ExperimentalFactor, Double> efEntry : efMap.entrySet() ) {
+                ExperimentalFactor ef = efEntry.getKey();
                 if ( first ) {
                     double[] nextRow = new double[layout.size()];
                     rows.add( nextRow );
                     efStrings.add( ef.getName() + " ( id=" + ef.getId() + ")" ); // make sure they are unique.
                 }
-                double d = layout.get( ba ).get( ef );
+                double d = efEntry.getValue();
 
                 rows.get( j )[i] = d;
                 j++;

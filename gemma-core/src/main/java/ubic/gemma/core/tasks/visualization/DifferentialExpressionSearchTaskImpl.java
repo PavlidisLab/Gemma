@@ -115,10 +115,11 @@ public class DifferentialExpressionSearchTaskImpl
                 .findByExperimentIds( IdentifiableUtils.getIds( getTaskCommand().getExperimentGroup() ), true, false );
 
         experiment:
-        for ( ExpressionExperimentDetailsValueObject bas : analyses.keySet() ) {
+        for ( Map.Entry<ExpressionExperimentDetailsValueObject, Collection<DifferentialExpressionAnalysisValueObject>> entry : analyses.entrySet() ) {
+            ExpressionExperimentDetailsValueObject bas = entry.getKey();
 
             Collection<DifferentialExpressionAnalysisValueObject> analysesForExperiment = this
-                    .filterAnalyses( analyses.get( bas ) );
+                    .filterAnalyses( entry.getValue() );
 
             if ( analysesForExperiment.isEmpty() ) {
                 continue;
@@ -350,9 +351,9 @@ public class DifferentialExpressionSearchTaskImpl
         //noinspection ConstantConditions // Defensiveness for future changes
         assert !analysisFactorsUsed.isEmpty();
         DifferentialExpressionAnalysisValueObject best = null;
-        for ( DifferentialExpressionAnalysisValueObject candidate : analysisFactorsUsed.keySet() ) {
-            if ( best == null || analysisFactorsUsed.get( best ).size() < analysisFactorsUsed.get( candidate )
-                    .size() ) {
+        for ( Map.Entry<DifferentialExpressionAnalysisValueObject, Collection<ExperimentalFactorValueObject>> entry : analysisFactorsUsed.entrySet() ) {
+            DifferentialExpressionAnalysisValueObject candidate = entry.getKey();
+            if ( best == null || analysisFactorsUsed.get( best ).size() < entry.getValue().size() ) {
                 best = candidate;
             }
         }
@@ -578,8 +579,9 @@ public class DifferentialExpressionSearchTaskImpl
             DifferentialExpressionSearchTaskImpl.log.debug( "Start processing hits for result sets." );
         try {
             boolean warned = false; // avoid too many warnings ...
-            for ( Long geneId : geneToProbeResult.keySet() ) {
-                DiffExprGeneSearchResult diffExprGeneSearchResult = geneToProbeResult.get( geneId );
+            for ( Map.Entry<Long, DiffExprGeneSearchResult> entry : geneToProbeResult.entrySet() ) {
+                Long geneId = entry.getKey();
+                DiffExprGeneSearchResult diffExprGeneSearchResult = entry.getValue();
 
                 if ( diffExprGeneSearchResult instanceof MissingResult ) {
                     continue;

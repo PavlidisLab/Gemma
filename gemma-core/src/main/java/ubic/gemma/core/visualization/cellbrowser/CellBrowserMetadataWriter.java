@@ -198,8 +198,7 @@ public class CellBrowserMetadataWriter {
                 writer.append( TsvUtils.NA );
             }
         }
-        for ( Category category : bioAssayCharacteristics.keySet() ) {
-            Map<BioAssay, Characteristic> characteristics = bioAssayCharacteristics.get( category );
+        for ( Map<BioAssay, Characteristic> characteristics : bioAssayCharacteristics.values() ) {
             Characteristic c = characteristics.get( bioAssay );
             writer.append( "\t" );
             if ( c != null ) {
@@ -208,8 +207,7 @@ public class CellBrowserMetadataWriter {
                 writer.append( TsvUtils.NA );
             }
         }
-        for ( Category category : sampleCharacteristics.keySet() ) {
-            Map<BioMaterial, Characteristic> characteristics = sampleCharacteristics.get( category );
+        for ( Map<BioMaterial, Characteristic> characteristics : sampleCharacteristics.values() ) {
             Characteristic c = characteristics.get( bioAssay.getSampleUsed() );
             writer.append( "\t" );
             if ( c != null ) {

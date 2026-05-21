@@ -350,7 +350,8 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
          * Now analyze each subset
          */
         Map<FactorValue, ExpressionExperimentSubSet> subsets = new HashMap<>();
-        for ( FactorValue subsetFactorValue : dmatrixBySubset.keySet() ) {
+        for ( Map.Entry<FactorValue, ExpressionDataDoubleMatrix> dbsEntry : dmatrixBySubset.entrySet() ) {
+            FactorValue subsetFactorValue = dbsEntry.getKey();
             /*
              * Checking for DE_Exclude characteristics, which should not be included in the analysis.
              * As requested in issue #4458 (bugzilla)
@@ -362,7 +363,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
 
             LinearModelAnalyzer.log.info( "Analyzing subset: " + subsetFactorValue );
 
-            List<BioMaterial> bioMaterials = orderByExperimentalDesign( dmatrixBySubset.get( subsetFactorValue ), factors, null );
+            List<BioMaterial> bioMaterials = orderByExperimentalDesign( dbsEntry.getValue(), factors, null );
 
             /*
              * make a EESubSet
@@ -389,7 +390,9 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
          */
         Collection<DifferentialExpressionAnalysis> results = new HashSet<>();
         Collection<AnalysisException> subsetExceptions = new HashSet<>();
-        for ( FactorValue subsetFactorValue : subsets.keySet() ) {
+        for ( Map.Entry<FactorValue, ExpressionExperimentSubSet> sEntry : subsets.entrySet() ) {
+            FactorValue subsetFactorValue = sEntry.getKey();
+            ExpressionExperimentSubSet subSet = sEntry.getValue();
             if ( isExcluded( subsetFactorValue ) ) {
                 LinearModelAnalyzer.log.warn( LinearModelAnalyzer.EXCLUDE_WARNING );
                 continue;
@@ -400,7 +403,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
             List<BioMaterial> bioMaterials = orderByExperimentalDesign( dmatrix.get( subsetFactorValue ), factors, null );
 
             List<ExperimentalFactor> subsetFactors = this
-                    .fixFactorsForSubset( subsets.get( subsetFactorValue ), dmatrix.get( subsetFactorValue ), factors );
+                    .fixFactorsForSubset( subSet, dmatrix.get( subsetFactorValue ), factors );
 
             DifferentialExpressionAnalysisConfig subsetConfig = this
                     .fixConfigForSubset( factors, subsetFactorValue, config );
@@ -415,7 +418,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
              * Run analysis on the subset.
              */
             try {
-                results.add( doAnalysis( subsets.get( subsetFactorValue ), dmatrix.get( subsetFactorValue ), bioMaterials,
+                results.add( doAnalysis( subSet, dmatrix.get( subsetFactorValue ), bioMaterials,
                         subsetFactors, baselineConditions, subsetFactorValue, subsetConfig ) );
             } catch ( AnalysisException e ) {
                 if ( config.isIgnoreFailingSubsets() ) {
@@ -761,7 +764,8 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
                 continue;
             }
 
-            for ( String factorName : label2Factors.keySet() ) {
+            for ( Map.Entry<String, Collection<ExperimentalFactor>> l2fEntry : label2Factors.entrySet() ) {
+                String factorName = l2fEntry.getKey();
 
                 if ( !pvaluesForQvalue.containsKey( factorName ) ) {
                     // was dropped.
@@ -778,7 +782,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
                     continue;
                 }
 
-                Collection<ExperimentalFactor> factorsForName = label2Factors.get( factorName );
+                Collection<ExperimentalFactor> factorsForName = l2fEntry.getValue();
 
                 if ( factorsForName.isEmpty() ) {
                     throw new IllegalStateException( "Expected at least one factor for " + el + " and " + factorName + "." );
@@ -810,9 +814,9 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
                     Map<String, Double> mainEffectContrastPvalues = lm.getContrastPValues( factorName );
                     Map<String, Double> mainEffectContrastCoeffs = lm.getContrastCoefficients( factorName );
 
-                    for ( String term : mainEffectContrastPvalues.keySet() ) {
-
-                        Double contrastPvalue = mainEffectContrastPvalues.get( term );
+                    for ( Map.Entry<String, Double> contrastEntry : mainEffectContrastPvalues.entrySet() ) {
+                        String term = contrastEntry.getKey();
+                        Double contrastPvalue = contrastEntry.getValue();
 
                         this.makeContrast( probeAnalysisResult, factorsForName, term, factorName, contrastPvalue,
                                 mainEffectContrastTStats, mainEffectContrastCoeffs );
@@ -840,8 +844,9 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
                     Map<String, Double> interactionContrastCoeffs = lm.getContrastCoefficients( factorName );
                     Map<String, Double> interactionContrastPValues = lm.getContrastPValues( factorName );
 
-                    for ( String term : interactionContrastPValues.keySet() ) {
-                        Double contrastPvalue = interactionContrastPValues.get( term );
+                    for ( Map.Entry<String, Double> contrastEntry : interactionContrastPValues.entrySet() ) {
+                        String term = contrastEntry.getKey();
+                        Double contrastPvalue = contrastEntry.getValue();
 
                         this.makeContrast( probeAnalysisResult, factorsForName, term, factorName, contrastPvalue,
                                 interactionContrastTStats, interactionContrastCoeffs );
@@ -1021,8 +1026,9 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
         /*
          * qvalues and ranks, requires second pass over the result objects.
          */
-        for ( String fName : pvaluesForQvalue.keySet() ) {
-            Collection<Double> pvals = pvaluesForQvalue.get( fName );
+        for ( Map.Entry<String, List<Double>> pEntry : pvaluesForQvalue.entrySet() ) {
+            String fName = pEntry.getKey();
+            Collection<Double> pvals = pEntry.getValue();
 
             if ( pvals.isEmpty() ) {
                 LinearModelAnalyzer.log.warn( "No pvalues for " + fName + ", ignoring." );
@@ -1124,8 +1130,9 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
         // StopWatch timer = new StopWatch();
         // timer.start();
         Set<ExpressionAnalysisResultSet> resultSets = new HashSet<>();
-        for ( String fName : resultLists.keySet() ) {
-            Collection<DifferentialExpressionAnalysisResult> results = resultLists.get( fName );
+        for ( Map.Entry<String, List<DifferentialExpressionAnalysisResult>> rlEntry : resultLists.entrySet() ) {
+            String fName = rlEntry.getKey();
+            Collection<DifferentialExpressionAnalysisResult> results = rlEntry.getValue();
 
             Set<ExperimentalFactor> factorsUsed = new HashSet<>( label2Factors.get( fName ) );
 
@@ -1286,19 +1293,21 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
             }
         }
 
-        for ( ExperimentalFactor ef : baselineConditions.keySet() ) {
+        for ( Map.Entry<ExperimentalFactor, FactorValue> bcEntry : baselineConditions.entrySet() ) {
+            ExperimentalFactor ef = bcEntry.getKey();
+            FactorValue baseline = bcEntry.getValue();
             if ( ef.getType().equals( FactorType.CONTINUOUS ) ) {
                 continue;
             }
             String factorName = DiffExAnalyzerUtils.nameForR( ef );
-            String baselineFactorValue = DiffExAnalyzerUtils.nameForR( baselineConditions.get( ef ), true );
+            String baselineFactorValue = DiffExAnalyzerUtils.nameForR( baseline, true );
 
             /*
              * If this is a subset, it is possible the baseline chosen is not eligible for the subset.
              */
             LinearModelAnalyzer.log.info( String.valueOf( ef ) );
 
-            assert baselineConditions.get( ef ).getExperimentalFactor().equals( ef ) : baselineConditions.get( ef ) + " is not a value of " + ef;
+            assert baseline.getExperimentalFactor().equals( ef ) : baseline + " is not a value of " + ef;
             properDesignMatrix.setBaseline( factorName, baselineFactorValue );
         }
         return properDesignMatrix;
@@ -1341,8 +1350,9 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
         }
 
         Map<FactorValue, ExpressionDataDoubleMatrix> subMatrices = new HashMap<>();
-        for ( FactorValue fv : subSetSamples.keySet() ) {
-            List<BioMaterial> samplesInSubset = subSetSamples.get( fv );
+        for ( Map.Entry<FactorValue, List<BioMaterial>> ssEntry : subSetSamples.entrySet() ) {
+            FactorValue fv = ssEntry.getKey();
+            List<BioMaterial> samplesInSubset = ssEntry.getValue();
             if ( samplesInSubset.isEmpty() ) {
                 throw new IllegalArgumentException( "The subset was empty for fv: " + fv );
             }

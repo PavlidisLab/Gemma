@@ -262,9 +262,7 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
             DoubleArrayList pvalues4geneDown = new DoubleArrayList();
             DoubleArrayList foldChanges4gene = new DoubleArrayList();
             Collection<DifferentialExpressionAnalysisResult> resultsUsed = new HashSet<>();
-            for ( ExpressionAnalysisResultSet rs : resultSet2Results4Gene.keySet() ) {
-                Collection<DifferentialExpressionAnalysisResult> res = resultSet2Results4Gene.get( rs );
-
+            for ( Collection<DifferentialExpressionAnalysisResult> res : resultSet2Results4Gene.values() ) {
                 if ( res.isEmpty() ) {
                     // shouldn't happen?
                     DiffExMetaAnalyzerServiceImpl.log.warn( "Unexpectedly no results in resultSet for gene " + g );

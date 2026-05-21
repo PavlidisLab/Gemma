@@ -122,8 +122,9 @@ public class BatchInfoParser {
 
         Map<BioMaterial, Date> result = new HashMap<>();
         Collection<File> missingDate = new HashSet<>();
-        for ( BioAssay ba : bioAssays2Files.keySet() ) {
-            File f = bioAssays2Files.get( ba );
+        for ( Map.Entry<BioAssay, File> entry : bioAssays2Files.entrySet() ) {
+            BioAssay ba = entry.getKey();
+            File f = entry.getValue();
 
             ArrayDesign arrayDesignUsed = ba.getArrayDesignUsed();
 

@@ -123,11 +123,11 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
                 }
             }
         }
-        for ( Long batchId : batches.keySet() ) {
-            if ( batches.get( batchId ) < 2 ) {
+        for ( Map.Entry<Long, Integer> entry : batches.entrySet() ) {
+            if ( entry.getValue() < 2 ) {
                 ExpressionExperimentBatchCorrectionServiceImpl.log
                         .info( "Batch with only one sample detected, correction not possible: " + ee + ", batchId="
-                                + batchId );
+                                + entry.getKey() );
                 return false;
             }
         }

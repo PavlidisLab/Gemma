@@ -152,9 +152,10 @@ public class VectorMergingServiceImpl
         int numSuccessfulMergers = 0;
         Collection<RawExpressionDataVector> newVectors = new HashSet<>();
 
-        for ( QuantitationType type : qt2Vec.keySet() ) {
+        for ( Map.Entry<QuantitationType, Collection<RawExpressionDataVector>> qtEntry : qt2Vec.entrySet() ) {
+            QuantitationType type = qtEntry.getKey();
 
-            Collection<RawExpressionDataVector> oldVecs = qt2Vec.get( type );
+            Collection<RawExpressionDataVector> oldVecs = qtEntry.getValue();
 
             if ( oldVecs.isEmpty() ) {
                 VectorMergingServiceImpl.log.warn( "No vectors for " + type );
@@ -173,10 +174,11 @@ public class VectorMergingServiceImpl
 
             int numAllMissing = 0;
             int missingValuesForQt = 0;
-            for ( CompositeSequence de : deVMap.keySet() ) {
+            for ( Map.Entry<CompositeSequence, Collection<RawExpressionDataVector>> deEntry : deVMap.entrySet() ) {
+                CompositeSequence de = deEntry.getKey();
 
                 RawExpressionDataVector vector = this.initializeNewVector( ee, newBioAd, type, de );
-                Collection<RawExpressionDataVector> dedvs = deVMap.get( de );
+                Collection<RawExpressionDataVector> dedvs = deEntry.getValue();
 
                 /*
                  * these ugly nested loops are to ENSURE that we get the vector reconstructed properly. For each of the
