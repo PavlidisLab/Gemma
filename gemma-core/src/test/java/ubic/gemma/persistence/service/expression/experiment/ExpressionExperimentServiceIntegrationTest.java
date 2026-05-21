@@ -496,9 +496,13 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
                 .containsExactly( AuditAction.CREATE );
         ExpressionExperiment updatedEE = expressionExperimentService.save( ee );
         assertThat( updatedEE.getId() ).isEqualTo( createdEE.getId() );
+        // Audit Phase C retired the blanket DAO save advice that emitted a generic UPDATE on
+        // every save of a persistent entity. The trail now records only the listener-driven
+        // CREATE from the initial save; a subsequent save without an explicit @Audited /
+        // imperative addUpdateEvent call adds no row.
         assertThat( createdEE.getAuditTrail().getEvents() )
                 .extracting( AuditEvent::getAction )
-                .containsExactly( AuditAction.CREATE, AuditAction.UPDATE );
+                .containsExactly( AuditAction.CREATE );
     }
 
     @Test
