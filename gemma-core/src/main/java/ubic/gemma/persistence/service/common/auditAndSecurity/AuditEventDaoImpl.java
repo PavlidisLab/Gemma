@@ -224,7 +224,7 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
         if ( auditables.isEmpty() ) {
             return Collections.emptyMap();
         }
-        Map<T, AuditEvent> result = new HashMap<>( auditables.size() );
+        Map<T, AuditEvent> result = HashMap.newHashMap( auditables.size() );
         final Map<Long, T> atMap = auditables.stream()
                 .collect( Collectors.toMap( a -> a.getAuditTrail().getId(), Function.identity() ) );
         //noinspection unchecked
@@ -251,7 +251,7 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
 
         StopWatch timer = StopWatch.createStarted();
 
-        Map<T, AuditEvent> result = new HashMap<>( auditables.size() );
+        Map<T, AuditEvent> result = HashMap.newHashMap( auditables.size() );
 
         // getId() does not require proxy initialization, otherwise we might inadvertently initialize the audit trail
         final Map<Long, T> atMap = auditables.stream()

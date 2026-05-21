@@ -91,7 +91,7 @@ public class SecurityServiceImpl implements SecurityService {
     @Override
     @Transactional(readOnly = true)
     public <T extends Securable> Map<T, Boolean> arePrivate( Collection<T> securables ) {
-        Map<T, Boolean> result = new HashMap<>( securables.size() );
+        Map<T, Boolean> result = HashMap.newHashMap( securables.size() );
         Map<ObjectIdentity, T> objectIdentities = getObjectIdentities( securables );
 
         if ( objectIdentities.isEmpty() ) return result;
@@ -117,7 +117,7 @@ public class SecurityServiceImpl implements SecurityService {
     @Override
     @Transactional(readOnly = true)
     public <T extends Securable> Map<T, Boolean> areShared( Collection<T> securables ) {
-        Map<T, Boolean> result = new HashMap<>( securables.size() );
+        Map<T, Boolean> result = HashMap.newHashMap( securables.size() );
         Map<ObjectIdentity, T> objectIdentities = getObjectIdentities( securables );
 
         if ( objectIdentities.isEmpty() ) return result;
@@ -263,7 +263,7 @@ public class SecurityServiceImpl implements SecurityService {
     public <T extends Securable> Map<T, Collection<String>> getGroupsEditableBy( Collection<T> securables ) {
         Collection<String> groupNames = getGroupsUserCanView( userDetailsManager.getCurrentUsername() );
 
-        Map<T, Collection<String>> result = new HashMap<>( securables.size() );
+        Map<T, Collection<String>> result = HashMap.newHashMap( securables.size() );
 
         for ( String groupName : groupNames ) {
             populateGroupPermissions( result, groupName,

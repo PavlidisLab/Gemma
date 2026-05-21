@@ -80,7 +80,7 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
     public Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> sortVectorDataByDesign(
             Collection<DoubleVectorValueObject> dedVs, @Nullable ExperimentalFactor primaryFactor ) {
         if ( dedVs == null || dedVs.isEmpty() ) {
-            return new HashMap<>( 0 );
+            return HashMap.newHashMap( 0 );
         }
 
         StopWatch timer = new StopWatch();
@@ -97,8 +97,7 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
          */
         this.prepare( dedVs, primaryFactor, eeCache, bdsCache, cachedLayouts );
 
-        Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> returnedLayouts = new HashMap<>(
-                dedVs.size() );
+        Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> returnedLayouts = HashMap.newHashMap( dedVs.size() );
         Map<DoubleVectorValueObject, List<BioAssayValueObject>> newOrderingsForBioAssayDimensions = new HashMap<>();
         for ( DoubleVectorValueObject vec : dedVs ) {
 
@@ -411,7 +410,7 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
 
             Collection<FactorValue> fvs = bm.getAllFactorValues();
 
-            LinkedHashMap<ExperimentalFactor, Double> v = new LinkedHashMap<>( fvs.size() );
+            LinkedHashMap<ExperimentalFactor, Double> v = LinkedHashMap.newLinkedHashMap( fvs.size() );
             for ( FactorValue fv : fvs ) {
                 ExperimentalFactor ef = fv.getExperimentalFactor();
                 Double value = fvV.get( fv ); // we use IDs to stratify the groups.

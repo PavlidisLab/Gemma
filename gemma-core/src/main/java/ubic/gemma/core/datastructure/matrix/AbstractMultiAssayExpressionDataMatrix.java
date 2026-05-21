@@ -449,9 +449,9 @@ abstract public class AbstractMultiAssayExpressionDataMatrix<T> extends Abstract
 
         // populated from BADs
         columnBioMaterials = new ArrayList<>( bioMaterialMap.size() );
-        columnBioMaterialMap = new HashMap<>( bioMaterialMap.size() );
+        columnBioMaterialMap = HashMap.newHashMap( bioMaterialMap.size() );
         columnBioAssays = new ArrayList<>( bioMaterialMap.size() );
-        columnAssayMap = new HashMap<>( bioMaterialMap.size() );
+        columnAssayMap = HashMap.newHashMap( bioMaterialMap.size() );
 
         if ( AbstractMultiAssayExpressionDataMatrix.log.isDebugEnabled() )
             AbstractMultiAssayExpressionDataMatrix.log.debug( bioMaterialMap.size() + " biomaterialGroups (correspond to columns)" );
