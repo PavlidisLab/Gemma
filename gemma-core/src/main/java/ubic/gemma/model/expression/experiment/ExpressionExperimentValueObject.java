@@ -203,15 +203,28 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
      */
     public ExpressionExperimentValueObject( ExpressionExperiment ee, AclObjectIdentity aoi, AclSid sid ) {
         this( ee );
+        populateAclInfo( this, aoi, sid );
+    }
 
-        // ACL
-        boolean[] permissions = SecurityUtils.getPermissions( aoi );
-        this.setIsPublic( permissions[0] );
-        this.setUserCanWrite( permissions[1] );
-        this.setIsShared( permissions[2] );
-
+    /**
+     * Apply ACL-derived flags (isPublic, userCanWrite, isShared, userOwned) onto an existing VO.
+     * <p>
+     * Extracted from the {@code (ExpressionExperiment, AclObjectIdentity, AclSid)} constructor so
+     * that the EXISTS-rewritten filtering query path can post-fetch ACL info and inject it onto a
+     * VO that was constructed without the {@code aoi}/{@code sid} pair available at projection time.
+     * Public so DAOs in other packages (e.g. {@code ExpressionExperimentDaoImpl}) can reach it.
+     */
+    public static void populateAclInfo( ExpressionExperimentValueObject vo,
+            @org.springframework.lang.Nullable AclObjectIdentity aoi,
+            @org.springframework.lang.Nullable AclSid sid ) {
+        if ( aoi != null ) {
+            boolean[] permissions = SecurityUtils.getPermissions( aoi );
+            vo.setIsPublic( permissions[0] );
+            vo.setUserCanWrite( permissions[1] );
+            vo.setIsShared( permissions[2] );
+        }
         String ownerName = ubic.gemma.core.security.acl.domain.Sids.principalName( sid == null ? null : sid.toSid() );
-        this.setUserOwned( ownerName != null && Objects.equals( ownerName, SecurityUtil.getCurrentUsername() ) );
+        vo.setUserOwned( ownerName != null && Objects.equals( ownerName, SecurityUtil.getCurrentUsername() ) );
     }
 
     public ExpressionExperimentValueObject( ExpressionExperimentIdAndShortName ee ) {

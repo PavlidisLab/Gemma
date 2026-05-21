@@ -2163,11 +2163,12 @@ public class ExpressionExperimentDaoImpl
         return new TypedResultTransformer<ExpressionExperimentDetailsValueObject>() {
             @Override
             public ExpressionExperimentDetailsValueObject transformTuple( Object[] row, String[] aliases ) {
+                // After the ACL EXISTS rewrite (Session 2), the filtering query projects only `ee` —
+                // ACL info (aoi/sid) is post-fetched in transformListTyped via AclQueryUtils.loadAclInfoFor()
+                // and applied with ExpressionExperimentValueObject.populateAclInfo().
                 ExpressionExperiment ee = ( ExpressionExperiment ) row[0];
                 initializeCachedFilteringResult( ee );
-                AclObjectIdentity aoi = ( AclObjectIdentity ) row[1];
-                AclSid sid = ( AclSid ) row[2];
-                return new ExpressionExperimentDetailsValueObject( ee, aoi, sid );
+                return new ExpressionExperimentDetailsValueObject( ee );
             }
 
             @Override
@@ -2180,6 +2181,19 @@ public class ExpressionExperimentDaoImpl
                         .sorted()
                         .distinct()
                         .collect( Collectors.toList() );
+
+                // Post-fetch ACL info for the resulting EE ids and inject onto each VO. The
+                // pre-rewrite path got aoi/sid directly off the SELECT projection; the EXISTS form
+                // can no longer project them.
+                java.util.Map<Long, org.apache.commons.lang3.tuple.Pair<AclObjectIdentity, AclSid>> aclByEeId =
+                        AclQueryUtils.loadAclInfoFor( getSessionFactory().getCurrentSession(),
+                                expressionExperimentIds, ExpressionExperiment.class );
+                for ( ExpressionExperimentDetailsValueObject vo : vos ) {
+                    org.apache.commons.lang3.tuple.Pair<AclObjectIdentity, AclSid> pair = aclByEeId.get( vo.getId() );
+                    if ( pair != null ) {
+                        ExpressionExperimentValueObject.populateAclInfo( vo, pair.getLeft(), pair.getRight() );
+                    }
+                }
 
                 // fetch some extras details
                 // we could make this a single query in getLoadValueObjectDetails, but performing a jointure with the bioAssays
@@ -2347,15 +2361,30 @@ public class ExpressionExperimentDaoImpl
         return new TypedResultTransformer<ExpressionExperimentValueObject>() {
             @Override
             public ExpressionExperimentValueObject transformTuple( Object[] row, String[] aliases ) {
+                // After the ACL EXISTS rewrite (Session 2), the filtering query projects only `ee`;
+                // ACL info is post-fetched in transformListTyped.
                 ExpressionExperiment ee = ( ExpressionExperiment ) row[0];
-                AclObjectIdentity aoi = ( AclObjectIdentity ) row[1];
-                AclSid sid = ( AclSid ) row[2];
                 initializeCachedFilteringResult( ee );
-                return new ExpressionExperimentValueObject( ee, aoi, sid );
+                return new ExpressionExperimentValueObject( ee );
             }
 
             @Override
             public List<ExpressionExperimentValueObject> transformListTyped( List<ExpressionExperimentValueObject> collection ) {
+                // Inject ACL info for each VO via a single batched fetch. Keeps the same effective
+                // VO shape that the pre-rewrite (ee, aoi, sid)-projecting constructor produced.
+                List<Long> ids = collection.stream()
+                        .map( IdentifiableUtils::getRequiredId )
+                        .distinct()
+                        .collect( Collectors.toList() );
+                java.util.Map<Long, org.apache.commons.lang3.tuple.Pair<AclObjectIdentity, AclSid>> aclByEeId =
+                        AclQueryUtils.loadAclInfoFor( getSessionFactory().getCurrentSession(),
+                                ids, ExpressionExperiment.class );
+                for ( ExpressionExperimentValueObject vo : collection ) {
+                    org.apache.commons.lang3.tuple.Pair<AclObjectIdentity, AclSid> pair = aclByEeId.get( vo.getId() );
+                    if ( pair != null ) {
+                        ExpressionExperimentValueObject.populateAclInfo( vo, pair.getLeft(), pair.getRight() );
+                    }
+                }
                 return transformer.transformListTyped( collection );
             }
         };
@@ -3918,9 +3947,13 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     protected Query getFilteringQuery( @Nullable Filters filters, @Nullable Sort sort ) {
-        // the constants for aliases are messing with the inspector
+        // EXISTS rewrite (Session 2 of the ACL EXISTS refactor): the legacy projection was
+        // `select ee, aoi, sid` to harvest ACL info via the FROM-side join that the old
+        // formAclRestrictionClause produced. Under EXISTS the aoi/sid aliases are no longer in
+        // the outer-query scope, so we project the entity only and the value-object transformer
+        // batch-loads ACL info post-fetch via AclQueryUtils.loadAclInfoFor().
         //language=HQL
-        return finishFilteringQuery( "select ee, " + AclQueryUtils.AOI_ALIAS + ", " + AclQueryUtils.SID_ALIAS + " "
+        return finishFilteringQuery( "select ee "
                 + "from ExpressionExperiment as ee "
                 + "left join fetch ee.accession acc "
                 + "left join fetch ee.experimentalDesign as EDES "
