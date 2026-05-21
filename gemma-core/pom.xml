@@ -313,11 +313,20 @@
         </dependency>
 
         <!-- Scheduling -->
-        <!-- This is the latest Quartz release compatible with Spring 3 -->
+        <!-- Quartz 2.x: JobExecutionContext is an interface, which Spring 6's
+             QuartzJobBean / SchedulerFactoryBean bind to. 1.x had it as a class
+             and broke at runtime under Spring 6. -->
         <dependency>
             <groupId>org.quartz-scheduler</groupId>
             <artifactId>quartz</artifactId>
-            <version>1.8.6</version>
+            <version>2.5.0</version>
+            <exclusions>
+                <!-- Use the project's slf4j-api version (already on classpath). -->
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <!-- jakarta.servlet-api + spring-security-web: previously test-scoped (only spring-security-test

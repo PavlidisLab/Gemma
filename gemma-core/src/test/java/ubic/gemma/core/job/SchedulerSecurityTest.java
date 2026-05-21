@@ -19,6 +19,7 @@
 package ubic.gemma.core.job;
 
 import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
@@ -71,6 +72,20 @@ public class SchedulerSecurityTest extends BaseIntegrationTest5 {
     @Qualifier("groupAgentSecurityContext")
     @Lazy
     private SecurityContext securityContext;
+
+    /*
+     * Force the lazy SecurityContext proxy to resolve WHILE admin auth is in
+     * SecurityContextHolder. Otherwise the first proxy dereference happens inside
+     * DelegatingSecurityContextCallable, by which point the holder's context IS the
+     * lazy proxy itself — a method-security check inside the FactoryBean's
+     * createInstance() (UserManagerImpl.updatePassword → @Secured update → method
+     * interceptor reads current authentication) re-enters the same proxy that's still
+     * being created, throwing BeanCurrentlyInCreationException.
+     */
+    @BeforeEach
+    public void resolveSecurityContextProxy() {
+        securityContext.getAuthentication();
+    }
 
     /*
      * Tests whether we can run a secured method that has been granted to GROUP_AGENT
