@@ -246,6 +246,30 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
     }
 
     @Test
+    public void testGetDatasetAuditEvents() {
+        ExpressionExperiment ee = ees.get( 0 );
+        assertThat( target( "/datasets/" + ee.getId() + "/auditEvents" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .entity()
+                .hasFieldOrProperty( "data" );
+    }
+
+    @Test
+    public void testGetDatasetAuditEventsByShortName() {
+        ExpressionExperiment ee = ees.get( 0 );
+        assertThat( target( "/datasets/" + ee.getShortName() + "/auditEvents" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
+    }
+
+    @Test
+    public void testGetDatasetAuditEventsWithUnknownDatasetIs404() {
+        assertThat( target( "/datasets/9999999/auditEvents" ).request().get() )
+                .hasStatus( Response.Status.NOT_FOUND );
+    }
+
+    @Test
     public void testGetDatasetRawExpression() {
         ExpressionExperiment ee = ees.get( 0 );
         assertThat( target( "/datasets/" + ee.getId() + "/data/raw" ).request().get() )

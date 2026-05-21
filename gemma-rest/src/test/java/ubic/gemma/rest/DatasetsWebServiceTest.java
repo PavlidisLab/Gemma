@@ -36,6 +36,8 @@ import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
+import ubic.gemma.model.common.auditAndSecurity.AuditAction;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.search.SearchResult;
@@ -306,6 +308,9 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
+    @Autowired
+    private AuditEventService auditEventService;
+
     private ExpressionExperiment ee;
 
     @Before
@@ -322,7 +327,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
 
     @After
     public void resetMocks() {
-        reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService, taxonArgService, geneArgService, searchService );
+        reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService, taxonArgService, geneArgService, searchService, auditEventService );
     }
 
     @Test
@@ -959,6 +964,54 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         assertThat( target( "/datasets/999/designPreflight" ).request().post( javax.ws.rs.client.Entity.json( new ExperimentalDesignValueObject() ) ) )
                 .hasStatus( Response.Status.NOT_FOUND );
         verify( expressionExperimentService, never() ).previewDesignChange( any(), any() );
+    }
+
+    @Test
+    public void testGetDatasetAuditEvents() {
+        Date when = new Date( 1_700_000_000_000L );
+        AuditEvent created = AuditEvent.Factory.newInstance( when, AuditAction.CREATE, "created", "detail-c", null, null );
+        AuditEvent updated = AuditEvent.Factory.newInstance( new Date( when.getTime() + 1000L ), AuditAction.UPDATE, "updated", "detail-u", null, null );
+        when( auditEventService.getEvents( ee ) ).thenReturn( Arrays.asList( created, updated ) );
+
+        assertThat( target( "/datasets/1/auditEvents" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 2 )
+                .satisfiesExactly(
+                        a -> assertThat( a )
+                                .containsEntry( "action", "C" )
+                                .containsEntry( "note", "created" )
+                                .containsEntry( "detail", "detail-c" ),
+                        a -> assertThat( a )
+                                .containsEntry( "action", "U" )
+                                .containsEntry( "note", "updated" )
+                                .containsEntry( "detail", "detail-u" ) );
+
+        verify( expressionExperimentService ).load( 1L );
+        verify( auditEventService ).getEvents( ee );
+    }
+
+    @Test
+    public void testGetDatasetAuditEventsWhenEmpty() {
+        when( auditEventService.getEvents( ee ) ).thenReturn( Collections.emptyList() );
+
+        assertThat( target( "/datasets/1/auditEvents" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .isEmpty();
+
+        verify( auditEventService ).getEvents( ee );
+    }
+
+    @Test
+    public void testGetDatasetAuditEventsWithUnknownDatasetIs404() {
+        assertThat( target( "/datasets/999/auditEvents" ).request().get() )
+                .hasStatus( Response.Status.NOT_FOUND );
+        verify( auditEventService, never() ).getEvents( any() );
     }
 
     @Test
