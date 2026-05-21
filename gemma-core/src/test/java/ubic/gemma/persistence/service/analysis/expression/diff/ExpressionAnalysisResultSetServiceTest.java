@@ -59,10 +59,9 @@ public class ExpressionAnalysisResultSetServiceTest extends BaseSpringContextTes
     @Test
     public void testFilterBySize() {
         // .size paths flow through a different code path that doesn't expose the registered
-        // object alias (it's null). Check only that the property resolves and the propertyName
-        // is the expected 'characteristics.size'.
-        validateSizeProperty( "analysis.subsetFactorValue.characteristics.size", null, "characteristics.size" );
-        validateSizeProperty( "baselineGroup.characteristics.size", null, "characteristics.size" );
+        // object alias (it's null) and keeps the full dot-path as propertyName.
+        validateSizeProperty( "analysis.subsetFactorValue.characteristics.size", null, "analysis.subsetFactorValue.characteristics.size" );
+        validateSizeProperty( "baselineGroup.characteristics.size", null, "baselineGroup.characteristics.size" );
     }
 
     private void validateSizeProperty( String property, @Nullable String expectedAlias, String expectedPropertyName ) {
