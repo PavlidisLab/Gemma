@@ -26,6 +26,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -70,6 +71,7 @@ import static ubic.gemma.rest.util.Responders.respond;
  * @author tesarst
  */
 @Service
+@Slf4j
 @Path("/annotations")
 public class AnnotationsWebService {
 
@@ -82,6 +84,24 @@ public class AnnotationsWebService {
      * Amout of time allowed to spend on finding characteristics.
      */
     private static final long FIND_CHARACTERISTICS_TIMEOUT_MS = 30000;
+
+    /**
+     * Bounded LRU cache for successful {@code /annotations/search} responses. Absorbs repeat queries from
+     * curation pipelines that ask for the same terms across many experiments. Keyed by the normalized
+     * (trimmed + lowercased) query payload; only success results are cached, exceptions propagate uncached.
+     * <p>
+     * Process-local, access-order eviction; size bound is the eviction signal. Plain {@link LinkedHashMap}
+     * wrapped in {@link Collections#synchronizedMap} — no Guava on the classpath here.
+     */
+    private static final int SEARCH_CACHE_MAX_ENTRIES = 500;
+
+    private static final Map<String, List<AnnotationSearchResultValueObject>> SEARCH_CACHE = Collections.synchronizedMap(
+            new LinkedHashMap<String, List<AnnotationSearchResultValueObject>>( 64, 0.75f, true ) {
+                @Override
+                protected boolean removeEldestEntry( Map.Entry<String, List<AnnotationSearchResultValueObject>> eldest ) {
+                    return size() > SEARCH_CACHE_MAX_ENTRIES;
+                }
+            } );
 
     private OntologyService ontologyService;
     private SearchService searchService;
@@ -266,8 +286,18 @@ public class AnnotationsWebService {
         if ( query == null || query.getValue().isEmpty() ) {
             throw new BadRequestException( "Search query cannot be empty." );
         }
+        String cacheKey = buildSearchCacheKey( query.getValue() );
+        List<AnnotationSearchResultValueObject> cached = SEARCH_CACHE.get( cacheKey );
+        if ( cached != null ) {
+            log.debug( "annotation-search cache HIT key={} (size={})", cacheKey, SEARCH_CACHE.size() );
+            return respond( new ArrayList<>( cached ) );
+        }
         try {
-            return respond( new ArrayList<>( this.getTerms( query, FIND_CHARACTERISTICS_TIMEOUT_MS ) ) );
+            List<AnnotationSearchResultValueObject> result = new ArrayList<>( this.getTerms( query, FIND_CHARACTERISTICS_TIMEOUT_MS ) );
+            // store an unmodifiable defensive copy so callers can't mutate the cached value
+            SEARCH_CACHE.put( cacheKey, Collections.unmodifiableList( new ArrayList<>( result ) ) );
+            log.debug( "annotation-search cache MISS key={} stored {} hits (size={})", cacheKey, result.size(), SEARCH_CACHE.size() );
+            return respond( result );
         } catch ( SearchTimeoutException e ) {
             throw new ServiceUnavailableException( e.getMessage(), DateUtils.addSeconds( new Date(), 30 ), e.getCause() );
         } catch ( ParseSearchException e ) {
@@ -579,6 +609,29 @@ public class AnnotationsWebService {
     public static class OntologyTermSimpleValueObject {
         String uri;
         String label;
+    }
+
+    /**
+     * Build a stable cache key from the raw query payload. Trims each term and lowercases for plain-text
+     * matches (the underlying LIKE search and ontology lookup are case-insensitive); URI-shaped terms keep
+     * their case because URIs are case-sensitive on the path/query portion.
+     */
+    private static String buildSearchCacheKey( List<String> values ) {
+        StringBuilder sb = new StringBuilder( values.size() * 16 );
+        for ( int i = 0; i < values.size(); i++ ) {
+            String v = values.get( i );
+            if ( v == null ) continue;
+            String stripped = v.trim();
+            if ( parseTermUriQuery( stripped ) != null ) {
+                sb.append( stripped );
+            } else {
+                sb.append( stripped.toLowerCase( Locale.ROOT ) );
+            }
+            if ( i < values.size() - 1 ) {
+                sb.append( '\u0001' ); // SOH separator - not a legal character in URIs or plain queries
+            }
+        }
+        return sb.toString();
     }
 
     @Nullable
