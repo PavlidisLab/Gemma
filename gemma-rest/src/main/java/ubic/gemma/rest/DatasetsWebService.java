@@ -2920,38 +2920,57 @@ public class DatasetsWebService {
         if ( !expressionExperimentService.hasProcessedExpressionData( ee ) ) {
             throw new NotFoundException( ee.getShortName() + " does not have any processed vectors." );
         }
-        try ( LockedPath p = expressionDataFileService.writeOrLocateProcessedDataFile( ee, filtered, force, 5, TimeUnit.SECONDS )
-                .orElseThrow( () -> new NotFoundException( ee.getShortName() + " does not have any processed vectors." ) ) ) {
-            String filename = download ? p.getPath().getFileName().toString() : FilenameUtils.removeExtension( p.getPath().getFileName().toString() );
-            return sendfile( p.getPath() )
-                    .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
-                    .header( "Content-Disposition", "attachment; filename=\"" + filename + "\"" )
-                    .build();
-        } catch ( TimeoutException e ) {
-            throw new ServiceUnavailableException( "Processed data for " + ee.getShortName() + " is still being generated.", 30L, e );
-        } catch ( IOException e ) {
-            log.error( "Failed to create processed expression data for " + ee + ", will have to stream it as a fallback.", e );
-            String filename = download ? getDataOutputFilename( ee, filtered, TABULAR_BULK_DATA_FILE_SUFFIX ) : FilenameUtils.removeExtension( getDataOutputFilename( ee, filtered, TABULAR_BULK_DATA_FILE_SUFFIX ) );
-            return Response.ok( ( StreamingOutput ) output -> {
-                        try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( output ), StandardCharsets.UTF_8 ) ) {
-                            expressionDataFileService.writeProcessedExpressionData( ee, filtered, null, false, false,
-                                    false, writer, true );
-                        } catch ( FilteringException ex ) {
-                            // this is a bit unfortunate, because it's too late for producing a 204 error
-                            throw new RuntimeException( ex );
-                        }
-                    } )
-                    .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
-                    .header( "Content-Disposition", "attachment; filename=\"" + filename + "\"" )
-                    .build();
-        } catch ( InterruptedException e ) {
-            Thread.currentThread().interrupt();
-            throw new InternalServerErrorException( e );
-        } catch ( NoDesignElementsException e ) {
-            return Response.noContent().build();
-        } catch ( FilteringException e ) {
-            throw new InternalServerErrorException( String.format( "Filtering of dataset %s failed.", ee.getShortName() ), e );
+        // Async-build pattern (mirrors the single-cell /data/singleCell endpoint): short-timeout cache probe via
+        // getDataFile + sendfile if hot; otherwise kick the matrix build onto expressionDataFileTaskExecutor and
+        // stream the data in-band so the caller doesn't block on the 30-120s cold matrix-build TTFB. Force-rewrite
+        // skips the cache probe so the admin path stays deterministic.
+        if ( !force ) {
+            try ( LockedPath p = expressionDataFileService.getDataFile( getDataOutputFilename( ee, filtered, TABULAR_BULK_DATA_FILE_SUFFIX ), false, 5, TimeUnit.SECONDS ) ) {
+                if ( Files.exists( p.getPath() ) ) {
+                    String filename = download ? p.getPath().getFileName().toString() : FilenameUtils.removeExtension( p.getPath().getFileName().toString() );
+                    return sendfile( p.getPath() )
+                            .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
+                            .header( "Content-Disposition", "attachment; filename=\"" + filename + "\"" )
+                            .build();
+                }
+            } catch ( TimeoutException e ) {
+                // file is locked by another writer — fall through to stream
+                log.warn( "Processed data for " + ee.getShortName() + " is locked, will stream instead." );
+            } catch ( IOException e ) {
+                log.error( "Failed to probe processed data cache for " + ee + ", will stream instead.", e );
+            } catch ( InterruptedException e ) {
+                Thread.currentThread().interrupt();
+                throw new InternalServerErrorException( e );
+            }
         }
+        if ( !expressionExperimentService.hasProcessedExpressionData( ee ) ) {
+            // re-check defensively after the cache probe (cheap)
+            throw new NotFoundException( ee.getShortName() + " does not have any processed vectors." );
+        }
+        // Kick the build onto the expression-data executor so the cache is populated for the next caller.
+        // Fire-and-forget: the returned Future is not awaited.
+        try {
+            expressionDataFileService.writeOrLocateProcessedDataFileAsync( ee, filtered, force );
+        } catch ( RejectedExecutionException e ) {
+            log.warn( "expressionDataFileTaskExecutor queue is full; streaming without populating cache for " + ee, e );
+        }
+        // Stream in-band so the caller doesn't block on the full matrix build.
+        String filename = download ? getDataOutputFilename( ee, filtered, TABULAR_BULK_DATA_FILE_SUFFIX ) : FilenameUtils.removeExtension( getDataOutputFilename( ee, filtered, TABULAR_BULK_DATA_FILE_SUFFIX ) );
+        return Response.ok( ( StreamingOutput ) output -> {
+                    try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( output ), StandardCharsets.UTF_8 ) ) {
+                        expressionDataFileService.writeProcessedExpressionData( ee, filtered, null, false, false,
+                                false, writer, true );
+                    } catch ( NoDesignElementsException ex ) {
+                        // streaming has already started; we cannot downgrade to 204, just truncate the body
+                        log.warn( "Processed data for " + ee + " is empty after filtering; truncating stream.", ex );
+                    } catch ( FilteringException ex ) {
+                        // this is a bit unfortunate, because it's too late for producing an error response
+                        throw new RuntimeException( ex );
+                    }
+                } )
+                .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
+                .header( "Content-Disposition", "attachment; filename=\"" + filename + "\"" )
+                .build();
     }
 
     /**
@@ -2989,28 +3008,104 @@ public class DatasetsWebService {
             qt = expressionExperimentService.getPreferredQuantitationType( ee )
                     .orElseThrow( () -> new NotFoundException( String.format( "No preferred quantitation type could be found for raw expression data data of %s.", ee ) ) );
         }
-        try ( LockedPath p = expressionDataFileService.writeOrLocateRawExpressionDataFile( ee, qt, force, 5, TimeUnit.SECONDS ) ) {
-            String filename = download ? p.getPath().getFileName().toString() : FilenameUtils.removeExtension( p.getPath().getFileName().toString() );
+        // Async-build pattern (mirrors /data/singleCell): short-timeout cache probe + sendfile if hot; otherwise
+        // fire-and-forget the disk write onto expressionDataFileTaskExecutor and stream the data in-band so the
+        // caller doesn't block on the matrix build.
+        if ( !force ) {
+            try ( LockedPath p = expressionDataFileService.getDataFile( getDataOutputFilename( ee, qt, TABULAR_BULK_DATA_FILE_SUFFIX ), false, 5, TimeUnit.SECONDS ) ) {
+                if ( Files.exists( p.getPath() ) ) {
+                    String filename = download ? p.getPath().getFileName().toString() : FilenameUtils.removeExtension( p.getPath().getFileName().toString() );
+                    return sendfile( p.getPath() )
+                            .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
+                            .header( "Content-Disposition", "attachment; filename=\"" + filename + "\"" )
+                            .build();
+                }
+            } catch ( TimeoutException e ) {
+                log.warn( "Raw data for " + qt + " is locked, will stream instead." );
+            } catch ( IOException e ) {
+                log.error( "Failed to probe raw data cache for " + qt + ", will stream instead.", e );
+            } catch ( InterruptedException e ) {
+                Thread.currentThread().interrupt();
+                throw new InternalServerErrorException( e );
+            }
+        }
+        // Kick the build onto the expression-data executor so the cache is populated for the next caller.
+        try {
+            expressionDataFileService.writeOrLocateRawExpressionDataFileAsync( ee, qt, force );
+        } catch ( RejectedExecutionException e ) {
+            log.warn( "expressionDataFileTaskExecutor queue is full; streaming without populating cache for " + qt, e );
+        }
+        String filename = getDataOutputFilename( ee, qt, TABULAR_BULK_DATA_FILE_SUFFIX );
+        return Response.ok( ( StreamingOutput ) output -> {
+                    try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( output ), StandardCharsets.UTF_8 ) ) {
+                        expressionDataFileService.writeRawExpressionData( ee, qt, null, false, false, false, writer, true );
+                    }
+                } )
+                .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
+                .header( "Content-Disposition", "attachment; filename=\"" + ( download ? filename : FilenameUtils.removeExtension( filename ) ) + "\"" )
+                .build();
+    }
+
+    /**
+     * Retrieve the differential-expression analysis archive for a dataset.
+     * <p>
+     * Builds (or, on cache hit, locates) the ZIP archive containing the analysis result + per-result-set contrast
+     * files for a single differential-expression analysis on this dataset, and sendfile-s the cached file directly.
+     * <p>
+     * The archive is generated lazily on first access by {@link ExpressionDataFileService#writeOrLocateDiffExAnalysisArchiveFile};
+     * subsequent accesses skip the rebuild.
+     * <p>
+     * If the dataset has more than one differential-expression analysis, the caller must disambiguate by passing
+     * {@code analysisId}; otherwise the response is 409 Conflict.
+     */
+    @GET
+    @Path("/{dataset}/data/dea")
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    @Operation(summary = "Retrieve the differential expression analysis archive of a dataset",
+            description = "Returns a ZIP archive (one per analysis) containing the analysis result and per-result-set "
+                    + "contrast files. The archive is cached on disk under <dataDir> and rebuilt on first access; "
+                    + "for datasets with multiple differential-expression analyses, pass `analysisId` to select one.",
+            responses = {
+                    @ApiResponse(responseCode = "200", content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM,
+                            schema = @Schema(type = "string", format = "binary"))),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not have any differential-expression analyses, or the supplied analysis ID does not belong to this dataset.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "409", description = "The dataset has more than one differential-expression analysis; pass `analysisId` to select one.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public Response getDatasetDiffExAnalysisArchive(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Identifier of the differential-expression analysis to retrieve. Required when the dataset has more than one analysis.") @QueryParam("analysisId") Long analysisId,
+            @Parameter(hidden = true) @QueryParam("download") @DefaultValue("false") Boolean download,
+            @Parameter(hidden = true) @QueryParam("force") @DefaultValue("false") Boolean force
+    ) {
+        if ( force ) {
+            checkIsAdmin();
+        }
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        DifferentialExpressionAnalysis analysis;
+        if ( analysisId != null ) {
+            analysis = differentialExpressionAnalysisService.findByExperimentAndAnalysisId( ee, true, analysisId );
+            if ( analysis == null ) {
+                throw new NotFoundException( "No differential-expression analysis with ID " + analysisId + " was found for " + ee.getShortName() + "." );
+            }
+        } else {
+            Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalysisService.findByExperiment( ee, true );
+            if ( analyses.isEmpty() ) {
+                throw new NotFoundException( ee.getShortName() + " does not have any differential-expression analyses." );
+            }
+            if ( analyses.size() > 1 ) {
+                throw new ClientErrorException( ee.getShortName() + " has " + analyses.size() + " differential-expression analyses; pass ?analysisId= to select one.", Response.Status.CONFLICT );
+            }
+            analysis = analyses.iterator().next();
+        }
+        try ( LockedPath p = expressionDataFileService.writeOrLocateDiffExAnalysisArchiveFile( analysis, force ) ) {
+            String filename = p.getPath().getFileName().toString();
             return sendfile( p.getPath() )
-                    .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
+                    .type( MediaType.APPLICATION_OCTET_STREAM_TYPE )
                     .header( "Content-Disposition", "attachment; filename=\"" + filename + "\"" )
                     .build();
-        } catch ( TimeoutException e ) {
-            // file is being written, recommend to the user to wait a lils.copy( is, entityStittle bit
-            throw new ServiceUnavailableException( "Raw data for " + qt + " is still being generated.", 30L, e );
         } catch ( IOException e ) {
-            log.error( "Failed to write raw expression data for " + qt + " to disk, will resort to stream it.", e );
-            String filename = getDataOutputFilename( ee, qt, TABULAR_BULK_DATA_FILE_SUFFIX );
-            return Response.ok( ( StreamingOutput ) output -> {
-                        try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( output ), StandardCharsets.UTF_8 ) ) {
-                            expressionDataFileService.writeRawExpressionData( ee, qt, null, false, false, false, writer, true );
-                        }
-                    } )
-                    .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
-                    .header( "Content-Disposition", "attachment; filename=\"" + ( download ? filename : FilenameUtils.removeExtension( filename ) ) + "\"" )
-                    .build();
-        } catch ( InterruptedException e ) {
-            Thread.currentThread().interrupt();
+            log.error( "Failed to locate or create the DEA archive for " + analysis + ".", e );
             throw new InternalServerErrorException( e );
         }
     }

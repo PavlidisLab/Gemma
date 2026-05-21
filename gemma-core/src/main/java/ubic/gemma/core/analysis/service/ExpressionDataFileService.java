@@ -356,6 +356,15 @@ public interface ExpressionDataFileService {
     Optional<LockedPath> writeOrLocateProcessedDataFile( ExpressionExperiment ee, boolean filtered, boolean forceWrite, long timeout, TimeUnit timeUnit ) throws TimeoutException, IOException, InterruptedException, FilteringException;
 
     /**
+     * Build the processed-expression data file off the request thread via the {@code expressionDataFileTaskExecutor}.
+     * Wraps {@link #writeOrLocateProcessedDataFile(ExpressionExperiment, boolean, boolean)} so cold-cache HTTP
+     * callers can return immediately and stream the data while the cached file materializes for the next caller.
+     *
+     * @throws RejectedExecutionException if the queue for creating data files is full
+     */
+    Future<Path> writeOrLocateProcessedDataFileAsync( ExpressionExperiment ee, boolean filtered, boolean forceWrite ) throws RejectedExecutionException;
+
+    /**
      * Locate or create a new data file for the given quantitation type. The output will include gene information if it
      * can be located from its own file.
      *
@@ -366,6 +375,15 @@ public interface ExpressionDataFileService {
     LockedPath writeOrLocateRawExpressionDataFile( ExpressionExperiment ee, QuantitationType type, boolean forceWrite ) throws IOException;
 
     LockedPath writeOrLocateRawExpressionDataFile( ExpressionExperiment ee, QuantitationType qt, boolean forceWrite, long timeout, TimeUnit timeUnit ) throws TimeoutException, IOException, InterruptedException;
+
+    /**
+     * Build the raw-expression data file off the request thread via the {@code expressionDataFileTaskExecutor}. Wraps
+     * {@link #writeOrLocateRawExpressionDataFile(ExpressionExperiment, QuantitationType, boolean)} so cold-cache HTTP
+     * callers can return immediately and stream the data while the cached file materializes for the next caller.
+     *
+     * @throws RejectedExecutionException if the queue for creating data files is full
+     */
+    Future<Path> writeOrLocateRawExpressionDataFileAsync( ExpressionExperiment ee, QuantitationType qt, boolean forceWrite ) throws RejectedExecutionException;
 
     /**
      * Locate or create an experimental design file for a given experiment.
@@ -393,6 +411,29 @@ public interface ExpressionDataFileService {
      * @see #writeOrLocateRawExpressionDataFile(ExpressionExperiment, QuantitationType, boolean)
      */
     LockedPath writeOrLocateJSONRawExpressionDataFile( ExpressionExperiment ee, QuantitationType type, boolean forceWrite ) throws IOException;
+
+    /**
+     * Locate or create a cached gzipped TSV for a single differential-expression result set.
+     * <p>
+     * Result sets are immutable post-creation, so the on-disk cache is effectively permanent.
+     * <p>
+     * On a cache hit, returns the existing path with a shared lock (no DB hit). On a cache miss, materializes
+     * the result set + contrasts + factor values + result-to-genes map via
+     * {@code ExpressionAnalysisResultSetService}, writes the TSV via {@code ExpressionAnalysisResultSetFileService},
+     * gzips it under {@code <dataDir>/resultSets/resultSet_<id>.tsv.gz}, and returns the locked path.
+     *
+     * @param resultSetId  the result-set ID to materialize
+     * @param forceWrite   ignore any existing cached file
+     * @return a locked path to the TSV file, which must be released after use
+     * @throws java.util.NoSuchElementException if the result set cannot be found
+     */
+    LockedPath writeOrLocateDifferentialExpressionResultSetTsvFile( Long resultSetId, boolean forceWrite ) throws IOException;
+
+    /**
+     * @throws RejectedExecutionException if the queue for creating data files is full
+     * @see #writeOrLocateDifferentialExpressionResultSetTsvFile(Long, boolean)
+     */
+    Future<Path> writeOrLocateDifferentialExpressionResultSetTsvFileAsync( Long resultSetId, boolean forceWrite ) throws RejectedExecutionException;
 
     /**
      * Locate or create the differential expression archive file(s) for a given experiment.

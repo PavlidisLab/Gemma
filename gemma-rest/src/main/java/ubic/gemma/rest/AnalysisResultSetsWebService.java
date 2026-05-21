@@ -26,9 +26,12 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.analysis.service.ExpressionAnalysisResultSetFileService;
+import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.model.analysis.AnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.Baseline;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultSetValueObject;
@@ -57,7 +60,9 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.StreamingOutput;
+import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
@@ -65,6 +70,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.RejectedExecutionException;
+
+import static ubic.gemma.rest.util.Responders.sendfile;
 
 import static ubic.gemma.rest.util.MediaTypeUtils.negotiate;
 import static ubic.gemma.rest.util.MediaTypeUtils.withQuality;
@@ -76,6 +84,7 @@ import static ubic.gemma.rest.util.Responders.respond;
  */
 @Service
 @Path("/resultSets")
+@Slf4j
 public class AnalysisResultSetsWebService {
 
     public static final String TEXT_TAB_SEPARATED_VALUES_UTF8_Q9 = "text/tab-separated-values; charset=UTF-8; q=0.9";
@@ -89,6 +98,9 @@ public class AnalysisResultSetsWebService {
 
     @Autowired
     private ExpressionAnalysisResultSetFileService expressionAnalysisResultSetFileService;
+
+    @Autowired
+    private ExpressionDataFileService expressionDataFileService;
 
     @Autowired
     private ExpressionAnalysisResultSetArgService expressionAnalysisResultSetArgService;
@@ -244,7 +256,37 @@ public class AnalysisResultSetsWebService {
             if ( threshold != null ) {
                 throw new BadRequestException( "The threshold parameter cannot be used with the TSV representation." );
             }
-            return getResultSetAsTsv( analysisResultSet );
+            return getResultSetAsTsvCached( analysisResultSet );
+        }
+    }
+
+    /**
+     * Disk-cache + sendfile path for the TSV representation of a result set.
+     * <p>
+     * Result sets are immutable post-creation; the cached gzipped TSV under
+     * {@code <dataDir>/resultSets/resultSet_<id>.tsv.gz} stays valid forever. The cold-build path materializes the
+     * full result set (50k results + thawed probe + contrasts + factor values + result-to-genes map = hundreds of
+     * batched DB round-trips) once on first request; subsequent requests skip the DB entirely.
+     */
+    private Response getResultSetAsTsvCached( ExpressionAnalysisResultSetArg analysisResultSet ) {
+        Long id = analysisResultSet.getValue();
+        try ( LockedPath p = expressionDataFileService.writeOrLocateDifferentialExpressionResultSetTsvFile( id, false ) ) {
+            return sendfile( p.getPath() )
+                    .type( new MediaType( "text", "tab-separated-values", "UTF-8" ) )
+                    .header( "Content-Disposition", "attachment; filename=\"resultSet_" + id + ".tsv\"" )
+                    .build();
+        } catch ( java.util.NoSuchElementException e ) {
+            throw new NotFoundException( "Could not find ExpressionAnalysisResultSet for " + analysisResultSet + "." );
+        } catch ( RejectedExecutionException e ) {
+            log.warn( "expressionDataFileTaskExecutor queue is full; streaming result-set " + id + " in-band.", e );
+            return Response.ok( getResultSetAsTsv( analysisResultSet ) )
+                    .type( new MediaType( "text", "tab-separated-values", "UTF-8" ) )
+                    .build();
+        } catch ( IOException e ) {
+            log.error( "Failed to materialize cached result-set TSV for " + id + ", falling back to stream.", e );
+            return Response.ok( getResultSetAsTsv( analysisResultSet ) )
+                    .type( new MediaType( "text", "tab-separated-values", "UTF-8" ) )
+                    .build();
         }
     }
 
