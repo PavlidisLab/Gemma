@@ -133,8 +133,12 @@ public class ExternalUrlReachabilityTest {
                     "https://www.ebi.ac.uk/efo/efo.owl", false ),
 
             // --- Gene Ontology -------------------------------------------------------------------
-            new Endpoint( "geneontology.org FTP", "GO",
-                    "ftp://ftp.geneontology.org/pub/go/godatabase/archive/latest-termdb/", true ),
+            // ftp.geneontology.org was retired; the canonical download host moved to HTTP at
+            // current.geneontology.org (latest release) and release.geneontology.org (versioned).
+            new Endpoint( "GO current go.obo", "GO",
+                    "http://current.geneontology.org/ontology/go.obo", false ),
+            new Endpoint( "GO download catalog", "GO",
+                    "https://geneontology.org/docs/download-ontology/", false ),
 
             // --- OBO Foundry ontologies (default.properties + basecode.properties) ---------------
             new Endpoint( "Uberon ontology", "Ontology",
