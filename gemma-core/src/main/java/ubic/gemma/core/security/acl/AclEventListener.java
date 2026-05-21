@@ -146,15 +146,13 @@ public class AclEventListener implements PostInsertEventListener, PostDeleteEven
         // own PostInsertEvent later in this flush can recover the parent OID even when the
         // child has no FK back to this Securable.
         //
-        // Chain semantics: most SecuredChildren (ED/EF/FV) declare ExpressionExperiment
-        // directly as their security owner so they inherit straight from EE, not from
-        // intermediate SecuredChild ancestors. Propagate this entity's OWN parent OID
-        // downward when this entity is itself a SecuredChild — so e.g. ED stashes EF with
-        // EE's OID, matching what locateSecuredParent (the immediate getSecurityOwner)
-        // would return for EF directly. The two-hop case (ExpressionAnalysisResultSet ->
-        // DifferentialExpressionAnalysis -> ExpressionExperiment) is handled by
-        // locateParentAcl, which beats stash lookup and resolves ResultSet's parent
-        // directly via getSecurityOwner() to DEA.
+        // Chain semantics: the gsec/Gemma model treats a SecuredChild's parent as its top-level
+        // security owner (the root non-SecuredChild Securable in the chain), NOT the immediate
+        // SecuredChild ancestor — e.g. for EE → ED → EF → FV, all of ED/EF/FV inherit from EE,
+        // not from each other. BaseAclAdvice.chooseParentForAssociations preserves the
+        // previousParent (top) as it recurses; mirror that by propagating this entity's own
+        // parent OID downward when this entity is itself a SecuredChild, and only using this
+        // entity's own OID as the child-parent when this entity is a top-level Securable.
         ObjectIdentity childParentOid;
         if ( s instanceof SecuredChild ) {
             childParentOid = parentAcl != null ? parentAcl.getObjectIdentity() : null;
@@ -453,10 +451,8 @@ public class AclEventListener implements PostInsertEventListener, PostDeleteEven
                     + cs + " (parent OID " + childParentOid + "): " + ex );
             return;
         }
-        // Recurse with the SAME OID so the whole subtree adopts the propagated security
-        // owner as parent. For the ED/EF/FV chain this naturally hits EE; for the two-hop
-        // DEA -> ResultSet case, ResultSet's own PostInsert hits locateParentAcl first
-        // (which now returns DEA directly), so the stash entry is just a fallback.
+        // Recurse with the SAME top OID so the whole subtree adopts the top-level security
+        // owner as parent — matching the advice's flat chain semantics.
         stashChildren( cs, childParentOid, visited );
     }
 
