@@ -166,17 +166,11 @@ public class ExpressionExperimentSetDaoImpl
 
         StopWatch timer = new StopWatch();
         timer.start();
-        //noinspection unchecked
-        List<Object[]> withCoexp = this.getSessionFactory().getCurrentSession().createQuery(
-                        "select e.id, count(an) from ExpressionExperimentSet e, CoexpressionAnalysis an join e.experiments ea "
-                                + "where an.experimentAnalyzed = ea and e.id in (:ids) group by e.id" )
-                .setParameterList( "ids", optimizeParameterList( idMap.keySet() ) ).list();
 
-        for ( Object[] oa : withCoexp ) {
-            Long id = ( Long ) oa[0];
-            Integer c = ( ( Long ) oa[1] ).intValue();
-            idMap.get( id ).setNumWithCoexpressionAnalysis( c );
-        }
+        // CoexpressionAnalysis subclass was retired; the previous HQL counting
+        // e.id, count(an) from ExpressionExperimentSet e, CoexpressionAnalysis an
+        // returned zero unconditionally and has been removed. numWithCoexpressionAnalysis
+        // on the VO retains its default of 0.
 
         /*
          * We're counting the number of data sets that have analyses, not the number of analyses (since a data set can
