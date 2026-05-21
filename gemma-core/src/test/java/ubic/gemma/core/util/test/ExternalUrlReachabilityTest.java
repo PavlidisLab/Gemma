@@ -74,7 +74,35 @@ public class ExternalUrlReachabilityTest {
     private static final int CONNECT_TIMEOUT_MS = 5000;
     private static final int READ_TIMEOUT_MS = 5000;
 
-    private record Endpoint(String label, String category, String url, boolean ftp) {}
+    /**
+     * Some endpoints have a known-long tail on cold-cache transient latency (Ensembl GRCh37 query
+     * service, NCBI GEO acc.cgi). For those we bump the read budget so the probe doesn't flag
+     * slow-but-alive endpoints as drift. Connect timeout stays at 5s — connect-slow is still a
+     * real signal.
+     */
+    private static final int READ_TIMEOUT_SLOW_MS = 10000;
+
+    /**
+     * NCBI's documented eutils rate cap is 3 req/s without an API key, 10 req/s with one. Probing
+     * every eutils endpoint in parallel via ForkJoinPool blows past that and the server returns
+     * HTTP 429. We serialize the eutils probes and sleep this many ms between them to stay under
+     * the anonymous cap with a safety margin.
+     */
+    private static final long EUTILS_INTERVAL_MS = 400;
+
+    private record Endpoint(String label, String category, String url, boolean ftp) {
+
+        /** True for NCBI eutils endpoints — these must be probed serially under the 3 req/s cap. */
+        boolean isEutils() {
+            return url.contains( "eutils.ncbi.nlm.nih.gov" );
+        }
+
+        /** Use the longer read budget for endpoints with a documented long tail on transient latency. */
+        boolean isSlowRead() {
+            return url.contains( "ensembl.org" )
+                    || url.contains( "/geo/query/acc.cgi" );
+        }
+    }
 
     /**
      * Curated inventory of external endpoints Gemma depends on. Not exhaustive — covers the
@@ -133,8 +161,12 @@ public class ExternalUrlReachabilityTest {
                     "https://www.ebi.ac.uk/efo/efo.owl", false ),
 
             // --- Gene Ontology -------------------------------------------------------------------
-            new Endpoint( "geneontology.org FTP", "GO",
-                    "ftp://ftp.geneontology.org/pub/go/godatabase/archive/latest-termdb/", true ),
+            // ftp.geneontology.org was retired; the canonical download host moved to HTTP at
+            // current.geneontology.org (latest release) and release.geneontology.org (versioned).
+            new Endpoint( "GO current go.obo", "GO",
+                    "http://current.geneontology.org/ontology/go.obo", false ),
+            new Endpoint( "GO download catalog", "GO",
+                    "https://geneontology.org/docs/download-ontology/", false ),
 
             // --- OBO Foundry ontologies (default.properties + basecode.properties) ---------------
             new Endpoint( "Uberon ontology", "Ontology",
@@ -190,16 +222,42 @@ public class ExternalUrlReachabilityTest {
     @Test
     void probeAll() throws IOException {
         Instant when = Instant.now();
-        ForkJoinPool pool = new ForkJoinPool( Math.min( 16, ENDPOINTS.size() ) );
-        List<ProbeResult> results;
+
+        // Split into eutils (must be serialized to stay under NCBI's 3 req/s anonymous cap) and
+        // everything else (safe to probe in parallel).
+        List<Endpoint> eutils = ENDPOINTS.stream()
+                .filter( Endpoint::isEutils )
+                .collect( Collectors.toList() );
+        List<Endpoint> rest = ENDPOINTS.stream()
+                .filter( e -> !e.isEutils() )
+                .collect( Collectors.toList() );
+
+        List<ProbeResult> results = new ArrayList<>( ENDPOINTS.size() );
+
+        // Parallel pass over everything that doesn't rate-limit us.
+        ForkJoinPool pool = new ForkJoinPool( Math.min( 16, Math.max( 1, rest.size() ) ) );
         try {
-            results = pool.submit( () ->
-                    ENDPOINTS.parallelStream()
+            List<ProbeResult> parallelResults = pool.submit( () ->
+                    rest.parallelStream()
                             .map( ExternalUrlReachabilityTest::probe )
                             .collect( Collectors.toList() )
             ).join();
+            results.addAll( parallelResults );
         } finally {
             pool.shutdown();
+        }
+
+        // Serial pass over NCBI eutils with a sleep between calls so we honour the 3 req/s cap.
+        for ( int i = 0; i < eutils.size(); i++ ) {
+            if ( i > 0 ) {
+                try {
+                    Thread.sleep( EUTILS_INTERVAL_MS );
+                } catch ( InterruptedException ie ) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+            }
+            results.add( probe( eutils.get( i ) ) );
         }
 
         writeJsonReport( when, results );
@@ -235,11 +293,12 @@ public class ExternalUrlReachabilityTest {
     }
 
     private static ProbeResult probeHttp( Endpoint e, long start ) throws IOException {
+        int readTimeout = e.isSlowRead() ? READ_TIMEOUT_SLOW_MS : READ_TIMEOUT_MS;
         URL url = URI.create( e.url() ).toURL();
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         try {
             conn.setConnectTimeout( CONNECT_TIMEOUT_MS );
-            conn.setReadTimeout( READ_TIMEOUT_MS );
+            conn.setReadTimeout( readTimeout );
             conn.setRequestMethod( "HEAD" );
             conn.setInstanceFollowRedirects( true );
             conn.setRequestProperty( "User-Agent", "Gemma-URL-Reachability-Probe/1.0" );
@@ -250,7 +309,7 @@ public class ExternalUrlReachabilityTest {
                 HttpURLConnection get = (HttpURLConnection) url.openConnection();
                 try {
                     get.setConnectTimeout( CONNECT_TIMEOUT_MS );
-                    get.setReadTimeout( READ_TIMEOUT_MS );
+                    get.setReadTimeout( readTimeout );
                     get.setRequestMethod( "GET" );
                     get.setInstanceFollowRedirects( true );
                     get.setRequestProperty( "User-Agent", "Gemma-URL-Reachability-Probe/1.0" );

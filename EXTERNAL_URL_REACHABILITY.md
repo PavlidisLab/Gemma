@@ -21,7 +21,7 @@ timeout and a 5s read timeout:
 | GEO         | www.ncbi.nlm.nih.gov/geo/query/acc.cgi + ftp.ncbi.nlm.nih.gov/geo   |
 | SRA         | www.ncbi.nlm.nih.gov/sra term search                                |
 | EBI-FTP     | ftp.ebi.ac.uk pub/databases (GOA HUMAN, ArrayExpress experiments)   |
-| GO          | ftp.geneontology.org godatabase archive                             |
+| GO          | current.geneontology.org/ontology/go.obo + download catalog         |
 | Ontology    | purl.obolibrary.org/obo/{uberon, cl, go, doid, mondo, ...}, EBI EFO |
 | BioMart     | grch37.ensembl.org/biomart/martservice                              |
 | CELLxGENE   | api.cellxgene.cziscience.com dp/v1/collections + datasets indexes   |
