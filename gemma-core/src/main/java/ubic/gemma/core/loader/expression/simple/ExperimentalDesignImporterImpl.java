@@ -37,6 +37,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalDesignService;
+import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -64,6 +65,8 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
     @Autowired
     private ExperimentalDesignService experimentalDesignService;
     @Autowired
+    private ExperimentalFactorService experimentalFactorService;
+    @Autowired
     private OntologyService ontologyService;
 
     @Override
@@ -75,7 +78,20 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
         BufferedReader r = new BufferedReader( new InputStreamReader( is ) );
         String line;
 
-        ExperimentalDesign experimentalDesign = experiment.getExperimentalDesign();
+        // Hibernate 6: re-resolve the design through the current session so its
+        // experimentalFactors PersistentSet carries a valid storedSnapshot. If we
+        // mutated the detached instance from `experiment.getExperimentalDesign()`
+        // (no snapshot from the prior session) and then merged it, the cascade into
+        // newly-added transient ExperimentalFactor/FactorValue/Statement triples
+        // triggers NPE inside DefaultMergeEventListener$CollectionVisitor →
+        // PersistentSet.equalsSnapshot because the wrap-on-cascade path leaves
+        // child collections with a null snapshot. Re-resolving up front gives the
+        // merge cascade a properly-snapshotted parent to add into.
+        ExperimentalDesign detached = experiment.getExperimentalDesign();
+        ExperimentalDesign experimentalDesign = experimentalDesignService.loadWithExperimentalFactors( detached.getId() );
+        if ( experimentalDesign == null ) {
+            throw new IllegalStateException( "ExperimentalDesign id=" + detached.getId() + " no longer exists in the session." );
+        }
 
         if ( !experimentalDesign.getExperimentalFactors().isEmpty() ) {
             ExperimentalDesignImporterImpl.log
@@ -112,14 +128,31 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
         this.validateFactorFileContent( experimentalFactorLines.size(), factorValueLines );
         this.validateBioMaterialFileContent( experimentBioMaterials, factorValueLines );
 
-        // build up the composite: create experimental factor then add the experimental value
+        // build up the composite: create experimental factor (with its factor values + statements
+        // wired up in memory) then explicitly persist it via experimentalFactorService.create()
+        // BEFORE wiring it into the design's collection. Going through cascade-from-design.update()
+        // tripped HB6's PersistentSet.equalsSnapshot NPE: the cascade wrapped the new factor's
+        // fresh HashSet<FactorValue> (and the FactorValue's fresh HashSet<Statement>) to a
+        // PersistentSet without setting a snapshot, then process-property-values on the saved
+        // entity dereferenced the null snapshot. Persist factor-first (the canonical pattern, see
+        // ExpressionExperimentWriteServiceImpl.addFactor) so the merge of the design only walks
+        // already-persistent children.
         this.addExperimentalFactorsToExperimentalDesign( experimentalDesign, experimentalFactorLines, headerFields,
                 factorValueLines );
 
         assert !experimentalDesign.getExperimentalFactors().isEmpty();
-        assert !experiment.getExperimentalDesign().getExperimentalFactors().isEmpty();
 
-        experimentalDesignService.update( experimentalDesign );
+        // Mirror the persisted factors into the caller's detached EE → design view so test
+        // assertions and any downstream code that reuses the original `experiment` reference
+        // see the imported factors without a fresh reload. The detached collection is not
+        // session-tracked, so these add()s are pure in-memory bookkeeping (no flush, no cascade).
+        if ( detached != experimentalDesign && detached.getExperimentalFactors() != null ) {
+            for ( ExperimentalFactor ef : experimentalDesign.getExperimentalFactors() ) {
+                if ( ef.getId() != null && !detached.getExperimentalFactors().contains( ef ) ) {
+                    detached.getExperimentalFactors().add( ef );
+                }
+            }
+        }
 
         Collection<BioMaterial> bioMaterialsWithFactorValues = this
                 .addFactorValuesToBioMaterialsInExpressionExperiment( experimentBioMaterials, experimentalDesign,
@@ -190,8 +223,12 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
 
             if ( !this.checkForDuplicateExperimentalFactorOnExperimentalDesign( experimentalDesign,
                     experimentalFactorFromFile ) ) {
-                experimentalDesign.getExperimentalFactors().add( experimentalFactorFromFile );
-                ExperimentalDesignImporterImpl.log.info( "Added " + experimentalFactorFromFile );
+                // Persist the new factor (with its cascaded factorValues + statements) BEFORE
+                // attaching it to the design's PersistentSet so the design's flush only sees
+                // already-persistent children — see Hibernate 6 note in importDesign().
+                ExperimentalFactor persistedFactor = experimentalFactorService.create( experimentalFactorFromFile );
+                experimentalDesign.getExperimentalFactors().add( persistedFactor );
+                ExperimentalDesignImporterImpl.log.info( "Added " + persistedFactor );
             }
         }
 
