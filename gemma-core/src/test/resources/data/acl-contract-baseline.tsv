@@ -72,7 +72,7 @@ GeneDaoImpl.getCompositeSequenceCountById [L247]	ANONYMOUS	scalar:0
 GeneDaoImpl.getCompositeSequenceCountById [L247]	AUTHENTICATED_USER	scalar:0
 GeneDaoImpl.getCompositeSequenceCountById [L247]	ADMIN	scalar:0
 ExpressionExperimentDaoImpl.loadAllIdentifiers [L240]	ANONYMOUS	1|9101
-ExpressionExperimentDaoImpl.loadAllIdentifiers [L240]	AUTHENTICATED_USER	8|9101,9101,9101,9102,9102,9103,9103,9103
+ExpressionExperimentDaoImpl.loadAllIdentifiers [L240]	AUTHENTICATED_USER	3|9101,9102,9103
 ExpressionExperimentDaoImpl.loadAllIdentifiers [L240]	ADMIN	4|9101,9102,9103,9104
 ExpressionExperimentDaoImpl.getCategoriesUsageFrequency (native ACL join) [L916]	ANONYMOUS	unwired
 ExpressionExperimentDaoImpl.getCategoriesUsageFrequency (native ACL join) [L916]	AUTHENTICATED_USER	unwired
