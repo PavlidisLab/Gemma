@@ -413,6 +413,29 @@ public interface ExpressionDataFileService {
     LockedPath writeOrLocateJSONRawExpressionDataFile( ExpressionExperiment ee, QuantitationType type, boolean forceWrite ) throws IOException;
 
     /**
+     * Locate or create a cached gzipped TSV for a single differential-expression result set.
+     * <p>
+     * Result sets are immutable post-creation, so the on-disk cache is effectively permanent.
+     * <p>
+     * On a cache hit, returns the existing path with a shared lock (no DB hit). On a cache miss, materializes
+     * the result set + contrasts + factor values + result-to-genes map via
+     * {@code ExpressionAnalysisResultSetService}, writes the TSV via {@code ExpressionAnalysisResultSetFileService},
+     * gzips it under {@code <dataDir>/resultSets/resultSet_<id>.tsv.gz}, and returns the locked path.
+     *
+     * @param resultSetId  the result-set ID to materialize
+     * @param forceWrite   ignore any existing cached file
+     * @return a locked path to the TSV file, which must be released after use
+     * @throws java.util.NoSuchElementException if the result set cannot be found
+     */
+    LockedPath writeOrLocateDifferentialExpressionResultSetTsvFile( Long resultSetId, boolean forceWrite ) throws IOException;
+
+    /**
+     * @throws RejectedExecutionException if the queue for creating data files is full
+     * @see #writeOrLocateDifferentialExpressionResultSetTsvFile(Long, boolean)
+     */
+    Future<Path> writeOrLocateDifferentialExpressionResultSetTsvFileAsync( Long resultSetId, boolean forceWrite ) throws RejectedExecutionException;
+
+    /**
      * Locate or create the differential expression archive file(s) for a given experiment.
      *
      * @param ee         the experiment

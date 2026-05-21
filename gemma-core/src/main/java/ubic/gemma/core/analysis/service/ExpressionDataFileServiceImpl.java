@@ -38,15 +38,18 @@ import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.locking.FileLockManager;
 import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.core.visualization.cellbrowser.CellBrowserTabularMatrixWriter;
+import ubic.gemma.model.analysis.expression.diff.Baseline;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentMetaFileType;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -110,6 +113,10 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     private FileLockManager fileLockManager;
     @Autowired
     private AsyncTaskExecutor taskExecutor;
+    @Autowired
+    private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
+    @Autowired
+    private ExpressionAnalysisResultSetFileService expressionAnalysisResultSetFileService;
 
     @Value("${gemma.appdata.home}/metadata")
     private Path metadataDir;
@@ -1030,6 +1037,43 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
                 throw e;
             }
         }
+    }
+
+    @Override
+    public LockedPath writeOrLocateDifferentialExpressionResultSetTsvFile( Long resultSetId, boolean forceWrite ) throws IOException {
+        // Cache uncompressed so the endpoint's @GZIP encoder can re-compress on the fly, matching the JSON
+        // representation's content-encoding contract.
+        String filename = "resultSets/resultSet_" + resultSetId + ".tsv";
+        try ( LockedPath f = this.getOutputFile( filename, false ) ) {
+            // Result sets are immutable post-creation, so any existing cached file is fresh by definition.
+            if ( !forceWrite && Files.exists( f.getPath() ) ) {
+                log.info( f + " exists, not regenerating" );
+                return f.steal();
+            }
+            try ( LockedPath lockedPath = f.toExclusive(); Writer writer = new OutputStreamWriter( openFile( lockedPath.getPath() ), StandardCharsets.UTF_8 ) ) {
+                log.info( "Creating result-set TSV cache: " + lockedPath.getPath() );
+                ExpressionAnalysisResultSet ears = expressionAnalysisResultSetService.loadWithResultsAndContrasts( resultSetId );
+                if ( ears == null ) {
+                    throw new NoSuchElementException( "Could not find ExpressionAnalysisResultSet with ID " + resultSetId + "." );
+                }
+                Map<Long, Set<Gene>> resultId2Genes = expressionAnalysisResultSetService.loadResultIdToGenesMap( ears );
+                Baseline baseline = expressionAnalysisResultSetService.getBaseline( ears );
+                expressionAnalysisResultSetFileService.writeTsv( ears, baseline, resultId2Genes, writer );
+                return lockedPath.toShared();
+            } catch ( Exception e ) {
+                Files.deleteIfExists( f.getPath() );
+                throw e;
+            }
+        }
+    }
+
+    @Override
+    public Future<Path> writeOrLocateDifferentialExpressionResultSetTsvFileAsync( Long resultSetId, boolean forceWrite ) {
+        return expressionDataFileTaskExecutor.submit( () -> {
+            try ( LockedPath lockedPath = writeOrLocateDifferentialExpressionResultSetTsvFile( resultSetId, forceWrite ) ) {
+                return lockedPath.getPath();
+            }
+        } );
     }
 
     @Override
