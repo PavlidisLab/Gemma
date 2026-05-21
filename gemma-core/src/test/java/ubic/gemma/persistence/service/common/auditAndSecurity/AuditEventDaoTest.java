@@ -124,6 +124,73 @@ public class AuditEventDaoTest extends BaseDatabaseTest5 {
     }
 
     @Test
+    public void testGetLastEventsWholeCorpusSqlSideMax() {
+        // Regression for the SQL-side MAX(date) rewrite of getLastEvents(Class, Class).
+        // Fixture: 5 trails x 3 events each with deliberately interleaved dates, plus a
+        // 6th trail with two events on the same DATETIME(3) instant (tie-breaker case:
+        // MAX(id) wins on equal date).
+        long t0 = 1_700_000_000_000L; // arbitrary base epoch-ms
+
+        // 5 trails: latest event has the largest date within each trail.
+        ExpressionExperiment[] eeFive = new ExpressionExperiment[ 5 ];
+        AuditEvent[] expectedLatest = new AuditEvent[ 5 ];
+        for ( int i = 0; i < 5; i++ ) {
+            ExpressionExperiment ee = new ExpressionExperiment();
+            // Interleaved dates per trail: e.g. trail i gets events at (base+10i+0,
+            // base+10i+5, base+10i+2) and the +5 one is the latest. By shuffling the
+            // insertion order we guarantee the SQL aggregate (not insertion-order) is
+            // doing the selection.
+            AuditEvent older = AuditEvent.Factory.newInstance( new Date( t0 + 10L * i + 0 ),
+                    AuditAction.U, "older", null, null, new BatchInformationFetchingEvent() );
+            AuditEvent latest = AuditEvent.Factory.newInstance( new Date( t0 + 10L * i + 5 ),
+                    AuditAction.U, "latest", null, null, new BatchInformationFetchingEvent() );
+            AuditEvent middle = AuditEvent.Factory.newInstance( new Date( t0 + 10L * i + 2 ),
+                    AuditAction.U, "middle", null, null, new BatchInformationFetchingEvent() );
+            ee.getAuditTrail().getEvents().add( older );
+            ee.getAuditTrail().getEvents().add( latest );
+            ee.getAuditTrail().getEvents().add( middle );
+            sessionFactory.getCurrentSession().persist( ee );
+            eeFive[ i ] = ee;
+            expectedLatest[ i ] = latest;
+        }
+
+        // 6th trail: two events at the exact same timestamp. MAX(id) should win.
+        ExpressionExperiment eeTied = new ExpressionExperiment();
+        Date tieDate = new Date( t0 + 99L );
+        AuditEvent tieA = AuditEvent.Factory.newInstance( tieDate, AuditAction.U, "tieA", null, null, new BatchInformationFetchingEvent() );
+        AuditEvent tieB = AuditEvent.Factory.newInstance( tieDate, AuditAction.U, "tieB", null, null, new BatchInformationFetchingEvent() );
+        eeTied.getAuditTrail().getEvents().add( tieA );
+        eeTied.getAuditTrail().getEvents().add( tieB );
+        sessionFactory.getCurrentSession().persist( eeTied );
+
+        sessionFactory.getCurrentSession().flush();
+        sessionFactory.getCurrentSession().clear();
+
+        Map<ExpressionExperiment, AuditEvent> result = auditEventDao.getLastEvents(
+                ExpressionExperiment.class, ExpressionExperimentAnalysisEvent.class );
+
+        // Exactly 6 trails should appear, one entry each (the contract: at most one event per
+        // auditable). NOTE: other tests in this class may run in the same in-memory DB - we
+        // assert presence of our trails and that each returned event is the expected latest,
+        // not exact size, to be robust to setUp ordering.
+        for ( int i = 0; i < 5; i++ ) {
+            AuditEvent actual = result.get( eeFive[ i ] );
+            assertNotNull( actual, "trail " + i + " should have a last event" );
+            assertEquals( expectedLatest[ i ].getId(), actual.getId(),
+                    "trail " + i + " latest event mismatch (expected the date-max event)" );
+            assertTrue( Hibernate.isInitialized( actual.getEventType() ),
+                    "eventType should be fetched eagerly" );
+        }
+
+        // Tie case: both events share the same DATETIME(3). The contract is "MAX(id) wins".
+        AuditEvent actualTie = result.get( eeTied );
+        assertNotNull( actualTie, "tied-date trail should have a last event" );
+        long winningId = Math.max( tieA.getId(), tieB.getId() );
+        assertEquals( winningId, actualTie.getId().longValue(),
+                "on equal-date tie, the event with the larger id should win" );
+    }
+
+    @Test
     public void testGetNewSinceDate() {
         Date before = new Date();
         ExpressionExperiment auditable = new ExpressionExperiment();

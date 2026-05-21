@@ -315,30 +315,76 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
         }
 
         String entityName = ubic.gemma.persistence.hibernate.HibernateUtils.getEntityName( getSessionFactory(), auditableClass );
+
+        // Whole-corpus path (e.g. ArrayDesignReportServiceImpl, ExpressionExperimentReportServiceImpl
+        // dashboards, scheduled stats). The legacy form pulled every matching event into the JVM
+        // and reduced to per-trail max in Java — 1.5 M event rows transferred for ~25k EEs in the
+        // worst case (PERF_PROBE_REPORT.md probe 3b, 8.7 s wall). The rewrite issues a SQL-side
+        // aggregate that returns exactly one (auditable.id, winning event.id) tuple per trail —
+        // the date-max followed by id-max-on-tied-date pair — then a second query loads the
+        // winning events with eventType joined. Tie-breaker on equal timestamps: MAX(id) wins (a
+        // bulk-insert can give two events on the same trail the same DATETIME(3) and the legacy
+        // Java-side `order by date desc, id desc` already picked the larger id; this preserves
+        // that semantics).
+        //
+        // Step 1: per-trail aggregate. Returns (auditable.id, winning event.id) — one row per
+        // matching trail. Uses a correlated MAX(date) subquery and breaks ties by MAX(id).
         //language=HQL
-        final String queryString = "select a.id, ae from " + entityName + " a  "
+        final String idsQuery = "select a.id, max(ae.id) from " + entityName + " a "
                 + "join a.auditTrail trail "
                 + "join trail.events ae "
-                + "join fetch ae.eventType et " // fetching here prevents a separate select query
+                + "join ae.eventType et "
                 + "where type(et) in :classes "
-                // annoyingly, Hibernate does not select the latest event when grouping by trail, so we have to fetch
-                // them all
-                + "group by trail, ae "
-                // latest by date or ID to break ties
-                + "order by ae.date desc, ae.id desc";
+                + "and ae.date = ( "
+                + "  select max(ae2.date) from " + entityName + " a2 "
+                + "  join a2.auditTrail trail2 "
+                + "  join trail2.events ae2 "
+                + "  join ae2.eventType et2 "
+                + "  where a2 = a and type(et2) in :classes "
+                + ") "
+                + "group by a.id";
 
-        Query queryObject = this.getSessionFactory().getCurrentSession()
-                .createQuery( queryString )
-                .setParameterList( "classes", classes ); // optimizing this one is unnecessary
+        @SuppressWarnings("unchecked")
+        List<Object[]> idPairs = this.getSessionFactory().getCurrentSession()
+                .createQuery( idsQuery )
+                .setParameterList( "classes", classes )
+                .list();
 
-        List<?> qr = queryObject.list();
-        for ( Object o : qr ) {
-            Object[] ar = ( Object[] ) o;
-            Long t = ( Long ) ar[0];
-            AuditEvent e = ( AuditEvent ) ar[1];
-            // only retain the first one which is the latest (by date or ID)
+        if ( idPairs.isEmpty() ) {
+            return result;
+        }
+
+        // Step 2: hydrate the winning events with eventType joined. One row per auditable.
+        List<Long> eventIds = new ArrayList<>( idPairs.size() );
+        for ( Object[] row : idPairs ) {
+            eventIds.add( ( Long ) row[1] );
+        }
+
+        //language=HQL
+        final String eventsQuery = "select ae from AuditEvent ae "
+                + "join fetch ae.eventType "
+                + "where ae.id in :ids";
+
+        @SuppressWarnings("unchecked")
+        List<AuditEvent> events = this.getSessionFactory().getCurrentSession()
+                .createQuery( eventsQuery )
+                .setParameterList( "ids", optimizeParameterList( eventIds ) )
+                .list();
+
+        Map<Long, AuditEvent> eventById = new HashMap<>( events.size() );
+        for ( AuditEvent ae : events ) {
+            eventById.put( ae.getId(), ae );
+        }
+
+        for ( Object[] row : idPairs ) {
+            Long auditableId = ( Long ) row[0];
+            Long winningEventId = ( Long ) row[1];
+            AuditEvent ae = eventById.get( winningEventId );
+            if ( ae == null ) {
+                continue; // shouldn't happen; defensive
+            }
             //noinspection unchecked
-            result.putIfAbsent( ( T ) getSessionFactory().getCurrentSession().getReference( auditableClass, t ), e );
+            result.put( ( T ) getSessionFactory().getCurrentSession().getReference( auditableClass, auditableId ), ae );
         }
 
         timer.stop();
