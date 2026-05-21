@@ -58,6 +58,7 @@ import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialDao;
 import ubic.gemma.persistence.util.Cursor;
 import ubic.gemma.persistence.util.CursorPage;
 import ubic.gemma.persistence.util.Filters;
@@ -130,6 +131,9 @@ public class ExpressionExperimentReadServiceImpl implements ExpressionExperiment
 
     @Autowired
     private FactorValueDao factorValueDao;
+
+    @Autowired
+    private BioMaterialDao bioMaterialDao;
 
     @Autowired
     public ExpressionExperimentReadServiceImpl( ExpressionExperimentDao expressionExperimentDao ) {
@@ -597,7 +601,14 @@ public class ExpressionExperimentReadServiceImpl implements ExpressionExperiment
     @Transactional(readOnly = true)
     public ExpressionExperiment thawBioAssays( final ExpressionExperiment expressionExperiment ) {
         ExpressionExperiment result = ensureInSession( expressionExperiment );
-        result.getBioAssays().forEach( Thaws::thawBioAssay );
+        // Per-BA: warm the (eager) array-design proxies — cheap, bounded by assay count, and
+        // the only platform-side init the BioAssayValueObject ctor depends on.
+        result.getBioAssays().forEach( Thaws::thawBioAssayPlatforms );
+        // Batched: warm every BioMaterial in the source-chain of every assay's sampleUsed,
+        // plus sourceTaxon / treatments / factorValues.experimentalFactor — in a small
+        // constant number of round-trips rather than O(N&times;chainDepth) Hibernate.initialize
+        // hits. PERF_PROBE_REPORT_ROUND2 finding #2.
+        bioMaterialDao.thawBioMaterialsForBioAssays( result.getBioAssays() );
         return result;
     }
 
