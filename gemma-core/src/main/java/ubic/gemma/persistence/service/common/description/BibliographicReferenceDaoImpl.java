@@ -157,24 +157,24 @@ public class BibliographicReferenceDaoImpl
     public Collection<BibliographicReference> thaw( Collection<BibliographicReference> bibliographicReferences ) {
         if ( bibliographicReferences.isEmpty() )
             return bibliographicReferences;
-        //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
                         "select b from BibliographicReference b left join fetch b.pubAccession left join fetch b.chemicals "
-                                + "left join fetch b.meshTerms left join fetch b.keywords where b in (:bs) " )
+                                + "left join fetch b.meshTerms left join fetch b.keywords where b in (:bs) ",
+                        BibliographicReference.class )
                 .setParameterList( "bs", optimizeIdentifiableParameterList( bibliographicReferences ) ).list();
     }
 
     @Override
     public Collection<Long> listAll() {
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery( "select id from BibliographicReference" )
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select id from BibliographicReference", Long.class )
                 .list();
     }
 
     @Override
     public List<BibliographicReference> browse( int start, int limit ) {
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery( "from BibliographicReference" )
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "from BibliographicReference", BibliographicReference.class )
                 .setMaxResults( limit ).setFirstResult( start ).list();
     }
 
@@ -188,9 +188,9 @@ public class BibliographicReferenceDaoImpl
             throw new IllegalArgumentException( "Unsupported BibliographicReference sort field: " + orderField
                     + " (allowed: " + BROWSE_SORTABLE_FIELDS + ")" );
         }
-        //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
-                .createQuery( "from BibliographicReference order by " + orderField + ( descending ? " desc" : " asc" ) )
+                .createQuery( "from BibliographicReference order by " + orderField + ( descending ? " desc" : " asc" ),
+                        BibliographicReference.class )
                 .setMaxResults( limit ).setFirstResult( start ).list();
     }
 
