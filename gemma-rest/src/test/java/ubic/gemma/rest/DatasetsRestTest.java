@@ -270,6 +270,48 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
     }
 
     @Test
+    public void testGetDatasetCurationDetails() {
+        ExpressionExperiment ee = ees.get( 0 );
+        assertThat( target( "/datasets/" + ee.getId() + "/curationDetails" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .entity()
+                .hasFieldOrProperty( "data" );
+    }
+
+    @Test
+    public void testGetDatasetCurationDetailsWithUnknownDatasetIs404() {
+        assertThat( target( "/datasets/9999999/curationDetails" ).request().get() )
+                .hasStatus( Response.Status.NOT_FOUND );
+    }
+
+    @Test
+    public void testUpdateDatasetCurationDetailsSetsTroubled() {
+        ExpressionExperiment ee = ees.get( 0 );
+        // Body: {"troubled": true, "note": "integration-test"}
+        String body = "{\"troubled\":true,\"note\":\"integration-test\"}";
+        assertThat( target( "/datasets/" + ee.getId() + "/curationDetails" ).request()
+                .put( javax.ws.rs.client.Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.troubled", true );
+
+        // Re-fetching reflects persisted state.
+        assertThat( target( "/datasets/" + ee.getId() + "/curationDetails" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.troubled", true );
+    }
+
+    @Test
+    public void testUpdateDatasetCurationDetailsWithEmptyBodyIs400() {
+        ExpressionExperiment ee = ees.get( 0 );
+        assertThat( target( "/datasets/" + ee.getId() + "/curationDetails" ).request()
+                .put( javax.ws.rs.client.Entity.json( "null" ) ) )
+                .hasStatus( Response.Status.BAD_REQUEST );
+    }
+
+    @Test
     public void testGetDatasetRawExpression() {
         ExpressionExperiment ee = ees.get( 0 );
         assertThat( target( "/datasets/" + ee.getId() + "/data/raw" ).request().get() )

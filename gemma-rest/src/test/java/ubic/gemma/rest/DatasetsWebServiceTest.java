@@ -311,6 +311,9 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     @Autowired
     private AuditEventService auditEventService;
 
+    @Autowired
+    private AuditTrailService auditTrailService;
+
     private ExpressionExperiment ee;
 
     @Before
@@ -327,7 +330,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
 
     @After
     public void resetMocks() {
-        reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService, taxonArgService, geneArgService, searchService, auditEventService );
+        reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService, taxonArgService, geneArgService, searchService, auditEventService, auditTrailService );
     }
 
     @Test
@@ -1012,6 +1015,211 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         assertThat( target( "/datasets/999/auditEvents" ).request().get() )
                 .hasStatus( Response.Status.NOT_FOUND );
         verify( auditEventService, never() ).getEvents( any() );
+    }
+
+    @Test
+    @WithMockUser
+    public void testGetDatasetCurationDetails() {
+        ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails cd =
+                new ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails();
+        cd.setId( 7L );
+        cd.setTroubled( true );
+        cd.setNeedsAttention( false );
+        cd.setCurationNote( "look here" );
+        ee.setCurationDetails( cd );
+
+        assertThat( target( "/datasets/1/curationDetails" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.troubled", true )
+                .hasFieldOrPropertyWithValue( "data.needsAttention", false );
+
+        verify( expressionExperimentService ).load( 1L );
+        verifyNoInteractions( auditTrailService );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testGetDatasetCurationDetailsExposesCurationNoteForAdmin() {
+        ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails cd =
+                new ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails();
+        cd.setCurationNote( "admin only" );
+        ee.setCurationDetails( cd );
+
+        assertThat( target( "/datasets/1/curationDetails" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.curationNote", "admin only" );
+    }
+
+    @Test
+    @WithMockUser
+    public void testGetDatasetCurationDetailsWithUnknownDatasetIs404() {
+        assertThat( target( "/datasets/999/curationDetails" ).request().get() )
+                .hasStatus( Response.Status.NOT_FOUND );
+        verifyNoInteractions( auditTrailService );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testUpdateDatasetCurationDetailsSetsTroubled() {
+        ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails cd =
+                new ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails();
+        cd.setTroubled( false );
+        ee.setCurationDetails( cd );
+
+        DatasetsWebService.CurationDetailsUpdateRequest body = new DatasetsWebService.CurationDetailsUpdateRequest();
+        body.setTroubled( true );
+        body.setNote( "data quality issue" );
+
+        assertThat( target( "/datasets/1/curationDetails" ).request().put( javax.ws.rs.client.Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+
+        verify( auditTrailService ).addUpdateEvent( ee,
+                ubic.gemma.model.common.auditAndSecurity.eventType.TroubledStatusFlagEvent.class,
+                "data quality issue" );
+        verifyNoMoreInteractions( auditTrailService );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testUpdateDatasetCurationDetailsClearsTroubled() {
+        ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails cd =
+                new ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails();
+        cd.setTroubled( true );
+        ee.setCurationDetails( cd );
+
+        DatasetsWebService.CurationDetailsUpdateRequest body = new DatasetsWebService.CurationDetailsUpdateRequest();
+        body.setTroubled( false );
+
+        assertThat( target( "/datasets/1/curationDetails" ).request().put( javax.ws.rs.client.Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+
+        verify( auditTrailService ).addUpdateEvent( ee,
+                ubic.gemma.model.common.auditAndSecurity.eventType.NotTroubledStatusFlagEvent.class,
+                null );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testUpdateDatasetCurationDetailsSkipsNoOpTroubled() {
+        ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails cd =
+                new ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails();
+        cd.setTroubled( true );
+        ee.setCurationDetails( cd );
+
+        DatasetsWebService.CurationDetailsUpdateRequest body = new DatasetsWebService.CurationDetailsUpdateRequest();
+        body.setTroubled( true );
+
+        assertThat( target( "/datasets/1/curationDetails" ).request().put( javax.ws.rs.client.Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+
+        verify( auditTrailService, never() ).addUpdateEvent( any(), any( Class.class ), any() );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testUpdateDatasetCurationDetailsSetsNeedsAttention() {
+        ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails cd =
+                new ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails();
+        cd.setNeedsAttention( false );
+        ee.setCurationDetails( cd );
+
+        DatasetsWebService.CurationDetailsUpdateRequest body = new DatasetsWebService.CurationDetailsUpdateRequest();
+        body.setNeedsAttention( true );
+        body.setNote( "needs review" );
+
+        assertThat( target( "/datasets/1/curationDetails" ).request().put( javax.ws.rs.client.Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+
+        verify( auditTrailService ).addUpdateEvent( ee,
+                ubic.gemma.model.common.auditAndSecurity.eventType.NeedsAttentionEvent.class,
+                "needs review" );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testUpdateDatasetCurationDetailsClearsNeedsAttention() {
+        ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails cd =
+                new ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails();
+        cd.setNeedsAttention( true );
+        ee.setCurationDetails( cd );
+
+        DatasetsWebService.CurationDetailsUpdateRequest body = new DatasetsWebService.CurationDetailsUpdateRequest();
+        body.setNeedsAttention( false );
+
+        assertThat( target( "/datasets/1/curationDetails" ).request().put( javax.ws.rs.client.Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+
+        verify( auditTrailService ).addUpdateEvent( ee,
+                ubic.gemma.model.common.auditAndSecurity.eventType.DoesNotNeedAttentionEvent.class,
+                null );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testUpdateDatasetCurationDetailsUpdatesCurationNote() {
+        ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails cd =
+                new ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails();
+        ee.setCurationDetails( cd );
+
+        DatasetsWebService.CurationDetailsUpdateRequest body = new DatasetsWebService.CurationDetailsUpdateRequest();
+        body.setCurationNote( "updated note" );
+
+        assertThat( target( "/datasets/1/curationDetails" ).request().put( javax.ws.rs.client.Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+
+        verify( auditTrailService ).addUpdateEvent( ee,
+                ubic.gemma.model.common.auditAndSecurity.eventType.CurationNoteUpdateEvent.class,
+                "updated note" );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testUpdateDatasetCurationDetailsAppliesMultipleChanges() {
+        ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails cd =
+                new ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails();
+        cd.setTroubled( false );
+        cd.setNeedsAttention( false );
+        ee.setCurationDetails( cd );
+
+        DatasetsWebService.CurationDetailsUpdateRequest body = new DatasetsWebService.CurationDetailsUpdateRequest();
+        body.setTroubled( true );
+        body.setNeedsAttention( true );
+        body.setCurationNote( "flagged" );
+        body.setNote( "bad batch" );
+
+        assertThat( target( "/datasets/1/curationDetails" ).request().put( javax.ws.rs.client.Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+
+        verify( auditTrailService ).addUpdateEvent( ee,
+                ubic.gemma.model.common.auditAndSecurity.eventType.TroubledStatusFlagEvent.class, "bad batch" );
+        verify( auditTrailService ).addUpdateEvent( ee,
+                ubic.gemma.model.common.auditAndSecurity.eventType.NeedsAttentionEvent.class, "bad batch" );
+        verify( auditTrailService ).addUpdateEvent( ee,
+                ubic.gemma.model.common.auditAndSecurity.eventType.CurationNoteUpdateEvent.class, "flagged" );
+        verifyNoMoreInteractions( auditTrailService );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testUpdateDatasetCurationDetailsWithEmptyBodyIs400() {
+        // PUT requires a non-null entity at the Jersey client layer; send the JSON literal "null" so the
+        // resource method receives a null body and triggers the 400 path.
+        assertThat( target( "/datasets/1/curationDetails" ).request().put( javax.ws.rs.client.Entity.json( "null" ) ) )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        verifyNoInteractions( auditTrailService );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testUpdateDatasetCurationDetailsWithUnknownDatasetIs404() {
+        DatasetsWebService.CurationDetailsUpdateRequest body = new DatasetsWebService.CurationDetailsUpdateRequest();
+        body.setTroubled( true );
+        assertThat( target( "/datasets/999/curationDetails" ).request().put( javax.ws.rs.client.Entity.json( body ) ) )
+                .hasStatus( Response.Status.NOT_FOUND );
+        verifyNoInteractions( auditTrailService );
     }
 
     @Test
