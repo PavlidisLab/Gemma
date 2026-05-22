@@ -12,6 +12,7 @@ package ubic.gemma.rest;
 
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,6 +20,8 @@ import org.springframework.stereotype.Service;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 import ubic.gemma.model.common.auditAndSecurity.eventType.CurationNoteUpdateEvent;
+import ubic.gemma.model.expression.experiment.AgentCurationKind;
+import ubic.gemma.model.expression.experiment.AgentCurationSummaryValueObject;
 import ubic.gemma.model.expression.experiment.AgentProposal;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
@@ -35,6 +38,7 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
@@ -180,16 +184,26 @@ public class CurationWebService {
         @JsonProperty("payload_json")
         @Nullable
         public String payloadJson;
+        /**
+         * Discriminator: {@code "proposal"} (default if absent) or {@code "audit"}.
+         * Case-insensitive. Unknown values cause 400.
+         */
+        @JsonProperty("kind")
+        @Nullable
+        public String kind;
     }
 
     /**
-     * Response of {@link #submitCurationProposal} and per-row of {@link #listCurationProposals}.
+     * Response of {@link #submitCurationProposal} and per-row of {@link #listCurationProposals}
+     * when {@code shape=full} (the default).
      */
     public static class CurationProposalResponse {
         @JsonProperty("proposal_id")
         public Long proposalId;
         @JsonProperty("dataset_id")
         public Long datasetId;
+        @JsonProperty("kind")
+        public String kind;
         @JsonProperty("run_id")
         public String runId;
         @JsonProperty("agent_version")
@@ -204,6 +218,34 @@ public class CurationWebService {
         @JsonProperty("payload_json")
         @Nullable
         public String payloadJson;
+    }
+
+    /**
+     * Per-row response of {@link #listCurationProposals} under
+     * {@code ?shape=meta}. Mirrors {@link AgentCurationSummaryValueObject}
+     * with snake_case wire names + {@code dataset_id} aliasing.
+     */
+    public static class CurationProposalSummaryResponse {
+        @JsonProperty("proposal_id")
+        public Long proposalId;
+        @JsonProperty("dataset_id")
+        public Long datasetId;
+        @JsonProperty("kind")
+        public String kind;
+        @JsonProperty("run_id")
+        public String runId;
+        @JsonProperty("agent_version")
+        @Nullable
+        public String agentVersion;
+        @JsonProperty("model")
+        @Nullable
+        public String model;
+        @JsonProperty("ran_at")
+        @Nullable
+        public Date ranAt;
+        @JsonProperty("payload_size")
+        @Nullable
+        public Long payloadSize;
     }
 
     /**
@@ -226,8 +268,9 @@ public class CurationWebService {
         if ( body == null || body.runId == null || body.runId.trim().isEmpty() ) {
             throw new BadRequestException( "Request body must include a non-blank `run_id`." );
         }
+        AgentCurationKind kind = parseKindOrThrow( body.kind, AgentCurationKind.PROPOSAL );
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
-        AgentProposalService.AttachedProposal attached = agentProposalService.attach( ee,
+        AgentProposalService.AttachedProposal attached = agentProposalService.attach( ee, kind,
                 body.runId.trim(), body.agentVersion, body.model, body.ranAt, body.payloadJson );
         CurationProposalResponse resp = toProposalResponse( attached.getProposal(), ee.getId() );
         Response.Status status = attached.isCreated()
@@ -237,7 +280,12 @@ public class CurationWebService {
     }
 
     /**
-     * List {@link AgentProposal}s attached to a loaded EE, newest first.
+     * List {@link AgentProposal}s attached to a loaded EE, newest first. The
+     * {@code ?kind=} param filters by discriminator; {@code ?shape=} selects
+     * the response shape (default {@code full} preserves the legacy wire
+     * shape; {@code meta} returns the thin
+     * {@link CurationProposalSummaryResponse} projection that omits
+     * {@code payload_json}).
      */
     @GET
     @Hidden
@@ -246,12 +294,29 @@ public class CurationWebService {
     @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
     @Operation(hidden = true)
     public Response listCurationProposals(
-            @PathParam("dataset") DatasetArg<?> datasetArg
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Filter by discriminator: `proposal`, `audit`, or `all` (default).")
+            @QueryParam("kind") @Nullable String kind,
+            @Parameter(description = "Response shape: `full` (default; carries payload_json) "
+                    + "or `meta` (thin projection, payload_size only).")
+            @QueryParam("shape") @Nullable String shape
     ) {
+        AgentCurationKind kindFilter = parseKindFilter( kind );
+        boolean metaShape = parseShapeIsMeta( shape );
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        if ( metaShape ) {
+            List<AgentCurationSummaryValueObject> summaries =
+                    agentProposalService.findSummariesByInvestigation( ee, kindFilter );
+            List<CurationProposalSummaryResponse> rows = new ArrayList<>( summaries.size() );
+            for ( AgentCurationSummaryValueObject s : summaries ) {
+                rows.add( toSummaryResponse( s ) );
+            }
+            return Response.ok( rows ).build();
+        }
         List<AgentProposal> proposals = agentProposalService.findByInvestigation( ee );
         List<CurationProposalResponse> rows = new ArrayList<>( proposals.size() );
         for ( AgentProposal p : proposals ) {
+            if ( kindFilter != null && p.getKind() != kindFilter ) continue;
             rows.add( toProposalResponse( p, ee.getId() ) );
         }
         return Response.ok( rows ).build();
@@ -261,11 +326,73 @@ public class CurationWebService {
         CurationProposalResponse r = new CurationProposalResponse();
         r.proposalId = p.getId();
         r.datasetId = datasetId;
+        r.kind = p.getKind() != null ? p.getKind().getDbValue() : AgentCurationKind.PROPOSAL.getDbValue();
         r.runId = p.getRunId();
         r.agentVersion = p.getAgentVersion();
         r.model = p.getModel();
         r.ranAt = p.getRanAt();
         r.payloadJson = p.getPayloadJson();
         return r;
+    }
+
+    private static CurationProposalSummaryResponse toSummaryResponse( AgentCurationSummaryValueObject s ) {
+        CurationProposalSummaryResponse r = new CurationProposalSummaryResponse();
+        r.proposalId = s.getId();
+        r.datasetId = s.getInvestigationId();
+        r.kind = s.getKind() != null ? s.getKind().getDbValue() : AgentCurationKind.PROPOSAL.getDbValue();
+        r.runId = s.getRunId();
+        r.agentVersion = s.getAgentVersion();
+        r.model = s.getModel();
+        r.ranAt = s.getRanAt();
+        r.payloadSize = s.getPayloadSize();
+        return r;
+    }
+
+    /**
+     * Parse the {@code ?kind=} query param into a filter value. {@code null}
+     * / empty / {@code "all"} -> {@code null} (no filter); anything else is
+     * passed through {@link AgentCurationKind#fromDbValue(String)} (case
+     * insensitive), throwing 400 on unknown values.
+     */
+    @Nullable
+    static AgentCurationKind parseKindFilter( @Nullable String kind ) {
+        if ( kind == null || kind.isEmpty() || "all".equalsIgnoreCase( kind ) ) {
+            return null;
+        }
+        try {
+            return AgentCurationKind.fromDbValue( kind );
+        } catch ( IllegalArgumentException e ) {
+            throw new BadRequestException( "Unknown kind: " + kind + " (expected 'proposal', 'audit', or 'all')" );
+        }
+    }
+
+    /**
+     * Parse the body-side {@code kind} for a POST. Accepts null/blank as the
+     * caller-supplied default; throws 400 on unknown values.
+     */
+    static AgentCurationKind parseKindOrThrow( @Nullable String kind, AgentCurationKind defaultKind ) {
+        if ( kind == null || kind.trim().isEmpty() ) {
+            return defaultKind;
+        }
+        try {
+            return AgentCurationKind.fromDbValue( kind.trim() );
+        } catch ( IllegalArgumentException e ) {
+            throw new BadRequestException( "Unknown kind: " + kind + " (expected 'proposal' or 'audit')" );
+        }
+    }
+
+    /**
+     * @return true iff the {@code ?shape=} param requests the thin meta
+     *         projection. Default (null / blank) is {@code full} per Paul's
+     *         resolution on the recce open question.
+     */
+    static boolean parseShapeIsMeta( @Nullable String shape ) {
+        if ( shape == null || shape.isEmpty() || "full".equalsIgnoreCase( shape ) ) {
+            return false;
+        }
+        if ( "meta".equalsIgnoreCase( shape ) ) {
+            return true;
+        }
+        throw new BadRequestException( "Unknown shape: " + shape + " (expected 'meta' or 'full')" );
     }
 }

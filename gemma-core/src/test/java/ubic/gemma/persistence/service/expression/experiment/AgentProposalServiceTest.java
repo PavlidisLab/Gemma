@@ -18,10 +18,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ubic.gemma.model.expression.experiment.AgentCurationKind;
+import ubic.gemma.model.expression.experiment.AgentCurationSummaryValueObject;
 import ubic.gemma.model.expression.experiment.AgentProposal;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -139,5 +142,53 @@ public class AgentProposalServiceTest {
         when( agentProposalDao.findLatestByInvestigation( ee ) ).thenReturn( latest );
         AgentProposal r = service.findLatestByInvestigation( ee );
         assertThat( r.getId() ).isEqualTo( 7L );
+    }
+
+    @Test
+    public void attach_kindAware_persistsAuditWhenRequested() {
+        when( agentProposalDao.findByInvestigationAndKindAndRunId( ee, AgentCurationKind.AUDIT, "run-A" ) )
+                .thenReturn( null );
+        when( agentProposalDao.create( any( AgentProposal.class ) ) ).thenAnswer( inv -> {
+            AgentProposal p = inv.getArgument( 0 );
+            p.setId( 88L );
+            return p;
+        } );
+        AgentProposalService.AttachedProposal r = service.attach( ee, AgentCurationKind.AUDIT,
+                "run-A", null, null, null, null );
+        assertThat( r.isCreated() ).isTrue();
+        assertThat( r.getProposal().getKind() ).isEqualTo( AgentCurationKind.AUDIT );
+    }
+
+    @Test
+    public void attach_kindAware_nullKindDefaultsToProposal() {
+        when( agentProposalDao.findByInvestigationAndKindAndRunId( ee, AgentCurationKind.PROPOSAL, "run-N" ) )
+                .thenReturn( null );
+        when( agentProposalDao.create( any( AgentProposal.class ) ) ).thenAnswer( inv -> inv.getArgument( 0 ) );
+        AgentProposalService.AttachedProposal r = service.attach( ee, null,
+                "run-N", null, null, null, null );
+        assertThat( r.getProposal().getKind() ).isEqualTo( AgentCurationKind.PROPOSAL );
+    }
+
+    @Test
+    public void findSummariesByInvestigation_delegatesToDao() {
+        AgentCurationSummaryValueObject vo = new AgentCurationSummaryValueObject(
+                1L, AgentCurationKind.PROPOSAL, "run-S", null, null, new Date(), 12345L, 1234L );
+        when( agentProposalDao.findSummariesByInvestigation( ee, AgentCurationKind.PROPOSAL ) )
+                .thenReturn( Collections.singletonList( vo ) );
+        List<AgentCurationSummaryValueObject> rows =
+                service.findSummariesByInvestigation( ee, AgentCurationKind.PROPOSAL );
+        assertThat( rows ).hasSize( 1 );
+        assertThat( rows.get( 0 ).getId() ).isEqualTo( 1L );
+        assertThat( rows.get( 0 ).getKind() ).isEqualTo( AgentCurationKind.PROPOSAL );
+        assertThat( rows.get( 0 ).getPayloadSize() ).isEqualTo( 1234L );
+    }
+
+    @Test
+    public void findSummariesByInvestigation_nullKindFilterMeansAll() {
+        when( agentProposalDao.findSummariesByInvestigation( ee, null ) )
+                .thenReturn( Collections.emptyList() );
+        List<AgentCurationSummaryValueObject> rows = service.findSummariesByInvestigation( ee, null );
+        assertThat( rows ).isEmpty();
+        verify( agentProposalDao ).findSummariesByInvestigation( ee, null );
     }
 }

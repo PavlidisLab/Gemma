@@ -13,6 +13,8 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import org.springframework.lang.Nullable;
 import ubic.gemma.model.analysis.Investigation;
+import ubic.gemma.model.expression.experiment.AgentCurationKind;
+import ubic.gemma.model.expression.experiment.AgentCurationSummaryValueObject;
 import ubic.gemma.model.expression.experiment.AgentProposal;
 
 import java.util.Date;
@@ -56,9 +58,39 @@ public interface AgentProposalService {
             @Nullable String payloadJson );
 
     /**
+     * Attach (or return existing) a curation row of the supplied kind to the
+     * given investigation. {@code (investigation, kind, runId)} is the
+     * idempotency triple — a forward-looking proposal and a post-hoc audit
+     * may coexist on the same investigation with the same {@code runId}.
+     *
+     * @param kind discriminator; {@code null} defaults to
+     *             {@link AgentCurationKind#PROPOSAL} for backwards-compat
+     *             with callers that predate the discriminator.
+     */
+    AttachedProposal attach( Investigation investigation, @Nullable AgentCurationKind kind, String runId,
+            @Nullable String agentVersion,
+            @Nullable String model,
+            @Nullable Date ranAt,
+            @Nullable String payloadJson );
+
+    /**
      * @return all proposals attached to the given investigation, newest first.
      */
     List<AgentProposal> findByInvestigation( Investigation investigation );
+
+    /**
+     * Thin metadata projection of all proposals attached to the given
+     * investigation, newest first. The {@code payloadJson} column is NOT
+     * loaded; the projection carries
+     * {@link AgentCurationSummaryValueObject#getPayloadSize() payloadSize} so the UI can
+     * decide whether to fetch the full row.
+     *
+     * @param investigation target investigation. Required.
+     * @param kindFilter    optional kind filter; {@code null} means "all
+     *                      kinds" (both proposal and audit rows).
+     */
+    List<AgentCurationSummaryValueObject> findSummariesByInvestigation( Investigation investigation,
+            @Nullable AgentCurationKind kindFilter );
 
     /**
      * @return the most recent proposal attached to the given investigation,

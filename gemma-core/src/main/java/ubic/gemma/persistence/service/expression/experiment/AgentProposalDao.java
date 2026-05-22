@@ -14,6 +14,7 @@ package ubic.gemma.persistence.service.expression.experiment;
 import org.springframework.lang.Nullable;
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.expression.experiment.AgentCurationKind;
+import ubic.gemma.model.expression.experiment.AgentCurationSummaryValueObject;
 import ubic.gemma.model.expression.experiment.AgentProposal;
 import ubic.gemma.persistence.service.BaseDao;
 
@@ -41,6 +42,20 @@ public interface AgentProposalDao extends BaseDao<AgentProposal> {
      * All proposals attached to the given investigation, newest first.
      */
     List<AgentProposal> findByInvestigation( Investigation investigation );
+
+    /**
+     * Thin metadata projection of all proposals attached to the given
+     * investigation, newest first. The {@code payloadJson} column is NOT
+     * loaded; the projection emits {@code length(payloadJson)} as
+     * {@code payloadSize} so the UI can decide whether to fetch the full
+     * row. See {@code handoffs/RECCE_AGENT_CURATION_UNIFICATION.md} §3.
+     *
+     * @param investigation target investigation. Required.
+     * @param kindFilter    optional kind filter; {@code null} means "all
+     *                      kinds" (both proposal and audit rows).
+     */
+    List<AgentCurationSummaryValueObject> findSummariesByInvestigation( Investigation investigation,
+            @Nullable AgentCurationKind kindFilter );
 
     /**
      * The most recent proposal attached to the given investigation, or
