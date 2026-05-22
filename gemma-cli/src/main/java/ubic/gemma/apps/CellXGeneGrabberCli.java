@@ -86,7 +86,7 @@ public class CellXGeneGrabberCli extends AbstractCLI {
                 .desc( "Limit to selected taxa. Defaults to all taxa declared in Gemma." ).get() );
         options.addOption( Option.builder( "assays" ).longOpt( "assays" ).hasArgs()
                 .valueSeparator( ',' )
-                .converter( EnumeratedStringConverter.of( Arrays.stream( CellXGeneUtils.GENE_EXPRESSION_ASSAYS ).collect( Collectors.toMap( OntologyTerm::getOntologyTermId, ot -> new DefaultMessageSourceResolvable( null, ot.getLabel() ) ) ) ) )
+                .converter( EnumeratedStringConverter.of( CellXGeneUtils.GENE_EXPRESSION_ASSAYS.stream().collect( Collectors.toMap( OntologyTerm::getOntologyTermId, ot -> new DefaultMessageSourceResolvable( null, ot.getLabel() ) ) ) ) )
                 .argName( "URI, term ID or label" )
                 .desc( "Limit results to selected assays. URIs and term IDs from EFO can be used. Defaults to a predefined set of gene expression assays." )
                 .get() );
@@ -137,7 +137,7 @@ public class CellXGeneGrabberCli extends AbstractCLI {
             }
         } else {
             // no ontology inference needed, we have a predefined set of assays that should be exhaustive
-            allowedAssays = Arrays.stream( CellXGeneUtils.GENE_EXPRESSION_ASSAYS )
+            allowedAssays = CellXGeneUtils.GENE_EXPRESSION_ASSAYS.stream()
                     .flatMap( ot -> Stream.of( ot.getOntologyTermId(), ot.getLabel(), OntologyUtils.termIdToUri( ot.getOntologyTermId() ) ) )
                     .collect( Collectors.toCollection( () -> new TreeSet<>( String.CASE_INSENSITIVE_ORDER ) ) );
         }

@@ -206,7 +206,7 @@ public class GeoSingleCellDataDownloaderCli extends AbstractCLI {
         options.addOption( Option.builder( CELLXGENE_DATASET_ID ).longOpt( "cellxgene-dataset-id" ).desc( "CELLxGENE dataset identifier" ).hasArg().get() );
         options.addOption( Option.builder( CELLXGENE_ASSET_ID ).longOpt( "cellxgene-asset-id" ).desc( "CELLxGENE asset identifier" ).hasArg().get() );
         options.addOption( Option.builder( CELLXGENE_ASSAYS ).longOpt( "cellxgene-assays" ).hasArgs().valueSeparator( ',' )
-                .converter( EnumeratedStringConverter.of( Arrays.stream( CellXGeneUtils.GENE_EXPRESSION_ASSAYS )
+                .converter( EnumeratedStringConverter.of( CellXGeneUtils.GENE_EXPRESSION_ASSAYS.stream()
                         .collect( Collectors.toMap( OntologyTerm::getOntologyTermId, ot -> new DefaultMessageSourceResolvable( null, ot.getLabel() ) ) ) ) )
                 .desc( "CELLxGENE assay identifiers to use to look for. Defaults to a predefined list of single-cell gene expression assays." ).get() );
         addBatchOption( options );
