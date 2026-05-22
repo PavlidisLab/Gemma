@@ -33,7 +33,6 @@ import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
-import ubic.gemma.model.common.auditAndSecurity.eventType.GeeqEvent;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -44,7 +43,6 @@ import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.AbstractVoEnabledService;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.util.IdentifiableUtils;
 
@@ -100,13 +98,13 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
     private final ArrayDesignService arrayDesignService;
     private final ExpressionDataMatrixService expressionDataMatrixService;
     private final OutlierDetectionService outlierDetectionService;
-    private final AuditTrailService auditTrailService;
+    private final GeeqAuditService geeqAuditService;
     private final SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService;
 
     @Autowired
     public GeeqServiceImpl( GeeqDao geeqDao, ExpressionExperimentService expressionExperimentService, ExpressionExperimentBatchInformationService expressionExperimentBatchInformationService,
             ArrayDesignService arrayDesignService, ExpressionDataMatrixService expressionDataMatrixService,
-            OutlierDetectionService outlierDetectionService, AuditTrailService auditTrailService,
+            OutlierDetectionService outlierDetectionService, GeeqAuditService geeqAuditService,
             SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService ) {
         super( geeqDao );
         this.expressionExperimentService = expressionExperimentService;
@@ -114,7 +112,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
         this.arrayDesignService = arrayDesignService;
         this.expressionDataMatrixService = expressionDataMatrixService;
         this.outlierDetectionService = outlierDetectionService;
-        this.auditTrailService = auditTrailService;
+        this.geeqAuditService = geeqAuditService;
         this.sampleCoexpressionAnalysisService = sampleCoexpressionAnalysisService;
     }
 
@@ -172,9 +170,9 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
         }
 
         stopwatch.stop();
-        this.createGeeqEvent( ee, "Geeq scoring (mode: " + mode + ")",
-                "Issues noted: \n" + gq
-                        .getOtherIssues() );
+        // Aspect-intercepted hoist target: the @Audited co-bean records a GeeqEvent on return.
+        geeqAuditService.recordGeeqScoring( ee, "Geeq scoring (mode: " + mode + ")",
+                "Issues noted: \n" + gq.getOtherIssues() );
 
         if ( stopwatch.getTime() > 1000 )
             log.info( GeeqServiceImpl.LOG_PREFIX + " finished for " + ee.getShortName() + " (" + stopwatch.getTime() + " ms)" );
@@ -561,10 +559,6 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
     /*
      * Support methods and other stuff
      */
-
-    private void createGeeqEvent( ExpressionExperiment ee, String note, String details ) {
-        auditTrailService.addUpdateEvent( ee, GeeqEvent.class, note, details );
-    }
 
     /**
      * Checks for all combinations of factor values in the experiments bio assays, and counts the amount of
