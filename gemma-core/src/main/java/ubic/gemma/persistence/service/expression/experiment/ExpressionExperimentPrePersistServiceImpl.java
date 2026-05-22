@@ -171,6 +171,7 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
         }
     }
 
+    @Nullable
     private CompositeSequence addNewDesignElementToPersistentArrayDesign( ArrayDesign arrayDesign,
             @Nullable CompositeSequence designElement ) {
         if ( designElement == null )

@@ -21,6 +21,7 @@ package ubic.gemma.core.analysis.preprocess;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.expression.AnalysisUtilService;
@@ -352,6 +353,7 @@ public class VectorMergingServiceImpl
      * @param oldVectors old vectors
      * @return map of design element to vectors.
      */
+    @Nullable
     private Map<CompositeSequence, Collection<RawExpressionDataVector>> getDevMap(
             Collection<RawExpressionDataVector> oldVectors ) {
         Map<CompositeSequence, Collection<RawExpressionDataVector>> deVMap = new HashMap<>();

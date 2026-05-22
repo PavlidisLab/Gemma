@@ -460,6 +460,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
      * @param force force-update the GENE2CS table
      * @return the reason for updating, or null not to update
      */
+    @Nullable
     private String needsToRefreshGene2Cs( boolean force ) {
         if ( force ) {
             return "Force-updating the GENE2CS table.";

@@ -358,6 +358,7 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
                 .collect( Collectors.toSet() );
     }
 
+    @Nullable
     private DoubleMatrix<String, String> getSubMatrixForArrayDesign( DoubleMatrix<String, String> matrix,
             Collection<Object> usedDesignElements, ArrayDesign design ) {
         List<String> designElements = new ArrayList<>();

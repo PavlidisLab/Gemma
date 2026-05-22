@@ -590,6 +590,7 @@ public class BusinessKey {
     // the caller's BioAssayDimension.equals(...) (which compares the bioAssays lists) is applied in
     // Java to enforce identity-and-order. All BioAssays must be persistent (have an id).
 
+    @Nullable
     public static BioAssayDimension find( Session session, BioAssayDimension bioAssayDimension ) {
         checkKey( bioAssayDimension );
 

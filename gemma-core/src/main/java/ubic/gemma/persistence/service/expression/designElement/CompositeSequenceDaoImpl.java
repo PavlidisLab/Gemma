@@ -601,6 +601,7 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
     }
 
     @Override
+    @Nullable
     public Collection<Object[]> getRawSummary( @Nullable Collection<CompositeSequence> compositeSequences ) {
         if ( compositeSequences == null || compositeSequences.size() == 0 )
             return null;

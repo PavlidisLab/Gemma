@@ -805,6 +805,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
 
     private static final String SRA_URL_PREFIX = "https://www.ncbi.nlm.nih.gov/sra?term=";
 
+    @Nullable
     private String getSraAccession( GeoData sample ) {
         if ( !sample.getRelations().containsKey( "SRA" ) ) {
             return null;

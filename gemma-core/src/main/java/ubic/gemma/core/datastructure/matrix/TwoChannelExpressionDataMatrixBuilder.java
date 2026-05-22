@@ -206,6 +206,7 @@ public class TwoChannelExpressionDataMatrixBuilder {
         return TwoChannelExpressionDataMatrixBuilder.getUsefulQuantitationTypes( eeQtTypes );
     }
 
+    @Nullable
     public ExpressionDataDoubleMatrix getBackgroundChannelA() {
         List<BioAssayDimension> dimensions = this.getBioAssayDimensions();
 
@@ -223,6 +224,7 @@ public class TwoChannelExpressionDataMatrixBuilder {
         return null;
     }
 
+    @Nullable
     public ExpressionDataDoubleMatrix getBackgroundChannelB() {
         List<BioAssayDimension> dimensions = this.getBioAssayDimensions();
 
@@ -265,6 +267,7 @@ public class TwoChannelExpressionDataMatrixBuilder {
         return new ArrayList<>( dimensions );
     }
 
+    @Nullable
     public ExpressionDataDoubleMatrix getBkgSubChannelA() {
         List<BioAssayDimension> dimensions = this.getBioAssayDimensions();
         List<QuantitationType> qTypes = new ArrayList<>();
@@ -357,6 +360,7 @@ public class TwoChannelExpressionDataMatrixBuilder {
     /**
      * @return The matrix for the preferred data - NOT the processed data (though they may be the same, in fact)
      */
+    @Nullable
     public ExpressionDataDoubleMatrix getPreferredData() {
 
         List<QuantitationType> qtypes = this.getPreferredQTypes();
@@ -395,6 +399,7 @@ public class TwoChannelExpressionDataMatrixBuilder {
         return result;
     }
 
+    @Nullable
     public ExpressionDataDoubleMatrix getProcessedData() {
 
         List<QuantitationType> qtypes = this.getPreferredQTypes();
@@ -420,6 +425,7 @@ public class TwoChannelExpressionDataMatrixBuilder {
         return ranks;
     }
 
+    @Nullable
     public ExpressionDataDoubleMatrix getSignalChannelA() {
         List<BioAssayDimension> dimensions = this.getBioAssayDimensions();
         List<QuantitationType> qTypes = new ArrayList<>();
@@ -447,6 +453,7 @@ public class TwoChannelExpressionDataMatrixBuilder {
         return null;
     }
 
+    @Nullable
     public ExpressionDataDoubleMatrix getSignalChannelB() {
         List<BioAssayDimension> dimensions = this.getBioAssayDimensions();
         List<QuantitationType> qTypes = new ArrayList<>();

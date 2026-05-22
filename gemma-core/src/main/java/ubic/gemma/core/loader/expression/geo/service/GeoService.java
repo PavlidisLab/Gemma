@@ -15,6 +15,7 @@
 package ubic.gemma.core.loader.expression.geo.service;
 
 import lombok.Builder;
+import org.springframework.lang.Nullable;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -45,6 +46,7 @@ public interface GeoService {
      * @param splitIncompatiblePlatforms split incompatible platforms
      * @return collection
      */
+    @Nullable
     Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching,
             boolean splitIncompatiblePlatforms );
 
@@ -57,6 +59,7 @@ public interface GeoService {
      * @param splitIncompatiblePlatforms split incompatible platforms
      * @return collection
      */
+    @Nullable
     Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching,
             boolean splitIncompatiblePlatforms, boolean allowSuperSeriesImport, boolean allowSubSeriesImport );
 

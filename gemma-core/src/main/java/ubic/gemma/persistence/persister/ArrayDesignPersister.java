@@ -101,6 +101,7 @@ public class ArrayDesignPersister {
      * through to {@link GenomePersister#doGenome} then {@link CommonPersister#doCommon},
      * else throws.
      */
+    @Nullable
     @SuppressWarnings("unchecked")
     protected <T extends Identifiable> T doPersist( T entity, Map<String, ExternalDatabase> xdbCache ) {
         if ( entity instanceof ArrayDesign ) {

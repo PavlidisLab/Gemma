@@ -110,8 +110,10 @@ public interface ExpressionExperimentDao
 
     Collection<ExpressionExperiment> findByBioMaterial( BioMaterial bm );
 
+    @Nullable
     Collection<ExpressionExperiment> findByBioMaterial( BioMaterial bm, boolean includeSubSets );
 
+    @Nullable
     Collection<Long> findIdsByBioMaterial( BioMaterial bm, boolean includeSubSets );
 
     Map<ExpressionExperiment, Collection<BioMaterial>> findByBioMaterials( Collection<BioMaterial> bms );
@@ -249,6 +251,7 @@ public interface ExpressionExperimentDao
 
     Map<Long, Collection<AuditEvent>> getAuditEvents( Collection<Long> ids );
 
+    @Nullable
     Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment expressionExperiment );
 
     /**

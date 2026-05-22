@@ -453,6 +453,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
 
 
     @Override
+    @Nullable
     public DifferentialExpressionAnalysis run( ExpressionExperimentSubSet subset, ExpressionDataDoubleMatrix dmatrix, DifferentialExpressionAnalysisConfig config ) throws AnalysisException {
         Assert.notNull( config.getSubsetFactor(), "A subset factor must be set to analyze a subset." );
 

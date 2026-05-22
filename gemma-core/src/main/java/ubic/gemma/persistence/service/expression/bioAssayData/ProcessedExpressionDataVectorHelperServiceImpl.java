@@ -176,6 +176,7 @@ class ProcessedExpressionDataVectorHelperServiceImpl
      *
      * @return ExpressionDataDoubleMatrix
      */
+    @Nullable
     private ExpressionDataDoubleMatrix loadIntensities( ExpressionExperiment ee,
             Collection<ProcessedExpressionDataVector> processedVectors ) {
         Collection<ArrayDesign> arrayDesignsUsed = this.eeService.getArrayDesignsUsed( ee );

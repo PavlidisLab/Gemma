@@ -106,6 +106,7 @@ public class CompositeSequenceReadServiceImpl implements CompositeSequenceReadSe
 
     @Override
     @Transactional(readOnly = true)
+    @Nullable
     public Collection<CompositeSequence> findByNamesInArrayDesigns( Collection<String> compositeSequenceNames,
             Collection<ArrayDesign> arrayDesigns ) {
         LinkedHashMap<String, CompositeSequence> compositeSequencesMap = new LinkedHashMap<>();

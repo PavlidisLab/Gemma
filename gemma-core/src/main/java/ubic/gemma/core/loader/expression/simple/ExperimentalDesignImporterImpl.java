@@ -22,6 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.ontology.basecode.model.OntologyTerm;
@@ -490,6 +491,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
      *                                 given in the first column of
      *                                 the factor value line.
      */
+    @Nullable
     private BioMaterial getBioMaterialFromExpressionExperiment( Collection<BioMaterial> bioMaterials,
             String biomaterialNameFromFile, String externalId ) {
 

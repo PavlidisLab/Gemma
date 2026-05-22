@@ -531,6 +531,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         return clone;
     }
 
+    @Nullable
     private DatabaseEntry cloneAccession( @Nullable DatabaseEntry de ) {
         if ( de == null ) return null;
         DatabaseEntry clone = DatabaseEntry.Factory.newInstance();

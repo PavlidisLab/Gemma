@@ -20,6 +20,7 @@
 package ubic.gemma.core.analysis.expression.diff;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.genome.gene.GeneValueObject;
@@ -81,6 +82,7 @@ public class GeneDiffExMetaAnalysisHelperServiceImpl implements GeneDiffExMetaAn
     }
 
     @Override
+    @Nullable
     public GeneDifferentialExpressionMetaAnalysisDetailValueObject findDetailMetaAnalysisById( long analysisId ) {
         GeneDifferentialExpressionMetaAnalysis metaAnalysis = this.geneDiffExMetaAnalysisService.load( analysisId );
 

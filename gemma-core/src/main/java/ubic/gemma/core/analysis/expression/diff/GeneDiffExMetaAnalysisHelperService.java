@@ -19,6 +19,7 @@
 
 package ubic.gemma.core.analysis.expression.diff;
 
+import org.springframework.lang.Nullable;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisDetailValueObject;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisSummaryValueObject;
@@ -44,6 +45,7 @@ public interface GeneDiffExMetaAnalysisHelperService {
      * @param metaAnalysisId meta analysis id
      * @return detail meta-analysis value object
      */
+    @Nullable
     GeneDifferentialExpressionMetaAnalysisDetailValueObject findDetailMetaAnalysisById( long metaAnalysisId );
 
     /**

@@ -147,6 +147,7 @@ public class CommonPersister {
      * here for the User and Characteristic arms; anything not handled terminates with
      * {@link UnsupportedOperationException}.
      */
+    @Nullable
     @OverridingMethodsMustInvokeSuper
     @SuppressWarnings("unchecked")
     protected <T extends Identifiable> T doPersist( T entity, Map<String, ExternalDatabase> xdbCache ) {

@@ -171,6 +171,7 @@ public class GeneReadServiceImpl implements GeneReadService {
 
     @Override
     @Transactional(readOnly = true)
+    @Nullable
     public List<PhysicalLocationValueObject> getPhysicalLocationsValueObjects( Gene gene ) {
         if ( gene == null ) {
             return Collections.emptyList();
