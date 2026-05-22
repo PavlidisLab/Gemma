@@ -42,6 +42,7 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.DesignApplyOutcome;
 import ubic.gemma.model.expression.experiment.DesignPreflightReport;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalDesignValueObject;
@@ -240,6 +241,15 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
 
     @Autowired
     private DifferentialExpressionAnalysisService deaService;
+
+    @Autowired
+    private ExperimentalFactorService experimentalFactorService;
+
+    @Autowired
+    private FactorValueService factorValueService;
+
+    @Autowired
+    private BioMaterialService bioMaterialService;
 
     @BeforeEach
     public void setupMocks() {
@@ -612,6 +622,40 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
         DesignPreflightReport report = svc.previewDesignChange( fixture, proposal );
         assertThat( report.getBlockers() ).extracting( DesignPreflightReport.Blocker::getType )
                 .contains( "UNKNOWN_BIOMATERIAL_ID" );
+    }
+
+    // ============================================================================================
+    // applyDesignChange() tests
+    //
+    // Coverage focus: idempotent no-op + blocker rejection. The mutation path itself is covered by
+    // the previewDesignChange tests above (apply re-runs preview as its gate). These tests live in
+    // the AOP-less impl test context, so the @AuditedConditional annotation does not fire here;
+    // aspect-level coverage lives in AuditedAspectTest.
+    // ============================================================================================
+
+    @Test
+    public void testApplyNoChangeIsIdempotentNoOp() {
+        buildFixture();
+        DesignApplyOutcome outcome = svc.applyDesignChange( fixture, mirrorProposal() );
+        assertThat( outcome ).isNotNull();
+        assertThat( outcome.isApplied() ).isFalse();
+        assertThat( outcome.getPreflightAtApply() ).isNotNull();
+        assertThat( outcome.getPreflightAtApply().getBlockers() ).isEmpty();
+        // No-op branch must not write any structural mutation.
+        verify( experimentalFactorService, never() ).remove( any( ExperimentalFactor.class ) );
+        verify( factorValueService, never() ).remove( any( FactorValue.class ) );
+        verify( bioMaterialService, never() ).update( anyCollection() );
+    }
+
+    @Test
+    public void testApplyRejectsBlockerWithIllegalArgumentException() {
+        buildFixture();
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        // type change while factor has values is a hard blocker
+        proposal.getExperimentalFactors().get( 0 ).setType( "continuous" );
+        assertThatThrownBy( () -> svc.applyDesignChange( fixture, proposal ) )
+                .isInstanceOf( IllegalArgumentException.class )
+                .hasMessageContaining( "Cannot apply proposed design" );
     }
 
     @Test

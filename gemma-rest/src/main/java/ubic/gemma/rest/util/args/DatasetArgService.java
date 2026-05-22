@@ -20,6 +20,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayUtils;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.experiment.DesignApplyOutcome;
 import ubic.gemma.model.expression.experiment.DesignPreflightReport;
 import ubic.gemma.model.expression.experiment.ExperimentalDesignValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -364,8 +365,8 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
         if ( !report.getDifferentialExpressionAnalysesToDelete().isEmpty() && !force ) {
             return DesignChangeResult.forceRequired( report );
         }
-        ExperimentalDesignValueObject updated = service.applyDesignChange( ee, proposed );
-        return DesignChangeResult.ok( updated );
+        DesignApplyOutcome outcome = service.applyDesignChange( ee, proposed );
+        return DesignChangeResult.ok( outcome.getDesign() );
     }
 
     public List<ExpressionExperimentSubSet> getSubSets( DatasetArg<?> datasetArg ) {

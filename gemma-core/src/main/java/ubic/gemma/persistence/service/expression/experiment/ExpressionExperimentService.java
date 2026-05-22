@@ -587,15 +587,21 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      * (any statement not echoed in the payload is deleted); factor values and factors not echoed are deleted.
      * Differential expression analyses whose factors or factor values are affected are cascaded.
      * <p>
-     * Emits a single {@link ubic.gemma.model.common.auditAndSecurity.eventType.ExperimentalDesignUpdatedEvent}
-     * summarising the change.
+     * Idempotent: when the apply-time preflight reports zero factor / factor value / biomaterial / design-metadata
+     * changes, the method short-circuits and returns a {@link DesignApplyOutcome} with {@code applied=false} without
+     * emitting an audit event. Repeated PUTs of an already-applied design therefore produce one
+     * {@link ubic.gemma.model.common.auditAndSecurity.eventType.DesignChangeEvent}, not many.
+     * <p>
+     * On a real change, emits a single {@link ubic.gemma.model.common.auditAndSecurity.eventType.DesignChangeEvent}
+     * via {@code @AuditedConditional} (Phase C declarative-audit pattern).
      *
      * @param ee       the target experiment
      * @param proposed the new design
-     * @return the freshly-rebuilt {@link ExperimentalDesignValueObject} after the update
+     * @return a {@link DesignApplyOutcome} carrying the rebuilt VO, the {@code applied} flag, and the apply-time
+     *         preflight report.
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    ExperimentalDesignValueObject applyDesignChange( ExpressionExperiment ee, ExperimentalDesignValueObject proposed );
+    DesignApplyOutcome applyDesignChange( ExpressionExperiment ee, ExperimentalDesignValueObject proposed );
 
     /**
      * Perform various transformation to the provided filters to enhance it.

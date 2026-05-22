@@ -771,7 +771,10 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional
-    public ExperimentalDesignValueObject applyDesignChange( ExpressionExperiment ee, ExperimentalDesignValueObject proposed ) {
+    @AuditedConditional(value = DesignChangeEvent.class,
+            when = "#result.applied",
+            messageSpel = "'Design replaced via REST: factors +' + #result.preflightAtApply.summary.factorsToCreate + ' / -' + #result.preflightAtApply.summary.factorsToDelete + ', factor values +' + #result.preflightAtApply.summary.factorValuesToCreate + ' / -' + #result.preflightAtApply.summary.factorValuesToDelete + ', biomaterial assignments changed: ' + #result.preflightAtApply.summary.biomaterialsWithChangedAssignments + ', analyses removed: ' + #result.preflightAtApply.summary.differentialExpressionAnalysesToDelete + '.'")
+    public DesignApplyOutcome applyDesignChange( ExpressionExperiment ee, ExperimentalDesignValueObject proposed ) {
         Assert.notNull( proposed, "A proposed design must be supplied." );
         ee = expressionExperimentDao.reload( ee );
 
@@ -781,6 +784,13 @@ public class ExpressionExperimentServiceImpl
         if ( !report.getBlockers().isEmpty() ) {
             throw new IllegalArgumentException( "Cannot apply proposed design: "
                     + report.getBlockers().get( 0 ).getMessage() );
+        }
+
+        // Idempotent no-op short-circuit. If the apply-time preflight reports zero changes across every dimension
+        // (factors, factor values, biomaterial assignments, design-level metadata), return applied=false without
+        // mutating anything. @AuditedConditional's `when` predicate then suppresses the audit row.
+        if ( isNoOpDesignApply( ee, report, proposed ) ) {
+            return new DesignApplyOutcome( false, getExperimentalDesignValueObject( ee ), report );
         }
 
         ExperimentalDesign ed = ee.getExperimentalDesign();
@@ -1001,16 +1011,40 @@ public class ExpressionExperimentServiceImpl
         }
 
         // ---- step 8: audit event ----
-        DesignPreflightReport.Summary s = report.getSummary();
-        String note = String.format(
-                "Design replaced via REST: factors +%d / -%d, factor values +%d / -%d, biomaterial assignments changed: %d, analyses removed: %d.",
-                s.getFactorsToCreate(), s.getFactorsToDelete(),
-                s.getFactorValuesToCreate(), s.getFactorValuesToDelete(),
-                s.getBiomaterialsWithChangedAssignments(),
-                s.getDifferentialExpressionAnalysesToDelete() );
-        auditTrailService.addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class, note );
+        // Emitted declaratively via @AuditedConditional on the public method (DesignChangeEvent). The aspect
+        // fires only when #result.applied is true, which suppresses the no-op early-return branch above.
+        return new DesignApplyOutcome( true, getExperimentalDesignValueObject( ee ), report );
+    }
 
-        return getExperimentalDesignValueObject( ee );
+    /**
+     * Decide whether the proposed design change is a no-op against the current state.
+     * <p>
+     * Returns true iff the preflight summary shows zero changes AND the design-level metadata fields would not
+     * change either. The metadata check mirrors step 7 of the apply path; the summary check covers steps 3-6
+     * (factor / factor value / biomaterial assignment deltas).
+     */
+    private boolean isNoOpDesignApply( ExpressionExperiment ee, DesignPreflightReport report,
+            ExperimentalDesignValueObject proposed ) {
+        DesignPreflightReport.Summary s = report.getSummary();
+        if ( s.getFactorsToCreate() > 0 || s.getFactorsToDelete() > 0
+                || s.getFactorValuesToCreate() > 0 || s.getFactorValuesToDelete() > 0
+                || s.getBiomaterialsWithChangedAssignments() > 0
+                || s.getDifferentialExpressionAnalysesToDelete() > 0 ) {
+            return false;
+        }
+        ExperimentalDesign ed = ee.getExperimentalDesign();
+        if ( ed == null ) {
+            // current design is null; proposal that introduces any non-null metadata is not a no-op
+            return proposed.getName() == null && proposed.getDescription() == null
+                    && proposed.getReplicateDescription() == null
+                    && proposed.getQualityControlDescription() == null
+                    && proposed.getNormalizationDescription() == null;
+        }
+        return Objects.equals( ed.getName(), proposed.getName() )
+                && Objects.equals( ed.getDescription(), proposed.getDescription() )
+                && Objects.equals( ed.getReplicateDescription(), proposed.getReplicateDescription() )
+                && Objects.equals( ed.getQualityControlDescription(), proposed.getQualityControlDescription() )
+                && Objects.equals( ed.getNormalizationDescription(), proposed.getNormalizationDescription() );
     }
 
     private Set<Long> computeAffectedFactorIds( Map<Long, ExperimentalFactor> currentFactorsById,
