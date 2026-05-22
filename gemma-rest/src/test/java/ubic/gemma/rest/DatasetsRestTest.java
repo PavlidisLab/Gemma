@@ -355,6 +355,23 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
     }
 
     @Test
+    public void testGetDatasetPipelineStatus() {
+        ExpressionExperiment ee = ees.get( 0 );
+        assertThat( target( "/datasets/" + ee.getId() + "/pipelineStatus" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .entity()
+                .hasFieldOrProperty( "data.steps" )
+                .hasFieldOrPropertyWithValue( "data.experimentId", ee.getId().intValue() );
+    }
+
+    @Test
+    public void testGetDatasetPipelineStatusWithUnknownDatasetIs404() {
+        assertThat( target( "/datasets/9999999/pipelineStatus" ).request().get() )
+                .hasStatus( Response.Status.NOT_FOUND );
+    }
+
+    @Test
     public void testGetDatasetRawExpression() {
         ExpressionExperiment ee = ees.get( 0 );
         assertThat( target( "/datasets/" + ee.getId() + "/data/raw" ).request().get() )

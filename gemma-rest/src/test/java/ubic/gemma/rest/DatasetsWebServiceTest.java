@@ -1330,6 +1330,158 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         }
         throw new AssertionError( "step " + key + " missing" );
     }
+
+    @Test
+    @WithMockUser
+    public void testGetDatasetPipelineStatusReturnsAllStepsWithNotRunOrNotApplicable() {
+        mockPipelineFixture( ubic.gemma.model.expression.arrayDesign.TechnologyType.ONECOLOR );
+
+        assertThat( target( "/datasets/1/pipelineStatus" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.experimentId", 1 )
+                .extracting( "data.steps", list( Map.class ) )
+                .isNotEmpty()
+                .satisfies( steps -> {
+                    org.assertj.core.api.Assertions.assertThat( findStep( steps, "preprocess" ).get( "state" ) ).isEqualTo( "notRun" );
+                    org.assertj.core.api.Assertions.assertThat( findStep( steps, "missingValue" ).get( "state" ) ).isEqualTo( "notApplicable" );
+                    org.assertj.core.api.Assertions.assertThat( findStep( steps, "batchInfo" ).get( "state" ) ).isEqualTo( "notRun" );
+                    org.assertj.core.api.Assertions.assertThat( findStep( steps, "pca" ).get( "state" ) ).isEqualTo( "notRun" );
+                    org.assertj.core.api.Assertions.assertThat( findStep( steps, "dea" ).get( "state" ) ).isEqualTo( "notRun" );
+                    org.assertj.core.api.Assertions.assertThat( findStep( steps, "coexpression" ).get( "state" ) ).isEqualTo( "notRun" );
+                } );
+    }
+
+    @Test
+    @WithMockUser
+    public void testGetDatasetPipelineStatusMissingValueApplicableForTwoColor() {
+        mockPipelineFixture( ubic.gemma.model.expression.arrayDesign.TechnologyType.TWOCOLOR );
+
+        assertThat( target( "/datasets/1/pipelineStatus" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data.steps", list( Map.class ) )
+                .satisfies( steps -> {
+                    org.assertj.core.api.Assertions.assertThat( findStep( steps, "missingValue" ).get( "state" ) ).isEqualTo( "notRun" );
+                } );
+    }
+
+    @Test
+    @WithMockUser
+    public void testGetDatasetPipelineStatusPreprocessOk() {
+        mockPipelineFixture( ubic.gemma.model.expression.arrayDesign.TechnologyType.ONECOLOR );
+        AuditEvent event = AuditEvent.Factory.newInstance( new Date( 1_700_000_000_000L ), AuditAction.UPDATE, "ok", null, null,
+                new ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent() );
+        when( auditEventService.getLastEvent( eq( ee ),
+                eq( ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent.class ) ) )
+                .thenReturn( event );
+
+        assertThat( target( "/datasets/1/pipelineStatus" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data.steps", list( Map.class ) )
+                .satisfies( steps -> {
+                    Map<String, Object> pp = findStep( steps, "preprocess" );
+                    org.assertj.core.api.Assertions.assertThat( pp.get( "state" ) ).isEqualTo( "ok" );
+                    org.assertj.core.api.Assertions.assertThat( pp.get( "eventType" ) ).isEqualTo( "ProcessedVectorComputationEvent" );
+                } );
+    }
+
+    @Test
+    @WithMockUser
+    public void testGetDatasetPipelineStatusPcaFailed() {
+        mockPipelineFixture( ubic.gemma.model.expression.arrayDesign.TechnologyType.ONECOLOR );
+        AuditEvent failed = AuditEvent.Factory.newInstance( new Date( 1_700_000_000_000L ), AuditAction.UPDATE, "boom", null, null,
+                new ubic.gemma.model.common.auditAndSecurity.eventType.FailedPCAAnalysisEvent() );
+        when( auditEventService.getLastEvent( eq( ee ),
+                eq( ubic.gemma.model.common.auditAndSecurity.eventType.FailedPCAAnalysisEvent.class ) ) )
+                .thenReturn( failed );
+
+        assertThat( target( "/datasets/1/pipelineStatus" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data.steps", list( Map.class ) )
+                .satisfies( steps -> {
+                    Map<String, Object> pca = findStep( steps, "pca" );
+                    org.assertj.core.api.Assertions.assertThat( pca.get( "state" ) ).isEqualTo( "failed" );
+                    org.assertj.core.api.Assertions.assertThat( pca.get( "eventType" ) ).isEqualTo( "FailedPCAAnalysisEvent" );
+                    org.assertj.core.api.Assertions.assertThat( pca.get( "message" ) ).isEqualTo( "boom" );
+                } );
+    }
+
+    @Test
+    @WithMockUser
+    public void testGetDatasetPipelineStatusPicksLatestEvent() {
+        mockPipelineFixture( ubic.gemma.model.expression.arrayDesign.TechnologyType.ONECOLOR );
+        // Older success, newer failure → newer wins, state="failed".
+        AuditEvent oldSuccess = AuditEvent.Factory.newInstance( new Date( 1_000_000_000_000L ), AuditAction.UPDATE, null, null, null,
+                new ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent() );
+        AuditEvent newFailure = AuditEvent.Factory.newInstance( new Date( 2_000_000_000_000L ), AuditAction.UPDATE, "retry-failed", null, null,
+                new ubic.gemma.model.common.auditAndSecurity.eventType.FailedPCAAnalysisEvent() );
+        when( auditEventService.getLastEvent( eq( ee ),
+                eq( ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent.class ) ) )
+                .thenReturn( oldSuccess );
+        when( auditEventService.getLastEvent( eq( ee ),
+                eq( ubic.gemma.model.common.auditAndSecurity.eventType.FailedPCAAnalysisEvent.class ) ) )
+                .thenReturn( newFailure );
+
+        assertThat( target( "/datasets/1/pipelineStatus" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data.steps", list( Map.class ) )
+                .satisfies( steps -> {
+                    org.assertj.core.api.Assertions.assertThat( findStep( steps, "pca" ).get( "state" ) ).isEqualTo( "failed" );
+                } );
+    }
+
+    @Test
+    @WithMockUser
+    public void testGetDatasetPipelineStatusIncludesConvenienceFields() {
+        mockPipelineFixture( ubic.gemma.model.expression.arrayDesign.TechnologyType.ONECOLOR );
+        ee.getCurationDetails().setNeedsAttention( true );
+        when( expressionExperimentBatchInformationService.checkHasBatchInfo( ee ) ).thenReturn( true );
+        when( securityService.isPublic( ee ) ).thenReturn( true );
+
+        assertThat( target( "/datasets/1/pipelineStatus" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.hasBatchInformation", true )
+                .hasFieldOrPropertyWithValue( "data.needsAttention", true )
+                .hasFieldOrPropertyWithValue( "data.isPublic", true );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testGetDatasetPipelineStatusAdminSeesCurationNote() {
+        mockPipelineFixture( ubic.gemma.model.expression.arrayDesign.TechnologyType.ONECOLOR );
+        ee.getCurationDetails().setCurationNote( "admin only" );
+
+        assertThat( target( "/datasets/1/pipelineStatus" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.curationNote", "admin only" );
+    }
+
+    @Test
+    @WithMockUser
+    public void testGetDatasetPipelineStatusNonAdminDoesNotSeeCurationNote() {
+        mockPipelineFixture( ubic.gemma.model.expression.arrayDesign.TechnologyType.ONECOLOR );
+        ee.getCurationDetails().setCurationNote( "hidden" );
+
+        assertThat( target( "/datasets/1/pipelineStatus" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.curationNote", null );
+    }
+
+    @Test
+    @WithMockUser
+    public void testGetDatasetPipelineStatusWithUnknownDatasetIs404() {
+        assertThat( target( "/datasets/999/pipelineStatus" ).request().get() )
+                .hasStatus( Response.Status.NOT_FOUND );
+    }
+
     @Test
     public void testGetDatasetAllPublications() {
         when( expressionExperimentService.loadWithPrimaryPublicationAndOtherRelevantPublications( 1L ) ).thenReturn( ee );
