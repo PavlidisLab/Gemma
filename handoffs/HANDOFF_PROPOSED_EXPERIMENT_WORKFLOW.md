@@ -1,4 +1,4 @@
-# HANDOFF: Proposed-but-not-loaded experiment surface (`PreboardingExperiment` + `AgentProposal`)
+# HANDOFF: Proposed-but-not-loaded experiment surface (`PreboardedExperiment` + `AgentProposal`)
 
 **Filed-by:** Paul Pavlidis (via curation-agents) — 2026-05-21
 **Status:** request for Gemma-side endpoints and persistence;
@@ -18,7 +18,7 @@ in `HANDOFF_PUT_DATASETS_DESIGN.md`, the annotation writes in
 
 This blocks the agent's "Proposal" mode (per
 `~/Dev/gemma-curation-agents/docs/THREE_MODES.md` Mode B: "fresh
-preboarding — no EE in Gemma yet"). Today those proposals live in
+preboarded — no EE in Gemma yet"). Today those proposals live in
 the agents-side SQLite mock with no Gemma identity, no curator
 triage surface, and no path to land on a loaded EE once the data
 arrives. The lifecycle from "GEO accession spotted" → "loaded EE
@@ -39,11 +39,11 @@ subclass + JSON-blob proposal":
 > with all the options, so the discriminator churn is the right
 > investment up front.
 >
-> - `PreboardingExperiment extends Investigation` — represents
+> - `PreboardedExperiment extends Investigation` — represents
 >   states 1+2 (proposed; not yet loaded). Sibling of
 >   `ExpressionExperiment` under `Investigation`.
 > - `AgentProposal` — a first-class entity holding the JSON-ified
->   preboarding payload the agent produces. Append-only; one row per
+>   preboarded payload the agent produces. Append-only; one row per
 >   agent run. Columns roughly `(investigation_fk, run_id,
 >   agent_version, model, ran_at, payload_json)`.
 > - `AuditEvent` of a new type (`AgentProposalEvent`) references
@@ -58,9 +58,9 @@ same decision in the agent project's notebook.
 
 ## Required endpoints
 
-### `POST /preboarding`
+### `POST /preboarded`
 
-Create a `PreboardingExperiment` from a GEO accession.
+Create a `PreboardedExperiment` from a GEO accession.
 
 **Request:**
 
@@ -84,28 +84,28 @@ Create a `PreboardingExperiment` from a GEO accession.
 
 ```json
 {
-  "preboarding_id": 9876,
+  "preboarded_id": 9876,
   "accession": "GSE12345",
   "created_at": "...",
   "state": "proposed"
 }
 ```
 
-`409` if a `PreboardingExperiment` OR an `ExpressionExperiment`
+`409` if a `PreboardedExperiment` OR an `ExpressionExperiment`
 already exists with this accession. The 409 response should
 include the existing entity's id and type so the caller can
 switch tactics.
 
-### `GET /preboarding/{id}`
+### `GET /preboarded/{id}`
 
-Fetch a preboarding's current state, including its latest
+Fetch a preboarded's current state, including its latest
 `AgentProposal`.
 
 **Response:**
 
 ```json
 {
-  "preboarding_id": 9876,
+  "preboarded_id": 9876,
   "accession": "GSE12345",
   "state": "proposed",
   "created_at": "...",
@@ -119,17 +119,17 @@ Fetch a preboarding's current state, including its latest
     "payload_json": { /* the agent's full proposal payload */ }
   },
   "proposal_count": 3,
-  "audit_trail_url": "/preboarding/9876/auditEvents"
+  "audit_trail_url": "/preboarded/9876/auditEvents"
 }
 ```
 
-`GET /preboarding?accession=GSE12345` resolves accession → preboarding
+`GET /preboarded?accession=GSE12345` resolves accession → preboarded
 id (the agent needs this when re-running against the same
 accession to know whether to POST or attach a new proposal).
 
-### `POST /preboarding/{id}/proposals`
+### `POST /preboarded/{id}/proposals`
 
-Attach a new `AgentProposal` to a preboarding.
+Attach a new `AgentProposal` to a preboarded.
 
 **Request:**
 
@@ -147,7 +147,7 @@ Attach a new `AgentProposal` to a preboarding.
 ```json
 {
   "proposal_id": 42,
-  "preboarding_id": 9876,
+  "preboarded_id": 9876,
   "audit_event_id": 555
 }
 ```
@@ -159,9 +159,9 @@ the new `AgentProposal` row.
 the same accession creates a new proposal row; the previous one is
 preserved as historical record.
 
-### `POST /preboarding/{id}/promote`
+### `POST /preboarded/{id}/promote`
 
-Promote a preboarding to a loaded `ExpressionExperiment`. Called
+Promote a preboarded to a loaded `ExpressionExperiment`. Called
 when the data has been loaded and an `ExpressionExperiment` row
 exists (typically as the final step of the GEO loader pipeline,
 or by a curator who has manually loaded the data).
@@ -185,7 +185,7 @@ interactively.
 
 ```json
 {
-  "preboarding_id": 9876,
+  "preboarded_id": 9876,
   "ee_id": 12345,
   "promoted_at": "...",
   "proposals_rebound": 3,
@@ -196,7 +196,7 @@ interactively.
 
 Promotion mechanics — open question, see "Open questions" item 1.
 Concretely the call either:
-- flips the `Investigation` discriminator on the preboarding row
+- flips the `Investigation` discriminator on the preboarded row
   in-place (clean for downstream URIs, costly in Hibernate), or
 - rebinds the `AgentProposal` rows and audit events to the
   separate `ExpressionExperiment` row (clean for Hibernate, more
@@ -206,12 +206,12 @@ Either way, the post-promotion state is: one `ExpressionExperiment`
 holding the curatable artifacts; the historical `AgentProposal`
 rows accessible from it; the audit trail intact.
 
-### `GET /preboarding?state=proposed&since=...`
+### `GET /preboarded?state=proposed&since=...`
 
-List preboarding in a given state (curator triage view). Reuses
+List preboarded in a given state (curator triage view). Reuses
 the `GET /workflow/queue` pattern from
 `HANDOFF_WORKFLOW_STATE_STORAGE.md` if that storage lands first;
-otherwise a per-resource filter on the preboarding collection.
+otherwise a per-resource filter on the preboarded collection.
 
 ---
 
@@ -219,21 +219,21 @@ otherwise a per-resource filter on the preboarding collection.
 
 Two distinct roles needed:
 
-- **`preboarding:write`** — POST new preboarding, POST proposals.
+- **`preboarded:write`** — POST new preboarded, POST proposals.
   Granted to agent service accounts. Curator role also holds it
-  (curators can create preboarding manually).
-- **`preboarding:promote`** — POST `/preboarding/{id}/promote`. Curator
+  (curators can create preboarded manually).
+- **`preboarded:promote`** — POST `/preboarded/{id}/promote`. Curator
   role only. **Agents MUST NOT be able to promote** — promotion
   binds curatable artifacts to a real EE and is a curator
   decision, not an agent decision.
 
 This is the explicit role-split called out in the original task
-brief: "agent-role can POST preboarding + proposals; only
+brief: "agent-role can POST preboarded + proposals; only
 curator-role can promote."
 
 Per `AUTH_FOR_SPA_RECCE.md` patterns: implement as two granted
 authorities on the curator/agent role definitions. An agent
-calling `/promote` with only `preboarding:write` gets `403`.
+calling `/promote` with only `preboarded:write` gets `403`.
 
 GET endpoints: read access for any authenticated user who can
 read the parent corpus (matches existing EE read-access patterns).
@@ -244,15 +244,15 @@ read the parent corpus (matches existing EE read-access patterns).
 
 New `AuditEventType` subclasses:
 
-- **`PreboardingCreatedEvent`** — fires on `POST /preboarding`. Emitted
-  against the new `PreboardingExperiment`'s own audit trail
-  (preboarding are `Auditable` — they inherit from `Investigation`).
-- **`AgentProposalEvent`** — fires on `POST /preboarding/{id}/proposals`.
-  Emitted against the preboarding's audit trail. Carries an FK to the
+- **`PreboardedCreatedEvent`** — fires on `POST /preboarded`. Emitted
+  against the new `PreboardedExperiment`'s own audit trail
+  (preboarded are `Auditable` — they inherit from `Investigation`).
+- **`AgentProposalEvent`** — fires on `POST /preboarded/{id}/proposals`.
+  Emitted against the preboarded's audit trail. Carries an FK to the
   new `AgentProposal` row (NOT the JSON payload inline — that's the
   decision in `AGENT_WRITEBACK_RECCE.md` §"Why JSON-blob over
   audit-event-attached").
-- **`PreboardingPromotedEvent`** — fires on `POST /preboarding/{id}/promote`.
+- **`PreboardedPromotedEvent`** — fires on `POST /preboarded/{id}/promote`.
   Emitted against the (possibly rebound) audit trail. Carries the
   promoted EE id and the applied proposal id (if any).
 
@@ -263,42 +263,42 @@ appropriate.
 
 If `HANDOFF_WORKFLOW_STATE_STORAGE.md` lands together with this,
 the promotion event also advances the workflow state (e.g.
-`Preboarding → Loaded`).
+`Preboarded → Loaded`).
 
 ---
 
 ## Failure modes + idempotency
 
-**`POST /preboarding` with existing accession.** `409 Conflict` with
-the existing entity's id and type (`preboarding` or
+**`POST /preboarded` with existing accession.** `409 Conflict` with
+the existing entity's id and type (`preboarded` or
 `expression_experiment`). Caller can decide whether to attach a
-new proposal (if preboarding) or write against the EE directly (if
+new proposal (if preboarded) or write against the EE directly (if
 already loaded).
 
-**`POST /preboarding/{id}/proposals` retry safety.** Idempotency
+**`POST /preboarded/{id}/proposals` retry safety.** Idempotency
 key: the `run_id` field. If a proposal with the same
-`(preboarding_id, run_id)` already exists, return `200 OK` with the
+`(preboarded_id, run_id)` already exists, return `200 OK` with the
 existing proposal id rather than `201 Created` with a new one. No
 duplicate `AgentProposalEvent`s. This matters because the
 agents-side runner retries on transient infrastructure errors;
 re-uploading the same `run_id`'s payload should be a no-op.
 
-**`POST /preboarding/{id}/promote` when EE already loaded
+**`POST /preboarded/{id}/promote` when EE already loaded
 elsewhere.** If `ee_id` in the body points to an EE that's
-already promoted from a different preboarding, return `409 Conflict`.
+already promoted from a different preboarded, return `409 Conflict`.
 A given EE should not be the promotion target of more than one
-preboarding.
+preboarded.
 
-**`POST /preboarding/{id}/promote` with `apply_latest_proposal=true`
+**`POST /preboarded/{id}/promote` with `apply_latest_proposal=true`
 and the proposal payload is structurally invalid for the loaded
 EE** (e.g. proposed factors reference sample IDs that don't exist
-in the loaded data): roll back the apply, leave the preboarding
+in the loaded data): roll back the apply, leave the preboarded
 unpromoted, return `409` with a structured error report. Caller
 should re-run the agent against the loaded EE in Mode A (audit)
 and apply through the curator review path.
 
 **Concurrent promote calls.** Last-writer-wins is acceptable; the
-second call sees the preboarding already promoted and returns the
+second call sees the preboarded already promoted and returns the
 existing promotion record. Optimistic-lock via `If-Match` ETag is
 optional.
 
@@ -312,19 +312,19 @@ optional.
 - `AUDIT_PHASE_C_RECCE.md` (this repo) — declarative-audit
   patterns the new write endpoints should match.
 - `AUDIT_AS_WORKFLOW_RECCE.md` (this repo) — ticket / workflow
-  context. The "Candidate" → "Preboarding" → "Loaded" → "Curate"
+  context. The "Candidate" → "Preboarded" → "Loaded" → "Curate"
   states from the UI's `WORKFLOW_MANAGEMENT.md` are tracked via
   the storage in `HANDOFF_WORKFLOW_STATE_STORAGE.md`; promotion
   advances the state.
 - `HANDOFF_WORKFLOW_STATE_STORAGE.md` (this dir) — sibling
-  handoff; the per-preboarding workflow state lives in that store.
+  handoff; the per-preboarded workflow state lives in that store.
 - `HANDOFF_PUT_DATASETS_DESIGN.md` (this dir) — what the
   promoted EE's design endpoint accepts when
   `apply_latest_proposal=true` triggers it server-side.
 - `HANDOFF_DATASETS_ANNOTATIONS_WRITE.md` (this dir) — what the
   promoted EE's annotation endpoint accepts likewise.
 - `~/Dev/gemma-curation-agents/docs/THREE_MODES.md` — Mode A
-  (audit), Mode B (proposal — this is the case the preboarding
+  (audit), Mode B (proposal — this is the case the preboarded
   surface enables), Mode C (calibration).
 - Agents-eval memory: `skeleton_in_gemma_as_investigation.md`
   (Paul 2026-05-18 decision).
@@ -341,7 +341,7 @@ optional.
    The `AGENT_WRITEBACK_RECCE.md` §"Promotion semantics" open
    question is the load-bearing one — same-row class flip (clean for
    downstream URIs, costly in Hibernate) vs. new EE row that links
-   back to the preboarding (clean in Hibernate, breaks accession-stable
+   back to the preboarded (clean in Hibernate, breaks accession-stable
    URIs). The endpoint contract above is agnostic between the two,
    but the implementation has to pick.
 2. **`AgentProposal` payload size limit.** Empirical: agent proposals
@@ -349,21 +349,21 @@ optional.
    `JSON` column or `LONGTEXT`? Either is fine.
 3. **Where does state 1 live?** Per
    `AGENT_WRITEBACK_RECCE.md` §"Open questions" item 4: does the
-   GEO-only-not-yet-triaged state get a `PreboardingExperiment`
+   GEO-only-not-yet-triaged state get a `PreboardedExperiment`
    immediately on agent run, or only when a curator triages it (so
    state 1 stays in the agents-side mock until then)? Recommendation:
-   create the preboarding on agent run (state 1 + 2 collapsed) — gives
+   create the preboarded on agent run (state 1 + 2 collapsed) — gives
    curators a single triage surface, doesn't blur the boundary
    between agent-only state and Gemma state.
-4. **ACL on preboarding rows.** Preboarding inherit `Investigation`'s
-   ACL machinery. Default ACL: same as the EE that the preboarding
+4. **ACL on preboarded rows.** Preboarded inherit `Investigation`'s
+   ACL machinery. Default ACL: same as the EE that the preboarded
    will become? Or a permissive "team-visible" default with the
    tighter ACL applied only at promotion? Curation-agents side
    has no preference; whichever is easier given the existing
    ACL aspect (see `ACL_ENTRY_VOTER_MIGRATION.md`).
 5. **Auto-promote on data-load detection.** When the GEO loader
    pipeline imports data for an accession that already has a
-   `PreboardingExperiment`, should it auto-call `/promote`, or
+   `PreboardedExperiment`, should it auto-call `/promote`, or
    wait for an explicit curator action? Recommendation: auto-
    promote with `apply_latest_proposal=false` so the curator
    still reviews the proposal before it lands. This matches the
@@ -375,26 +375,26 @@ optional.
 
 This endpoint set is "done" when:
 
-- [ ] `PreboardingExperiment` JPA entity extends `Investigation`;
+- [ ] `PreboardedExperiment` JPA entity extends `Investigation`;
       Flyway migration adds discriminator value + any
-      preboarding-specific columns.
+      preboarded-specific columns.
 - [ ] `AgentProposal` JPA entity exists with the column shape from
       `AGENT_WRITEBACK_RECCE.md` §"The model".
-- [ ] `POST /preboarding` creates a preboarding; idempotency on
-      accession; emits `PreboardingCreatedEvent`.
-- [ ] `GET /preboarding/{id}` returns preboarding + latest proposal.
-- [ ] `GET /preboarding?accession=...` resolves accession → preboarding.
-- [ ] `POST /preboarding/{id}/proposals` appends a proposal;
+- [ ] `POST /preboarded` creates a preboarded; idempotency on
+      accession; emits `PreboardedCreatedEvent`.
+- [ ] `GET /preboarded/{id}` returns preboarded + latest proposal.
+- [ ] `GET /preboarded?accession=...` resolves accession → preboarded.
+- [ ] `POST /preboarded/{id}/proposals` appends a proposal;
       idempotent on `run_id`; emits `AgentProposalEvent`.
-- [ ] `POST /preboarding/{id}/promote` promotes to EE; emits
-      `PreboardingPromotedEvent`; optional `apply_latest_proposal`
+- [ ] `POST /preboarded/{id}/promote` promotes to EE; emits
+      `PreboardedPromotedEvent`; optional `apply_latest_proposal`
       drives initial factor/FV/tag creation.
-- [ ] Auth: agent role can POST preboarding + proposals; only
+- [ ] Auth: agent role can POST preboarded + proposals; only
       curator role can promote.
 - [ ] All write methods use `@Audited(...)` declarative form.
 - [ ] Audit-event payloads carry FKs to `AgentProposal` rows, not
       inlined JSON.
-- [ ] Integration test exercises: create preboarding → attach
+- [ ] Integration test exercises: create preboarded → attach
       proposal → re-attach same `run_id` (no-op) → attach new
       `run_id` → promote with `apply_latest_proposal=true` →
       audit trail intact across promotion.

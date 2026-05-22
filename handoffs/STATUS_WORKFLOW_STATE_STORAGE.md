@@ -72,7 +72,7 @@ focused tests `WorkflowServiceTest` 8/8 + `WorkflowWebServiceTest` 12/12 green.
 - No `Ticket` / `TicketEvent` storage built (separate
   `AUDIT_AS_WORKFLOW_RECCE.md` Phase B-3; the `Ticket` layer already
   landed via the sibling `TicketsWebService` work).
-- No `PreboardingExperiment` subclass built. The REST + service
+- No `PreboardedExperiment` subclass built. The REST + service
   layer accommodates it (`dataset_type` is a string field, not an
   enum; the queue HQL has a TODO marker for the UNION).
 - No curator-approved backfill mapping; the migration defaults
@@ -81,18 +81,18 @@ focused tests `WorkflowServiceTest` 8/8 + `WorkflowWebServiceTest` 12/12 green.
 ## Known integration TODOs
 
 These are tagged `// TODO(ticket-integration)` or
-`// TODO(preboarding-integration)` in the source:
+`// TODO(preboarded-integration)` in the source:
 
 - `WorkflowQueueEntry.currentAssignee` and `ticketCountOpen` are
   returned as `null` / `0`. The join over the open-ticket-per-dataset
   projection lands when the Ticket-layer queue contract is settled.
   The `?assignee=` query parameter is honored literally (returns
   empty) rather than silently ignored.
-- `?dataset_type=preboarding_experiment` returns empty until the
-  `PreboardingExperiment` subclass lands.
+- `?dataset_type=preboarded_experiment` returns empty until the
+  `PreboardedExperiment` subclass lands.
 - The queue HQL is `from ExpressionExperiment` (subclass-specific);
   the polymorphic version `from Investigation` would naturally pick
-  up the future `PreboardingExperiment` subclass.
+  up the future `PreboardedExperiment` subclass.
 
 ## What downstream callers can expect
 

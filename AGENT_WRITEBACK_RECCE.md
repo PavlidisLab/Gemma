@@ -49,14 +49,14 @@ repo's mock SQLite.
 
 | State | Today | What's missing |
 | --- | --- | --- |
-| (1) Proposed, no Gemma row | Agent has preboarding; lives in mock curation server | No Gemma identity; can't surface in curator triage |
-| (2) Preboarding in Gemma, no data | doesn't exist | A lightweight `Investigation` row holding the JSON-ified preboarding |
+| (1) Proposed, no Gemma row | Agent has preboarded; lives in mock curation server | No Gemma identity; can't surface in curator triage |
+| (2) Preboarded in Gemma, no data | doesn't exist | A lightweight `Investigation` row holding the JSON-ified preboarded |
 | (3) Data loaded, awaiting curation | `ExpressionExperiment` exists; agent re-runs against the loaded EE | Per-instance design / tag writeback (the missing PUT endpoints above) |
 | (4) Curated | `ExpressionExperiment` fully curated | curationDetails writeback (✅ shipped on `api_fixes`) |
 
-Preboarding-in-Gemma collapses 1↔2 into one row that exists from
+Preboarded-in-Gemma collapses 1↔2 into one row that exists from
 proposal time. State 2 → 3 becomes a *promotion*: the data load
-binds the preboarding's curatable artifacts (factors, FVs,
+binds the preboarded's curatable artifacts (factors, FVs,
 assignments, tags, audit trail) to the new EE.
 
 ## The model — `Investigation` subclass + JSON-blob proposal
@@ -69,13 +69,13 @@ EE query forever" rather than expanded here.
 
 ### Shape
 
-- `PreboardingExperiment extends Investigation` — represents
+- `PreboardedExperiment extends Investigation` — represents
   states 1+2 (proposed; not yet loaded). Sibling of
   `ExpressionExperiment` under `Investigation`. Holds accession,
   identifying metadata, ACLs, audit trail — everything that
   doesn't require a `BioAssay` to exist.
 - `AgentProposal` — a first-class entity holding the JSON-ified
-  preboarding payload the agent produces. Append-only; one row per
+  preboarded payload the agent produces. Append-only; one row per
   agent run. Columns roughly `(investigation_fk, run_id,
   agent_version, model, ran_at, payload_json)`. The JSON column
   is whatever MySQL gives us cheapest (native JSON or TEXT — not
@@ -89,7 +89,7 @@ EE query forever" rather than expanded here.
 
 ### Why JSON-blob over audit-event-attached
 
-The preboarding row exists to hold the proposal, so the JSON belongs
+The preboarded row exists to hold the proposal, so the JSON belongs
 on a row in its own right. Attaching JSON to an audit event
 overloads event payload semantics ("events are receipts, not
 state") and makes querying "what does the agent think now" awkward
@@ -102,15 +102,15 @@ changed between v1 and v3 of the agent run."
 When data lands and a real `ExpressionExperiment` comes into
 existence:
 
-1. The `PreboardingExperiment` row gets re-classified to
+1. The `PreboardedExperiment` row gets re-classified to
    `ExpressionExperiment` (the hard option — Hibernate class
-   flip), or the EE is a new row that links back to the preboarding
+   flip), or the EE is a new row that links back to the preboarded
    (the easier-on-Hibernate option, but breaks accession-stable
    URIs). Decision deferred — depends on what `INSERT`/`DELETE`-
    vs-`UPDATE`-discriminator costs us in this schema.
 2. The most recent `AgentProposal` payload drives initial
    factor / FV / sample-assignment creation on the EE.
-3. `AgentProposal` rows rebind from the preboarding to the EE.
+3. `AgentProposal` rows rebind from the preboarded to the EE.
    Audit events that referenced the proposal trail along.
 4. The JSON stays as a frozen historical artifact next to the
    relational design — "what the agent saw at time T" vs "what
@@ -150,7 +150,7 @@ existence:
    DB? Gates when the agents repo flips from mock-only writes to
    real-staging smoke testing.
 4. **Where does state 1 live?** — does the GEO-only proposed
-   state get a `PreboardingExperiment` row immediately, or only
+   state get a `PreboardedExperiment` row immediately, or only
    when a curator decides to triage it (so state 1 stays in the
    agents repo until then)? Depends on whether curators triage
    *which to load* vs. *what's already loaded*.

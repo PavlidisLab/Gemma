@@ -7,7 +7,7 @@
 
         See HANDOFF_PROPOSED_EXPERIMENT_WORKFLOW.md §"The decided shape".
         FK -> INVESTIGATION (works for both ExpressionExperiment and
-        PreboardingExperiment discriminator rows; the column is the same
+        PreboardedExperiment discriminator rows; the column is the same
         ID generator). Unique key (INVESTIGATION_FK, RUN_ID) enforces
         idempotency per the handoff's "Failure modes" §.
 

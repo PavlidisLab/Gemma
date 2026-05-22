@@ -100,7 +100,7 @@ public class WorkflowServiceImpl implements WorkflowService {
             @Nullable String reason, @Nullable Long ticketId ) {
         Assert.notNull( dataset, "Dataset must not be null." );
         Assert.notNull( targetState, "Target state must not be null." );
-        // TODO(preboarding-integration): when PreboardingExperiment lands, this
+        // TODO(preboarded-integration): when PreboardedExperiment lands, this
         // method's body works unchanged because Investigation is the common
         // supertype. The REST layer is what currently narrows to EE.
         WorkflowState current = dataset.getWorkflowState();
@@ -136,12 +136,12 @@ public class WorkflowServiceImpl implements WorkflowService {
             @Nullable Date since,
             int offset, int limit ) {
         Assert.notNull( state, "State must not be null." );
-        // TODO(preboarding-integration): when PreboardingExperiment lands the
+        // TODO(preboarded-integration): when PreboardedExperiment lands the
         // query needs a UNION over both subclasses. For now we only serve
         // ExpressionExperiment and report dataset_type=expression_experiment.
         if ( datasetType != null
                 && !"expression_experiment".equalsIgnoreCase( datasetType ) ) {
-            // Honor the filter literally: a request for preboarding_experiment
+            // Honor the filter literally: a request for preboarded_experiment
             // returns empty until the subclass lands rather than silently
             // returning EEs.
             return new Slice<>( new ArrayList<>(), null, offset, limit, 0L );

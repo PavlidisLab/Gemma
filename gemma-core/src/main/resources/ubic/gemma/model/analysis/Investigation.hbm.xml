@@ -209,25 +209,25 @@
 				</set>
 			</subclass>
 		</subclass>
-		<!-- Preboarding investigation: proposed-but-not-yet-loaded dataset.
+		<!-- Preboarded investigation: proposed-but-not-yet-loaded dataset.
 		     Sibling of BioAssaySet under INVESTIGATION; carries the upstream
 		     accession + identifying metadata blob harvested by the agent.
 		     See HANDOFF_PROPOSED_EXPERIMENT_WORKFLOW.md. The Java-side
-		     constructor seeds workflowState=Preboarding; no SQL `default=` on the
+		     constructor seeds workflowState=Preboarded; no SQL `default=` on the
 		     ACCESSION column because HBM `default=` quoting halted hbm2ddl
 		     in commit d19dcf45d8. -->
-		<subclass name="ubic.gemma.model.expression.experiment.PreboardingExperiment"
-				  discriminator-value="PreboardingExperiment" abstract="false">
+		<subclass name="ubic.gemma.model.expression.experiment.PreboardedExperiment"
+				  discriminator-value="PreboardedExperiment" abstract="false">
 			<property name="accession" type="java.lang.String">
-				<column name="PREBOARDING_ACCESSION" not-null="false" unique="false"
-						sql-type="VARCHAR(255)" index="INVESTIGATION_PREBOARDING_ACCESSION"/>
+				<column name="PREBOARDED_ACCESSION" not-null="false" unique="false"
+						sql-type="VARCHAR(255)" index="INVESTIGATION_PREBOARDED_ACCESSION"/>
 			</property>
 			<property name="source" type="java.lang.String">
-				<column name="PREBOARDING_SOURCE" not-null="false" unique="false"
+				<column name="PREBOARDED_SOURCE" not-null="false" unique="false"
 						sql-type="VARCHAR(32)"/>
 			</property>
 			<property name="identifyingMetadata" type="org.hibernate.type.MaterializedClobType">
-				<column name="PREBOARDING_IDENTIFYING_METADATA" not-null="false" unique="false"
+				<column name="PREBOARDED_IDENTIFYING_METADATA" not-null="false" unique="false"
 						sql-type="LONGTEXT"/>
 			</property>
 		</subclass>

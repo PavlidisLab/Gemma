@@ -17,25 +17,25 @@ import ubic.gemma.model.analysis.Investigation;
  * Subclass of {@link Investigation} representing a proposed-but-not-yet-loaded
  * dataset.
  *
- * <p>Created by {@code POST /preboarding} when the curation-agents runner targets
+ * <p>Created by {@code POST /preboarded} when the curation-agents runner targets
  * a GEO (or other) accession that has not yet been imported into Gemma. The
- * preboarding carries enough identifying metadata to triage / re-run the agent
+ * preboarded carries enough identifying metadata to triage / re-run the agent
  * against it, and accumulates one or more {@code AgentProposal} rows over
- * time. When the data lands as an {@code ExpressionExperiment}, the preboarding
- * is promoted via {@code POST /preboarding/{id}/promote} — the
+ * time. When the data lands as an {@code ExpressionExperiment}, the preboarded
+ * is promoted via {@code POST /preboarded/{id}/promote} — the
  * implementation rebinds the {@code AgentProposal} FKs to the new EE row
  * (new-row + FK rebind approach; see {@code HANDOFF_PROPOSED_EXPERIMENT_WORKFLOW.md}
  * §"Open questions" item 1 and STATUS file for rationale).</p>
  *
  * <p>Single-table inheritance under {@code INVESTIGATION} with discriminator
- * value {@code PreboardingExperiment}; sibling of {@link ExpressionExperiment}
+ * value {@code PreboardedExperiment}; sibling of {@link ExpressionExperiment}
  * and {@link ExpressionExperimentSubSet}.</p>
  *
- * <p>Defaults its {@link WorkflowState} to {@link WorkflowState#Preboarding} on
+ * <p>Defaults its {@link WorkflowState} to {@link WorkflowState#Preboarded} on
  * construction (collapsing handoff states 1+2; see STATUS file). Promotion
  * advances the resulting EE to {@link WorkflowState#Loaded}.</p>
  */
-public class PreboardingExperiment extends Investigation {
+public class PreboardedExperiment extends Investigation {
 
     private String accession;
     private String source = "GEO";
@@ -46,13 +46,13 @@ public class PreboardingExperiment extends Investigation {
      */
     private String identifyingMetadata;
 
-    public PreboardingExperiment() {
+    public PreboardedExperiment() {
         super();
-        setWorkflowState( WorkflowState.Preboarding );
+        setWorkflowState( WorkflowState.Preboarded );
     }
 
     /**
-     * @return the upstream accession this preboarding targets (e.g. GSE12345).
+     * @return the upstream accession this preboarded targets (e.g. GSE12345).
      *         Required; the create endpoint enforces it.
      */
     public String getAccession() {
@@ -103,8 +103,8 @@ public class PreboardingExperiment extends Investigation {
     @Override
     public boolean equals( Object object ) {
         if ( this == object ) return true;
-        if ( !( object instanceof PreboardingExperiment ) ) return false;
-        PreboardingExperiment other = ( PreboardingExperiment ) object;
+        if ( !( object instanceof PreboardedExperiment ) ) return false;
+        PreboardedExperiment other = ( PreboardedExperiment ) object;
         if ( getId() != null && other.getId() != null ) {
             return getId().equals( other.getId() );
         }

@@ -12,12 +12,12 @@
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 /**
- * Emitted by {@code POST /preboarding} when a {@code PreboardingExperiment}
+ * Emitted by {@code POST /preboarded} when a {@code PreboardedExperiment}
  * is created for a previously-unknown accession.
  *
  * <p>See {@code HANDOFF_PROPOSED_EXPERIMENT_WORKFLOW.md} §"Audit-event hooks".
- * Authored via the declarative {@code @Audited(PreboardingCreatedEvent.class)}
+ * Authored via the declarative {@code @Audited(PreboardedCreatedEvent.class)}
  * pattern; the audit row's {@code NOTE} carries the accession.</p>
  */
-public class PreboardingCreatedEvent extends AuditEventType {
+public class PreboardedCreatedEvent extends AuditEventType {
 }

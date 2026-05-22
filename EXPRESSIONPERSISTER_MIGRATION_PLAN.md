@@ -323,7 +323,7 @@ change. Tests: `AclAdviceTest`, `AclAuthorizationTest`,
 `ProcessedExpressionDataVectorServiceTest`, plus the standard EE-load
 sweep.
 
-### Chunk E2 — extract `EeWriteService` preboarding (~0.5 session)
+### Chunk E2 — extract `EeWriteService` preboarded (~0.5 session)
 1. Create `gemma-core/.../service/expression/experiment/EeWriteService.java`
    (interface) + `EeWriteServiceImpl` (impl). Define
    `create(EE, ArrayDesignsForExperimentCache)` matching the contract
@@ -423,7 +423,7 @@ project independent of the persister retirement.
 | Chunk | Risk | Effort |
 |---|:-:|---|
 | E1 — FlushMode/ACL collapse + redundant wrap delete | medium-high | 0.5 |
-| E2 — Preboarding `EeWriteService` + trivial methods | low | 0.5 |
+| E2 — Preboarded `EeWriteService` + trivial methods | low | 0.5 |
 | E3 — Relocate body + BAD/BA helpers + sanity checks | medium | 0.7 |
 | E4 — Cut over `GeoServiceImpl` + Simple loader | low | 0.3 |
 | E5 — Delete persister + migrate tests | low | 0.5 |

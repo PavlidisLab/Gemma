@@ -104,7 +104,7 @@ public interface WorkflowService {
      *
      * @param state        required; restrict to this workflow state.
      * @param datasetType  optional; "expression_experiment" or
-     *                     "preboarding_experiment". Currently only the
+     *                     "preboarded_experiment". Currently only the
      *                     former is implemented.
      * @param assignee     optional; restrict to datasets that have an OPEN
      *                     ticket assigned to this user login.

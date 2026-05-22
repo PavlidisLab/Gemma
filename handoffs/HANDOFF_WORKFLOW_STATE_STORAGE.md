@@ -11,7 +11,7 @@ not implemented.
 The curation UI (`~/Dev/gemma-curation-ui/apps/curation/WORKFLOW_MANAGEMENT.md`)
 defines an explicit eight-state experiment lifecycle:
 
-> **Discovery → Candidate → Preboarding → Loaded → Curate → Process →
+> **Discovery → Candidate → Preboarded → Loaded → Curate → Process →
 > Audit → Public**
 
 with a **recuration loop** Audit → Curate (per
@@ -51,7 +51,7 @@ the UI.
 ### `GET /datasets/{id}/workflow`
 
 Return the current workflow state for a dataset (an EE OR a
-`PreboardingExperiment` per
+`PreboardedExperiment` per
 `HANDOFF_PROPOSED_EXPERIMENT_WORKFLOW.md`), plus the full
 transition history.
 
@@ -66,15 +66,15 @@ transition history.
   "history": [
     { "state": "Discovery", "entered_at": "...", "actor": "agent:gemini-loader", "reason": null },
     { "state": "Candidate",  "entered_at": "...", "actor": "curator:alice",       "reason": "Triage approved" },
-    { "state": "Preboarding",   "entered_at": "...", "actor": "agent:proposer-v0.8", "reason": null },
+    { "state": "Preboarded",   "entered_at": "...", "actor": "agent:proposer-v0.8", "reason": null },
     { "state": "Loaded",     "entered_at": "...", "actor": "system:geo-loader",   "reason": null },
     { "state": "Curate",     "entered_at": "...", "actor": "curator:alice",       "reason": "Beginning curation" }
   ]
 }
 ```
 
-For preboarding, `dataset_id` is the preboarding id and `dataset_type`
-is `"preboarding_experiment"`.
+For preboarded, `dataset_id` is the preboarded id and `dataset_type`
+is `"preboarded_experiment"`.
 
 ### `PUT /datasets/{id}/workflow`
 
@@ -119,9 +119,9 @@ view — "show me everything that's waiting in Audit."
 **Query params:**
 
 - `state` (required): one of `Discovery`, `Candidate`,
-  `Preboarding`, `Loaded`, `Curate`, `Process`, `Audit`, `Public`.
+  `Preboarded`, `Loaded`, `Curate`, `Process`, `Audit`, `Public`.
 - `dataset_type` (optional): filter to `expression_experiment` or
-  `preboarding_experiment`. Default: both.
+  `preboarded_experiment`. Default: both.
 - `assignee` (optional): user login; filter to datasets where the
   current open ticket (per
   `AUDIT_AS_WORKFLOW_RECCE.md`) is assigned to this user.
@@ -156,9 +156,9 @@ Allowed transitions (lifted from
 21–40):
 
 ```
-Discovery   → Candidate, Preboarding
-Candidate   → Preboarding, Discovery (rejection back-flow)
-Preboarding    → Loaded, Candidate (re-triage)
+Discovery   → Candidate, Preboarded
+Candidate   → Preboarded, Discovery (rejection back-flow)
+Preboarded    → Loaded, Candidate (re-triage)
 Loaded      → Curate
 Curate      → Process, Audit
 Process     → Audit, Curate
@@ -192,7 +192,7 @@ agent-role authority for:
 
 - `Discovery → Candidate` (agent triage decides the GEO record
   is worth pursuing).
-- `Preboarding → Loaded` (the GEO loader pipeline; already a system
+- `Preboarded → Loaded` (the GEO loader pipeline; already a system
   account, not strictly the "agent" identity).
 - `Loaded → Curate` (agent's proposer auto-advances when it
   attaches its first proposal — debatable; could also be a
@@ -306,8 +306,8 @@ changes commonly correspond to workflow-state advances.
 - `AUDIT_PHASE_C_RECCE.md` (this repo) — declarative-audit
   patterns for the `WorkflowStateChangedEvent` emission.
 - `HANDOFF_PROPOSED_EXPERIMENT_WORKFLOW.md` (this dir) —
-  `PreboardingExperiment` lives in `Discovery` / `Candidate` /
-  `Preboarding` states; promotion to EE advances to `Loaded`.
+  `PreboardedExperiment` lives in `Discovery` / `Candidate` /
+  `Preboarded` states; promotion to EE advances to `Loaded`.
 - `HANDOFF_PUT_DATASETS_DESIGN.md` (this dir) — applying a
   design change typically corresponds to time spent in `Curate`
   state.
@@ -324,7 +324,7 @@ changes commonly correspond to workflow-state advances.
 
 1. **Per-transition role granularity.** First cut: any curator
    can advance to any allowed next-state. Stricter: agents drive
-   `Discovery → Candidate`, system drives `Preboarding → Loaded`,
+   `Discovery → Candidate`, system drives `Preboarded → Loaded`,
    curators drive everything else. Recommendation: ship the
    permissive first-cut; tighten when curator + agent
    responsibilities are more settled.
@@ -382,7 +382,7 @@ This endpoint set is "done" when:
 - [ ] Auth: `workflow:read` for GETs; `workflow:advance` (curator
       role) for PUT.
 - [ ] Integration test exercises full lifecycle on a fixture
-      dataset: `Discovery → Candidate → Preboarding → Loaded →
+      dataset: `Discovery → Candidate → Preboarded → Loaded →
       Curate → Audit → Curate → Process → Audit → Public`.
 - [ ] `gemma-rest` OpenAPI spec updated.
 - [ ] Python client wrappers in `shared/gemma.py` (sibling
