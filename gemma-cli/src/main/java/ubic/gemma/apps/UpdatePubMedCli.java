@@ -76,7 +76,9 @@ public class UpdatePubMedCli extends AbstractAuthenticatedCLI {
     @Override
     protected void doAuthenticatedWork() throws Exception {
         Map<String, ExpressionExperiment> toFetch = new HashMap<>();
-        Collection<ExpressionExperiment> ees = eeserv.getExperimentsLackingPublications();
+        // admin pass: process the full set (currently ~7k+ rows on prod); explicit MAX_VALUE makes the unbounded
+        // intent visible at the callsite rather than baked into the DAO.
+        Collection<ExpressionExperiment> ees = eeserv.getExperimentsLackingPublications( Integer.MAX_VALUE );
         for ( ExpressionExperiment ee : ees ) {
             String shortName = ee.getShortName();
             if ( shortName.contains( "." ) ) {

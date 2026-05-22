@@ -543,7 +543,7 @@ public interface ExpressionExperimentDao
      */
     Map<Characteristic, Long> getAnnotationsUsageFrequency( @Nullable Collection<Long> expressionExperimentIds, @Nullable Class<? extends Identifiable> level, int maxResults, int minFrequency, @Nullable String category, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris, boolean includePredicates, boolean includeObjects );
 
-    Collection<ExpressionExperiment> getExperimentsLackingPublications();
+    Collection<ExpressionExperiment> getExperimentsLackingPublications( int maxResults );
 
     MeanVarianceRelation updateMeanVarianceRelation( ExpressionExperiment ee, MeanVarianceRelation mvr );
 

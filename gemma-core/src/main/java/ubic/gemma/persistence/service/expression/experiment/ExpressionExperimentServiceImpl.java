@@ -2104,8 +2104,8 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<ExpressionExperiment> getExperimentsLackingPublications() {
-        return this.expressionExperimentDao.getExperimentsLackingPublications();
+    public Collection<ExpressionExperiment> getExperimentsLackingPublications( int maxResults ) {
+        return this.expressionExperimentDao.getExperimentsLackingPublications( maxResults );
     }
 
     @Override

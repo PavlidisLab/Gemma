@@ -1251,12 +1251,13 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     Boolean isSuitableForDEA( ExpressionExperiment ee );
 
     /**
-     *
+     * @param maxResults maximum number of rows to return; pass {@link Integer#MAX_VALUE} for unbounded (use with care
+     *                   on prod, where this set is in the thousands).
      * @return collection of GEO experiments which lack an association with a publication (non-GEO experiments will be ignored)
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
     @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
-    Collection<ExpressionExperiment> getExperimentsLackingPublications();
+    Collection<ExpressionExperiment> getExperimentsLackingPublications( int maxResults );
 
     /**
      * Update a quantitation type.
