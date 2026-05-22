@@ -338,3 +338,85 @@ component).
   Needs to read the rotation algorithm under HB6 and check whether
   the "switching gene product from one gene to another" branch fires
   spuriously.
+
+## Batch 3 — failsafe-residuals-batch3 (2026-05-21)
+
+Starting state: 7 issues carried over from batch 2 plus the new
+residuals introduced by the recent merges (skeleton workflow,
+annotations write, PUT-design, workflow-state, hbm-default-quoting fix
+at `d19dcf45d8`). gemdtest is single-tenant and locked by other parallel
+agents, so this batch is compile-validation only — no focused failsafe
+run was possible inside the worktree.
+
+Commits:
+
+- `ca9f98517d` `test(EESIT): reload after update to capture
+  merge-generated ids` — Bucket H managed-instance gap, three EESIT
+  tests in one shot:
+  - `testLoadValueObjectsByFactorValueCharacteristic` — capture
+    pre-update Statement id set on the FactorValue, reload EE post
+    `expressionExperimentService.update(ee)`, identify the new Statement
+    by id-diff, then build the Filter against the resolved id.
+  - `testLoadValueObjectsBySampleUsedCharacteristic` — same pattern on
+    `BioMaterial.characteristics` via `bioMaterialService.load + thaw`.
+  - `testCacheInvalidationWhenACharacteristicIsDeleted` — capture
+    baseline ids, resolve the persisted Characteristic via the reloaded
+    EE before the not-null assertion. The downstream
+    `characteristicService.remove(c)` / `load(c.getId())` /
+    `doesNotContain(c)` paths were retargeted at the reloaded managed
+    `persistedC` so the remove receives a valid id.
+- `6d19b85442` `test(geneSet): make testLoadValueObject robust to
+  cross-test data residue` — Bucket H one-off. Hard-coded
+  `loadAllValueObjects().size() == 1` assumed a freshly empty schema;
+  failsafe ITs share gemdtest, so any earlier-class leak inflated the
+  count. Capture baseline pre-create, assert baseline+1.
+
+Batch 3 attempted but not landed (reasoning):
+
+- `ExpressionExperimentServiceIntegrationTest.testStreamExperiments`
+  (AccessDenied) — needs a runtime trace of which voter is denying on
+  `IS_AUTHENTICATED_ANONYMOUSLY` + `AFTER_ACL_STREAM_READ`. The other
+  patterns (`@Secured("IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_*")`)
+  work elsewhere, so the divergence is specifically around stream
+  filtering. Without a focused failsafe run, blind voter / provider
+  shuffling risks regression. Defer to a session that can run the
+  test class against gemdtest.
+- `DifferentialExpressionAnalysisServiceTest.testCreate` — confirmed
+  the structural cause: `ParentIdentityRetrievalStrategyImpl` returns
+  the IMMEDIATE getSecurityOwner (which for ResultSet is DEA), but
+  `BaseAclAdvice.locateSecuredParent` (post-revert `d0f141efd3`)
+  recurses to the TOP-LEVEL Securable (EE for ResultSet). Test
+  expects 3-level chain `EE -> DEA -> ResultSet`; revert collapses
+  it to `EE -> ResultSet`. Re-applying the immediate-owner fix
+  re-breaks the 5 setUp tests the revert was protecting. A proper
+  fix probably has to teach `chooseParentForAssociations` (or the
+  `AclEventListener` stash) to distinguish "ED/EF/FV inherit from
+  EE" from "ResultSet inherits from DEA" — needs the OTHER 5
+  failing tests in front of you to design against. Deferred.
+- `GeneSearchTest.testSearchGenes` — Hibernate Search 7 query-time
+  error. Without the actual stack from a run, no minimal fix is
+  visible from a code read; `HibernateConfig.resolveSearchIndexBase`
+  already coerces the directory.root to `${java.io.tmpdir}` so
+  startup ordering may not be the failure mode any more. Defer.
+- `GeneWriteServiceTest.testGiRotationInPlace` — traced the algorithm
+  end-to-end. The "same name, different GI" path SHOULD recognize the
+  existing GP by name (in `updatedGpMap`), update its NcbiGi in place
+  via `updateGeneProduct`, then `handleGeneProductChangedGIs` sees the
+  existing GP already carrying the new GI (which is in `usedGIs`) and
+  skips it — `toRemove` ends up empty. On paper, no GP removal should
+  happen. So the "products bag is empty" observation must originate
+  somewhere I can't pin from a static read alone: either a session-
+  level managed-instance refresh dropping the GP after the merge, an
+  L2 cache eviction, or an unintended cascade. Needs a focused run
+  with logging on `handleGeneProductChangedGIs` and the post-update
+  reload. Deferred.
+- Bucket A (`sn` NPE through `PersistentSet.equalsSnapshot`) and
+  Bucket B (`Gene altered from null to 4309`) — out of scope for a
+  surgical batch; both need upstream HB6 investigation. Skipped per
+  the brief's "chip away" framing.
+- Sister-owned files (DAOs under `persistence/service`,
+  `gemma-rest/src/test`, unified-curation-draft files) — left alone
+  per scope guardrails.
+
+No new regressions emerged from the recent merges in the files this
+batch touched (compile-clean against current main).
