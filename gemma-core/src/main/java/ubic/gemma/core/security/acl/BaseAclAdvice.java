@@ -119,6 +119,27 @@ public abstract class BaseAclAdvice {
      * @param s which might have a parent already in the system
      */
     protected Acl locateParentAcl( SecuredChild s ) {
+        // Prefer the IMMEDIATE getSecurityOwner when it already has its own ACL. This handles
+        // the multi-hop case (ExpressionAnalysisResultSet -> DifferentialExpressionAnalysis ->
+        // ExpressionExperiment) where the immediate owner (DEA) has been persisted earlier in
+        // the flush and has its ACL row. AclClassMetadata registers ResultSet's parent type as
+        // DEA, not as the top-level EE; flattening here would break that contract and the
+        // testCreate-style assertion analysisAcl.getObjectIdentity() ==
+        // resultSetAcl.getParentAcl().getObjectIdentity().
+        //
+        // Fall back to the recursive walk when the immediate owner has no ACL yet — this is
+        // the ED/EF/FV chain during EE cascade-create, where intermediate SecuredChild ancestors
+        // (e.g. ExperimentalDesign for ExperimentalFactor) don't have their own ACLs and we
+        // need to skip past them to the EE root.
+        Securable immediate = s.getSecurityOwner();
+        if ( immediate != null ) {
+            try {
+                return this.getAclService().readAclById( makeObjectIdentity( immediate ) );
+            } catch ( NotFoundException ex ) {
+                // Immediate owner has no ACL yet; recurse to find a higher ancestor that does.
+            }
+        }
+
         Securable parent = locateSecuredParent( s );
 
         if ( parent != null ) return this.getAclService().readAclById( makeObjectIdentity( parent ) );
