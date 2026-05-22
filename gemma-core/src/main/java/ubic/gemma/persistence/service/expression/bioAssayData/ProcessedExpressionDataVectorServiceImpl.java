@@ -10,6 +10,7 @@ import ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionExcep
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.security.audit.Audited;
 import ubic.gemma.core.security.audit.AuditedOnError;
+import ubic.gemma.core.security.audit.payload.ProcessedVectorComputationPayload;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedProcessedVectorComputationEvent;
@@ -67,6 +68,8 @@ public class ProcessedExpressionDataVectorServiceImpl
     private CachedProcessedExpressionDataVectorService cachedProcessedExpressionDataVectorService;
     @Autowired
     private ProcessedExpressionDataVectorCreationHelperService processedExpressionDataVectorCreationHelperService;
+    @Autowired
+    private ProcessedExpressionDataVectorAuditService processedVectorAuditService;
 
     @Autowired
     protected ProcessedExpressionDataVectorServiceImpl( ProcessedExpressionDataVectorDao mainDao ) {
@@ -92,24 +95,19 @@ public class ProcessedExpressionDataVectorServiceImpl
         QuantitationType qt;
         ProcessedExpressionDataVectorCreationSummary summary = new ProcessedExpressionDataVectorCreationSummary();
         qt = this.processedExpressionDataVectorCreationHelperService.createProcessedDataVectors( expressionExperiment, ignoreQuantitationMismatch, summary );
-        StringBuilder details = new StringBuilder();
-        details.append( "QuantitationType: " ).append( summary.getRawQuantitationType() ).append( "\n" );
-        details.append( "QuantitationType: " ).append( qt ).append( "\n" );
-        if ( summary.getNumberOfMaskedMissingValues() > 0 ) {
-            details.append( "Number of masked missing values: " ).append( summary.getNumberOfMaskedMissingValues() ).append( "\n" );
-        }
-        if ( summary.getNumberOfMaskedOutliers() > 0 ) {
-            details.append( "Number of masked outliers: " ).append( summary.getNumberOfMaskedOutliers() ).append( "\n" );
-        }
-        if ( summary.isQuantileNormalized() ) {
-            details.append( "Data was quantile normalized.\n" );
-        }
-        if ( StringUtils.isNotBlank( summary.getComment() ) ) {
-            details.append( summary.getComment() ).append( "\n" );
-        }
-        // Success path: 4-arg detail form retained pending the AuditEventPayload
-        // refactor (bucket 2f). The failure path is now handled by @AuditedOnError above.
-        auditTrailService.addUpdateEvent( expressionExperiment, ProcessedVectorComputationEvent.class, String.format( "Created processed expression data for %s.", expressionExperiment ), details.toString() );
+        // Phase C bucket 2f: typed payload via the AuditedAspect. The audit row
+        // is emitted by the @Audited annotation on
+        // ProcessedExpressionDataVectorAuditService#recordProcessedVectorComputation
+        // — calling through a co-bean is required because Spring AOP cannot
+        // intercept self-invocations on this class.
+        ProcessedVectorComputationPayload payload = new ProcessedVectorComputationPayload(
+                summary.getRawQuantitationType() != null ? summary.getRawQuantitationType().toString() : null,
+                qt != null ? qt.toString() : null,
+                summary.getNumberOfMaskedMissingValues(),
+                summary.getNumberOfMaskedOutliers(),
+                summary.isQuantileNormalized(),
+                StringUtils.isNotBlank( summary.getComment() ) ? summary.getComment() : null );
+        processedVectorAuditService.recordProcessedVectorComputation( expressionExperiment, payload );
         if ( updateRanks ) {
             updateRanks( expressionExperiment );
         }
