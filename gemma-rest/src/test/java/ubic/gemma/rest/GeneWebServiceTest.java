@@ -73,6 +73,17 @@ public class GeneWebServiceTest extends BaseJerseyIntegrationTest5 {
     }
 
     @Test
+    public void testGeneProbesSummary() {
+        // Fixture gene has no composite sequences mapped, so the page is empty either way; this
+        // asserts the summary=true branch wires + serializes cleanly (the enrichment loop is a
+        // no-op for an empty page, surfaced as a 200 with an empty list payload).
+        assertThat( target( "/genes/" + gene.getOfficialSymbol() + "/probes" )
+                .queryParam( "summary", "true" )
+                .request().get() )
+                .hasStatus( Response.Status.OK );
+    }
+
+    @Test
     public void testGeneProbesWhenIdentifierIsAmbiguous() {
         gene2 = new Gene();
         gene2.setOfficialSymbol( gene.getOfficialSymbol() );

@@ -24,7 +24,10 @@ import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import ubic.gemma.core.analysis.sequence.ArrayDesignMapResultService;
+import ubic.gemma.core.analysis.sequence.CompositeSequenceMapValueObject;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.expression.experiment.BioAssaySetValueObject;
 import ubic.gemma.model.genome.Gene;
@@ -32,6 +35,7 @@ import ubic.gemma.model.genome.GeneOntologyTermValueObject;
 import ubic.gemma.model.genome.PhysicalLocationValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
+import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 import ubic.gemma.persistence.util.CursorPage;
@@ -45,11 +49,14 @@ import ubic.gemma.rest.util.args.*;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static ubic.gemma.rest.util.Responders.paginate;
 import static ubic.gemma.rest.util.Responders.paginateByCursor;
@@ -75,6 +82,10 @@ public class GeneWebService {
     private TableMaintenanceUtil tableMaintenanceUtil;
     @Autowired
     private DifferentialExpressionResultService differentialExpressionResultService;
+    @Autowired
+    private CompositeSequenceService compositeSequenceService;
+    @Autowired
+    private ArrayDesignMapResultService arrayDesignMapResultService;
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -164,7 +175,9 @@ public class GeneWebService {
                     + "pass an opaque `cursor` token from a previous response's `nextCursor` / `prevCursor` field. "
                     + "`offset` and `cursor` are mutually exclusive — passing a non-null `cursor` selects cursor mode. "
                     + "In cursor mode the result is always sorted by ascending `cs.id` (cursor mode forces a single-component id sort pending the indexed-column audit in phase B); "
-                    + "the path-derived `{gene}` constraint is preserved; `totalElements` is `null` by default (no count query per request).",
+                    + "the path-derived `{gene}` constraint is preserved; `totalElements` is `null` by default (no count query per request). "
+                    + "Pass `summary=true` to receive an enriched per-row VO with the gene-list this probe maps to and the BLAT-hit count (replaces the legacy `getGeneCsSummaries` DWR call); "
+                    + "the page shape is unchanged but each element is a `CompositeSequenceSummaryValueObject` instead of the thin `CompositeSequenceValueObject`.",
             responses = {
                     @ApiResponse(responseCode = "200",
                             content = @Content(schema = @Schema(oneOf = {
@@ -176,7 +189,9 @@ public class GeneWebService {
             @PathParam("gene") GeneArg<?> geneArg, // Required
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
-            @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg
+            @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg,
+            @Parameter(description = "When true, each element is enriched with the gene-list this probe maps to and the BLAT-hit count (the legacy `getGeneCsSummaries` shape).")
+            @QueryParam("summary") @DefaultValue("false") boolean summary
     ) {
         if ( cursorArg != null ) {
             // Mutual-exclusion: a non-null cursor selects cursor mode. The default offset=0 is
@@ -186,9 +201,62 @@ public class GeneWebService {
             // The path-derived gene.id constraint is preserved by the DAO query (the keyset HQL walks
             // the same gene→probe join structure as the offset variant, scoped to the resolved Gene).
             CursorPage<CompositeSequenceValueObject> page = geneArgService.getGeneProbesByCursor( geneArg, cursorArg.getValue(), limit.getValue() );
+            if ( summary ) {
+                Map<Long, CompositeSequenceMapValueObject> enrichment = loadProbeSummaries( page );
+                CursorPage<CompositeSequenceSummaryValueObject> enriched = page.map( probe -> toSummaryVo( probe, enrichment.get( probe.getId() ) ) );
+                return paginateByCursor( enriched, new String[] { "id" } );
+            }
             return paginateByCursor( page, new String[] { "id" } );
         }
-        return paginate( geneArgService.getGeneProbes( geneArg, offset.getValue(), limit.getValue() ), new String[] { "id" } );
+        Slice<CompositeSequenceValueObject> slice = geneArgService.getGeneProbes( geneArg, offset.getValue(), limit.getValue() );
+        if ( summary ) {
+            Map<Long, CompositeSequenceMapValueObject> enrichment = loadProbeSummaries( slice );
+            Slice<CompositeSequenceSummaryValueObject> enriched = slice.map( probe -> toSummaryVo( probe, enrichment.get( probe.getId() ) ) );
+            return paginate( enriched, new String[] { "id" } );
+        }
+        return paginate( slice, new String[] { "id" } );
+    }
+
+    /**
+     * Build the per-probe enrichment map for the given page of probe VOs &mdash; one
+     * {@code getRawSummary} hit over the page's probe IDs, fanned into a
+     * {@link CompositeSequenceMapValueObject} per probe via the existing
+     * {@link ArrayDesignMapResultService} aggregator. Returned map is keyed by
+     * {@code compositeSequence.id} for O(1) lookup during slice mapping; probes with no
+     * sequence-analysis rows (no BLAT hits, no gene-product mappings) are absent from
+     * the map and surface as a summary VO with an empty gene list and {@code numBlatHits=null}.
+     */
+    private Map<Long, CompositeSequenceMapValueObject> loadProbeSummaries( List<CompositeSequenceValueObject> probes ) {
+        if ( probes.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+        List<Long> ids = probes.stream().map( CompositeSequenceValueObject::getId ).collect( Collectors.toList() );
+        Collection<CompositeSequence> entities = compositeSequenceService.load( ids );
+        Collection<Object[]> rawSummaries = compositeSequenceService.getRawSummary( entities );
+        if ( rawSummaries == null || rawSummaries.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+        Collection<CompositeSequenceMapValueObject> summaries = arrayDesignMapResultService.getSummaryMapValueObjects( rawSummaries );
+        Map<Long, CompositeSequenceMapValueObject> byId = new HashMap<>( summaries.size() );
+        for ( CompositeSequenceMapValueObject s : summaries ) {
+            if ( s.getCompositeSequenceId() != null ) {
+                byId.put( Long.parseLong( s.getCompositeSequenceId() ), s );
+            }
+        }
+        return byId;
+    }
+
+    private static CompositeSequenceSummaryValueObject toSummaryVo( CompositeSequenceValueObject probe, @org.springframework.lang.Nullable CompositeSequenceMapValueObject mapVo ) {
+        List<GeneValueObject> genes;
+        Integer numBlatHits;
+        if ( mapVo != null ) {
+            genes = new ArrayList<>( mapVo.getGenes().values() );
+            numBlatHits = mapVo.getNumBlatHits();
+        } else {
+            genes = Collections.emptyList();
+            numBlatHits = null;
+        }
+        return new CompositeSequenceSummaryValueObject( probe, genes, genes.size(), numBlatHits );
     }
 
     /**
@@ -352,5 +420,27 @@ public class GeneWebService {
     public static class GeneDifferentialExpressionGroupValueObject {
         private final BioAssaySetValueObject experiment;
         private final List<DifferentialExpressionValueObject> results;
+    }
+
+    /**
+     * Enriched per-probe row returned by {@link #getGeneProbes} when {@code summary=true}.
+     * Replaces the legacy DWR {@code CompositeSequenceController.getGeneCsSummaries} shape:
+     * for each probe (composite sequence) on the page, carries the thin probe VO plus the
+     * list of genes this probe maps to and the distinct-BLAT-hit count.
+     * <p>
+     * {@code numGenes} duplicates {@code genes.size()} as a UI convenience (avoids forcing
+     * the client to count when only the cardinality matters). {@code numBlatHits} is the
+     * count of distinct sequence-similarity hits (chrom + target-start + target-end + target-starts
+     * + query-sequence), aggregated by {@code ArrayDesignMapResultService}; null when the probe
+     * has no sequence-analysis rows.
+     */
+    @Data
+    public static class CompositeSequenceSummaryValueObject implements Serializable {
+        private static final long serialVersionUID = 1L;
+        private final CompositeSequenceValueObject probe;
+        private final List<GeneValueObject> genes;
+        private final int numGenes;
+        @org.springframework.lang.Nullable
+        private final Integer numBlatHits;
     }
 }

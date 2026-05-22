@@ -46,7 +46,7 @@ import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for the cursor-pagination branch added to
- * {@link GeneWebService#getGeneProbes(GeneArg, OffsetArg, LimitArg, CursorArg)} as step 1m
+ * {@link GeneWebService#getGeneProbes(GeneArg, OffsetArg, LimitArg, CursorArg, boolean)} as step 1m
  * of {@code CURSOR_PAGINATION_STEP1_PLAN.md}. Pure Mockito — the goal is to verify the
  * WebService routes cursor vs offset modes to the right helper and emits the right
  * response wrapper, not to retest the DAO (covered by the broader DAO-cursor suite).
@@ -116,7 +116,7 @@ public class GeneWebServiceProbesCursorTest {
                 0, 20, 2L );
         when( geneArgService.getGeneProbes( any( GeneArg.class ), eq( 0 ), eq( 20 ) ) ).thenReturn( slice );
 
-        Object response = webService.getGeneProbes( geneArg, offset( "0" ), limit( "20" ), null );
+        Object response = webService.getGeneProbes( geneArg, offset( "0" ), limit( "20" ), null, false );
 
         assertThat( response ).isInstanceOf( PaginatedResponseDataObject.class );
         @SuppressWarnings("unchecked")
@@ -144,7 +144,7 @@ public class GeneWebServiceProbesCursorTest {
         when( geneArgService.getGeneProbesByCursor( any( GeneArg.class ), eq( c ), eq( 20 ) ) ).thenReturn( cp );
 
         CursorArg arg = CursorArg.valueOf( c.encode() );
-        Object response = webService.getGeneProbes( geneArg, offset( "0" ), limit( "20" ), arg );
+        Object response = webService.getGeneProbes( geneArg, offset( "0" ), limit( "20" ), arg, false );
 
         assertThat( response ).isInstanceOf( CursorPaginatedResponseDataObject.class );
         @SuppressWarnings("unchecked")
@@ -171,7 +171,7 @@ public class GeneWebServiceProbesCursorTest {
                 Collections.singletonList( probe2 ), null, 5, null, "prev", null );
         when( geneArgService.getGeneProbesByCursor( any( GeneArg.class ), eq( c ), eq( 5 ) ) ).thenReturn( cp );
 
-        Object response = webService.getGeneProbes( geneArg, offset( "0" ), limit( "5" ), CursorArg.valueOf( c.encode() ) );
+        Object response = webService.getGeneProbes( geneArg, offset( "0" ), limit( "5" ), CursorArg.valueOf( c.encode() ), false );
 
         assertThat( response ).isInstanceOf( CursorPaginatedResponseDataObject.class );
         verify( geneArgService ).getGeneProbesByCursor( any( GeneArg.class ), eq( c ), eq( 5 ) );
@@ -186,7 +186,7 @@ public class GeneWebServiceProbesCursorTest {
                 Collections.singletonList( probe1 ), null, 10, null, null, null );
         when( geneArgService.getGeneProbesByCursor( eq( geneArg ), eq( c ), eq( 10 ) ) ).thenReturn( cp );
 
-        webService.getGeneProbes( geneArg, offset( "0" ), limit( "10" ), CursorArg.valueOf( c.encode() ) );
+        webService.getGeneProbes( geneArg, offset( "0" ), limit( "10" ), CursorArg.valueOf( c.encode() ), false );
 
         verify( geneArgService ).getGeneProbesByCursor( eq( geneArg ), eq( c ), eq( 10 ) );
     }
@@ -201,7 +201,7 @@ public class GeneWebServiceProbesCursorTest {
                 Collections.emptyList(), null, 20, /* nextCursor */ null, /* prevCursor */ null, null );
         when( geneArgService.getGeneProbesByCursor( any( GeneArg.class ), eq( c ), eq( 20 ) ) ).thenReturn( cp );
 
-        Object response = webService.getGeneProbes( geneArg, offset( "0" ), limit( "20" ), CursorArg.valueOf( c.encode() ) );
+        Object response = webService.getGeneProbes( geneArg, offset( "0" ), limit( "20" ), CursorArg.valueOf( c.encode() ), false );
 
         assertThat( response ).isInstanceOf( CursorPaginatedResponseDataObject.class );
         @SuppressWarnings("unchecked")
@@ -222,7 +222,7 @@ public class GeneWebServiceProbesCursorTest {
                 Arrays.asList( probe1, probe2 ), null, 10, null, null, null );
         when( geneArgService.getGeneProbesByCursor( any( GeneArg.class ), eq( c ), eq( 10 ) ) ).thenReturn( cp );
 
-        Object response = webService.getGeneProbes( geneArg, offset( "0" ), limit( "10" ), CursorArg.valueOf( c.encode() ) );
+        Object response = webService.getGeneProbes( geneArg, offset( "0" ), limit( "10" ), CursorArg.valueOf( c.encode() ), false );
 
         @SuppressWarnings("unchecked")
         CursorPaginatedResponseDataObject<CompositeSequenceValueObject> page =
