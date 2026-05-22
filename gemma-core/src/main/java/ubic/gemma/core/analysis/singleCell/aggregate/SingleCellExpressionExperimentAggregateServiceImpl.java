@@ -18,7 +18,7 @@ import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.core.security.audit.payload.SingleCellAggregationPayload;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
@@ -54,7 +54,7 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
     private BioAssayService bioAssayService;
 
     @Autowired
-    private AuditTrailService auditTrailService;
+    private SingleCellExpressionExperimentAggregateAuditService aggregateAuditService;
 
     @Autowired
     private QuantitationTypeService quantitationTypeService;
@@ -290,6 +290,12 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
 
         int newVecs = expressionExperimentService.addRawDataVectors( ee, newQt, rawVectors );
         String note = String.format( Locale.ENGLISH, "Created %d aggregated raw vectors for %s.", newVecs, newQt );
+        // Phase C bucket 2f: typed payload via the AuditedAspect. The audit row is
+        // written by the @Audited annotation on
+        // SingleCellExpressionExperimentAggregateAuditService#recordAggregateCreated
+        // — the co-bean hop is required because Spring AOP can't intercept
+        // self-invocations on this service.
+        List<SingleCellAggregationPayload.AggregatedAssay> aggregatedAssays = new ArrayList<>( cellBAs.size() );
         StringBuilder details = new StringBuilder();
         details.append( "Single-cell quantitation type: " ).append( qt ).append( "\n" );
         details.append( "Single-cell dimension: " ).append( scd ).append( "\n" );
@@ -297,32 +303,57 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
         for ( int i = 0; i < cellBAs.size(); i++ ) {
             BioAssay cellBa = cellBAs.get( i );
             details.append( "\n" ).append( "\t" ).append( cellBa );
+            Integer pNumberOfCells = null;
+            Integer pNumberOfDesignElements = null;
+            Integer pNumberOfCellsByDesignElements = null;
+            Integer pMaskedCells = null;
+            Integer pTotalCells = null;
+            Double pLibrarySize = null;
+            Double pUnadjustedLibrarySize = null;
             if ( config.isMakePreferred() ) {
+                pNumberOfCells = cellBa.getNumberOfCells();
+                pNumberOfDesignElements = cellBa.getNumberOfDesignElements();
+                pNumberOfCellsByDesignElements = cellBa.getNumberOfCellsByDesignElements();
                 details.append( " Number of cells=" ).append( cellBa.getNumberOfCells() );
                 details
                         .append( " Number of design elements=" ).append( cellBa.getNumberOfDesignElements() )
                         .append( " Number of cells x design elements=" ).append( cellBa.getNumberOfCellsByDesignElements() );
             }
             if ( mask != null ) {
+                pMaskedCells = maskedCells[i];
+                pTotalCells = totalCells[i];
                 details.append( " Number of masked cells=" ).append( maskedCells[i] ).append( "/" ).append( totalCells[i] );
             }
             if ( librarySize != null ) {
                 if ( librarySize[i] == 0 ) {
+                    pLibrarySize = 0d;
                     details.append( " Library Size is zero, the aggregate is filled with NAs" );
                 } else {
+                    pLibrarySize = librarySize[i];
                     details.append( " Library Size=" ).append( String.format( Locale.ENGLISH, "%.2f", librarySize[i] ) );
                     Double lsa = sourceSampleLibrarySizeAdjustments.get( sourceBioAssayMap.get( cellBa ) );
                     if ( lsa != null && lsa != 1.0 ) {
+                        pUnadjustedLibrarySize = librarySize[i] / lsa;
                         details.append( " (adjusted from " ).append( String.format( Locale.ENGLISH, "%.2f", librarySize[i] / lsa ) ).append( " due to unmapped genes)" );
                     }
                 }
             }
+            aggregatedAssays.add( new SingleCellAggregationPayload.AggregatedAssay(
+                    cellBa.toString(),
+                    pNumberOfCells, pNumberOfDesignElements, pNumberOfCellsByDesignElements,
+                    pMaskedCells, pTotalCells,
+                    pLibrarySize, pUnadjustedLibrarySize ) );
         }
         if ( config.getMask() != null ) {
             details.append( "\n" ).append( " Mask: " ).append( config.getMask() );
         }
         log.info( note + "\n" + details );
-        auditTrailService.addUpdateEvent( ee, DataAddedEvent.class, note, details.toString() );
+        SingleCellAggregationPayload payload = new SingleCellAggregationPayload(
+                qt.toString(),
+                scd.toString(),
+                config.getMask() != null ? config.getMask().toString() : null,
+                aggregatedAssays );
+        aggregateAuditService.recordAggregateCreated( ee, note, payload );
 
         return newQt;
     }
