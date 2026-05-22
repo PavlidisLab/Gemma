@@ -2799,7 +2799,7 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public void createSingleCellDataVectors( ExpressionExperiment ee, Collection<SingleCellExpressionDataVector> vectors ) {
+    public void createSingleCellDataVectors( ExpressionExperiment ee, Iterable<SingleCellExpressionDataVector> vectors ) {
         //
         Session session = getSessionFactory().getCurrentSession();
         // using batch size from settings.
@@ -2825,7 +2825,14 @@ public class ExpressionExperimentDaoImpl
                 session.evict( v );
             }
         }
-        session.refresh( ee );
+        // CacheMode.IGNORE to prevent hibernate from calling update() on read only cache entries
+        CacheMode previousCacheMode = session.getCacheMode();
+        session.setCacheMode( CacheMode.IGNORE );
+        try {
+            session.refresh( ee );
+        } finally {
+            session.setCacheMode( previousCacheMode );
+        }
         log.info( String.format( "Created %d single-cell data vectors for %s.", count, ee ) );
     }
 
@@ -3760,9 +3767,12 @@ public class ExpressionExperimentDaoImpl
     }
 
     private int removeAllSingleCellDataVectors( ExpressionExperiment ee, boolean keepDimensions ) {
-        Set<QuantitationType> qtsToRemove = ee.getSingleCellExpressionDataVectors().stream()
-                .map( SingleCellExpressionDataVector::getQuantitationType )
-                .collect( Collectors.toSet() );
+        //get qts to remove without loading the vectors
+        //noinspection unchecked
+        Set<QuantitationType> qtsToRemove = new HashSet<>( getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct v.quantitationType from SingleCellExpressionDataVector v where v.expressionExperiment = :ee" )
+                .setParameter( "ee", ee )
+                .list() );
         if ( Hibernate.isInitialized( ee.getSingleCellExpressionDataVectors() ) ) {
             ee.getSingleCellExpressionDataVectors().clear();
         }
