@@ -1550,6 +1550,7 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    @Nullable
     public Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment ee, QuantitationType qt ) {
         Set<Collection<BioAssayDimension>> dimensions = bulkDataVectorTypes.stream()
                 .map( vectorType -> getBioAssayDimensions( ee, qt, vectorType ) )

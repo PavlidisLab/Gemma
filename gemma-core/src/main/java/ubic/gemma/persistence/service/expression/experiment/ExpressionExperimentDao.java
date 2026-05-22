@@ -287,6 +287,7 @@ public interface ExpressionExperimentDao
 
     Collection<BioAssayDimension> getProcessedBioAssayDimensions( ExpressionExperiment ee );
 
+    @Nullable
     Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment ee, QuantitationType qt );
 
     Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment ee, QuantitationType qt, Class<? extends BulkExpressionDataVector> dataVectorType );
