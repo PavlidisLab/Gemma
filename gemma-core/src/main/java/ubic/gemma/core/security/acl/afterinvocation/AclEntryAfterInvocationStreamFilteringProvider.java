@@ -34,12 +34,18 @@ public class AclEntryAfterInvocationStreamFilteringProvider extends AbstractAclP
                 continue;
             }
             if ( returnedObject instanceof Stream ) {
+                // openSession() may return null when ACL ops piggyback on the active
+                // transaction's session (see GemmaAclConfiguration.openSession()). Guard
+                // the onClose hook so we don't NPE on the null reference.
                 Session session = aclService.openSession();
                 List<Sid> sids = sidRetrievalStrategy.getSids( authentication );
-                return ( ( Stream<?> ) returnedObject )
+                Stream<?> filtered = ( ( Stream<?> ) returnedObject )
                     .filter( getProcessDomainObjectClass()::isInstance )
-                    .filter( s -> hasPermission( s, sids, session ) )
-                    .onClose( session::close );
+                    .filter( s -> hasPermission( s, sids, session ) );
+                if ( session != null ) {
+                    filtered = filtered.onClose( session::close );
+                }
+                return filtered;
             } else {
                 throw new AuthorizationServiceException( "Expected a return type of Stream, but got " + returnedObject + "." );
             }

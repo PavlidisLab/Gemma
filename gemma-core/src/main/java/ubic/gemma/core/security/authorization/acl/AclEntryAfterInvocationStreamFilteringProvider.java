@@ -65,12 +65,19 @@ public class AclEntryAfterInvocationStreamFilteringProvider extends AbstractAclP
                 continue;
             }
             if ( returnedObject instanceof Stream ) {
+                // The Gemma AclService.openSession() returns null — ACL ops ride the active
+                // transaction's session rather than vending a separate one (see
+                // GemmaAclConfiguration.openSession()). The original gsec stack opened a real
+                // session here; we preserve the API but skip onClose when null is returned.
                 Session session = aclService.openSession();
                 List<Sid> sids = sidRetrievalStrategy.getSids( authentication );
-                return ( ( Stream<?> ) returnedObject )
+                Stream<?> filtered = ( ( Stream<?> ) returnedObject )
                         .filter( getProcessDomainObjectClass()::isInstance )
-                        .filter( s -> hasPermission( s, sids, session ) )
-                        .onClose( session::close );
+                        .filter( s -> hasPermission( s, sids, session ) );
+                if ( session != null ) {
+                    filtered = filtered.onClose( session::close );
+                }
+                return filtered;
             } else {
                 throw new AuthorizationServiceException( "Expected a return type of Stream, but got " + returnedObject + "." );
             }
