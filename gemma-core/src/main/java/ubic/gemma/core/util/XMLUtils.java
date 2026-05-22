@@ -26,6 +26,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.springframework.lang.Nullable;
 import org.xml.sax.EntityResolver;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -88,6 +89,7 @@ public class XMLUtils {
         return r;
     }
 
+    @Nullable
     public static String extractOneChildText( Node parent, String elementName ) {
         NodeList jNodes = parent.getChildNodes();
         for ( int q = 0; q < jNodes.getLength(); q++ ) {
@@ -102,6 +104,7 @@ public class XMLUtils {
         return null;
     }
 
+    @Nullable
     public static Node extractOneChild( Node parent, String elementName ) {
         NodeList jNodes = parent.getChildNodes();
         for ( int q = 0; q < jNodes.getLength(); q++ ) {
