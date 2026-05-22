@@ -323,6 +323,12 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     @Autowired
     private GeeqService geeqService;
 
+    @Autowired
+    private TaskRunningService taskRunningService;
+
+    @Autowired
+    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
+
     private ExpressionExperiment ee;
 
     @Before
@@ -339,7 +345,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
 
     @After
     public void resetMocks() {
-        reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService, taxonArgService, geneArgService, searchService, auditEventService, auditTrailService, securityService, geeqService );
+        reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService, taxonArgService, geneArgService, searchService, auditEventService, auditTrailService, securityService, geeqService, taskRunningService, differentialExpressionAnalysisService );
     }
 
     @Test
@@ -1598,6 +1604,213 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         assertThat( target( "/datasets/999/geeq" ).request().put( javax.ws.rs.client.Entity.json( "" ) ) )
                 .hasStatus( Response.Status.NOT_FOUND );
         verifyNoInteractions( geeqService );
+    }
+
+    private void mockTaskSubmission( String taskId ) {
+        when( taskRunningService.submitTaskCommand( any() ) ).thenReturn( taskId );
+        ubic.gemma.core.job.SubmittedTask task = mock( ubic.gemma.core.job.SubmittedTask.class );
+        when( task.getTaskId() ).thenReturn( taskId );
+        when( task.getStatus() ).thenReturn( ubic.gemma.core.job.SubmittedTask.Status.QUEUED );
+        when( taskRunningService.getSubmittedTask( taskId ) ).thenReturn( task );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testRunDatasetPreprocess() {
+        ee.setId( 1L );
+        mockTaskSubmission( "task-1" );
+
+        assertThat( target( "/datasets/1/tasks/preprocess" ).request()
+                .post( javax.ws.rs.client.Entity.json( "" ) ) )
+                .hasStatus( Response.Status.ACCEPTED )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .hasHeaderSatisfying( "Location", values ->
+                        assertThat( values ).singleElement().asString().endsWith( "/tasks/task-1" ) )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.taskId", "task-1" );
+
+        ArgumentCaptor<ubic.gemma.core.tasks.analysis.expression.PreprocessTaskCommand> cmd =
+                ArgumentCaptor.forClass( ubic.gemma.core.tasks.analysis.expression.PreprocessTaskCommand.class );
+        verify( taskRunningService ).submitTaskCommand( cmd.capture() );
+        assertThat( cmd.getValue().diagnosticsOnly() ).isFalse();
+        verify( expressionExperimentReportService, atLeastOnce() ).evictFromCache( 1L );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testRunDatasetPreprocessWithUnknownDatasetIs404() {
+        assertThat( target( "/datasets/999/tasks/preprocess" ).request()
+                .post( javax.ws.rs.client.Entity.json( "" ) ) )
+                .hasStatus( Response.Status.NOT_FOUND );
+        verifyNoInteractions( taskRunningService );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testRunDatasetDiagnosticsSetsFlag() {
+        ee.setId( 1L );
+        mockTaskSubmission( "task-diag" );
+
+        assertThat( target( "/datasets/1/tasks/diagnostics" ).request()
+                .post( javax.ws.rs.client.Entity.json( "" ) ) )
+                .hasStatus( Response.Status.ACCEPTED );
+
+        ArgumentCaptor<ubic.gemma.core.tasks.analysis.expression.PreprocessTaskCommand> cmd =
+                ArgumentCaptor.forClass( ubic.gemma.core.tasks.analysis.expression.PreprocessTaskCommand.class );
+        verify( taskRunningService ).submitTaskCommand( cmd.capture() );
+        assertThat( cmd.getValue().diagnosticsOnly() ).isTrue();
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testRunDatasetBatchInformationFetch() {
+        ee.setId( 1L );
+        mockTaskSubmission( "task-batch" );
+
+        assertThat( target( "/datasets/1/tasks/batchInfo" ).request()
+                .post( javax.ws.rs.client.Entity.json( "" ) ) )
+                .hasStatus( Response.Status.ACCEPTED )
+                .hasHeaderSatisfying( "Location", values ->
+                        assertThat( values ).singleElement().asString().endsWith( "/tasks/task-batch" ) );
+
+        verify( taskRunningService ).submitTaskCommand( any( ubic.gemma.core.tasks.analysis.expression.BatchInfoFetchTaskCommand.class ) );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testRunDatasetDifferentialAnalysisWithoutBodyUsesAllNonBatchFactors() {
+        ee.setId( 1L );
+        ExperimentalDesign design = new ExperimentalDesign();
+        ExperimentalFactor regular = ExperimentalFactor.Factory.newInstance();
+        regular.setId( 10L );
+        regular.setType( ubic.gemma.model.expression.experiment.FactorType.CATEGORICAL );
+        regular.setCategory( ubic.gemma.model.common.description.Characteristic.Factory.newInstance() );
+        design.getExperimentalFactors().add( regular );
+        ee.setExperimentalDesign( design );
+        when( expressionExperimentService.thawLite( ee ) ).thenReturn( ee );
+        when( expressionExperimentService.isRNASeq( ee ) ).thenReturn( false );
+        mockTaskSubmission( "task-dea" );
+
+        assertThat( target( "/datasets/1/tasks/differential" ).request()
+                .post( javax.ws.rs.client.Entity.json( "{}" ) ) )
+                .hasStatus( Response.Status.ACCEPTED );
+
+        ArgumentCaptor<ubic.gemma.core.tasks.analysis.diffex.DifferentialExpressionAnalysisTaskCommand> cmd =
+                ArgumentCaptor.forClass( ubic.gemma.core.tasks.analysis.diffex.DifferentialExpressionAnalysisTaskCommand.class );
+        verify( taskRunningService ).submitTaskCommand( cmd.capture() );
+        assertThat( cmd.getValue().getFactors() ).containsExactly( regular );
+        assertThat( cmd.getValue().isIncludeInteractions() ).isTrue();
+        assertThat( cmd.getValue().getSubsetFactor() ).isNull();
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testRunDatasetDifferentialAnalysisWithoutDesignIs400() {
+        ee.setId( 1L );
+        ee.setShortName( "GSE1" );
+        ee.setExperimentalDesign( null );
+        when( expressionExperimentService.thawLite( ee ) ).thenReturn( ee );
+
+        assertThat( target( "/datasets/1/tasks/differential" ).request()
+                .post( javax.ws.rs.client.Entity.json( "{}" ) ) )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        verifyNoInteractions( taskRunningService );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testRunDatasetDifferentialAnalysisRejectsUnknownFactorId() {
+        ee.setId( 1L );
+        ee.setShortName( "GSE1" );
+        ExperimentalDesign design = new ExperimentalDesign();
+        ExperimentalFactor regular = ExperimentalFactor.Factory.newInstance();
+        regular.setId( 10L );
+        design.getExperimentalFactors().add( regular );
+        ee.setExperimentalDesign( design );
+        when( expressionExperimentService.thawLite( ee ) ).thenReturn( ee );
+
+        assertThat( target( "/datasets/1/tasks/differential" ).request()
+                .post( javax.ws.rs.client.Entity.json( "{\"factorIds\":[999]}" ) ) )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        verifyNoInteractions( taskRunningService );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testRunDatasetDifferentialAnalysisRejectsSubsetFactorInFactorIds() {
+        ee.setId( 1L );
+        ee.setShortName( "GSE1" );
+        ExperimentalDesign design = new ExperimentalDesign();
+        ExperimentalFactor f = ExperimentalFactor.Factory.newInstance();
+        f.setId( 10L );
+        design.getExperimentalFactors().add( f );
+        ee.setExperimentalDesign( design );
+        when( expressionExperimentService.thawLite( ee ) ).thenReturn( ee );
+
+        assertThat( target( "/datasets/1/tasks/differential" ).request()
+                .post( javax.ws.rs.client.Entity.json( "{\"factorIds\":[10],\"subsetFactorId\":10}" ) ) )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        verifyNoInteractions( taskRunningService );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testRedoDatasetDifferentialAnalysis() {
+        ee.setId( 1L );
+        mockTaskSubmission( "task-redo" );
+        ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis dea =
+                ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis.Factory.newInstance();
+        dea.setId( 500L );
+        when( differentialExpressionAnalysisService.findByExperimentAndAnalysisId( ee, true, 500L ) ).thenReturn( dea );
+
+        assertThat( target( "/datasets/1/tasks/redo/500" ).request()
+                .post( javax.ws.rs.client.Entity.json( "" ) ) )
+                .hasStatus( Response.Status.ACCEPTED )
+                .hasHeaderSatisfying( "Location", values ->
+                        assertThat( values ).singleElement().asString().endsWith( "/tasks/task-redo" ) );
+
+        verify( taskRunningService ).submitTaskCommand( any( ubic.gemma.core.tasks.analysis.diffex.DifferentialExpressionAnalysisTaskCommand.class ) );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testRedoDatasetDifferentialAnalysisWithUnknownAnalysisIs404() {
+        ee.setShortName( "GSE1" );
+        when( differentialExpressionAnalysisService.findByExperimentAndAnalysisId( ee, true, 999L ) ).thenReturn( null );
+
+        assertThat( target( "/datasets/1/tasks/redo/999" ).request()
+                .post( javax.ws.rs.client.Entity.json( "" ) ) )
+                .hasStatus( Response.Status.NOT_FOUND );
+        verifyNoInteractions( taskRunningService );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testRemoveDatasetDifferentialAnalysis() {
+        ee.setId( 1L );
+        mockTaskSubmission( "task-remove" );
+        ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis dea =
+                ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis.Factory.newInstance();
+        dea.setId( 500L );
+        when( differentialExpressionAnalysisService.findByExperimentAndAnalysisId( ee, true, 500L ) ).thenReturn( dea );
+
+        assertThat( target( "/datasets/1/tasks/differential/500" ).request().delete() )
+                .hasStatus( Response.Status.ACCEPTED )
+                .hasHeaderSatisfying( "Location", values ->
+                        assertThat( values ).singleElement().asString().endsWith( "/tasks/task-remove" ) );
+
+        verify( taskRunningService ).submitTaskCommand( any( ubic.gemma.core.tasks.analysis.diffex.DifferentialExpressionAnalysisRemoveTaskCommand.class ) );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testRemoveDatasetDifferentialAnalysisWithUnknownAnalysisIs404() {
+        ee.setShortName( "GSE1" );
+        when( differentialExpressionAnalysisService.findByExperimentAndAnalysisId( ee, true, 999L ) ).thenReturn( null );
+
+        assertThat( target( "/datasets/1/tasks/differential/999" ).request().delete() )
+                .hasStatus( Response.Status.NOT_FOUND );
+        verifyNoInteractions( taskRunningService );
     }
 
     @Test

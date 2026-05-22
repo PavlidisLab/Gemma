@@ -393,6 +393,49 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
     }
 
     @Test
+    public void testRunDatasetPreprocessWithUnknownDatasetIs404() {
+        assertThat( target( "/datasets/9999999/tasks/preprocess" ).request()
+                .post( javax.ws.rs.client.Entity.json( "" ) ) )
+                .hasStatus( Response.Status.NOT_FOUND );
+    }
+
+    @Test
+    public void testRunDatasetDiagnosticsWithUnknownDatasetIs404() {
+        assertThat( target( "/datasets/9999999/tasks/diagnostics" ).request()
+                .post( javax.ws.rs.client.Entity.json( "" ) ) )
+                .hasStatus( Response.Status.NOT_FOUND );
+    }
+
+    @Test
+    public void testRunDatasetBatchInformationFetchWithUnknownDatasetIs404() {
+        assertThat( target( "/datasets/9999999/tasks/batchInfo" ).request()
+                .post( javax.ws.rs.client.Entity.json( "" ) ) )
+                .hasStatus( Response.Status.NOT_FOUND );
+    }
+
+    @Test
+    public void testRunDatasetDifferentialAnalysisWithUnknownDatasetIs404() {
+        assertThat( target( "/datasets/9999999/tasks/differential" ).request()
+                .post( javax.ws.rs.client.Entity.json( "{}" ) ) )
+                .hasStatus( Response.Status.NOT_FOUND );
+    }
+
+    @Test
+    public void testRedoDatasetDifferentialAnalysisWithUnknownAnalysisIs404() {
+        ExpressionExperiment ee = ees.get( 0 );
+        assertThat( target( "/datasets/" + ee.getId() + "/tasks/redo/9999999" ).request()
+                .post( javax.ws.rs.client.Entity.json( "" ) ) )
+                .hasStatus( Response.Status.NOT_FOUND );
+    }
+
+    @Test
+    public void testRemoveDatasetDifferentialAnalysisWithUnknownAnalysisIs404() {
+        ExpressionExperiment ee = ees.get( 0 );
+        assertThat( target( "/datasets/" + ee.getId() + "/tasks/differential/9999999" ).request().delete() )
+                .hasStatus( Response.Status.NOT_FOUND );
+    }
+
+    @Test
     public void testGetDatasetRawExpression() {
         ExpressionExperiment ee = ees.get( 0 );
         assertThat( target( "/datasets/" + ee.getId() + "/data/raw" ).request().get() )
