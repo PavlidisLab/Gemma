@@ -42,6 +42,15 @@ public class BibliographicReferenceDaoImpl
         extends AbstractVoEnabledDao<BibliographicReference, BibliographicReferenceValueObject>
         implements BibliographicReferenceDao {
 
+    /**
+     * Whitelist of column names that {@link #browse(int, int, String, boolean)} accepts as
+     * the ORDER BY target. Mirrors the four properties the web controller exposes; values
+     * not in this set are rejected to keep the ORDER BY clause from absorbing arbitrary
+     * caller input.
+     */
+    private static final Set<String> BROWSE_SORTABLE_FIELDS = new HashSet<>( Arrays.asList(
+            "title", "publicationDate", "publication", "authorList" ) );
+
     private final int eeBatchSize;
 
     @Autowired
@@ -171,10 +180,18 @@ public class BibliographicReferenceDaoImpl
 
     @Override
     public List<BibliographicReference> browse( int start, int limit, String orderField, boolean descending ) {
+        // ORDER BY column names cannot be bound as HQL parameters; whitelist + inject so
+        // the column reference is fixed alphabet, then append the direction explicitly so
+        // descending=false produces a well-formed ASC clause (the prior code emitted
+        // 'order by ?' with no direction in that arm).
+        if ( !BROWSE_SORTABLE_FIELDS.contains( orderField ) ) {
+            throw new IllegalArgumentException( "Unsupported BibliographicReference sort field: " + orderField
+                    + " (allowed: " + BROWSE_SORTABLE_FIELDS + ")" );
+        }
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
-                .createQuery( "from BibliographicReference order by :orderField " + ( descending ? "desc" : "" ) )
-                .setMaxResults( limit ).setFirstResult( start ).setParameter( "orderField", orderField ).list();
+                .createQuery( "from BibliographicReference order by " + orderField + ( descending ? " desc" : " asc" ) )
+                .setMaxResults( limit ).setFirstResult( start ).list();
     }
 
     @Override
