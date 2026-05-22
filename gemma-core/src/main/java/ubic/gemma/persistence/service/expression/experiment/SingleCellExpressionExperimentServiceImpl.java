@@ -59,6 +59,16 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
      */
     public static final long SC_MATRIX_VECTOR_COUNT_LIMIT = 1_000_000L;
 
+    /**
+     * Sample-count ceiling above which {@link #getSingleCellExpressionDataMatrix} refuses to materialize.
+     *
+     * <p>Complements {@link #SC_MATRIX_VECTOR_COUNT_LIMIT}: experiments below the vector-count cap can still
+     * blow the heap when per-sample cell counts push the total blob payload into the multi-GB range (EE 56855
+     * is ~46k vectors / 2.6 GB at ~6.5k samples). Refuse anything above this and route the caller to
+     * {@link #streamSingleCellDataVectors} or a per-vector fetch path. See PERF_PROBE_REPORT_ROUND4 C1.</p>
+     */
+    public static final int MAX_SAFE_INMEMORY_SC_MATRIX_SAMPLES = 5000;
+
     @Autowired
     private ExpressionExperimentDao expressionExperimentDao;
 
@@ -364,12 +374,26 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     }
 
     /**
-     * Refuse to build a full single-cell matrix when the vector count exceeds {@link #SC_MATRIX_VECTOR_COUNT_LIMIT}.
-     * The biggest live experiment (46k vectors / 2.6 GB blob payload) already pushes the JVM hard; anything beyond
-     * the limit is guaranteed OOM territory and the caller should switch to
-     * {@link #streamSingleCellDataVectors} instead.
+     * Refuse to build a full single-cell matrix when the vector count exceeds {@link #SC_MATRIX_VECTOR_COUNT_LIMIT}
+     * or the EE-level sample count exceeds {@link #MAX_SAFE_INMEMORY_SC_MATRIX_SAMPLES}.
+     *
+     * <p>The biggest live experiment (46k vectors / 2.6 GB blob payload at ~6.5k samples) already pushes the JVM
+     * hard; anything beyond either limit is OOM territory and the caller should switch to
+     * {@link #streamSingleCellDataVectors} instead.</p>
+     *
+     * <p>The sample-count check reads {@link ExpressionExperiment#getNumberOfSamples()}, which is a stored cached
+     * field on the entity itself — no DB hit. If the cache is unpopulated (null or zero) we skip the check rather
+     * than trigger a fresh count; the vector-count cap above is the backstop. See PERF_PROBE_REPORT_ROUND4 C1.</p>
      */
     private void assertVectorCountUnderMatrixLimit( ExpressionExperiment ee, QuantitationType quantitationType ) {
+        // PERF_PROBE_ROUND4 C1 — sample-count gate (cheap, in-memory entity field)
+        Integer cachedSamples = ee.getNumberOfSamples();
+        if ( cachedSamples != null && cachedSamples > MAX_SAFE_INMEMORY_SC_MATRIX_SAMPLES ) {
+            throw new IllegalStateException( String.format(
+                    "Refusing to materialize a single-cell matrix for %s in %s: %d samples exceeds the %d ceiling. "
+                            + "Use streamSingleCellDataVectors(...) or a per-vector fetch path instead.",
+                    quantitationType, ee, cachedSamples, MAX_SAFE_INMEMORY_SC_MATRIX_SAMPLES ) );
+        }
         long count = expressionExperimentDao.getNumberOfSingleCellDataVectors( ee, quantitationType );
         if ( count > SC_MATRIX_VECTOR_COUNT_LIMIT ) {
             throw new IllegalStateException( String.format(
