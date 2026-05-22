@@ -597,22 +597,22 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
         } else if ( results.size() > 1 ) {
 
             /*
-             * As a side-effect, we remove relics. This is a bit ugly, but takes care of the problem! It was put in
-             * place to help in the cleanup of duplicated genes. But this can happen fairly routinely when NCBI
-             * information changes in messy ways.
+             * find() is a read method and MUST NOT mutate state. Previously this block deleted "relic" duplicate
+             * genes whose previousNcbiGeneId pointed at the incoming gene's current id; that delete blew up under
+             * read-only transactions (Hibernate flush on commit). The dedup side effect has been removed (HQL_SQL_AUDIT C4).
              *
-             * FIXME this can fail because 'find' methods are read-only; it will be okay if it is a nested call from a
-             * read-write method.
+             * If duplicates are observed here we log loudly so they can be reconciled by a separate write step
+             * (GeneWriteServiceImpl handles legitimate NCBI-ID merges via previousNcbiGeneId during persistence).
              */
-            Collection<Gene> toDelete = new HashSet<>();
+            Collection<Gene> deprecated = new HashSet<>();
             for ( Gene foundGene : results ) {
                 if ( StringUtils.isBlank( foundGene.getPreviousNcbiGeneId() ) )
                     continue;
                 // Note hack we used to allow multiple previous ids.
                 for ( String previousId : StringUtils.split( foundGene.getPreviousNcbiGeneId(), "," ) ) {
                     try {
-                        if ( gene.getNcbiGeneId().equals( Integer.parseInt( previousId ) ) ) {
-                            toDelete.add( foundGene );
+                        if ( gene.getNcbiGeneId() != null && gene.getNcbiGeneId().equals( Integer.parseInt( previousId ) ) ) {
+                            deprecated.add( foundGene );
                         }
                     } catch ( NumberFormatException e ) {
                         // no action
@@ -620,13 +620,12 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
                 }
             }
 
-            if ( !toDelete.isEmpty() ) {
-                assert toDelete.size() < results.size(); // it shouldn't be everything!
-                log.warn(
-                        "Deleting gene(s) that use a deprecated NCBI ID: " + StringUtils.join( toDelete, " | " ) );
-                this.remove( toDelete ); // WARNING this might fail due to constraints.
+            if ( !deprecated.isEmpty() ) {
+                log.warn( "find(Gene) observed gene(s) with a deprecated NCBI ID that shadow " + gene
+                        + "; they will be ignored for this lookup but were NOT deleted (find() is read-only). "
+                        + "Deprecated duplicates: " + StringUtils.join( deprecated, " | " ) );
+                results.removeAll( deprecated );
             }
-            results.removeAll( toDelete );
 
             for ( Gene foundGene : results ) {
                 if ( foundGene.getNcbiGeneId() != null && gene.getNcbiGeneId() != null && foundGene.getNcbiGeneId()
@@ -644,6 +643,9 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
                 results.sort( Comparator.comparing( IdentifiableUtils::getRequiredId ) );
                 result = results.iterator().next();
                 log.error( "Returning arbitrary gene: " + result );
+            } else if ( results.isEmpty() ) {
+                // every candidate was a deprecated-NCBI-id duplicate
+                return null;
             } else {
                 result = results.get( 0 );
             }
