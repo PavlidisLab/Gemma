@@ -52,7 +52,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponentAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
@@ -85,9 +84,6 @@ public class DataUpdaterImpl implements DataUpdater {
 
     @Autowired
     private BioAssayDimensionService assayDimensionService;
-
-    @Autowired
-    private AuditTrailService auditTrailService;
 
     @Autowired
     private AuditEventService auditEventService;
@@ -175,7 +171,9 @@ public class DataUpdaterImpl implements DataUpdater {
             // Switch ALL bioassays to the target platform.
             int numSwitched = this.switchBioAssaysToTargetPlatform( ee, targetPlatform, null );
 
-            auditTrailService.addUpdateEvent( ee, ExpressionExperimentPlatformSwitchEvent.class,
+            // ExpressionExperimentPlatformSwitchEvent written by @Audited on
+            // DataUpdaterAuditService.recordPlatformSwitch via AuditedAspect.
+            dataUpdaterAuditService.recordPlatformSwitch( ee,
                     "Switched " + numSwitched + " bioassays in course of updating vectors using AffyPowerTools (from "
                             + originalPlatform.getShortName() + " to " + targetPlatform.getShortName() + ")" );
         }
@@ -508,7 +506,9 @@ public class DataUpdaterImpl implements DataUpdater {
                         .info( "Switched " + numSwitched + " bioassays from " + originalPlatform.getShortName() + " to "
                                 + targetPlatform.getShortName() );
 
-                auditTrailService.addUpdateEvent( ee, ExpressionExperimentPlatformSwitchEvent.class, "Switched " + numSwitched
+                // ExpressionExperimentPlatformSwitchEvent written by @Audited on
+                // DataUpdaterAuditService.recordPlatformSwitch via AuditedAspect.
+                dataUpdaterAuditService.recordPlatformSwitch( ee, "Switched " + numSwitched
                         + " bioassays in course of updating vectors using AffyPowerTools (from " + originalPlatform
                         .getShortName()
                         + " to " + targetPlatform.getShortName() + ")" );
@@ -692,7 +692,9 @@ public class DataUpdaterImpl implements DataUpdater {
 
             this.switchBioAssaysToTargetPlatform( ee, targetPlatform, null );
 
-            auditTrailService.addUpdateEvent( ee, ExpressionExperimentPlatformSwitchEvent.class,
+            // ExpressionExperimentPlatformSwitchEvent written by @Audited on
+            // DataUpdaterAuditService.recordPlatformSwitch via AuditedAspect.
+            dataUpdaterAuditService.recordPlatformSwitch( ee,
                     "Switched in course of updating vectors using data input (from " + originalArrayDesign
                             .getShortName() + " to " + targetPlatform.getShortName() + ")" );
         }
