@@ -24,7 +24,9 @@ import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.expression.experiment.WorkflowState;
 
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -37,6 +39,20 @@ public abstract class Investigation extends AbstractAuditable implements Securab
     private Set<BibliographicReference> otherRelevantPublications = new HashSet<>();
     private Contact owner;
     private BibliographicReference primaryPublication;
+    /**
+     * Eight-state workflow lifecycle position. See
+     * {@link ubic.gemma.model.expression.experiment.WorkflowState} and
+     * {@code HANDOFF_WORKFLOW_STATE_STORAGE.md}. Defaults to
+     * {@link WorkflowState#Loaded} on legacy rows (the migration backfill is
+     * the same — a curator-approved refinement is deferred).
+     */
+    private WorkflowState workflowState = WorkflowState.Loaded;
+    /**
+     * Timestamp at which the dataset entered its current
+     * {@link #workflowState}. Null on legacy rows that pre-date the column;
+     * populated by the workflow service on every transition.
+     */
+    private Date workflowStateEnteredAt;
 
     /**
      * @return Annotations that describe the experiment as a whole, for example "tumor" or "brain".
@@ -83,6 +99,31 @@ public abstract class Investigation extends AbstractAuditable implements Securab
 
     public void setPrimaryPublication( BibliographicReference primaryPublication ) {
         this.primaryPublication = primaryPublication;
+    }
+
+    /**
+     * @return the current workflow-state position of this investigation.
+     *         Never null — legacy rows default to {@link WorkflowState#Loaded}.
+     */
+    public WorkflowState getWorkflowState() {
+        return this.workflowState;
+    }
+
+    public void setWorkflowState( WorkflowState workflowState ) {
+        this.workflowState = workflowState;
+    }
+
+    /**
+     * @return timestamp at which the dataset entered its current
+     *         {@link #getWorkflowState()}, or {@code null} on legacy rows
+     *         that pre-date the column.
+     */
+    public Date getWorkflowStateEnteredAt() {
+        return this.workflowStateEnteredAt;
+    }
+
+    public void setWorkflowStateEnteredAt( Date workflowStateEnteredAt ) {
+        this.workflowStateEnteredAt = workflowStateEnteredAt;
     }
 
 }
