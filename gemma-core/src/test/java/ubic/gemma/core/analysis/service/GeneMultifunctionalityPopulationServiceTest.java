@@ -151,14 +151,16 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
                 .isNotNull()
                 .isBetween( beforeUpdateDate, new Date(), true, true );
 
+        // After AuditAdvice retirement (commit e8af1660c8), DAO-level update() calls no
+        // longer emit a generic action=UPDATE / eventType=null trailing row. Only the
+        // typed ReleaseDetailsUpdateEvent emitted imperatively from
+        // ExternalDatabaseServiceImpl.updateReleaseLastUpdated remains. See
+        // AUDIT_ADVICE_RETIREMENT_PLAN.md Step 3.
         List<AuditEvent> auditEvents = ed.getAuditTrail().getEvents();
-        assertThat( auditEvents ).hasSizeGreaterThanOrEqualTo( 2 );
-        assertThat( auditEvents.get( auditEvents.size() - 2 ).getEventType() )
+        assertThat( auditEvents ).hasSizeGreaterThanOrEqualTo( 1 );
+        assertThat( auditEvents.get( auditEvents.size() - 1 ).getEventType() )
                 .isInstanceOf( ReleaseDetailsUpdateEvent.class );
-        assertThat( auditEvents.get( auditEvents.size() - 2 ) )
-                .hasFieldOrPropertyWithValue( "action", AuditAction.UPDATE );
         assertThat( auditEvents.get( auditEvents.size() - 1 ) )
-                .hasFieldOrPropertyWithValue( "eventType", null )
                 .hasFieldOrPropertyWithValue( "action", AuditAction.UPDATE );
     }
 }
