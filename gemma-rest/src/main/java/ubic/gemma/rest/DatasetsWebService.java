@@ -3287,8 +3287,17 @@ public class DatasetsWebService {
     public Response replaceDatasetDesign(
             @PathParam("dataset") DatasetArg<?> datasetArg,
             @Parameter(description = "Set to true to consent to deleting differential-expression analyses that depend on factors or factor values affected by the change.") @QueryParam("force") @DefaultValue("false") Boolean force,
+            @Parameter(description = "Optional FK to an AgentProposal row driving this apply. Accepted by the endpoint; the link is not yet persisted (AgentProposal entity pending per AGENT_WRITEBACK_RECCE.md). Logged for audit-trail traceability once wired.") @QueryParam("agentProposalId") @Nullable Long agentProposalId,
             ExperimentalDesignValueObject proposed
     ) {
+        // TODO(agent-proposal): once the AgentProposal entity lands (AGENT_WRITEBACK_RECCE.md "The model"),
+        // forward agentProposalId into the emitted DesignChangeEvent so the audit trail links
+        // proposal -> decision -> effect. For now the parameter is accepted (so clients can wire it
+        // immediately) and discarded.
+        if ( agentProposalId != null ) {
+            log.info( "PUT /datasets/" + datasetArg + "/design called with agentProposalId=" + agentProposalId
+                    + "; will be linked into DesignChangeEvent once AgentProposal entity is wired." );
+        }
         ubic.gemma.rest.util.args.DatasetArgService.DesignChangeResult result =
                 datasetArgService.applyDesignChange( datasetArg, proposed, force );
         if ( result.blockingReport != null ) {
