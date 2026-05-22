@@ -10,7 +10,9 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 
 import org.springframework.lang.Nullable;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import static ubic.gemma.core.util.StringUtils.urlEncode;
@@ -25,7 +27,7 @@ public class CellXGeneUtils {
      * <p>
      * TODO: we should keep a list of supported assays in a shared location
      */
-    public static final OntologyTerm[] GENE_EXPRESSION_ASSAYS = {
+    public static final List<OntologyTerm> GENE_EXPRESSION_ASSAYS = Collections.unmodifiableList( Arrays.asList(
             new OntologyTerm( "EFO:0030003", "10x 3' transcription profiling" ),
             new OntologyTerm( "EFO:0009901", "10x 3' v1" ),
             new OntologyTerm( "EFO:0009899", "10x 3' v2" ),
@@ -68,9 +70,9 @@ public class CellXGeneUtils {
             new OntologyTerm( "EFO:0900001", "Asteria scRNA-seq kit" ),
             new OntologyTerm( "EFO:0022601", "Parse Evercode Whole Transcriptome v2" ),
             new OntologyTerm( "EFO:0900000", "particle-templated instant partition sequencing" )
-    };
+    ) );
 
-    private static final Set<OntologyTerm> GENE_EXPRESSION_ASSAYS_SET = new HashSet<>( Arrays.asList( GENE_EXPRESSION_ASSAYS ) );
+    private static final Set<OntologyTerm> GENE_EXPRESSION_ASSAYS_SET = new HashSet<>( GENE_EXPRESSION_ASSAYS );
 
     public static String getCollectionUri( String collectionId ) {
         return "https://cellxgene.cziscience.com/collections/" + urlEncode( collectionId );

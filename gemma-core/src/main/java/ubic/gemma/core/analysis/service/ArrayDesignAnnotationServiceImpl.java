@@ -528,7 +528,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
         Writer writer;
         if ( StringUtils.isBlank( fileBaseName ) ) {
             ArrayDesignAnnotationServiceImpl.log.info( "Output to stdout" );
-            writer = new PrintWriter( System.out );
+            writer = new PrintWriter( new OutputStreamWriter( System.out, StandardCharsets.UTF_8 ) );
         } else {
 
             Path f = getFileName( fileBaseName );

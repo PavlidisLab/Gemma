@@ -20,6 +20,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.*;
 import java.nio.*;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 /**
@@ -125,7 +126,7 @@ public class AffyScanDateExtractor extends BaseScanDateExtractor {
                     /*
                      * assume version 3 plain text.
                      */
-                    reader = new BufferedReader( new InputStreamReader( is ) );
+                    reader = new BufferedReader( new InputStreamReader( is, StandardCharsets.US_ASCII ) );
                     String line;
                     int count = 0;
                     while ( ( line = reader.readLine() ) != null ) {
@@ -192,7 +193,7 @@ public class AffyScanDateExtractor extends BaseScanDateExtractor {
                     v = new String( value, "US-ASCII" );
 
                     if ( name.equals( "affymetrix-scan-date" ) ) {
-                        String decodedValue = new String( ( ( String ) v ).getBytes(), "UTF-16" );
+                        String decodedValue = new String( ( ( String ) v ).getBytes( StandardCharsets.US_ASCII ), "UTF-16" );
                         result = this.parseISO8601( decodedValue );
 
                         if (result == null) { // might be in YYYY/MM/DD HH:mm:ss format ...
@@ -203,7 +204,7 @@ public class AffyScanDateExtractor extends BaseScanDateExtractor {
                     } else if ( name.equals( "affymetrix-Hyb-Start-Time" ) ) {
                         // We don't use this but I'm curious to start looking at it.
                         AffyScanDateExtractor.log
-                                .info( "Hyb start date = " + new String( ( ( String ) v ).getBytes(), "UTF-16" ) );
+                                .info( "Hyb start date = " + new String( ( ( String ) v ).getBytes( StandardCharsets.US_ASCII ), "UTF-16" ) );
                     }
 
                     break;
@@ -314,7 +315,7 @@ public class AffyScanDateExtractor extends BaseScanDateExtractor {
         for ( int i = 0; i < fieldLength; i++ ) {
             if ( str.available() == 0 )
                 throw new IOException( "Reached end of file without string end" );
-            buf.append( new String( new byte[] { str.readByte() } ) );
+            buf.append( new String( new byte[] { str.readByte() }, StandardCharsets.US_ASCII ) );
         }
         return buf.toString();
     }

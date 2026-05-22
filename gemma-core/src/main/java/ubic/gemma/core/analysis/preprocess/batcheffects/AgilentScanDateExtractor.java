@@ -27,6 +27,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -64,7 +65,7 @@ public class AgilentScanDateExtractor extends BaseScanDateExtractor {
 
     @Override
     public Date extract( InputStream is ) throws IOException, ParseException {
-        try ( BufferedReader reader = new BufferedReader( new InputStreamReader( is ) ) ) {
+        try ( BufferedReader reader = new BufferedReader( new InputStreamReader( is, StandardCharsets.US_ASCII ) ) ) {
             /*
              * Read the first three characters. IF they are ATF, it's a Axon file. If it's TYPE then it's probably an
              * agilent file.
