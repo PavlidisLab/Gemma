@@ -644,7 +644,7 @@ public class ExpressionExperimentDaoImpl
                 .createNativeQuery( "select ee.ID as eeID from INVESTIGATION ee "
                         + "join BIO_ASSAY ba on ba.EXPRESSION_EXPERIMENT_FK = ee.ID "
                         + "join ARRAY_DESIGN on ba.ARRAY_DESIGN_USED_FK = ARRAY_DESIGN.ID "
-                        + "join gemd.COMPOSITE_SEQUENCE cs on cs.ARRAY_DESIGN_FK = ARRAY_DESIGN.ID "
+                        + "join COMPOSITE_SEQUENCE cs on cs.ARRAY_DESIGN_FK = ARRAY_DESIGN.ID "
                         + "join GENE2CS g2s on g2s.CS = cs.ID "
                         + "where g2s.GENE = :geneID" )
                 .addScalar( "eeID", StandardBasicTypes.LONG )
