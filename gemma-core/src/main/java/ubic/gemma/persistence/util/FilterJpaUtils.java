@@ -47,6 +47,16 @@ public class FilterJpaUtils {
      * @param filters the filters to render.
      */
     public static Predicate formRestrictionClause( CriteriaBuilder cb, @Nullable CommonAbstractCriteria query, Root<?> root, @Nullable Filters filters ) {
+        return formRestrictionClause( cb, query, root, filters, null );
+    }
+
+    /**
+     * Variant of {@link #formRestrictionClause(CriteriaBuilder, CommonAbstractCriteria, Root, Filters)}
+     * that honours a registered {@code objectAlias → dotted-prefix} map so alias-prefixed paths
+     * (e.g. {@code Filter(objectAlias="bc", propertyName="value")} where {@code bc} was registered
+     * with prefix {@code baselineGroup.characteristics}) resolve via an explicit join on the root.
+     */
+    public static Predicate formRestrictionClause( CriteriaBuilder cb, @Nullable CommonAbstractCriteria query, Root<?> root, @Nullable Filters filters, @Nullable Map<String, String> aliasPrefixes ) {
         if ( filters == null || filters.isEmpty() ) {
             return cb.conjunction();
         }
@@ -56,7 +66,7 @@ public class FilterJpaUtils {
             List<Predicate> disjuncts = new ArrayList<>( clause.size() );
             for ( Filter subClause : clause ) {
                 if ( subClause == null ) continue;
-                disjuncts.add( buildPredicate( cb, query, root, subClause ) );
+                disjuncts.add( buildPredicate( cb, query, root, subClause, aliasPrefixes ) );
             }
             if ( !disjuncts.isEmpty() ) {
                 conjuncts.add( disjuncts.size() == 1 ? disjuncts.get( 0 ) : cb.or( disjuncts.toArray( new Predicate[ 0 ] ) ) );
@@ -80,7 +90,7 @@ public class FilterJpaUtils {
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private static Predicate buildPredicate( CriteriaBuilder cb, @Nullable CommonAbstractCriteria enclosingQuery, Root<?> root, Filter f ) {
+    private static Predicate buildPredicate( CriteriaBuilder cb, @Nullable CommonAbstractCriteria enclosingQuery, Root<?> root, Filter f, @Nullable Map<String, String> aliasPrefixes ) {
         // Subquery filters: build a JPA jakarta.persistence.criteria.Subquery and emit an IN /
         // NOT IN predicate against the outer root path. Pre-Phase-2 this lived in the deleted
         // FilterCriteriaUtils; the HQL equivalent is in FilterQueryUtils.formSubClause.
@@ -94,9 +104,9 @@ public class FilterJpaUtils {
         }
         // .size-suffix filters: cb.size(collection-expression) returns an Expression<Integer>.
         if ( f.getPropertyName().endsWith( ".size" ) ) {
-            return buildSizePredicate( cb, root, f );
+            return buildSizePredicate( cb, root, f, aliasPrefixes );
         }
-        Path<?> path = resolvePath( root, f.getPropertyName() );
+        Path<?> path = resolvePathWithAlias( root, f.getObjectAlias(), f.getPropertyName(), aliasPrefixes );
         Object value = f.getRequiredValue();
         switch ( f.getOperator() ) {
             case eq:
@@ -125,10 +135,10 @@ public class FilterJpaUtils {
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private static Predicate buildSizePredicate( CriteriaBuilder cb, Root<?> root, Filter f ) {
+    private static Predicate buildSizePredicate( CriteriaBuilder cb, Root<?> root, Filter f, @Nullable Map<String, String> aliasPrefixes ) {
         String collectionPath = f.getPropertyName().substring( 0, f.getPropertyName().length() - ".size".length() );
         // Walk the property path; the final segment must be a collection-typed attribute.
-        Path<?> path = resolvePath( root, collectionPath );
+        Path<?> path = resolvePathWithAlias( root, f.getObjectAlias(), collectionPath, aliasPrefixes );
         Expression<Integer> sizeExpr = cb.size( ( Expression ) path );
         Object value = f.getRequiredValue();
         switch ( f.getOperator() ) {
@@ -261,5 +271,32 @@ public class FilterJpaUtils {
             p = p.get( part );
         }
         return p;
+    }
+
+    /**
+     * Walk a dot-separated property path from the root, prepending the dotted prefix that the
+     * given {@code objectAlias} was registered with (if any).
+     * <p>
+     * Pre-Phase-2 the legacy Hibernate Criteria implementation tracked aliases natively through
+     * {@code Subcriteria}; the JPA Criteria port doesn't have a built-in alias-to-join mechanism,
+     * so {@link AbstractCriteriaFilteringVoEnabledDao} threads the {@code alias → prefix} map
+     * (sourced from {@link AbstractFilteringVoEnabledDao#getFilterablePropertyObjectAliases()})
+     * through to this helper. When the alias is recognised, the registered prefix is walked first
+     * (creating implicit joins via {@code Path.get}), then the leaf property name is walked on top.
+     */
+    public static Path<?> resolvePathWithAlias( Root<?> root, @Nullable String objectAlias, String propertyName, @Nullable Map<String, String> aliasPrefixes ) {
+        Path<?> base = root;
+        if ( objectAlias != null && aliasPrefixes != null ) {
+            String prefix = aliasPrefixes.get( objectAlias );
+            if ( prefix != null && !prefix.isEmpty() ) {
+                for ( String part : prefix.split( "\\." ) ) {
+                    base = base.get( part );
+                }
+            }
+        }
+        for ( String part : propertyName.split( "\\." ) ) {
+            base = base.get( part );
+        }
+        return base;
     }
 }
