@@ -61,4 +61,38 @@ public class AnnotationsRestTest extends BaseJerseyIntegrationTest {
         assertThat( target( "/annotations/term" ).request().get() )
                 .hasStatus( Response.Status.BAD_REQUEST );
     }
+
+    @Test
+    public void testGetAnnotationCategoriesReturnsList() {
+        assertThat( target( "/annotations/categories" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .entity()
+                .extracting( "data", list( Object.class ) )
+                .satisfies( data -> {
+                    if ( !data.isEmpty() ) {
+                        java.util.Map<String, Object> first = ( java.util.Map<String, Object> ) data.get( 0 );
+                        org.assertj.core.api.Assertions.assertThat( first )
+                                .containsKey( "uri" )
+                                .containsKey( "label" );
+                    }
+                } );
+    }
+
+    @Test
+    public void testGetAnnotationPredicatesReturnsList() {
+        assertThat( target( "/annotations/predicates" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .entity()
+                .extracting( "data", list( Object.class ) )
+                .satisfies( data -> {
+                    if ( !data.isEmpty() ) {
+                        java.util.Map<String, Object> first = ( java.util.Map<String, Object> ) data.get( 0 );
+                        org.assertj.core.api.Assertions.assertThat( first )
+                                .containsKey( "uri" )
+                                .containsKey( "label" );
+                    }
+                } );
+    }
 }

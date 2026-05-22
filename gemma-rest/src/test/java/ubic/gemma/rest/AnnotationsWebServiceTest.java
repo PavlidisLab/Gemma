@@ -13,6 +13,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
+import ubic.basecode.ontology.model.OntologyProperty;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.context.TestComponent;
@@ -406,6 +407,82 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest {
                         .containsEntry( "value", "diabetes" )
                         .containsEntry( "valueUri", "http://example.com/diabetes" )
                         .containsEntry( "usageCount", 2 ) );
+    }
+
+    @Test
+    public void testGetAnnotationCategories() {
+        OntologyTerm cellType = mock( OntologyTerm.class );
+        when( cellType.getUri() ).thenReturn( "http://example.com/cellType" );
+        when( cellType.getLabel() ).thenReturn( "cell type" );
+        OntologyTerm disease = mock( OntologyTerm.class );
+        when( disease.getUri() ).thenReturn( "http://example.com/disease" );
+        when( disease.getLabel() ).thenReturn( "disease" );
+        java.util.LinkedHashSet<OntologyTerm> categories = new java.util.LinkedHashSet<>();
+        categories.add( cellType );
+        categories.add( disease );
+        when( ontologyService.getCategoryTerms() ).thenReturn( categories );
+
+        assertThat( target( "/annotations/categories" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 2 )
+                .satisfiesExactlyInAnyOrder(
+                        a -> assertThat( a )
+                                .containsEntry( "uri", "http://example.com/cellType" )
+                                .containsEntry( "label", "cell type" ),
+                        a -> assertThat( a )
+                                .containsEntry( "uri", "http://example.com/disease" )
+                                .containsEntry( "label", "disease" ) );
+
+        verify( ontologyService ).getCategoryTerms();
+    }
+
+    @Test
+    public void testGetAnnotationCategoriesEmpty() {
+        when( ontologyService.getCategoryTerms() ).thenReturn( Collections.emptySet() );
+
+        assertThat( target( "/annotations/categories" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .isEmpty();
+    }
+
+    @Test
+    public void testGetAnnotationPredicates() {
+        OntologyProperty hasPart = mock( OntologyProperty.class );
+        when( hasPart.getUri() ).thenReturn( "http://example.com/has_part" );
+        when( hasPart.getLabel() ).thenReturn( "has part" );
+        java.util.LinkedHashSet<OntologyProperty> predicates = new java.util.LinkedHashSet<>();
+        predicates.add( hasPart );
+        when( ontologyService.getRelationTerms() ).thenReturn( predicates );
+
+        assertThat( target( "/annotations/predicates" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 1 )
+                .first()
+                .satisfies( a -> assertThat( a )
+                        .containsEntry( "uri", "http://example.com/has_part" )
+                        .containsEntry( "label", "has part" ) );
+
+        verify( ontologyService ).getRelationTerms();
+    }
+
+    @Test
+    public void testGetAnnotationPredicatesEmpty() {
+        when( ontologyService.getRelationTerms() ).thenReturn( Collections.emptySet() );
+
+        assertThat( target( "/annotations/predicates" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .isEmpty();
     }
 
     @Test
