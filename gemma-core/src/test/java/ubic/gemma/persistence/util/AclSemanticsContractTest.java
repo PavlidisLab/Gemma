@@ -84,9 +84,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * Contract harness for the planned rewrite of
  * {@link AclQueryUtils#formAclRestrictionClause(String)} (and its sibling
- * {@code formNativeAclJoinClause} / {@code formNativeAclRestrictionClause})
- * from the current row-multiplying JOIN strategy to a correlated EXISTS
- * subquery.
+ * {@code formNativeAclRestrictionClause}) from the current row-multiplying
+ * JOIN strategy to a correlated EXISTS subquery.
  * <p>
  * The intent is that every DAO callsite of the ACL clause is exercised here
  * from each of the three principals (anonymous, authenticated non-admin,
