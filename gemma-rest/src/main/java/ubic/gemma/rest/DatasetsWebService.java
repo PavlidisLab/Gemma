@@ -56,6 +56,7 @@ import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.core.tasks.analysis.diffex.DifferentialExpressionAnalysisRemoveTaskCommand;
 import ubic.gemma.core.tasks.analysis.diffex.DifferentialExpressionAnalysisTaskCommand;
 import ubic.gemma.core.tasks.analysis.expression.BatchInfoFetchTaskCommand;
+import ubic.gemma.core.tasks.analysis.expression.ExpressionExperimentLoadTaskCommand;
 import ubic.gemma.core.tasks.analysis.expression.PreprocessTaskCommand;
 import ubic.gemma.core.analysis.service.DifferentialExpressionAnalysisResultListFileService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
@@ -1353,6 +1354,159 @@ public class DatasetsWebService {
     }
 
     /**
+     * Retrieve the current sharing state of a dataset.
+     * <p>
+     * Curation-UI helper: the experiment-page sharing widget needs to read the current public/shared state
+     * without performing an update. Same response shape as {@link #updateDatasetPermissions}.
+     */
+    @GET
+    @Path("/{dataset}/permissions")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Retrieve the sharing permissions of a dataset",
+            description = "Returns whether the dataset is publicly readable and whether it has been shared with any user groups.",
+            security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<DatasetPermissionsValueObject> getDatasetPermissions(
+            @PathParam("dataset") DatasetArg<?> datasetArg
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        return respond( new DatasetPermissionsValueObject( securityService.isPublic( ee ), securityService.isShared( ee ) ) );
+    }
+
+    /**
+     * Curation-UI workflow-step endpoint: raw ACL flip to make a dataset publicly readable. Distinct from
+     * {@code POST /publish} (which is a curator-state-machine transition that ALSO calls this under the hood).
+     * Idempotent — re-running on an already-public dataset is a no-op.
+     */
+    @POST
+    @Path("/{dataset}/makePublic")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Make a dataset publicly readable",
+            description = "Performs the raw ACL flip to grant `IS_AUTHENTICATED_ANONYMOUSLY` read on the dataset. "
+                    + "Idempotent. See `POST /datasets/{id}/publish` for the curator-workflow transition that also "
+                    + "captures a reviewer.",
+            security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<DatasetPermissionsValueObject> makeDatasetPublic(
+            @PathParam("dataset") DatasetArg<?> datasetArg
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        if ( !securityService.isPublic( ee ) ) {
+            securityService.makePublic( ee );
+        }
+        return respond( new DatasetPermissionsValueObject( securityService.isPublic( ee ), securityService.isShared( ee ) ) );
+    }
+
+    /**
+     * Curation-UI workflow-step endpoint: raw ACL flip to make a dataset private. Idempotent.
+     */
+    @POST
+    @Path("/{dataset}/makePrivate")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Make a dataset private",
+            description = "Removes the `IS_AUTHENTICATED_ANONYMOUSLY` read ACE from the dataset. Idempotent.",
+            security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<DatasetPermissionsValueObject> makeDatasetPrivate(
+            @PathParam("dataset") DatasetArg<?> datasetArg
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        if ( securityService.isPublic( ee ) ) {
+            securityService.makePrivate( ee );
+        }
+        return respond( new DatasetPermissionsValueObject( securityService.isPublic( ee ), securityService.isShared( ee ) ) );
+    }
+
+    /**
+     * Curation-UI workflow-step endpoint: curator-state-machine transition that publishes a dataset under a named
+     * reviewer. Distinct from {@code POST /makePublic}: this endpoint ALSO records the reviewer as an audit event
+     * (currently re-uses {@link ubic.gemma.model.common.auditAndSecurity.eventType.MakePublicEvent} with the
+     * reviewer encoded in the note), and is idempotent on already-published datasets (audit-only emission then).
+     */
+    @POST
+    @Path("/{dataset}/publish")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Publish a dataset (curator-workflow transition; records reviewer)",
+            description = "Curator-workflow endpoint distinct from `/makePublic`. Records the reviewer as an audit "
+                    + "event and (if the dataset is not already public) performs the ACL flip. The `reviewer` query "
+                    + "parameter is required.",
+            security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "400", description = "The `reviewer` query parameter is missing or blank.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<DatasetPermissionsValueObject> publishDataset(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @QueryParam("reviewer") @Nullable String reviewer
+    ) {
+        if ( reviewer == null || reviewer.trim().isEmpty() ) {
+            throw new BadRequestException( "The `reviewer` query parameter is required." );
+        }
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        boolean alreadyPublic = securityService.isPublic( ee );
+        if ( !alreadyPublic ) {
+            securityService.makePublic( ee );
+        }
+        String note = alreadyPublic
+                ? "Re-published by reviewer: " + reviewer.trim() + " (dataset was already public)"
+                : "Published by reviewer: " + reviewer.trim();
+        auditTrailService.addUpdateEvent( ee,
+                ubic.gemma.model.common.auditAndSecurity.eventType.MakePublicEvent.class, note );
+        return respond( new DatasetPermissionsValueObject( securityService.isPublic( ee ), securityService.isShared( ee ) ) );
+    }
+
+    /**
+     * Curation-UI compatibility alias for {@link #getDatasetPermissions}. The UI's dataset-page sharing widget
+     * calls {@code GET /datasets/{id}/visibility}; the canonical gemma-rest endpoint lives at
+     * {@code /datasets/{id}/permissions}. Hidden from the OpenAPI spec to avoid duplicating the canonical entry.
+     */
+    @GET
+    @Path("/{dataset}/visibility")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Retrieve the sharing permissions of a dataset (alias of /permissions)", hidden = true,
+            security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) })
+    public ResponseDataObject<DatasetPermissionsValueObject> getDatasetVisibility(
+            @PathParam("dataset") DatasetArg<?> datasetArg
+    ) {
+        return getDatasetPermissions( datasetArg );
+    }
+
+    /**
+     * Curation-UI compatibility alias for {@link #getDatasetPipelineStatus}: the UI uses the flatter, hyphenated
+     * path {@code /datasets/{id}/pipeline-status}; the canonical handler lives at {@code /pipelineStatus}.
+     */
+    @GET
+    @Path("/{dataset}/pipeline-status")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve the per-step pipeline status of a dataset (alias of /pipelineStatus)", hidden = true)
+    public ResponseDataObject<PipelineStatusValueObject> getDatasetPipelineStatusAlias(
+            @PathParam("dataset") DatasetArg<?> datasetArg
+    ) {
+        return getDatasetPipelineStatus( datasetArg );
+    }
+
+    /**
      * Step descriptor backing {@link #getDatasetPipelineStatus}: the JSON {@code step} key plus the success-event
      * and (optional) failed-event classes whose latest occurrences determine the step's state.
      */
@@ -1837,6 +1991,25 @@ public class DatasetsWebService {
         return doRecomputeDatasetGeeq( datasetArg, mode );
     }
 
+    /**
+     * Curation-UI compatibility alias for {@link #recomputeDatasetGeeqViaPost}: UI calls
+     * {@code POST /datasets/{id}/geeq/recalculate} with the same body shape.
+     */
+    @POST
+    @Path("/{dataset}/geeq/recalculate")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Recompute GEEQ scores for a dataset (alias of /geeq/recompute)", hidden = true,
+            security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) })
+    public ResponseDataObject<GeeqValueObject> recomputeDatasetGeeqViaPostAlias(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Nullable GeeqRecomputeRequest body
+    ) {
+        return recomputeDatasetGeeqViaPost( datasetArg, body );
+    }
+
     private ResponseDataObject<GeeqValueObject> doRecomputeDatasetGeeq( DatasetArg<?> datasetArg, GeeqService.ScoreMode mode ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         Geeq updated = geeqService.calculateScore( ee, mode );
@@ -1846,6 +2019,164 @@ public class DatasetsWebService {
             vo.setLastComputed( geeqEvent.getDate() );
         }
         return respond( vo );
+    }
+
+    /**
+     * Optional request body for {@link #importDataset}. Only {@code accession} is required.
+     */
+    public static class DatasetImportRequest {
+        @Nullable
+        private String accession;
+        @Nullable
+        private String arrayDesignName;
+        @Nullable
+        private Boolean loadPlatformOnly;
+        @Nullable
+        private Boolean suppressMatching;
+        @Nullable
+        private Boolean splitByPlatform;
+        @Nullable
+        private Boolean aggressiveQtRemoval;
+        @Nullable
+        private Boolean allowSuperSeriesLoad;
+        @Nullable
+        private Boolean allowArrayExpressDesign;
+        @Nullable
+        private Boolean isArrayExpress;
+
+        @Nullable
+        public String getAccession() {
+            return accession;
+        }
+
+        public void setAccession( @Nullable String accession ) {
+            this.accession = accession;
+        }
+
+        @Nullable
+        public String getArrayDesignName() {
+            return arrayDesignName;
+        }
+
+        public void setArrayDesignName( @Nullable String arrayDesignName ) {
+            this.arrayDesignName = arrayDesignName;
+        }
+
+        @Nullable
+        public Boolean getLoadPlatformOnly() {
+            return loadPlatformOnly;
+        }
+
+        public void setLoadPlatformOnly( @Nullable Boolean loadPlatformOnly ) {
+            this.loadPlatformOnly = loadPlatformOnly;
+        }
+
+        @Nullable
+        public Boolean getSuppressMatching() {
+            return suppressMatching;
+        }
+
+        public void setSuppressMatching( @Nullable Boolean suppressMatching ) {
+            this.suppressMatching = suppressMatching;
+        }
+
+        @Nullable
+        public Boolean getSplitByPlatform() {
+            return splitByPlatform;
+        }
+
+        public void setSplitByPlatform( @Nullable Boolean splitByPlatform ) {
+            this.splitByPlatform = splitByPlatform;
+        }
+
+        @Nullable
+        public Boolean getAggressiveQtRemoval() {
+            return aggressiveQtRemoval;
+        }
+
+        public void setAggressiveQtRemoval( @Nullable Boolean aggressiveQtRemoval ) {
+            this.aggressiveQtRemoval = aggressiveQtRemoval;
+        }
+
+        @Nullable
+        public Boolean getAllowSuperSeriesLoad() {
+            return allowSuperSeriesLoad;
+        }
+
+        public void setAllowSuperSeriesLoad( @Nullable Boolean allowSuperSeriesLoad ) {
+            this.allowSuperSeriesLoad = allowSuperSeriesLoad;
+        }
+
+        @Nullable
+        public Boolean getAllowArrayExpressDesign() {
+            return allowArrayExpressDesign;
+        }
+
+        public void setAllowArrayExpressDesign( @Nullable Boolean allowArrayExpressDesign ) {
+            this.allowArrayExpressDesign = allowArrayExpressDesign;
+        }
+
+        @Nullable
+        public Boolean getIsArrayExpress() {
+            return isArrayExpress;
+        }
+
+        public void setIsArrayExpress( @Nullable Boolean isArrayExpress ) {
+            this.isArrayExpress = isArrayExpress;
+        }
+    }
+
+    /**
+     * Curation-UI workflow-step endpoint: kick off an async GEO (or ArrayExpress) accession load. The actual loader
+     * runs inside {@link ExpressionExperimentLoadTaskCommand}; this handler submits the command to the
+     * {@link TaskRunningService} and returns a 202 with a {@code Location} header pointing at the polling endpoint.
+     */
+    @POST
+    @Path("/import")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Import a dataset from GEO (or ArrayExpress) by accession",
+            description = "Submits an async load task and returns 202 with a `Location` header pointing at "
+                    + "`/tasks/{taskId}`. Body must include `accession`. Optional flags map to the corresponding "
+                    + "fields on `ExpressionExperimentLoadTaskCommand`.",
+            security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
+            responses = {
+                    @ApiResponse(responseCode = "202", content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
+                    @ApiResponse(responseCode = "400", description = "The request body is missing or `accession` is blank.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public Response importDataset( @Nullable DatasetImportRequest body ) {
+        if ( body == null || body.getAccession() == null || body.getAccession().trim().isEmpty() ) {
+            throw new BadRequestException( "Request body must include a non-blank `accession`." );
+        }
+        ExpressionExperimentLoadTaskCommand cmd = new ExpressionExperimentLoadTaskCommand();
+        cmd.setAccession( body.getAccession().trim() );
+        if ( body.getArrayDesignName() != null ) {
+            cmd.setArrayDesignName( body.getArrayDesignName() );
+        }
+        if ( body.getLoadPlatformOnly() != null ) {
+            cmd.setLoadPlatformOnly( body.getLoadPlatformOnly() );
+        }
+        if ( body.getSuppressMatching() != null ) {
+            cmd.setSuppressMatching( body.getSuppressMatching() );
+        }
+        if ( body.getSplitByPlatform() != null ) {
+            cmd.setSplitByPlatform( body.getSplitByPlatform() );
+        }
+        if ( body.getAggressiveQtRemoval() != null ) {
+            cmd.setAggressiveQtRemoval( body.getAggressiveQtRemoval() );
+        }
+        if ( body.getAllowSuperSeriesLoad() != null ) {
+            cmd.setAllowSuperSeriesLoad( body.getAllowSuperSeriesLoad() );
+        }
+        if ( body.getAllowArrayExpressDesign() != null ) {
+            cmd.setAllowArrayExpressDesign( body.getAllowArrayExpressDesign() );
+        }
+        if ( body.getIsArrayExpress() != null ) {
+            cmd.setArrayExpress( body.getIsArrayExpress() );
+        }
+        return acceptedTaskResponse( taskRunningService.submitTaskCommand( cmd ) );
     }
 
     @POST
@@ -1914,6 +2245,56 @@ public class DatasetsWebService {
         BatchInfoFetchTaskCommand cmd = new BatchInfoFetchTaskCommand( ee );
         expressionExperimentReportService.evictFromCache( ee.getId() );
         return acceptedTaskResponse( taskRunningService.submitTaskCommand( cmd ) );
+    }
+
+    /**
+     * Curation-UI compatibility alias for {@link #runDatasetPreprocess}: UI calls {@code POST /datasets/{id}/preprocess}.
+     */
+    @POST
+    @Path("/{dataset}/preprocess")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Run preprocessing run for a dataset (alias of /tasks/preprocess)", hidden = true,
+            security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) })
+    public Response runDatasetPreprocessAlias(
+            @PathParam("dataset") DatasetArg<?> datasetArg
+    ) {
+        return runDatasetPreprocess( datasetArg );
+    }
+
+    /**
+     * Curation-UI compatibility alias for {@link #runDatasetDiagnostics}: UI calls
+     * {@code POST /datasets/{id}/preprocess/diagnostics}.
+     */
+    @POST
+    @Path("/{dataset}/preprocess/diagnostics")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Submit a diagnostics-only preprocessing run for a dataset (alias of /tasks/diagnostics)", hidden = true,
+            security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) })
+    public Response runDatasetDiagnosticsAlias(
+            @PathParam("dataset") DatasetArg<?> datasetArg
+    ) {
+        return runDatasetDiagnostics( datasetArg );
+    }
+
+    /**
+     * Curation-UI compatibility alias for {@link #runDatasetBatchInformationFetch}: UI calls
+     * {@code POST /datasets/{id}/batchInformation/fetch}.
+     */
+    @POST
+    @Path("/{dataset}/batchInformation/fetch")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Run a batch-information fetch for a dataset (alias of /tasks/batchInfo)", hidden = true,
+            security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) })
+    public Response runDatasetBatchInformationFetchAlias(
+            @PathParam("dataset") DatasetArg<?> datasetArg
+    ) {
+        return runDatasetBatchInformationFetch( datasetArg );
     }
 
     /**
@@ -2141,6 +2522,43 @@ public class DatasetsWebService {
                 new DifferentialExpressionAnalysisRemoveTaskCommand( ee, toRemove );
         expressionExperimentReportService.evictFromCache( ee.getId() );
         return acceptedTaskResponse( taskRunningService.submitTaskCommand( cmd ) );
+    }
+
+    /**
+     * Curation-UI compatibility alias for {@link #redoDatasetDifferentialAnalysis}: UI calls
+     * {@code POST /datasets/{id}/analyses/differential/{aid}/redo}; the canonical handler lives at
+     * {@code /tasks/redo/{analysisId}}.
+     */
+    @POST
+    @Path("/{dataset}/analyses/differential/{analysisId}/redo")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Redo an existing differential expression analysis (alias of /tasks/redo/{analysisId})", hidden = true,
+            security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) })
+    public Response redoDatasetDifferentialAnalysisAlias(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @PathParam("analysisId") Long analysisId
+    ) {
+        return redoDatasetDifferentialAnalysis( datasetArg, analysisId );
+    }
+
+    /**
+     * Curation-UI compatibility alias for {@link #removeDatasetDifferentialAnalysis}: UI calls
+     * {@code DELETE /datasets/{id}/analyses/differential/{aid}}.
+     */
+    @DELETE
+    @Path("/{dataset}/analyses/differential/{analysisId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Remove a differential expression analysis (alias of /tasks/differential/{analysisId})", hidden = true,
+            security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) })
+    public Response removeDatasetDifferentialAnalysisAlias(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @PathParam("analysisId") Long analysisId
+    ) {
+        return removeDatasetDifferentialAnalysis( datasetArg, analysisId );
     }
 
     private Response acceptedTaskResponse( String taskId ) {
@@ -2627,6 +3045,66 @@ public class DatasetsWebService {
             @PathParam("dataset") DatasetArg<?> datasetArg,
             @PathParam("qtId") Long qtId,
             @Nullable QuantitationTypePreferredRequest body
+    ) {
+        return doSetDatasetQuantitationTypePreferred( datasetArg, qtId, body );
+    }
+
+    /**
+     * Request body for {@link #patchDatasetQuantitationType}. Currently understands the
+     * {@code is_preferred} (or {@code isPreferred}) field; future patchable fields can be added here.
+     */
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class QuantitationTypePatchRequest {
+        @Nullable
+        @com.fasterxml.jackson.annotation.JsonAlias({ "is_preferred", "isPreferred" })
+        private Boolean preferred;
+
+        @Nullable
+        public Boolean getPreferred() {
+            return preferred;
+        }
+
+        public void setPreferred( @Nullable Boolean preferred ) {
+            this.preferred = preferred;
+        }
+    }
+
+    /**
+     * Body-driven PATCH dispatcher for a quantitation type. Curation-UI calls
+     * {@code PATCH /datasets/{id}/quantitationTypes/{qtId}} with {@code {"is_preferred": true}} instead of
+     * routing through the {@code /preferred} suffix; this handler dispatches based on which fields are present.
+     */
+    @PATCH
+    @Path("/{dataset}/quantitationTypes/{qtId}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Patch a quantitation type (currently dispatches on `is_preferred`)",
+            description = "Curation-UI compatibility shim for body-driven patches. Body: `{\"is_preferred\": true|false}` "
+                    + "delegates to the canonical `/preferred` handler. Other patchable fields can be added later.",
+            security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "400", description = "The patch body is empty or invalid.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "404", description = "The dataset or quantitation type does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<QuantitationTypeValueObject> patchDatasetQuantitationType(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @PathParam("qtId") Long qtId,
+            @Nullable QuantitationTypePatchRequest body
+    ) {
+        if ( body == null || body.getPreferred() == null ) {
+            throw new BadRequestException( "PATCH body must include at least one supported field (currently: `is_preferred`)." );
+        }
+        QuantitationTypePreferredRequest preferredBody = new QuantitationTypePreferredRequest();
+        preferredBody.setPreferred( body.getPreferred() );
+        return doSetDatasetQuantitationTypePreferred( datasetArg, qtId, preferredBody );
+    }
+
+    private ResponseDataObject<QuantitationTypeValueObject> doSetDatasetQuantitationTypePreferred(
+            DatasetArg<?> datasetArg, Long qtId, @Nullable QuantitationTypePreferredRequest body
     ) {
         boolean preferred = body == null || body.getPreferred() == null || body.getPreferred();
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
