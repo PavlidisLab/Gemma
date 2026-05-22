@@ -31,7 +31,6 @@ import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.util.Thaws;
 
@@ -70,10 +69,10 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     private ExperimentalFactorService experimentalFactorService;
 
     @Autowired
-    private AuditTrailService auditTrailService;
+    private QuantitationTypeService quantitationTypeService;
 
     @Autowired
-    private QuantitationTypeService quantitationTypeService;
+    private SingleCellExperimentDesignAuditService singleCellExperimentDesignAuditService;
 
     /**
      * Maintains the {@code SINGLE_CELL_DIMENSION_EXPERIMENT} link table introduced by V7 / V9.
@@ -1034,6 +1033,9 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional
+    @AuditedConditional( value = PreferredCellTypeAssignmentChangedEvent.class,
+            when = "#result.name() != 'UNCHANGED'",
+            messageSpel = "'Changed the preferred cell type assignment of ' + #dimension + ' to ' + #newPreferredCta" )
     public PreferredCellTypeAssignmentChangeOutcome changePreferredCellTypeAssignment( ExpressionExperiment ee, SingleCellDimension dimension, CellTypeAssignment newPreferredCta, boolean recreateCellTypeFactorIfNecessary, boolean ignoreCompatibleFactor ) {
         Assert.notNull( ee.getId(), "Dataset must be persistent." );
         Assert.notNull( dimension.getId(), "Single-cell dimension must be persistent." );
@@ -1064,9 +1066,12 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         }
 
         expressionExperimentDao.updateSingleCellDimension( ee, dimension );
-        auditTrailService.addUpdateEvent( ee, PreferredCellTypeAssignmentChangedEvent.class,
-                String.format( "Changed the preferred cell type assignment of %s%s to %s", dimension,
-                        preferredCta != null ? " from " + preferredCta : "", newPreferredCta ) );
+        // Audit emission migrated to @AuditedConditional at the method level
+        // (gates on #result != UNCHANGED; the early-return above SHORT-CIRCUITS
+        // before we reach this point so the predicate also excludes that path).
+        // Note: previous imperative message included " from <oldCta>" when one
+        // existed; the SpEL form keeps the static portion. The oldCta detail
+        // is recoverable from prior PreferredCellTypeAssignmentChangedEvent rows.
 
         // include the case where there was no overall CTA
         if ( dimension.equals( preferredDimension ) ) {
@@ -1537,8 +1542,12 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         log.info( "Created cell type factor " + cellTypeFactor + " from " + ctl );
         ee.getExperimentalDesign().getExperimentalFactors().add( cellTypeFactor );
         experimentalDesignService.update( ee.getExperimentalDesign() );
-        auditTrailService.addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class,
-                String.format( "Created a cell type factor %s from preferred cell type assignment %s.", cellTypeFactor, ctl ) );
+        // Audit emission hoisted to SingleCellExperimentDesignAuditService:
+        // this createCellTypeFactor is private + self-invoked from 5+ call sites
+        // so a direct @Audited here would be invisible to AOP. Pass ctl.toString()
+        // explicitly so the message matches the historical imperative form
+        // verbatim (CellTypeAssignment#toString is the same shape used before).
+        singleCellExperimentDesignAuditService.recordCellTypeFactorCreated( ee, cellTypeFactor, ctl.toString() );
         return cellTypeFactor;
     }
 
@@ -1564,7 +1573,10 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         // this will remove analysis involving the factor and also sample-fv associations
         log.info( "Removing existing cell type factor for " + ee + ": " + existingCellTypeFactor );
         experimentalFactorService.remove( existingCellTypeFactor );
-        auditTrailService.addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class,
-                String.format( "Removed the cell type factor %s.", existingCellTypeFactor ) );
+        // Audit emission hoisted to SingleCellExperimentDesignAuditService:
+        // this removeCellTypeFactor is private + self-invoked from two call sites
+        // (createCellTypeFactor recreate path and removeCellTypeFactorIfExists)
+        // so a direct @Audited here would be invisible to AOP.
+        singleCellExperimentDesignAuditService.recordCellTypeFactorRemoved( ee, existingCellTypeFactor );
     }
 }
