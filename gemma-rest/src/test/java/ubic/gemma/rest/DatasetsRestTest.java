@@ -468,6 +468,41 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
     }
 
     @Test
+    public void testReplaceDatasetDesignWithEmptyBodyIs400() {
+        ExpressionExperiment ee = ees.get( 0 );
+        assertThat( target( "/datasets/" + ee.getId() + "/design" ).request()
+                .put( javax.ws.rs.client.Entity.json( "null" ) ) )
+                .hasStatus( Response.Status.BAD_REQUEST );
+    }
+
+    @Test
+    public void testReplaceDatasetDesignWithUnknownDatasetIs404() {
+        assertThat( target( "/datasets/9999999/design" ).request()
+                .put( javax.ws.rs.client.Entity.json( "{}" ) ) )
+                .hasStatus( Response.Status.NOT_FOUND );
+    }
+
+    @Test
+    public void testReplaceDatasetDesignNoOpEcho() {
+        // Fetch the current design then PUT it back unchanged; no blockers, no DEAs to delete, so should be 200.
+        ExpressionExperiment ee = ees.get( 0 );
+        Response getResponse = target( "/datasets/" + ee.getId() + "/design" ).request( MediaType.APPLICATION_JSON ).get();
+        assertThat( getResponse ).hasStatus( Response.Status.OK );
+        String body = getResponse.readEntity( String.class );
+        // The GET returns ResponseDataObject{data: ExperimentalDesignValueObject}; extract the data object as JSON.
+        int dataStart = body.indexOf( "\"data\":" );
+        org.assertj.core.api.Assertions.assertThat( dataStart ).isGreaterThanOrEqualTo( 0 );
+        // Trim trailing closing brace of the ResponseDataObject wrapper.
+        String designJson = body.substring( dataStart + "\"data\":".length(), body.lastIndexOf( '}' ) );
+
+        assertThat( target( "/datasets/" + ee.getId() + "/design" ).request()
+                .put( javax.ws.rs.client.Entity.json( designJson ) ) )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrProperty( "data" );
+    }
+
+    @Test
     public void testGetDatasetRawExpression() {
         ExpressionExperiment ee = ees.get( 0 );
         assertThat( target( "/datasets/" + ee.getId() + "/data/raw" ).request().get() )

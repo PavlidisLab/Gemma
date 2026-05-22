@@ -1856,6 +1856,101 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     }
 
     @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testReplaceDatasetDesignHappyPath() {
+        DesignPreflightReport clean = new DesignPreflightReport();
+        when( expressionExperimentService.previewDesignChange( eq( ee ), any( ExperimentalDesignValueObject.class ) ) )
+                .thenReturn( clean );
+        ExperimentalDesignValueObject updated = new ExperimentalDesignValueObject();
+        when( expressionExperimentService.applyDesignChange( eq( ee ), any( ExperimentalDesignValueObject.class ) ) )
+                .thenReturn( updated );
+
+        assertThat( target( "/datasets/1/design" ).request()
+                .put( javax.ws.rs.client.Entity.json( new ExperimentalDesignValueObject() ) ) )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .entity()
+                .hasFieldOrProperty( "data" );
+
+        verify( expressionExperimentService ).applyDesignChange( eq( ee ), any( ExperimentalDesignValueObject.class ) );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testReplaceDatasetDesignReturnsBadRequestOnBlockers() {
+        DesignPreflightReport report = new DesignPreflightReport();
+        DesignPreflightReport.Blocker b = new DesignPreflightReport.Blocker( "UNKNOWN_FACTOR_VALUE_ID", "bad payload" );
+        report.getBlockers().add( b );
+        when( expressionExperimentService.previewDesignChange( eq( ee ), any( ExperimentalDesignValueObject.class ) ) )
+                .thenReturn( report );
+
+        assertThat( target( "/datasets/1/design" ).request()
+                .put( javax.ws.rs.client.Entity.json( new ExperimentalDesignValueObject() ) ) )
+                .hasStatus( Response.Status.BAD_REQUEST )
+                .entity()
+                .extracting( "data.blockers", list( Map.class ) )
+                .hasSize( 1 );
+
+        verify( expressionExperimentService, never() ).applyDesignChange( any(), any() );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testReplaceDatasetDesignReturns409WhenForceRequired() {
+        DesignPreflightReport report = new DesignPreflightReport();
+        report.getDifferentialExpressionAnalysesToDelete().add(
+                new DesignPreflightReport.AnalysisRef( 500L, "vs control", null ) );
+        when( expressionExperimentService.previewDesignChange( eq( ee ), any( ExperimentalDesignValueObject.class ) ) )
+                .thenReturn( report );
+
+        assertThat( target( "/datasets/1/design" ).request()
+                .put( javax.ws.rs.client.Entity.json( new ExperimentalDesignValueObject() ) ) )
+                .hasStatus( Response.Status.CONFLICT )
+                .entity()
+                .extracting( "data.differentialExpressionAnalysesToDelete", list( Map.class ) )
+                .hasSize( 1 );
+
+        verify( expressionExperimentService, never() ).applyDesignChange( any(), any() );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testReplaceDatasetDesignWithForceAppliesEvenWithCascade() {
+        DesignPreflightReport report = new DesignPreflightReport();
+        report.getDifferentialExpressionAnalysesToDelete().add(
+                new DesignPreflightReport.AnalysisRef( 500L, "vs control", null ) );
+        when( expressionExperimentService.previewDesignChange( eq( ee ), any( ExperimentalDesignValueObject.class ) ) )
+                .thenReturn( report );
+        when( expressionExperimentService.applyDesignChange( eq( ee ), any( ExperimentalDesignValueObject.class ) ) )
+                .thenReturn( new ExperimentalDesignValueObject() );
+
+        assertThat( target( "/datasets/1/design" ).queryParam( "force", "true" ).request()
+                .put( javax.ws.rs.client.Entity.json( new ExperimentalDesignValueObject() ) ) )
+                .hasStatus( Response.Status.OK );
+
+        verify( expressionExperimentService ).applyDesignChange( eq( ee ), any( ExperimentalDesignValueObject.class ) );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testReplaceDatasetDesignWithEmptyBodyIs400() {
+        assertThat( target( "/datasets/1/design" ).request()
+                .put( javax.ws.rs.client.Entity.json( "null" ) ) )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        verify( expressionExperimentService, never() ).previewDesignChange( any(), any() );
+        verify( expressionExperimentService, never() ).applyDesignChange( any(), any() );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testReplaceDatasetDesignWithUnknownDatasetIs404() {
+        assertThat( target( "/datasets/999/design" ).request()
+                .put( javax.ws.rs.client.Entity.json( new ExperimentalDesignValueObject() ) ) )
+                .hasStatus( Response.Status.NOT_FOUND );
+        verify( expressionExperimentService, never() ).applyDesignChange( any(), any() );
+    }
+
+    @Test
     public void testGetDatasetAllPublications() {
         when( expressionExperimentService.loadWithPrimaryPublicationAndOtherRelevantPublications( 1L ) ).thenReturn( ee );
         BibliographicReference prim_ref = new BibliographicReference();
