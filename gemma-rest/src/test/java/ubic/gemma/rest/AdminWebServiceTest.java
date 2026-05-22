@@ -22,9 +22,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
+import ubic.gemma.core.job.SubmittedTask;
+import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.rest.util.ResponseDataObject;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -49,12 +53,14 @@ public class AdminWebServiceTest {
     private Cache fooCache;
     @Mock
     private Cache barCache;
+    @Mock
+    private TaskRunningService taskRunningService;
 
     private AdminWebService webService;
 
     @BeforeEach
     public void setUp() {
-        webService = new AdminWebService( cacheManager, sessionFactory );
+        webService = new AdminWebService( cacheManager, sessionFactory, taskRunningService );
     }
 
     /* ===== /admin/caches ===== */
@@ -156,5 +162,62 @@ public class AdminWebServiceTest {
         assertThat( body.secondLevelCacheHitCount ).isEqualTo( 44L );
         assertThat( body.secondLevelCacheMissCount ).isEqualTo( 55L );
         assertThat( body.secondLevelCachePutCount ).isEqualTo( 66L );
+    }
+
+    /* ===== /admin/hibernate/reset ===== */
+
+    @Test
+    public void resetHibernateStatsClearsStatistics() {
+        when( sessionFactory.getStatistics() ).thenReturn( statistics );
+
+        Response resp = webService.resetHibernateStats();
+
+        assertThat( resp.getStatus() ).isEqualTo( 204 );
+        verify( statistics ).clear();
+    }
+
+    /* ===== /admin/jobs ===== */
+
+    @Test
+    public void getJobsReturnsEmptyListWhenNoTasks() {
+        when( taskRunningService.getSubmittedTasks() ).thenReturn( Collections.emptyList() );
+
+        ResponseDataObject<AdminWebService.JobsListResponse> resp = webService.getJobs();
+        AdminWebService.JobsListResponse body = resp.getData();
+
+        assertThat( body.total ).isZero();
+        assertThat( body.queued ).isZero();
+        assertThat( body.running ).isZero();
+        assertThat( body.completed ).isZero();
+        assertThat( body.failed ).isZero();
+        assertThat( body.tasks ).isEmpty();
+    }
+
+    @Test
+    public void getJobsAggregatesStatusCountsAndSortsNewestFirst() {
+        SubmittedTask qTask = mockTask( "q-1", SubmittedTask.Status.QUEUED, new Date( 1_000L ) );
+        SubmittedTask rTask = mockTask( "r-1", SubmittedTask.Status.RUNNING, new Date( 3_000L ) );
+        SubmittedTask cTask = mockTask( "c-1", SubmittedTask.Status.COMPLETED, new Date( 2_000L ) );
+        SubmittedTask fTask = mockTask( "f-1", SubmittedTask.Status.FAILED, new Date( 4_000L ) );
+        when( taskRunningService.getSubmittedTasks() ).thenReturn( Arrays.asList( qTask, rTask, cTask, fTask ) );
+
+        ResponseDataObject<AdminWebService.JobsListResponse> resp = webService.getJobs();
+        AdminWebService.JobsListResponse body = resp.getData();
+
+        assertThat( body.total ).isEqualTo( 4 );
+        assertThat( body.queued ).isEqualTo( 1 );
+        assertThat( body.running ).isEqualTo( 1 );
+        assertThat( body.completed ).isEqualTo( 1 );
+        assertThat( body.failed ).isEqualTo( 1 );
+        assertThat( body.tasks ).extracting( TaskStatusValueObject::getTaskId )
+                .containsExactly( "f-1", "r-1", "c-1", "q-1" );
+    }
+
+    private SubmittedTask mockTask( String id, SubmittedTask.Status status, Date submittedAt ) {
+        SubmittedTask t = org.mockito.Mockito.mock( SubmittedTask.class );
+        when( t.getTaskId() ).thenReturn( id );
+        when( t.getStatus() ).thenReturn( status );
+        when( t.getSubmissionTime() ).thenReturn( submittedAt );
+        return t;
     }
 }
