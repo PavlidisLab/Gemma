@@ -169,6 +169,8 @@
                   name="ubic.gemma.model.common.auditAndSecurity.eventType.AgentProposalEvent"/>
         <subclass abstract="false" discriminator-value="PreboardedPromotedEvent"
                   name="ubic.gemma.model.common.auditAndSecurity.eventType.PreboardedPromotedEvent"/>
+        <subclass abstract="false" discriminator-value="DatasetPublishedEvent"
+                  name="ubic.gemma.model.common.auditAndSecurity.eventType.DatasetPublishedEvent"/>
         <subclass abstract="true" discriminator-value="CurationDetailsEvent"
                   name="ubic.gemma.model.common.auditAndSecurity.eventType.CurationDetailsEvent">
             <subclass abstract="true"

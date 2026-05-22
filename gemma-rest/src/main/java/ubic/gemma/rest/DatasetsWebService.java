@@ -1552,8 +1552,8 @@ public class DatasetsWebService {
 
     /**
      * Curation-UI workflow-step endpoint: curator-state-machine transition that publishes a dataset under a named
-     * reviewer. Distinct from {@code POST /makePublic}: this endpoint ALSO records the reviewer as an audit event
-     * (currently re-uses {@link ubic.gemma.model.common.auditAndSecurity.eventType.MakePublicEvent} with the
+     * reviewer. Distinct from {@code POST /makePublic}: this endpoint ALSO records the reviewer as a
+     * {@link ubic.gemma.model.common.auditAndSecurity.eventType.DatasetPublishedEvent} audit event (with the
      * reviewer encoded in the note), and is idempotent on already-published datasets (audit-only emission then).
      */
     @POST
@@ -1588,7 +1588,7 @@ public class DatasetsWebService {
                 ? "Re-published by reviewer: " + reviewer.trim() + " (dataset was already public)"
                 : "Published by reviewer: " + reviewer.trim();
         auditTrailService.addUpdateEvent( ee,
-                ubic.gemma.model.common.auditAndSecurity.eventType.MakePublicEvent.class, note );
+                ubic.gemma.model.common.auditAndSecurity.eventType.DatasetPublishedEvent.class, note );
         return respond( new DatasetPermissionsValueObject( securityService.isPublic( ee ), securityService.isShared( ee ) ) );
     }
 
