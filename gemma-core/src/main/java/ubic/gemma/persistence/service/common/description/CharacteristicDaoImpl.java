@@ -430,18 +430,22 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
         if ( isParentClassesEmpty( parentClasses, includeNoParents ) ) {
             return Collections.emptyMap();
         }
+        // Two-query group-by-then-load: the prior shape projected {C.*} alongside a GROUP BY on
+        // coalesce(VALUE_URI, VALUE), which strict ONLY_FULL_GROUP_BY (MySQL 5.7+ default sql_mode)
+        // rejects and which silently picked an arbitrary row per group under relaxed mode. The
+        // aggregate query below yields (normalized-key, MIN(ID)) pairs — strict-mode safe and
+        // deterministic — then load() reassembles the Characteristic per representative ID.
         //noinspection unchecked
-        return ( ( List<Object[]> ) this.getSessionFactory().getCurrentSession()
-                .createNativeQuery( "select lower(coalesce(VALUE_URI, `VALUE`)) as V, {C.*} from CHARACTERISTIC C "
+        List<Object[]> keys = ( List<Object[]> ) this.getSessionFactory().getCurrentSession()
+                .createNativeQuery( "select lower(coalesce(VALUE_URI, `VALUE`)) as V, MIN(C.ID) as REP_ID from CHARACTERISTIC C "
                         + "where VALUE_URI = :valueUri "
                         + ( parentClasses != null || includeNoParents ? "and " + createOwningEntityConstraint( parentClasses, includeNoParents ) + " " : "" )
                         + "group by coalesce(VALUE_URI, `VALUE`)" )
                 .addScalar( "V", StandardBasicTypes.STRING )
-                .addEntity( "C", Characteristic.class )
+                .addScalar( "REP_ID", StandardBasicTypes.LONG )
                 .setParameter( "valueUri", valueUri )
-                .list() )
-                .stream()
-                .collect( Collectors.toMap( row -> ( String ) row[0], row -> ( Characteristic ) row[1] ) );
+                .list();
+        return reassembleByRepresentativeId( keys );
     }
 
     @Override
@@ -449,18 +453,46 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
         if ( isParentClassesEmpty( parentClasses, includeNoParents ) ) {
             return Collections.emptyMap();
         }
+        // See findByValueUriGroupedByNormalizedValue for rationale: aggregate by normalized key,
+        // pick MIN(ID) as the per-group representative, then bulk-load and rebuild the map.
         //noinspection unchecked
-        return ( ( List<Object[]> ) this.getSessionFactory().getCurrentSession()
-                .createNativeQuery( "select lower(coalesce(VALUE_URI, `VALUE`)) as V, {C.*} from CHARACTERISTIC {C} "
+        List<Object[]> keys = ( List<Object[]> ) this.getSessionFactory().getCurrentSession()
+                .createNativeQuery( "select lower(coalesce(VALUE_URI, `VALUE`)) as V, MIN(C.ID) as REP_ID from CHARACTERISTIC C "
                         + "where `VALUE` like :valueLike "
                         + ( parentClasses != null || includeNoParents ? "and " + createOwningEntityConstraint( parentClasses, includeNoParents ) + " " : "" )
                         + "group by coalesce(VALUE_URI, `VALUE`)" )
                 .addScalar( "V", StandardBasicTypes.STRING )
-                .addEntity( "C", Characteristic.class )
+                .addScalar( "REP_ID", StandardBasicTypes.LONG )
                 .setParameter( "valueLike", valueLike )
-                .list() )
-                .stream()
-                .collect( Collectors.toMap( row -> ( String ) row[0], row -> ( Characteristic ) row[1] ) );
+                .list();
+        return reassembleByRepresentativeId( keys );
+    }
+
+    /**
+     * Resolve (normalized-key, representative-ID) tuples from the group-by-then-load pattern into
+     * a Map keyed by normalized value with the matching {@link Characteristic} entity as the value.
+     * Bulk-loads via {@link #load(Collection)}, which batches internally.
+     */
+    private Map<String, Characteristic> reassembleByRepresentativeId( List<Object[]> keys ) {
+        if ( keys.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+        Set<Long> repIds = new HashSet<>( keys.size() );
+        for ( Object[] row : keys ) {
+            repIds.add( ( Long ) row[1] );
+        }
+        Map<Long, Characteristic> byId = new HashMap<>( repIds.size() );
+        for ( Characteristic c : this.load( repIds ) ) {
+            byId.put( c.getId(), c );
+        }
+        Map<String, Characteristic> result = new HashMap<>( keys.size() );
+        for ( Object[] row : keys ) {
+            Characteristic c = byId.get( ( Long ) row[1] );
+            if ( c != null ) {
+                result.put( ( String ) row[0], c );
+            }
+        }
+        return result;
     }
 
     @Override
