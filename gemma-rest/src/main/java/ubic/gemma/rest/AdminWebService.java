@@ -26,9 +26,15 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import lombok.extern.apachecommons.CommonsLog;
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.search.mapper.orm.Search;
+import org.hibernate.search.mapper.orm.entity.SearchIndexedEntity;
+import org.hibernate.search.mapper.orm.mapping.SearchMapping;
 import org.hibernate.stat.Statistics;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.lang.Nullable;
@@ -38,6 +44,10 @@ import ubic.gemma.core.job.SubmittedTask;
 import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.rest.util.ResponseDataObject;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -66,11 +76,21 @@ import static ubic.gemma.rest.util.Responders.respond;
 @Service
 @Path("/admin")
 @Tag(name = "Admin", description = "System monitoring endpoints — admin only")
+@CommonsLog
 public class AdminWebService {
 
     private final CacheManager cacheManager;
     private final SessionFactory sessionFactory;
     private final TaskRunningService taskRunningService;
+
+    /**
+     * Filesystem root holding the per-entity Hibernate Search 7 Lucene index
+     * sub-directories. Wired from {@code gemma.search.dir}; see
+     * {@code HibernateConfig#resolveSearchIndexBase}.
+     */
+    @Nullable
+    @Value("${gemma.search.dir:}")
+    private String searchIndexBase;
 
     @Autowired
     public AdminWebService( CacheManager cacheManager, SessionFactory sessionFactory,
@@ -280,6 +300,96 @@ public class AdminWebService {
         return respond( body );
     }
 
+    /* ===== Search indices ===== */
+
+    /**
+     * Per-{@code @Indexed}-entity Hibernate Search 7 index status. Replaces the
+     * legacy gemma-web {@code indexer.js} flow that pinged the indexer directly
+     * to discover what was indexable. The new UI uses this read-only view to
+     * surface index sizes / on-disk paths; rebuild actions stay in the CLI
+     * ({@code IndexGemmaCLI}).
+     */
+    @GET
+    @Path("/search/indices")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Hibernate Search 7 per-index status",
+            description = "Enumerates every @Indexed entity known to Hibernate Search 7 and reports, for each: the JPA entity name, the Java simple class name, the Lucene index name, the on-disk index directory (under `gemma.search.dir`), the document count (matchAll fetchTotalHitCount), and the directory mtime. Document-count queries run in a short-lived Hibernate session; on query failure the documentCount field is reported as -1 and the error message is included.",
+            security = {
+                    @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
+            },
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class)))
+            })
+    public ResponseDataObject<SearchIndicesResponse> getSearchIndices() {
+        SearchMapping mapping = Search.mapping( sessionFactory );
+        Collection<? extends SearchIndexedEntity<?>> indexed = mapping.allIndexedEntities();
+        List<IndexStatusValueObject> indices = new ArrayList<>( indexed.size() );
+        long totalDocs = 0;
+        boolean totalDocsExact = true;
+        try ( Session session = sessionFactory.openSession() ) {
+            for ( SearchIndexedEntity<?> entity : indexed ) {
+                indices.add( buildStatus( entity, session ) );
+            }
+        }
+        for ( IndexStatusValueObject vo : indices ) {
+            if ( vo.documentCount < 0 ) {
+                totalDocsExact = false;
+            } else {
+                totalDocs += vo.documentCount;
+            }
+        }
+        indices.sort( Comparator.comparing( v -> v.entityName, Comparator.nullsLast( Comparator.naturalOrder() ) ) );
+        SearchIndicesResponse body = new SearchIndicesResponse();
+        body.indexBase = searchIndexBase;
+        body.count = indices.size();
+        body.totalDocumentCount = totalDocs;
+        body.totalDocumentCountExact = totalDocsExact;
+        body.indices = indices;
+        return respond( body );
+    }
+
+    private <E> IndexStatusValueObject buildStatus( SearchIndexedEntity<E> entity, Session session ) {
+        IndexStatusValueObject vo = new IndexStatusValueObject();
+        vo.entityName = entity.jpaName();
+        vo.className = entity.javaClass().getSimpleName();
+        vo.indexName = entity.indexManager().descriptor().hibernateSearchName();
+        // Doc count via matchAll() fetchTotalHitCount() — backend-agnostic, doesn't
+        // require unwrapping to the Lucene-specific extension. A blank / missing
+        // gemma.search.dir falls back to a tmpdir path in HibernateConfig, so the
+        // query is always answerable; only schema problems would push us to the
+        // catch arm.
+        try {
+            vo.documentCount = Search.session( session )
+                    .search( entity.javaClass() )
+                    .where( f -> f.matchAll() )
+                    .fetchTotalHitCount();
+        } catch ( RuntimeException e ) {
+            log.warn( "Failed to count documents for " + entity.javaClass().getName() + ": " + e.getMessage() );
+            vo.documentCount = -1L;
+            vo.error = e.getClass().getSimpleName() + ": " + e.getMessage();
+        }
+        // Per-index on-disk directory — HS 7 Lucene local-filesystem backend names the
+        // sub-directory after IndexDescriptor.hibernateSearchName() under directory.root.
+        if ( searchIndexBase != null && !searchIndexBase.trim().isEmpty() ) {
+            java.nio.file.Path indexDir = Paths.get( searchIndexBase, vo.indexName );
+            vo.indexPath = indexDir.toString();
+            if ( Files.isDirectory( indexDir ) ) {
+                vo.exists = true;
+                try {
+                    vo.lastModified = Files.getLastModifiedTime( indexDir ).toInstant();
+                } catch ( IOException e ) {
+                    log.debug( "Could not read mtime for " + indexDir + ": " + e.getMessage() );
+                }
+            } else {
+                vo.exists = false;
+            }
+        }
+        return vo;
+    }
+
     /* ===== DTOs ===== */
 
     public static class CacheListResponse {
@@ -296,6 +406,40 @@ public class AdminWebService {
         public int cancelling;
         public int unknown;
         public List<TaskStatusValueObject> tasks;
+    }
+
+    public static class SearchIndicesResponse {
+        /** Filesystem root (gemma.search.dir) under which per-entity index dirs live. May be blank if unconfigured. */
+        @Nullable
+        public String indexBase;
+        public int count;
+        public long totalDocumentCount;
+        /** False if any per-index count failed; the total is then a lower bound. */
+        public boolean totalDocumentCountExact;
+        public List<IndexStatusValueObject> indices;
+    }
+
+    public static class IndexStatusValueObject {
+        /** JPA entity name (e.g. {@code ExpressionExperiment}). */
+        public String entityName;
+        /** Java simple class name. */
+        public String className;
+        /** Hibernate Search index name (the sub-directory name under {@code indexBase}). */
+        public String indexName;
+        /** Absolute path to the on-disk index directory, or null if {@code gemma.search.dir} is unset. */
+        @Nullable
+        public String indexPath;
+        /** True if the on-disk index directory exists; null if {@code indexPath} is null. */
+        @Nullable
+        public Boolean exists;
+        /** Document count from a matchAll {@code fetchTotalHitCount}; -1 on query failure. */
+        public long documentCount;
+        /** mtime of the on-disk index directory; null if missing / unconfigured / unreadable. */
+        @Nullable
+        public Instant lastModified;
+        /** Populated only when {@code documentCount == -1}. */
+        @Nullable
+        public String error;
     }
 
     public static class HibernateStatsResponse {
