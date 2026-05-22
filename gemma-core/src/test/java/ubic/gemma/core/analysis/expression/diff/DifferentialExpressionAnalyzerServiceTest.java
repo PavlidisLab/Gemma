@@ -18,7 +18,6 @@
  */
 package ubic.gemma.core.analysis.expression.diff;
 
-import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Disabled;
@@ -37,7 +36,6 @@ import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.security.authorization.acl.AclTestUtils;
 import ubic.gemma.core.util.locking.LockedPath;
-import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
@@ -68,7 +66,6 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author keshav, paul
  */
 @Disabled("These tests randomly fail on the CI")
-@Category(SlowTest.class)
 @Tag("slow")
 public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServiceTest5 {
 

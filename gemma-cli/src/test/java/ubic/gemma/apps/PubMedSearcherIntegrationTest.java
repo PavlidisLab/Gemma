@@ -18,7 +18,6 @@
  */
 package ubic.gemma.apps;
 
-import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,7 +27,6 @@ import ubic.gemma.cli.util.test.BaseCliIntegrationTest5;
 import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.util.test.NetworkAvailable;
 import ubic.gemma.core.util.test.NetworkAvailableExtension;
-import ubic.gemma.core.util.test.category.SlowTest;
 
 import java.io.ByteArrayOutputStream;
 
@@ -51,7 +49,6 @@ public class PubMedSearcherIntegrationTest extends BaseCliIntegrationTest5 {
      */
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public final void testMain() {
         ByteArrayOutputStream os = new ByteArrayOutputStream();

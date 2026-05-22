@@ -2,7 +2,6 @@ package ubic.gemma.core.loader.expression.singleCell;
 
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Configuration;
@@ -15,7 +14,6 @@ import ubic.gemma.core.loader.expression.singleCell.transform.*;
 import ubic.gemma.core.loader.util.hdf5.H5Attribute;
 import ubic.gemma.core.loader.util.hdf5.H5File;
 import ubic.gemma.core.util.test.BaseTest5;
-import ubic.gemma.core.util.test.category.SlowTest;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -27,7 +25,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-@Category(SlowTest.class)
 @Tag("slow")
 @Tag("integration")
 @ContextConfiguration

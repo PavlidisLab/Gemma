@@ -21,7 +21,6 @@ package ubic.gemma.core.loader.expression.geo;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
@@ -30,7 +29,6 @@ import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.util.test.BaseIntegrationTest5;
 import ubic.gemma.core.util.test.NetworkAvailable;
 import ubic.gemma.core.util.test.NetworkAvailableExtension;
-import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -69,7 +67,6 @@ public class GeoConverterTest extends BaseIntegrationTest5 {
      */
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     public final void test5C() {
         // GSE35721
@@ -853,7 +850,6 @@ public class GeoConverterTest extends BaseIntegrationTest5 {
      */
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     public final void testWithImageNoGenbank() throws Exception {
         InputStream is = new GZIPInputStream(
                 new ClassPathResource( "/data/loader/expression/geo/GPL222_family.soft.gz" ).getInputStream() );

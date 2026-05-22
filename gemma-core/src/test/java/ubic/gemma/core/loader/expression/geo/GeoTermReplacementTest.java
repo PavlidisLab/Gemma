@@ -10,7 +10,6 @@ import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.Tag;
 import ubic.gemma.core.ontology.basecode.model.OntologyTerm;
 import ubic.gemma.core.ontology.basecode.providers.*;
@@ -20,7 +19,6 @@ import ubic.gemma.core.ontology.providers.PatoOntologyService;
 import ubic.gemma.core.util.concurrent.Executors;
 import ubic.gemma.core.util.test.NetworkAvailable;
 import ubic.gemma.core.util.test.NetworkAvailableExtension;
-import ubic.gemma.core.util.test.category.SlowTest;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -40,7 +38,6 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @Slf4j
 @Tag("slow")
-@Category(SlowTest.class)
 @NetworkAvailable(url = "http://purl.obolibrary.org/")
 @ExtendWith(NetworkAvailableExtension.class)
 public class GeoTermReplacementTest {

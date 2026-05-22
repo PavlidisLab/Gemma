@@ -15,7 +15,6 @@
 package ubic.gemma.core.analysis.expression.diff;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -30,7 +29,6 @@ import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.core.loader.genome.gene.ExternalFileGeneLoaderService;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
-import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -156,7 +154,6 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest5 {
 
     @Test
     @Disabled
-    @Category(SlowTest.class)
     @Tag("slow")
     public void testAnalyze() throws Exception {
 

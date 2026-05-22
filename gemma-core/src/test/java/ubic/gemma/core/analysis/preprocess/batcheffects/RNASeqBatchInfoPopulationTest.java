@@ -22,7 +22,6 @@ package ubic.gemma.core.analysis.preprocess.batcheffects;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +35,6 @@ import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.util.test.NetworkAvailable;
 import ubic.gemma.core.util.test.NetworkAvailableExtension;
-import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationFetchingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.SingleBatchDeterminationEvent;
@@ -118,7 +116,6 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest5 {
      */
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testGetBatches() throws Exception {
 
@@ -161,7 +158,6 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest5 {
      */
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testGSE14285OneBatch() throws Exception {
         geoService.setGeoDomainObjectGenerator(
@@ -187,7 +183,6 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest5 {
      */
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testGSE156689NoBatchinfo() throws Exception {
         geoService.setGeoDomainObjectGenerator(

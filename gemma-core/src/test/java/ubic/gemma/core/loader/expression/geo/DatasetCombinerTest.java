@@ -19,7 +19,6 @@
 package ubic.gemma.core.loader.expression.geo;
 
 import lombok.extern.slf4j.Slf4j;
-import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,7 +29,6 @@ import ubic.gemma.core.loader.expression.geo.model.GeoDataset;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.util.test.NetworkAvailable;
 import ubic.gemma.core.util.test.NetworkAvailableExtension;
-import ubic.gemma.core.util.test.category.SlowTest;
 
 import java.io.InputStream;
 import java.util.Collection;
@@ -47,7 +45,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @Slf4j
 @Tag("slow")
-@Category(SlowTest.class)
 @ExtendWith(NetworkAvailableExtension.class)
 public class DatasetCombinerTest {
 

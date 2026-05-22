@@ -16,7 +16,6 @@ package ubic.gemma.core.ontology.providers;
 
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
@@ -31,7 +30,6 @@ import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.ontology.providers.GeneOntologyServiceImpl.GOAspect;
 import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
-import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationReadService;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 
@@ -49,7 +47,6 @@ import static org.mockito.Mockito.mock;
  *
  * @author Paul
  */
-@Category(SlowTest.class)
 @Tag("slow")
 @ContextConfiguration
 public class GeneOntologyService2Test extends BaseTest5 implements InitializingBean {

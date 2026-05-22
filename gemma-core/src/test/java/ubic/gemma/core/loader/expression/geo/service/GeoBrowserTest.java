@@ -32,7 +32,6 @@ import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.util.test.NetworkAvailable;
 import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.core.util.test.category.GeoTest;
-import ubic.gemma.core.util.test.category.SlowTest;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -59,7 +58,6 @@ public class GeoBrowserTest {
 
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     @NetworkAvailable(url = "https://www.ncbi.nlm.nih.gov/geo/browse/")
     public void testGetRecentGeoRecords() throws Exception {
         Collection<GeoRecord> res = b.getRecentGeoRecords( GeoRecordType.SERIES, 10, 10 );
@@ -70,7 +68,6 @@ public class GeoBrowserTest {
 
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     public void testGetDetailedGeoRecord() throws IOException {
         b.getGeoRecord( GeoRecordType.SERIES, "GSE1", GeoRetrieveConfig.DETAILED );
         b.getGeoRecord( GeoRecordType.SERIES, "GSE999", GeoRetrieveConfig.DETAILED );
@@ -79,7 +76,6 @@ public class GeoBrowserTest {
 
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     public void testSearchGeoRecords() throws IOException {
         GeoQuery query = b.searchGeoRecords( GeoRecordType.SERIES, "Homo sapiens", GeoSearchField.ORGANISM, null, null, null );
         assertThat( query.getQueryId() ).isNotNull();
@@ -131,7 +127,6 @@ public class GeoBrowserTest {
 
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     public void testGetGeoRecordB() throws IOException {
         assertThat( b.getGeoRecords( GeoRecordType.SERIES, Arrays.asList( "GSE1", "GSE2", "GSE3" ) ) ).hasSize( 3 );
     }
@@ -157,7 +152,6 @@ public class GeoBrowserTest {
      */
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     public void testGSE97948() throws IOException {
         assertThat( b.getGeoRecord( GeoRecordType.SERIES, "GSE97948", GeoRetrieveConfig.builder()
                 .subSeriesStatus( true )
@@ -172,7 +166,6 @@ public class GeoBrowserTest {
      */
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     public void testGeoEmptyMINiML() throws IOException {
         b.searchAndRetrieveGeoRecords( GeoRecordType.SERIES, "GSE127242", null, null, null, null, 0, 10, true );
     }
@@ -182,7 +175,6 @@ public class GeoBrowserTest {
      */
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     public void testGetGeoRecordWithMeshHeadings() throws IOException {
         assertThat( b.getGeoRecord( GeoRecordType.SERIES, "GSE171541", GeoRetrieveConfig.DETAILED ) )
                 .satisfies( record -> {
@@ -194,7 +186,6 @@ public class GeoBrowserTest {
 
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     public void testSearchGeoRecordWithMeshHeadings() throws IOException {
         assertThat( b.searchAndRetrieveGeoRecords( GeoRecordType.SERIES, "GSE171541", GeoSearchField.GEO_ACCESSION, null, null, null, 0, 10, true ) )
                 .singleElement()
@@ -211,7 +202,6 @@ public class GeoBrowserTest {
      */
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     public void testGSE2569() throws IOException {
         b.getGeoRecord( GeoRecordType.SERIES, "GSE2569", GeoRetrieveConfig.DETAILED );
     }
@@ -221,7 +211,6 @@ public class GeoBrowserTest {
      */
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     public void testGSE8579() throws IOException {
         b.getGeoRecord( GeoRecordType.SERIES, "GSE8579", GeoRetrieveConfig.builder().sampleDetails( true ).ignoreErrors( true ).build() );
     }
@@ -231,7 +220,6 @@ public class GeoBrowserTest {
      */
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     public void testFetchDetailedGeoSeries() throws IOException {
         GeoBrowserImpl b = new GeoBrowserImpl( ncbiApiKey );
         Document rec1 = b.fetchDetailedGeoSeriesFamilyFromGeoFtp( "GSE93826" );
@@ -244,7 +232,6 @@ public class GeoBrowserTest {
 
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     public void testFetchDetailedGeoSeriesWithInvalidUtf8Characters() throws IOException {
         GeoBrowserImpl b = new GeoBrowserImpl( ncbiApiKey );
         Document rec1 = b.fetchDetailedGeoSeriesFamilyFromGeoFtp( "GSE730" );
@@ -257,7 +244,6 @@ public class GeoBrowserTest {
 
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     public void testGetAllGeoRecords() throws IOException {
         Collection<GeoRecord> allHumanPlatforms = b.getAllGeoRecords( GeoRecordType.PLATFORM, Collections.singleton( "human" ), 100 );
         assertThat( allHumanPlatforms ).isNotEmpty();

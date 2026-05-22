@@ -20,12 +20,10 @@ package ubic.gemma.core.loader.util;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import ubic.gemma.core.loader.util.fetcher.HttpFetcher;
-import ubic.gemma.core.util.test.category.SlowTest;
 
 import java.io.File;
 import java.io.IOException;
@@ -38,7 +36,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author pavlidis
  */
 @Tag("slow")
-@Category(SlowTest.class)
 public class HttpFetcherTest {
 
     private static final Log log = LogFactory.getLog( HttpFetcherTest.class.getName() );

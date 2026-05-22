@@ -28,7 +28,6 @@ import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.core.util.test.NetworkAvailable;
 import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.core.util.test.category.GeoTest;
-import ubic.gemma.core.util.test.category.SlowTest;
 
 import java.net.UnknownHostException;
 import java.util.List;
@@ -47,7 +46,6 @@ public class GeoBrowserServiceTest extends BaseSpringContextTest5 {
 
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     @NetworkAvailable(url = "https://www.ncbi.nlm.nih.gov/geo/browse/")
     public final void testFillDetails() throws Exception {
 
@@ -86,7 +84,6 @@ public class GeoBrowserServiceTest extends BaseSpringContextTest5 {
 
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     @NetworkAvailable(url = "https://www.ncbi.nlm.nih.gov/geo/browse/")
     public final void testGetRecentRecords() throws Exception {
 

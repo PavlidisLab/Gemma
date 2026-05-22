@@ -10,7 +10,6 @@ import ubic.gemma.core.util.SimpleRetryPolicy;
 import ubic.gemma.core.util.test.NetworkAvailable;
 import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.core.util.test.category.GeoTest;
-import ubic.gemma.core.util.test.category.SlowTest;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -26,7 +25,6 @@ public class GeoFetcherTest {
 
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     public void testGSE246121() throws IOException {
         Path tmpdir = java.nio.file.Files.createTempDirectory( "test" );
         GeoFetcher fetcher = new GeoFetcher( new SimpleRetryPolicy( 3, 1000, 1.5 ), tmpdir );
@@ -39,7 +37,6 @@ public class GeoFetcherTest {
      */
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testGSE246121ViaGeoQuery() throws IOException {
         Path tmpdir = java.nio.file.Files.createTempDirectory( "test" );
@@ -49,7 +46,6 @@ public class GeoFetcherTest {
 
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     public void testNotFound() throws IOException {
         Path tmpdir = java.nio.file.Files.createTempDirectory( "test" );
         GeoFetcher fetcher = new GeoFetcher( new SimpleRetryPolicy( 0, 1000, 1.5 ), tmpdir );

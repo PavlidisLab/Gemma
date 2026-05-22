@@ -14,7 +14,6 @@
  */
 package ubic.gemma.core.analysis.preprocess.svd;
 
-import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -28,7 +27,6 @@ import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.util.test.NetworkAvailable;
 import ubic.gemma.core.util.test.NetworkAvailableExtension;
-import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -43,7 +41,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * @author paul
  */
 @Tag("slow")
-@Category(SlowTest.class)
 @ExtendWith(NetworkAvailableExtension.class)
 public class SVDServiceImplTest extends AbstractGeoServiceTest5 {
 

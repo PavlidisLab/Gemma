@@ -35,7 +35,6 @@ import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.core.util.test.NetworkAvailable;
 import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.core.util.test.category.GeoTest;
-import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
@@ -60,7 +59,7 @@ import static org.assertj.core.api.InstanceOfAssertFactories.type;
  * TODO: Phase 2 — trim and cache per-test download data so the integration-tagged methods can move to fully offline @Test. SOFT files are now cached in test resources (Phase 1).
  */
 @Tag("slow")
-@Category({ GeoTest.class, SlowTest.class })
+@Category(GeoTest.class)
 @ContextConfiguration
 @ExtendWith(NetworkAvailableExtension.class)
 @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
@@ -906,7 +905,6 @@ public class GeoSingleCellDetectorTest extends BaseTest5 {
     @Tag("slow")
     @Tag("integration")
     @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
-    @Category(SlowTest.class)
     public void testHasSingleCellDataInCellXGene() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE207848" );
         assertThat( detector.hasSingleCellDataInCellXGene( series ) ).isTrue();
@@ -939,7 +937,6 @@ public class GeoSingleCellDetectorTest extends BaseTest5 {
     @Tag("slow")
     @Tag("integration")
     @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
-    @Category(SlowTest.class)
     public void testDownloadSingleCellDataInCellXGeneWithoutACollectionId() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE207848" );
         assertThat( detector.hasSingleCellDataInCellXGene( series ) ).isTrue();
