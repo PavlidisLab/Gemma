@@ -638,7 +638,7 @@ public class DatasetCombiner {
                             .suffixWeightedHammingDistance( targetAcc, bestMatchAcc, 1.0 );
                     double suffixWeightedDistanceB = StringDistance
                             .suffixWeightedHammingDistance( targetAcc, testAcc, 1.0 );
-                    if ( prefixWeightedDistanceA == prefixWeightedDistanceB ) {
+                    if ( suffixWeightedDistanceA == suffixWeightedDistanceB ) {
                         continue; // still tied, keep old one
                     } else if ( suffixWeightedDistanceA < suffixWeightedDistanceB ) {
                         // new one is better.

@@ -364,9 +364,12 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                     .map( e -> e.getKey() + ":\t" + e.getValue().stream().limit( 10 ).collect( Collectors.joining( ", " ) ) + ", ..." )
                     .collect( Collectors.joining( "\n\t" ) ) );
         }
+        // Pin to a local so SpotBugs can see the null-guard above carries forward (field reads
+        // through the try-with-resources scope otherwise look possibly-null to its flow analysis).
+        String cellTypeFactor = cellTypeFactorName;
         try ( AnnData h5File = AnnData.open( file ); Dataframe<?> var = getCellsDataframe( h5File ) ) {
             // TODO: support cell types encoded as string-array
-            CategoricalArray<String> cellTypes = var.getCategoricalColumn( cellTypeFactorName, String.class );
+            CategoricalArray<String> cellTypes = var.getCategoricalColumn( cellTypeFactor, String.class );
             CategoricalArray<String> cellTypeUris = cellTypeUriFactorName != null ? var.getCategoricalColumn( cellTypeUriFactorName, String.class ) : null;
             CellTypeAssignment assignment = new CellTypeAssignment();
             assignment.setName( cellTypeFactorName );

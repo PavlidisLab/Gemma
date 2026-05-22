@@ -139,6 +139,89 @@
     </Match>
 
     <!--
+        SpecFunc / PolyGamma carry R-derived numerics (dbinom/dpois sentinel
+        checks, polygamma asymptotic expansions). The `x == y` and `s1 == s`
+        idioms are intentional tests for "term was effectively zero" / "exact
+        sferr table hit" — Catherine Loader's R sources use the same pattern.
+        Changing == to an epsilon comparison would alter convergence behaviour
+        and break parity with R. PolyGamma is bytecode-only on the analysis
+        classpath (no source under gemma-core), so per-line @SuppressFBWarnings
+        is not available; suppress at the class level here.
+    -->
+    <Match>
+        <Or>
+            <Class name="ubic.gemma.core.util.math.SpecFunc"/>
+            <Class name="ubic.gemma.core.util.math.PolyGamma"/>
+        </Or>
+        <Bug pattern="FE_FLOATING_POINT_EQUALITY"/>
+    </Match>
+    <!--
+        PolyGamma is upstream baseCode bytecode; the UC_USELESS_CONDITION at
+        dpsifn lines 486/489 and the RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT at
+        line 470 mirror the R reference verbatim. Not editable from this repo.
+    -->
+    <Match>
+        <Class name="ubic.gemma.core.util.math.PolyGamma"/>
+        <Bug pattern="UC_USELESS_CONDITION,RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT"/>
+    </Match>
+
+    <!--
+        DatasetCombiner.findBestSampleHit uses `distance == minDistance` (exact
+        equality on integer-valued Hamming distances cast to double) to detect
+        ties in GEO sample-to-sample alignment. An epsilon comparison here
+        would silently merge near-ties and change the deterministic
+        tie-resolution that the surrounding prefix/suffix weighted-distance
+        cascade depends on. Intentional sentinel comparison.
+    -->
+    <Match>
+        <Class name="ubic.gemma.core.loader.expression.geo.DatasetCombiner"/>
+        <Method name="findBestSampleHit"/>
+        <Bug pattern="FE_FLOATING_POINT_EQUALITY"/>
+    </Match>
+
+    <!--
+        ColorMap exposes three Color[] palette constants as part of its public
+        API (consumed by ColorMatrix, MatrixDisplay, and visualization
+        services that pass them through to AWT Color[]-taking constructors).
+        Wrapping in Collections.unmodifiableList would break the API contract
+        and force every callsite to convert back to Color[]. The arrays
+        themselves are not mutated in practice.
+    -->
+    <Match>
+        <Class name="ubic.gemma.core.util.graphics.ColorMap"/>
+        <Bug pattern="MS_MUTABLE_ARRAY"/>
+    </Match>
+
+    <!--
+        HibernateConfig.resolveSearchIndexBase guards against Spring @Value
+        leaving `raw` blank or as an unresolved ${...} placeholder when
+        gemma.search.dir is missing from the environment (Mac dev / CI without
+        Gemma.properties). SpotBugs reads the @NonNullApi package annotation
+        and treats `raw` as never-null at the warn-log site; the defensive
+        null branch is the whole point of the helper. See commit 04d720c666.
+    -->
+    <Match>
+        <Class name="ubic.gemma.persistence.hibernate.HibernateConfig"/>
+        <Method name="resolveSearchIndexBase"/>
+        <Bug pattern="RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE"/>
+    </Match>
+
+    <!--
+        GeneSearchServiceImpl.searchGenesAndGeneGroups carries `taxon` as a
+        nullable optimisation: when the caller does not supply a taxonId, or
+        when taxonService.load(taxonId) returns null, taxon stays null all the
+        way through to the no-results log line. SpotBugs infers non-null after
+        the earlier getGOGroupResults(query, taxon) call because that method's
+        package is @NonNullApi, but its body explicitly handles taxon == null.
+        The defensive check at the log site documents the dual-path intent.
+    -->
+    <Match>
+        <Class name="ubic.gemma.persistence.service.genome.gene.GeneSearchServiceImpl"/>
+        <Method name="searchGenesAndGeneGroups"/>
+        <Bug pattern="RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE"/>
+    </Match>
+
+    <!--
         NM_SAME_SIMPLE_NAME_AS_SUPERCLASS: Gemma deliberately shadows the
         simple name of several upstream classes (Spring Security, Hibernate,
         Colt) where the subclass is a project-local extension/replacement that
