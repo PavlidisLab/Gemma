@@ -265,6 +265,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         }
     }
 
+    @Nullable
     private SampleCoexpressionMatrix getMatrix( ExpressionExperiment ee, boolean regress,
             Collection<ProcessedExpressionDataVector> vectors ) throws FilteringException {
         SampleCoexpressionAnalysisServiceImpl.log.info( String

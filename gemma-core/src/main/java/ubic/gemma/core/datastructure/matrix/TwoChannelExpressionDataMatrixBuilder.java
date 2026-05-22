@@ -296,6 +296,7 @@ public class TwoChannelExpressionDataMatrixBuilder {
      * preferred data
      * matrix.
      */
+    @Nullable
     public ExpressionDataDoubleMatrix getIntensity() {
         if ( this.isTwoColor() ) {
 
