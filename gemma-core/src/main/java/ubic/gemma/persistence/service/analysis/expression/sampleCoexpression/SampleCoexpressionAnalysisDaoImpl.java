@@ -16,6 +16,7 @@ package ubic.gemma.persistence.service.analysis.expression.sampleCoexpression;
 
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -35,6 +36,7 @@ class SampleCoexpressionAnalysisDaoImpl extends AbstractDao<SampleCoexpressionAn
     }
 
     @Override
+    @Nullable
     public SampleCoexpressionAnalysis load( ExpressionExperiment ee ) {
 
         Collection<SampleCoexpressionAnalysis> r = this.findByExperimentAnalyzed( ee );

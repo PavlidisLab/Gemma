@@ -95,6 +95,7 @@ public class WorkflowQueueEntry {
     /**
      * Helper for tests / queue assembly; never the persisted state.
      */
+    @Nullable
     public WorkflowState peekState() {
         return null; // not carried on the entry; queue() narrows by state already
     }

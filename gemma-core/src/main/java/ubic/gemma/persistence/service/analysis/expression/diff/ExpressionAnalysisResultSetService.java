@@ -25,12 +25,16 @@ import java.util.Set;
 
 public interface ExpressionAnalysisResultSetService extends AnalysisResultSetService<DifferentialExpressionAnalysisResult, ExpressionAnalysisResultSet>, FilteringVoEnabledService<ExpressionAnalysisResultSet, DifferentialExpressionAnalysisResultSetValueObject> {
 
+    @Nullable
     ExpressionAnalysisResultSet loadWithAnalysis( Long id );
 
+    @Nullable
     ExpressionAnalysisResultSet loadWithResultsAndContrasts( Long value );
 
+    @Nullable
     ExpressionAnalysisResultSet loadWithResultsAndContrasts( Long value, int offset, int limit );
 
+    @Nullable
     ExpressionAnalysisResultSet loadWithResultsAndContrasts( Long value, double threshold, int offset, int limit );
 
     long countResults( ExpressionAnalysisResultSet ears );
@@ -40,6 +44,7 @@ public interface ExpressionAnalysisResultSetService extends AnalysisResultSetSer
     @CheckReturnValue
     ExpressionAnalysisResultSet thaw( ExpressionAnalysisResultSet e );
 
+    @Nullable
     ExpressionAnalysisResultSet loadWithExperimentAnalyzed( Long id );
 
     DifferentialExpressionAnalysisResultSetValueObject loadValueObjectWithResults( ExpressionAnalysisResultSet ears, boolean includeFactorValuesInContrasts, boolean queryByResult, boolean includeTaxonInGenes );

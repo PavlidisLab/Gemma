@@ -36,6 +36,7 @@ public class ExpressionAnalysisResultSetServiceImpl extends AbstractFilteringVoE
     }
 
     @Override
+    @Nullable
     @Transactional(readOnly = true)
     public ExpressionAnalysisResultSet loadWithAnalysis( Long id ) {
         ExpressionAnalysisResultSet rs = load( id );
@@ -46,6 +47,7 @@ public class ExpressionAnalysisResultSetServiceImpl extends AbstractFilteringVoE
     }
 
     @Override
+    @Nullable
     @Transactional(readOnly = true)
     public ExpressionAnalysisResultSet loadWithResultsAndContrasts( Long value ) {
         ExpressionAnalysisResultSet result = voDao.loadWithResultsAndContrasts( value );
@@ -53,6 +55,7 @@ public class ExpressionAnalysisResultSetServiceImpl extends AbstractFilteringVoE
     }
 
     @Override
+    @Nullable
     @Transactional(readOnly = true)
     public ExpressionAnalysisResultSet loadWithResultsAndContrasts( Long value, int offset, int limit ) {
         ExpressionAnalysisResultSet result = voDao.loadWithResultsAndContrasts( value, offset, limit );
@@ -60,6 +63,7 @@ public class ExpressionAnalysisResultSetServiceImpl extends AbstractFilteringVoE
     }
 
     @Override
+    @Nullable
     @Transactional(readOnly = true)
     public ExpressionAnalysisResultSet loadWithResultsAndContrasts( Long value, double threshold, int offset, int limit ) {
         ExpressionAnalysisResultSet result = voDao.loadWithResultsAndContrasts( value, threshold, offset, limit );
@@ -87,6 +91,7 @@ public class ExpressionAnalysisResultSetServiceImpl extends AbstractFilteringVoE
     }
 
     @Override
+    @Nullable
     @Transactional(readOnly = true)
     public ExpressionAnalysisResultSet loadWithExperimentAnalyzed( Long id ) {
         ExpressionAnalysisResultSet ears = voDao.load( id );

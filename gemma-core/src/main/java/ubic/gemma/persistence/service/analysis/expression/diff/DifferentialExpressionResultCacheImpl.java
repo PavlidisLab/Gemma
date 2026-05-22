@@ -24,6 +24,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 import ubic.gemma.model.analysis.expression.diff.DiffExprGeneSearchResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject;
@@ -103,6 +104,7 @@ public class DifferentialExpressionResultCacheImpl implements DifferentialExpres
     }
 
     @Override
+    @Nullable
     public DiffExprGeneSearchResult get( Long resultSet, Long g ) {
         assert cache != null;
         Cache.ValueWrapper element = cache.get( new CacheKey( resultSet, g ) );
@@ -129,6 +131,7 @@ public class DifferentialExpressionResultCacheImpl implements DifferentialExpres
 
     @SuppressWarnings("unchecked")
     @Override
+    @Nullable
     public List<DifferentialExpressionValueObject> getTopHits( ExpressionAnalysisResultSet resultSet ) {
         Cache.ValueWrapper element = this.topHitsCache.get( resultSet.getId() );
         if ( element == null )

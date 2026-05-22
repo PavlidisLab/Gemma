@@ -18,6 +18,7 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
+import org.springframework.lang.Nullable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -68,6 +69,7 @@ public interface FactorValueDao extends FilteringVoEnabledDao<FactorValue, Facto
     Collection<FactorValue> findByValueStartingWith( String valuePrefix, int maxResults );
 
     @Deprecated
+    @Nullable
     FactorValue loadWithOldStyleCharacteristics( Long id, boolean readOnly );
 
     /**
