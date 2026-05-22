@@ -20,11 +20,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import ubic.gemma.model.common.auditAndSecurity.eventType.PreboardedCreatedEvent;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.PreboardedExperiment;
 import ubic.gemma.model.expression.experiment.WorkflowState;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 
 import java.util.Collections;
 
@@ -54,7 +52,7 @@ public class PreboardedExperimentServiceTest {
     @Mock
     private ExpressionExperimentService expressionExperimentService;
     @Mock
-    private AuditTrailService auditTrailService;
+    private PreboardedAuditService preboardedAuditService;
 
     @InjectMocks
     private PreboardedExperimentServiceImpl service;
@@ -86,8 +84,7 @@ public class PreboardedExperimentServiceTest {
         assertThat( result.getIdentifyingMetadata() ).contains( "title" );
         assertThat( result.getWorkflowState() ).isEqualTo( WorkflowState.Preboarded );
         verify( session ).persist( result );
-        verify( auditTrailService ).addUpdateEvent( eq( result ), eq( PreboardedCreatedEvent.class ),
-                anyString() );
+        verify( preboardedAuditService ).recordPreboardedCreated( eq( result ), eq( "GSE1" ) );
     }
 
     @Test

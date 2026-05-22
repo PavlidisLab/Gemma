@@ -18,12 +18,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import ubic.gemma.core.security.audit.Audited;
-import ubic.gemma.model.common.auditAndSecurity.eventType.PreboardedCreatedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.PreboardedPromotedEvent;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.PreboardedExperiment;
 import ubic.gemma.model.expression.experiment.WorkflowState;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 
 import java.util.Date;
 import java.util.List;
@@ -35,11 +33,12 @@ import java.util.List;
  * {@link AgentProposalService#rebindInvestigation} to point every
  * {@code AgentProposal} row at the loaded EE rather than the preboarded, then
  * advances both rows' workflow state. Audit events are emitted declaratively
- * via {@link Audited @Audited} on the methods where the auditable target is
- * passed in (promote). The create path emits its event imperatively because
- * the auditable target is constructed in the method body and the
- * {@code AuditedAspect} can only locate auditables on the argument list
- * (see {@code AuditedAspect#findAuditable}).</p>
+ * via {@link Audited @Audited}. The create path delegates to
+ * {@link PreboardedAuditService} so the proxy-intercepted return triggers the
+ * aspect against the freshly constructed preboarded — direct annotation on
+ * {@code createPreboarded} would not work because the {@code AuditedAspect}
+ * locates the auditable target on the argument list (the new preboarded is
+ * built inside the method body).</p>
  */
 @Service
 public class PreboardedExperimentServiceImpl implements PreboardedExperimentService {
@@ -47,17 +46,17 @@ public class PreboardedExperimentServiceImpl implements PreboardedExperimentServ
     private final SessionFactory sessionFactory;
     private final AgentProposalService agentProposalService;
     private final ExpressionExperimentService expressionExperimentService;
-    private final AuditTrailService auditTrailService;
+    private final PreboardedAuditService preboardedAuditService;
 
     @Autowired
     public PreboardedExperimentServiceImpl( SessionFactory sessionFactory,
             AgentProposalService agentProposalService,
             ExpressionExperimentService expressionExperimentService,
-            AuditTrailService auditTrailService ) {
+            PreboardedAuditService preboardedAuditService ) {
         this.sessionFactory = sessionFactory;
         this.agentProposalService = agentProposalService;
         this.expressionExperimentService = expressionExperimentService;
-        this.auditTrailService = auditTrailService;
+        this.preboardedAuditService = preboardedAuditService;
     }
 
     @Override
@@ -92,14 +91,10 @@ public class PreboardedExperimentServiceImpl implements PreboardedExperimentServ
         sessionFactory.getCurrentSession().persist( skel );
         sessionFactory.getCurrentSession().flush();
 
-        // Imperative audit emission: the AuditedAspect can only locate
-        // an Auditable target on the argument list, and `accession` (String)
-        // is not auditable. The freshly persisted preboarded IS auditable;
-        // emit the event directly so the same "one PreboardedCreatedEvent per
-        // create" guarantee holds.
-        //noinspection deprecation
-        auditTrailService.addUpdateEvent( skel, PreboardedCreatedEvent.class,
-                "Preboarded created for accession " + accession );
+        // Audit emission via PreboardedAuditService co-bean so the @Audited
+        // aspect can locate the freshly constructed skel on its argument list
+        // (the AuditedAspect#findAuditable scan only inspects method args).
+        preboardedAuditService.recordPreboardedCreated( skel, accession );
         return skel;
     }
 
