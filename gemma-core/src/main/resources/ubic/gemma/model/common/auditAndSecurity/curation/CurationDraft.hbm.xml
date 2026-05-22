@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hibernate-mapping xmlns="http://www.hibernate.org/xsd/hibernate-mapping"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.hibernate.org/xsd/hibernate-mapping http://hibernate.org/xsd/hibernate-mapping-4.0.xsd">
+    <!--
+        Unified per-(investigation, curator) curation draft buffer.
+
+        Carries both the curator's WIP payload AND the snapshot of any
+        seeding AgentProposal so per-element dispositions can be DERIVED
+        at read time (see CurationDraftDispositions). Only `parkedElements`
+        requires explicit storage.
+
+        Notes:
+        * Unique key (INVESTIGATION_FK, CURATOR_FK) — one draft per pair.
+        * Two indexes (curator+lastEdited DESC, proposal) wire the
+          "my recent drafts" and "all reviews of proposal X" queries.
+        * Cascade-delete on investigation and curator FKs is configured at
+          the SQL level (see Flyway V12 / V14). Hibernate just declares the
+          FK; cascade behavior is owned by the DB so a curator/investigation
+          delete from any path tears the draft down.
+        * No `default=` on <column> elements — d19dcf45d8 documents why
+          that halts hbm2ddl. Java-side default initializers only.
+    -->
+    <class name="ubic.gemma.model.common.auditAndSecurity.curation.CurationDraft"
+           table="CURATION_DRAFT">
+        <id name="id" type="java.lang.Long" unsaved-value="null">
+            <column name="ID" sql-type="BIGINT"/>
+            <generator class="native"/>
+        </id>
+        <many-to-one name="investigation"
+                     class="ubic.gemma.model.analysis.Investigation"
+                     lazy="proxy" fetch="select"
+                     foreign-key="FK_CURATION_DRAFT_INVESTIGATION">
+            <column name="INVESTIGATION_FK" not-null="true" sql-type="BIGINT"
+                    unique-key="UQ_CURATION_DRAFT_PER_CURATOR_EE"/>
+        </many-to-one>
+        <many-to-one name="curator"
+                     class="ubic.gemma.model.common.auditAndSecurity.Contact"
+                     lazy="proxy" fetch="select"
+                     foreign-key="FK_CURATION_DRAFT_CURATOR">
+            <column name="CURATOR_FK" not-null="true" sql-type="BIGINT"
+                    unique-key="UQ_CURATION_DRAFT_PER_CURATOR_EE"/>
+        </many-to-one>
+        <property name="payloadJson" type="org.hibernate.type.MaterializedClobType">
+            <column name="PAYLOAD_JSON" not-null="true" unique="false"
+                    sql-type="LONGTEXT"/>
+        </property>
+        <many-to-one name="proposal"
+                     class="ubic.gemma.model.expression.experiment.AgentProposal"
+                     lazy="proxy" fetch="select"
+                     foreign-key="FK_CURATION_DRAFT_PROPOSAL">
+            <column name="PROPOSAL_FK" not-null="false" sql-type="BIGINT"
+                    index="IDX_CURATION_DRAFT_PROPOSAL"/>
+        </many-to-one>
+        <property name="proposalSnapshotJson" type="org.hibernate.type.MaterializedClobType">
+            <column name="PROPOSAL_SNAPSHOT_JSON" not-null="false" unique="false"
+                    sql-type="LONGTEXT"/>
+        </property>
+        <property name="parkedElements" type="org.hibernate.type.MaterializedClobType">
+            <column name="PARKED_ELEMENTS" not-null="false" unique="false"
+                    sql-type="LONGTEXT"/>
+        </property>
+        <property name="startedAt" type="java.util.Date">
+            <column name="STARTED_AT" not-null="true" unique="false"
+                    sql-type="DATETIME"/>
+        </property>
+        <property name="lastEditedAt" type="java.util.Date">
+            <column name="LAST_EDITED_AT" not-null="true" unique="false"
+                    sql-type="DATETIME"
+                    index="IDX_CURATION_DRAFT_CURATOR_RECENT"/>
+        </property>
+        <property name="finalizedAt" type="java.util.Date">
+            <column name="FINALIZED_AT" not-null="false" unique="false"
+                    sql-type="DATETIME"/>
+        </property>
+    </class>
+</hibernate-mapping>
