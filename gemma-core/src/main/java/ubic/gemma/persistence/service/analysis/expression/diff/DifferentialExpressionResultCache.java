@@ -14,6 +14,7 @@
  */
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
+import org.springframework.lang.Nullable;
 import ubic.gemma.model.analysis.expression.diff.DiffExprGeneSearchResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
@@ -52,6 +53,7 @@ public interface DifferentialExpressionResultCache {
 
     Collection<DiffExprGeneSearchResult> get( Long resultSet, Collection<Long> genes );
 
+    @Nullable
     DiffExprGeneSearchResult get( Long resultSet, Long g );
 
     Boolean isEnabled();
@@ -64,6 +66,7 @@ public interface DifferentialExpressionResultCache {
      * @param resultSet result set
      * @return top hits, or null.
      */
+    @Nullable
     List<DifferentialExpressionValueObject> getTopHits( ExpressionAnalysisResultSet resultSet );
 
 }

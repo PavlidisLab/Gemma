@@ -1544,6 +1544,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
      * <p>
      * These values cannot be stored in a FLOAT column.
      */
+    @Nullable
     private Double nan2Null( @Nullable Double e ) {
         return e != null && Double.isFinite( e ) ? e : null;
     }

@@ -13,6 +13,7 @@ package ubic.gemma.persistence.service.common.description;
 
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.util.ListUtils;
@@ -53,6 +54,7 @@ public class ExternalDatabaseReadServiceImpl implements ExternalDatabaseReadServ
     }
 
     @Override
+    @Nullable
     @Transactional(readOnly = true)
     public ExternalDatabase loadWithExternalDatabases( Long id ) {
         ExternalDatabase ed = externalDatabaseDao.load( id );

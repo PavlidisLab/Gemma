@@ -57,6 +57,7 @@ public interface GeneSetDao extends BaseVoEnabledDao<GeneSet, DatabaseBackedGene
      */
     List<Taxon> getTaxa( GeneSet geneSet );
 
+    @Nullable
     DatabaseBackedGeneSetValueObject loadValueObjectByIdLite( Long id );
 
     List<DatabaseBackedGeneSetValueObject> loadValueObjectsByIdsLite( Collection<Long> geneSetIds );

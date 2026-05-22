@@ -96,6 +96,7 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
     }
 
     @Override
+    @Nullable
     public DatabaseBackedGeneSetValueObject loadValueObjectByIdLite( Long id ) {
         Object[] row = ( Object[] ) this.getSessionFactory().getCurrentSession().createQuery(
                         "select g, t, count(m) from GeneSet g "

@@ -11,6 +11,7 @@
  */
 package ubic.gemma.persistence.service.common.description;
 
+import org.springframework.lang.Nullable;
 import ubic.gemma.model.common.description.ExternalDatabase;
 
 import java.util.Collection;
@@ -51,6 +52,7 @@ public interface ExternalDatabaseReadService {
 
     Collection<ExternalDatabase> loadAllWithAuditTrail();
 
+    @Nullable
     ExternalDatabase loadWithExternalDatabases( Long id );
 
     ExternalDatabase findByName( String name );

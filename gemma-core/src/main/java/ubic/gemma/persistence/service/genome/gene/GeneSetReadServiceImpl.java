@@ -124,6 +124,7 @@ public class GeneSetReadServiceImpl implements GeneSetReadService {
     }
 
     @Override
+    @Nullable
     @Transactional(readOnly = true)
     public Collection<GeneValueObject> getGenesInGroup( GeneSetValueObject object ) {
         GeneSet gs = this.geneSetDao.load( object.getId() );
@@ -150,6 +151,7 @@ public class GeneSetReadServiceImpl implements GeneSetReadService {
     }
 
     @Override
+    @Nullable
     @Transactional(readOnly = true)
     public TaxonValueObject getTaxonVOforGeneSetVO( SessionBoundGeneSetValueObject geneSetVO ) {
         if ( geneSetVO == null )

@@ -85,6 +85,7 @@ public class StringUtils {
     /**
      * Borrowed from <a href="https://stackoverflow.com/questions/119328/how-do-i-truncate-a-java-string-to-fit-in-a-given-number-of-bytes-once-utf-8-en">How do I truncate a java string to fit in a given number of bytes, once UTF-8 encoded? on Stackoverflow</a>.
      */
+    @Nullable
     private static String truncateWhenUTF8( @Nullable String s, int maxBytes ) {
         if ( s == null || s.isEmpty() ) {
             return s;
@@ -174,6 +175,7 @@ public class StringUtils {
      * <p>
      * The charset encoding is UTF-8.
      */
+    @Nullable
     public static String urlEncode( @Nullable String s ) {
         if ( s == null || s.isEmpty() ) {
             return s;

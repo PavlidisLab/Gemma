@@ -87,12 +87,14 @@ public interface GeneSetReadService {
 
     Collection<GeneSet> loadMySharedGeneSets( Taxon tax );
 
+    @Nullable
     Collection<GeneValueObject> getGenesInGroup( GeneSetValueObject object );
 
     Collection<Long> getGeneIdsInGroup( GeneSetValueObject geneSetVO );
 
     int getSize( GeneSetValueObject geneSetVO );
 
+    @Nullable
     TaxonValueObject getTaxonVOforGeneSetVO( SessionBoundGeneSetValueObject geneSetVO );
 
     @Nullable

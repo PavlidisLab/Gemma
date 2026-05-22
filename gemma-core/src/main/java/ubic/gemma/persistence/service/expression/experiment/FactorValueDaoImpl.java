@@ -157,6 +157,7 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
 
     @Override
     @Deprecated
+    @Nullable
     public FactorValue loadWithOldStyleCharacteristics( Long id, boolean readOnly ) {
         boolean previousReadOnly = getSessionFactory().getCurrentSession().isDefaultReadOnly();
         try {
