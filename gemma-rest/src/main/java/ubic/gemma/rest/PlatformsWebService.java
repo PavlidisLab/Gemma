@@ -439,6 +439,37 @@ public class PlatformsWebService {
     }
 
     /**
+     * Retrieves the per-probe gene-mapping summary (BLAT alignments + biological-sequence
+     * metadata + supported genes) for a single probe on a given platform. Replaces the
+     * legacy {@code CompositeSequenceController.getGeneMappingSummary} DWR call used by
+     * the gemma-web gene-page Elements drill-down.
+     *
+     * @param platformArg can either be the ArrayDesign ID or its short name (e.g. "GPL1355" ). Retrieval by ID
+     *                    is more efficient. Only platforms that user has access to will be available.
+     * @param probeArg    the name or ID of the platform element for which the mapping summary should be retrieved.
+     *                    Note that names containing a forward slash are not accepted.
+     */
+    @GET
+    @Path("/{platform}/elements/{probe}/mappingSummary")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve the gene-mapping summary for a probe",
+            description = "Returns the probe value object with `geneMappingSummaries` populated: one entry per distinct BLAT alignment, carrying the alignment scores, the biological sequence metadata, and the genes supported by that alignment. Replaces the legacy `getGeneMappingSummary` DWR call.",
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class))),
+                    @ApiResponse(responseCode = "404", description = "Probe not found on the given platform")
+            })
+    public ResponseDataObject<CompositeSequenceValueObject> getPlatformElementMappingSummary( // Params:
+            @PathParam("platform") PlatformArg<?> platformArg, // Required
+            @PathParam("probe") CompositeSequenceArg<?> probeArg // Required
+    ) {
+        ArrayDesign platform = arrayDesignArgService.getEntity( platformArg );
+        ubic.gemma.model.expression.designElement.CompositeSequence cs =
+                probeArgService.getEntityWithPlatform( probeArg, platform );
+        return respond( compositeSequenceService.loadValueObjectWithGeneMappingSummary( cs ) );
+    }
+
+    /**
      * Retrieves the annotation file for the given platform.
      *
      * @param platformArg can either be the ArrayDesign ID or its short name (e.g. "GPL1355" ). Retrieval by ID

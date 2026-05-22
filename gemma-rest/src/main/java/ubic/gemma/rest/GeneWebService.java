@@ -41,6 +41,8 @@ import ubic.gemma.rest.util.args.*;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import static ubic.gemma.rest.util.Responders.paginate;
@@ -215,5 +217,70 @@ public class GeneWebService {
             @PathParam("gene") GeneArg<?> geneArg // Required
     ) {
         return respond( geneArgService.getGeneGoTerms( geneArg ) );
+    }
+
+    /**
+     * Retrieves a fully-populated overview of the given gene, suitable for rendering
+     * the gene-page header in gemma-curation-ui. Replaces the legacy
+     * {@code GeneController.loadGeneDetails(Long)} DWR call.
+     *
+     * <p>The returned VO carries: aliases, multifunctionality rank, composite-sequence
+     * count, platform count, gene-set memberships, homologues, GO-term count, and the
+     * associated-experiment count (filled in by {@code populateAssociatedExperimentCount}).</p>
+     *
+     * @param geneArg can either be the NCBI ID, Ensembl ID or official symbol. NCBI ID is most efficient (and
+     *                guaranteed to be unique). Official symbol returns a gene homologue on a random taxon.
+     */
+    @GET
+    @Path("/{gene}/overview")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve a fully-populated overview of a gene",
+            description = "Returns the gene VO populated with aliases, multifunctionality rank, composite-sequence count, platform count, gene-set memberships, homologues, GO-term count, and associated-experiment count. Replaces the legacy `loadGeneDetails` DWR call used by the gemma-web gene page.",
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class))),
+                    @ApiResponse(responseCode = "404", description = "Gene not found")
+            })
+    public ResponseDataObject<GeneValueObject> getGeneOverview( // Params:
+            @PathParam("gene") GeneArg<?> geneArg // Required
+    ) {
+        Gene gene = geneArgService.getEntity( geneArg );
+        GeneValueObject gvo = geneService.loadFullyPopulatedValueObject( gene.getId() );
+        if ( gvo == null ) {
+            // getEntity already throws 404 on missing, but guard against a race where the
+            // gene is removed between the resolve and the fat-loader call.
+            throw new NotFoundException( "No gene found with id=" + gene.getId() );
+        }
+        gvo.setNumGoTerms( geneService.findGOTerms( gene.getId() ).size() );
+        return respond( gvo );
+    }
+
+    /**
+     * Retrieves the homologues of the given gene. Single-purpose subset of
+     * {@link #getGeneOverview} for callers that only need the homologue list.
+     *
+     * @param geneArg can either be the NCBI ID, Ensembl ID or official symbol. NCBI ID is most efficient (and
+     *                guaranteed to be unique). Official symbol returns a gene homologue on a random taxon.
+     */
+    @GET
+    @Path("/{gene}/homologues")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve the homologues of a gene",
+            description = "Returns the gene's homologues across all taxa (via the homologene service). The legacy gemma-web gene page surfaces this in the Overview tab.",
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class))),
+                    @ApiResponse(responseCode = "404", description = "Gene not found")
+            })
+    public ResponseDataObject<Collection<GeneValueObject>> getGeneHomologues( // Params:
+            @PathParam("gene") GeneArg<?> geneArg // Required
+    ) {
+        Gene gene = geneArgService.getEntity( geneArg );
+        GeneValueObject gvo = geneService.loadFullyPopulatedValueObject( gene.getId() );
+        if ( gvo == null ) {
+            throw new NotFoundException( "No gene found with id=" + gene.getId() );
+        }
+        Collection<GeneValueObject> homologues = gvo.getHomologues();
+        return respond( homologues != null ? homologues : Collections.<GeneValueObject>emptyList() );
     }
 }
