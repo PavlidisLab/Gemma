@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.analysis.singleCell.SingleCellMaskUtils;
+import ubic.gemma.core.security.audit.payload.SingleCellAggregationPayload;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DataAddedEvent;
@@ -84,6 +85,11 @@ public class SingleCellExpressionExperimentAggregateServiceTest extends BaseTest
         public QuantitationTypeService quantitationTypeService() {
             return mock();
         }
+
+        @Bean
+        public SingleCellExpressionExperimentAggregateAuditService aggregateAuditService() {
+            return mock();
+        }
     }
 
     @Autowired
@@ -103,6 +109,9 @@ public class SingleCellExpressionExperimentAggregateServiceTest extends BaseTest
 
     @Autowired
     private AuditTrailService auditTrailService;
+
+    @Autowired
+    private SingleCellExpressionExperimentAggregateAuditService aggregateAuditService;
 
     private ExpressionExperiment ee;
     private ExperimentalFactor ctf;
@@ -155,7 +164,7 @@ public class SingleCellExpressionExperimentAggregateServiceTest extends BaseTest
 
     @AfterEach
     public void resetMocks() {
-        reset( expressionExperimentService, bioAssayDimensionService, bioAssayService, singleCellExpressionExperimentService, auditTrailService );
+        reset( expressionExperimentService, bioAssayDimensionService, bioAssayService, singleCellExpressionExperimentService, auditTrailService, aggregateAuditService );
     }
 
     @Test
@@ -300,7 +309,7 @@ public class SingleCellExpressionExperimentAggregateServiceTest extends BaseTest
                             .hasSize( 16 )
                             .containsExactly( 24, 24, 24, 24, 20, 20, 20, 20, 31, 31, 31, 31, 33, 33, 33, 33 );
                 } );
-        verify( auditTrailService ).addUpdateEvent( eq( ee ), eq( DataAddedEvent.class ), any(), any( String.class ) );
+        verify( aggregateAuditService ).recordAggregateCreated( eq( ee ), any( String.class ), any() );
     }
 
     @Test
@@ -413,7 +422,7 @@ public class SingleCellExpressionExperimentAggregateServiceTest extends BaseTest
                             .hasSize( 16 )
                             .containsExactly( 24, 24, 24, 24, 20, 20, 20, 20, 31, 31, 31, 31, 33, 33, 33, 33 );
                 } );
-        verify( auditTrailService ).addUpdateEvent( eq( ee ), eq( DataAddedEvent.class ), any(), any( String.class ) );
+        verify( aggregateAuditService ).recordAggregateCreated( eq( ee ), any( String.class ), any() );
     }
 
     @Test
@@ -461,7 +470,7 @@ public class SingleCellExpressionExperimentAggregateServiceTest extends BaseTest
                             .containsExactly( 24, 24, 24, 24, 20, 20, 20, 20, 31, 31, 31, 31, 33, 33, 33, 33 );
                 } );
         verify( bioAssayService, times( 2 ) ).update( anyCollection() );
-        verify( auditTrailService ).addUpdateEvent( eq( ee ), eq( DataAddedEvent.class ), any(), any( String.class ) );
+        verify( aggregateAuditService ).recordAggregateCreated( eq( ee ), any( String.class ), any() );
     }
 
     @Test
@@ -507,7 +516,7 @@ public class SingleCellExpressionExperimentAggregateServiceTest extends BaseTest
                             .containsExactly( 24, 24, 24, 24, 20, 20, 20, 20, 31, 31, 31, 31, 33, 33, 33, 33 );
                 } );
         verify( bioAssayService, times( 2 ) ).update( anyCollection() );
-        verify( auditTrailService ).addUpdateEvent( eq( ee ), eq( DataAddedEvent.class ), any(), any( String.class ) );
+        verify( aggregateAuditService ).recordAggregateCreated( eq( ee ), any( String.class ), any() );
     }
 
     @Test
@@ -555,7 +564,7 @@ public class SingleCellExpressionExperimentAggregateServiceTest extends BaseTest
                             .containsExactly( 24, 24, 24, 24, 20, 20, 20, 20, 31, 31, 31, 31, 33, 33, 33, 33 );
                 } );
         verify( bioAssayService ).update( anyCollection() );
-        verify( auditTrailService ).addUpdateEvent( eq( ee ), eq( DataAddedEvent.class ), any(), any( String.class ) );
+        verify( aggregateAuditService ).recordAggregateCreated( eq( ee ), any( String.class ), any() );
     }
 
 
@@ -675,7 +684,7 @@ public class SingleCellExpressionExperimentAggregateServiceTest extends BaseTest
                             .hasSize( 12 )
                             .containsExactly( 24, 24, 24, 24, 20, 20, 20, 20, 31, 31, 31, 31 );
                 } );
-        verify( auditTrailService ).addUpdateEvent( eq( ee ), eq( DataAddedEvent.class ), any(), any( String.class ) );
+        verify( aggregateAuditService ).recordAggregateCreated( eq( ee ), any( String.class ), any() );
     }
 
     @Test
@@ -740,11 +749,16 @@ public class SingleCellExpressionExperimentAggregateServiceTest extends BaseTest
                             .containsExactly( 19, 19, 19, 19, 18, 18, 18, 18, 28, 28, 28, 28, 30, 30, 30, 30 );
                 } );
 
-        ArgumentCaptor<String> details = ArgumentCaptor.captor();
-        verify( auditTrailService ).addUpdateEvent( eq( ee ), eq( DataAddedEvent.class ), eq( "Created 10 aggregated raw vectors for " + newQt + "." ), details.capture() );
-        assertThat( details.getValue() )
-                .contains( "BioAssay Name=s0c0 Number of cells=144 Number of design elements=10 Number of cells x design elements=227 Number of masked cells=29/264 Library Size=1342.00" )
-                .contains( "Mask: GenericCellLevelCharacteristics Characteristics=false, true Number of characteristics=2 Number of assigned cells=4000" );
+        ArgumentCaptor<SingleCellAggregationPayload> payloadCaptor = ArgumentCaptor.captor();
+        verify( aggregateAuditService ).recordAggregateCreated( eq( ee ), eq( "Created 10 aggregated raw vectors for " + newQt + "." ), payloadCaptor.capture() );
+        String detail = payloadCaptor.getValue().toString();
+        assertThat( detail )
+                .contains( "s0c0" )
+                .contains( "numberOfCells=144" )
+                .contains( "numberOfDesignElements=10" )
+                .contains( "librarySize=1342.0" )
+                .contains( "mask=" )
+                .contains( "Number of assigned cells=4000" );
     }
 
     private CellTypeAssignment createCellTypeAssignment( SingleCellDimension dimension ) {
