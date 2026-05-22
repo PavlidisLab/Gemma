@@ -22,7 +22,6 @@ package ubic.gemma.persistence.service.expression.arrayDesign;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Hibernate;
-import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -145,12 +144,14 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     @Override
     public void deleteGeneProductAlignmentAssociations( ArrayDesign arrayDesign ) {
-        // HB6: the legacy buildLockRequest(LockOptions.UPGRADE).setLockMode(LockMode.PESSIMISTIC_WRITE)
-        // pattern calls .setLockMode on the IMMUTABLE LockOptions.UPGRADE singleton (see
-        // SessionImpl$LockRequestImpl.setLockMode), which fails in HB6.6+. Use the modern
-        // Session.lock(entity, LockMode) overload directly.
-        this.getSessionFactory().getCurrentSession().lock( arrayDesign, LockMode.PESSIMISTIC_WRITE );
-
+        // HB6: previously acquired Session.lock(arrayDesign, PESSIMISTIC_WRITE) as a
+        // defensive serialisation guard. HB6 cascades the lock through cascade="all"
+        // (compositeSequences -> biologicalCharacteristic -> ...) and trips
+        // ImmutableEntityEntry.setLockMode with "Lock mode not supported" when it reaches
+        // an immutable entity (Chromosome / ExternalDatabase). The lock served no
+        // functional purpose for this child-record cleanup — DB row locks on the
+        // BlatAssociation/AnnotationAssociation deletes provide the per-row mutex —
+        // so it has been dropped.
         //noinspection unchecked
         List<BlatAssociation> blatAssociations = this.getSessionFactory().getCurrentSession()
                 .createQuery( "select ba from CompositeSequence  cs "
@@ -168,9 +169,8 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     @Override
     public void deleteGeneProductAnnotationAssociations( ArrayDesign arrayDesign ) {
-        // See deleteGeneProductAlignmentAssociations for the HB6 buildLockRequest rationale.
-        this.getSessionFactory().getCurrentSession().lock( arrayDesign, LockMode.PESSIMISTIC_WRITE );
-
+        // See deleteGeneProductAlignmentAssociations for the HB6 cascading-lock rationale
+        // (the parent-entity lock was dropped — DB row locks on the delete suffice).
         //noinspection unchecked
         List<AnnotationAssociation> annotAssociations = this.getSessionFactory().getCurrentSession()
                 .createQuery( "select ba from CompositeSequence cs "
@@ -241,9 +241,8 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Override
     public void deleteGeneProductAssociations( ArrayDesign arrayDesign ) {
 
-        // See deleteGeneProductAlignmentAssociations for the HB6 buildLockRequest rationale.
-        this.getSessionFactory().getCurrentSession().lock( arrayDesign, LockMode.PESSIMISTIC_WRITE );
-
+        // See deleteGeneProductAlignmentAssociations for the HB6 cascading-lock rationale
+        // (the parent-entity lock was dropped — DB row locks on the delete suffice).
         // these two queries could be combined by using BioSequence2GeneProduct.
         //noinspection unchecked
         List<BlatAssociation> blatAssociations = this.getSessionFactory().getCurrentSession()
