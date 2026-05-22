@@ -1814,6 +1814,48 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     }
 
     @Test
+    public void testGetDatasetDesignJson() {
+        ExperimentalDesignValueObject vo = new ExperimentalDesignValueObject();
+        when( expressionExperimentService.getExperimentalDesignValueObject( ee ) ).thenReturn( vo );
+
+        assertThat( target( "/datasets/1/design" ).request( MediaType.APPLICATION_JSON ).get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .entity()
+                .hasFieldOrProperty( "data" );
+
+        verify( expressionExperimentService ).getExperimentalDesignValueObject( ee );
+    }
+
+    @Test
+    public void testGetDatasetDesignDefaultIsJson() {
+        ExperimentalDesignValueObject vo = new ExperimentalDesignValueObject();
+        when( expressionExperimentService.getExperimentalDesignValueObject( ee ) ).thenReturn( vo );
+
+        // No Accept header → server returns the highest-q producer; the @Produces TSV variant is qs=0.9,
+        // so JSON wins.
+        assertThat( target( "/datasets/1/design" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
+    }
+
+    @Test
+    public void testGetDatasetDesignJsonReturnsNotFoundWhenDesignMissing() {
+        ee.setShortName( "GSE1" );
+        when( expressionExperimentService.getExperimentalDesignValueObject( ee ) ).thenReturn( null );
+
+        assertThat( target( "/datasets/1/design" ).request( MediaType.APPLICATION_JSON ).get() )
+                .hasStatus( Response.Status.NOT_FOUND );
+    }
+
+    @Test
+    public void testGetDatasetDesignJsonWithUnknownDatasetIs404() {
+        assertThat( target( "/datasets/999/design" ).request( MediaType.APPLICATION_JSON ).get() )
+                .hasStatus( Response.Status.NOT_FOUND );
+        verify( expressionExperimentService, never() ).getExperimentalDesignValueObject( any() );
+    }
+
+    @Test
     public void testGetDatasetAllPublications() {
         when( expressionExperimentService.loadWithPrimaryPublicationAndOtherRelevantPublications( 1L ) ).thenReturn( ee );
         BibliographicReference prim_ref = new BibliographicReference();

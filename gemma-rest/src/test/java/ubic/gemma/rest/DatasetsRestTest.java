@@ -436,6 +436,38 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
     }
 
     @Test
+    public void testGetDatasetDesignJson() {
+        ExpressionExperiment ee = ees.get( 0 );
+        assertThat( target( "/datasets/" + ee.getId() + "/design" ).request( MediaType.APPLICATION_JSON ).get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .entity()
+                .hasFieldOrProperty( "data" );
+    }
+
+    @Test
+    public void testGetDatasetDesignDefaultIsJson() {
+        ExpressionExperiment ee = ees.get( 0 );
+        assertThat( target( "/datasets/" + ee.getId() + "/design" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
+    }
+
+    @Test
+    public void testGetDatasetDesignTsvViaAcceptHeader() {
+        ExpressionExperiment ee = ees.get( 0 );
+        assertThat( target( "/datasets/" + ee.getId() + "/design" ).request( "text/tab-separated-values" ).get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( new MediaType( "text", "tab-separated-values" ) );
+    }
+
+    @Test
+    public void testGetDatasetDesignJsonWithUnknownDatasetIs404() {
+        assertThat( target( "/datasets/9999999/design" ).request( MediaType.APPLICATION_JSON ).get() )
+                .hasStatus( Response.Status.NOT_FOUND );
+    }
+
+    @Test
     public void testGetDatasetRawExpression() {
         ExpressionExperiment ee = ees.get( 0 );
         assertThat( target( "/datasets/" + ee.getId() + "/data/raw" ).request().get() )
