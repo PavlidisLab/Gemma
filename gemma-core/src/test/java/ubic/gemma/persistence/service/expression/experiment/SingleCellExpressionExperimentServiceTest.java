@@ -18,7 +18,6 @@ import ubic.gemma.core.util.test.BaseDatabaseTest5;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DataAddedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DataRemovedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ExperimentalDesignUpdatedEvent;
 import ubic.gemma.model.common.description.Categories;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicUtils;
@@ -118,6 +117,11 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest5
         }
 
         @Bean
+        public SingleCellExperimentDesignAuditService singleCellExperimentDesignAuditService() {
+            return mock();
+        }
+
+        @Bean
         public QuantitationTypeService quantitationTypeService() {
             return mock();
         }
@@ -133,6 +137,9 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest5
 
     @Autowired
     private AuditTrailService auditTrailService;
+
+    @Autowired
+    private SingleCellExperimentDesignAuditService singleCellExperimentDesignAuditService;
 
     @Autowired
     private ExpressionExperimentDao expressionExperimentDao;
@@ -175,6 +182,7 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest5
     @AfterEach
     public void resetMocks() {
         reset( auditTrailService );
+        reset( singleCellExperimentDesignAuditService );
     }
 
     @Test
@@ -479,9 +487,12 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest5
         assertThat( ctf2.getDescription() ).isEqualTo( "Cell type factor pre-populated from " + ctl2 + "." );
         // DataAddedEvent rows are written by AuditedAspect under @Audited on
         // addSingleCellDataVectors; aspect-level coverage lives in AuditedAspectTest.
-        verify( auditTrailService ).addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class, "Created a cell type factor " + ctf + " from preferred cell type assignment " + ctl + "." );
-        verify( auditTrailService ).addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class, "Removed the cell type factor " + ctf + "." );
-        verify( auditTrailService ).addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class, "Created a cell type factor " + ctf2 + " from preferred cell type assignment " + ctl2 + "." );
+        // Cell-type-factor create / remove audits hoisted to
+        // SingleCellExperimentDesignAuditService (bucket 2g); the impl is mocked here
+        // because the test wires the service impl directly with no AOP proxy.
+        verify( singleCellExperimentDesignAuditService ).recordCellTypeFactorCreated( ee, ctf, ctl.toString() );
+        verify( singleCellExperimentDesignAuditService ).recordCellTypeFactorRemoved( ee, ctf );
+        verify( singleCellExperimentDesignAuditService ).recordCellTypeFactorCreated( ee, ctf2, ctl2.toString() );
     }
 
     @Test
@@ -622,12 +633,11 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest5
         scExpressionExperimentService.removeCellTypeAssignment( ee, scd, newLabelling );
         assertThat( scExpressionExperimentService.getPreferredCellTypeAssignment( ee ) ).isEmpty();
         assertThat( scExpressionExperimentService.getCellTypeFactor( ee ) ).isPresent();
-        verify( auditTrailService ).addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class,
-                "Created a cell type factor " + ctf + " from preferred cell type assignment " + ctaS + "." );
-        verify( auditTrailService ).addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class,
-                "Removed the cell type factor " + ctf + "." );
-        verify( auditTrailService ).addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class,
-                "Created a cell type factor " + newCtf + " from preferred cell type assignment " + newLabellingS + "." );
+        // Cell-type-factor create / remove audits hoisted to
+        // SingleCellExperimentDesignAuditService (bucket 2g).
+        verify( singleCellExperimentDesignAuditService ).recordCellTypeFactorCreated( ee, ctf, ctaS );
+        verify( singleCellExperimentDesignAuditService ).recordCellTypeFactorRemoved( ee, ctf );
+        verify( singleCellExperimentDesignAuditService ).recordCellTypeFactorCreated( ee, newCtf, newLabellingS );
     }
 
     /**
@@ -673,8 +683,10 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest5
             assertThat( f.getCategory() ).isEqualTo( "cell type" );
             assertThat( f.getCategoryUri() ).isEqualTo( "http://www.ebi.ac.uk/efo/EFO_0000324" );
         } );
-        verify( auditTrailService ).addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class, "Created a cell type factor " + factor + " from preferred cell type assignment " + ctl + "." );
-        verify( auditTrailService ).addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class, "Created a cell type factor " + recreatedFactor + " from preferred cell type assignment " + ctl + "." );
+        // Cell-type-factor create audits hoisted to
+        // SingleCellExperimentDesignAuditService (bucket 2g).
+        verify( singleCellExperimentDesignAuditService ).recordCellTypeFactorCreated( ee, factor, ctl.toString() );
+        verify( singleCellExperimentDesignAuditService ).recordCellTypeFactorCreated( ee, recreatedFactor, ctl.toString() );
     }
 
     @Test
@@ -697,8 +709,10 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest5
             assertThat( f.getCategory() ).isEqualTo( "cell type" );
             assertThat( f.getCategoryUri() ).isEqualTo( "http://www.ebi.ac.uk/efo/EFO_0000324" );
         } );
-        verify( auditTrailService ).addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class, "Created a cell type factor " + factor + " from preferred cell type assignment " + ctl + "." );
-        verify( auditTrailService ).addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class, "Created a cell type factor " + recreatedFactor + " from preferred cell type assignment " + ctl + "." );
+        // Cell-type-factor create audits hoisted to
+        // SingleCellExperimentDesignAuditService (bucket 2g).
+        verify( singleCellExperimentDesignAuditService ).recordCellTypeFactorCreated( ee, factor, ctl.toString() );
+        verify( singleCellExperimentDesignAuditService ).recordCellTypeFactorCreated( ee, recreatedFactor, ctl.toString() );
     }
 
     @Test
