@@ -29,6 +29,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import ubic.gemma.core.security.audit.AuditedOnError;
+import ubic.gemma.core.security.audit.payload.DifferentialExpressionAnalysisPayload;
 import ubic.gemma.core.util.math.distribution.Histogram;
 import ubic.gemma.core.util.FileTools;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
@@ -43,7 +44,6 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.io.File;
@@ -66,7 +66,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     @Autowired
     private AnalysisSelectionAndExecutionService analysisSelectionAndExecutionService;
     @Autowired
-    private AuditTrailService auditTrailService = null;
+    private DifferentialExpressionAnalyzerAuditService differentialExpressionAnalyzerAuditService;
     @Autowired
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
     @Autowired
@@ -296,10 +296,19 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
             }
         }
 
-        // final transaction: audit.
+        // final transaction: audit. Phase C bucket 2f -- typed payload via the
+        // AuditedAspect (the @Audited annotation on
+        // DifferentialExpressionAnalyzerAuditService#recordAnalysisPersisted
+        // writes the audit row; the co-bean hop is required because this class
+        // is Propagation.NEVER and Spring AOP can't intercept self-invocations).
+        // Defensive try/catch is retained so a transient audit failure does not
+        // poison the persisted analysis -- this is best-effort post-persist
+        // bookkeeping.
         try {
-            auditTrailService.addUpdateEvent( expressionExperiment, DifferentialExpressionAnalysisEvent.class,
-                    analysis.toString(), analysis.getDescription() );
+            DifferentialExpressionAnalysisPayload payload = new DifferentialExpressionAnalysisPayload(
+                    analysis.getDescription() );
+            differentialExpressionAnalyzerAuditService.recordAnalysisPersisted(
+                    expressionExperiment, analysis.toString(), payload );
         } catch ( Exception e ) {
             DifferentialExpressionAnalyzerServiceImpl.log
                     .error( "Error while trying to add audit event: " + e.getMessage(), e );
