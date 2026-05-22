@@ -1,9 +1,8 @@
 package ubic.gemma.rest;
 
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import ubic.gemma.core.util.test.category.SlowTest;
-import ubic.gemma.rest.util.BaseJerseyIntegrationTest;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import ubic.gemma.rest.util.BaseJerseyIntegrationTest5;
 
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -18,8 +17,8 @@ import static ubic.gemma.rest.util.Assertions.assertThat;
  * presence of the {@code usageCount} field) rather than exact numbers. Numeric correctness is covered by
  * {@link AnnotationsWebServiceTest}.
  */
-@Category(SlowTest.class)
-public class AnnotationsRestTest extends BaseJerseyIntegrationTest {
+@Tag("slow")
+public class AnnotationsRestTest extends BaseJerseyIntegrationTest5 {
 
     @Test
     public void testSearchAnnotationsReturnsUsageCountField() {

@@ -1,8 +1,8 @@
 package ubic.gemma.rest;
 
 import io.swagger.v3.oas.models.OpenAPI;
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,7 +21,7 @@ import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.rest.analytics.AnalyticsProvider;
-import ubic.gemma.rest.util.BaseJerseyTest;
+import ubic.gemma.rest.util.BaseJerseyTest5;
 import ubic.gemma.rest.util.JacksonConfig;
 
 import jakarta.ws.rs.core.MediaType;
@@ -37,7 +37,7 @@ import static ubic.gemma.rest.util.Assertions.assertThat;
 
 @ContextConfiguration
 @TestExecutionListeners({ WithSecurityContextTestExecutionListener.class })
-public class TasksWebServiceTest extends BaseJerseyTest {
+public class TasksWebServiceTest extends BaseJerseyTest5 {
 
     @Configuration
     @TestComponent
@@ -83,7 +83,7 @@ public class TasksWebServiceTest extends BaseJerseyTest {
     @Autowired
     private TaskRunningService taskRunningService;
 
-    @After
+    @AfterEach
     public void resetMocks() {
         reset( taskRunningService );
     }
