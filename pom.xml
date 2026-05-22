@@ -1113,13 +1113,11 @@
 						<include>**/*Test.java</include>
 					</includes>
 					<!--
-					JUnit 5 Phase B0 dual-selector. Excludes both the legacy
-					JUnit 4 @Category(IntegrationTest.class) (selected via FQCN —
-					exposed as a tag by the Vintage engine) AND the new
-					@Tag("integration") JUnit 5 marker. Comma-separated entries
-					form a tag-expression OR on the JUnit Platform.
+					Excludes @Tag("integration") JUnit 5 markers from surefire
+					(unit) runs. Comma-separated entries form a tag-expression
+					OR on the JUnit Platform.
 					-->
-					<excludedGroups>ubic.gemma.core.util.test.category.IntegrationTest,integration,${excludedGroups}</excludedGroups>
+					<excludedGroups>integration,${excludedGroups}</excludedGroups>
 					<!--suppress MavenModelInspection -->
 					<skip>${skipUnitTests}</skip>
 				</configuration>
@@ -1135,22 +1133,17 @@
 						<include>**/*Test.java</include>
 					</includes>
 					<!--
-					JUnit 5 Phase B0 dual-selector. With Surefire/Failsafe 3.x +
-					Jupiter on the classpath, <groups> is a JUnit Platform tag
-					expression. The Vintage engine exposes JUnit 4 @Category
-					interfaces as tags named by their fully-qualified class name,
-					so the FQCN below still selects @Category(IntegrationTest.class)
-					classes, and "integration" picks up classes annotated with
-					@Tag("integration"). The | operator is JUnit Platform OR.
+					<groups> is a JUnit Platform tag expression. "integration"
+					picks up classes annotated with @Tag("integration").
 					-->
-					<groups>ubic.gemma.core.util.test.category.IntegrationTest | integration</groups>
+					<groups>integration</groups>
 					<!--
 					Failsafe exclusions mirror surefire's: anything tagged
-					@Tag("slow") (or @Category(SlowTest.class)) is skipped from
-					the default `mvn verify` run. The `${excludedGroups}` default
-					(set lower in this pom) is `network,slow,ubic.gemma.core.util.test.category.SlowTest`.
-					Override with -DexcludedGroups=network (run slow tests) or
-					-DexcludedGroups= (clear all exclusions, run everything).
+					@Tag("slow") is skipped from the default `mvn verify` run.
+					The `${excludedGroups}` default (set lower in this pom) is
+					`network,slow`. Override with -DexcludedGroups=network (run
+					slow tests) or -DexcludedGroups= (clear all exclusions,
+					run everything).
 					-->
 					<excludedGroups>${excludedGroups}</excludedGroups>
 					<!--suppress MavenModelInspection -->
@@ -1658,25 +1651,24 @@
 		Default surefire + failsafe excluded tag set.
 
 		Tag taxonomy:
-		  - @Tag("integration") / @Category(IntegrationTest.class):
+		  - @Tag("integration"):
 		      runs in failsafe only, skipped from surefire. The day-to-day
 		      mvn verify entry point.
 		  - @Tag("network") / ExternalUrlReachabilityTest:
 		      cheap reachability probe; opt-in via -DexcludedGroups= or a
 		      different tag list. Excluded by default to keep verify offline.
-		  - @Tag("slow") / @Category(SlowTest.class):
+		  - @Tag("slow"):
 		      heavy in-JVM work or large external download (GEO archives,
 		      Uberon OWL, UCSC matrices, etc.). Excluded from BOTH phases
 		      by default — run explicitly with
 		      `-DexcludedGroups=network` (drop the slow exclusion, keep
 		      network excluded) or `-DexcludedGroups=` (clear everything).
-
-		The JUnit Vintage engine exposes JUnit 4 @Category interfaces as
-		tags named by their fully-qualified class name, so the FQCN entry
-		below catches the legacy SlowTest category alongside the Jupiter
-		@Tag("slow") marker.
+		  - @Tag("geo") / @Tag("pubmed") / @Tag("goldenPath"):
+		      opt-in narrow integration markers; not excluded by default
+		      but typically paired with @Tag("slow") and/or
+		      @Tag("integration"), so they're filtered transitively.
 		-->
-		<excludedGroups>network,slow,ubic.gemma.core.util.test.category.SlowTest</excludedGroups>
+		<excludedGroups>network,slow</excludedGroups>
 		<skipJavadoc>false</skipJavadoc>
 		<skipWebpack>false</skipWebpack>
 		<maven.javadoc.skip>${skipJavadoc}</maven.javadoc.skip>
