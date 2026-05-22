@@ -400,7 +400,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
                 .createQuery( "select c from Characteristic c "
                         + "where valueUri = :uri "
                         + "group by c.value "
-                        + "having c.value <> null "
+                        + "having c.value is not null "
                         + "order by count(*) desc" )
                 .setParameter( "uri", uri )
                 .setMaxResults( 1 )
