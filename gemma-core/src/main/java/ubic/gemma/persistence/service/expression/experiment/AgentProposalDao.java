@@ -28,7 +28,7 @@ public interface AgentProposalDao extends BaseDao<AgentProposal> {
     /**
      * Find an existing proposal for the {@code (investigation, runId)} pair, or
      * {@code null}. Used by the service to make
-     * {@code POST /skeletons/{id}/proposals} idempotent on retry.
+     * {@code POST /preboarding/{id}/proposals} idempotent on retry.
      */
     @Nullable
     AgentProposal findByInvestigationAndRunId( Investigation investigation, String runId );
@@ -54,9 +54,9 @@ public interface AgentProposalDao extends BaseDao<AgentProposal> {
     /**
      * Rebind every proposal currently attached to {@code from} so it points at
      * {@code to} instead. Returns the number of rows rebound. Used by the
-     * skeleton-promotion flow: skeleton rows do NOT carry the loaded EE's
+     * preboarding-promotion flow: preboarding rows do NOT carry the loaded EE's
      * curatable artifacts, so the agent's historical proposals must follow
-     * the EE rather than stay on the skeleton.
+     * the EE rather than stay on the preboarding.
      */
     int rebindInvestigation( Investigation from, Investigation to );
 }

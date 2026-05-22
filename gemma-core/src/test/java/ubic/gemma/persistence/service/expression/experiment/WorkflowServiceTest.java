@@ -109,7 +109,7 @@ public class WorkflowServiceTest {
                     assertThat( dwte.getCurrentState() ).isEqualTo( WorkflowState.Discovery );
                     assertThat( dwte.getTargetState() ).isEqualTo( WorkflowState.Public );
                     assertThat( dwte.getAllowedNextStates() )
-                            .containsExactlyInAnyOrder( WorkflowState.Candidate, WorkflowState.Skeleton );
+                            .containsExactlyInAnyOrder( WorkflowState.Candidate, WorkflowState.Preboarding );
                 } );
         // Disallowed path must NOT mutate the row.
         verify( session, never() ).update( ee );
@@ -117,7 +117,7 @@ public class WorkflowServiceTest {
 
     /**
      * Spec §"Acceptance criteria" exercises the full lifecycle:
-     * {@code Discovery → Candidate → Skeleton → Loaded → Curate → Audit →
+     * {@code Discovery → Candidate → Preboarding → Loaded → Curate → Audit →
      * Curate → Process → Audit → Public}. The pure-Mockito version of that
      * test asserts only the state-machine sequence (no aspect, no real DB).
      * The integration variant (orchestrator's job) layers the AUDIT_EVENT
@@ -128,7 +128,7 @@ public class WorkflowServiceTest {
         ee.setWorkflowState( WorkflowState.Discovery );
         WorkflowState[] path = {
                 WorkflowState.Candidate,
-                WorkflowState.Skeleton,
+                WorkflowState.Preboarding,
                 WorkflowState.Loaded,
                 WorkflowState.Curate,
                 WorkflowState.Audit,
@@ -140,7 +140,7 @@ public class WorkflowServiceTest {
         WorkflowState[] prevStates = {
                 WorkflowState.Discovery,
                 WorkflowState.Candidate,
-                WorkflowState.Skeleton,
+                WorkflowState.Preboarding,
                 WorkflowState.Loaded,
                 WorkflowState.Curate,
                 WorkflowState.Audit,
@@ -161,10 +161,10 @@ public class WorkflowServiceTest {
     @Test
     public void stateMachine_transitionTableMatchesHandoff() {
         assertThat( WorkflowState.Discovery.allowedNextStates() )
-                .containsExactlyInAnyOrder( WorkflowState.Candidate, WorkflowState.Skeleton );
+                .containsExactlyInAnyOrder( WorkflowState.Candidate, WorkflowState.Preboarding );
         assertThat( WorkflowState.Candidate.allowedNextStates() )
-                .containsExactlyInAnyOrder( WorkflowState.Skeleton, WorkflowState.Discovery );
-        assertThat( WorkflowState.Skeleton.allowedNextStates() )
+                .containsExactlyInAnyOrder( WorkflowState.Preboarding, WorkflowState.Discovery );
+        assertThat( WorkflowState.Preboarding.allowedNextStates() )
                 .containsExactlyInAnyOrder( WorkflowState.Loaded, WorkflowState.Candidate );
         assertThat( WorkflowState.Loaded.allowedNextStates() )
                 .containsExactly( WorkflowState.Curate );

@@ -18,10 +18,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import ubic.gemma.core.security.audit.Audited;
-import ubic.gemma.model.common.auditAndSecurity.eventType.SkeletonCreatedEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.SkeletonPromotedEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.PreboardingCreatedEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.PreboardingPromotedEvent;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.SkeletonInvestigation;
+import ubic.gemma.model.expression.experiment.PreboardingExperiment;
 import ubic.gemma.model.expression.experiment.WorkflowState;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 
@@ -29,11 +29,11 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * Default {@link SkeletonInvestigationService} implementation.
+ * Default {@link PreboardingExperimentService} implementation.
  *
  * <p>The promotion path is the substantive piece: it calls into
  * {@link AgentProposalService#rebindInvestigation} to point every
- * {@code AgentProposal} row at the loaded EE rather than the skeleton, then
+ * {@code AgentProposal} row at the loaded EE rather than the preboarding, then
  * advances both rows' workflow state. Audit events are emitted declaratively
  * via {@link Audited @Audited} on the methods where the auditable target is
  * passed in (promote). The create path emits its event imperatively because
@@ -42,7 +42,7 @@ import java.util.List;
  * (see {@code AuditedAspect#findAuditable}).</p>
  */
 @Service
-public class SkeletonInvestigationServiceImpl implements SkeletonInvestigationService {
+public class PreboardingExperimentServiceImpl implements PreboardingExperimentService {
 
     private final SessionFactory sessionFactory;
     private final AgentProposalService agentProposalService;
@@ -50,7 +50,7 @@ public class SkeletonInvestigationServiceImpl implements SkeletonInvestigationSe
     private final AuditTrailService auditTrailService;
 
     @Autowired
-    public SkeletonInvestigationServiceImpl( SessionFactory sessionFactory,
+    public PreboardingExperimentServiceImpl( SessionFactory sessionFactory,
             AgentProposalService agentProposalService,
             ExpressionExperimentService expressionExperimentService,
             AuditTrailService auditTrailService ) {
@@ -62,17 +62,17 @@ public class SkeletonInvestigationServiceImpl implements SkeletonInvestigationSe
 
     @Override
     @Transactional
-    public SkeletonInvestigation createSkeleton( String accession,
+    public PreboardingExperiment createPreboarding( String accession,
             @Nullable String source,
             @Nullable String identifyingMetadata )
             throws AccessionAlreadyExistsException {
         Assert.hasText( accession, "accession must be non-blank." );
-        // Reject if either a SkeletonInvestigation OR an ExpressionExperiment
+        // Reject if either a PreboardingExperiment OR an ExpressionExperiment
         // already carries this accession (handoff §"Required endpoints" 409).
-        SkeletonInvestigation existingSkeleton = findByAccession( accession );
-        if ( existingSkeleton != null ) {
+        PreboardingExperiment existingPreboarding = findByAccession( accession );
+        if ( existingPreboarding != null ) {
             throw new AccessionAlreadyExistsException( accession,
-                    existingSkeleton.getId(), "skeleton" );
+                    existingPreboarding.getId(), "preboarding" );
         }
         ExpressionExperiment existingEe = findExpressionExperimentByAccession( accession );
         if ( existingEe != null ) {
@@ -80,46 +80,46 @@ public class SkeletonInvestigationServiceImpl implements SkeletonInvestigationSe
                     existingEe.getId(), "expression_experiment" );
         }
 
-        SkeletonInvestigation skel = new SkeletonInvestigation();
+        PreboardingExperiment skel = new PreboardingExperiment();
         skel.setAccession( accession );
         if ( source != null && !source.isEmpty() ) {
             skel.setSource( source );
         }
         skel.setIdentifyingMetadata( identifyingMetadata );
-        skel.setName( "Skeleton:" + accession );
-        skel.setWorkflowState( WorkflowState.Skeleton );
+        skel.setName( "Preboarding:" + accession );
+        skel.setWorkflowState( WorkflowState.Preboarding );
         skel.setWorkflowStateEnteredAt( new Date() );
         sessionFactory.getCurrentSession().persist( skel );
         sessionFactory.getCurrentSession().flush();
 
         // Imperative audit emission: the AuditedAspect can only locate
         // an Auditable target on the argument list, and `accession` (String)
-        // is not auditable. The freshly persisted skeleton IS auditable;
-        // emit the event directly so the same "one SkeletonCreatedEvent per
+        // is not auditable. The freshly persisted preboarding IS auditable;
+        // emit the event directly so the same "one PreboardingCreatedEvent per
         // create" guarantee holds.
         //noinspection deprecation
-        auditTrailService.addUpdateEvent( skel, SkeletonCreatedEvent.class,
-                "Skeleton created for accession " + accession );
+        auditTrailService.addUpdateEvent( skel, PreboardingCreatedEvent.class,
+                "Preboarding created for accession " + accession );
         return skel;
     }
 
     @Nullable
     @Override
     @Transactional(readOnly = true)
-    public SkeletonInvestigation load( Long id ) {
+    public PreboardingExperiment load( Long id ) {
         if ( id == null ) return null;
-        return ( SkeletonInvestigation ) sessionFactory.getCurrentSession()
-                .get( SkeletonInvestigation.class, id );
+        return ( PreboardingExperiment ) sessionFactory.getCurrentSession()
+                .get( PreboardingExperiment.class, id );
     }
 
     @Nullable
     @Override
     @Transactional(readOnly = true)
-    public SkeletonInvestigation findByAccession( String accession ) {
+    public PreboardingExperiment findByAccession( String accession ) {
         if ( accession == null ) return null;
         @SuppressWarnings("unchecked")
-        List<SkeletonInvestigation> rows = sessionFactory.getCurrentSession()
-                .createQuery( "from SkeletonInvestigation s where s.accession = :acc order by s.id asc" )
+        List<PreboardingExperiment> rows = sessionFactory.getCurrentSession()
+                .createQuery( "from PreboardingExperiment s where s.accession = :acc order by s.id asc" )
                 .setParameter( "acc", accession )
                 .setMaxResults( 1 )
                 .list();
@@ -129,10 +129,10 @@ public class SkeletonInvestigationServiceImpl implements SkeletonInvestigationSe
     @Override
     @Transactional(readOnly = true)
     @SuppressWarnings("unchecked")
-    public List<SkeletonInvestigation> findAllByAccession( String accession ) {
+    public List<PreboardingExperiment> findAllByAccession( String accession ) {
         if ( accession == null ) return java.util.Collections.emptyList();
         return sessionFactory.getCurrentSession()
-                .createQuery( "from SkeletonInvestigation s where s.accession = :acc order by s.id asc" )
+                .createQuery( "from PreboardingExperiment s where s.accession = :acc order by s.id asc" )
                 .setParameter( "acc", accession )
                 .list();
     }
@@ -147,46 +147,46 @@ public class SkeletonInvestigationServiceImpl implements SkeletonInvestigationSe
 
     @Override
     @Transactional
-    @Audited(value = SkeletonPromotedEvent.class,
-            messageSpel = "'Skeleton#' + #skeleton.id + ' promoted to ExpressionExperiment#' + #ee.id"
+    @Audited(value = PreboardingPromotedEvent.class,
+            messageSpel = "'Preboarding#' + #preboarding.id + ' promoted to ExpressionExperiment#' + #ee.id"
                     + " + ' (proposals_rebound=' + #result.proposalsRebound + ')'")
-    public PromotionResult promote( ExpressionExperiment ee, SkeletonInvestigation skeleton )
-            throws SkeletonAlreadyPromotedException {
-        Assert.notNull( skeleton, "skeleton must not be null." );
+    public PromotionResult promote( ExpressionExperiment ee, PreboardingExperiment preboarding )
+            throws PreboardingAlreadyPromotedException {
+        Assert.notNull( preboarding, "preboarding must not be null." );
         Assert.notNull( ee, "ee must not be null." );
-        if ( skeleton.getWorkflowState() == WorkflowState.Loaded
-                || skeleton.getWorkflowState() == WorkflowState.Curate
-                || skeleton.getWorkflowState() == WorkflowState.Process
-                || skeleton.getWorkflowState() == WorkflowState.Audit
-                || skeleton.getWorkflowState() == WorkflowState.Public ) {
-            throw new SkeletonAlreadyPromotedException( skeleton.getId() );
+        if ( preboarding.getWorkflowState() == WorkflowState.Loaded
+                || preboarding.getWorkflowState() == WorkflowState.Curate
+                || preboarding.getWorkflowState() == WorkflowState.Process
+                || preboarding.getWorkflowState() == WorkflowState.Audit
+                || preboarding.getWorkflowState() == WorkflowState.Public ) {
+            throw new PreboardingAlreadyPromotedException( preboarding.getId() );
         }
 
-        // Rebind AgentProposal rows from skeleton -> ee. The promote endpoint
+        // Rebind AgentProposal rows from preboarding -> ee. The promote endpoint
         // contract is "the historical AgentProposal rows accessible from the
         // EE; the audit trail intact" — rebind is the new-row + FK rebind
         // approach (see STATUS_PROPOSED_EXPERIMENT_WORKFLOW.md for the
         // trade-off discussion).
-        int reboundCount = agentProposalService.rebindInvestigation( skeleton, ee );
+        int reboundCount = agentProposalService.rebindInvestigation( preboarding, ee );
 
-        // Advance the skeleton's workflow state to Loaded (terminal marker;
-        // the skeleton row is retained as history, no curatable artifacts
+        // Advance the preboarding's workflow state to Loaded (terminal marker;
+        // the preboarding row is retained as history, no curatable artifacts
         // on it). The EE's workflow state likewise becomes Loaded if it
         // isn't already past it.
         Date now = new Date();
-        skeleton.setWorkflowState( WorkflowState.Loaded );
-        skeleton.setWorkflowStateEnteredAt( now );
-        sessionFactory.getCurrentSession().update( skeleton );
+        preboarding.setWorkflowState( WorkflowState.Loaded );
+        preboarding.setWorkflowStateEnteredAt( now );
+        sessionFactory.getCurrentSession().update( preboarding );
 
         if ( ee.getWorkflowState() == null
                 || ee.getWorkflowState() == WorkflowState.Discovery
                 || ee.getWorkflowState() == WorkflowState.Candidate
-                || ee.getWorkflowState() == WorkflowState.Skeleton ) {
+                || ee.getWorkflowState() == WorkflowState.Preboarding ) {
             ee.setWorkflowState( WorkflowState.Loaded );
             ee.setWorkflowStateEnteredAt( now );
             sessionFactory.getCurrentSession().update( ee );
         }
 
-        return new PromotionResult( skeleton.getId(), ee.getId(), reboundCount );
+        return new PromotionResult( preboarding.getId(), ee.getId(), reboundCount );
     }
 }

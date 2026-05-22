@@ -21,8 +21,8 @@ import java.util.Objects;
  * Append-only record of a curation-agents proposal payload.
  *
  * <p>One row per agent run. Attached to an {@link Investigation} (either a
- * {@code SkeletonInvestigation} pre-load or an {@code ExpressionExperiment}
- * post-load); the FK is rebound from skeleton to EE at promotion time.</p>
+ * {@code PreboardingExperiment} pre-load or an {@code ExpressionExperiment}
+ * post-load); the FK is rebound from preboarding to EE at promotion time.</p>
  *
  * <p>The {@code payloadJson} column carries the full structured proposal the
  * agent produced (factors, FVs, sample assignments, tags, etc.). It's stored
@@ -36,7 +36,7 @@ import java.util.Objects;
  *
  * <p>See {@code HANDOFF_PROPOSED_EXPERIMENT_WORKFLOW.md} §"The decided shape"
  * and {@code STATUS_CURATION_PROPOSALS.md} for the consolidation decision
- * (one entity feeds both {@code /skeletons/{id}/proposals} and
+ * (one entity feeds both {@code /preboarding/{id}/proposals} and
  * {@code /datasets/{id}/curation-proposals}).</p>
  */
 public class AgentProposal extends AbstractIdentifiable {
@@ -53,7 +53,7 @@ public class AgentProposal extends AbstractIdentifiable {
 
     /**
      * @return the {@link Investigation} this proposal targets. Never null on
-     *         persisted rows. Rebound from skeleton to EE at promotion time.
+     *         persisted rows. Rebound from preboarding to EE at promotion time.
      */
     public Investigation getInvestigation() {
         return investigation;
@@ -66,7 +66,7 @@ public class AgentProposal extends AbstractIdentifiable {
     /**
      * @return the agent runner's unique id for the run that produced this
      *         proposal. Together with {@link #investigation} this is the
-     *         idempotency key for {@code POST /skeletons/{id}/proposals}.
+     *         idempotency key for {@code POST /preboarding/{id}/proposals}.
      */
     public String getRunId() {
         return runId;

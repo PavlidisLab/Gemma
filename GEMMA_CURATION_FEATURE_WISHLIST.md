@@ -64,7 +64,7 @@ End-to-end pipeline (`gemma_curation_agents/agents/`):
   results against existing Gemma curation. Read-only; uses gemmapy
   + direct REST for membership lookups.
 * **curation_proposer** — for an experiment already loaded into Gemma
-  as a "skeleton" (no design yet), proposes factors, FVs, statements,
+  as a "preboarding" (no design yet), proposes factors, FVs, statements,
   tags, sample assignments. Submits to the mock's
   `POST /rest/v2/datasets/{id}/curation-proposals`.
 * **audit** — for an already-curated experiment, runs six judges
@@ -158,7 +158,7 @@ addition, effort estimate (S/M/L), and blocking impact.
 
 #### A2. Dataset Design GET endpoint
 
-* **Callers**: `agents/curation_proposer/skeleton.py:fetch_skeleton`
+* **Callers**: `agents/curation_proposer/preboarding.py:fetch_skeleton`
   reconstructs factors / FVs / statements from
   `get_dataset_samples`'s nested `sample_factor_values` frame.
   Statement IDs are not stable across reads.
@@ -176,7 +176,7 @@ addition, effort estimate (S/M/L), and blocking impact.
 
 #### A3. Full Design + Cell-type subsets for single-cell experiments
 
-* **Caller**: `skeleton.py` cannot reconstruct the
+* **Caller**: `preboarding.py` cannot reconstruct the
   bioassay → cell-type-subset mapping from `/samples` alone.
 * **Workaround**: none usable; curators inspect single-cell datasets
   in the legacy Gemma UI.
@@ -270,15 +270,15 @@ addition, effort estimate (S/M/L), and blocking impact.
 * **Blocks**: GEEQ subscore display in the new UI; data exists, gap
   is shape.
 
-#### A10. Skeleton-fetching as a single fat call
+#### A10. Preboarding-fetching as a single fat call
 
-* **Caller**: `agents/curation_proposer/skeleton.py:fetch_skeleton`
+* **Caller**: `agents/curation_proposer/preboarding.py:fetch_skeleton`
   currently issues 5+ REST calls per experiment: `/datasets/{id}` +
   `/samples` + `/annotations` + `/quantitationTypes` + a GEO fetch.
 * **Workaround**: parallel `concurrent.futures` calls when caller
-  asks for many skeletons; per-call overhead is real (each call ~200
+  asks for many preboarding; per-call overhead is real (each call ~200
   ms when warm).
-* **Proposed**: `GET /datasets/{id}/skeleton` returning the union in
+* **Proposed**: `GET /datasets/{id}/preboarding` returning the union in
   one body — biomaterials, characteristics, factor values, tags,
   quantitation types, publications, pipeline status. Server-side
   fan-out, single response. Equivalent to the existing per-
