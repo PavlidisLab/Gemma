@@ -1339,11 +1339,15 @@ public class ExpressionExperimentDaoImpl
     public Collection<Gene> getGenesUsedByPreferredVectors( ExpressionExperiment experimentConstraint ) {
         //noinspection unchecked
         return getSessionFactory().getCurrentSession()
-                // using distinct for multi-mapping probes to prevent duplicated genes
+                // using distinct for multi-mapping probes to prevent duplicated genes;
+                // PROCESSED_EXPRESSION_DATA_VECTOR is expected to reference only preferred
+                // QuantitationTypes by construction — the explicit qt.IS_PREFERRED predicate
+                // is defence-in-depth so a misclassified row cannot leak into the result.
                 .createNativeQuery( "select {G.*} from PROCESSED_EXPRESSION_DATA_VECTOR pedv "
+                        + "join QUANTITATION_TYPE qt on pedv.QUANTITATION_TYPE_FK = qt.ID "
                         + "join GENE2CS on pedv.DESIGN_ELEMENT_FK = GENE2CS.CS "
                         + "join CHROMOSOME_FEATURE G on GENE2CS.GENE = G.ID "
-                        + "where pedv.EXPRESSION_EXPERIMENT_FK = :eeId "
+                        + "where pedv.EXPRESSION_EXPERIMENT_FK = :eeId and qt.IS_PREFERRED = true "
                         + "group by G.ID" )
                 .addEntity( "G", Gene.class )
                 .addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE )
