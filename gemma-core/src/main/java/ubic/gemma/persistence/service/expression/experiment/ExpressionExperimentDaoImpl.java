@@ -1784,9 +1784,15 @@ public class ExpressionExperimentDaoImpl
             results.put( id, 0L );
         }
 
+        // NULL-safe BATCH-factor exclusion: a factor with NULL category / categoryUri / name is NOT the batch
+        // factor and must NOT be silently filtered out by three-valued logic (HQL_SQL_AUDIT C3).
         String queryString = "select e.id,count(distinct ef.id) from ExpressionExperiment e inner join e.bioAssays ba"
                 + " inner join ba.sampleUsed bm inner join bm.factorValues fv inner join fv.experimentalFactor ef "
-                + " inner join ef.category cat where e.id in (:ids) and cat.category != (:category) and cat.categoryUri != (:categoryUri) and ef.name != (:name) group by e.id";
+                + " inner join ef.category cat where e.id in (:ids)"
+                + " and (cat.category is null or cat.category != (:category))"
+                + " and (cat.categoryUri is null or cat.categoryUri != (:categoryUri))"
+                + " and (ef.name is null or ef.name != (:name))"
+                + " group by e.id";
 
         //noinspection unchecked
         List<Object[]> res = this.getSessionFactory().getCurrentSession().createQuery( queryString )
