@@ -447,6 +447,28 @@ public class GeneWriteServiceImpl implements GeneWriteService {
                  * Check if this GI is already associated with some other gene.
                  */
                 GeneProduct otherGpUsingThisGi = geneProductDao.findByNcbiId( ngp.getNcbiGi() );
+
+                /*
+                 * In-place GI rotation: if the only row carrying the new GI is THIS same row (same id),
+                 * then updateGeneProduct() already mutated the GI in place on the managed instance. The
+                 * `existingGp` we are iterating may be a detached reflection still showing the OLD GI
+                 * (so the early-skip via usedGIs.containsKey at the top of the outer loop missed it),
+                 * but otherGpUsingThisGi resolves back to the same persistent row. Treat as a no-op:
+                 * the rotation is done, do not remove it. Without this guard, the existing-copy branch
+                 * below mistakenly deletes the row as a duplicate of itself.
+                 */
+                if ( otherGpUsingThisGi != null
+                        && existingGp.getId() != null
+                        && existingGp.getId().equals( otherGpUsingThisGi.getId() ) ) {
+                    // Sync the GI on the in-iteration reflection so the returned Gene's
+                    // products set surfaces the rotated value (the managed copy in the
+                    // session already carries it via updateGeneProduct).
+                    existingGp.setNcbiGi( ngp.getNcbiGi() );
+                    deleteIt = false;
+                    switchedGis.add( ngp.getNcbiGi() );
+                    continue;
+                }
+
                 if ( otherGpUsingThisGi == null ) {
                     // this is routine; it happens whenever a sequence is updated by NCBI.
 
