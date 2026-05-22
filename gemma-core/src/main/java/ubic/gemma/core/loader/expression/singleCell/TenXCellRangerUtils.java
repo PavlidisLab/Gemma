@@ -10,6 +10,7 @@ import org.json.JSONObject;
 import org.springframework.lang.Nullable;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.zip.GZIPInputStream;
@@ -46,7 +47,7 @@ public class TenXCellRangerUtils {
 
     public static boolean detect10xFromMexFile( Path mexFile ) {
         String[] comments;
-        try ( MatrixVectorReader reader = new MatrixVectorReader( new InputStreamReader( new GZIPInputStream( Files.newInputStream( mexFile ) ) ) ) ) {
+        try ( MatrixVectorReader reader = new MatrixVectorReader( new InputStreamReader( new GZIPInputStream( Files.newInputStream( mexFile ) ), StandardCharsets.UTF_8 ) ) ) {
             reader.readMatrixInfo();
             comments = reader.readComments();
         } catch ( IOException e ) {

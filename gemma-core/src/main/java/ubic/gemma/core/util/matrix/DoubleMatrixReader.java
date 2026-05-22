@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.ParseException;
@@ -92,7 +93,7 @@ public class DoubleMatrixReader extends AbstractMatrixReader<DoubleMatrix<String
             // ( ( DecimalFormat ) nf ).setDecimalSeparatorAlwaysShown( true );
         }
 
-        BufferedReader dis = new BufferedReader( new InputStreamReader( stream ) );
+        BufferedReader dis = new BufferedReader( new InputStreamReader( stream, StandardCharsets.UTF_8 ) );
 
         List<DoubleArrayList> MTemp = new Vector<DoubleArrayList>();
 

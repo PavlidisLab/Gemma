@@ -33,6 +33,9 @@ import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Collection;
 
 /**
@@ -65,7 +68,7 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
 
     @Override
     public int load( InputStream geneInputStream, String taxonName ) throws Exception {
-        BufferedReader b = new BufferedReader( new InputStreamReader( geneInputStream ) );
+        BufferedReader b = new BufferedReader( new InputStreamReader( geneInputStream, StandardCharsets.UTF_8 ) );
         Taxon taxon = validateTaxon( taxonName );
         log.info( "Taxon and file validation passed for taxon " + taxonName );
         return load( b, taxon );
@@ -193,7 +196,7 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
         if ( !f.canRead() ) {
             throw new IOException( "Cannot read from " + geneFile );
         }
-        BufferedReader b = new BufferedReader( new FileReader( geneFile ) );
+        BufferedReader b = Files.newBufferedReader( Paths.get( geneFile ), StandardCharsets.UTF_8 );
         log.info( "File " + geneFile + " read successfully" );
         return b;
 

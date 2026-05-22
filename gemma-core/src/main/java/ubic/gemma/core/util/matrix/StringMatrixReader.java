@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.StringTokenizer;
 import java.util.Vector;
@@ -61,7 +62,7 @@ public class StringMatrixReader extends AbstractMatrixReader<StringMatrix<String
         List<List<String>> MTemp = new Vector<List<String>>();
         List<String> rowNames = new Vector<String>();
         List<String> columnNames;
-        BufferedReader dis = new BufferedReader( new InputStreamReader( stream ) );
+        BufferedReader dis = new BufferedReader( new InputStreamReader( stream, StandardCharsets.UTF_8 ) );
         int columnNumber = 0;
         int rowNumber = 0;
         String row;

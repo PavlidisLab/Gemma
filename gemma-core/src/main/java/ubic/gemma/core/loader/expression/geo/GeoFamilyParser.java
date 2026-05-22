@@ -28,6 +28,7 @@ import ubic.gemma.core.loader.util.parser.Parser;
 import ubic.gemma.core.util.concurrent.Executors;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.BiConsumer;
@@ -112,7 +113,7 @@ public class GeoFamilyParser implements Parser<GeoParseResult> {
             throw new IOException( "No bytes to read from the input stream." );
         }
 
-        try ( final BufferedReader dis = new BufferedReader( new InputStreamReader( is ) ) ) {
+        try ( final BufferedReader dis = new BufferedReader( new InputStreamReader( is, StandardCharsets.UTF_8 ) ) ) {
 
             GeoFamilyParser.log.debug( "Parsing...." );
 

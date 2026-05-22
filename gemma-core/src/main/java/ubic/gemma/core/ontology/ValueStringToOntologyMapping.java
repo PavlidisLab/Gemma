@@ -9,6 +9,7 @@ import org.springframework.lang.Nullable;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -61,7 +62,7 @@ public class ValueStringToOntologyMapping {
      * See also convertVariableType where we map some to some categories.
      */
     private static void initializeTerm2OntologyMappings() {
-        try ( BufferedReader in = new BufferedReader( new InputStreamReader( new ClassPathResource( "/ubic/gemma/core/ontology/valueStringToOntologyTermMappings.txt" ).getInputStream() ) ) ) {
+        try ( BufferedReader in = new BufferedReader( new InputStreamReader( new ClassPathResource( "/ubic/gemma/core/ontology/valueStringToOntologyTermMappings.txt" ).getInputStream(), StandardCharsets.UTF_8 ) ) ) {
             while ( in.ready() ) {
                 String line = in.readLine().trim();
                 if ( line.startsWith( "#" ) ) {

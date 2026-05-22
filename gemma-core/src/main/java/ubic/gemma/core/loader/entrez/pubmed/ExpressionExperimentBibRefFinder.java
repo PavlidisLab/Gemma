@@ -33,6 +33,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -103,7 +104,7 @@ public class ExpressionExperimentBibRefFinder {
         }
 
         try ( InputStream is = conn.getInputStream();
-                BufferedReader br = new BufferedReader( new InputStreamReader( is ) ) ) {
+                BufferedReader br = new BufferedReader( new InputStreamReader( is, StandardCharsets.UTF_8 ) ) ) {
 
             String line;
             while ( ( line = br.readLine() ) != null ) {

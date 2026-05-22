@@ -46,6 +46,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.channels.ClosedByInterruptException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
@@ -141,7 +142,7 @@ class OntologyLoader {
                 // Attempt to load from disk cache
                 if ( f.isFile() ) {
                     StopWatch timer = StopWatch.createStarted();
-                    try ( BufferedReader buf = new BufferedReader( new FileReader( f ) ) ) {
+                    try ( BufferedReader buf = Files.newBufferedReader( f.toPath(), StandardCharsets.UTF_8 ) ) {
                         model.read( buf, url );
                         // We successfully loaded the cached ontology. Copy the loaded ontology to oldFile
                         // so that we don't recreate indices during initialization based on a false change in
