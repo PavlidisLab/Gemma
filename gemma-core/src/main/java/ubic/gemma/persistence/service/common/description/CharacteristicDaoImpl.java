@@ -97,6 +97,15 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
             .map( OwningEntity::getOwningClass )
             .collect( Collectors.toSet() );
 
+    /**
+     * Whitelist of column names that {@link #browse(int, int, String, boolean)} accepts as
+     * the ORDER BY target. Mirrors the three properties the web controller exposes; values
+     * not in this set are rejected so the ORDER BY clause cannot absorb arbitrary caller
+     * input.
+     */
+    private static final Set<String> BROWSE_SORTABLE_FIELDS = new HashSet<>( Arrays.asList(
+            "category", "value", "evidenceCode" ) );
+
     @Autowired
     public CharacteristicDaoImpl( SessionFactory sessionFactory ) {
         super( Characteristic.class, sessionFactory );
@@ -115,6 +124,15 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
 
     @Override
     public List<Characteristic> browse( int start, int limit, String orderField, boolean descending ) {
+        // ORDER BY column names cannot be bound as HQL parameters; whitelist + inject so
+        // the column reference comes from a fixed alphabet. Pushes the guard into the DAO
+        // so any future caller gets a clear IllegalArgumentException instead of relying on
+        // Hibernate 6's UnknownPathException wrapping at runtime — mirrors the
+        // BibliographicReferenceDaoImpl.browse pattern (HQL_SQL_AUDIT C1).
+        if ( !BROWSE_SORTABLE_FIELDS.contains( orderField ) ) {
+            throw new IllegalArgumentException( "Unsupported Characteristic sort field: " + orderField
+                    + " (allowed: " + BROWSE_SORTABLE_FIELDS + ")" );
+        }
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
                 .createQuery( "select c from Characteristic c where c.valueUri not like :p "
@@ -468,8 +486,14 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     public Map<String, String> findValueGroupedByValueUri( @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, boolean includePredicates, boolean includeObjects, int maxResults ) {
         Map<String, String> result = new HashMap<>();
         //noinspection unchecked
+        // MAX(`VALUE`) makes this ONLY_FULL_GROUP_BY-compliant (MySQL 5.7+ default sql_mode).
+        // The method's contract is "one representative VALUE per VALUE_URI" — different rows
+        // carrying the same URI may have stylistic differences (case, whitespace) in the free-
+        // text VALUE column; any single representative satisfies the caller, and MAX picks
+        // deterministically across runs (the prior relaxed-mode picker was implementation-
+        // defined).
         List<Object[]> result1 = this.getSessionFactory().getCurrentSession()
-                .createNativeQuery( "select VALUE_URI, `VALUE` from CHARACTERISTIC C "
+                .createNativeQuery( "select VALUE_URI, MAX(`VALUE`) from CHARACTERISTIC C "
                         + "where VALUE_URI is not null "
                         + ( parentClasses != null || includeNoParents ? "and " + createOwningEntityConstraint( parentClasses, includeNoParents ) + " " : "" ) + " "
                         + "group by VALUE_URI" )
@@ -480,8 +504,11 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
         }
         if ( includePredicates ) {
             //noinspection unchecked
+            // MAX(PREDICATE) / MAX(SECOND_PREDICATE) make this ONLY_FULL_GROUP_BY-compliant.
+            // Semantics match the VALUE branch: one representative label per (predicate URI,
+            // second-predicate URI) pair.
             List<Object[]> result2 = this.getSessionFactory().getCurrentSession()
-                    .createNativeQuery( "select PREDICATE_URI, PREDICATE, SECOND_PREDICATE_URI, SECOND_PREDICATE from CHARACTERISTIC C "
+                    .createNativeQuery( "select PREDICATE_URI, MAX(PREDICATE), SECOND_PREDICATE_URI, MAX(SECOND_PREDICATE) from CHARACTERISTIC C "
                             + "where PREDICATE_URI is not null or SECOND_PREDICATE_URI is not null "
                             + ( parentClasses != null || includeNoParents ? "and " + createOwningEntityConstraint( parentClasses, includeNoParents ) + " " : "" ) + " "
                             + "group by PREDICATE_URI, SECOND_PREDICATE_URI" )
@@ -498,8 +525,11 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
         }
         if ( includeObjects ) {
             //noinspection unchecked
+            // MAX(OBJECT) / MAX(SECOND_OBJECT) make this ONLY_FULL_GROUP_BY-compliant.
+            // Semantics match the VALUE branch: one representative label per (object URI,
+            // second-object URI) pair.
             List<Object[]> result3 = this.getSessionFactory().getCurrentSession()
-                    .createNativeQuery( "select OBJECT_URI, OBJECT, SECOND_OBJECT_URI, SECOND_OBJECT from CHARACTERISTIC C "
+                    .createNativeQuery( "select OBJECT_URI, MAX(OBJECT), SECOND_OBJECT_URI, MAX(SECOND_OBJECT) from CHARACTERISTIC C "
                             + "where OBJECT_URI is not null or SECOND_OBJECT_URI is not null "
                             + ( parentClasses != null || includeNoParents ? "and " + createOwningEntityConstraint( parentClasses, includeNoParents ) + " " : "" ) + " "
                             + "group by OBJECT_URI, SECOND_OBJECT_URI" )
