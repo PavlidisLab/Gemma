@@ -26,7 +26,6 @@ import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.util.test.NetworkAvailable;
 import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.core.util.test.category.GeoTest;
-import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -46,7 +45,6 @@ public class ExpressionExperimentBibRefFinderTest {
 
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     @NetworkAvailable(url = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi")
     public void testLocatePrimaryReference() throws IOException {
         ExpressionExperimentBibRefFinder finder = new ExpressionExperimentBibRefFinder( Settings.getString( "entrez.efetch.apikey" ) );
@@ -65,7 +63,6 @@ public class ExpressionExperimentBibRefFinderTest {
 
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     @NetworkAvailable(url = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi")
     public void testLocatePrimaryReferenceInvalidGSE() throws IOException {
         ExpressionExperimentBibRefFinder finder = new ExpressionExperimentBibRefFinder( Settings.getString( "entrez.efetch.apikey" ) );

@@ -37,7 +37,6 @@ import ubic.gemma.core.security.authorization.acl.AclTestUtils;
 import ubic.gemma.core.util.test.NetworkAvailable;
 import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.core.util.test.category.GeoTest;
-import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
@@ -89,7 +88,6 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest5 {
 
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     @NetworkAvailable(url = EntrezUtils.ESEARCH)
     final public void testServiceCreateTwoColor() throws Exception {
         prepareGSE2892();
@@ -142,7 +140,6 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest5 {
 
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     @NetworkAvailable(url = EntrezUtils.ESEARCH)
     final public void testServiceCreateOneColor() throws Exception {
         prepareGSE2892();
@@ -191,7 +188,6 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest5 {
 
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     final public void testServiceCreateCountData() throws Exception {
 
@@ -287,7 +283,6 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest5 {
 
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     @NetworkAvailable(url = EntrezUtils.ESEARCH)
     final public void testServiceCreateExistingEe() throws Exception {
         prepareGSE2892();

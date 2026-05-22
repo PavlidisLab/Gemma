@@ -20,7 +20,6 @@ package ubic.gemma.core.ontology.providers;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.InitializingBean;
@@ -38,7 +37,6 @@ import ubic.gemma.core.ontology.basecode.search.OntologySearchResult;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
-import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationReadService;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 
@@ -55,7 +53,6 @@ import static ubic.gemma.core.ontology.providers.GeneOntologyUtils.asRegularGoId
  * @author Paul
  */
 @Tag("slow")
-@Category(SlowTest.class)
 @ContextConfiguration
 public class GeneOntologyServiceTest extends BaseTest5 implements InitializingBean {
     private static final Log log = LogFactory.getLog( GeneOntologyServiceTest.class.getName() );

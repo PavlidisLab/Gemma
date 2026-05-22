@@ -21,7 +21,6 @@ package ubic.gemma.core.analysis.preprocess;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -43,7 +42,6 @@ import ubic.gemma.core.loader.expression.simple.model.SimplePlatformMetadata;
 import ubic.gemma.core.loader.expression.simple.model.SimpleQuantitationTypeMetadata;
 import ubic.gemma.core.loader.expression.simple.model.SimpleTaxonMetadata;
 import ubic.gemma.core.util.test.BaseTest5;
-import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
@@ -263,7 +261,6 @@ public class ExpressionDataSVDTest extends BaseTest5 {
      * Test on full-sized data set.
      */
     @Test
-    @Category(SlowTest.class)
     @Tag("slow")
     public void testMatrixReconstructB() throws Exception {
         GeoConverter gc = new GeoConverterImpl();

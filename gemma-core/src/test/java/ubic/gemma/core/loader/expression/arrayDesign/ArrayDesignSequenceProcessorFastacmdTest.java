@@ -18,7 +18,6 @@
  */
 package ubic.gemma.core.loader.expression.arrayDesign;
 
-import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,7 +28,6 @@ import ubic.gemma.core.loader.genome.SimpleFastaCmd;
 import ubic.gemma.core.loader.util.TestUtils;
 import ubic.gemma.core.util.test.NetworkAvailable;
 import ubic.gemma.core.util.test.NetworkAvailableExtension;
-import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
 import java.nio.file.Path;
@@ -55,7 +53,6 @@ public class ArrayDesignSequenceProcessorFastacmdTest extends AbstractArrayDesig
 
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     public void testProcessArrayDesignWithFastaCmdFetch() throws Exception {
         assumeThatExecutableExists( FASTA_CMD_EXE );

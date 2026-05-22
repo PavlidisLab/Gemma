@@ -19,7 +19,6 @@
 package ubic.gemma.core.loader.expression.simple;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,7 +32,6 @@ import ubic.gemma.core.loader.expression.simple.model.SimpleQuantitationTypeMeta
 import ubic.gemma.core.loader.expression.simple.model.SimpleTaxonMetadata;
 import ubic.gemma.core.security.authorization.acl.AclTestUtils;
 import ubic.gemma.core.util.test.BaseSpringContextTest5;
-import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
@@ -56,7 +54,6 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author Paul
  */
 @Tag("slow")
-@Category(SlowTest.class)
 public class ExperimentalDesignImporterTest extends BaseSpringContextTest5 {
 
     private final String adName = RandomStringUtils.insecure().nextAlphabetic( 10 );

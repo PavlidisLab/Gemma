@@ -27,7 +27,6 @@ import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.util.test.NetworkAvailable;
 import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.core.util.test.category.GeoTest;
-import ubic.gemma.core.util.test.category.SlowTest;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -42,7 +41,6 @@ public class EutilFetchTest {
 
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testFetch() throws Exception {
         Document result = EutilFetch.summary( "gds", "GSE4595", 2, ncbiApiKey );

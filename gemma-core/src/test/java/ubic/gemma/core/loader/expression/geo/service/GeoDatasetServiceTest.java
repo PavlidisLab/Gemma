@@ -43,7 +43,6 @@ import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.core.util.test.NetworkAvailable;
 import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.core.util.test.category.GeoTest;
-import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.GeeqEvent;
@@ -78,7 +77,7 @@ import static org.junit.jupiter.api.Assumptions.abort;
  *
  * @author pavlidis
  */
-@Category({ GeoTest.class, SlowTest.class })
+@Category(GeoTest.class)
 @NetworkAvailable(url = EntrezUtils.ESEARCH)
 @ExtendWith(NetworkAvailableExtension.class)
 public class GeoDatasetServiceTest extends AbstractGeoServiceTest5 {
@@ -137,7 +136,6 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest5 {
      */
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     public void testFetchAndLoadGSE1133() throws Exception {
         geoService.setGeoDomainObjectGenerator(
                 new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath( "gse1133Short" ) ) );
@@ -163,7 +161,6 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest5 {
 
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     public void testFetchAndLoadGSE16035() {
         setUpDatasetFromGeo( "GSE16035" );
 
@@ -183,7 +180,6 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest5 {
 
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     public void testFetchAndLoadGSE12135EXON() {
         setUpDatasetFromGeo( "GSE12135" );
         aclTestUtils.checkEEAcls( ee );
@@ -223,7 +219,6 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest5 {
 
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     public void testFetchAndLoadGSE9048() throws Exception {
         setUpDatasetFromGeo( "GSE9048" );
 
@@ -374,7 +369,6 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest5 {
 
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     public void testLoadGSE30521ExonArray() {
         setUpDatasetFromGeo( "GSE30521" );
         ee = this.eeService.thawLite( ee );
@@ -419,7 +413,6 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest5 {
 
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     public void testLoadGSE28383ExonArray() {
         setUpDatasetFromGeo( "GSE28383" );
         ee = this.eeService.thawLite( ee );

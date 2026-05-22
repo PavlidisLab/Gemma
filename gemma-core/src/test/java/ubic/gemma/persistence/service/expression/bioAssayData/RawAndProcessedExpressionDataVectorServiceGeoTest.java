@@ -22,7 +22,6 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest5;
@@ -31,7 +30,6 @@ import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.util.test.NetworkAvailable;
 import ubic.gemma.core.util.test.NetworkAvailableExtension;
-import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -72,7 +70,6 @@ public class RawAndProcessedExpressionDataVectorServiceGeoTest extends AbstractG
 
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     public void testFindByQt() throws Exception {
 

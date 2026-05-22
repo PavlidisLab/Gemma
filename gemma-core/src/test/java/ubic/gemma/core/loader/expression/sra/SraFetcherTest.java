@@ -1,7 +1,6 @@
 package ubic.gemma.core.loader.expression.sra;
 
 import org.assertj.core.data.Offset;
-import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -10,7 +9,6 @@ import ubic.gemma.core.loader.expression.sra.model.*;
 import ubic.gemma.core.util.SimpleRetryPolicy;
 import ubic.gemma.core.util.test.NetworkAvailable;
 import ubic.gemma.core.util.test.NetworkAvailableExtension;
-import ubic.gemma.core.util.test.category.SlowTest;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -132,7 +130,6 @@ public class SraFetcherTest {
 
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     public void testGSE230440() throws IOException {
         SraExperimentPackageSet result = sraFetcher.fetchByGeoAccession( "GSE231774" );
         assertThat( result.getExperimentPackages() )
@@ -148,7 +145,6 @@ public class SraFetcherTest {
 
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     public void testGSE165635() throws IOException {
         SraExperimentPackageSet result = sraFetcher.fetchByGeoAccession( "GSE165635" );
         assertThat( result.getExperimentPackages() ).hasSize( 3 );

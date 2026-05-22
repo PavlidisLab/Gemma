@@ -2,7 +2,6 @@ package ubic.gemma.core.loader.expression.ucsc.cellbrowser;
 
 import org.apache.commons.collections4.Transformer;
 import org.apache.commons.collections4.map.DefaultedMap;
-import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -10,7 +9,6 @@ import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataMatrix;
 import ubic.gemma.core.util.LoggingProgressReporter;
 import ubic.gemma.core.util.test.NetworkAvailable;
 import ubic.gemma.core.util.test.NetworkAvailableExtension;
-import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -31,7 +29,6 @@ public class UcscCellBrowserUtilsTest {
     @Test
     @Tag("slow")
     @Tag("integration")
-    @Category(SlowTest.class)
     @NetworkAvailable
     public void testGetDatasets() throws IOException {
         assertThat( UcscCellBrowserUtils.getDatasets() )
@@ -46,7 +43,6 @@ public class UcscCellBrowserUtilsTest {
     @Test
     @Tag("slow")
     @Tag("integration")
-    @Category(SlowTest.class)
     @NetworkAvailable
     public void testGetDataset() throws IOException {
         UcscCellBrowserUtils.getDataset( "aging-brain" );
@@ -55,7 +51,6 @@ public class UcscCellBrowserUtilsTest {
     @Test
     @Tag("slow")
     @Tag("integration")
-    @Category(SlowTest.class)
     @NetworkAvailable
     public void testGetDatasetDescription() throws IOException {
         UcscCellBrowserUtils.getDatasetDescription( "aging-brain" );
@@ -69,7 +64,6 @@ public class UcscCellBrowserUtilsTest {
     @Test
     @Tag("slow")
     @Tag("integration")
-    @Category(SlowTest.class)
     @NetworkAvailable
     public void testGetDatasetDataMatrix() throws IOException {
         QuantitationType quantitationType = QuantitationType.Factory.newInstance();

@@ -20,11 +20,9 @@ package ubic.gemma.core.loader.expression.geo.fetcher;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import ubic.gemma.core.loader.util.TestUtils;
-import ubic.gemma.core.util.test.category.SlowTest;
 
 import java.io.File;
 import java.util.Collection;
@@ -36,7 +34,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * @author pavlidis
  */
 @Tag("slow")
-@Category(SlowTest.class)
 public class RawDataFetcherTest {
     private static final Log log = LogFactory.getLog( RawDataFetcherTest.class.getName() );
 

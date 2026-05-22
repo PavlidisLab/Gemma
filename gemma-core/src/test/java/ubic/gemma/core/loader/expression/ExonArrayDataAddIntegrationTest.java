@@ -19,7 +19,6 @@
 
 package ubic.gemma.core.loader.expression;
 
-import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
@@ -29,7 +28,6 @@ import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest5;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
-import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.config.Settings;
@@ -45,7 +43,6 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  *
  * @author paul
  */
-@Category(SlowTest.class)
 @Tag("slow")
 @Disabled("These tests are broken and also way too slow to be included in the test suite by default.")
 public class ExonArrayDataAddIntegrationTest extends AbstractGeoServiceTest5 {

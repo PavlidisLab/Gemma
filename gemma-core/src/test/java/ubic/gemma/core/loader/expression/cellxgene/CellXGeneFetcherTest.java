@@ -1,6 +1,5 @@
 package ubic.gemma.core.loader.expression.cellxgene;
 
-import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,7 +18,6 @@ import ubic.gemma.core.util.SimpleRetryPolicy;
 import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.core.util.test.NetworkAvailable;
 import ubic.gemma.core.util.test.NetworkAvailableExtension;
-import ubic.gemma.core.util.test.category.SlowTest;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -61,7 +59,6 @@ public class CellXGeneFetcherTest extends BaseTest5 {
 
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     public void testFetchAllDatasetMetadata() throws IOException {
         List<DatasetMetadata> metadata = fetcher.fetchAllDatasetMetadata();
         assertThat( metadata ).isNotEmpty();
@@ -69,7 +66,6 @@ public class CellXGeneFetcherTest extends BaseTest5 {
 
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     public void testFetchDatasetMetadata() throws IOException {
         DatasetMetadata datasetMetadata = fetcher.fetchDatasetMetadata( "860a9839-5d24-4073-9a67-6ad570f41da1" );
         assertThat( datasetMetadata.getId() ).isEqualTo( "860a9839-5d24-4073-9a67-6ad570f41da1" );

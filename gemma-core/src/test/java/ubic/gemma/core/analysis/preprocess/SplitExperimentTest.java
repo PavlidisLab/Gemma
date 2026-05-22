@@ -20,7 +20,6 @@
 package ubic.gemma.core.analysis.preprocess;
 
 import ubic.gemma.core.security.SecurityService;
-import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -35,7 +34,6 @@ import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.core.util.test.NetworkAvailable;
 import ubic.gemma.core.util.test.NetworkAvailableExtension;
-import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
@@ -85,7 +83,6 @@ public class SplitExperimentTest extends BaseSpringContextTest5 {
 
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testSplitGSE17183ByOrganismPart() throws Exception {
 
@@ -167,7 +164,6 @@ public class SplitExperimentTest extends BaseSpringContextTest5 {
 
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testSplitGSE123753ByCollectionOfMaterial() throws Exception {
 

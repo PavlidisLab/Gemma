@@ -16,7 +16,6 @@ import ubic.gemma.core.loader.util.ftp.FTPConfig;
 import ubic.gemma.core.util.locking.FileLockManager;
 import ubic.gemma.core.util.locking.FileLockManagerImpl;
 import ubic.gemma.core.util.test.category.GeoTest;
-import ubic.gemma.core.util.test.category.SlowTest;
 
 import java.io.File;
 
@@ -24,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static ubic.gemma.cli.util.test.Assertions.assertThat;
 
 @ContextConfiguration
-@Category({ GeoTest.class, SlowTest.class })
+@Category(GeoTest.class)
 public class GeoSingleCellDataDownloaderCliTest extends BaseCliTest5 {
 
     @Configuration
@@ -54,7 +53,6 @@ public class GeoSingleCellDataDownloaderCliTest extends BaseCliTest5 {
 
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     public void testDownloadSingleSampleAccession() {
         assertThat( geoSingleCellDataDownloaderCli )
                 .withArguments( "-e", "GSE224438", "--sample-accessions", "GSM7022367" )

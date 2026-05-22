@@ -15,7 +15,6 @@
 package ubic.gemma.core.analysis.preprocess;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -27,7 +26,6 @@ import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignMergeService;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest5;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
-import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -129,7 +127,6 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest5 {
 
     @Test
     @Disabled
-    @Category(SlowTest.class)
     @Tag("slow")
     final public void test() throws Exception {
         /*

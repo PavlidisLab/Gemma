@@ -30,7 +30,6 @@ import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.core.util.test.NetworkAvailable;
 import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.core.util.test.category.GeoTest;
-import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
@@ -116,7 +115,6 @@ public class MexSingleCellDataLoaderTest extends BaseTest5 {
 
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     public void testGSE224438() throws IOException {
         // consider the first file for mapping to elements
         Map<String, CompositeSequence> elementsMapping = createElementsMappingFromResourceFile( "data/loader/expression/singleCell/GSE224438/GSM7022367_1_features.tsv.gz" );
@@ -305,7 +303,7 @@ public class MexSingleCellDataLoaderTest extends BaseTest5 {
     @Test
     @Tag("slow")
     @Tag("integration")
-    @Category({ GeoTest.class, SlowTest.class })
+    @Category(GeoTest.class)
     @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     public void testGSE141552() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE141552" );
@@ -437,7 +435,7 @@ public class MexSingleCellDataLoaderTest extends BaseTest5 {
     @Test
     @Tag("slow")
     @Tag("integration")
-    @Category({ GeoTest.class, SlowTest.class })
+    @Category(GeoTest.class)
     @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     public void testGSE125708() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE125708" );

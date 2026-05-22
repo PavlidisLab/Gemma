@@ -16,7 +16,6 @@ package ubic.gemma.core.loader.expression.geo.service;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.Tag;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +31,6 @@ import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.core.util.test.NetworkAvailable;
 import ubic.gemma.core.util.test.NetworkAvailableExtension;
-import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -107,7 +105,6 @@ public class GeoBrowserServiceParseTest extends BaseTest5 {
 
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     @NetworkAvailable
     public void testParse() throws IOException {
         Document response;
@@ -160,7 +157,6 @@ public class GeoBrowserServiceParseTest extends BaseTest5 {
 
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     public void testSampleMINiMLParse() throws Exception {
         ClassPathResource resource = new ClassPathResource( "/data/loader/expression/geo/GSE171682.xml" );
         GeoBrowserImpl serv = new GeoBrowserImpl( Settings.getString( "entrez.efetch.apikey" ) );

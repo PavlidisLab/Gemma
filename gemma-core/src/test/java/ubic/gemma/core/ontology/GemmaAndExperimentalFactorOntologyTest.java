@@ -1,6 +1,5 @@
 package ubic.gemma.core.ontology;
 
-import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -23,7 +22,6 @@ import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
-import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 
@@ -40,7 +38,6 @@ import static org.mockito.Mockito.mock;
  * @author poirigui
  */
 @Disabled("This test is timing out on the CI.")
-@Category(SlowTest.class)
 @Tag("slow")
 @ContextConfiguration
 public class GemmaAndExperimentalFactorOntologyTest extends BaseTest5 {

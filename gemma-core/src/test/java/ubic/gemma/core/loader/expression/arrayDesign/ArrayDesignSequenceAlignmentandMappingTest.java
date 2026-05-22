@@ -28,7 +28,6 @@ import ubic.gemma.core.analysis.sequence.Blat;
 import ubic.gemma.core.util.test.NetworkAvailable;
 import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.core.util.test.category.GoldenPathTest;
-import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 
@@ -53,7 +52,6 @@ public class ArrayDesignSequenceAlignmentandMappingTest extends AbstractArrayDes
 
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     public final void testProcessArrayDesign() throws Exception {
 

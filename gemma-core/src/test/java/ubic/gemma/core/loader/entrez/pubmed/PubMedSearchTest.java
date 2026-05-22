@@ -29,7 +29,6 @@ import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.util.test.NetworkAvailable;
 import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.core.util.test.category.PubMedTest;
-import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.description.BibliographicReference;
 
 import java.io.IOException;
@@ -67,7 +66,6 @@ public class PubMedSearchTest {
 
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     public void testSearchAndRetrieveByHTTPInChunks() throws Exception {
         Collection<String> searchTerms = new HashSet<>();
         searchTerms.add( "brain" );

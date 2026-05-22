@@ -23,7 +23,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.Tag;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
@@ -33,7 +32,6 @@ import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.context.AbstractAsyncFactoryBean;
 import ubic.gemma.core.util.test.NetworkAvailable;
 import ubic.gemma.core.util.test.NetworkAvailableExtension;
-import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonReadService;
 
@@ -121,7 +119,6 @@ public class HomologeneServiceTest {
 
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/pub/HomoloGene/last-archive/homologene.data")
     public final void testHomologeneFromFtpServer() throws Exception {
         hgs.setHomologeneFile( new HomologeneNcbiFtpResource( "homologene.data" ) );

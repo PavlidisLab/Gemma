@@ -2,7 +2,6 @@ package ubic.gemma.core.ontology;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.StopWatch;
-import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,7 +22,6 @@ import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.ontology.providers.GemmaOntologyService;
 import ubic.gemma.core.ontology.providers.MondoOntologyService;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
-import ubic.gemma.core.util.test.category.SlowTest;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -131,7 +129,6 @@ public class OntologyLoadingTest {
     }
 
     @Test
-    @Category(SlowTest.class)
     @Tag("slow")
     public void testInitializeAllOntologies() {
         // these are notoriously slow, so we skip them

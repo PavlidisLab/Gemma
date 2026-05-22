@@ -15,7 +15,6 @@
 package ubic.gemma.core.analysis.preprocess.batcheffects;
 
 import org.junit.jupiter.api.Test;
-import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +25,6 @@ import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.util.test.NetworkAvailable;
 import ubic.gemma.core.util.test.NetworkAvailableExtension;
-import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.expression.experiment.ExperimentFactorUtils;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -59,7 +57,6 @@ public class BatchInfoPopulationServiceIntegrationTest extends AbstractGeoServic
 
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testLoad() throws Exception {
 
@@ -84,7 +81,6 @@ public class BatchInfoPopulationServiceIntegrationTest extends AbstractGeoServic
      */
     @Test
     @Tag("slow")
-    @Category(SlowTest.class)
     @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testLoadCommandConsoleFormat() throws Exception {
 
