@@ -25,14 +25,19 @@ import java.util.stream.Stream;
 public interface SingleCellExpressionExperimentService {
 
     /**
-     * Load an experiment with its single-cell data vectors initialized.
+     * Load an experiment for the single-cell data loader path.
      * <p>
-     * The rest of the experiment is also initialized as per {@link ExpressionExperimentDao#thawLite(ExpressionExperiment)}.
+     * The experiment is initialized via {@link ExpressionExperimentDao#thawLite(ExpressionExperiment)}
+     * (quantitation types, bioassays, experimental design, etc.). The single-cell vector collection
+     * is intentionally NOT eagerly initialized; the calling transaction lazy-loads only what it
+     * touches. This replaces the prior {@code loadWithSingleCellVectors} entry point which forced
+     * a full SCEDV load even when the loader was about to write fresh vectors. See
+     * PERF_PROBE_REPORT_ROUND4 finding C3.
      */
     @Nullable
     @Secured({ "GROUP_USER" })
     @PostAuthorize("returnObject == null or hasPermission(returnObject, 'READ') or hasPermission(returnObject, 'ADMINISTRATION')")
-    ExpressionExperiment loadWithSingleCellVectors( Long id );
+    ExpressionExperiment loadAndInitializeSingleCellDimensions( Long id );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<QuantitationType> getSingleCellQuantitationTypes( ExpressionExperiment ee );
