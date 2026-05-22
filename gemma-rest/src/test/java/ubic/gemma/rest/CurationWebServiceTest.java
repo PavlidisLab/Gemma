@@ -23,7 +23,6 @@ import ubic.gemma.model.expression.experiment.AgentCurationKind;
 import ubic.gemma.model.expression.experiment.AgentCurationSummaryValueObject;
 import ubic.gemma.model.expression.experiment.AgentProposal;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.experiment.AgentProposalService;
 import ubic.gemma.rest.util.args.DatasetArg;
 import ubic.gemma.rest.util.args.DatasetArgService;
@@ -51,8 +50,6 @@ public class CurationWebServiceTest {
 
     @Mock
     private DatasetArgService datasetArgService;
-    @Mock
-    private AuditTrailService auditTrailService;
     @Mock
     private AgentProposalService agentProposalService;
     @Mock
@@ -221,5 +218,71 @@ public class CurationWebServiceTest {
         // Also guard the null-body path.
         assertThatThrownBy( () -> webService.submitCurationProposal( datasetArg, null ) )
                 .isInstanceOf( BadRequestException.class );
+    }
+
+    /* ===== /datasets/{id}/audits alias handlers (GEMMA_UI_ENDPOINT_GAP §3f) ===== */
+
+    @Test
+    public void submitAudit_alias_persistsRowAsKindAuditRegardlessOfBodyKind() {
+        AgentProposal saved = new AgentProposal();
+        saved.setId( 77L );
+        saved.setKind( AgentCurationKind.AUDIT );
+        saved.setRunId( "run-audit-1" );
+        saved.setInvestigation( ee );
+        when( agentProposalService.attach( eq( ee ), eq( AgentCurationKind.AUDIT ), eq( "run-audit-1" ),
+                any(), any(), any(), any() ) )
+                .thenReturn( new AgentProposalService.AttachedProposal( saved, true ) );
+
+        CurationWebService.CurationProposalRequest req = new CurationWebService.CurationProposalRequest();
+        req.runId = "run-audit-1";
+        // Body kind explicitly set to "proposal" to prove the path wins — the alias must force AUDIT.
+        req.kind = "proposal";
+        Response resp = webService.submitAudit( datasetArg, req );
+        assertThat( resp.getStatus() ).isEqualTo( 201 );
+        CurationWebService.CurationProposalResponse body =
+                ( CurationWebService.CurationProposalResponse ) resp.getEntity();
+        assertThat( body.kind ).isEqualTo( "audit" );
+    }
+
+    @Test
+    public void submitAudit_alias_blankRunIdThrows400() {
+        CurationWebService.CurationProposalRequest req = new CurationWebService.CurationProposalRequest();
+        assertThatThrownBy( () -> webService.submitAudit( datasetArg, req ) )
+                .isInstanceOf( BadRequestException.class );
+        assertThatThrownBy( () -> webService.submitAudit( datasetArg, null ) )
+                .isInstanceOf( BadRequestException.class );
+    }
+
+    @Test
+    public void listAudits_alias_shapeMetaCallsSummariesDaoWithAuditFilter() {
+        when( agentProposalService.findSummariesByInvestigation( ee, AgentCurationKind.AUDIT ) )
+                .thenReturn( Collections.emptyList() );
+        Response resp = webService.listAudits( datasetArg, "meta" );
+        assertThat( resp.getStatus() ).isEqualTo( 200 );
+    }
+
+    @Test
+    public void listAudits_alias_shapeFullByDefaultFiltersByAudit() {
+        AgentProposal pProp = new AgentProposal();
+        pProp.setId( 1L );
+        pProp.setRunId( "run-prop" );
+        pProp.setKind( AgentCurationKind.PROPOSAL );
+        pProp.setInvestigation( ee );
+        AgentProposal pAudit = new AgentProposal();
+        pAudit.setId( 2L );
+        pAudit.setRunId( "run-aud" );
+        pAudit.setKind( AgentCurationKind.AUDIT );
+        pAudit.setInvestigation( ee );
+        when( agentProposalService.findByInvestigation( ee ) )
+                .thenReturn( Arrays.asList( pProp, pAudit ) );
+
+        // Pass "full" explicitly — the @DefaultValue("full") only fires on a real JAX-RS dispatch, not a
+        // direct call. Verifies the shape-full path filters by AUDIT.
+        Response resp = webService.listAudits( datasetArg, "full" );
+        @SuppressWarnings("unchecked")
+        List<CurationWebService.CurationProposalResponse> rows =
+                ( List<CurationWebService.CurationProposalResponse> ) resp.getEntity();
+        assertThat( rows ).hasSize( 1 );
+        assertThat( rows.get( 0 ).kind ).isEqualTo( "audit" );
     }
 }
