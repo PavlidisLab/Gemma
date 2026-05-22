@@ -33,6 +33,7 @@ import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.ChromosomeLocation;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
@@ -722,12 +723,50 @@ public class GeneWriteServiceImpl implements GeneWriteService {
             if ( ct != null ) {
                 chromosome.setTaxon( this.persistTaxon( ct ) );
             }
+            // Chromosome.sequence is also a NOT-NULL-free many-to-one without cascade-persist;
+            // NcbiGeneConverter.getChromosomeDetails attaches a fresh transient BioSequence here
+            // (with a transient DatabaseEntry that has a transient ExternalDatabase). Without
+            // pre-persisting, the chromosomeDao.create flush throws
+            // TransientObjectException on BioSequence. Mirrors GenomePersister.persistChromosome
+            // miss-branch.
+            if ( chromosome.getSequence() != null ) {
+                chromosome.setSequence( this.persistBioSequence( chromosome.getSequence() ) );
+            }
             resolved = chromosomeDao.create( chromosome );
         } else {
             resolved = existing;
         }
         chromosomeCache.put( key, resolved );
         return resolved;
+    }
+
+    /**
+     * Find-or-create for a {@link BioSequence} by business key. Used by
+     * {@link #persistChromosome} to resolve the transient BioSequence that
+     * {@code NcbiGeneConverter.getChromosomeDetails} attaches to a fresh
+     * chromosome. Mirrors {@code GenomePersister.persistBioSequence} +
+     * {@code persistBioSequenceAssociations} minus the per-call caches (the
+     * gene-loader path hits at most one BioSequence per chromosome, so the
+     * cache benefit is negligible compared with GenomePersister's broader
+     * use of this method via the ArrayDesignSequencePersister path).
+     */
+    private BioSequence persistBioSequence( BioSequence bioSequence ) {
+        if ( bioSequence == null ) return null;
+        if ( bioSequence.getId() != null ) return bioSequence;
+
+        BioSequence existing = bioSequenceDao.find( bioSequence );
+        if ( existing != null ) return existing;
+
+        // Resolve associations on miss. Taxon FK is NOT NULL; ExternalDatabase on the
+        // sequenceDatabaseEntry has no cascade-persist.
+        if ( bioSequence.getTaxon() != null ) {
+            bioSequence.setTaxon( this.persistTaxon( bioSequence.getTaxon() ) );
+        }
+        DatabaseEntry sde = bioSequence.getSequenceDatabaseEntry();
+        if ( sde != null && sde.getExternalDatabase() != null && sde.getExternalDatabase().getId() == null ) {
+            sde.setExternalDatabase( this.persistExternalDatabase( sde.getExternalDatabase(), new HashMap<String, ExternalDatabase>() ) );
+        }
+        return bioSequenceDao.create( bioSequence );
     }
 
     /**
