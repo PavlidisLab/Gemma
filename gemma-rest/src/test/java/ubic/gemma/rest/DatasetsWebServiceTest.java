@@ -36,6 +36,8 @@ import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
+import ubic.gemma.model.common.auditAndSecurity.AuditAction;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.search.SearchResult;
@@ -306,6 +308,27 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
+    @Autowired
+    private AuditEventService auditEventService;
+
+    @Autowired
+    private AuditTrailService auditTrailService;
+
+    @Autowired
+    private SecurityService securityService;
+
+    @Autowired
+    private ExpressionExperimentBatchInformationService expressionExperimentBatchInformationService;
+
+    @Autowired
+    private GeeqService geeqService;
+
+    @Autowired
+    private TaskRunningService taskRunningService;
+
+    @Autowired
+    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
+
     private ExpressionExperiment ee;
 
     @Before
@@ -322,7 +345,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
 
     @After
     public void resetMocks() {
-        reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService, taxonArgService, geneArgService, searchService );
+        reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService, taxonArgService, geneArgService, searchService, auditEventService, auditTrailService, securityService, geeqService, taskRunningService, differentialExpressionAnalysisService );
     }
 
     @Test
@@ -959,6 +982,972 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         assertThat( target( "/datasets/999/designPreflight" ).request().post( javax.ws.rs.client.Entity.json( new ExperimentalDesignValueObject() ) ) )
                 .hasStatus( Response.Status.NOT_FOUND );
         verify( expressionExperimentService, never() ).previewDesignChange( any(), any() );
+    }
+
+    @Test
+    public void testGetDatasetAuditEvents() {
+        Date when = new Date( 1_700_000_000_000L );
+        AuditEvent created = AuditEvent.Factory.newInstance( when, AuditAction.CREATE, "created", "detail-c", null, null );
+        AuditEvent updated = AuditEvent.Factory.newInstance( new Date( when.getTime() + 1000L ), AuditAction.UPDATE, "updated", "detail-u", null, null );
+        when( auditEventService.getEvents( ee ) ).thenReturn( Arrays.asList( created, updated ) );
+
+        assertThat( target( "/datasets/1/auditEvents" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 2 )
+                .satisfiesExactly(
+                        a -> assertThat( a )
+                                .containsEntry( "action", "C" )
+                                .containsEntry( "note", "created" )
+                                .containsEntry( "detail", "detail-c" ),
+                        a -> assertThat( a )
+                                .containsEntry( "action", "U" )
+                                .containsEntry( "note", "updated" )
+                                .containsEntry( "detail", "detail-u" ) );
+
+        verify( expressionExperimentService ).load( 1L );
+        verify( auditEventService ).getEvents( ee );
+    }
+
+    @Test
+    public void testGetDatasetAuditEventsWhenEmpty() {
+        when( auditEventService.getEvents( ee ) ).thenReturn( Collections.emptyList() );
+
+        assertThat( target( "/datasets/1/auditEvents" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .isEmpty();
+
+        verify( auditEventService ).getEvents( ee );
+    }
+
+    @Test
+    public void testGetDatasetAuditEventsWithUnknownDatasetIs404() {
+        assertThat( target( "/datasets/999/auditEvents" ).request().get() )
+                .hasStatus( Response.Status.NOT_FOUND );
+        verify( auditEventService, never() ).getEvents( any() );
+    }
+
+    @Test
+    @WithMockUser
+    public void testGetDatasetCurationDetails() {
+        ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails cd =
+                new ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails();
+        cd.setId( 7L );
+        cd.setTroubled( true );
+        cd.setNeedsAttention( false );
+        cd.setCurationNote( "look here" );
+        ee.setCurationDetails( cd );
+
+        assertThat( target( "/datasets/1/curationDetails" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.troubled", true )
+                .hasFieldOrPropertyWithValue( "data.needsAttention", false );
+
+        verify( expressionExperimentService ).load( 1L );
+        verifyNoInteractions( auditTrailService );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testGetDatasetCurationDetailsExposesCurationNoteForAdmin() {
+        ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails cd =
+                new ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails();
+        cd.setCurationNote( "admin only" );
+        ee.setCurationDetails( cd );
+
+        assertThat( target( "/datasets/1/curationDetails" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.curationNote", "admin only" );
+    }
+
+    @Test
+    @WithMockUser
+    public void testGetDatasetCurationDetailsWithUnknownDatasetIs404() {
+        assertThat( target( "/datasets/999/curationDetails" ).request().get() )
+                .hasStatus( Response.Status.NOT_FOUND );
+        verifyNoInteractions( auditTrailService );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testUpdateDatasetCurationDetailsSetsTroubled() {
+        ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails cd =
+                new ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails();
+        cd.setTroubled( false );
+        ee.setCurationDetails( cd );
+
+        DatasetsWebService.CurationDetailsUpdateRequest body = new DatasetsWebService.CurationDetailsUpdateRequest();
+        body.setTroubled( true );
+        body.setNote( "data quality issue" );
+
+        assertThat( target( "/datasets/1/curationDetails" ).request().put( javax.ws.rs.client.Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+
+        verify( auditTrailService ).addUpdateEvent( ee,
+                ubic.gemma.model.common.auditAndSecurity.eventType.TroubledStatusFlagEvent.class,
+                "data quality issue" );
+        verifyNoMoreInteractions( auditTrailService );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testUpdateDatasetCurationDetailsClearsTroubled() {
+        ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails cd =
+                new ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails();
+        cd.setTroubled( true );
+        ee.setCurationDetails( cd );
+
+        DatasetsWebService.CurationDetailsUpdateRequest body = new DatasetsWebService.CurationDetailsUpdateRequest();
+        body.setTroubled( false );
+
+        assertThat( target( "/datasets/1/curationDetails" ).request().put( javax.ws.rs.client.Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+
+        verify( auditTrailService ).addUpdateEvent( ee,
+                ubic.gemma.model.common.auditAndSecurity.eventType.NotTroubledStatusFlagEvent.class,
+                null );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testUpdateDatasetCurationDetailsSkipsNoOpTroubled() {
+        ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails cd =
+                new ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails();
+        cd.setTroubled( true );
+        ee.setCurationDetails( cd );
+
+        DatasetsWebService.CurationDetailsUpdateRequest body = new DatasetsWebService.CurationDetailsUpdateRequest();
+        body.setTroubled( true );
+
+        assertThat( target( "/datasets/1/curationDetails" ).request().put( javax.ws.rs.client.Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+
+        verify( auditTrailService, never() ).addUpdateEvent( any(), any( Class.class ), any() );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testUpdateDatasetCurationDetailsSetsNeedsAttention() {
+        ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails cd =
+                new ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails();
+        cd.setNeedsAttention( false );
+        ee.setCurationDetails( cd );
+
+        DatasetsWebService.CurationDetailsUpdateRequest body = new DatasetsWebService.CurationDetailsUpdateRequest();
+        body.setNeedsAttention( true );
+        body.setNote( "needs review" );
+
+        assertThat( target( "/datasets/1/curationDetails" ).request().put( javax.ws.rs.client.Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+
+        verify( auditTrailService ).addUpdateEvent( ee,
+                ubic.gemma.model.common.auditAndSecurity.eventType.NeedsAttentionEvent.class,
+                "needs review" );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testUpdateDatasetCurationDetailsClearsNeedsAttention() {
+        ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails cd =
+                new ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails();
+        cd.setNeedsAttention( true );
+        ee.setCurationDetails( cd );
+
+        DatasetsWebService.CurationDetailsUpdateRequest body = new DatasetsWebService.CurationDetailsUpdateRequest();
+        body.setNeedsAttention( false );
+
+        assertThat( target( "/datasets/1/curationDetails" ).request().put( javax.ws.rs.client.Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+
+        verify( auditTrailService ).addUpdateEvent( ee,
+                ubic.gemma.model.common.auditAndSecurity.eventType.DoesNotNeedAttentionEvent.class,
+                null );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testUpdateDatasetCurationDetailsUpdatesCurationNote() {
+        ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails cd =
+                new ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails();
+        ee.setCurationDetails( cd );
+
+        DatasetsWebService.CurationDetailsUpdateRequest body = new DatasetsWebService.CurationDetailsUpdateRequest();
+        body.setCurationNote( "updated note" );
+
+        assertThat( target( "/datasets/1/curationDetails" ).request().put( javax.ws.rs.client.Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+
+        verify( auditTrailService ).addUpdateEvent( ee,
+                ubic.gemma.model.common.auditAndSecurity.eventType.CurationNoteUpdateEvent.class,
+                "updated note" );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testUpdateDatasetCurationDetailsAppliesMultipleChanges() {
+        ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails cd =
+                new ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails();
+        cd.setTroubled( false );
+        cd.setNeedsAttention( false );
+        ee.setCurationDetails( cd );
+
+        DatasetsWebService.CurationDetailsUpdateRequest body = new DatasetsWebService.CurationDetailsUpdateRequest();
+        body.setTroubled( true );
+        body.setNeedsAttention( true );
+        body.setCurationNote( "flagged" );
+        body.setNote( "bad batch" );
+
+        assertThat( target( "/datasets/1/curationDetails" ).request().put( javax.ws.rs.client.Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+
+        verify( auditTrailService ).addUpdateEvent( ee,
+                ubic.gemma.model.common.auditAndSecurity.eventType.TroubledStatusFlagEvent.class, "bad batch" );
+        verify( auditTrailService ).addUpdateEvent( ee,
+                ubic.gemma.model.common.auditAndSecurity.eventType.NeedsAttentionEvent.class, "bad batch" );
+        verify( auditTrailService ).addUpdateEvent( ee,
+                ubic.gemma.model.common.auditAndSecurity.eventType.CurationNoteUpdateEvent.class, "flagged" );
+        verifyNoMoreInteractions( auditTrailService );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testUpdateDatasetCurationDetailsWithEmptyBodyIs400() {
+        // PUT requires a non-null entity at the Jersey client layer; send the JSON literal "null" so the
+        // resource method receives a null body and triggers the 400 path.
+        assertThat( target( "/datasets/1/curationDetails" ).request().put( javax.ws.rs.client.Entity.json( "null" ) ) )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        verifyNoInteractions( auditTrailService );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testUpdateDatasetCurationDetailsWithUnknownDatasetIs404() {
+        DatasetsWebService.CurationDetailsUpdateRequest body = new DatasetsWebService.CurationDetailsUpdateRequest();
+        body.setTroubled( true );
+        assertThat( target( "/datasets/999/curationDetails" ).request().put( javax.ws.rs.client.Entity.json( body ) ) )
+                .hasStatus( Response.Status.NOT_FOUND );
+        verifyNoInteractions( auditTrailService );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testUpdateDatasetPermissionsMakesPublic() {
+        when( securityService.isPublic( ee ) ).thenReturn( true );
+        when( securityService.isShared( ee ) ).thenReturn( false );
+
+        DatasetsWebService.PermissionsUpdateRequest body = new DatasetsWebService.PermissionsUpdateRequest();
+        body.setIsPublic( true );
+
+        assertThat( target( "/datasets/1/permissions" ).request().put( javax.ws.rs.client.Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.isPublic", true )
+                .hasFieldOrPropertyWithValue( "data.isShared", false );
+
+        verify( securityService ).makePublic( ee );
+        verify( securityService, never() ).makePrivate( ee );
+        verify( securityService ).isPublic( ee );
+        verify( securityService ).isShared( ee );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testUpdateDatasetPermissionsMakesPrivate() {
+        when( securityService.isPublic( ee ) ).thenReturn( false );
+        when( securityService.isShared( ee ) ).thenReturn( true );
+
+        DatasetsWebService.PermissionsUpdateRequest body = new DatasetsWebService.PermissionsUpdateRequest();
+        body.setIsPublic( false );
+
+        assertThat( target( "/datasets/1/permissions" ).request().put( javax.ws.rs.client.Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.isPublic", false )
+                .hasFieldOrPropertyWithValue( "data.isShared", true );
+
+        verify( securityService ).makePrivate( ee );
+        verify( securityService, never() ).makePublic( ee );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testUpdateDatasetPermissionsReturnsCurrentStateWhenIsPublicOmitted() {
+        when( securityService.isPublic( ee ) ).thenReturn( false );
+        when( securityService.isShared( ee ) ).thenReturn( false );
+
+        // Body with no fields → both make* calls skipped.
+        DatasetsWebService.PermissionsUpdateRequest body = new DatasetsWebService.PermissionsUpdateRequest();
+
+        assertThat( target( "/datasets/1/permissions" ).request().put( javax.ws.rs.client.Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.isPublic", false )
+                .hasFieldOrPropertyWithValue( "data.isShared", false );
+
+        verify( securityService, never() ).makePublic( any( gemma.gsec.model.Securable.class ) );
+        verify( securityService, never() ).makePrivate( any( gemma.gsec.model.Securable.class ) );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testUpdateDatasetPermissionsWithEmptyBodyIs400() {
+        assertThat( target( "/datasets/1/permissions" ).request().put( javax.ws.rs.client.Entity.json( "null" ) ) )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        verify( securityService, never() ).makePublic( any( gemma.gsec.model.Securable.class ) );
+        verify( securityService, never() ).makePrivate( any( gemma.gsec.model.Securable.class ) );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testUpdateDatasetPermissionsWithUnknownDatasetIs404() {
+        DatasetsWebService.PermissionsUpdateRequest body = new DatasetsWebService.PermissionsUpdateRequest();
+        body.setIsPublic( true );
+        assertThat( target( "/datasets/999/permissions" ).request().put( javax.ws.rs.client.Entity.json( body ) ) )
+                .hasStatus( Response.Status.NOT_FOUND );
+        verifyNoInteractions( securityService );
+    }
+
+    private void mockPipelineFixture( ubic.gemma.model.expression.arrayDesign.TechnologyType techType ) {
+        ee.setId( 1L );
+        ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails cd =
+                new ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails();
+        ee.setCurationDetails( cd );
+        ubic.gemma.model.expression.arrayDesign.ArrayDesign ad =
+                ubic.gemma.model.expression.arrayDesign.ArrayDesign.Factory.newInstance();
+        ad.setTechnologyType( techType );
+        when( expressionExperimentService.getArrayDesignsUsed( ee ) ).thenReturn( Collections.singletonList( ad ) );
+        when( expressionExperimentReportService.generateSummary( 1L ) ).thenReturn( null );
+        when( expressionExperimentBatchInformationService.checkHasBatchInfo( ee ) ).thenReturn( false );
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> findStep( List<?> steps, String key ) {
+        for ( Object s : steps ) {
+            Map<String, Object> m = ( Map<String, Object> ) s;
+            if ( key.equals( m.get( "step" ) ) ) {
+                return m;
+            }
+        }
+        throw new AssertionError( "step " + key + " missing" );
+    }
+
+    @Test
+    @WithMockUser
+    public void testGetDatasetPipelineStatusReturnsAllStepsWithNotRunOrNotApplicable() {
+        mockPipelineFixture( ubic.gemma.model.expression.arrayDesign.TechnologyType.ONECOLOR );
+
+        assertThat( target( "/datasets/1/pipelineStatus" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.experimentId", 1 )
+                .extracting( "data.steps", list( Map.class ) )
+                .isNotEmpty()
+                .satisfies( steps -> {
+                    org.assertj.core.api.Assertions.assertThat( findStep( steps, "preprocess" ).get( "state" ) ).isEqualTo( "notRun" );
+                    org.assertj.core.api.Assertions.assertThat( findStep( steps, "missingValue" ).get( "state" ) ).isEqualTo( "notApplicable" );
+                    org.assertj.core.api.Assertions.assertThat( findStep( steps, "batchInfo" ).get( "state" ) ).isEqualTo( "notRun" );
+                    org.assertj.core.api.Assertions.assertThat( findStep( steps, "pca" ).get( "state" ) ).isEqualTo( "notRun" );
+                    org.assertj.core.api.Assertions.assertThat( findStep( steps, "dea" ).get( "state" ) ).isEqualTo( "notRun" );
+                    org.assertj.core.api.Assertions.assertThat( findStep( steps, "coexpression" ).get( "state" ) ).isEqualTo( "notRun" );
+                } );
+    }
+
+    @Test
+    @WithMockUser
+    public void testGetDatasetPipelineStatusMissingValueApplicableForTwoColor() {
+        mockPipelineFixture( ubic.gemma.model.expression.arrayDesign.TechnologyType.TWOCOLOR );
+
+        assertThat( target( "/datasets/1/pipelineStatus" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data.steps", list( Map.class ) )
+                .satisfies( steps -> {
+                    org.assertj.core.api.Assertions.assertThat( findStep( steps, "missingValue" ).get( "state" ) ).isEqualTo( "notRun" );
+                } );
+    }
+
+    @Test
+    @WithMockUser
+    public void testGetDatasetPipelineStatusPreprocessOk() {
+        mockPipelineFixture( ubic.gemma.model.expression.arrayDesign.TechnologyType.ONECOLOR );
+        AuditEvent event = AuditEvent.Factory.newInstance( new Date( 1_700_000_000_000L ), AuditAction.UPDATE, "ok", null, null,
+                new ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent() );
+        when( auditEventService.getLastEvent( eq( ee ),
+                eq( ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent.class ) ) )
+                .thenReturn( event );
+
+        assertThat( target( "/datasets/1/pipelineStatus" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data.steps", list( Map.class ) )
+                .satisfies( steps -> {
+                    Map<String, Object> pp = findStep( steps, "preprocess" );
+                    org.assertj.core.api.Assertions.assertThat( pp.get( "state" ) ).isEqualTo( "ok" );
+                    org.assertj.core.api.Assertions.assertThat( pp.get( "eventType" ) ).isEqualTo( "ProcessedVectorComputationEvent" );
+                } );
+    }
+
+    @Test
+    @WithMockUser
+    public void testGetDatasetPipelineStatusPcaFailed() {
+        mockPipelineFixture( ubic.gemma.model.expression.arrayDesign.TechnologyType.ONECOLOR );
+        AuditEvent failed = AuditEvent.Factory.newInstance( new Date( 1_700_000_000_000L ), AuditAction.UPDATE, "boom", null, null,
+                new ubic.gemma.model.common.auditAndSecurity.eventType.FailedPCAAnalysisEvent() );
+        when( auditEventService.getLastEvent( eq( ee ),
+                eq( ubic.gemma.model.common.auditAndSecurity.eventType.FailedPCAAnalysisEvent.class ) ) )
+                .thenReturn( failed );
+
+        assertThat( target( "/datasets/1/pipelineStatus" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data.steps", list( Map.class ) )
+                .satisfies( steps -> {
+                    Map<String, Object> pca = findStep( steps, "pca" );
+                    org.assertj.core.api.Assertions.assertThat( pca.get( "state" ) ).isEqualTo( "failed" );
+                    org.assertj.core.api.Assertions.assertThat( pca.get( "eventType" ) ).isEqualTo( "FailedPCAAnalysisEvent" );
+                    org.assertj.core.api.Assertions.assertThat( pca.get( "message" ) ).isEqualTo( "boom" );
+                } );
+    }
+
+    @Test
+    @WithMockUser
+    public void testGetDatasetPipelineStatusPicksLatestEvent() {
+        mockPipelineFixture( ubic.gemma.model.expression.arrayDesign.TechnologyType.ONECOLOR );
+        // Older success, newer failure → newer wins, state="failed".
+        AuditEvent oldSuccess = AuditEvent.Factory.newInstance( new Date( 1_000_000_000_000L ), AuditAction.UPDATE, null, null, null,
+                new ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent() );
+        AuditEvent newFailure = AuditEvent.Factory.newInstance( new Date( 2_000_000_000_000L ), AuditAction.UPDATE, "retry-failed", null, null,
+                new ubic.gemma.model.common.auditAndSecurity.eventType.FailedPCAAnalysisEvent() );
+        when( auditEventService.getLastEvent( eq( ee ),
+                eq( ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent.class ) ) )
+                .thenReturn( oldSuccess );
+        when( auditEventService.getLastEvent( eq( ee ),
+                eq( ubic.gemma.model.common.auditAndSecurity.eventType.FailedPCAAnalysisEvent.class ) ) )
+                .thenReturn( newFailure );
+
+        assertThat( target( "/datasets/1/pipelineStatus" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data.steps", list( Map.class ) )
+                .satisfies( steps -> {
+                    org.assertj.core.api.Assertions.assertThat( findStep( steps, "pca" ).get( "state" ) ).isEqualTo( "failed" );
+                } );
+    }
+
+    @Test
+    @WithMockUser
+    public void testGetDatasetPipelineStatusIncludesConvenienceFields() {
+        mockPipelineFixture( ubic.gemma.model.expression.arrayDesign.TechnologyType.ONECOLOR );
+        ee.getCurationDetails().setNeedsAttention( true );
+        when( expressionExperimentBatchInformationService.checkHasBatchInfo( ee ) ).thenReturn( true );
+        when( securityService.isPublic( ee ) ).thenReturn( true );
+
+        assertThat( target( "/datasets/1/pipelineStatus" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.hasBatchInformation", true )
+                .hasFieldOrPropertyWithValue( "data.needsAttention", true )
+                .hasFieldOrPropertyWithValue( "data.isPublic", true );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testGetDatasetPipelineStatusAdminSeesCurationNote() {
+        mockPipelineFixture( ubic.gemma.model.expression.arrayDesign.TechnologyType.ONECOLOR );
+        ee.getCurationDetails().setCurationNote( "admin only" );
+
+        assertThat( target( "/datasets/1/pipelineStatus" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.curationNote", "admin only" );
+    }
+
+    @Test
+    @WithMockUser
+    public void testGetDatasetPipelineStatusNonAdminDoesNotSeeCurationNote() {
+        mockPipelineFixture( ubic.gemma.model.expression.arrayDesign.TechnologyType.ONECOLOR );
+        ee.getCurationDetails().setCurationNote( "hidden" );
+
+        assertThat( target( "/datasets/1/pipelineStatus" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.curationNote", null );
+    }
+
+    @Test
+    @WithMockUser
+    public void testGetDatasetPipelineStatusWithUnknownDatasetIs404() {
+        assertThat( target( "/datasets/999/pipelineStatus" ).request().get() )
+                .hasStatus( Response.Status.NOT_FOUND );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testGetDatasetGeeq() {
+        ee.setId( 1L );
+        ee.setShortName( "GSE1" );
+        ubic.gemma.model.expression.experiment.Geeq geeq = new ubic.gemma.model.expression.experiment.Geeq();
+        ee.setGeeq( geeq );
+        when( expressionExperimentService.thawLiter( ee ) ).thenReturn( ee );
+        Date computedAt = new Date( 1_700_000_000_000L );
+        AuditEvent geeqEvent = AuditEvent.Factory.newInstance( computedAt, AuditAction.UPDATE, null, null, null,
+                new ubic.gemma.model.common.auditAndSecurity.eventType.GeeqEvent() );
+        when( auditEventService.getLastEvent( eq( ee ),
+                eq( ubic.gemma.model.common.auditAndSecurity.eventType.GeeqEvent.class ) ) )
+                .thenReturn( geeqEvent );
+
+        assertThat( target( "/datasets/1/geeq" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .entity()
+                .hasFieldOrProperty( "data" )
+                .hasFieldOrProperty( "data.lastComputed" );
+
+        verify( expressionExperimentService ).thawLiter( ee );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testGetDatasetGeeqWithoutEvent() {
+        ee.setId( 1L );
+        ee.setGeeq( new ubic.gemma.model.expression.experiment.Geeq() );
+        when( expressionExperimentService.thawLiter( ee ) ).thenReturn( ee );
+
+        assertThat( target( "/datasets/1/geeq" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.lastComputed", null );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testGetDatasetGeeqWhenNotComputedIs404() {
+        ee.setShortName( "GSE1" );
+        ee.setGeeq( null );
+        when( expressionExperimentService.thawLiter( ee ) ).thenReturn( ee );
+
+        assertThat( target( "/datasets/1/geeq" ).request().get() )
+                .hasStatus( Response.Status.NOT_FOUND );
+
+        verify( auditEventService, never() ).getLastEvent( eq( ee ), any( Class.class ) );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testGetDatasetGeeqWithUnknownDatasetIs404() {
+        assertThat( target( "/datasets/999/geeq" ).request().get() )
+                .hasStatus( Response.Status.NOT_FOUND );
+        verifyNoInteractions( geeqService );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testRecomputeDatasetGeeqDefaultModeIsAll() {
+        ee.setId( 1L );
+        ubic.gemma.model.expression.experiment.Geeq updated = new ubic.gemma.model.expression.experiment.Geeq();
+        when( geeqService.calculateScore( eq( ee ), any( ubic.gemma.persistence.service.expression.experiment.GeeqService.ScoreMode.class ) ) )
+                .thenReturn( updated );
+
+        assertThat( target( "/datasets/1/geeq" ).request().put( javax.ws.rs.client.Entity.json( "" ) ) )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
+
+        verify( geeqService ).calculateScore( ee, ubic.gemma.persistence.service.expression.experiment.GeeqService.ScoreMode.all );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testRecomputeDatasetGeeqWithSpecificMode() {
+        ee.setId( 1L );
+        when( geeqService.calculateScore( eq( ee ), any( ubic.gemma.persistence.service.expression.experiment.GeeqService.ScoreMode.class ) ) )
+                .thenReturn( new ubic.gemma.model.expression.experiment.Geeq() );
+
+        assertThat( target( "/datasets/1/geeq" ).queryParam( "mode", "batch" ).request()
+                .put( javax.ws.rs.client.Entity.json( "" ) ) )
+                .hasStatus( Response.Status.OK );
+
+        verify( geeqService ).calculateScore( ee, ubic.gemma.persistence.service.expression.experiment.GeeqService.ScoreMode.batch );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testRecomputeDatasetGeeqIncludesLastComputed() {
+        ee.setId( 1L );
+        when( geeqService.calculateScore( eq( ee ), any( ubic.gemma.persistence.service.expression.experiment.GeeqService.ScoreMode.class ) ) )
+                .thenReturn( new ubic.gemma.model.expression.experiment.Geeq() );
+        Date computedAt = new Date( 1_700_000_000_000L );
+        AuditEvent geeqEvent = AuditEvent.Factory.newInstance( computedAt, AuditAction.UPDATE, null, null, null,
+                new ubic.gemma.model.common.auditAndSecurity.eventType.GeeqEvent() );
+        when( auditEventService.getLastEvent( eq( ee ),
+                eq( ubic.gemma.model.common.auditAndSecurity.eventType.GeeqEvent.class ) ) )
+                .thenReturn( geeqEvent );
+
+        assertThat( target( "/datasets/1/geeq" ).request().put( javax.ws.rs.client.Entity.json( "" ) ) )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrProperty( "data.lastComputed" );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testRecomputeDatasetGeeqWithUnknownDatasetIs404() {
+        assertThat( target( "/datasets/999/geeq" ).request().put( javax.ws.rs.client.Entity.json( "" ) ) )
+                .hasStatus( Response.Status.NOT_FOUND );
+        verifyNoInteractions( geeqService );
+    }
+
+    private void mockTaskSubmission( String taskId ) {
+        when( taskRunningService.submitTaskCommand( any() ) ).thenReturn( taskId );
+        ubic.gemma.core.job.SubmittedTask task = mock( ubic.gemma.core.job.SubmittedTask.class );
+        when( task.getTaskId() ).thenReturn( taskId );
+        when( task.getStatus() ).thenReturn( ubic.gemma.core.job.SubmittedTask.Status.QUEUED );
+        when( taskRunningService.getSubmittedTask( taskId ) ).thenReturn( task );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testRunDatasetPreprocess() {
+        ee.setId( 1L );
+        mockTaskSubmission( "task-1" );
+
+        assertThat( target( "/datasets/1/tasks/preprocess" ).request()
+                .post( javax.ws.rs.client.Entity.json( "" ) ) )
+                .hasStatus( Response.Status.ACCEPTED )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .hasHeaderSatisfying( "Location", values ->
+                        assertThat( values ).singleElement().asString().endsWith( "/tasks/task-1" ) )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.taskId", "task-1" );
+
+        ArgumentCaptor<ubic.gemma.core.tasks.analysis.expression.PreprocessTaskCommand> cmd =
+                ArgumentCaptor.forClass( ubic.gemma.core.tasks.analysis.expression.PreprocessTaskCommand.class );
+        verify( taskRunningService ).submitTaskCommand( cmd.capture() );
+        assertThat( cmd.getValue().diagnosticsOnly() ).isFalse();
+        verify( expressionExperimentReportService, atLeastOnce() ).evictFromCache( 1L );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testRunDatasetPreprocessWithUnknownDatasetIs404() {
+        assertThat( target( "/datasets/999/tasks/preprocess" ).request()
+                .post( javax.ws.rs.client.Entity.json( "" ) ) )
+                .hasStatus( Response.Status.NOT_FOUND );
+        verifyNoInteractions( taskRunningService );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testRunDatasetDiagnosticsSetsFlag() {
+        ee.setId( 1L );
+        mockTaskSubmission( "task-diag" );
+
+        assertThat( target( "/datasets/1/tasks/diagnostics" ).request()
+                .post( javax.ws.rs.client.Entity.json( "" ) ) )
+                .hasStatus( Response.Status.ACCEPTED );
+
+        ArgumentCaptor<ubic.gemma.core.tasks.analysis.expression.PreprocessTaskCommand> cmd =
+                ArgumentCaptor.forClass( ubic.gemma.core.tasks.analysis.expression.PreprocessTaskCommand.class );
+        verify( taskRunningService ).submitTaskCommand( cmd.capture() );
+        assertThat( cmd.getValue().diagnosticsOnly() ).isTrue();
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testRunDatasetBatchInformationFetch() {
+        ee.setId( 1L );
+        mockTaskSubmission( "task-batch" );
+
+        assertThat( target( "/datasets/1/tasks/batchInfo" ).request()
+                .post( javax.ws.rs.client.Entity.json( "" ) ) )
+                .hasStatus( Response.Status.ACCEPTED )
+                .hasHeaderSatisfying( "Location", values ->
+                        assertThat( values ).singleElement().asString().endsWith( "/tasks/task-batch" ) );
+
+        verify( taskRunningService ).submitTaskCommand( any( ubic.gemma.core.tasks.analysis.expression.BatchInfoFetchTaskCommand.class ) );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testRunDatasetDifferentialAnalysisWithoutBodyUsesAllNonBatchFactors() {
+        ee.setId( 1L );
+        ExperimentalDesign design = new ExperimentalDesign();
+        ExperimentalFactor regular = ExperimentalFactor.Factory.newInstance();
+        regular.setId( 10L );
+        regular.setType( ubic.gemma.model.expression.experiment.FactorType.CATEGORICAL );
+        regular.setCategory( ubic.gemma.model.common.description.Characteristic.Factory.newInstance() );
+        design.getExperimentalFactors().add( regular );
+        ee.setExperimentalDesign( design );
+        when( expressionExperimentService.thawLite( ee ) ).thenReturn( ee );
+        when( expressionExperimentService.isRNASeq( ee ) ).thenReturn( false );
+        mockTaskSubmission( "task-dea" );
+
+        assertThat( target( "/datasets/1/tasks/differential" ).request()
+                .post( javax.ws.rs.client.Entity.json( "{}" ) ) )
+                .hasStatus( Response.Status.ACCEPTED );
+
+        ArgumentCaptor<ubic.gemma.core.tasks.analysis.diffex.DifferentialExpressionAnalysisTaskCommand> cmd =
+                ArgumentCaptor.forClass( ubic.gemma.core.tasks.analysis.diffex.DifferentialExpressionAnalysisTaskCommand.class );
+        verify( taskRunningService ).submitTaskCommand( cmd.capture() );
+        assertThat( cmd.getValue().getFactors() ).containsExactly( regular );
+        assertThat( cmd.getValue().isIncludeInteractions() ).isTrue();
+        assertThat( cmd.getValue().getSubsetFactor() ).isNull();
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testRunDatasetDifferentialAnalysisWithoutDesignIs400() {
+        ee.setId( 1L );
+        ee.setShortName( "GSE1" );
+        ee.setExperimentalDesign( null );
+        when( expressionExperimentService.thawLite( ee ) ).thenReturn( ee );
+
+        assertThat( target( "/datasets/1/tasks/differential" ).request()
+                .post( javax.ws.rs.client.Entity.json( "{}" ) ) )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        verifyNoInteractions( taskRunningService );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testRunDatasetDifferentialAnalysisRejectsUnknownFactorId() {
+        ee.setId( 1L );
+        ee.setShortName( "GSE1" );
+        ExperimentalDesign design = new ExperimentalDesign();
+        ExperimentalFactor regular = ExperimentalFactor.Factory.newInstance();
+        regular.setId( 10L );
+        design.getExperimentalFactors().add( regular );
+        ee.setExperimentalDesign( design );
+        when( expressionExperimentService.thawLite( ee ) ).thenReturn( ee );
+
+        assertThat( target( "/datasets/1/tasks/differential" ).request()
+                .post( javax.ws.rs.client.Entity.json( "{\"factorIds\":[999]}" ) ) )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        verifyNoInteractions( taskRunningService );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testRunDatasetDifferentialAnalysisRejectsSubsetFactorInFactorIds() {
+        ee.setId( 1L );
+        ee.setShortName( "GSE1" );
+        ExperimentalDesign design = new ExperimentalDesign();
+        ExperimentalFactor f = ExperimentalFactor.Factory.newInstance();
+        f.setId( 10L );
+        design.getExperimentalFactors().add( f );
+        ee.setExperimentalDesign( design );
+        when( expressionExperimentService.thawLite( ee ) ).thenReturn( ee );
+
+        assertThat( target( "/datasets/1/tasks/differential" ).request()
+                .post( javax.ws.rs.client.Entity.json( "{\"factorIds\":[10],\"subsetFactorId\":10}" ) ) )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        verifyNoInteractions( taskRunningService );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testRedoDatasetDifferentialAnalysis() {
+        ee.setId( 1L );
+        mockTaskSubmission( "task-redo" );
+        ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis dea =
+                ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis.Factory.newInstance();
+        dea.setId( 500L );
+        when( differentialExpressionAnalysisService.findByExperimentAndAnalysisId( ee, true, 500L ) ).thenReturn( dea );
+
+        assertThat( target( "/datasets/1/tasks/redo/500" ).request()
+                .post( javax.ws.rs.client.Entity.json( "" ) ) )
+                .hasStatus( Response.Status.ACCEPTED )
+                .hasHeaderSatisfying( "Location", values ->
+                        assertThat( values ).singleElement().asString().endsWith( "/tasks/task-redo" ) );
+
+        verify( taskRunningService ).submitTaskCommand( any( ubic.gemma.core.tasks.analysis.diffex.DifferentialExpressionAnalysisTaskCommand.class ) );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testRedoDatasetDifferentialAnalysisWithUnknownAnalysisIs404() {
+        ee.setShortName( "GSE1" );
+        when( differentialExpressionAnalysisService.findByExperimentAndAnalysisId( ee, true, 999L ) ).thenReturn( null );
+
+        assertThat( target( "/datasets/1/tasks/redo/999" ).request()
+                .post( javax.ws.rs.client.Entity.json( "" ) ) )
+                .hasStatus( Response.Status.NOT_FOUND );
+        verifyNoInteractions( taskRunningService );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testRemoveDatasetDifferentialAnalysis() {
+        ee.setId( 1L );
+        mockTaskSubmission( "task-remove" );
+        ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis dea =
+                ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis.Factory.newInstance();
+        dea.setId( 500L );
+        when( differentialExpressionAnalysisService.findByExperimentAndAnalysisId( ee, true, 500L ) ).thenReturn( dea );
+
+        assertThat( target( "/datasets/1/tasks/differential/500" ).request().delete() )
+                .hasStatus( Response.Status.ACCEPTED )
+                .hasHeaderSatisfying( "Location", values ->
+                        assertThat( values ).singleElement().asString().endsWith( "/tasks/task-remove" ) );
+
+        verify( taskRunningService ).submitTaskCommand( any( ubic.gemma.core.tasks.analysis.diffex.DifferentialExpressionAnalysisRemoveTaskCommand.class ) );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testRemoveDatasetDifferentialAnalysisWithUnknownAnalysisIs404() {
+        ee.setShortName( "GSE1" );
+        when( differentialExpressionAnalysisService.findByExperimentAndAnalysisId( ee, true, 999L ) ).thenReturn( null );
+
+        assertThat( target( "/datasets/1/tasks/differential/999" ).request().delete() )
+                .hasStatus( Response.Status.NOT_FOUND );
+        verifyNoInteractions( taskRunningService );
+    }
+
+    @Test
+    public void testGetDatasetDesignJson() {
+        ExperimentalDesignValueObject vo = new ExperimentalDesignValueObject();
+        when( expressionExperimentService.getExperimentalDesignValueObject( ee ) ).thenReturn( vo );
+
+        assertThat( target( "/datasets/1/design" ).request( MediaType.APPLICATION_JSON ).get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .entity()
+                .hasFieldOrProperty( "data" );
+
+        verify( expressionExperimentService ).getExperimentalDesignValueObject( ee );
+    }
+
+    @Test
+    public void testGetDatasetDesignDefaultIsJson() {
+        ExperimentalDesignValueObject vo = new ExperimentalDesignValueObject();
+        when( expressionExperimentService.getExperimentalDesignValueObject( ee ) ).thenReturn( vo );
+
+        // No Accept header → server returns the highest-q producer; the @Produces TSV variant is qs=0.9,
+        // so JSON wins.
+        assertThat( target( "/datasets/1/design" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
+    }
+
+    @Test
+    public void testGetDatasetDesignJsonReturnsNotFoundWhenDesignMissing() {
+        ee.setShortName( "GSE1" );
+        when( expressionExperimentService.getExperimentalDesignValueObject( ee ) ).thenReturn( null );
+
+        assertThat( target( "/datasets/1/design" ).request( MediaType.APPLICATION_JSON ).get() )
+                .hasStatus( Response.Status.NOT_FOUND );
+    }
+
+    @Test
+    public void testGetDatasetDesignJsonWithUnknownDatasetIs404() {
+        assertThat( target( "/datasets/999/design" ).request( MediaType.APPLICATION_JSON ).get() )
+                .hasStatus( Response.Status.NOT_FOUND );
+        verify( expressionExperimentService, never() ).getExperimentalDesignValueObject( any() );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testReplaceDatasetDesignHappyPath() {
+        DesignPreflightReport clean = new DesignPreflightReport();
+        when( expressionExperimentService.previewDesignChange( eq( ee ), any( ExperimentalDesignValueObject.class ) ) )
+                .thenReturn( clean );
+        ExperimentalDesignValueObject updated = new ExperimentalDesignValueObject();
+        when( expressionExperimentService.applyDesignChange( eq( ee ), any( ExperimentalDesignValueObject.class ) ) )
+                .thenReturn( updated );
+
+        assertThat( target( "/datasets/1/design" ).request()
+                .put( javax.ws.rs.client.Entity.json( new ExperimentalDesignValueObject() ) ) )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .entity()
+                .hasFieldOrProperty( "data" );
+
+        verify( expressionExperimentService ).applyDesignChange( eq( ee ), any( ExperimentalDesignValueObject.class ) );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testReplaceDatasetDesignReturnsBadRequestOnBlockers() {
+        DesignPreflightReport report = new DesignPreflightReport();
+        DesignPreflightReport.Blocker b = new DesignPreflightReport.Blocker( "UNKNOWN_FACTOR_VALUE_ID", "bad payload" );
+        report.getBlockers().add( b );
+        when( expressionExperimentService.previewDesignChange( eq( ee ), any( ExperimentalDesignValueObject.class ) ) )
+                .thenReturn( report );
+
+        assertThat( target( "/datasets/1/design" ).request()
+                .put( javax.ws.rs.client.Entity.json( new ExperimentalDesignValueObject() ) ) )
+                .hasStatus( Response.Status.BAD_REQUEST )
+                .entity()
+                .extracting( "data.blockers", list( Map.class ) )
+                .hasSize( 1 );
+
+        verify( expressionExperimentService, never() ).applyDesignChange( any(), any() );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testReplaceDatasetDesignReturns409WhenForceRequired() {
+        DesignPreflightReport report = new DesignPreflightReport();
+        report.getDifferentialExpressionAnalysesToDelete().add(
+                new DesignPreflightReport.AnalysisRef( 500L, "vs control", null ) );
+        when( expressionExperimentService.previewDesignChange( eq( ee ), any( ExperimentalDesignValueObject.class ) ) )
+                .thenReturn( report );
+
+        assertThat( target( "/datasets/1/design" ).request()
+                .put( javax.ws.rs.client.Entity.json( new ExperimentalDesignValueObject() ) ) )
+                .hasStatus( Response.Status.CONFLICT )
+                .entity()
+                .extracting( "data.differentialExpressionAnalysesToDelete", list( Map.class ) )
+                .hasSize( 1 );
+
+        verify( expressionExperimentService, never() ).applyDesignChange( any(), any() );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testReplaceDatasetDesignWithForceAppliesEvenWithCascade() {
+        DesignPreflightReport report = new DesignPreflightReport();
+        report.getDifferentialExpressionAnalysesToDelete().add(
+                new DesignPreflightReport.AnalysisRef( 500L, "vs control", null ) );
+        when( expressionExperimentService.previewDesignChange( eq( ee ), any( ExperimentalDesignValueObject.class ) ) )
+                .thenReturn( report );
+        when( expressionExperimentService.applyDesignChange( eq( ee ), any( ExperimentalDesignValueObject.class ) ) )
+                .thenReturn( new ExperimentalDesignValueObject() );
+
+        assertThat( target( "/datasets/1/design" ).queryParam( "force", "true" ).request()
+                .put( javax.ws.rs.client.Entity.json( new ExperimentalDesignValueObject() ) ) )
+                .hasStatus( Response.Status.OK );
+
+        verify( expressionExperimentService ).applyDesignChange( eq( ee ), any( ExperimentalDesignValueObject.class ) );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testReplaceDatasetDesignWithEmptyBodyIs400() {
+        assertThat( target( "/datasets/1/design" ).request()
+                .put( javax.ws.rs.client.Entity.json( "null" ) ) )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        verify( expressionExperimentService, never() ).previewDesignChange( any(), any() );
+        verify( expressionExperimentService, never() ).applyDesignChange( any(), any() );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testReplaceDatasetDesignWithUnknownDatasetIs404() {
+        assertThat( target( "/datasets/999/design" ).request()
+                .put( javax.ws.rs.client.Entity.json( new ExperimentalDesignValueObject() ) ) )
+                .hasStatus( Response.Status.NOT_FOUND );
+        verify( expressionExperimentService, never() ).applyDesignChange( any(), any() );
     }
 
     @Test
