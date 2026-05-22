@@ -25,17 +25,23 @@ import io.swagger.v3.oas.annotations.enums.Explode;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.ontology.basecode.model.OntologyTerm;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.*;
+import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.description.AnnotationValueObject;
+import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.CharacteristicUtils;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.search.SearchResult;
 import ubic.gemma.model.common.search.SearchSettings;
@@ -56,6 +62,7 @@ import ubic.gemma.rest.util.args.*;
 import org.springframework.lang.Nullable;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import java.net.URI;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -646,5 +653,394 @@ public class AnnotationsWebService {
             }
         }
         return null;
+    }
+
+    // ---------------------------------------------------------------------
+    // Dataset annotation write endpoints (HANDOFF_DATASETS_ANNOTATIONS_WRITE.md)
+    //
+    // POST   /annotations/datasets/{dataset}/annotations
+    // DELETE /annotations/datasets/{dataset}/annotations/{annotationId}
+    // PUT    /annotations/datasets/{dataset}/annotations
+    //
+    // Auth model: GROUP_CURATOR or GROUP_ADMIN, matching the design-write
+    // decision in STATUS_PUT_DATASETS_DESIGN.md. Fine-grained
+    // `curation:annotation:write` authority is a follow-up.
+    //
+    // The PUT here is distinct from DatasetsWebService#updateDatasetAnnotations:
+    // both target the same EE characteristic set, but this PUT emits per-row
+    // TagAddedEvent / TagRemovedEvent audit rows (one per change), where the
+    // DatasetsWebService PUT emits a single ManualAnnotationEvent. Bulk callers
+    // that want the per-row trail should use this endpoint.
+    // ---------------------------------------------------------------------
+
+    /**
+     * Request body for {@link #addDatasetAnnotation}. Fields mirror
+     * {@link HANDOFF_DATASETS_ANNOTATIONS_WRITE.md} §"Required endpoints":
+     * a single tag carried as a (category, value) pair with optional ontology URIs
+     * and evidence code.
+     */
+    public static class AnnotationDto {
+        @Nullable
+        private String category;
+        @Nullable
+        private String categoryUri;
+        @Nullable
+        private String value;
+        @Nullable
+        private String valueUri;
+        @Nullable
+        private String evidenceCode;
+        @Nullable
+        private String predicateUri;
+
+        @Nullable
+        public String getCategory() {
+            return category;
+        }
+
+        public void setCategory( @Nullable String category ) {
+            this.category = category;
+        }
+
+        @Nullable
+        public String getCategoryUri() {
+            return categoryUri;
+        }
+
+        public void setCategoryUri( @Nullable String categoryUri ) {
+            this.categoryUri = categoryUri;
+        }
+
+        @Nullable
+        public String getValue() {
+            return value;
+        }
+
+        public void setValue( @Nullable String value ) {
+            this.value = value;
+        }
+
+        @Nullable
+        public String getValueUri() {
+            return valueUri;
+        }
+
+        public void setValueUri( @Nullable String valueUri ) {
+            this.valueUri = valueUri;
+        }
+
+        @Nullable
+        public String getEvidenceCode() {
+            return evidenceCode;
+        }
+
+        public void setEvidenceCode( @Nullable String evidenceCode ) {
+            this.evidenceCode = evidenceCode;
+        }
+
+        @Nullable
+        public String getPredicateUri() {
+            return predicateUri;
+        }
+
+        public void setPredicateUri( @Nullable String predicateUri ) {
+            this.predicateUri = predicateUri;
+        }
+    }
+
+    /**
+     * Request body for {@link #replaceDatasetAnnotations}: the full desired tag set plus an optional
+     * {@code agentProposalId} to attach to emitted audit events (linkage is parked until the
+     * {@code AgentProposal} entity ships — see {@code STATUS_PUT_DATASETS_DESIGN.md}).
+     */
+    public static class AnnotationsReplaceRequest {
+        @Nullable
+        private List<AnnotationDto> annotations;
+        @Nullable
+        private Long agentProposalId;
+
+        @Nullable
+        public List<AnnotationDto> getAnnotations() {
+            return annotations;
+        }
+
+        public void setAnnotations( @Nullable List<AnnotationDto> annotations ) {
+            this.annotations = annotations;
+        }
+
+        @Nullable
+        public Long getAgentProposalId() {
+            return agentProposalId;
+        }
+
+        public void setAgentProposalId( @Nullable Long agentProposalId ) {
+            this.agentProposalId = agentProposalId;
+        }
+    }
+
+    /**
+     * Diff-and-apply summary returned by the bulk PUT.
+     */
+    @Value
+    public static class AnnotationReplaceReport {
+        Long eeId;
+        int before;
+        int after;
+        List<AnnotationValueObject> added;
+        List<AnnotationValueObject> removed;
+        int unchanged;
+        /**
+         * Per-row audit-event ids; empty by default — populating these requires capturing the
+         * id of the {@code AuditEvent} written by the {@code @Audited} aspect, which the aspect
+         * does not surface back through the call. Follow-up work; see {@code STATUS_DATASETS_ANNOTATIONS_WRITE.md}.
+         */
+        List<Long> auditEventIds;
+        /**
+         * URIs in the desired set that didn't resolve against an ontology. Currently always empty
+         * — the server trusts the client's URIs (per the recommendation in
+         * {@code HANDOFF_DATASETS_ANNOTATIONS_WRITE.md} §"Failure modes — Unknown URIs"). Wired
+         * into the response shape now so the contract is stable; populated when boundary
+         * resolution lands.
+         */
+        List<String> unresolvedUris;
+    }
+
+    @POST
+    @Path("/datasets/{dataset}/annotations")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Add a single annotation tag to a dataset",
+            description = "Adds one experiment-level annotation (tag) to the dataset. Emits a "
+                    + "TagAddedEvent on the dataset's audit trail. Duplicate tags (same category "
+                    + "URI + value URI) are rejected with 409 Conflict. Requires GROUP_CURATOR or "
+                    + "GROUP_ADMIN.",
+            security = { @SecurityRequirement(name = "basicAuth"), @SecurityRequirement(name = "cookieAuth") },
+            responses = {
+                    @ApiResponse(responseCode = "201", description = "Annotation created.", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "400", description = "The request body is missing or malformed.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "403", description = "The caller lacks curator privileges.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "409", description = "An annotation with the same (category, value) already exists.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public Response addDatasetAnnotation(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Nullable AnnotationDto body,
+            @Parameter(description = "Optional id of the AgentProposal this tag is being applied from; "
+                    + "linkage is parked until the AgentProposal entity ships.")
+            @QueryParam("agentProposalId") @Nullable Long agentProposalId
+    ) {
+        if ( body == null ) {
+            throw new BadRequestException( "A request body is required." );
+        }
+        Characteristic vc = annotationDtoToCharacteristic( body );
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        Characteristic persisted;
+        try {
+            persisted = expressionExperimentService.addAnnotation( ee, vc );
+        } catch ( IllegalArgumentException e ) {
+            // 409 Conflict for duplicate (category, value) — service throws IAE on dup.
+            throw new ClientErrorException( e.getMessage(), Response.Status.CONFLICT, e );
+        }
+        // agentProposalId is accepted-and-dropped; see STATUS_PUT_DATASETS_DESIGN.md.
+        if ( agentProposalId != null ) {
+            log.debug( "addDatasetAnnotation: received agentProposalId={} for ee={} (linkage parked)",
+                    agentProposalId, ee.getId() );
+        }
+        return Response.status( Response.Status.CREATED )
+                .entity( respond( new AnnotationValueObject( persisted, ExpressionExperiment.class ) ) )
+                .build();
+    }
+
+    @DELETE
+    @Path("/datasets/{dataset}/annotations/{annotationId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Remove a single annotation tag from a dataset",
+            description = "Removes the annotation with the given id from the dataset. Emits a "
+                    + "TagRemovedEvent. Returns 404 if no such annotation exists on this dataset. "
+                    + "Requires GROUP_CURATOR or GROUP_ADMIN.",
+            security = { @SecurityRequirement(name = "basicAuth"), @SecurityRequirement(name = "cookieAuth") },
+            responses = {
+                    @ApiResponse(responseCode = "204", description = "Annotation removed.", content = @Content()),
+                    @ApiResponse(responseCode = "403", description = "The caller lacks curator privileges.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "404", description = "The dataset or annotation does not exist on this dataset.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public Response removeDatasetAnnotation(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @PathParam("annotationId") Long annotationId
+    ) {
+        if ( annotationId == null ) {
+            throw new BadRequestException( "An annotation id is required." );
+        }
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        Characteristic removed = expressionExperimentService.removeAnnotation( ee, annotationId );
+        if ( removed == null ) {
+            throw new NotFoundException( "No annotation with id " + annotationId + " on dataset " + ee.getShortName() + "." );
+        }
+        return Response.noContent().build();
+    }
+
+    @PUT
+    @Path("/datasets/{dataset}/annotations")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Bulk-replace a dataset's annotations (diff-then-apply)",
+            description = "Computes the diff between the desired tag set and the dataset's current "
+                    + "tag set, then applies adds and removes per-row in a single transaction. "
+                    + "Emits one TagAddedEvent per add and one TagRemovedEvent per remove (NOT a "
+                    + "single summary event). Idempotent: re-PUTing the same set yields an empty "
+                    + "diff and no events. Distinct from PUT /datasets/{id}/annotations on "
+                    + "DatasetsWebService, which emits a single aggregate ManualAnnotationEvent. "
+                    + "Requires GROUP_CURATOR or GROUP_ADMIN.",
+            security = { @SecurityRequirement(name = "basicAuth"), @SecurityRequirement(name = "cookieAuth") },
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "400", description = "The request body is missing or malformed.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "403", description = "The caller lacks curator privileges.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<AnnotationReplaceReport> replaceDatasetAnnotations(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Nullable AnnotationsReplaceRequest body
+    ) {
+        if ( body == null || body.getAnnotations() == null ) {
+            throw new BadRequestException( "A request body with an 'annotations' field is required (use an empty list to clear)." );
+        }
+        List<Characteristic> desired = new ArrayList<>( body.getAnnotations().size() );
+        for ( AnnotationDto dto : body.getAnnotations() ) {
+            if ( dto == null ) {
+                throw new BadRequestException( "Annotation entries must not be null." );
+            }
+            desired.add( annotationDtoToCharacteristic( dto ) );
+        }
+        // agentProposalId accepted but currently dropped; see STATUS_PUT_DATASETS_DESIGN.md.
+        if ( body.getAgentProposalId() != null ) {
+            log.debug( "replaceDatasetAnnotations: received agentProposalId={} (linkage parked)",
+                    body.getAgentProposalId() );
+        }
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+
+        // Compute the diff against the current set up-front so the response can carry the
+        // before/after counts and the lists of added/removed VOs. The actual mutations are then
+        // applied per-row through expressionExperimentService so each call fires its own
+        // @Audited aspect (one TagAddedEvent / TagRemovedEvent per row).
+        Set<AnnotationValueObject> currentVOs = expressionExperimentService.getAnnotations( ee );
+        // Re-read current characteristics directly off the EE for identity-based removal.
+        Collection<Characteristic> currentChars = new ArrayList<>( ee.getCharacteristics() );
+        List<Characteristic> toAdd = new ArrayList<>();
+        List<Characteristic> toRemove = new ArrayList<>();
+        for ( Characteristic c : currentChars ) {
+            boolean keep = false;
+            for ( Characteristic d : desired ) {
+                if ( sameTag( c, d ) ) {
+                    keep = true;
+                    break;
+                }
+            }
+            if ( !keep ) {
+                toRemove.add( c );
+            }
+        }
+        for ( Characteristic d : desired ) {
+            boolean already = false;
+            for ( Characteristic c : currentChars ) {
+                if ( sameTag( c, d ) ) {
+                    already = true;
+                    break;
+                }
+            }
+            if ( !already ) {
+                toAdd.add( d );
+            }
+        }
+        int before = currentChars.size();
+        int unchanged = before - toRemove.size();
+
+        // No-op fast path: idempotent re-PUT — no events, no DB writes, empty diff report.
+        if ( toAdd.isEmpty() && toRemove.isEmpty() ) {
+            return respond( new AnnotationReplaceReport(
+                    ee.getId(),
+                    before,
+                    before,
+                    Collections.emptyList(),
+                    Collections.emptyList(),
+                    unchanged,
+                    Collections.emptyList(),
+                    Collections.emptyList()
+            ) );
+        }
+
+        // Apply removes first, then adds, per-row through the service so each call is its own
+        // @Audited aspect emission. The service method is @Transactional so the inner-loop
+        // emissions land within the surrounding transaction; a per-row failure rolls back the
+        // whole bulk (matches HANDOFF §"Partial failure inside bulk PUT").
+        List<AnnotationValueObject> removedVOs = new ArrayList<>( toRemove.size() );
+        for ( Characteristic c : toRemove ) {
+            Characteristic gone = expressionExperimentService.removeAnnotation( ee, c.getId() );
+            if ( gone != null ) {
+                removedVOs.add( new AnnotationValueObject( gone, ExpressionExperiment.class ) );
+            }
+        }
+        List<AnnotationValueObject> addedVOs = new ArrayList<>( toAdd.size() );
+        for ( Characteristic c : toAdd ) {
+            Characteristic added = expressionExperimentService.addAnnotation( ee, c );
+            addedVOs.add( new AnnotationValueObject( added, ExpressionExperiment.class ) );
+        }
+
+        int after = before - toRemove.size() + toAdd.size();
+        return respond( new AnnotationReplaceReport(
+                ee.getId(),
+                before,
+                after,
+                addedVOs,
+                removedVOs,
+                unchanged,
+                Collections.emptyList(),
+                Collections.emptyList()
+        ) );
+    }
+
+    /**
+     * Map an inbound {@link AnnotationDto} into a transient {@link Characteristic}, validating
+     * required fields and parsing the evidence code. Throws {@link BadRequestException} on bad
+     * input (mapped to HTTP 400 by the Jersey exception mapper).
+     */
+    private static Characteristic annotationDtoToCharacteristic( AnnotationDto dto ) {
+        if ( dto == null ) {
+            throw new BadRequestException( "Annotation entry must not be null." );
+        }
+        if ( StringUtils.isBlank( dto.getCategory() ) ) {
+            throw new BadRequestException( "Each annotation must have a non-blank 'category'." );
+        }
+        if ( StringUtils.isBlank( dto.getValue() ) ) {
+            throw new BadRequestException( "Each annotation must have a non-blank 'value'." );
+        }
+        Characteristic c = Characteristic.Factory.newInstance();
+        c.setCategory( dto.getCategory() );
+        c.setCategoryUri( dto.getCategoryUri() );
+        c.setValue( dto.getValue() );
+        c.setValueUri( dto.getValueUri() );
+        if ( StringUtils.isNotBlank( dto.getEvidenceCode() ) ) {
+            try {
+                c.setEvidenceCode( GOEvidenceCode.valueOf( dto.getEvidenceCode().trim().toUpperCase( Locale.ROOT ) ) );
+            } catch ( IllegalArgumentException e ) {
+                throw new BadRequestException( "Unknown evidence_code: '" + dto.getEvidenceCode() + "'. "
+                        + "Expected one of the GOEvidenceCode enum values (IEA, IDA, IC, ...).", e );
+            }
+        }
+        return c;
+    }
+
+    private static boolean sameTag( Characteristic a, Characteristic b ) {
+        return CharacteristicUtils.equals( a.getCategory(), a.getCategoryUri(), b.getCategory(), b.getCategoryUri() )
+                && CharacteristicUtils.equals( a.getValue(), a.getValueUri(), b.getValue(), b.getValueUri() );
     }
 }

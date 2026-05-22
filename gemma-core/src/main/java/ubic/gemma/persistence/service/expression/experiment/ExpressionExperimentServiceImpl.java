@@ -31,6 +31,7 @@ import ubic.gemma.model.association.GOEvidenceCode;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.ontology.basecode.model.OntologyTerm;
 import ubic.gemma.core.search.SearchException;
+import ubic.gemma.core.security.audit.Audited;
 import ubic.gemma.core.security.audit.AuditedConditional;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
@@ -1987,6 +1988,64 @@ public class ExpressionExperimentServiceImpl
     private static boolean sameTag( Characteristic a, Characteristic b ) {
         return CharacteristicUtils.equals( a.getCategory(), a.getCategoryUri(), b.getCategory(), b.getCategoryUri() )
                 && CharacteristicUtils.equals( a.getValue(), a.getValueUri(), b.getValue(), b.getValueUri() );
+    }
+
+    /**
+     * Per-tag REST-write counterpart to {@link #addCharacteristic(ExpressionExperiment, Characteristic)}.
+     * <p>
+     * Emits one {@link TagAddedEvent} per call via the {@code @Audited} aspect; rejects duplicates by
+     * {@code (categoryUri, valueUri)} so the {@code POST /annotations/datasets/{id}/annotations}
+     * handler can surface a {@code 409 Conflict}. Delegates the actual persistence to
+     * {@link ExpressionExperimentWriteService#addCharacteristic(ExpressionExperiment, Characteristic)}
+     * (which does the {@code IC}-evidence-code defaulting and the Hibernate session attach).
+     */
+    @Override
+    @Transactional
+    @Audited(value = TagAddedEvent.class,
+            messageSpel = "'Added tag ' + #vc.category + ' = ' + #vc.value")
+    public Characteristic addAnnotation( ExpressionExperiment ee, Characteristic vc ) {
+        Assert.notNull( vc, "Characteristic must not be null." );
+        Assert.isTrue( StringUtils.isNotBlank( vc.getCategory() ), "Must provide a category" );
+        Assert.isTrue( StringUtils.isNotBlank( vc.getValue() ), "Must provide a value" );
+        ee = ensureInSession( ee );
+        for ( Characteristic existing : ee.getCharacteristics() ) {
+            if ( sameTag( existing, vc ) ) {
+                throw new IllegalArgumentException( "An annotation with the same (category, value) already exists on "
+                        + ee.getShortName() + " (existing id=" + existing.getId() + ")." );
+            }
+        }
+        writeService.addCharacteristic( ee, vc );
+        // writeService.addCharacteristic attaches vc via ee.getCharacteristics().add(vc) and
+        // cascades the insert through ee update; vc.getId() is set after the flush.
+        return vc;
+    }
+
+    /**
+     * Per-tag REST-write counterpart to {@link #removeCharacteristics(ExpressionExperiment, Collection)}.
+     * Returns {@code null} when the id is not in {@code ee}'s characteristic set so the REST handler
+     * can surface a {@code 404}.
+     */
+    @Override
+    @Transactional
+    @AuditedConditional(value = TagRemovedEvent.class,
+            when = "#result != null",
+            messageSpel = "'Removed tag ' + #result.category + ' = ' + #result.value")
+    @Nullable
+    public Characteristic removeAnnotation( ExpressionExperiment ee, Long annotationId ) {
+        Assert.notNull( annotationId, "Annotation id must not be null." );
+        ee = ensureInSession( ee );
+        Characteristic target = null;
+        for ( Characteristic c : ee.getCharacteristics() ) {
+            if ( annotationId.equals( c.getId() ) ) {
+                target = c;
+                break;
+            }
+        }
+        if ( target == null ) {
+            return null;
+        }
+        writeService.removeCharacteristics( ee, Collections.singleton( target ) );
+        return target;
     }
 
     @Override

@@ -21,6 +21,7 @@ import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.search.SearchResult;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -44,9 +45,11 @@ import ubic.gemma.rest.util.QueriedAndFilteredAndPaginatedResponseDataObject;
 import ubic.gemma.rest.util.SortValueObject;
 import ubic.gemma.rest.util.args.*;
 
+import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -161,7 +164,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
 
     @AfterEach
     public void resetMocks() {
-        reset( searchService, taxonService, ontologyService );
+        reset( searchService, taxonService, ontologyService, expressionExperimentService );
     }
 
     @Test
@@ -248,5 +251,162 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
                 .hasStatus( Response.Status.OK );
         verify( ontologyService ).getTerm( "http://example.com/test", 30000, TimeUnit.MILLISECONDS );
         verify( ontologyService ).getChildren( eq( Collections.singleton( term ) ), eq( false ), eq( true ), longThat( l -> l <= 30000 ), eq( TimeUnit.MILLISECONDS ) );
+    }
+
+    // ---------------------------------------------------------------------
+    // Dataset annotation write endpoint tests (POST / DELETE / PUT)
+    // ---------------------------------------------------------------------
+
+    @Test
+    @WithMockUser(authorities = { "GROUP_CURATOR" })
+    public void testAddDatasetAnnotation() {
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setId( 1L );
+        ee.setShortName( "GSE-test" );
+        ee.setCharacteristics( new LinkedHashSet<>() );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.addAnnotation( eq( ee ), any( Characteristic.class ) ) )
+                .thenAnswer( a -> {
+                    Characteristic vc = a.getArgument( 1, Characteristic.class );
+                    vc.setId( 42L );
+                    return vc;
+                } );
+        String body = "{\"category\":\"organism part\",\"categoryUri\":\"http://purl.obolibrary.org/obo/UBERON_0000479\","
+                + "\"value\":\"liver\",\"valueUri\":\"http://purl.obolibrary.org/obo/UBERON_0002107\","
+                + "\"evidenceCode\":\"IEA\"}";
+        assertThat( target( "/annotations/datasets/1/annotations" ).request().post( Entity.json( body ) ) )
+                .hasStatus( Response.Status.CREATED )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
+        verify( expressionExperimentService ).addAnnotation( eq( ee ), any( Characteristic.class ) );
+    }
+
+    @Test
+    @WithMockUser(authorities = { "GROUP_CURATOR" })
+    public void testAddDatasetAnnotationDuplicateReturns409() {
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setId( 1L );
+        ee.setShortName( "GSE-test" );
+        ee.setCharacteristics( new LinkedHashSet<>() );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.addAnnotation( eq( ee ), any( Characteristic.class ) ) )
+                .thenThrow( new IllegalArgumentException( "duplicate" ) );
+        String body = "{\"category\":\"organism part\",\"value\":\"liver\","
+                + "\"valueUri\":\"http://purl.obolibrary.org/obo/UBERON_0002107\"}";
+        assertThat( target( "/annotations/datasets/1/annotations" ).request().post( Entity.json( body ) ) )
+                .hasStatus( Response.Status.CONFLICT );
+    }
+
+    @Test
+    @WithMockUser(authorities = { "GROUP_CURATOR" })
+    public void testAddDatasetAnnotationRejectsBlankCategory() {
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        String body = "{\"category\":\"\",\"value\":\"liver\"}";
+        assertThat( target( "/annotations/datasets/1/annotations" ).request().post( Entity.json( body ) ) )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        verify( expressionExperimentService, never() ).addAnnotation( any(), any() );
+    }
+
+    @Test
+    @WithMockUser(authorities = { "GROUP_CURATOR" })
+    public void testAddDatasetAnnotationRejectsBadEvidenceCode() {
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        String body = "{\"category\":\"organism part\",\"value\":\"liver\",\"evidenceCode\":\"BOGUS\"}";
+        assertThat( target( "/annotations/datasets/1/annotations" ).request().post( Entity.json( body ) ) )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        verify( expressionExperimentService, never() ).addAnnotation( any(), any() );
+    }
+
+    @Test
+    @WithMockUser(authorities = { "GROUP_CURATOR" })
+    public void testRemoveDatasetAnnotation() {
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setId( 1L );
+        ee.setShortName( "GSE-test" );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        Characteristic c = Characteristic.Factory.newInstance();
+        c.setId( 42L );
+        c.setCategory( "organism part" );
+        c.setValue( "liver" );
+        when( expressionExperimentService.removeAnnotation( ee, 42L ) ).thenReturn( c );
+        assertThat( target( "/annotations/datasets/1/annotations/42" ).request().delete() )
+                .hasStatus( Response.Status.NO_CONTENT );
+        verify( expressionExperimentService ).removeAnnotation( ee, 42L );
+    }
+
+    @Test
+    @WithMockUser(authorities = { "GROUP_CURATOR" })
+    public void testRemoveDatasetAnnotationNotFound() {
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setId( 1L );
+        ee.setShortName( "GSE-test" );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.removeAnnotation( ee, 999L ) ).thenReturn( null );
+        assertThat( target( "/annotations/datasets/1/annotations/999" ).request().delete() )
+                .hasStatus( Response.Status.NOT_FOUND );
+    }
+
+    @Test
+    @WithMockUser(authorities = { "GROUP_CURATOR" })
+    public void testReplaceDatasetAnnotationsIdempotentNoOp() {
+        // EE already carries the desired tag; bulk PUT with the same set produces an empty diff
+        // and emits no audit events. The handler returns 200 OK with empty added/removed lists.
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setId( 1L );
+        ee.setShortName( "GSE-test" );
+        Characteristic existing = Characteristic.Factory.newInstance();
+        existing.setId( 7L );
+        existing.setCategory( "organism part" );
+        existing.setCategoryUri( "http://purl.obolibrary.org/obo/UBERON_0000479" );
+        existing.setValue( "liver" );
+        existing.setValueUri( "http://purl.obolibrary.org/obo/UBERON_0002107" );
+        LinkedHashSet<Characteristic> chars = new LinkedHashSet<>();
+        chars.add( existing );
+        ee.setCharacteristics( chars );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.getAnnotations( ee ) ).thenReturn( Collections.emptySet() );
+        String body = "{\"annotations\":[{\"category\":\"organism part\",\"categoryUri\":\"http://purl.obolibrary.org/obo/UBERON_0000479\","
+                + "\"value\":\"liver\",\"valueUri\":\"http://purl.obolibrary.org/obo/UBERON_0002107\"}]}";
+        assertThat( target( "/annotations/datasets/1/annotations" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
+        verify( expressionExperimentService, never() ).addAnnotation( any(), any() );
+        verify( expressionExperimentService, never() ).removeAnnotation( any(), any() );
+    }
+
+    @Test
+    @WithMockUser(authorities = { "GROUP_CURATOR" })
+    public void testReplaceDatasetAnnotationsAppliesDiff() {
+        // EE has one tag; desired set has a different tag. Bulk PUT should call removeAnnotation
+        // for the existing tag and addAnnotation for the new tag — one event per mutation.
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setId( 1L );
+        ee.setShortName( "GSE-test" );
+        Characteristic existing = Characteristic.Factory.newInstance();
+        existing.setId( 7L );
+        existing.setCategory( "organism part" );
+        existing.setValue( "liver" );
+        existing.setValueUri( "http://purl.obolibrary.org/obo/UBERON_0002107" );
+        LinkedHashSet<Characteristic> chars = new LinkedHashSet<>();
+        chars.add( existing );
+        ee.setCharacteristics( chars );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.getAnnotations( ee ) ).thenReturn( Collections.emptySet() );
+        when( expressionExperimentService.removeAnnotation( ee, 7L ) ).thenReturn( existing );
+        when( expressionExperimentService.addAnnotation( eq( ee ), any( Characteristic.class ) ) )
+                .thenAnswer( a -> {
+                    Characteristic vc = a.getArgument( 1, Characteristic.class );
+                    vc.setId( 88L );
+                    return vc;
+                } );
+        String body = "{\"annotations\":[{\"category\":\"organism part\","
+                + "\"value\":\"brain\",\"valueUri\":\"http://purl.obolibrary.org/obo/UBERON_0000955\"}]}";
+        assertThat( target( "/annotations/datasets/1/annotations" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+        verify( expressionExperimentService ).removeAnnotation( ee, 7L );
+        verify( expressionExperimentService ).addAnnotation( eq( ee ), any( Characteristic.class ) );
     }
 }
