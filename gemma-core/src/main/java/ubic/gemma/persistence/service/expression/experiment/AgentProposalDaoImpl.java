@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.analysis.Investigation;
+import ubic.gemma.model.expression.experiment.AgentCurationKind;
 import ubic.gemma.model.expression.experiment.AgentProposal;
 import ubic.gemma.persistence.service.AbstractDao;
 
@@ -35,10 +36,13 @@ public class AgentProposalDaoImpl extends AbstractDao<AgentProposal>
 
     @Nullable
     @Override
-    public AgentProposal findByInvestigationAndRunId( Investigation investigation, String runId ) {
+    public AgentProposal findByInvestigationAndKindAndRunId( Investigation investigation,
+            AgentCurationKind kind, String runId ) {
         return ( AgentProposal ) getSessionFactory().getCurrentSession()
-                .createQuery( "from AgentProposal p where p.investigation = :inv and p.runId = :runId" )
+                .createQuery( "from AgentProposal p where p.investigation = :inv "
+                        + "and p.kind = :kind and p.runId = :runId" )
                 .setParameter( "inv", investigation )
+                .setParameter( "kind", kind )
                 .setParameter( "runId", runId )
                 .uniqueResult();
     }

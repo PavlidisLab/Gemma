@@ -5,11 +5,19 @@
     <!--
         Append-only record of one curation-agents proposal payload.
 
-        See HANDOFF_PROPOSED_EXPERIMENT_WORKFLOW.md §"The decided shape".
+        See HANDOFF_PROPOSED_EXPERIMENT_WORKFLOW.md §"The decided shape"
+        and handoffs/RECCE_AGENT_CURATION_UNIFICATION.md §2 + §3.
+
         FK -> INVESTIGATION (works for both ExpressionExperiment and
         PreboardedExperiment discriminator rows; the column is the same
-        ID generator). Unique key (INVESTIGATION_FK, RUN_ID) enforces
-        idempotency per the handoff's "Failure modes" §.
+        ID generator). Unique key (INVESTIGATION_FK, KIND, RUN_ID) enforces
+        idempotency per the handoff's "Failure modes" §, scoped by the
+        kind discriminator so a forward-looking proposal and a post-hoc
+        audit can coexist on the same investigation with the same runId.
+
+        kind defaults to PROPOSAL in the Java constructor; existing rows
+        carry the schema default ('PROPOSAL' via Flyway V13/V15) so the
+        column rollout is backwards-compatible.
 
         payloadJson is mapped as MaterializedClobType; the production
         DDL (mysql V11) materializes it as a JSON column for queryability,
@@ -27,12 +35,20 @@
                      foreign-key="FK_AGENT_PROPOSAL_INVESTIGATION">
             <column name="INVESTIGATION_FK" not-null="true" sql-type="BIGINT"
                     index="IDX_AGENT_PROPOSAL_INVESTIGATION"
-                    unique-key="UK_AGENT_PROPOSAL_INVESTIGATION_RUN"/>
+                    unique-key="UK_AGENT_PROPOSAL_INVESTIGATION_KIND_RUN"/>
         </many-to-one>
+        <property name="kind">
+            <column name="KIND" not-null="true" sql-type="VARCHAR(16)"
+                    unique-key="UK_AGENT_PROPOSAL_INVESTIGATION_KIND_RUN"/>
+            <type name="org.hibernate.type.EnumType">
+                <param name="enumClass">ubic.gemma.model.expression.experiment.AgentCurationKind</param>
+                <param name="useNamed">true</param>
+            </type>
+        </property>
         <property name="runId" type="java.lang.String">
             <column name="RUN_ID" not-null="true"
                     sql-type="VARCHAR(255)"
-                    unique-key="UK_AGENT_PROPOSAL_INVESTIGATION_RUN"/>
+                    unique-key="UK_AGENT_PROPOSAL_INVESTIGATION_KIND_RUN"/>
         </property>
         <property name="agentVersion" type="java.lang.String">
             <column name="AGENT_VERSION" not-null="false" unique="false"

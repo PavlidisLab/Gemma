@@ -19,6 +19,7 @@ import org.springframework.util.Assert;
 import ubic.gemma.core.security.audit.AuditedConditional;
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AgentProposalEvent;
+import ubic.gemma.model.expression.experiment.AgentCurationKind;
 import ubic.gemma.model.expression.experiment.AgentProposal;
 
 import java.util.Date;
@@ -59,7 +60,11 @@ public class AgentProposalServiceImpl implements AgentProposalService {
             @Nullable String payloadJson ) {
         Assert.notNull( investigation, "Investigation must not be null." );
         Assert.hasText( runId, "runId must be non-blank." );
-        AgentProposal existing = agentProposalDao.findByInvestigationAndRunId( investigation, runId );
+        // Step 1 of AgentCuration unification: the proposal path is always
+        // kind=PROPOSAL. The audit-creation entry point (kind=AUDIT) ships in
+        // step 3 — see handoffs/RECCE_AGENT_CURATION_UNIFICATION.md.
+        AgentProposal existing = agentProposalDao.findByInvestigationAndKindAndRunId(
+                investigation, AgentCurationKind.PROPOSAL, runId );
         if ( existing != null ) {
             // Idempotent retry; the @AuditedConditional predicate
             // (`#result.created`) suppresses event emission.
@@ -67,6 +72,7 @@ public class AgentProposalServiceImpl implements AgentProposalService {
         }
         AgentProposal p = new AgentProposal();
         p.setInvestigation( investigation );
+        p.setKind( AgentCurationKind.PROPOSAL );
         p.setRunId( runId );
         p.setAgentVersion( agentVersion );
         p.setModel( model );
