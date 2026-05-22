@@ -2,33 +2,33 @@
 --
 -- Two changes:
 --
--- 1. Adds a new sibling discriminator (SkeletonInvestigation) on INVESTIGATION.
+-- 1. Adds a new sibling discriminator (PreboardingExperiment) on INVESTIGATION.
 --    Single-table inheritance, so the only schema cost is three new columns
 --    on INVESTIGATION (NULL for existing EE / Subset rows; populated only on
---    skeleton rows). Column names are prefixed SKELETON_ to avoid collision
+--    preboarding rows). Column names are prefixed PREBOARDING_ to avoid collision
 --    with EE's SOURCE / ACCESSION_FK columns. The Java entity defaults
---    workflowState=Skeleton in its constructor (no SQL `default=` on the
+--    workflowState=Preboarding in its constructor (no SQL `default=` on the
 --    discriminator column; see d19dcf45d8 for why default= halts hbm2ddl).
 --
 -- 2. Adds AGENT_PROPOSAL: append-only record of one curation-agents proposal
 --    payload. FK -> INVESTIGATION so the FK works for both ExpressionExperiment
---    and SkeletonInvestigation discriminator rows; promotion rebinds the FK
---    from the skeleton row to the EE row (new-row + FK rebind approach).
+--    and PreboardingExperiment discriminator rows; promotion rebinds the FK
+--    from the preboarding row to the EE row (new-row + FK rebind approach).
 --
 -- The unique key (INVESTIGATION_FK, RUN_ID) enforces the "idempotency on
 -- run_id" guarantee in the handoff §"Failure modes + idempotency": re-posting
 -- the same run's payload is a no-op that returns the existing proposal row.
 
 ALTER TABLE INVESTIGATION
-    ADD COLUMN SKELETON_ACCESSION VARCHAR(255) NULL,
-    ADD COLUMN SKELETON_SOURCE VARCHAR(32) NULL,
-    ADD COLUMN SKELETON_IDENTIFYING_METADATA LONGTEXT NULL;
+    ADD COLUMN PREBOARDING_ACCESSION VARCHAR(255) NULL,
+    ADD COLUMN PREBOARDING_SOURCE VARCHAR(32) NULL,
+    ADD COLUMN PREBOARDING_IDENTIFYING_METADATA LONGTEXT NULL;
 
--- Lookup by accession for `GET /skeletons?accession=...` and for the
--- 409-on-existing check in POST /skeletons. Not unique because two skeletons
+-- Lookup by accession for `GET /preboarding?accession=...` and for the
+-- 409-on-existing check in POST /preboarding. Not unique because two preboarding rows
 -- could in principle share an accession across `source` boundaries; the
 -- service-level check guarantees uniqueness within a (source, accession).
-CREATE INDEX INVESTIGATION_SKELETON_ACCESSION ON INVESTIGATION (SKELETON_ACCESSION);
+CREATE INDEX INVESTIGATION_PREBOARDING_ACCESSION ON INVESTIGATION (PREBOARDING_ACCESSION);
 
 CREATE TABLE AGENT_PROPOSAL (
     ID                  BIGINT       NOT NULL AUTO_INCREMENT,

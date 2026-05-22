@@ -75,7 +75,7 @@ import static ubic.gemma.rest.util.Responders.respond;
  * ({@code /datasets/{id}/workflow} and {@code /workflow/queue}); JAX-RS
  * dispatch is by full path, so a single resource class can serve both.
  * Per the handoff the queue endpoint is also a forward-compat hook for
- * {@code SkeletonInvestigation} -- {@link WorkflowService} is what gates
+ * {@code PreboardingExperiment} -- {@link WorkflowService} is what gates
  * dataset_type today; the REST surface is type-agnostic.</p>
  *
  * @author paul
@@ -243,7 +243,7 @@ public class WorkflowWebService {
     @Operation(summary = "List datasets currently in a given workflow state",
             description = "The curator triage view. Oldest entry first by workflowStateEnteredAt. "
                     + "Optional filters: dataset_type (currently only `expression_experiment` is "
-                    + "implemented; `skeleton_investigation` returns empty pending the subclass), "
+                    + "implemented; `preboarding_experiment` returns empty pending the subclass), "
                     + "assignee (returns empty pending the Ticket-layer join; see TODO(ticket-integration)), "
                     + "since (ISO-8601; restrict to rows that entered the state on or after this).",
             responses = {
@@ -255,7 +255,7 @@ public class WorkflowWebService {
     public PaginatedResponseDataObject<WorkflowQueueEntryResponse> getWorkflowQueue(
             @Parameter(description = "Required; one of the 8 WorkflowState constants.")
             @QueryParam("state") @Nullable String stateName,
-            @Parameter(description = "Optional; expression_experiment | skeleton_investigation.")
+            @Parameter(description = "Optional; expression_experiment | preboarding_experiment.")
             @QueryParam("dataset_type") @Nullable String datasetType,
             @Parameter(description = "Optional; restrict to datasets with an OPEN ticket assigned to this user.")
             @QueryParam("assignee") @Nullable String assignee,

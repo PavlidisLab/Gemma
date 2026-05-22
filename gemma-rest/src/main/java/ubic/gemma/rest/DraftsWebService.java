@@ -191,7 +191,7 @@ public class DraftsWebService {
      * the UI calls after those succeed, so the draft row can be deleted).
      *
      * <p>The deferred behavior follows the same pattern as
-     * {@code SkeletonsWebService.promoteSkeleton}'s
+     * {@code PreboardingWebService.promotePreboarding}'s
      * {@code apply_latest_proposal} flag: accept the call, document the
      * gap, return a structured response the UI can react to.</p>
      */

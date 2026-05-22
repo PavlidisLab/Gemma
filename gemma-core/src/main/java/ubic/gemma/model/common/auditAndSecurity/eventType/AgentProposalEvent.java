@@ -13,7 +13,7 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 /**
  * Emitted when an {@code AgentProposal} row is appended to a
- * {@code SkeletonInvestigation} (or, for the private curation API, to a
+ * {@code PreboardingExperiment} (or, for the private curation API, to a
  * loaded {@code ExpressionExperiment}).
  *
  * <p>See {@code HANDOFF_PROPOSED_EXPERIMENT_WORKFLOW.md} §"Audit-event hooks".

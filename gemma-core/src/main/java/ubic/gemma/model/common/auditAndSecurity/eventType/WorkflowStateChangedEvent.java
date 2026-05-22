@@ -19,7 +19,7 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * Emitted on every successful workflow-state transition of an
  * {@link ubic.gemma.model.analysis.Investigation} (currently:
  * {@link ubic.gemma.model.expression.experiment.ExpressionExperiment}; a
- * forthcoming {@code SkeletonInvestigation} subclass will join the same
+ * forthcoming {@code PreboardingExperiment} subclass will join the same
  * stream).
  *
  * <p>Authored via the declarative {@code @Audited(WorkflowStateChangedEvent.class)}

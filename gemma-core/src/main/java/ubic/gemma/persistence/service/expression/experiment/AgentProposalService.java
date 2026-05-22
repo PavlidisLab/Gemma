@@ -20,7 +20,7 @@ import java.util.List;
 
 /**
  * Service surface for append-only {@link AgentProposal} rows. Drives both
- * the public {@code /skeletons/{id}/proposals} endpoint and the private
+ * the public {@code /preboarding/{id}/proposals} endpoint and the private
  * {@code /datasets/{id}/curation-proposals} endpoint
  * (see {@code STATUS_CURATION_PROPOSALS.md} for the consolidation
  * decision).
@@ -37,7 +37,7 @@ public interface AgentProposalService {
      * Attach (or return existing) a proposal to the given investigation.
      *
      * @param investigation  target. Required; may be either a
-     *                       {@code SkeletonInvestigation} or an
+     *                       {@code PreboardingExperiment} or an
      *                       {@code ExpressionExperiment}.
      * @param runId          the agent runner's unique id for this run.
      *                       Required.
@@ -80,7 +80,7 @@ public interface AgentProposalService {
 
     /**
      * Rebind every proposal currently attached to {@code from} so it points
-     * at {@code to}. Called by the skeleton-promotion path. Returns the
+     * at {@code to}. Called by the preboarding-promotion path. Returns the
      * number of rows rebound.
      */
     int rebindInvestigation( Investigation from, Investigation to );

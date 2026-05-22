@@ -35,7 +35,7 @@ need a cross-check pass once the sibling lands.
 `WORKFLOW_MANAGEMENT.md` (gemma-curation-ui, lines 21–33) defines an
 **eight-state experiment lifecycle**:
 
-> Discovery → Candidate → Skeleton → Loaded → Curate → Process →
+> Discovery → Candidate → Preboarding → Loaded → Curate → Process →
 > Audit → Public
 
 with a **recuration loop** (Audit → Curate, lines 35–40):
@@ -109,7 +109,7 @@ write-back path to real Gemma is `PUT /datasets/{id}/curationDetails`
 `source_batch`, `reviewer`, `decision_reason`, and on promotion to
 Gemma binds a `gemma_id`. The screening-world / Gemma-world boundary
 (handoff lines 13–28) is **a one-way promotion**, never a soft
-reference — once a candidate becomes a `SkeletonInvestigation` (per
+reference — once a candidate becomes a `PreboardingExperiment` (per
 `AGENT_WRITEBACK_RECCE.md`), it leaves the candidate table.
 
 ### 1.4 Top design constraints surfaced

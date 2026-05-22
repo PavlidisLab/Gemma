@@ -65,7 +65,7 @@ import static ubic.gemma.rest.util.Responders.respond;
  *   <li>{@code POST /datasets/{id}/audits} — curator manual audit submission (creates a
  *       {@link CurationNoteUpdateEvent} audit event with the supplied note + detail).</li>
  *   <li>{@code POST /datasets/{id}/curation-proposals} — attach an {@code AgentProposal} to a loaded EE
- *       (consolidated with the skeleton path's surface per STATUS_CURATION_PROPOSALS.md).</li>
+ *       (consolidated with the preboarding path's surface per STATUS_CURATION_PROPOSALS.md).</li>
  *   <li>{@code GET  /datasets/{id}/curation-proposals} — list proposals attached to a loaded EE,
  *       newest first.</li>
  * </ul>
@@ -162,7 +162,7 @@ public class CurationWebService {
 
     /**
      * Request body for {@link #submitCurationProposal}. Mirrors
-     * {@link SkeletonsWebService.AttachProposalRequest} so the two endpoints accept the same payload shape — the
+     * {@link PreboardingWebService.AttachProposalRequest} so the two endpoints accept the same payload shape — the
      * underlying {@link AgentProposalService#attach} is the same call. See STATUS_CURATION_PROPOSALS.md.
      */
     public static class CurationProposalRequest {
@@ -209,7 +209,7 @@ public class CurationWebService {
     /**
      * Attach an {@link AgentProposal} to a loaded EE. Idempotent on {@code run_id}: a retry returns the existing
      * row as 200 OK rather than 201 Created. The underlying service is the same one the public
-     * {@link SkeletonsWebService#attachProposal} uses; this endpoint just provides a dataset-centric URL pattern
+     * {@link PreboardingWebService#attachProposal} uses; this endpoint just provides a dataset-centric URL pattern
      * the curation-UI prefers.
      */
     @POST
