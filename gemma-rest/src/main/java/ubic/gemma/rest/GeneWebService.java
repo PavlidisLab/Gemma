@@ -20,14 +20,18 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
+import ubic.gemma.model.expression.experiment.BioAssaySetValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.GeneOntologyTermValueObject;
 import ubic.gemma.model.genome.PhysicalLocationValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 import ubic.gemma.persistence.util.CursorPage;
@@ -41,9 +45,11 @@ import ubic.gemma.rest.util.args.*;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static ubic.gemma.rest.util.Responders.paginate;
 import static ubic.gemma.rest.util.Responders.paginateByCursor;
@@ -67,6 +73,8 @@ public class GeneWebService {
     private GeneArgService geneArgService;
     @Autowired
     private TableMaintenanceUtil tableMaintenanceUtil;
+    @Autowired
+    private DifferentialExpressionResultService differentialExpressionResultService;
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -282,5 +290,67 @@ public class GeneWebService {
         }
         Collection<GeneValueObject> homologues = gvo.getHomologues();
         return respond( homologues != null ? homologues : Collections.<GeneValueObject>emptyList() );
+    }
+
+    /**
+     * Retrieves the differential expression results for the given gene across all experiments
+     * the caller has access to (ACL-filtered downstream).
+     *
+     * <p>Wraps {@link DifferentialExpressionResultService#findByGene(Gene, boolean, boolean, double, int)}
+     * with {@code useGene2Cs=true} and {@code keepNonSpecificProbes=false} — matches the
+     * convention used by the dataset-scoped DEA endpoint in {@code DatasetsWebService}.</p>
+     *
+     * <p>The cold-cache latency on this path (~4s for high-traffic genes like TP53) is mitigated by
+     * {@code DiffExGeneWarmupService} which periodically re-runs the underlying call for a seed gene
+     * list. See {@code PERF_PROBE_REPORT_ROUND3.md} §C1.</p>
+     *
+     * @param geneArg can either be the NCBI ID, Ensembl ID or official symbol. NCBI ID is most efficient (and
+     *                guaranteed to be unique). Official symbol returns a gene homologue on a random taxon.
+     * @param threshold optional q/p-value threshold. Defaults to 1.0 (no filtering).
+     * @param limit optional cap on results returned per experiment grouping. -1 means no cap.
+     */
+    @GET
+    @Path("/{gene}/differentialExpression")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve differential expression results for a gene across all accessible experiments",
+            description = "Returns a flat list of per-experiment groupings, each with the experiment VO and the list of probe-level DEA results for the given gene. "
+                    + "Results are scoped to experiments the caller has read access to (ACL-filtered). "
+                    + "Cold-cache latency is mitigated by a scheduled warm-up of a seed gene list (`gemma.diffex.warmup.*`).",
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class))),
+                    @ApiResponse(responseCode = "404", description = "Gene not found")
+            })
+    public ResponseDataObject<List<GeneDifferentialExpressionGroupValueObject>> getGeneDifferentialExpression( // Params:
+            @PathParam("gene") GeneArg<?> geneArg, // Required
+            @Parameter(description = "Maximum threshold on the corrected P-value to retain a result (inclusive). Default 1.0 returns all.",
+                    schema = @Schema(minimum = "0.0", maximum = "1.0"))
+            @QueryParam("threshold") @DefaultValue("1.0") double threshold,
+            @Parameter(description = "Cap on results returned per experiment grouping; -1 (default) means no cap.")
+            @QueryParam("limit") @DefaultValue("-1") int limit
+    ) {
+        if ( threshold < 0 || threshold > 1 ) {
+            throw new BadRequestException( "The threshold must be in the [0, 1] interval." );
+        }
+        Gene gene = geneArgService.getEntity( geneArg );
+        Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> grouped =
+                differentialExpressionResultService.findByGene( gene, true, false, threshold, limit );
+        List<GeneDifferentialExpressionGroupValueObject> payload = new ArrayList<>( grouped.size() );
+        for ( Map.Entry<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> e : grouped.entrySet() ) {
+            payload.add( new GeneDifferentialExpressionGroupValueObject( e.getKey(), e.getValue() ) );
+        }
+        return respond( payload );
+    }
+
+    /**
+     * One experiment's DEA results for the requested gene. The outer list returned by
+     * {@link #getGeneDifferentialExpression} is a flat sequence of these — a JSON-friendly
+     * rendering of the {@code Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>>}
+     * the underlying service hands back (maps don't serialize cleanly when the key is a complex VO).
+     */
+    @Data
+    public static class GeneDifferentialExpressionGroupValueObject {
+        private final BioAssaySetValueObject experiment;
+        private final List<DifferentialExpressionValueObject> results;
     }
 }
