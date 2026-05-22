@@ -246,6 +246,8 @@ public class DatasetsWebService {
     @Autowired
     private TicketsWebService ticketsWebService;
     @Autowired
+    private GroupsWebService groupsWebService;
+    @Autowired
     private TicketService ticketService;
     @Autowired
     private UserManager userManager;
@@ -1071,6 +1073,38 @@ public class DatasetsWebService {
             return paginateByCursor( page, new String[] { "id" } );
         }
         return respond( ticketsWebService.openTicketsForExpressionExperiment( ee.getId() ) );
+    }
+
+    /**
+     * Groups that have ANY permission (read or admin) on the given dataset
+     * (gap §3c of {@code GEMMA_UI_ENDPOINT_GAP.md}). When
+     * {@code include_summaries=true}, each entry includes the group's
+     * lightweight summary (name, description, memberCount); otherwise only
+     * the group names are returned.
+     */
+    @GET
+    @Path("/{dataset}/groups")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve groups that have any permission on the given dataset",
+            description = "Returns the names (or summaries) of groups with read or admin permission "
+                    + "on the dataset's ACL. The set is computed from the SecurityService union of "
+                    + "groupsReadableBy + groupsEditableBy. Filtered by the current caller's ACL view.",
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<?> getDatasetGroups(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @QueryParam("include_summaries") @DefaultValue("false") boolean includeSummaries
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        Set<String> groupNames = new LinkedHashSet<>();
+        groupNames.addAll( securityService.getGroupsReadableBy( ee ) );
+        groupNames.addAll( securityService.getGroupsEditableBy( ee ) );
+        if ( includeSummaries ) {
+            return respond( groupsWebService.summariesForGroupNames( groupNames ) );
+        }
+        return respond( new ArrayList<>( groupNames ) );
     }
 
     @GET
