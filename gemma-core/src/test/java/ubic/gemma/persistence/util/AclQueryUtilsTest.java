@@ -80,20 +80,6 @@ public class AclQueryUtilsTest extends BaseSpringContextTest5 {
     }
 
     @Test
-    public void testFormNativeAclJoinClause() {
-        // HQL_SQL_AUDIT C5: the native join clause is now a deprecated no-op. The id-column
-        // is passed explicitly to formNativeAclRestrictionClause.
-        assertThat( formNativeAclJoinClause( "EE.ID" ) ).isEmpty();
-    }
-
-    @Test
-    public void testFormNativeAclJoinClauseAsAnonymous() {
-        this.runAsAnonymous();
-        // Same as above: deprecated no-op.
-        assertThat( formNativeAclJoinClause( "EE.ID" ) ).isEmpty();
-    }
-
-    @Test
     public void testFormNativeRestrictionClause() {
         // Admin bypass emits empty (no filter needed).
         assertThat( formNativeAclRestrictionClause( ( SessionFactoryImplementor ) sessionFactory, "EE.ID" ) ).isEmpty();

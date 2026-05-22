@@ -17,7 +17,7 @@ import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
  * To build a query, sequentially proceed as follows:
  * <ol>
  * <li>form your select clause and your jointures</li>
- * <li>concatenate {@link #formAclRestrictionClause(String)} or {@link #formNativeAclJoinClause(String)} in the jointure section</li>
+ * <li>concatenate {@link #formAclRestrictionClause(String)} in the jointure section</li>
  * <li>form where clause and add your constraints</li>
  * <li>concatenate {@link #formNativeAclRestrictionClause(SessionFactoryImplementor, String)} in the clause section (only for native queries)</li>
  * <li>bind all your parameters</li>
@@ -42,11 +42,11 @@ import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
  *
  * <h2>Native callers: explicit id column (HQL_SQL_AUDIT C5)</h2>
  * <p>
- * Native callers previously had to invoke {@link #formNativeAclJoinClause(String)} before
+ * Native callers previously had to invoke a {@code formNativeAclJoinClause(String)} shim before
  * {@link #formNativeAclRestrictionClause(SessionFactoryImplementor, String)} so the id column
  * could be threaded across via a {@link ThreadLocal}. That coupling is gone: the restriction
- * clause now takes the {@code aoiIdColumn} as an explicit parameter. The join clause survives
- * as a deprecated empty-string returning shim so legacy concatenation idioms still compile.
+ * clause now takes the {@code aoiIdColumn} as an explicit parameter, and the join shim has
+ * been removed.
  *
  * @author poirigui
  */
@@ -235,30 +235,6 @@ public class AclQueryUtils {
             out.put( id, org.apache.commons.lang3.tuple.Pair.of( aoi, sid ) );
         }
         return out;
-    }
-
-    /**
-     * Native SQL flavour of the ACL jointure.
-     * <p>
-     * After the EXISTS rewrite this method returns the empty string: the native restriction
-     * clause produced by {@link #formNativeAclRestrictionClause(SessionFactoryImplementor, String, Permission)}
-     * now emits a self-contained correlated {@code EXISTS} sub-query that needs no outer
-     * jointure. Kept as a deprecated shim so callers that still string-concatenate
-     * "{@code from X x } + formNativeAclJoinClause(...) + ..." continue to compile.
-     *
-     * @param aoiIdColumn column name (only validated for non-blank — the id column is now passed
-     *                    explicitly to {@link #formNativeAclRestrictionClause(SessionFactoryImplementor, String, Permission)})
-     * @see #formAclRestrictionClause(String)
-     * @deprecated as of the HQL_SQL_AUDIT C5 fix; the id column is now an explicit parameter to
-     *             {@link #formNativeAclRestrictionClause(SessionFactoryImplementor, String, Permission)}.
-     *             Remove the call entirely.
-     */
-    @Deprecated
-    public static String formNativeAclJoinClause( String aoiIdColumn ) {
-        if ( StringUtils.isBlank( aoiIdColumn ) ) {
-            throw new IllegalArgumentException( "Object identity column cannot be empty." );
-        }
-        return "";
     }
 
     /**

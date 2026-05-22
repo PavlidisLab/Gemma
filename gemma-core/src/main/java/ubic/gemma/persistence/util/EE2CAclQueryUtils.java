@@ -13,19 +13,6 @@ import ubic.gemma.model.common.auditAndSecurity.Securable;
  */
 public class EE2CAclQueryUtils {
 
-    /**
-     * @deprecated as of HQL_SQL_AUDIT C5 the id column is passed explicitly to
-     *             {@link #formNativeAclRestrictionClause(SessionFactoryImplementor, String, String, Permission)};
-     *             this join shim now always returns the empty string. Drop the call.
-     */
-    @Deprecated
-    public static String formNativeAclJoinClause( String aoiIdColumn ) {
-        // The EE2C fast-path never depended on the ACL join clause (it short-circuited for
-        // admin/anonymous and delegated to AclQueryUtils otherwise — which itself returned
-        // empty post-EXISTS rewrite). Kept for API stability; safe to delete.
-        return "";
-    }
-
     public static String formNativeAclRestrictionClause( SessionFactoryImplementor sessionFactoryImplementor, String aoiIdColumn, String anonymousMaskColumn ) {
         return formNativeAclRestrictionClause( sessionFactoryImplementor, aoiIdColumn, anonymousMaskColumn, BasePermission.READ );
     }
