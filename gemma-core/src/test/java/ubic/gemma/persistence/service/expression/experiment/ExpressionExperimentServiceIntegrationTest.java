@@ -348,10 +348,23 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
         ExpressionExperiment ee = createExpressionExperiment();
         FactorValue fv = ee.getExperimentalDesign().getExperimentalFactors().iterator().next()
                 .getFactorValues().iterator().next();
+        Set<Long> preExistingStmtIds = fv.getCharacteristics().stream()
+                .map( Statement::getId ).filter( Objects::nonNull )
+                .collect( java.util.stream.Collectors.toSet() );
         Statement s = new Statement();
         fv.getCharacteristics().add( s );
         expressionExperimentService.update( ee );
-        Filter of = expressionExperimentService.getFilter( "experimentalDesign.experimentalFactors.factorValues.characteristics.id", Filter.Operator.eq, String.valueOf( s.getId() ) );
+        // session.merge does not back-populate ids onto detached input nodes, so reload the EE
+        // and rediscover the newly persisted Statement by id-difference.
+        ExpressionExperiment reloaded = expressionExperimentService.loadAndThaw( ee.getId() );
+        FactorValue reloadedFv = reloaded.getExperimentalDesign().getExperimentalFactors().iterator().next()
+                .getFactorValues().iterator().next();
+        Long newStmtId = reloadedFv.getCharacteristics().stream()
+                .map( Statement::getId )
+                .filter( id -> id != null && !preExistingStmtIds.contains( id ) )
+                .findFirst()
+                .orElseThrow( () -> new AssertionError( "newly added Statement was not persisted" ) );
+        Filter of = expressionExperimentService.getFilter( "experimentalDesign.experimentalFactors.factorValues.characteristics.id", Filter.Operator.eq, String.valueOf( newStmtId ) );
         assertEquals( "id", of.getPropertyName() );
         assertEquals( Long.class, of.getPropertyType() );
         Collection<ExpressionExperimentValueObject> list = expressionExperimentService.loadValueObjects( Filters.by( of ), null, 0, 0 );
@@ -364,10 +377,23 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
         ExpressionExperiment ee = createExpressionExperiment();
         BioMaterial bm = ee.getBioAssays().iterator().next()
                 .getSampleUsed();
+        Set<Long> preExistingCharIds = bm.getCharacteristics().stream()
+                .map( Characteristic::getId ).filter( Objects::nonNull )
+                .collect( java.util.stream.Collectors.toSet() );
         Characteristic c = Characteristic.Factory.newInstance();
         bm.getCharacteristics().add( c );
         bioMaterialService.update( bm );
-        Filter of = expressionExperimentService.getFilter( "bioAssays.sampleUsed.characteristics.id", Filter.Operator.eq, String.valueOf( c.getId() ) );
+        // session.merge does not back-populate ids onto detached input nodes; reload the BM and
+        // identify the newly persisted Characteristic by id-difference.
+        BioMaterial reloadedBm = bioMaterialService.load( bm.getId() );
+        assertNotNull( reloadedBm, "BioMaterial reload failed" );
+        reloadedBm = bioMaterialService.thaw( reloadedBm );
+        Long newCharId = reloadedBm.getCharacteristics().stream()
+                .map( Characteristic::getId )
+                .filter( id -> id != null && !preExistingCharIds.contains( id ) )
+                .findFirst()
+                .orElseThrow( () -> new AssertionError( "newly added Characteristic was not persisted" ) );
+        Filter of = expressionExperimentService.getFilter( "bioAssays.sampleUsed.characteristics.id", Filter.Operator.eq, String.valueOf( newCharId ) );
         assertEquals( "id", of.getPropertyName() );
         assertEquals( Long.class, of.getPropertyType() );
         Collection<ExpressionExperimentValueObject> list = expressionExperimentService.loadValueObjects( Filters.by( of ), null, 0, 0 );
@@ -445,22 +471,34 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
     @Test
     public void testCacheInvalidationWhenACharacteristicIsDeleted() throws TimeoutException {
         ExpressionExperiment ee = createExpressionExperiment();
+        Set<Long> preExistingCharIds = ee.getCharacteristics().stream()
+                .map( Characteristic::getId ).filter( Objects::nonNull )
+                .collect( java.util.stream.Collectors.toSet() );
         Characteristic c = new Characteristic();
         c.setCategory( "bar" );
         c.setValue( "foo" );
-        Consumer<? super ExpressionExperimentService.CharacteristicWithUsageStatisticsAndOntologyTerm> consumer = c2 -> {
-            assertThat( c2.getCharacteristic() ).isEqualTo( c );
-            assertThat( c2.getNumberOfExpressionExperiments() ).isEqualTo( 1L );
-        };
 
         tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
-        assertThat( expressionExperimentService.getAnnotationsUsageFrequency( null, null, null, null, null, 0, null, 0, false, false, 5000, TimeUnit.MILLISECONDS ) )
-                .noneSatisfy( consumer );
 
         // add the term to the dataset and update the pivot table
         ee.getCharacteristics().add( c );
         expressionExperimentService.update( ee );
-        assertThat( c.getId() ).isNotNull();
+        // session.merge does not back-populate the id onto the detached input Characteristic;
+        // resolve the freshly persisted Characteristic via the reloaded EE so the downstream
+        // remove + assertion paths work against a managed instance with a real id.
+        ExpressionExperiment reloadedForId = expressionExperimentService.loadAndThaw( ee.getId() );
+        Characteristic persistedC = reloadedForId.getCharacteristics().stream()
+                .filter( ch -> ch.getId() != null && !preExistingCharIds.contains( ch.getId() ) )
+                .findFirst()
+                .orElseThrow( () -> new AssertionError( "newly added Characteristic was not persisted" ) );
+        assertThat( persistedC.getId() ).isNotNull();
+        Consumer<? super ExpressionExperimentService.CharacteristicWithUsageStatisticsAndOntologyTerm> consumer = c2 -> {
+            assertThat( c2.getCharacteristic() ).isEqualTo( persistedC );
+            assertThat( c2.getNumberOfExpressionExperiments() ).isEqualTo( 1L );
+        };
+
+        assertThat( expressionExperimentService.getAnnotationsUsageFrequency( null, null, null, null, null, 0, null, 0, false, false, 5000, TimeUnit.MILLISECONDS ) )
+                .noneSatisfy( consumer );
 
         // the table is out-of-date
         assertThat( expressionExperimentService.getAnnotationsUsageFrequency( null, null, null, null, null, 0, null, 0, false, false, 5000, TimeUnit.MILLISECONDS ) )
@@ -472,12 +510,12 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
                 .satisfiesOnlyOnce( consumer );
 
         // remove the term, which must evict the query cache
-        characteristicService.remove( c );
-        assertThat( characteristicService.load( c.getId() ) ).isNull();
+        characteristicService.remove( persistedC );
+        assertThat( characteristicService.load( persistedC.getId() ) ).isNull();
         assertThat( expressionExperimentService.loadWithCharacteristics( ee.getId() ) )
                 .isNotNull()
                 .satisfies( e -> {
-                    assertThat( e.getCharacteristics() ).doesNotContain( c );
+                    assertThat( e.getCharacteristics() ).doesNotContain( persistedC );
                 } );
 
         // since deletions are cascaded, the change will be reflected immediatly
