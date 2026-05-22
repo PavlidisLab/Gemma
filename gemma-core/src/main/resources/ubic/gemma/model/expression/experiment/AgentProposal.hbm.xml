@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hibernate-mapping xmlns="http://www.hibernate.org/xsd/hibernate-mapping"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.hibernate.org/xsd/hibernate-mapping http://hibernate.org/xsd/hibernate-mapping-4.0.xsd">
+    <!--
+        Append-only record of one curation-agents proposal payload.
+
+        See HANDOFF_PROPOSED_EXPERIMENT_WORKFLOW.md §"The decided shape".
+        FK -> INVESTIGATION (works for both ExpressionExperiment and
+        SkeletonInvestigation discriminator rows; the column is the same
+        ID generator). Unique key (INVESTIGATION_FK, RUN_ID) enforces
+        idempotency per the handoff's "Failure modes" §.
+
+        payloadJson is mapped as MaterializedClobType; the production
+        DDL (mysql V11) materializes it as a JSON column for queryability,
+        while the H2 test sibling (V13) uses CLOB — Hibernate reads/writes
+        the same String either way.
+    -->
+    <class name="ubic.gemma.model.expression.experiment.AgentProposal" table="AGENT_PROPOSAL">
+        <id name="id" type="java.lang.Long" unsaved-value="null">
+            <column name="ID" sql-type="BIGINT"/>
+            <generator class="native"/>
+        </id>
+        <many-to-one name="investigation"
+                     class="ubic.gemma.model.analysis.Investigation"
+                     lazy="proxy" fetch="select"
+                     foreign-key="FK_AGENT_PROPOSAL_INVESTIGATION">
+            <column name="INVESTIGATION_FK" not-null="true" sql-type="BIGINT"
+                    index="IDX_AGENT_PROPOSAL_INVESTIGATION"
+                    unique-key="UK_AGENT_PROPOSAL_INVESTIGATION_RUN"/>
+        </many-to-one>
+        <property name="runId" type="java.lang.String">
+            <column name="RUN_ID" not-null="true"
+                    sql-type="VARCHAR(255)"
+                    unique-key="UK_AGENT_PROPOSAL_INVESTIGATION_RUN"/>
+        </property>
+        <property name="agentVersion" type="java.lang.String">
+            <column name="AGENT_VERSION" not-null="false" unique="false"
+                    sql-type="VARCHAR(255)"/>
+        </property>
+        <property name="model" type="java.lang.String">
+            <column name="MODEL" not-null="false" unique="false"
+                    sql-type="VARCHAR(255)"/>
+        </property>
+        <property name="ranAt" type="java.util.Date">
+            <column name="RAN_AT" not-null="false" unique="false"
+                    sql-type="DATETIME"/>
+        </property>
+        <property name="payloadJson" type="org.hibernate.type.MaterializedClobType">
+            <column name="PAYLOAD_JSON" not-null="false" unique="false"
+                    sql-type="LONGTEXT"/>
+        </property>
+    </class>
+</hibernate-mapping>
