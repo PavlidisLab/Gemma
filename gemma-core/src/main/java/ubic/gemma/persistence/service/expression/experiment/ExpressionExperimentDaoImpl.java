@@ -1269,9 +1269,12 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public Collection<ExpressionExperiment> getExperimentsLackingPublications() {
+    public Collection<ExpressionExperiment> getExperimentsLackingPublications( int maxResults ) {
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery( "select e from ExpressionExperiment e where e.primaryPublication = null and e.shortName like 'GSE%'" ).list();
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select e from ExpressionExperiment e where e.primaryPublication is null and e.shortName like 'GSE%'" )
+                .setMaxResults( maxResults )
+                .list();
     }
 
     @Override
