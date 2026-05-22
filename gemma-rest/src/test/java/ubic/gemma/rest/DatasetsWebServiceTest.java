@@ -320,6 +320,9 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     @Autowired
     private ExpressionExperimentBatchInformationService expressionExperimentBatchInformationService;
 
+    @Autowired
+    private GeeqService geeqService;
+
     private ExpressionExperiment ee;
 
     @Before
@@ -336,7 +339,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
 
     @After
     public void resetMocks() {
-        reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService, taxonArgService, geneArgService, searchService, auditEventService, auditTrailService, securityService );
+        reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService, taxonArgService, geneArgService, searchService, auditEventService, auditTrailService, securityService, geeqService );
     }
 
     @Test
@@ -1480,6 +1483,121 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     public void testGetDatasetPipelineStatusWithUnknownDatasetIs404() {
         assertThat( target( "/datasets/999/pipelineStatus" ).request().get() )
                 .hasStatus( Response.Status.NOT_FOUND );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testGetDatasetGeeq() {
+        ee.setId( 1L );
+        ee.setShortName( "GSE1" );
+        ubic.gemma.model.expression.experiment.Geeq geeq = new ubic.gemma.model.expression.experiment.Geeq();
+        ee.setGeeq( geeq );
+        when( expressionExperimentService.thawLiter( ee ) ).thenReturn( ee );
+        Date computedAt = new Date( 1_700_000_000_000L );
+        AuditEvent geeqEvent = AuditEvent.Factory.newInstance( computedAt, AuditAction.UPDATE, null, null, null,
+                new ubic.gemma.model.common.auditAndSecurity.eventType.GeeqEvent() );
+        when( auditEventService.getLastEvent( eq( ee ),
+                eq( ubic.gemma.model.common.auditAndSecurity.eventType.GeeqEvent.class ) ) )
+                .thenReturn( geeqEvent );
+
+        assertThat( target( "/datasets/1/geeq" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .entity()
+                .hasFieldOrProperty( "data" )
+                .hasFieldOrProperty( "data.lastComputed" );
+
+        verify( expressionExperimentService ).thawLiter( ee );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testGetDatasetGeeqWithoutEvent() {
+        ee.setId( 1L );
+        ee.setGeeq( new ubic.gemma.model.expression.experiment.Geeq() );
+        when( expressionExperimentService.thawLiter( ee ) ).thenReturn( ee );
+
+        assertThat( target( "/datasets/1/geeq" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.lastComputed", null );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testGetDatasetGeeqWhenNotComputedIs404() {
+        ee.setShortName( "GSE1" );
+        ee.setGeeq( null );
+        when( expressionExperimentService.thawLiter( ee ) ).thenReturn( ee );
+
+        assertThat( target( "/datasets/1/geeq" ).request().get() )
+                .hasStatus( Response.Status.NOT_FOUND );
+
+        verify( auditEventService, never() ).getLastEvent( eq( ee ), any( Class.class ) );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testGetDatasetGeeqWithUnknownDatasetIs404() {
+        assertThat( target( "/datasets/999/geeq" ).request().get() )
+                .hasStatus( Response.Status.NOT_FOUND );
+        verifyNoInteractions( geeqService );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testRecomputeDatasetGeeqDefaultModeIsAll() {
+        ee.setId( 1L );
+        ubic.gemma.model.expression.experiment.Geeq updated = new ubic.gemma.model.expression.experiment.Geeq();
+        when( geeqService.calculateScore( eq( ee ), any( ubic.gemma.persistence.service.expression.experiment.GeeqService.ScoreMode.class ) ) )
+                .thenReturn( updated );
+
+        assertThat( target( "/datasets/1/geeq" ).request().put( javax.ws.rs.client.Entity.json( "" ) ) )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
+
+        verify( geeqService ).calculateScore( ee, ubic.gemma.persistence.service.expression.experiment.GeeqService.ScoreMode.all );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testRecomputeDatasetGeeqWithSpecificMode() {
+        ee.setId( 1L );
+        when( geeqService.calculateScore( eq( ee ), any( ubic.gemma.persistence.service.expression.experiment.GeeqService.ScoreMode.class ) ) )
+                .thenReturn( new ubic.gemma.model.expression.experiment.Geeq() );
+
+        assertThat( target( "/datasets/1/geeq" ).queryParam( "mode", "batch" ).request()
+                .put( javax.ws.rs.client.Entity.json( "" ) ) )
+                .hasStatus( Response.Status.OK );
+
+        verify( geeqService ).calculateScore( ee, ubic.gemma.persistence.service.expression.experiment.GeeqService.ScoreMode.batch );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testRecomputeDatasetGeeqIncludesLastComputed() {
+        ee.setId( 1L );
+        when( geeqService.calculateScore( eq( ee ), any( ubic.gemma.persistence.service.expression.experiment.GeeqService.ScoreMode.class ) ) )
+                .thenReturn( new ubic.gemma.model.expression.experiment.Geeq() );
+        Date computedAt = new Date( 1_700_000_000_000L );
+        AuditEvent geeqEvent = AuditEvent.Factory.newInstance( computedAt, AuditAction.UPDATE, null, null, null,
+                new ubic.gemma.model.common.auditAndSecurity.eventType.GeeqEvent() );
+        when( auditEventService.getLastEvent( eq( ee ),
+                eq( ubic.gemma.model.common.auditAndSecurity.eventType.GeeqEvent.class ) ) )
+                .thenReturn( geeqEvent );
+
+        assertThat( target( "/datasets/1/geeq" ).request().put( javax.ws.rs.client.Entity.json( "" ) ) )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrProperty( "data.lastComputed" );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testRecomputeDatasetGeeqWithUnknownDatasetIs404() {
+        assertThat( target( "/datasets/999/geeq" ).request().put( javax.ws.rs.client.Entity.json( "" ) ) )
+                .hasStatus( Response.Status.NOT_FOUND );
+        verifyNoInteractions( geeqService );
     }
 
     @Test
