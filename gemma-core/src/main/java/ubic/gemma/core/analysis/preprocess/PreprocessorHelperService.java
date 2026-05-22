@@ -14,6 +14,7 @@
  */
 package ubic.gemma.core.analysis.preprocess;
 
+import org.springframework.lang.Nullable;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -30,6 +31,29 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @see ubic.gemma.core.security.audit.AuditedOnError
  */
 public interface PreprocessorHelperService {
+
+    /**
+     * If possible, batch-correct the processed data vectors via ComBat. A
+     * successful run emits a {@code BatchCorrectionEvent} via the
+     * {@code @Audited} aspect; the note records how many vectors were
+     * replaced. When the experiment is not batch-correctable, the method
+     * returns without writing a vector or an audit event.
+     * <p>
+     * Hoisted out of {@code PreprocessorServiceImpl} (where it lived as
+     * {@code private void batchCorrect(ExpressionExperiment)} and was self-
+     * invoked from {@code process()}) so the call passes through a Spring
+     * proxy and the audit aspect can fire — bucket 2b of
+     * {@code AUDIT_PHASE_C_RECCE.md} / inventory #3 of
+     * {@code handoffs/AUDIT_RESIDUAL_INVENTORY.md}.
+     *
+     * @return the number of processed vectors that were replaced by the
+     *         batch-corrected matrix, or {@code null} when the experiment
+     *         is not batch-correctable (no audit event written in that
+     *         case). The return value drives the {@code @Audited} note via
+     *         {@code messageSpel}; callers may ignore it.
+     */
+    @Nullable
+    Integer batchCorrect( ExpressionExperiment ee ) throws PreprocessingException;
 
     /**
      * Compute and persist the mean-variance scatter used for the
