@@ -191,6 +191,7 @@ public class Gene extends ChromosomeFeature {
         this.ncbiGeneId = ncbiGeneId;
     }
 
+    @KeywordField
     @Nullable
     public String getPreviousNcbiGeneId() {
         return previousNcbiGeneId;
