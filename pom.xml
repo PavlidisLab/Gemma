@@ -492,9 +492,9 @@
 				<version>2.41.0</version>
 			</dependency>
 
-			<!-- JUnit 5 (Jupiter) Phase A: Jupiter + Vintage engines side-by-side.
-			     Boot 3.5 BOM imports junit-bom at 5.12.2 (matches Gemma's junit.jupiter.version),
-			     so junit-jupiter / junit-vintage-engine no longer need overrides.
+			<!-- JUnit 5 (Jupiter). Boot 3.5 BOM imports junit-bom at 5.12.2
+			     (matches Gemma's junit.jupiter.version), so junit-jupiter no
+			     longer needs an override.
 			     Mockito stays pinned because Gemma leads BOM (5.21.0 > BOM 5.17.0). -->
 			<dependency>
 				<groupId>org.mockito</groupId>
@@ -965,19 +965,13 @@
 			<artifactId>junit</artifactId>
 		</dependency>
 		<!--
-		JUnit 5 (Jupiter) migration, Phase A. Jupiter + Vintage are added at the
-		root so every module gets them transitively (currently only gemma-rest
-		had the vintage engine). Versions are managed via the root
-		<dependencyManagement> block above.
+		JUnit 5 (Jupiter) is added at the root so every module gets it
+		transitively. Versions are managed via the root <dependencyManagement>
+		block above.
 		-->
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.junit.vintage</groupId>
-			<artifactId>junit-vintage-engine</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
