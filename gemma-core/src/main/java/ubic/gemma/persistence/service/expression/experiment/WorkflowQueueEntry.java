@@ -32,9 +32,9 @@ import java.util.Date;
  * dataset, and the assignee of the single such ticket if exactly one).
  *
  * <p>{@code datasetType} is a string rather than an enum so a forthcoming
- * {@code PreboardingExperiment} subclass can populate {@code "preboarding_experiment"}
- * without an enum-extension migration. // TODO(preboarding-integration): wire
- * the PreboardingExperiment path through the queue query once the subclass
+ * {@code PreboardedExperiment} subclass can populate {@code "preboarded_experiment"}
+ * without an enum-extension migration. // TODO(preboarded-integration): wire
+ * the PreboardedExperiment path through the queue query once the subclass
  * lands.
  */
 public class WorkflowQueueEntry {

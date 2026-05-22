@@ -23,16 +23,16 @@ import java.util.Set;
 
 /**
  * Eight-state workflow lifecycle for experiments (and forthcoming
- * {@code PreboardingExperiment}s).
+ * {@code PreboardedExperiment}s).
  *
  * <p>Transition table is lifted verbatim from {@code HANDOFF_WORKFLOW_STATE_STORAGE.md}
  * §"State-machine reference" (which itself mirrors the UI canonical spec in
  * {@code gemma-curation-ui/apps/curation/WORKFLOW_MANAGEMENT.md}):</p>
  *
  * <pre>
- * Discovery   -&gt; Candidate, Preboarding
- * Candidate   -&gt; Preboarding, Discovery
- * Preboarding    -&gt; Loaded, Candidate
+ * Discovery   -&gt; Candidate, Preboarded
+ * Candidate   -&gt; Preboarded, Discovery
+ * Preboarded    -&gt; Loaded, Candidate
  * Loaded      -&gt; Curate
  * Curate      -&gt; Process, Audit
  * Process     -&gt; Audit, Curate
@@ -51,7 +51,7 @@ import java.util.Set;
 public enum WorkflowState {
     Discovery,
     Candidate,
-    Preboarding,
+    Preboarded,
     Loaded,
     Curate,
     Process,
@@ -62,9 +62,9 @@ public enum WorkflowState {
 
     static {
         EnumMap<WorkflowState, Set<WorkflowState>> t = new EnumMap<>( WorkflowState.class );
-        t.put( Discovery, EnumSet.of( Candidate, Preboarding ) );
-        t.put( Candidate, EnumSet.of( Preboarding, Discovery ) );
-        t.put( Preboarding, EnumSet.of( Loaded, Candidate ) );
+        t.put( Discovery, EnumSet.of( Candidate, Preboarded ) );
+        t.put( Candidate, EnumSet.of( Preboarded, Discovery ) );
+        t.put( Preboarded, EnumSet.of( Loaded, Candidate ) );
         t.put( Loaded, EnumSet.of( Curate ) );
         t.put( Curate, EnumSet.of( Process, Audit ) );
         t.put( Process, EnumSet.of( Audit, Curate ) );

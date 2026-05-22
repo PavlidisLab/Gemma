@@ -13,55 +13,55 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import org.springframework.lang.Nullable;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.PreboardingExperiment;
+import ubic.gemma.model.expression.experiment.PreboardedExperiment;
 
 import java.util.List;
 
 /**
- * Service surface for {@link PreboardingExperiment} CRUD + accession resolution
+ * Service surface for {@link PreboardedExperiment} CRUD + accession resolution
  * + promotion. See {@code HANDOFF_PROPOSED_EXPERIMENT_WORKFLOW.md} §"Required
  * endpoints".
  */
-public interface PreboardingExperimentService {
+public interface PreboardedExperimentService {
 
     /**
-     * Create a new preboarding for the given accession.
+     * Create a new preboarded for the given accession.
      *
      * <p>Throws {@link AccessionAlreadyExistsException} if an existing
-     * {@link PreboardingExperiment} OR {@link ExpressionExperiment} already
+     * {@link PreboardedExperiment} OR {@link ExpressionExperiment} already
      * carries the same accession. The exception carries the existing entity's
      * id and type so the REST layer can mint a 409 response per spec.</p>
      *
-     * <p>Emits a {@code PreboardingCreatedEvent} audit row against the new
-     * preboarding's own audit trail.</p>
+     * <p>Emits a {@code PreboardedCreatedEvent} audit row against the new
+     * preboarded's own audit trail.</p>
      */
-    PreboardingExperiment createPreboarding( String accession, @Nullable String source,
+    PreboardedExperiment createPreboarded( String accession, @Nullable String source,
             @Nullable String identifyingMetadata )
             throws AccessionAlreadyExistsException;
 
     /**
-     * @return the preboarding with the given id, or {@code null}.
+     * @return the preboarded with the given id, or {@code null}.
      */
     @Nullable
-    PreboardingExperiment load( Long id );
+    PreboardedExperiment load( Long id );
 
     /**
-     * @return the preboarding with the given accession, or {@code null}.
+     * @return the preboarded with the given accession, or {@code null}.
      */
     @Nullable
-    PreboardingExperiment findByAccession( String accession );
+    PreboardedExperiment findByAccession( String accession );
 
     /**
-     * @return list of preboarding with the given accession (defensive — only
+     * @return list of preboarded with the given accession (defensive — only
      *         one is expected; the create path enforces uniqueness).
      */
-    List<PreboardingExperiment> findAllByAccession( String accession );
+    List<PreboardedExperiment> findAllByAccession( String accession );
 
     /**
      * Look up an existing {@link ExpressionExperiment} carrying the given
-     * accession. Used by the {@code POST /preboarding} 409 path: if the data
+     * accession. Used by the {@code POST /preboarded} 409 path: if the data
      * is already loaded as an EE, the caller should write against the EE
-     * directly rather than create a preboarding.
+     * directly rather than create a preboarded.
      *
      * @return the existing EE with this accession, or {@code null}.
      */
@@ -69,46 +69,46 @@ public interface PreboardingExperimentService {
     ExpressionExperiment findExpressionExperimentByAccession( String accession );
 
     /**
-     * Promote the preboarding to a loaded {@link ExpressionExperiment}.
+     * Promote the preboarded to a loaded {@link ExpressionExperiment}.
      *
      * <p>The implementation rebinds every {@code AgentProposal} attached to
-     * the preboarding so it points at the EE row instead (new-row + FK rebind
+     * the preboarded so it points at the EE row instead (new-row + FK rebind
      * approach; see {@code STATUS_PROPOSED_EXPERIMENT_WORKFLOW.md} for the
-     * trade-off discussion). The preboarding's workflow state is advanced to
+     * trade-off discussion). The preboarded's workflow state is advanced to
      * {@code Loaded} (terminal marker — the row is retained for history;
      * it carries no curatable artifacts) and the EE's workflow state is
      * advanced to {@code Loaded} too.</p>
      *
-     * <p>Emits a {@code PreboardingPromotedEvent} on the EE's audit trail
+     * <p>Emits a {@code PreboardedPromotedEvent} on the EE's audit trail
      * (post-promotion the EE is the authoritative parent of the trail).
      * The {@code ee} argument is first so the {@code @Audited} aspect
-     * picks the EE as the audit target rather than the preboarding.</p>
+     * picks the EE as the audit target rather than the preboarded.</p>
      *
-     * <p>Throws {@link PreboardingAlreadyPromotedException} if the preboarding's
+     * <p>Throws {@link PreboardedAlreadyPromotedException} if the preboarded's
      * workflow state is already {@code Loaded} (or beyond).</p>
      *
      * @return the promoted-from / promoted-to pair + counts the REST layer
      *         needs for the 200 response.
      */
-    PromotionResult promote( ExpressionExperiment ee, PreboardingExperiment preboarding )
-            throws PreboardingAlreadyPromotedException;
+    PromotionResult promote( ExpressionExperiment ee, PreboardedExperiment preboarded )
+            throws PreboardedAlreadyPromotedException;
 
     /**
-     * Return value of {@link #promote(PreboardingExperiment, ExpressionExperiment)}.
+     * Return value of {@link #promote(PreboardedExperiment, ExpressionExperiment)}.
      */
     class PromotionResult {
-        private final Long preboardingId;
+        private final Long preboardedId;
         private final Long eeId;
         private final int proposalsRebound;
 
-        public PromotionResult( Long preboardingId, Long eeId, int proposalsRebound ) {
-            this.preboardingId = preboardingId;
+        public PromotionResult( Long preboardedId, Long eeId, int proposalsRebound ) {
+            this.preboardedId = preboardedId;
             this.eeId = eeId;
             this.proposalsRebound = proposalsRebound;
         }
 
-        public Long getPreboardingId() {
-            return preboardingId;
+        public Long getPreboardedId() {
+            return preboardedId;
         }
 
         public Long getEeId() {
@@ -121,7 +121,7 @@ public interface PreboardingExperimentService {
     }
 
     /**
-     * Thrown by {@link #createPreboarding(String, String, String)} when an
+     * Thrown by {@link #createPreboarded(String, String, String)} when an
      * existing entity carries the same accession.
      */
     class AccessionAlreadyExistsException extends Exception {
@@ -139,26 +139,26 @@ public interface PreboardingExperimentService {
             return existingId;
         }
 
-        /** Either {@code "preboarding"} or {@code "expression_experiment"}. */
+        /** Either {@code "preboarded"} or {@code "expression_experiment"}. */
         public String getExistingType() {
             return existingType;
         }
     }
 
     /**
-     * Thrown by {@link #promote(PreboardingExperiment, ExpressionExperiment)}
-     * when the preboarding has already been promoted.
+     * Thrown by {@link #promote(PreboardedExperiment, ExpressionExperiment)}
+     * when the preboarded has already been promoted.
      */
-    class PreboardingAlreadyPromotedException extends Exception {
-        private final Long preboardingId;
+    class PreboardedAlreadyPromotedException extends Exception {
+        private final Long preboardedId;
 
-        public PreboardingAlreadyPromotedException( Long preboardingId ) {
-            super( "Preboarding " + preboardingId + " has already been promoted." );
-            this.preboardingId = preboardingId;
+        public PreboardedAlreadyPromotedException( Long preboardedId ) {
+            super( "Preboarded " + preboardedId + " has already been promoted." );
+            this.preboardedId = preboardedId;
         }
 
-        public Long getPreboardingId() {
-            return preboardingId;
+        public Long getPreboardedId() {
+            return preboardedId;
         }
     }
 }

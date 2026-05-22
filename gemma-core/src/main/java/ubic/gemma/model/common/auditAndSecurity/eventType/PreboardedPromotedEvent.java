@@ -12,15 +12,15 @@
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 /**
- * Emitted on {@code POST /preboarding/{id}/promote}, when a
- * {@code PreboardingExperiment} is promoted to a loaded
+ * Emitted on {@code POST /preboarded/{id}/promote}, when a
+ * {@code PreboardedExperiment} is promoted to a loaded
  * {@code ExpressionExperiment}.
  *
  * <p>See {@code HANDOFF_PROPOSED_EXPERIMENT_WORKFLOW.md} §"Audit-event hooks".
  * The promotion implementation rebinds the AgentProposal rows' FK from
- * the preboarding to the EE (new-row + FK rebind approach); this event is
+ * the preboarded to the EE (new-row + FK rebind approach); this event is
  * appended to the EE's audit trail so the post-promotion history is
  * unified on the EE side.</p>
  */
-public class PreboardingPromotedEvent extends AuditEventType {
+public class PreboardedPromotedEvent extends AuditEventType {
 }
