@@ -138,4 +138,29 @@
         <Bug pattern="ES_COMPARING_PARAMETER_STRING_WITH_EQ"/>
     </Match>
 
+    <!--
+        NM_SAME_SIMPLE_NAME_AS_SUPERCLASS: Gemma deliberately shadows the
+        simple name of several upstream classes (Spring Security, Hibernate,
+        Colt) where the subclass is a project-local extension/replacement that
+        callers should reach via the Gemma package. The simple-name collision
+        is the whole point — callers import the Gemma type and inherit
+        upstream behaviour. Concrete sites:
+          - Spring Security ACL afterinvocation + voter extensions
+            (afterinvocation, authorization.acl, voter subpackages)
+          - Spring Security DelegatingSecurityContext* executor wrappers
+          - Colt's DenseDoubleMatrix1D subclassed for fast getQuick
+          - Hibernate H2Dialect preserved as a subclass for wiring continuity
+    -->
+    <Match>
+        <Or>
+            <Class name="~ubic\.gemma\.core\.security\.acl\.afterinvocation\..*"/>
+            <Class name="~ubic\.gemma\.core\.security\.acl\.voter\..*"/>
+            <Class name="~ubic\.gemma\.core\.security\.authorization\.acl\..*"/>
+            <Class name="~ubic\.gemma\.core\.security\.concurrent\..*"/>
+            <Class name="ubic.gemma.core.util.matrix.DenseDoubleMatrix1D"/>
+            <Class name="ubic.gemma.persistence.hibernate.H2Dialect"/>
+        </Or>
+        <Bug pattern="NM_SAME_SIMPLE_NAME_AS_SUPERCLASS"/>
+    </Match>
+
 </FindBugsFilter>

@@ -974,7 +974,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
         DatasetMetadata datasetMetadata = getDatasetMetadataFromCellXGene( geoSeries, collectionId, datasetId );
         if ( datasetMetadata.getAssay().stream().noneMatch( this::isGeneExpressionAssay ) ) {
             throw new IllegalArgumentException( String.format( "Dataset %s in collection %s is not a single-cell dataset. Only the following assay types are supported: %s.",
-                    datasetId, collectionId, Arrays.stream( CellXGeneUtils.GENE_EXPRESSION_ASSAYS )
+                    datasetId, collectionId, CellXGeneUtils.GENE_EXPRESSION_ASSAYS.stream()
                             .map( ot -> ot.getLabel() + "(" + ot.getOntologyTermId() + ")" )
                             .collect( Collectors.joining( ", " ) ) ) );
         }
