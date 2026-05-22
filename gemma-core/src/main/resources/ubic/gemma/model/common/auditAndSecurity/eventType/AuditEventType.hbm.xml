@@ -163,6 +163,12 @@
                   name="ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent"/>
         <subclass abstract="false" discriminator-value="WorkflowStateChangedEvent"
                   name="ubic.gemma.model.common.auditAndSecurity.eventType.WorkflowStateChangedEvent"/>
+        <subclass abstract="false" discriminator-value="SkeletonCreatedEvent"
+                  name="ubic.gemma.model.common.auditAndSecurity.eventType.SkeletonCreatedEvent"/>
+        <subclass abstract="false" discriminator-value="AgentProposalEvent"
+                  name="ubic.gemma.model.common.auditAndSecurity.eventType.AgentProposalEvent"/>
+        <subclass abstract="false" discriminator-value="SkeletonPromotedEvent"
+                  name="ubic.gemma.model.common.auditAndSecurity.eventType.SkeletonPromotedEvent"/>
         <subclass abstract="true" discriminator-value="CurationDetailsEvent"
                   name="ubic.gemma.model.common.auditAndSecurity.eventType.CurationDetailsEvent">
             <subclass abstract="true"

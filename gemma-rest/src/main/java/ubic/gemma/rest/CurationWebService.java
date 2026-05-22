@@ -19,11 +19,15 @@ import org.springframework.stereotype.Service;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 import ubic.gemma.model.common.auditAndSecurity.eventType.CurationNoteUpdateEvent;
+import ubic.gemma.model.expression.experiment.AgentProposal;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.persistence.service.expression.experiment.AgentProposalService;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.args.DatasetArg;
 import ubic.gemma.rest.util.args.DatasetArgService;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
@@ -39,6 +43,10 @@ import jakarta.ws.rs.core.UriBuilder;
 import jakarta.ws.rs.core.UriInfo;
 import org.springframework.lang.Nullable;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
 import static ubic.gemma.rest.util.Responders.respond;
 
 /**
@@ -51,14 +59,15 @@ import static ubic.gemma.rest.util.Responders.respond;
  * <p>
  * Round 3 scope (per GEMMA_UI_ENDPOINT_GAP.md):
  * <ul>
- *   <li>{@code GET  /candidates} - screening queue (datasets needing curation attention).
+ *   <li>{@code GET  /candidates} — screening queue (datasets needing curation attention).
  *       Implemented as a 302 redirect to {@code /datasets?filter=needsAttention=true} since the underlying
  *       query is already supported by the existing dataset filter.</li>
- *   <li>{@code POST /datasets/{id}/audits} - curator manual audit submission (creates a
+ *   <li>{@code POST /datasets/{id}/audits} — curator manual audit submission (creates a
  *       {@link CurationNoteUpdateEvent} audit event with the supplied note + detail).</li>
- *   <li>{@code POST /datasets/{id}/curation-proposals} - <b>recce-only</b>. Returns 501 Not Implemented.
- *       Requires a new {@code CurationProposal} entity that does not yet exist in the gemd schema.</li>
- *   <li>{@code GET  /datasets/{id}/curation-proposals} - <b>recce-only</b>. Returns 501 Not Implemented.</li>
+ *   <li>{@code POST /datasets/{id}/curation-proposals} — attach an {@code AgentProposal} to a loaded EE
+ *       (consolidated with the skeleton path's surface per STATUS_CURATION_PROPOSALS.md).</li>
+ *   <li>{@code GET  /datasets/{id}/curation-proposals} — list proposals attached to a loaded EE,
+ *       newest first.</li>
  * </ul>
  */
 @Service
@@ -72,6 +81,9 @@ public class CurationWebService {
 
     @Autowired
     private AuditTrailService auditTrailService;
+
+    @Autowired
+    private AgentProposalService agentProposalService;
 
     /**
      * Screening queue: redirect to the existing {@code /datasets?filter=needsAttention=true} query. Implemented
@@ -149,51 +161,111 @@ public class CurationWebService {
     }
 
     /**
-     * Recce stub for {@code POST /datasets/{id}/curation-proposals}. Returns 501 Not Implemented.
-     * <p>
-     * <b>Recce note</b>: a real implementation needs a new {@code CurationProposal} entity (with fields like
-     * {@code experimentId}, {@code proposerId}, {@code proposalText}, {@code status},
-     * {@code createdAt}, {@code reviewedBy}, {@code reviewedAt}), a Hibernate mapping, a Flyway migration, a
-     * {@code CurationProposalService} + DAO, and a value object. None of those exist today. The closest existing
-     * concept is {@link ubic.gemma.model.common.auditAndSecurity.curation.Ticket}, which models curator-workflow
-     * tickets but is shaped around troubled/needs-attention state machines rather than free-text AI-generated
-     * proposals. Decision needed: extend Ticket, add a sibling CurationProposal entity, or keep proposals in the
-     * gemma-curation-agents FastAPI service (per GEMMA_UI_FEATURE_CATALOG.md B12 dubious bits).
+     * Request body for {@link #submitCurationProposal}. Mirrors
+     * {@link SkeletonsWebService.AttachProposalRequest} so the two endpoints accept the same payload shape — the
+     * underlying {@link AgentProposalService#attach} is the same call. See STATUS_CURATION_PROPOSALS.md.
+     */
+    public static class CurationProposalRequest {
+        @JsonProperty("run_id")
+        public String runId;
+        @JsonProperty("agent_version")
+        @Nullable
+        public String agentVersion;
+        @JsonProperty("model")
+        @Nullable
+        public String model;
+        @JsonProperty("ran_at")
+        @Nullable
+        public Date ranAt;
+        @JsonProperty("payload_json")
+        @Nullable
+        public String payloadJson;
+    }
+
+    /**
+     * Response of {@link #submitCurationProposal} and per-row of {@link #listCurationProposals}.
+     */
+    public static class CurationProposalResponse {
+        @JsonProperty("proposal_id")
+        public Long proposalId;
+        @JsonProperty("dataset_id")
+        public Long datasetId;
+        @JsonProperty("run_id")
+        public String runId;
+        @JsonProperty("agent_version")
+        @Nullable
+        public String agentVersion;
+        @JsonProperty("model")
+        @Nullable
+        public String model;
+        @JsonProperty("ran_at")
+        @Nullable
+        public Date ranAt;
+        @JsonProperty("payload_json")
+        @Nullable
+        public String payloadJson;
+    }
+
+    /**
+     * Attach an {@link AgentProposal} to a loaded EE. Idempotent on {@code run_id}: a retry returns the existing
+     * row as 200 OK rather than 201 Created. The underlying service is the same one the public
+     * {@link SkeletonsWebService#attachProposal} uses; this endpoint just provides a dataset-centric URL pattern
+     * the curation-UI prefers.
      */
     @POST
     @Hidden
     @Path("/datasets/{dataset}/curation-proposals")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
     @Operation(hidden = true)
     public Response submitCurationProposal(
             @PathParam("dataset") DatasetArg<?> datasetArg,
-            @Nullable Object body
+            @Nullable CurationProposalRequest body
     ) {
-        return curationProposalsNotImplemented();
+        if ( body == null || body.runId == null || body.runId.trim().isEmpty() ) {
+            throw new BadRequestException( "Request body must include a non-blank `run_id`." );
+        }
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        AgentProposalService.AttachedProposal attached = agentProposalService.attach( ee,
+                body.runId.trim(), body.agentVersion, body.model, body.ranAt, body.payloadJson );
+        CurationProposalResponse resp = toProposalResponse( attached.getProposal(), ee.getId() );
+        Response.Status status = attached.isCreated()
+                ? Response.Status.CREATED
+                : Response.Status.OK;
+        return Response.status( status ).entity( resp ).build();
     }
 
     /**
-     * Recce stub for {@code GET /datasets/{id}/curation-proposals}. Returns 501 Not Implemented.
-     * See {@link #submitCurationProposal} for the recce note.
+     * List {@link AgentProposal}s attached to a loaded EE, newest first.
      */
     @GET
     @Hidden
     @Path("/datasets/{dataset}/curation-proposals")
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
     @Operation(hidden = true)
     public Response listCurationProposals(
             @PathParam("dataset") DatasetArg<?> datasetArg
     ) {
-        return curationProposalsNotImplemented();
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        List<AgentProposal> proposals = agentProposalService.findByInvestigation( ee );
+        List<CurationProposalResponse> rows = new ArrayList<>( proposals.size() );
+        for ( AgentProposal p : proposals ) {
+            rows.add( toProposalResponse( p, ee.getId() ) );
+        }
+        return Response.ok( rows ).build();
     }
 
-    private Response curationProposalsNotImplemented() {
-        return Response.status( Response.Status.NOT_IMPLEMENTED )
-                .type( MediaType.APPLICATION_JSON )
-                .entity( "{\"error\":\"curation-proposals require a new CurationProposal entity that does not exist yet; see CurationWebService javadoc for the recce.\"}" )
-                .build();
+    private static CurationProposalResponse toProposalResponse( AgentProposal p, Long datasetId ) {
+        CurationProposalResponse r = new CurationProposalResponse();
+        r.proposalId = p.getId();
+        r.datasetId = datasetId;
+        r.runId = p.getRunId();
+        r.agentVersion = p.getAgentVersion();
+        r.model = p.getModel();
+        r.ranAt = p.getRanAt();
+        r.payloadJson = p.getPayloadJson();
+        return r;
     }
 }

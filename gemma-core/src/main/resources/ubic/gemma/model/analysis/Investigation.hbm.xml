@@ -209,5 +209,27 @@
 				</set>
 			</subclass>
 		</subclass>
+		<!-- Skeleton investigation: proposed-but-not-yet-loaded dataset.
+		     Sibling of BioAssaySet under INVESTIGATION; carries the upstream
+		     accession + identifying metadata blob harvested by the agent.
+		     See HANDOFF_PROPOSED_EXPERIMENT_WORKFLOW.md. The Java-side
+		     constructor seeds workflowState=Skeleton; no SQL `default=` on the
+		     ACCESSION column because HBM `default=` quoting halted hbm2ddl
+		     in commit d19dcf45d8. -->
+		<subclass name="ubic.gemma.model.expression.experiment.SkeletonInvestigation"
+				  discriminator-value="SkeletonInvestigation" abstract="false">
+			<property name="accession" type="java.lang.String">
+				<column name="SKELETON_ACCESSION" not-null="false" unique="false"
+						sql-type="VARCHAR(255)" index="INVESTIGATION_SKELETON_ACCESSION"/>
+			</property>
+			<property name="source" type="java.lang.String">
+				<column name="SKELETON_SOURCE" not-null="false" unique="false"
+						sql-type="VARCHAR(32)"/>
+			</property>
+			<property name="identifyingMetadata" type="org.hibernate.type.MaterializedClobType">
+				<column name="SKELETON_IDENTIFYING_METADATA" not-null="false" unique="false"
+						sql-type="LONGTEXT"/>
+			</property>
+		</subclass>
 	</class>
 </hibernate-mapping>
