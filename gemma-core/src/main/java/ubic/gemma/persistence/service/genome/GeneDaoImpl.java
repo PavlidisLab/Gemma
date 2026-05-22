@@ -496,9 +496,8 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
                 .createNativeQuery( "delete from DATABASE_ENTRY where GENE_FK is not null" )
                 .executeUpdate();
         // we have to do some manual deletion because no cascading is performed when deleting in batch
-        //noinspection unchecked
         List<Long> gpIds = getSessionFactory().getCurrentSession()
-                .createQuery( "select gp.id from Gene g join g.products gp" )
+                .createQuery( "select gp.id from Gene g join g.products gp", Long.class )
                 .list();
         int removedGeneProductsAccessions;
         if ( !gpIds.isEmpty() ) {
@@ -511,9 +510,8 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
         int removedProducts = getSessionFactory().getCurrentSession()
                 .createQuery( "delete from GeneProduct gp where gp.gene is not null" )
                 .executeUpdate();
-        //noinspection unchecked
         List<Long> gaIds = getSessionFactory().getCurrentSession()
-                .createQuery( "select ga.id from Gene g join g.aliases ga" )
+                .createQuery( "select ga.id from Gene g join g.aliases ga", Long.class )
                 .list();
         int removedAliases;
         if ( !gaIds.isEmpty() ) {
@@ -523,9 +521,8 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
         } else {
             removedAliases = 0;
         }
-        //noinspection unchecked
         List<Long> plIds = getSessionFactory().getCurrentSession()
-                .createQuery( "select pl.id from Gene g join g.physicalLocation pl" )
+                .createQuery( "select pl.id from Gene g join g.physicalLocation pl", Long.class )
                 .list();
         int removedGenes = getSessionFactory().getCurrentSession()
                 .createQuery( "delete from Gene" )
