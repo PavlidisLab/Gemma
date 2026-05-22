@@ -116,7 +116,7 @@ public class SlackAppender extends AbstractAppender {
 
     private synchronized Slack getSlackInstance() {
         if ( slackInstance == null ) {
-            slackInstance = Slack.getInstance();
+            slackInstance = Objects.requireNonNull( Slack.getInstance(), "Slack.getInstance() returned null" );
         }
         return slackInstance;
     }

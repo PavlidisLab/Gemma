@@ -33,6 +33,7 @@ import org.springframework.lang.Nullable;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -462,7 +463,7 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
 
     private List<String> readLinesFromPath( Path path ) throws IOException {
         if ( path.toString().endsWith( ".gz" ) ) {
-            try ( BufferedReader br = new BufferedReader( new InputStreamReader( FileUtils.openCompressedFile( path ) ) ) ) {
+            try ( BufferedReader br = new BufferedReader( new InputStreamReader( FileUtils.openCompressedFile( path ), StandardCharsets.UTF_8 ) ) ) {
                 return br.lines().collect( Collectors.toList() );
             }
         } else {

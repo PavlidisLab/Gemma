@@ -58,8 +58,9 @@ import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultReadServ
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
@@ -231,7 +232,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
                     "Do not use this service to process platforms that do not use an probe-based technology." );
         }
 
-        try ( BufferedReader b = new BufferedReader( new FileReader( source ) ) ) {
+        try ( BufferedReader b = Files.newBufferedReader( source.toPath(), StandardCharsets.UTF_8 ) ) {
             String line;
             int numSkipped = 0;
 

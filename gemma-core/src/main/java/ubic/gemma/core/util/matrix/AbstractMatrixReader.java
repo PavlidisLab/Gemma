@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class AbstractMatrixReader<M extends Matrix2D<String, String, V>, V> {
 
-    protected static Logger log = LoggerFactory.getLogger( AbstractMatrixReader.class );
+    protected static final Logger log = LoggerFactory.getLogger( AbstractMatrixReader.class );
 
     public abstract M read( InputStream stream ) throws IOException;
 

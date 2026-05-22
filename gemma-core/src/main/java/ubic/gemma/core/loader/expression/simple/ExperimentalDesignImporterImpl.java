@@ -43,6 +43,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -75,7 +76,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
         ExperimentalDesignImporterImpl.log.debug( "Parsing input file" );
         boolean readHeader = false;
 
-        BufferedReader r = new BufferedReader( new InputStreamReader( is ) );
+        BufferedReader r = new BufferedReader( new InputStreamReader( is, StandardCharsets.UTF_8 ) );
         String line;
 
         // Hibernate 6: re-resolve the design through the current session so its

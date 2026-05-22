@@ -170,6 +170,7 @@ public class MaskedExpressionDataMatrix<T> extends AbstractExpressionDataMatrix<
     }
 
     @Override
+    @Nullable
     public T get( int row, int column ) {
         if ( mask.isMasked( row, column ) ) {
             return maskedValue;

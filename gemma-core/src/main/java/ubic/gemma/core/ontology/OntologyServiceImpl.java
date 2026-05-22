@@ -71,6 +71,7 @@ import org.springframework.lang.Nullable;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Function;
@@ -922,7 +923,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     private void initializeCategoryTerms() throws IOException {
         Set<OntologyTermSimple> categoryTerms = new HashSet<>();
         Resource resource = new ClassPathResource( "/ubic/gemma/core/ontology/EFO.factor.categories.txt" );
-        try ( BufferedReader reader = new BufferedReader( new InputStreamReader( resource.getInputStream() ) ) ) {
+        try ( BufferedReader reader = new BufferedReader( new InputStreamReader( resource.getInputStream(), StandardCharsets.UTF_8 ) ) ) {
             String line;
             while ( ( line = reader.readLine() ) != null ) {
                 if ( line.startsWith( "#" ) || StringUtils.isEmpty( line ) )
@@ -945,7 +946,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     private void initializeRelationTerms() throws IOException {
         Set<OntologyPropertySimple> relationTerms = new HashSet<>();
         Resource resource = new ClassPathResource( "/ubic/gemma/core/ontology/Relation.terms.txt" );
-        try ( BufferedReader reader = new BufferedReader( new InputStreamReader( resource.getInputStream() ) ) ) {
+        try ( BufferedReader reader = new BufferedReader( new InputStreamReader( resource.getInputStream(), StandardCharsets.UTF_8 ) ) ) {
             String line;
             while ( ( line = reader.readLine() ) != null ) {
                 if ( line.startsWith( "#" ) || StringUtils.isEmpty( line ) )

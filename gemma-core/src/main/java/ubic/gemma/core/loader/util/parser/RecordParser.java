@@ -4,6 +4,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 
 /**
@@ -34,7 +35,7 @@ public abstract class RecordParser<T> implements Parser<T> {
     public void parse( InputStream is ) throws IOException {
         int recordsParsed = 0;
         int nullRecords = 0;
-        BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
+        BufferedReader br = new BufferedReader( new InputStreamReader( is, StandardCharsets.UTF_8 ) );
 
         String line;
         StringBuilder record = null;

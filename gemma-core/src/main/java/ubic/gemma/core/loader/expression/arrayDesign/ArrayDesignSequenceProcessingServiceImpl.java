@@ -46,6 +46,7 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
@@ -930,7 +931,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
      * @param sequenceIdentifierFile with two columns: first is probe id, second is genbank accession.
      */
     private Map<String, String> parseAccessionFile( InputStream sequenceIdentifierFile ) throws IOException {
-        try ( BufferedReader br = new BufferedReader( new InputStreamReader( sequenceIdentifierFile ) ) ) {
+        try ( BufferedReader br = new BufferedReader( new InputStreamReader( sequenceIdentifierFile, StandardCharsets.UTF_8 ) ) ) {
 
             String line;
 

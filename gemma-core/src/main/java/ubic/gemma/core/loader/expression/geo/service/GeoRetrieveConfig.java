@@ -14,11 +14,11 @@ class GeoRetrieveConfig {
     /**
      * Default preset for retrieving GEO records.
      */
-    public static GeoRetrieveConfig DEFAULT = GeoRetrieveConfig.builder().build();
+    public static final GeoRetrieveConfig DEFAULT = GeoRetrieveConfig.builder().build();
     /**
      * A preset configuration for retrieving detailed GEO records.
      */
-    public static GeoRetrieveConfig DETAILED = GeoRetrieveConfig.builder()
+    public static final GeoRetrieveConfig DETAILED = GeoRetrieveConfig.builder()
             .subSeriesStatus( true )
             .libraryStrategy( true )
             .sampleDetails( true )

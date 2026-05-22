@@ -16,45 +16,45 @@ public class TGFVO {
      * This namespace is reserved for classes and properties that are necessary to connect factor values and their
      * annotations.
      */
-    public static String NS = "http://gemma.msl.ubc.ca/ont/TGFVO#";
+    public static final String NS = "http://gemma.msl.ubc.ca/ont/TGFVO#";
 
-    public static Resource Dataset = ResourceFactory.createResource( NS + "Dataset" );
+    public static final Resource Dataset = ResourceFactory.createResource( NS + "Dataset" );
     /**
      * Relate a {@link ubic.gemma.model.expression.experiment.FactorValue} to the {@link ubic.gemma.model.expression.experiment.ExpressionExperiment} that owns it.
      */
-    public static Property belongsTo = ResourceFactory.createProperty( NS + "belongsTo" );
+    public static final Property belongsTo = ResourceFactory.createProperty( NS + "belongsTo" );
     /**
      * Relates a {@link ubic.gemma.model.expression.experiment.FactorValue} to one of its annotation which can be either
      * a subject or an object of one if its {@link ubic.gemma.model.expression.experiment.Statement} or its measurement.
      */
-    public static Property hasAnnotation = ResourceFactory.createProperty( NS + "hasAnnotation" );
+    public static final Property hasAnnotation = ResourceFactory.createProperty( NS + "hasAnnotation" );
     /**
      * Inverse of {@link #hasAnnotation}.
      */
-    public static Property annotationOf = ResourceFactory.createProperty( NS + "annotationOf" );
+    public static final Property annotationOf = ResourceFactory.createProperty( NS + "annotationOf" );
     /**
      * Relates a {@link ubic.gemma.model.expression.experiment.FactorValue} to its measurement.
      */
-    public static Property hasMeasurement = ResourceFactory.createProperty( NS + "hasMeasurement" );
+    public static final Property hasMeasurement = ResourceFactory.createProperty( NS + "hasMeasurement" );
     /**
      * Inverse of {@link #hasMeasurement}.
      */
-    public static Property measurementOf = ResourceFactory.createProperty( NS + "measurementOf" );
+    public static final Property measurementOf = ResourceFactory.createProperty( NS + "measurementOf" );
 
     /**
      * Represents a factor value {@link ubic.gemma.model.common.measurement.Measurement}.
      */
-    public static Resource Measurement = ResourceFactory.createResource( NS + "Measurement" );
+    public static final Resource Measurement = ResourceFactory.createResource( NS + "Measurement" );
     /**
      * Relates a {@link ubic.gemma.model.common.measurement.Measurement} to its unit, if any.
      */
-    public static Property hasUnit = ResourceFactory.createProperty( NS + "hasUnit" );
+    public static final Property hasUnit = ResourceFactory.createProperty( NS + "hasUnit" );
     /**
      * Relates a {@link ubic.gemma.model.common.measurement.Measurement} to its representation.
      */
-    public static Property hasRepresentation = ResourceFactory.createProperty( NS + "hasRepresentation" );
+    public static final Property hasRepresentation = ResourceFactory.createProperty( NS + "hasRepresentation" );
     /**
      * Relates a {@link ubic.gemma.model.common.measurement.Measurement} to its value.
      */
-    public static Property hasValue = ResourceFactory.createProperty( NS + "hasValue" );
+    public static final Property hasValue = ResourceFactory.createProperty( NS + "hasValue" );
 }

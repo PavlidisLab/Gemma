@@ -24,6 +24,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 
 /**
  * The difference between this class and BasicLineMapParser is more flexibility in how keys are provided. The
@@ -47,7 +48,7 @@ public abstract class LineMapParser<K, T> extends BasicLineMapParser<K, T> {
 
         int linesParsed = 0;
         int nullLines = 0;
-        BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
+        BufferedReader br = new BufferedReader( new InputStreamReader( is, StandardCharsets.UTF_8 ) );
         StopWatch timer = new StopWatch();
         timer.start();
         String line;

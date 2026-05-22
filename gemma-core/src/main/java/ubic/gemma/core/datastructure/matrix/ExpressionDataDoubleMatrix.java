@@ -401,6 +401,7 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
     }
 
     @Override
+    @Nullable
     public double[] getColumnAsDoubles( BioAssay bioAssay ) {
         int j = getColumnIndex( bioAssay );
         if ( j == -1 ) {

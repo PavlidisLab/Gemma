@@ -25,6 +25,7 @@ import org.apache.commons.logging.LogFactory;
 import ubic.gemma.core.util.FileTools;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 
 /**
@@ -72,7 +73,7 @@ public abstract class BasicLineMapParser<K, T> implements LineParser<T> {
 
         if ( is == null )
             throw new IllegalArgumentException( "InputStream was null" );
-        try (BufferedReader br = new BufferedReader( new InputStreamReader( is ) )) {
+        try (BufferedReader br = new BufferedReader( new InputStreamReader( is, StandardCharsets.UTF_8 ) )) {
 
             StopWatch timer = new StopWatch();
             timer.start();

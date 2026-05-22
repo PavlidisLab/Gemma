@@ -15,6 +15,7 @@ public class MarkdownUtils {
      * <p>
      * This is aiming at escaping [Common Mark](https://spec.commonmark.org/) markdown.
      */
+    @Nullable
     public static String escapeMarkdown( @Nullable String text ) {
         if ( text == null ) {
             return null;
@@ -33,6 +34,7 @@ public class MarkdownUtils {
      * <p>
      * This takes care of escaping backticks by surrounding the text with double backticks (or more).
      */
+    @Nullable
     public static String formatMarkdownCodeSpan( @Nullable String text ) {
         if ( text == null ) {
             return null;

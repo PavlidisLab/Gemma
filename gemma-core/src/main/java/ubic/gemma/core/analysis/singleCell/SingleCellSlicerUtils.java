@@ -3,6 +3,7 @@ package ubic.gemma.core.analysis.singleCell;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import ubic.gemma.core.util.ListUtils;
 import ubic.gemma.model.common.description.Characteristic;
@@ -109,6 +110,7 @@ public class SingleCellSlicerUtils {
         return newVector;
     }
 
+    @Nullable
     private static byte[] sliceData( SingleCellExpressionDataVector vec, List<BioAssay> assays, int[] starts, int[] ends, int nnz ) {
         if ( vec.getData() == null ) {
             return null;
@@ -127,6 +129,7 @@ public class SingleCellSlicerUtils {
         return data;
     }
 
+    @Nullable
     private static int[] sliceIndices( SingleCellExpressionDataVector vec, List<BioAssay> assays, int[] bioAssayOffsetInNewVec, int[] sampleIndicesInVec, int[] starts, int[] ends, int nnz ) {
         if ( vec.getDataIndices() == null ) {
             return null;

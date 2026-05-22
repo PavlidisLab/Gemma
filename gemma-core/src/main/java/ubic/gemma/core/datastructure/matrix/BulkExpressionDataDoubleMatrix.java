@@ -69,6 +69,7 @@ public class BulkExpressionDataDoubleMatrix extends AbstractBulkExpressionDataMa
     }
 
     @Override
+    @Nullable
     public double[] getColumnAsDoubles( BioAssay bioAssay ) {
         int column = getColumnIndex( bioAssay );
         if ( column == -1 ) {

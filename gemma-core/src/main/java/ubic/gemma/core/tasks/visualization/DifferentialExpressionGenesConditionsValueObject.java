@@ -37,10 +37,13 @@ public class DifferentialExpressionGenesConditionsValueObject implements Seriali
      * Map of Condition IDs to map of Genes to the Cell holding the information for the results for that Gene x
      * Condition combination.
      */
-    private final Map<String, Map<Long, Cell>> cellData;
-    private final Map<Long, Collection<Condition>> resultSetConditions = new HashMap<>();
-    private final List<Condition> conditions;
-    private final List<DiffExGene> genes;
+    // marked transient because the inner Cell/Condition/DiffExGene types are not Serializable.
+    // the VO is wrapped in TaskResult (which requires Serializable) but not actually serialized
+    // over the wire in current code paths.
+    private final transient Map<String, Map<Long, Cell>> cellData;
+    private final transient Map<Long, Collection<Condition>> resultSetConditions = new HashMap<>();
+    private final transient List<Condition> conditions;
+    private final transient List<DiffExGene> genes;
 
     @SuppressWarnings("WeakerAccess") // Front end use
     public DifferentialExpressionGenesConditionsValueObject() {

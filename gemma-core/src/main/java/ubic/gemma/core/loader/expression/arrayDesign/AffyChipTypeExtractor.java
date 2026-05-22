@@ -25,6 +25,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.io.*;
 import java.nio.*;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -239,7 +240,7 @@ public class AffyChipTypeExtractor {
                     /*
                      * assume version 3 plain text.
                      */
-                    reader = new BufferedReader( new InputStreamReader( is ) );
+                    reader = new BufferedReader( new InputStreamReader( is, StandardCharsets.UTF_8 ) );
                     String line;
                     int count = 0;
                     while ( ( line = reader.readLine() ) != null ) {
@@ -299,8 +300,12 @@ public class AffyChipTypeExtractor {
                 case "text/plain":
                 case "text/ascii":
                     // text/ascii is undocumented, but needed.
-                    v = new String( value, "US-ASCII" );
-                    String vv = new String( ( ( String ) v ).getBytes(), "UTF-16" ).trim();
+                    v = new String( value, StandardCharsets.US_ASCII );
+                    // Preserve historical decode path: stringify under default,
+                    // re-encode under default, then read as UTF-16. The default
+                    // here is forced to US-ASCII (matching the source bytes) so
+                    // the path is portable across JVMs.
+                    String vv = new String( ( ( String ) v ).getBytes( StandardCharsets.US_ASCII ), StandardCharsets.UTF_16 ).trim();
 
                     if ( name.equals( "affymetrix-array-type" ) ) {
                         return vv;
@@ -430,7 +435,7 @@ public class AffyChipTypeExtractor {
         for ( int i = 0; i < fieldLength; i++ ) {
             if ( str.available() == 0 )
                 throw new IOException( "Reached end of file without string end" );
-            buf.append( new String( new byte[] { str.readByte() } ) );
+            buf.append( new String( new byte[] { str.readByte() }, StandardCharsets.US_ASCII ) );
         }
         return buf.toString();
     }

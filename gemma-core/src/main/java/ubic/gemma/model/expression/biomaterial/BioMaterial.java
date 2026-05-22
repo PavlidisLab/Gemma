@@ -62,7 +62,7 @@ public class BioMaterial extends AbstractDescribable implements SecuredChild<Exp
 
     public static final int MAX_NAME_LENGTH = 255;
 
-    public static Comparator<BioMaterial> COMPARATOR = Comparator
+    public static final Comparator<BioMaterial> COMPARATOR = Comparator
             .comparing( BioMaterial::getName, DescribableUtils.NAME_COMPARATOR )
             .thenComparing( BioMaterial::getId, Comparator.nullsLast( Comparator.naturalOrder() ) );
 

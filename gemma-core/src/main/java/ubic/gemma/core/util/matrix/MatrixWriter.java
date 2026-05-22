@@ -19,11 +19,13 @@
 package ubic.gemma.core.util.matrix;
 
 import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.Format;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -61,7 +63,7 @@ public class MatrixWriter<R, C> {
     }
 
     public MatrixWriter(OutputStream out, Format formatter, String sep) {
-        this(new BufferedWriter(new OutputStreamWriter(out)), formatter, sep);
+        this(new BufferedWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8)), formatter, sep);
     }
 
     public MatrixWriter(String fileName, Format formatter) throws IOException {
@@ -70,7 +72,7 @@ public class MatrixWriter<R, C> {
 
     @SuppressWarnings("resource")
     public MatrixWriter(String fileName, Format formatter, String sep) throws IOException {
-        this(new BufferedWriter(new FileWriter(fileName)), formatter, sep);
+        this(Files.newBufferedWriter(Paths.get(fileName), StandardCharsets.UTF_8), formatter, sep);
     }
 
     public MatrixWriter(Writer out) {

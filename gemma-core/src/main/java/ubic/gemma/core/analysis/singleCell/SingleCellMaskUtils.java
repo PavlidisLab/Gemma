@@ -1,5 +1,6 @@
 package ubic.gemma.core.analysis.singleCell;
 
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import ubic.gemma.model.common.description.Categories;
 import ubic.gemma.model.common.description.Characteristic;
@@ -43,6 +44,7 @@ public class SingleCellMaskUtils {
         return parseMask( mask, true );
     }
 
+    @Nullable
     public static boolean[] parseMask( CellLevelCharacteristics mask, boolean createArray ) {
         Assert.isTrue( mask.getCharacteristics().stream().allMatch( c -> CharacteristicUtils.hasCategory( c, Categories.MASK ) ),
                 "All the characteristic of a mask must use the " + Categories.MASK + " category." );

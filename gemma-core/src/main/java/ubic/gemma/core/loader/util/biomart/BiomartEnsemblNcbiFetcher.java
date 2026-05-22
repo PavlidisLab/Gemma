@@ -30,6 +30,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -244,7 +245,7 @@ public class BiomartEnsemblNcbiFetcher {
             // try (Writer writer = new OutputStreamWriter( conn.getOutputStream() );) {
             // writer.write( data );
             // writer.flush();
-            return new BufferedReader( new InputStreamReader( conn.getInputStream() ) );
+            return new BufferedReader( new InputStreamReader( conn.getInputStream(), StandardCharsets.UTF_8 ) );
             // }
         } catch ( IOException e ) {
             log.error( e );
@@ -263,7 +264,7 @@ public class BiomartEnsemblNcbiFetcher {
      */
     private File writeFile( File file, String headerForFile, BufferedReader reader ) throws IOException {
 
-        try (BufferedWriter writer = new BufferedWriter( new FileWriter( file ) )) {
+        try (BufferedWriter writer = new BufferedWriter( new OutputStreamWriter( new FileOutputStream( file ), StandardCharsets.UTF_8 ) )) {
             writer.append( headerForFile ).append( "\n" );
             String line;
             while ( ( line = reader.readLine() ) != null ) {

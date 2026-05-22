@@ -51,7 +51,7 @@ public abstract class AbstractOntologyService implements OntologyService {
      * Properties through which propagation is allowed for {@link #getParents(Collection, boolean, boolean)}}
      */
     private static final Set<Property> DEFAULT_ADDITIONAL_PROPERTIES;
-    protected static Logger log = LoggerFactory.getLogger( AbstractOntologyService.class );
+    protected static final Logger log = LoggerFactory.getLogger( AbstractOntologyService.class );
 
     static {
         DEFAULT_ADDITIONAL_PROPERTIES = new HashSet<>();
