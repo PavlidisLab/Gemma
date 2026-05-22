@@ -617,7 +617,13 @@ public class DataUpdaterImpl implements DataUpdater {
 
         // Audit event (DataAddedEvent) written by @Audited via AuditedAspect.
 
-        experimentService.update( ee );
+        // Re-thaw rather than merge: addRawDataVectors persists the new vectors through its own
+        // transaction, so the detached ee handed in here carries stale collection snapshots
+        // (especially the BioAssayDimensions whose many-to-many bioAssays may reference rows
+        // already removed upstream by dealWithMissingSamples). A merge() walks those snapshots
+        // and trips EntityNotFoundException: BioAssay#N — same residual the trailing call in
+        // replaceData hit (see commit 6a946c7c17).
+        ee = experimentService.thaw( ee );
 
         if ( qt.getIsPreferred() ) {
             DataUpdaterImpl.log.info( "Postprocessing preferred data" );
@@ -684,7 +690,15 @@ public class DataUpdaterImpl implements DataUpdater {
         }
 
         this.audit( ee, "Data vector replacement for " + targetPlatform, true );
-        experimentService.update( ee );
+        // Re-thaw rather than merge: replaceAllRawDataVectors and switchBioAssaysToTargetPlatform
+        // already persisted their state through fresh sessions (ensureEeInSession + their own
+        // transactions). The detached ee handed in here still carries stale collection snapshots
+        // — chiefly the original rawExpressionDataVectors and their BioAssayDimensions, whose
+        // many-to-many bioAssays lists may reference BioAssay rows just removed by an upstream
+        // dealWithMissingSamples. A merge() would walk those snapshots and trip
+        // EntityNotFoundException: BioAssay#N (see Phase 2 Step 7 commit 27d09617b5 which
+        // identified this as the remaining residual after the per-call-site re-resolves).
+        ee = experimentService.thaw( ee );
         this.postprocess( ee );
 
         assert ee.getNumberOfDataVectors() != null;
