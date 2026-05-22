@@ -82,10 +82,19 @@ public class OpenAPIVisitor extends BeanDefinitionVisitor {
 
     private void visitPathItem( PathItem pathItem ) {
         visitOperation( pathItem.getGet() );
+        visitOperation( pathItem.getPut() );
+        visitOperation( pathItem.getPost() );
+        visitOperation( pathItem.getDelete() );
+        visitOperation( pathItem.getPatch() );
+        visitOperation( pathItem.getHead() );
+        visitOperation( pathItem.getOptions() );
+        visitOperation( pathItem.getTrace() );
         visitExtensions( pathItem.getExtensions() );
     }
 
     private void visitOperation( Operation operation ) {
+        if ( operation == null )
+            return;
         visitStringProperties( operation, Operation.class );
         visitApiResponses( operation.getResponses() );
         visitExternalDocs( operation.getExternalDocs() );

@@ -91,7 +91,6 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     private Boolean suitableForDEA = true;
 
     // these are populated by gsec
-    @JsonIgnore
     private boolean isPublic = false;
     @JsonIgnore
     private boolean isShared = false;
@@ -266,7 +265,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     }
 
     @Override
-    @JsonIgnore
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     public boolean getIsPublic() {
         return this.isPublic;
     }

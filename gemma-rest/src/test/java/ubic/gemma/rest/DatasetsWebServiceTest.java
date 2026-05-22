@@ -1,5 +1,6 @@
 package ubic.gemma.rest;
 
+import gemma.gsec.SecurityService;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
@@ -28,6 +29,7 @@ import ubic.gemma.core.analysis.service.ExpressionAnalysisResultSetFileService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.analysis.service.ExpressionExperimentDataFileType;
 import ubic.gemma.core.context.TestComponent;
+import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchService;
@@ -47,11 +49,13 @@ import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpre
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.GeeqService;
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 import ubic.gemma.persistence.util.*;
@@ -146,6 +150,16 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         }
 
         @Bean
+        public AuditTrailService auditTrailService() {
+            return mock( AuditTrailService.class );
+        }
+
+        @Bean
+        public SecurityService securityService() {
+            return mock( SecurityService.class );
+        }
+
+        @Bean
         public QuantitationTypeService quantitationTypeService() {
             return mock( QuantitationTypeService.class );
         }
@@ -222,6 +236,16 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
 
         @Bean
         public ExpressionExperimentBatchInformationService expressionExperimentBatchInformationService() {
+            return mock();
+        }
+
+        @Bean
+        public TaskRunningService taskRunningService() {
+            return mock();
+        }
+
+        @Bean
+        public GeeqService geeqService() {
             return mock();
         }
 
@@ -850,6 +874,91 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         assertThat( target( "/datasets/1/subSets/1/samples" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
+    }
+
+    @Test
+    public void testPreviewDatasetDesignChangeNoOp() {
+        DesignPreflightReport report = new DesignPreflightReport();
+        report.getSummary().setBiomaterialsWithChangedAssignments( 0 );
+        when( expressionExperimentService.previewDesignChange( eq( ee ), any( ExperimentalDesignValueObject.class ) ) ).thenReturn( report );
+
+        ExperimentalDesignValueObject payload = new ExperimentalDesignValueObject();
+        assertThat( target( "/datasets/1/designPreflight" ).request().post( javax.ws.rs.client.Entity.json( payload ) ) )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .entity()
+                .hasFieldOrProperty( "data" )
+                .hasFieldOrPropertyWithValue( "data.summary.factorsToDelete", 0 )
+                .hasFieldOrPropertyWithValue( "data.summary.factorValuesToDelete", 0 )
+                .hasFieldOrPropertyWithValue( "data.summary.differentialExpressionAnalysesToDelete", 0 )
+                .hasFieldOrPropertyWithValue( "data.summary.biomaterialsWithChangedAssignments", 0 );
+
+        ArgumentCaptor<ExperimentalDesignValueObject> captor = ArgumentCaptor.forClass( ExperimentalDesignValueObject.class );
+        verify( expressionExperimentService ).previewDesignChange( eq( ee ), captor.capture() );
+        verify( expressionExperimentService ).load( 1L );
+    }
+
+    @Test
+    public void testPreviewDatasetDesignChangeWithBlockers() {
+        DesignPreflightReport report = new DesignPreflightReport();
+        DesignPreflightReport.Blocker b = new DesignPreflightReport.Blocker(
+                "ASSIGNMENT_REFERENCES_UNKNOWN_FV",
+                "Biomaterial 42 is assigned to factor value 999 which is not present in the proposed design." );
+        b.setBioMaterialId( 42L );
+        b.setFactorValueId( 999L );
+        report.getBlockers().add( b );
+        when( expressionExperimentService.previewDesignChange( eq( ee ), any( ExperimentalDesignValueObject.class ) ) ).thenReturn( report );
+
+        assertThat( target( "/datasets/1/designPreflight" ).request().post( javax.ws.rs.client.Entity.json( new ExperimentalDesignValueObject() ) ) )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data.blockers", list( Map.class ) )
+                .hasSize( 1 )
+                .first()
+                .hasFieldOrPropertyWithValue( "type", "ASSIGNMENT_REFERENCES_UNKNOWN_FV" )
+                .hasFieldOrPropertyWithValue( "bioMaterialId", 42 )
+                .hasFieldOrPropertyWithValue( "factorValueId", 999 );
+    }
+
+    @Test
+    public void testPreviewDatasetDesignChangeReportsDeletions() {
+        DesignPreflightReport report = new DesignPreflightReport();
+        report.getFactorsToDelete().add( new DesignPreflightReport.EntityRef( 7L, "treatment" ) );
+        report.getFactorValuesToDelete().add( new DesignPreflightReport.EntityRef( 70L, "control" ) );
+        report.getDifferentialExpressionAnalysesToDelete().add( new DesignPreflightReport.AnalysisRef( 500L, "control vs treatment", null ) );
+        report.getSummary().setFactorsToDelete( 1 );
+        report.getSummary().setFactorValuesToDelete( 1 );
+        report.getSummary().setDifferentialExpressionAnalysesToDelete( 1 );
+        report.getSummary().setBiomaterialsWithChangedAssignments( 3 );
+        when( expressionExperimentService.previewDesignChange( eq( ee ), any( ExperimentalDesignValueObject.class ) ) ).thenReturn( report );
+
+        assertThat( target( "/datasets/1/designPreflight" ).request().post( javax.ws.rs.client.Entity.json( new ExperimentalDesignValueObject() ) ) )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.summary.factorsToDelete", 1 )
+                .hasFieldOrPropertyWithValue( "data.summary.factorValuesToDelete", 1 )
+                .hasFieldOrPropertyWithValue( "data.summary.differentialExpressionAnalysesToDelete", 1 )
+                .hasFieldOrPropertyWithValue( "data.summary.biomaterialsWithChangedAssignments", 3 )
+                .extracting( "data.differentialExpressionAnalysesToDelete", list( Map.class ) )
+                .hasSize( 1 )
+                .first()
+                .hasFieldOrPropertyWithValue( "id", 500 )
+                .hasFieldOrPropertyWithValue( "name", "control vs treatment" );
+    }
+
+    @Test
+    public void testPreviewDatasetDesignChangeWithEmptyBodyIs400() {
+        assertThat( target( "/datasets/1/designPreflight" ).request().post( javax.ws.rs.client.Entity.json( null ) ) )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        verify( expressionExperimentService, never() ).previewDesignChange( any(), any() );
+    }
+
+    @Test
+    public void testPreviewDatasetDesignChangeWithUnknownDatasetIs404() {
+        // expressionExperimentService.load( 1L ) returns ee per setUpMocks(); load for an unknown id returns null.
+        assertThat( target( "/datasets/999/designPreflight" ).request().post( javax.ws.rs.client.Entity.json( new ExperimentalDesignValueObject() ) ) )
+                .hasStatus( Response.Status.NOT_FOUND );
+        verify( expressionExperimentService, never() ).previewDesignChange( any(), any() );
     }
 
     @Test

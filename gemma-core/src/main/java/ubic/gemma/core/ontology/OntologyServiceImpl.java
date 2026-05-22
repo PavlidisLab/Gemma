@@ -690,7 +690,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         if ( StringUtils.isNotBlank( uri ) ) {
             OntologyTerm term = this.getTerm( uri, timeoutMs, TimeUnit.MILLISECONDS );
 
-            if ( uri.startsWith( "http://purl.org/commons/record/ncbi_gene" ) ) {
+            if ( uri.startsWith( Gene.NCBI_URI_PREFIX ) ) {
                 // these are false positives, they aren't in an ontology. No-op. There may be others.
                 return;
             } else if ( term == null ) {
@@ -734,7 +734,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                     OntologyTerm term = this.getTerm( valueUri, Math.max( timeoutMs - timer.getTime(), 0 ), TimeUnit.MILLISECONDS );
 
                     if ( term == null ) {
-                        if ( log.isDebugEnabled() && !ch.getValueUri().startsWith( "http://purl.org/commons/record/ncbi_gene/" ) ) {
+                        if ( log.isDebugEnabled() && !ch.getValueUri().startsWith( Gene.NCBI_URI_PREFIX ) ) {
                             log.debug( "No term for " + valueUri + " (In Gemma: " + ch.getValue() + ")" );
                         }
                         checked++;
@@ -915,7 +915,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         vc.setValue( g.getOfficialSymbol() + " [" + g.getTaxon().getCommonName() + "]" + " " + g.getOfficialName() );
         vc.setDescription( g.toString() );
         if ( g.getNcbiGeneId() != null ) {
-            vc.setValueUri( "http://purl.org/commons/record/ncbi_gene/" + g.getNcbiGeneId() );
+            vc.setValueUri( Gene.NCBI_URI_PREFIX + g.getNcbiGeneId() );
         }
         return vc;
     }

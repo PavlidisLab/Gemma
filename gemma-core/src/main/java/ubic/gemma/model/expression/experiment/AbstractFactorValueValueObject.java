@@ -119,7 +119,9 @@ public abstract class AbstractFactorValueValueObject extends IdentifiableValueOb
      * Indicate if this FactorValue is a measurement.
      */
     @Schema(description = "Indicate if this factor value represents a measurement. When this is true, the `measurement` field will be populated.")
-    @JsonProperty("isMeasurement")
+    // READ_ONLY: this is derived from measurementObject != null, so Jackson should emit it but never try
+    // to set it back — otherwise clients who round-trip the JSON hit "Unrecognized field 'isMeasurement'".
+    @JsonProperty(value = "isMeasurement", access = JsonProperty.Access.READ_ONLY)
     public boolean isMeasurement() {
         return measurementObject != null;
     }

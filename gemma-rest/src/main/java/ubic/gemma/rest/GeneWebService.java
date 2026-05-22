@@ -30,6 +30,7 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.args.*;
@@ -71,7 +72,9 @@ public class GeneWebService {
             @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
             @QueryParam("limit") @DefaultValue("20") LimitArg limitArg
     ) {
-        return paginate( geneArgService.getGenes( offsetArg.getValue(), limitArg.getValue() ), new String[] { "id" } );
+        Slice<GeneValueObject> slice = geneArgService.getGenes( offsetArg.getValue(), limitArg.getValue() );
+        geneService.populateAssociatedExperimentCount( slice );
+        return paginate( slice, new String[] { "id" } );
     }
 
     /**
@@ -94,7 +97,9 @@ public class GeneWebService {
         SortArg<Gene> sort = SortArg.valueOf( "+id" );
         Filters filters = Filters.empty();
         filters.and( geneArgService.getFilters( genes ) );
-        return respond( geneService.loadValueObjects( filters, geneArgService.getSort( sort ), 0, -1 ) );
+        Slice<GeneValueObject> slice = geneService.loadValueObjects( filters, geneArgService.getSort( sort ), 0, -1 );
+        geneService.populateAssociatedExperimentCount( slice );
+        return respond( slice );
     }
 
     /**
