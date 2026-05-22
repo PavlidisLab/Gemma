@@ -17,6 +17,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.expression.experiment.AgentCurationKind;
+import ubic.gemma.model.expression.experiment.AgentCurationSummaryValueObject;
 import ubic.gemma.model.expression.experiment.AgentProposal;
 import ubic.gemma.persistence.service.AbstractDao;
 
@@ -54,6 +55,27 @@ public class AgentProposalDaoImpl extends AbstractDao<AgentProposal>
                 .createQuery( "from AgentProposal p where p.investigation = :inv "
                         + "order by p.ranAt desc, p.id desc" )
                 .setParameter( "inv", investigation )
+                .list();
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public List<AgentCurationSummaryValueObject> findSummariesByInvestigation( Investigation investigation,
+            AgentCurationKind kindFilter ) {
+        // Thin projection: omit payloadJson, emit cast(length(payloadJson) as long) as payloadSize.
+        // The cast to long is necessary because HQL `length(...)` is typed as Integer and the
+        // AgentCurationSummaryValueObject constructor takes Long; Hibernate's NEW dispatch is
+        // strict about parameter types.
+        return getSessionFactory().getCurrentSession()
+                .createQuery( "select new ubic.gemma.model.expression.experiment.AgentCurationSummaryValueObject("
+                        + " p.id, p.kind, p.runId, p.agentVersion, p.model, p.ranAt, p.investigation.id,"
+                        + " cast(length(p.payloadJson) as long) )"
+                        + " from AgentProposal p"
+                        + " where p.investigation = :inv"
+                        + " and ( :kind is null or p.kind = :kind )"
+                        + " order by p.ranAt desc, p.id desc" )
+                .setParameter( "inv", investigation )
+                .setParameter( "kind", kindFilter )
                 .list();
     }
 

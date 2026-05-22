@@ -20,6 +20,7 @@ import ubic.gemma.core.security.audit.AuditedConditional;
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AgentProposalEvent;
 import ubic.gemma.model.expression.experiment.AgentCurationKind;
+import ubic.gemma.model.expression.experiment.AgentCurationSummaryValueObject;
 import ubic.gemma.model.expression.experiment.AgentProposal;
 
 import java.util.Date;
@@ -50,7 +51,9 @@ public class AgentProposalServiceImpl implements AgentProposalService {
     @Transactional
     @AuditedConditional(value = AgentProposalEvent.class,
             when = "#result != null and #result.created",
-            messageSpel = "'AgentProposal#' + #result.proposal.id + ' run=' + #runId"
+            messageSpel = "'AgentProposal#' + #result.proposal.id"
+                    + " + ' kind=' + #result.proposal.kind.dbValue"
+                    + " + ' run=' + #runId"
                     + " + (#agentVersion != null ? ' agent=' + #agentVersion : '')"
                     + " + (#model != null ? ' model=' + #model : '')")
     public AttachedProposal attach( Investigation investigation, String runId,
@@ -58,13 +61,41 @@ public class AgentProposalServiceImpl implements AgentProposalService {
             @Nullable String model,
             @Nullable Date ranAt,
             @Nullable String payloadJson ) {
+        // Backwards-compat overload: kind defaults to PROPOSAL. Persists
+        // inline rather than delegating to the kind-aware overload so the
+        // AOP proxy fires the @AuditedConditional aspect on this entry point
+        // (self-invocation would skip the proxy).
+        return doAttach( investigation, AgentCurationKind.PROPOSAL, runId,
+                agentVersion, model, ranAt, payloadJson );
+    }
+
+    @Override
+    @Transactional
+    @AuditedConditional(value = AgentProposalEvent.class,
+            when = "#result != null and #result.created",
+            messageSpel = "'AgentProposal#' + #result.proposal.id"
+                    + " + ' kind=' + #result.proposal.kind.dbValue"
+                    + " + ' run=' + #runId"
+                    + " + (#agentVersion != null ? ' agent=' + #agentVersion : '')"
+                    + " + (#model != null ? ' model=' + #model : '')")
+    public AttachedProposal attach( Investigation investigation,
+            @Nullable AgentCurationKind kind,
+            String runId,
+            @Nullable String agentVersion,
+            @Nullable String model,
+            @Nullable Date ranAt,
+            @Nullable String payloadJson ) {
+        return doAttach( investigation, kind != null ? kind : AgentCurationKind.PROPOSAL,
+                runId, agentVersion, model, ranAt, payloadJson );
+    }
+
+    private AttachedProposal doAttach( Investigation investigation, AgentCurationKind kind, String runId,
+            @Nullable String agentVersion, @Nullable String model,
+            @Nullable Date ranAt, @Nullable String payloadJson ) {
         Assert.notNull( investigation, "Investigation must not be null." );
         Assert.hasText( runId, "runId must be non-blank." );
-        // Step 1 of AgentCuration unification: the proposal path is always
-        // kind=PROPOSAL. The audit-creation entry point (kind=AUDIT) ships in
-        // step 3 — see handoffs/RECCE_AGENT_CURATION_UNIFICATION.md.
         AgentProposal existing = agentProposalDao.findByInvestigationAndKindAndRunId(
-                investigation, AgentCurationKind.PROPOSAL, runId );
+                investigation, kind, runId );
         if ( existing != null ) {
             // Idempotent retry; the @AuditedConditional predicate
             // (`#result.created`) suppresses event emission.
@@ -72,7 +103,7 @@ public class AgentProposalServiceImpl implements AgentProposalService {
         }
         AgentProposal p = new AgentProposal();
         p.setInvestigation( investigation );
-        p.setKind( AgentCurationKind.PROPOSAL );
+        p.setKind( kind );
         p.setRunId( runId );
         p.setAgentVersion( agentVersion );
         p.setModel( model );
@@ -87,6 +118,14 @@ public class AgentProposalServiceImpl implements AgentProposalService {
     public List<AgentProposal> findByInvestigation( Investigation investigation ) {
         Assert.notNull( investigation, "Investigation must not be null." );
         return agentProposalDao.findByInvestigation( investigation );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AgentCurationSummaryValueObject> findSummariesByInvestigation( Investigation investigation,
+            @Nullable AgentCurationKind kindFilter ) {
+        Assert.notNull( investigation, "Investigation must not be null." );
+        return agentProposalDao.findSummariesByInvestigation( investigation, kindFilter );
     }
 
     @Nullable
