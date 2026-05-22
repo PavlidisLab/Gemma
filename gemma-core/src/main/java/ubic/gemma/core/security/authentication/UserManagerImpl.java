@@ -463,6 +463,14 @@ public class UserManagerImpl implements UserManager, UserDetailsPasswordService 
 
     @Override
     @Transactional
+    public void setGroupDescription( String groupName, String description ) {
+        UserGroup group = userService.findGroupByName( groupName );
+        group.setDescription( description );
+        userService.update( group );
+    }
+
+    @Override
+    @Transactional
     public void addUserToGroup( String username, String groupName ) {
         User u = this.loadUser( username );
         UserGroup g = this.loadGroup( groupName );

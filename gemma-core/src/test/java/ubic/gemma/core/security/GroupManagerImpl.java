@@ -46,6 +46,11 @@ public class GroupManagerImpl implements GroupManager {
     }
 
     @Override
+    public void setGroupDescription( String groupName, String description ) {
+
+    }
+
+    @Override
     public void addUserToGroup( String username, String group ) {
 
     }

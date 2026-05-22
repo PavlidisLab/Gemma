@@ -196,12 +196,9 @@ public class GroupsWebService {
             throw new BadRequestException( "Group creation appeared to succeed but the group is not visible." );
         }
         if ( req.getDescription() != null ) {
-            created.setDescription( req.getDescription() );
-            // UserService.update(UserGroup) carries @Secured GROUP_USER + ACL_SECURABLE_EDIT;
-            // routed through UserManager doesn't expose a description-only setter, so we go
-            // through the facade indirectly via the read service is not enough — fall back to
-            // the UserService write path is intentionally not wired here to keep the WebService
-            // dependency surface narrow. Description update is exposed on PATCH (see below).
+            userManager.setGroupDescription( name, req.getDescription() );
+            // Re-load so the response reflects the persisted description.
+            created = userReadService.findGroupByName( name );
         }
         return Response.status( Response.Status.CREATED )
                 .entity( new ResponseDataObject<>( GroupValueObject.from( created ) ) )
@@ -243,11 +240,9 @@ public class GroupsWebService {
             changed = true;
         }
         if ( req.getDescription() != null && !req.getDescription().equals( g.getDescription() ) ) {
-            g.setDescription( req.getDescription() );
-            // No direct UserManager hook for description-only update; the entity is detached
-            // here. The next service-level write (e.g. member add) would persist; for the
-            // UI flow we rely on the patch caller to expect the legacy gemma-web limitation
-            // until a UserService description setter lands. Tracked as an open question.
+            userManager.setGroupDescription( g.getName(), req.getDescription() );
+            // Refresh so the response reflects the persisted state.
+            g = loadGroupById( id );
             changed = true;
         }
         if ( !changed ) {

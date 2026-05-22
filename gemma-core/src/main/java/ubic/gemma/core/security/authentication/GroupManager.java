@@ -20,4 +20,13 @@ public interface GroupManager extends org.springframework.security.provisioning.
      * Check if a group with a given name exists.
      */
     boolean groupExists( String name );
+
+    /**
+     * Update the human-readable description of a group. Spring's {@link org.springframework.security.provisioning.GroupManager}
+     * has no equivalent — the description field is Gemma-specific (on the {@code UserGroup} entity).
+     *
+     * @param groupName   the group to update (looked up by name).
+     * @param description new description; {@code null} clears the field.
+     */
+    void setGroupDescription( String groupName, @org.springframework.lang.Nullable String description );
 }
