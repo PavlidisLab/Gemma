@@ -52,6 +52,7 @@ import org.springframework.lang.Nullable;
 import javax.xml.xpath.XPathExpression;
 import java.io.*;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -178,7 +179,7 @@ public class GeoBrowserImpl implements GeoBrowser {
         URL url = getUrlForBrowsing( GeoRecordType.SERIES, start, pageSize, GeoFormat.CSV );
 
         List<GeoRecord> records = new ArrayList<>();
-        try ( BufferedReader br = new BufferedReader( new InputStreamReader( url.openStream() ) ) ) {
+        try ( BufferedReader br = new BufferedReader( new InputStreamReader( url.openStream(), StandardCharsets.UTF_8 ) ) ) {
 
             // We are getting a tab delimited file.
 

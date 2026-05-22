@@ -44,6 +44,7 @@ import ubic.gemma.persistence.service.expression.designElement.CompositeSequence
 import ubic.gemma.persistence.util.EntityUrlBuilder;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -153,7 +154,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
         }
 
         try ( InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( f.toAbsolutePath().toString() );
-                BufferedReader br = new BufferedReader( new InputStreamReader( is ) ) ) {
+                BufferedReader br = new BufferedReader( new InputStreamReader( is, StandardCharsets.UTF_8 ) ) ) {
             ArrayDesignAnnotationServiceImpl.log.info( "Reading annotations from: " + f );
 
             String line;
@@ -541,7 +542,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
             // ensure the parent directory exists
             PathUtils.createParentDirectories( f );
 
-            writer = new OutputStreamWriter( new GZIPOutputStream( Files.newOutputStream( f ) ) );
+            writer = new OutputStreamWriter( new GZIPOutputStream( Files.newOutputStream( f ) ), StandardCharsets.UTF_8 );
         }
         appendBaseHeader( "Platform annotations", buildInfo, new Date(), writer );
         writer.append( "#" ).append( "\n" );

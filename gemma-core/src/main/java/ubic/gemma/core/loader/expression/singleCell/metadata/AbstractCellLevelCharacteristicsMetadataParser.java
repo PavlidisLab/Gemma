@@ -19,6 +19,7 @@ import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import org.springframework.lang.Nullable;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -392,7 +393,7 @@ abstract class AbstractCellLevelCharacteristicsMetadataParser<T extends CellLeve
 
     private CSVParser openMetadataFile( Path metadataFile ) throws IOException {
         if ( metadataFile.toString().endsWith( ".gz" ) ) {
-            return getTsvFormat().parse( new InputStreamReader( FileUtils.openCompressedFile( metadataFile ) ) );
+            return getTsvFormat().parse( new InputStreamReader( FileUtils.openCompressedFile( metadataFile ), StandardCharsets.UTF_8 ) );
         } else {
             return getTsvFormat().parse( Files.newBufferedReader( metadataFile ) );
         }
