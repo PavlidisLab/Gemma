@@ -264,17 +264,46 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
             classes = null;
         }
 
+        // HQL_SQL_AUDIT P4: prior implementation fetched every event for every requested trail
+        // (group-by-trail-and-event was effectively a no-op, since (trail, ae) pairs are distinct)
+        // then reduced in Java via putIfAbsent on an ordered scan. For long-lived auditables that
+        // materialised thousands of rows per trail to discard all but one.
+        //
+        // Rewrite: per-trail correlated subquery picks the single event matching (max date,
+        // max id on tie) within the type filter. Two-level subquery — outer max(id) breaks
+        // ties on the inner max(date) — mirrors the prior Java reducer's `order by date desc,
+        // id desc; putIfAbsent` exactly. (max(id) alone would be wrong on test fixtures where
+        // events are inserted out of date order; see V8__audit_trail_last_event_id.sql's note
+        // on why the migration backfill's max(id) shortcut is OK for prod but not in general.)
+        // Both subqueries join AuditTrail.events via `trail2.id = trail.id`, hitting the
+        // AUDIT_EVENT.AUDIT_TRAIL_FK index — one row per trail instead of every historical event.
+        //
+        // The `join fetch ae.eventType et` inner-join survives unchanged: the prior query also
+        // used `join fetch` (not `left join fetch`), so events with a null eventType were
+        // dropped even in the no-types-filter path. Preserving that to keep behaviour identical
+        // for callers like BatchInfoRepopulationJob that pass no type filter — they want the
+        // latest event WITH an eventType, since downstream `instanceof` checks on null are
+        // false anyway.
         //language=HQL
         final String queryString = "select trail.id, ae from AuditTrail trail "
                 + "join trail.events ae "
-                + "join fetch ae.eventType et " // fetching here prevents a separate select query
+                + "join fetch ae.eventType et "
                 + "where trail.id in :trails "
                 + ( classes != null ? "and type(et) in :classes " : "" )
-                // annoyingly, Hibernate does not select the latest event when grouping by trail, so we have to fetch
-                // them all
-                + "group by trail, ae "
-                // latest by date or ID to break ties
-                + "order by ae.date desc, ae.id desc";
+                + "and ae.id = ("
+                + "  select max(ae2.id) from AuditTrail trail2 "
+                + "  join trail2.events ae2 "
+                + "  where trail2.id = trail.id "
+                + "  and ae2.eventType is not null"
+                + ( classes != null ? " and type(ae2.eventType) in :classes" : "" )
+                + "  and ae2.date = ("
+                + "    select max(ae3.date) from AuditTrail trail3 "
+                + "    join trail3.events ae3 "
+                + "    where trail3.id = trail.id "
+                + "    and ae3.eventType is not null"
+                + ( classes != null ? " and type(ae3.eventType) in :classes" : "" )
+                + "  )"
+                + ")";
 
         Query queryObject = this.getSessionFactory().getCurrentSession()
                 .createQuery( queryString )
@@ -289,7 +318,7 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
             Object[] ar = ( Object[] ) o;
             Long t = ( Long ) ar[0];
             AuditEvent e = ( AuditEvent ) ar[1];
-            // only retain the first one which is the latest (by date or ID)
+            // one row per trail by construction; putIfAbsent is now belt-and-braces
             result.putIfAbsent( atMap.get( t ), e );
         }
 
