@@ -94,8 +94,22 @@ public @interface AuditedConditional {
     /**
      * The concrete {@link AuditEventType} subclass to record. Must be
      * instantiable via a public no-arg constructor.
+     *
+     * <p>May be left at the default ({@link AuditEventType}.class — the
+     * abstract base) when {@link #valueSpel()} chooses the event class at
+     * runtime. See {@link Audited#value()} for the parallel rule.
      */
-    Class<? extends AuditEventType> value();
+    Class<? extends AuditEventType> value() default AuditEventType.class;
+
+    /**
+     * Optional SpEL expression that resolves to a {@code Class<? extends AuditEventType>}
+     * at runtime. Mirrors {@link Audited#valueSpel()}: when set, it overrides
+     * {@link #value()} (with a WARN if both are non-default). When evaluation
+     * fails or resolves to {@code null}/non-Class, the aspect falls back to
+     * {@link #value()}; if {@code value()} is also at the default the audit
+     * row is skipped.
+     */
+    String valueSpel() default "";
 
     /**
      * SpEL predicate evaluated against the post-invocation context. The audit

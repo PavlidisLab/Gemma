@@ -37,10 +37,13 @@ import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.model.common.auditAndSecurity.AbstractAuditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Auditable;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedSampleCorrelationAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalReversionEvent;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -321,6 +324,106 @@ public class AuditedAspectTest extends BaseTest5 {
         @AuditedOnError( value = FailedSampleCorrelationAnalysisEvent.class, exception = IllegalStateException.class )
         public void noMatchEmitsNothing( FakeAuditable target ) {
             throw new NullPointerException( "npe" );
+        }
+
+        // -----------------------------------------------------------------
+        // valueSpel — runtime-resolved event type (inventory #15 + #16 in
+        // AUDIT_RESIDUAL_INVENTORY.md). The SpEL expression must resolve to
+        // a Class<? extends AuditEventType>; the aspect uses that instead of
+        // the (default) value() attribute.
+        // -----------------------------------------------------------------
+
+        /**
+         * Runtime-resolved event class via {@code valueSpel}: the SpEL
+         * expression returns a concrete Class chosen by the parameter
+         * {@code which}. Note that {@code value()} is left at its default
+         * (the abstract {@link AuditEventType}); the SpEL choice is the
+         * only source of the event type.
+         */
+        @Audited(
+                valueSpel = "T(ubic.gemma.core.security.audit.AuditedAspectTest$ValueSpelHelper).pick(#which)",
+                messageSpel = "'valueSpel chose ' + #which" )
+        public void dynamicEventType( FakeAuditable target, String which ) {
+            // no-op; aspect resolves the event class from #which via SpEL
+        }
+
+        /**
+         * {@code valueSpel} resolves to {@code null} (no concrete class for
+         * this case); the aspect must SKIP emission, not fall back to the
+         * default {@link AuditEventType}.class.
+         */
+        @Audited( valueSpel = "T(ubic.gemma.core.security.audit.AuditedAspectTest$ValueSpelHelper).pick(#which)",
+                message = "would-be note" )
+        public void dynamicEventTypeNullSkips( FakeAuditable target, String which ) {
+            // no-op
+        }
+
+        /**
+         * Broken {@code valueSpel}: a malformed expression triggers the
+         * fallback to {@link Audited#value()}. Since {@code value()} here is
+         * a concrete class, emission proceeds with that fallback.
+         */
+        @Audited( value = SampleRemovalEvent.class,
+                valueSpel = "#nonexistent.foo.bar()",
+                message = "fallback event-class path" )
+        public void brokenValueSpelFallsBackToValue( FakeAuditable target ) {
+            // no-op
+        }
+
+        /**
+         * Both {@code value} and {@code valueSpel} non-default: SpEL choice
+         * wins when it resolves successfully. The aspect logs a WARN; the
+         * row is written with the SpEL-chosen type
+         * ({@link SampleRemovalReversionEvent}), not the literal
+         * {@code value} ({@link SampleRemovalEvent}).
+         */
+        @Audited( value = SampleRemovalEvent.class,
+                valueSpel = "T(ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalReversionEvent)",
+                message = "both-set-spel-wins" )
+        public void bothValueAndValueSpel_spelWins( FakeAuditable target ) {
+            // no-op
+        }
+
+        /**
+         * Both forms unset: {@code value()} defaults to the abstract
+         * {@link AuditEventType}, {@code valueSpel} is empty. The aspect
+         * SKIPS emission (no concrete class to write).
+         */
+        @Audited( message = "no event class chosen" )
+        public void noEventTypeAtAll( FakeAuditable target ) {
+            // no-op
+        }
+
+        /**
+         * {@code @AuditedConditional} variant of {@code valueSpel}: the
+         * conditional predicate fires AND the event class is chosen at
+         * runtime. Exercises the @AuditedConditional path through
+         * resolveEventType.
+         */
+        @AuditedConditional(
+                valueSpel = "T(ubic.gemma.core.security.audit.AuditedAspectTest$ValueSpelHelper).pick(#which)",
+                when = "#count > 0",
+                messageSpel = "'cond+spel: ' + #which" )
+        public int dynamicConditional( FakeAuditable target, String which, int count ) {
+            return count;
+        }
+    }
+
+    /**
+     * Static helper invoked from {@code valueSpel} expressions via
+     * {@code T(...).pick(#arg)}. Returns null for the sentinel "none" so
+     * tests can assert the null-skip path.
+     */
+    public static class ValueSpelHelper {
+        @Nullable
+        public static Class<? extends AuditEventType> pick( String which ) {
+            if ( "a".equals( which ) ) {
+                return SampleRemovalEvent.class;
+            }
+            if ( "b".equals( which ) ) {
+                return SampleRemovalReversionEvent.class;
+            }
+            return null;
         }
     }
 
@@ -822,6 +925,146 @@ public class AuditedAspectTest extends BaseTest5 {
 
         Throwable caught = catchThrowable( () -> annotatedService.noMatchEmitsNothing( target ) );
         assertThat( caught ).isInstanceOf( NullPointerException.class );
+        verifyNoInteractions( auditTrailService );
+        assertThat( collector.received ).isEmpty();
+    }
+
+    // -----------------------------------------------------------------
+    // valueSpel — runtime-resolved event type
+    // -----------------------------------------------------------------
+
+    /**
+     * {@code valueSpel} resolves to {@link SampleRemovalEvent} when
+     * {@code which == "a"}. The aspect must write the row with the
+     * SpEL-chosen class.
+     */
+    @Test
+    public void valueSpel_resolvesToBranchA() {
+        FakeAuditable target = new FakeAuditable( 500L );
+
+        annotatedService.dynamicEventType( target, "a" );
+
+        verify( auditTrailService ).addUpdateEventWithPayload(
+                eq( target ),
+                eq( SampleRemovalEvent.class ),
+                eq( "valueSpel chose a" ),
+                eq( null ) );
+        assertThat( collector.received ).hasSize( 1 );
+        assertThat( collector.received.get( 0 ).getEventType() ).isInstanceOf( SampleRemovalEvent.class );
+    }
+
+    /**
+     * {@code valueSpel} resolves to {@link SampleRemovalReversionEvent} when
+     * {@code which == "b"} — different concrete class from branch A, on the
+     * same annotated method. Demonstrates true runtime dispatch.
+     */
+    @Test
+    public void valueSpel_resolvesToBranchB() {
+        FakeAuditable target = new FakeAuditable( 501L );
+
+        annotatedService.dynamicEventType( target, "b" );
+
+        verify( auditTrailService ).addUpdateEventWithPayload(
+                eq( target ),
+                eq( SampleRemovalReversionEvent.class ),
+                eq( "valueSpel chose b" ),
+                eq( null ) );
+        assertThat( collector.received ).hasSize( 1 );
+        assertThat( collector.received.get( 0 ).getEventType() ).isInstanceOf( SampleRemovalReversionEvent.class );
+    }
+
+    /**
+     * {@code valueSpel} returns {@code null} (the helper has no class for
+     * {@code which == "x"}); {@code value()} is at its abstract default. The
+     * aspect must SKIP emission — no fallback to the abstract base class.
+     */
+    @Test
+    public void valueSpel_nullResultSkipsEmission() {
+        FakeAuditable target = new FakeAuditable( 502L );
+
+        annotatedService.dynamicEventTypeNullSkips( target, "x" );
+
+        verifyNoInteractions( auditTrailService );
+        assertThat( collector.received ).isEmpty();
+    }
+
+    /**
+     * Broken {@code valueSpel}: the SpEL expression cannot evaluate. The
+     * aspect must log ERROR and FALL BACK to the literal {@code value()}.
+     * Since {@code value()} here is a concrete class, emission proceeds.
+     */
+    @Test
+    public void valueSpel_brokenExpressionFallsBackToLiteralValue() {
+        FakeAuditable target = new FakeAuditable( 503L );
+
+        annotatedService.brokenValueSpelFallsBackToValue( target );
+
+        verify( auditTrailService ).addUpdateEventWithPayload(
+                eq( target ),
+                eq( SampleRemovalEvent.class ),
+                eq( "fallback event-class path" ),
+                eq( null ) );
+    }
+
+    /**
+     * Both {@code value} and {@code valueSpel} non-default: the SpEL choice
+     * wins when it resolves successfully (the literal {@code value} is the
+     * fallback for the broken-SpEL path).
+     */
+    @Test
+    public void valueSpel_bothSetSpelChoiceWins() {
+        FakeAuditable target = new FakeAuditable( 504L );
+
+        annotatedService.bothValueAndValueSpel_spelWins( target );
+
+        verify( auditTrailService ).addUpdateEventWithPayload(
+                eq( target ),
+                eq( SampleRemovalReversionEvent.class ), // SpEL choice
+                eq( "both-set-spel-wins" ),
+                eq( null ) );
+    }
+
+    /**
+     * Both {@code value} at its abstract default AND empty {@code valueSpel}:
+     * no concrete class to write, the aspect must skip emission entirely.
+     */
+    @Test
+    public void valueSpel_noEventTypeResolvedSkips() {
+        FakeAuditable target = new FakeAuditable( 505L );
+
+        annotatedService.noEventTypeAtAll( target );
+
+        verifyNoInteractions( auditTrailService );
+        assertThat( collector.received ).isEmpty();
+    }
+
+    /**
+     * {@code @AuditedConditional} also honours {@code valueSpel}: when the
+     * predicate fires, the event class is resolved at runtime.
+     */
+    @Test
+    public void valueSpel_worksOnAuditedConditional() {
+        FakeAuditable target = new FakeAuditable( 506L );
+
+        annotatedService.dynamicConditional( target, "b", 3 );
+
+        verify( auditTrailService ).addUpdateEventWithPayload(
+                eq( target ),
+                eq( SampleRemovalReversionEvent.class ),
+                eq( "cond+spel: b" ),
+                eq( null ) );
+    }
+
+    /**
+     * {@code @AuditedConditional} predicate false → no emission even if
+     * {@code valueSpel} would have resolved. The when-gate runs first.
+     */
+    @Test
+    public void valueSpel_auditedConditionalSkipsWhenPredicateFalse() {
+        FakeAuditable target = new FakeAuditable( 507L );
+
+        annotatedService.dynamicConditional( target, "a", 0 );
+
         verifyNoInteractions( auditTrailService );
         assertThat( collector.received ).isEmpty();
     }

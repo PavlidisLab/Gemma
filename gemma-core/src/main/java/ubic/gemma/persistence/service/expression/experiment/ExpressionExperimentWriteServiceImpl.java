@@ -75,6 +75,8 @@ public class ExpressionExperimentWriteServiceImpl implements ExpressionExperimen
     @Autowired
     private AuditTrailService auditTrailService;
     @Autowired
+    private ExpressionExperimentWriteAuditService expressionExperimentWriteAuditService;
+    @Autowired
     private BioMaterialService bioMaterialService;
     @Autowired
     private CharacteristicService characteristicService;
@@ -240,22 +242,23 @@ public class ExpressionExperimentWriteServiceImpl implements ExpressionExperimen
                 }
                 if ( !qt.equals( previousPreferredQt ) ) {
                     Class<? extends PreferredDataChangedEvent> eventType = getPreferredDataChangedEventForVectorType( vectorType );
-                    String message = String.format( "The preferred quantitation type for %s changed%s to %s.",
-                            vectorType.getSimpleName(), previousPreferredQt != null ? " from " + previousPreferredQt : "", qt );
                     if ( eventType != null ) {
-                        auditTrailService.addUpdateEvent( ee, eventType, message );
+                        // Audit emission flows through the co-bean so the @Audited
+                        // aspect intercepts the proxied invocation and resolves the
+                        // concrete event class at runtime via valueSpel.
+                        expressionExperimentWriteAuditService.recordPreferredQtChanged( ee, qt, previousPreferredQt, vectorType );
                     } else {
-                        log.warn( message + " There is no audit event type for this change." );
+                        log.warn( String.format( "The preferred quantitation type for %s changed%s to %s. There is no audit event type for this change.",
+                                vectorType.getSimpleName(), previousPreferredQt != null ? " from " + previousPreferredQt : "", qt ) );
                     }
                 }
             } else if ( previousPreferredQt != null && previousPreferredQt.isPreferred( vectorType ) && qt.equals( previousPreferredQt ) ) {
                 Class<? extends PreferredDataChangedEvent> eventType = getPreferredDataChangedEventForVectorType( vectorType );
-                String message = String.format( "The preferred quantitation type for %s was cleared (previously %s).",
-                        vectorType.getSimpleName(), previousPreferredQt );
                 if ( eventType != null ) {
-                    auditTrailService.addUpdateEvent( ee, eventType, message );
+                    expressionExperimentWriteAuditService.recordPreferredQtCleared( ee, previousPreferredQt, vectorType );
                 } else {
-                    log.warn( message + " There is no audit event type for this change." );
+                    log.warn( String.format( "The preferred quantitation type for %s was cleared (previously %s). There is no audit event type for this change.",
+                            vectorType.getSimpleName(), previousPreferredQt ) );
                 }
             }
         } else {
@@ -265,8 +268,18 @@ public class ExpressionExperimentWriteServiceImpl implements ExpressionExperimen
         quantitationTypeService.update( qt );
     }
 
+    /**
+     * Resolve the concrete {@link PreferredDataChangedEvent} subclass that
+     * matches a data-vector type, or {@code null} if no event is emitted for
+     * that vector type (currently: processed data — multiple processed sets
+     * are not allowed so a "preference change" has no meaning).
+     *
+     * <p>{@code public static} so the {@link ubic.gemma.core.security.audit.Audited#valueSpel()}
+     * SpEL expressions in {@code ExpressionExperimentWriteAuditServiceImpl}
+     * can reach it via {@code T(...).getPreferredDataChangedEventForVectorType(#vectorType)}.
+     */
     @Nullable
-    private Class<? extends PreferredDataChangedEvent> getPreferredDataChangedEventForVectorType( Class<? extends DataVector> vectorType ) {
+    public static Class<? extends PreferredDataChangedEvent> getPreferredDataChangedEventForVectorType( Class<? extends DataVector> vectorType ) {
         if ( SingleCellExpressionDataVector.class.isAssignableFrom( vectorType ) ) {
             return PreferredSingleCellDataChangedEvent.class;
         } else if ( RawExpressionDataVector.class.isAssignableFrom( vectorType ) ) {
