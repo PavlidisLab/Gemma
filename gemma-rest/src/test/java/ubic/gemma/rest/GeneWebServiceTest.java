@@ -94,4 +94,28 @@ public class GeneWebServiceTest extends BaseJerseyIntegrationTest5 {
         assertThat( target( "/genes/" + gene.getOfficialSymbol() + "/locations" ).request().get() )
                 .hasStatus( Response.Status.OK );
     }
+
+    @Test
+    public void testGeneDifferentialExpression() {
+        // Happy path: no DEA results exist for the fixture gene, so the underlying service returns
+        // an empty map; the endpoint surfaces that as a 200 with an empty list payload.
+        assertThat( target( "/genes/" + gene.getOfficialSymbol() + "/differentialExpression" ).request().get() )
+                .hasStatus( Response.Status.OK );
+    }
+
+    @Test
+    public void testGeneDifferentialExpressionWithThreshold() {
+        assertThat( target( "/genes/" + gene.getOfficialSymbol() + "/differentialExpression" )
+                .queryParam( "threshold", "0.05" )
+                .request().get() )
+                .hasStatus( Response.Status.OK );
+    }
+
+    @Test
+    public void testGeneDifferentialExpressionRejectsOutOfRangeThreshold() {
+        assertThat( target( "/genes/" + gene.getOfficialSymbol() + "/differentialExpression" )
+                .queryParam( "threshold", "2.0" )
+                .request().get() )
+                .hasStatus( Response.Status.BAD_REQUEST );
+    }
 }
