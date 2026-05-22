@@ -17,22 +17,18 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
-import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
-import ubic.gemma.model.common.auditAndSecurity.eventType.CurationNoteUpdateEvent;
 import ubic.gemma.model.expression.experiment.AgentCurationKind;
 import ubic.gemma.model.expression.experiment.AgentCurationSummaryValueObject;
 import ubic.gemma.model.expression.experiment.AgentProposal;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.experiment.AgentProposalService;
-import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.args.DatasetArg;
 import ubic.gemma.rest.util.args.DatasetArgService;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -51,8 +47,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import static ubic.gemma.rest.util.Responders.respond;
-
 /**
  * Private curation API for the curation-UI.
  * <p>
@@ -66,12 +60,13 @@ import static ubic.gemma.rest.util.Responders.respond;
  *   <li>{@code GET  /candidates} — screening queue (datasets needing curation attention).
  *       Implemented as a 302 redirect to {@code /datasets?filter=needsAttention=true} since the underlying
  *       query is already supported by the existing dataset filter.</li>
- *   <li>{@code POST /datasets/{id}/audits} — curator manual audit submission (creates a
- *       {@link CurationNoteUpdateEvent} audit event with the supplied note + detail).</li>
  *   <li>{@code POST /datasets/{id}/curation-proposals} — attach an {@code AgentProposal} to a loaded EE
  *       (consolidated with the preboarded path's surface per STATUS_CURATION_PROPOSALS.md).</li>
  *   <li>{@code GET  /datasets/{id}/curation-proposals} — list proposals attached to a loaded EE,
  *       newest first.</li>
+ *   <li>{@code POST /datasets/{id}/audits} + {@code GET /datasets/{id}/audits} — thin URL aliases for
+ *       the {@code kind=AUDIT} flavor of curation proposals (per GEMMA_UI_ENDPOINT_GAP §3f). Delegate to
+ *       the unified handlers with {@code kind} pre-bound to {@link AgentCurationKind#AUDIT}.</li>
  * </ul>
  */
 @Service
@@ -82,9 +77,6 @@ public class CurationWebService {
 
     @Autowired
     private DatasetArgService datasetArgService;
-
-    @Autowired
-    private AuditTrailService auditTrailService;
 
     @Autowired
     private AgentProposalService agentProposalService;
@@ -109,59 +101,6 @@ public class CurationWebService {
             }
         } );
         return Response.status( Response.Status.FOUND ).location( builder.build() ).build();
-    }
-
-    /**
-     * Request body for {@link #submitAudit}. {@code note} is short text; {@code detail} is optional long-form.
-     */
-    public static class AuditSubmissionRequest {
-        @Nullable
-        private String note;
-        @Nullable
-        private String detail;
-
-        @Nullable
-        public String getNote() {
-            return note;
-        }
-
-        public void setNote( @Nullable String note ) {
-            this.note = note;
-        }
-
-        @Nullable
-        public String getDetail() {
-            return detail;
-        }
-
-        public void setDetail( @Nullable String detail ) {
-            this.detail = detail;
-        }
-    }
-
-    /**
-     * Submit a curator audit on a dataset. Creates a {@link CurationNoteUpdateEvent} audit event with the supplied
-     * note/detail. The persistent storage is the existing audit-trail table; no new entity is needed.
-     */
-    @POST
-    @Hidden
-    @Path("/datasets/{dataset}/audits")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
-    @Operation(hidden = true)
-    public ResponseDataObject<AuditEventValueObject> submitAudit(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
-            @Nullable AuditSubmissionRequest body
-    ) {
-        if ( body == null || body.getNote() == null || body.getNote().trim().isEmpty() ) {
-            throw new BadRequestException( "Request body must include a non-blank `note`." );
-        }
-        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
-        //noinspection deprecation
-        AuditEvent event = auditTrailService.addUpdateEvent( ee, CurationNoteUpdateEvent.class,
-                body.getNote().trim(), body.getDetail() );
-        return respond( new AuditEventValueObject( event ) );
     }
 
     /**
@@ -320,6 +259,55 @@ public class CurationWebService {
             rows.add( toProposalResponse( p, ee.getId() ) );
         }
         return Response.ok( rows ).build();
+    }
+
+    /**
+     * Thin alias for {@link #submitCurationProposal} with {@code kind} pre-bound to
+     * {@link AgentCurationKind#AUDIT}. The body field {@code kind} (if present) is ignored — the path
+     * is the discriminator. See GEMMA_UI_ENDPOINT_GAP §3f.
+     */
+    @POST
+    @Hidden
+    @Path("/datasets/{dataset}/audits")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
+    @Operation(hidden = true)
+    public Response submitAudit(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Nullable CurationProposalRequest body
+    ) {
+        if ( body == null || body.runId == null || body.runId.trim().isEmpty() ) {
+            throw new BadRequestException( "Request body must include a non-blank `run_id`." );
+        }
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        AgentProposalService.AttachedProposal attached = agentProposalService.attach( ee, AgentCurationKind.AUDIT,
+                body.runId.trim(), body.agentVersion, body.model, body.ranAt, body.payloadJson );
+        CurationProposalResponse resp = toProposalResponse( attached.getProposal(), ee.getId() );
+        Response.Status status = attached.isCreated()
+                ? Response.Status.CREATED
+                : Response.Status.OK;
+        return Response.status( status ).entity( resp ).build();
+    }
+
+    /**
+     * Thin alias for {@link #listCurationProposals} with {@code kind} pre-bound to
+     * {@link AgentCurationKind#AUDIT}. {@code ?shape=meta|full} (default {@code full}) is honoured.
+     * See GEMMA_UI_ENDPOINT_GAP §3f.
+     */
+    @GET
+    @Hidden
+    @Path("/datasets/{dataset}/audits")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
+    @Operation(hidden = true)
+    public Response listAudits(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Response shape: `full` (default; carries payload_json) "
+                    + "or `meta` (thin projection, payload_size only).")
+            @QueryParam("shape") @DefaultValue("full") String shape
+    ) {
+        return listCurationProposals( datasetArg, AgentCurationKind.AUDIT.getDbValue(), shape );
     }
 
     private static CurationProposalResponse toProposalResponse( AgentProposal p, Long datasetId ) {
