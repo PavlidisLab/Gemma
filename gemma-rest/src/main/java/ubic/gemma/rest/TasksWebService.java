@@ -14,6 +14,7 @@ import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.ResponseErrorObject;
 
+import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.Path;
@@ -59,6 +60,36 @@ public class TasksWebService {
         if ( task == null ) {
             throw new NotFoundException( "No task with id " + taskId + " is currently tracked." );
         }
+        return respond( new TaskStatusValueObject( task ) );
+    }
+
+    /**
+     * Cooperative task cancellation. Delegates to {@link SubmittedTask#requestCancellation()}: the running task
+     * checks for the cancellation flag at its own preemption points; this endpoint does NOT force-kill anything.
+     * Returns the (post-request) task status snapshot.
+     */
+    @DELETE
+    @Path("/{taskId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Request cooperative cancellation of a submitted pipeline task",
+            description = "Sends a cancellation request to the named task. The task is responsible for honouring "
+                    + "the cancellation flag at its next preemption point; this endpoint does NOT force-kill the "
+                    + "task. Returns the task status snapshot taken immediately after the request was filed.",
+            security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "404", description = "The task was never submitted or has already been evicted from the in-memory store.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<TaskStatusValueObject> cancelTask(
+            @PathParam("taskId") String taskId
+    ) {
+        SubmittedTask task = taskRunningService.getSubmittedTask( taskId );
+        if ( task == null ) {
+            throw new NotFoundException( "No task with id " + taskId + " is currently tracked." );
+        }
+        task.requestCancellation();
         return respond( new TaskStatusValueObject( task ) );
     }
 }
