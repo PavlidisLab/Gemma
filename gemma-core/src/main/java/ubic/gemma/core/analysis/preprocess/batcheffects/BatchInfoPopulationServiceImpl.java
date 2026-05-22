@@ -180,7 +180,21 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
         // Create batch factor.
         this.removeExistingBatchFactor( ee );
 
-        ExperimentalFactor bf = batchInfoPopulationHelperService.createRnaSeqBatchFactor( ee, headers );
+        ExperimentalFactor bf;
+        try {
+            bf = batchInfoPopulationHelperService.createRnaSeqBatchFactor( ee, headers );
+        } catch ( FASTQHeadersPresentButNotUsableException e ) {
+            // Audit row written by @AuditedOnError on the helper (proxy
+            // boundary, REQUIRES_NEW). Treat as "no batch factor" — do NOT
+            // rethrow, otherwise the outer @AuditedOnError on
+            // fillBatchInformation would also fire a Failed*Event.
+            log.info( "Batches unable to be determined from headers: " + ee );
+            return;
+        } catch ( SingletonBatchesException e ) {
+            // Same as above: audit emitted by @AuditedOnError on the helper.
+            log.info( "At least one singleton batch: " + ee + " " + e.getMessage() );
+            return;
+        }
 
         if ( bf != null ) {
             if ( bf.getId() == null ) { // hack to signal a single batch

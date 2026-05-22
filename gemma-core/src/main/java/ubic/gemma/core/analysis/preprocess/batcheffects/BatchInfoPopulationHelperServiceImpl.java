@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.security.audit.Audited;
+import ubic.gemma.core.security.audit.AuditedOnError;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.SingleBatchDeterminationEvent;
@@ -31,7 +32,6 @@ import ubic.gemma.model.common.description.Categories;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -78,27 +78,44 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
     @Autowired
     private ExpressionExperimentService experimentService;
 
-    @Autowired
-    private AuditTrailService auditTrailService;
-
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Two failure modes are surfaced as exceptions so the
+     * {@link AuditedOnError} aspect (which runs {@code @AfterThrowing} on
+     * the proxy boundary) can write the matching audit row before the
+     * caller in {@code BatchInfoPopulationServiceImpl} catches them and
+     * converts them to a {@code null} return:
+     * <ul>
+     *   <li>{@link FASTQHeadersPresentButNotUsableException} &rarr;
+     *       {@link UninformativeFASTQHeadersForBatchingEvent}</li>
+     *   <li>{@link SingletonBatchesException} &rarr;
+     *       {@link SingletonBatchInvalidEvent}</li>
+     * </ul>
+     * The aspect picks the most-specific {@code exception} match, so the
+     * two declarations dispatch deterministically. The 4-arg
+     * {@code addUpdateEvent} detail string (the verbose
+     * "RNA-seq experiment, FASTQ headers ..." text) is dropped on
+     * migration pending the {@code AuditEventPayload} Phase A landing.
+     */
     @Override
     @Transactional
+    @AuditedOnError(value = UninformativeFASTQHeadersForBatchingEvent.class,
+            exception = FASTQHeadersPresentButNotUsableException.class,
+            message = "Batches unable to be determined")
+    @AuditedOnError(value = SingletonBatchInvalidEvent.class,
+            exception = SingletonBatchesException.class,
+            message = "At least one singleton batch")
     public ExperimentalFactor createRnaSeqBatchFactor( ExpressionExperiment ee, Map<BioMaterial, String> headers ) {
         /*
-         * Go through the headers and convert to factor values.
+         * Go through the headers and convert to factor values. The two
+         * batch-construction failure modes (FASTQHeadersPresentButNotUsableException,
+         * SingletonBatchesException) propagate to the proxy boundary so the
+         * @AuditedOnError aspect can write the audit row; the caller in
+         * BatchInfoPopulationServiceImpl catches them and treats the
+         * outcome as "no batch factor".
          */
-        Map<String, Collection<String>> batchIdToHeaders;
-        try {
-            batchIdToHeaders = convertHeadersToBatches( ee, headers.values() );
-        } catch ( FASTQHeadersPresentButNotUsableException e ) {
-            log.info( "Batches unable to be determined from headers: " + ee );
-            this.auditTrailService.addUpdateEvent( ee, UninformativeFASTQHeadersForBatchingEvent.class, "Batches unable to be determined", "RNA-seq experiment, FASTQ headers and platform not informative for batches" );
-            return null;
-        } catch ( SingletonBatchesException e ) {
-            log.info( "At least one singleton batch: " + ee + " " + e.getMessage() );
-            this.auditTrailService.addUpdateEvent( ee, SingletonBatchInvalidEvent.class, "At least one singleton batch", "RNA-seq experiment, FASTQ headers indicate at least one batch of just one sample" );
-            return null;
-        }
+        Map<String, Collection<String>> batchIdToHeaders = convertHeadersToBatches( ee, headers.values() );
 
         // other situations
         if ( batchIdToHeaders.isEmpty() ) {
