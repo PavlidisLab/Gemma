@@ -51,7 +51,7 @@ import java.util.Set;
 @Indexed
 public class ExperimentalFactor extends AbstractDescribable implements SecuredChild<ExpressionExperiment> {
 
-    public static Comparator<ExperimentalFactor> COMPARATOR = Comparator.comparing( ExperimentalFactor::getName )
+    public static final Comparator<ExperimentalFactor> COMPARATOR = Comparator.comparing( ExperimentalFactor::getName )
             .thenComparing( ExperimentalFactor::getCategory, Comparator.nullsLast( Comparator.naturalOrder() ) )
             .thenComparing( ExperimentalFactor::getId, Comparator.nullsLast( Comparator.naturalOrder() ) );
 

@@ -46,7 +46,7 @@ import java.util.Map;
 @SuppressWarnings({ "WeakerAccess", "unused" }) // Possible external use
 public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
 
-    protected static Log log = LogFactory.getLog( GeoDomainObjectGenerator.class.getName() );
+    protected static final Log log = LogFactory.getLog( GeoDomainObjectGenerator.class.getName() );
 
     private final Fetcher datasetFetcher;
     private final Fetcher seriesFetcher;
