@@ -21,10 +21,9 @@ package ubic.gemma.persistence.service.common.description;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ReleaseDetailsUpdateEvent;
+import ubic.gemma.core.security.audit.payload.ReleaseDetailsUpdatePayload;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.persistence.service.AbstractService;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 
 import org.springframework.lang.Nullable;
 import java.net.URL;
@@ -42,8 +41,19 @@ public class ExternalDatabaseServiceImpl extends AbstractService<ExternalDatabas
     @Autowired
     private ExternalDatabaseReadService readService;
 
+    /**
+     * Co-bean carrying the {@code @Audited} hook for release-details
+     * writes. Replaces the imperative 5-arg
+     * {@code auditTrailService.addUpdateEvent(ed, ReleaseDetailsUpdateEvent.class,
+     * note, detail, lastUpdated)} previously used by
+     * {@link #updateReleaseDetails} and {@link #updateReleaseLastUpdated}.
+     * The audit row's {@code performedDate} is now {@code now()} rather
+     * than the supplied {@code lastUpdated} — the original moment is
+     * preserved in the JSON payload and on the entity.
+     * See {@code handoffs/AUDIT_RESIDUAL_INVENTORY.md} #9 + #10.
+     */
     @Autowired
-    private AuditTrailService auditTrailService;
+    private ExternalDatabaseReleaseAuditService releaseAuditService;
 
     @Autowired
     public ExternalDatabaseServiceImpl( ExternalDatabaseDao mainDao ) {
@@ -104,8 +114,16 @@ public class ExternalDatabaseServiceImpl extends AbstractService<ExternalDatabas
         ed.setReleaseVersion( releaseVersion );
         ed.setReleaseUrl( releaseUrl );
         ed.setLastUpdated( lastUpdated );
-        auditTrailService.addUpdateEvent( ed, ReleaseDetailsUpdateEvent.class, releaseNote, detail, lastUpdated );
         update( ed );
+        // Audit emission routed through a helper bean so the @Audited
+        // aspect can intercept; the legacy 5-arg form's explicit
+        // performedDate=lastUpdated is now carried in the JSON payload
+        // (the audit row's own performedDate is now() under the aspect).
+        // Inventory #9.
+        releaseAuditService.recordReleaseDetailsUpdate( ed, releaseNote,
+                new ReleaseDetailsUpdatePayload( releaseVersion,
+                        releaseUrl != null ? releaseUrl.toString() : null,
+                        lastUpdated, detail ) );
     }
 
     @Override
@@ -113,7 +131,12 @@ public class ExternalDatabaseServiceImpl extends AbstractService<ExternalDatabas
     public void updateReleaseLastUpdated( ExternalDatabase ed, @Nullable String releaseNote, Date lastUpdated ) {
         ed.setLastUpdated( lastUpdated );
         String detail = "Release last updated moment has been updated.";
-        auditTrailService.addUpdateEvent( ed, ReleaseDetailsUpdateEvent.class, releaseNote, detail, lastUpdated );
         update( ed );
+        // Audit emission routed through a helper bean; see the note on
+        // updateReleaseDetails above. Inventory #10.
+        releaseAuditService.recordReleaseDetailsUpdate( ed, releaseNote,
+                new ReleaseDetailsUpdatePayload( ed.getReleaseVersion(),
+                        ed.getReleaseUrl() != null ? ed.getReleaseUrl().toString() : null,
+                        lastUpdated, detail ) );
     }
 }
