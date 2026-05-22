@@ -244,3 +244,97 @@ Tests that improved but still have residual failures:
 - `CharacteristicServiceTest` — 4 → 3 (browse-invalid-field fixed).
 
 Rough net fixed: ~22 of original 87.
+
+## Batch 2 — failsafe-residuals-batch2 (2026-05-21)
+
+Starting state: 21 issues (9F + 12E) across ~10 test classes. Commits:
+
+- `ad9644a009` `fix(audit): null lastEvent before deleting events in
+  AuditTrailDao.removeByIds` — Bucket E. Pre-deletes the denormalised
+  LAST_EVENT_FK pointer before deleting the events so the
+  hbm2ddl-generated FK (which has no cascade rule, unlike the V8
+  migration's ON DELETE SET NULL) doesn't reject the delete. Also
+  scopes the aeIds / aetIds queries to the trail ids being deleted —
+  previously they slurped every audit-event id in the DB. Confirmed:
+  GeneSetServiceTest 7/7 (was 6E + 1F).
+- `919892e7be` `fix(acl): guard onClose against null session in stream
+  filtering providers` — fixes
+  `AclEntryAfterInvocationStreamFilteringProvider.decide` NPE when
+  `AclService.openSession()` returns null (Gemma's intentional contract).
+  Partially unblocks
+  `ExpressionExperimentServiceIntegrationTest#testStreamExperiments`
+  (NPE gone, downstream AccessDenied remains — see residuals below).
+- `f848800ff4` `fix(acl): swallow NotFoundException in VO
+  populateValueObject WRITE check` — Bucket F. The WRITE-check
+  `acl.isGranted` inside populateValueObject was the last unguarded
+  NotFoundException throw on the collection-VO path. Confirmed:
+  SecureValueObjectAuthorizationTest 1/1 (was 1E).
+- `27f293e76f` `test(vectors): reload EE after addRaw/createProcessed
+  mutations` — Bucket H. The vector-add/create methods mutate the
+  re-fetched managed instance (via `ensureEeInSession`), not the
+  test's local `ee`. With L2 cache disabled in BaseDatabaseTest5 the
+  local reference doesn't see the writes. Reload through the service
+  before asserting. Confirmed:
+  ProcessedExpressionDataVectorCreationHelperServiceTest 4/4 (was 4F);
+  ProcessedExpressionDataVectorServiceTest 2/2 (was 1F).
+- `f508146ee8` `test(externalGeneLoader): reload gene after GP removal
+  to avoid stale merge` — Bucket H. Merging the local gene after the
+  GP has already been removed via the service trips HB6 merge into
+  fetching the deleted row; reload first. Confirmed:
+  ExternalFileGeneLoaderServiceTest 4/4 (was 1E).
+
+Batch 2 net: 14 of 21 residuals fixed across 5 commits (7 GeneSet + 4
+processed-vector creation + 1 processed-vector service + 1
+SecureValueObject + 1 ExternalFileGeneLoader + 1 EE stream NPE
+component).
+
+### Batch 2 residuals (7 remaining)
+
+- `ExpressionExperimentServiceIntegrationTest.testLoadValueObjectsByFactorValueCharacteristic`
+  (1E) — `Filter.parseItem` rejects "null" because the transient
+  `Statement` added to a FactorValue isn't given an id by the
+  enclosing `expressionExperimentService.update(ee)` call (same
+  managed-instance gap as the vector tests, but the value is fed to
+  `String.valueOf(s.getId())` before the reload could land — test
+  needs a per-statement create / reload-fv-and-pick-up-id step before
+  asking for `s.getId()`).
+- `ExpressionExperimentServiceIntegrationTest.testLoadValueObjectsBySampleUsedCharacteristic`
+  (1E) — same managed-instance shape on Characteristic id; same fix
+  pattern.
+- `ExpressionExperimentServiceIntegrationTest.testCacheInvalidationWhenACharacteristicIsDeleted`
+  (1F) — assertion-not-null after a cache invalidation flow; likely
+  the same managed-instance gap.
+- `ExpressionExperimentServiceIntegrationTest.testStreamExperiments`
+  (1E remaining) — after the NPE fix, hits
+  `AccessDeniedException: Access is denied` from `UnanimousBased.decide`
+  on the BEFORE invocation. `streamAll()` is annotated
+  `@Secured("IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_STREAM_READ")`
+  so any logged-in user should pass the before-invocation vote.
+  Smells like a `RoleVoter` / `AuthenticatedVoter` mismatch or a
+  configuration drift in the stream-secured method security wiring;
+  needs investigation.
+- `DifferentialExpressionAnalysisServiceTest.testCreate` (1F) — ACL
+  ObjectIdentity drift: `resultSet1`'s parent ACL identity comes back
+  as `ExpressionExperiment#44` instead of the expected
+  `DifferentialExpressionAnalysis#13`. Either the ACL parent
+  assignment on ExpressionAnalysisResultSet now points one hop too
+  high, or `SecuredChild#getSecurityOwner` returns the EE for the
+  result set instead of the analysis. The revert in
+  `d0f141efd3` ("Revert: fix(acl): point SecuredChild parent ACL at
+  the immediate security owner") is the smoking gun — that revert
+  re-introduced this drift. Needs a different fix that doesn't break
+  the OTHER thing the revert was un-fixing.
+- `GeneSearchTest.testSearchGenes` (1E) — HibernateSearch error at
+  query time. Likely Lucene index directory / startup-ordering /
+  Hibernate Search 7 config; per `HibernateConfig.resolveSearchIndexBase`
+  comment that path was already adjusted for HS7. Needs in-JVM
+  Hibernate Search reindex or a startup-condition guard.
+- `GeneWriteServiceTest.testGiRotationInPlace` (1F) — `updateGene`
+  returns a Gene whose products bag is empty (expected 1). Reloading
+  the gene after update still shows 0 products. Suggests the GI
+  rotation path inside `handleGeneProductChangedGIs` /
+  `removeGeneProducts` actually deletes the GP rather than rotating
+  its NcbiGi in place — a real production bug, not a test issue.
+  Needs to read the rotation algorithm under HB6 and check whether
+  the "switching gene product from one gene to another" branch fires
+  spuriously.

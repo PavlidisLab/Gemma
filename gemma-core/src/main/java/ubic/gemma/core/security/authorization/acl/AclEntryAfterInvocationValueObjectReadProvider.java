@@ -98,7 +98,12 @@ public class AclEntryAfterInvocationValueObjectReadProvider extends AclEntryAfte
         if ( svo.getUserOwned() || isAdmin || requirePermission.contains( BasePermission.WRITE ) ) {
             svo.setUserCanWrite( true );
         } else {
-            svo.setUserCanWrite( acl.isGranted( Collections.singletonList( BasePermission.WRITE ), sids, false ) );
+            try {
+                svo.setUserCanWrite( acl.isGranted( Collections.singletonList( BasePermission.WRITE ), sids, false ) );
+            } catch ( NotFoundException ignore ) {
+                // No ACE matches WRITE for any of the user's sids — same as denied.
+                svo.setUserCanWrite( false );
+            }
         }
     }
 }

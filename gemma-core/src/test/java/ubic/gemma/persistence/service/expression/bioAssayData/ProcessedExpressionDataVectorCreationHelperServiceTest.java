@@ -66,6 +66,9 @@ public class ProcessedExpressionDataVectorCreationHelperServiceTest extends Base
         assertEquals( ScaleType.LOG2, processedQt.getScale() );
         assertEquals( PrimitiveType.DOUBLE, processedQt.getRepresentation() );
         assertTrue( processedQt.getIsMaskedPreferred() );
+        // createProcessedDataVectors mutates the managed instance, not this method's `ee`.
+        // Reload to see the updated numberOfDataVectors and quantitation-types collection.
+        ee = expressionExperimentService.thaw( expressionExperimentService.load( ee.getId() ) );
         assertEquals( ( Integer ) NUM_PROBES, ee.getNumberOfDataVectors() );
         assertEquals( NUM_PROBES, summary.getNumberOfDataVectors() );
         assertThat( ee.getQuantitationTypes() )
@@ -217,6 +220,12 @@ public class ProcessedExpressionDataVectorCreationHelperServiceTest extends Base
 
         expressionExperimentService.addRawDataVectors( ee, qt, vectors );
 
+        // addRawDataVectors mutates the managed instance (re-fetched via ensureEeInSession),
+        // not this method's `ee` parameter. With L2 cache disabled (BaseDatabaseTest5) the
+        // test's local reference doesn't see the new raw vectors / QT, so reload to expose
+        // them on the returned ee. thaw() pulls in the raw vector bag.
+        ee = expressionExperimentService.load( ee.getId() );
+        ee = expressionExperimentService.thaw( ee );
         return ee;
     }
 }
