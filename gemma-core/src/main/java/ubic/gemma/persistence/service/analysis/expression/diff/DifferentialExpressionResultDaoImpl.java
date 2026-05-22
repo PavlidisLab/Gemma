@@ -440,13 +440,25 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
                     .setParameter( "geneId", gene.getId() )
                     .list();
         } else {
-            //noinspection unchecked
-            return getSessionFactory().getCurrentSession()
-                    .createQuery( "select cs.id from CompositeSequence cs join cs.biologicalCharacteristic bs join bs.bioSequence2GeneProduct bs2gp join bs2gp.geneProduct gp where gp.gene = :gene"
-                            // only retain probes that map to a single gene in the platform
-                            + ( keepNonSpecificProbes ? "" : " and (select count(distinct gp2.gene) from CompositeSequence cs2 join cs2.biologicalCharacteristic bs2 join bs2.bioSequence2GeneProduct bs2gp2 join bs2gp2.geneProduct gp2 where cs2 = cs) = 1" ) )
-                    .setParameter( "gene", gene )
-                    .list();
+            if ( keepNonSpecificProbes ) {
+                //noinspection unchecked
+                return getSessionFactory().getCurrentSession()
+                        .createQuery( "select cs.id from CompositeSequence cs join cs.biologicalCharacteristic bs join bs.bioSequence2GeneProduct bs2gp join bs2gp.geneProduct gp where gp.gene = :gene" )
+                        .setParameter( "gene", gene )
+                        .list();
+            } else {
+                // Specific-probes filter: group on cs.id and use HAVING to enforce
+                // (a) the cs maps to :gene and (b) it maps to only one distinct gene.
+                // Replaces the previous correlated subquery (one count per outer row, O(N^2) in the worst case)
+                // with a single GROUP BY scan that MySQL can execute via a deterministic plan.
+                //noinspection unchecked
+                return getSessionFactory().getCurrentSession()
+                        .createQuery( "select cs.id from CompositeSequence cs join cs.biologicalCharacteristic bs join bs.bioSequence2GeneProduct bs2gp join bs2gp.geneProduct gp"
+                                + " group by cs.id"
+                                + " having count(distinct gp.gene.id) = 1 and min(gp.gene.id) = :geneId" )
+                        .setParameter( "geneId", gene.getId() )
+                        .list();
+            }
         }
     }
 
