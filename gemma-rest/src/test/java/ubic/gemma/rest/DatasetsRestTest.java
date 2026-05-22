@@ -312,6 +312,49 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
     }
 
     @Test
+    public void testUpdateDatasetPermissionsMakesPublicThenPrivate() {
+        ExpressionExperiment ee = ees.get( 0 );
+
+        assertThat( target( "/datasets/" + ee.getId() + "/permissions" ).request()
+                .put( javax.ws.rs.client.Entity.json( "{\"isPublic\":true}" ) ) )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.isPublic", true );
+
+        assertThat( target( "/datasets/" + ee.getId() + "/permissions" ).request()
+                .put( javax.ws.rs.client.Entity.json( "{\"isPublic\":false}" ) ) )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.isPublic", false );
+    }
+
+    @Test
+    public void testUpdateDatasetPermissionsReturnsStateWhenIsPublicOmitted() {
+        ExpressionExperiment ee = ees.get( 0 );
+        assertThat( target( "/datasets/" + ee.getId() + "/permissions" ).request()
+                .put( javax.ws.rs.client.Entity.json( "{}" ) ) )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrProperty( "data.isPublic" )
+                .hasFieldOrProperty( "data.isShared" );
+    }
+
+    @Test
+    public void testUpdateDatasetPermissionsWithEmptyBodyIs400() {
+        ExpressionExperiment ee = ees.get( 0 );
+        assertThat( target( "/datasets/" + ee.getId() + "/permissions" ).request()
+                .put( javax.ws.rs.client.Entity.json( "null" ) ) )
+                .hasStatus( Response.Status.BAD_REQUEST );
+    }
+
+    @Test
+    public void testUpdateDatasetPermissionsWithUnknownDatasetIs404() {
+        assertThat( target( "/datasets/9999999/permissions" ).request()
+                .put( javax.ws.rs.client.Entity.json( "{\"isPublic\":true}" ) ) )
+                .hasStatus( Response.Status.NOT_FOUND );
+    }
+
+    @Test
     public void testGetDatasetRawExpression() {
         ExpressionExperiment ee = ees.get( 0 );
         assertThat( target( "/datasets/" + ee.getId() + "/data/raw" ).request().get() )

@@ -314,6 +314,12 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     @Autowired
     private AuditTrailService auditTrailService;
 
+    @Autowired
+    private SecurityService securityService;
+
+    @Autowired
+    private ExpressionExperimentBatchInformationService expressionExperimentBatchInformationService;
+
     private ExpressionExperiment ee;
 
     @Before
@@ -330,7 +336,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
 
     @After
     public void resetMocks() {
-        reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService, taxonArgService, geneArgService, searchService, auditEventService, auditTrailService );
+        reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService, taxonArgService, geneArgService, searchService, auditEventService, auditTrailService, securityService );
     }
 
     @Test
@@ -1222,6 +1228,108 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         verifyNoInteractions( auditTrailService );
     }
 
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testUpdateDatasetPermissionsMakesPublic() {
+        when( securityService.isPublic( ee ) ).thenReturn( true );
+        when( securityService.isShared( ee ) ).thenReturn( false );
+
+        DatasetsWebService.PermissionsUpdateRequest body = new DatasetsWebService.PermissionsUpdateRequest();
+        body.setIsPublic( true );
+
+        assertThat( target( "/datasets/1/permissions" ).request().put( javax.ws.rs.client.Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.isPublic", true )
+                .hasFieldOrPropertyWithValue( "data.isShared", false );
+
+        verify( securityService ).makePublic( ee );
+        verify( securityService, never() ).makePrivate( ee );
+        verify( securityService ).isPublic( ee );
+        verify( securityService ).isShared( ee );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testUpdateDatasetPermissionsMakesPrivate() {
+        when( securityService.isPublic( ee ) ).thenReturn( false );
+        when( securityService.isShared( ee ) ).thenReturn( true );
+
+        DatasetsWebService.PermissionsUpdateRequest body = new DatasetsWebService.PermissionsUpdateRequest();
+        body.setIsPublic( false );
+
+        assertThat( target( "/datasets/1/permissions" ).request().put( javax.ws.rs.client.Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.isPublic", false )
+                .hasFieldOrPropertyWithValue( "data.isShared", true );
+
+        verify( securityService ).makePrivate( ee );
+        verify( securityService, never() ).makePublic( ee );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testUpdateDatasetPermissionsReturnsCurrentStateWhenIsPublicOmitted() {
+        when( securityService.isPublic( ee ) ).thenReturn( false );
+        when( securityService.isShared( ee ) ).thenReturn( false );
+
+        // Body with no fields → both make* calls skipped.
+        DatasetsWebService.PermissionsUpdateRequest body = new DatasetsWebService.PermissionsUpdateRequest();
+
+        assertThat( target( "/datasets/1/permissions" ).request().put( javax.ws.rs.client.Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.isPublic", false )
+                .hasFieldOrPropertyWithValue( "data.isShared", false );
+
+        verify( securityService, never() ).makePublic( any( gemma.gsec.model.Securable.class ) );
+        verify( securityService, never() ).makePrivate( any( gemma.gsec.model.Securable.class ) );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testUpdateDatasetPermissionsWithEmptyBodyIs400() {
+        assertThat( target( "/datasets/1/permissions" ).request().put( javax.ws.rs.client.Entity.json( "null" ) ) )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        verify( securityService, never() ).makePublic( any( gemma.gsec.model.Securable.class ) );
+        verify( securityService, never() ).makePrivate( any( gemma.gsec.model.Securable.class ) );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testUpdateDatasetPermissionsWithUnknownDatasetIs404() {
+        DatasetsWebService.PermissionsUpdateRequest body = new DatasetsWebService.PermissionsUpdateRequest();
+        body.setIsPublic( true );
+        assertThat( target( "/datasets/999/permissions" ).request().put( javax.ws.rs.client.Entity.json( body ) ) )
+                .hasStatus( Response.Status.NOT_FOUND );
+        verifyNoInteractions( securityService );
+    }
+
+    private void mockPipelineFixture( ubic.gemma.model.expression.arrayDesign.TechnologyType techType ) {
+        ee.setId( 1L );
+        ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails cd =
+                new ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails();
+        ee.setCurationDetails( cd );
+        ubic.gemma.model.expression.arrayDesign.ArrayDesign ad =
+                ubic.gemma.model.expression.arrayDesign.ArrayDesign.Factory.newInstance();
+        ad.setTechnologyType( techType );
+        when( expressionExperimentService.getArrayDesignsUsed( ee ) ).thenReturn( Collections.singletonList( ad ) );
+        when( expressionExperimentReportService.generateSummary( 1L ) ).thenReturn( null );
+        when( expressionExperimentBatchInformationService.checkHasBatchInfo( ee ) ).thenReturn( false );
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> findStep( List<?> steps, String key ) {
+        for ( Object s : steps ) {
+            Map<String, Object> m = ( Map<String, Object> ) s;
+            if ( key.equals( m.get( "step" ) ) ) {
+                return m;
+            }
+        }
+        throw new AssertionError( "step " + key + " missing" );
+    }
     @Test
     public void testGetDatasetAllPublications() {
         when( expressionExperimentService.loadWithPrimaryPublicationAndOtherRelevantPublications( 1L ) ).thenReturn( ee );
