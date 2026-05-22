@@ -344,11 +344,17 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
         }
         Query query;
         if ( useGene2Cs ) {
+            // Group by (cs.ID, gene.ID) so every (gene, cs) pair survives the GROUP BY — under
+            // ONLY_FULL_GROUP_BY (MySQL 5.7+ default sql_mode) grouping by cs.ID alone with
+            // {gene.*} in the select list is rejected; relaxed-mode behaviour silently dropped
+            // the additional genes a CS maps to (a CS can resolve to multiple genes via
+            // different gene products), which collapsed the Map<Gene, Collection<CS>>
+            // result by an unspecified amount.
             query = this.getSessionFactory().getCurrentSession()
                     .createNativeQuery( "select {gene.*}, {cs.*} "
                             + CS_BY_GENE_GENE2CS_QUERY + " "
                             + "and gene.ID in (:genes) "
-                            + "group by cs.ID" )
+                            + "group by cs.ID, gene.ID" )
                     .addEntity( "gene", Gene.class )
                     .addEntity( "cs", CompositeSequence.class );
             List<Long> geneIds = IdentifiableUtils.getIds( genes );
@@ -372,12 +378,16 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
         }
         if ( useGene2Cs ) {
             //noinspection unchecked
+            // Group by (cs.ID, gene.ID) — same ONLY_FULL_GROUP_BY rationale as the no-platform
+            // findByGenes variant above: grouping by cs.ID alone with {gene.*} in the select
+            // is strict-mode-illegal, and relaxed-mode behaviour silently dropped additional
+            // genes-per-cs from the result map.
             List<Object[]> result = this.getSessionFactory().getCurrentSession()
                     .createNativeQuery( "select {gene.*}, {cs.*} "
                             + CS_BY_GENE_GENE2CS_QUERY + " "
                             + "and gene.ID in (:genes) "
                             + "and ad.ID = :arrayDesign "
-                            + "group by cs.ID" )
+                            + "group by cs.ID, gene.ID" )
                     .addEntity( "gene", Gene.class )
                     .addEntity( "cs", CompositeSequence.class )
                     .setParameterList( "genes", IdentifiableUtils.getIds( genes ) )
