@@ -96,6 +96,12 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     private static final String MSG_FILE_NOT_EXISTS = "File (%s) does not exist or can not be accessed ";
     private static final String MSG_FILE_OUTDATED = "File (%s) outdated, regenerating";
 
+    /**
+     * Default fetch size used by the OutputStream MEX overload, which has no caller-supplied size.
+     * Matches the CLI's default (see {@code SingleCellDataWriterCli#fetchSize}).
+     */
+    private static final int DEFAULT_SC_MEX_FETCH_SIZE = 30;
+
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
     @Autowired
@@ -600,12 +606,6 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         return writeMexSingleCellExpressionDataInternal( ee, samples, qt, scaleType, useEnsemblIds, stream );
     }
 
-    /**
-     * Default fetch size used by the OutputStream MEX overload, which has no caller-supplied size.
-     * Matches the CLI's default (see {@code SingleCellDataWriterCli#fetchSize}).
-     */
-    private static final int DEFAULT_MEX_STREAM_FETCH_SIZE = 30;
-
     private int writeMexSingleCellExpressionDataInternal( ExpressionExperiment ee, @Nullable List<BioAssay> samples, QuantitationType qt, @Nullable ScaleType scaleType, boolean useEnsemblIds, OutputStream stream ) throws IOException {
         // MEX-to-stream cannot avoid building a single TAR archive over the OutputStream, but the matrix
         // itself does NOT have to be held in JVM heap: stage per-sample MEX files to a temp dir using the
@@ -615,7 +615,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         Files.delete( tempDir );
         try {
             int written = writeMexSingleCellExpressionDataInternal( ee, samples, qt, scaleType, useEnsemblIds,
-                    DEFAULT_MEX_STREAM_FETCH_SIZE, false, tempDir, false, null );
+                    DEFAULT_SC_MEX_FETCH_SIZE, false, tempDir, false, null );
             tarDirectoryToStream( tempDir, stream );
             return written;
         } finally {
