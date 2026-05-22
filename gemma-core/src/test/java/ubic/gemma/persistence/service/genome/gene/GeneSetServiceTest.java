@@ -266,6 +266,9 @@ public class GeneSetServiceTest extends BaseSpringContextTest5 {
 
     @Test
     public void testLoadValueObject() {
+        // capture baseline so the assertion is robust against gene sets created (and not yet
+        // removed) by other tests in the same mvn run — failsafe ITs share the schema.
+        int baselineCount = geneSetService.loadAllValueObjects().size();
         GeneSet gset = GeneSet.Factory.newInstance();
         gset.getMembers().add( GeneSetMember.Factory.newInstance( 1.0, g ) );
         gset = geneSetService.create( gset );
@@ -276,7 +279,7 @@ public class GeneSetServiceTest extends BaseSpringContextTest5 {
         assertNotNull( vo.getGeneIds() );
         assertEquals( 1, vo.getGeneIds().size() );
         assertNotNull( geneSetService.loadValueObjectById( gset.getId() ) );
-        assertEquals( 1, geneSetService.loadAllValueObjects().size() );
+        assertEquals( baselineCount + 1, geneSetService.loadAllValueObjects().size() );
     }
 
     @Test
