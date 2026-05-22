@@ -471,7 +471,9 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     /**
      * Resolve (normalized-key, representative-ID) tuples from the group-by-then-load pattern into
      * a Map keyed by normalized value with the matching {@link Characteristic} entity as the value.
-     * Bulk-loads via {@link #load(Collection)}, which batches internally.
+     * Uses a direct {@code WHERE id IN (...)} HQL query so deleted IDs are silently omitted rather
+     * than causing {@code ObjectNotFoundException} via the L1/L2-cache fast path in
+     * {@link #load(Collection)}.
      */
     private Map<String, Characteristic> reassembleByRepresentativeId( List<Object[]> keys ) {
         if ( keys.isEmpty() ) {
@@ -481,8 +483,15 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
         for ( Object[] row : keys ) {
             repIds.add( ( Long ) row[1] );
         }
-        Map<Long, Characteristic> byId = new HashMap<>( repIds.size() );
-        for ( Characteristic c : this.load( repIds ) ) {
+        // Use a direct WHERE-IN query rather than load(Collection) to ensure rows deleted
+        // since the aggregate query ran are silently skipped (no ObjectNotFoundException).
+        //noinspection unchecked
+        List<Characteristic> loaded = ( List<Characteristic> ) getSessionFactory().getCurrentSession()
+                .createQuery( "select c from Characteristic c where c.id in :ids" )
+                .setParameterList( "ids", repIds )
+                .list();
+        Map<Long, Characteristic> byId = new HashMap<>( loaded.size() );
+        for ( Characteristic c : loaded ) {
             byId.put( c.getId(), c );
         }
         Map<String, Characteristic> result = new HashMap<>( keys.size() );
