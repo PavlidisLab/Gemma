@@ -552,9 +552,11 @@ public class ExpressionExperimentPlatformSwitchService {
                 continue;
             }
 
+            String badSuffix = targetBioAssayDimension == null ? "" : ", BioAssayDimension=" + targetBioAssayDimension;
+
             log.info( "Switching " + vecsForQt.size() + " vectors for " + type + " from " + oldAd.getShortName()
                     + " to " + arrayDesign.getShortName()
-                    + ( targetBioAssayDimension == null ? "" : ", BioAssayDimension=" + targetBioAssayDimension ) );
+                    + badSuffix );
 
             int numwarns = 0;
             int maxwarns = 30;
@@ -574,7 +576,7 @@ public class ExpressionExperimentPlatformSwitchService {
             if ( count != vecsForQt.size() ) {
                 throw new IllegalStateException(
                         "Found matches for only " + count + "/" + vecsForQt.size() + " vectors for " + type + " from " + oldAd.getShortName()
-                                + ( targetBioAssayDimension == null ? "" : ", BioAssayDimension=" + targetBioAssayDimension ) );
+                                + badSuffix );
             }
 
             // sanity check. this is all fine.

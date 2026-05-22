@@ -201,10 +201,11 @@ public class SimpleDownloader {
     }
 
     private long downloadFtp( URL url, Path dest, boolean force ) throws IOException {
-        if ( ftpClientFactory == null ) {
+        FTPClientFactory factory = this.ftpClientFactory;
+        if ( factory == null ) {
             throw new IllegalStateException( "FTP client factory not configured; call setFtpClientFactory() before downloading from FTP." );
         }
-        FTPClient client = ftpClientFactory.getFtpClient( url );
+        FTPClient client = factory.getFtpClient( url );
         try {
             String remoteFile = url.getFile();
             boolean download;
@@ -266,10 +267,10 @@ public class SimpleDownloader {
             } else {
                 downloadedBytes = 0;
             }
-            ftpClientFactory.recycleClient( url, client );
+            factory.recycleClient( url, client );
             return downloadedBytes;
         } catch ( Exception e ) {
-            ftpClientFactory.destroyClient( url, client );
+            factory.destroyClient( url, client );
             throw e;
         }
     }

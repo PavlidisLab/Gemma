@@ -743,15 +743,16 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
 
     private boolean hasSingleCellDataInSra( GeoData geoData,
             @Nullable Collection<String> sraAccessions, @Nullable Collection<String> sraAccessionsWithOtherDataTypes ) {
-        Assert.notNull( sraFetcher, "An SraFetcher must be set to retrieve metadata from SRA." );
+        SraFetcher fetcher = this.sraFetcher;
+        Assert.notNull( fetcher, "An SraFetcher must be set to retrieve metadata from SRA." );
         try {
             SraExperimentPackageSet sraMeta;
             String accession;
             if ( ( accession = getSraAccession( geoData ) ) != null ) {
-                sraMeta = sraFetcher.fetch( accession );
+                sraMeta = fetcher.fetch( accession );
             } else if ( geoData.getGeoAccession() != null ) {
                 accession = geoData.getGeoAccession();
-                sraMeta = sraFetcher.fetchByGeoAccession( accession );
+                sraMeta = fetcher.fetchByGeoAccession( accession );
             } else {
                 log.warn( geoData + " does not have a GEO accession, cannot check if it has single-cell data in SRA." );
                 return false;

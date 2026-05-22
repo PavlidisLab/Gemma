@@ -115,11 +115,12 @@ public class CompressedStringListType implements UserType<List<String>>, Paramet
     }
 
     @Override
-    public void setParameterValues( @Nullable Properties parameters ) {
+    public void setParameterValues( Properties parameters ) {
         String m = "A non-null value must be used as delimiter.";
-        this.delimiter = ( String ) requireNonNull( requireNonNull( parameters, m ).get( "delimiter" ), m );
-        if ( parameters.containsKey( "charset" ) ) {
-            this.charset = Charset.forName( parameters.getProperty( "charset" ) );
+        Properties params = requireNonNull( parameters, m );
+        this.delimiter = ( String ) requireNonNull( params.get( "delimiter" ), m );
+        if ( params.containsKey( "charset" ) ) {
+            this.charset = Charset.forName( params.getProperty( "charset" ) );
         } else {
             this.charset = StandardCharsets.UTF_8;
         }
