@@ -15,7 +15,6 @@
 package ubic.gemma.core.analysis.preprocess;
 
 import org.hibernate.ObjectNotFoundException;
-import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
@@ -36,7 +35,6 @@ import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.security.authorization.acl.AclTestUtils;
 import ubic.gemma.core.util.test.NetworkAvailable;
 import ubic.gemma.core.util.test.NetworkAvailableExtension;
-import ubic.gemma.core.util.test.category.GeoTest;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
@@ -56,7 +54,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * @author ptan
  */
-@Category(GeoTest.class)
+@Tag("geo")
 @ExtendWith(NetworkAvailableExtension.class)
 public class MeanVarianceServiceTest extends AbstractGeoServiceTest5 {
 

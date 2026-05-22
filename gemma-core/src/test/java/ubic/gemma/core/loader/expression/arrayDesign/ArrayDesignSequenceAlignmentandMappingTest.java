@@ -18,7 +18,6 @@
  */
 package ubic.gemma.core.loader.expression.arrayDesign;
 
-import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -27,7 +26,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.sequence.Blat;
 import ubic.gemma.core.util.test.NetworkAvailable;
 import ubic.gemma.core.util.test.NetworkAvailableExtension;
-import ubic.gemma.core.util.test.category.GoldenPathTest;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 
@@ -40,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author pavlidis
  */
-@Category(GoldenPathTest.class)
+@Tag("goldenPath")
 @ExtendWith(NetworkAvailableExtension.class)
 public class ArrayDesignSequenceAlignmentandMappingTest extends AbstractArrayDesignProcessingTest {
 

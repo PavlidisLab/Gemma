@@ -18,14 +18,12 @@
  */
 package ubic.gemma.core.loader.entrez.pubmed;
 
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.util.test.NetworkAvailable;
 import ubic.gemma.core.util.test.NetworkAvailableExtension;
-import ubic.gemma.core.util.test.category.PubMedTest;
-import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.description.BibliographicReference;
 
 import java.io.IOException;
@@ -37,7 +35,8 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * @author pavlidis
  */
-@Category({ PubMedTest.class, SlowTest.class })
+@Tag("pubmed")
+@Tag("slow")
 @ExtendWith(NetworkAvailableExtension.class)
 public class PubMedXMLFetcherTest {
 

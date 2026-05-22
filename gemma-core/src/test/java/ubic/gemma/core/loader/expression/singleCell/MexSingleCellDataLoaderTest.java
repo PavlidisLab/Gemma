@@ -1,6 +1,5 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
-import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,7 +28,6 @@ import ubic.gemma.core.loader.util.mapper.SimpleDesignElementMapper;
 import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.core.util.test.NetworkAvailable;
 import ubic.gemma.core.util.test.NetworkAvailableExtension;
-import ubic.gemma.core.util.test.category.GeoTest;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
@@ -303,7 +301,7 @@ public class MexSingleCellDataLoaderTest extends BaseTest5 {
     @Test
     @Tag("slow")
     @Tag("integration")
-    @Category(GeoTest.class)
+    @Tag("geo")
     @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     public void testGSE141552() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE141552" );
@@ -435,7 +433,7 @@ public class MexSingleCellDataLoaderTest extends BaseTest5 {
     @Test
     @Tag("slow")
     @Tag("integration")
-    @Category(GeoTest.class)
+    @Tag("geo")
     @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     public void testGSE125708() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE125708" );

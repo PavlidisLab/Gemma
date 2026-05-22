@@ -20,7 +20,6 @@ package ubic.gemma.core.loader.expression.geo.service;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -31,7 +30,6 @@ import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.util.test.NetworkAvailable;
 import ubic.gemma.core.util.test.NetworkAvailableExtension;
-import ubic.gemma.core.util.test.category.GeoTest;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -45,7 +43,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /**
  * @author pavlidis
  */
-@Category(GeoTest.class)
+@Tag("geo")
 @NetworkAvailable(url = EntrezUtils.ESUMMARY)
 @ExtendWith(NetworkAvailableExtension.class)
 public class GeoBrowserTest {

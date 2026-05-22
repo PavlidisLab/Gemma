@@ -23,7 +23,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.matrix.DoubleMatrix;
@@ -42,7 +41,6 @@ import ubic.gemma.core.security.authorization.acl.AclTestUtils;
 import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.core.util.test.NetworkAvailable;
 import ubic.gemma.core.util.test.NetworkAvailableExtension;
-import ubic.gemma.core.util.test.category.GeoTest;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.GeeqEvent;
@@ -77,7 +75,7 @@ import static org.junit.jupiter.api.Assumptions.abort;
  *
  * @author pavlidis
  */
-@Category(GeoTest.class)
+@Tag("geo")
 @NetworkAvailable(url = EntrezUtils.ESEARCH)
 @ExtendWith(NetworkAvailableExtension.class)
 public class GeoDatasetServiceTest extends AbstractGeoServiceTest5 {
