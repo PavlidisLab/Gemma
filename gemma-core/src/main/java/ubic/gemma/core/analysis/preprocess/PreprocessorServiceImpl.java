@@ -22,28 +22,20 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerService;
-import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchCorrectionService;
 import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
 import ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionException;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
-import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrixUtils;
-import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.common.auditAndSecurity.eventType.BatchCorrectionEvent;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.GeeqService;
 
 import java.util.Collection;
-import java.util.List;
 
 @Service
 @Transactional(propagation = Propagation.NEVER)
@@ -58,15 +50,11 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     @Autowired
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
     @Autowired
-    private ExpressionExperimentBatchCorrectionService expressionExperimentBatchCorrectionService;
-    @Autowired
     private ExpressionExperimentService expressionExperimentService;
     @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
     @Autowired
     private TwoChannelMissingValues twoChannelMissingValueService;
-    @Autowired
-    private AuditTrailService auditTrailService;
     @Autowired
     private ExpressionExperimentReportService expressionExperimentReportService;
     @Autowired
@@ -88,7 +76,10 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         removeInvalidatedData( ee ); // clear out old files
         processForMissingValues( ee ); // only relevant for two-channel arrays
         processVectorCreate( ee, ignoreQuantitationMismatch ); // key step
-        batchCorrect( ee ); // will be a no-op in many cases
+        // Route through the helper bean so the @AuditedConditional aspect can
+        // intercept the batch-correction step (private self-invocation here
+        // was invisible to the proxy). Inventory #3 / bucket 2b.
+        preprocessorHelperService.batchCorrect( ee ); // will be a no-op in many cases
         processBatchInfo( ee ); // update status
         try {
             processDiagnostics( ee ); // PCA, GEEQ, MV etc.
@@ -102,37 +93,6 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         }
         updateDEAs( ee ); // if existing, redo it
         log.info( "Processing complete for " + ee.getShortName() + " in " + timer.getTime() / 1000 + " seconds" );
-    }
-
-    /**
-     * If possible, batch correct the processed data vectors. This entails repeating the other preprocessing steps. But
-     * it should only be run after the experimental design is set up, the batch information has been fetched, and (of
-     * course) the data needed are already available.
-     */
-    private void batchCorrect( ExpressionExperiment ee ) throws PreprocessingException {
-        if ( !expressionExperimentBatchCorrectionService.checkCorrectability( ee ) ) {
-            log.warn( ee + " is not batch-correctable, will not perform ComBat." );
-            return;
-        }
-
-        Collection<ProcessedExpressionDataVector> vecs;
-        try {
-            vecs = this.getProcessedExpressionDataVectors( ee );
-        } catch ( QuantitationTypeConversionException e ) {
-            throw new QuantitationTypeConversionRelatedPreprocessingException( ee, e );
-        }
-
-        List<ProcessedExpressionDataVector> correctedVectors = this.getCorrectedData( ee, vecs );
-
-        QuantitationType correctedQt = correctedVectors.iterator().next().getQuantitationType();
-
-        // ComBat will create a new QT, but will not pass on the preferred flag
-        correctedQt.setIsMaskedPreferred( true );
-
-        // Convert to vectors (persist QT)
-        int replaced = processedExpressionDataVectorService.replaceProcessedDataVectors( ee, correctedVectors, false );
-
-        auditTrailService.addUpdateEvent( ee, BatchCorrectionEvent.class, String.format( "ComBat batch correction, vectors were replaced with %d batch-corrected ones.", replaced ) );
     }
 
     @Override
@@ -210,51 +170,4 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         dataFileService.deleteAllAnalysisFiles( expExp );
     }
 
-    private List<ProcessedExpressionDataVector> getCorrectedData( ExpressionExperiment ee,
-            Collection<ProcessedExpressionDataVector> vecs ) throws PreprocessingException {
-
-        /*
-         * FIXME perhaps here we should remove rows that are going to be problematic?
-         */
-
-        ExpressionDataDoubleMatrix correctedData = expressionExperimentBatchCorrectionService
-                .comBat( ee, new ExpressionDataDoubleMatrix( ee, vecs ) );
-
-
-        /*
-         * FIXME: this produces two plots that can be used as diagnostics, we could link them into this.
-         */
-
-        if ( correctedData == null ) {
-            throw new PreprocessingException( ee, "could not be batch-corrected: ComBat did not found a suitable batch factor" );
-        }
-
-        List<ProcessedExpressionDataVector> correctedVectors = BulkExpressionDataMatrixUtils.toVectors( correctedData, ProcessedExpressionDataVector.class );
-
-        if ( correctedVectors.size() != vecs.size() ) {
-            throw new PreprocessingException( ee, "could not be batch-corrected: matrix returned by ComBat had wrong number of rows" );
-        }
-
-        QuantitationType batchCorrectedQt = correctedVectors.iterator().next().getQuantitationType();
-        if ( !batchCorrectedQt.getIsBatchCorrected() ) {
-            throw new IllegalStateException( "Batch correction did not set the isBatchCorrected flag on " + batchCorrectedQt + "." );
-        }
-
-        return correctedVectors;
-    }
-
-    /**
-     *
-     * @return processed data vectors; if they don't exist, create them. They will be thawed in either case.
-     */
-    private Collection<ProcessedExpressionDataVector> getProcessedExpressionDataVectors( ExpressionExperiment ee ) throws QuantitationTypeConversionException {
-        Collection<ProcessedExpressionDataVector> vecs = processedExpressionDataVectorService
-                .getProcessedDataVectorsAndThaw( ee );
-        if ( vecs.isEmpty() ) {
-            log.info( String.format( "No processed vectors for %s, they will be computed from raw data...", ee ) );
-            this.processedExpressionDataVectorService.createProcessedDataVectors( ee, true );
-            vecs = this.processedExpressionDataVectorService.getProcessedDataVectorsAndThaw( ee );
-        }
-        return vecs;
-    }
 }

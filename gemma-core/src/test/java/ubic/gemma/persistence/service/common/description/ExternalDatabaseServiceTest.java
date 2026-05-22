@@ -56,7 +56,11 @@ public class ExternalDatabaseServiceTest extends BaseSpringContextTest5 {
                 .hasFieldOrPropertyWithValue( "releaseUrl", new URL( "http://example.com/test" ) );
         // Audit Phase C retired the blanket DAO advices. Trail now carries:
         //   [0] CREATE — from AuditTrailEventListener on POST_INSERT;
-        //   [1] UPDATE — from the imperative addUpdateEvent call inside updateReleaseDetails.
+        //   [1] UPDATE — from the @Audited aspect via
+        //                ExternalDatabaseReleaseAuditServiceImpl.recordReleaseDetailsUpdate,
+        //                which replaced the legacy 5-arg
+        //                addUpdateEvent(ed, ReleaseDetailsUpdateEvent.class, note,
+        //                               detail, lastUpdated) inside updateReleaseDetails.
         // The third row ("from AuditAdvice on update()") no longer exists.
         assertThat( externalDatabase.getAuditTrail().getEvents() )
                 .hasSize( 2 )
