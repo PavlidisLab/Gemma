@@ -388,15 +388,49 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     public Gene thaw( final Gene gene ) {
         if ( gene.getId() == null )
             return gene;
-        return ( Gene ) this.getSessionFactory().getCurrentSession().createQuery(
-                        "select distinct g from Gene g " + " left join fetch g.aliases left join fetch g.accessions acc"
-                                + " left join fetch acc.externalDatabase left join fetch g.products gp "
-                                + " left join fetch gp.accessions gpacc left join fetch gpacc.externalDatabase left join"
-                                + " fetch gp.physicalLocation gppl left join fetch gppl.chromosome chr left join fetch chr.taxon "
-                                + " left join fetch g.taxon t left join fetch t.externalDatabase "
+        // HQL_SQL_AUDIT P5: avoid the Cartesian product that arises from one mega-query
+        // joining g.aliases x g.accessions x g.products x gp.accessions x ... (rows scale as
+        // the product of all collection sizes). Issue a separate fetch per collection branch;
+        // entries land in the same Hibernate first-level cache so the Gene returned by the
+        // first query is the same instance whose collections the follow-up queries populate.
+        Long gid = gene.getId();
+        // Branch 1: Gene + taxon ToOne chain + aliases collection.
+        Gene g = ( Gene ) this.getSessionFactory().getCurrentSession().createQuery(
+                        "select distinct g from Gene g "
+                                + " left join fetch g.taxon t left join fetch t.externalDatabase"
+                                + " left join fetch g.aliases"
                                 + " where g.id=:gid" )
-                .setParameter( "gid", gene.getId() )
+                .setParameter( "gid", gid )
                 .uniqueResult();
+        if ( g == null )
+            return null;
+        // Branch 2: gene accessions + their externalDatabase ToOne.
+        this.getSessionFactory().getCurrentSession().createQuery(
+                        "select distinct g from Gene g "
+                                + " left join fetch g.accessions acc left join fetch acc.externalDatabase"
+                                + " where g.id=:gid" )
+                .setParameter( "gid", gid )
+                .uniqueResult();
+        // Branch 3: gene products + their physicalLocation -> chromosome -> taxon ToOne chain.
+        this.getSessionFactory().getCurrentSession().createQuery(
+                        "select distinct g from Gene g "
+                                + " left join fetch g.products gp"
+                                + " left join fetch gp.physicalLocation gppl"
+                                + " left join fetch gppl.chromosome chr"
+                                + " left join fetch chr.taxon"
+                                + " where g.id=:gid" )
+                .setParameter( "gid", gid )
+                .uniqueResult();
+        // Branch 4: gene products' accessions + their externalDatabase ToOne.
+        this.getSessionFactory().getCurrentSession().createQuery(
+                        "select distinct g from Gene g "
+                                + " left join fetch g.products gp"
+                                + " left join fetch gp.accessions gpacc"
+                                + " left join fetch gpacc.externalDatabase"
+                                + " where g.id=:gid" )
+                .setParameter( "gid", gid )
+                .uniqueResult();
+        return g;
     }
 
     /**
