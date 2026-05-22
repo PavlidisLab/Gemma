@@ -59,8 +59,39 @@ public @interface Audited {
      * The concrete {@link AuditEventType} subclass to record. Must be
      * instantiable via a public no-arg constructor (the convention for every
      * AndroMDA-generated event type in {@code ubic.gemma.model.common.auditAndSecurity.eventType}).
+     *
+     * <p>May be left at the default ({@link AuditEventType}.class — the
+     * abstract base) when {@link #valueSpel()} is used to choose the event
+     * class at runtime. The aspect treats the default as "no compile-time
+     * choice"; emission is skipped unless {@code valueSpel} resolves to a
+     * concrete subclass.
      */
-    Class<? extends AuditEventType> value();
+    Class<? extends AuditEventType> value() default AuditEventType.class;
+
+    /**
+     * Optional SpEL expression evaluated against the join-point to choose the
+     * {@link AuditEventType} subclass at runtime. The expression must resolve
+     * to a {@code Class<? extends AuditEventType>} — either a class literal
+     * ({@code T(com.example.FooEvent)}) or a helper invocation
+     * ({@code T(com.example.Helper).pick(#arg)}).
+     *
+     * <p>Evaluation context matches {@link #messageSpel()}: method parameters
+     * resolve by name, the return value is exposed as {@code #result}, and
+     * {@code #root.args[i]} provides positional access.
+     *
+     * <p>When both {@link #value()} and {@code valueSpel()} are non-default,
+     * the aspect logs a WARN and prefers {@code valueSpel} (runtime choice
+     * wins). When {@code valueSpel} evaluates to {@code null}, is non-Class,
+     * or fails to evaluate, the aspect logs ERROR and falls back to
+     * {@link #value()}; if {@code value()} is also at its default, no audit
+     * row is written.
+     *
+     * <p>Motivated by inventory #15/#16 in {@code AUDIT_RESIDUAL_INVENTORY.md}:
+     * {@code ExpressionExperimentWriteServiceImpl.updateQuantitationType}
+     * emits one of two {@link AuditEventType} subclasses depending on the
+     * vector type of the affected {@code QuantitationType}.
+     */
+    String valueSpel() default "";
 
     /**
      * Optional plain (non-SpEL) note string. Stored verbatim in

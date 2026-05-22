@@ -105,7 +105,12 @@ public class AuditedAspect {
 
     @AfterReturning( pointcut = "@annotation(audited)", returning = "result" )
     public void afterAuditedMethod( JoinPoint joinPoint, Audited audited, @Nullable Object result ) {
-        emit( joinPoint, audited.value(), audited.message(), audited.messageSpel(), result, "@Audited" );
+        Class<? extends AuditEventType> eventType = resolveEventType( audited.value(), audited.valueSpel(),
+                joinPoint, result, null, "@Audited" );
+        if ( eventType == null ) {
+            return;
+        }
+        emit( joinPoint, eventType, audited.message(), audited.messageSpel(), result, "@Audited" );
     }
 
     /**
@@ -134,7 +139,12 @@ public class AuditedAspect {
             // Predicate false (or null) → caller intentionally signalled "no audit on this branch".
             return;
         }
-        emit( joinPoint, auditedConditional.value(), auditedConditional.message(),
+        Class<? extends AuditEventType> eventType = resolveEventType( auditedConditional.value(),
+                auditedConditional.valueSpel(), joinPoint, result, null, "@AuditedConditional" );
+        if ( eventType == null ) {
+            return;
+        }
+        emit( joinPoint, eventType, auditedConditional.message(),
                 auditedConditional.messageSpel(), result, "@AuditedConditional" );
     }
 
@@ -294,6 +304,80 @@ public class AuditedAspect {
             log.warn( "AuditedEvent listener threw for {} on {}; audit row is unaffected.",
                     eventType.getSimpleName(), target, e );
         }
+    }
+
+    /**
+     * Resolve the {@link AuditEventType} subclass at runtime. Mirrors
+     * {@link #resolveMessage(String, String, JoinPoint, Object)} but for the
+     * event-class slot.
+     *
+     * <p>Precedence:
+     * <ol>
+     *   <li>If {@code valueSpel} is non-empty: evaluate it as SpEL. If it
+     *       returns a non-null {@code Class<? extends AuditEventType>},
+     *       USE THAT. If it returns {@code null} or non-Class, or the
+     *       expression throws, fall through to the literal {@code value}.</li>
+     *   <li>If both {@code value} and {@code valueSpel} are set (the SpEL
+     *       expression is non-empty AND {@code value} is not the abstract
+     *       {@link AuditEventType} default), log a WARN once and prefer the
+     *       SpEL choice when it resolved successfully.</li>
+     *   <li>If the literal {@code value} is still the abstract
+     *       {@link AuditEventType}.class default — meaning the annotation
+     *       relied purely on {@code valueSpel} and SpEL produced nothing
+     *       usable — return {@code null}; the caller SKIPS emission.</li>
+     * </ol>
+     *
+     * <p>{@code null} return = "no concrete event class could be resolved,
+     * caller MUST skip emission" (logged at ERROR).
+     */
+    @Nullable
+    private Class<? extends AuditEventType> resolveEventType( Class<? extends AuditEventType> literalValue,
+            String valueSpel, JoinPoint joinPoint, @Nullable Object returnValue,
+            @Nullable Throwable exception, String label ) {
+        boolean spelPresent = !valueSpel.isEmpty();
+        boolean literalConcrete = literalValue != AuditEventType.class;
+        if ( spelPresent && literalConcrete ) {
+            // Both forms set: caller asked for a runtime override; the SpEL
+            // path wins when it resolves, but we surface the ambiguity once.
+            log.warn( "{} on {} has BOTH value()={} AND valueSpel='{}' set — runtime SpEL choice wins.",
+                    label, joinPoint.getSignature(), literalValue.getSimpleName(), valueSpel );
+        }
+        if ( spelPresent ) {
+            try {
+                Object resolved = evaluateSpel( valueSpel, joinPoint, returnValue, exception, Object.class );
+                if ( resolved instanceof Class<?> ) {
+                    Class<?> c = ( Class<?> ) resolved;
+                    if ( AuditEventType.class.isAssignableFrom( c ) && c != AuditEventType.class ) {
+                        @SuppressWarnings( "unchecked" )
+                        Class<? extends AuditEventType> typed = ( Class<? extends AuditEventType> ) c;
+                        return typed;
+                    }
+                    log.error( "{} valueSpel='{}' on {} resolved to {} which is not a concrete AuditEventType subclass; falling back to value().",
+                            label, valueSpel, joinPoint.getSignature(), c.getName() );
+                } else if ( resolved == null ) {
+                    // SpEL returning null is a common shape for "this case isn't
+                    // an audit-worthy event" — fall back, but logging at INFO
+                    // would be noisy. ERROR is too loud; DEBUG suffices since
+                    // the caller is expected to gate the call.
+                    if ( log.isDebugEnabled() ) {
+                        log.debug( "{} valueSpel='{}' on {} resolved to null; falling back to value().",
+                                label, valueSpel, joinPoint.getSignature() );
+                    }
+                } else {
+                    log.error( "{} valueSpel='{}' on {} resolved to {} (type {}), not a Class; falling back to value().",
+                            label, valueSpel, joinPoint.getSignature(), resolved, resolved.getClass().getName() );
+                }
+            } catch ( RuntimeException e ) {
+                log.error( "Failed to evaluate {} valueSpel='{}' on {}; falling back to value().",
+                        label, valueSpel, joinPoint.getSignature(), e );
+            }
+        }
+        if ( literalConcrete ) {
+            return literalValue;
+        }
+        log.error( "{} on {} has no resolvable event type (value() at default AuditEventType.class, valueSpel='{}' did not resolve); SKIPPING emission.",
+                label, joinPoint.getSignature(), valueSpel );
+        return null;
     }
 
     @Nullable
