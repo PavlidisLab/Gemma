@@ -684,7 +684,15 @@ public class DataUpdaterImpl implements DataUpdater {
         }
 
         this.audit( ee, "Data vector replacement for " + targetPlatform, true );
-        experimentService.update( ee );
+        // Re-thaw rather than merge: replaceAllRawDataVectors and switchBioAssaysToTargetPlatform
+        // already persisted their state through fresh sessions (ensureEeInSession + their own
+        // transactions). The detached ee handed in here still carries stale collection snapshots
+        // — chiefly the original rawExpressionDataVectors and their BioAssayDimensions, whose
+        // many-to-many bioAssays lists may reference BioAssay rows just removed by an upstream
+        // dealWithMissingSamples. A merge() would walk those snapshots and trip
+        // EntityNotFoundException: BioAssay#N (see Phase 2 Step 7 commit 27d09617b5 which
+        // identified this as the remaining residual after the per-call-site re-resolves).
+        ee = experimentService.thaw( ee );
         this.postprocess( ee );
 
         assert ee.getNumberOfDataVectors() != null;
