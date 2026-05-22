@@ -518,7 +518,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         NativeQuery<?> queryObject = session.createNativeQuery(
                 "SELECT dear.PROBE_FK, dear.ID,"
                         + " dear.RESULT_SET_FK, dear.CORRECTED_PVALUE, dear.PVALUE  "
-                        + " FROM DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear FORCE INDEX (probeResultSets) WHERE dear.RESULT_SET_FK IN (:rs_ids) AND "
+                        + " FROM DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear WHERE dear.RESULT_SET_FK IN (:rs_ids) AND "
                         + " dear.PROBE_FK IN (:probe_ids) " );
 
         /*
