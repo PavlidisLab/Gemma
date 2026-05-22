@@ -24,9 +24,7 @@ import com.tngtech.archunit.core.domain.JavaField;
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
-import com.tngtech.archunit.junit.ArchUnitRunner;
 import com.tngtech.archunit.lang.ArchRule;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.architecture.SuppressArchUnit;
 
@@ -68,7 +66,6 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noFields;
  * {@link ImportOption.DoNotIncludeTests}). Mocks and test doubles
  * legitimately need concrete types.
  */
-@RunWith(ArchUnitRunner.class)
 @AnalyzeClasses(
         packages = "ubic.gemma",
         importOptions = ImportOption.DoNotIncludeTests.class
