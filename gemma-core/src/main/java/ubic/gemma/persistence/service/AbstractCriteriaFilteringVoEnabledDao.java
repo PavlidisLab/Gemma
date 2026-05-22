@@ -20,6 +20,7 @@ import ubic.gemma.persistence.util.Sort;
 import org.springframework.lang.Nullable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -83,7 +84,7 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
         CriteriaQuery<T> q = cb.createQuery( resultType );
         @SuppressWarnings("unchecked")
         Root<O> root = q.from( (Class<O>) getElementClass() );
-        q.where( FilterJpaUtils.formRestrictionClause( cb, q, root, filters ) );
+        q.where( FilterJpaUtils.formRestrictionClause( cb, q, root, filters, getFilterablePropertyObjectAliases() ) );
         return new CriteriaContext<>( q, root );
     }
 
@@ -188,14 +189,16 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private List<Order> buildOrders( CriteriaBuilder cb, Root<O> root, Sort sort ) {
         List<Order> orders = new ArrayList<>();
+        Map<String, String> aliasPrefixes = getFilterablePropertyObjectAliases();
         for ( ; sort != null; sort = sort.getAndThen() ) {
             String propertyName = sort.getPropertyName();
+            String objectAlias = sort.getObjectAlias();
             jakarta.persistence.criteria.Expression<?> expr;
             if ( propertyName.endsWith( ".size" ) ) {
                 String collectionPath = propertyName.substring( 0, propertyName.length() - ".size".length() );
-                expr = cb.size( ( jakarta.persistence.criteria.Expression ) FilterJpaUtils.resolvePath( root, collectionPath ) );
+                expr = cb.size( ( jakarta.persistence.criteria.Expression ) FilterJpaUtils.resolvePathWithAlias( root, objectAlias, collectionPath, aliasPrefixes ) );
             } else {
-                expr = FilterJpaUtils.resolvePath( root, propertyName );
+                expr = FilterJpaUtils.resolvePathWithAlias( root, objectAlias, propertyName, aliasPrefixes );
             }
             Order order = sort.getDirection() == Sort.Direction.DESC ? cb.desc( expr ) : cb.asc( expr );
             // JPA's Order has no null-precedence accessor, but in Hibernate 6 the Order returned by

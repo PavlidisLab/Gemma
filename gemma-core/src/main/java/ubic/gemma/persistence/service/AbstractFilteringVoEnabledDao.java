@@ -77,6 +77,23 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
 
     private final Set<FilterablePropertyAlias> filterablePropertyObjectAliases = new HashSet<>();
 
+    /**
+     * Expose registered object-alias mappings to subclasses (e.g. the JPA Criteria DAO) so
+     * they can wire alias-prefixed filter/sort paths back to explicit joins on the root.
+     * <p>
+     * Returns a map of {@code objectAlias} → dotted prefix (without the trailing {@code "."}).
+     * Aliases registered with a {@code null} objectAlias are skipped.
+     */
+    protected final Map<String, String> getFilterablePropertyObjectAliases() {
+        Map<String, String> result = new HashMap<>();
+        for ( FilterablePropertyAlias fpa : filterablePropertyObjectAliases ) {
+            if ( fpa.objectAlias == null ) continue;
+            String prefix = fpa.prefix.endsWith( "." ) ? fpa.prefix.substring( 0, fpa.prefix.length() - 1 ) : fpa.prefix;
+            result.put( fpa.objectAlias, prefix );
+        }
+        return result;
+    }
+
     protected AbstractFilteringVoEnabledDao( @Nullable String objectAlias, Class<? extends O> elementClass, SessionFactory sessionFactory ) {
         super( elementClass, sessionFactory );
         this.objectAlias = objectAlias;
@@ -650,6 +667,20 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
     private static Class<?> normalizeAttributeJavaType( Class<?> javaType ) {
         if ( java.util.Date.class.isAssignableFrom( javaType ) && !javaType.equals( java.util.Date.class ) ) {
             return java.util.Date.class;
+        }
+        // Box primitive types so downstream type-aware code (Filter conversion service, test
+        // stubs, etc.) sees the wrapper class consistently. Hibernate 6's JPA Metamodel
+        // reports primitive Java types verbatim (e.g. boolean.class for a `boolean` field);
+        // the pre-HB6 ClassMetadata path returned the boxed form.
+        if ( javaType.isPrimitive() ) {
+            if ( javaType == boolean.class ) return Boolean.class;
+            if ( javaType == byte.class ) return Byte.class;
+            if ( javaType == short.class ) return Short.class;
+            if ( javaType == int.class ) return Integer.class;
+            if ( javaType == long.class ) return Long.class;
+            if ( javaType == float.class ) return Float.class;
+            if ( javaType == double.class ) return Double.class;
+            if ( javaType == char.class ) return Character.class;
         }
         return javaType;
     }
