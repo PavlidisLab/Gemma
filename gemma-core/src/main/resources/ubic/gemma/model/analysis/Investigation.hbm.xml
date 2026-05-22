@@ -45,6 +45,23 @@
 				<column name="OTHER_RELEVANT_PUBLICATIONS_FK" sql-type="BIGINT"/>
 			</many-to-many>
 		</set>
+		<!-- 8-state workflow lifecycle (HANDOFF_WORKFLOW_STATE_STORAGE.md). Stored as
+		     a VARCHAR(32) on every INVESTIGATION row; the EnumType's useNamed=true
+		     keeps the string form of the enum constant on disk so an "all datasets
+		     in state X" query is a simple indexed equality predicate. -->
+		<property name="workflowState">
+			<column name="WORKFLOW_STATE" not-null="true" unique="false"
+					sql-type="VARCHAR(32)" default="'Loaded'"
+					index="INVESTIGATION_WORKFLOW_STATE"/>
+			<type name="org.hibernate.type.EnumType">
+				<param name="enumClass">ubic.gemma.model.expression.experiment.WorkflowState</param>
+				<param name="useNamed">true</param>
+			</type>
+		</property>
+		<property name="workflowStateEnteredAt" type="java.util.Date">
+			<column name="WORKFLOW_STATE_ENTERED_AT" not-null="false" unique="false"
+					sql-type="DATETIME"/>
+		</property>
 
 		<subclass name="ubic.gemma.model.expression.experiment.BioAssaySet" abstract="true">
 			<subclass name="ubic.gemma.model.expression.experiment.ExpressionExperiment"

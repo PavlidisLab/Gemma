@@ -161,6 +161,8 @@
         </subclass>
         <subclass abstract="false" discriminator-value="CommentedEvent"
                   name="ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent"/>
+        <subclass abstract="false" discriminator-value="WorkflowStateChangedEvent"
+                  name="ubic.gemma.model.common.auditAndSecurity.eventType.WorkflowStateChangedEvent"/>
         <subclass abstract="true" discriminator-value="CurationDetailsEvent"
                   name="ubic.gemma.model.common.auditAndSecurity.eventType.CurationDetailsEvent">
             <subclass abstract="true"
