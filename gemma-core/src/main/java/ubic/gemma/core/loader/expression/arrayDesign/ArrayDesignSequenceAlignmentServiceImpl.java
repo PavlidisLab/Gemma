@@ -230,11 +230,11 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
 
         if ( taxon == null ) {
             Collection<Taxon> taxaOnArray = arrayDesignService.getTaxaFromBioSequences( arrayDesign );
-            if ( taxaOnArray != null && taxaOnArray.size() == 1 && taxaOnArray.iterator().next() != null ) {
+            if ( taxaOnArray.size() == 1 && taxaOnArray.iterator().next() != null ) {
                 return taxaOnArray.iterator().next();
             }
             throw new IllegalArgumentException(
-                    ( taxaOnArray == null ? "?" : taxaOnArray.size() ) + " taxon found for " + arrayDesign
+                    taxaOnArray.size() + " taxon found for " + arrayDesign
                             + " specify which taxon to run" );
 
         }

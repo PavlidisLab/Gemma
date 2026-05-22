@@ -350,6 +350,7 @@ abstract class AbstractCellLevelCharacteristicsMetadataParser<T extends CellLeve
     @Nullable
     protected abstract String getCategoryId( CSVRecord record );
 
+    @Nullable
     protected abstract String getValue( CSVRecord record );
 
     @Nullable
