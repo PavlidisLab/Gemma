@@ -402,7 +402,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
             log.info( "Truncating EXPRESSION_EXPERIMENT2ARRAY_DESIGN..." );
             sessionFactory.getCurrentSession()
                     .createNativeQuery( "delete from EXPRESSION_EXPERIMENT2ARRAY_DESIGN" )
-                    .addScalar( EE2AD_QUERY_SPACE )
+                    .addSynchronizedQuerySpace( EE2AD_QUERY_SPACE )
                     .executeUpdate();
         }
         int updated = sessionFactory.getCurrentSession()

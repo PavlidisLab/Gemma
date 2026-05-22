@@ -472,7 +472,9 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
 
         // result ID -> result set ID
         Map<Long, Long> representativeResults = QueryUtils.<Long, Object[]>streamByBatch( getSessionFactory().getCurrentSession()
-                        .createNativeQuery( "select dear.ID as RESULT_ID, dear.RESULT_SET_FK as RESULT_SET_ID " +
+                        // MAX(dear.ID) makes this ONLY_FULL_GROUP_BY-compliant; any DEAR id for the result
+                        // set is fine here — the picker only needs one representative per result set.
+                        .createNativeQuery( "select MAX(dear.ID) as RESULT_ID, dear.RESULT_SET_FK as RESULT_SET_ID " +
                                 "from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear " +
                                 "where dear.RESULT_SET_FK in :rsIds " +
                                 "group by dear.RESULT_SET_FK" )
@@ -482,7 +484,10 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
 
         // result ID -> [ef1 ID, ef2 ID]
         List<Object[]> representativeContrasts = listByBatch( getSessionFactory().getCurrentSession().createNativeQuery(
-                        "select cr.DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK as RESULT_ID, fv1.EXPERIMENTAL_FACTOR_FK as EF1_ID, fv2.EXPERIMENTAL_FACTOR_FK as EF2_ID " +
+                        // MAX() wraps the non-grouped columns so this query is ONLY_FULL_GROUP_BY-compliant
+                        // (MySQL 5.7+ default sql_mode). All CRs for a given result share identical FV refs
+                        // by construction, so MAX picks the same value any non-aggregated reference would.
+                        "select cr.DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK as RESULT_ID, MAX(fv1.EXPERIMENTAL_FACTOR_FK) as EF1_ID, MAX(fv2.EXPERIMENTAL_FACTOR_FK) as EF2_ID " +
                                 "from CONTRAST_RESULT cr " +
                                 // A left join is critical for performance, because otherwise the database will scan every
                                 // single contrast results until it finds a non-null one. We know however that they are all

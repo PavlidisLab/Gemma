@@ -61,6 +61,7 @@ import java.util.stream.Collectors;
 import static java.util.Objects.requireNonNull;
 import static ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil.EE2AD_QUERY_SPACE;
 import static ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil.GENE2CS_QUERY_SPACE;
+import static ubic.gemma.persistence.util.QueryUtils.optimizeIdentifiableParameterList;
 import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
 
 /**
@@ -505,12 +506,50 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     @Override
     public Map<CompositeSequence, Set<Gene>> getGenesByCompositeSequence( Collection<ArrayDesign> arrayDesigns, boolean useGene2Cs ) {
-        return arrayDesigns.stream()
-                .map( ad -> getGenesByCompositeSequence( ad, useGene2Cs ) )
-                .reduce( new HashMap<>(), ( m1, m2 ) -> {
-                    m1.putAll( m2 );
-                    return m1;
-                } );
+        if ( arrayDesigns.isEmpty() ) {
+            return new HashMap<>();
+        }
+        if ( useGene2Cs ) {
+            // Fetch CSs for all ADs in one query so the gene2cs row's CS id can be resolved.
+            //noinspection unchecked
+            List<CompositeSequence> allCs = getSessionFactory().getCurrentSession()
+                    .createQuery( "select cs from CompositeSequence cs where cs.arrayDesign in :ads" )
+                    .setParameterList( "ads", optimizeIdentifiableParameterList( arrayDesigns ) )
+                    .list();
+            Map<Long, CompositeSequence> idMap = IdentifiableUtils.getIdMap( allCs );
+            //noinspection unchecked
+            List<Object[]> results = getSessionFactory().getCurrentSession()
+                    .createNativeQuery( "select gene2cs.CS, {G.*} from GENE2CS gene2cs join CHROMOSOME_FEATURE G on gene2cs.GENE = G.ID where gene2cs.AD in :arrayDesignIds" )
+                    .addScalar( "CS", StandardBasicTypes.LONG )
+                    .addEntity( "G", Gene.class )
+                    .addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE )
+                    .addSynchronizedEntityClass( ArrayDesign.class )
+                    .addSynchronizedEntityClass( CompositeSequence.class )
+                    .addSynchronizedEntityClass( Gene.class )
+                    .setParameterList( "arrayDesignIds", IdentifiableUtils.getIds( arrayDesigns ) )
+                    .setCacheable( true )
+                    .list();
+            return results.stream()
+                    .collect( Collectors.groupingBy(
+                            row -> requireNonNull( idMap.get( ( Long ) row[0] ) ),
+                            Collectors.mapping( row -> ( Gene ) row[1], Collectors.toSet() ) ) );
+        } else {
+            //noinspection unchecked
+            List<Object[]> results = getSessionFactory().getCurrentSession()
+                    .createQuery( "select cs, gene from CompositeSequence cs "
+                            + "join cs.biologicalCharacteristic bs "
+                            + "join bs.bioSequence2GeneProduct bs2gp "
+                            + "join bs2gp.geneProduct gp "
+                            + "join gp.gene gene "
+                            + "where cs.arrayDesign in :ads "
+                            + "group by cs, gene" )
+                    .setParameterList( "ads", optimizeIdentifiableParameterList( arrayDesigns ) )
+                    .list();
+            return results.stream()
+                    .collect( Collectors.groupingBy(
+                            row -> ( CompositeSequence ) row[0],
+                            Collectors.mapping( row -> ( Gene ) row[1], Collectors.toSet() ) ) );
+        }
     }
 
     @Override
