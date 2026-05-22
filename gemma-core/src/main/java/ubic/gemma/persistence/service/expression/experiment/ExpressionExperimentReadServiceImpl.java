@@ -255,6 +255,9 @@ public class ExpressionExperimentReadServiceImpl implements ExpressionExperiment
     public ExpressionExperiment loadWithCharacteristics( Long id ) {
         ExpressionExperiment ee = expressionExperimentDao.load( id );
         if ( ee != null ) {
+            // Evict stale L2 collection cache so a removed characteristic doesn't cause
+            // ObjectNotFoundException when the collection is assembled from a stale entry.
+            expressionExperimentDao.evictCharacteristicsCache( ee );
             Hibernate.initialize( ee.getCharacteristics() );
         }
         return ee;
