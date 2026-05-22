@@ -24,7 +24,6 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.util.Assert;
-import ubic.gemma.core.util.matrix.AbstractMatrix;
 import ubic.gemma.core.util.matrix.DenseDoubleMatrix;
 import ubic.gemma.core.util.matrix.DoubleMatrix;
 import ubic.gemma.core.util.math.DescriptiveWithMissing;
@@ -712,19 +711,11 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
         return result;
     }
 
-    private <R, C, V> void setMatBioAssayValues( AbstractMatrix<R, C, V> mat, Integer rowIndex, V[] vals,
-            Collection<BioAssay> bioAssays, Iterator<BioAssay> it ) {
-        for ( int j = 0; j < bioAssays.size(); j++ ) {
-            BioAssay bioAssay = it.next();
-            int column = getColumnIndex( bioAssay );
-            assert column != -1;
-            mat.set( rowIndex, column, vals[j] );
-        }
-    }
-
     /**
-     * Primitive-double variant of {@link #setMatBioAssayValues}: avoids the per-cell Double allocation that
-     * would result from boxing the row's values before assignment.
+     * Writes a row of vector values into the dense double matrix. Takes a primitive {@code double[]} so the
+     * row's payload does not need to be boxed into a {@code Double[]} before assignment (the generic
+     * {@code AbstractMatrix.set(int, int, V)} path would otherwise allocate one Double per cell -- ~17.5M
+     * Doubles for a 175k x 100 matrix, all garbage).
      * <p>
      * -Infinity sentinel: the legacy two-pass path filled cells with -Infinity then scanned-and-rewrote them
      * to NaN at the end. That replaced both unwritten sentinels AND any actual -Infinity values produced by
