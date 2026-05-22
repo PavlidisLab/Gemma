@@ -1172,6 +1172,43 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     int updateAnnotations( ExpressionExperiment ee, Collection<Characteristic> desired );
 
     /**
+     * Add a single experiment-level tag to {@code ee} as part of the per-tag REST write flow.
+     * <p>
+     * Distinct from {@link #addCharacteristic(ExpressionExperiment, Characteristic)} in two ways:
+     * (1) emits a {@link ubic.gemma.model.common.auditAndSecurity.eventType.TagAddedEvent} per call
+     * (via {@code @Audited} on the facade impl) so the audit trail records one row per added tag;
+     * (2) rejects duplicates by {@code (categoryUri, valueUri)} with an {@link IllegalArgumentException}
+     * the REST layer maps to {@code 409 Conflict}. {@code addCharacteristic} preserves its existing
+     * audit-silent / dup-tolerant semantics for legacy gemma-web callers.
+     *
+     * @param ee the experiment to add the tag to.
+     * @param vc the characteristic to add. Must have a non-blank category and value; if the evidence
+     *           code is null it defaults to {@link ubic.gemma.model.association.GOEvidenceCode#IC}.
+     * @return the persistent {@code Characteristic} with its assigned id.
+     * @throws IllegalArgumentException if a characteristic with the same {@code (categoryUri,
+     *                                  valueUri)} already exists on the EE.
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    Characteristic addAnnotation( ExpressionExperiment ee, Characteristic vc );
+
+    /**
+     * Remove a single experiment-level tag from {@code ee} by characteristic id. Counterpart to
+     * {@link #addAnnotation(ExpressionExperiment, Characteristic)}.
+     * <p>
+     * Emits a {@link ubic.gemma.model.common.auditAndSecurity.eventType.TagRemovedEvent} per call
+     * (via {@code @Audited} on the facade impl). The REST layer maps the {@code null} return
+     * to {@code 404 Not Found}.
+     *
+     * @param ee             the experiment.
+     * @param annotationId   the id of the {@link Characteristic} to remove.
+     * @return the removed characteristic, or {@code null} if no characteristic with that id is
+     *         currently attached to {@code ee}.
+     */
+    @Nullable
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    Characteristic removeAnnotation( ExpressionExperiment ee, Long annotationId );
+
+    /**
      * @see ExpressionExperimentDao#thaw(ExpressionExperiment)
      */
     @CheckReturnValue
