@@ -136,7 +136,11 @@ public class LowVarianceDataTest extends AbstractGeoServiceTest5 {
 
         Collection<ExperimentalFactor> toremove = new HashSet<>( ee.getExperimentalDesign().getExperimentalFactors() );
         experimentalFactorService.remove( toremove );
-        ee.getExperimentalDesign().getExperimentalFactors().clear();
+
+        // HB6: a stale in-memory EE still references the deleted EFs; reload before update so
+        // the merge doesn't try to refetch the now-gone ExperimentalFactor rows.
+        ee = expressionExperimentService.loadAndThaw( ee.getId() );
+        assertNotNull( ee );
 
         expressionExperimentService.update( ee );
 
