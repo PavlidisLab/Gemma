@@ -118,9 +118,13 @@ public class ExternalFileGeneLoaderServiceTest extends BaseSpringContextTest5 {
 
         // show that we add a product if the gene exists, but is missing one.
         GeneProduct gp = gene.getProducts().iterator().next();
-        gene.getProducts().clear();
         geneProductService.remove( gp );
-        geneService.update( gene );
+        // Reload the gene so its products collection reflects the GP removal; merging
+        // the stale local instance (with the cleared collection but a still-pinned
+        // PersistentSet snapshot referencing the removed GP) trips merge into trying
+        // to fetch the deleted GeneProduct row and fails with EntityNotFoundException
+        // under HB6.
+        gene = geneService.thaw( geneService.load( gene.getId() ) );
         assertEquals( 0, geneService.getProducts( gene.getId() ).size() );
         numbersGeneLoaded = externalFileGeneLoaderService.load( geneFile, TAXON_NAME );
         assertEquals( 1, numbersGeneLoaded );
