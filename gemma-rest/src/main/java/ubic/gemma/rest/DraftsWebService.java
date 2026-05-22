@@ -276,7 +276,7 @@ public class DraftsWebService {
         }
         CurationDraft d;
         try {
-            d = curationDraftService.saveOrUpdate( id, curator, payloadJson, null, parkedJson );
+            d = curationDraftService.saveOrUpdate( id, curator, payloadJson, req.proposalId, parkedJson );
         } catch ( IllegalArgumentException e ) {
             // saveOrUpdate throws IAE when the investigation id is unknown.
             throw new NotFoundException( e.getMessage() );
@@ -631,6 +631,18 @@ public class DraftsWebService {
         @JsonProperty("parked_elements")
         @Nullable
         public List<String> parkedElements;
+
+        /**
+         * Optional AgentProposal id to seed the disposition snapshot from.
+         * Required when the draft does not already exist (a draft created
+         * here without a snapshot would yield empty dispositions on every
+         * subsequent diff). If the draft already exists and is bound to a
+         * proposal, callers may omit this; if supplied, it must match the
+         * existing binding or the service will throw.
+         */
+        @JsonProperty("proposal_id")
+        @Nullable
+        public Long proposalId;
     }
 
     /**
