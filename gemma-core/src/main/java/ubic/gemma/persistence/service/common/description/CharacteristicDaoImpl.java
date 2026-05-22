@@ -357,8 +357,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
             uriColumns.add( "OBJECT_URI" );
             uriColumns.add( "SECOND_OBJECT_URI" );
         }
-        String aclJoin = EE2CAclQueryUtils.formNativeAclJoinClause( "T.EXPRESSION_EXPERIMENT_FK" );
-        String aclWhere = EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "T.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" );
+        String aclWhere = EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "T.EXPRESSION_EXPERIMENT_FK", "T.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" );
         String taxonJoin = taxon != null ? " join INVESTIGATION I on T.EXPRESSION_EXPERIMENT_FK = I.ID " : "";
         String taxonWhere = taxon != null ? " and I.TAXON_FK = :taxonId" : "";
         StringBuilder sb = new StringBuilder();
@@ -372,7 +371,6 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
             }
             sb.append( "select T.`LEVEL`, T.VALUE_URI, T.PREDICATE_URI, T.OBJECT_URI, T.SECOND_PREDICATE_URI, T.SECOND_OBJECT_URI, T.EXPRESSION_EXPERIMENT_FK from EXPRESSION_EXPERIMENT2CHARACTERISTIC T" )
                     .append( taxonJoin )
-                    .append( aclJoin )
                     .append( " where T." ).append( uriColumns.get( i ) ).append( " in (:uris)" )
                     .append( taxonWhere )
                     .append( aclWhere );
