@@ -1242,10 +1242,9 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     private void populateExpressionExperimentCount( Collection<ArrayDesignValueObject> entities ) {
         Query query = this.getSessionFactory().getCurrentSession()
                 .createNativeQuery( "select ee2ad.ARRAY_DESIGN_FK as ID, count(distinct ee2ad.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2ARRAY_DESIGN ee2ad "
-                        + EE2CAclQueryUtils.formNativeAclJoinClause( "ee2ad.EXPRESSION_EXPERIMENT_FK" ) + " "
                         + "where ee2ad.ARRAY_DESIGN_FK in :ids "
                         + "and not ee2ad.IS_ORIGINAL_PLATFORM"
-                        + EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "ee2ad.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" )
+                        + EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "ee2ad.EXPRESSION_EXPERIMENT_FK", "ee2ad.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" )
                         + formNativeNonTroubledClause( "ee2ad.EXPRESSION_EXPERIMENT_FK", ExpressionExperiment.class )
                         + " group by ee2ad.ARRAY_DESIGN_FK" )
                 .addScalar( "ID", StandardBasicTypes.LONG )
@@ -1268,12 +1267,11 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     private void populateSwitchedExpressionExperimentCount( Collection<ArrayDesignValueObject> entities ) {
         Query query = this.getSessionFactory().getCurrentSession()
                 .createNativeQuery( "select ee2ad.ARRAY_DESIGN_FK as ID, count(distinct ee2ad.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2ARRAY_DESIGN ee2ad "
-                        + EE2CAclQueryUtils.formNativeAclJoinClause( "ee2ad.EXPRESSION_EXPERIMENT_FK" ) + " "
                         + "where ee2ad.ARRAY_DESIGN_FK in :ids "
                         + "and ee2ad.IS_ORIGINAL_PLATFORM "
                         // ignore noop switches
                         + "and ee2ad.ARRAY_DESIGN_FK not in (select ARRAY_DESIGN_FK from EXPRESSION_EXPERIMENT2ARRAY_DESIGN where EXPRESSION_EXPERIMENT_FK = ee2ad.EXPRESSION_EXPERIMENT_FK and ARRAY_DESIGN_FK = ee2ad.ARRAY_DESIGN_FK and not IS_ORIGINAL_PLATFORM)"
-                        + EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "ee2ad.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" )
+                        + EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "ee2ad.EXPRESSION_EXPERIMENT_FK", "ee2ad.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" )
                         + formNativeNonTroubledClause( "ee2ad.EXPRESSION_EXPERIMENT_FK", ExpressionExperiment.class )
                         + " group by ee2ad.ARRAY_DESIGN_FK" )
                 .addScalar( "ID", StandardBasicTypes.LONG )

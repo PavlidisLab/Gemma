@@ -19,7 +19,7 @@ import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
  * <li>form your select clause and your jointures</li>
  * <li>concatenate {@link #formAclRestrictionClause(String)} or {@link #formNativeAclJoinClause(String)} in the jointure section</li>
  * <li>form where clause and add your constraints</li>
- * <li>concatenate {@link #formNativeAclRestrictionClause(SessionFactoryImplementor)} in the clause section (only for native queries)</li>
+ * <li>concatenate {@link #formNativeAclRestrictionClause(SessionFactoryImplementor, String)} in the clause section (only for native queries)</li>
  * <li>bind all your parameters</li>
  * <li>bind ACL-specific parameters with {@link #addAclParameters(Query, Class)} to the query object</li>
  * </ol>
@@ -40,13 +40,21 @@ import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
  * callers that need the ACL info (only {@code ExpressionExperimentDaoImpl.getFilteringQuery})
  * must post-fetch via {@link #loadAclInfoFor(org.hibernate.Session, java.util.Collection, Class)}.
  *
+ * <h2>Native callers: explicit id column (HQL_SQL_AUDIT C5)</h2>
+ * <p>
+ * Native callers previously had to invoke {@link #formNativeAclJoinClause(String)} before
+ * {@link #formNativeAclRestrictionClause(SessionFactoryImplementor, String)} so the id column
+ * could be threaded across via a {@link ThreadLocal}. That coupling is gone: the restriction
+ * clause now takes the {@code aoiIdColumn} as an explicit parameter. The join clause survives
+ * as a deprecated empty-string returning shim so legacy concatenation idioms still compile.
+ *
  * @author poirigui
  */
 public class AclQueryUtils {
 
     /**
-     * Alias used by {@link #formNativeAclJoinClause(String)} for the
-     * object identity {@link ubic.gemma.core.security.acl.domain.AclObjectIdentity} and the owner identity {@link ubic.gemma.core.security.acl.domain.AclSid}.
+     * Alias used for the object identity {@link ubic.gemma.core.security.acl.domain.AclObjectIdentity}
+     * and the owner identity {@link ubic.gemma.core.security.acl.domain.AclSid} inside the EXISTS body.
      * <p>
      * Note: after the EXISTS rewrite, {@link #formAclRestrictionClause(String, Permission)} no
      * longer leaves these aliases in the outer query's scope (the sub-query has its own scope).
@@ -232,65 +240,52 @@ public class AclQueryUtils {
     /**
      * Native SQL flavour of the ACL jointure.
      * <p>
-     * After the EXISTS rewrite, this method returns the empty string: the native restriction
-     * clause produced by {@link #formNativeAclRestrictionClause(SessionFactoryImplementor, Permission)}
+     * After the EXISTS rewrite this method returns the empty string: the native restriction
+     * clause produced by {@link #formNativeAclRestrictionClause(SessionFactoryImplementor, String, Permission)}
      * now emits a self-contained correlated {@code EXISTS} sub-query that needs no outer
-     * jointure. Kept for API stability so that callers that string-concatenate
+     * jointure. Kept as a deprecated shim so callers that still string-concatenate
      * "{@code from X x } + formNativeAclJoinClause(...) + ..." continue to compile.
      *
-     * @param aoiIdColumn column name to match against the ACL object identity, the object class is passed via
-     *                    {@link #addAclParameters(Query, Class)} afterward
-     *
+     * @param aoiIdColumn column name (only validated for non-blank — the id column is now passed
+     *                    explicitly to {@link #formNativeAclRestrictionClause(SessionFactoryImplementor, String, Permission)})
      * @see #formAclRestrictionClause(String)
+     * @deprecated as of the HQL_SQL_AUDIT C5 fix; the id column is now an explicit parameter to
+     *             {@link #formNativeAclRestrictionClause(SessionFactoryImplementor, String, Permission)}.
+     *             Remove the call entirely.
      */
+    @Deprecated
     public static String formNativeAclJoinClause( String aoiIdColumn ) {
         if ( StringUtils.isBlank( aoiIdColumn ) ) {
             throw new IllegalArgumentException( "Object identity column cannot be empty." );
         }
-        // The EXISTS sub-query in formNativeAclRestrictionClause carries the aoi-id correlation
-        // back to the outer query via :aclQueryUtils_aoiIdCol, so we store the caller's column
-        // name on a thread-local that the restriction clause reads.
-        NATIVE_AOI_ID_COLUMN.set( aoiIdColumn );
         return "";
     }
 
     /**
-     * Thread-local hand-off between {@link #formNativeAclJoinClause(String)} (which records the
-     * caller's id column) and {@link #formNativeAclRestrictionClause(SessionFactoryImplementor, Permission)}
-     * (which embeds it into the EXISTS sub-query body). The contract is: callers MUST invoke
-     * the join clause before the restriction clause in the same call chain. All in-tree
-     * callers follow this pattern.
-     */
-    private static final ThreadLocal<String> NATIVE_AOI_ID_COLUMN = new ThreadLocal<>();
-
-    /**
      * Native flavour of the ACL restriction clause with a {@link BasePermission#READ} permission.
-     * @see #formNativeAclRestrictionClause(SessionFactoryImplementor, Permission)
+     * @see #formNativeAclRestrictionClause(SessionFactoryImplementor, String, Permission)
      */
-    public static String formNativeAclRestrictionClause( SessionFactoryImplementor sessionFactoryImplementor ) {
-        return formNativeAclRestrictionClause( sessionFactoryImplementor, BasePermission.READ );
+    public static String formNativeAclRestrictionClause( SessionFactoryImplementor sessionFactoryImplementor, String aoiIdColumn ) {
+        return formNativeAclRestrictionClause( sessionFactoryImplementor, aoiIdColumn, BasePermission.READ );
     }
 
     /**
      * Native flavour of the ACL restriction clause.
      * <p>
-     * After the EXISTS rewrite, this returns a self-contained {@code " and exists (...)"} clause
-     * that correlates back to the outer query via the {@code aoiIdColumn} that
-     * {@link #formNativeAclJoinClause(String)} stashed on a thread-local during the same call
-     * chain.
+     * Emits a self-contained {@code " and exists (...)"} clause that correlates back to the
+     * outer query via the supplied {@code aoiIdColumn}.
      *
-     * @param sessionFactoryImplementor a session factory implementor that will be used to adjust the SQL generated
-     *                                  based on the dialect
+     * @param sessionFactoryImplementor session factory implementor used to dialect-render the
+     *                                  bitwise-AND fragment
+     * @param aoiIdColumn               outer-query column to correlate against
+     *                                  {@code acl_object_identity.object_id_identity}; must be
+     *                                  non-blank (must be a SQL column reference, never user input)
      * @param permission                requested permission(s)
      * @see #formAclRestrictionClause(String, Permission)
      */
-    public static String formNativeAclRestrictionClause( SessionFactoryImplementor sessionFactoryImplementor, Permission permission ) {
-        String aoiIdColumn = NATIVE_AOI_ID_COLUMN.get();
-        NATIVE_AOI_ID_COLUMN.remove();
-        if ( aoiIdColumn == null ) {
-            throw new IllegalStateException(
-                    "formNativeAclRestrictionClause was called without a prior formNativeAclJoinClause; "
-                            + "the EXISTS rewrite needs the outer-query id column to correlate." );
+    public static String formNativeAclRestrictionClause( SessionFactoryImplementor sessionFactoryImplementor, String aoiIdColumn, Permission permission ) {
+        if ( StringUtils.isBlank( aoiIdColumn ) ) {
+            throw new IllegalArgumentException( "Object identity column cannot be empty." );
         }
         if ( SecurityUtil.isUserAdmin() ) {
             return "";
@@ -335,8 +330,8 @@ public class AclQueryUtils {
      * Bind {@link Query} parameters to a join clause generated with {@link #formAclRestrictionClause(String)} and add ACL
      * restriction parameters defined in {@link #formAclRestrictionClause(String)}.
      * <p>
-     * This method also work for native queries formed with {@link #formNativeAclJoinClause(String)} and
-     * {@link #formNativeAclRestrictionClause(SessionFactoryImplementor)}.
+     * This method also work for native queries formed with
+     * {@link #formNativeAclRestrictionClause(SessionFactoryImplementor, String)}.
      *
      * @param query   a {@link Query} object that contains the join and restriction clauses
      * @param aoiType the AOI type to be bound in the query

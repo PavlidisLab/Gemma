@@ -81,40 +81,28 @@ public class AclQueryUtilsTest extends BaseSpringContextTest5 {
 
     @Test
     public void testFormNativeAclJoinClause() {
-        // EXISTS rewrite: the native join clause now stashes the id-column on a thread-local
-        // and emits the empty string. The actual EXISTS sub-query is produced by
-        // formNativeAclRestrictionClause. Drain the thread-local so we don't leak into the
-        // next test (it's cleared on next read by formNativeAclRestrictionClause anyway, but
-        // for an isolated test we don't want the side-effect to persist).
+        // HQL_SQL_AUDIT C5: the native join clause is now a deprecated no-op. The id-column
+        // is passed explicitly to formNativeAclRestrictionClause.
         assertThat( formNativeAclJoinClause( "EE.ID" ) ).isEmpty();
-        // drain thread-local
-        formNativeAclRestrictionClause( ( SessionFactoryImplementor ) sessionFactory );
     }
 
     @Test
     public void testFormNativeAclJoinClauseAsAnonymous() {
         this.runAsAnonymous();
-        // Same as above: native join clause is now an empty string post-EXISTS rewrite.
+        // Same as above: deprecated no-op.
         assertThat( formNativeAclJoinClause( "EE.ID" ) ).isEmpty();
-        // drain thread-local
-        formNativeAclRestrictionClause( ( SessionFactoryImplementor ) sessionFactory );
     }
 
     @Test
     public void testFormNativeRestrictionClause() {
-        // Admin bypass emits empty (no filter needed). Must still call the join clause first
-        // to satisfy the contract that the id-column is stashed.
-        formNativeAclJoinClause( "EE.ID" );
-        assertThat( formNativeAclRestrictionClause( ( SessionFactoryImplementor ) sessionFactory ) ).isEmpty();
+        // Admin bypass emits empty (no filter needed).
+        assertThat( formNativeAclRestrictionClause( ( SessionFactoryImplementor ) sessionFactory, "EE.ID" ) ).isEmpty();
     }
 
     @Test
     public void testFormNativeRestrictionClauseAsAnonymous() {
         this.runAsAnonymous();
-        // Must call the join clause first so the EXISTS body knows which outer column to
-        // correlate against.
-        formNativeAclJoinClause( "EE.ID" );
-        assertThat( formNativeAclRestrictionClause( ( SessionFactoryImplementor ) sessionFactory ) )
+        assertThat( formNativeAclRestrictionClause( ( SessionFactoryImplementor ) sessionFactory, "EE.ID" ) )
                 .startsWith( " and exists (" )
                 .contains( "from acl_object_identity aoi" )
                 .contains( "aoi.object_id_identity = EE.ID" )
@@ -158,10 +146,9 @@ public class AclQueryUtilsTest extends BaseSpringContextTest5 {
     @Test
     public void testNative() {
         Query q = session.createNativeQuery(
-                        "select {I.*} from INVESTIGATION {I}"
-                                + formNativeAclJoinClause( "{I}.id" ) + " "
+                        "select {I.*} from INVESTIGATION {I} "
                                 + "where {I}.class = 'ExpressionExperiment'"
-                                + formNativeAclRestrictionClause( ( SessionFactoryImplementor ) sessionFactory ) )
+                                + formNativeAclRestrictionClause( ( SessionFactoryImplementor ) sessionFactory, "{I}.id" ) )
                 .addEntity( "I", ExpressionExperiment.class );
         addAclParameters( q, ExpressionExperiment.class );
         q.setMaxResults( 1 );
@@ -172,10 +159,9 @@ public class AclQueryUtilsTest extends BaseSpringContextTest5 {
     public void testNativeAsUser() {
         runAsUser( "bob" );
         Query q = session.createNativeQuery(
-                        "select {I.*} from INVESTIGATION {I}"
-                                + formNativeAclJoinClause( "{I}.id" ) + " "
+                        "select {I.*} from INVESTIGATION {I} "
                                 + "where {I}.class = 'ExpressionExperiment'"
-                                + formNativeAclRestrictionClause( ( SessionFactoryImplementor ) sessionFactory ) )
+                                + formNativeAclRestrictionClause( ( SessionFactoryImplementor ) sessionFactory, "{I}.id" ) )
                 .addEntity( "I", ExpressionExperiment.class );
         addAclParameters( q, ExpressionExperiment.class );
         q.setMaxResults( 1 );
@@ -186,10 +172,9 @@ public class AclQueryUtilsTest extends BaseSpringContextTest5 {
     public void testNativeAsAnonymous() {
         runAsAnonymous();
         Query q = session.createNativeQuery(
-                        "select {I.*} from INVESTIGATION {I}"
-                                + formNativeAclJoinClause( "{I}.id" ) + " "
+                        "select {I.*} from INVESTIGATION {I} "
                                 + "where {I}.class = 'ExpressionExperiment'"
-                                + formNativeAclRestrictionClause( ( SessionFactoryImplementor ) sessionFactory ) )
+                                + formNativeAclRestrictionClause( ( SessionFactoryImplementor ) sessionFactory, "{I}.id" ) )
                 .addEntity( "I", ExpressionExperiment.class );
         addAclParameters( q, ExpressionExperiment.class );
         q.setMaxResults( 1 );
