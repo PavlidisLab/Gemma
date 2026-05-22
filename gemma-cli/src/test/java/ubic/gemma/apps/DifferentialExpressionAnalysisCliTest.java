@@ -10,10 +10,10 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.cli.util.EntityLocator;
-import ubic.gemma.cli.util.test.BaseCliTest;
 import ubic.gemma.core.analysis.expression.diff.AnalysisType;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
@@ -56,7 +56,8 @@ public class DifferentialExpressionAnalysisCliTest extends BaseTest5 {
 
     @Configuration
     @TestComponent
-    static class DifferentialExpressionAnalysisCliTestConfiguration extends BaseCliTest {
+    @ActiveProfiles("cli")
+    static class DifferentialExpressionAnalysisCliTestConfiguration {
 
         @Bean
         @Scope("prototype")
