@@ -259,7 +259,7 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
         // saving twice is needed to get the QT filled in properly. ??Why??
         source = expressionExperimentService.save( source );
         source.getRawExpressionDataVectors().addAll( results );
-        source = expressionExperimentService.save( source );
+        expressionExperimentService.save( source );
         // Audit event written by @AuditedConditional on the public
         // computeMissingValues entry-points via AuditedAspect (Phase C). The
         // SpEL guard `!#result.isEmpty()` keeps the no-data short-circuit
