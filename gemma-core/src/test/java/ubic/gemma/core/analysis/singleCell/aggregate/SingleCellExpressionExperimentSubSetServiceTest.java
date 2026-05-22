@@ -12,6 +12,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
+import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
@@ -108,12 +109,17 @@ public class SingleCellExpressionExperimentSubSetServiceTest extends BaseTest {
             cta.getCellTypes().add( ct );
             cf.getFactorValues().add( FactorValue.Factory.newInstance( cf, ct ) );
         }
+        // Single-cell dimension covers all four sample bioassays — none are dataless.
+        SingleCellDimension scd = new SingleCellDimension();
+        scd.getBioAssays().addAll( ee.getBioAssays() );
         when( bioMaterialService.create( any( BioMaterial.class ) ) ).thenAnswer( a -> a.getArgument( 0 ) );
         when( bioAssayService.create( any( BioAssay.class ) ) ).thenAnswer( a -> a.getArgument( 0 ) );
         when( singleCellExpressionExperimentService.getPreferredCellTypeAssignment( ee ) )
                 .thenReturn( Optional.of( cta ) );
         when( singleCellExpressionExperimentService.getCellTypeFactor( ee ) )
                 .thenReturn( Optional.of( cf ) );
+        when( singleCellExpressionExperimentService.getPreferredSingleCellDimensionWithoutCellIds( ee ) )
+                .thenReturn( Optional.of( scd ) );
         when( expressionExperimentSubSetService.create( any( ExpressionExperimentSubSet.class ) ) )
                 .thenAnswer( a -> a.getArgument( 0 ) );
         List<ExpressionExperimentSubSet> subsets = service.createSubSetsByCellType( ee, SingleCellExperimentSubSetsCreationConfig.builder().build() );
@@ -188,12 +194,17 @@ public class SingleCellExpressionExperimentSubSetServiceTest extends BaseTest {
                 cf.getFactorValues().add( FactorValue.Factory.newInstance( cf, ct ) );
             }
         }
+        // Single-cell dimension covers all four sample bioassays — none are dataless.
+        SingleCellDimension scd = new SingleCellDimension();
+        scd.getBioAssays().addAll( ee.getBioAssays() );
         when( bioMaterialService.create( any( BioMaterial.class ) ) ).thenAnswer( a -> a.getArgument( 0 ) );
         when( bioAssayService.create( any( BioAssay.class ) ) ).thenAnswer( a -> a.getArgument( 0 ) );
         when( singleCellExpressionExperimentService.getPreferredCellTypeAssignment( ee ) )
                 .thenReturn( Optional.of( cta ) );
         when( singleCellExpressionExperimentService.getCellTypeFactor( ee ) )
                 .thenReturn( Optional.of( cf ) );
+        when( singleCellExpressionExperimentService.getPreferredSingleCellDimensionWithoutCellIds( ee ) )
+                .thenReturn( Optional.of( scd ) );
         when( expressionExperimentSubSetService.create( any( ExpressionExperimentSubSet.class ) ) )
                 .thenAnswer( a -> a.getArgument( 0 ) );
         SingleCellExperimentSubSetsCreationConfig config = SingleCellExperimentSubSetsCreationConfig.builder().ignoreUnmatchedCharacteristics( true ).build();
