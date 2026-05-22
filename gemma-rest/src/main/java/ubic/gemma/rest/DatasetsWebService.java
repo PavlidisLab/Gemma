@@ -56,6 +56,7 @@ import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.core.tasks.analysis.diffex.DifferentialExpressionAnalysisRemoveTaskCommand;
 import ubic.gemma.core.tasks.analysis.diffex.DifferentialExpressionAnalysisTaskCommand;
 import ubic.gemma.core.tasks.analysis.expression.BatchInfoFetchTaskCommand;
+import ubic.gemma.core.tasks.analysis.expression.ExpressionExperimentLoadTaskCommand;
 import ubic.gemma.core.tasks.analysis.expression.PreprocessTaskCommand;
 import ubic.gemma.core.analysis.service.DifferentialExpressionAnalysisResultListFileService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
@@ -2018,6 +2019,164 @@ public class DatasetsWebService {
             vo.setLastComputed( geeqEvent.getDate() );
         }
         return respond( vo );
+    }
+
+    /**
+     * Optional request body for {@link #importDataset}. Only {@code accession} is required.
+     */
+    public static class DatasetImportRequest {
+        @Nullable
+        private String accession;
+        @Nullable
+        private String arrayDesignName;
+        @Nullable
+        private Boolean loadPlatformOnly;
+        @Nullable
+        private Boolean suppressMatching;
+        @Nullable
+        private Boolean splitByPlatform;
+        @Nullable
+        private Boolean aggressiveQtRemoval;
+        @Nullable
+        private Boolean allowSuperSeriesLoad;
+        @Nullable
+        private Boolean allowArrayExpressDesign;
+        @Nullable
+        private Boolean isArrayExpress;
+
+        @Nullable
+        public String getAccession() {
+            return accession;
+        }
+
+        public void setAccession( @Nullable String accession ) {
+            this.accession = accession;
+        }
+
+        @Nullable
+        public String getArrayDesignName() {
+            return arrayDesignName;
+        }
+
+        public void setArrayDesignName( @Nullable String arrayDesignName ) {
+            this.arrayDesignName = arrayDesignName;
+        }
+
+        @Nullable
+        public Boolean getLoadPlatformOnly() {
+            return loadPlatformOnly;
+        }
+
+        public void setLoadPlatformOnly( @Nullable Boolean loadPlatformOnly ) {
+            this.loadPlatformOnly = loadPlatformOnly;
+        }
+
+        @Nullable
+        public Boolean getSuppressMatching() {
+            return suppressMatching;
+        }
+
+        public void setSuppressMatching( @Nullable Boolean suppressMatching ) {
+            this.suppressMatching = suppressMatching;
+        }
+
+        @Nullable
+        public Boolean getSplitByPlatform() {
+            return splitByPlatform;
+        }
+
+        public void setSplitByPlatform( @Nullable Boolean splitByPlatform ) {
+            this.splitByPlatform = splitByPlatform;
+        }
+
+        @Nullable
+        public Boolean getAggressiveQtRemoval() {
+            return aggressiveQtRemoval;
+        }
+
+        public void setAggressiveQtRemoval( @Nullable Boolean aggressiveQtRemoval ) {
+            this.aggressiveQtRemoval = aggressiveQtRemoval;
+        }
+
+        @Nullable
+        public Boolean getAllowSuperSeriesLoad() {
+            return allowSuperSeriesLoad;
+        }
+
+        public void setAllowSuperSeriesLoad( @Nullable Boolean allowSuperSeriesLoad ) {
+            this.allowSuperSeriesLoad = allowSuperSeriesLoad;
+        }
+
+        @Nullable
+        public Boolean getAllowArrayExpressDesign() {
+            return allowArrayExpressDesign;
+        }
+
+        public void setAllowArrayExpressDesign( @Nullable Boolean allowArrayExpressDesign ) {
+            this.allowArrayExpressDesign = allowArrayExpressDesign;
+        }
+
+        @Nullable
+        public Boolean getIsArrayExpress() {
+            return isArrayExpress;
+        }
+
+        public void setIsArrayExpress( @Nullable Boolean isArrayExpress ) {
+            this.isArrayExpress = isArrayExpress;
+        }
+    }
+
+    /**
+     * Curation-UI workflow-step endpoint: kick off an async GEO (or ArrayExpress) accession load. The actual loader
+     * runs inside {@link ExpressionExperimentLoadTaskCommand}; this handler submits the command to the
+     * {@link TaskRunningService} and returns a 202 with a {@code Location} header pointing at the polling endpoint.
+     */
+    @POST
+    @Path("/import")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Import a dataset from GEO (or ArrayExpress) by accession",
+            description = "Submits an async load task and returns 202 with a `Location` header pointing at "
+                    + "`/tasks/{taskId}`. Body must include `accession`. Optional flags map to the corresponding "
+                    + "fields on `ExpressionExperimentLoadTaskCommand`.",
+            security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
+            responses = {
+                    @ApiResponse(responseCode = "202", content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
+                    @ApiResponse(responseCode = "400", description = "The request body is missing or `accession` is blank.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public Response importDataset( @Nullable DatasetImportRequest body ) {
+        if ( body == null || body.getAccession() == null || body.getAccession().trim().isEmpty() ) {
+            throw new BadRequestException( "Request body must include a non-blank `accession`." );
+        }
+        ExpressionExperimentLoadTaskCommand cmd = new ExpressionExperimentLoadTaskCommand();
+        cmd.setAccession( body.getAccession().trim() );
+        if ( body.getArrayDesignName() != null ) {
+            cmd.setArrayDesignName( body.getArrayDesignName() );
+        }
+        if ( body.getLoadPlatformOnly() != null ) {
+            cmd.setLoadPlatformOnly( body.getLoadPlatformOnly() );
+        }
+        if ( body.getSuppressMatching() != null ) {
+            cmd.setSuppressMatching( body.getSuppressMatching() );
+        }
+        if ( body.getSplitByPlatform() != null ) {
+            cmd.setSplitByPlatform( body.getSplitByPlatform() );
+        }
+        if ( body.getAggressiveQtRemoval() != null ) {
+            cmd.setAggressiveQtRemoval( body.getAggressiveQtRemoval() );
+        }
+        if ( body.getAllowSuperSeriesLoad() != null ) {
+            cmd.setAllowSuperSeriesLoad( body.getAllowSuperSeriesLoad() );
+        }
+        if ( body.getAllowArrayExpressDesign() != null ) {
+            cmd.setAllowArrayExpressDesign( body.getAllowArrayExpressDesign() );
+        }
+        if ( body.getIsArrayExpress() != null ) {
+            cmd.setArrayExpress( body.getIsArrayExpress() );
+        }
+        return acceptedTaskResponse( taskRunningService.submitTaskCommand( cmd ) );
     }
 
     @POST
