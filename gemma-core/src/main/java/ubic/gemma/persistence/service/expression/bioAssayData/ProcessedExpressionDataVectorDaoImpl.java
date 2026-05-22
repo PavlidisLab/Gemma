@@ -150,28 +150,15 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
             // cannot fix this here, because we're read-only.
         }
 
-        // join fetch designElement + arrayDesign: see getProcessedVectors(ee) for the N+1 rationale.
-        //noinspection unchecked
-        List<ProcessedExpressionDataVector> result = this.getSessionFactory().getCurrentSession()
-                .createQuery( "select dedv from ProcessedExpressionDataVector dedv "
-                        + "join fetch dedv.designElement cs "
-                        + "join fetch cs.arrayDesign "
-                        + "where dedv.expressionExperiment = :ee and dedv.rankByMean > 0.5 order by RAND()" ) // order by rand() works?
-                .setParameter( "ee", ee )
-                .setMaxResults( limit )
-                .list();
+        // HQL_SQL_AUDIT P2: replace `order by RAND()` (forces a full sort of every matching
+        // vector with a random key per row -- O(N log N) on millions of vectors per EE) with
+        // a two-step pattern: (1) cheap id-only index scan, (2) shuffle in Java + pick N,
+        // (3) fetch only the chosen vectors by id (with the same fetch joins as before).
+        List<ProcessedExpressionDataVector> result = sampleVectorsByRank( ee, limit, true );
 
         // maybe ranks are not set for some reason; can happen e.g. GeneSpring mangled data.
         if ( result.isEmpty() ) {
-            //noinspection unchecked
-            result = this.getSessionFactory().getCurrentSession()
-                    .createQuery( "select dedv from ProcessedExpressionDataVector dedv "
-                            + "join fetch dedv.designElement cs "
-                            + "join fetch cs.arrayDesign "
-                            + "where dedv.expressionExperiment = :ee order by RAND()" )
-                    .setParameter( "ee", ee )
-                    .setMaxResults( limit )
-                    .list();
+            result = sampleVectorsByRank( ee, limit, false );
         }
 
         thaw( result ); // needed?
@@ -185,6 +172,41 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
         }
 
         return result;
+    }
+
+    /**
+     * Sample {@code limit} processed vectors for the given experiment, optionally restricted
+     * to {@code rankByMean > 0.5}.
+     * <p>
+     * Implementation: (1) cheap id-only query returning candidate ids, (2) shuffle the id
+     * list in Java and pick the first {@code limit}, (3) fetch only those vectors by id with
+     * the same designElement / arrayDesign join fetches as the bulk loader.
+     * <p>
+     * Replaces a `ORDER BY RAND()` over the full set, which forced the DB to compute a
+     * random key per row and sort the entire result. See HQL_SQL_AUDIT P2.
+     */
+    private List<ProcessedExpressionDataVector> sampleVectorsByRank( ExpressionExperiment ee, int limit, boolean rankFilter ) {
+        String idQuery = rankFilter
+                ? "select dedv.id from ProcessedExpressionDataVector dedv where dedv.expressionExperiment = :ee and dedv.rankByMean > 0.5"
+                : "select dedv.id from ProcessedExpressionDataVector dedv where dedv.expressionExperiment = :ee";
+        //noinspection unchecked
+        List<Long> ids = this.getSessionFactory().getCurrentSession()
+                .createQuery( idQuery )
+                .setParameter( "ee", ee )
+                .list();
+        if ( ids.isEmpty() ) {
+            return new ArrayList<>();
+        }
+        Collections.shuffle( ids );
+        List<Long> picked = ids.size() > limit ? ids.subList( 0, limit ) : ids;
+        //noinspection unchecked
+        return ( List<ProcessedExpressionDataVector> ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select dedv from ProcessedExpressionDataVector dedv "
+                        + "join fetch dedv.designElement cs "
+                        + "join fetch cs.arrayDesign "
+                        + "where dedv.id in (:ids)" )
+                .setParameterList( "ids", picked )
+                .list();
     }
 
     @Override
