@@ -20,7 +20,6 @@ package ubic.gemma.core.loader.entrez.pubmed;
 
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.api.Assertions;
-import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,7 +27,6 @@ import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.util.test.NetworkAvailable;
 import ubic.gemma.core.util.test.NetworkAvailableExtension;
-import ubic.gemma.core.util.test.category.PubMedTest;
 import ubic.gemma.model.common.description.BibliographicReference;
 
 import java.io.IOException;
@@ -40,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * @author pavlidis
  */
-@Category(PubMedTest.class)
+@Tag("pubmed")
 @NetworkAvailable(url = EntrezUtils.ESEARCH)
 @ExtendWith(NetworkAvailableExtension.class)
 public class PubMedSearchTest {

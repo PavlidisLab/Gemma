@@ -18,7 +18,6 @@
  */
 package ubic.gemma.core.loader.expression.geo.service;
 
-import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,7 +26,6 @@ import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.core.util.test.NetworkAvailable;
 import ubic.gemma.core.util.test.NetworkAvailableExtension;
-import ubic.gemma.core.util.test.category.GeoTest;
 
 import java.net.UnknownHostException;
 import java.util.List;
@@ -37,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * @author paul
  */
-@Category(GeoTest.class)
+@Tag("geo")
 @ExtendWith(NetworkAvailableExtension.class)
 public class GeoBrowserServiceTest extends BaseSpringContextTest5 {
 

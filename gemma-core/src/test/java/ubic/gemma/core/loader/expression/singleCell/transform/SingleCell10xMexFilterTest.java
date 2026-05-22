@@ -3,9 +3,9 @@ package ubic.gemma.core.loader.expression.singleCell.transform;
 import org.apache.commons.io.file.PathUtils;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
@@ -27,8 +27,6 @@ import ubic.gemma.core.util.FileUtils;
 import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.core.util.test.NetworkAvailable;
 import ubic.gemma.core.util.test.NetworkAvailableExtension;
-import ubic.gemma.core.util.test.category.GeoTest;
-import ubic.gemma.core.util.test.category.SlowTest;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -63,7 +61,8 @@ public class SingleCell10xMexFilterTest extends BaseTest5 {
     private Path downloadDir;
 
     @Test
-    @Category({ GeoTest.class, SlowTest.class })
+    @Tag("geo")
+    @Tag("slow")
     @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     public void testGSM8316309() throws IOException, NoSingleCellDataFoundException {
         SingleCell10xMexFilter filter = ctx.getBean( SingleCell10xMexFilter.class );
@@ -104,7 +103,8 @@ public class SingleCell10xMexFilterTest extends BaseTest5 {
      * This example uses 3 GEMs.
      */
     @Test
-    @Category({ GeoTest.class, SlowTest.class })
+    @Tag("geo")
+    @Tag("slow")
     @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     public void testGSM4871780() throws IOException, NoSingleCellDataFoundException {
         SingleCell10xMexFilter filter = ctx.getBean( SingleCell10xMexFilter.class );
@@ -142,7 +142,8 @@ public class SingleCell10xMexFilterTest extends BaseTest5 {
     }
 
     @Test
-    @Category({ GeoTest.class, SlowTest.class })
+    @Tag("geo")
+    @Tag("slow")
     @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     public void testGSM3559978() throws IOException, NoSingleCellDataFoundException {
         SingleCell10xMexFilter filter = ctx.getBean( SingleCell10xMexFilter.class );

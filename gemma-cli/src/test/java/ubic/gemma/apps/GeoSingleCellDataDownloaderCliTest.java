@@ -1,6 +1,5 @@
 package ubic.gemma.apps;
 
-import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +14,6 @@ import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.loader.util.ftp.FTPConfig;
 import ubic.gemma.core.util.locking.FileLockManager;
 import ubic.gemma.core.util.locking.FileLockManagerImpl;
-import ubic.gemma.core.util.test.category.GeoTest;
 
 import java.io.File;
 
@@ -23,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static ubic.gemma.cli.util.test.Assertions.assertThat;
 
 @ContextConfiguration
-@Category(GeoTest.class)
+@Tag("geo")
 public class GeoSingleCellDataDownloaderCliTest extends BaseCliTest5 {
 
     @Configuration

@@ -20,12 +20,10 @@ package ubic.gemma.core.loader.entrez.pubmed;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.Tag;
 import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.util.test.NetworkAvailable;
 import ubic.gemma.core.util.test.NetworkAvailableExtension;
-import ubic.gemma.core.util.test.category.GeoTest;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -39,7 +37,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * @author pavlidis
  */
-@Category(GeoTest.class)
+@Tag("geo")
 @ExtendWith(NetworkAvailableExtension.class)
 public class ExpressionExperimentBibRefFinderTest {
 

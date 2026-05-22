@@ -18,7 +18,6 @@
  */
 package ubic.gemma.core.analysis.service;
 
-import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -36,7 +35,6 @@ import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest5;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.genome.gene.ncbi.NcbiGeneLoader;
-import ubic.gemma.core.util.test.category.GoldenPathTest;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -65,7 +63,7 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * @author keshav
  */
-@Category(GoldenPathTest.class)
+@Tag("goldenPath")
 @Tag("slow")
 public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTest5 {
 

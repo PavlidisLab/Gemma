@@ -15,9 +15,9 @@
 package ubic.gemma.core.loader.expression;
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest5;
@@ -25,8 +25,6 @@ import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.util.test.NetworkAvailable;
 import ubic.gemma.core.util.test.NetworkAvailableExtension;
-import ubic.gemma.core.util.test.category.GeoTest;
-import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
@@ -67,7 +65,8 @@ public class ExpressionExperimentPlatformSwitchTest extends AbstractGeoServiceTe
      * for bug 3451
      */
     @Test
-    @Category({ GeoTest.class, SlowTest.class })
+    @Tag("geo")
+    @Tag("slow")
     @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testGSE36025() {
 

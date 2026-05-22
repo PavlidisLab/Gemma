@@ -1,6 +1,5 @@
 package ubic.gemma.core.loader.expression.geo.fetcher2;
 
-import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -9,7 +8,6 @@ import ubic.gemma.core.loader.util.ftp.FTPClientFactoryImpl;
 import ubic.gemma.core.util.SimpleRetryPolicy;
 import ubic.gemma.core.util.test.NetworkAvailable;
 import ubic.gemma.core.util.test.NetworkAvailableExtension;
-import ubic.gemma.core.util.test.category.GeoTest;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -18,7 +16,7 @@ import java.nio.file.Path;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @Tag("integration")
-@Category(GeoTest.class)
+@Tag("geo")
 @NetworkAvailable(url = EntrezUtils.ESEARCH)
 @ExtendWith(NetworkAvailableExtension.class)
 public class GeoFetcherTest {
