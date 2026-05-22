@@ -499,18 +499,17 @@ public class ExpressionExperimentDaoImpl
     @Override
     public Collection<ExpressionExperiment> findByExpressedGene( Gene gene, Double rank ) {
         //noinspection unchecked
-        List<Long> eeIds = this.getSessionFactory().getCurrentSession().
-                createNativeQuery( "SELECT ee.ID AS eeID FROM INVESTIGATION ee "
+        return this.getSessionFactory().getCurrentSession()
+                .createNativeQuery( "SELECT ee.* FROM INVESTIGATION ee "
                         + "join PROCESSED_EXPRESSION_DATA_VECTOR dedv on dedv.EXPRESSION_EXPERIMENT_FK = ee.ID "
                         + "join COMPOSITE_SEQUENCE cs on dedv.DESIGN_ELEMENT_FK = cs.ID "
                         + "join GENE2CS g2s on g2s.CS = cs.ID "
                         + "where g2s.GENE = :geneID and dedv.RANK_BY_MEAN >= :rank "
                         + "group by ee.ID" )
-                .addScalar( "eeID", StandardBasicTypes.LONG )
+                .addEntity( "ee", ExpressionExperiment.class )
                 .setParameter( "geneID", gene.getId() )
                 .setParameter( "rank", rank )
                 .list();
-        return this.load( eeIds );
     }
 
     @Override
@@ -640,17 +639,17 @@ public class ExpressionExperimentDaoImpl
     @Override
     public Collection<ExpressionExperiment> findByGene( Gene gene ) {
         //noinspection unchecked
-        Collection<Long> eeIds = this.getSessionFactory().getCurrentSession()
-                .createNativeQuery( "select ee.ID as eeID from INVESTIGATION ee "
+        return this.getSessionFactory().getCurrentSession()
+                .createNativeQuery( "select ee.* from INVESTIGATION ee "
                         + "join BIO_ASSAY ba on ba.EXPRESSION_EXPERIMENT_FK = ee.ID "
                         + "join ARRAY_DESIGN on ba.ARRAY_DESIGN_USED_FK = ARRAY_DESIGN.ID "
                         + "join COMPOSITE_SEQUENCE cs on cs.ARRAY_DESIGN_FK = ARRAY_DESIGN.ID "
                         + "join GENE2CS g2s on g2s.CS = cs.ID "
-                        + "where g2s.GENE = :geneID" )
-                .addScalar( "eeID", StandardBasicTypes.LONG )
+                        + "where g2s.GENE = :geneID "
+                        + "group by ee.ID" )
+                .addEntity( "ee", ExpressionExperiment.class )
                 .setParameter( "geneID", gene.getId() )
                 .list();
-        return this.load( eeIds );
     }
 
     @Override
