@@ -38,7 +38,7 @@ public abstract class AbstractScriptBasedTransformation implements SingleCellDat
             Process process = processBuilder.start();
             IOUtils.copy( in, process.getOutputStream() );
             process.getOutputStream().close();
-            try ( BufferedReader reader = new BufferedReader( new InputStreamReader( process.getInputStream() ) ) ) {
+            try ( BufferedReader reader = new BufferedReader( new InputStreamReader( process.getInputStream(), StandardCharsets.UTF_8 ) ) ) {
                 reader.lines().forEach( log::info );
             }
             if ( process.waitFor() != 0 ) {

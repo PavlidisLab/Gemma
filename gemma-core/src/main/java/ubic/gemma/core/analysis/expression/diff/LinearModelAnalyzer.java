@@ -61,6 +61,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -580,8 +581,8 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
     private void outputForDebugging( ExpressionDataDoubleMatrix dmatrix,
             ObjectMatrix<String, String, Object> designMatrix ) {
         MatrixWriter mw = new MatrixWriter( entityUrlBuilder, buildInfo );
-        try ( FileWriter writer = new FileWriter( File.createTempFile( "data.", ".txt" ) );
-                FileWriter out = new FileWriter( File.createTempFile( "design.", ".txt" ) ) ) {
+        try ( FileWriter writer = new FileWriter( File.createTempFile( "data.", ".txt" ), StandardCharsets.UTF_8 );
+                FileWriter out = new FileWriter( File.createTempFile( "design.", ".txt" ), StandardCharsets.UTF_8 ) ) {
 
             mw.write( dmatrix, ProcessedExpressionDataVector.class, writer );
 

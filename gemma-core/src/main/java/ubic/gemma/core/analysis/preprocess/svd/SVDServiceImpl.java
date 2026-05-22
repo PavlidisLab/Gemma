@@ -588,7 +588,7 @@ public class SVDServiceImpl implements SVDService {
                 .create( ee, svd.getU(), svd.getEigenvalues(), v, b, SVDServiceImpl.MAX_NUM_COMPONENTS_TO_PERSIST,
                         SVDServiceImpl.MAX_LOADINGS_TO_PERSIST );
 
-        ee = expressionExperimentService.thawLite( ee ); // I wish this wasn't needed.
+        expressionExperimentService.thawLite( ee ); // I wish this wasn't needed.
         // Audit event written by @Audited on svd() via AuditedAspect.
         return pca;
     }

@@ -99,7 +99,7 @@ public class GemmaRestApiClientImpl implements GemmaRestApiClient {
             connection.setRequestProperty( "Accept", "application/json" );
             connection.setRequestProperty( "Accept-Encoding", "gzip" );
             if ( authentication instanceof UsernamePasswordAuthenticationToken ) {
-                connection.setRequestProperty( "Authorization", "Basic " + Base64.getEncoder().encodeToString( ( authentication.getPrincipal() + ":" + authentication.getCredentials() ).getBytes() ) );
+                connection.setRequestProperty( "Authorization", "Basic " + Base64.getEncoder().encodeToString( ( authentication.getPrincipal() + ":" + authentication.getCredentials() ).getBytes( StandardCharsets.UTF_8 ) ) );
             }
             if ( connection instanceof HttpURLConnection ) {
                 HttpURLConnection httpConnection = ( HttpURLConnection ) connection;

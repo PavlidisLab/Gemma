@@ -25,7 +25,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.persistence.service.AbstractDao;
 
 import org.springframework.lang.Nullable;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * @see ubic.gemma.model.expression.experiment.ExperimentalDesign
@@ -62,7 +62,7 @@ public class ExperimentalDesignDaoImpl extends AbstractDao<ExperimentalDesign> i
                         + "where ed.id != :edId and fv.needsAttention = true "
                         + "group by ed" )
                 .setParameter( "edId", excludedDesign.getId() )
-                .setFirstResult( new Random().nextInt( numThatNeedsAttention.intValue() ) )
+                .setFirstResult( ThreadLocalRandom.current().nextInt( numThatNeedsAttention.intValue() ) )
                 .setMaxResults( 1 )
                 .uniqueResult();
     }

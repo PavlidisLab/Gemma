@@ -750,7 +750,7 @@ public class SecurityServiceImpl implements SecurityService {
     private static final String ALLOWED_CHARS_IN_GROUP_NAME_SUFFIX = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
 
     private String randomGroupNameSuffix() {
-        Random random = new Random();
+        java.util.concurrent.ThreadLocalRandom random = java.util.concurrent.ThreadLocalRandom.current();
         char[] buffer = new char[32];
         for ( int i = 0; i < buffer.length; i++ ) {
             buffer[i] = ALLOWED_CHARS_IN_GROUP_NAME_SUFFIX.charAt( random.nextInt( ALLOWED_CHARS_IN_GROUP_NAME_SUFFIX.length() ) );

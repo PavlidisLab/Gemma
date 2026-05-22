@@ -40,6 +40,7 @@ import ubic.gemma.persistence.service.expression.designElement.CompositeSequence
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.zip.GZIPOutputStream;
 
@@ -116,7 +117,7 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
          */
         File file = this.getViewFile( DatabaseViewGeneratorImpl.DATASET_TISSUE_VIEW_BASENAME );
         DatabaseViewGeneratorImpl.log.info( "Writing to " + file );
-        try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) ) ) {
+        try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ), StandardCharsets.UTF_8 ) ) {
 
             /*
              * For all of their annotations... if it's a tissue, print out a line
@@ -170,7 +171,7 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
          */
         File file = this.getViewFile( DatabaseViewGeneratorImpl.DATASET_SUMMARY_VIEW_BASENAME );
         DatabaseViewGeneratorImpl.log.info( "Writing to " + file );
-        try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) ) ) {
+        try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ), StandardCharsets.UTF_8 ) ) {
 
             writer.write( "GemmaDsId\tSource\tSourceAccession\tShortName\tName\tDescription\ttaxon\tManufacturer\n" );
 
@@ -237,7 +238,7 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
          */
         File file = this.getViewFile( DatabaseViewGeneratorImpl.DATASET_DIFFEX_VIEW_BASENAME );
         DatabaseViewGeneratorImpl.log.info( "Writing to " + file );
-        try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) ) ) {
+        try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ), StandardCharsets.UTF_8 ) ) {
 
             /*
              * For each gene that is differentially expressed, print out a line per contrast
