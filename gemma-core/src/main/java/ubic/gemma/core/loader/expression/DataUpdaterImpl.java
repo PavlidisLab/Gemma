@@ -128,6 +128,9 @@ public class DataUpdaterImpl implements DataUpdater {
     @Autowired
     private RawAndProcessedExpressionDataVectorService rawAndProcessedExpressionDataVectorService;
 
+    @Autowired
+    private DataUpdaterAuditService dataUpdaterAuditService;
+
     /**
      * Affymetrix: Use to bypass the automated running of apt-probeset-summarize. For example if GEO doesn't have
      * them and we ran apt-probeset-summarize ourselves, or if some GEO files were corrupted (in which case the file
@@ -177,8 +180,11 @@ public class DataUpdaterImpl implements DataUpdater {
                             + originalPlatform.getShortName() + " to " + targetPlatform.getShortName() + ")" );
         }
 
-        this.audit( ee, "Data vector input from APT output file " + pathToAptOutputFile + " on " + targetPlatform,
-                true );
+        // DataReplacedEvent written by @Audited on DataUpdaterAuditService.recordDataReplaced
+        // via AuditedAspect. The hoist was required because self-invocation (this.audit(...)
+        // of a private helper) is invisible to Spring AOP -- see DataUpdaterAuditService.
+        dataUpdaterAuditService.recordDataReplaced( ee,
+                "Data vector input from APT output file " + pathToAptOutputFile + " on " + targetPlatform );
 
         this.postprocess( ee );
     }
@@ -510,7 +516,9 @@ public class DataUpdaterImpl implements DataUpdater {
         }
 
         experimentService.replaceAllRawDataVectors( ee, vectors );
-        this.audit( ee, "Data vector computation from CEL files using AffyPowerTools", true );
+        // DataReplacedEvent written by @Audited on DataUpdaterAuditService.recordDataReplaced
+        // via AuditedAspect (see comment in addAffyDataFromAPTOutput).
+        dataUpdaterAuditService.recordDataReplaced( ee, "Data vector computation from CEL files using AffyPowerTools" );
 
         DataUpdaterImpl.log.info( "------  Done with reanalyzed data; cleaning up and postprocessing -----" );
 
@@ -689,7 +697,9 @@ public class DataUpdaterImpl implements DataUpdater {
                             .getShortName() + " to " + targetPlatform.getShortName() + ")" );
         }
 
-        this.audit( ee, "Data vector replacement for " + targetPlatform, true );
+        // DataReplacedEvent written by @Audited on DataUpdaterAuditService.recordDataReplaced
+        // via AuditedAspect (see comment in addAffyDataFromAPTOutput).
+        dataUpdaterAuditService.recordDataReplaced( ee, "Data vector replacement for " + targetPlatform );
         // Re-thaw rather than merge: replaceAllRawDataVectors and switchBioAssaysToTargetPlatform
         // already persisted their state through fresh sessions (ensureEeInSession + their own
         // transactions). The detached ee handed in here still carries stale collection snapshots
@@ -744,25 +754,6 @@ public class DataUpdaterImpl implements DataUpdater {
             bioAssayService.update( ba );
 
         }
-    }
-
-    /**
-     * Generic
-     *
-     * @param replace if true, use a DataReplacedEvent; otherwise DataAddedEvent.
-     * @param ee      ee
-     * @param note    note
-     */
-    private void audit( ExpressionExperiment ee, String note, boolean replace ) {
-        Class<? extends AuditEventType> eventType;
-
-        if ( replace ) {
-            eventType = DataReplacedEvent.class;
-        } else {
-            eventType = DataAddedEvent.class;
-        }
-
-        auditTrailService.addUpdateEvent( ee, eventType, note );
     }
 
     /**
