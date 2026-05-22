@@ -4705,13 +4705,21 @@ public class ExpressionExperimentDaoImpl
     @Override
     public int createProcessedDataVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> vectors ) {
         Assert.notNull( ee.getId(), "ExpressionExperiment must be persistent." );
-        Assert.isTrue( ee.getProcessedExpressionDataVectors().isEmpty(), "ExpressionExperiment already has processed vectors, remove them before creating new ones or use replaceProcessedDataVectors()." );
         Assert.isTrue( !vectors.isEmpty(), "At least one vector must be provided." );
         QuantitationType qt = vectors.iterator().next().getQuantitationType();
         Assert.notNull( qt.getId(), "Quantitation type must be persistent." );
         Assert.isTrue( qt.getIsMaskedPreferred(), "QuantitationType must be marked as masked preferred." );
         checkVectors( ee, qt, vectors );
+        // Resolve the managed instance BEFORE the "already has processed vectors" check.
+        // Callers (notably ProcessedExpressionDataVectorCreationHelperServiceImpl) typically
+        // call removeProcessedDataVectors() immediately before this method, and that path
+        // operates on the managed instance. If the caller's ee reference is a detached
+        // snapshot with an initialized processedExpressionDataVectors collection (e.g. from
+        // a prior thaw() in a different session), the in-memory collection won't reflect the
+        // just-issued bulk DELETE and the assert below would spuriously fire. Resolving via
+        // session.get() first ensures we check the up-to-date managed collection state.
         ee = ensureEeInSession( ee );
+        Assert.isTrue( ee.getProcessedExpressionDataVectors().isEmpty(), "ExpressionExperiment already has processed vectors, remove them before creating new ones or use replaceProcessedDataVectors()." );
         ee.getQuantitationTypes().add( qt );
         ee.getProcessedExpressionDataVectors().addAll( vectors );
         ee.setNumberOfDataVectors( vectors.size() );
