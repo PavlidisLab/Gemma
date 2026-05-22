@@ -33,7 +33,7 @@
 		    AuditEventDaoImpl#getLastEvents(Class, Class)). lazy="proxy" so a
 		    trail load doesn't drag the AuditEvent in — readers that want the
 		    event request it explicitly. The FK column has ON DELETE SET NULL
-		    at the DB level (see V6__audit_trail_last_event_id.sql) so a stray
+		    at the DB level (see V8__audit_trail_last_event_id.sql) so a stray
 		    event delete cannot leave a dangling FK; writers must repoint the
 		    pointer on append (AuditTrailServiceImpl, AuditTrailEventListener).
 		-->
@@ -45,4 +45,33 @@
 		             foreign-key="FK_AUDIT_TRAIL_LAST_EVENT"
 		             index="IDX_AUDIT_TRAIL_LAST_EVENT" />
 	</class>
+
+	<!--
+	    HBM XML's <many-to-one on-delete> attribute only accepts "cascade" or
+	    "noaction" (see Hibernate's legacy-mapping-4.0.xsd OnDeleteEnum) so we
+	    cannot express ON DELETE SET NULL via the column/many-to-one mapping
+	    itself. With hibernate.hbm2ddl.auto=create the Hibernate-generated FK
+	    has no cascade rule (default RESTRICT), so deleting an AuditEvent row
+	    while a trail still points at it via LAST_EVENT_FK fails with a
+	    ConstraintViolation — even though the equivalent Flyway path
+	    (V8__audit_trail_last_event_id.sql) declares ON DELETE SET NULL.
+
+	    The two <database-object> hooks below replay the V8 migration's FK
+	    shape against any hbm2ddl-built schema: first drop the auto-generated
+	    FK, then re-add it with ON DELETE SET NULL. Two separate elements
+	    because Hibernate executes each <create> body as a single JDBC
+	    statement. Dialect-scoped to MySQL (Gemma's only production / test
+	    dialect — see HibernateConfig#sessionFactory which hard-codes
+	    MySQL57InnoDBDialect).
+	-->
+	<database-object>
+		<create>ALTER TABLE AUDIT_TRAIL DROP FOREIGN KEY FK_AUDIT_TRAIL_LAST_EVENT</create>
+		<drop>select 1</drop>
+		<dialect-scope name="ubic.gemma.persistence.hibernate.MySQL57InnoDBDialect"/>
+	</database-object>
+	<database-object>
+		<create>ALTER TABLE AUDIT_TRAIL ADD CONSTRAINT FK_AUDIT_TRAIL_LAST_EVENT FOREIGN KEY (LAST_EVENT_FK) REFERENCES AUDIT_EVENT(ID) ON DELETE SET NULL</create>
+		<drop>select 1</drop>
+		<dialect-scope name="ubic.gemma.persistence.hibernate.MySQL57InnoDBDialect"/>
+	</database-object>
 </hibernate-mapping>
