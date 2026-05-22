@@ -1378,6 +1378,102 @@ public class DatasetsWebService {
     }
 
     /**
+     * Curation-UI workflow-step endpoint: raw ACL flip to make a dataset publicly readable. Distinct from
+     * {@code POST /publish} (which is a curator-state-machine transition that ALSO calls this under the hood).
+     * Idempotent — re-running on an already-public dataset is a no-op.
+     */
+    @POST
+    @Path("/{dataset}/makePublic")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Make a dataset publicly readable",
+            description = "Performs the raw ACL flip to grant `IS_AUTHENTICATED_ANONYMOUSLY` read on the dataset. "
+                    + "Idempotent. See `POST /datasets/{id}/publish` for the curator-workflow transition that also "
+                    + "captures a reviewer.",
+            security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<DatasetPermissionsValueObject> makeDatasetPublic(
+            @PathParam("dataset") DatasetArg<?> datasetArg
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        if ( !securityService.isPublic( ee ) ) {
+            securityService.makePublic( ee );
+        }
+        return respond( new DatasetPermissionsValueObject( securityService.isPublic( ee ), securityService.isShared( ee ) ) );
+    }
+
+    /**
+     * Curation-UI workflow-step endpoint: raw ACL flip to make a dataset private. Idempotent.
+     */
+    @POST
+    @Path("/{dataset}/makePrivate")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Make a dataset private",
+            description = "Removes the `IS_AUTHENTICATED_ANONYMOUSLY` read ACE from the dataset. Idempotent.",
+            security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<DatasetPermissionsValueObject> makeDatasetPrivate(
+            @PathParam("dataset") DatasetArg<?> datasetArg
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        if ( securityService.isPublic( ee ) ) {
+            securityService.makePrivate( ee );
+        }
+        return respond( new DatasetPermissionsValueObject( securityService.isPublic( ee ), securityService.isShared( ee ) ) );
+    }
+
+    /**
+     * Curation-UI workflow-step endpoint: curator-state-machine transition that publishes a dataset under a named
+     * reviewer. Distinct from {@code POST /makePublic}: this endpoint ALSO records the reviewer as an audit event
+     * (currently re-uses {@link ubic.gemma.model.common.auditAndSecurity.eventType.MakePublicEvent} with the
+     * reviewer encoded in the note), and is idempotent on already-published datasets (audit-only emission then).
+     */
+    @POST
+    @Path("/{dataset}/publish")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Publish a dataset (curator-workflow transition; records reviewer)",
+            description = "Curator-workflow endpoint distinct from `/makePublic`. Records the reviewer as an audit "
+                    + "event and (if the dataset is not already public) performs the ACL flip. The `reviewer` query "
+                    + "parameter is required.",
+            security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "400", description = "The `reviewer` query parameter is missing or blank.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<DatasetPermissionsValueObject> publishDataset(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @QueryParam("reviewer") @Nullable String reviewer
+    ) {
+        if ( reviewer == null || reviewer.trim().isEmpty() ) {
+            throw new BadRequestException( "The `reviewer` query parameter is required." );
+        }
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        boolean alreadyPublic = securityService.isPublic( ee );
+        if ( !alreadyPublic ) {
+            securityService.makePublic( ee );
+        }
+        String note = alreadyPublic
+                ? "Re-published by reviewer: " + reviewer.trim() + " (dataset was already public)"
+                : "Published by reviewer: " + reviewer.trim();
+        auditTrailService.addUpdateEvent( ee,
+                ubic.gemma.model.common.auditAndSecurity.eventType.MakePublicEvent.class, note );
+        return respond( new DatasetPermissionsValueObject( securityService.isPublic( ee ), securityService.isShared( ee ) ) );
+    }
+
+    /**
      * Curation-UI compatibility alias for {@link #getDatasetPermissions}. The UI's dataset-page sharing widget
      * calls {@code GET /datasets/{id}/visibility}; the canonical gemma-rest endpoint lives at
      * {@code /datasets/{id}/permissions}. Hidden from the OpenAPI spec to avoid duplicating the canonical entry.
