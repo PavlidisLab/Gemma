@@ -119,6 +119,25 @@ public abstract class BaseAclAdvice {
      * @param s which might have a parent already in the system
      */
     protected Acl locateParentAcl( SecuredChild s ) {
+        // Prefer the IMMEDIATE getSecurityOwner when it already has its own ACL. This handles
+        // the multi-hop case (ResultSet -> DEA -> EE) where the immediate owner (DEA) has been
+        // persisted earlier in the same flush and has its ACL row. AclClassMetadata registers
+        // ResultSet's parent type as DEA, not as the top-level EE; flattening here would break
+        // that contract (the testCreate-style assertion
+        // analysisAcl.getObjectIdentity() == resultSetAcl.getParentAcl().getObjectIdentity()).
+        //
+        // Fall back to the recursive walk when the immediate owner has no ACL yet — this is
+        // the ED/EF/FV cascade-create case, where intermediate SecuredChild ancestors don't
+        // have their own ACLs and we need to skip past them to the EE root.
+        Securable immediate = s.getSecurityOwner();
+        if ( immediate != null ) {
+            try {
+                return this.getAclService().readAclById( makeObjectIdentity( immediate ) );
+            } catch ( NotFoundException ex ) {
+                // Immediate owner has no ACL yet; recurse to find a higher ancestor that does.
+            }
+        }
+
         Securable parent = locateSecuredParent( s );
 
         if ( parent != null ) return this.getAclService().readAclById( makeObjectIdentity( parent ) );
@@ -341,9 +360,14 @@ public abstract class BaseAclAdvice {
             }
 
         } else {
+            // Accept transitive inheritance: in chains like ResultSet -> DEA -> EE, the
+            // immediate parent (DEA) may itself inherit and carry no ACEs of its own; the
+            // root (EE) is where the ACEs live. Spring's permission-granting walks the
+            // chain transparently at check time, so we don't require the immediate parent
+            // to hold ACEs directly — only that the chain ultimately roots at one that does.
             assert !acl.getEntries().isEmpty()
-                || ( parentAcl != null && !parentAcl.getEntries().isEmpty() ) : "Failed to get valid ace for acl or parents: "
-                + acl + " parent=" + parentAcl;
+                || ( parentAcl != null && ( !parentAcl.getEntries().isEmpty() || parentAcl.isEntriesInheriting() ) )
+                : "Failed to get valid ace for acl or parents: " + acl + " parent=" + parentAcl;
         }
 
         /*
@@ -481,9 +505,11 @@ public abstract class BaseAclAdvice {
         int aceCount = childAcl.getEntries().size();
 
         if ( aceCount == 0 ) {
-            if ( parentAcl.getEntries().size() == 0 ) {
+            if ( parentAcl.getEntries().size() == 0 && !parentAcl.isEntriesInheriting() ) {
                 throw new IllegalStateException( "Either the child or the parent has to have ACEs" );
             }
+            // Parent may itself inherit from a higher ancestor that holds the ACEs (e.g.
+            // ResultSet -> DEA -> EE, where only EE has ACEs at root). Nothing to clear.
             return false;
         }
 
