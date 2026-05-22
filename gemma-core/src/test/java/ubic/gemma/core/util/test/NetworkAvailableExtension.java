@@ -21,9 +21,9 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Jupiter equivalent of {@link NetworkAvailableRule}. Enables the {@link NetworkAvailable} annotation on JUnit 5 tests.
+ * Enables the {@link NetworkAvailable} annotation on JUnit 5 tests.
  * <p>
- * Two-phase behaviour, mirroring the JUnit 4 rule:
+ * Two-phase behaviour:
  * <ol>
  *  <li>Before each test, for every URL declared via {@code @NetworkAvailable(url=...)} on the test class or method,
  *      attempt a short-timeout connection. If the resource is unreachable, abort the test with a {@link TestAbortedException}
@@ -36,7 +36,6 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * @author poirigui
  * @see NetworkAvailable
- * @see NetworkAvailableRule
  */
 public class NetworkAvailableExtension implements BeforeEachCallback, TestExecutionExceptionHandler {
 

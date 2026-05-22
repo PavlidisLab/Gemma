@@ -10,7 +10,7 @@ import javax.sql.DataSource;
 import java.io.File;
 
 /**
- * One-off Flyway baseline generator. Boots Hibernate the same way {@link BaseDatabaseTest} does
+ * One-off Flyway baseline generator. Boots Hibernate the same way {@link BaseDatabaseTest5} does
  * (H2 in {@code MODE=MYSQL}, native bootstrap from {@code hibernate.cfg.xml}, gsec mappings) and
  * writes the {@code CREATE} DDL to a target file via Hibernate's standard
  * {@code jakarta.persistence.schema-generation.scripts.*} properties.
