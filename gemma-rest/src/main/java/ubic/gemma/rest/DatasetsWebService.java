@@ -365,6 +365,90 @@ public class DatasetsWebService {
         }
     }
 
+    /**
+     * Typeahead-style search for datasets. Wraps the global {@link ubic.gemma.core.search.SearchService}
+     * filtered to {@link ExpressionExperiment} and projects each hit to a thin
+     * {@link DatasetSearchHitValueObject}. Intended for the curation-UI browser import dialog
+     * (see {@code GEMMA_UI_ENDPOINT_GAP.md} §3i).
+     */
+    @GET
+    @Path("/search")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Typeahead search for datasets by short name, accession, or title",
+            description = "Returns a thin list of dataset hits ranked by search score. Suited for autocomplete UIs; for paginated browse-style search use `GET /datasets?query=...`.",
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "400", description = "The query parameter is missing or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+            })
+    public ResponseDataObject<List<DatasetSearchHitValueObject>> searchDatasets(
+            @Parameter(description = "The search query (e.g. a short name, accession, or fragment of the title). Required.", required = true) @QueryParam("query") QueryArg query,
+            @Parameter(description = "Maximum number of hits to return.", schema = @Schema(type = "integer", defaultValue = "20", minimum = "1")) @QueryParam("limit") @DefaultValue("20") LimitArg limit
+    ) {
+        if ( query == null ) {
+            throw new BadRequestException( "A query must be supplied." );
+        }
+        int max = limit.getValue( SearchWebService.MAX_SEARCH_RESULTS );
+        LinkedHashSet<Throwable> warnings = new LinkedHashSet<>();
+        // SearchService already returns hits ordered by descending score.
+        List<SearchResult<ExpressionExperiment>> results = datasetArgService.getResultsForSearchQuery( query, null, warnings );
+        List<Long> idsRanked = results.stream()
+                .map( SearchResult::getResultId )
+                .limit( max )
+                .collect( Collectors.toList() );
+        if ( idsRanked.isEmpty() ) {
+            return respond( Collections.<DatasetSearchHitValueObject>emptyList() )
+                    .addWarnings( warnings, "query", LocationType.QUERY );
+        }
+        Map<Long, Double> scoreById = new HashMap<>();
+        for ( SearchResult<ExpressionExperiment> r : results ) {
+            scoreById.putIfAbsent( r.getResultId(), r.getScore() );
+        }
+        // ACL filtering is applied by the @Secured annotation on this loader; results the
+        // caller cannot read are silently dropped, matching the global /search behaviour.
+        List<ExpressionExperimentValueObject> vos = expressionExperimentService.loadValueObjectsByIds( idsRanked, true );
+        List<DatasetSearchHitValueObject> hits = vos.stream()
+                .map( vo -> new DatasetSearchHitValueObject( vo, scoreById.get( vo.getId() ) ) )
+                .collect( Collectors.toList() );
+        return respond( hits ).addWarnings( warnings, "query", LocationType.QUERY );
+    }
+
+    /**
+     * Thin dataset projection for the typeahead {@code /datasets/search} endpoint. Carries
+     * only the fields the curation-UI browser import dialog needs to render a result chip
+     * (short name + title + taxon + score), to keep the payload small enough for
+     * keystroke-rate fetching.
+     */
+    @Value
+    public static class DatasetSearchHitValueObject {
+
+        Long id;
+        @Nullable
+        String shortName;
+        @Nullable
+        String name;
+        @Nullable
+        String accession;
+        /** Common name of the taxon, suitable for a typeahead chip. */
+        @Nullable
+        String taxon;
+        @Nullable
+        Long taxonId;
+        /** Search relevance score; higher is better. May be null if the hit was not directly scored. */
+        @Nullable
+        Double score;
+
+        public DatasetSearchHitValueObject( ExpressionExperimentValueObject vo, @Nullable Double score ) {
+            this.id = vo.getId();
+            this.shortName = vo.getShortName();
+            this.name = vo.getName();
+            this.accession = vo.getAccession();
+            this.taxon = vo.getTaxon();
+            this.taxonId = vo.getTaxonObject() != null ? vo.getTaxonObject().getId() : null;
+            this.score = score;
+        }
+    }
+
     @GET
     @Path("/count")
     @Produces(MediaType.APPLICATION_JSON)
