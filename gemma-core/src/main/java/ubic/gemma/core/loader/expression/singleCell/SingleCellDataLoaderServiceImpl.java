@@ -611,7 +611,10 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
 
     private SingleCellDataLoader getAnnDataLoader( ExpressionExperiment ee, SingleCellDataLoaderConfig config ) {
         BioAssayMapper bioAssayMapper = getBioAssayMapper( ee, config );
-        Path p = config.getDataPath() != null ? config.getDataPath() : getAnnDataFile( ee );
+        // Pin to a single local so SpotBugs sees a stable non-null binding (it cannot reason
+        // that the two getDataPath() reads in the ternary return the same reference).
+        Path configDataPath = config.getDataPath();
+        Path p = configDataPath != null ? configDataPath : getAnnDataFile( ee );
         if ( config instanceof CellXGeneAnnDataSingleCellDataLoaderConfig ) {
             log.info( "Loading single-cell data from " + p + " using the CELLxGENE preset." );
             CellXGeneAnnDataSingleCellDataConfigurer annDataConfigurer = new CellXGeneAnnDataSingleCellDataConfigurer( p, singleCellDataTransformationFactory );

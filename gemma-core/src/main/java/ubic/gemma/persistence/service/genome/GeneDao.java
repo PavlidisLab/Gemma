@@ -152,6 +152,7 @@ public interface GeneDao extends FilteringVoEnabledDao<Gene, GeneValueObject> {
 
     Collection<Gene> loadThawedLiter( Collection<Long> ids );
 
+    @Nullable
     Gene thaw( Gene gene );
 
     Gene thawAliases( Gene gene );

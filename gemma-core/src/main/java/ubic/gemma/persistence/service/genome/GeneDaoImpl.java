@@ -385,6 +385,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     }
 
     @Override
+    @Nullable
     public Gene thaw( final Gene gene ) {
         if ( gene.getId() == null )
             return gene;
