@@ -15,7 +15,6 @@ import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetService;
@@ -62,7 +61,7 @@ public class SingleCellExpressionExperimentSubSetServiceTest extends BaseTest5 {
         }
 
         @Bean
-        public AuditTrailService auditTrailService() {
+        public SingleCellExpressionExperimentSubSetAuditService subSetAuditService() {
             return mock();
         }
     }

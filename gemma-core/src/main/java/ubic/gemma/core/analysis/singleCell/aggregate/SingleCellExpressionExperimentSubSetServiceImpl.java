@@ -4,7 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.model.common.auditAndSecurity.eventType.SingleCellSubSetsCreatedEvent;
+import ubic.gemma.core.security.audit.payload.SingleCellSubSetsCreatedPayload;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
@@ -15,7 +15,6 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetService;
@@ -46,7 +45,7 @@ public class SingleCellExpressionExperimentSubSetServiceImpl implements SingleCe
     private BioMaterialService bioMaterialService;
 
     @Autowired
-    private AuditTrailService auditTrailService;
+    private SingleCellExpressionExperimentSubSetAuditService subSetAuditService;
 
 
     @Transactional
@@ -115,26 +114,29 @@ public class SingleCellExpressionExperimentSubSetServiceImpl implements SingleCe
             results.add( expressionExperimentSubSetService.create( subset ) );
         }
         String note = "Created " + results.size() + " aggregated single-cell subsets for " + factor;
-        StringBuilder details = new StringBuilder();
-        details.append( "Cell type assignment: " );
-        boolean first = true;
+        // Phase C bucket 2f: typed payload via the AuditedAspect. The audit row
+        // is written by the @Audited annotation on
+        // SingleCellExpressionExperimentSubSetAuditService#recordSubSetsCreated
+        // — the co-bean hop is required because the Spring proxy can't
+        // intercept self-invocations on this service (createSubSetsByCellType
+        // calls createSubSets via this.).
+        List<String> cellTypeLabels = new ArrayList<>( clc.getCharacteristics().size() );
         for ( Characteristic ct : clc.getCharacteristics() ) {
-            if ( !first ) {
-                details.append( ", " );
-            }
-            first = false;
-            details.append( formatCellType( ct ) );
+            cellTypeLabels.add( formatCellType( ct ) );
         }
-        details.append( "\n" );
-        details.append( "Cell type factor: " ).append( factor ).append( "\n" );
-        details.append( "Mapping of cell types to factor values:\n" );
-        details.append( printMapping( mappedCellTypeFactors ) );
-        details.append( "Subsets:" );
-        for ( ExpressionExperimentSubSet subset : results ) {
-            details.append( "\n" ).append( "\t" ).append( subset );
+        List<String> subsetLabels = results.stream().map( ExpressionExperimentSubSet::toString ).collect( Collectors.toList() );
+        SingleCellSubSetsCreatedPayload payload = new SingleCellSubSetsCreatedPayload(
+                cellTypeLabels,
+                factor.toString(),
+                printMapping( mappedCellTypeFactors ),
+                subsetLabels );
+        if ( log.isInfoEnabled() ) {
+            log.info( note + "\nCell type assignment: " + String.join( ", ", cellTypeLabels )
+                    + "\nCell type factor: " + factor
+                    + "\nMapping of cell types to factor values:\n" + printMapping( mappedCellTypeFactors )
+                    + "Subsets:\n\t" + String.join( "\n\t", subsetLabels ) );
         }
-        log.info( note + "\n" + details );
-        auditTrailService.addUpdateEvent( ee, SingleCellSubSetsCreatedEvent.class, note, details.toString() );
+        subSetAuditService.recordSubSetsCreated( ee, note, payload );
         return results;
     }
 
