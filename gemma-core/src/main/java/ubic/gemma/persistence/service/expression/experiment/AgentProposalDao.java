@@ -13,6 +13,7 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import org.springframework.lang.Nullable;
 import ubic.gemma.model.analysis.Investigation;
+import ubic.gemma.model.expression.experiment.AgentCurationKind;
 import ubic.gemma.model.expression.experiment.AgentProposal;
 import ubic.gemma.persistence.service.BaseDao;
 
@@ -21,17 +22,20 @@ import java.util.List;
 /**
  * DAO for {@link AgentProposal} rows. The contract is small because
  * proposals are append-only and addressed by either id or
- * {@code (investigation, runId)} (the idempotency key).
+ * {@code (investigation, kind, runId)} (the idempotency key).
  */
 public interface AgentProposalDao extends BaseDao<AgentProposal> {
 
     /**
-     * Find an existing proposal for the {@code (investigation, runId)} pair, or
-     * {@code null}. Used by the service to make
-     * {@code POST /preboarded/{id}/proposals} idempotent on retry.
+     * Find an existing row for the {@code (investigation, kind, runId)} triple,
+     * or {@code null}. Used by the service to make
+     * {@code POST /preboarded/{id}/proposals} idempotent on retry. The
+     * {@code kind} parameter lets a forward-looking proposal and a post-hoc
+     * audit coexist on the same investigation with the same {@code runId}.
      */
     @Nullable
-    AgentProposal findByInvestigationAndRunId( Investigation investigation, String runId );
+    AgentProposal findByInvestigationAndKindAndRunId( Investigation investigation,
+            AgentCurationKind kind, String runId );
 
     /**
      * All proposals attached to the given investigation, newest first.

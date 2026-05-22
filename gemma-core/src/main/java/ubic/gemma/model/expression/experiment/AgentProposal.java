@@ -30,9 +30,11 @@ import java.util.Objects;
  * profile (see Flyway V11 / V13). The schema is intentionally opaque on the
  * Java side: the agent owns the payload shape; Gemma persists it verbatim.</p>
  *
- * <p>Idempotency is on {@code (investigation, runId)}: re-uploading the same
- * {@code runId}'s payload is a no-op that returns the existing row. The
- * unique constraint enforces it.</p>
+ * <p>Idempotency is on {@code (investigation, kind, runId)}: re-uploading the
+ * same {@code runId}'s payload (for the same {@code kind}) is a no-op that
+ * returns the existing row. The unique constraint enforces it. The
+ * {@code kind} discriminator distinguishes forward-looking proposals from
+ * post-hoc audits — see {@code handoffs/RECCE_AGENT_CURATION_UNIFICATION.md}.</p>
  *
  * <p>See {@code HANDOFF_PROPOSED_EXPERIMENT_WORKFLOW.md} §"The decided shape"
  * and {@code STATUS_CURATION_PROPOSALS.md} for the consolidation decision
@@ -42,6 +44,7 @@ import java.util.Objects;
 public class AgentProposal extends AbstractIdentifiable {
 
     private Investigation investigation;
+    private AgentCurationKind kind = AgentCurationKind.PROPOSAL;
     private String runId;
     private String agentVersion;
     private String model;
@@ -49,6 +52,21 @@ public class AgentProposal extends AbstractIdentifiable {
     private String payloadJson;
 
     public AgentProposal() {
+    }
+
+    /**
+     * @return the discriminator that distinguishes a forward-looking proposal
+     *         (default) from a post-hoc audit. Never null; defaults to
+     *         {@link AgentCurationKind#PROPOSAL} so existing call sites that
+     *         predate the discriminator continue to write proposal rows.
+     *         See {@code handoffs/RECCE_AGENT_CURATION_UNIFICATION.md} §2.
+     */
+    public AgentCurationKind getKind() {
+        return kind;
+    }
+
+    public void setKind( AgentCurationKind kind ) {
+        this.kind = kind;
     }
 
     /**
@@ -126,7 +144,7 @@ public class AgentProposal extends AbstractIdentifiable {
 
     @Override
     public int hashCode() {
-        return Objects.hash( investigation, runId );
+        return Objects.hash( investigation, kind, runId );
     }
 
     @Override
@@ -138,6 +156,7 @@ public class AgentProposal extends AbstractIdentifiable {
             return getId().equals( other.getId() );
         }
         return Objects.equals( investigation, other.investigation )
+                && Objects.equals( kind, other.kind )
                 && Objects.equals( runId, other.runId );
     }
 }

@@ -17,6 +17,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import ubic.gemma.model.expression.experiment.AgentCurationKind;
 import ubic.gemma.model.expression.experiment.AgentProposal;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -53,7 +54,7 @@ public class AgentProposalServiceTest {
 
     @Test
     public void attach_freshRunIdInsertsAndFlagsCreated() {
-        when( agentProposalDao.findByInvestigationAndRunId( ee, "run-1" ) ).thenReturn( null );
+        when( agentProposalDao.findByInvestigationAndKindAndRunId( ee, AgentCurationKind.PROPOSAL, "run-1" ) ).thenReturn( null );
         when( agentProposalDao.create( any( AgentProposal.class ) ) ).thenAnswer( inv -> {
             AgentProposal p = inv.getArgument( 0 );
             p.setId( 555L );
@@ -73,7 +74,7 @@ public class AgentProposalServiceTest {
         existing.setId( 42L );
         existing.setRunId( "run-1" );
         existing.setInvestigation( ee );
-        when( agentProposalDao.findByInvestigationAndRunId( ee, "run-1" ) ).thenReturn( existing );
+        when( agentProposalDao.findByInvestigationAndKindAndRunId( ee, AgentCurationKind.PROPOSAL, "run-1" ) ).thenReturn( existing );
 
         AgentProposalService.AttachedProposal r = service.attach( ee, "run-1", "0.8.0",
                 "claude", new Date(), "{}" );
@@ -99,7 +100,7 @@ public class AgentProposalServiceTest {
 
     @Test
     public void attach_defaultsRanAtToNowWhenNull() {
-        when( agentProposalDao.findByInvestigationAndRunId( ee, "run-2" ) ).thenReturn( null );
+        when( agentProposalDao.findByInvestigationAndKindAndRunId( ee, AgentCurationKind.PROPOSAL, "run-2" ) ).thenReturn( null );
         when( agentProposalDao.create( any( AgentProposal.class ) ) ).thenAnswer( inv -> inv.getArgument( 0 ) );
         AgentProposalService.AttachedProposal r = service.attach( ee, "run-2", null, null, null, null );
         assertThat( r.getProposal().getRanAt() ).isNotNull();
@@ -113,6 +114,22 @@ public class AgentProposalServiceTest {
         int n = service.rebindInvestigation( ee, to );
         assertThat( n ).isEqualTo( 3 );
         verify( agentProposalDao ).rebindInvestigation( ee, to );
+    }
+
+    @Test
+    public void kindDefaultsToProposalOnCreate() {
+        // Entity-level default: a freshly-constructed AgentProposal must carry
+        // kind=PROPOSAL so legacy call sites (and the service.attach() path)
+        // continue producing proposal rows without explicit setKind calls.
+        AgentProposal fresh = new AgentProposal();
+        assertThat( fresh.getKind() ).isEqualTo( AgentCurationKind.PROPOSAL );
+
+        // Service path: attach() always sets kind=PROPOSAL on the persisted row.
+        when( agentProposalDao.findByInvestigationAndKindAndRunId( ee, AgentCurationKind.PROPOSAL, "run-3" ) )
+                .thenReturn( null );
+        when( agentProposalDao.create( any( AgentProposal.class ) ) ).thenAnswer( inv -> inv.getArgument( 0 ) );
+        AgentProposalService.AttachedProposal r = service.attach( ee, "run-3", null, null, null, null );
+        assertThat( r.getProposal().getKind() ).isEqualTo( AgentCurationKind.PROPOSAL );
     }
 
     @Test
