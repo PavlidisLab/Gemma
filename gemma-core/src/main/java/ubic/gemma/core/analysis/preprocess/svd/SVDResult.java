@@ -28,7 +28,6 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -38,7 +37,7 @@ import java.util.stream.Collectors;
  * @author paul
  */
 @Value
-public class SVDResult implements Serializable {
+public class SVDResult {
 
     /**
      * Experiment or subset this is for.
