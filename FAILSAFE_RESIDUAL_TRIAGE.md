@@ -420,3 +420,97 @@ Batch 3 attempted but not landed (reasoning):
 
 No new regressions emerged from the recent merges in the files this
 batch touched (compile-clean against current main).
+
+## Batch 4 — failsafe-residuals-batch4 (2026-05-21)
+
+Starting state: ~10 residuals carried over from batch 3 plus any new
+divergence introduced by HQL high-severity, SpotBugs P1 batch 2, and
+gene-page endpoint merges. gemdtest is single-tenant so this batch is
+compile-validation only.
+
+Recent-merge regression check (read-only):
+- HQL fixes (ArrayDesignDaoImpl.getGenesByCompositeSequence collection
+  overload, BibRefDaoImpl.browse ORDER BY whitelist,
+  ExpressionAnalysisResultSetDaoImpl.getBaselinesForInteractionsByIds
+  MAX wrapper, CharacteristicDaoImpl '<> null' → 'is not null',
+  TableMaintenanceUtilImpl EE2AD truncate addSynchronizedQuerySpace) —
+  searched gemma-core/src/test for callsites with shape-dependent
+  assertions on these methods. ArrayDesignDaoTest exercises only smoke
+  calls on getGenesByCompositeSequence with no result-shape assertions
+  (empty AD, expecting empty maps). No matching tests for
+  browse(orderField), getBaselinesForInteractionsByIds, or the EE2C
+  truncate path. No test regressions visible from a static read.
+- SpotBugs P1 batch 2 UTF-8 pinning — touched LinearModelAnalyzer
+  debug-output, DatabaseViewGenerator views, ArrayDesignAnnotationService
+  read/write, GeoBrowser HTTP I/O, AbstractScriptBasedTransformation
+  stdout, GemmaRestApiClient basic-auth getBytes. None of these have
+  byte-comparison assertions in their test partners
+  (ExpressionDataFileServiceTest mocks ArrayDesignAnnotationService;
+  GemmaRestApiClientTest doesn't assert auth-header bytes). No
+  regressions.
+- Renamed types SkeletonInvestigation → PreboardingExperiment →
+  PreboardedExperiment — no stale references in gemma-core/src/test or
+  gemma-rest/src/test.
+
+Commits:
+
+- `ef2f537327` `test(diffex): reload EE after factor removal in
+  LowVarianceDataTest setUp` — Bucket H one-off. Replaces the
+  in-place `.getExperimentalFactors().clear()` after
+  `experimentalFactorService.remove(toremove)` with a fresh
+  `loadAndThaw`. The stale in-memory ee still carried references to
+  the deleted EFs, so the next `expressionExperimentService.update(ee)`
+  triggered HB6 merge to refetch ExperimentalFactor#28 and threw
+  EntityNotFoundException. Same managed-instance gap shape fixed by
+  batch 2/3 patches elsewhere.
+
+Batch 4 inspected and deferred:
+
+- `MeanVarianceServiceTest.testServiceCreateCountData` — same
+  EntityNotFoundException shape but on BioAssay#76 after a deliberate
+  failed `addCountData(..., false)` (expected IAE on line 247) followed
+  by a retry with `allowMissingSamples=true` on line 252. The retry path
+  is the one throwing; needs runtime trace of which BioAssay
+  `addCountData` is hitting during the second pass to know whether the
+  failed first pass left orphan state. Deferred.
+- `CompositeSequenceGeneMapperServiceTest.testGetGenesForCompositeSequence`
+  (Bucket G lock-mode) — repo-wide `setLockMode`/`LockOptions.UPGRADE`
+  call-sites are already migrated to `Session.lock(entity, LockMode)`
+  in ArrayDesignDaoImpl (3 spots). The remaining lock-mode error
+  inside `aligner.processArrayDesign` (via ArrayDesignProbeMapperService)
+  isn't visible from a static read of those services — they hold no
+  explicit lock calls. The error must originate from a transitive
+  helper or framework adapter; needs a stack trace from a focused run.
+  Deferred.
+- `RawAndProcessedExpressionDataVectorServiceGeoTest.testFindByQt`
+  (`Not an entity: BulkExpressionDataVector`) — the three known
+  hot-spot DAO methods (`find(QuantitationType)`,
+  `find(Collection<QuantitationType>)`, `findByExpressionExperiment`)
+  are already manually rewritten in
+  RawAndProcessedExpressionDataVectorDaoImpl to dispatch to the two
+  concrete entity types. The test on line 109 calls
+  `rawAndProcessedService.find(qt)` which routes through the
+  AbstractBulkExpressionDataVectorService.find(qt) wrapper into the
+  overridden DAO method — should not trip the metamodel. The actual
+  throw site needs a runtime stack; possibly a thaw/ACL post-filter
+  call going through an un-overridden `findByProperty` indirection.
+  Deferred.
+- `GeneMultifunctionalityPopulationServiceTest.test:155` (expected
+  ≥2 audit events, got 1) — multifunctionality update path; if the
+  audit-Phase-C migration replaced one of the imperative addUpdateEvent
+  calls with `@Audited`/`@AuditedConditional` and the path is
+  self-invoked (private method or `this.x()`), the aspect does not
+  fire. Needs to read the migration commit for this service and see
+  which call became aspect-based plus whether the call is reached via
+  a proxy boundary. Deferred to a session that can run the test.
+- `CharacteristicServiceTest.testGetParents` /
+  `testFindExperimentsByUris` / `testFindExperimentsByUrisAsProxies`
+  — setUp calls
+  `tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries(null, false)`
+  to refresh the EE2C lookup table. The EE2C path in
+  TableMaintenanceUtilImpl already uses `addSynchronizedQuerySpace`
+  correctly (not affected by the EE2AD scalar-vs-querySpace fix in
+  c9-batch). The likely cause is upstream of the lookup-table refresh
+  — characteristics aren't reaching EE2C, or the join graph in
+  `findExperimentsByUris` walks a path that now returns empty under
+  HB6 join semantics. Needs runtime trace. Deferred.
