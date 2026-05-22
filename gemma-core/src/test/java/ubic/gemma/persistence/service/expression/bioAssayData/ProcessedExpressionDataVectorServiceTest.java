@@ -139,9 +139,13 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
         }
         expressionExperimentService.update( ee );
         processedDataVectorService.createProcessedDataVectors( ee, false );
+        // createProcessedDataVectors mutates the managed instance (re-fetched via
+        // ensureEeInSession), not this method's `ee` reference. With L2 cache disabled
+        // (BaseDatabaseTest5) the local reference doesn't see the new processed vectors,
+        // so reload before asserting.
+        ee = expressionExperimentService.thaw( expressionExperimentService.load( ee.getId() ) );
         Set<ProcessedExpressionDataVector> createdVectors = ee.getProcessedExpressionDataVectors();
         assertThat( createdVectors ).hasSize( 10 );
-        ee = expressionExperimentService.thaw( ee );
         assertThat( ee.getNumberOfDataVectors() )
                 .isEqualTo( 10 );
         assertThat( ee.getProcessedExpressionDataVectors() )
