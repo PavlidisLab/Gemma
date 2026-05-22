@@ -234,7 +234,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     }
 
     private QuantitationType load( ExpressionExperiment ee, ArrayDesign platform, SingleCellDataLoader loader, SingleCellDataLoaderConfig config ) {
-        ee = requireNonNull( singleCellExpressionExperimentService.loadWithSingleCellVectors( ee.getId() ) );
+        ee = requireNonNull( singleCellExpressionExperimentService.loadAndInitializeSingleCellDimensions( ee.getId() ) );
         Assert.isTrue( platform.getPrimaryTaxon().equals( expressionExperimentService.getTaxon( ee ) ),
                 "Platform primary taxon does not match dataset." );
         SingleCellDimension dim = loadSingleCellDimension( loader, ee.getBioAssays() );

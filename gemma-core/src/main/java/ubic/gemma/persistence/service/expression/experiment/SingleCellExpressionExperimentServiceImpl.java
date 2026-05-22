@@ -1,7 +1,6 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -87,11 +86,10 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional(readOnly = true)
-    public ExpressionExperiment loadWithSingleCellVectors( Long id ) {
+    public ExpressionExperiment loadAndInitializeSingleCellDimensions( Long id ) {
         ExpressionExperiment ee = expressionExperimentDao.load( id );
         if ( ee != null ) {
             expressionExperimentDao.thawLite( ee );
-            Hibernate.initialize( ee.getSingleCellExpressionDataVectors() );
         }
         return ee;
     }
