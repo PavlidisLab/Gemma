@@ -42,7 +42,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
@@ -109,9 +108,6 @@ public class ExpressionExperimentPlatformSwitchService {
 
     @Autowired
     private AnalysisUtilService analysisUtilService;
-
-    @Autowired
-    private AuditTrailService auditTrailService;
 
     @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;

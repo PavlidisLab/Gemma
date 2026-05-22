@@ -48,7 +48,6 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentReadService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -105,8 +104,6 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
      */
     @Autowired
     private ExpressionExperimentReadService expressionExperimentReadService;
-    @Autowired
-    private AuditTrailService auditTrailService;
 
     @Override
     @Transactional(readOnly = true)
