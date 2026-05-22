@@ -18,7 +18,6 @@
  */
 package ubic.gemma.core.analysis.service;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,15 +26,15 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
-import ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalReversionEvent;
+import ubic.gemma.core.security.audit.payload.SampleRemovalPayload;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Service for removing sample(s) from an expression experiment. This can be done in the interest of quality control, so
@@ -55,7 +54,7 @@ public class OutlierFlaggingServiceImpl
     private BioAssayService bioAssayService;
 
     @Autowired
-    private AuditTrailService auditTrailService;
+    private OutlierFlaggingAuditService outlierFlaggingAuditService;
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
@@ -93,8 +92,17 @@ public class OutlierFlaggingServiceImpl
         if ( expExp == null ) {
             throw new IllegalStateException( "Could not find experiment for bioassay " + bioAssays.iterator().next() );
         }
-        auditTrailService.addUpdateEvent( expExp, SampleRemovalEvent.class,
-                bioAssays.size() + " flagged as outliers", StringUtils.join( bioAssays, "," ) );
+        // Phase C bucket 2f: typed payload via the AuditedAspect (co-bean
+        // proxy hop in OutlierFlaggingAuditService). The bioassay list moves
+        // from the free-form DETAIL string to AUDIT_EVENT.PAYLOAD as a typed
+        // SampleRemovalPayload.
+        List<String> baLabels = new ArrayList<>( bioAssays.size() );
+        for ( BioAssay ba : bioAssays ) {
+            baLabels.add( ba.toString() );
+        }
+        outlierFlaggingAuditService.recordSampleRemoval( expExp,
+                bioAssays.size() + " flagged as outliers",
+                new SampleRemovalPayload( baLabels ) );
 
         try {
             expExp = expressionExperimentService.thaw( expExp );
@@ -132,8 +140,15 @@ public class OutlierFlaggingServiceImpl
         if ( expExp == null ) {
             throw new IllegalStateException( "Could not find experiment for bioassay " + bioAssays.iterator().next() );
         }
-        auditTrailService.addUpdateEvent( expExp, SampleRemovalReversionEvent.class,
-                "Marked " + bioAssays.size() + " bioassays as non-missing", StringUtils.join( bioAssays, "" ) );
+        // Phase C bucket 2f: typed payload via the AuditedAspect (co-bean
+        // proxy hop in OutlierFlaggingAuditService).
+        List<String> baLabels = new ArrayList<>( bioAssays.size() );
+        for ( BioAssay ba : bioAssays ) {
+            baLabels.add( ba.toString() );
+        }
+        outlierFlaggingAuditService.recordSampleRemovalReversion( expExp,
+                "Marked " + bioAssays.size() + " bioassays as non-missing",
+                new SampleRemovalPayload( baLabels ) );
 
         // several transactions
         try {
