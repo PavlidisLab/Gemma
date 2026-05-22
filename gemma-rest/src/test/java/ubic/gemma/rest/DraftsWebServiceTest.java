@@ -11,6 +11,8 @@
  */
 package ubic.gemma.rest;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.ForbiddenException;
 import jakarta.ws.rs.NotFoundException;
@@ -184,6 +186,108 @@ public class DraftsWebServiceTest {
         Map<String, Object> body = ( Map<String, Object> ) resp.getEntity();
         assertThat( body ).containsEntry( "draft_id", 1L );
         assertThat( body ).containsKey( "redirect_to" );
+    }
+
+    /* ===== /datasets/{id}/curation-draft (finalisation) ===== */
+
+    @Test
+    public void submitFinalisedDraft_happyPath_returnsDispositionsInWireVocab() throws Exception {
+        // Snapshot has factor:1 (retained), factor:2 (will be edited),
+        // factor:3 (will be rejected — only in snapshot, dropped from payload).
+        ObjectMapper m = new ObjectMapper();
+        JsonNode payload = m.readTree(
+                "{\"factor:1\":{\"n\":\"a\"},\"factor:2\":{\"n\":\"b2\"}}" );
+        CurationDraft saved = draftOf( 11L, ee, currentUser );
+        saved.setProposalSnapshotJson(
+                "{\"factor:1\":{\"n\":\"a\"},\"factor:2\":{\"n\":\"b\"},\"factor:3\":{\"n\":\"c\"}}" );
+        saved.setPayloadJson( "{\"factor:1\":{\"n\":\"a\"},\"factor:2\":{\"n\":\"b2\"}}" );
+        saved.setParkedElements( "[\"fv:42\"]" );
+        when( curationDraftService.saveOrUpdate( eq( 100L ), eq( currentUser ),
+                any(), eq( null ), any() ) ).thenReturn( saved );
+        DraftsWebService.FinalisationRequest req = new DraftsWebService.FinalisationRequest();
+        req.payload = payload;
+        req.parkedElements = List.of( "fv:42" );
+        DraftsWebService.FinalisationResponse body = webService.submitFinalisedDraft( 100L, req );
+        assertThat( body.draftId ).isEqualTo( 11L );
+        assertThat( body.dispositions )
+                .containsEntry( "factor:1", "accepted" )
+                .containsEntry( "factor:2", "accepted_with_edits" )
+                .containsEntry( "factor:3", "rejected" )
+                .containsEntry( "fv:42", "parked" );
+    }
+
+    @Test
+    public void submitFinalisedDraft_emptyParkedList_works() throws Exception {
+        ObjectMapper m = new ObjectMapper();
+        JsonNode payload = m.readTree( "{\"factor:1\":{\"n\":\"a\"}}" );
+        CurationDraft saved = draftOf( 12L, ee, currentUser );
+        saved.setProposalSnapshotJson( "{\"factor:1\":{\"n\":\"a\"}}" );
+        saved.setPayloadJson( "{\"factor:1\":{\"n\":\"a\"}}" );
+        saved.setParkedElements( "[]" );
+        when( curationDraftService.saveOrUpdate( eq( 100L ), eq( currentUser ),
+                any(), eq( null ), eq( "[]" ) ) ).thenReturn( saved );
+        DraftsWebService.FinalisationRequest req = new DraftsWebService.FinalisationRequest();
+        req.payload = payload;
+        req.parkedElements = Collections.emptyList();
+        DraftsWebService.FinalisationResponse body = webService.submitFinalisedDraft( 100L, req );
+        assertThat( body.draftId ).isEqualTo( 12L );
+        assertThat( body.dispositions ).containsEntry( "factor:1", "accepted" );
+    }
+
+    @Test
+    public void submitFinalisedDraft_nullParkedList_treatedAsEmpty() throws Exception {
+        ObjectMapper m = new ObjectMapper();
+        JsonNode payload = m.readTree( "{\"factor:1\":{\"n\":\"a\"}}" );
+        CurationDraft saved = draftOf( 13L, ee, currentUser );
+        saved.setProposalSnapshotJson( "{\"factor:1\":{\"n\":\"a\"}}" );
+        saved.setPayloadJson( "{\"factor:1\":{\"n\":\"a\"}}" );
+        when( curationDraftService.saveOrUpdate( eq( 100L ), eq( currentUser ),
+                any(), eq( null ), eq( "[]" ) ) ).thenReturn( saved );
+        DraftsWebService.FinalisationRequest req = new DraftsWebService.FinalisationRequest();
+        req.payload = payload;
+        req.parkedElements = null;
+        DraftsWebService.FinalisationResponse body = webService.submitFinalisedDraft( 100L, req );
+        assertThat( body.draftId ).isEqualTo( 13L );
+    }
+
+    @Test
+    public void submitFinalisedDraft_missingBodyThrows400() {
+        assertThatThrownBy( () -> webService.submitFinalisedDraft( 100L, null ) )
+                .isInstanceOf( BadRequestException.class );
+        DraftsWebService.FinalisationRequest req = new DraftsWebService.FinalisationRequest();
+        // payload is null
+        assertThatThrownBy( () -> webService.submitFinalisedDraft( 100L, req ) )
+                .isInstanceOf( BadRequestException.class );
+    }
+
+    @Test
+    public void submitFinalisedDraft_unknownDatasetThrows404() throws Exception {
+        ObjectMapper m = new ObjectMapper();
+        JsonNode payload = m.readTree( "{}" );
+        when( curationDraftService.saveOrUpdate( eq( 999L ), eq( currentUser ),
+                any(), eq( null ), any() ) )
+                .thenThrow( new IllegalArgumentException( "No investigation with id 999" ) );
+        DraftsWebService.FinalisationRequest req = new DraftsWebService.FinalisationRequest();
+        req.payload = payload;
+        req.parkedElements = List.of();
+        assertThatThrownBy( () -> webService.submitFinalisedDraft( 999L, req ) )
+                .isInstanceOf( NotFoundException.class );
+    }
+
+    @Test
+    public void toWireVocab_translatesAllFourStates() {
+        assertThat( DraftsWebService.toWireVocab(
+                ubic.gemma.model.common.auditAndSecurity.curation.CurationDraftDispositions.Disposition.RETAINED ) )
+                .isEqualTo( "accepted" );
+        assertThat( DraftsWebService.toWireVocab(
+                ubic.gemma.model.common.auditAndSecurity.curation.CurationDraftDispositions.Disposition.EDITED ) )
+                .isEqualTo( "accepted_with_edits" );
+        assertThat( DraftsWebService.toWireVocab(
+                ubic.gemma.model.common.auditAndSecurity.curation.CurationDraftDispositions.Disposition.REJECTED ) )
+                .isEqualTo( "rejected" );
+        assertThat( DraftsWebService.toWireVocab(
+                ubic.gemma.model.common.auditAndSecurity.curation.CurationDraftDispositions.Disposition.PARKED ) )
+                .isEqualTo( "parked" );
     }
 
     /* ===== /drafts family ===== */

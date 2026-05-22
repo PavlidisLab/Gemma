@@ -12,6 +12,9 @@
 package ubic.gemma.rest;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -47,6 +50,7 @@ import ubic.gemma.model.expression.experiment.AgentProposal;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CurationDraftService;
 import ubic.gemma.persistence.service.expression.experiment.AgentProposalService;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -83,6 +87,12 @@ import java.util.stream.Collectors;
 @Path("/")
 @Tag(name = "Drafts", description = "Per-curator curation draft buffer")
 public class DraftsWebService {
+
+    /**
+     * Mapper used to round-trip the finalisation request body. Reused
+     * statically — Jackson's ObjectMapper is thread-safe once configured.
+     */
+    private static final ObjectMapper FINALISATION_MAPPER = new ObjectMapper();
 
     private final CurationDraftService curationDraftService;
     private final AgentProposalService agentProposalService;
@@ -216,6 +226,70 @@ public class DraftsWebService {
                 "PUT /datasets/" + id + "/annotations" ) );
         body.put( "after_dispatch", "DELETE /datasets/" + id + "/draft to clear the buffer" );
         return Response.status( Response.Status.NOT_IMPLEMENTED ).entity( body ).build();
+    }
+
+    /**
+     * Finalisation submission endpoint. The curation-UI sends the curator's
+     * edited proposal payload plus the list of element keys the curator
+     * parked. Server overwrites the draft's {@code payloadJson} +
+     * {@code parkedElements}, then diff-derives the per-element disposition
+     * map against the original {@code proposalSnapshotJson} captured at
+     * seed-time.
+     *
+     * <p>Distinct from {@code PUT /datasets/{id}/draft}: that endpoint takes
+     * raw JSON strings and returns the full draft row. This one takes
+     * structured JSON ({@code payload} as an object, {@code parked_elements}
+     * as a string array) and returns only the dispositions, translated to
+     * the curator wire vocab ({@code accepted}/{@code accepted_with_edits}/
+     * {@code rejected}/{@code parked}).</p>
+     *
+     * <p>PUT semantics (full replace of the draft's payload + parked list);
+     * see {@link FinalisationRequest}.</p>
+     */
+    @PUT
+    @Hidden
+    @Path("/datasets/{id}/curation-draft")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN')")
+    @Operation(hidden = true,
+            summary = "Finalisation submit: replace draft payload + parked list, get dispositions",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Saved.", content = @Content()),
+                    @ApiResponse(responseCode = "400", description = "Malformed body.", content = @Content()),
+                    @ApiResponse(responseCode = "404", description = "Unknown dataset.", content = @Content())
+            })
+    public FinalisationResponse submitFinalisedDraft( @PathParam("id") Long id,
+            @Nullable FinalisationRequest req ) {
+        if ( req == null || req.payload == null ) {
+            throw new BadRequestException( "Request body must include `payload`." );
+        }
+        User curator = requireCurrentUser();
+        String payloadJson;
+        String parkedJson;
+        try {
+            payloadJson = FINALISATION_MAPPER.writeValueAsString( req.payload );
+            List<String> parked = req.parkedElements != null ? req.parkedElements : Collections.emptyList();
+            parkedJson = FINALISATION_MAPPER.writeValueAsString( parked );
+        } catch ( JsonProcessingException e ) {
+            throw new BadRequestException( "Malformed JSON in request body: " + e.getOriginalMessage() );
+        }
+        CurationDraft d;
+        try {
+            d = curationDraftService.saveOrUpdate( id, curator, payloadJson, null, parkedJson );
+        } catch ( IllegalArgumentException e ) {
+            // saveOrUpdate throws IAE when the investigation id is unknown.
+            throw new NotFoundException( e.getMessage() );
+        }
+        Map<String, CurationDraftDispositions.Disposition> derived =
+                CurationDraftDispositions.derive( d );
+        FinalisationResponse out = new FinalisationResponse();
+        out.draftId = d.getId();
+        out.dispositions = new LinkedHashMap<>();
+        for ( Map.Entry<String, CurationDraftDispositions.Disposition> e : derived.entrySet() ) {
+            out.dispositions.put( e.getKey(), toWireVocab( e.getValue() ) );
+        }
+        return out;
     }
 
     /* ============== /drafts family ============== */
@@ -455,6 +529,27 @@ public class DraftsWebService {
         return r;
     }
 
+    /**
+     * Translate a domain {@link CurationDraftDispositions.Disposition} to
+     * the curator-facing wire string. Lives at the REST boundary so the
+     * domain enum stays unchanged — only the wire shape uses the curator
+     * vocab.
+     */
+    static String toWireVocab( CurationDraftDispositions.Disposition d ) {
+        switch ( d ) {
+            case RETAINED:
+                return "accepted";
+            case EDITED:
+                return "accepted_with_edits";
+            case REJECTED:
+                return "rejected";
+            case PARKED:
+                return "parked";
+            default:
+                throw new IllegalStateException( "Unhandled disposition: " + d );
+        }
+    }
+
     private ReviewResponse toReviewResponse( CurationDraft d ) {
         ReviewResponse r = new ReviewResponse();
         r.draft = toDraftResponse( d );
@@ -519,5 +614,36 @@ public class DraftsWebService {
     public static class ReviewResponse {
         public DraftResponse draft;
         public Map<String, CurationDraftDispositions.Disposition> dispositions;
+    }
+
+    /**
+     * Body of PUT /datasets/{id}/curation-draft.
+     *
+     * <p>{@code payload} is the curator's edited proposal envelope as a
+     * structured JSON object (server serialises it back into the draft's
+     * {@code payloadJson} string column). {@code parked_elements} is the
+     * list of element keys the curator chose to defer.</p>
+     */
+    public static class FinalisationRequest {
+        @JsonProperty("payload")
+        public JsonNode payload;
+
+        @JsonProperty("parked_elements")
+        @Nullable
+        public List<String> parkedElements;
+    }
+
+    /**
+     * Response of PUT /datasets/{id}/curation-draft. Carries the persisted
+     * draft id plus the per-element dispositions in the curator wire vocab
+     * ({@code accepted}/{@code accepted_with_edits}/{@code rejected}/
+     * {@code parked}).
+     */
+    public static class FinalisationResponse {
+        @JsonProperty("draft_id")
+        public Long draftId;
+
+        @JsonProperty("dispositions")
+        public Map<String, String> dispositions;
     }
 }
