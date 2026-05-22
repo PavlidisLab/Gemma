@@ -24,7 +24,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import ubic.gemma.core.context.TestComponent;
 
 /**
- * Configuration for enabling ACLs in a {@link BaseDatabaseTest}.
+ * Configuration for enabling ACLs in a {@link BaseDatabaseTest5}.
  *
  * @author poirigui
  */
