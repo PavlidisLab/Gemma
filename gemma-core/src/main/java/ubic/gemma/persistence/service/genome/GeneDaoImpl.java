@@ -162,7 +162,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     @Override
     public Gene findByOfficialSymbol( String symbol, Taxon taxon ) {
         return ( Gene ) this.getSessionFactory().getCurrentSession()
-                .createQuery( "select g from Gene as g where g.officialSymbol = :symbol and g.taxon = :taxon" )
+                .createQuery( "select g from Gene as g where lower(g.officialSymbol) = lower(:symbol) and g.taxon = :taxon" )
                 .setParameter( "symbol", symbol ).setParameter( "taxon", taxon ).uniqueResult();
     }
 
@@ -170,7 +170,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     public Collection<Gene> findByOfficialSymbolInexact( final String officialSymbol ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
-                .createQuery( "from Gene g where g.officialSymbol like :officialSymbol order by g.officialSymbol" )
+                .createQuery( "from Gene g where lower(g.officialSymbol) like lower(:officialSymbol) order by g.officialSymbol" )
                 .setParameter( "officialSymbol", officialSymbol ).setMaxResults( GeneDaoImpl.MAX_RESULTS ).list();
     }
 
