@@ -158,6 +158,7 @@ public interface CompositeSequenceDao extends FilteringVoEnabledDao<CompositeSeq
     Map<CompositeSequence, Collection<BioSequence2GeneProduct>> getGenesWithSpecificity(
             Collection<CompositeSequence> compositeSequences );
 
+    @Nullable
     Collection<Object[]> getRawSummary( Collection<CompositeSequence> compositeSequences );
 
     Collection<Object[]> getRawSummary( ArrayDesign arrayDesign, int numResults );

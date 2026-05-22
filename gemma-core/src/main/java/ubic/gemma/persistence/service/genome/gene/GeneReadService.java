@@ -101,6 +101,7 @@ public interface GeneReadService {
 
     Collection<CompositeSequence> getCompositeSequencesById( Long geneId, boolean includeDummyProducts );
 
+    @Nullable
     List<PhysicalLocationValueObject> getPhysicalLocationsValueObjects( Gene gene );
 
     Collection<GeneProductValueObject> getProducts( Long geneId );

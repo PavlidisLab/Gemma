@@ -617,6 +617,7 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
         return results;
     }
 
+    @Nullable
     private Collection<DoubleVectorValueObject> sliceSubSet( BioAssaySet bas, @Nullable Collection<DoubleVectorValueObject> obs ) {
         if ( bas instanceof ExpressionExperimentSubSet ) {
             return sliceSubSet( ( ExpressionExperimentSubSet ) bas, obs );
@@ -632,6 +633,7 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
      * just the
      * data for the subset.
      */
+    @Nullable
     private Collection<DoubleVectorValueObject> sliceSubSet( ExpressionExperimentSubSet ee,
             @Nullable Collection<DoubleVectorValueObject> obs ) {
         if ( obs == null || obs.isEmpty() )

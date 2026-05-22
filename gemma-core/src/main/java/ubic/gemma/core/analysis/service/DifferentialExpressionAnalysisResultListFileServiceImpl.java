@@ -101,6 +101,7 @@ public class DifferentialExpressionAnalysisResultListFileServiceImpl implements 
                 format( contrast.getPvalue() ) );
     }
 
+    @Nullable
     private String formatBaseline( @Nullable Baseline baseline ) {
         if ( baseline == null ) {
             return null;

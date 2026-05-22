@@ -432,6 +432,7 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    @Nullable
     public Collection<ExpressionExperiment> findByBioMaterial( BioMaterial bm, boolean includeSubSets ) {
         //noinspection unchecked
         List<ExpressionExperiment> results = this.getSessionFactory().getCurrentSession()
@@ -453,6 +454,7 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    @Nullable
     public Collection<Long> findIdsByBioMaterial( BioMaterial bm, boolean includeSubSets ) {
         //noinspection unchecked
         List<Long> results = this.getSessionFactory().getCurrentSession()
@@ -1533,6 +1535,7 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    @Nullable
     public Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment expressionExperiment ) {
         // Original HQL was "select b from BioAssayDimension b, ExpressionExperiment e join b.bioAssays bba join e.bioAssays eb
         // where eb = bba and e = :ee group by b" — a cross-join from two roots with set-joins from each. Hibernate 6's

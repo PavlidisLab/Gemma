@@ -161,6 +161,7 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
 
     @Override
     @Transactional
+    @Nullable
     public Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching,
             boolean splitByPlatform ) {
         return this.fetchAndLoad( geoAccession, loadPlatformOnly, doSampleMatching, splitByPlatform, true, true );
@@ -177,6 +178,7 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
      */
     @Override
     @Transactional
+    @Nullable
     public Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching,
             boolean splitByPlatform, boolean allowSuperSeriesImport, boolean allowSubSeriesImport ) {
 
@@ -806,6 +808,7 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
      * @param rawGEOPlatform Our representation of the original GEO platform
      * @param geoArrayDesign Our conversion
      */
+    @Nullable
     private String getGEOIDColumnName( GeoPlatform rawGEOPlatform, ArrayDesign geoArrayDesign ) {
 
         if ( rawGEOPlatform.getDesignElements().isEmpty() ) {

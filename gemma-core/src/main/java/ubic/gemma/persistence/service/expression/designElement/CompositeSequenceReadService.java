@@ -98,6 +98,7 @@ public interface CompositeSequenceReadService {
      * insertion order and discarding names that don't match any sequence on any of the
      * supplied platforms.
      */
+    @Nullable
     Collection<CompositeSequence> findByNamesInArrayDesigns( Collection<String> compositeSequenceNames,
             Collection<ArrayDesign> arrayDesigns );
 

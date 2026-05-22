@@ -18,6 +18,7 @@ import cern.colt.list.DoubleArrayList;
 import cern.colt.matrix.DoubleMatrix2D;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -237,6 +238,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
                 .format( SampleCoexpressionAnalysisServiceImpl.MSG_INFO_ANALYSIS_STATUS, comp, full, reg ) );
     }
 
+    @Nullable
     private DoubleMatrix<BioAssay, BioAssay> toDoubleMatrix( SampleCoexpressionMatrix matrix ) {
         byte[] matrixBytes = matrix.getCoexpressionMatrix();
 
@@ -299,6 +301,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         return MatrixStats.correlationMatrix( transpose );
     }
 
+    @Nullable
     private ExpressionDataDoubleMatrix loadDataMatrix( ExpressionExperiment ee, boolean useRegression,
             Collection<ProcessedExpressionDataVector> vectors ) throws FilteringException {
         if ( vectors.isEmpty() ) {
@@ -375,6 +378,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
      *               ignored)
      * @return residuals from the regression.
      */
+    @Nullable
     private ExpressionDataDoubleMatrix regressionResiduals( ExpressionDataDoubleMatrix matrix,
             DifferentialExpressionAnalysisConfig config ) {
 

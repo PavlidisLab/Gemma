@@ -78,6 +78,7 @@ public class AffyPowerToolsProbesetSummarize {
      * @param  fileName file name
      * @return BioAssay, or null if not found.
      */
+    @Nullable
     public static BioAssay matchBioAssayToCelFileName( Map<String, BioAssay> bmap, String fileName ) {
 
         Pattern regex = Pattern.compile( AffyPowerToolsProbesetSummarize.GEO_CEL_FILE_NAME_REGEX );
@@ -404,6 +405,7 @@ public class AffyPowerToolsProbesetSummarize {
      * @param  ad platform
      * @return file or null if not found
      */
+    @Nullable
     private File findCdf( ArrayDesign ad ) {
         String affyCdfs = Settings.getString( AffyPowerToolsProbesetSummarize.AFFY_POWER_TOOLS_CDF_PATH );
 
@@ -523,6 +525,7 @@ public class AffyPowerToolsProbesetSummarize {
      * @param outputPath directory
      * @return string or null if not found.s
      */
+    @Nullable
     private String[] getMPSCommand( ArrayDesign ad, List<String> celfiles, String outputPath ) {
         /*
          * Get the pgf, clf, mps file for this platform. qc probesets: optional.

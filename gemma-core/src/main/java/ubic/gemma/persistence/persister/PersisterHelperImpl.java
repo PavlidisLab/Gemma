@@ -217,6 +217,7 @@ public class PersisterHelperImpl implements PersisterHelper {
      * {@link CommonPersister#doCommon}) each return {@code null} when the entity
      * isn't theirs, so we fall through in turn and throw at the bottom.
      */
+    @Nullable
     @SuppressWarnings("unchecked")
     <T extends Identifiable> T doPersist( T entity, Map<String, ExternalDatabase> xdbCache ) {
         EeWriteServiceImpl impl = eeWriteServiceImpl();

@@ -107,6 +107,7 @@ public class GenomePersister {
      * ({@link #doGenome}), then falls through to {@link CommonPersister#doCommon} for
      * User/Characteristic, otherwise throws {@link UnsupportedOperationException}.
      */
+    @Nullable
     @SuppressWarnings("unchecked")
     protected <T extends Identifiable> T doPersist( T entity, Map<String, ExternalDatabase> xdbCache ) {
         T handled = doGenome( entity, xdbCache );

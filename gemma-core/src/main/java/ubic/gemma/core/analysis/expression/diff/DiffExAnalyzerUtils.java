@@ -182,6 +182,7 @@ public class DiffExAnalyzerUtils {
      * @param includeInteractionsIfPossible include interactions among the provided experimental factors if possible
      * @return an appropriate analysis type
      */
+    @Nullable
     public static AnalysisType determineAnalysisType( BioAssaySet bioAssaySet, Collection<ExperimentalFactor> experimentalFactors,
             @Nullable ExperimentalFactor subsetFactor, boolean includeInteractionsIfPossible ) {
 

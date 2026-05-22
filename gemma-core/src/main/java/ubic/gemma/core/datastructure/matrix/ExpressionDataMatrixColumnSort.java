@@ -185,6 +185,7 @@ public class ExpressionDataMatrixColumnSort {
      *
      * @return ordered map of fv->bm where fv is of ef, or null if it couldn't be done properly.
      */
+    @Nullable
     private static LinkedHashMap<FactorValue, List<BioMaterial>> chunkOnFactor( ExperimentalFactor ef,
             @Nullable List<BioMaterial> bms ) {
 

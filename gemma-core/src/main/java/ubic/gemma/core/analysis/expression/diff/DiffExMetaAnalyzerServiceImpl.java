@@ -25,6 +25,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.lang.Nullable;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.util.math.MultipleTestCorrection;
 import ubic.gemma.core.util.math.metaanalysis.MetaAnalysis;
@@ -64,6 +65,7 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
 
     @Override
     @Transactional
+    @Nullable
     public GeneDifferentialExpressionMetaAnalysis analyze( Collection<Long> analysisResultSetIds ) {
 
         /*
@@ -104,6 +106,7 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
         return analysisService.create( analysis );
     }
 
+    @Nullable
     private Double aggregateFoldChangeForGeneWithinResultSet( Collection<DifferentialExpressionAnalysisResult> res ) {
         assert !res.isEmpty();
         Double bestPvalue = Double.MAX_VALUE;
@@ -235,6 +238,7 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
                             fisherPvalueDown ) );
     }
 
+    @Nullable
     private GeneDifferentialExpressionMetaAnalysis doMetaAnalysis(
             Collection<ExpressionAnalysisResultSet> updatedResultSets,
             Map<Gene, Collection<DifferentialExpressionAnalysisResult>> gene2result ) {
@@ -455,6 +459,7 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
      *
      * @return a map of genes to the usable results for that gene. There can be more than one result for one resultset.
      */
+    @Nullable
     private Map<Gene, Collection<DifferentialExpressionAnalysisResult>> organizeResultsByGene(
             Collection<ExpressionAnalysisResultSet> resultSets,
             Collection<DifferentialExpressionAnalysisResult> res2set ) {
