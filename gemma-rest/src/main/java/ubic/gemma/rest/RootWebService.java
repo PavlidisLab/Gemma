@@ -25,6 +25,7 @@ import jakarta.servlet.ServletContext;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
 import jakarta.ws.rs.core.UriInfo;
 import java.net.URI;
@@ -108,6 +109,26 @@ public class RootWebService {
     @Operation(summary = "Retrieve the user information associated to the authenticated session", hidden = true)
     public ResponseDataObject<UserValueObject> getMyself() {
         return respond( getUserVo( userManager.getCurrentUser() ) );
+    }
+
+    /**
+     * Top-level alias for {@code GET /datasets/categories}: the curation-UI calls {@code GET /categories} for the
+     * recently-used annotation-category picker. Implemented as a 302 redirect so query params (filter, limit,
+     * etc.) pass through unchanged.
+     */
+    @GET
+    @Path("/categories")
+    @Operation(summary = "Retrieve usage statistics of categories among datasets (alias of /datasets/categories)", hidden = true,
+            responses = { @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "302",
+                    description = "Redirection to /datasets/categories.") })
+    public Response getCategoriesAlias( @Context UriInfo uriInfo ) {
+        UriBuilder builder = uriInfo.getBaseUriBuilder()
+                .scheme( null ).host( null ).port( -1 )
+                .path( "/datasets/categories" );
+        uriInfo.getQueryParameters().forEach( ( k, vs ) -> vs.forEach( v -> builder.queryParam( k, v ) ) );
+        return Response.status( Response.Status.FOUND )
+                .location( builder.build() )
+                .build();
     }
 
     /**
