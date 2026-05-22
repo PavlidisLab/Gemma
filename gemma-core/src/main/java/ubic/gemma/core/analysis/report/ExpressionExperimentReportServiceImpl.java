@@ -42,7 +42,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueOb
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.IdentifiableUtils;
 
@@ -78,8 +77,6 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
             DifferentialExpressionAnalysisEvent.class, BatchInformationFetchingEvent.class,
             PCAAnalysisEvent.class, BatchInformationMissingEvent.class );
 
-    @Autowired
-    private AuditTrailService auditTrailService;
     @Autowired
     private AuditEventService auditEventService;
     @Autowired
