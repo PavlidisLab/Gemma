@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.security.audit.Audited;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentPlatformSwitchEvent;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -66,5 +67,20 @@ public class DataUpdaterAuditServiceImpl implements DataUpdaterAuditService {
     @Audited(value = DataReplacedEvent.class, messageSpel = "#note")
     public void recordDataReplaced( ExpressionExperiment ee, String note ) {
         log.debug( "Data replaced audit for " + ee + ": " + note );
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p>The {@link Audited} annotation drives emission through the
+     * {@code AuditedAspect}; this method body is intentionally a logging-only
+     * marker so the proxy-intercepted return triggers exactly one
+     * {@link ExpressionExperimentPlatformSwitchEvent}.
+     */
+    @Override
+    @Transactional
+    @Audited(value = ExpressionExperimentPlatformSwitchEvent.class, messageSpel = "#note")
+    public void recordPlatformSwitch( ExpressionExperiment ee, String note ) {
+        log.debug( "Platform switch audit for " + ee + ": " + note );
     }
 }

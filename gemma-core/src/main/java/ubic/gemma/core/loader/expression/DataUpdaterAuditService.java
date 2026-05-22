@@ -48,4 +48,21 @@ public interface DataUpdaterAuditService {
      * @param note free-text note stored in {@code AUDIT_EVENT.NOTE}
      */
     void recordDataReplaced( ExpressionExperiment ee, String note );
+
+    /**
+     * Record an {@code ExpressionExperimentPlatformSwitchEvent} against the
+     * given experiment with the supplied note. Dispatch is via the
+     * {@code @Audited} aspect.
+     * <p>
+     * Three sites in {@link DataUpdaterImpl} ({@code addAffyDataFromAPTOutput},
+     * {@code reprocessAffyDataFromCel}, {@code replaceData}) emit this event
+     * conditionally when a platform switch actually happens. Callers gate the
+     * call on their own {@code if (!targetPlatform.equals(originalPlatform))}
+     * predicate, so this method is unconditional -- the absence of a call is
+     * the "no switch" signal.
+     *
+     * @param ee   experiment to audit
+     * @param note free-text note stored in {@code AUDIT_EVENT.NOTE}
+     */
+    void recordPlatformSwitch( ExpressionExperiment ee, String note );
 }
