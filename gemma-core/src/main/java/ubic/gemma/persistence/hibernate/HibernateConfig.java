@@ -179,6 +179,14 @@ public class HibernateConfig {
         props.setProperty( "hibernate.jdbc.batch_versioned_data", "true" );
         props.setProperty( "hibernate.order_inserts", "true" );
         props.setProperty( "hibernate.order_updates", "true" );
+        // Spring's HibernateTransactionManager rejects custom @Transactional isolation
+        // (e.g. SERIALIZABLE on SampleCoexpressionAnalysisServiceImpl.compute) unless the
+        // connection is held through the whole transaction. The HB6 equivalent of HB5's
+        // ON_CLOSE release mode is DELAYED_ACQUISITION_AND_HOLD — set it explicitly so
+        // setPrepareConnection(true) (HTM default) can apply the isolation level on the
+        // physical connection without the connection getting released between statements.
+        // Without this, InvalidIsolationLevelException fires at tx-begin.
+        props.setProperty( "hibernate.connection.handling_mode", "DELAYED_ACQUISITION_AND_HOLD" );
         // used for micrometer
         props.setProperty( "hibernate.generate_statistics", "true" );
         // debugging options
