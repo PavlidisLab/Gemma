@@ -20,6 +20,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.NotFoundException;
+import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
@@ -33,10 +34,13 @@ import org.springframework.cache.CacheManager;
 import org.springframework.lang.Nullable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import ubic.gemma.core.job.SubmittedTask;
+import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.rest.util.ResponseDataObject;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.TreeSet;
@@ -66,11 +70,14 @@ public class AdminWebService {
 
     private final CacheManager cacheManager;
     private final SessionFactory sessionFactory;
+    private final TaskRunningService taskRunningService;
 
     @Autowired
-    public AdminWebService( CacheManager cacheManager, SessionFactory sessionFactory ) {
+    public AdminWebService( CacheManager cacheManager, SessionFactory sessionFactory,
+            TaskRunningService taskRunningService ) {
         this.cacheManager = cacheManager;
         this.sessionFactory = sessionFactory;
+        this.taskRunningService = taskRunningService;
     }
 
     /* ===== Caches ===== */
@@ -196,11 +203,99 @@ public class AdminWebService {
         return respond( body );
     }
 
+    /**
+     * Resets the Hibernate statistics counters to zero. Replaces the legacy
+     * {@code SystemMonitorController.resetHibernateStatus()} DWR call.
+     */
+    @POST
+    @Path("/hibernate/reset")
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Reset Hibernate statistics",
+            description = "Clears the Hibernate session-factory statistics counters. Returns 204 on success. Has no effect on whether statistics collection itself is enabled.",
+            security = {
+                    @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
+            },
+            responses = {
+                    @ApiResponse(responseCode = "204")
+            })
+    public Response resetHibernateStats() {
+        sessionFactory.getStatistics().clear();
+        return Response.noContent().build();
+    }
+
+    /* ===== Background jobs ===== */
+
+    /**
+     * Aggregated admin view of the in-memory background task queue. Returns the per-task
+     * {@link TaskStatusValueObject} snapshots plus counts of tasks in each status. The underlying
+     * task store is in-memory only and tasks are evicted ~10 minutes after completion.
+     */
+    @GET
+    @Path("/jobs")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "List currently tracked background tasks",
+            description = "Returns a snapshot of every task currently tracked by the in-memory task store, sorted by submission time (newest first), with counts of tasks by status. The store evicts tasks roughly 10 minutes after completion.",
+            security = {
+                    @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
+            },
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class)))
+            })
+    public ResponseDataObject<JobsListResponse> getJobs() {
+        Collection<SubmittedTask> tasks = taskRunningService.getSubmittedTasks();
+        List<TaskStatusValueObject> snapshots = new ArrayList<>();
+        int queued = 0, running = 0, completed = 0, failed = 0, cancelling = 0, unknown = 0;
+        for ( SubmittedTask task : tasks ) {
+            snapshots.add( new TaskStatusValueObject( task ) );
+            SubmittedTask.Status st = task.getStatus();
+            if ( st == null ) {
+                unknown++;
+                continue;
+            }
+            switch ( st ) {
+                case QUEUED: queued++; break;
+                case RUNNING: running++; break;
+                case COMPLETED: completed++; break;
+                case FAILED: failed++; break;
+                case CANCELLING: cancelling++; break;
+                default: unknown++; break;
+            }
+        }
+        // newest first; nulls sort last
+        snapshots.sort( Comparator.comparing( TaskStatusValueObject::getSubmittedAt,
+                Comparator.nullsLast( Comparator.reverseOrder() ) ) );
+        JobsListResponse body = new JobsListResponse();
+        body.total = snapshots.size();
+        body.queued = queued;
+        body.running = running;
+        body.completed = completed;
+        body.failed = failed;
+        body.cancelling = cancelling;
+        body.unknown = unknown;
+        body.tasks = snapshots;
+        return respond( body );
+    }
+
     /* ===== DTOs ===== */
 
     public static class CacheListResponse {
         public int count;
         public List<String> names;
+    }
+
+    public static class JobsListResponse {
+        public int total;
+        public int queued;
+        public int running;
+        public int completed;
+        public int failed;
+        public int cancelling;
+        public int unknown;
+        public List<TaskStatusValueObject> tasks;
     }
 
     public static class HibernateStatsResponse {
