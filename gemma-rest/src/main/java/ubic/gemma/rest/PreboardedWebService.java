@@ -32,6 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.Nullable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import ubic.gemma.model.expression.experiment.AgentCurationKind;
 import ubic.gemma.model.expression.experiment.AgentProposal;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.PreboardedExperiment;
@@ -232,8 +233,9 @@ public class PreboardedWebService {
         if ( req == null || req.runId == null || req.runId.trim().isEmpty() ) {
             throw new BadRequestException( "Request body must include a non-blank `run_id`." );
         }
+        AgentCurationKind kind = parseKindOrThrow( req.kind, AgentCurationKind.PROPOSAL );
         PreboardedExperiment skel = loadPreboardedOrThrow( id );
-        AgentProposalService.AttachedProposal attached = agentProposalService.attach( skel,
+        AgentProposalService.AttachedProposal attached = agentProposalService.attach( skel, kind,
                 req.runId.trim(), req.agentVersion, req.model, req.ranAt, req.payloadJson );
         ProposalResponse body = toProposalResponse( attached.getProposal(), skel.getId() );
         Response.Status status = attached.isCreated()
@@ -336,12 +338,28 @@ public class PreboardedWebService {
         ProposalResponse r = new ProposalResponse();
         r.proposalId = p.getId();
         r.preboardedId = preboardedId;
+        r.kind = p.getKind() != null ? p.getKind().getDbValue() : AgentCurationKind.PROPOSAL.getDbValue();
         r.runId = p.getRunId();
         r.agentVersion = p.getAgentVersion();
         r.model = p.getModel();
         r.ranAt = p.getRanAt();
         r.payloadJson = p.getPayloadJson();
         return r;
+    }
+
+    /**
+     * Parse the body-side {@code kind} for a POST. Accepts null/blank as the
+     * caller-supplied default; throws 400 on unknown values.
+     */
+    static AgentCurationKind parseKindOrThrow( @Nullable String kind, AgentCurationKind defaultKind ) {
+        if ( kind == null || kind.trim().isEmpty() ) {
+            return defaultKind;
+        }
+        try {
+            return AgentCurationKind.fromDbValue( kind.trim() );
+        } catch ( IllegalArgumentException e ) {
+            throw new BadRequestException( "Unknown kind: " + kind + " (expected 'proposal' or 'audit')" );
+        }
     }
 
     /* ===================== DTOs ===================== */
@@ -381,6 +399,13 @@ public class PreboardedWebService {
         @JsonProperty("payload_json")
         @Nullable
         public String payloadJson;
+        /**
+         * Discriminator: {@code "proposal"} (default if absent) or {@code "audit"}.
+         * Case-insensitive. Unknown values cause 400.
+         */
+        @JsonProperty("kind")
+        @Nullable
+        public String kind;
     }
 
     /** Body of {@link #promotePreboarded}. */
@@ -420,6 +445,8 @@ public class PreboardedWebService {
         public Long proposalId;
         @JsonProperty("preboarded_id")
         public Long preboardedId;
+        @JsonProperty("kind")
+        public String kind;
         @JsonProperty("run_id")
         public String runId;
         @JsonProperty("agent_version")

@@ -20,6 +20,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import ubic.gemma.model.expression.experiment.AgentCurationKind;
 import ubic.gemma.model.expression.experiment.AgentProposal;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.PreboardedExperiment;
@@ -188,7 +189,8 @@ public class PreboardedWebServiceTest {
         p.setId( 100L );
         p.setRunId( "run-1" );
         p.setInvestigation( preboarded );
-        when( agentProposalService.attach( eq( preboarded ), eq( "run-1" ), any(), any(), any(), any() ) )
+        when( agentProposalService.attach( eq( preboarded ), eq( AgentCurationKind.PROPOSAL ),
+                eq( "run-1" ), any(), any(), any(), any() ) )
                 .thenReturn( new AgentProposalService.AttachedProposal( p, true ) );
         PreboardedWebService.AttachProposalRequest req = new PreboardedWebService.AttachProposalRequest();
         req.runId = "run-1";
@@ -202,7 +204,8 @@ public class PreboardedWebServiceTest {
         p.setId( 100L );
         p.setRunId( "run-1" );
         p.setInvestigation( preboarded );
-        when( agentProposalService.attach( eq( preboarded ), eq( "run-1" ), any(), any(), any(), any() ) )
+        when( agentProposalService.attach( eq( preboarded ), eq( AgentCurationKind.PROPOSAL ),
+                eq( "run-1" ), any(), any(), any(), any() ) )
                 .thenReturn( new AgentProposalService.AttachedProposal( p, false ) );
         PreboardedWebService.AttachProposalRequest req = new PreboardedWebService.AttachProposalRequest();
         req.runId = "run-1";
