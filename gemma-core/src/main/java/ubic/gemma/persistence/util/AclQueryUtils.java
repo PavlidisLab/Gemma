@@ -2,7 +2,6 @@ package ubic.gemma.persistence.util;
 
 import ubic.gemma.core.security.util.SecurityUtil;
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.Query;
 import org.hibernate.QueryParameterException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -374,6 +373,13 @@ public class AclQueryUtils {
     }
 
     /**
+     * Stashed by {@link AclClassIdInitializer} (in `gemma-core/src/main/java/.../AclClassIdInitializer.java`)
+     * at Spring context init so the static {@link #resolveAclClassId} doesn't need a
+     * Hibernate-internal unwrap on every query. One factory per JVM; thread-safe via final + volatile.
+     */
+    static volatile SessionFactoryImplementor sessionFactory;
+
+    /**
      * Resolve {@code acl_class.id} for a Securable class name, caching the result for
      * the JVM lifetime. The acl_class table is insert-once on first registration of
      * each Securable subclass, so the id is stable.
@@ -383,12 +389,21 @@ public class AclQueryUtils {
         if ( cached != null ) {
             return cached;
         }
-        SharedSessionContractImplementor session = query.unwrap( SharedSessionContractImplementor.class );
-        Number id = (Number) session.createNativeQuery(
-                        "select id from acl_class where class = :c", Number.class )
-                .setParameter( "c", className )
-                .getSingleResult();
-        Long resolved = id.longValue();
+        SessionFactoryImplementor sf = sessionFactory;
+        if ( sf == null ) {
+            throw new IllegalStateException( "AclQueryUtils.sessionFactory not set; AclClassIdInitializer must run before any ACL-filtered query." );
+        }
+        // Open a stateless session for the lookup so we don't piggyback on the
+        // caller's Hibernate session (which may be mid-flush or carrying state
+        // we don't want to interleave with).
+        Long resolved;
+        try ( org.hibernate.StatelessSession ss = sf.openStatelessSession() ) {
+            Number id = (Number) ss.createNativeQuery(
+                            "select id from acl_class where class = :c", Number.class )
+                    .setParameter( "c", className )
+                    .getSingleResult();
+            resolved = id.longValue();
+        }
         ACL_CLASS_ID_CACHE.put( className, resolved );
         return resolved;
     }
