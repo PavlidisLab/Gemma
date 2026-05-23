@@ -8,6 +8,7 @@ import org.hibernate.search.engine.search.query.SearchResult;
 import org.hibernate.search.mapper.orm.Search;
 import org.hibernate.search.mapper.orm.session.SearchSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.security.acls.model.ObjectIdentity;
 import org.springframework.security.acls.model.Sid;
@@ -20,6 +21,7 @@ import ubic.gemma.core.search.SearchContext;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.security.acl.domain.AclObjectIdentity;
 import ubic.gemma.core.security.acl.domain.AclService;
+import ubic.gemma.core.security.util.SecurityUtil;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
@@ -67,6 +69,12 @@ import java.util.stream.Collectors;
 public class HibernateSearchSource implements FieldAwareSearchSource {
 
     private static final double FULL_TEXT_SCORE_PENALTY = 0.9;
+
+    /**
+     * Hard cap on the over-fetched Lucene hit count so a misconfigured multiplier (or a very
+     * large requested page) can't drag arbitrary amounts of work through Hibernate Search.
+     */
+    private static final int ACL_OVER_FETCH_HARD_CAP = 500;
 
     private static final String[] PLATFORM_FIELDS = { "shortName", "name", "description", "alternateNames.name", "externalReferences.accession" };
     private static final String[] PLATFORM_EXACT_FIELDS = { "shortName", "name", "alternateNames.name", "externalReferences.accession" };
@@ -187,6 +195,16 @@ public class HibernateSearchSource implements FieldAwareSearchSource {
     @Autowired
     private SidRetrievalStrategy sidRetrievalStrategy;
 
+    /**
+     * Multiplier applied to {@code maxResults} when over-fetching Lucene hits ahead of the
+     * ACL post-filter — see PERF_PROBE_SEARCH #4. Anonymous and admin requests still fetch
+     * exactly {@code maxResults} (the ACL post-filter is a no-op or near-no-op for them);
+     * other authenticated users (curators with selective project visibility) over-fetch so
+     * the response page can refill after {@link #filterByAcls} drops hits.
+     */
+    @Value("${gemma.search.acl.over_fetch_multiplier:2}")
+    private int aclOverFetchMultiplier;
+
     @Override
     public Set<String> getFields( Class<? extends Identifiable> resultType, SearchSettings.SearchMode searchMode ) {
         return searchMode == SearchSettings.SearchMode.EXACT
@@ -261,6 +279,13 @@ public class HibernateSearchSource implements FieldAwareSearchSource {
                     ? PROJECTABLE_FIELDS.getOrDefault( clazz, new String[0] )
                     : new String[0];
 
+            final int requestedMax = Math.max( settings.getMaxResults(), 1 );
+            final boolean aclPostFilter = Securable.class.isAssignableFrom( clazz )
+                    && aclPostFilterWillRun();
+            final int fetchSize = aclPostFilter
+                    ? Math.min( ACL_OVER_FETCH_HARD_CAP, requestedMax * Math.max( aclOverFetchMultiplier, 1 ) )
+                    : requestedMax;
+
             SearchResult<List<?>> hits = searchSession.search( clazz )
                     .select( f -> {
                         org.hibernate.search.engine.search.projection.SearchProjection<?>[] projections =
@@ -277,7 +302,7 @@ public class HibernateSearchSource implements FieldAwareSearchSource {
                             .matching( settings.getQuery() )
                             // tolerate Lucene-reserved characters; mirrors the pre-strip parseSafely behaviour.
                             .defaultOperator( org.hibernate.search.engine.search.common.BooleanOperator.OR ) )
-                    .fetch( Math.max( settings.getMaxResults(), 1 ) );
+                    .fetch( fetchSize );
 
             List<List<?>> rows = hits.hits();
             DoubleSummaryStatistics stats = rows.stream().mapToDouble( r -> ( Float ) r.get( 1 ) ).summaryStatistics();
@@ -315,7 +340,23 @@ public class HibernateSearchSource implements FieldAwareSearchSource {
 
             if ( Securable.class.isAssignableFrom( clazz ) ) {
                 //noinspection unchecked
-                return filterByAcls( results, ( Class<? extends Securable> ) clazz );
+                Collection<ubic.gemma.model.common.search.SearchResult<T>> filtered =
+                        filterByAcls( results, ( Class<? extends Securable> ) clazz );
+                // After the ACL post-filter, trim back to the originally requested page size.
+                // When over-fetching was active (aclPostFilter == true) and the ACL still
+                // dropped enough hits to fall under requestedMax, log it — a heavier ACL
+                // skew than the multiplier accounts for is the only way to leave the page
+                // short. We don't loop-and-retry; one over-fetch is the heuristic.
+                if ( filtered.size() > requestedMax ) {
+                    return filtered.stream().limit( requestedMax ).collect( Collectors.toList() );
+                }
+                if ( aclPostFilter && filtered.size() < requestedMax && hits.hits().size() >= fetchSize ) {
+                    log.debug( String.format(
+                            "ACL post-filter left %d results from %d Lucene hits for %s (requested %d); "
+                                    + "consider raising gemma.search.acl.over_fetch_multiplier.",
+                            filtered.size(), hits.hits().size(), clazz.getSimpleName(), requestedMax ) );
+                }
+                return filtered;
             }
             return results;
         } catch ( org.hibernate.search.util.common.SearchException e ) {
@@ -398,5 +439,25 @@ public class HibernateSearchSource implements FieldAwareSearchSource {
         return results.stream()
                 .filter( s -> filteredIds.contains( s.getResultId() ) )
                 .collect( Collectors.toList() );
+    }
+
+    /**
+     * @return {@code true} when the ACL post-filter applied by {@link #filterByAcls} can
+     * meaningfully drop hits for the current authentication. Anonymous traffic and admin
+     * traffic both bypass the per-row READ check at the AclService layer (anonymous hits
+     * the public-only fast path; admin always wins) so over-fetching to compensate for
+     * the post-filter is wasted work.
+     */
+    private boolean aclPostFilterWillRun() {
+        if ( SecurityContextHolder.getContext().getAuthentication() == null ) {
+            return false;
+        }
+        if ( SecurityUtil.isUserAnonymous() ) {
+            return false;
+        }
+        if ( SecurityUtil.isUserAdmin() || SecurityUtil.isRunningAsAdmin() ) {
+            return false;
+        }
+        return true;
     }
 }
