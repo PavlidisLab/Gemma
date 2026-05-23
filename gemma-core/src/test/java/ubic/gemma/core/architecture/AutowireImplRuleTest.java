@@ -102,6 +102,12 @@ public class AutowireImplRuleTest {
                 }
             };
 
+    /**
+     * Intentionally vacuous when no {@code @Autowired} Impl-typed fields exist
+     * — that is the goal state of the migration. {@code allowEmptyShould(true)}
+     * suppresses ArchUnit's default "rule matched no classes" failure so the
+     * guard keeps locking the codebase down without flagging the clean state.
+     */
     @ArchTest
     public static final ArchRule autowired_fields_must_not_be_impl_typed =
             noFields()
@@ -112,8 +118,14 @@ public class AutowireImplRuleTest {
                             + "JDK dynamic proxy (BeanNotOfRequiredTypeException) or causes aliasing "
                             + "bugs under CGLIB. Declare the field with the interface type instead. "
                             + "Targeted exceptions (e.g. @Lazy circular-DI bridges) must carry "
-                            + "@SuppressArchUnit(\"AutowireImpl\") with a Javadoc rationale." );
+                            + "@SuppressArchUnit(\"AutowireImpl\") with a Javadoc rationale." )
+                    .allowEmptyShould( true );
 
+    /**
+     * Intentionally vacuous when no constructor-injected Impl-typed parameters
+     * exist — that is the goal state. {@code allowEmptyShould(true)} suppresses
+     * ArchUnit's default "rule matched no classes" failure.
+     */
     @ArchTest
     public static final ArchRule constructor_parameters_must_not_be_impl_typed =
             noConstructors()
@@ -124,7 +136,8 @@ public class AutowireImplRuleTest {
                     .or().areDeclaredInClassesThat().areAnnotatedWith( "org.springframework.stereotype.Controller" )
                     .should().haveRawParameterTypes( anyParameterMatches( IMPL_TYPED ) )
                     .because( "Constructor-injected dependencies typed as Impl break when the source bean is "
-                            + "wrapped in an AOP proxy. Declare the parameter with the interface type." );
+                            + "wrapped in an AOP proxy. Declare the parameter with the interface type." )
+                    .allowEmptyShould( true );
 
     private static DescribedPredicate<List<JavaClass>> anyParameterMatches( DescribedPredicate<JavaClass> inner ) {
         return new DescribedPredicate<List<JavaClass>>( "any parameter " + inner.getDescription() ) {
