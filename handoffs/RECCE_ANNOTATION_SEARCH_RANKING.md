@@ -185,6 +185,72 @@ If "hippocampus" doesn't rank UBERON_0002421 above EMAPA_32845 (mouse-anatomy hi
 - `gemma-core/src/main/java/ubic/gemma/core/ontology/search/JenaTextOntologySearchService.java` — Lucene-text wrapper.
 - Empirical evidence: probe staging via `curl 'https://staging-gemma.msl.ubc.ca/rest/v2/annotations/search?query=ammon'`, query=`cornu+ammonis`, etc.
 
+### 7. Embedding-based reranking via CAB sidecar — agreed direction (Paul, 2026-05-23)
+
+Paul: "we also need to sort better, a lot better, so we don't have to return 200 results but more like 20. We can use a small embedding that the curation-agent knows about to help rank."
+
+Right architecture: **gemma-rest exposes `?rank=embedding` and internally calls CAB** for the rerank. CAB stays the model owner (Python land); gemma-rest stays the single client contract (Java land). Combined with the `?limit=20` cap below, every UI surface gets smart ranking for free without re-implementing it.
+
+#### Endpoint contract — gemma-rest ↔ CAB
+
+New CAB endpoint (lives in `gemma-curation-agents`, sketched at `handoffs/HANDOFF_CAB_EMBEDDING_RERANK_ENDPOINT.md`):
+
+```
+POST /rerank/annotations
+Content-Type: application/json
+
+{
+  "query": "chronic itch",
+  "hits": [
+    { "uri": "http://.../UBERON_0001954", "label": "ammon's horn", "definition": "...", "usage_count": 0 },
+    ... up to 200 hits ...
+  ]
+}
+→ 200
+{
+  "reranked": [
+    { "uri": "...", "score": 0.87 },
+    { "uri": "...", "score": 0.72 },
+    ...
+  ]
+}
+```
+
+gemma-rest side:
+- New `EmbeddingRankingStrategy implements AnnotationSearchRankingStrategy` (Java side, in the existing `ubic.gemma.rest.ranking` package).
+- Bean name `"embedding"`. Configurable CAB URL via `@Value("${gemma.curationAgent.url}")` defaulting to a sentinel that fails fast if unset.
+- HTTP client (Apache HttpClient or built-in `java.net.http.HttpClient`) with short timeout (~500ms).
+- Cache the response by `(query, hit-uri-set hash)` to absorb repeat queries.
+- **Fall back to `composite` ranking on CAB error** (timeout, 5xx, connection refused) — degradation must be graceful and observable (warn-log per fallback, Micrometer counter).
+
+#### THE CYCLE-PREVENTION RULE — non-negotiable
+
+**CAB's rerank handler must NOT make outbound HTTP calls.** Specifically: no `gemma_api.get(...)`, no fetching term parents from gemma-rest, no enriching anything from a network roundtrip. The handler is **pure**: input = the request body verbatim, output = derived ONLY from those inputs + the local in-process embedding model.
+
+Rationale: if CAB calls back into gemma-rest, we get `gemma-rest → CAB → gemma-rest → CAB → ...` cycles under load. Even one-deep recursion (CAB calls `/annotations/term?uri=X` for a focused hit) bloats latency and creates a deadlock window where gemma-rest is blocked on CAB which is blocked on gemma-rest.
+
+If CAB's reranker NEEDS richer term context (e.g. wants to embed the full definition, not just the label), **gemma-rest sends it in the request payload**. That's why the contract above includes `definition` and `usage_count` per hit, not just URI+label. If CAB later wants synonyms, `oboInOwl:hasExactSynonym` strings get sent in the payload too. Push the context to CAB; don't pull it from CAB.
+
+CAB side enforces by NOT importing `gemmapy` (or any other HTTP client) into the rerank module's call stack. Lint rule + a code-review check; failing those, an integration test that mocks the network as a connection-refused trap.
+
+#### Combined with the `?limit=20` cap
+
+Today the typeahead returns up to 200 hits. UX research says > 20 in a typeahead is overwhelming. New default: `?limit=20`, hard upper bound `50` (clients that need more can paginate, but typeahead use case caps).
+
+Pipeline becomes:
+1. Lucene/Jena Text search returns up to 200 candidate hits (existing).
+2. Rerank ALL 200 against the query via the chosen strategy (lucene/coverage/usage/composite/embedding).
+3. Truncate to `?limit` (default 20, cap 50).
+4. Enrich top-N (definition, parents, matchedVia) — only for the post-truncation set, so enrichment cost scales with `limit` not with candidate count.
+
+#### Sequence for the next ranker PR
+
+Don't bundle. Three separate ships:
+
+1. `?limit=20` cap + the truncation step in `getTerms`. No behavior change for non-typeahead consumers if they pass `?limit=200`.
+2. Per-hit attribution (`matchedVia`, `matchedText`) — section 6 of this recce.
+3. `EmbeddingRankingStrategy` + CAB sidecar endpoint. Each side's commit. UI rolls out `?rank=embedding` when ready.
+
 ### 6b. ORIGINAL (incorrect) framing kept for diff context only
 
 > "when the query is 'hippocampus' synonyms have to be returned like 'ammon's horn' which is actually what we use; then, if the ontology actually says that ammon's horn is a synonym of the query (per the ontology) that has to be surfaced."
