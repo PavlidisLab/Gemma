@@ -38,6 +38,7 @@ import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.search.SearchResult;
@@ -393,6 +394,12 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
     @Autowired
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
 
+    @Autowired
+    private UserManager userManager;
+
+    @Autowired
+    private TicketService ticketService;
+
     private ExpressionExperiment ee;
 
     @BeforeEach
@@ -405,11 +412,17 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
         when( expressionExperimentService.getEnhancedFilters( any(), any(), any(), anyLong(), any() ) ).thenAnswer( a -> a.getArgument( 0 ) );
         when( expressionExperimentService.getSort( any(), any(), any() ) ).thenAnswer( a -> Sort.by( null, a.getArgument( 0 ), a.getArgument( 1 ), a.getArgument( 2 ) ) );
+        // Curation-details PUT routes troubled/needsAttention flips through TicketService, which requires
+        // a non-null current user. @WithMockUser populates the SecurityContext but the UserManager mock
+        // returns null by default; stub a User so applyFlagViaTickets clears its "No authenticated user"
+        // guard.
+        User actor = mock( User.class );
+        when( userManager.getCurrentUser() ).thenReturn( actor );
     }
 
     @AfterEach
     public void resetMocks() {
-        reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService, taxonArgService, geneArgService, searchService, auditEventService, auditTrailService, securityService, geeqService, taskRunningService, differentialExpressionAnalysisService );
+        reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService, taxonArgService, geneArgService, searchService, auditEventService, auditTrailService, securityService, geeqService, taskRunningService, differentialExpressionAnalysisService, userManager, ticketService );
     }
 
     @Test
@@ -661,6 +674,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
     public void testGetDatasetProcessedExpression() throws IOException, URISyntaxException, InterruptedException, TimeoutException, FilteringException {
         // New async-build flow: endpoint probes the cache via getDataFile(filename, false, 5, SECONDS),
         // sendfile-s the path when it exists, otherwise streams in-band while the cache is being built.
+        ee.setShortName( "GSE1" );
         when( expressionExperimentService.hasProcessedExpressionData( eq( ee ) ) ).thenReturn( true );
         when( expressionDataFileService.getDataFile( anyString(), eq( false ), eq( 5L ), eq( TimeUnit.SECONDS ) ) )
                 .thenReturn( new DummyLockedPath( Paths.get( requireNonNull( getClass().getResource( "/data.txt.gz" ) ).toURI() ), true ) );
@@ -687,7 +701,9 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
 
     @Test
     public void testGetDatasetRawExpression() throws IOException, URISyntaxException, InterruptedException, TimeoutException {
+        ee.setShortName( "GSE1" );
         QuantitationType qt = QuantitationType.Factory.newInstance();
+        qt.setName( "raw" );
         when( expressionExperimentService.getPreferredQuantitationType( ee ) )
                 .thenReturn( Optional.of( qt ) );
         // New async-build flow: cache probe is via getDataFile(filename, false, 5, SECONDS).
@@ -720,8 +736,10 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
 
     @Test
     public void testGetDatasetRawExpressionByQuantitationType() throws IOException, URISyntaxException, InterruptedException, TimeoutException {
+        ee.setShortName( "GSE1" );
         QuantitationType qt = QuantitationType.Factory.newInstance();
         qt.setId( 12L );
+        qt.setName( "raw" );
         when( quantitationTypeService.load( 12L ) ).thenReturn( qt );
         when( quantitationTypeService.loadByIdAndVectorType( 12L, ee, RawExpressionDataVector.class ) ).thenReturn( qt );
 
@@ -1212,10 +1230,14 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
     @Test
     @WithMockUser(authorities = "GROUP_ADMIN")
     public void testUpdateDatasetCurationDetailsSetsTroubled() {
+        ee.setId( 1L );
         ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails cd =
                 new ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails();
         cd.setTroubled( false );
         ee.setCurationDetails( cd );
+        when( ticketService.findOpenForTarget(
+                ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType.EXPRESSION_EXPERIMENT, 1L ) )
+                .thenReturn( Collections.emptyList() );
 
         DatasetsWebService.CurationDetailsUpdateRequest body = new DatasetsWebService.CurationDetailsUpdateRequest();
         body.setTroubled( true );
@@ -1224,19 +1246,27 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         assertThat( target( "/datasets/1/curationDetails" ).request().put( jakarta.ws.rs.client.Entity.json( body ) ) )
                 .hasStatus( Response.Status.OK );
 
-        verify( auditTrailService ).addUpdateEvent( ee,
-                ubic.gemma.model.common.auditAndSecurity.eventType.TroubledStatusFlagEvent.class,
-                "data quality issue" );
-        verifyNoMoreInteractions( auditTrailService );
+        verify( ticketService ).openTicket( any( ubic.gemma.model.common.auditAndSecurity.User.class ),
+                eq( ubic.gemma.model.common.auditAndSecurity.curation.TicketType.QUALITY_REVIEW ),
+                eq( "data quality issue" ),
+                anyCollection() );
+        verifyNoInteractions( auditTrailService );
     }
 
     @Test
     @WithMockUser(authorities = "GROUP_ADMIN")
     public void testUpdateDatasetCurationDetailsClearsTroubled() {
+        ee.setId( 1L );
         ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails cd =
                 new ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails();
         cd.setTroubled( true );
         ee.setCurationDetails( cd );
+        ubic.gemma.model.common.auditAndSecurity.curation.Ticket open = mock( ubic.gemma.model.common.auditAndSecurity.curation.Ticket.class );
+        when( open.getType() ).thenReturn( ubic.gemma.model.common.auditAndSecurity.curation.TicketType.QUALITY_REVIEW );
+        when( open.getState() ).thenReturn( ubic.gemma.model.common.auditAndSecurity.curation.TicketState.OPEN );
+        when( ticketService.findOpenForTarget(
+                ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType.EXPRESSION_EXPERIMENT, 1L ) )
+                .thenReturn( Collections.singletonList( open ) );
 
         DatasetsWebService.CurationDetailsUpdateRequest body = new DatasetsWebService.CurationDetailsUpdateRequest();
         body.setTroubled( false );
@@ -1244,9 +1274,11 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         assertThat( target( "/datasets/1/curationDetails" ).request().put( jakarta.ws.rs.client.Entity.json( body ) ) )
                 .hasStatus( Response.Status.OK );
 
-        verify( auditTrailService ).addUpdateEvent( ee,
-                ubic.gemma.model.common.auditAndSecurity.eventType.NotTroubledStatusFlagEvent.class,
-                null );
+        verify( ticketService ).transition( eq( open ),
+                eq( ubic.gemma.model.common.auditAndSecurity.curation.TicketState.RESOLVED ),
+                any( ubic.gemma.model.common.auditAndSecurity.User.class ),
+                isNull() );
+        verifyNoInteractions( auditTrailService );
     }
 
     @Test
@@ -1269,10 +1301,14 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
     @Test
     @WithMockUser(authorities = "GROUP_ADMIN")
     public void testUpdateDatasetCurationDetailsSetsNeedsAttention() {
+        ee.setId( 1L );
         ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails cd =
                 new ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails();
         cd.setNeedsAttention( false );
         ee.setCurationDetails( cd );
+        when( ticketService.findOpenForTarget(
+                ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType.EXPRESSION_EXPERIMENT, 1L ) )
+                .thenReturn( Collections.emptyList() );
 
         DatasetsWebService.CurationDetailsUpdateRequest body = new DatasetsWebService.CurationDetailsUpdateRequest();
         body.setNeedsAttention( true );
@@ -1281,18 +1317,27 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         assertThat( target( "/datasets/1/curationDetails" ).request().put( jakarta.ws.rs.client.Entity.json( body ) ) )
                 .hasStatus( Response.Status.OK );
 
-        verify( auditTrailService ).addUpdateEvent( ee,
-                ubic.gemma.model.common.auditAndSecurity.eventType.NeedsAttentionEvent.class,
-                "needs review" );
+        verify( ticketService ).openTicket( any( ubic.gemma.model.common.auditAndSecurity.User.class ),
+                eq( ubic.gemma.model.common.auditAndSecurity.curation.TicketType.GENERIC ),
+                eq( "needs review" ),
+                anyCollection() );
+        verifyNoInteractions( auditTrailService );
     }
 
     @Test
     @WithMockUser(authorities = "GROUP_ADMIN")
     public void testUpdateDatasetCurationDetailsClearsNeedsAttention() {
+        ee.setId( 1L );
         ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails cd =
                 new ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails();
         cd.setNeedsAttention( true );
         ee.setCurationDetails( cd );
+        ubic.gemma.model.common.auditAndSecurity.curation.Ticket open = mock( ubic.gemma.model.common.auditAndSecurity.curation.Ticket.class );
+        when( open.getType() ).thenReturn( ubic.gemma.model.common.auditAndSecurity.curation.TicketType.GENERIC );
+        when( open.getState() ).thenReturn( ubic.gemma.model.common.auditAndSecurity.curation.TicketState.OPEN );
+        when( ticketService.findOpenForTarget(
+                ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType.EXPRESSION_EXPERIMENT, 1L ) )
+                .thenReturn( Collections.singletonList( open ) );
 
         DatasetsWebService.CurationDetailsUpdateRequest body = new DatasetsWebService.CurationDetailsUpdateRequest();
         body.setNeedsAttention( false );
@@ -1300,9 +1345,11 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         assertThat( target( "/datasets/1/curationDetails" ).request().put( jakarta.ws.rs.client.Entity.json( body ) ) )
                 .hasStatus( Response.Status.OK );
 
-        verify( auditTrailService ).addUpdateEvent( ee,
-                ubic.gemma.model.common.auditAndSecurity.eventType.DoesNotNeedAttentionEvent.class,
-                null );
+        verify( ticketService ).transition( eq( open ),
+                eq( ubic.gemma.model.common.auditAndSecurity.curation.TicketState.RESOLVED ),
+                any( ubic.gemma.model.common.auditAndSecurity.User.class ),
+                isNull() );
+        verifyNoInteractions( auditTrailService );
     }
 
     @Test
@@ -1326,11 +1373,15 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
     @Test
     @WithMockUser(authorities = "GROUP_ADMIN")
     public void testUpdateDatasetCurationDetailsAppliesMultipleChanges() {
+        ee.setId( 1L );
         ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails cd =
                 new ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails();
         cd.setTroubled( false );
         cd.setNeedsAttention( false );
         ee.setCurationDetails( cd );
+        when( ticketService.findOpenForTarget(
+                ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType.EXPRESSION_EXPERIMENT, 1L ) )
+                .thenReturn( Collections.emptyList() );
 
         DatasetsWebService.CurationDetailsUpdateRequest body = new DatasetsWebService.CurationDetailsUpdateRequest();
         body.setTroubled( true );
@@ -1341,10 +1392,16 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         assertThat( target( "/datasets/1/curationDetails" ).request().put( jakarta.ws.rs.client.Entity.json( body ) ) )
                 .hasStatus( Response.Status.OK );
 
-        verify( auditTrailService ).addUpdateEvent( ee,
-                ubic.gemma.model.common.auditAndSecurity.eventType.TroubledStatusFlagEvent.class, "bad batch" );
-        verify( auditTrailService ).addUpdateEvent( ee,
-                ubic.gemma.model.common.auditAndSecurity.eventType.NeedsAttentionEvent.class, "bad batch" );
+        // troubled=true -> QUALITY_REVIEW ticket, needsAttention=true -> GENERIC ticket
+        verify( ticketService ).openTicket( any( ubic.gemma.model.common.auditAndSecurity.User.class ),
+                eq( ubic.gemma.model.common.auditAndSecurity.curation.TicketType.QUALITY_REVIEW ),
+                eq( "bad batch" ),
+                anyCollection() );
+        verify( ticketService ).openTicket( any( ubic.gemma.model.common.auditAndSecurity.User.class ),
+                eq( ubic.gemma.model.common.auditAndSecurity.curation.TicketType.GENERIC ),
+                eq( "bad batch" ),
+                anyCollection() );
+        // curationNote still flows through legacy auditTrailService event path
         verify( auditTrailService ).addUpdateEvent( ee,
                 ubic.gemma.model.common.auditAndSecurity.eventType.CurationNoteUpdateEvent.class, "flagged" );
         verifyNoMoreInteractions( auditTrailService );
@@ -1482,16 +1539,16 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
                 .entity()
-                .hasFieldOrPropertyWithValue( "data.experimentId", 1 )
+                .hasFieldOrPropertyWithValue( "data.dataset_id", 1 )
                 .extracting( "data.steps", list( Map.class ) )
                 .isNotEmpty()
                 .satisfies( steps -> {
-                    org.assertj.core.api.Assertions.assertThat( findStep( steps, "preprocess" ).get( "state" ) ).isEqualTo( "notRun" );
-                    org.assertj.core.api.Assertions.assertThat( findStep( steps, "missingValue" ).get( "state" ) ).isEqualTo( "notApplicable" );
-                    org.assertj.core.api.Assertions.assertThat( findStep( steps, "batchInfo" ).get( "state" ) ).isEqualTo( "notRun" );
-                    org.assertj.core.api.Assertions.assertThat( findStep( steps, "pca" ).get( "state" ) ).isEqualTo( "notRun" );
-                    org.assertj.core.api.Assertions.assertThat( findStep( steps, "dea" ).get( "state" ) ).isEqualTo( "notRun" );
-                    org.assertj.core.api.Assertions.assertThat( findStep( steps, "coexpression" ).get( "state" ) ).isEqualTo( "notRun" );
+                    org.assertj.core.api.Assertions.assertThat( findStep( steps, "preprocess" ).get( "status" ) ).isEqualTo( "notRun" );
+                    org.assertj.core.api.Assertions.assertThat( findStep( steps, "missingValue" ).get( "status" ) ).isEqualTo( "notApplicable" );
+                    org.assertj.core.api.Assertions.assertThat( findStep( steps, "batchInfo" ).get( "status" ) ).isEqualTo( "notRun" );
+                    org.assertj.core.api.Assertions.assertThat( findStep( steps, "pca" ).get( "status" ) ).isEqualTo( "notRun" );
+                    org.assertj.core.api.Assertions.assertThat( findStep( steps, "dea" ).get( "status" ) ).isEqualTo( "notRun" );
+                    org.assertj.core.api.Assertions.assertThat( findStep( steps, "coexpression" ).get( "status" ) ).isEqualTo( "notRun" );
                 } );
     }
 
@@ -1505,7 +1562,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
                 .entity()
                 .extracting( "data.steps", list( Map.class ) )
                 .satisfies( steps -> {
-                    org.assertj.core.api.Assertions.assertThat( findStep( steps, "missingValue" ).get( "state" ) ).isEqualTo( "notRun" );
+                    org.assertj.core.api.Assertions.assertThat( findStep( steps, "missingValue" ).get( "status" ) ).isEqualTo( "notRun" );
                 } );
     }
 
@@ -1515,9 +1572,8 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         mockPipelineFixture( ubic.gemma.model.expression.arrayDesign.TechnologyType.ONECOLOR );
         AuditEvent event = AuditEvent.Factory.newInstance( new Date( 1_700_000_000_000L ), AuditAction.UPDATE, "ok", null, null,
                 new ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent() );
-        when( auditEventService.getLastEvent( eq( ee ),
-                eq( ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent.class ) ) )
-                .thenReturn( event );
+        stubLastEvents( Collections.singletonMap(
+                ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent.class, event ) );
 
         assertThat( target( "/datasets/1/pipelineStatus" ).request().get() )
                 .hasStatus( Response.Status.OK )
@@ -1525,8 +1581,8 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
                 .extracting( "data.steps", list( Map.class ) )
                 .satisfies( steps -> {
                     Map<String, Object> pp = findStep( steps, "preprocess" );
-                    org.assertj.core.api.Assertions.assertThat( pp.get( "state" ) ).isEqualTo( "ok" );
-                    org.assertj.core.api.Assertions.assertThat( pp.get( "eventType" ) ).isEqualTo( "ProcessedVectorComputationEvent" );
+                    org.assertj.core.api.Assertions.assertThat( pp.get( "status" ) ).isEqualTo( "ok" );
+                    org.assertj.core.api.Assertions.assertThat( pp.get( "event_type" ) ).isEqualTo( "ProcessedVectorComputationEvent" );
                 } );
     }
 
@@ -1536,9 +1592,8 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         mockPipelineFixture( ubic.gemma.model.expression.arrayDesign.TechnologyType.ONECOLOR );
         AuditEvent failed = AuditEvent.Factory.newInstance( new Date( 1_700_000_000_000L ), AuditAction.UPDATE, "boom", null, null,
                 new ubic.gemma.model.common.auditAndSecurity.eventType.FailedPCAAnalysisEvent() );
-        when( auditEventService.getLastEvent( eq( ee ),
-                eq( ubic.gemma.model.common.auditAndSecurity.eventType.FailedPCAAnalysisEvent.class ) ) )
-                .thenReturn( failed );
+        stubLastEvents( Collections.singletonMap(
+                ubic.gemma.model.common.auditAndSecurity.eventType.FailedPCAAnalysisEvent.class, failed ) );
 
         assertThat( target( "/datasets/1/pipelineStatus" ).request().get() )
                 .hasStatus( Response.Status.OK )
@@ -1546,9 +1601,9 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
                 .extracting( "data.steps", list( Map.class ) )
                 .satisfies( steps -> {
                     Map<String, Object> pca = findStep( steps, "pca" );
-                    org.assertj.core.api.Assertions.assertThat( pca.get( "state" ) ).isEqualTo( "failed" );
-                    org.assertj.core.api.Assertions.assertThat( pca.get( "eventType" ) ).isEqualTo( "FailedPCAAnalysisEvent" );
-                    org.assertj.core.api.Assertions.assertThat( pca.get( "message" ) ).isEqualTo( "boom" );
+                    org.assertj.core.api.Assertions.assertThat( pca.get( "status" ) ).isEqualTo( "failed" );
+                    org.assertj.core.api.Assertions.assertThat( pca.get( "event_type" ) ).isEqualTo( "FailedPCAAnalysisEvent" );
+                    org.assertj.core.api.Assertions.assertThat( pca.get( "details" ) ).isEqualTo( "boom" );
                 } );
     }
 
@@ -1561,20 +1616,32 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
                 new ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent() );
         AuditEvent newFailure = AuditEvent.Factory.newInstance( new Date( 2_000_000_000_000L ), AuditAction.UPDATE, "retry-failed", null, null,
                 new ubic.gemma.model.common.auditAndSecurity.eventType.FailedPCAAnalysisEvent() );
-        when( auditEventService.getLastEvent( eq( ee ),
-                eq( ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent.class ) ) )
-                .thenReturn( oldSuccess );
-        when( auditEventService.getLastEvent( eq( ee ),
-                eq( ubic.gemma.model.common.auditAndSecurity.eventType.FailedPCAAnalysisEvent.class ) ) )
-                .thenReturn( newFailure );
+        Map<Class<? extends ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType>, AuditEvent> latest = new LinkedHashMap<>();
+        latest.put( ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent.class, oldSuccess );
+        latest.put( ubic.gemma.model.common.auditAndSecurity.eventType.FailedPCAAnalysisEvent.class, newFailure );
+        stubLastEvents( latest );
 
         assertThat( target( "/datasets/1/pipelineStatus" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .entity()
                 .extracting( "data.steps", list( Map.class ) )
                 .satisfies( steps -> {
-                    org.assertj.core.api.Assertions.assertThat( findStep( steps, "pca" ).get( "state" ) ).isEqualTo( "failed" );
+                    org.assertj.core.api.Assertions.assertThat( findStep( steps, "pca" ).get( "status" ) ).isEqualTo( "failed" );
                 } );
+    }
+
+    /**
+     * Production batches all per-step lookups through {@link AuditEventService#getLastEvents(java.util.Collection, java.util.Set)}.
+     * The returned map shape is {@code Class<? extends AuditEventType> -> ee -> AuditEvent}; an empty inner
+     * map yields {@code notRun}.
+     */
+    private void stubLastEvents( Map<Class<? extends ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType>, AuditEvent> eventsByType ) {
+        Map<Class<? extends ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType>, Map<ExpressionExperiment, AuditEvent>> result = new LinkedHashMap<>();
+        for ( Map.Entry<Class<? extends ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType>, AuditEvent> e : eventsByType.entrySet() ) {
+            result.put( e.getKey(), Collections.singletonMap( ee, e.getValue() ) );
+        }
+        when( auditEventService.getLastEvents( eq( Collections.singleton( ee ) ), anySet() ) )
+                .thenReturn( result );
     }
 
     @Test
@@ -1588,9 +1655,9 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         assertThat( target( "/datasets/1/pipelineStatus" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .entity()
-                .hasFieldOrPropertyWithValue( "data.hasBatchInformation", true )
-                .hasFieldOrPropertyWithValue( "data.needsAttention", true )
-                .hasFieldOrPropertyWithValue( "data.isPublic", true );
+                .hasFieldOrPropertyWithValue( "data.has_batch_information", true )
+                .hasFieldOrPropertyWithValue( "data.needs_attention", true )
+                .hasFieldOrPropertyWithValue( "data.is_public", true );
     }
 
     @Test
@@ -1602,7 +1669,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         assertThat( target( "/datasets/1/pipelineStatus" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .entity()
-                .hasFieldOrPropertyWithValue( "data.curationNote", "admin only" );
+                .hasFieldOrPropertyWithValue( "data.curation_note", "admin only" );
     }
 
     @Test
@@ -1614,7 +1681,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         assertThat( target( "/datasets/1/pipelineStatus" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .entity()
-                .hasFieldOrPropertyWithValue( "data.curationNote", null );
+                .hasFieldOrPropertyWithValue( "data.curation_note", null );
     }
 
     @Test
