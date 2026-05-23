@@ -81,6 +81,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchCorrectionEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.CurationNoteUpdateEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.DatasetShortNameChangedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedDifferentialExpressionAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedLinkAnalysisEvent;
@@ -1428,6 +1429,117 @@ public class DatasetsWebService {
             auditTrailService.addUpdateEvent( ee, CurationNoteUpdateEvent.class, body.getCurationNote() );
         }
         return respond( new CurationDetailsValueObject( ee.getCurationDetails() ) );
+    }
+
+    /**
+     * Request body for {@link #renameDatasetShortName}.
+     */
+    public static class RenameDatasetRequest {
+        @com.fasterxml.jackson.annotation.JsonProperty("short_name")
+        @Nullable
+        private String shortName;
+
+        @Nullable
+        public String getShortName() {
+            return shortName;
+        }
+
+        public void setShortName( @Nullable String shortName ) {
+            this.shortName = shortName;
+        }
+    }
+
+    /**
+     * Response body for {@link #renameDatasetShortName}.
+     */
+    public static class RenameDatasetResponse {
+        @com.fasterxml.jackson.annotation.JsonProperty("experiment_id")
+        private final Long experimentId;
+        @com.fasterxml.jackson.annotation.JsonProperty("short_name")
+        private final String shortName;
+
+        public RenameDatasetResponse( Long experimentId, String shortName ) {
+            this.experimentId = experimentId;
+            this.shortName = shortName;
+        }
+
+        public Long getExperimentId() {
+            return experimentId;
+        }
+
+        public String getShortName() {
+            return shortName;
+        }
+    }
+
+    /**
+     * Whitespace + character whitelist. Permitted: letters, digits, dot, underscore, hyphen.
+     * Matches the values present in the existing INVESTIGATION.SHORT_NAME column
+     * (e.g. {@code GSE12345.1}, {@code E-MTAB-2025}, {@code Lopes_2026}).
+     */
+    private static final java.util.regex.Pattern SHORT_NAME_ALLOWED =
+            java.util.regex.Pattern.compile( "[A-Za-z0-9._-]+" );
+
+    /**
+     * Cap matches the DB column (VARCHAR(255) on INVESTIGATION.SHORT_NAME).
+     */
+    private static final int SHORT_NAME_MAX_LENGTH = 255;
+
+    @PUT
+    @Path("/{dataset}/short-name")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Rename the short_name of a dataset",
+            description = "Updates the curator-facing short_name identifier on an ExpressionExperiment. "
+                    + "Returns 400 on blank/too-long/illegal-character names, 404 on unknown dataset, "
+                    + "409 when the requested short_name is already in use (DB unique constraint).",
+            security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "400", description = "Invalid short_name (blank, too long, or contains forbidden characters).",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "409", description = "The requested short_name is already in use.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<RenameDatasetResponse> renameDatasetShortName(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Nullable RenameDatasetRequest body
+    ) {
+        if ( body == null || body.getShortName() == null ) {
+            throw new BadRequestException( "A request body with 'short_name' is required." );
+        }
+        String trimmed = body.getShortName().trim();
+        if ( trimmed.isEmpty() ) {
+            throw new BadRequestException( "short_name must not be blank." );
+        }
+        if ( trimmed.length() > SHORT_NAME_MAX_LENGTH ) {
+            throw new BadRequestException( "short_name exceeds " + SHORT_NAME_MAX_LENGTH + " characters." );
+        }
+        if ( !SHORT_NAME_ALLOWED.matcher( trimmed ).matches() ) {
+            throw new BadRequestException( "short_name may only contain letters, digits, '.', '_', and '-'." );
+        }
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        String previous = ee.getShortName();
+        if ( trimmed.equals( previous ) ) {
+            // No-op: idempotent rename to the same value. Skip mutation + audit; return success.
+            return respond( new RenameDatasetResponse( ee.getId(), ee.getShortName() ) );
+        }
+        // Uniqueness is enforced by the UNIQUE KEY on INVESTIGATION.SHORT_NAME; the explicit
+        // existsByShortName check turns that into a 409 instead of a 500 on DataIntegrityViolation.
+        if ( expressionExperimentService.existsByShortName( trimmed ) ) {
+            throw new jakarta.ws.rs.ClientErrorException(
+                    "short_name '" + trimmed + "' is already in use.",
+                    jakarta.ws.rs.core.Response.Status.CONFLICT );
+        }
+        ee.setShortName( trimmed );
+        expressionExperimentService.update( ee );
+        //noinspection deprecation
+        auditTrailService.addUpdateEvent( ee, DatasetShortNameChangedEvent.class,
+                "Renamed short_name: '" + previous + "' -> '" + trimmed + "'" );
+        return respond( new RenameDatasetResponse( ee.getId(), ee.getShortName() ) );
     }
 
     /**
