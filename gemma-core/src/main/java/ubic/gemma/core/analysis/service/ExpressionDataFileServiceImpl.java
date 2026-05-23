@@ -257,6 +257,12 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
+    public boolean deleteDifferentialExpressionResultSetTsvFile( Long resultSetId ) {
+        // Mirrors the filename produced by writeOrLocateDifferentialExpressionResultSetTsvFile.
+        return deleteAndLog( dataDir.resolve( "resultSets/resultSet_" + resultSetId + ".tsv" ) );
+    }
+
+    @Override
     public boolean deleteCoexpressionDataFile( ExpressionExperiment ee ) {
         return deleteAndLog( dataDir.resolve( getCoexpressionDataFilename( ee ) ) );
     }

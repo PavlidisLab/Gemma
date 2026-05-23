@@ -413,14 +413,15 @@ public interface ExpressionDataFileService {
     LockedPath writeOrLocateJSONRawExpressionDataFile( ExpressionExperiment ee, QuantitationType type, boolean forceWrite ) throws IOException;
 
     /**
-     * Locate or create a cached gzipped TSV for a single differential-expression result set.
+     * Locate or create a cached TSV for a single differential-expression result set.
      * <p>
      * Result sets are immutable post-creation, so the on-disk cache is effectively permanent.
      * <p>
      * On a cache hit, returns the existing path with a shared lock (no DB hit). On a cache miss, materializes
      * the result set + contrasts + factor values + result-to-genes map via
      * {@code ExpressionAnalysisResultSetService}, writes the TSV via {@code ExpressionAnalysisResultSetFileService},
-     * gzips it under {@code <dataDir>/resultSets/resultSet_<id>.tsv.gz}, and returns the locked path.
+     * stores it uncompressed under {@code <dataDir>/resultSets/resultSet_<id>.tsv}, and returns the locked path.
+     * The {@code /resultSets/{id}} REST endpoint re-compresses on the fly through its existing {@code @GZIP} encoder.
      *
      * @param resultSetId  the result-set ID to materialize
      * @param forceWrite   ignore any existing cached file
@@ -434,6 +435,17 @@ public interface ExpressionDataFileService {
      * @see #writeOrLocateDifferentialExpressionResultSetTsvFile(Long, boolean)
      */
     Future<Path> writeOrLocateDifferentialExpressionResultSetTsvFileAsync( Long resultSetId, boolean forceWrite ) throws RejectedExecutionException;
+
+    /**
+     * Delete the cached TSV (if any) for a single differential-expression result set.
+     * <p>
+     * Intended to be called by the DEA-deletion path so the per-result-set TSV cache does not outlive the
+     * underlying entity. Idempotent; returns {@code true} only when a cached file was actually removed.
+     *
+     * @param resultSetId the result-set ID whose cached TSV should be deleted
+     * @return {@code true} if a cached file was deleted, {@code false} if none existed
+     */
+    boolean deleteDifferentialExpressionResultSetTsvFile( Long resultSetId );
 
     /**
      * Locate or create the differential expression archive file(s) for a given experiment.
