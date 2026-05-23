@@ -291,7 +291,7 @@ and the ~25 manually-managed app caches.
 |---|---|---|---|
 | 1 | **Done in this audit:** remove dead `MeterRegistryEhcacheConfigurer` bean from XML so the `metrics` profile starts. | applied | — |
 | 2 | ~~Replace the `ConcurrentMapCacheManager` stub in `EhcacheConfig.java` with a `JCacheCacheManager` sharing the same `javax.cache.CacheManager` Hibernate uses.~~ **DONE** (commits `6b17850441`, `536e95cda7`, `a6bac875f8`) — `JCacheCacheManager` now wraps the Ehcache 3 provider; ~13 application caches + ~80 Hibernate L2 regions are programmatically declared with bounded heap + TTL via `CacheConfigurationBuilder`. | done | — |
-| 3 | After #2, restore cache metrics via `JCacheMetrics.monitor(...)` (see code sketch in §3.3). | medium | 0.5d (trivial once #2 done) |
+| 3 | ~~After #2, restore cache metrics via `JCacheMetrics.monitor(...)`.~~ **DONE** — `MetricsConfig.meterRegistryJCacheConfigurer` wires `MeterRegistryJCacheConfigurer` against the JSR-107 manager. | done | — |
 | 4 | ~~Migrate `ehcache.xml` to Ehcache 3 schema (or replace with programmatic config) and delete the v2-format file.~~ **DONE** — v2 file deleted (`71bcc9ee51`); programmatic Ehcache 3 config now lives in `EhcacheConfig.java` (see #2). | done | — |
 | 5 | Remove the no-op AOP wiring chatter: three XML files declare `<aop:aspectj-autoproxy/>`. After XML→Java migration, consolidate into one `@EnableAspectJAutoProxy` on a central `@Configuration`. | low | 0.25d |
 | 6 | Keep AspectJ 1.9.25.1 — already current and JDK-21 ready. No action. | none | — |
