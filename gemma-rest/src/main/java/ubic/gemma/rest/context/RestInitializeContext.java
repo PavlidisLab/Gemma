@@ -13,8 +13,8 @@ import static ubic.gemma.core.context.SpringContextUtils.prepareContext;
  * Responsibilities reduced to what the standalone {@code gemma-rest.war} actually needs:
  * <ul>
  *     <li>Activate the {@code web} Spring profile so beans gated on {@code @Profile("web")} (notably
- *     {@link ubic.gemma.rest.analytics.ga4.AnalyticsConfig} and the {@code <beans profile="web">}
- *     wrapper in {@code applicationContext-analytics.xml}) become active. The profile name is kept
+ *     {@link ubic.gemma.rest.analytics.ga4.AnalyticsConfig}, registered via
+ *     {@code applicationContext-analytics.xml}) become active. The profile name is kept
  *     as {@code web} rather than introducing a fresh {@code rest} profile so existing
  *     {@code @Profile("web")} call sites in gemma-rest do not need re-gating.</li>
  *     <li>Delegate to {@link ubic.gemma.core.context.SpringContextUtils#prepareContext} for the
