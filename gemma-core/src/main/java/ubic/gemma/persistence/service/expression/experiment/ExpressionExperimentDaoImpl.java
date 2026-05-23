@@ -5015,11 +5015,24 @@ public class ExpressionExperimentDaoImpl
 
     private void removeQts( ExpressionExperiment ee, Collection<QuantitationType> qts ) {
         // remove QTs
+        Session session = getSessionFactory().getCurrentSession();
         for ( QuantitationType qt : qts ) {
             if ( !ee.getQuantitationTypes().remove( qt ) ) {
                 log.warn( qt + " was not attached to " + ee + ", but was associated to at least one of its vectors, it will be removed." );
             }
-            getSessionFactory().getCurrentSession().delete( qt );
+            // qt may be a detached instance handed in by a caller that resolved it
+            // outside this session (e.g. ExpressionExperimentDataVectorServiceImpl.
+            // replaceAllRawDataVectors iterates the detached EE's existing QTs and
+            // forwards them straight through to removeRawDataVectors → removeQts).
+            // If the session has already loaded a managed copy with the same id —
+            // which happens whenever an earlier call in the same tx initialised
+            // ee.quantitationTypes or ee.rawExpressionDataVectors → quantitationType
+            // for that id — session.delete(detached) hits StatefulPersistenceContext
+            // .checkUniqueness and throws NonUniqueObjectException. Resolve to the
+            // managed instance (if any) before deleting; otherwise delete the
+            // detached one (which session.delete reattaches via Cascade.merge).
+            QuantitationType managedQt = session.get( QuantitationType.class, qt.getId() );
+            session.delete( managedQt != null ? managedQt : qt );
         }
     }
 
