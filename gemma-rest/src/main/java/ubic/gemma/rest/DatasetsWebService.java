@@ -4056,6 +4056,13 @@ public class DatasetsWebService {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         if ( quantitationTypeArg != null ) {
             QuantitationType qt = quantitationTypeArgService.getEntity( quantitationTypeArg, ee, RawExpressionDataVector.class );
+            // Empty-EE guard: writeDesignMatrix throws IllegalStateException (→ 500) when the EE has
+            // no ExperimentalDesign or no factors. The plain-TSV branch below produces 404 in that
+            // shape via writeOrLocateDesignFile.Optional.empty(); mirror that here so a half-imported
+            // / direct-upload EE returns 404 rather than 500.
+            if ( ee.getExperimentalDesign() == null || ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
+                throw new NotFoundException( ee.getShortName() + " does not have an experimental design." );
+            }
             String filename = getDesignFileName( ee, qt );
             return Response.ok( ( StreamingOutput ) stream -> {
                         try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( stream ), StandardCharsets.UTF_8 ) ) {
