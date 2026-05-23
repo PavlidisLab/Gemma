@@ -928,11 +928,8 @@ public class AnnotationsWebService {
         }
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
 
-        // Compute the diff against the current set up-front so the response can carry the
-        // before/after counts and the lists of added/removed VOs. The actual mutations are then
-        // applied per-row through expressionExperimentService so each call fires its own
-        // @Audited aspect (one TagAddedEvent / TagRemovedEvent per row).
-        Set<AnnotationValueObject> currentVOs = expressionExperimentService.getAnnotations( ee );
+        // The mutations are applied per-row through expressionExperimentService so each call fires
+        // its own @Audited aspect (one TagAddedEvent / TagRemovedEvent per row).
         // Re-read current characteristics directly off the EE for identity-based removal.
         Collection<Characteristic> currentChars = new ArrayList<>( ee.getCharacteristics() );
         List<Characteristic> toAdd = new ArrayList<>();
