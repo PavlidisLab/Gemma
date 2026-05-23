@@ -54,13 +54,21 @@ public class RawAndProcessedExpressionDataVectorDaoImpl extends AbstractDesignEl
         // so the AbstractDao.findByProperty Criteria query against it fails on Hibernate 6's stricter
         // JPA Metamodel ("Not an entity: BulkExpressionDataVector"). Issue two HQL queries against the
         // real concrete entities and merge.
+        // bioAssayDimension/quantitationType are lazy=proxy in the hbm (c646639fa9, 1520096ae2);
+        // left join fetch both so downstream thaw()/findAndThaw consumers don't hit N+1 proxy init.
         Collection<BulkExpressionDataVector> result = new ArrayList<>();
         result.addAll( this.getSessionFactory().getCurrentSession()
-                .createQuery( "from RawExpressionDataVector v where v.quantitationType = :qt", RawExpressionDataVector.class )
+                .createQuery( "select v from RawExpressionDataVector v "
+                        + "left join fetch v.bioAssayDimension "
+                        + "left join fetch v.quantitationType "
+                        + "where v.quantitationType = :qt", RawExpressionDataVector.class )
                 .setParameter( "qt", quantitationType )
                 .list() );
         result.addAll( this.getSessionFactory().getCurrentSession()
-                .createQuery( "from ProcessedExpressionDataVector v where v.quantitationType = :qt", ProcessedExpressionDataVector.class )
+                .createQuery( "select v from ProcessedExpressionDataVector v "
+                        + "left join fetch v.bioAssayDimension "
+                        + "left join fetch v.quantitationType "
+                        + "where v.quantitationType = :qt", ProcessedExpressionDataVector.class )
                 .setParameter( "qt", quantitationType )
                 .list() );
         return result;
@@ -69,16 +77,24 @@ public class RawAndProcessedExpressionDataVectorDaoImpl extends AbstractDesignEl
     @Override
     public Collection<BulkExpressionDataVector> find( Collection<QuantitationType> quantitationTypes ) {
         // Same rationale as the single-QT overload: BulkExpressionDataVector is not a JPA entity.
+        // bioAssayDimension/quantitationType are lazy=proxy in the hbm (c646639fa9, 1520096ae2);
+        // left join fetch both so downstream thaw()/findAndThaw consumers don't hit N+1 proxy init.
         if ( quantitationTypes.isEmpty() ) {
             return new ArrayList<>();
         }
         Collection<BulkExpressionDataVector> result = new ArrayList<>();
         result.addAll( this.getSessionFactory().getCurrentSession()
-                .createQuery( "from RawExpressionDataVector v where v.quantitationType in :qts", RawExpressionDataVector.class )
+                .createQuery( "select v from RawExpressionDataVector v "
+                        + "left join fetch v.bioAssayDimension "
+                        + "left join fetch v.quantitationType "
+                        + "where v.quantitationType in :qts", RawExpressionDataVector.class )
                 .setParameter( "qts", quantitationTypes )
                 .list() );
         result.addAll( this.getSessionFactory().getCurrentSession()
-                .createQuery( "from ProcessedExpressionDataVector v where v.quantitationType in :qts", ProcessedExpressionDataVector.class )
+                .createQuery( "select v from ProcessedExpressionDataVector v "
+                        + "left join fetch v.bioAssayDimension "
+                        + "left join fetch v.quantitationType "
+                        + "where v.quantitationType in :qts", ProcessedExpressionDataVector.class )
                 .setParameter( "qts", quantitationTypes )
                 .list() );
         return result;
@@ -89,13 +105,21 @@ public class RawAndProcessedExpressionDataVectorDaoImpl extends AbstractDesignEl
         // BulkExpressionDataVector is not a JPA entity (the inheritance is plain Java, not <subclass/>),
         // so the AbstractDao.findByProperty Criteria query against it fails on Hibernate 6's stricter
         // JPA Metamodel. Issue two HQL queries against the real entities and merge.
+        // bioAssayDimension/quantitationType are lazy=proxy in the hbm (c646639fa9, 1520096ae2);
+        // left join fetch both so downstream thaw()/findAndThaw consumers don't hit N+1 proxy init.
         Collection<BulkExpressionDataVector> result = new ArrayList<>();
         result.addAll( this.getSessionFactory().getCurrentSession()
-                .createQuery( "from RawExpressionDataVector v where v.expressionExperiment = :ee", RawExpressionDataVector.class )
+                .createQuery( "select v from RawExpressionDataVector v "
+                        + "left join fetch v.bioAssayDimension "
+                        + "left join fetch v.quantitationType "
+                        + "where v.expressionExperiment = :ee", RawExpressionDataVector.class )
                 .setParameter( "ee", ee )
                 .list() );
         result.addAll( this.getSessionFactory().getCurrentSession()
-                .createQuery( "from ProcessedExpressionDataVector v where v.expressionExperiment = :ee", ProcessedExpressionDataVector.class )
+                .createQuery( "select v from ProcessedExpressionDataVector v "
+                        + "left join fetch v.bioAssayDimension "
+                        + "left join fetch v.quantitationType "
+                        + "where v.expressionExperiment = :ee", ProcessedExpressionDataVector.class )
                 .setParameter( "ee", ee )
                 .list() );
         return result;
