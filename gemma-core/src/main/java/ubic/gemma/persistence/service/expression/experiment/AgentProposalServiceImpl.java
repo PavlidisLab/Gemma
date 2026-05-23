@@ -158,4 +158,18 @@ public class AgentProposalServiceImpl implements AgentProposalService {
         Assert.notNull( to, "to must not be null." );
         return agentProposalDao.rebindInvestigation( from, to );
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AgentCurationSummaryValueObject> listSummaries( @Nullable AgentCurationKind kindFilter,
+            @Nullable List<Long> investigationIds, int offset, int limit ) {
+        return agentProposalDao.listSummaries( kindFilter, investigationIds, offset, limit );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countSummaries( @Nullable AgentCurationKind kindFilter,
+            @Nullable List<Long> investigationIds ) {
+        return agentProposalDao.countSummaries( kindFilter, investigationIds );
+    }
 }

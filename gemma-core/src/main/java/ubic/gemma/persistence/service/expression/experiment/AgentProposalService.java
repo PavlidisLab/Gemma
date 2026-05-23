@@ -118,6 +118,31 @@ public interface AgentProposalService {
     int rebindInvestigation( Investigation from, Investigation to );
 
     /**
+     * Cross-experiment thin metadata listing — newest first, paginated.
+     * Backs the curation-UI's cross-experiment inbox endpoints
+     * ({@code GET /curation-proposals} + {@code GET /audits}). ACL is the
+     * caller's responsibility (REST {@code @PreAuthorize}).
+     *
+     * @param kindFilter        optional kind filter; {@code null} = all
+     *                          kinds.
+     * @param investigationIds  optional restriction to a set of investigation
+     *                          ids; {@code null} or empty = no extra filter.
+     * @param offset            zero-based starting offset.
+     * @param limit             max rows.
+     */
+    List<AgentCurationSummaryValueObject> listSummaries( @Nullable AgentCurationKind kindFilter,
+            @Nullable List<Long> investigationIds, int offset, int limit );
+
+    /**
+     * Count of rows that would be returned by
+     * {@link #listSummaries(AgentCurationKind, List, int, int)} with no
+     * pagination — used to populate {@code totalElements} on the
+     * paginated response.
+     */
+    long countSummaries( @Nullable AgentCurationKind kindFilter,
+            @Nullable List<Long> investigationIds );
+
+    /**
      * Return value of {@link #attach(Investigation, String, String, String, Date, String)}.
      * Carries the persisted proposal plus a flag noting whether the row was
      * created (true) or returned as-existing (false) — the REST layer uses

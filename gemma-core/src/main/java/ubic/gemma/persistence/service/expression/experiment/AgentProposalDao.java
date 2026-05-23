@@ -78,4 +78,31 @@ public interface AgentProposalDao extends BaseDao<AgentProposal> {
      * the EE rather than stay on the preboarded.
      */
     int rebindInvestigation( Investigation from, Investigation to );
+
+    /**
+     * Cross-experiment thin metadata projection: every {@link AgentProposal}
+     * matching the supplied filter, newest first, sliced by
+     * {@code offset / limit}.
+     *
+     * @param kindFilter        optional kind filter; {@code null} means "all
+     *                          kinds".
+     * @param investigationIds  optional restriction to a set of investigation
+     *                          ids; {@code null} or empty means "all
+     *                          investigations the caller can see" (no
+     *                          additional filter — ACL is enforced upstream
+     *                          via @PreAuthorize on the REST handler).
+     * @param offset            zero-based starting offset.
+     * @param limit             max rows to return.
+     */
+    List<AgentCurationSummaryValueObject> listSummaries( @Nullable AgentCurationKind kindFilter,
+            @Nullable List<Long> investigationIds, int offset, int limit );
+
+    /**
+     * Cross-experiment count: number of {@link AgentProposal} rows that match
+     * the supplied filter. The counterpart of
+     * {@link #listSummaries(AgentCurationKind, List, int, int)} — used to
+     * populate {@code totalElements} on a paginated response.
+     */
+    long countSummaries( @Nullable AgentCurationKind kindFilter,
+            @Nullable List<Long> investigationIds );
 }

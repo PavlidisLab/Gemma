@@ -109,4 +109,49 @@ public class AgentProposalDaoImpl extends AbstractDao<AgentProposal>
                 .setParameter( "to", to )
                 .executeUpdate();
     }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public List<AgentCurationSummaryValueObject> listSummaries( @Nullable AgentCurationKind kindFilter,
+            @Nullable List<Long> investigationIds, int offset, int limit ) {
+        boolean restrictByInv = investigationIds != null && !investigationIds.isEmpty();
+        StringBuilder hql = new StringBuilder()
+                .append( "select new ubic.gemma.model.expression.experiment.AgentCurationSummaryValueObject(" )
+                .append( " p.id, p.kind, p.runId, p.agentVersion, p.model, p.ranAt, p.investigation.id," )
+                .append( " cast(length(p.payloadJson) as long) )" )
+                .append( " from AgentProposal p" )
+                .append( " where ( :kind is null or p.kind = :kind )" );
+        if ( restrictByInv ) {
+            hql.append( " and p.investigation.id in (:invIds)" );
+        }
+        hql.append( " order by p.ranAt desc, p.id desc" );
+        org.hibernate.query.Query<?> q = getSessionFactory().getCurrentSession()
+                .createQuery( hql.toString() )
+                .setParameter( "kind", kindFilter )
+                .setFirstResult( Math.max( 0, offset ) )
+                .setMaxResults( Math.max( 1, limit ) );
+        if ( restrictByInv ) {
+            q.setParameterList( "invIds", investigationIds );
+        }
+        return ( List<AgentCurationSummaryValueObject> ) q.list();
+    }
+
+    @Override
+    public long countSummaries( @Nullable AgentCurationKind kindFilter,
+            @Nullable List<Long> investigationIds ) {
+        boolean restrictByInv = investigationIds != null && !investigationIds.isEmpty();
+        StringBuilder hql = new StringBuilder( "select count(p) from AgentProposal p" )
+                .append( " where ( :kind is null or p.kind = :kind )" );
+        if ( restrictByInv ) {
+            hql.append( " and p.investigation.id in (:invIds)" );
+        }
+        org.hibernate.query.Query<?> q = getSessionFactory().getCurrentSession()
+                .createQuery( hql.toString() )
+                .setParameter( "kind", kindFilter );
+        if ( restrictByInv ) {
+            q.setParameterList( "invIds", investigationIds );
+        }
+        Long n = ( Long ) q.uniqueResult();
+        return n == null ? 0L : n;
+    }
 }
