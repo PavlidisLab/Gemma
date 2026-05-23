@@ -2,6 +2,7 @@ package ubic.gemma.persistence.util;
 
 import ubic.gemma.core.security.util.SecurityUtil;
 import org.apache.commons.lang3.StringUtils;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.Query;
 import org.hibernate.QueryParameterException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -10,6 +11,8 @@ import org.springframework.security.acls.model.Permission;
 import org.springframework.util.Assert;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
+
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Utilities for integrating ACL into {@link Query}.
@@ -74,8 +77,21 @@ public class AclQueryUtils {
      */
     private static final String PARAM_PREFIX = "aclQueryUtils_";
     private static final String
-            AOI_TYPE_PARAM = PARAM_PREFIX + "aoiType";
+            AOI_TYPE_PARAM = PARAM_PREFIX + "aoiType",
+    // HQL-only: the resolved acl_class.id, used in place of the formula-backed
+    // `aoi.type = :aoiType` so MySQL doesn't emit a correlated subquery per
+    // outer row. See the formAclRestrictionClause comment + the recce in
+    // handoffs/STATUS_PERF_DATASETS_COUNT_RECCE.md.
+            AOI_CLASS_ID_PARAM = PARAM_PREFIX + "aoiClassId";
     static final String USER_NAME_PARAM = PARAM_PREFIX + "userName";
+
+    /**
+     * Cache of {@code acl_class.id} keyed by {@link Class#getCanonicalName()}.
+     * Stable across JVM lifetime (acl_class rows are insert-once on first
+     * Securable registration). Lookup is via a one-shot native query the first
+     * time a given class name is bound.
+     */
+    private static final ConcurrentHashMap<String, Long> ACL_CLASS_ID_CACHE = new ConcurrentHashMap<>();
 
     /**
      * Select all the SIDs that belong to a given user (specified by a :userName parameter).
@@ -164,8 +180,15 @@ public class AclQueryUtils {
         }
 
         // Build the EXISTS body: select 1 from AclObjectIdentity aoi [join sid] [left join aoi.entries ace]
-        //   where aoi.identifier = <aoiIdCol> and aoi.type = :aoiType
+        //   where aoi.identifier = <aoiIdCol> and aoi.objectIdClass = :aoiClassId
         //         and (<acl predicates>)
+        //
+        // Filtering on aoi.objectIdClass (the mapped BIGINT column) instead of
+        // aoi.type (a formula property that resolves to a correlated subquery on
+        // acl_class) lets MySQL fold the AOI class lookup to a const. With
+        // aoi.type the planner re-ran acl_class per outer row and the
+        // /datasets/count query never finished against prod cardinalities
+        // (handoffs/STATUS_PERF_DATASETS_COUNT_RECCE.md).
         //language=HQL
         StringBuilder exists = new StringBuilder( 256 );
         exists.append( "exists (select 1 from AclObjectIdentity " ).append( AOI_ALIAS )
@@ -176,7 +199,7 @@ public class AclQueryUtils {
             // joining keeps the shape consistent with the authenticated branch.
             exists.append( " join " ).append( AOI_ALIAS ).append( ".entries " ).append( ACE_ALIAS )
                     .append( " where " ).append( AOI_ALIAS ).append( ".identifier = " ).append( aoiIdColumn )
-                    .append( " and " ).append( AOI_ALIAS ).append( ".type = :" ).append( AOI_TYPE_PARAM )
+                    .append( " and " ).append( AOI_ALIAS ).append( ".objectIdClass = :" ).append( AOI_CLASS_ID_PARAM )
                     .append( " and bitand(" ).append( ACE_ALIAS ).append( ".mask, " ).append( permission.getMask() )
                     .append( ") <> 0 and " ).append( ACE_ALIAS ).append( ".sid in (" ).append( ANONYMOUS_SID_HQL ).append( "))" );
         } else {
@@ -185,7 +208,7 @@ public class AclQueryUtils {
             // explicitly with two EXISTS variants OR'd together.
             exists.append( " left join " ).append( AOI_ALIAS ).append( ".entries " ).append( ACE_ALIAS )
                     .append( " where " ).append( AOI_ALIAS ).append( ".identifier = " ).append( aoiIdColumn )
-                    .append( " and " ).append( AOI_ALIAS ).append( ".type = :" ).append( AOI_TYPE_PARAM )
+                    .append( " and " ).append( AOI_ALIAS ).append( ".objectIdClass = :" ).append( AOI_CLASS_ID_PARAM )
                     .append( " and (" )
                     // user owns the object
                     .append( SID_ALIAS ).append( ".principal = :" ).append( USER_NAME_PARAM ).append( " " )
@@ -324,11 +347,49 @@ public class AclQueryUtils {
             // the where clause and no parameters are bound.
             return;
         }
-        query.setParameter( AOI_TYPE_PARAM, aoiType.getCanonicalName() );
+        // HQL formAclRestrictionClause uses :aoiClassId (the resolved acl_class.id);
+        // native formNativeAclRestrictionClause + loadAclInfoFor use :aoiType (the string).
+        // Each call site exposes exactly one of the two parameter names, so bind both
+        // conditionally rather than requiring the caller to know which form it built.
+        String className = aoiType.getCanonicalName();
+        setParameterIfPresent( query, AOI_TYPE_PARAM, className );
+        if ( hasNamedParameter( query, AOI_CLASS_ID_PARAM ) ) {
+            query.setParameter( AOI_CLASS_ID_PARAM, resolveAclClassId( query, className ) );
+        }
         if ( SecurityUtil.isUserAnonymous() ) {
             // a constant is used directly in ANONYMOUS_SID_HQL/ANONYMOUS_SID_SQL, so no binding is necessary
         } else {
             query.setParameter( USER_NAME_PARAM, SecurityUtil.getCurrentUsername() );
         }
+    }
+
+    private static boolean hasNamedParameter( Query query, String name ) {
+        return query.getParameterMetadata().getNamedParameterNames().contains( name );
+    }
+
+    private static void setParameterIfPresent( Query query, String name, Object value ) {
+        if ( hasNamedParameter( query, name ) ) {
+            query.setParameter( name, value );
+        }
+    }
+
+    /**
+     * Resolve {@code acl_class.id} for a Securable class name, caching the result for
+     * the JVM lifetime. The acl_class table is insert-once on first registration of
+     * each Securable subclass, so the id is stable.
+     */
+    private static Long resolveAclClassId( Query query, String className ) {
+        Long cached = ACL_CLASS_ID_CACHE.get( className );
+        if ( cached != null ) {
+            return cached;
+        }
+        SharedSessionContractImplementor session = query.unwrap( SharedSessionContractImplementor.class );
+        Number id = (Number) session.createNativeQuery(
+                        "select id from acl_class where class = :c", Number.class )
+                .setParameter( "c", className )
+                .getSingleResult();
+        Long resolved = id.longValue();
+        ACL_CLASS_ID_CACHE.put( className, resolved );
+        return resolved;
     }
 }
