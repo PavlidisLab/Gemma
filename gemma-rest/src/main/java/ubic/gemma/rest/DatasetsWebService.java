@@ -4462,7 +4462,16 @@ public class DatasetsWebService {
     @GET
     @Path("/{datasets}/expressions/differential")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the expression levels of a set of datasets subject to a threshold on their differential expressions")
+    @Operation(summary = "Retrieve the expression levels of a set of datasets subject to a threshold on their differential expressions",
+            description = "Each entry under data[].geneExpressionLevels[] also carries gene-level "
+                    + "metadata (officialName, ensemblId) and contrast statistics for the chosen "
+                    + "result set: correctedPvalue and pvalue come from the per-row "
+                    + "DifferentialExpressionAnalysisResult that the endpoint ranks by (ordered by "
+                    + "correctedPvalue ascending, nulls last), and log2FoldChange is taken from the "
+                    + "single contrast on that row — or, for multi-contrast result sets, from the "
+                    + "contrast with the smallest uncorrected p-value on that row. When a gene maps "
+                    + "to several probes, the most-significant probe row is used. All five fields are "
+                    + "nullable and are additive — existing fields are unchanged.")
     public ResponseDataObject<List<ExperimentExpressionLevelsValueObject>> getDatasetsDifferentialExpression( // Params:
             @PathParam("datasets") DatasetArrayArg datasets, // Required
             @QueryParam("diffExSet") Long diffExSet, // Required
