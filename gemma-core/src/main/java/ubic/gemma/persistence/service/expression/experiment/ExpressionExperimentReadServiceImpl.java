@@ -699,16 +699,14 @@ public class ExpressionExperimentReadServiceImpl implements ExpressionExperiment
         // (one collection-init per FV's characteristics). Measurement is mapped fetch="join"
         // on FactorValue itself so it loads alongside the FV row. See FactorValue.hbm.xml.
         factorValueDao.loadByExperimentalDesignWithCharacteristics( ed );
-        for ( ExperimentalFactor ef : ed.getExperimentalFactors() ) {
-            Hibernate.initialize( ef.getFactorValues() );
-        }
+        // EF.factorValues is lazy=false (ExperimentalFactor.hbm.xml), and the FV walk above
+        // already populates L1 — the per-EF Hibernate.initialize loop here was a no-op.
         Hibernate.initialize( ee.getBioAssays() );
-        for ( BioAssay ba : ee.getBioAssays() ) {
-            BioMaterial bm = ba.getSampleUsed();
-            if ( bm != null ) {
-                Thaws.thawBioMaterial( bm );
-            }
-        }
+        // Batched thaw of every BioMaterial in the source chain of every assay's sampleUsed
+        // (sourceTaxon / treatments / factorValues.experimentalFactor), collapsing the
+        // per-BA O(N&times;chainDepth) Hibernate.initialize fan-out into a constant number of
+        // queries. Mirrors the /samples fix in commit 352118e781.
+        bioMaterialDao.thawBioMaterialsForBioAssays( ee.getBioAssays() );
         return new ExperimentalDesignValueObject( ed, ee.getBioAssays() );
     }
 
