@@ -139,6 +139,18 @@ public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<Dif
     void thaw( ExpressionAnalysisResultSet ears );
 
     /**
+     * Batch counterpart to {@link #thaw(ExpressionAnalysisResultSet)} for a whole page of result sets.
+     * <p>
+     * Initializes the same set of lazy associations as the single-element form (analysis,
+     * {@code analysis.experimentAnalyzed}, {@code analysis.subsetFactorValue} (+EF),
+     * {@code experimentalFactors}, {@code baselineGroup} (+EF)) but issues a small fixed
+     * number of queries across the whole collection instead of 5-7 sequential
+     * {@code Hibernate.initialize} round-trips per row. Idempotent and safe to call with an
+     * empty or {@code null} collection (no-op).
+     */
+    void thawAll( Collection<ExpressionAnalysisResultSet> ears );
+
+    /**
      * Count the number of results in a given result set.
      */
     long countResults( ExpressionAnalysisResultSet ears );
