@@ -67,4 +67,11 @@ public interface ExpressionAnalysisResultSetService extends AnalysisResultSetSer
 
     @Nullable
     Histogram loadPvalueDistribution( ExpressionAnalysisResultSet resulSet );
+
+    /**
+     * Bin the raw or corrected p-values for a result set into a uniform histogram over {@code [0, 1]}.
+     *
+     * @see ExpressionAnalysisResultSetDao#binPvalues(Long, String, int)
+     */
+    long[] binPvalues( Long resultSetId, String column, int numberOfBins );
 }

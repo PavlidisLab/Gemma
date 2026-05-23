@@ -561,6 +561,50 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
     }
 
     @Override
+    public long[] binPvalues( Long resultSetId, String column, int numberOfBins ) {
+        Assert.notNull( resultSetId, "resultSetId must not be null." );
+        Assert.isTrue( numberOfBins >= 1, "numberOfBins must be >= 1." );
+        final String physicalColumn;
+        switch ( column ) {
+            case "raw":
+                physicalColumn = "PVALUE";
+                break;
+            case "corrected":
+                physicalColumn = "CORRECTED_PVALUE";
+                break;
+            default:
+                throw new IllegalArgumentException( "column must be 'raw' or 'corrected', got: " + column );
+        }
+        // Clamp pvalue == 1.0 into the last bin so FLOOR(1.0 * bins) == bins doesn't overflow.
+        // LEAST(FLOOR(p * :bins), :bins - 1) keeps every non-null row inside [0, bins-1].
+        @SuppressWarnings("unchecked")
+        List<Object[]> rows = getSessionFactory().getCurrentSession()
+                .createNativeQuery( "select LEAST(FLOOR(dear." + physicalColumn + " * :bins), :bins - 1) as BIN, COUNT(*) as N " +
+                        "from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear " +
+                        "where dear.RESULT_SET_FK = :rs and dear." + physicalColumn + " is not null " +
+                        "group by BIN" )
+                .addScalar( "BIN", StandardBasicTypes.LONG )
+                .addScalar( "N", StandardBasicTypes.LONG )
+                .setParameter( "rs", resultSetId )
+                .setParameter( "bins", numberOfBins )
+                .list();
+        long[] counts = new long[numberOfBins];
+        for ( Object[] row : rows ) {
+            int bin = ( ( Long ) row[0] ).intValue();
+            long n = ( Long ) row[1];
+            // Defensive bounds check — clamp anything outside [0, numberOfBins-1] (covers negative
+            // p-values from corrupted upstream data, which the LEAST() above doesn't catch).
+            if ( bin < 0 ) {
+                bin = 0;
+            } else if ( bin >= numberOfBins ) {
+                bin = numberOfBins - 1;
+            }
+            counts[bin] += n;
+        }
+        return counts;
+    }
+
+    @Override
     public Histogram loadPvalueDistribution( ExpressionAnalysisResultSet resultSet ) {
         PvalueDistribution pvd = ( PvalueDistribution ) this.getSessionFactory().getCurrentSession()
                 .createQuery( "select rs.pvalueDistribution from ExpressionAnalysisResultSet rs where rs=:rs " )
