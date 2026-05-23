@@ -175,13 +175,6 @@ public class OpenApiTest extends BaseTest5 implements InitializingBean {
             for ( Map.Entry<PathItem.HttpMethod, Operation> opEntry : pathItem.readOperationsMap().entrySet() ) {
                 PathItem.HttpMethod method = opEntry.getKey();
                 Operation operation = opEntry.getValue();
-                // TODO(annotations): remove this exemption once AnnotationsWebService.removeDatasetAnnotation
-                // drops the `content = @Content()` block from its 204 ApiResponse. Filed in
-                // handoffs/OPENAPI_SPEC_DRIFT_RESIDUAL.md — the annotation-ranker worktree owns that file.
-                if ( method == PathItem.HttpMethod.DELETE
-                        && "/annotations/datasets/{dataset}/annotations/{annotationId}".equals( path ) ) {
-                    continue;
-                }
                 assertions.assertThat( operation.getResponses() )
                         .describedAs( "%s %s (%s)", method, path, operation.getOperationId() )
                         .hasKeySatisfying( new Condition<>( entry -> entry.equals( "200" )

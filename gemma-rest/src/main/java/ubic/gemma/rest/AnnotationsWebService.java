@@ -1045,7 +1045,7 @@ public class AnnotationsWebService {
                     + "Requires GROUP_CURATOR or GROUP_ADMIN.",
             security = { @SecurityRequirement(name = "basicAuth"), @SecurityRequirement(name = "cookieAuth") },
             responses = {
-                    @ApiResponse(responseCode = "204", description = "Annotation removed.", content = @Content()),
+                    @ApiResponse(responseCode = "204", description = "Annotation removed."),
                     @ApiResponse(responseCode = "403", description = "The caller lacks curator privileges.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "404", description = "The dataset or annotation does not exist on this dataset.",
