@@ -37,9 +37,11 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetService;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 
 import java.util.ArrayList;
@@ -80,6 +82,8 @@ public class DatasetVisualizationWebServiceTest {
     private SVDService svdService;
     @Mock
     private ExpressionExperimentService expressionExperimentService;
+    @Mock
+    private ExpressionExperimentSubSetService expressionExperimentSubSetService;
 
     @InjectMocks
     private HeatmapDataService heatmapDataService;
@@ -251,7 +255,7 @@ public class DatasetVisualizationWebServiceTest {
         when( geneService.loadThawedLiter( any( Collection.class ) ) ).thenReturn( Collections.singletonList( brca1 ) );
 
         HeatmapDataValueObject payload = heatmapDataService.buildHeatmapData(
-                ee, Arrays.asList( 672L ), null, null, 0.01, null, 20, 20, "json" );
+                ee, Arrays.asList( 672L ), null, null, 0.01, null, 20, 20, "json", null );
 
         assertThat( payload.getDatasetId() ).isEqualTo( 12345L );
         assertThat( payload.getDatasetShortName() ).isEqualTo( "GSE6789" );
@@ -317,7 +321,7 @@ public class DatasetVisualizationWebServiceTest {
                 .thenReturn( vectors );
 
         HeatmapDataValueObject payload = heatmapDataService.buildHeatmapData(
-                ee, null, Arrays.asList( 101L, 102L ), null, 0.01, null, 20, 20, "json" );
+                ee, null, Arrays.asList( 101L, 102L ), null, 0.01, null, 20, 20, "json", null );
 
         assertThat( payload.getMatrix().getRowsCount() ).isEqualTo( 2 );
         assertThat( payload.getMatrix().getColsCount() ).isEqualTo( 4 );
@@ -331,7 +335,7 @@ public class DatasetVisualizationWebServiceTest {
                         buildVector( probe1, new double[] { 1.0, 2.0, 3.0, 4.0 }, Collections.emptyList(), null ) ) );
 
         HeatmapDataValueObject payload = heatmapDataService.buildHeatmapData(
-                ee, null, null, null, 0.01, null, 20, 20, "json" );
+                ee, null, null, null, 0.01, null, 20, 20, "json", null );
 
         assertThat( payload.getMatrix().getRowsCount() ).isEqualTo( 1 );
     }
@@ -344,7 +348,7 @@ public class DatasetVisualizationWebServiceTest {
                         buildVector( probe1, row, Collections.emptyList(), null ) ) );
 
         HeatmapDataValueObject payload = heatmapDataService.buildHeatmapData(
-                ee, null, null, null, 0.01, null, 20, 20, "base64f32" );
+                ee, null, null, null, 0.01, null, 20, 20, "base64f32", null );
 
         assertThat( payload.getMatrix().getEncoding() ).isEqualTo( "base64f32" );
         assertThat( payload.getMatrix().getValues() ).isInstanceOf( String.class );
@@ -369,7 +373,7 @@ public class DatasetVisualizationWebServiceTest {
         when( geneService.loadThawedLiter( any( Collection.class ) ) ).thenReturn( Collections.singletonList( brca1 ) );
 
         HeatmapDataValueObject payload = heatmapDataService.buildHeatmapData(
-                ee, Arrays.asList( 672L ), null, null, 0.01, null, 20, 20, "json" );
+                ee, Arrays.asList( 672L ), null, null, 0.01, null, 20, 20, "json", null );
 
         assertThat( payload.getFactors() ).hasSize( 2 );
         for ( HeatmapDataValueObject.FactorEntry fe : payload.getFactors() ) {
@@ -391,5 +395,58 @@ public class DatasetVisualizationWebServiceTest {
                 .filter( fe -> factorId.equals( fe.getFactor().getId() ) )
                 .findFirst()
                 .orElse( null );
+    }
+
+    @Test
+    public void testHeatmapSubSet_columnsAndMatrixFilteredToSubsetBioAssays() {
+        // Subset contains BAs 8001 and 8003 (samples i=1 and i=3 → columns 1 and 3 of the full dim).
+        ExpressionExperimentSubSet subSet = new ExpressionExperimentSubSet();
+        subSet.setId( 555L );
+        subSet.setSourceExperiment( ee );
+        Set<BioAssay> subBas = new HashSet<>();
+        subBas.add( bioAssays.get( 1 ) );
+        subBas.add( bioAssays.get( 3 ) );
+        subSet.setBioAssays( subBas );
+        when( expressionExperimentSubSetService.loadWithBioAssays( 555L ) ).thenReturn( subSet );
+
+        Collection<DoubleVectorValueObject> vectors = Arrays.asList(
+                buildVector( probe1, new double[] { 1.0, 2.0, 3.0, 4.0 }, Collections.emptyList(), null ),
+                buildVector( probe2, new double[] { 5.0, 6.0, 7.0, 8.0 }, Collections.emptyList(), null ) );
+        when( processedExpressionDataVectorService.getProcessedDataArrays( any( ExpressionExperiment.class ), any( Collection.class ) ) )
+                .thenReturn( vectors );
+
+        HeatmapDataValueObject payload = heatmapDataService.buildHeatmapData(
+                ee, Arrays.asList( 672L ), null, null, 0.01, null, 20, 20, "json", 555L );
+
+        // Column axis shrank to 2 entries — the BAs that belong to the subset.
+        assertThat( payload.getMatrix().getColsCount() ).isEqualTo( 2 );
+        assertThat( payload.getMatrix().getRowsCount() ).isEqualTo( 2 );
+        assertThat( payload.getColumns() ).hasSize( 2 );
+        assertThat( payload.getColumns().get( 0 ).getBioAssayId() ).isEqualTo( 8001L );
+        assertThat( payload.getColumns().get( 1 ).getBioAssayId() ).isEqualTo( 8003L );
+
+        // Matrix cells project the kept source-column indices (1 and 3) into output positions 0 and 1.
+        double[][] mat = ( double[][] ) payload.getMatrix().getValues();
+        assertThat( mat[0] ).containsExactly( 2.0, 4.0 );
+        assertThat( mat[1] ).containsExactly( 6.0, 8.0 );
+    }
+
+    @Test
+    public void testHeatmapSubSet_rejectsForeignSubset() {
+        ExpressionExperiment otherEe = ExpressionExperiment.Factory.newInstance();
+        otherEe.setId( 99999L );
+        ExpressionExperimentSubSet subSet = new ExpressionExperimentSubSet();
+        subSet.setId( 777L );
+        subSet.setSourceExperiment( otherEe );
+        subSet.setBioAssays( new HashSet<>( bioAssays ) );
+        when( expressionExperimentSubSetService.loadWithBioAssays( 777L ) ).thenReturn( subSet );
+
+        try {
+            heatmapDataService.buildHeatmapData(
+                    ee, null, null, null, 0.01, null, 20, 20, "json", 777L );
+            assertThat( false ).as( "expected IllegalArgumentException" ).isTrue();
+        } catch ( IllegalArgumentException expected ) {
+            assertThat( expected.getMessage() ).contains( "does not belong to dataset" );
+        }
     }
 }

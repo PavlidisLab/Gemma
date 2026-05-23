@@ -26,6 +26,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
@@ -33,6 +34,7 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetService;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 
 import java.nio.ByteBuffer;
@@ -76,6 +78,9 @@ public class HeatmapDataService {
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
+    @Autowired
+    private ExpressionExperimentSubSetService expressionExperimentSubSetService;
+
     /**
      * Build a heatmap payload for {@code ee} given a vector-selection mode. Caller has already
      * resolved {@code ee} via ACL. Exactly one of {@code geneIds}, {@code probeIds},
@@ -91,6 +96,9 @@ public class HeatmapDataService {
      * @param pcaCount     how many probes per PCA component (default 20)
      * @param sampleSize   fallback random-N size when no other mode applies (default 20, max 150)
      * @param encoding     {@code "json"} (default) or {@code "base64f32"} for the matrix encoding
+     * @param subSetId     optional {@link ExpressionExperimentSubSet} id; when non-null, the response
+     *                     is restricted to that subset's sample columns. The subset must belong to
+     *                     {@code ee}; otherwise {@link IllegalArgumentException} is raised.
      */
     @Transactional(readOnly = true)
     public HeatmapDataValueObject buildHeatmapData(
@@ -102,7 +110,30 @@ public class HeatmapDataService {
             @Nullable Integer pcaComponent,
             int pcaCount,
             int sampleSize,
-            String encoding ) {
+            String encoding,
+            @Nullable Long subSetId ) {
+        // Resolve the subset (ACL-gated) up front and verify it belongs to this EE; null when no
+        // subset was requested.
+        ExpressionExperimentSubSet subSet = null;
+        Set<Long> subSetBaIds = null;
+        if ( subSetId != null ) {
+            subSet = expressionExperimentSubSetService.loadWithBioAssays( subSetId );
+            if ( subSet == null ) {
+                throw new IllegalArgumentException( "ExpressionExperimentSubSet " + subSetId + " not found." );
+            }
+            ExpressionExperiment src = subSet.getSourceExperiment();
+            if ( src == null || src.getId() == null || !src.getId().equals( ee.getId() ) ) {
+                throw new IllegalArgumentException(
+                        "ExpressionExperimentSubSet " + subSetId + " does not belong to dataset " + ee.getId() + "." );
+            }
+            subSetBaIds = new HashSet<>();
+            for ( ubic.gemma.model.expression.bioAssay.BioAssay ba : subSet.getBioAssays() ) {
+                if ( ba.getId() != null ) {
+                    subSetBaIds.add( ba.getId() );
+                }
+            }
+        }
+
         Collection<DoubleVectorValueObject> vectors = resolveVectors(
                 ee, geneIds, probeIds, resultSetId, threshold, pcaComponent, pcaCount, sampleSize );
 
@@ -125,7 +156,30 @@ public class HeatmapDataService {
 
         // All vectors share the same BioAssayDimension; key off the first.
         DoubleVectorValueObject head = vectors.iterator().next();
-        List<BioAssayValueObject> bioAssays = head.getBioAssays();
+        List<BioAssayValueObject> fullBioAssays = head.getBioAssays();
+
+        // When a subset is requested, project the column axis down to the subset's bioAssays only.
+        // keptIdx[i] holds the source column index in the full dimension for kept column i.
+        int[] keptIdx;
+        List<BioAssayValueObject> bioAssays;
+        if ( subSetBaIds != null ) {
+            List<BioAssayValueObject> kept = new ArrayList<>( subSetBaIds.size() );
+            int[] tmpIdx = new int[fullBioAssays.size()];
+            int k = 0;
+            for ( int i = 0; i < fullBioAssays.size(); i++ ) {
+                BioAssayValueObject ba = fullBioAssays.get( i );
+                if ( ba.getId() != null && subSetBaIds.contains( ba.getId() ) ) {
+                    kept.add( ba );
+                    tmpIdx[k++] = i;
+                }
+            }
+            bioAssays = kept;
+            keptIdx = java.util.Arrays.copyOf( tmpIdx, k );
+        } else {
+            bioAssays = fullBioAssays;
+            keptIdx = null;
+        }
+
         int rowsCount = vectors.size();
         int colsCount = bioAssays.size();
 
@@ -134,10 +188,17 @@ public class HeatmapDataService {
         int r = 0;
         for ( DoubleVectorValueObject v : vectors ) {
             double[] src = v.getData();
-            // Defensive: vectors should match dimension; pad with NaN if not (shouldn't happen here).
-            if ( src.length == colsCount ) {
+            if ( keptIdx != null ) {
+                // Subset path: pull only the kept source indices into the output row.
+                int srcLen = src.length;
+                for ( int j = 0; j < colsCount; j++ ) {
+                    int srcIdx = keptIdx[j];
+                    raw[r][j] = srcIdx < srcLen ? src[srcIdx] : Double.NaN;
+                }
+            } else if ( src.length == colsCount ) {
                 System.arraycopy( src, 0, raw[r], 0, colsCount );
             } else {
+                // Defensive: vectors should match dimension; pad with NaN if not (shouldn't happen here).
                 java.util.Arrays.fill( raw[r], Double.NaN );
                 int n = Math.min( src.length, colsCount );
                 System.arraycopy( src, 0, raw[r], 0, n );
