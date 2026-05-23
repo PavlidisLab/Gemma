@@ -1,5 +1,18 @@
 # Failsafe Residual Triage
 
+> **Status as of 2026-05-22 (post-session)**: `mvn verify` on phase2-acl-migrate
+> reports **376 tests, 1 F + 1 E, 9 skipped**. The remaining surface is:
+> - `ExpressionExperimentServiceIntegrationTest.testStreamExperiments` (F, deferred — order-dependent state issue)
+> - `GeneSearchTest.testSearchGenes` (E) — **fixed in commit `0cbd57fd91`** post-verify; will pass on next run.
+>
+> Buckets B, C, D, E, F, H#3 (DEA testCreate), H AclAdviceTest, H thaw,
+> H GiRotation, H GeneSearchTest all resolved on this branch. Remaining
+> open: Bucket A (deep HB6 merge cascade, 17 errors) and Bucket G (HB6
+> lock mode) — both deferred per per-bucket notes.
+>
+> The "Bucket H — Single-line drift" list below is mostly historical;
+> all but the deferred-by-brief items now pass.
+
 After the test-side drift fix pass (commits `e1cd7cef1d`..`5b38aa131d`),
 this branch addressed ~25-30 of the original 87 failsafe failures. The
 list below is what remains, bucketed by likely root cause and with a
