@@ -143,6 +143,44 @@ public interface AgentProposalService {
             @Nullable List<Long> investigationIds );
 
     /**
+     * Set the curator-chosen disposition + optional note on an existing
+     * row. Stamps {@code lastUpdated}; does NOT change {@code status}
+     * (finalize / reopen are the separate lifecycle transitions).
+     *
+     * @param id           the {@link AgentProposal} id. Required.
+     * @param disposition  the wire-vocabulary disposition (already validated
+     *                     by the REST handler). Required, non-blank.
+     * @param note         optional free-text curator note.
+     * @return the updated proposal, or {@code null} if {@code id} doesn't
+     *         resolve.
+     */
+    @Nullable
+    AgentProposal updateDisposition( Long id, String disposition, @Nullable String note );
+
+    /**
+     * Transition the row to {@code FINALIZED}. Idempotent: a row already in
+     * {@code FINALIZED} returns unchanged. Stamps {@code finalizedAt} +
+     * {@code lastUpdated} on the transition.
+     *
+     * @return the updated proposal, or {@code null} if {@code id} doesn't
+     *         resolve.
+     */
+    @Nullable
+    AgentProposal finalizeProposal( Long id );
+
+    /**
+     * Transition the row to {@code REOPENED} and clear {@code finalizedAt}.
+     * Idempotent: a row already in {@code REOPENED} (or never finalized)
+     * stays put but still has its {@code lastUpdated} touched only on the
+     * real transition.
+     *
+     * @return the updated proposal, or {@code null} if {@code id} doesn't
+     *         resolve.
+     */
+    @Nullable
+    AgentProposal reopenProposal( Long id );
+
+    /**
      * Return value of {@link #attach(Investigation, String, String, String, Date, String)}.
      * Carries the persisted proposal plus a flag noting whether the row was
      * created (true) or returned as-existing (false) — the REST layer uses

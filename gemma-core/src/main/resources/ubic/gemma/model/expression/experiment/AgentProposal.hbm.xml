@@ -66,5 +66,33 @@
             <column name="PAYLOAD_JSON" not-null="false" unique="false"
                     sql-type="LONGTEXT"/>
         </property>
+        <!--
+            Lifecycle + disposition columns (Flyway mysql/V15 + h2/V17).
+            STATUS is NOT NULL with a schema-side default of 'OPEN' — Hibernate
+            doesn't honour the SQL default for INSERTs, so the Java entity sets
+            the default in its field initializer. lastUpdated is stamped by
+            the service layer on every save() to keep H2 aligned with MySQL's
+            `ON UPDATE CURRENT_TIMESTAMP(3)`.
+        -->
+        <property name="status" type="java.lang.String">
+            <column name="STATUS" not-null="true" unique="false"
+                    sql-type="VARCHAR(32)"/>
+        </property>
+        <property name="disposition" type="java.lang.String">
+            <column name="DISPOSITION" not-null="false" unique="false"
+                    sql-type="VARCHAR(32)"/>
+        </property>
+        <property name="dispositionNote" type="org.hibernate.type.MaterializedClobType">
+            <column name="DISPOSITION_NOTE" not-null="false" unique="false"
+                    sql-type="TEXT"/>
+        </property>
+        <property name="finalizedAt" type="java.util.Date">
+            <column name="FINALIZED_AT" not-null="false" unique="false"
+                    sql-type="DATETIME(3)"/>
+        </property>
+        <property name="lastUpdated" type="java.util.Date">
+            <column name="LAST_UPDATED" not-null="false" unique="false"
+                    sql-type="DATETIME(3)"/>
+        </property>
     </class>
 </hibernate-mapping>
