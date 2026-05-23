@@ -300,6 +300,40 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         public TicketsWebService ticketsWebService( TicketService ticketService, UserManager userManager, UserReadService userReadService ) {
             return new TicketsWebService( ticketService, userManager, userReadService );
         }
+
+        // DatasetsWebService also @Autowires CurationWebService, GroupsWebService,
+        // BioAssayService, and OutlierFlaggingService. Provide them here so the
+        // Spring context loads. CurationWebService is a concrete @Service with
+        // its own @Autowired fields, so we also expose its transitive deps
+        // (DatasetArgService already present; AgentProposalService added below)
+        // and register the real class — letting Spring autowire mock fields onto
+        // it is cleaner than mocking the class itself, which would cause Spring
+        // to re-run AutowiredAnnotationBeanPostProcessor against unsatisfied
+        // dependencies.
+        @Bean
+        public ubic.gemma.persistence.service.expression.experiment.AgentProposalService agentProposalService() {
+            return mock( ubic.gemma.persistence.service.expression.experiment.AgentProposalService.class );
+        }
+
+        @Bean
+        public CurationWebService curationWebService() {
+            return new CurationWebService();
+        }
+
+        @Bean
+        public GroupsWebService groupsWebService( UserManager userManager, UserReadService userReadService ) {
+            return new GroupsWebService( userManager, userReadService );
+        }
+
+        @Bean
+        public BioAssayService bioAssayService() {
+            return mock( BioAssayService.class );
+        }
+
+        @Bean
+        public ubic.gemma.core.analysis.service.OutlierFlaggingService outlierFlaggingService() {
+            return mock( ubic.gemma.core.analysis.service.OutlierFlaggingService.class );
+        }
     }
 
     @Autowired
