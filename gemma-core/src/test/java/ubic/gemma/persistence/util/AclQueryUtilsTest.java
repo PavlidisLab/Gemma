@@ -1,5 +1,6 @@
 package ubic.gemma.persistence.util;
 
+import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -12,9 +13,12 @@ import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import java.util.Collections;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static ubic.gemma.persistence.util.AclQueryUtils.*;
 
 public class AclQueryUtilsTest extends BaseSpringContextTest5 {
@@ -75,6 +79,13 @@ public class AclQueryUtilsTest extends BaseSpringContextTest5 {
         // Switch to anonymous so the aoiType parameter is bound.
         runAsAnonymous();
         Query query = mock( Query.class );
+        // addAclParameters introspects query.getParameterMetadata().getNamedParameterNames()
+        // via hasNamedParameter() / setParameterIfPresent() to bind only the params actually
+        // present in the HQL (post EXISTS-rewrite the HQL exposes :aclQueryUtils_aoiType, not
+        // :aclQueryUtils_aoiClassId). Stub the metadata so the introspection survives the mock.
+        ParameterMetadata metadata = mock( ParameterMetadata.class );
+        when( metadata.getNamedParameterNames() ).thenReturn( Collections.singleton( "aclQueryUtils_aoiType" ) );
+        when( query.getParameterMetadata() ).thenReturn( metadata );
         addAclParameters( query, ExpressionExperiment.class );
         verify( query ).setParameter( "aclQueryUtils_aoiType", "ubic.gemma.model.expression.experiment.ExpressionExperiment" );
     }
