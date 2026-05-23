@@ -211,9 +211,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
             totalElements = 0L;
         }
 
-        for ( ExpressionAnalysisResultSet d : data ) {
-            thaw( d );
-        }
+        thawAll( data );
 
         if ( timer.getTime() > 1000 ) {
             log.info( String.format( "Loaded %d/%d result sets matching bioAssaySets=%s, databaseEntries=%s, filters=%s in %d ms.",
@@ -295,9 +293,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
             Collections.reverse( data );
         }
 
-        for ( ExpressionAnalysisResultSet d : data ) {
-            thaw( d );
-        }
+        thawAll( data );
 
         List<DifferentialExpressionAnalysisResultSetValueObject> vos = loadValueObjects( data );
 
@@ -384,6 +380,42 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
             Hibernate.initialize( ears.getBaselineGroup() );
             Hibernate.initialize( ears.getBaselineGroup().getExperimentalFactor() );
         }
+    }
+
+    @Override
+    public void thawAll( Collection<ExpressionAnalysisResultSet> ears ) {
+        if ( ears == null || ears.isEmpty() ) {
+            return;
+        }
+        // Two batched queries (one for the single-valued navigation chain, one for the
+        // experimentalFactors bag) replace the 5-7 sequential Hibernate.initialize calls
+        // per row in the single-element thaw(). Splitting the bag off keeps us clear of
+        // MultipleBagFetchException and row-cartesian explosion.
+        //
+        // Both queries operate on entities already attached to the session (they came out
+        // of the data query), so the fetch-joins materialize the lazy associations on the
+        // existing instances rather than producing new ones.
+        Collection<Long> ids = IdentifiableUtils.getIds( ears );
+        Session session = getSessionFactory().getCurrentSession();
+
+        // Q1: single-valued chain — analysis + experimentAnalyzed + subsetFactorValue (+EF)
+        //     + baselineGroup (+EF). All to-one associations, so a single join-fetch query
+        //     does not risk a bag explosion.
+        listByBatch( session.createQuery( "select rs from ExpressionAnalysisResultSet rs "
+                        + "left join fetch rs.analysis a "
+                        + "left join fetch a.experimentAnalyzed "
+                        + "left join fetch a.subsetFactorValue sfv "
+                        + "left join fetch sfv.experimentalFactor "
+                        + "left join fetch rs.baselineGroup bg "
+                        + "left join fetch bg.experimentalFactor "
+                        + "where rs.id in :ids", ExpressionAnalysisResultSet.class ),
+                "ids", ids, 2048 );
+
+        // Q2: experimentalFactors bag — separate to dodge MultipleBagFetchException.
+        listByBatch( session.createQuery( "select rs from ExpressionAnalysisResultSet rs "
+                        + "left join fetch rs.experimentalFactors "
+                        + "where rs.id in :ids", ExpressionAnalysisResultSet.class ),
+                "ids", ids, 2048 );
     }
 
     private void thawResultsAndContrasts( ExpressionAnalysisResultSet ears ) {
