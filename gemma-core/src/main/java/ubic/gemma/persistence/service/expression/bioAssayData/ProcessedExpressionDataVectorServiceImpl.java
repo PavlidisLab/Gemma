@@ -224,13 +224,50 @@ public class ProcessedExpressionDataVectorServiceImpl
             boolean keepGeneNonSpecific, @Nullable String consolidateMode ) {
         List<ExperimentExpressionLevelsValueObject> vos = new ArrayList<>( ees.size() );
 
+        // Compute the diff-ex stats map once (probeId -> DEVO) so we can enrich the per-gene VO without
+        // a second round-trip; this is the same data the endpoint already used to rank its top-N.
+        Map<Long, DifferentialExpressionValueObject> statsByProbeId = this.getDiffExStatsByProbeId( diffExResultSetId, threshold, max );
+
         // Adapted from DEDV controller
         for ( ExpressionExperiment ee : ees ) {
             Collection<DoubleVectorValueObject> vectors = this.getDiffExVectors( diffExResultSetId, threshold, max );
-            this.addExperimentGeneVectors( vos, ee, vectors, keepGeneNonSpecific, consolidateMode );
+            this.addExperimentGeneVectorsWithDiffExStats( vos, ee, vectors, keepGeneNonSpecific, consolidateMode, statsByProbeId );
         }
 
         return vos;
+    }
+
+    /**
+     * Mirror of the per-probe top-hits query used by {@link #getDiffExVectors}, but returning the DEVOs keyed
+     * by probe id so callers can pull corrected p-value / log2-fold-change for the contrast represented by
+     * the result-set.
+     */
+    private Map<Long, DifferentialExpressionValueObject> getDiffExStatsByProbeId( Long resultSetId, double threshold, int max ) {
+        ExpressionAnalysisResultSet ar = expressionAnalysisResultSetService.load( resultSetId );
+        if ( ar == null ) {
+            return Collections.emptyMap();
+        }
+        ar = expressionAnalysisResultSetService.thaw( ar );
+        List<DifferentialExpressionValueObject> rows = differentialExpressionResultService
+                .findByResultSet( ar, threshold, max, DIFFEX_MIN_NUMBER_OF_RESULTS );
+        Map<Long, DifferentialExpressionValueObject> byProbe = new HashMap<>( rows.size() );
+        for ( DifferentialExpressionValueObject r : rows ) {
+            // If the same probe appears twice (shouldn't happen for a single result set), keep the more-
+            // significant row — same tie-break the endpoint uses for ranking.
+            DifferentialExpressionValueObject prev = byProbe.get( r.getProbeId() );
+            if ( prev == null || isMoreSignificant( r, prev ) ) {
+                byProbe.put( r.getProbeId(), r );
+            }
+        }
+        return byProbe;
+    }
+
+    private static boolean isMoreSignificant( DifferentialExpressionValueObject a, DifferentialExpressionValueObject b ) {
+        Double ac = a.getCorrP();
+        Double bc = b.getCorrP();
+        if ( ac == null ) return false;
+        if ( bc == null ) return true;
+        return ac < bc;
     }
 
     @Override
@@ -390,5 +427,80 @@ public class ProcessedExpressionDataVectorServiceImpl
         }
         vos.add( new ExperimentExpressionLevelsValueObject( ee.getId(), vectorsPerGene, keepGeneNonSpecific,
                 consolidateMode ) );
+    }
+
+    /**
+     * Like {@link #addExperimentGeneVectors} but also computes per-gene diff-ex stats (corrected p-value,
+     * uncorrected p-value, log2 fold change) for the result-set whose ranking produced these vectors. For
+     * genes whose probes span more than one result row, picks the most-significant row (smallest corrected
+     * p-value) — the same selection rule the endpoint uses to rank its top-N.
+     */
+    private void addExperimentGeneVectorsWithDiffExStats( Collection<ExperimentExpressionLevelsValueObject> vos,
+            ExpressionExperiment ee, Collection<DoubleVectorValueObject> vectors, boolean keepGeneNonSpecific,
+            @Nullable String consolidateMode, Map<Long, DifferentialExpressionValueObject> statsByProbeId ) {
+        Map<Gene, List<DoubleVectorValueObject>> vectorsPerGene = new HashMap<>();
+        Map<Gene, DifferentialExpressionValueObject> bestStatsPerGene = new HashMap<>();
+        for ( DoubleVectorValueObject v : vectors ) {
+            if ( !v.getExpressionExperiment().getId().equals( ee.getId() ) ) {
+                continue;
+            }
+
+            DifferentialExpressionValueObject probeStats = statsByProbeId.get( v.getDesignElement().getId() );
+
+            if ( v.getGenes() == null || v.getGenes().isEmpty() ) {
+                if ( !vectorsPerGene.containsKey( null ) ) {
+                    vectorsPerGene.put( null, new LinkedList<>() );
+                }
+                vectorsPerGene.get( null ).add( v );
+            }
+
+            for ( Long gId : v.getGenes() ) {
+                Gene g = geneService.load( gId );
+                if ( g != null ) {
+                    if ( !vectorsPerGene.containsKey( g ) ) {
+                        vectorsPerGene.put( g, new LinkedList<>() );
+                    }
+                    vectorsPerGene.get( g ).add( v );
+
+                    if ( probeStats != null ) {
+                        DifferentialExpressionValueObject prev = bestStatsPerGene.get( g );
+                        if ( prev == null || isMoreSignificant( probeStats, prev ) ) {
+                            bestStatsPerGene.put( g, probeStats );
+                        }
+                    }
+                }
+            }
+        }
+
+        Map<Gene, ExperimentExpressionLevelsValueObject.GeneDiffExStats> diffExStatsPerGene = new HashMap<>( bestStatsPerGene.size() );
+        for ( Map.Entry<Gene, DifferentialExpressionValueObject> entry : bestStatsPerGene.entrySet() ) {
+            diffExStatsPerGene.put( entry.getKey(), buildGeneDiffExStats( entry.getValue() ) );
+        }
+
+        vos.add( new ExperimentExpressionLevelsValueObject( ee.getId(), vectorsPerGene, keepGeneNonSpecific,
+                consolidateMode, diffExStatsPerGene ) );
+    }
+
+    /**
+     * Build the gene-level diff-ex statistics. The log2 fold change is the contrast coefficient on the
+     * picked row; for a single-contrast result set there is exactly one contrast, for a multi-contrast
+     * result set we pick the contrast with the smallest uncorrected p-value (most significant on that row).
+     */
+    private static ExperimentExpressionLevelsValueObject.GeneDiffExStats buildGeneDiffExStats( DifferentialExpressionValueObject row ) {
+        Double log2FoldChange = null;
+        if ( row.getContrasts() != null && row.getContrasts().getContrasts() != null
+                && !row.getContrasts().getContrasts().isEmpty() ) {
+            ubic.gemma.model.analysis.expression.diff.ContrastVO best = null;
+            for ( ubic.gemma.model.analysis.expression.diff.ContrastVO c : row.getContrasts().getContrasts() ) {
+                if ( c.getLogFoldChange() == null ) continue;
+                if ( best == null ) { best = c; continue; }
+                Double bp = best.getPvalue();
+                Double cp = c.getPvalue();
+                if ( bp == null && cp != null ) { best = c; continue; }
+                if ( bp != null && cp != null && cp < bp ) best = c;
+            }
+            if ( best != null ) log2FoldChange = best.getLogFoldChange();
+        }
+        return new ExperimentExpressionLevelsValueObject.GeneDiffExStats( row.getCorrP(), row.getP(), log2FoldChange );
     }
 }
