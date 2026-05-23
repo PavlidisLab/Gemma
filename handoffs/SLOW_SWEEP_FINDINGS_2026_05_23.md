@@ -8,8 +8,12 @@ Run: `mvn -pl gemma-core verify -DexcludedGroups=network -Dit.test='!DatasetComb
 
 ## Result shape
 
-- **Surefire**: 506 tests, 1F + 5E + 29S — ran the 77 slow-tagged classes filtered by the surefire-side tag expression. Took ~10 min.
-- **Failsafe**: hung at fork startup; 15-min `failsafe.timeout` fired before the first test ran. Spring context boot or pre-test populator stalled — separate concern, not a per-test signal.
+Final tallies from Agent F's full run (28:41 wall clock):
+
+- **Surefire**: 1625 / 0F+0E+34S — default baseline (1526) + 99 slow-tagged classes pulled in. Zero failures in this phase.
+- **Failsafe**: 506 / 1F+5E+29S — default baseline (376) + 130 slow integration tests pulled in. All six failures listed below.
+- **Longest individual class**: 213 s (`MexSingleCellDataLoaderTest`).
+- **`BUILD FAILURE` at the end** is a **JVM-shutdown forker artifact** (`maven-failsafe-plugin:verify` reported "timeout in the fork" at process tear-down), NOT a test hang. The failsafe test phase completed, all 506 tests ran. Probable cause: HDF5 / Lucene / Jena native resource not closing on JVM exit; resource-close audit is its own task.
 
 ## Surefire failures, classified per Paul's perf-probe lens
 
@@ -19,17 +23,17 @@ Run: `mvn -pl gemma-core verify -DexcludedGroups=network -Dit.test='!DatasetComb
 | `DataUpdaterTest.testLoadRNASeqData:302` | `EntityExists: A different object with the same identifier value was already associated with the session: QuantitationType#170` | **CODE — Hibernate session merge bug or test-isolation hole** | Either the production loader caches a QT instance across sessions, or the test reuses Spring context state. The two-different-objects-same-id pattern is the canonical "you saved with `session.persist` after a `session.merge` happened upstream" symptom. |
 | `TwoWayAnovaWithInteractionTest2.test:161` | `NoDesignElementsException: No rows left after filtering for repetitive values with TooFewDistinctValuesFilter Threshold=30.00%` | **FIXTURE — too-narrow stub data** | The 30% distinct-values filter ate the entire matrix. Either the fixture matrix's variance was always too tight for this filter, OR the filter threshold changed and the fixture wasn't refreshed. Cheap check: print row count + min variance for the input matrix. Then either regen with more variance or pin a smaller threshold for this test. |
 | `RNASeqBatchInfoPopulationTest.testGSE156689NoBatchinfo:198` | `UnexpectedRollback: Transaction rolled back because it has been marked as rollback-only` | **NEEDS RECCE — underlying exception is upstream of the rollback** | A swallowed exception inside the tx scope marked it rollback-only; Spring throws `UnexpectedRollback` on commit. Read the surefire `*-output.txt` for the test in the slow-sweep worktree's `target/surefire-reports/` to find the underlying cause. May be code, may be fixture. |
-| `HibernateSqmFragileShapesIT.probe_implicitPolymorphismOnUnmappedBase:89` | `UnknownEntityException: Could not resolve root entity 'BulkExpressionDataVector'` | **TEST ASSERTION SHAPE — the regression guard is firing on its expected case** | This is literally what the SQM probe checks ("`BulkExpressionDataVector` is an unmapped base; HQL `FROM BulkExpressionDataVector` must throw"). The test was expecting the exception via `assertThrows`-equivalent and the exception arrived wrapped in `IllegalArgumentException`. Tighten the probe's expected-exception unwrap (e.g. check `getCause() instanceof UnknownEntityException` rather than the wrapping class). Test fix, not a real regression. |
+| `HibernateSqmFragileShapesIT.probe_implicitPolymorphismOnUnmappedBase:89` | `UnknownEntityException: Could not resolve root entity 'BulkExpressionDataVector'` | **ORDERING FLAKE — not slow-tagged itself, failed because slow tests ran first** | Agent F flagged this as a cross-class Hibernate-metamodel state coupling: something the slow tests run earlier mutates the metamodel state the SQM probe inspects, surfacing the exception in a shape the probe's `assertThrows`-style guard doesn't unwrap. Recce both sides: which slow test mutates metamodel, and how the probe should be hardened against ordering. |
 
-## Failsafe-fork hang (separate concern)
+## Failsafe shutdown forker (separate concern)
 
-The failsafe phase started, allocated its fork, and never reported a `Running ubic…` line before the 15-min `failsafe.timeout` killed it. Probable causes (any):
+**Correction from an earlier draft of this doc:** the failsafe phase did NOT hang at startup — it ran all 506 tests. The `BUILD FAILURE` came from the `maven-failsafe-plugin:verify` goal reporting "There was a timeout in the fork" at JVM shutdown, AFTER the test phase completed. Common cause: a native resource (HDF5 / Lucene / Jena TDB / ehcache disk store) doesn't release on shutdown and the forker waits past its timeout for the JVM to exit cleanly.
 
-1. Spring context init scanning a slow-sweep-bloated gemdtest schema.
-2. `MassIndexer` triggered on the new (denser) corpus.
-3. ehcache warm-up over the larger persisted-vector tables.
+This is its own task (audit native-resource closers in the test contexts), not a slow-tagged-test finding.
 
-This is NOT a slow-tagged-test finding. It's a **first-failsafe-test cold-start cost** that the slow surefire phase amplified by writing more rows than usual. Independent recce when needed; not part of the perf-probe lens.
+### `HibernateSqmFragileShapesIT.probe_implicitPolymorphismOnUnmappedBase` — ordering coupling
+
+Agent F observed: this test is NOT slow-tagged, but it **failed specifically in this run** because the slow tests ran first. Suspected mechanism: Hibernate metamodel state-coupling — earlier slow tests register or mutate entity-metadata state (e.g. via a `MassIndexer`, a `BootstrapServiceRegistry`, or a Hibernate Search lifecycle hook) that the SQM probe's expected-exception path now reads differently. This is genuine ordering flake territory and deserves its own recce.
 
 ## Action queue for the next perf-probe agent
 
