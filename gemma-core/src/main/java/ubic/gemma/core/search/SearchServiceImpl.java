@@ -55,9 +55,11 @@ import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -242,8 +244,82 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     @Override
     @Transactional(readOnly = true)
     public List<SearchResult<? extends IdentifiableValueObject<?>>> loadValueObjects( Collection<SearchResult<?>> searchResults ) throws IllegalArgumentException {
-        return searchResults.stream()
-                .map( sr -> ( SearchResult<? extends IdentifiableValueObject<?>> ) loadValueObject( sr ) )
-                .collect( Collectors.toList() );
+        if ( searchResults.isEmpty() ) {
+            return Collections.emptyList();
+        }
+        // Group by result type so we can dispatch to the batched collection-based VO converter
+        // (ServiceBasedValueObjectConverter#voListFromEntities / #voListFromIds) instead of
+        // calling loadValueObject(entity) once per hit. The per-hit path triggers
+        // postProcessValueObjects(singletonList(vo)) for each result, which makes the batched
+        // IN-queries on Gene/ArrayDesign/ExpressionExperiment fire once per result rather than
+        // once per page. See handoffs/RECCE_HSEARCH_NPLUS1.md.
+        Map<Class<? extends Identifiable>, List<SearchResult<?>>> byType = new LinkedHashMap<>();
+        for ( SearchResult<?> sr : searchResults ) {
+            byType.computeIfAbsent( sr.getResultType(), k -> new ArrayList<>() ).add( sr );
+        }
+        // VO-by-id lookup, keyed by (resultType, id), so we can stitch results back to the
+        // original input order. Per-type because two SearchResults could (in principle) share
+        // an id across result types — keying by (type,id) keeps the lookup unambiguous.
+        Map<Class<? extends Identifiable>, Map<Long, IdentifiableValueObject<?>>> voIndex = new HashMap<>();
+        for ( Map.Entry<Class<? extends Identifiable>, List<SearchResult<?>>> e : byType.entrySet() ) {
+            Class<? extends Identifiable> resultType = e.getKey();
+            List<SearchResult<?>> group = e.getValue();
+            Class<? extends IdentifiableValueObject<?>> voType = supportedResultTypes.get( resultType );
+            if ( voType == null ) {
+                throw new IllegalArgumentException( "Result type " + resultType + " is not supported for VO conversion." );
+            }
+            // Split into entities-present vs id-only buckets so each side can use its batched converter.
+            List<Identifiable> entities = new ArrayList<>( group.size() );
+            List<Long> idsOnly = new ArrayList<>();
+            for ( SearchResult<?> sr : group ) {
+                Identifiable entity = sr.getResultObject();
+                if ( entity != null ) {
+                    entities.add( entity );
+                } else {
+                    idsOnly.add( sr.getResultId() );
+                }
+            }
+            Map<Long, IdentifiableValueObject<?>> perType = voIndex.computeIfAbsent( resultType, k -> new HashMap<>() );
+            try {
+                if ( !entities.isEmpty() ) {
+                    TypeDescriptor entityCollectionType = TypeDescriptor.collection( Collection.class, TypeDescriptor.valueOf( resultType ) );
+                    TypeDescriptor voListType = TypeDescriptor.collection( List.class, TypeDescriptor.valueOf( voType ) );
+                    @SuppressWarnings("unchecked")
+                    List<IdentifiableValueObject<?>> vos = ( List<IdentifiableValueObject<?>> ) valueObjectConversionService.convert( entities, entityCollectionType, voListType );
+                    if ( vos != null ) {
+                        for ( IdentifiableValueObject<?> vo : vos ) {
+                            if ( vo != null ) {
+                                perType.put( vo.getId(), vo );
+                            }
+                        }
+                    }
+                }
+                if ( !idsOnly.isEmpty() ) {
+                    TypeDescriptor idCollectionType = TypeDescriptor.collection( Collection.class, TypeDescriptor.valueOf( Long.class ) );
+                    TypeDescriptor voListType = TypeDescriptor.collection( List.class, TypeDescriptor.valueOf( voType ) );
+                    @SuppressWarnings("unchecked")
+                    List<IdentifiableValueObject<?>> vos = ( List<IdentifiableValueObject<?>> ) valueObjectConversionService.convert( idsOnly, idCollectionType, voListType );
+                    if ( vos != null ) {
+                        for ( IdentifiableValueObject<?> vo : vos ) {
+                            if ( vo != null ) {
+                                perType.put( vo.getId(), vo );
+                            }
+                        }
+                    }
+                }
+            } catch ( ConverterNotFoundException ex ) {
+                throw new IllegalArgumentException( "Result type " + resultType + " is not supported for VO conversion.", ex );
+            }
+        }
+        // Reassemble in original iteration order. Results whose entity has been removed
+        // (VO lookup miss) come through with a null result object — matching the prior
+        // contract where loadValueObject could return a SearchResult wrapping null.
+        List<SearchResult<? extends IdentifiableValueObject<?>>> out = new ArrayList<>( searchResults.size() );
+        for ( SearchResult<?> sr : searchResults ) {
+            Map<Long, IdentifiableValueObject<?>> perType = voIndex.get( sr.getResultType() );
+            IdentifiableValueObject<?> vo = perType != null ? perType.get( sr.getResultId() ) : null;
+            out.add( sr.withResultObject( vo ) );
+        }
+        return out;
     }
 }
