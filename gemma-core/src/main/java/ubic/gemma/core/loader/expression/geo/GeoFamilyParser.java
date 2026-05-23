@@ -428,9 +428,10 @@ public class GeoFamilyParser implements Parser<GeoParseResult> {
         if ( res == null )
             return;
 
-        String columnName = res.keySet().iterator().next();
+        Map.Entry<String, String> entry = res.entrySet().iterator().next();
+        String columnName = entry.getKey();
         dataToAddTo.addColumnName( columnName );
-        dataToAddTo.getColumnDescriptions().add( res.get( columnName ) );
+        dataToAddTo.getColumnDescriptions().add( entry.getValue() );
         if ( GeoFamilyParser.log.isDebugEnabled() )
             GeoFamilyParser.log.debug( "Adding " + columnName + " to column names for " + dataToAddTo );
     }
@@ -731,8 +732,9 @@ public class GeoFamilyParser implements Parser<GeoParseResult> {
             if ( res == null ) {
                 throw new IllegalStateException( "Failed to extract key-value pair from the given line" );
             }
-            String potentialSampleAccession = res.keySet().iterator().next();
-            String potentialTitle = res.get( potentialSampleAccession );
+            Map.Entry<String, String> entry = res.entrySet().iterator().next();
+            String potentialSampleAccession = entry.getKey();
+            String potentialTitle = entry.getValue();
 
             // First add the sample if we haven't seen it before.
             if ( potentialSampleAccession.startsWith( "GSM" ) && !results.getSampleMap()
