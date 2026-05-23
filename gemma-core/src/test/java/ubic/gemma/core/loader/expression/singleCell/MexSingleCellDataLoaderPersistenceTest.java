@@ -86,6 +86,11 @@ public class MexSingleCellDataLoaderPersistenceTest extends BaseDatabaseTest5 {
         }
 
         @Bean
+        public SingleCellExperimentDesignAuditService singleCellExperimentDesignAuditService() {
+            return mock();
+        }
+
+        @Bean
         public SingleCellSparsityMetrics singleCellSparsityMetrics() {
             return new SingleCellSparsityMetrics();
         }
