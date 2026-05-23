@@ -26,6 +26,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.task.TaskExecutor;
+import ubic.gemma.core.context.EnvironmentProfiles;
 import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.core.metrics.GenericMeterRegistryConfigurer;
 import ubic.gemma.core.metrics.binder.GenericTaskExecutorMetrics;
@@ -50,7 +51,7 @@ import java.util.List;
  * per-cache JSR-107 metrics from the new Ehcache 3 / JCache backend.
  */
 @Configuration
-@Profile("metrics")
+@Profile(EnvironmentProfiles.METRICS)
 public class MetricsConfig {
 
     @Bean
