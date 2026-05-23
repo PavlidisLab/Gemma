@@ -81,7 +81,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
                 .setParameter( "ee", ee )
                 .setParameter( "dimension", dimension )
                 .setFirstResult( offset )
-                .setMaxResults( limit )
+                // HB6 rejects setMaxResults(<0); pagination contract treats <=0 as "no limit".
+                .setMaxResults( limit > 0 ? limit : Integer.MAX_VALUE )
                 .list();
     }
 
@@ -218,7 +219,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
                 .setParameter( "ee", ee )
                 .setParameter( "dimension", dimension )
                 .setFirstResult( offset )
-                .setMaxResults( limit )
+                // HB6 rejects setMaxResults(<0); pagination contract treats <=0 as "no limit".
+                .setMaxResults( limit > 0 ? limit : Integer.MAX_VALUE )
                 .list();
     }
 

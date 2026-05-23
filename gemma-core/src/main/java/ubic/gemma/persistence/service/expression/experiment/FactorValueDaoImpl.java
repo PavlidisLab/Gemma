@@ -85,7 +85,8 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
         //noinspection unchecked
         return new Slice<>( ( List<FactorValue> ) query
                 .setFirstResult( offset )
-                .setMaxResults( limit )
+                // HB6 rejects setMaxResults(<0); pagination contract treats <=0 as "no limit".
+                .setMaxResults( limit > 0 ? limit : Integer.MAX_VALUE )
                 .list(), null, offset, limit, countAllWithAcls() );
     }
 
@@ -110,7 +111,8 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
         //noinspection unchecked
         return new Slice<>( ( List<Long> ) query
                 .setFirstResult( offset )
-                .setMaxResults( limit )
+                // HB6 rejects setMaxResults(<0); pagination contract treats <=0 as "no limit".
+                .setMaxResults( limit > 0 ? limit : Integer.MAX_VALUE )
                 .list(), null, offset, limit, countAllWithAcls() );
     }
 

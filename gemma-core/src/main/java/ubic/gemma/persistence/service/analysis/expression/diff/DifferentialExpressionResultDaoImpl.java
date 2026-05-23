@@ -309,8 +309,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         }
         StopWatch timer = StopWatch.createStarted();
         try {
-            //noinspection unchecked
-            return groupDiffExResults( ( List<Object[]> ) getSessionFactory().getCurrentSession()
+            org.hibernate.query.Query<?> q = getSessionFactory().getCurrentSession()
                     .createQuery( "select e, r from DifferentialExpressionAnalysis a "
                             + "join a.experimentAnalyzed e  "
                             + "join a.resultSets rs "
@@ -320,9 +319,13 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
                             + ( limit > 0 ? " order by r.correctedPvalue nulls last" : "" ) )
                     .setParameterList( "experimentsAnalyzed", optimizeParameterList( experimentAnalyzedIds ) )
                     .setParameter( "threshold", threshold )
-                    .setMaxResults( limit )
-                    .setCacheable( true )
-                    .list() );
+                    .setCacheable( true );
+            // HB6 rejects setMaxResults(<0); callers may pass 0/negative to mean "no limit" — preserve that contract.
+            if ( limit > 0 ) {
+                q.setMaxResults( limit );
+            }
+            //noinspection unchecked
+            return groupDiffExResults( ( List<Object[]> ) q.list() );
         } finally {
             timer.stop();
             if ( timer.getTime() > 1000 ) {
@@ -368,8 +371,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
             return Collections.emptyMap();
         }
         try {
-            //noinspection unchecked
-            return groupDiffExResults( ( List<Object[]> ) getSessionFactory().getCurrentSession()
+            org.hibernate.query.Query<?> q = getSessionFactory().getCurrentSession()
                     .createQuery( "select e, r from DifferentialExpressionAnalysis a "
                             + "join a.experimentAnalyzed e "
                             + "join a.resultSets rs join rs.results r "
@@ -378,9 +380,13 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
                             + ( limit > 0 ? " order by r.correctedPvalue nulls last" : "" ) )
                     .setParameterList( "probeIds", optimizeParameterList( probeIds ) )
                     .setParameter( "threshold", threshold )
-                    .setCacheable( true )
-                    .setMaxResults( limit )
-                    .list() );
+                    .setCacheable( true );
+            // HB6 rejects setMaxResults(<0); callers may pass 0/negative to mean "no limit" — preserve that contract.
+            if ( limit > 0 ) {
+                q.setMaxResults( limit );
+            }
+            //noinspection unchecked
+            return groupDiffExResults( ( List<Object[]> ) q.list() );
         } finally {
             timer.stop();
             if ( timer.getTime() > 1000 ) {
@@ -686,11 +692,14 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
                 + "where r.resultSet = :resultSet and r.correctedPvalue <= :threshold "
                 + "order by r.correctedPvalue nulls last";
 
-        List<?> qResult = getSessionFactory().getCurrentSession().createQuery( qs )
+        org.hibernate.query.Query<?> q1 = getSessionFactory().getCurrentSession().createQuery( qs )
                 .setParameter( "resultSet", resultSet )
-                .setParameter( "threshold", threshold )
-                .setMaxResults( limit )
-                .list();
+                .setParameter( "threshold", threshold );
+        // HB6 rejects setMaxResults(<0); callers may pass 0/negative to mean "no limit" — preserve that contract.
+        if ( limit > 0 ) {
+            q1.setMaxResults( limit );
+        }
+        List<?> qResult = q1.list();
 
         // If too few probes meet threshold, redo and just get top results.
         if ( qResult.size() < minNumberOfResults ) {

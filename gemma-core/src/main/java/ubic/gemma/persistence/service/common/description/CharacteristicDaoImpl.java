@@ -118,7 +118,8 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
                 .createQuery( "select c from Characteristic c where c.valueUri not like :p" )
                 .setParameter( "p", OntologyUtils.BASE_PURL_URI + "GO_%" )
                 .setFirstResult( start )
-                .setMaxResults( limit )
+                // HB6 rejects setMaxResults(<0); browse contract treats <=0 as "no limit".
+                .setMaxResults( limit > 0 ? limit : Integer.MAX_VALUE )
                 .list();
     }
 
@@ -139,7 +140,8 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
                         + "order by c." + orderField + ( descending ? " desc" : " asc" ) )
                 .setParameter( "p", OntologyUtils.BASE_PURL_URI + "GO_%" )
                 .setFirstResult( start )
-                .setMaxResults( limit )
+                // HB6 rejects setMaxResults(<0); browse contract treats <=0 as "no limit".
+                .setMaxResults( limit > 0 ? limit : Integer.MAX_VALUE )
                 .list();
     }
 

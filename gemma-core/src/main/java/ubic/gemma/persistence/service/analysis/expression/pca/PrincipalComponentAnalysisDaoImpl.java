@@ -63,7 +63,9 @@ public class PrincipalComponentAnalysisDaoImpl extends AbstractDao<PrincipalComp
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( "select pr from PrincipalComponentAnalysis p join p.probeLoadings pr"
                 + " where p.experimentAnalyzed = :ee and pr.componentNumber = :cmp order by pr.loadingRank " )
-                .setParameter( "ee", ee ).setParameter( "cmp", component ).setMaxResults( count ).list();
+                .setParameter( "ee", ee ).setParameter( "cmp", component )
+                // HB6 rejects setMaxResults(<0); treat <=0 as "no limit".
+                .setMaxResults( count > 0 ? count : Integer.MAX_VALUE ).list();
     }
 
     @Override

@@ -187,7 +187,8 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
                             + "group by cs.ID" )
                     .addEntity( "cs", CompositeSequence.class )
                     .setFirstResult( start )
-                    .setMaxResults( limit )
+                    // HB6 rejects setMaxResults(<0); pagination contract treats <=0 as "no limit".
+                    .setMaxResults( limit > 0 ? limit : Integer.MAX_VALUE )
                     .setParameter( "gene", gene.getId() )
                     .list();
             Long totalElements = ( ( Number ) getSessionFactory().getCurrentSession()
@@ -203,7 +204,8 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
                             + "and gene = :gene "
                             + "group by cs" )
                     .setFirstResult( start )
-                    .setMaxResults( limit )
+                    // HB6 rejects setMaxResults(<0); pagination contract treats <=0 as "no limit".
+                    .setMaxResults( limit > 0 ? limit : Integer.MAX_VALUE )
                     .setParameter( "gene", gene )
                     .list();
             Long totalElements = ( Long ) getSessionFactory().getCurrentSession()
@@ -456,7 +458,8 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
                     .addEntity( "gene", Gene.class )
                     .setParameter( "csId", compositeSequence.getId() )
                     .setFirstResult( offset )
-                    .setMaxResults( limit )
+                    // HB6 rejects setMaxResults(<0); pagination contract treats <=0 as "no limit".
+                    .setMaxResults( limit > 0 ? limit : Integer.MAX_VALUE )
                     .list();
             Long totalElements = ( ( Number ) getSessionFactory().getCurrentSession()
                     .createNativeQuery( "select count(distinct gene.ID) " + CS_BY_GENE_GENE2CS_QUERY + " and cs.ID = :csId" )
@@ -470,7 +473,8 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
                     .createQuery( "select gene " + CS_BY_GENE_QUERY + " and cs = :cs group by gene" )
                     .setParameter( "cs", compositeSequence )
                     .setFirstResult( offset )
-                    .setMaxResults( limit )
+                    // HB6 rejects setMaxResults(<0); pagination contract treats <=0 as "no limit".
+                    .setMaxResults( limit > 0 ? limit : Integer.MAX_VALUE )
                     .list();
             Long totalElements = ( Long ) getSessionFactory().getCurrentSession()
                     .createQuery( "select count(distinct gene) " + CS_BY_GENE_QUERY + " and cs = :cs" )

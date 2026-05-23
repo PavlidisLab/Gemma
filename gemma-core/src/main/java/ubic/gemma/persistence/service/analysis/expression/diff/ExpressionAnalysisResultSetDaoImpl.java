@@ -114,14 +114,17 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
         ExpressionAnalysisResultSet ears = load( id );
         if ( ears != null ) {
             //noinspection unchecked
-            List<DifferentialExpressionAnalysisResult> results = ( List<DifferentialExpressionAnalysisResult> ) getSessionFactory().getCurrentSession()
+            org.hibernate.query.Query<?> q = getSessionFactory().getCurrentSession()
                     .createQuery( "select res from DifferentialExpressionAnalysisResult res "
                             + "where res.resultSet = :ears "
                             + "order by res.correctedPvalue asc nulls last" )
                     .setParameter( "ears", ears )
-                    .setFirstResult( offset )
-                    .setMaxResults( limit )
-                    .list();
+                    .setFirstResult( offset );
+            // HB6 rejects setMaxResults(<0); callers may pass 0/negative to mean "no limit" — preserve that contract.
+            if ( limit > 0 ) {
+                q.setMaxResults( limit );
+            }
+            List<DifferentialExpressionAnalysisResult> results = ( List<DifferentialExpressionAnalysisResult> ) q.list();
             // preserve order of results
             ears.setResults( new LinkedHashSet<>( results ) );
             thawResultsAndContrasts( ears );
@@ -143,16 +146,19 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
         ExpressionAnalysisResultSet ears = load( id );
         if ( ears != null ) {
             //noinspection unchecked
-            List<DifferentialExpressionAnalysisResult> results = ( List<DifferentialExpressionAnalysisResult> ) getSessionFactory().getCurrentSession()
+            org.hibernate.query.Query<?> q = getSessionFactory().getCurrentSession()
                     .createQuery( "select res from DifferentialExpressionAnalysisResult res "
                             + "where res.resultSet = :ears and res.correctedPvalue <= :threshold "
                             // no need to specify a null mode, the threshold will filter them out
                             + "order by res.correctedPvalue" )
                     .setParameter( "ears", ears )
                     .setParameter( "threshold", threshold )
-                    .setFirstResult( offset )
-                    .setMaxResults( limit )
-                    .list();
+                    .setFirstResult( offset );
+            // HB6 rejects setMaxResults(<0); callers may pass 0/negative to mean "no limit" — preserve that contract.
+            if ( limit > 0 ) {
+                q.setMaxResults( limit );
+            }
+            List<DifferentialExpressionAnalysisResult> results = ( List<DifferentialExpressionAnalysisResult> ) q.list();
             // preserve order of results
             ears.setResults( new LinkedHashSet<>( results ) );
             thawResultsAndContrasts( ears );

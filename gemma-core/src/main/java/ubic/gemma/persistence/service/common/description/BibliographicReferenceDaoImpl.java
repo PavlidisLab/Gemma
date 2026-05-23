@@ -109,7 +109,8 @@ public class BibliographicReferenceDaoImpl
         //noinspection unchecked
         List<Object[]> os = q
                 .setFirstResult( offset )
-                .setMaxResults( limit )
+                // HB6 rejects setMaxResults(<0); pagination contract treats <=0 as "no limit".
+                .setMaxResults( limit > 0 ? limit : Integer.MAX_VALUE )
                 .list();
         LinkedHashMap<BibliographicReference, Set<ExpressionExperimentIdAndShortName>> result = new LinkedHashMap<>();
         for ( Object[] o : os ) {
@@ -175,7 +176,8 @@ public class BibliographicReferenceDaoImpl
     public List<BibliographicReference> browse( int start, int limit ) {
         return this.getSessionFactory().getCurrentSession()
                 .createQuery( "from BibliographicReference", BibliographicReference.class )
-                .setMaxResults( limit ).setFirstResult( start ).list();
+                // HB6 rejects setMaxResults(<0); browse contract treats <=0 as "no limit".
+                .setMaxResults( limit > 0 ? limit : Integer.MAX_VALUE ).setFirstResult( start ).list();
     }
 
     @Override
@@ -191,7 +193,8 @@ public class BibliographicReferenceDaoImpl
         return this.getSessionFactory().getCurrentSession()
                 .createQuery( "from BibliographicReference order by " + orderField + ( descending ? " desc" : " asc" ),
                         BibliographicReference.class )
-                .setMaxResults( limit ).setFirstResult( start ).list();
+                // HB6 rejects setMaxResults(<0); browse contract treats <=0 as "no limit".
+                .setMaxResults( limit > 0 ? limit : Integer.MAX_VALUE ).setFirstResult( start ).list();
     }
 
     @Override
