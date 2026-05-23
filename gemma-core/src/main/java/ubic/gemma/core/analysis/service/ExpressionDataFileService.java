@@ -466,6 +466,18 @@ public interface ExpressionDataFileService {
     LockedPath writeOrLocateDiffExAnalysisArchiveFile( DifferentialExpressionAnalysis analysis, boolean forceWrite ) throws IOException;
 
     /**
+     * Build the differential expression analysis archive file off the request thread via the
+     * {@code expressionDataFileTaskExecutor}. The returned {@link Future} resolves to the archive
+     * path once the write completes; callers that only need fire-and-forget semantics may ignore
+     * the result. The shared lock acquired by the underlying sync write is released before the
+     * future resolves.
+     *
+     * @throws RejectedExecutionException if the queue for creating data files is full
+     * @see #writeOrLocateDiffExAnalysisArchiveFile(DifferentialExpressionAnalysis, boolean)
+     */
+    Future<Path> writeOrLocateDiffExAnalysisArchiveFileAsync( DifferentialExpressionAnalysis analysis, boolean forceWrite ) throws RejectedExecutionException;
+
+    /**
      * Write all the differential expression data files for a given experiment to a particular directory.
      */
     Collection<Path> writeDiffExAnalysisArchiveFiles( ExpressionExperiment ee, Path outputDir, boolean forceWrite ) throws IOException;
