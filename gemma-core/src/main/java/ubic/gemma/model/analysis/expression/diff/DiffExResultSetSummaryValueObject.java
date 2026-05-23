@@ -21,16 +21,20 @@ package ubic.gemma.model.analysis.expression.diff;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.springframework.lang.Nullable;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
+import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Summary of a result set.
@@ -108,7 +112,7 @@ public class DiffExResultSetSummaryValueObject implements Serializable {
     }
 
     public DiffExResultSetSummaryValueObject( ExpressionAnalysisResultSet resultSet ) {
-        populateBase( resultSet );
+        populateBase( resultSet, null );
         // extract statistics for the default threshold (if available)
         for ( HitListSize hitList : resultSet.getHitListSizes() ) {
             applyHitListSize( hitList );
@@ -124,7 +128,22 @@ public class DiffExResultSetSummaryValueObject implements Serializable {
      */
     public DiffExResultSetSummaryValueObject( ExpressionAnalysisResultSet resultSet,
             ubic.gemma.model.analysis.expression.diff.ResultSetCountsValueObject counts ) {
-        populateBase( resultSet );
+        this( resultSet, counts, null );
+    }
+
+    /**
+     * Variant constructor that also accepts a {@link Prefetch} snapshot of the result-set's
+     * {@code experimentalFactors} + {@code baselineGroup} associations gathered up-front by
+     * a batched HQL fetch in the caller. When {@code prefetch} is non-null, the VO is
+     * populated without touching the lazy associations on {@code resultSet}, eliminating
+     * three round trips per RS in the {@code findByExperimentIds} hot path.
+     * <p>
+     * Passing {@code null} for {@code prefetch} preserves the original lazy-load behaviour.
+     */
+    public DiffExResultSetSummaryValueObject( ExpressionAnalysisResultSet resultSet,
+            @Nullable ubic.gemma.model.analysis.expression.diff.ResultSetCountsValueObject counts,
+            @Nullable Prefetch prefetch ) {
+        populateBase( resultSet, prefetch );
         if ( counts != null ) {
             this.setThreshold( counts.getThreshold() );
             this.setNumberOfDiffExpressedProbes( counts.getNumberOfDiffExpressedProbes() );
@@ -133,18 +152,55 @@ public class DiffExResultSetSummaryValueObject implements Serializable {
         }
     }
 
-    private void populateBase( ExpressionAnalysisResultSet resultSet ) {
+    private void populateBase( ExpressionAnalysisResultSet resultSet, @Nullable Prefetch prefetch ) {
         this.setId( resultSet.getId() );
-        this.setFactorIds( IdentifiableUtils.getIds( resultSet.getExperimentalFactors() ) );
         this.setNumberOfGenesAnalyzed( resultSet.getNumberOfGenesTested() );
         this.setNumberOfProbesAnalyzed( resultSet.getNumberOfProbesTested() );
 
-        for ( ExperimentalFactor ef : resultSet.getExperimentalFactors() ) {
+        Set<ExperimentalFactor> efs = prefetch != null
+                ? prefetch.getExperimentalFactors()
+                : resultSet.getExperimentalFactors();
+        this.setFactorIds( IdentifiableUtils.getIds( efs ) );
+        for ( ExperimentalFactor ef : efs ) {
             this.getExperimentalFactors().add( new ExperimentalFactorValueObject( ef ) );
         }
 
-        if ( resultSet.getBaselineGroup() != null ) {
-            this.setBaselineGroup( new FactorValueValueObject( resultSet.getBaselineGroup() ) );
+        FactorValue baseline = prefetch != null
+                ? prefetch.getBaselineGroup()
+                : resultSet.getBaselineGroup();
+        if ( baseline != null ) {
+            this.setBaselineGroup( new FactorValueValueObject( baseline ) );
+        }
+    }
+
+    /**
+     * Pre-aggregated {@code experimentalFactors} + {@code baselineGroup} for a single
+     * {@link ExpressionAnalysisResultSet}, sourced from a batched join-fetch query so the
+     * VO ctor avoids three sequential lazy initializations.
+     *
+     * @see DiffExResultSetSummaryValueObject#DiffExResultSetSummaryValueObject(ExpressionAnalysisResultSet,
+     *      ubic.gemma.model.analysis.expression.diff.ResultSetCountsValueObject, Prefetch)
+     */
+    public static final class Prefetch implements Serializable {
+        private static final long serialVersionUID = 1L;
+        private final Set<ExperimentalFactor> experimentalFactors;
+        @Nullable
+        private final FactorValue baselineGroup;
+
+        public Prefetch( Set<ExperimentalFactor> experimentalFactors, @Nullable FactorValue baselineGroup ) {
+            this.experimentalFactors = experimentalFactors != null
+                    ? experimentalFactors
+                    : Collections.emptySet();
+            this.baselineGroup = baselineGroup;
+        }
+
+        public Set<ExperimentalFactor> getExperimentalFactors() {
+            return experimentalFactors;
+        }
+
+        @Nullable
+        public FactorValue getBaselineGroup() {
+            return baselineGroup;
         }
     }
 
