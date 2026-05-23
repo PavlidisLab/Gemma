@@ -178,6 +178,15 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
         super( ee );
     }
 
+    /**
+     * Variant that skips reading the three {@code last*Event} associations off
+     * {@code CurationDetails} when {@code skipEvents=true}. See
+     * {@link ExpressionExperimentValueObject#ExpressionExperimentValueObject(ExpressionExperiment, boolean, boolean, boolean)}.
+     */
+    public ExpressionExperimentDetailsValueObject( ExpressionExperiment ee, boolean skipEvents ) {
+        super( ee, false, false, skipEvents );
+    }
+
     public ExpressionExperimentDetailsValueObject( ExpressionExperiment ee, AclObjectIdentity aoi,
             AclSid sid ) {
         super( ee, aoi, sid );
