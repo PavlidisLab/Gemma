@@ -31,6 +31,21 @@ COPY gemma-rest/pom.xml      gemma-rest/pom.xml
 COPY gemma-cli/pom.xml       gemma-cli/pom.xml
 COPY gemma-web/pom.xml       gemma-web/pom.xml
 
+# Install the hdf5 jar from the host's maven repo (org.hdf5group:hdf5:1.12.3
+# is not on Maven Central or the pavlab mirror; it was hand-installed via
+# `mvn install:install-file` on the host). The bounce script passes
+# --build-context hdf5=$HOME/maven.repository/org/hdf5group/hdf5/1.12.3 so
+# this layer can resolve it. If the build-context is absent, this layer is
+# a no-op and the dependency-resolution step below will fail fast with the
+# missing-artifact error.
+RUN --mount=type=bind,from=hdf5,target=/tmp/hdf5,readonly \
+    --mount=type=cache,target=/root/.m2/repository \
+    if [ -f /tmp/hdf5/hdf5-1.12.3.jar ]; then \
+        mvn -B -ntp install:install-file \
+            -Dfile=/tmp/hdf5/hdf5-1.12.3.jar \
+            -DpomFile=/tmp/hdf5/hdf5-1.12.3.pom; \
+    fi
+
 # Prime the local repo. -fae so partial misses (a sibling module that's not
 # wired here) don't kill the cache; we re-run the real build below.
 RUN --mount=type=cache,target=/root/.m2/repository \
