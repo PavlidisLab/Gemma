@@ -38,6 +38,7 @@ import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.rest.util.CursorPaginatedResponseDataObject;
 import ubic.gemma.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.rest.util.ResponseDataObject;
+import ubic.gemma.rest.util.ResponseErrorObject;
 import ubic.gemma.rest.util.args.CursorArg;
 import ubic.gemma.rest.util.args.LimitArg;
 import ubic.gemma.rest.util.args.OffsetArg;
@@ -215,7 +216,7 @@ public class TicketsWebService {
                                     CursorPaginatedResponseDataObject.class
                             }))),
                     @ApiResponse(responseCode = "404", description = "The ticket does not exist.",
-                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class))) })
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Object getTicketEvents(
             @PathParam("id") Long id,
             @Parameter(description = "Opaque keyset-pagination cursor token.")

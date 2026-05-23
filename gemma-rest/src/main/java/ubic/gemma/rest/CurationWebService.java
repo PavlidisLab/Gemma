@@ -12,6 +12,7 @@ package ubic.gemma.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -89,6 +90,9 @@ public class CurationWebService {
     @GET
     @Path("/candidates")
     @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Screening queue (alias of /datasets?filter=curationDetails.needsAttention=true)",
+            description = "Redirects to /datasets with `curationDetails.needsAttention = true` applied. Implemented as a 302 so any query parameters the caller supplies (limit, offset, sort, etc.) pass through verbatim.",
+            responses = { @ApiResponse(responseCode = "302", description = "Redirection to /datasets with the needs-attention filter applied.") })
     public Response getCandidates( @Context UriInfo uriInfo ) {
         UriBuilder builder = uriInfo.getBaseUriBuilder()
                 .scheme( null ).host( null ).port( -1 )

@@ -44,6 +44,7 @@ import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.rest.util.CursorPaginatedResponseDataObject;
 import ubic.gemma.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.rest.util.ResponseDataObject;
+import ubic.gemma.rest.util.ResponseErrorObject;
 import ubic.gemma.rest.util.args.*;
 
 import jakarta.ws.rs.*;
@@ -315,7 +316,8 @@ public class GeneWebService {
             responses = {
                     @ApiResponse(responseCode = "200",
                             content = @Content(schema = @Schema(implementation = ResponseDataObject.class))),
-                    @ApiResponse(responseCode = "404", description = "Gene not found")
+                    @ApiResponse(responseCode = "404", description = "Gene not found",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public ResponseDataObject<GeneValueObject> getGeneOverview( // Params:
             @PathParam("gene") GeneArg<?> geneArg // Required
@@ -346,7 +348,8 @@ public class GeneWebService {
             responses = {
                     @ApiResponse(responseCode = "200",
                             content = @Content(schema = @Schema(implementation = ResponseDataObject.class))),
-                    @ApiResponse(responseCode = "404", description = "Gene not found")
+                    @ApiResponse(responseCode = "404", description = "Gene not found",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public ResponseDataObject<Collection<GeneValueObject>> getGeneHomologues( // Params:
             @PathParam("gene") GeneArg<?> geneArg // Required
@@ -387,7 +390,8 @@ public class GeneWebService {
             responses = {
                     @ApiResponse(responseCode = "200",
                             content = @Content(schema = @Schema(implementation = ResponseDataObject.class))),
-                    @ApiResponse(responseCode = "404", description = "Gene not found")
+                    @ApiResponse(responseCode = "404", description = "Gene not found",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public ResponseDataObject<List<GeneDifferentialExpressionGroupValueObject>> getGeneDifferentialExpression( // Params:
             @PathParam("gene") GeneArg<?> geneArg, // Required

@@ -2,6 +2,8 @@ package ubic.gemma.rest.monitoring;
 
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.apachecommons.CommonsLog;
@@ -48,10 +50,14 @@ public class MetricsWebService {
     @Operation(summary = "Prometheus exposition of process metrics",
             description = "Returns the Micrometer Prometheus exposition format (text/plain version 0.0.4). Requires the X-Scrape-Token header to match the gemma.metrics.scrapeToken property. When that property is unset, the endpoint is disabled (404).",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "Prometheus exposition body"),
-                    @ApiResponse(responseCode = "401", description = "Missing or wrong X-Scrape-Token header"),
-                    @ApiResponse(responseCode = "404", description = "Metrics endpoint disabled (no scrape token configured)"),
-                    @ApiResponse(responseCode = "503", description = "Metrics Spring profile not active; no Prometheus registry available")
+                    @ApiResponse(responseCode = "200", description = "Prometheus exposition body",
+                            content = @Content(mediaType = PROMETHEUS_CONTENT_TYPE, schema = @Schema(type = "string"))),
+                    @ApiResponse(responseCode = "401", description = "Missing or wrong X-Scrape-Token header",
+                            content = @Content(mediaType = "text/plain; charset=utf-8", schema = @Schema(type = "string"))),
+                    @ApiResponse(responseCode = "404", description = "Metrics endpoint disabled (no scrape token configured)",
+                            content = @Content(mediaType = "text/plain; charset=utf-8", schema = @Schema(type = "string"))),
+                    @ApiResponse(responseCode = "503", description = "Metrics Spring profile not active; no Prometheus registry available",
+                            content = @Content(mediaType = "text/plain; charset=utf-8", schema = @Schema(type = "string")))
             })
     public Response scrape( @HeaderParam(TOKEN_HEADER) String presentedToken ) {
         if ( scrapeToken == null || scrapeToken.isEmpty() ) {
