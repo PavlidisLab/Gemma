@@ -30,6 +30,7 @@ import ubic.gemma.core.analysis.sequence.ProbeMapUtils;
 import ubic.gemma.core.analysis.sequence.SequenceBinUtils;
 import ubic.gemma.core.analysis.sequence.ShellDelegatingBlat;
 import ubic.gemma.core.goldenpath.GoldenPathQuery;
+import ubic.gemma.core.goldenpath.GoldenPathQueryFactory;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -62,14 +63,17 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
     private final ArrayDesignService arrayDesignService;
     private final BioSequenceService bioSequenceService;
     private final GenomePersister genomePersister;
+    private final GoldenPathQueryFactory goldenPathQueryFactory;
 
     @Autowired
     public ArrayDesignSequenceAlignmentServiceImpl( ArrayDesignReportService arrayDesignReportService,
-            ArrayDesignService arrayDesignService, BioSequenceService bioSequenceService, GenomePersister genomePersister ) {
+            ArrayDesignService arrayDesignService, BioSequenceService bioSequenceService,
+            GenomePersister genomePersister, GoldenPathQueryFactory goldenPathQueryFactory ) {
         this.arrayDesignReportService = arrayDesignReportService;
         this.arrayDesignService = arrayDesignService;
         this.bioSequenceService = bioSequenceService;
         this.genomePersister = genomePersister;
+        this.goldenPathQueryFactory = goldenPathQueryFactory;
     }
 
     /**
@@ -304,7 +308,7 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
     private Collection<BioSequence> getGoldenPathAlignments( Collection<BioSequence> sequencesToBlat, Taxon taxon,
             Map<BioSequence, Collection<BlatResult>> results ) {
 
-        try ( GoldenPathQuery gpq = new GoldenPathQuery( taxon ) ) {
+        try ( GoldenPathQuery gpq = goldenPathQueryFactory.create( taxon ) ) {
             Collection<BioSequence> needBlat = new HashSet<>();
             int count = 0;
             int totalFound = 0;
