@@ -95,13 +95,10 @@ public class AffyScanDateExtractor extends BaseScanDateExtractor {
                         // this is fixed to 1 according to affy docs.
                         throw new IllegalStateException( "Affymetrix CEL format not recognized: " + version );
                     }
-                    @SuppressWarnings("unused") int numDataGroups = this
-                            .readIntBigEndian( str ); // number of data groups, usually = 1. Each data group
-
+                    this.readIntBigEndian( str ); // number of data groups, usually = 1. Each data group
                     // contains another header, with different name/value/type
                     // triples.
-                    @SuppressWarnings("unused") int filePosOfFirstGroup = this
-                            .readIntBigEndian( str ); // file position of first data group.
+                    this.readIntBigEndian( str ); // file position of first data group.
 
                     date = this.parseGenericCCHeader( str );
 
@@ -170,8 +167,8 @@ public class AffyScanDateExtractor extends BaseScanDateExtractor {
 
         AffyScanDateExtractor.log.debug( guid );
 
-        @SuppressWarnings("unused") String createDate = this.readUnicodeString( str ); // blank?
-        @SuppressWarnings("unused") String locale = this.readUnicodeString( str ); // e.g. en-US
+        this.readUnicodeString( str ); // createDate, blank?
+        this.readUnicodeString( str ); // locale, e.g. en-US
         int numKeyValuePairs = this.readIntBigEndian( str ); // e.g. 55
         Date result = null;
         for ( int i = 0; i < numKeyValuePairs; i++ ) {
@@ -257,7 +254,7 @@ public class AffyScanDateExtractor extends BaseScanDateExtractor {
 
         }
 
-        @SuppressWarnings("unused") int numParentHeaders = this.readIntBigEndian( str );
+        this.readIntBigEndian( str ); // numParentHeaders
         return result;
     }
 

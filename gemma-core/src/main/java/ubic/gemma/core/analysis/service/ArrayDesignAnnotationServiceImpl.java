@@ -217,13 +217,10 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
 
         String shortFileBaseName = ArrayDesignAnnotationServiceImpl.mungeFileName( ad.getShortName() )
                 + ArrayDesignAnnotationService.NO_PARENTS_FILE_SUFFIX;
-        Path sf = getFileName( shortFileBaseName );
         String bioFileBaseName = ArrayDesignAnnotationServiceImpl.mungeFileName( ad.getShortName() )
                 + ArrayDesignAnnotationService.BIO_PROCESS_FILE_SUFFIX;
-        Path bf = getFileName( bioFileBaseName );
         String allParFileBaseName = ArrayDesignAnnotationServiceImpl.mungeFileName( ad.getShortName() )
                 + ArrayDesignAnnotationService.STANDARD_FILE_SUFFIX;
-        Path af = getFileName( allParFileBaseName );
 
         Collection<CompositeSequence> compositeSequences = ad.getCompositeSequences();
         log.info( "Starting getting probe specificity" );

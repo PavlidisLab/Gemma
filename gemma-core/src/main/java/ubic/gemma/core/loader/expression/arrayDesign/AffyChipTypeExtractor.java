@@ -209,13 +209,10 @@ public class AffyChipTypeExtractor {
                         // this is fixed to 1 according to affy docs.
                         throw new IllegalStateException( "Affymetrix CEL format not recognized: " + version );
                     }
-                    @SuppressWarnings("unused")
-                    int numDataGroups = readIntBigEndian( str ); // number of data groups, usually = 1. Each data group
-
+                    readIntBigEndian( str ); // number of data groups, usually = 1. Each data group
                     // contains another header, with different name/value/type
                     // triples.
-                    @SuppressWarnings("unused")
-                    int filePosOfFirstGroup = readIntBigEndian( str ); // file position of first data group.
+                    readIntBigEndian( str ); // file position of first data group.
 
                     chipType = parseGenericCCHeader( str );
 
@@ -277,11 +274,9 @@ public class AffyChipTypeExtractor {
 
         AffyChipTypeExtractor.log.debug( guid );
 
-        // we just need to read thsee off, even if we aren't using it.
-        @SuppressWarnings("unused")
-        String createDate = readUnicodeString( str ); // blank?
-        @SuppressWarnings("unused")
-        String locale = readUnicodeString( str ); // e.g. en-US
+        // we just need to read these off, even if we aren't using it.
+        readUnicodeString( str ); // createDate, blank?
+        readUnicodeString( str ); // locale, e.g. en-US
         int numKeyValuePairs = readIntBigEndian( str ); // e.g. 55
         String result = null;
         for ( int i = 0; i < numKeyValuePairs; i++ ) {
@@ -361,8 +356,7 @@ public class AffyChipTypeExtractor {
 
         }
 
-        @SuppressWarnings("unused")
-        int numParentHeaders = readIntBigEndian( str );
+        readIntBigEndian( str ); // numParentHeaders
         return result;
     }
 

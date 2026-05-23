@@ -226,11 +226,11 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
                 vecsForBas = processedDataVectors;
             } else {
                 // isolate the vectors for the current experiment.
-                for ( Iterator<ProcessedExpressionDataVector> it = processedDataVectors.keySet().iterator(); it
-                        .hasNext(); ) {
-                    ProcessedExpressionDataVector v = it.next();
+                for ( Iterator<Map.Entry<ProcessedExpressionDataVector, Collection<Long>>> it = processedDataVectors.entrySet().iterator(); it.hasNext(); ) {
+                    Map.Entry<ProcessedExpressionDataVector, Collection<Long>> entry = it.next();
+                    ProcessedExpressionDataVector v = entry.getKey();
                     if ( v.getExpressionExperiment().equals( bas ) ) {
-                        vecsForBas.put( v, processedDataVectors.get( v ) );
+                        vecsForBas.put( v, entry.getValue() );
                         it.remove(); // since we're done with it.
                     }
                 }

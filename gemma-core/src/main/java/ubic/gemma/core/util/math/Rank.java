@@ -197,12 +197,8 @@ public class Rank {
 
         List<KeyAndValueData<K>> values = new ArrayList<KeyAndValueData<K>>();
 
-        for ( Iterator<K> itr = m.keySet().iterator(); itr.hasNext(); ) {
-
-            K key = itr.next();
-            Comparable<?> val = m.get( key );
-
-            values.add( new KeyAndValueData<K>( 0, key, val ) );
+        for ( Map.Entry<K, ? extends Comparable<?>> e : m.entrySet() ) {
+            values.add( new KeyAndValueData<K>( 0, e.getKey(), e.getValue() ) );
         }
 
         return rankTransform( m, desc, values );

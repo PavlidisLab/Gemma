@@ -35,12 +35,6 @@ public class ColorMap {
     // color map
     protected Color[] m_colorPalette;
     protected Color[] m_currentColorMap = GREENRED_COLORMAP; // reference to a
-    protected Color[] m_customColorMap;
-
-    /** last color in the current color map */
-    protected Color m_maxColor;
-    /** first color in the current color map */
-    protected Color m_minColor;
 
     public ColorMap() {
 

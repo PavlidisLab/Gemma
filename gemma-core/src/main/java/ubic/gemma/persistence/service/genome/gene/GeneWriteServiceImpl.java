@@ -642,20 +642,12 @@ public class GeneWriteServiceImpl implements GeneWriteService {
     // These are cache-free copies. Hibernate L1 covers within-transaction
     // identity. Once the cutover lands, GenomePersister's copies go away.
 
-    private void fillInDatabaseEntry( DatabaseEntry databaseEntry ) {
-        this.fillInDatabaseEntry( databaseEntry, new HashMap<String, ExternalDatabase>() );
-    }
-
     private void fillInDatabaseEntry( DatabaseEntry databaseEntry, Map<String, ExternalDatabase> externalDbCache ) {
         ExternalDatabase tempExternalDb = databaseEntry.getExternalDatabase();
         databaseEntry.setExternalDatabase( null );
         ExternalDatabase persistedDb = this.persistExternalDatabase( tempExternalDb, externalDbCache );
         databaseEntry.setExternalDatabase( persistedDb );
         assert databaseEntry.getExternalDatabase().getId() != null;
-    }
-
-    private ExternalDatabase persistExternalDatabase( ExternalDatabase database ) {
-        return this.persistExternalDatabase( database, new HashMap<String, ExternalDatabase>() );
     }
 
     private ExternalDatabase persistExternalDatabase( ExternalDatabase database, Map<String, ExternalDatabase> externalDbCache ) {
@@ -673,19 +665,11 @@ public class GeneWriteServiceImpl implements GeneWriteService {
         return resolved;
     }
 
-    private void fillChromosomeLocationAssociations( ChromosomeLocation chromosomeLocation, Taxon t ) {
-        this.fillChromosomeLocationAssociations( chromosomeLocation, t, new HashMap<Integer, Chromosome>() );
-    }
-
     private void fillChromosomeLocationAssociations( ChromosomeLocation chromosomeLocation, Taxon t, Map<Integer, Chromosome> chromosomeCache ) {
         if ( chromosomeLocation == null ) return;
         if ( chromosomeLocation.getChromosome() != null ) {
             chromosomeLocation.setChromosome( this.persistChromosome( chromosomeLocation.getChromosome(), t, chromosomeCache ) );
         }
-    }
-
-    private void fillInGeneProductAssociations( GeneProduct geneProduct ) {
-        this.fillInGeneProductAssociations( geneProduct, new HashMap<String, ExternalDatabase>(), new HashMap<Integer, Chromosome>() );
     }
 
     private void fillInGeneProductAssociations( GeneProduct geneProduct, Map<String, ExternalDatabase> externalDbCache, Map<Integer, Chromosome> chromosomeCache ) {
@@ -700,10 +684,6 @@ public class GeneWriteServiceImpl implements GeneWriteService {
                 de.setExternalDatabase( this.persistExternalDatabase( de.getExternalDatabase(), externalDbCache ) );
             }
         }
-    }
-
-    private Chromosome persistChromosome( Chromosome chromosome, Taxon t ) {
-        return this.persistChromosome( chromosome, t, new HashMap<Integer, Chromosome>() );
     }
 
     private Chromosome persistChromosome( Chromosome chromosome, Taxon t, Map<Integer, Chromosome> chromosomeCache ) {
