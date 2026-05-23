@@ -24,6 +24,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
+import ubic.gemma.core.security.SecurityService;
 import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
@@ -80,6 +81,8 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
     private ExpressionExperimentSetService expressionExperimentSetService;
     @Autowired
     private BioMaterialService bioMaterialService;
+    @Autowired
+    private SecurityService securityService;
 
     /**
      * A collection of {@link ExpressionExperiment} that will be removed at the end of the test.
@@ -573,12 +576,24 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
 
     @Test
     public void testStreamExperiments() {
-        runAsUser( "bob" );
+        // Persist as admin; getTestPersistentBasicExpressionExperiment transitively
+        // calls externalDatabaseService.findOrCreate which is @Secured("GROUP_ADMIN").
+        // Then transfer ownership via SecurityService — same pattern as
+        // SecureValueObjectAuthorizationTest.
         ExpressionExperiment bobExperiment = getTestPersistentBasicExpressionExperiment();
-        runAsUser( "joe" );
         ExpressionExperiment joeExperiment = getTestPersistentBasicExpressionExperiment();
-
+        ees.add( bobExperiment );
+        ees.add( joeExperiment );
+        // Ensure the target users exist (runAsUser(name) creates if missing), then
+        // restore the admin context for the ACL-mutating calls below.
+        runAsUser( "bob" );
+        runAsUser( "joe" );
         runAsAdmin();
+        securityService.makeOwnedByUser( bobExperiment, "bob" );
+        securityService.makePrivate( bobExperiment );
+        securityService.makeOwnedByUser( joeExperiment, "joe" );
+        securityService.makePrivate( joeExperiment );
+
         assertThat( expressionExperimentService.streamAll( true ) )
                 .contains( bobExperiment, joeExperiment );
 
