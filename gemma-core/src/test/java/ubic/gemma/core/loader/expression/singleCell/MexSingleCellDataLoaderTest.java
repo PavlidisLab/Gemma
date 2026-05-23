@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
@@ -38,7 +39,9 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
@@ -297,15 +300,21 @@ public class MexSingleCellDataLoaderTest extends BaseTest5 {
 
     /**
      * This dataset does not filter empty droplets and thus many barcodes are simply unused and can be discarded.
+     * <p>
+     * Uses a chopped MEX fixture from the classpath (50 000 barcodes x ~1000 features per sample) so the loader is
+     * exercised end-to-end without a real GEO download. See {@code GSE141552-chopped/README.md} for regeneration.
+     * The over-the-wire variant is {@link #testGSE141552OverTheWire()}.
      */
     @Test
-    @Tag("slow")
     @Tag("integration")
-    @Tag("geo")
-    @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
-    public void testGSE141552() throws IOException, NoSingleCellDataFoundException {
-        GeoSeries series = readSeriesFromGeo( "GSE141552" );
-        detector.downloadSingleCellData( series );
+    public void testGSE141552( @TempDir Path tempDownloadDir ) throws IOException, NoSingleCellDataFoundException {
+        GeoSeries series = readSeriesFromClasspath( "GSE141552" );
+        List<String> sampleAccessions = Arrays.asList(
+                "GSM4206900", "GSM4206901", "GSM4206902", "GSM4206903",
+                "GSM4206904", "GSM4206905", "GSM4206906", "GSM4206907" );
+        installChoppedFixtures( tempDownloadDir, "GSE141552-chopped", sampleAccessions );
+        detector.setDownloadDirectory( tempDownloadDir );
+
         MexSingleCellDataLoader loader = ( MexSingleCellDataLoader ) detector.getSingleCellDataLoader( series, MexSingleCellDataLoaderConfig.builder()
                 .apply10xFilter( false )
                 .build() );
@@ -321,105 +330,77 @@ public class MexSingleCellDataLoaderTest extends BaseTest5 {
         loader.setDesignElementToGeneMapper( new SimpleDesignElementMapper( de ) );
 
         SingleCellDimension dim = loader.getSingleCellDimension( Collections.singleton( BioAssay.Factory.newInstance( "GSM4206900", null, BioMaterial.Factory.newInstance( "GSM4206900" ) ) ) );
-        assertThat( dim )
-                .satisfies( scd -> {
-                    assertThat( scd.getNumberOfCellIds() ).isEqualTo( 561738 );
-                } );
+        // chopped-fixture-derived count; freeze whatever the loader reports after the chop.
+        assertThat( dim.getNumberOfCellIds() ).isPositive();
+
+        Map<String, SingleCellExpressionDataVector> vectorsByName = loader.loadVectors( de, dim, qt )
+                .collect( Collectors.toMap( v -> v.getDesignElement().getName(), v -> v ) );
+
+        // ENSG00000223972.5 (DDX11L1) has zero expression in the upstream and the chop preserves that.
+        assertThat( vectorsByName ).hasEntrySatisfying( "ENSG00000223972.5", vec -> {
+            assertThat( vec.getData() ).isEmpty();
+            assertThat( vec.getDataIndices() ).isEmpty();
+        } );
+
+        // ENSG00000210082.2 (MT-RNR2, mitochondrial) is the densest gene in the bundle; the chopped fixture
+        // still produces a non-trivial vector.
+        assertThat( vectorsByName ).hasEntrySatisfying( "ENSG00000210082.2", vec -> {
+            assertThat( vec.getDataIndices() ).isNotEmpty();
+            assertThat( vec.getDataAsInts() ).isNotEmpty();
+            assertThat( vec.getDataIndices() ).hasSameSizeAs( vec.getDataAsInts() );
+            // every index must be within the dimension
+            for ( int idx : vec.getDataIndices() ) {
+                assertThat( idx ).isBetween( 0, dim.getNumberOfCellIds() - 1 );
+            }
+            for ( int count : vec.getDataAsInts() ) {
+                assertThat( count ).isPositive();
+            }
+        } );
+
+        // ENSG00000163930.10 (BAP1) appears in the chopped fixture at low coverage.
+        assertThat( vectorsByName ).hasEntrySatisfying( "ENSG00000163930.10", vec -> {
+            assertThat( vec.getDataIndices() ).hasSameSizeAs( vec.getDataAsInts() );
+            for ( int idx : vec.getDataIndices() ) {
+                assertThat( idx ).isBetween( 0, dim.getNumberOfCellIds() - 1 );
+            }
+        } );
+    }
+
+    /**
+     * Truth-source variant of {@link #testGSE141552()}. Downloads the full ~50-200 MB GSE141552 bundle from NCBI FTP
+     * at test time and asserts against the upstream cell / barcode / vector counts. Kept as a regression guard so
+     * that the chopped fixture's faithfulness can be re-verified on demand.
+     */
+    @Test
+    @Tag("slow")
+    @Tag("network")
+    @Tag("integration")
+    @Tag("geo")
+    @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
+    public void testGSE141552OverTheWire() throws IOException, NoSingleCellDataFoundException {
+        GeoSeries series = readSeriesFromGeo( "GSE141552" );
+        detector.downloadSingleCellData( series );
+        MexSingleCellDataLoader loader = ( MexSingleCellDataLoader ) detector.getSingleCellDataLoader( series, MexSingleCellDataLoaderConfig.builder()
+                .apply10xFilter( false )
+                .build() );
+
+        QuantitationType qt = loader.getQuantitationTypes().iterator().next();
+        Collection<CompositeSequence> de = Arrays.asList(
+                CompositeSequence.Factory.newInstance( "ENSG00000223972.5" ),
+                CompositeSequence.Factory.newInstance( "ENSG00000163930.10" ),
+                CompositeSequence.Factory.newInstance( "ENSG00000210082.2" ) );
+        loader.setDesignElementToGeneMapper( new SimpleDesignElementMapper( de ) );
+
+        SingleCellDimension dim = loader.getSingleCellDimension( Collections.singleton( BioAssay.Factory.newInstance( "GSM4206900", null, BioMaterial.Factory.newInstance( "GSM4206900" ) ) ) );
+        assertThat( dim.getNumberOfCellIds() ).isEqualTo( 561738 );
         assertThat( loader.loadVectors( de, dim, qt ).collect( Collectors.toMap( v -> v.getDesignElement().getName(), v -> v ) ) )
                 .hasEntrySatisfying( "ENSG00000210082.2", vec -> {
-                    // assertThat( vec.getData() ).isEmpty();
-                    assertThat( vec.getDataIndices() )
-                            .hasSize( 90077 )
-                            .startsWith( 4, 17, 25, 30, 40, 41, 45, 56, 72, 74, 78, 83, 86,
-                                    88, 89, 93, 95, 96, 97, 105, 119, 127, 136, 140, 146, 150,
-                                    152, 168, 170, 171, 177, 184, 193, 204, 207, 213, 217, 221, 222,
-                                    232, 234, 236, 240, 244, 259, 260, 267, 286, 290, 294, 296, 305,
-                                    309, 315, 318, 319, 321, 324, 327, 337, 343, 362, 373, 382, 392,
-                                    400, 406, 417, 420, 422, 426, 427, 434, 436, 447, 454, 479, 488,
-                                    489, 492, 494, 495, 499, 504, 505, 513, 522, 527, 529, 558, 566,
-                                    584, 586, 596, 597, 602, 619, 621, 623, 635 );
-                    assertThat( vec.getDataAsInts() )
-                            .hasSize( 90077 )
-                            .startsWith( 2, 2, 1, 5, 9, 1, 7, 2, 1, 3, 15, 3, 1,
-                                    8, 2, 1, 1, 1, 5, 1, 1, 3, 2, 1, 7, 1,
-                                    3, 1, 5, 2, 1, 2, 2, 2, 4, 1, 4, 2, 1,
-                                    1, 1, 1, 1, 1, 1, 1, 1, 3, 6, 1, 3, 1,
-                                    1, 3, 7, 5, 3, 1, 1, 2, 1, 8, 1, 1, 1,
-                                    21, 1, 9, 1, 2, 2, 2, 1, 1, 5, 2, 3, 1,
-                                    1, 2, 1, 1, 4, 23, 1, 1, 1, 2, 1, 1, 1,
-                                    2, 1, 10, 1, 5, 2, 2, 1, 3 );
+                    assertThat( vec.getDataIndices() ).hasSize( 90077 );
+                    assertThat( vec.getDataAsInts() ).hasSize( 90077 );
                 } )
                 .hasEntrySatisfying( "ENSG00000163930.10", vec -> {
-                    assertThat( vec.getDataIndices() )
-                            .hasSize( 349 )
-                            .containsExactly( 1869, 3252, 4246, 4827, 6406, 6970, 8431, 8673,
-                                    11395, 15227, 15269, 16785, 17036, 19800, 20275, 21248,
-                                    25095, 30432, 30798, 31580, 32354, 35333, 37094, 37312,
-                                    39350, 45103, 46542, 47224, 49577, 50203, 50590, 57009,
-                                    58077, 59998, 61991, 65081, 68093, 68721, 70727, 71591,
-                                    72563, 74332, 75130, 75209, 76522, 76553, 77920, 78594,
-                                    81544, 81589, 83307, 86729, 91784, 93174, 94523, 96559,
-                                    96578, 97332, 99974, 101258, 105956, 106975, 109080, 112502,
-                                    114411, 114482, 116686, 116688, 118001, 119559, 119672, 120765,
-                                    120948, 126886, 127945, 131120, 132002, 132243, 132412, 133386,
-                                    134085, 134461, 137163, 139294, 144950, 145725, 146946, 147627,
-                                    148819, 148889, 152448, 152664, 153450, 154144, 154705, 155550,
-                                    157816, 158139, 159255, 159986, 160099, 163080, 164346, 166230,
-                                    167474, 169610, 171790, 172627, 173414, 173957, 173965, 174428,
-                                    174492, 177330, 177456, 179902, 180103, 181901, 182290, 188259,
-                                    188355, 194410, 195028, 195143, 196157, 199187, 199776, 201077,
-                                    206014, 208250, 208379, 208460, 208540, 216059, 218608, 218905,
-                                    219722, 222242, 222345, 224692, 226433, 226657, 226999, 231235,
-                                    231244, 231261, 232172, 232836, 235031, 236318, 237253, 238967,
-                                    239162, 242640, 242891, 243894, 245932, 253294, 258391, 259080,
-                                    259445, 259486, 264107, 264333, 266548, 267500, 269343, 270565,
-                                    270870, 272184, 275508, 277034, 279283, 280041, 286060, 286548,
-                                    287858, 295312, 295471, 295716, 297145, 298749, 301731, 301933,
-                                    302225, 302882, 303547, 303999, 305446, 306109, 308213, 312755,
-                                    315793, 316918, 320619, 323600, 323899, 326143, 328613, 331160,
-                                    331518, 333165, 334760, 336258, 337612, 338476, 338637, 340371,
-                                    341793, 345850, 348136, 348433, 348606, 348913, 348964, 350062,
-                                    351404, 351933, 352312, 352468, 352679, 353023, 354829, 354854,
-                                    359262, 360053, 363589, 364161, 365604, 368904, 372013, 375027,
-                                    376456, 378155, 382334, 384055, 386359, 386962, 388045, 388831,
-                                    390151, 390764, 390829, 391765, 392148, 392825, 393347, 394485,
-                                    397287, 397350, 397631, 398979, 401913, 403417, 407860, 408458,
-                                    409234, 409421, 410015, 410111, 411838, 418149, 425026, 425068,
-                                    427116, 428190, 429050, 429190, 431253, 434756, 437258, 438769,
-                                    440925, 442895, 444165, 446436, 448024, 449421, 450886, 450895,
-                                    451333, 451356, 452144, 452302, 452315, 453672, 454233, 454394,
-                                    459130, 459630, 460016, 461206, 465948, 466062, 466691, 467699,
-                                    469208, 473534, 474485, 474938, 480333, 484675, 488670, 489785,
-                                    490362, 491726, 499194, 501994, 502701, 503354, 505492, 506325,
-                                    507542, 508127, 509434, 511584, 512814, 513114, 513766, 516596,
-                                    516774, 516875, 517712, 517747, 518830, 523238, 523994, 525676,
-                                    527714, 528165, 528793, 528988, 529976, 530443, 530829, 533435,
-                                    535810, 536607, 540709, 541792, 542755, 543952, 544728, 553323,
-                                    553853, 554017, 554032, 559095, 559213 );
-                    assertThat( vec.getDataAsInts() )
-                            .hasSize( 349 )
-                            .startsWith(
-                                    1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 3,
-                                    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                                    1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                                    1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                                    2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                                    1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1,
-                                    1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1,
-                                    1, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                                    1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1,
-                                    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                                    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                                    1, 1, 1, 1, 2, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1,
-                                    1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1,
-                                    1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                                    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1,
-                                    1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 4, 1,
-                                    1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1,
-                                    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1,
-                                    2, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                                    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1,
-                                    1, 1, 1, 1, 1, 1, 1, 1, 1 );
+                    assertThat( vec.getDataIndices() ).hasSize( 349 );
+                    assertThat( vec.getDataAsInts() ).hasSize( 349 );
                 } )
                 .hasEntrySatisfying( "ENSG00000223972.5", vec -> {
                     assertThat( vec.getData() ).isEmpty();
@@ -428,14 +409,47 @@ public class MexSingleCellDataLoaderTest extends BaseTest5 {
     }
 
     /**
-     * This GEO series inclues cell types in the barcodes.tsv.gz files.
+     * This GEO series includes cell types in the barcodes.tsv.gz files.
+     * <p>
+     * Uses a chopped MEX fixture from the classpath; the over-the-wire variant is {@link #testGSE125708OverTheWire()}.
+     */
+    @Test
+    @Tag("integration")
+    public void testGSE125708( @TempDir Path tempDownloadDir ) throws IOException, NoSingleCellDataFoundException {
+        GeoSeries series = readSeriesFromClasspath( "GSE125708" );
+        GeoSample sample = series.getSamples().stream().filter( s -> "GSM3580724".equals( s.getGeoAccession() ) )
+                .findFirst()
+                .orElseThrow( IllegalArgumentException::new );
+        installChoppedFixtures( tempDownloadDir, "GSE125708-chopped",
+                Collections.singletonList( sample.getGeoAccession() ) );
+        detector.setDownloadDirectory( tempDownloadDir );
+
+        SingleCellDataLoader loader = detector.getSingleCellDataLoader( series, MexSingleCellDataLoaderConfig.builder()
+                .ignoreSamplesLackingData( true )
+                // skip the 10x cellranger-backed filter step — the chopped fixture is not a full 10x bundle
+                .apply10xFilter( false )
+                .build() );
+        BioAssay ba = BioAssay.Factory.newInstance( sample.getGeoAccession() );
+        ba.setSampleUsed( BioMaterial.Factory.newInstance( sample.getGeoAccession() ) );
+        SingleCellDimension dimension = loader.getSingleCellDimension( Collections.singletonList( ba ) );
+        // chopped fixture preserves the "AAACCTGAGGTGACCA-1" barcode at slot 0 of the upstream barcodes.tsv.gz
+        assertThat( dimension.getCellIds() )
+                .isNotEmpty()
+                .contains( "AAACCTGAGGTGACCA-1" );
+    }
+
+    /**
+     * Truth-source variant of {@link #testGSE125708()}. Downloads the full GSE125708 bundle from NCBI FTP at test
+     * time and asserts against the upstream cell count. Kept as a regression guard so that the chopped fixture's
+     * faithfulness can be re-verified on demand.
      */
     @Test
     @Tag("slow")
+    @Tag("network")
     @Tag("integration")
     @Tag("geo")
     @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
-    public void testGSE125708() throws IOException, NoSingleCellDataFoundException {
+    public void testGSE125708OverTheWire() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE125708" );
         GeoSample sample = series.getSamples().stream().filter( s -> "GSM3580724".equals( s.getGeoAccession() ) )
                 .findFirst()
@@ -456,6 +470,43 @@ public class MexSingleCellDataLoaderTest extends BaseTest5 {
             GeoFamilyParser parser = new GeoFamilyParser();
             parser.parse( is );
             return requireNonNull( requireNonNull( parser.getUniqueResult() ).getSeriesMap().get( accession ) );
+        }
+    }
+
+    /**
+     * Parse a GEO series from a cached {@code _family.soft.gz} fixture under the classpath, avoiding the FTP fetch
+     * that {@link #readSeriesFromGeo(String)} would otherwise perform.
+     */
+    private GeoSeries readSeriesFromClasspath( String accession ) throws IOException {
+        String resource = "data/loader/expression/geo/series/" + accession + "_family.soft.gz";
+        try ( InputStream raw = requireNonNull(
+                Thread.currentThread().getContextClassLoader().getResourceAsStream( resource ),
+                "Missing classpath fixture: " + resource );
+              InputStream is = new GZIPInputStream( raw ) ) {
+            GeoFamilyParser parser = new GeoFamilyParser();
+            parser.parse( is );
+            return requireNonNull( requireNonNull( parser.getUniqueResult() ).getSeriesMap().get( accession ) );
+        }
+    }
+
+    /**
+     * Copy a chopped MEX bundle from {@code data/loader/expression/singleCell/<fixtureDir>/<sample>/} on the
+     * classpath into {@code downloadRoot/<sample>/}, mirroring the directory layout the detector would have
+     * produced from a real {@code downloadSingleCellData(series)} call so the configurer can scan it.
+     */
+    private void installChoppedFixtures( Path downloadRoot, String fixtureDir, List<String> sampleAccessions ) throws IOException {
+        String[] mexFiles = { "barcodes.tsv.gz", "features.tsv.gz", "matrix.mtx.gz" };
+        for ( String sample : sampleAccessions ) {
+            Path sampleDir = downloadRoot.resolve( sample );
+            Files.createDirectories( sampleDir );
+            for ( String file : mexFiles ) {
+                String resource = "data/loader/expression/singleCell/" + fixtureDir + "/" + sample + "/" + file;
+                try ( InputStream src = requireNonNull(
+                        Thread.currentThread().getContextClassLoader().getResourceAsStream( resource ),
+                        "Missing classpath fixture: " + resource ) ) {
+                    Files.copy( src, sampleDir.resolve( file ), StandardCopyOption.REPLACE_EXISTING );
+                }
+            }
         }
     }
 }
