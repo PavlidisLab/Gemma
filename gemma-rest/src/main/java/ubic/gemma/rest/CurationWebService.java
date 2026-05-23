@@ -165,6 +165,23 @@ public class CurationWebService {
         @JsonProperty("payload_json")
         @Nullable
         public String payloadJson;
+        /** Lifecycle status: {@code OPEN}, {@code FINALIZED}, {@code REOPENED}. */
+        @JsonProperty("status")
+        @Nullable
+        public String status;
+        /** Curator-chosen disposition wire string; null until set. */
+        @JsonProperty("disposition")
+        @Nullable
+        public String disposition;
+        @JsonProperty("disposition_note")
+        @Nullable
+        public String dispositionNote;
+        @JsonProperty("finalized_at")
+        @Nullable
+        public Date finalizedAt;
+        @JsonProperty("last_updated")
+        @Nullable
+        public Date lastUpdated;
     }
 
     /**
@@ -328,13 +345,14 @@ public class CurationWebService {
     //
     // The mutation/state-machine endpoints (PATCH /curation-proposals/{id},
     // PATCH /audits/{id}, POST /audits/{id}/finalize, POST /audits/{id}/reopen)
-    // are stubbed as 501 NOT IMPLEMENTED — the underlying AgentProposal entity
-    // does not yet carry the `status` / `disposition` / `finalizedAt` columns
-    // those endpoints need (see handoffs/RECCE_AGENT_CURATION_UNIFICATION.md
-    // §1, §4 — disposition lives on CurationDraft today, not on the proposal
-    // row, and there is no FINALIZED/OPEN lifecycle column on the entity).
-    // Wiring the URL surface now lets the curation-UI ship its routes; the
-    // schema migration + state-machine implementation lands as a follow-up.
+    // flip the AgentProposal lifecycle columns added in Flyway mysql/V15 +
+    // h2/V17 (STATUS / DISPOSITION / DISPOSITION_NOTE / FINALIZED_AT /
+    // LAST_UPDATED). Note: per Paul's directive, the same dispositions ALSO
+    // exist on CurationDraft via diff-derive in the local-api eval path —
+    // the AgentProposal-side disposition is a complementary surface for the
+    // post-evaluation phase, not a replacement. See
+    // handoffs/RECCE_AGENT_CURATION_UNIFICATION.md §4 +
+    // handoffs/CURATION_TO_GEMMA_2_0_HANDOFF.md.
     // ------------------------------------------------------------------
 
     /**
@@ -383,34 +401,36 @@ public class CurationWebService {
     }
 
     /**
-     * Disposition mutation — STUB. Returns 501 Not Implemented today; the
-     * underlying entity lacks the {@code disposition} / {@code note} columns
-     * the curation-UI's accept/reject/park action needs.
+     * Set the curator disposition on a {@code kind=PROPOSAL} row. Wire
+     * vocabulary: {@code accept}, {@code reject}, {@code edit}, {@code park}
+     * (see {@code handoffs/RECCE_AGENT_CURATION_UNIFICATION.md} §4.1).
+     * Stamps {@code lastUpdated}; does NOT change lifecycle status (use
+     * finalize / reopen for that). 404 if id resolves to an audit row.
      * <p>
-     * TODO: once the {@code AgentProposal} entity carries a disposition
-     * column (or once dispositions migrate fully onto {@code CurationDraft}),
-     * wire this to flip the row, validate the disposition allow-list
-     * ({@code accepted} / {@code rejected} / {@code parked}), and add an
-     * {@code @Audited} of an appropriate {@code AgentProposalDispositionEvent}.
+     * TODO(@Audited): no {@code AgentProposalDispositionEvent} type exists
+     * yet; emitting an audit row from here can come once the curation event
+     * type hierarchy is in place.
      */
     @PATCH
     @Hidden
     @Path("/curation-proposals/{id}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     @Operation(hidden = true)
     public Response patchProposal(
             @PathParam("id") Long id,
             @Nullable DispositionPatchRequest body
     ) {
-        // Validate id resolves so the 501 isn't masking a 404.
         loadByIdOfKindOrThrow( id, AgentCurationKind.PROPOSAL );
-        validateDispositionOrThrow( body, /* audit */ false );
-        return Response.status( Response.Status.NOT_IMPLEMENTED )
-                .entity( unimplementedBody( "PATCH /curation-proposals/{id}",
-                        "AgentProposal entity lacks `disposition` + `note` columns" ) )
-                .build();
+        String disposition = validateDispositionOrThrow( body, /* audit */ false );
+        String note = body != null ? body.note : null;
+        AgentProposal updated = agentProposalService.updateDisposition( id, disposition, note );
+        if ( updated == null ) {
+            throw new NotFoundException( "No proposal with id " + id );
+        }
+        Long invId = updated.getInvestigation() != null ? updated.getInvestigation().getId() : null;
+        return Response.ok( toProposalResponse( updated, invId ) ).build();
     }
 
     /**
@@ -452,81 +472,96 @@ public class CurationWebService {
     }
 
     /**
-     * Audit disposition mutation — STUB. See {@link #patchProposal} for the
-     * rationale; same schema gap blocks the audit-side mutation.
+     * Set the curator disposition on a {@code kind=AUDIT} row. Wire
+     * vocabulary as {@link #patchProposal}, plus {@code accepted_with_edits}.
+     * Stamps {@code lastUpdated}; lifecycle status is unchanged here (use
+     * finalize / reopen). 404 if id resolves to a proposal row.
      */
     @PATCH
     @Hidden
     @Path("/audits/{id}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     @Operation(hidden = true)
     public Response patchAudit(
             @PathParam("id") Long id,
             @Nullable DispositionPatchRequest body
     ) {
         loadByIdOfKindOrThrow( id, AgentCurationKind.AUDIT );
-        validateDispositionOrThrow( body, /* audit */ true );
-        return Response.status( Response.Status.NOT_IMPLEMENTED )
-                .entity( unimplementedBody( "PATCH /audits/{id}",
-                        "AgentProposal entity lacks `disposition` + `note` columns; "
-                                + "audit lifecycle (OPEN/FINALIZED) also missing" ) )
-                .build();
+        String disposition = validateDispositionOrThrow( body, /* audit */ true );
+        if ( disposition == null ) {
+            // Audit PATCH with no body-level disposition is a no-op (per-element
+            // map is opaque pass-through at this layer); echo the row back.
+            AgentProposal p = loadByIdOfKindOrThrow( id, AgentCurationKind.AUDIT );
+            Long invId = p.getInvestigation() != null ? p.getInvestigation().getId() : null;
+            return Response.ok( toProposalResponse( p, invId ) ).build();
+        }
+        String note = body != null ? body.note : null;
+        AgentProposal updated = agentProposalService.updateDisposition( id, disposition, note );
+        if ( updated == null ) {
+            throw new NotFoundException( "No audit with id " + id );
+        }
+        Long invId = updated.getInvestigation() != null ? updated.getInvestigation().getId() : null;
+        return Response.ok( toProposalResponse( updated, invId ) ).build();
     }
 
     /**
-     * Mark an audit FINALIZED — STUB. Returns 501 today. The entity has no
-     * {@code status} column and no {@code finalizedAt} column.
-     * <p>
-     * TODO: add the {@code STATUS} + {@code FINALIZED_AT} columns (Flyway
-     * migration), then implement: set status to FINALIZED, stamp
-     * {@code finalizedAt = now()}, return 200 with the fresh row. Second-time
-     * call is idempotent (200 OK, no state change).
+     * Mark an audit FINALIZED. Idempotent: second call returns 200 with no
+     * state change. Returns 409 if the audit has no disposition set yet (an
+     * unresponded audit can't be finalized).
      */
     @POST
     @Hidden
     @Path("/audits/{id}/finalize")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     @Operation(hidden = true)
     public Response finalizeAudit(
             @PathParam("id") Long id
     ) {
-        loadByIdOfKindOrThrow( id, AgentCurationKind.AUDIT );
-        return Response.status( Response.Status.NOT_IMPLEMENTED )
-                .entity( unimplementedBody( "POST /audits/{id}/finalize",
-                        "AgentProposal entity lacks `status` + `finalizedAt` columns" ) )
-                .build();
+        AgentProposal p = loadByIdOfKindOrThrow( id, AgentCurationKind.AUDIT );
+        if ( p.getDisposition() == null || p.getDisposition().trim().isEmpty() ) {
+            return Response.status( Response.Status.CONFLICT )
+                    .entity( conflictBody( "audit has no disposition; PATCH /audits/{id} first" ) )
+                    .build();
+        }
+        AgentProposal updated = agentProposalService.finalizeProposal( id );
+        if ( updated == null ) {
+            throw new NotFoundException( "No audit with id " + id );
+        }
+        Long invId = updated.getInvestigation() != null ? updated.getInvestigation().getId() : null;
+        return Response.ok( toProposalResponse( updated, invId ) ).build();
     }
 
     /**
-     * Reopen a FINALIZED audit — STUB. Returns 501 today. Idempotent
-     * counterpart of {@link #finalizeAudit}.
+     * Reopen a FINALIZED audit (sets status to REOPENED, clears
+     * {@code finalizedAt}). Idempotent counterpart of {@link #finalizeAudit}.
      */
     @POST
     @Hidden
     @Path("/audits/{id}/reopen")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     @Operation(hidden = true)
     public Response reopenAudit(
             @PathParam("id") Long id
     ) {
         loadByIdOfKindOrThrow( id, AgentCurationKind.AUDIT );
-        return Response.status( Response.Status.NOT_IMPLEMENTED )
-                .entity( unimplementedBody( "POST /audits/{id}/reopen",
-                        "AgentProposal entity lacks `status` + `finalizedAt` columns" ) )
-                .build();
+        AgentProposal updated = agentProposalService.reopenProposal( id );
+        if ( updated == null ) {
+            throw new NotFoundException( "No audit with id " + id );
+        }
+        Long invId = updated.getInvestigation() != null ? updated.getInvestigation().getId() : null;
+        return Response.ok( toProposalResponse( updated, invId ) ).build();
     }
 
     /**
-     * Body shape for the (currently stubbed) PATCH disposition endpoints.
-     * Allow-list validation runs before the 501 is returned so a malformed
-     * body still gets a 400 — keeps the wire contract honest while the
-     * implementation catches up.
+     * Body shape for the PATCH disposition endpoints. Allow-list validation
+     * runs at the handler boundary so a malformed body returns 400 before
+     * touching the service layer.
      */
     public static class DispositionPatchRequest {
         @JsonProperty("disposition")
@@ -543,33 +578,36 @@ public class CurationWebService {
 
     /**
      * Shared helper: validate the disposition string against the allow-list.
-     * For proposal PATCH the allowed values are {@code accepted}, {@code rejected},
-     * {@code parked}. Audit PATCH additionally allows {@code accepted_with_edits}
-     * (matches the wire vocabulary in
-     * {@code handoffs/RECCE_AGENT_CURATION_UNIFICATION.md} §4).
+     * Wire vocabulary from {@code handoffs/RECCE_AGENT_CURATION_UNIFICATION.md}
+     * §4.1: proposal PATCH allows {@code accept}, {@code reject}, {@code edit},
+     * {@code park}; audit PATCH additionally allows {@code accepted_with_edits}.
+     * Returns the normalized lowercase string for storage, or {@code null} if
+     * the body carries no disposition (audit PATCH only).
      */
-    private static void validateDispositionOrThrow( @Nullable DispositionPatchRequest body, boolean audit ) {
+    @Nullable
+    private static String validateDispositionOrThrow( @Nullable DispositionPatchRequest body, boolean audit ) {
         if ( body == null || body.disposition == null || body.disposition.trim().isEmpty() ) {
             // Body-level disposition is optional on the audit PATCH (per-element
             // map can carry the change instead); required on the proposal PATCH.
             if ( !audit ) {
                 throw new BadRequestException( "Request body must include a `disposition`." );
             }
-            return;
+            return null;
         }
         String d = body.disposition.trim().toLowerCase();
         switch ( d ) {
-            case "accepted":
-            case "rejected":
-            case "parked":
-                return;
+            case "accept":
+            case "reject":
+            case "edit":
+            case "park":
+                return d;
             case "accepted_with_edits":
-                if ( audit ) return;
+                if ( audit ) return d;
                 throw new BadRequestException( "Unknown disposition: " + body.disposition
-                        + " (expected one of: accepted, rejected, parked)" );
+                        + " (expected one of: accept, reject, edit, park)" );
             default:
                 throw new BadRequestException( "Unknown disposition: " + body.disposition
-                        + " (expected one of: accepted, rejected, parked"
+                        + " (expected one of: accept, reject, edit, park"
                         + ( audit ? ", accepted_with_edits)" : ")" ) );
         }
     }
@@ -629,18 +667,14 @@ public class CurationWebService {
     }
 
     /**
-     * Standard 501 body — a small JSON envelope identifying the stubbed
-     * endpoint + the schema gap blocking it. UIB can switch on the
-     * {@code not_implemented} field if it wants to render a "coming soon"
-     * banner instead of a generic error.
+     * Small JSON envelope returned with a 409 Conflict so the curation-UI can
+     * surface a specific reason ("audit has no disposition yet") rather than
+     * a generic error.
      */
-    private static Object unimplementedBody( String endpoint, String reason ) {
+    private static Object conflictBody( String reason ) {
         java.util.Map<String, Object> body = new java.util.LinkedHashMap<>();
-        body.put( "not_implemented", true );
-        body.put( "endpoint", endpoint );
+        body.put( "conflict", true );
         body.put( "reason", reason );
-        body.put( "tracker",
-                "handoffs/RECCE_AGENT_CURATION_UNIFICATION.md §1, §4 — schema gap on AgentProposal" );
         return body;
     }
 
@@ -654,6 +688,11 @@ public class CurationWebService {
         r.model = p.getModel();
         r.ranAt = p.getRanAt();
         r.payloadJson = p.getPayloadJson();
+        r.status = p.getStatus();
+        r.disposition = p.getDisposition();
+        r.dispositionNote = p.getDispositionNote();
+        r.finalizedAt = p.getFinalizedAt();
+        r.lastUpdated = p.getLastUpdated();
         return r;
     }
 

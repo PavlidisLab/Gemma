@@ -51,6 +51,37 @@ public class AgentProposal extends AbstractIdentifiable {
     private Date ranAt;
     private String payloadJson;
 
+    /**
+     * Lifecycle status. Defaults to {@code OPEN} (agent emitted, no curator
+     * action yet). {@code FINALIZED} after the curator finalizes; {@code
+     * REOPENED} if the curator un-finalizes (re-opens the edit surface).
+     * Stored as a free-form {@code VARCHAR(32)} string rather than an enum
+     * so wire vocabulary can evolve without a schema migration; see Flyway
+     * mysql/V15 + h2/V17.
+     */
+    private String status = "OPEN";
+
+    /**
+     * Curator-chosen disposition (allow-list validated at the REST handler
+     * boundary): {@code accept}, {@code accepted_with_edits}, {@code reject},
+     * {@code edit}, {@code park}. Null until the curator dispositions the
+     * row. See {@code handoffs/RECCE_AGENT_CURATION_UNIFICATION.md} §4.1.
+     */
+    private String disposition;
+
+    /** Optional free-text curator note attached to the disposition. */
+    private String dispositionNote;
+
+    /** Timestamp the row was finalized; reset to {@code null} on reopen. */
+    private Date finalizedAt;
+
+    /**
+     * Last-touched timestamp. MySQL's {@code ON UPDATE CURRENT_TIMESTAMP(3)}
+     * keeps it fresh on prod; the service layer stamps it on save() so H2
+     * (no {@code ON UPDATE} semantics) stays behaviourally aligned.
+     */
+    private Date lastUpdated;
+
     public AgentProposal() {
     }
 
@@ -140,6 +171,46 @@ public class AgentProposal extends AbstractIdentifiable {
 
     public void setPayloadJson( String payloadJson ) {
         this.payloadJson = payloadJson;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus( String status ) {
+        this.status = status;
+    }
+
+    public String getDisposition() {
+        return disposition;
+    }
+
+    public void setDisposition( String disposition ) {
+        this.disposition = disposition;
+    }
+
+    public String getDispositionNote() {
+        return dispositionNote;
+    }
+
+    public void setDispositionNote( String dispositionNote ) {
+        this.dispositionNote = dispositionNote;
+    }
+
+    public Date getFinalizedAt() {
+        return finalizedAt;
+    }
+
+    public void setFinalizedAt( Date finalizedAt ) {
+        this.finalizedAt = finalizedAt;
+    }
+
+    public Date getLastUpdated() {
+        return lastUpdated;
+    }
+
+    public void setLastUpdated( Date lastUpdated ) {
+        this.lastUpdated = lastUpdated;
     }
 
     @Override

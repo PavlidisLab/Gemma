@@ -172,4 +172,57 @@ public class AgentProposalServiceImpl implements AgentProposalService {
             @Nullable List<Long> investigationIds ) {
         return agentProposalDao.countSummaries( kindFilter, investigationIds );
     }
+
+    @Nullable
+    @Override
+    @Transactional
+    public AgentProposal updateDisposition( Long id, String disposition, @Nullable String note ) {
+        Assert.notNull( id, "id must not be null." );
+        Assert.hasText( disposition, "disposition must be non-blank." );
+        AgentProposal p = agentProposalDao.load( id );
+        if ( p == null ) return null;
+        p.setDisposition( disposition );
+        p.setDispositionNote( note );
+        p.setLastUpdated( new Date() );
+        agentProposalDao.update( p );
+        return p;
+    }
+
+    @Nullable
+    @Override
+    @Transactional
+    public AgentProposal finalizeProposal( Long id ) {
+        Assert.notNull( id, "id must not be null." );
+        AgentProposal p = agentProposalDao.load( id );
+        if ( p == null ) return null;
+        if ( "FINALIZED".equals( p.getStatus() ) ) {
+            // Idempotent: no state change, no lastUpdated stamp.
+            return p;
+        }
+        Date now = new Date();
+        p.setStatus( "FINALIZED" );
+        p.setFinalizedAt( now );
+        p.setLastUpdated( now );
+        agentProposalDao.update( p );
+        return p;
+    }
+
+    @Nullable
+    @Override
+    @Transactional
+    public AgentProposal reopenProposal( Long id ) {
+        Assert.notNull( id, "id must not be null." );
+        AgentProposal p = agentProposalDao.load( id );
+        if ( p == null ) return null;
+        if ( "REOPENED".equals( p.getStatus() ) ) {
+            // Idempotent: no state change, no lastUpdated stamp.
+            return p;
+        }
+        Date now = new Date();
+        p.setStatus( "REOPENED" );
+        p.setFinalizedAt( null );
+        p.setLastUpdated( now );
+        agentProposalDao.update( p );
+        return p;
+    }
 }
