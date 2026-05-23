@@ -419,10 +419,18 @@ public class GemmaAclConfiguration {
          * through ACL reads (avoiding session conflicts in batch operations). Spring Security's JDBC
          * stack doesn't have or need this concept — it manages its own connections via DataSource.
          * Ignore the session argument.
+         * <p>
+         * Must {@code normalize} the OID like the sibling {@link #readAclById(ObjectIdentity)} overload
+         * does — Spring's {@code JdbcAclService.readAclById} ultimately routes through
+         * {@code BasicLookupStrategy.readAclsById}, which keys its result map by
+         * {@link org.springframework.security.acls.domain.ObjectIdentityImpl}. Without normalization
+         * an {@link ubic.gemma.core.security.acl.domain.AclObjectIdentity} passed in by callers (e.g.
+         * the {@code AFTER_ACL_STREAM_READ} after-invocation filter) misses the map key on the way
+         * out and surfaces as {@link NotFoundException}, even when the underlying row exists.
          */
         @Override
         public Acl readAclById( ObjectIdentity oid, Session session ) throws NotFoundException {
-            return delegate.readAclById( oid );
+            return delegate.readAclById( normalize( oid ) );
         }
 
         /**
