@@ -145,13 +145,40 @@ Map<String, List<OntologyTermSimpleValueObject>> parentsByUri = batchGetDirectPa
 
 **What NOT to do.** Don't pre-resolve definitions in `OntologyService.findExperimentsCharacteristicTags` itself — keep ontology-search and metadata-enrichment as separate stages so the ranker can reorder before enrichment happens.
 
-### 6. Optional — synonym walk for query expansion
+### 6. Synonym walk — REQUIRED (Paul, 2026-05-23)
 
-Out of scope for the first iteration, but the real win for "chronic itch" requires the search to recognise `itch ≈ pruritus`. Options:
-- Walk the in-memory ontology service for `exactSynonym` / `relatedSynonym` annotations and OR them into the Lucene query.
-- Pre-build a synonym dictionary file and feed it to Lucene as a `SynonymGraphFilter`.
+> "when the query is 'hippocampus' synonyms have to be returned like 'ammon's horn' which is actually what we use; then, if the ontology actually says that ammon's horn is a synonym of the query (per the ontology) that has to be surfaced."
 
-Both are real work. Mention in the recce, don't try to do them in the first ranker PR.
+Right now `AnnotationsWebService.getTerms` runs pure Lucene token match against preferred term labels. Gemma's `CHARACTERISTIC` table can be annotated with synonym strings ("ammon's horn" — the curator-typed text), and the ontology knows those are `oboInOwl:hasExactSynonym` of `UBERON_0002421` ("hippocampus"). Today neither side bridges these.
+
+#### Two layers, each separable
+
+**6a. Query expansion**. Before searching, expand each query token:
+1. For each token, find ontology term(s) whose preferred label matches.
+2. Pull each matched term's synonyms via `OntologyTerm.getSynonyms()` (or the equivalent — needs a recce on the basecode/Jena API since the current `OntologyService` doesn't expose synonyms directly per a quick grep; may live on `OntologyTerm` itself or via TDB query).
+3. OR the synonyms into the Lucene query — `hippocampus OR "ammon's horn" OR "Ammon horn" OR "cornu ammonis"` etc.
+
+The TDB-backed `JenaTextOntologySearchService` may already index synonym text on the term entries (Jena Text supports `multilingual` and `analyzer-per-property` configs). Recce first: does `?query=ammon's+horn` already find UBERON_0002421 today? If yes, query expansion may be cheaper than it sounds — Lucene already knows about synonyms, we just need to FIND the synonym-set per query token rather than asking the user to type each variant.
+
+**6b. Per-hit synonym annotation**. For each hit, attach metadata that lets the UI explain WHY this hit matched:
+- New field on `AnnotationSearchResultValueObject`: `@Nullable String matchedVia` — one of `preferred_label` (default), `exact_synonym`, `narrow_synonym`, `related_synonym`, `alt_label`.
+- New field: `@Nullable String matchedText` — the actual synonym text that matched (so the UI can render "↪ via synonym 'ammon's horn'").
+- Computation: for each hit, walk the hit's term against each query token; if the preferred label matches, `matched_via=preferred_label`; otherwise check the term's synonyms and pick the one with the closest match.
+
+For the typeahead UX Paul described: a hit like `UBERON_0002421 hippocampus` matched by query "ammon's horn" should render the preferred label "hippocampus" prominently with a secondary line "↪ matches synonym 'Ammon's horn' (exact_synonym)".
+
+#### Don't fold into the ranker. Don't fold into the ranker.
+
+The ranker (lucene / usage / coverage / composite) is orthogonal — it reorders whatever results the SEARCH stage produces. The synonym walk is in the SEARCH stage (Lucene query expansion). Two distinct PRs:
+
+1. Query expansion + per-hit synonym annotation — touches `AnnotationsWebService.getTerms` (search call) and `JenaTextOntologySearchService` (if Lucene index needs synonym fields added).
+2. Optional follow-up: a `SynonymWeightedRankingStrategy` that downranks pure-synonym matches relative to preferred-label matches (curator preference). But that's debatable — synonym matches ARE the desired hits sometimes ("ammon's horn" usage is real Gemma data).
+
+#### Cross-references for this section
+
+- `gemma-core/src/main/java/ubic/gemma/core/ontology/search/JenaTextOntologySearchService.java` — Lucene-text wrapper; check what properties are indexed.
+- `OntologyTerm.getSynonyms()` — confirm signature; baseCode side.
+- Paul's "hippocampus / ammon's horn" framing → typical curator-side mental model is: typeahead helps me find the term Gemma's data is already tagged with. Synonyms ARE the bridge.
 
 ## What NOT to do
 
