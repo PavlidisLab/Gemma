@@ -24,8 +24,10 @@ import org.hibernate.Hibernate;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.hibernate.SessionFactory;
 import ubic.gemma.core.util.test.BaseIntegrationTest5;
 import ubic.gemma.core.util.test.PersistentDummyObjectHelper;
+import ubic.gemma.core.util.test.ThawTestUtils;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabases;
@@ -78,6 +80,9 @@ public class ArrayDesignServiceTest extends BaseIntegrationTest5 {
 
     @Autowired
     private PersistentDummyObjectHelper testHelper;
+
+    @Autowired
+    private SessionFactory sessionFactory;
 
     private final Collection<ArrayDesign> adsToRemove = new HashSet<>();
 
@@ -325,11 +330,13 @@ public class ArrayDesignServiceTest extends BaseIntegrationTest5 {
 
     @Test
     public void testThaw() {
-        ArrayDesign ad = getTestPersistentArrayDesign( 5, true );
+        ArrayDesign persisted = getTestPersistentArrayDesign( 5, true );
+        assertNotNull( persisted.getId() );
 
-        assertNotNull( ad.getId() );
-        ad = arrayDesignService.load( ad.getId() );
-
+        // Load in a fresh session so the composite-sequences bag is NOT pre-hydrated
+        // by cascade-saves earlier in this test session. The returned instance is
+        // detached; arrayDesignService.thaw(...) re-attaches it via ensureInSession().
+        ArrayDesign ad = ThawTestUtils.loadDetachedInFreshSession( sessionFactory, ArrayDesign.class, persisted.getId() );
         assertNotNull( ad );
         assertFalse( Hibernate.isInitialized( ad.getCompositeSequences() ) );
 
