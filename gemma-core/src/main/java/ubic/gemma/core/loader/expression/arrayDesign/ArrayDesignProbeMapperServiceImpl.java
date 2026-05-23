@@ -33,6 +33,7 @@ import ubic.gemma.core.analysis.sequence.ProbeMapperConfig;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.goldenpath.GoldenPathSequenceAnalysis;
+import ubic.gemma.core.goldenpath.GoldenPathSequenceAnalysisFactory;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
@@ -91,6 +92,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
     private final GeneProductService geneProductService;
     private final GeneService geneService;
     private final GenomePersister genomePersister;
+    private final GoldenPathSequenceAnalysisFactory goldenPathSequenceAnalysisFactory;
     private final ProbeMapper probeMapper;
     private final TaskExecutor taskExecutor;
 
@@ -100,7 +102,8 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
             ArrayDesignReportService arrayDesignReportService, ArrayDesignService arrayDesignService,
             ProbeMapper probeMapper, BioSequenceService bioSequenceService, BlatResultReadService blatResultService,
             CompositeSequenceService compositeSequenceService, ExpressionDataFileService expressionDataFileService,
-            GeneProductService geneProductService, GeneService geneService, GenomePersister genomePersister, TaskExecutor taskExecutor ) {
+            GeneProductService geneProductService, GeneService geneService, GenomePersister genomePersister,
+            GoldenPathSequenceAnalysisFactory goldenPathSequenceAnalysisFactory, TaskExecutor taskExecutor ) {
         this.annotationAssociationService = annotationAssociationService;
         this.arrayDesignAnnotationService = arrayDesignAnnotationService;
         this.arrayDesignReportService = arrayDesignReportService;
@@ -113,6 +116,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
         this.geneProductService = geneProductService;
         this.geneService = geneService;
         this.genomePersister = genomePersister;
+        this.goldenPathSequenceAnalysisFactory = goldenPathSequenceAnalysisFactory;
         this.taskExecutor = taskExecutor;
     }
 
@@ -165,7 +169,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
         int numWithNoResults = 0;
         ArrayDesignProbeMapperServiceImpl.log
                 .info( "Start processing " + arrayDesign.getCompositeSequences().size() + " probes ..." );
-        try ( GoldenPathSequenceAnalysis goldenPathDb = new GoldenPathSequenceAnalysis( taxon ) ) {
+        try ( GoldenPathSequenceAnalysis goldenPathDb = goldenPathSequenceAnalysisFactory.create( taxon ) ) {
             for ( CompositeSequence compositeSequence : arrayDesign.getCompositeSequences() ) {
 
                 Map<String, Collection<BlatAssociation>> results = this
