@@ -33,6 +33,7 @@ import ubic.gemma.core.security.acl.domain.AclService;
 import ubic.gemma.core.security.acl.domain.AclServiceImpl;
 import ubic.gemma.persistence.hibernate.H2Dialect;
 import ubic.gemma.persistence.hibernate.HibernateSessionFactoryBean;
+import ubic.gemma.persistence.util.AclClassIdInitializer;
 
 import javax.sql.DataSource;
 import java.util.Properties;
@@ -128,6 +129,19 @@ public abstract class BaseDatabaseTest5 extends BaseTest5 {
         @Bean
         public SidRetrievalStrategy sidRetrievalStrategy() {
             return new AclSidRetrievalStrategyImpl( new NullRoleHierarchy() );
+        }
+
+        /**
+         * Stash the SessionFactory onto {@code AclQueryUtils.sessionFactory} so
+         * ACL-filtered HQL/SQL queries can resolve {@code acl_class.id} during
+         * predicate rendering. Production picks this up via component-scan;
+         * test contexts wire infrastructure beans explicitly and need this
+         * shim, otherwise the first ACL-filtered query throws
+         * {@code IllegalStateException} from {@code AclQueryUtils.resolveAclClassId}.
+         */
+        @Bean
+        public AclClassIdInitializer aclClassIdInitializer( SessionFactory sessionFactory ) {
+            return new AclClassIdInitializer( sessionFactory );
         }
     }
 
