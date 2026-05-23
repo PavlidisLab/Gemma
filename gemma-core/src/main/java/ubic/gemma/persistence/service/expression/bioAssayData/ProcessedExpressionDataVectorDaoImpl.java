@@ -67,7 +67,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
                                 + "join fetch cs.arrayDesign "
                                 + "left join fetch cs.biologicalCharacteristic "
                                 + "join fetch dedv.bioAssayDimension "
-                                + "join fetch dedv.quantitationType "
+                                + "left join fetch dedv.quantitationType "
                                 + "where dedv.expressionExperiment = :ee" )
                 .setParameter( "ee", ee )
                 .list();
@@ -86,7 +86,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
                                 + "join fetch dedv.designElement cs "
                                 + "join fetch cs.arrayDesign "
                                 + "join fetch dedv.bioAssayDimension "
-                                + "join fetch dedv.quantitationType "
+                                + "left join fetch dedv.quantitationType "
                                 + "where dedv.expressionExperiment = :ee and dedv.bioAssayDimension = :dimension" )
                 .setParameter( "ee", ee )
                 .setParameter( "dimension", dimension )
@@ -113,7 +113,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
                                 + "join fetch dedv.designElement cs "
                                 + "join fetch cs.arrayDesign "
                                 + "join fetch dedv.bioAssayDimension "
-                                + "join fetch dedv.quantitationType "
+                                + "left join fetch dedv.quantitationType "
                                 + "where cs.id in ( :cs )"
                                 + ( ees != null ? " and dedv.expressionExperiment in :ees" : "" ) )
                 .setParameterList( "cs", optimizeParameterList( cs2gene.keySet() ) );
@@ -220,7 +220,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
                         + "join fetch dedv.designElement cs "
                         + "join fetch cs.arrayDesign "
                         + "join fetch dedv.bioAssayDimension "
-                        + "join fetch dedv.quantitationType "
+                        + "left join fetch dedv.quantitationType "
                         + "where dedv.id in (:ids)" )
                 .setParameterList( "ids", picked )
                 .list();

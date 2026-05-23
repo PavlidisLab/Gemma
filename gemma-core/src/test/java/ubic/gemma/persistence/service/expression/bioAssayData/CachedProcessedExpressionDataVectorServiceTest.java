@@ -102,6 +102,11 @@ public class CachedProcessedExpressionDataVectorServiceTest extends BaseDatabase
         public QuantitationTypeDao quantitationTypeDao( SessionFactory sessionFactory ) {
             return new QuantitationTypeDaoImpl( sessionFactory );
         }
+
+        @Bean
+        public ubic.gemma.persistence.service.expression.biomaterial.BioMaterialDao bioMaterialDao( SessionFactory sessionFactory ) {
+            return new ubic.gemma.persistence.service.expression.biomaterial.BioMaterialDaoImpl( sessionFactory );
+        }
     }
 
     @Autowired
