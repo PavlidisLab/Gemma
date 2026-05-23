@@ -238,6 +238,8 @@ public class DatasetsWebService {
     @Autowired
     private AuditTrailService auditTrailService;
     @Autowired
+    private CurationWebService curationWebService;
+    @Autowired
     private SecurityService securityService;
     @Autowired
     private TaskRunningService taskRunningService;
@@ -1230,6 +1232,75 @@ public class DatasetsWebService {
                 .map( AuditEventValueObject::new )
                 .collect( Collectors.toList() );
         return respond( out );
+    }
+
+    /*
+     * Per-dataset curation surface. The handler bodies live on CurationWebService — these wrappers exist
+     * because Jersey resolves /datasets/* against the class-level @Path("/datasets") and never falls
+     * through to CurationWebService's class-level @Path("/"), so the routes have to be declared on this
+     * resource class to be reachable.
+     */
+
+    @POST
+    @Path("/{dataset}/curation-proposals")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
+    @Operation(summary = "Attach an AgentProposal to a dataset (curation-UI surface).",
+            description = "Idempotent on `run_id`: a retry returns the existing row as 200 OK rather than 201 Created. "
+                    + "The body field `kind` selects PROPOSAL (default) or AUDIT.")
+    public Response submitDatasetCurationProposal(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Nullable CurationWebService.CurationProposalRequest body
+    ) {
+        return curationWebService.submitCurationProposal( datasetArg, body );
+    }
+
+    @GET
+    @Path("/{dataset}/curation-proposals")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
+    @Operation(summary = "List AgentProposals attached to a dataset, newest first.",
+            description = "`?kind=` filters by discriminator (`proposal`/`audit`/`all`). "
+                    + "`?shape=` selects the response shape (`full` default; `meta` is the thin projection without payload_json).")
+    public Response listDatasetCurationProposals(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Filter by discriminator: `proposal`, `audit`, or `all` (default).")
+            @QueryParam("kind") @Nullable String kind,
+            @Parameter(description = "Response shape: `full` (default; carries payload_json) "
+                    + "or `meta` (thin projection, payload_size only).")
+            @QueryParam("shape") @Nullable String shape
+    ) {
+        return curationWebService.listCurationProposals( datasetArg, kind, shape );
+    }
+
+    @POST
+    @Path("/{dataset}/audits")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
+    @Operation(summary = "Attach an AUDIT-kind AgentProposal to a dataset.",
+            description = "Thin alias for the curation-proposals POST with `kind` pre-bound to `audit`. "
+                    + "The body field `kind` (if present) is ignored — the path is the discriminator.")
+    public Response submitDatasetAudit(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Nullable CurationWebService.CurationProposalRequest body
+    ) {
+        return curationWebService.submitAudit( datasetArg, body );
+    }
+
+    @GET
+    @Path("/{dataset}/audits")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
+    @Operation(summary = "List AUDIT-kind AgentProposals attached to a dataset.")
+    public Response listDatasetAudits(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Response shape: `full` (default; carries payload_json) "
+                    + "or `meta` (thin projection, payload_size only).")
+            @QueryParam("shape") @DefaultValue("full") String shape
+    ) {
+        return curationWebService.listAudits( datasetArg, shape );
     }
 
     @GET

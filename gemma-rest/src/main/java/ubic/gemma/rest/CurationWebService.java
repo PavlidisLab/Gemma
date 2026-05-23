@@ -10,7 +10,6 @@
  */
 package ubic.gemma.rest;
 
-import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import lombok.extern.slf4j.Slf4j;
@@ -56,29 +55,23 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * Private curation API for the curation-UI.
+ * Curation API for the curation-UI (Gemma 2.0 modern surface).
  * <p>
- * Every handler in this class is annotated {@link Hidden} so the entire surface is excluded from the public
- * OpenAPI / Swagger documentation. The endpoints are still callable — they're just not advertised. This is the
- * "private namespace" the curation-UI uses for curator-only operations that the public REST surface should not
- * advertise.
- * <p>
- * Round 3 scope (per GEMMA_UI_ENDPOINT_GAP.md):
+ * Two flavors of route live here:
  * <ul>
- *   <li>{@code GET  /candidates} — screening queue (datasets needing curation attention).
- *       Implemented as a 302 redirect to {@code /datasets?filter=needsAttention=true} since the underlying
- *       query is already supported by the existing dataset filter.</li>
- *   <li>{@code POST /datasets/{id}/curation-proposals} — attach an {@code AgentProposal} to a loaded EE
- *       (consolidated with the preboarded path's surface per STATUS_CURATION_PROPOSALS.md).</li>
- *   <li>{@code GET  /datasets/{id}/curation-proposals} — list proposals attached to a loaded EE,
- *       newest first.</li>
- *   <li>{@code POST /datasets/{id}/audits} + {@code GET /datasets/{id}/audits} — thin URL aliases for
- *       the {@code kind=AUDIT} flavor of curation proposals (per GEMMA_UI_ENDPOINT_GAP §3f). Delegate to
- *       the unified handlers with {@code kind} pre-bound to {@link AgentCurationKind#AUDIT}.</li>
+ *   <li><b>Per-dataset routes</b> ({@code /datasets/{id}/curation-proposals},
+ *       {@code /datasets/{id}/audits}). The JAX-RS annotations for these
+ *       endpoints are declared on {@link DatasetsWebService} because Jersey
+ *       resolves {@code /datasets/*} against the class-level
+ *       {@code @Path("/datasets")} and never falls through to this resource's
+ *       class-level {@code @Path("/")}. The handler bodies live here; the
+ *       DatasetsWebService methods delegate.</li>
+ *   <li><b>Cross-experiment routes</b> ({@code /curation-proposals},
+ *       {@code /audits}, plus their {@code /{id}} + lifecycle mutations).
+ *       Declared here directly.</li>
  * </ul>
  */
 @Service
-@Hidden
 @Path("/")
 @Slf4j
 public class CurationWebService {
@@ -94,10 +87,8 @@ public class CurationWebService {
      * as a 302 so any query parameters the caller supplies (limit, offset, sort, etc.) pass through verbatim.
      */
     @GET
-    @Hidden
     @Path("/candidates")
     @PreAuthorize("hasAuthority('GROUP_ADMIN')")
-    @Operation(hidden = true)
     public Response getCandidates( @Context UriInfo uriInfo ) {
         UriBuilder builder = uriInfo.getBaseUriBuilder()
                 .scheme( null ).host( null ).port( -1 )
@@ -217,16 +208,14 @@ public class CurationWebService {
      * row as 200 OK rather than 201 Created. The underlying service is the same one the public
      * {@link PreboardedWebService#attachProposal} uses; this endpoint just provides a dataset-centric URL pattern
      * the curation-UI prefers.
+     * <p>
+     * Routing lives on {@link DatasetsWebService#submitDatasetCurationProposal} — Jersey resolves
+     * {@code /datasets/*} against the {@code @Path("/datasets")} class and never falls through to this resource's
+     * class-level {@code @Path("/")}, so the JAX-RS annotations are declared there. This method is the
+     * implementation the delegator invokes.
      */
-    @POST
-    @Hidden
-    @Path("/datasets/{dataset}/curation-proposals")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
-    @Operation(hidden = true)
     public Response submitCurationProposal(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
+            DatasetArg<?> datasetArg,
             @Nullable CurationProposalRequest body
     ) {
         if ( body == null || body.runId == null || body.runId.trim().isEmpty() ) {
@@ -245,25 +234,17 @@ public class CurationWebService {
 
     /**
      * List {@link AgentProposal}s attached to a loaded EE, newest first. The
-     * {@code ?kind=} param filters by discriminator; {@code ?shape=} selects
-     * the response shape (default {@code full} preserves the legacy wire
-     * shape; {@code meta} returns the thin
-     * {@link CurationProposalSummaryResponse} projection that omits
-     * {@code payload_json}).
+     * {@code kind} param filters by discriminator; {@code shape} selects the
+     * response shape (default {@code full} preserves the legacy wire shape;
+     * {@code meta} returns the thin {@link CurationProposalSummaryResponse}
+     * projection that omits {@code payload_json}).
+     * <p>
+     * Routing on {@link DatasetsWebService#listDatasetCurationProposals}.
      */
-    @GET
-    @Hidden
-    @Path("/datasets/{dataset}/curation-proposals")
-    @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
-    @Operation(hidden = true)
     public Response listCurationProposals(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
-            @Parameter(description = "Filter by discriminator: `proposal`, `audit`, or `all` (default).")
-            @QueryParam("kind") @Nullable String kind,
-            @Parameter(description = "Response shape: `full` (default; carries payload_json) "
-                    + "or `meta` (thin projection, payload_size only).")
-            @QueryParam("shape") @Nullable String shape
+            DatasetArg<?> datasetArg,
+            @Nullable String kind,
+            @Nullable String shape
     ) {
         AgentCurationKind kindFilter = parseKindFilter( kind );
         boolean metaShape = parseShapeIsMeta( shape );
@@ -290,16 +271,11 @@ public class CurationWebService {
      * Thin alias for {@link #submitCurationProposal} with {@code kind} pre-bound to
      * {@link AgentCurationKind#AUDIT}. The body field {@code kind} (if present) is ignored — the path
      * is the discriminator. See GEMMA_UI_ENDPOINT_GAP §3f.
+     * <p>
+     * Routing on {@link DatasetsWebService#submitDatasetAudit}.
      */
-    @POST
-    @Hidden
-    @Path("/datasets/{dataset}/audits")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
-    @Operation(hidden = true)
     public Response submitAudit(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
+            DatasetArg<?> datasetArg,
             @Nullable CurationProposalRequest body
     ) {
         if ( body == null || body.runId == null || body.runId.trim().isEmpty() ) {
@@ -317,20 +293,14 @@ public class CurationWebService {
 
     /**
      * Thin alias for {@link #listCurationProposals} with {@code kind} pre-bound to
-     * {@link AgentCurationKind#AUDIT}. {@code ?shape=meta|full} (default {@code full}) is honoured.
+     * {@link AgentCurationKind#AUDIT}. {@code shape=meta|full} (default {@code full}) is honoured.
      * See GEMMA_UI_ENDPOINT_GAP §3f.
+     * <p>
+     * Routing on {@link DatasetsWebService#listDatasetAudits}.
      */
-    @GET
-    @Hidden
-    @Path("/datasets/{dataset}/audits")
-    @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
-    @Operation(hidden = true)
     public Response listAudits(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
-            @Parameter(description = "Response shape: `full` (default; carries payload_json) "
-                    + "or `meta` (thin projection, payload_size only).")
-            @QueryParam("shape") @DefaultValue("full") String shape
+            DatasetArg<?> datasetArg,
+            String shape
     ) {
         return listCurationProposals( datasetArg, AgentCurationKind.AUDIT.getDbValue(), shape );
     }
@@ -366,11 +336,9 @@ public class CurationWebService {
      * filtering is a TODO once the schema settles.
      */
     @GET
-    @Hidden
     @Path("/curation-proposals")
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
-    @Operation(hidden = true)
     public PaginatedResponseDataObject<AgentCurationSummaryValueObject> listProposalsInbox(
             @Parameter(description = "Reserved for future status filter — IGNORED today (no status column on AgentProposal yet).")
             @QueryParam("status") @Nullable String status,
@@ -387,11 +355,9 @@ public class CurationWebService {
      * proposal-kind row.
      */
     @GET
-    @Hidden
     @Path("/curation-proposals/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
-    @Operation(hidden = true)
     public ResponseDataObject<CurationProposalResponse> getProposal(
             @PathParam("id") Long id
     ) {
@@ -412,12 +378,10 @@ public class CurationWebService {
      * type hierarchy is in place.
      */
     @PATCH
-    @Hidden
     @Path("/curation-proposals/{id}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("isAuthenticated()")
-    @Operation(hidden = true)
     public Response patchProposal(
             @PathParam("id") Long id,
             @Nullable DispositionPatchRequest body
@@ -438,11 +402,9 @@ public class CurationWebService {
      * paginated. Thin metadata projection (no {@code payload_json}).
      */
     @GET
-    @Hidden
     @Path("/audits")
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
-    @Operation(hidden = true)
     public PaginatedResponseDataObject<AgentCurationSummaryValueObject> listAuditsInbox(
             @Parameter(description = "Reserved for future status filter — IGNORED today (no status column on AgentProposal yet).")
             @QueryParam("status") @Nullable String status,
@@ -458,11 +420,9 @@ public class CurationWebService {
      * Single audit row (full payload). Returns 404 if not an audit-kind row.
      */
     @GET
-    @Hidden
     @Path("/audits/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
-    @Operation(hidden = true)
     public ResponseDataObject<CurationProposalResponse> getAudit(
             @PathParam("id") Long id
     ) {
@@ -478,12 +438,10 @@ public class CurationWebService {
      * finalize / reopen). 404 if id resolves to a proposal row.
      */
     @PATCH
-    @Hidden
     @Path("/audits/{id}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("isAuthenticated()")
-    @Operation(hidden = true)
     public Response patchAudit(
             @PathParam("id") Long id,
             @Nullable DispositionPatchRequest body
@@ -512,12 +470,10 @@ public class CurationWebService {
      * unresponded audit can't be finalized).
      */
     @POST
-    @Hidden
     @Path("/audits/{id}/finalize")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("isAuthenticated()")
-    @Operation(hidden = true)
     public Response finalizeAudit(
             @PathParam("id") Long id
     ) {
@@ -540,12 +496,10 @@ public class CurationWebService {
      * {@code finalizedAt}). Idempotent counterpart of {@link #finalizeAudit}.
      */
     @POST
-    @Hidden
     @Path("/audits/{id}/reopen")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("isAuthenticated()")
-    @Operation(hidden = true)
     public Response reopenAudit(
             @PathParam("id") Long id
     ) {
