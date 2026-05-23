@@ -1122,6 +1122,15 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
+    public Future<Path> writeOrLocateDiffExAnalysisArchiveFileAsync( DifferentialExpressionAnalysis analysis, boolean forceWrite ) {
+        return expressionDataFileTaskExecutor.submit( () -> {
+            try ( LockedPath lockedPath = writeOrLocateDiffExAnalysisArchiveFile( analysis, forceWrite ) ) {
+                return lockedPath.getPath();
+            }
+        } );
+    }
+
+    @Override
     public Collection<Path> writeDiffExAnalysisArchiveFiles( ExpressionExperiment ee, Path outputDir, boolean forceWrite ) throws IOException {
         return writeDiffExAnalysisArchiveFiles( helperService.getAnalyses( ee ), outputDir, forceWrite );
     }
