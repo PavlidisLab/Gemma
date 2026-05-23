@@ -2814,18 +2814,25 @@ public class DatasetsWebService {
     @GET
     @Path("/{dataset}/analyses/differential")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve annotations and surface level stats for a dataset's differential analyses", responses = {
-            @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
-            @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
-                    content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    @Operation(summary = "Retrieve annotations and surface level stats for a dataset's differential analyses",
+            description = "By default, the per-analysis `bioAssaysAnalyzed` collection is omitted from the response: "
+                    + "populating it requires thawing every BioAssay on every analyzed experiment, which dominates "
+                    + "the cost of this endpoint on large datasets and is rarely needed by callers (the UI fetches "
+                    + "sample metadata separately via `/datasets/{id}/samples`). Set `includeAssays=true` to opt back "
+                    + "into the pre-2.0 behaviour.",
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<List<DifferentialExpressionAnalysisValueObject>> getDatasetDifferentialExpressionAnalyses( // Params:
             @PathParam("dataset") DatasetArg<?> datasetArg, // Required
             @Parameter(deprecated = true, description = "This parameter is ignored and will be removed in the 2.10 release.") @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg, // Optional, default 0
-            @Parameter(deprecated = true, description = "This parameter is ignored and will be removed in the 2.10 release.") @QueryParam("limit") @DefaultValue("20") LimitArg limitArg // Optional, default 20
+            @Parameter(deprecated = true, description = "This parameter is ignored and will be removed in the 2.10 release.") @QueryParam("limit") @DefaultValue("20") LimitArg limitArg, // Optional, default 20
+            @Parameter(description = "When true, populate the `bioAssaysAnalyzed` collection on each analysis. Defaults to false because thawing every BioAssay is expensive and the field is rarely consumed.") @QueryParam("includeAssays") @DefaultValue("false") boolean includeAssays // Optional, default false
     ) {
         List<DifferentialExpressionAnalysisValueObject> result;
         Long eeId = datasetArgService.getEntity( datasetArg ).getId();
-        Map<ExpressionExperimentDetailsValueObject, Collection<DifferentialExpressionAnalysisValueObject>> map = differentialExpressionAnalysisService.findByExperimentIds( Collections.singleton( eeId ), true, true );
+        Map<ExpressionExperimentDetailsValueObject, Collection<DifferentialExpressionAnalysisValueObject>> map = differentialExpressionAnalysisService.findByExperimentIds( Collections.singleton( eeId ), true, includeAssays );
         if ( map == null || map.isEmpty() ) {
             result = Collections.emptyList();
         } else {
