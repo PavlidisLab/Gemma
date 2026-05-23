@@ -127,6 +127,8 @@ public class ProcessedExpressionDataVectorCreationHelperServiceTest extends Base
                                     + "join fetch dedv.designElement cs "
                                     + "join fetch cs.arrayDesign "
                                     + "left join fetch cs.biologicalCharacteristic "
+                                    + "join fetch dedv.bioAssayDimension "
+                                    + "left join fetch dedv.quantitationType "
                                     + "where dedv.expressionExperiment.id = :eeId" )
                     .setParameter( "eeId", eeId )
                     .list();
@@ -150,6 +152,8 @@ public class ProcessedExpressionDataVectorCreationHelperServiceTest extends Base
                                     + "join fetch dedv.designElement cs "
                                     + "join fetch cs.arrayDesign "
                                     + "left join fetch cs.biologicalCharacteristic "
+                                    + "join fetch dedv.bioAssayDimension "
+                                    + "left join fetch dedv.quantitationType "
                                     + "where dedv.expressionExperiment.id = :eeId" )
                     .setParameter( "eeId", eeId )
                     .list();
