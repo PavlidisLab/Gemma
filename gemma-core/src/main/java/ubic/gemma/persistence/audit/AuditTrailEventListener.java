@@ -189,6 +189,32 @@ public class AuditTrailEventListener implements PersistEventListener, PostInsert
             }
             return false;
         }
+        if ( entity instanceof AuditEvent ) {
+            // Bucket E safety net: when an AuditEvent is about to be deleted (either
+            // directly or via cascade from its parent AuditTrail), null any
+            // AUDIT_TRAIL row that still references it through LAST_EVENT_FK. The
+            // sibling AuditTrail branch above handles the common cascade-from-
+            // Auditable path by clearing the pointer on the trail itself; this
+            // branch is the residual guard for paths where the trail isn't being
+            // deleted (e.g. an event delete that doesn't cascade up to the trail,
+            // or a snapshot-mismatch where Hibernate orders the AuditEvent delete
+            // before the AuditTrail PreDelete fires for the same flush). The
+            // single-row UPDATE keyed on LAST_EVENT_FK is a no-op when no trail
+            // points at this event.
+            AuditEvent auditEvent = ( AuditEvent ) entity;
+            Long eventId = auditEvent.getId();
+            if ( eventId != null ) {
+                final long lastEventFk = eventId;
+                event.getSession().doWork( connection -> {
+                    try ( java.sql.PreparedStatement ps = connection.prepareStatement(
+                            "UPDATE AUDIT_TRAIL SET LAST_EVENT_FK = NULL WHERE LAST_EVENT_FK = ?" ) ) {
+                        ps.setLong( 1, lastEventFk );
+                        ps.executeUpdate();
+                    }
+                } );
+            }
+            return false;
+        }
         if ( !isLifecycleTarget( entity ) ) {
             return false;
         }
