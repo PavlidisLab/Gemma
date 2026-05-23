@@ -34,6 +34,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import ubic.gemma.core.ontology.basecode.model.AnnotationProperty;
 import ubic.gemma.core.ontology.basecode.model.OntologyTerm;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.*;
@@ -307,7 +308,7 @@ public class AnnotationsWebService {
             return terms.stream()
                     .map( t -> new AnnotationSearchResultValueObject( t.getLabel(), t.getUri(), null, null,
                             t.getUri() != null ? countsByUri.getOrDefault( t.getUri(), 0 ) : null,
-                            null, null ) )
+                            null, null, null, null ) )
                     .collect( Collectors.toList() );
         } catch ( TimeoutException e ) {
             throw new ServiceUnavailableException( DateUtils.addSeconds( new Date(), 30 ), e );
@@ -651,16 +652,19 @@ public class AnnotationsWebService {
             ranked = new ArrayList<>( ranked.subList( 0, limit ) );
         }
 
-        // Enrich the top-N ranked hits with definition + nearest is_a/part_of parents. The rest
-        // carry null sentinels so the UI can lazy-load via /annotations/term?uri=X. Lookups share
-        // the remaining ontology-search timeout budget; per-URI failures (timeout, missing term)
-        // degrade silently to null on that single field.
+        // Enrich the top-N ranked hits with definition + nearest is_a/part_of parents + match
+        // attribution (matchedVia/matchedText). The rest carry null sentinels so the UI can
+        // lazy-load via /annotations/term?uri=X. Lookups share the remaining ontology-search
+        // timeout budget; per-URI failures (timeout, missing term) degrade silently to null on
+        // that single field.
         Set<String> topUris = collectTopUris( ranked, ENRICH_TOP_N );
         Map<String, String> defByUri = new HashMap<>();
         Map<String, List<OntologyTermSimpleValueObject>> parentsByUri = new HashMap<>();
+        Map<String, MatchAttribution> matchByUri = new HashMap<>();
         if ( !topUris.isEmpty() ) {
             try {
-                enrichTopHits( topUris, defByUri, parentsByUri, Math.max( timeoutMs - timer.getTime(), 0 ) );
+                enrichTopHits( topUris, defByUri, parentsByUri, matchByUri, joinedQuery,
+                        Math.max( timeoutMs - timer.getTime(), 0 ) );
             } catch ( TimeoutException e ) {
                 // Budget exhausted mid-enrichment; surface whatever did resolve and leave the rest null.
                 log.debug( "annotation-search enrichment hit shared-budget timeout: {} of {} URIs enriched (definitions); {} URIs enriched (parents)",
@@ -672,10 +676,14 @@ public class AnnotationsWebService {
         for ( CharacteristicValueObject vo : ranked ) {
             Integer count = vo.getValueUri() != null ? countsByUri.getOrDefault( vo.getValueUri(), 0 ) : null;
             String uri = vo.getValueUri();
-            String definition = uri != null && topUris.contains( uri ) ? defByUri.get( uri ) : null;
-            List<OntologyTermSimpleValueObject> parents = uri != null && topUris.contains( uri ) ? parentsByUri.get( uri ) : null;
+            boolean isTop = uri != null && topUris.contains( uri );
+            String definition = isTop ? defByUri.get( uri ) : null;
+            List<OntologyTermSimpleValueObject> parents = isTop ? parentsByUri.get( uri ) : null;
+            MatchAttribution match = isTop ? matchByUri.get( uri ) : null;
+            String matchedVia = match != null ? match.via.token : null;
+            String matchedText = match != null ? match.text : null;
             vos.add( new AnnotationSearchResultValueObject( vo.getValue(), vo.getValueUri(), vo.getCategory(),
-                    vo.getCategoryUri(), count, definition, parents ) );
+                    vo.getCategoryUri(), count, definition, parents, matchedVia, matchedText ) );
         }
         return vos;
     }
@@ -709,8 +717,11 @@ public class AnnotationsWebService {
     private void enrichTopHits( Set<String> topUris,
             Map<String, String> defByUri,
             Map<String, List<OntologyTermSimpleValueObject>> parentsByUri,
+            Map<String, MatchAttribution> matchByUri,
+            String originalQuery,
             long budgetMs ) throws TimeoutException {
         StopWatch local = StopWatch.createStarted();
+        List<String> queryTokens = tokeniseQuery( originalQuery );
         for ( String uri : topUris ) {
             long remaining = Math.max( budgetMs - local.getTime(), 0 );
             if ( remaining <= 0 ) {
@@ -734,6 +745,12 @@ public class AnnotationsWebService {
                 if ( term == null ) {
                     continue;
                 }
+                // Compute match attribution from the fetched term's label + synonyms. Cheap
+                // (no extra ontology call) since the term is already in hand.
+                MatchAttribution attribution = computeMatchAttribution( term, queryTokens );
+                if ( attribution != null ) {
+                    matchByUri.put( uri, attribution );
+                }
                 remaining = Math.max( budgetMs - local.getTime(), 0 );
                 if ( remaining <= 0 ) {
                     return;
@@ -747,6 +764,131 @@ public class AnnotationsWebService {
             } catch ( TimeoutException e ) {
                 log.debug( "parents lookup timed out for {}", uri );
             }
+        }
+    }
+
+    /**
+     * OBO + IAO synonym-property URIs probed when back-computing per-hit match attribution. The
+     * ordering matches the JSON-serialised {@link MatchedVia} ordering: preferred_label is checked
+     * first by the caller; we then probe exact > narrow > related > broad > generic > alt_label.
+     */
+    private static final String OBO_EXACT_SYNONYM = "http://www.geneontology.org/formats/oboInOwl#hasExactSynonym";
+    private static final String OBO_NARROW_SYNONYM = "http://www.geneontology.org/formats/oboInOwl#hasNarrowSynonym";
+    private static final String OBO_RELATED_SYNONYM = "http://www.geneontology.org/formats/oboInOwl#hasRelatedSynonym";
+    private static final String OBO_BROAD_SYNONYM = "http://www.geneontology.org/formats/oboInOwl#hasBroadSynonym";
+    private static final String OBO_GENERIC_SYNONYM = "http://www.geneontology.org/formats/oboInOwl#hasSynonym";
+    private static final String IAO_ALT_LABEL = "http://purl.obolibrary.org/obo/IAO_0000118";
+
+    /**
+     * Back-compute which Lucene field most likely produced the hit. We have no access to the
+     * Jena Text highlighter spans from the existing search call, so we replay the query tokens
+     * against the term's preferred label and indexed synonym annotations and pick the strongest
+     * matching field (preferred_label > exact > narrow > related > broad > generic > alt_label).
+     * <p>
+     * Returns {@code null} when the query and term have no token overlap (the hit must have come
+     * from a property we don't probe — fall through to the UI showing only the preferred label).
+     */
+    @Nullable
+    private static MatchAttribution computeMatchAttribution( OntologyTerm term, List<String> queryTokens ) {
+        if ( queryTokens.isEmpty() ) {
+            // No tokens to match — default to preferred_label so the UI doesn't render an empty hint.
+            return new MatchAttribution( MatchedVia.PREFERRED_LABEL, term.getLabel() );
+        }
+        String label = term.getLabel();
+        if ( label != null && labelContainsAnyToken( label, queryTokens ) ) {
+            return new MatchAttribution( MatchedVia.PREFERRED_LABEL, label );
+        }
+        // Walk synonym fields in strength order; the first synonym whose value contains a query
+        // token wins. Most ontology terms expose only a handful of synonyms so this is cheap.
+        String[][] probes = {
+                { OBO_EXACT_SYNONYM, MatchedVia.EXACT_SYNONYM.token },
+                { OBO_NARROW_SYNONYM, MatchedVia.NARROW_SYNONYM.token },
+                { OBO_RELATED_SYNONYM, MatchedVia.RELATED_SYNONYM.token },
+                { OBO_BROAD_SYNONYM, MatchedVia.BROAD_SYNONYM.token },
+                { OBO_GENERIC_SYNONYM, MatchedVia.EXACT_SYNONYM.token },  // collapsed to exact
+                { IAO_ALT_LABEL, MatchedVia.ALT_LABEL.token },
+        };
+        for ( String[] probe : probes ) {
+            Collection<AnnotationProperty> annots = term.getAnnotations( probe[0] );
+            if ( annots == null || annots.isEmpty() ) {
+                continue;
+            }
+            for ( AnnotationProperty ap : annots ) {
+                String text = ap.getContents();
+                if ( text != null && labelContainsAnyToken( text, queryTokens ) ) {
+                    return new MatchAttribution( MatchedVia.fromToken( probe[1] ), text );
+                }
+            }
+        }
+        // No synonym matched any query token — the hit might have come via a Lucene field we
+        // don't probe (e.g. obo_id, definition). Fall back to preferred_label with the term's
+        // label so the UI still has something to render.
+        return new MatchAttribution( MatchedVia.PREFERRED_LABEL, label );
+    }
+
+    private static List<String> tokeniseQuery( @Nullable String q ) {
+        if ( q == null || q.isBlank() ) {
+            return Collections.emptyList();
+        }
+        String lc = q.toLowerCase( Locale.ROOT );
+        String[] parts = lc.split( "[^a-z0-9]+" );
+        List<String> out = new ArrayList<>( parts.length );
+        for ( String p : parts ) {
+            if ( p.length() >= 2 ) {  // skip 1-char filler tokens
+                out.add( p );
+            }
+        }
+        return out;
+    }
+
+    private static boolean labelContainsAnyToken( String label, List<String> tokens ) {
+        if ( label == null ) return false;
+        String lc = label.toLowerCase( Locale.ROOT );
+        for ( String t : tokens ) {
+            if ( lc.contains( t ) ) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * JSON-friendly enumeration of which Lucene field produced a hit. Serialised as the
+     * lowercase-snake string in {@code token} for the {@code matchedVia} response field.
+     */
+    public enum MatchedVia {
+        PREFERRED_LABEL( "preferred_label" ),
+        EXACT_SYNONYM( "exact_synonym" ),
+        NARROW_SYNONYM( "narrow_synonym" ),
+        RELATED_SYNONYM( "related_synonym" ),
+        BROAD_SYNONYM( "broad_synonym" ),
+        ALT_LABEL( "alt_label" );
+
+        final String token;
+
+        MatchedVia( String token ) {
+            this.token = token;
+        }
+
+        static MatchedVia fromToken( String token ) {
+            for ( MatchedVia v : values() ) {
+                if ( v.token.equals( token ) ) {
+                    return v;
+                }
+            }
+            return PREFERRED_LABEL;
+        }
+    }
+
+    /** Pair of (matched field, matched text) attached to an annotation-search hit. */
+    static final class MatchAttribution {
+        final MatchedVia via;
+        @Nullable
+        final String text;
+
+        MatchAttribution( MatchedVia via, @Nullable String text ) {
+            this.via = via;
+            this.text = text;
         }
     }
 
@@ -792,6 +934,21 @@ public class AnnotationsWebService {
          * Populated for the top-25 search hits only — see {@code getTerms}.
          */
         @Nullable List<OntologyTermSimpleValueObject> parents;
+        /**
+         * Which Lucene field most likely produced this hit. One of {@code preferred_label} (default),
+         * {@code exact_synonym}, {@code narrow_synonym}, {@code related_synonym}, {@code broad_synonym},
+         * {@code alt_label}. Back-computed by replaying the query tokens against the term's label
+         * and indexed synonyms — see {@code computeMatchAttribution}. Null indicates "not enriched"
+         * (lazy-load sentinel, same semantics as {@link #definition}). Populated for the top-25
+         * search hits only.
+         */
+        @Nullable String matchedVia;
+        /**
+         * The actual label or synonym text that scored the match — surfaced so the UI can render
+         * "↪ matches synonym 'Ammon's horn'" beneath the preferred label. Equals the term's label
+         * when {@link #matchedVia} is {@code preferred_label}. Null when {@link #matchedVia} is null.
+         */
+        @Nullable String matchedText;
     }
 
     @Value
