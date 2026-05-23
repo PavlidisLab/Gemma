@@ -1123,6 +1123,20 @@
 				<configuration>
 					<argLine>${testJvmOptions}</argLine>
 					<redirectTestOutputToFile>${redirectTestOutputToFile}</redirectTestOutputToFile>
+					<!--
+					Bump the JVM-shutdown grace window past failsafe's 30s
+					default. TaskRunningServiceImpl.destroy() awaits up to 5
+					min for in-flight Task futures to drain (see
+					handoffs/FAILSAFE_FORKER_SHUTDOWN_RECCE.md); under the
+					default forker timeout, the JVM gets killed mid-drain
+					and the `verify` goal reports 'There was a timeout in
+					the fork' even when the test phase completed cleanly.
+					120s is a belt-and-braces cushion that absorbs normal
+					drain time without masking a real wedge. If a forked
+					JVM stays alive longer than this, that's a genuine
+					leak worth investigating, not a knob to widen further.
+					-->
+					<forkedProcessExitTimeoutInSeconds>120</forkedProcessExitTimeoutInSeconds>
 					<includes>
 						<include>**/*Test.java</include>
 					</includes>
