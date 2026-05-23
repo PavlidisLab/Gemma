@@ -22,20 +22,28 @@ import ubic.gemma.model.expression.experiment.AgentCurationSummaryValueObject;
 import ubic.gemma.model.expression.experiment.AgentProposal;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.AgentProposalService;
+import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.rest.util.PaginatedResponseDataObject;
+import ubic.gemma.rest.util.ResponseDataObject;
+import ubic.gemma.rest.util.Responders;
 import ubic.gemma.rest.util.args.DatasetArg;
 import ubic.gemma.rest.util.args.DatasetArgService;
+import ubic.gemma.rest.util.args.LimitArg;
+import ubic.gemma.rest.util.args.OffsetArg;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.PATCH;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -308,6 +316,332 @@ public class CurationWebService {
             @QueryParam("shape") @DefaultValue("full") String shape
     ) {
         return listCurationProposals( datasetArg, AgentCurationKind.AUDIT.getDbValue(), shape );
+    }
+
+    // ------------------------------------------------------------------
+    // Cross-experiment inbox endpoints (curation-UI)
+    //
+    // The four read endpoints below — GET /curation-proposals (+ /{id}) and
+    // GET /audits (+ /{id}) — back the curation-UI's "inbox" pages: a single
+    // list of all PROPOSAL-kind (or AUDIT-kind) rows the curator can
+    // disposition, regardless of which dataset they target.
+    //
+    // The mutation/state-machine endpoints (PATCH /curation-proposals/{id},
+    // PATCH /audits/{id}, POST /audits/{id}/finalize, POST /audits/{id}/reopen)
+    // are stubbed as 501 NOT IMPLEMENTED — the underlying AgentProposal entity
+    // does not yet carry the `status` / `disposition` / `finalizedAt` columns
+    // those endpoints need (see handoffs/RECCE_AGENT_CURATION_UNIFICATION.md
+    // §1, §4 — disposition lives on CurationDraft today, not on the proposal
+    // row, and there is no FINALIZED/OPEN lifecycle column on the entity).
+    // Wiring the URL surface now lets the curation-UI ship its routes; the
+    // schema migration + state-machine implementation lands as a follow-up.
+    // ------------------------------------------------------------------
+
+    /**
+     * Cross-experiment inbox of {@code kind=PROPOSAL} agent curation rows,
+     * paginated. Thin metadata projection (no {@code payload_json}).
+     * <p>
+     * ACL note: ACL is at the entity level — {@link AgentProposal} rows hang
+     * off an {@link ubic.gemma.model.analysis.Investigation} but the DAO
+     * doesn't apply ACL filtering here. The {@code @PreAuthorize} on this
+     * method gates access to curators / admins / agents; per-row visibility
+     * filtering is a TODO once the schema settles.
+     */
+    @GET
+    @Hidden
+    @Path("/curation-proposals")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
+    @Operation(hidden = true)
+    public PaginatedResponseDataObject<AgentCurationSummaryValueObject> listProposalsInbox(
+            @Parameter(description = "Reserved for future status filter — IGNORED today (no status column on AgentProposal yet).")
+            @QueryParam("status") @Nullable String status,
+            @Parameter(description = "Restrict to a comma-separated list of dataset (investigation) ids.")
+            @QueryParam("datasetIds") @Nullable String datasetIds,
+            @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
+            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg
+    ) {
+        return inboxList( AgentCurationKind.PROPOSAL, datasetIds, offsetArg, limitArg );
+    }
+
+    /**
+     * Single {@link AgentProposal} (full payload). Returns 404 if not a
+     * proposal-kind row.
+     */
+    @GET
+    @Hidden
+    @Path("/curation-proposals/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
+    @Operation(hidden = true)
+    public ResponseDataObject<CurationProposalResponse> getProposal(
+            @PathParam("id") Long id
+    ) {
+        AgentProposal p = loadByIdOfKindOrThrow( id, AgentCurationKind.PROPOSAL );
+        Long invId = p.getInvestigation() != null ? p.getInvestigation().getId() : null;
+        return Responders.respond( toProposalResponse( p, invId ) );
+    }
+
+    /**
+     * Disposition mutation — STUB. Returns 501 Not Implemented today; the
+     * underlying entity lacks the {@code disposition} / {@code note} columns
+     * the curation-UI's accept/reject/park action needs.
+     * <p>
+     * TODO: once the {@code AgentProposal} entity carries a disposition
+     * column (or once dispositions migrate fully onto {@code CurationDraft}),
+     * wire this to flip the row, validate the disposition allow-list
+     * ({@code accepted} / {@code rejected} / {@code parked}), and add an
+     * {@code @Audited} of an appropriate {@code AgentProposalDispositionEvent}.
+     */
+    @PATCH
+    @Hidden
+    @Path("/curation-proposals/{id}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN')")
+    @Operation(hidden = true)
+    public Response patchProposal(
+            @PathParam("id") Long id,
+            @Nullable DispositionPatchRequest body
+    ) {
+        // Validate id resolves so the 501 isn't masking a 404.
+        loadByIdOfKindOrThrow( id, AgentCurationKind.PROPOSAL );
+        validateDispositionOrThrow( body, /* audit */ false );
+        return Response.status( Response.Status.NOT_IMPLEMENTED )
+                .entity( unimplementedBody( "PATCH /curation-proposals/{id}",
+                        "AgentProposal entity lacks `disposition` + `note` columns" ) )
+                .build();
+    }
+
+    /**
+     * Cross-experiment inbox of {@code kind=AUDIT} agent curation rows,
+     * paginated. Thin metadata projection (no {@code payload_json}).
+     */
+    @GET
+    @Hidden
+    @Path("/audits")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
+    @Operation(hidden = true)
+    public PaginatedResponseDataObject<AgentCurationSummaryValueObject> listAuditsInbox(
+            @Parameter(description = "Reserved for future status filter — IGNORED today (no status column on AgentProposal yet).")
+            @QueryParam("status") @Nullable String status,
+            @Parameter(description = "Restrict to a comma-separated list of dataset (investigation) ids.")
+            @QueryParam("datasetIds") @Nullable String datasetIds,
+            @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
+            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg
+    ) {
+        return inboxList( AgentCurationKind.AUDIT, datasetIds, offsetArg, limitArg );
+    }
+
+    /**
+     * Single audit row (full payload). Returns 404 if not an audit-kind row.
+     */
+    @GET
+    @Hidden
+    @Path("/audits/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
+    @Operation(hidden = true)
+    public ResponseDataObject<CurationProposalResponse> getAudit(
+            @PathParam("id") Long id
+    ) {
+        AgentProposal p = loadByIdOfKindOrThrow( id, AgentCurationKind.AUDIT );
+        Long invId = p.getInvestigation() != null ? p.getInvestigation().getId() : null;
+        return Responders.respond( toProposalResponse( p, invId ) );
+    }
+
+    /**
+     * Audit disposition mutation — STUB. See {@link #patchProposal} for the
+     * rationale; same schema gap blocks the audit-side mutation.
+     */
+    @PATCH
+    @Hidden
+    @Path("/audits/{id}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN')")
+    @Operation(hidden = true)
+    public Response patchAudit(
+            @PathParam("id") Long id,
+            @Nullable DispositionPatchRequest body
+    ) {
+        loadByIdOfKindOrThrow( id, AgentCurationKind.AUDIT );
+        validateDispositionOrThrow( body, /* audit */ true );
+        return Response.status( Response.Status.NOT_IMPLEMENTED )
+                .entity( unimplementedBody( "PATCH /audits/{id}",
+                        "AgentProposal entity lacks `disposition` + `note` columns; "
+                                + "audit lifecycle (OPEN/FINALIZED) also missing" ) )
+                .build();
+    }
+
+    /**
+     * Mark an audit FINALIZED — STUB. Returns 501 today. The entity has no
+     * {@code status} column and no {@code finalizedAt} column.
+     * <p>
+     * TODO: add the {@code STATUS} + {@code FINALIZED_AT} columns (Flyway
+     * migration), then implement: set status to FINALIZED, stamp
+     * {@code finalizedAt = now()}, return 200 with the fresh row. Second-time
+     * call is idempotent (200 OK, no state change).
+     */
+    @POST
+    @Hidden
+    @Path("/audits/{id}/finalize")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN')")
+    @Operation(hidden = true)
+    public Response finalizeAudit(
+            @PathParam("id") Long id
+    ) {
+        loadByIdOfKindOrThrow( id, AgentCurationKind.AUDIT );
+        return Response.status( Response.Status.NOT_IMPLEMENTED )
+                .entity( unimplementedBody( "POST /audits/{id}/finalize",
+                        "AgentProposal entity lacks `status` + `finalizedAt` columns" ) )
+                .build();
+    }
+
+    /**
+     * Reopen a FINALIZED audit — STUB. Returns 501 today. Idempotent
+     * counterpart of {@link #finalizeAudit}.
+     */
+    @POST
+    @Hidden
+    @Path("/audits/{id}/reopen")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN')")
+    @Operation(hidden = true)
+    public Response reopenAudit(
+            @PathParam("id") Long id
+    ) {
+        loadByIdOfKindOrThrow( id, AgentCurationKind.AUDIT );
+        return Response.status( Response.Status.NOT_IMPLEMENTED )
+                .entity( unimplementedBody( "POST /audits/{id}/reopen",
+                        "AgentProposal entity lacks `status` + `finalizedAt` columns" ) )
+                .build();
+    }
+
+    /**
+     * Body shape for the (currently stubbed) PATCH disposition endpoints.
+     * Allow-list validation runs before the 501 is returned so a malformed
+     * body still gets a 400 — keeps the wire contract honest while the
+     * implementation catches up.
+     */
+    public static class DispositionPatchRequest {
+        @JsonProperty("disposition")
+        @Nullable
+        public String disposition;
+        @JsonProperty("note")
+        @Nullable
+        public String note;
+        /** Audit-only — per-element dispositions map. Opaque pass-through. */
+        @JsonProperty("dispositions")
+        @Nullable
+        public Object dispositions;
+    }
+
+    /**
+     * Shared helper: validate the disposition string against the allow-list.
+     * For proposal PATCH the allowed values are {@code accepted}, {@code rejected},
+     * {@code parked}. Audit PATCH additionally allows {@code accepted_with_edits}
+     * (matches the wire vocabulary in
+     * {@code handoffs/RECCE_AGENT_CURATION_UNIFICATION.md} §4).
+     */
+    private static void validateDispositionOrThrow( @Nullable DispositionPatchRequest body, boolean audit ) {
+        if ( body == null || body.disposition == null || body.disposition.trim().isEmpty() ) {
+            // Body-level disposition is optional on the audit PATCH (per-element
+            // map can carry the change instead); required on the proposal PATCH.
+            if ( !audit ) {
+                throw new BadRequestException( "Request body must include a `disposition`." );
+            }
+            return;
+        }
+        String d = body.disposition.trim().toLowerCase();
+        switch ( d ) {
+            case "accepted":
+            case "rejected":
+            case "parked":
+                return;
+            case "accepted_with_edits":
+                if ( audit ) return;
+                throw new BadRequestException( "Unknown disposition: " + body.disposition
+                        + " (expected one of: accepted, rejected, parked)" );
+            default:
+                throw new BadRequestException( "Unknown disposition: " + body.disposition
+                        + " (expected one of: accepted, rejected, parked"
+                        + ( audit ? ", accepted_with_edits)" : ")" ) );
+        }
+    }
+
+    /**
+     * Shared inbox list helper: parse the comma-separated {@code datasetIds}
+     * param, page via the DAO, wrap in a {@link Slice} + paginated response.
+     */
+    private PaginatedResponseDataObject<AgentCurationSummaryValueObject> inboxList(
+            AgentCurationKind kind, @Nullable String datasetIds,
+            OffsetArg offsetArg, LimitArg limitArg ) {
+        List<Long> invIds = parseDatasetIdsOrThrow( datasetIds );
+        int offset = offsetArg.getValue();
+        int limit = limitArg.getValue();
+        List<AgentCurationSummaryValueObject> rows = agentProposalService.listSummaries(
+                kind, invIds, offset, limit );
+        long total = agentProposalService.countSummaries( kind, invIds );
+        Slice<AgentCurationSummaryValueObject> slice = new Slice<>( rows, null, offset, limit, total );
+        return Responders.paginate( slice, new String[]{ "kind" } );
+    }
+
+    @Nullable
+    private static List<Long> parseDatasetIdsOrThrow( @Nullable String s ) {
+        if ( s == null || s.trim().isEmpty() ) {
+            return null;
+        }
+        String[] parts = s.split( "," );
+        List<Long> ids = new ArrayList<>( parts.length );
+        for ( String part : parts ) {
+            String t = part.trim();
+            if ( t.isEmpty() ) continue;
+            try {
+                ids.add( Long.parseLong( t ) );
+            } catch ( NumberFormatException e ) {
+                throw new BadRequestException( "datasetIds must be a comma-separated list of integers; got: " + t );
+            }
+        }
+        return ids.isEmpty() ? null : ids;
+    }
+
+    private AgentProposal loadByIdOfKindOrThrow( Long id, AgentCurationKind expectedKind ) {
+        if ( id == null ) {
+            throw new BadRequestException( "Path id is required." );
+        }
+        AgentProposal p = agentProposalService.load( id );
+        if ( p == null ) {
+            throw new NotFoundException( "No " + expectedKind.getDbValue() + " with id " + id );
+        }
+        AgentCurationKind k = p.getKind() != null ? p.getKind() : AgentCurationKind.PROPOSAL;
+        if ( k != expectedKind ) {
+            // A row exists but is the wrong kind — treat as 404 from this URL's
+            // perspective (the row is reachable via the other endpoint).
+            throw new NotFoundException( "No " + expectedKind.getDbValue() + " with id " + id
+                    + " (id " + id + " is a " + k.getDbValue() + ")" );
+        }
+        return p;
+    }
+
+    /**
+     * Standard 501 body — a small JSON envelope identifying the stubbed
+     * endpoint + the schema gap blocking it. UIB can switch on the
+     * {@code not_implemented} field if it wants to render a "coming soon"
+     * banner instead of a generic error.
+     */
+    private static Object unimplementedBody( String endpoint, String reason ) {
+        java.util.Map<String, Object> body = new java.util.LinkedHashMap<>();
+        body.put( "not_implemented", true );
+        body.put( "endpoint", endpoint );
+        body.put( "reason", reason );
+        body.put( "tracker",
+                "handoffs/RECCE_AGENT_CURATION_UNIFICATION.md §1, §4 — schema gap on AgentProposal" );
+        return body;
     }
 
     private static CurationProposalResponse toProposalResponse( AgentProposal p, Long datasetId ) {
