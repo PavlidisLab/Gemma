@@ -46,12 +46,26 @@ public abstract class GoldenPath implements AutoCloseable {
 
     /**
      * Create a GoldenPath database for a given taxon.
+     * <p>
+     * If any post-{@link #createDataSource} step throws (typically the {@code USE &lt;db&gt;}
+     * probe inside {@link #createJdbcTemplateFromConfig} when the configured goldenpath host
+     * is unreachable or the per-taxon schema does not exist), the partially-allocated
+     * {@link HikariDataSource} is closed before the exception propagates. Without this
+     * cleanup the Hikari pool leaks on every failed construction — try-with-resources at the
+     * call site does NOT cover constructor failure, since {@code close()} only fires for
+     * resources that were fully bound to the try-resource variable.
      */
     public GoldenPath( Taxon taxon ) {
-        this.dataSource = createDataSource( taxon );
-        this.jdbcTemplate = createJdbcTemplateFromConfig( this.dataSource, taxon );
-        this.searchedDatabase = createExternalDatabase( taxon );
-        this.taxon = taxon;
+        HikariDataSource ds = createDataSource( taxon );
+        try {
+            this.jdbcTemplate = createJdbcTemplateFromConfig( ds, taxon );
+            this.searchedDatabase = createExternalDatabase( taxon );
+            this.taxon = taxon;
+            this.dataSource = ds;
+        } catch ( RuntimeException e ) {
+            ds.close();
+            throw e;
+        }
     }
 
     @Override
