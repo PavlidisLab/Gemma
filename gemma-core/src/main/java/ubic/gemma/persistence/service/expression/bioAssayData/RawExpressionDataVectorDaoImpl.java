@@ -37,10 +37,14 @@ public class RawExpressionDataVectorDaoImpl extends AbstractDesignElementDataVec
 
     @Override
     public Collection<RawExpressionDataVector> find( ArrayDesign arrayDesign, QuantitationType quantitationType ) {
+        // bioAssayDimension/quantitationType are lazy=proxy in the hbm; join fetch both to
+        // avoid one follow-up SELECT per vector. (quantitationType is pinned by the parameter
+        // but join-fetch initializes the proxy so downstream consumers don't hit it lazily.)
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
                         "select dev from RawExpressionDataVector dev "
                                 + "join fetch dev.bioAssayDimension bd "
+                                + "join fetch dev.quantitationType qt "
                                 + "join dev.designElement de "
                                 + "where de.arrayDesign = :ad and dev.quantitationType = :quantitationType" )
                 .setParameter( "quantitationType", quantitationType )
@@ -54,10 +58,14 @@ public class RawExpressionDataVectorDaoImpl extends AbstractDesignElementDataVec
         if ( designElements == null || designElements.size() == 0 )
             return new HashSet<>();
 
+        // bioAssayDimension/quantitationType are lazy=proxy in the hbm; join fetch both so
+        // downstream consumers don't fall back to per-row lazy initialization.
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
                         "select dev from RawExpressionDataVector as dev "
-                                // no need for the fetch jointures since the design elements and biological characteristics are already in the session
+                                // design elements + biological characteristics are already in the session
+                                + "join fetch dev.bioAssayDimension "
+                                + "join fetch dev.quantitationType "
                                 + "where dev.designElement in (:des) and dev.quantitationType = :qt" )
                 .setParameterList( "des", optimizeIdentifiableParameterList( designElements ) )
                 .setParameter( "qt", quantitationType )
