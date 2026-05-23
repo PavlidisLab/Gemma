@@ -22,7 +22,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.servlet.ModelAndView;
-import ubic.gemma.core.util.RegressionTesting;
 import ubic.gemma.core.analysis.report.WhatsNew;
 import ubic.gemma.core.analysis.report.WhatsNewService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -89,7 +88,7 @@ public class RssFeedControllerTest extends BaseSpringWebTest {
         assertNotNull( retreivedUpdateCount );
         assertNotNull( retreivedNewCount );
 
-        assertTrue( RegressionTesting.containsSame( experiments.keySet(), retreivedExperiments.keySet() ) );
+        assertEquals( experiments.keySet(), retreivedExperiments.keySet() );
         assertEquals( updateCount, retreivedUpdateCount.intValue() );
         assertEquals( newCount, retreivedNewCount.intValue() );
     }
