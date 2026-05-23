@@ -59,24 +59,37 @@ import java.util.Properties;
 public class DataSourceConfig {
 
     /**
-     * MySQL Connector/J performance + correctness tuning. See
+     * MySQL Connector/J performance + correctness tuning, sourced from {@code gemma.db.hikari.*}
+     * properties (see {@code default.properties}). See
      * https://dev.mysql.com/doc/connectors/en/connector-j-connp-props-performance-extensions.html
      * for the {@code useCursorFetch} / {@code rewriteBatchedStatements} pair, and the MySQL
      * server documentation for the {@code sessionVariables} sql_mode override (drops
      * ONLY_FULL_GROUP_BY because Gemma's HQL produces aggregates without listing every selected
-     * non-aggregate in GROUP BY, a pattern strict mode forbids).
+     * non-aggregate in GROUP BY, a pattern strict mode forbids). Externalising these to
+     * properties lets test / per-environment overrides land without a Java rebuild.
      */
-    private static Properties hikariDataSourceProperties() {
+    @Value("${gemma.db.hikari.useCursorFetch}")
+    private String hikariUseCursorFetch;
+
+    @Value("${gemma.db.hikari.rewriteBatchedStatements}")
+    private String hikariRewriteBatchedStatements;
+
+    @Value("${gemma.db.hikari.connectionTimeZone}")
+    private String hikariConnectionTimeZone;
+
+    @Value("${gemma.db.hikari.sessionVariables}")
+    private String hikariSessionVariables;
+
+    private Properties hikariDataSourceProperties() {
         Properties props = new Properties();
         // Enable server-side cursor fetching so large result sets stream instead of buffering.
-        props.setProperty( "useCursorFetch", "true" );
+        props.setProperty( "useCursorFetch", hikariUseCursorFetch );
         // Merge multiple insert/update statements into a single batch round-trip.
-        props.setProperty( "rewriteBatchedStatements", "true" );
+        props.setProperty( "rewriteBatchedStatements", hikariRewriteBatchedStatements );
         // Default timezone for storage of DATETIME mapped to java.util.Date.
-        props.setProperty( "connectionTimeZone", "America/Vancouver" );
+        props.setProperty( "connectionTimeZone", hikariConnectionTimeZone );
         // Drop ONLY_FULL_GROUP_BY from sql_mode for the connection's session.
-        props.setProperty( "sessionVariables",
-                "sql_mode='STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'" );
+        props.setProperty( "sessionVariables", hikariSessionVariables );
         return props;
     }
 
