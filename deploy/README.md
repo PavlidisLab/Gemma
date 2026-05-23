@@ -34,6 +34,45 @@ This directory holds **sample configuration** for bringing up `gemma-rest` 2.0 o
    curl -fsS https://gemma.example.org/rest/v2/info    # TODO(sysop): real domain
    ```
 
+## SSH tunnel to the production database (if you use one)
+
+If `gemma-rest` reaches MySQL via an SSH-forwarded local port (the common
+pattern when the container host doesn't sit on the DB's network), launch the
+tunnel with keepalives and exit-on-forward-failure so a dead tunnel
+self-detects instead of silently swallowing traffic. The audit in
+`handoffs/STATUS_HIBERNATE_SESSION_EXHAUSTION_AUDIT.md` traced a wave of
+opaque HTTP 500s to a tunnel that had died hours earlier — none of the SSH
+flags below were set, so the kernel never noticed.
+
+```bash
+ssh -N \
+    -o ServerAliveInterval=60 \
+    -o ServerAliveCountMax=3 \
+    -o ExitOnForwardFailure=yes \
+    -L 8000:<prod-mysql-host>:3306 \
+    <bastion-user>@<bastion-host>
+```
+
+Why each flag matters:
+
+- **`ServerAliveInterval=60`** — client emits an SSH-level keepalive every
+  60s. Without this, an idle tunnel through a stateful firewall or NAT can
+  have its connection-tracking entry expire (typical TCP idle timeout is
+  5–10 minutes) while both ends still believe the session is up. The next
+  packet then black-holes.
+- **`ServerAliveCountMax=3`** — disconnect after three unacknowledged
+  keepalives (~3 minutes). Pairs with the previous flag: detect, don't just
+  probe.
+- **`ExitOnForwardFailure=yes`** — abort `ssh` immediately if the `-L`
+  forward can't be established (port already bound, remote refused, etc.).
+  Without this, `ssh` happily authenticates and then sits idle with no
+  forwarder, so the application reports "connection refused" with no
+  upstream signal that the tunnel never actually came up.
+
+For a long-lived tunnel run this under `systemd` (or `autossh`) so the
+tunnel respawns when the keepalive trips. Don't strip these flags "for
+brevity" — that's how a future sysop reintroduces the failure mode.
+
 ## Caveats — read before deploying to production
 
 - **Every `TODO(sysop)` needs a deliberate decision.** Domain name, DB URL, DB user, image tag, host paths, RAM envelope, UID/GID mapping, and SELinux relabel scope are all host-specific. Do not ship to prod without the sysop's pass.
