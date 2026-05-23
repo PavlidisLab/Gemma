@@ -5,9 +5,15 @@
 
 ---
 
-## TL;DR
+## TL;DR (revised after Paul's redirect 2026-05-23)
 
-The REST endpoint is fine. The DB linkage is missing **systemically** for single-cell datasets — not just GSE237718. **Production gemd has 523 single-cell EEs and ZERO of them carry any `SOURCE_BIO_MATERIAL_FK` linkage on their BioMaterials.** The curator-UI grouping codepath has no real prod data to exercise against until the single-cell ingestion path starts creating the linkage.
+The REST endpoint is fine. The DB linkage is missing **because the cell-type aggregation pipeline hasn't created the per-cell-type pseudobulk BioMaterials yet** for any of the 523 prod SC EEs — they're all at the GSM-level sample stage. The 0/523 count isn't an ingestion bug; it's the expected state for SC EEs that haven't been aggregated.
+
+The cell-type aggregation lives downstream (CAB / a separate pipeline step). When that step runs, it creates per-cell-type-per-sample pseudobulk BMs and is the natural place to set `sourceBioMaterial` pointing back to the GSM. Until then, the curator-UI single-cell grouping codepath needs synthetic test data — manual backfill or a `--fake-singlecell-grouping` importer flag.
+
+## ORIGINAL FRAMING (incorrect, corrected above)
+
+I'd originally read 0/523 as "the SC loader isn't setting `sourceBioMaterial`". Paul's redirect: that's another part of the pipeline; the SC loader only creates GSM-level BMs. The aggregation/subset step that creates per-cell-type pseudobulk BMs is where the linkage would get set, and that step hasn't been run against prod yet.
 
 ## What I checked
 
@@ -68,22 +74,13 @@ Pick one of:
 
 (a) is fastest for unblocking the UI today. (b) is more reusable. (c) is the only durable answer.
 
-### For the upstream fix
+### For the upstream fix (revised)
 
-The single-cell ingestion path (gemma-cli's `SingleCellDataLoaderCli` + the Java loaders under `ubic.gemma.core.loader.expression.singleCell`) is not setting `BioMaterial.sourceBioMaterial` when it creates per-cell-bucket BioMaterials. This is the load-side gap — the cell-bucket BioMaterials should reference the **original sample** (GSM-level BioMaterial that maps to the FASTQ submission) via `sourceBioMaterial`.
+Cell-type aggregation creates per-cell-type pseudobulk BioMaterials downstream of the SC loader. THAT step is where `sourceBioMaterial` would be set — pointing each pseudobulk BM back to its GSM-level source. The 523 prod SC EEs haven't been through aggregation yet, so they have only GSM-level BMs and no linkages to set.
 
-Without that linkage:
-- Aggregation views in `SampleDetailsPanel` can't collapse N cell-buckets → source sample.
-- Curators editing a factor value on one cell-bucket can't "fan to siblings" because the sibling set is implicit (would have to be reconstructed from naming conventions per dataset).
-- The Gemma audit log can't attribute curation edits to a logical source sample.
+When the aggregation pipeline (CAB-side or `SingleCellExpressionExperimentCreateSubSetsAndAggregateService` on the Java side, depending on where it ends up living) runs against a prod SC EE, the cell-bucket BMs it creates should `setSourceBioMaterial(gsmBM)` before persist + audit-event the linkage.
 
-Fix shape (recce, not a commit):
-
-1. In the SC ingestion path, when creating cell-bucket BioMaterials, locate the original GSM-level BioMaterial that corresponds to the sample the cell came from. Should already be in the EE's BioAssay set (it's the BA's `sampleUsed`).
-2. Set `cellBucketBM.setSourceBioMaterial(gsmBM)` before persist.
-3. Audit-event the change so the linkage is traceable.
-
-This is gemma-core + gemma-cli work, not gemma-rest. Separate handoff if Paul wants me to file it.
+Paul's note: this is "another part of the pipeline" — out of scope for this STATUS reply. Filed for awareness; the actual aggregation work owns the linkage-setting concern.
 
 ## What's NOT needed
 
