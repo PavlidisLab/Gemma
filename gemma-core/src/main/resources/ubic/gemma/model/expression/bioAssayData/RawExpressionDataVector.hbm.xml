@@ -9,9 +9,12 @@
             <generator class="native">
             </generator>
         </id>
-        <!-- assumed readily available in DataVectorValueObject -->
+        <!-- bioAssayDimension/quantitationType flipped to lazy=proxy: eager fetch issued
+             one follow-up SELECT per vector on bulk loads (mirrors the processed-side fix in
+             ProcessedExpressionDataVector.hbm.xml; see RECCE_VECTOR_RETRIEVAL_NPLUS1 hotspot #5).
+             Hot loaders in RawExpressionDataVectorDaoImpl now JOIN FETCH these. -->
         <many-to-one name="bioAssayDimension" class="ubic.gemma.model.expression.bioAssayData.BioAssayDimension"
-                     lazy="false" fetch="select">
+                     lazy="proxy" fetch="select">
             <column name="BIO_ASSAY_DIMENSION_FK" not-null="true" sql-type="BIGINT"/>
         </many-to-one>
         <many-to-one name="designElement" class="ubic.gemma.model.expression.designElement.CompositeSequence"
@@ -22,7 +25,7 @@
             <column name="DATA" not-null="true" unique="false" sql-type="LONGBLOB"/>
         </property>
         <many-to-one name="quantitationType" class="ubic.gemma.model.common.quantitationtype.QuantitationType"
-                     lazy="false" fetch="select">
+                     lazy="proxy" fetch="select">
             <column name="QUANTITATION_TYPE_FK" not-null="false" sql-type="BIGINT"/>
         </many-to-one>
         <many-to-one name="expressionExperiment" class="ubic.gemma.model.expression.experiment.ExpressionExperiment"
