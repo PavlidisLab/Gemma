@@ -128,7 +128,18 @@ public class AclEntryAfterInvocationCollectionFilteringProvider extends org.spri
                         domainObject ) );
             }
         } else {
-            return super.hasPermission( authentication, domainObject );
+            try {
+                return super.hasPermission( authentication, domainObject );
+            } catch ( NotFoundException nfe ) {
+                // No ACL row or no ACE matched any required permission for any of the
+                // user's sids (typical for anonymous reads against private objects).
+                // Treat as "no permission" so the per-row filter drops the domain
+                // object instead of aborting the entire filter pass. Mirrors the
+                // sibling fix in the legacy ubic.gemma.core.security.acl.afterinvocation
+                // package (commit e94a2fe3e1).
+                log.trace( String.format( "No matching ACE for %s; filtering out.", domainObject ) );
+                return false;
+            }
         }
     }
 
