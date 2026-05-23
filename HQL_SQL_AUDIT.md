@@ -209,4 +209,78 @@ Cumulative effort estimate: 1–2 sessions if grouped; the first three are sub-3
 
 ---
 
-End of audit. No code changed.
+## B1 setMaxResults sweep (2026-05-22)
+
+Followed up on the audit recommendation to spot-check the ~83 `setMaxResults`
+callsites across `gemma-core`, `gemma-rest`, `gemma-cli` for the HB6
+"negative limit" trap. Classification:
+
+- **Total callsites**: 83 (gemma-core only — gemma-rest and gemma-cli have none).
+- **SAFE** (positive constant, `Math.abs(...)`, fetchSize Assert, or upstream
+  `if (limit <= 0) throw`/return guard): the cursor-page family in
+  `AbstractQueryFilteringVoEnabledDao`, `TicketDaoImpl`,
+  `CompositeSequenceDaoImpl.findByGeneByCursor`/`getGenesByCursor`,
+  `AuditEventDaoImpl.getEventsByCursor`, `BioAssayDaoImpl.loadValueObjectsByBioAssaySetCursor`,
+  `ExpressionAnalysisResultSetDaoImpl.findByBioAssaySetInAndDatabaseEntryInByCursor`;
+  `ExpressionExperimentDaoImpl.findByUpdatedLimit(int)` (`Math.abs`),
+  `findByUpdatedLimit(Collection,int)` (early return),
+  `doLoadDetailsValueObjects` (guarded), `GeneDaoImpl.findByAccession`/
+  `findByOfficialNameInexact`/`findByOfficialSymbolInexact` (`1` /
+  `MAX_RESULTS`), `CompositeSequenceDaoImpl.getRawSummary` (`MAX_CS_RECORDS`
+  / early return), `PreboardedExperimentServiceImpl`/`ExperimentalDesignDaoImpl`/
+  `AgentProposalDaoImpl`/`GeneSetDaoImpl`/`CharacteristicDaoImpl` line 422 (`1`),
+  `ExpressionExperimentDaoImpl.getCellLevelCharacteristicsCategory` (`1`),
+  `QueryUtils.stream` (Assert fetchSize >= 1).
+- **GUARDED** in place by `if (limit > 0)`: `AbstractCriteriaFilteringVoEnabledDao`
+  (2x), `AbstractQueryFilteringVoEnabledDao` (offset-mode 2x),
+  `ArrayDesignDaoImpl.loadCompositeSequences`,
+  `ExpressionAnalysisResultSetDaoImpl.findByBioAssaySetInAndDatabaseEntryInLimit`,
+  `DifferentialExpressionResultDaoImpl.findByExperimentAnalyzed(Coll,boolean,double,int)`
+  (the original known-fixed callsite at line 281),
+  `CurationDraftDaoImpl.findByCurator`, `TicketDaoImpl.findTickets`,
+  `QueryUtils.listByBatch`/`listByIdentifiableBatch`,
+  `WorkflowServiceImpl.findByWorkflowState`,
+  `CharacteristicDaoImpl` 153/178/190/410/539/554/575/623/646 (already use
+  `> 0 ? : Integer.MAX_VALUE`), `ExpressionExperimentDaoImpl` 994/999/1200/1205/
+  1454/1501 (same pattern), `FactorValueDaoImpl.findByValueStartingWith`
+  (same pattern).
+
+**AT-RISK** (raw pass-through of caller-supplied int with no guard) — and applied fix:
+
+| file:line | expression | applied fix |
+|---|---|---|
+| `ExpressionAnalysisResultSetDaoImpl.java:123` | `setMaxResults(limit)` in `loadWithResultsAndContrasts(Long,int,int)` | `if (limit > 0) q.setMaxResults(limit);` |
+| `ExpressionAnalysisResultSetDaoImpl.java:154` | `setMaxResults(limit)` in `loadWithResultsAndContrasts(Long,double,int,int)` | `if (limit > 0) q.setMaxResults(limit);` |
+| `DifferentialExpressionResultDaoImpl.java:323` | `setMaxResults(limit)` in `findByExperimentAnalyzed(Coll,boolean,double,int)` | `if (limit > 0) q.setMaxResults(limit);` (mirror the sibling pattern already on line 283) |
+| `DifferentialExpressionResultDaoImpl.java:382` | `setMaxResults(limit)` in `findByGene(Gene,boolean,boolean,double,int)` | `if (limit > 0) q.setMaxResults(limit);` |
+| `DifferentialExpressionResultDaoImpl.java:692` | `setMaxResults(limit)` in `findByResultSet(...double,int,int)` | `if (limit > 0) q.setMaxResults(limit);` |
+| `CharacteristicDaoImpl.java:121` | `setMaxResults(limit)` in `browse(int,int)` | `setMaxResults(limit > 0 ? limit : Integer.MAX_VALUE)` (matches existing helper pattern on lines 153/178/190/etc.) |
+| `CharacteristicDaoImpl.java:142` | `setMaxResults(limit)` in `browse(int,int,String,boolean)` | same |
+| `BibliographicReferenceDaoImpl.java:112` | `setMaxResults(limit)` in `getRelatedExperiments(int,int)` | `setMaxResults(limit > 0 ? limit : Integer.MAX_VALUE)` |
+| `BibliographicReferenceDaoImpl.java:178` | `setMaxResults(limit)` in `browse(int,int)` | same |
+| `BibliographicReferenceDaoImpl.java:194` | `setMaxResults(limit)` in `browse(int,int,String,boolean)` | same |
+| `ExpressionExperimentDaoImpl.java:276` | `setMaxResults(limit)` in `browse(int,int)` | `setMaxResults(limit > 0 ? limit : Integer.MAX_VALUE)` |
+| `ExpressionExperimentDaoImpl.java:1275` | `setMaxResults(maxResults)` in `getExperimentsLackingPublications(int)` | `setMaxResults(maxResults > 0 ? maxResults : Integer.MAX_VALUE)` |
+| `CompositeSequenceDaoImpl.java:190` | `setMaxResults(limit)` in `findByGene(Gene,int,int,boolean)` (useGene2Cs branch) | `setMaxResults(limit > 0 ? limit : Integer.MAX_VALUE)` |
+| `CompositeSequenceDaoImpl.java:206` | same method, HQL branch | same |
+| `CompositeSequenceDaoImpl.java:459` | `setMaxResults(limit)` in `getGenes(CompositeSequence,int,int,boolean)` (useGene2Cs branch) | same |
+| `CompositeSequenceDaoImpl.java:473` | same method, HQL branch | same |
+| `ProcessedExpressionDataVectorDaoImpl.java:84` | `setMaxResults(limit)` in `getProcessedVectors(ee,dim,int,int)` | same |
+| `ProcessedExpressionDataVectorDaoImpl.java:221` | `setMaxResults(limit)` in `getProcessedVectorsDesignElements(ee,dim,int,int)` | same |
+| `FactorValueDaoImpl.java:88` | `setMaxResults(limit)` in `loadAll(int,int)` | same |
+| `FactorValueDaoImpl.java:113` | `setMaxResults(limit)` in `loadAllIds(int,int)` | same |
+| `PrincipalComponentAnalysisDaoImpl.java:66` | `setMaxResults(count)` in `getTopLoadedProbes(ee,int,int)` | `setMaxResults(count > 0 ? count : Integer.MAX_VALUE)` |
+
+**Summary**: 21 AT-RISK callsites identified, 21 fixes applied. All resolve to
+the same semantic: when the caller passes 0 or a negative `limit`, treat it as
+"no limit" (matching the legacy HB5 behaviour). Two stylistic patterns used,
+matching whatever the surrounding file already uses: the explicit `if (limit > 0)`
+guard for files that already write that form, and `limit > 0 ? limit : Integer.MAX_VALUE`
+for files that already use the inline ternary. No semantic change to any
+positive-limit caller — only the unguarded negative path is fixed.
+
+Validation: `mvn -pl gemma-core,gemma-rest,gemma-cli compile test-compile` is clean.
+
+---
+
+End of audit.

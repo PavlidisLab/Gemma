@@ -273,7 +273,8 @@ public class ExpressionExperimentDaoImpl
     @Override
     public List<ExpressionExperiment> browse( int start, int limit ) {
         Query query = this.getSessionFactory().getCurrentSession().createQuery( "from ExpressionExperiment" );
-        query.setMaxResults( limit );
+        // HB6 rejects setMaxResults(<0); browse contract treats <=0 as "no limit".
+        query.setMaxResults( limit > 0 ? limit : Integer.MAX_VALUE );
         query.setFirstResult( start );
 
         //noinspection unchecked
@@ -1272,7 +1273,8 @@ public class ExpressionExperimentDaoImpl
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
                 .createQuery( "select e from ExpressionExperiment e where e.primaryPublication is null and e.shortName like 'GSE%'" )
-                .setMaxResults( maxResults )
+                // HB6 rejects setMaxResults(<0); treat <=0 as "no limit".
+                .setMaxResults( maxResults > 0 ? maxResults : Integer.MAX_VALUE )
                 .list();
     }
 
