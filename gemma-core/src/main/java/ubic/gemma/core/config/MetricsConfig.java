@@ -24,7 +24,6 @@ import io.micrometer.jmx.JmxConfig;
 import org.hibernate.SessionFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.task.TaskExecutor;
 import ubic.gemma.core.job.TaskRunningService;
@@ -52,7 +51,6 @@ import java.util.List;
  */
 @Configuration
 @Profile("metrics")
-@EnableAspectJAutoProxy
 public class MetricsConfig {
 
     @Bean
@@ -105,8 +103,8 @@ public class MetricsConfig {
 
     /**
      * Enables {@code @Timed}-annotated method timing. The XML had a sibling
-     * {@code <aop:aspectj-autoproxy/>}; replaced here by the class-level
-     * {@link EnableAspectJAutoProxy} annotation.
+     * {@code <aop:aspectj-autoproxy/>}; the consolidated
+     * {@code @EnableAspectJAutoProxy} on {@code ComponentScanConfig} now covers it.
      */
     @Bean
     public TimedAspect timedAspect( MeterRegistry meterRegistry ) {

@@ -12,6 +12,7 @@ package ubic.gemma.core.config;
 
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.ImportResource;
 import ubic.gemma.core.context.BeanNameGenerator;
@@ -36,6 +37,15 @@ import ubic.gemma.core.context.TestComponent;
  * The stub is required because the XML wildcard loader
  * ({@code classpath*:ubic/gemma/applicationContext-*.xml}) needs at least one XML entry point;
  * once this {@code @Configuration} is registered, its {@code @ComponentScan} handles the rest.
+ * <p>
+ * {@link EnableAspectJAutoProxy} is declared here so AspectJ annotation-driven proxying is
+ * enabled once at the root scan, covering every {@code @Aspect} bean picked up under
+ * {@code ubic.gemma.core} / {@code ubic.gemma.persistence} (audit advice, {@code @Timed}
+ * via micrometer's TimedAspect, etc.). Replaces the three legacy XML
+ * {@code <aop:aspectj-autoproxy/>} declarations from
+ * {@code applicationContext-security.xml}, {@code applicationContext-serviceBeans.xml}, and
+ * {@code applicationContext-hibernate.xml}. Default {@code proxyTargetClass=false} matches
+ * the XML behaviour (interface-based JDK proxies where available, CGLIB fallback).
  */
 @Configuration
 @ComponentScan(
@@ -44,6 +54,7 @@ import ubic.gemma.core.context.TestComponent;
         excludeFilters = @ComponentScan.Filter(
                 type = FilterType.ANNOTATION,
                 classes = TestComponent.class ) )
+@EnableAspectJAutoProxy
 // gsec security XML imported at THIS level (not deferred to SecurityConfig's own
 // @ImportResource) so the gsec beans register alongside the component scan, before
 // BeanPostProcessor-driven eager creation (e.g. taskExecutorThreadContextInheritPostProcessor)

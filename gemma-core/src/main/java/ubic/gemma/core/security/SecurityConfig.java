@@ -17,7 +17,6 @@ import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.context.annotation.ImportResource;
 import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.security.acls.model.AclService;
@@ -90,11 +89,10 @@ import java.util.List;
  *       they can be looked up by name from {@link MethodSecurityConfig#AFTER_INVOCATION_PROVIDER_BEAN_NAMES}.
  *       Only three of the four are currently wired; the fourth (and a fifth — composite
  *       sequence single) are present-but-unwired pending future hook-up.</li>
- *   <li>AspectJ autoproxy via {@link EnableAspectJAutoProxy} (replaces
- *       {@code <aop:aspectj-autoproxy/>}). The other autoproxy declarations in
- *       {@code applicationContext-hibernate.xml} and {@code applicationContext-serviceBeans.xml}
- *       are idempotent &mdash; Spring registers a single {@code AnnotationAwareAspectJAutoProxyCreator}
- *       regardless of how many sources request it.</li>
+ *   <li>AspectJ autoproxy now consolidated on {@code ComponentScanConfig} via
+ *       {@code @EnableAspectJAutoProxy} (replaces the legacy
+ *       {@code <aop:aspectj-autoproxy/>} declarations from this XML plus
+ *       {@code applicationContext-hibernate.xml} and {@code applicationContext-serviceBeans.xml}).</li>
  * </ul>
  *
  * <p><b>Spring Security 6 idioms.</b> This is the modern stack: an explicit
@@ -118,7 +116,6 @@ import java.util.List;
  * required name, achieved by injecting the existing bean and re-exposing it.
  */
 @Configuration
-@EnableAspectJAutoProxy
 @ImportResource("classpath:ubic/gemma/core/security/applicationContext-*.xml")
 public class SecurityConfig {
 
