@@ -31,6 +31,8 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.model.common.auditAndSecurity.User;
@@ -106,10 +108,23 @@ public class AuthWebService {
         if ( authentication == null || !authentication.isAuthenticated() ) {
             throw new NotAuthorizedException( "Invalid credentials", "xBasic realm=\"Gemma RESTful API\"" );
         }
-        String token = tokenStore.issue( authentication );
-        User user = userManager.findByUserName( req.username );
-        UserValueObject userVo = user != null ? toUserVo( user ) : null;
-        return Response.ok( new ResponseDataObject<>( new LoginResponse( token, userVo ) ) ).build();
+        // Install the freshly-minted Authentication into the SecurityContext for the
+        // duration of this request so the downstream @Secured("GROUP_USER")
+        // userManager.findByUserName(...) call sees an authenticated principal. The
+        // request is stateless (SessionCreationPolicy.STATELESS) so this only affects
+        // the current thread; we restore the prior context in finally to be tidy.
+        SecurityContext prior = SecurityContextHolder.getContext();
+        try {
+            SecurityContext authed = SecurityContextHolder.createEmptyContext();
+            authed.setAuthentication( authentication );
+            SecurityContextHolder.setContext( authed );
+            String token = tokenStore.issue( authentication );
+            User user = userManager.findByUserName( req.username );
+            UserValueObject userVo = user != null ? toUserVo( user ) : null;
+            return Response.ok( new ResponseDataObject<>( new LoginResponse( token, userVo ) ) ).build();
+        } finally {
+            SecurityContextHolder.setContext( prior );
+        }
     }
 
     /**
