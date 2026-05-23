@@ -54,6 +54,8 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
+import ubic.gemma.rest.ranking.AnnotationSearchRankingStrategy;
+import ubic.gemma.rest.ranking.LuceneOrderRankingStrategy;
 import ubic.gemma.rest.util.QueriedAndFilteredAndPaginatedResponseDataObject;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.ResponseErrorObject;
@@ -116,6 +118,15 @@ public class AnnotationsWebService {
     private ExpressionExperimentService expressionExperimentService;
     private DatasetArgService datasetArgService;
     private TaxonArgService taxonArgService;
+    /**
+     * Strategy registry keyed by short name ({@code lucene}, {@code usage}, {@code coverage}).
+     * Spring populates this from every {@link AnnotationSearchRankingStrategy} bean — the bean name
+     * (set via {@code @Component("name")}) is the map key. Adding a new strategy is one bean.
+     * Optional so the existing {@code @TestComponent} contexts that don't define any ranker bean
+     * still wire — the constructor falls back to a single-entry map with the no-op default.
+     */
+    @Nullable
+    private Map<String, AnnotationSearchRankingStrategy> rankingStrategies;
 
     /**
      * Required by spring
@@ -129,13 +140,32 @@ public class AnnotationsWebService {
     @Autowired
     public AnnotationsWebService( OntologyService ontologyService, SearchService searchService,
             CharacteristicService characteristicService, ExpressionExperimentService expressionExperimentService,
-            DatasetArgService datasetArgService, TaxonArgService taxonArgService ) {
+            DatasetArgService datasetArgService, TaxonArgService taxonArgService,
+            @Nullable Map<String, AnnotationSearchRankingStrategy> rankingStrategies ) {
         this.ontologyService = ontologyService;
         this.searchService = searchService;
         this.characteristicService = characteristicService;
         this.expressionExperimentService = expressionExperimentService;
         this.datasetArgService = datasetArgService;
         this.taxonArgService = taxonArgService;
+        if ( rankingStrategies == null || rankingStrategies.isEmpty() ) {
+            // Test contexts may omit ranker beans; degrade to no-op so default-rank queries still work.
+            LuceneOrderRankingStrategy fallback = new LuceneOrderRankingStrategy();
+            this.rankingStrategies = Collections.singletonMap( fallback.getName(), fallback );
+        } else {
+            this.rankingStrategies = rankingStrategies;
+        }
+    }
+
+    /**
+     * Back-compat constructor for tests that wire only the core collaborators. Equivalent to
+     * passing {@code null} for {@code rankingStrategies}.
+     */
+    public AnnotationsWebService( OntologyService ontologyService, SearchService searchService,
+            CharacteristicService characteristicService, ExpressionExperimentService expressionExperimentService,
+            DatasetArgService datasetArgService, TaxonArgService taxonArgService ) {
+        this( ontologyService, searchService, characteristicService, expressionExperimentService,
+                datasetArgService, taxonArgService, null );
     }
 
     /*https://www.w3.org/TR/owl-ref/#subClassOf-def*
@@ -206,7 +236,19 @@ public class AnnotationsWebService {
             Integer usageCount = term.getUri() != null
                     ? getDistinctEeCountsByUri( Collections.singleton( term.getUri() ) ).getOrDefault( term.getUri(), 0 )
                     : null;
-            return respond( new OntologyTermValueObject( term.getUri(), term.getLabel(), definition, term.isObsolete(), usageCount ) );
+            // Direct + includeAdditionalProperties=true == nearest is_a OR part_of parents.
+            // Null when the term has no URI (matches the count-skip semantics above).
+            List<OntologyTermSimpleValueObject> parentVos;
+            if ( term.getUri() != null ) {
+                Collection<OntologyTerm> parents = ontologyService.getParents( Collections.singleton( term ),
+                        true, true, Math.max( 30000 - timer.getTime(), 0 ), TimeUnit.MILLISECONDS );
+                parentVos = parents.stream()
+                        .map( p -> new OntologyTermSimpleValueObject( p.getUri(), p.getLabel() ) )
+                        .collect( Collectors.toList() );
+            } else {
+                parentVos = null;
+            }
+            return respond( new OntologyTermValueObject( term.getUri(), term.getLabel(), definition, term.isObsolete(), usageCount, parentVos ) );
         } catch ( TimeoutException e ) {
             throw new ServiceUnavailableException( DateUtils.addSeconds( new Date(), 30 ), e );
         }
@@ -264,7 +306,8 @@ public class AnnotationsWebService {
             Map<String, Integer> countsByUri = getDistinctEeCountsByUri( uris );
             return terms.stream()
                     .map( t -> new AnnotationSearchResultValueObject( t.getLabel(), t.getUri(), null, null,
-                            t.getUri() != null ? countsByUri.getOrDefault( t.getUri(), 0 ) : null ) )
+                            t.getUri() != null ? countsByUri.getOrDefault( t.getUri(), 0 ) : null,
+                            null, null ) )
                     .collect( Collectors.toList() );
         } catch ( TimeoutException e ) {
             throw new ServiceUnavailableException( DateUtils.addSeconds( new Date(), 30 ), e );
@@ -288,19 +331,25 @@ public class AnnotationsWebService {
             @ApiResponse(responseCode = "503", description = FIND_CHARACTERISTICS_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
     })
     public ResponseDataObject<List<AnnotationSearchResultValueObject>> searchAnnotations(
-            @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE, description = SEARCH_QUERY_DESCRIPTION) @QueryParam("query") @DefaultValue("") StringArrayArg query
+            @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE, description = SEARCH_QUERY_DESCRIPTION) @QueryParam("query") @DefaultValue("") StringArrayArg query,
+            @Parameter(description = "Ranking strategy to apply on top of the raw Lucene order. " +
+                    "`lucene` (default) preserves today's behaviour. `usage` blends rank with per-URI " +
+                    "experiment usage count. `coverage` sorts by fraction of query tokens present in " +
+                    "the hit's label.")
+            @QueryParam("rank") @DefaultValue(LuceneOrderRankingStrategy.NAME) String rank
     ) {
         if ( query == null || query.getValue().isEmpty() ) {
             throw new BadRequestException( "Search query cannot be empty." );
         }
-        String cacheKey = buildSearchCacheKey( query.getValue() );
+        AnnotationSearchRankingStrategy strategy = resolveRankingStrategy( rank );
+        String cacheKey = buildSearchCacheKey( query.getValue(), strategy.getName() );
         List<AnnotationSearchResultValueObject> cached = SEARCH_CACHE.get( cacheKey );
         if ( cached != null ) {
             log.debug( "annotation-search cache HIT key={} (size={})", cacheKey, SEARCH_CACHE.size() );
             return respond( new ArrayList<>( cached ) );
         }
         try {
-            List<AnnotationSearchResultValueObject> result = new ArrayList<>( this.getTerms( query, FIND_CHARACTERISTICS_TIMEOUT_MS ) );
+            List<AnnotationSearchResultValueObject> result = new ArrayList<>( this.getTerms( query, strategy, FIND_CHARACTERISTICS_TIMEOUT_MS ) );
             // store an unmodifiable defensive copy so callers can't mutate the cached value
             SEARCH_CACHE.put( cacheKey, Collections.unmodifiableList( new ArrayList<>( result ) ) );
             log.debug( "annotation-search cache MISS key={} stored {} hits (size={})", cacheKey, result.size(), SEARCH_CACHE.size() );
@@ -312,6 +361,19 @@ public class AnnotationsWebService {
         } catch ( SearchException e ) {
             throw new InternalServerErrorException( e );
         }
+    }
+
+    private AnnotationSearchRankingStrategy resolveRankingStrategy( String name ) {
+        String key = name != null ? name.trim().toLowerCase( Locale.ROOT ) : LuceneOrderRankingStrategy.NAME;
+        if ( key.isEmpty() ) {
+            key = LuceneOrderRankingStrategy.NAME;
+        }
+        AnnotationSearchRankingStrategy s = rankingStrategies != null ? rankingStrategies.get( key ) : null;
+        if ( s == null ) {
+            throw new BadRequestException( "Unknown ranking strategy '" + name + "'. Supported values: "
+                    + ( rankingStrategies != null ? rankingStrategies.keySet() : Collections.emptySet() ) + "." );
+        }
+        return s;
     }
 
     /**
@@ -330,7 +392,7 @@ public class AnnotationsWebService {
     public ResponseDataObject<List<AnnotationSearchResultValueObject>> searchAnnotationsByPathQuery( // Params:
             @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE, description = SEARCH_QUERY_DESCRIPTION) @PathParam("query") @DefaultValue("") StringArrayArg query // Required
     ) {
-        return searchAnnotations( query );
+        return searchAnnotations( query, LuceneOrderRankingStrategy.NAME );
     }
 
     /**
@@ -544,7 +606,8 @@ public class AnnotationsWebService {
      * @param arg the array arg containing all the strings to search for.
      * @return a collection of characteristics matching the input query.
      */
-    private LinkedHashSet<AnnotationSearchResultValueObject> getTerms( StringArrayArg arg, long timeoutMs ) throws SearchException {
+    private LinkedHashSet<AnnotationSearchResultValueObject> getTerms( StringArrayArg arg,
+            AnnotationSearchRankingStrategy strategy, long timeoutMs ) throws SearchException {
         StopWatch timer = StopWatch.createStarted();
         List<CharacteristicValueObject> rawHits = new ArrayList<>();
         for ( String query : arg.getValue() ) {
@@ -562,13 +625,109 @@ public class AnnotationsWebService {
                 .filter( Objects::nonNull )
                 .collect( Collectors.toSet() );
         Map<String, Integer> countsByUri = getDistinctEeCountsByUri( uris );
+        // Apply the requested ranking strategy. The joined query text drives token-coverage; for
+        // multi-term StringArrayArg inputs (typically comma-joined keywords), pass them space-joined
+        // so the tokeniser sees the union.
+        String joinedQuery = String.join( " ", arg.getValue() );
+        List<CharacteristicValueObject> ranked = strategy.rank( joinedQuery, rawHits, countsByUri );
+
+        // Enrich the top-N ranked hits with definition + nearest is_a/part_of parents. The rest
+        // carry null sentinels so the UI can lazy-load via /annotations/term?uri=X. Lookups share
+        // the remaining ontology-search timeout budget; per-URI failures (timeout, missing term)
+        // degrade silently to null on that single field.
+        Set<String> topUris = collectTopUris( ranked, ENRICH_TOP_N );
+        Map<String, String> defByUri = new HashMap<>();
+        Map<String, List<OntologyTermSimpleValueObject>> parentsByUri = new HashMap<>();
+        if ( !topUris.isEmpty() ) {
+            try {
+                enrichTopHits( topUris, defByUri, parentsByUri, Math.max( timeoutMs - timer.getTime(), 0 ) );
+            } catch ( TimeoutException e ) {
+                // Budget exhausted mid-enrichment; surface whatever did resolve and leave the rest null.
+                log.debug( "annotation-search enrichment hit shared-budget timeout: {} of {} URIs enriched (definitions); {} URIs enriched (parents)",
+                        defByUri.size(), topUris.size(), parentsByUri.size() );
+            }
+        }
+
         LinkedHashSet<AnnotationSearchResultValueObject> vos = new LinkedHashSet<>();
-        for ( CharacteristicValueObject vo : rawHits ) {
+        for ( CharacteristicValueObject vo : ranked ) {
             Integer count = vo.getValueUri() != null ? countsByUri.getOrDefault( vo.getValueUri(), 0 ) : null;
+            String uri = vo.getValueUri();
+            String definition = uri != null && topUris.contains( uri ) ? defByUri.get( uri ) : null;
+            List<OntologyTermSimpleValueObject> parents = uri != null && topUris.contains( uri ) ? parentsByUri.get( uri ) : null;
             vos.add( new AnnotationSearchResultValueObject( vo.getValue(), vo.getValueUri(), vo.getCategory(),
-                    vo.getCategoryUri(), count ) );
+                    vo.getCategoryUri(), count, definition, parents ) );
         }
         return vos;
+    }
+
+    /** Top-N hits to enrich inline with definition + parents on /annotations/search. */
+    private static final int ENRICH_TOP_N = 25;
+
+    private static Set<String> collectTopUris( List<CharacteristicValueObject> ranked, int topN ) {
+        Set<String> out = new LinkedHashSet<>();
+        int seen = 0;
+        for ( CharacteristicValueObject vo : ranked ) {
+            if ( seen >= topN ) {
+                break;
+            }
+            seen++;
+            String uri = vo.getValueUri();
+            if ( uri != null ) {
+                out.add( uri );
+            }
+        }
+        return out;
+    }
+
+    /**
+     * Per-URI definition + nearest-parents lookup with a shared timeout budget. OntologyService
+     * has no batch get-definition / get-parents-by-URI API, so this loops; each per-URI call
+     * sees what is left of the budget after prior calls subtract from it. Per-URI TimeoutException
+     * is logged and the offending URI is left unset (downstream renders null); a TimeoutException
+     * is rethrown only if the budget is exhausted upfront.
+     */
+    private void enrichTopHits( Set<String> topUris,
+            Map<String, String> defByUri,
+            Map<String, List<OntologyTermSimpleValueObject>> parentsByUri,
+            long budgetMs ) throws TimeoutException {
+        StopWatch local = StopWatch.createStarted();
+        for ( String uri : topUris ) {
+            long remaining = Math.max( budgetMs - local.getTime(), 0 );
+            if ( remaining <= 0 ) {
+                throw new TimeoutException( "annotation-search enrichment exhausted timeout budget" );
+            }
+            try {
+                String def = ontologyService.getDefinition( uri, remaining, TimeUnit.MILLISECONDS );
+                if ( def != null ) {
+                    defByUri.put( uri, def );
+                }
+            } catch ( TimeoutException e ) {
+                log.debug( "definition lookup timed out for {}", uri );
+            }
+            remaining = Math.max( budgetMs - local.getTime(), 0 );
+            if ( remaining <= 0 ) {
+                // budget used up; bail with whatever we have.
+                return;
+            }
+            try {
+                OntologyTerm term = ontologyService.getTerm( uri, remaining, TimeUnit.MILLISECONDS );
+                if ( term == null ) {
+                    continue;
+                }
+                remaining = Math.max( budgetMs - local.getTime(), 0 );
+                if ( remaining <= 0 ) {
+                    return;
+                }
+                Collection<OntologyTerm> parents = ontologyService.getParents( Collections.singleton( term ),
+                        true, true, remaining, TimeUnit.MILLISECONDS );
+                List<OntologyTermSimpleValueObject> parentVos = parents.stream()
+                        .map( p -> new OntologyTermSimpleValueObject( p.getUri(), p.getLabel() ) )
+                        .collect( Collectors.toList() );
+                parentsByUri.put( uri, parentVos );
+            } catch ( TimeoutException e ) {
+                log.debug( "parents lookup timed out for {}", uri );
+            }
+        }
     }
 
     /**
@@ -601,6 +760,18 @@ public class AnnotationsWebService {
         String category;
         String categoryUri;
         Integer usageCount;
+        /**
+         * Definition of the term, if enriched. Null indicates "not enriched" (the typeahead caller can
+         * lazy-load via {@code /annotations/term?uri=X}); empty string indicates "enriched, no definition
+         * known". Populated for the top-25 search hits only — see {@code getTerms}.
+         */
+        @Nullable String definition;
+        /**
+         * Nearest is_a OR part_of parents of this term, if enriched. Null indicates "not enriched"
+         * (sentinel for lazy-load); empty list indicates "enriched, no parents" (e.g. top-level term).
+         * Populated for the top-25 search hits only — see {@code getTerms}.
+         */
+        @Nullable List<OntologyTermSimpleValueObject> parents;
     }
 
     @Value
@@ -610,6 +781,11 @@ public class AnnotationsWebService {
         String definition;
         boolean obsolete;
         Integer usageCount;
+        /**
+         * Nearest is_a OR part_of parents of this term. Empty list when the term is a top-level node;
+         * null only if the lookup was skipped (e.g. term has no URI).
+         */
+        @Nullable List<OntologyTermSimpleValueObject> parents;
     }
 
     @Value
@@ -623,8 +799,12 @@ public class AnnotationsWebService {
      * matches (the underlying LIKE search and ontology lookup are case-insensitive); URI-shaped terms keep
      * their case because URIs are case-sensitive on the path/query portion.
      */
-    private static String buildSearchCacheKey( List<String> values ) {
+    private static String buildSearchCacheKey( List<String> values, String rankName ) {
         StringBuilder sb = new StringBuilder( values.size() * 16 );
+        // Prefix the strategy name so swapping rank= invalidates the cache without colliding with
+        // a different-query default-rank entry. STX separates the prefix from the query payload.
+        sb.append( rankName != null ? rankName : LuceneOrderRankingStrategy.NAME );
+        sb.append( '' );
         for ( int i = 0; i < values.size(); i++ ) {
             String v = values.get( i );
             if ( v == null ) continue;

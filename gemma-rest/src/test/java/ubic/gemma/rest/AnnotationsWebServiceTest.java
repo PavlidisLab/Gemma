@@ -51,6 +51,7 @@ import ubic.gemma.rest.util.args.*;
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -762,6 +763,108 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
 
         verify( characteristicService, never() ).findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() );
+    }
+
+    @Test
+    public void testSearchAnnotationsEnrichesTopNWithDefinitionAndParents() throws SearchException, TimeoutException {
+        // Mock 27 hits — the first 25 should carry non-null definition + parents in the response,
+        // hits 26+ carry nulls (lazy-load sentinel).
+        List<CharacteristicValueObject> raw = new ArrayList<>();
+        for ( int i = 0; i < 27; i++ ) {
+            raw.add( new CharacteristicValueObject( "term-" + i, "http://example.com/t" + i, "disease", "http://example.com/disease" ) );
+        }
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "diabetes" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( raw );
+        // Definition lookup: per-URI canned response keyed by URI.
+        when( ontologyService.getDefinition( anyString(), anyLong(), any() ) )
+                .thenAnswer( a -> "def-for-" + a.getArgument( 0 ) );
+        // Parents lookup: for each top-25 URI, the test resolves the term then asks for direct parents.
+        when( ontologyService.getTerm( anyString(), anyLong(), any() ) )
+                .thenAnswer( a -> {
+                    String uri = a.getArgument( 0 );
+                    OntologyTerm t = mock( OntologyTerm.class );
+                    when( t.getUri() ).thenReturn( uri );
+                    when( t.getLabel() ).thenReturn( "term-" + uri );
+                    return t;
+                } );
+        when( ontologyService.getParents( anySet(), eq( true ), eq( true ), anyLong(), any() ) )
+                .thenAnswer( a -> {
+                    OntologyTerm parent = mock( OntologyTerm.class );
+                    when( parent.getUri() ).thenReturn( "http://example.com/parent" );
+                    when( parent.getLabel() ).thenReturn( "parent label" );
+                    return Collections.singleton( parent );
+                } );
+        // No usage-count contribution needed for this test; mock returns empty.
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/annotations/search" ).queryParam( "query", "diabetes" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 27 )
+                .satisfies( hits -> {
+                    // First 25 hits: definition + parents populated.
+                    for ( int i = 0; i < 25; i++ ) {
+                        Map<?, ?> hit = ( Map<?, ?> ) hits.get( i );
+                        assertThat( hit.get( "definition" ) )
+                                .as( "top-25 hit %d should carry definition", i )
+                                .isEqualTo( "def-for-http://example.com/t" + i );
+                        assertThat( hit.get( "parents" ) )
+                                .as( "top-25 hit %d should carry parents", i )
+                                .isInstanceOf( List.class );
+                        assertThat( ( List<?> ) hit.get( "parents" ) ).hasSize( 1 );
+                    }
+                    // Hits 25 + 26: sentinel nulls.
+                    for ( int i = 25; i < 27; i++ ) {
+                        Map<?, ?> hit = ( Map<?, ?> ) hits.get( i );
+                        assertThat( hit.get( "definition" ) )
+                                .as( "post-top-25 hit %d should carry null definition", i ).isNull();
+                        assertThat( hit.get( "parents" ) )
+                                .as( "post-top-25 hit %d should carry null parents", i ).isNull();
+                    }
+                } );
+    }
+
+    @Test
+    public void testGetAnnotationTermPopulatesParents() throws TimeoutException {
+        OntologyTerm term = mock( OntologyTerm.class );
+        when( term.getUri() ).thenReturn( "http://example.com/diabetes" );
+        when( term.getLabel() ).thenReturn( "diabetes" );
+        when( ontologyService.getTerm( eq( "http://example.com/diabetes" ), anyLong(), any() ) ).thenReturn( term );
+        when( ontologyService.getDefinition( eq( "http://example.com/diabetes" ), anyLong(), any() ) )
+                .thenReturn( "metabolic disease" );
+        OntologyTerm parent = mock( OntologyTerm.class );
+        when( parent.getUri() ).thenReturn( "http://example.com/disease" );
+        when( parent.getLabel() ).thenReturn( "disease" );
+        when( ontologyService.getParents( eq( Collections.singleton( term ) ), eq( true ), eq( true ), anyLong(), any() ) )
+                .thenReturn( Collections.singleton( parent ) );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/annotations/term" ).queryParam( "uri", "http://example.com/diabetes" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.uri", "http://example.com/diabetes" )
+                .extracting( "data.parents", list( Map.class ) )
+                .hasSize( 1 )
+                .first()
+                .satisfies( p -> assertThat( p )
+                        .containsEntry( "uri", "http://example.com/disease" )
+                        .containsEntry( "label", "disease" ) );
+
+        verify( ontologyService ).getParents( eq( Collections.singleton( term ) ), eq( true ), eq( true ), anyLong(), any() );
+    }
+
+    @Test
+    public void testSearchAnnotationsUnknownRankReturns400() throws SearchException, TimeoutException {
+        // No need to mock anything — the rank= validator fires before ontology lookup.
+        assertThat( target( "/annotations/search" )
+                .queryParam( "query", "diabetes" )
+                .queryParam( "rank", "no-such-strategy" )
+                .request().get() )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        verify( ontologyService, never() ).findExperimentsCharacteristicTags( anyString(), anyInt(), anyBoolean(), anyLong(), any() );
     }
 
     @Test
