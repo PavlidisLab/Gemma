@@ -53,6 +53,7 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -104,11 +105,13 @@ public class DatasetsWebServiceExpressionLevelsForGeneCursorTest {
         // Shared filter wiring: getFilters is the inferred-terms-collecting variant; return
         // an empty Filters so we don't have to parse a real expression. Inferred terms left
         // empty (filled per-test where it matters).
-        when( datasetArgService.getFilters( any( FilterArg.class ), isNull(), any( Collection.class ) ) )
+        // lenient: a subset of tests re-stub getFilters with a populating Answer, so the
+        // shared stub goes unused and strict-stubbing flags it as unnecessary.
+        lenient().when( datasetArgService.getFilters( any( FilterArg.class ), isNull(), any( Collection.class ) ) )
                 .thenReturn( Filters.empty() );
-        when( datasetArgService.getSort( any( SortArg.class ) ) )
+        lenient().when( datasetArgService.getSort( any( SortArg.class ) ) )
                 .thenReturn( Sort.by( null, "id", Sort.Direction.ASC, Sort.NullMode.LAST, "id" ) );
-        when( geneArgService.getEntity( any() ) ).thenReturn( gene );
+        lenient().when( geneArgService.getEntity( any() ) ).thenReturn( gene );
     }
 
     private FilterArg<ExpressionExperiment> filter( String s ) {
