@@ -224,9 +224,11 @@ public class HeatmapDataService {
         out.setRows( buildRowMetas( vectors ) );
 
         // Column metadata + per-sample factor-value lookup.
-        // Refresh the EE to walk its experimental design + biomaterial factor-value assignments
-        // within this read-only transaction.
-        ExpressionExperiment freshEe = expressionExperimentService.loadAndThawLite( ee.getId() );
+        // Thaw the EE in-place so the experimental design + biomaterial factor-value
+        // assignments are walkable within this read-only transaction. (getEntity returns
+        // an ACL-resolved but un-thawed entity — thawLite avoids a second loadById hit
+        // that the previous loadAndThawLite(id) call did.)
+        ExpressionExperiment freshEe = expressionExperimentService.thawLite( ee );
         if ( freshEe == null ) {
             freshEe = ee;
         }
@@ -384,16 +386,30 @@ public class HeatmapDataService {
             bmIdToBaIds.computeIfAbsent( bmId, k -> new ArrayList<>() ).add( ba.getId() );
         }
 
+        // Pre-index FV-id -> BioMaterial-ids in a single pass over the EE's BAs (each BM walks
+        // its source-BM chain once, via getAllFactorValues). Replaces the per-FV × per-BA scan
+        // that was ~O(numContinuousFVs × numBioAssays) source-chain probes per request.
+        Map<Long, Set<Long>> fvIdToBmIds = new HashMap<>();
+        for ( ubic.gemma.model.expression.bioAssay.BioAssay ba : ee.getBioAssays() ) {
+            BioMaterial bm = ba.getSampleUsed();
+            if ( bm == null || bm.getId() == null ) continue;
+            for ( FactorValue fv : bm.getAllFactorValues() ) {
+                if ( fv.getId() == null ) continue;
+                fvIdToBmIds.computeIfAbsent( fv.getId(), k -> new HashSet<>() ).add( bm.getId() );
+            }
+        }
+
         List<HeatmapDataValueObject.FactorEntry> out = new ArrayList<>( ed.getExperimentalFactors().size() );
         for ( ExperimentalFactor ef : ed.getExperimentalFactors() ) {
             ExperimentalFactorValueObject vo = new ExperimentalFactorValueObject( ef, true );
             LinkedHashMap<Long, Double> measurements = null;
             if ( ef.getType() == FactorType.continuous ) {
                 measurements = new LinkedHashMap<>();
-                // For each FV in this continuous factor, walk the assigned BioMaterials and
-                // populate per-BA measurement entries.
+                // For each FV in this continuous factor, look up the BMs carrying it (O(1))
+                // and emit per-BA measurement entries.
                 for ( FactorValue fv : ef.getFactorValues() ) {
                     if ( fv.getMeasurement() == null || fv.getMeasurement().getValue() == null ) continue;
+                    if ( fv.getId() == null ) continue;
                     Double val;
                     try {
                         val = Double.parseDouble( fv.getMeasurement().getValue() );
@@ -401,16 +417,13 @@ public class HeatmapDataService {
                         // Non-numeric continuous measurements show up occasionally; skip.
                         continue;
                     }
-                    // Find which BioMaterials carry this FV by walking the EE's BMs.
-                    for ( ubic.gemma.model.expression.bioAssay.BioAssay ba : ee.getBioAssays() ) {
-                        BioMaterial bm = ba.getSampleUsed();
-                        if ( bm == null ) continue;
-                        if ( bm.getAllFactorValues().contains( fv ) ) {
-                            List<Long> baIds = bmIdToBaIds.get( bm.getId() );
-                            if ( baIds != null ) {
-                                for ( Long baId : baIds ) {
-                                    measurements.put( baId, val );
-                                }
+                    Set<Long> bmIds = fvIdToBmIds.get( fv.getId() );
+                    if ( bmIds == null ) continue;
+                    for ( Long bmId : bmIds ) {
+                        List<Long> baIds = bmIdToBaIds.get( bmId );
+                        if ( baIds != null ) {
+                            for ( Long baId : baIds ) {
+                                measurements.put( baId, val );
                             }
                         }
                     }
