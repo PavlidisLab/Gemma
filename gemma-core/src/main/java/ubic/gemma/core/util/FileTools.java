@@ -219,7 +219,6 @@ public class FileTools {
     /**
      * Unzip every entry of a zip archive next to the archive.
      */
-    @SuppressWarnings("resource")
     public static Collection<File> unZipFiles( final String seekFile ) throws IOException {
         if ( !isZipped( seekFile ) ) {
             throw new IllegalArgumentException();
@@ -228,22 +227,18 @@ public class FileTools {
         String outputFilePath = chompExtension( seekFile );
 
         Collection<File> result = new HashSet<>();
-        try {
-            ZipFile f = new ZipFile( seekFile );
+        try ( ZipFile f = new ZipFile( seekFile ) ) {
             for ( Enumeration<? extends ZipEntry> entries = f.entries(); entries.hasMoreElements(); ) {
                 ZipEntry entry = entries.nextElement();
                 String outputFileTitle = entry.getName();
-                InputStream is = f.getInputStream( entry );
-
                 File out = new File( outputFilePath + outputFileTitle );
-                OutputStream os = new FileOutputStream( out );
-                copy( is, os );
-
+                try ( InputStream is = f.getInputStream( entry );
+                        OutputStream os = new FileOutputStream( out ) ) {
+                    copy( is, os );
+                }
                 result.add( out );
                 log.debug( outputFileTitle );
             }
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
         }
         return result;
     }

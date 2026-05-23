@@ -92,7 +92,6 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
 
         ExpressionExperimentSearchServiceImpl.log
                 .info( "Experiment search: " + query + ", " + experimentSearchResults.size() + " found" );
-        List<Long> eeIds = experimentSearchResults.stream().map( SearchResult::getResultId ).collect( Collectors.toList() );
         Collection<ExpressionExperimentValueObject> experimentValueObjects = expressionExperimentService
                 .loadValueObjectsByIds( experimentSearchResults.stream().map( SearchResult::getResultId ).collect( Collectors.toList() ), true );
         ExpressionExperimentSearchServiceImpl.log

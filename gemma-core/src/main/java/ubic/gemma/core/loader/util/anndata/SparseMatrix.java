@@ -62,7 +62,7 @@ public class SparseMatrix implements Matrix {
 
     @Override
     public int[] getShape() {
-        return shape;
+        return shape.clone();
     }
 
     @Override
@@ -73,7 +73,7 @@ public class SparseMatrix implements Matrix {
     }
 
     public long[] getIndptr() {
-        return indptr;
+        return indptr.clone();
     }
 
     @Override

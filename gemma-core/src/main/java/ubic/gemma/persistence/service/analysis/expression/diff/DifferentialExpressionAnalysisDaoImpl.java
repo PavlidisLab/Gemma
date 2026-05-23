@@ -31,7 +31,6 @@ import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.jdbc.Expectations;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.Type;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.analysis.expression.diff.ContrastResult;
@@ -219,14 +218,12 @@ class DifferentialExpressionAnalysisDaoImpl extends AbstractDao<DifferentialExpr
     private void insertRowsAndAssignGeneratedKeys( String insertSql, PreparedStatement insertStmt, List<?> objects, EntityPersister persister, SessionImplementor session ) throws SQLException {
         statementLogger.logStatement( insertSql + String.format( " [repeated %d times]", objects.size() ) );
         ensureExpectedRowsAreInserted( insertSql, insertStmt, insertStmt.executeBatch() );
-        ResultSet rs = insertStmt.getGeneratedKeys();
-        String idProp = persister.getIdentifierPropertyName();
-        Type idType = persister.getIdentifierType();
-        // Hibernate 5: getGeneratedIdentity gained a Dialect parameter.
-        org.hibernate.dialect.Dialect dialect = session.getJdbcServices().getDialect();
-        for ( Object object : objects ) {
-            Serializable id = ( Serializable ) IdentifierGeneratorHelper.getGeneratedIdentity( idProp, rs, ( org.hibernate.id.PostInsertIdentityPersister ) persister, ( org.hibernate.type.descriptor.WrapperOptions ) session );
-            persister.setIdentifier( object, id, session );
+        try ( ResultSet rs = insertStmt.getGeneratedKeys() ) {
+            String idProp = persister.getIdentifierPropertyName();
+            for ( Object object : objects ) {
+                Serializable id = ( Serializable ) IdentifierGeneratorHelper.getGeneratedIdentity( idProp, rs, ( org.hibernate.id.PostInsertIdentityPersister ) persister, ( org.hibernate.type.descriptor.WrapperOptions ) session );
+                persister.setIdentifier( object, id, session );
+            }
         }
     }
 

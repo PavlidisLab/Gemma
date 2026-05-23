@@ -277,7 +277,7 @@ public abstract class MetaAnalysis {
         double s = Descriptive.sum( weights );
 
         if ( s == 0.0 ) return 0.0;
-        return wm /= s;
+        return wm / s;
     }
 
     /**
@@ -298,6 +298,6 @@ public abstract class MetaAnalysis {
         for ( int i = 0; i < effectSizes.size(); i++ ) {
             wm += weights.getQuick( i ) * effectSizes.getQuick( i ) * qualityIndices.getQuick( i );
         }
-        return wm /= Descriptive.sum( weights ) * Descriptive.sum( qualityIndices );
+        return wm / ( Descriptive.sum( weights ) * Descriptive.sum( qualityIndices ) );
     }
 }

@@ -141,12 +141,11 @@ public class Stats {
      */
     public static double meanAboveQuantile(int index, double[] array, int effectiveSize) {
 
-        double[] temp = new double[effectiveSize];
+        double[] temp = array;
         double median;
         double returnvalue = 0.0;
         int k = 0;
 
-        temp = array;
         median = quantile(index, array, effectiveSize);
 
         for (int i = 0; i < effectiveSize; i++) {
