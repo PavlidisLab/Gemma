@@ -57,12 +57,17 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
         // and biologicalCharacteristic is a lazy proxy that the matrix-builder filter
         // (RowsWithSequencesFilter) triggers per row via a null check.
         // See PERF_PROBE_REPORT_ROUND3 Category A1.
+        // bioAssayDimension + quantitationType are now lazy=proxy in the hbm (was eager+select
+        // which produced one follow-up SELECT per vector); join fetch them here since the
+        // Cached*Service VO builders read both per vector.
         //noinspection unchecked
         List<ProcessedExpressionDataVector> result = this.getSessionFactory().getCurrentSession().createQuery(
                         "select dedv from ProcessedExpressionDataVector dedv "
                                 + "join fetch dedv.designElement cs "
                                 + "join fetch cs.arrayDesign "
                                 + "left join fetch cs.biologicalCharacteristic "
+                                + "join fetch dedv.bioAssayDimension "
+                                + "join fetch dedv.quantitationType "
                                 + "where dedv.expressionExperiment = :ee" )
                 .setParameter( "ee", ee )
                 .list();
@@ -72,11 +77,16 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
 
     @Override
     public List<ProcessedExpressionDataVector> getProcessedVectors( ExpressionExperiment ee, BioAssayDimension dimension, int offset, int limit ) {
+        // bioAssayDimension/quantitationType are lazy=proxy in the hbm; join fetch QT so
+        // downstream VO builders don't trigger one SELECT per vector. (dimension is already
+        // pinned by the parameter; still join-fetch for consistency.)
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
                         "select dedv from ProcessedExpressionDataVector dedv "
                                 + "join fetch dedv.designElement cs "
                                 + "join fetch cs.arrayDesign "
+                                + "join fetch dedv.bioAssayDimension "
+                                + "join fetch dedv.quantitationType "
                                 + "where dedv.expressionExperiment = :ee and dedv.bioAssayDimension = :dimension" )
                 .setParameter( "ee", ee )
                 .setParameter( "dimension", dimension )
@@ -96,10 +106,14 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
 
         // Do not do in clause for experiments, as it can't use the indices.
         // join fetch designElement + arrayDesign: see getProcessedVectors(ee) for the N+1 rationale.
+        // bioAssayDimension/quantitationType are lazy=proxy in the hbm; join fetch both since
+        // the Cached*Service VO builders read them per vector.
         Query queryObject = this.getSessionFactory().getCurrentSession().createQuery(
                         "select dedv from ProcessedExpressionDataVector dedv "
                                 + "join fetch dedv.designElement cs "
                                 + "join fetch cs.arrayDesign "
+                                + "join fetch dedv.bioAssayDimension "
+                                + "join fetch dedv.quantitationType "
                                 + "where cs.id in ( :cs )"
                                 + ( ees != null ? " and dedv.expressionExperiment in :ees" : "" ) )
                 .setParameterList( "cs", optimizeParameterList( cs2gene.keySet() ) );
@@ -205,6 +219,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
                 .createQuery( "select dedv from ProcessedExpressionDataVector dedv "
                         + "join fetch dedv.designElement cs "
                         + "join fetch cs.arrayDesign "
+                        + "join fetch dedv.bioAssayDimension "
+                        + "join fetch dedv.quantitationType "
                         + "where dedv.id in (:ids)" )
                 .setParameterList( "ids", picked )
                 .list();
