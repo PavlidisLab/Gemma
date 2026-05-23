@@ -267,6 +267,12 @@ public class SettingsConfig {
      * dot-separated Gemma keys ({@code gemma.db.url}, {@code gemma.appdata.home}) and keep only those that
      * correspond to a key declared in {@link #DEFAULT_CONFIGURATIONS}. This lets a container supply any
      * Gemma property via {@code -e GEMMA_FOO_BAR=...} without needing a {@code Gemma.properties} file on disk.
+     * <p>
+     * Each candidate env var also supports the {@code *_FILE} indirection pattern (see
+     * {@link ConfigUtils#resolveEnvVar(String, java.util.function.Function)}): if {@code GEMMA_DB_PASSWORD_FILE}
+     * is set, its value is treated as a path whose trimmed contents are used as the resolved value. This
+     * matches the Postgres / Redis / Mongo container convention and is how systemd's {@code LoadCredential=}
+     * exposes secrets via {@code $CREDENTIALS_DIRECTORY}.
      */
     static Properties filterEnvironmentVariables( Map<String, String> env ) throws IOException {
         Properties props = new Properties();
@@ -279,8 +285,9 @@ public class SettingsConfig {
                         continue;
                     }
                     String envKey = key.toUpperCase().replace( '.', '_' );
-                    if ( env.containsKey( envKey ) ) {
-                        props.setProperty( key, env.get( envKey ) );
+                    String resolved = ConfigUtils.resolveEnvVar( envKey, env::get );
+                    if ( resolved != null ) {
+                        props.setProperty( key, resolved );
                     }
                 }
             }
