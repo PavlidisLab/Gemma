@@ -51,6 +51,18 @@ Steps:
 - `mvn -pl gemma-core verify -Dit.test='CompositeSequenceGeneMapperServiceTest' -Dgemma.testdb.password=$(security find-generic-password -s mysql-root -w) -Dgemma.hibernate.hbm2ddl.auto=create` passes WITHOUT `gemma.goldenpath.*` configured.
 - Default-run `mvn -pl gemma-core verify` still at `surefire 1526/0F+0E+18S, failsafe 376/0F+0E+9S` (the test was excluded by `slow` anyway, so the default-run baseline shouldn't move unless the new test is no longer `slow`).
 
+## Same pattern for BLAT (any test that invokes the subprocess)
+
+Paul, follow-up 2026-05-23: "Same for BLAT if that is involved: again, we don't want to run BLAT for fast tests, configuring it is a pain."
+
+**Status in *this* test:** `CompositeSequenceGeneMapperServiceTest` uses `ShellDelegatingBlat` but does NOT actually invoke the BLAT subprocess — it reads pre-computed `.psl` results from `data/loader/genome/gpl96.blatresults.psl.gz` (line 190) and just parses them. So BLAT itself isn't part of *this* test's slowness.
+
+**Pattern for tests that DO invoke BLAT:** mirror the GoldenPath mock strategy. The BLAT subprocess surface is `ShellDelegatingBlat.blatQuery(sequences, taxon)` returning `Map<BioSequence, List<BlatResult>>`. Mock that map from a frozen `.psl` capture. The agent inventory at `handoffs/SLOW_SWEEP_INVENTORY_2026_05_23.md` already flags `ShellDelegatingBlatTest` as `@Tag("slow")` + `@Disabled` ("way too slow"); when picking up that work, apply the same mock-the-external-resource pattern.
+
+## Priority
+
+Microarray plumbing. The active product frontier is single-cell / RNA-seq (see `RECCE_MEX_LOADER_CHOP.md` for the MEX loader work). These GoldenPath + BLAT mocks are worth doing, but **the MEX-loader chop ships first** — same perf-probe slot, higher product weight. Pick this work up when the single-cell queue is clear or when a microarray-side regression actually bites.
+
 ## Cross-references
 
 - `gemma-core/src/main/java/ubic/gemma/core/goldenpath/GoldenPath.java` — the abstract base.
