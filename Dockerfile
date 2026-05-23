@@ -123,11 +123,20 @@ ENV GEMMA_APPDATA_HOME=/data/gemma \
                    -XX:+UseZGC \
                    -XX:+ZGenerational"
 
-# Non-root runtime user. UID/GID 1000 by convention. The tomcat base image
-# does not pre-create this user, so do it here. /data/gemma and the Tomcat
-# work / temp / logs dirs must be writeable.
-RUN groupadd --system --gid 1000 gemma \
- && useradd  --system --uid 1000 --gid 1000 --home /home/gemma --create-home gemma \
+# Non-root runtime user. UID/GID idempotent because newer tomcat base images
+# (e.g. 10.1-jdk25-temurin / -jdk21-temurin on recent debian) already define
+# GID 1000 ("ubuntu" or similar) — groupadd would fail. Use --gid only if it's
+# unused; otherwise let groupadd pick the next free GID.
+RUN if getent group 1000 >/dev/null; then \
+        groupadd --system gemma; \
+    else \
+        groupadd --system --gid 1000 gemma; \
+    fi \
+ && if getent passwd 1000 >/dev/null; then \
+        useradd  --system --gid gemma --home /home/gemma --create-home gemma; \
+    else \
+        useradd  --system --uid 1000 --gid gemma --home /home/gemma --create-home gemma; \
+    fi \
  && mkdir -p /data/gemma \
  && chown -R gemma:gemma /data/gemma "$CATALINA_HOME"
 
