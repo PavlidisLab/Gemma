@@ -2105,6 +2105,43 @@ public class DatasetsWebService {
         return respond( vo );
     }
 
+    /**
+     * Public sibling of {@link #getDatasetGeeq(DatasetArg)}: returns the per-factor GEEQ
+     * breakdown without exposing the admin-only detected/manual override scores or the
+     * free-text {@code otherIssues} curator field. Drives the GEEQ-badge popover in the
+     * browser UI for anonymous and non-admin users.
+     */
+    @GET
+    @Path("/{dataset}/geeq/public")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve the public per-factor GEEQ breakdown of a dataset",
+            description = "Returns the per-factor suitability and quality scores plus the aggregate "
+                    + "`publicQualityScore` / `publicSuitabilityScore` already exposed inline on "
+                    + "`GET /datasets/{dataset}`. Admin-only fields (detected/manual override scores, "
+                    + "`otherIssues`) are omitted. Returns 404 when GEEQ has never been computed for "
+                    + "the dataset.",
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist or GEEQ has not been computed for it.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<PublicGeeqValueObject> getDatasetGeeqPublic(
+            @PathParam("dataset") DatasetArg<?> datasetArg
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        ee = expressionExperimentService.thawLiter( ee );
+        Geeq geeq = ee.getGeeq();
+        if ( geeq == null ) {
+            throw new NotFoundException( "GEEQ has not been computed for dataset " + ee.getShortName()
+                    + "; use PUT /geeq to compute it." );
+        }
+        PublicGeeqValueObject vo = new PublicGeeqValueObject( geeq );
+        AuditEvent geeqEvent = auditEventService.getLastEvent( ee, GeeqEvent.class );
+        if ( geeqEvent != null ) {
+            vo.setLastComputed( geeqEvent.getDate() );
+        }
+        return respond( vo );
+    }
+
     @PUT
     @Path("/{dataset}/geeq")
     @Produces(MediaType.APPLICATION_JSON)
