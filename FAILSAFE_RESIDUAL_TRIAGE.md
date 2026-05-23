@@ -40,21 +40,24 @@ behavior needs investigation.
 `PersistentSet.equalsSnapshot` gets a null snapshot through the EE merge
 path — fix is upstream of the bag-initialization contract.
 
-## Bucket B — `Gene altered from null to 4309` (11 errors)
+## Bucket B — `Gene altered from null to 4309` (11 errors) — RESOLVED 2026-05-22
 
-- `GeneServiceTest` (8 errors, all methods)
+> **Status**: fixed upstream by commit `c4f883546c`
+> (`fix(gene): remove side-effect delete from GeneDao.find(Gene)`,
+> HQL_SQL_AUDIT C4). The "find" method previously called
+> `geneDao.remove(...)` on duplicate-NCBI-ID candidates, which under a
+> read-only transaction was staged for flush-time replay. Flush then
+> tripped on the deprecated row whose id had not been reset, surfacing as
+> `Gene altered from null to <id>` on the FIRST query of any test that
+> went through `getTestPersistentGene` → `GenomePersister.persistGene` →
+> `geneDao.find(gene)`.
+>
+> Validation: `GeneServiceTest` 8/8 + `GeneSetServiceTest` 7/7 pass in
+> isolation against `phase2-acl-migrate` HEAD post-C4.
+
+- `GeneServiceTest` (8 errors, all methods) — now pass.
 - `GeneSetServiceTest.setUp` (3 errors, all setUps for tests that need
-  `getTestPersistentGene`)
-
-Stack: HibernateException at the FIRST query inside each test, even
-queries that don't touch Gene (e.g. `taxonService.findByCommonName`).
-The exception fires during session flush. Smoking gun: the same gene id
-(4309) shows up in every test of the run.
-
-**Needed:** investigate whether `PersistentDummyObjectHelper.getTestPersistentGene`
-+ `GenomePersister.persistGene` leaves the input Gene with a null id but
-attached to the session after persist (so a downstream re-set of id from
-the inflated row triggers the "altered from null" check).
+  `getTestPersistentGene`) — now pass.
 
 ## Bucket C — Audit transactional rollback (3 remaining)
 
