@@ -337,20 +337,27 @@ public class AnnotationsWebService {
                     "experiment usage count. `coverage` sorts by fraction of query tokens present in " +
                     "the hit's label. `composite` combines coverage, usage, and rank into a single " +
                     "weighted score.")
-            @QueryParam("rank") @DefaultValue(LuceneOrderRankingStrategy.NAME) String rank
+            @QueryParam("rank") @DefaultValue(LuceneOrderRankingStrategy.NAME) String rank,
+            @Parameter(description = "Maximum number of hits to return. Defaults to 20 (typeahead UX). " +
+                    "Hard upper bound is 50; values outside [1, 50] yield HTTP 400. The truncation is " +
+                    "applied AFTER ranking, so reducing the limit also reduces top-N enrichment cost.")
+            @QueryParam("limit") @DefaultValue(SEARCH_DEFAULT_LIMIT_STR) int limit
     ) {
         if ( query == null || query.getValue().isEmpty() ) {
             throw new BadRequestException( "Search query cannot be empty." );
         }
+        if ( limit < 1 || limit > SEARCH_MAX_LIMIT ) {
+            throw new BadRequestException( "The 'limit' parameter must be between 1 and " + SEARCH_MAX_LIMIT + " (got " + limit + ")." );
+        }
         AnnotationSearchRankingStrategy strategy = resolveRankingStrategy( rank );
-        String cacheKey = buildSearchCacheKey( query.getValue(), strategy.getName() );
+        String cacheKey = buildSearchCacheKey( query.getValue(), strategy.getName(), limit );
         List<AnnotationSearchResultValueObject> cached = SEARCH_CACHE.get( cacheKey );
         if ( cached != null ) {
             log.debug( "annotation-search cache HIT key={} (size={})", cacheKey, SEARCH_CACHE.size() );
             return respond( new ArrayList<>( cached ) );
         }
         try {
-            List<AnnotationSearchResultValueObject> result = new ArrayList<>( this.getTerms( query, strategy, FIND_CHARACTERISTICS_TIMEOUT_MS ) );
+            List<AnnotationSearchResultValueObject> result = new ArrayList<>( this.getTerms( query, strategy, limit, FIND_CHARACTERISTICS_TIMEOUT_MS ) );
             // store an unmodifiable defensive copy so callers can't mutate the cached value
             SEARCH_CACHE.put( cacheKey, Collections.unmodifiableList( new ArrayList<>( result ) ) );
             log.debug( "annotation-search cache MISS key={} stored {} hits (size={})", cacheKey, result.size(), SEARCH_CACHE.size() );
@@ -363,6 +370,12 @@ public class AnnotationsWebService {
             throw new InternalServerErrorException( e );
         }
     }
+
+    /** Default number of hits returned by {@code /annotations/search}; sized for typeahead UX. */
+    static final int SEARCH_DEFAULT_LIMIT = 20;
+    private static final String SEARCH_DEFAULT_LIMIT_STR = "20";
+    /** Upper bound for {@code ?limit=}; requests above this are 400. */
+    static final int SEARCH_MAX_LIMIT = 50;
 
     private AnnotationSearchRankingStrategy resolveRankingStrategy( String name ) {
         String key = name != null ? name.trim().toLowerCase( Locale.ROOT ) : LuceneOrderRankingStrategy.NAME;
@@ -393,7 +406,7 @@ public class AnnotationsWebService {
     public ResponseDataObject<List<AnnotationSearchResultValueObject>> searchAnnotationsByPathQuery( // Params:
             @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE, description = SEARCH_QUERY_DESCRIPTION) @PathParam("query") @DefaultValue("") StringArrayArg query // Required
     ) {
-        return searchAnnotations( query, LuceneOrderRankingStrategy.NAME );
+        return searchAnnotations( query, LuceneOrderRankingStrategy.NAME, SEARCH_DEFAULT_LIMIT );
     }
 
     /**
@@ -608,7 +621,7 @@ public class AnnotationsWebService {
      * @return a collection of characteristics matching the input query.
      */
     private LinkedHashSet<AnnotationSearchResultValueObject> getTerms( StringArrayArg arg,
-            AnnotationSearchRankingStrategy strategy, long timeoutMs ) throws SearchException {
+            AnnotationSearchRankingStrategy strategy, int limit, long timeoutMs ) throws SearchException {
         StopWatch timer = StopWatch.createStarted();
         List<CharacteristicValueObject> rawHits = new ArrayList<>();
         for ( String query : arg.getValue() ) {
@@ -631,6 +644,12 @@ public class AnnotationsWebService {
         // so the tokeniser sees the union.
         String joinedQuery = String.join( " ", arg.getValue() );
         List<CharacteristicValueObject> ranked = strategy.rank( joinedQuery, rawHits, countsByUri );
+
+        // Truncate to the requested limit BEFORE enrichment, so per-URI definition + parents
+        // lookups only fire for hits the client will actually see.
+        if ( ranked.size() > limit ) {
+            ranked = new ArrayList<>( ranked.subList( 0, limit ) );
+        }
 
         // Enrich the top-N ranked hits with definition + nearest is_a/part_of parents. The rest
         // carry null sentinels so the UI can lazy-load via /annotations/term?uri=X. Lookups share
@@ -800,11 +819,14 @@ public class AnnotationsWebService {
      * matches (the underlying LIKE search and ontology lookup are case-insensitive); URI-shaped terms keep
      * their case because URIs are case-sensitive on the path/query portion.
      */
-    private static String buildSearchCacheKey( List<String> values, String rankName ) {
+    private static String buildSearchCacheKey( List<String> values, String rankName, int limit ) {
         StringBuilder sb = new StringBuilder( values.size() * 16 );
-        // Prefix the strategy name so swapping rank= invalidates the cache without colliding with
-        // a different-query default-rank entry. STX separates the prefix from the query payload.
+        // Prefix the strategy name + limit so swapping rank= or limit= invalidates the cache
+        // without colliding with a different-query default-rank entry. STX separates the prefix
+        // from the query payload; SOH separates strategy name from limit.
         sb.append( rankName != null ? rankName : LuceneOrderRankingStrategy.NAME );
+        sb.append( '' );
+        sb.append( limit );
         sb.append( '' );
         for ( int i = 0; i < values.size(); i++ ) {
             String v = values.get( i );

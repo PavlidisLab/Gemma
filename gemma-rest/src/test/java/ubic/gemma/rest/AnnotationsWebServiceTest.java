@@ -767,10 +767,11 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
 
     @Test
     public void testSearchAnnotationsEnrichesTopNWithDefinitionAndParents() throws SearchException, TimeoutException {
-        // Mock 27 hits — the first 25 should carry non-null definition + parents in the response,
-        // hits 26+ carry nulls (lazy-load sentinel).
+        // Mock 60 hits and request limit=50 — the first 25 (ENRICH_TOP_N) should carry non-null
+        // definition + parents in the response, hits 26-50 carry nulls (lazy-load sentinel), and
+        // hits 51-60 are truncated by the ?limit=50 cap.
         List<CharacteristicValueObject> raw = new ArrayList<>();
-        for ( int i = 0; i < 27; i++ ) {
+        for ( int i = 0; i < 60; i++ ) {
             raw.add( new CharacteristicValueObject( "term-" + i, "http://example.com/t" + i, "disease", "http://example.com/disease" ) );
         }
         when( ontologyService.findExperimentsCharacteristicTags( eq( "diabetes" ), anyInt(), anyBoolean(), anyLong(), any() ) )
@@ -798,11 +799,14 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
                 .thenReturn( Collections.emptyMap() );
 
-        assertThat( target( "/annotations/search" ).queryParam( "query", "diabetes" ).request().get() )
+        assertThat( target( "/annotations/search" )
+                .queryParam( "query", "diabetes" )
+                .queryParam( "limit", "50" )
+                .request().get() )
                 .hasStatus( Response.Status.OK )
                 .entity()
                 .extracting( "data", list( Map.class ) )
-                .hasSize( 27 )
+                .hasSize( 50 )
                 .satisfies( hits -> {
                     // First 25 hits: definition + parents populated.
                     for ( int i = 0; i < 25; i++ ) {
@@ -815,8 +819,8 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
                                 .isInstanceOf( List.class );
                         assertThat( ( List<?> ) hit.get( "parents" ) ).hasSize( 1 );
                     }
-                    // Hits 25 + 26: sentinel nulls.
-                    for ( int i = 25; i < 27; i++ ) {
+                    // Hits 25..49: sentinel nulls (within limit but past enrichment top-N).
+                    for ( int i = 25; i < 50; i++ ) {
                         Map<?, ?> hit = ( Map<?, ?> ) hits.get( i );
                         assertThat( hit.get( "definition" ) )
                                 .as( "post-top-25 hit %d should carry null definition", i ).isNull();
@@ -854,6 +858,68 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
                         .containsEntry( "label", "disease" ) );
 
         verify( ontologyService ).getParents( eq( Collections.singleton( term ) ), eq( true ), eq( true ), anyLong(), any() );
+    }
+
+    @Test
+    public void testSearchAnnotationsDefaultLimitIs20() throws SearchException, TimeoutException {
+        // 30 raw hits → response truncated to 20 by the default ?limit=20.
+        List<CharacteristicValueObject> raw = new ArrayList<>();
+        for ( int i = 0; i < 30; i++ ) {
+            raw.add( new CharacteristicValueObject( "term-" + i, "http://example.com/t" + i, "disease", "http://example.com/disease" ) );
+        }
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "diabetes" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( raw );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/annotations/search" ).queryParam( "query", "diabetes" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 20 );
+    }
+
+    @Test
+    public void testSearchAnnotationsRespectsExplicitLimit() throws SearchException, TimeoutException {
+        // 60 raw hits → response truncated to the requested ?limit=50 (hard upper bound).
+        List<CharacteristicValueObject> raw = new ArrayList<>();
+        for ( int i = 0; i < 60; i++ ) {
+            raw.add( new CharacteristicValueObject( "term-" + i, "http://example.com/t" + i, "disease", "http://example.com/disease" ) );
+        }
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "diabetes" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( raw );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/annotations/search" )
+                .queryParam( "query", "diabetes" )
+                .queryParam( "limit", "50" )
+                .request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 50 );
+    }
+
+    @Test
+    public void testSearchAnnotationsLimitOver50Returns400() throws SearchException, TimeoutException {
+        // The validator fires before the ontology lookup — no need to mock anything.
+        assertThat( target( "/annotations/search" )
+                .queryParam( "query", "diabetes" )
+                .queryParam( "limit", "51" )
+                .request().get() )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        verify( ontologyService, never() ).findExperimentsCharacteristicTags( anyString(), anyInt(), anyBoolean(), anyLong(), any() );
+    }
+
+    @Test
+    public void testSearchAnnotationsLimitBelow1Returns400() throws SearchException, TimeoutException {
+        assertThat( target( "/annotations/search" )
+                .queryParam( "query", "diabetes" )
+                .queryParam( "limit", "0" )
+                .request().get() )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        verify( ontologyService, never() ).findExperimentsCharacteristicTags( anyString(), anyInt(), anyBoolean(), anyLong(), any() );
     }
 
     @Test
