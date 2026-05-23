@@ -13,6 +13,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
+import ubic.gemma.core.ontology.basecode.model.AnnotationProperty;
 import ubic.gemma.core.ontology.basecode.model.OntologyProperty;
 import ubic.gemma.core.ontology.basecode.model.OntologyTerm;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
@@ -767,10 +768,11 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
 
     @Test
     public void testSearchAnnotationsEnrichesTopNWithDefinitionAndParents() throws SearchException, TimeoutException {
-        // Mock 27 hits — the first 25 should carry non-null definition + parents in the response,
-        // hits 26+ carry nulls (lazy-load sentinel).
+        // Mock 60 hits and request limit=50 — the first 25 (ENRICH_TOP_N) should carry non-null
+        // definition + parents in the response, hits 26-50 carry nulls (lazy-load sentinel), and
+        // hits 51-60 are truncated by the ?limit=50 cap.
         List<CharacteristicValueObject> raw = new ArrayList<>();
-        for ( int i = 0; i < 27; i++ ) {
+        for ( int i = 0; i < 60; i++ ) {
             raw.add( new CharacteristicValueObject( "term-" + i, "http://example.com/t" + i, "disease", "http://example.com/disease" ) );
         }
         when( ontologyService.findExperimentsCharacteristicTags( eq( "diabetes" ), anyInt(), anyBoolean(), anyLong(), any() ) )
@@ -798,11 +800,14 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
                 .thenReturn( Collections.emptyMap() );
 
-        assertThat( target( "/annotations/search" ).queryParam( "query", "diabetes" ).request().get() )
+        assertThat( target( "/annotations/search" )
+                .queryParam( "query", "diabetes" )
+                .queryParam( "limit", "50" )
+                .request().get() )
                 .hasStatus( Response.Status.OK )
                 .entity()
                 .extracting( "data", list( Map.class ) )
-                .hasSize( 27 )
+                .hasSize( 50 )
                 .satisfies( hits -> {
                     // First 25 hits: definition + parents populated.
                     for ( int i = 0; i < 25; i++ ) {
@@ -815,8 +820,8 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
                                 .isInstanceOf( List.class );
                         assertThat( ( List<?> ) hit.get( "parents" ) ).hasSize( 1 );
                     }
-                    // Hits 25 + 26: sentinel nulls.
-                    for ( int i = 25; i < 27; i++ ) {
+                    // Hits 25..49: sentinel nulls (within limit but past enrichment top-N).
+                    for ( int i = 25; i < 50; i++ ) {
                         Map<?, ?> hit = ( Map<?, ?> ) hits.get( i );
                         assertThat( hit.get( "definition" ) )
                                 .as( "post-top-25 hit %d should carry null definition", i ).isNull();
@@ -854,6 +859,195 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
                         .containsEntry( "label", "disease" ) );
 
         verify( ontologyService ).getParents( eq( Collections.singleton( term ) ), eq( true ), eq( true ), anyLong(), any() );
+    }
+
+    @Test
+    public void testSearchAnnotationsDefaultLimitIs20() throws SearchException, TimeoutException {
+        // 30 raw hits → response truncated to 20 by the default ?limit=20.
+        List<CharacteristicValueObject> raw = new ArrayList<>();
+        for ( int i = 0; i < 30; i++ ) {
+            raw.add( new CharacteristicValueObject( "term-" + i, "http://example.com/t" + i, "disease", "http://example.com/disease" ) );
+        }
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "diabetes" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( raw );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/annotations/search" ).queryParam( "query", "diabetes" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 20 );
+    }
+
+    @Test
+    public void testSearchAnnotationsRespectsExplicitLimit() throws SearchException, TimeoutException {
+        // 60 raw hits → response truncated to the requested ?limit=50 (hard upper bound).
+        List<CharacteristicValueObject> raw = new ArrayList<>();
+        for ( int i = 0; i < 60; i++ ) {
+            raw.add( new CharacteristicValueObject( "term-" + i, "http://example.com/t" + i, "disease", "http://example.com/disease" ) );
+        }
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "diabetes" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( raw );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/annotations/search" )
+                .queryParam( "query", "diabetes" )
+                .queryParam( "limit", "50" )
+                .request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 50 );
+    }
+
+    @Test
+    public void testSearchAnnotationsLimitOver50Returns400() throws SearchException, TimeoutException {
+        // The validator fires before the ontology lookup — no need to mock anything.
+        assertThat( target( "/annotations/search" )
+                .queryParam( "query", "diabetes" )
+                .queryParam( "limit", "51" )
+                .request().get() )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        verify( ontologyService, never() ).findExperimentsCharacteristicTags( anyString(), anyInt(), anyBoolean(), anyLong(), any() );
+    }
+
+    @Test
+    public void testSearchAnnotationsLimitBelow1Returns400() throws SearchException, TimeoutException {
+        assertThat( target( "/annotations/search" )
+                .queryParam( "query", "diabetes" )
+                .queryParam( "limit", "0" )
+                .request().get() )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        verify( ontologyService, never() ).findExperimentsCharacteristicTags( anyString(), anyInt(), anyBoolean(), anyLong(), any() );
+    }
+
+    @Test
+    public void testSearchAnnotationsAttributesPreferredLabelMatch() throws SearchException, TimeoutException {
+        // Hit's preferred label contains the query token → matchedVia=preferred_label,
+        // matchedText=label. No synonyms wired on the term mock; the back-compute fast-paths
+        // on the preferred-label match.
+        CharacteristicValueObject hit = new CharacteristicValueObject(
+                "diabetes mellitus", "http://example.com/diabetes", "disease", "http://example.com/disease" );
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "diabetes" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Collections.singletonList( hit ) );
+        when( ontologyService.getDefinition( eq( "http://example.com/diabetes" ), anyLong(), any() ) )
+                .thenReturn( "a metabolic disease" );
+        OntologyTerm term = mock( OntologyTerm.class );
+        when( term.getUri() ).thenReturn( "http://example.com/diabetes" );
+        when( term.getLabel() ).thenReturn( "diabetes mellitus" );
+        when( term.getAnnotations( anyString() ) ).thenReturn( Collections.emptyList() );
+        when( ontologyService.getTerm( eq( "http://example.com/diabetes" ), anyLong(), any() ) ).thenReturn( term );
+        when( ontologyService.getParents( anySet(), eq( true ), eq( true ), anyLong(), any() ) )
+                .thenReturn( Collections.emptySet() );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/annotations/search" ).queryParam( "query", "diabetes" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 1 )
+                .first()
+                .satisfies( a -> assertThat( a )
+                        .containsEntry( "matchedVia", "preferred_label" )
+                        .containsEntry( "matchedText", "diabetes mellitus" ) );
+    }
+
+    @Test
+    public void testSearchAnnotationsAttributesSynonymMatch() throws SearchException, TimeoutException {
+        // Hit's preferred label ("hippocampus") does NOT contain the query token ("ammon"); the
+        // exact-synonym property does ("ammon's horn"). Back-compute must pick exact_synonym +
+        // surface the matching synonym text.
+        CharacteristicValueObject hit = new CharacteristicValueObject(
+                "hippocampus", "http://example.com/UBERON_0002421", "organism part", "http://example.com/organism_part" );
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "ammon" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Collections.singletonList( hit ) );
+        when( ontologyService.getDefinition( anyString(), anyLong(), any() ) )
+                .thenReturn( "the part of the brain that..." );
+        OntologyTerm term = mock( OntologyTerm.class );
+        when( term.getUri() ).thenReturn( "http://example.com/UBERON_0002421" );
+        when( term.getLabel() ).thenReturn( "hippocampus" );
+        AnnotationProperty syn = mock( AnnotationProperty.class );
+        when( syn.getContents() ).thenReturn( "Ammon's horn" );
+        when( term.getAnnotations( "http://www.geneontology.org/formats/oboInOwl#hasExactSynonym" ) )
+                .thenReturn( Collections.singletonList( syn ) );
+        // Other synonym probes return empty.
+        when( term.getAnnotations( anyString() ) ).thenAnswer( a -> {
+            String prop = a.getArgument( 0 );
+            if ( "http://www.geneontology.org/formats/oboInOwl#hasExactSynonym".equals( prop ) ) {
+                return Collections.singletonList( syn );
+            }
+            return Collections.emptyList();
+        } );
+        when( ontologyService.getTerm( eq( "http://example.com/UBERON_0002421" ), anyLong(), any() ) ).thenReturn( term );
+        when( ontologyService.getParents( anySet(), eq( true ), eq( true ), anyLong(), any() ) )
+                .thenReturn( Collections.emptySet() );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/annotations/search" ).queryParam( "query", "ammon" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 1 )
+                .first()
+                .satisfies( a -> assertThat( a )
+                        .containsEntry( "matchedVia", "exact_synonym" )
+                        .containsEntry( "matchedText", "Ammon's horn" ) );
+    }
+
+    @Test
+    public void testSearchAnnotationsLeavesMatchAttributionNullForPostTopN() throws SearchException, TimeoutException {
+        // Hits beyond the 25-deep enrichment window must carry matchedVia=null / matchedText=null
+        // (lazy-load sentinel), even when the limit allows them through.
+        List<CharacteristicValueObject> raw = new ArrayList<>();
+        for ( int i = 0; i < 30; i++ ) {
+            raw.add( new CharacteristicValueObject( "term-" + i, "http://example.com/t" + i, "disease", "http://example.com/disease" ) );
+        }
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "diabetes" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( raw );
+        when( ontologyService.getDefinition( anyString(), anyLong(), any() ) ).thenReturn( null );
+        when( ontologyService.getTerm( anyString(), anyLong(), any() ) )
+                .thenAnswer( a -> {
+                    String uri = a.getArgument( 0 );
+                    OntologyTerm t = mock( OntologyTerm.class );
+                    when( t.getUri() ).thenReturn( uri );
+                    when( t.getLabel() ).thenReturn( "term-x" );
+                    when( t.getAnnotations( anyString() ) ).thenReturn( Collections.emptyList() );
+                    return t;
+                } );
+        when( ontologyService.getParents( anySet(), eq( true ), eq( true ), anyLong(), any() ) )
+                .thenReturn( Collections.emptySet() );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/annotations/search" )
+                .queryParam( "query", "diabetes" )
+                .queryParam( "limit", "30" )
+                .request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 30 )
+                .satisfies( hits -> {
+                    // Top-25: matchedVia populated.
+                    for ( int i = 0; i < 25; i++ ) {
+                        Map<?, ?> hit = ( Map<?, ?> ) hits.get( i );
+                        assertThat( hit.get( "matchedVia" ) )
+                                .as( "top-25 hit %d should carry matchedVia", i )
+                                .isNotNull();
+                    }
+                    // 25..29: nulls.
+                    for ( int i = 25; i < 30; i++ ) {
+                        Map<?, ?> hit = ( Map<?, ?> ) hits.get( i );
+                        assertThat( hit.get( "matchedVia" ) )
+                                .as( "post-top-25 hit %d should carry null matchedVia", i ).isNull();
+                        assertThat( hit.get( "matchedText" ) )
+                                .as( "post-top-25 hit %d should carry null matchedText", i ).isNull();
+                    }
+                } );
     }
 
     @Test
