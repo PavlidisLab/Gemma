@@ -20,7 +20,10 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.analysis.expression.diff.DiffExResultSetSummaryValueObject;
+import ubic.gemma.model.analysis.expression.diff.Direction;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.diff.HitListSize;
+import ubic.gemma.model.analysis.expression.diff.ResultSetCountsValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -64,6 +67,8 @@ public class DifferentialExpressionAnalysisReadServiceImpl implements Differenti
     private ExpressionAnalysisResultSetDao expressionAnalysisResultSetDao;
     @Autowired
     private ExpressionExperimentDao expressionExperimentDao;
+    @Autowired
+    private DifferentialExpressionResultCache differentialExpressionResultCache;
 
     @Autowired
     public DifferentialExpressionAnalysisReadServiceImpl( DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao ) {
@@ -183,12 +188,30 @@ public class DifferentialExpressionAnalysisReadServiceImpl implements Differenti
         }
 
         // initialize result sets and hit list sizes
-        // this is necessary because the DEA VO constructor will ignore uninitialized associations
+        // this is necessary because the DEA VO constructor will ignore uninitialized associations.
+        // For the per-result-set hit-list counts we consult the result-set counts cache first;
+        // on a hit we skip the hitListSizes collection initialization (the dominant cost in this
+        // loop on prod cardinalities) and populate the count fields from the cached snapshot in
+        // the resultSet → VO mapping below.
+        Map<Long, ResultSetCountsValueObject> cachedCounts = new HashMap<>();
         for ( Collection<DifferentialExpressionAnalysis> deas : hits.values() ) {
             for ( DifferentialExpressionAnalysis dea : deas ) {
                 Hibernate.initialize( dea.getResultSets() );
                 for ( ExpressionAnalysisResultSet rs : dea.getResultSets() ) {
-                    Hibernate.initialize( rs.getHitListSizes() );
+                    Long rsId = rs.getId();
+                    ResultSetCountsValueObject cached = rsId != null
+                            ? differentialExpressionResultCache.getResultSetCounts( rsId )
+                            : null;
+                    if ( cached != null ) {
+                        cachedCounts.put( rsId, cached );
+                    } else {
+                        Hibernate.initialize( rs.getHitListSizes() );
+                        if ( rsId != null ) {
+                            ResultSetCountsValueObject snapshot = buildCountsSnapshot( rs );
+                            differentialExpressionResultCache.addToResultSetCountsCache( rsId, snapshot );
+                            cachedCounts.put( rsId, snapshot );
+                        }
+                    }
                 }
                 if ( includeAssays ) {
                     dea.getExperimentAnalyzed().getBioAssays().forEach( Thaws::thawBioAssay );
@@ -252,7 +275,12 @@ public class DifferentialExpressionAnalysisReadServiceImpl implements Differenti
                 }
 
                 for ( ExpressionAnalysisResultSet resultSet : results ) {
-                    DiffExResultSetSummaryValueObject desvo = new DiffExResultSetSummaryValueObject( resultSet );
+                    ResultSetCountsValueObject countsVo = resultSet.getId() != null
+                            ? cachedCounts.get( resultSet.getId() )
+                            : null;
+                    DiffExResultSetSummaryValueObject desvo = countsVo != null
+                            ? new DiffExResultSetSummaryValueObject( resultSet, countsVo )
+                            : new DiffExResultSetSummaryValueObject( resultSet );
                     desvo.setArrayDesignsUsed( avo.getArrayDesignsUsed() );
                     desvo.setBioAssaySetAnalyzedId( experimentAnalyzed.getId() ); // might be a subset.
                     desvo.setAnalysisId( analysis.getId() );
@@ -264,6 +292,39 @@ public class DifferentialExpressionAnalysisReadServiceImpl implements Differenti
             result.put( eeVo, summaries );
         }
         return result;
+    }
+
+    /**
+     * Build a {@link ResultSetCountsValueObject} from an attached result-set whose
+     * {@code hitListSizes} collection has just been initialized. Mirrors the count extraction
+     * logic in {@link DiffExResultSetSummaryValueObject}'s primary constructor — same default
+     * q-value threshold, same Direction → count field mapping.
+     */
+    private static ResultSetCountsValueObject buildCountsSnapshot( ExpressionAnalysisResultSet rs ) {
+        Double threshold = null;
+        Integer up = null;
+        Integer down = null;
+        Integer either = null;
+        for ( HitListSize hls : rs.getHitListSizes() ) {
+            if ( hls.getThresholdQvalue() == null ) continue;
+            if ( !hls.getThresholdQvalue().equals( DifferentialExpressionAnalysisValueObject.DEFAULT_THRESHOLD ) ) continue;
+            threshold = hls.getThresholdQvalue();
+            if ( Direction.UP.equals( hls.getDirection() ) ) {
+                up = hls.getNumberOfProbes();
+            } else if ( Direction.DOWN.equals( hls.getDirection() ) ) {
+                down = hls.getNumberOfProbes();
+            } else if ( Direction.EITHER.equals( hls.getDirection() ) ) {
+                either = hls.getNumberOfProbes();
+            }
+        }
+        return new ResultSetCountsValueObject(
+                rs.getNumberOfGenesTested(),
+                rs.getNumberOfProbesTested(),
+                threshold,
+                either,
+                up,
+                down
+        );
     }
 
     @Override

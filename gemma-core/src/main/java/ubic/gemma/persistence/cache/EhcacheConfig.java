@@ -112,6 +112,10 @@ public class EhcacheConfig {
         // DifferentialExpressionResultCacheImpl
         APP_CACHES.put( "DiffExResultCache", new CacheSpec( 5000, Duration.ofHours( 2 ) ) );
         APP_CACHES.put( "TopDiffExResultCache", new CacheSpec( 5000, Duration.ofHours( 2 ) ) );
+        // Per-result-set hit-list count snapshot consumed by /datasets/{id}/analyses/differential
+        // enrichment. Same heap as siblings; shorter TTL since the underlying HitListSize rows
+        // are themselves L2-cached read-only and recompute is cheap on miss.
+        APP_CACHES.put( "DiffExResultSetCountsCache", new CacheSpec( 5000, Duration.ofMinutes( 30 ) ) );
 
         // ProcessedDataVectorCache / ByGene — historically large; bound the heap and let
         // the LRU prune the long tail. TTL kept generous since recompute is expensive.

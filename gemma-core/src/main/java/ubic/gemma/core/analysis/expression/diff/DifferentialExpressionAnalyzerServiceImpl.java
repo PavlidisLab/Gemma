@@ -40,6 +40,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.FailedDifferentialExpr
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultCache;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
@@ -74,6 +75,8 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     private ExpressionExperimentService expressionExperimentService;
     @Autowired
     private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
+    @Autowired
+    private DifferentialExpressionResultCache differentialExpressionResultCache;
 
     @Override
     public int deleteAnalyses( ExpressionExperiment expressionExperiment ) {
@@ -420,12 +423,15 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     }
 
     /**
-     * Clear the per-result-set TSV caches under {@code <dataDir>/resultSets/}. Best-effort; cache misses are
-     * silent and any IO failure is logged downstream by {@code ExpressionDataFileService}.
+     * Clear the per-result-set TSV caches under {@code <dataDir>/resultSets/} AND the in-memory
+     * counts snapshot used by {@code /datasets/{id}/analyses/differential} enrichment.
+     * Best-effort; cache misses are silent and any IO failure is logged downstream by
+     * {@code ExpressionDataFileService}.
      */
     private void deleteResultSetTsvCaches( List<Long> resultSetIds ) {
         for ( Long rsId : resultSetIds ) {
             expressionDataFileService.deleteDifferentialExpressionResultSetTsvFile( rsId );
+            differentialExpressionResultCache.clearResultSetCountsCache( rsId );
         }
     }
 
