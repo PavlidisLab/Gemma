@@ -169,10 +169,17 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
     private CharacteristicService characteristicService;
 
     @BeforeEach
-    public void setUpMocks() {
+    public void setUpMocks() throws Exception {
         Taxon taxon = Taxon.Factory.newInstance();
         taxon.setId( 1L );
         when( taxonService.findByCommonName( "human" ) ).thenReturn( taxon );
+        // The /annotations/search endpoint memoises results in a static SEARCH_CACHE keyed by
+        // normalised query. Multiple tests in this class issue ?query=diabetes with different
+        // mocked usage-count payloads; without clearing the cache, the first run's result
+        // poisons all subsequent ones. Drop the static map between tests.
+        java.lang.reflect.Field f = AnnotationsWebService.class.getDeclaredField( "SEARCH_CACHE" );
+        f.setAccessible( true );
+        ( ( Map<?, ?> ) f.get( null ) ).clear();
     }
 
     @AfterEach

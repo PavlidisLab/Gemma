@@ -45,6 +45,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -79,7 +80,9 @@ public class DatasetsWebServiceBlacklistedCursorTest {
         ee2 = new ExpressionExperimentValueObject( 200L );
         // The filter arg's getFilters(...) goes through DatasetArgService.getFilters(FilterArg, null, inferredTerms);
         // return an empty Filters so we don't need a real parse. We don't populate inferredTerms.
-        when( datasetArgService.getFilters( any( FilterArg.class ), any(), any( Collection.class ) ) )
+        // lenient: some tests (cursorMode*) re-stub this with a different Filters instance and
+        // don't exercise this shared stub; strict-stubbing flags it as unnecessary otherwise.
+        lenient().when( datasetArgService.getFilters( any( FilterArg.class ), any(), any( Collection.class ) ) )
                 .thenReturn( Filters.empty() );
     }
 

@@ -48,6 +48,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -100,8 +101,10 @@ public class PlatformsWebServiceByIdsCursorTest {
         ad2 = new ArrayDesignValueObject( 200L );
         // Both getFilters(FilterArg) and getFilters(AbstractEntityArrayArg) should return empties
         // so we don't need a real parse / a real entity lookup.
-        when( arrayDesignArgService.getFilters( any( FilterArg.class ) ) ).thenReturn( Filters.empty() );
-        when( arrayDesignArgService.getFilters( any( PlatformArrayArg.class ) ) ).thenReturn( Filters.empty() );
+        // lenient: a subset of cursor tests don't traverse the filter path; strict-stubbing
+        // would flag the unused shared stub otherwise.
+        lenient().when( arrayDesignArgService.getFilters( any( FilterArg.class ) ) ).thenReturn( Filters.empty() );
+        lenient().when( arrayDesignArgService.getFilters( any( PlatformArrayArg.class ) ) ).thenReturn( Filters.empty() );
     }
 
     private FilterArg<ArrayDesign> filter( String s ) {

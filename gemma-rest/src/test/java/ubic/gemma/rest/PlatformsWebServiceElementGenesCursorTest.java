@@ -49,6 +49,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -130,12 +131,14 @@ public class PlatformsWebServiceElementGenesCursorTest {
         probe = new CompositeSequence();
         probe.setId( 7L );
         probe.setArrayDesign( platform );
-        when( arrayDesignArgService.getEntity( any( PlatformArg.class ) ) ).thenReturn( platform );
-        when( geneService.loadValueObject( gene1 ) ).thenReturn( vo1 );
-        when( geneService.loadValueObject( gene2 ) ).thenReturn( vo2 );
+        // lenient: cursor-mode tests don't traverse the full offset-mode wiring;
+        // strict-stubbing would flag the shared setUp stubs as unnecessary.
+        lenient().when( arrayDesignArgService.getEntity( any( PlatformArg.class ) ) ).thenReturn( platform );
+        lenient().when( geneService.loadValueObject( gene1 ) ).thenReturn( vo1 );
+        lenient().when( geneService.loadValueObject( gene2 ) ).thenReturn( vo2 );
         // Both modes echo the path-derived filter on the response wrapper; stub the arg-service
         // to return a deterministic Filters value so we can compare the wrapper's filter field.
-        when( probeArgService.getFilters( any( CompositeSequenceArg.class ) ) ).thenReturn( Filters.empty() );
+        lenient().when( probeArgService.getFilters( any( CompositeSequenceArg.class ) ) ).thenReturn( Filters.empty() );
     }
 
     private OffsetArg offset( String s ) {

@@ -46,6 +46,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -121,9 +122,11 @@ public class PlatformsWebServiceElementCursorTest {
         // platform.getId(); we wire arrayDesignArgService.getEntity(...) to return our stub
         // platform so getPlatformFilter() can compose without an in-memory DB. The webService
         // and the arg-service both call getEntity() — keep them consistent.
-        when( arrayDesignArgService.getEntity( any( PlatformArg.class ) ) ).thenReturn( platform );
+        // lenient: cursor-mode tests don't reach getEntity / getSort; strict-stubbing would
+        // flag these shared setUp stubs as unnecessary for those tests otherwise.
+        lenient().when( arrayDesignArgService.getEntity( any( PlatformArg.class ) ) ).thenReturn( platform );
         // Stub the legacy filter-aware loadValueObjects path so offset-mode tests can fire.
-        when( compositeSequenceService.getSort( eq( "id" ), eq( Sort.Direction.ASC ), eq( Sort.NullMode.LAST ) ) )
+        lenient().when( compositeSequenceService.getSort( eq( "id" ), eq( Sort.Direction.ASC ), eq( Sort.NullMode.LAST ) ) )
                 .thenReturn( Sort.by( null, "id", Sort.Direction.ASC, Sort.NullMode.LAST, "id" ) );
     }
 

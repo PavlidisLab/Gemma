@@ -46,6 +46,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -83,12 +84,13 @@ public class DatasetsWebServiceByIdsCursorTest {
         ee2 = new ExpressionExperimentValueObject( 200L );
         // The filter arg's getFilters(...) goes through DatasetArgService.getFilters(FilterArg, null, inferredTerms);
         // return an empty Filters so we don't need a real parse. We don't populate inferredTerms.
-        when( datasetArgService.getFilters( any( FilterArg.class ), any(), any( Collection.class ) ) )
+        // lenient: per-test re-stubs / unreached cursor paths trip strict-stubbing otherwise.
+        lenient().when( datasetArgService.getFilters( any( FilterArg.class ), any(), any( Collection.class ) ) )
                 .thenReturn( Filters.empty() );
         // The {dataset} path arg flows through DatasetArgService.getFilters(AbstractEntityArrayArg);
         // return an empty Filters so the .and(...) composition produces a non-null Filters instance
         // identical to the inferred-terms branch.
-        when( datasetArgService.getFilters( any( AbstractEntityArrayArg.class ) ) )
+        lenient().when( datasetArgService.getFilters( any( AbstractEntityArrayArg.class ) ) )
                 .thenReturn( Filters.empty() );
     }
 
