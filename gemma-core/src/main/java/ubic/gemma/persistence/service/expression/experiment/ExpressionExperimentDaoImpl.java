@@ -54,6 +54,8 @@ import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.DescribableUtils;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
+import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
 import ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEvent;
 import ubic.gemma.model.common.description.*;
 import ubic.gemma.model.common.protocol.Protocol;
@@ -2225,10 +2227,13 @@ public class ExpressionExperimentDaoImpl
             public ExpressionExperimentDetailsValueObject transformTuple( Object[] row, String[] aliases ) {
                 // After the ACL EXISTS rewrite (Session 2), the filtering query projects only `ee` —
                 // ACL info (aoi/sid) is post-fetched in transformListTyped via AclQueryUtils.loadAclInfoFor()
-                // and applied with ExpressionExperimentValueObject.populateAclInfo().
+                // and applied with ExpressionExperimentValueObject.populateAclInfo(). The three
+                // CurationDetails.last*Event proxies are likewise batch-hydrated in transformListTyped
+                // via #loadLastEventsByExperimentIds — passing skipEvents=true here leaves them
+                // untouched at row-mapping time.
                 ExpressionExperiment ee = ( ExpressionExperiment ) row[0];
                 initializeCachedFilteringResult( ee );
-                return new ExpressionExperimentDetailsValueObject( ee );
+                return new ExpressionExperimentDetailsValueObject( ee, true );
             }
 
             @Override
@@ -2253,6 +2258,17 @@ public class ExpressionExperimentDaoImpl
                     if ( pair != null ) {
                         ExpressionExperimentValueObject.populateAclInfo( vo, pair.getLeft(), pair.getRight() );
                     }
+                }
+
+                // Batch-hydrate the three last*Event proxies that the row-mapping skipped. One
+                // SELECT per event-kind, keyed on EE id; eventType + performer come along via the
+                // entity mappings (fetch="join" / lazy="false" respectively). The transformer
+                // populated VOs with skipEvents=true, so this is where the AuditEventValueObject
+                // fields get filled in.
+                Map<Long, AbstractCuratableValueObject.LastEventTriple> eventsByEeId =
+                        loadLastEventsByExperimentIds( expressionExperimentIds );
+                for ( ExpressionExperimentDetailsValueObject vo : vos ) {
+                    vo.applyLastEventTriple( eventsByEeId.get( vo.getId() ) );
                 }
 
                 // fetch some extras details
@@ -2442,10 +2458,12 @@ public class ExpressionExperimentDaoImpl
             @Override
             public ExpressionExperimentValueObject transformTuple( Object[] row, String[] aliases ) {
                 // After the ACL EXISTS rewrite (Session 2), the filtering query projects only `ee`;
-                // ACL info is post-fetched in transformListTyped.
+                // ACL info is post-fetched in transformListTyped. The three CurationDetails
+                // last*Event proxies are likewise batch-hydrated in transformListTyped — passing
+                // skipEvents=true here leaves them untouched at row-mapping time.
                 ExpressionExperiment ee = ( ExpressionExperiment ) row[0];
                 initializeCachedFilteringResult( ee );
-                return new ExpressionExperimentValueObject( ee );
+                return new ExpressionExperimentValueObject( ee, false, false, true );
             }
 
             @Override
@@ -2465,9 +2483,79 @@ public class ExpressionExperimentDaoImpl
                         ExpressionExperimentValueObject.populateAclInfo( vo, pair.getLeft(), pair.getRight() );
                     }
                 }
+                // Batch-hydrate the three last*Event proxies that the row-mapping skipped. See
+                // #loadLastEventsByExperimentIds for the per-page SELECT shape.
+                Map<Long, AbstractCuratableValueObject.LastEventTriple> eventsByEeId =
+                        loadLastEventsByExperimentIds( ids );
+                for ( ExpressionExperimentValueObject vo : collection ) {
+                    vo.applyLastEventTriple( eventsByEeId.get( vo.getId() ) );
+                }
                 return transformer.transformListTyped( collection );
             }
         };
+    }
+
+    /**
+     * Batch-load the three {@code last*Event} associations off {@code CurationDetails} for a page
+     * of EEs, returning a per-EE {@link AbstractCuratableValueObject.LastEventTriple}. One SELECT
+     * per event-kind, all keyed on EE id (with {@code listByBatch} for chunking large pages);
+     * {@code eventType} ({@code fetch="join"} on the {@code AuditEvent} mapping) and
+     * {@code performer} ({@code lazy="false"} on the same mapping) come along automatically, so
+     * the downstream {@link AuditEventValueObject} constructor walks initialised state.
+     * <p>
+     * Replaces the six {@code left join fetch} lines on {@code getFilteringQuery}: the join-fetch
+     * form bloated every multi-EE list query with three extra LEFT JOINs against
+     * {@code AUDIT_EVENT} + {@code AUDIT_EVENT_TYPE} regardless of whether the result-set
+     * payload was ever read.
+     */
+    private Map<Long, AbstractCuratableValueObject.LastEventTriple> loadLastEventsByExperimentIds( Collection<Long> eeIds ) {
+        if ( eeIds.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+        Session session = getSessionFactory().getCurrentSession();
+        //noinspection unchecked
+        List<Object[]> troubledRows = listByBatch( session
+                        .createQuery( "select ee.id, e from ExpressionExperiment ee "
+                                + "join ee.curationDetails s "
+                                + "join s.lastTroubledEvent e "
+                                + "where ee.id in :eeIds" ),
+                "eeIds", eeIds, 2048 );
+        //noinspection unchecked
+        List<Object[]> attentionRows = listByBatch( session
+                        .createQuery( "select ee.id, e from ExpressionExperiment ee "
+                                + "join ee.curationDetails s "
+                                + "join s.lastNeedsAttentionEvent e "
+                                + "where ee.id in :eeIds" ),
+                "eeIds", eeIds, 2048 );
+        //noinspection unchecked
+        List<Object[]> noteRows = listByBatch( session
+                        .createQuery( "select ee.id, e from ExpressionExperiment ee "
+                                + "join ee.curationDetails s "
+                                + "join s.lastNoteUpdateEvent e "
+                                + "where ee.id in :eeIds" ),
+                "eeIds", eeIds, 2048 );
+        Map<Long, AuditEvent> troubled = new HashMap<>();
+        for ( Object[] row : troubledRows ) {
+            troubled.put( ( Long ) row[0], ( AuditEvent ) row[1] );
+        }
+        Map<Long, AuditEvent> attention = new HashMap<>();
+        for ( Object[] row : attentionRows ) {
+            attention.put( ( Long ) row[0], ( AuditEvent ) row[1] );
+        }
+        Map<Long, AuditEvent> note = new HashMap<>();
+        for ( Object[] row : noteRows ) {
+            note.put( ( Long ) row[0], ( AuditEvent ) row[1] );
+        }
+        Map<Long, AbstractCuratableValueObject.LastEventTriple> result = new HashMap<>();
+        for ( Long eeId : eeIds ) {
+            AuditEvent t = troubled.get( eeId );
+            AuditEvent a = attention.get( eeId );
+            AuditEvent n = note.get( eeId );
+            if ( t != null || a != null || n != null ) {
+                result.put( eeId, new AbstractCuratableValueObject.LastEventTriple( t, a, n ) );
+            }
+        }
+        return result;
     }
 
     @Override
@@ -4064,17 +4152,17 @@ public class ExpressionExperimentDaoImpl
         // the outer-query scope, so we project the entity only and the value-object transformer
         // batch-loads ACL info post-fetch via AclQueryUtils.loadAclInfoFor().
         //language=HQL
+        // The three `last*Event` associations on CurationDetails are NOT join-fetched here:
+        // they are batch-hydrated post-fetch via #loadLastEventsByExperimentIds and applied to
+        // each VO through AbstractCuratableValueObject#applyLastEventTriple. Reverting to a
+        // per-EE proxy walk would cost ~3 SELECTs per row (event + eventType + performer) on
+        // every multi-EE list, which is why this query intentionally leaves the proxies untouched
+        // and the VO transformer pulls them in one keyed batch.
         return finishFilteringQuery( "select ee "
                 + "from ExpressionExperiment as ee "
                 + "left join fetch ee.accession acc "
                 + "left join fetch ee.experimentalDesign as EDES "
                 + "left join fetch ee.curationDetails as s " /* needed for trouble status */
-                + "left join fetch s.lastNeedsAttentionEvent as eAttn "
-                + "left join fetch eAttn.eventType "
-                + "left join fetch s.lastNoteUpdateEvent as eNote "
-                + "left join fetch eNote.eventType "
-                + "left join fetch s.lastTroubledEvent as eTrbl "
-                + "left join fetch eTrbl.eventType "
                 + "left join fetch ee.geeq as geeq", filters, sort, groupByIfNecessary( sort, ONE_TO_MANY_ALIASES ) );
     }
 

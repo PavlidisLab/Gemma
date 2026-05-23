@@ -135,7 +135,19 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
      * @param ignoreAccession exclude accession from serialization
      */
     public ExpressionExperimentValueObject( ExpressionExperiment ee, boolean ignoreDesign, boolean ignoreAccession ) {
-        super( ee );
+        this( ee, ignoreDesign, ignoreAccession, false );
+    }
+
+    /**
+     * Variant that skips reading the three {@code last*Event} associations off
+     * {@link ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails} when
+     * {@code skipEvents=true}. Use this from a transformer that batch-hydrates the events
+     * post-fetch and calls
+     * {@link ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject#applyLastEventTriple(ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject.LastEventTriple)}
+     * to fill them in once a per-page prefetch is available.
+     */
+    public ExpressionExperimentValueObject( ExpressionExperiment ee, boolean ignoreDesign, boolean ignoreAccession, boolean skipEvents ) {
+        super( ee, skipEvents );
         this.shortName = ee.getShortName();
         this.name = ee.getName();
         this.source = ee.getSource();
