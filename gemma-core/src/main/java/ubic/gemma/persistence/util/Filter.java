@@ -78,11 +78,18 @@ public class Filter implements PropertyMapping {
         addConverter( Integer.class, Integer::parseInt, Object::toString );
         addConverter( Date.class, s -> {
             try {
-                return DATE_FORMAT.parse( s );
+                // StdDateFormat is not thread-safe; synchronize on the shared static instance.
+                synchronized ( DATE_FORMAT ) {
+                    return DATE_FORMAT.parse( s );
+                }
             } catch ( ParseException e ) {
                 throw new ConversionFailedException( TypeDescriptor.valueOf( Date.class ), TypeDescriptor.valueOf( String.class ), s, e );
             }
-        }, DATE_FORMAT::format );
+        }, d -> {
+            synchronized ( DATE_FORMAT ) {
+                return DATE_FORMAT.format( d );
+            }
+        } );
         addConverter( URL.class, s -> {
             try {
                 return new URL( s );

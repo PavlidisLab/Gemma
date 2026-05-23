@@ -83,7 +83,12 @@ public class BioAssayUtils {
     private static Set<Characteristic> getCharacteristics( BioAssay bioAssay ) {
         HashSet<Characteristic> result = new HashSet<>();
         if ( bioAssay.getProcessingDate() != null ) {
-            result.add( Characteristic.Factory.newInstance( BioAssayCategories.PROCESSING_DATE, DATE_FORMAT.format( bioAssay.getProcessingDate() ), null ) );
+            String processingDateStr;
+            // StdDateFormat is not thread-safe; synchronize on the shared static instance.
+            synchronized ( DATE_FORMAT ) {
+                processingDateStr = DATE_FORMAT.format( bioAssay.getProcessingDate() );
+            }
+            result.add( Characteristic.Factory.newInstance( BioAssayCategories.PROCESSING_DATE, processingDateStr, null ) );
         }
         result.add( Characteristic.Factory.newInstance( BioAssayCategories.IS_OUTLIER, String.valueOf( bioAssay.getIsOutlier() ), null ) );
         if ( bioAssay.getSequencePairedReads() != null ) {

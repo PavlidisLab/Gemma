@@ -229,7 +229,10 @@ public class TsvUtils {
         if ( d == null ) {
             return NA;
         }
-        return dateFormat.format( d );
+        // StdDateFormat is not thread-safe; synchronize on the shared static instance.
+        synchronized ( dateFormat ) {
+            return dateFormat.format( d );
+        }
     }
 
     public static String format( @Nullable Object object ) {

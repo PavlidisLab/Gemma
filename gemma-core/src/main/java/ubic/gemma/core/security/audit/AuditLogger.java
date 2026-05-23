@@ -27,8 +27,13 @@ public class AuditLogger {
         if ( !log.isInfoEnabled() ) {
             return;
         }
+        String dateStr;
+        // StdDateFormat is not thread-safe; synchronize on the shared static instance.
+        synchronized ( dateFormat ) {
+            dateStr = dateFormat.format( event.getDate() );
+        }
         log.info( String.format( "%s | %s event%s on entity %s:%d by %s%s%s",
-                dateFormat.format( event.getDate() ),
+                dateStr,
                 event.getAction(),
                 event.getEventType() != null ? " of type " + event.getEventType().getClass().getName() : "",
                 auditable.getClass().getName(), auditable.getId(),

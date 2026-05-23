@@ -76,10 +76,15 @@ public class BuildInfo implements InitializingBean {
     public void afterPropertiesSet() {
         if ( timestampAsString != null ) {
             try {
-                timestamp = MAVEN_DATETIME_PATTERN.parse( timestampAsString );
+                // SimpleDateFormat is not thread-safe; synchronize on the shared static instance.
+                synchronized ( MAVEN_DATETIME_PATTERN ) {
+                    timestamp = MAVEN_DATETIME_PATTERN.parse( timestampAsString );
+                }
             } catch ( ParseException e ) {
                 try {
-                    timestamp = MAVEN_3_1_1_DATETIME_PATTERN.parse( timestampAsString );
+                    synchronized ( MAVEN_3_1_1_DATETIME_PATTERN ) {
+                        timestamp = MAVEN_3_1_1_DATETIME_PATTERN.parse( timestampAsString );
+                    }
                 } catch ( ParseException ex ) {
                     log.error( "Failed to parse build timestamp.", e );
                 }
