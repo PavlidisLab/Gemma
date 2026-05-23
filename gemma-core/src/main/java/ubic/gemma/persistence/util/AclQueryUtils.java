@@ -241,12 +241,18 @@ public class AclQueryUtils {
             return java.util.Collections.emptyMap();
         }
         //language=HQL
+        // Filter on aoi.objectIdClass (indexed BIGINT) rather than aoi.type (formula
+        // resolving to a correlated subquery on acl_class) — see the formAclRestrictionClause
+        // comment + handoffs/STATUS_PERF_DATASETS_COUNT_RECCE.md. The IN list here is the
+        // post-fetch batch (usually ≤ 128 ids) so the formula form wasn't catastrophic, but
+        // applying the same shape keeps the surface consistent.
+        Long aoiClassId = resolveAclClassId( aoiType.getCanonicalName() );
         @SuppressWarnings("unchecked")
         java.util.List<Object[]> rows = session
                 .createQuery( "select aoi.identifier, aoi, aoi.ownerSid from AclObjectIdentity aoi "
-                        + "where aoi.identifier in :ids and aoi.type = :aoiType" )
+                        + "where aoi.identifier in :ids and aoi.objectIdClass = :aoiClassId" )
                 .setParameterList( "ids", ids )
-                .setParameter( "aoiType", aoiType.getCanonicalName() )
+                .setParameter( "aoiClassId", aoiClassId )
                 .list();
         java.util.Map<Long, org.apache.commons.lang3.tuple.Pair<ubic.gemma.core.security.acl.domain.AclObjectIdentity, ubic.gemma.core.security.acl.domain.AclSid>> out
                 = new java.util.HashMap<>( rows.size() * 2 );
@@ -353,7 +359,7 @@ public class AclQueryUtils {
         String className = aoiType.getCanonicalName();
         setParameterIfPresent( query, AOI_TYPE_PARAM, className );
         if ( hasNamedParameter( query, AOI_CLASS_ID_PARAM ) ) {
-            query.setParameter( AOI_CLASS_ID_PARAM, resolveAclClassId( query, className ) );
+            query.setParameter( AOI_CLASS_ID_PARAM, resolveAclClassId( className ) );
         }
         if ( SecurityUtil.isUserAnonymous() ) {
             // a constant is used directly in ANONYMOUS_SID_HQL/ANONYMOUS_SID_SQL, so no binding is necessary
@@ -384,7 +390,7 @@ public class AclQueryUtils {
      * the JVM lifetime. The acl_class table is insert-once on first registration of
      * each Securable subclass, so the id is stable.
      */
-    private static Long resolveAclClassId( Query query, String className ) {
+    private static Long resolveAclClassId( String className ) {
         Long cached = ACL_CLASS_ID_CACHE.get( className );
         if ( cached != null ) {
             return cached;
