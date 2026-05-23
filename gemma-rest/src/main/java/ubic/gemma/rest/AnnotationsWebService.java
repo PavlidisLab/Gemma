@@ -54,6 +54,8 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
+import ubic.gemma.rest.ranking.AnnotationSearchRankingStrategy;
+import ubic.gemma.rest.ranking.LuceneOrderRankingStrategy;
 import ubic.gemma.rest.util.QueriedAndFilteredAndPaginatedResponseDataObject;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.ResponseErrorObject;
@@ -116,6 +118,15 @@ public class AnnotationsWebService {
     private ExpressionExperimentService expressionExperimentService;
     private DatasetArgService datasetArgService;
     private TaxonArgService taxonArgService;
+    /**
+     * Strategy registry keyed by short name ({@code lucene}, {@code usage}, {@code coverage}).
+     * Spring populates this from every {@link AnnotationSearchRankingStrategy} bean — the bean name
+     * (set via {@code @Component("name")}) is the map key. Adding a new strategy is one bean.
+     * Optional so the existing {@code @TestComponent} contexts that don't define any ranker bean
+     * still wire — the constructor falls back to a single-entry map with the no-op default.
+     */
+    @Nullable
+    private Map<String, AnnotationSearchRankingStrategy> rankingStrategies;
 
     /**
      * Required by spring
@@ -129,13 +140,32 @@ public class AnnotationsWebService {
     @Autowired
     public AnnotationsWebService( OntologyService ontologyService, SearchService searchService,
             CharacteristicService characteristicService, ExpressionExperimentService expressionExperimentService,
-            DatasetArgService datasetArgService, TaxonArgService taxonArgService ) {
+            DatasetArgService datasetArgService, TaxonArgService taxonArgService,
+            @Nullable Map<String, AnnotationSearchRankingStrategy> rankingStrategies ) {
         this.ontologyService = ontologyService;
         this.searchService = searchService;
         this.characteristicService = characteristicService;
         this.expressionExperimentService = expressionExperimentService;
         this.datasetArgService = datasetArgService;
         this.taxonArgService = taxonArgService;
+        if ( rankingStrategies == null || rankingStrategies.isEmpty() ) {
+            // Test contexts may omit ranker beans; degrade to no-op so default-rank queries still work.
+            LuceneOrderRankingStrategy fallback = new LuceneOrderRankingStrategy();
+            this.rankingStrategies = Collections.singletonMap( fallback.getName(), fallback );
+        } else {
+            this.rankingStrategies = rankingStrategies;
+        }
+    }
+
+    /**
+     * Back-compat constructor for tests that wire only the core collaborators. Equivalent to
+     * passing {@code null} for {@code rankingStrategies}.
+     */
+    public AnnotationsWebService( OntologyService ontologyService, SearchService searchService,
+            CharacteristicService characteristicService, ExpressionExperimentService expressionExperimentService,
+            DatasetArgService datasetArgService, TaxonArgService taxonArgService ) {
+        this( ontologyService, searchService, characteristicService, expressionExperimentService,
+                datasetArgService, taxonArgService, null );
     }
 
     /*https://www.w3.org/TR/owl-ref/#subClassOf-def*
@@ -288,19 +318,25 @@ public class AnnotationsWebService {
             @ApiResponse(responseCode = "503", description = FIND_CHARACTERISTICS_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
     })
     public ResponseDataObject<List<AnnotationSearchResultValueObject>> searchAnnotations(
-            @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE, description = SEARCH_QUERY_DESCRIPTION) @QueryParam("query") @DefaultValue("") StringArrayArg query
+            @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE, description = SEARCH_QUERY_DESCRIPTION) @QueryParam("query") @DefaultValue("") StringArrayArg query,
+            @Parameter(description = "Ranking strategy to apply on top of the raw Lucene order. " +
+                    "`lucene` (default) preserves today's behaviour. `usage` blends rank with per-URI " +
+                    "experiment usage count. `coverage` sorts by fraction of query tokens present in " +
+                    "the hit's label.")
+            @QueryParam("rank") @DefaultValue(LuceneOrderRankingStrategy.NAME) String rank
     ) {
         if ( query == null || query.getValue().isEmpty() ) {
             throw new BadRequestException( "Search query cannot be empty." );
         }
-        String cacheKey = buildSearchCacheKey( query.getValue() );
+        AnnotationSearchRankingStrategy strategy = resolveRankingStrategy( rank );
+        String cacheKey = buildSearchCacheKey( query.getValue(), strategy.getName() );
         List<AnnotationSearchResultValueObject> cached = SEARCH_CACHE.get( cacheKey );
         if ( cached != null ) {
             log.debug( "annotation-search cache HIT key={} (size={})", cacheKey, SEARCH_CACHE.size() );
             return respond( new ArrayList<>( cached ) );
         }
         try {
-            List<AnnotationSearchResultValueObject> result = new ArrayList<>( this.getTerms( query, FIND_CHARACTERISTICS_TIMEOUT_MS ) );
+            List<AnnotationSearchResultValueObject> result = new ArrayList<>( this.getTerms( query, strategy, FIND_CHARACTERISTICS_TIMEOUT_MS ) );
             // store an unmodifiable defensive copy so callers can't mutate the cached value
             SEARCH_CACHE.put( cacheKey, Collections.unmodifiableList( new ArrayList<>( result ) ) );
             log.debug( "annotation-search cache MISS key={} stored {} hits (size={})", cacheKey, result.size(), SEARCH_CACHE.size() );
@@ -312,6 +348,19 @@ public class AnnotationsWebService {
         } catch ( SearchException e ) {
             throw new InternalServerErrorException( e );
         }
+    }
+
+    private AnnotationSearchRankingStrategy resolveRankingStrategy( String name ) {
+        String key = name != null ? name.trim().toLowerCase( Locale.ROOT ) : LuceneOrderRankingStrategy.NAME;
+        if ( key.isEmpty() ) {
+            key = LuceneOrderRankingStrategy.NAME;
+        }
+        AnnotationSearchRankingStrategy s = rankingStrategies != null ? rankingStrategies.get( key ) : null;
+        if ( s == null ) {
+            throw new BadRequestException( "Unknown ranking strategy '" + name + "'. Supported values: "
+                    + ( rankingStrategies != null ? rankingStrategies.keySet() : Collections.emptySet() ) + "." );
+        }
+        return s;
     }
 
     /**
@@ -330,7 +379,7 @@ public class AnnotationsWebService {
     public ResponseDataObject<List<AnnotationSearchResultValueObject>> searchAnnotationsByPathQuery( // Params:
             @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE, description = SEARCH_QUERY_DESCRIPTION) @PathParam("query") @DefaultValue("") StringArrayArg query // Required
     ) {
-        return searchAnnotations( query );
+        return searchAnnotations( query, LuceneOrderRankingStrategy.NAME );
     }
 
     /**
@@ -544,7 +593,8 @@ public class AnnotationsWebService {
      * @param arg the array arg containing all the strings to search for.
      * @return a collection of characteristics matching the input query.
      */
-    private LinkedHashSet<AnnotationSearchResultValueObject> getTerms( StringArrayArg arg, long timeoutMs ) throws SearchException {
+    private LinkedHashSet<AnnotationSearchResultValueObject> getTerms( StringArrayArg arg,
+            AnnotationSearchRankingStrategy strategy, long timeoutMs ) throws SearchException {
         StopWatch timer = StopWatch.createStarted();
         List<CharacteristicValueObject> rawHits = new ArrayList<>();
         for ( String query : arg.getValue() ) {
@@ -562,8 +612,13 @@ public class AnnotationsWebService {
                 .filter( Objects::nonNull )
                 .collect( Collectors.toSet() );
         Map<String, Integer> countsByUri = getDistinctEeCountsByUri( uris );
+        // Apply the requested ranking strategy. The joined query text drives token-coverage; for
+        // multi-term StringArrayArg inputs (typically comma-joined keywords), pass them space-joined
+        // so the tokeniser sees the union.
+        String joinedQuery = String.join( " ", arg.getValue() );
+        List<CharacteristicValueObject> ranked = strategy.rank( joinedQuery, rawHits, countsByUri );
         LinkedHashSet<AnnotationSearchResultValueObject> vos = new LinkedHashSet<>();
-        for ( CharacteristicValueObject vo : rawHits ) {
+        for ( CharacteristicValueObject vo : ranked ) {
             Integer count = vo.getValueUri() != null ? countsByUri.getOrDefault( vo.getValueUri(), 0 ) : null;
             vos.add( new AnnotationSearchResultValueObject( vo.getValue(), vo.getValueUri(), vo.getCategory(),
                     vo.getCategoryUri(), count ) );
@@ -623,8 +678,12 @@ public class AnnotationsWebService {
      * matches (the underlying LIKE search and ontology lookup are case-insensitive); URI-shaped terms keep
      * their case because URIs are case-sensitive on the path/query portion.
      */
-    private static String buildSearchCacheKey( List<String> values ) {
+    private static String buildSearchCacheKey( List<String> values, String rankName ) {
         StringBuilder sb = new StringBuilder( values.size() * 16 );
+        // Prefix the strategy name so swapping rank= invalidates the cache without colliding with
+        // a different-query default-rank entry. STX separates the prefix from the query payload.
+        sb.append( rankName != null ? rankName : LuceneOrderRankingStrategy.NAME );
+        sb.append( '' );
         for ( int i = 0; i < values.size(); i++ ) {
             String v = values.get( i );
             if ( v == null ) continue;
