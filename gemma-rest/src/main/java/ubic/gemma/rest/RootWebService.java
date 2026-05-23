@@ -111,18 +111,9 @@ public class RootWebService {
         return respond( getUserVo( userManager.getCurrentUser() ) );
     }
 
-    /**
-     * Curation-UI compatibility alias for {@link #getMyself}: the UI calls {@code GET /me}; the canonical
-     * gemma-rest endpoint lives at {@code /users/me}.
-     */
-    @GET
-    @Path("/me")
-    @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("isAuthenticated()")
-    @Operation(summary = "Retrieve the user information associated to the authenticated session (alias of /users/me)", hidden = true)
-    public ResponseDataObject<UserValueObject> getMyselfAlias() {
-        return getMyself();
-    }
+    // (Curation-UI compatibility alias `GET /me` was removed — it conflicted with
+    // AuthWebService.me() at Jersey resource-model validation. AuthWebService.me()
+    // is now the canonical /me handler; this class still serves /users/me.)
 
     /**
      * Top-level alias for {@code GET /datasets/categories}: the curation-UI calls {@code GET /categories} for the
