@@ -15,6 +15,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.BadRequestException;
@@ -40,6 +41,7 @@ import ubic.gemma.model.expression.experiment.WorkflowState;
 import ubic.gemma.persistence.service.expression.experiment.AgentProposalService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.PreboardedExperimentService;
+import ubic.gemma.rest.util.ResponseErrorObject;
 
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -110,9 +112,10 @@ public class PreboardedWebService {
             responses = {
                     @ApiResponse(responseCode = "201", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "Missing accession.",
-                            content = @Content()),
-                    @ApiResponse(responseCode = "409", description = "An entity with this accession already exists.",
-                            content = @Content())
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "409", description = "An entity with this accession already exists. Body includes the existing entity's id and type.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                                    schema = @Schema(description = "{ error, accession, existing_id, existing_type }")))
             })
     public Response createPreboarded( @Nullable CreatePreboardedRequest req ) {
         if ( req == null || req.accession == null || req.accession.trim().isEmpty() ) {
@@ -144,7 +147,7 @@ public class PreboardedWebService {
             responses = {
                     @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "No preboarded with that id.",
-                            content = @Content())
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public PreboardedResponse getPreboarded( @PathParam("id") Long id ) {
         PreboardedExperiment skel = loadPreboardedOrThrow( id );
@@ -224,9 +227,9 @@ public class PreboardedWebService {
                     @ApiResponse(responseCode = "200", description = "Proposal with this run_id already attached.",
                             content = @Content()),
                     @ApiResponse(responseCode = "400", description = "Missing run_id.",
-                            content = @Content()),
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "404", description = "Preboarded not found.",
-                            content = @Content())
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public Response attachProposal( @PathParam("id") Long id,
             @Nullable AttachProposalRequest req ) {
@@ -270,11 +273,13 @@ public class PreboardedWebService {
                     + "annotation-write endpoints. See STATUS_PROPOSED_EXPERIMENT_WORKFLOW.md.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Promoted.", content = @Content()),
-                    @ApiResponse(responseCode = "400", description = "Missing ee_id.", content = @Content()),
+                    @ApiResponse(responseCode = "400", description = "Missing ee_id.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "404", description = "Preboarded or EE not found.",
-                            content = @Content()),
-                    @ApiResponse(responseCode = "409", description = "Preboarded already promoted.",
-                            content = @Content())
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "409", description = "Preboarded already promoted. Body includes the preboarded id for the caller's reference.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                                    schema = @Schema(description = "{ error, preboarded_id }")))
             })
     public Response promotePreboarded( @PathParam("id") Long id,
             @Nullable PromoteRequest req ) {

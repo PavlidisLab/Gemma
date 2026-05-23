@@ -43,6 +43,7 @@ import org.springframework.stereotype.Service;
 import ubic.gemma.core.job.SubmittedTask;
 import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.rest.util.ResponseDataObject;
+import ubic.gemma.rest.util.ResponseErrorObject;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -143,7 +144,7 @@ public class AdminWebService {
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
             },
             responses = {
-                    @ApiResponse(responseCode = "204")
+                    @ApiResponse(responseCode = "204", description = "All caches cleared.")
             })
     public Response clearAllCaches() {
         for ( String name : cacheManager.getCacheNames() ) {
@@ -169,8 +170,9 @@ public class AdminWebService {
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
             },
             responses = {
-                    @ApiResponse(responseCode = "204"),
-                    @ApiResponse(responseCode = "404", description = "No cache registered under that name")
+                    @ApiResponse(responseCode = "204", description = "Cache cleared."),
+                    @ApiResponse(responseCode = "404", description = "No cache registered under that name",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public Response clearCache( @PathParam("cacheName") String cacheName ) {
         Cache cache = cacheManager.getCache( cacheName );
@@ -237,7 +239,7 @@ public class AdminWebService {
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
             },
             responses = {
-                    @ApiResponse(responseCode = "204")
+                    @ApiResponse(responseCode = "204", description = "Hibernate statistics reset.")
             })
     public Response resetHibernateStats() {
         sessionFactory.getStatistics().clear();

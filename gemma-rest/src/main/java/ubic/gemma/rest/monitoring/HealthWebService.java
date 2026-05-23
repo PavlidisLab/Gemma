@@ -50,8 +50,10 @@ public class HealthWebService {
     @Operation(summary = "Aggregated process health",
             description = "Returns UP only if every registered HealthIndicator (db, cache, disk space, ...) reports UP. Returns HTTP 503 with the same JSON shape when any component is DOWN.",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "All components UP", useReturnTypeSchema = true),
-                    @ApiResponse(responseCode = "503", description = "At least one component reported DOWN", content = @Content(schema = @Schema(implementation = HealthValueObject.class)))
+                    @ApiResponse(responseCode = "200", description = "All components UP",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = HealthValueObject.class))),
+                    @ApiResponse(responseCode = "503", description = "At least one component reported DOWN",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = HealthValueObject.class)))
             })
     public Response getHealth() {
         Map<String, ComponentValueObject> components = new LinkedHashMap<>();

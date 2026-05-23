@@ -48,6 +48,7 @@ import ubic.gemma.rest.util.FilteredAndCursorPaginatedResponseDataObject;
 import ubic.gemma.rest.util.FilteredAndPaginatedResponseDataObject;
 import ubic.gemma.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.rest.util.ResponseDataObject;
+import ubic.gemma.rest.util.ResponseErrorObject;
 import ubic.gemma.rest.util.args.*;
 
 import jakarta.ws.rs.*;
@@ -457,7 +458,8 @@ public class PlatformsWebService {
             responses = {
                     @ApiResponse(responseCode = "200",
                             content = @Content(schema = @Schema(implementation = ResponseDataObject.class))),
-                    @ApiResponse(responseCode = "404", description = "Probe not found on the given platform")
+                    @ApiResponse(responseCode = "404", description = "Probe not found on the given platform",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public ResponseDataObject<CompositeSequenceValueObject> getPlatformElementMappingSummary( // Params:
             @PathParam("platform") PlatformArg<?> platformArg, // Required

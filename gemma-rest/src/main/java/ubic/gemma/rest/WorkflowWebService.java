@@ -33,6 +33,7 @@ import ubic.gemma.persistence.service.expression.experiment.WorkflowTransition;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.rest.util.ResponseDataObject;
+import ubic.gemma.rest.util.ResponseErrorObject;
 import ubic.gemma.rest.util.args.LimitArg;
 import ubic.gemma.rest.util.args.OffsetArg;
 
@@ -114,7 +115,7 @@ public class WorkflowWebService {
                     @ApiResponse(responseCode = "200", useReturnTypeSchema = true,
                             content = @Content()),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
-                            content = @Content())
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public ResponseDataObject<WorkflowStateResponse> getDatasetWorkflow(
             @PathParam("id") Long datasetId
@@ -165,13 +166,14 @@ public class WorkflowWebService {
                     @ApiResponse(responseCode = "200", useReturnTypeSchema = true,
                             content = @Content()),
                     @ApiResponse(responseCode = "400", description = "Missing or unknown target_state.",
-                            content = @Content()),
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "403", description = "Insufficient role for this transition.",
-                            content = @Content()),
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
-                            content = @Content()),
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "409", description = "Disallowed transition; body lists allowed next states.",
-                            content = @Content())
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                                    schema = @Schema(description = "{ error, current_state, target_state, allowed_next_states }")))
             })
     public Response advanceDatasetWorkflow(
             @PathParam("id") Long datasetId,
@@ -250,7 +252,7 @@ public class WorkflowWebService {
                     @ApiResponse(responseCode = "200", useReturnTypeSchema = true,
                             content = @Content(schema = @Schema(implementation = PaginatedResponseDataObject.class))),
                     @ApiResponse(responseCode = "400", description = "Missing or unknown state.",
-                            content = @Content())
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public PaginatedResponseDataObject<WorkflowQueueEntryResponse> getWorkflowQueue(
             @Parameter(description = "Required; one of the 8 WorkflowState constants.")
