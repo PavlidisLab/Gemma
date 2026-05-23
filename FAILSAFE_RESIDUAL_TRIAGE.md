@@ -6,9 +6,12 @@
 > - `GeneSearchTest.testSearchGenes` (E) — **fixed in commit `0cbd57fd91`** post-verify; will pass on next run.
 >
 > Buckets B, C, D, E, F, H#3 (DEA testCreate), H AclAdviceTest, H thaw,
-> H GiRotation, H GeneSearchTest all resolved on this branch. Remaining
-> open: Bucket A (deep HB6 merge cascade, 17 errors) and Bucket G (HB6
-> lock mode) — both deferred per per-bucket notes.
+> H GiRotation, H GeneSearchTest all resolved on this branch. Bucket A's
+> failure surface (BaselineDetectionTest, DiffExTest, SplitExperimentTest,
+> ExperimentalDesignImporterTest, etc.) does not appear in the latest
+> mvn verify output, so it is now either silently passing or running
+> within default-excluded tag set — re-check explicitly before retiring.
+> Bucket G (HB6 lock mode in BLAT path) remains deferred per its note.
 >
 > The "Bucket H — Single-line drift" list below is mostly historical;
 > all but the deferred-by-brief items now pass.
