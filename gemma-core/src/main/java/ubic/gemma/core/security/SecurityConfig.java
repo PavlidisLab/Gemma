@@ -35,7 +35,6 @@ import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.core.userdetails.UserDetailsPasswordService;
 import ubic.gemma.core.security.authentication.GemmaLegacyAwarePasswordEncoder;
 import ubic.gemma.core.security.authentication.LegacyAwareDaoAuthenticationProvider;
 import ubic.gemma.core.security.authorization.acl.AclEntryAfterInvocationCompositeSequenceByArrayDesignFilteringProvider;
@@ -182,19 +181,24 @@ public class SecurityConfig {
     @Bean(name = "daoAuthenticationProvider")
     public LegacyAwareDaoAuthenticationProvider daoAuthenticationProvider(
             @Qualifier("userManager") UserDetailsService userManager,
-            @Qualifier("passwordEncoder") PasswordEncoder passwordEncoder,
-            @Qualifier("userManager") UserDetailsPasswordService userDetailsPasswordService ) {
+            @Qualifier("passwordEncoder") PasswordEncoder passwordEncoder ) {
         LegacyAwareDaoAuthenticationProvider provider = new LegacyAwareDaoAuthenticationProvider();
         provider.setUserDetailsService( userManager );
         provider.setPasswordEncoder( passwordEncoder );
-        // Spring Security 6 password-upgrade hook: when the encoder reports
-        // upgradeEncoding(stored) == true after a successful auth, the framework
-        // calls userDetailsPasswordService.updatePassword(user, newEncoded) automatically.
-        // UserManagerImpl IS the userDetailsService AND implements UserDetailsPasswordService,
-        // so this is the same bean — but the property must be set explicitly because
-        // DaoAuthenticationProvider does not auto-detect when the two implementations
-        // coincide. See LegacyAwareDaoAuthenticationProvider class javadoc.
-        provider.setUserDetailsPasswordService( userDetailsPasswordService );
+        // Password-upgrade hook NOT wired: DaoAuthenticationProvider's auto-upgrade
+        // calls UserDetailsPasswordService.updatePassword(...), which on UserManagerImpl
+        // is @Secured("GROUP_ADMIN"). The upgrade fires during authenticate() — BEFORE
+        // any Authentication is installed in the SecurityContext — so the method-
+        // security interceptor sees the still-anonymous request and throws
+        // AccessDeniedException, which propagates out as a 403 on every successful
+        // credential check. Result: nobody could log in.
+        //
+        // Gemma's been on bcrypt-encoded passwords for years; there's no legacy
+        // hash format to upgrade on the fly. Leaving the hook unwired closes that
+        // path without changing the on-disk hash format or the legacy-aware
+        // matching behavior in LegacyAwareDaoAuthenticationProvider (which handles
+        // the pre-bcrypt rows it does still encounter — those compare-only, no
+        // upgrade-write).
         return provider;
     }
 
