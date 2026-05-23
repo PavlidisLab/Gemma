@@ -776,4 +776,52 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
         }
         return orders;
     }
+
+    @Override
+    public Map<Long, DiffExResultSetSummaryValueObject.Prefetch> getPrefetchForVo( Collection<Long> ids ) {
+        if ( ids.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+
+        // Query 1: result-set id -> ExperimentalFactor (one row per (rs,ef) pair). Using a
+        // LEFT JOIN so result sets with zero factors still appear (they keep an empty set).
+        //noinspection unchecked
+        List<Object[]> efRows = listByBatch( getSessionFactory().getCurrentSession()
+                        .createQuery( "select rs.id, ef from ExpressionAnalysisResultSet rs "
+                                + "left join rs.experimentalFactors ef "
+                                + "where rs.id in :rsIds" ),
+                "rsIds", ids, 2048 );
+        Map<Long, Set<ExperimentalFactor>> efs = new HashMap<>();
+        for ( Object[] row : efRows ) {
+            Long rsId = ( Long ) row[0];
+            ExperimentalFactor ef = ( ExperimentalFactor ) row[1];
+            Set<ExperimentalFactor> bucket = efs.computeIfAbsent( rsId, k -> new HashSet<>() );
+            if ( ef != null ) {
+                bucket.add( ef );
+            }
+        }
+
+        // Query 2: result-set id -> baselineGroup FactorValue (at most one). The baseline
+        // is a single FactorValue so this can be join-fetched without row explosion. We
+        // restrict to result sets that have a non-null baseline (the populateBase code
+        // already treats absence as "no baseline VO").
+        //noinspection unchecked
+        List<Object[]> baselineRows = listByBatch( getSessionFactory().getCurrentSession()
+                        .createQuery( "select rs.id, fv from ExpressionAnalysisResultSet rs "
+                                + "join rs.baselineGroup fv "
+                                + "where rs.id in :rsIds" ),
+                "rsIds", ids, 2048 );
+        Map<Long, FactorValue> baselines = new HashMap<>();
+        for ( Object[] row : baselineRows ) {
+            baselines.put( ( Long ) row[0], ( FactorValue ) row[1] );
+        }
+
+        Map<Long, DiffExResultSetSummaryValueObject.Prefetch> result = new HashMap<>();
+        for ( Long rsId : ids ) {
+            Set<ExperimentalFactor> rsEfs = efs.getOrDefault( rsId, Collections.emptySet() );
+            FactorValue bg = baselines.get( rsId );
+            result.put( rsId, new DiffExResultSetSummaryValueObject.Prefetch( rsEfs, bg ) );
+        }
+        return result;
+    }
 }

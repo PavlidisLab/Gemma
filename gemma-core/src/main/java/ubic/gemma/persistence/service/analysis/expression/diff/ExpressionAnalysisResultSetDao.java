@@ -24,6 +24,8 @@ import ubic.gemma.model.annotations.MayBeUninitialized;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 import ubic.gemma.persistence.service.analysis.AnalysisResultSetDao;
@@ -166,6 +168,24 @@ public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<Dif
      * @param initializeFactorValues whether to initialize factor values
      */
     Map<Long, Baseline> getBaselinesForInteractionsByIds( Collection<Long> ids, boolean initializeFactorValues );
+
+    /**
+     * Batch-fetch the {@code experimentalFactors} + {@code baselineGroup} associations of
+     * the given result sets in two queries (one per association, to avoid {@code MultipleBagFetchException}
+     * and Cartesian explosion on a multi-row join), and return a map keyed by result-set id.
+     * <p>
+     * Consumed by the {@code findByExperimentIds} VO enrichment path so the per-row
+     * {@link DiffExResultSetSummaryValueObject} ctor can skip three sequential
+     * {@code Hibernate.initialize} round-trips on a warm cache.
+     * <p>
+     * Returns an empty map if {@code ids} is empty. Result-sets missing from the result
+     * (e.g. concurrently deleted) are simply absent from the map; the caller should
+     * fall back to the lazy-load path for those.
+     *
+     * @param ids the result-set ids to prefetch
+     * @return map from result-set id to {@link DiffExResultSetSummaryValueObject.Prefetch}
+     */
+    Map<Long, DiffExResultSetSummaryValueObject.Prefetch> getPrefetchForVo( Collection<Long> ids );
 
     /**
      * Obtain a histogram of the P-value distribution for a given result set.

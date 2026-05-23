@@ -43,6 +43,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import static java.util.Objects.requireNonNull;
 import static ubic.gemma.persistence.service.expression.biomaterial.BioMaterialUtils.visitBioMaterials;
@@ -194,11 +195,15 @@ public class DifferentialExpressionAnalysisReadServiceImpl implements Differenti
         // loop on prod cardinalities) and populate the count fields from the cached snapshot in
         // the resultSet → VO mapping below.
         Map<Long, ResultSetCountsValueObject> cachedCounts = new HashMap<>();
+        Set<Long> allResultSetIds = new HashSet<>();
         for ( Collection<DifferentialExpressionAnalysis> deas : hits.values() ) {
             for ( DifferentialExpressionAnalysis dea : deas ) {
                 Hibernate.initialize( dea.getResultSets() );
                 for ( ExpressionAnalysisResultSet rs : dea.getResultSets() ) {
                     Long rsId = rs.getId();
+                    if ( rsId != null ) {
+                        allResultSetIds.add( rsId );
+                    }
                     ResultSetCountsValueObject cached = rsId != null
                             ? differentialExpressionResultCache.getResultSetCounts( rsId )
                             : null;
@@ -218,6 +223,15 @@ public class DifferentialExpressionAnalysisReadServiceImpl implements Differenti
                 }
             }
         }
+
+        // Batch-fetch the experimentalFactors + baselineGroup associations for all result
+        // sets in this page in two queries, so the DiffExResultSetSummaryValueObject ctor
+        // below can skip three sequential lazy-init round trips per RS (factors-for-ids,
+        // factors-for-VOs, baselineGroup). Mirrors the result-set counts cache short-circuit
+        // (d09951c583) and the analyses-enrichment merge (8a0e052bd8).
+        Map<Long, DiffExResultSetSummaryValueObject.Prefetch> prefetchByRsId = allResultSetIds.isEmpty()
+                ? Collections.emptyMap()
+                : expressionAnalysisResultSetDao.getPrefetchForVo( allResultSetIds );
 
         Map<Long, ExpressionExperimentDetailsValueObject> idMap = IdentifiableUtils.getIdMap( expressionExperimentDao
                 .loadDetailsValueObjectsByIds( IdentifiableUtils.getIds( hits.keySet() ) ) );
@@ -275,12 +289,38 @@ public class DifferentialExpressionAnalysisReadServiceImpl implements Differenti
                 }
 
                 for ( ExpressionAnalysisResultSet resultSet : results ) {
-                    ResultSetCountsValueObject countsVo = resultSet.getId() != null
-                            ? cachedCounts.get( resultSet.getId() )
+                    Long rsId = resultSet.getId();
+                    ResultSetCountsValueObject countsVo = rsId != null
+                            ? cachedCounts.get( rsId )
                             : null;
-                    DiffExResultSetSummaryValueObject desvo = countsVo != null
-                            ? new DiffExResultSetSummaryValueObject( resultSet, countsVo )
-                            : new DiffExResultSetSummaryValueObject( resultSet );
+                    DiffExResultSetSummaryValueObject.Prefetch prefetch = rsId != null
+                            ? prefetchByRsId.get( rsId )
+                            : null;
+                    DiffExResultSetSummaryValueObject desvo;
+                    if ( prefetch != null ) {
+                        desvo = new DiffExResultSetSummaryValueObject( resultSet, countsVo, prefetch );
+                        if ( countsVo == null ) {
+                            // No counts snapshot — fall back to the original hit-list walk so
+                            // threshold + per-direction counts are still populated.
+                            for ( HitListSize hls : resultSet.getHitListSizes() ) {
+                                if ( hls.getThresholdQvalue() == null ) continue;
+                                if ( !hls.getThresholdQvalue().equals(
+                                        ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject.DEFAULT_THRESHOLD ) ) continue;
+                                desvo.setThreshold( hls.getThresholdQvalue() );
+                                if ( Direction.UP.equals( hls.getDirection() ) ) {
+                                    desvo.setUpregulatedCount( hls.getNumberOfProbes() );
+                                } else if ( Direction.DOWN.equals( hls.getDirection() ) ) {
+                                    desvo.setDownregulatedCount( hls.getNumberOfProbes() );
+                                } else if ( Direction.EITHER.equals( hls.getDirection() ) ) {
+                                    desvo.setNumberOfDiffExpressedProbes( hls.getNumberOfProbes() );
+                                }
+                            }
+                        }
+                    } else if ( countsVo != null ) {
+                        desvo = new DiffExResultSetSummaryValueObject( resultSet, countsVo );
+                    } else {
+                        desvo = new DiffExResultSetSummaryValueObject( resultSet );
+                    }
                     desvo.setArrayDesignsUsed( avo.getArrayDesignsUsed() );
                     desvo.setBioAssaySetAnalyzedId( experimentAnalyzed.getId() ); // might be a subset.
                     desvo.setAnalysisId( analysis.getId() );
