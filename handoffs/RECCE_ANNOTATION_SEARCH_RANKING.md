@@ -145,7 +145,47 @@ Map<String, List<OntologyTermSimpleValueObject>> parentsByUri = batchGetDirectPa
 
 **What NOT to do.** Don't pre-resolve definitions in `OntologyService.findExperimentsCharacteristicTags` itself — keep ontology-search and metadata-enrichment as separate stages so the ranker can reorder before enrichment happens.
 
-### 6. Synonym walk — REQUIRED (Paul, 2026-05-23)
+### 6. Synonym attribution — required, but smaller than first thought (Paul, 2026-05-23)
+
+**Correction from the first draft of this section:** synonym walking IS already working in `JenaTextOntologySearchService`. Empirically against staging (2026-05-23):
+
+- Query `cornu ammonis` (Latin name for hippocampus, NOT in any preferred label) → returns `hippocampus` as the top hit.
+- Query `ammon` → returns both `ammon's horn` (UBERON_0001954) AND `hippocampus` (EMAPA_32845) in the same 18-hit response.
+
+Jena Text indexes synonym properties (`oboInOwl:hasExactSynonym`, `altLabel`, etc.) — query expansion happens at the Lucene layer, not in our code. **What's missing is per-hit attribution**: the UI doesn't know WHY each hit matched.
+
+For Paul's curator UX:
+- Query "ammon's horn" → currently surfaces "hippocampus" silently. Curator sees "hippocampus" and wonders "why?"
+- Query "hippocampus" → currently surfaces 120 hits including the real hippocampus, but doesn't tell the UI which of those hits matched via synonym vs preferred-label.
+
+#### The actual fix
+
+Add to `AnnotationSearchResultValueObject`:
+- `@Nullable String matchedVia` — one of `preferred_label` (default), `exact_synonym`, `narrow_synonym`, `related_synonym`, `alt_label`, `definition`. Whatever the underlying Lucene index field names map to.
+- `@Nullable String matchedText` — the actual synonym text that scored the match (so the UI can render "↪ matches synonym 'Ammon's horn'").
+
+#### Where the data comes from
+
+This needs a recce on the Lucene `Highlighter` / `MatchHighlighter` / `Explanation` API exposed by Jena Text. The `JenaTextOntologySearchService` issues a TextDataset query and gets back URIs; to know which Lucene FIELD matched per hit, we either:
+1. Run the query in "highlighter" mode and read which field's spans hit.
+2. After the search, for each hit URI, re-fetch the term's synonyms and string-match against the original query tokens to back-compute which synonym matched.
+
+(2) is implementable without Jena internals. (1) is cleaner but needs Jena Text's highlighter integration which may or may not be wired in current JenaTextOntologySearchService.
+
+#### Don't fold into the ranker. Same lesson.
+
+The ranker (lucene / usage / coverage / composite) is orthogonal — it reorders results, doesn't touch metadata. Synonym attribution is a separate enrichment stage. Sequence: search → rank → enrich (definition + parents + matchedVia/matchedText for top-N).
+
+#### Out of scope here
+
+If "hippocampus" doesn't rank UBERON_0002421 above EMAPA_32845 (mouse-anatomy hippocampus), that's a SEPARATE issue — namespace-priority ranking. The Jena search returns EMAPA first probably because of which ontology was loaded into the TDB first / index-order; needs its own recce. Not blocking the per-hit attribution work.
+
+#### Cross-references
+
+- `gemma-core/src/main/java/ubic/gemma/core/ontology/search/JenaTextOntologySearchService.java` — Lucene-text wrapper.
+- Empirical evidence: probe staging via `curl 'https://staging-gemma.msl.ubc.ca/rest/v2/annotations/search?query=ammon'`, query=`cornu+ammonis`, etc.
+
+### 6b. ORIGINAL (incorrect) framing kept for diff context only
 
 > "when the query is 'hippocampus' synonyms have to be returned like 'ammon's horn' which is actually what we use; then, if the ontology actually says that ammon's horn is a synonym of the query (per the ontology) that has to be surfaced."
 
