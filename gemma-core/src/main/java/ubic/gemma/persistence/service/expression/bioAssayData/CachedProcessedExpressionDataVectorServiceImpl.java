@@ -20,9 +20,12 @@ import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialDao;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.CommonQueries;
 import ubic.gemma.persistence.util.IdentifiableUtils;
+import ubic.gemma.persistence.util.Thaws;
 
 import org.springframework.lang.Nullable;
 import java.util.*;
@@ -38,6 +41,12 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
+
+    @Autowired
+    private ExpressionExperimentDao expressionExperimentDao;
+
+    @Autowired
+    private BioMaterialDao bioMaterialDao;
 
     @Autowired
     private ProcessedDataVectorByGeneCache processedDataVectorByGeneCache;
@@ -680,9 +689,38 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
 
 
     private Map<BioAssaySet, Collection<BioAssayDimension>> getBioAssayDimensions( Collection<? extends BioAssaySet> ees ) {
+        if ( ees.isEmpty() ) {
+            return new HashMap<>();
+        }
+        // Map each input BioAssaySet -> its source ExpressionExperiment (subsets resolve to their owner).
+        Map<BioAssaySet, ExpressionExperiment> basToEe = new HashMap<>();
+        for ( BioAssaySet bas : ees ) {
+            basToEe.put( bas, getExperiment( bas ) );
+        }
+        // One HQL fetches all (ee, bad) pairs for the union of source experiments.
+        Map<ExpressionExperiment, Collection<BioAssayDimension>> eeToBads = expressionExperimentDao
+                .getProcessedBioAssayDimensions( new HashSet<>( basToEe.values() ) );
+        // Batched thaw of every assay's source chain in a small constant number of queries —
+        // mirrors the per-EE-callee path (Thaws::thawBioAssayDimension -> thawBioAssay) but
+        // replaces the O(N x chainDepth) Hibernate.initialize loop with the batched BioMaterial
+        // loader introduced in 352118e781. Platform-side proxies are warmed per-assay.
+        List<BioAssay> allAssays = new ArrayList<>();
+        for ( Collection<BioAssayDimension> bads : eeToBads.values() ) {
+            for ( BioAssayDimension bad : bads ) {
+                for ( BioAssay ba : bad.getBioAssays() ) {
+                    Thaws.thawBioAssayPlatforms( ba );
+                    allAssays.add( ba );
+                }
+            }
+        }
+        if ( !allAssays.isEmpty() ) {
+            bioMaterialDao.thawBioMaterialsForBioAssays( allAssays );
+        }
+        // Stitch back to the input keys (multiple BAS may share an EE).
         Map<BioAssaySet, Collection<BioAssayDimension>> result = new HashMap<>();
-        for ( BioAssaySet ee : ees ) {
-            result.put( ee, getBioAssayDimensions( ee ) );
+        for ( Map.Entry<BioAssaySet, ExpressionExperiment> entry : basToEe.entrySet() ) {
+            Collection<BioAssayDimension> bads = eeToBads.get( entry.getValue() );
+            result.put( entry.getKey(), bads != null ? bads : Collections.emptyList() );
         }
         return result;
     }

@@ -1636,6 +1636,27 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public Map<ExpressionExperiment, Collection<BioAssayDimension>> getProcessedBioAssayDimensions( Collection<ExpressionExperiment> ees ) {
+        if ( ees.isEmpty() ) {
+            return new HashMap<>();
+        }
+        //noinspection unchecked
+        List<Object[]> rows = getSessionFactory().getCurrentSession()
+                .createQuery( "select pedv.expressionExperiment, pedv.bioAssayDimension from ProcessedExpressionDataVector pedv "
+                        + "where pedv.expressionExperiment in (:ees) "
+                        + "group by pedv.expressionExperiment, pedv.bioAssayDimension" )
+                .setParameterList( "ees", optimizeIdentifiableParameterList( ees ) )
+                .list();
+        Map<ExpressionExperiment, Collection<BioAssayDimension>> result = new HashMap<>();
+        for ( Object[] row : rows ) {
+            ExpressionExperiment ee = ( ExpressionExperiment ) row[0];
+            BioAssayDimension bad = ( BioAssayDimension ) row[1];
+            result.computeIfAbsent( ee, k -> new HashSet<>() ).add( bad );
+        }
+        return result;
+    }
+
+    @Override
     public long getBioMaterialCount( ExpressionExperiment expressionExperiment ) {
         //language=HQL
         final String queryString =
