@@ -4,11 +4,13 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.math3.distribution.LogNormalDistribution;
 import org.apache.commons.math3.distribution.NormalDistribution;
 import org.hibernate.Hibernate;
+import org.hibernate.SessionFactory;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
 import ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionException;
 import ubic.gemma.core.util.test.BaseIntegrationTest5;
+import ubic.gemma.core.util.test.ThawTestUtils;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
@@ -49,6 +51,8 @@ public class ProcessedExpressionDataVectorCreationHelperServiceTest extends Base
     private ArrayDesignService arrayDesignService;
     @Autowired
     private BioMaterialService bioMaterialService;
+    @Autowired
+    private SessionFactory sessionFactory;
 
     @Test
     public void testCreateProcessedDataVectors() throws QuantitationTypeDetectionException, QuantitationTypeConversionException {
@@ -109,20 +113,50 @@ public class ProcessedExpressionDataVectorCreationHelperServiceTest extends Base
         processedExpressionDataVectorCreationHelperService.createProcessedDataVectors( ee, false, summary );
         assertEquals( NUM_PROBES, summary.getNumberOfDataVectors() );
 
-        Collection<ProcessedExpressionDataVector> reloadedVectors;
+        Long eeId = ee.getId();
 
-        // thaw a single vector
-        reloadedVectors = processedExpressionDataVectorDao.getProcessedDataVectors( ee );
-        ProcessedExpressionDataVector oneVector = reloadedVectors.iterator().next();
+        // Reload vectors in a fresh session so the expressionExperiment association
+        // is a lazy proxy (otherwise it resolves to the already-managed ee in the
+        // test session, and Hibernate.isInitialized(...) returns true before thaw).
+        // The fetch profile mirrors ProcessedExpressionDataVectorDaoImpl.getProcessedVectors
+        // so designElement / arrayDesign / biologicalCharacteristic are already realised.
+        Collection<ProcessedExpressionDataVector> detachedVectors = ThawTestUtils.queryDetachedInFreshSession( sessionFactory, session -> {
+            //noinspection unchecked
+            return ( Collection<ProcessedExpressionDataVector> ) ( Collection<?> ) session.createQuery(
+                            "select dedv from ProcessedExpressionDataVector dedv "
+                                    + "join fetch dedv.designElement cs "
+                                    + "join fetch cs.arrayDesign "
+                                    + "left join fetch cs.biologicalCharacteristic "
+                                    + "where dedv.expressionExperiment.id = :eeId" )
+                    .setParameter( "eeId", eeId )
+                    .list();
+        } );
+        assertThat( detachedVectors ).hasSize( NUM_PROBES );
+
+        // thaw a single vector — pass the detached vector to the service, which
+        // re-attaches it via ensureInSession() inside its own read-only tx and
+        // initializes the lazy associations.
+        ProcessedExpressionDataVector oneVector = detachedVectors.iterator().next();
         checkVectorInitializationBeforeThaw( oneVector );
         oneVector = processedExpressionDataVectorDao.thaw( oneVector );
         checkVectorInitializationAfterThaw( oneVector );
 
-        // thaw all vectors in bulk
-        reloadedVectors = processedExpressionDataVectorDao.getProcessedDataVectors( ee );
-        assertThat( reloadedVectors ).allSatisfy( ProcessedExpressionDataVectorCreationHelperServiceTest::checkVectorInitializationBeforeThaw );
-        reloadedVectors = processedExpressionDataVectorDao.thaw( reloadedVectors );
-        assertThat( reloadedVectors )
+        // thaw all vectors in bulk — re-fetch detached set so the "before" assertion
+        // is meaningful again (the singleton thaw above already mutated one of them).
+        Collection<ProcessedExpressionDataVector> bulkDetachedVectors = ThawTestUtils.queryDetachedInFreshSession( sessionFactory, session -> {
+            //noinspection unchecked
+            return ( Collection<ProcessedExpressionDataVector> ) ( Collection<?> ) session.createQuery(
+                            "select dedv from ProcessedExpressionDataVector dedv "
+                                    + "join fetch dedv.designElement cs "
+                                    + "join fetch cs.arrayDesign "
+                                    + "left join fetch cs.biologicalCharacteristic "
+                                    + "where dedv.expressionExperiment.id = :eeId" )
+                    .setParameter( "eeId", eeId )
+                    .list();
+        } );
+        assertThat( bulkDetachedVectors ).allSatisfy( ProcessedExpressionDataVectorCreationHelperServiceTest::checkVectorInitializationBeforeThaw );
+        Collection<ProcessedExpressionDataVector> thawedVectors = processedExpressionDataVectorDao.thaw( bulkDetachedVectors );
+        assertThat( thawedVectors )
                 .allSatisfy( ProcessedExpressionDataVectorCreationHelperServiceTest::checkVectorInitializationAfterThaw );
     }
 
