@@ -21,22 +21,57 @@ Both are tagged `@Tag("slow") @Tag("integration") @Tag("geo") @NetworkAvailable(
 
 `MexSingleCellDataLoader` IS the unit under test. The test validates that the parser correctly handles the MEX wire format — gene/cell indexing, sparse-matrix triples, multi-sample bundling, barcode-to-sample offset arithmetic. Mocking the loader erases the coverage. Stub the file inputs, not the parser.
 
-## Plan — chop + split
+## Plan — mock the download, run the rest
 
-For each of `testGSE141552` and `testGSE125708`, split into two variants:
+Paul's redirect 2026-05-23: mock the network step (`detector.downloadSingleCellData(series)`); the mock places a chopped MEX bundle where the real download would have, and the rest of the test (the parser, the dimension, the vector materialization) runs unchanged on the chopped data. Keep the original `@Tag("slow")@Tag("network")` test method as the truth source — acknowledged it'll rarely run.
 
-### Variant A — `@Tag("integration")` fast (default-run)
+### Mock shape
 
-Loads a **chopped MEX bundle** from `src/test/resources/data/loader/expression/singleCell/<accession>-chopped/`. Targets:
+`detector` is a `GeoSingleCellDetector` constructed in `@BeforeEach` (line 77). The download surface:
+
+```java
+GeoSeries series = readSeriesFromGeo( "GSE141552" );
+detector.downloadSingleCellData( series );                 // ← network step to mock
+MexSingleCellDataLoader loader = ( MexSingleCellDataLoader ) detector.getSingleCellDataLoader( series, config );
+```
+
+`getSingleCellDataLoader(series, config)` after the download scans `downloadDir` for the MEX files. So replacing the network step with a classpath copy is enough:
+
+```java
+@BeforeEach
+public void setUp() throws IOException {
+    detector = Mockito.spy( new GeoSingleCellDetector() );
+    detector.setFTPClientFactory( ftpClientFactory );
+    detector.setDownloadDirectory( downloadDir );
+    detector.setSingleCellDataTransformationFactory( singleCellDataTransformationFactory );
+
+    // Mock the download: instead of FTP-fetching, copy the chopped classpath
+    // fixture into downloadDir at the path getSingleCellDataLoader expects.
+    doAnswer( inv -> {
+        GeoSeries series = inv.getArgument(0);
+        Path dst = downloadDir.resolve( "GSE" + series.getGeoAccession().substring(3,6) + "nnn" )
+                              .resolve( series.getGeoAccession() );
+        copyClasspathDirTo( "data/loader/expression/singleCell/" + series.getGeoAccession() + "-chopped/", dst );
+        return null;
+    } ).when( detector ).downloadSingleCellData( any( GeoSeries.class ) );
+}
+```
+
+(The exact `downloadDir` layout the detector expects needs to be confirmed by reading `GeoSingleCellDetector.downloadSingleCellData` once — the snippet above is a sketch of where the chopped fixture lands.)
+
+### Variant taxonomy
+
+- **Default (now mocked).** Drop `@Tag("slow")` and `@Tag("network")` from `testGSE141552` / `testGSE125708`. Keep `@Tag("integration")`. The mock kicks in via the `@BeforeEach` `@Spy`. Test runs in default `mvn verify`.
+- **Truth-source variant (opt-in).** A new sibling method (e.g. `testGSE141552OverTheWire`) carries `@Tag("slow")@Tag("network")@NetworkAvailable(...)` and skips the mock by calling the real detector. Asserts against the full-dataset numbers. Paul: "I doubt we'll run it" — that's fine; it exists as documentation that the chopped fixture is a faithful slice of the real data, and as a regression guard if anyone ever does run with `-DexcludedGroups=network`.
+
+### Chopped fixture
+
+Same shape as before:
 - `barcodes.tsv.gz`: first 1 000 barcodes (vs 561 738)
-- `features.tsv.gz`: first ~500 genes, **including** the specific gene IDs the test asserts on (e.g. `ENSG00000223972.5`, `ENSG00000163930.10`, `ENSG00000210082.2` for `testGSE141552`)
-- `matrix.mtx.gz`: re-rendered from upstream, keeping only triples (gene_idx, cell_idx, count) where both indices land in the kept ranges; **rewrite the MEX header** to reflect the trimmed dimensions
+- `features.tsv.gz`: first ~500 genes, **including** the gene IDs the assertions check (e.g. `ENSG00000223972.5`, `ENSG00000163930.10`, `ENSG00000210082.2` for GSE141552)
+- `matrix.mtx.gz`: re-rendered from upstream, only triples where both indices land in the kept ranges, header rewritten.
 
-Assertions in this variant are computed **from the chopped fixture** (not the upstream) — concrete `dataIndices` / `dataAsInts` derived by running the loader once locally and freezing the output, then asserting against that. Test runs in seconds, not minutes; runs in default `mvn verify` failsafe.
-
-### Variant B — `@Tag("slow") @Tag("network") @NetworkAvailable` over-the-wire (opt-in)
-
-The current test, unchanged. Stays the truth source for the assertion numbers that match the full upstream dataset. Runs only when explicitly requested.
+Assertion numbers in the (now-fast) `testGSE141552` are re-derived from the chopped fixture — concrete `dataIndices` / `dataAsInts` frozen from a one-time loader run.
 
 ## How to chop the MEX cleanly
 
