@@ -287,6 +287,15 @@ public interface ExpressionExperimentDao
 
     Collection<BioAssayDimension> getProcessedBioAssayDimensions( ExpressionExperiment ee );
 
+    /**
+     * Batched variant of {@link #getProcessedBioAssayDimensions(ExpressionExperiment)} — one HQL
+     * with an {@code IN} clause for the supplied experiments. The returned map omits experiments
+     * that have no processed dimensions; callers that need a per-key empty default must handle
+     * that explicitly. Used by {@code CachedProcessedExpressionDataVectorService} to avoid the
+     * per-EE dimension fetch + per-assay source-chain thaw cycle.
+     */
+    Map<ExpressionExperiment, Collection<BioAssayDimension>> getProcessedBioAssayDimensions( Collection<ExpressionExperiment> ees );
+
     @Nullable
     Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment ee, QuantitationType qt );
 
