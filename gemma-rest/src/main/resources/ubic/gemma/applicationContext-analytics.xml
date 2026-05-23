@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd"
-       profile="web">
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
     <!--
         Renovations Phase 3: the Google Analytics 4 provider wiring moved to the Java
         @Configuration class below (ubic.gemma.rest.analytics.ga4.AnalyticsConfig), which itself
-        carries @Profile("web"). The profile attribute on this <beans> element stays as belt-and-
-        suspenders so the AnalyticsConfig bean is not registered outside the web profile.
+        carries @Profile("web"). The previous belt-and-suspenders profile="web" attribute on this
+        <beans> element was removed after a stable build cycle (CONFIG_AUDIT.md LOW #12): the Java
+        @Profile gate is the single source of truth, and AnalyticsConfig is the only bean defined
+        here so registering it outside the web profile is impossible regardless.
     -->
     <bean class="ubic.gemma.rest.analytics.ga4.AnalyticsConfig"/>
 </beans>
