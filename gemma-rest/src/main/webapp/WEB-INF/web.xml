@@ -255,6 +255,17 @@
     </servlet-mapping>
 
     <!--
+        Welcome file. /resources/restapidocs/ (and / once the WAR is at ROOT)
+        falls through to index.html via DefaultServlet's welcome-file machinery
+        instead of 404'ing on the directory path. This replaces the
+        RestapidocsIndexRewriteFilter mentioned in the comment above (which was
+        never actually implemented).
+    -->
+    <welcome-file-list>
+        <welcome-file>index.html</welcome-file>
+    </welcome-file-list>
+
+    <!--
         No <session-config>, no <error-page>, no <jsp-config>.
         gemma-rest is JSON-API-first:
           - Authn flows via HTTP Basic on every request (RestSecurityConfig sets
