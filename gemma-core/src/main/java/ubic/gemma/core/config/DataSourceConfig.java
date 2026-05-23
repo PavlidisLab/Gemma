@@ -80,6 +80,26 @@ public class DataSourceConfig {
     @Value("${gemma.db.hikari.sessionVariables}")
     private String hikariSessionVariables;
 
+    /**
+     * Pool-level Hikari knobs (distinct from the {@code dataSourceProperties} driver-level knobs
+     * above). All four default to {@code null} so that an unset key falls through to Hikari's own
+     * built-in defaults rather than overriding them with zero. See {@code deploy/env.example} for
+     * the per-environment guidance (tunneled prod wants {@code keepaliveTime=60000} and
+     * {@code maxLifetime=1800000} to reap server- or tunnel-closed sockets before Hikari hands
+     * them back out).
+     */
+    @Value("${gemma.db.hikari.keepaliveTime:#{null}}")
+    private Long hikariKeepaliveTime;
+
+    @Value("${gemma.db.hikari.maxLifetime:#{null}}")
+    private Long hikariMaxLifetime;
+
+    @Value("${gemma.db.hikari.connectionTimeout:#{null}}")
+    private Long hikariConnectionTimeout;
+
+    @Value("${gemma.db.hikari.idleTimeout:#{null}}")
+    private Long hikariIdleTimeout;
+
     private Properties hikariDataSourceProperties() {
         Properties props = new Properties();
         // Enable server-side cursor fetching so large result sets stream instead of buffering.
@@ -91,6 +111,27 @@ public class DataSourceConfig {
         // Drop ONLY_FULL_GROUP_BY from sql_mode for the connection's session.
         props.setProperty( "sessionVariables", hikariSessionVariables );
         return props;
+    }
+
+    /**
+     * Apply pool-level Hikari setters from {@code gemma.db.hikari.*} properties. Each setter
+     * fires only if the corresponding property is set; unset keys preserve Hikari's own defaults
+     * rather than coercing to zero. Shared between the prod / dev and test datasource beans so
+     * tunneled-tunnel-survival tuning applies uniformly.
+     */
+    private void applyHikariPoolSettings( HikariDataSource ds ) {
+        if ( hikariKeepaliveTime != null ) {
+            ds.setKeepaliveTime( hikariKeepaliveTime );
+        }
+        if ( hikariMaxLifetime != null ) {
+            ds.setMaxLifetime( hikariMaxLifetime );
+        }
+        if ( hikariConnectionTimeout != null ) {
+            ds.setConnectionTimeout( hikariConnectionTimeout );
+        }
+        if ( hikariIdleTimeout != null ) {
+            ds.setIdleTimeout( hikariIdleTimeout );
+        }
     }
 
     // ---------------------------------------------------------------------------
@@ -120,6 +161,7 @@ public class DataSourceConfig {
         ds.setDataSourceProperties( hikariDataSourceProperties() );
         ds.setMaximumPoolSize( maximumPoolSize );
         ds.setMinimumIdle( minimumIdle );
+        applyHikariPoolSettings( ds );
         return ds;
     }
 
@@ -152,6 +194,7 @@ public class DataSourceConfig {
         ds.setDataSourceProperties( hikariDataSourceProperties() );
         ds.setMaximumPoolSize( maximumPoolSize );
         ds.setMinimumIdle( minimumIdle );
+        applyHikariPoolSettings( ds );
         // Catch connection leaks in tests (60s threshold).
         ds.setLeakDetectionThreshold( 60_000L );
         return ds;
