@@ -115,9 +115,12 @@ public class UnifiedOntologyUpdaterCli extends AbstractCLI {
     @Override
     protected void doWork() throws Exception {
         Resource res = new ClassPathResource( "/ubic/gemma/core/ontology/unifiedOntology.urls.txt" );
-        Set<String> urls = new BufferedReader( new InputStreamReader( res.getInputStream(), StandardCharsets.UTF_8 ) ).lines()
-                .filter( line -> !line.startsWith( "#" ) )
-                .collect( Collectors.toSet() );
+        Set<String> urls;
+        try ( BufferedReader reader = new BufferedReader( new InputStreamReader( res.getInputStream(), StandardCharsets.UTF_8 ) ) ) {
+            urls = reader.lines()
+                    .filter( line -> !line.startsWith( "#" ) )
+                    .collect( Collectors.toSet() );
+        }
         List<Path> downloadedFiles = new ArrayList<>();
         if ( skipDownload ) {
             log.info( "Skipping download of ontology files, will only create the TDB dataset from existing files." );
