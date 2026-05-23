@@ -173,7 +173,18 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
      * @param ad ad
      */
     public ArrayDesignValueObject( ArrayDesign ad ) {
-        super( ad );
+        this( ad, false );
+    }
+
+    /**
+     * Variant of {@link #ArrayDesignValueObject(ArrayDesign)} that propagates the
+     * {@code skipEvents} hint up to {@link AbstractCuratableValueObject}, letting the caller batch-
+     * hydrate the three {@code last*Event} associations off {@code CurationDetails} post-fetch (via
+     * {@link AbstractCuratableValueObject#applyLastEventTriple}) instead of paying ~3 SELECTs per
+     * row at construction time. See {@code ArrayDesignDaoImpl#loadLastEventsByArrayDesignIds}.
+     */
+    public ArrayDesignValueObject( ArrayDesign ad, boolean skipEvents ) {
+        super( ad, skipEvents );
         this.name = ad.getName();
         this.shortName = ad.getShortName();
         this.description = ad.getDescription();
