@@ -32,6 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -46,6 +47,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.persistence.hibernate.TypedResultTransformer;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AbstractCuratableDao;
 import ubic.gemma.persistence.util.*;
 import ubic.gemma.persistence.util.Filter;
@@ -743,6 +745,108 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
+    protected TypedResultTransformer<ArrayDesignValueObject> getValueObjectTransformer() {
+        TypedResultTransformer<ArrayDesignValueObject> defaultTransformer = super.getValueObjectTransformer();
+        return new TypedResultTransformer<ArrayDesignValueObject>() {
+            @Override
+            public ArrayDesignValueObject transformTuple( Object[] tuple, String[] aliases ) {
+                // The three CurationDetails.last*Event proxies are batch-hydrated in
+                // transformListTyped — passing skipEvents=true here leaves them untouched at
+                // row-mapping time. Mirrors ExpressionExperimentDaoImpl#getValueObjectTransformer.
+                ArrayDesign ad = ( ArrayDesign ) tuple[0];
+                if ( ad == null ) {
+                    return null;
+                }
+                initializeCachedFilteringResult( ad );
+                return new ArrayDesignValueObject( ad, true );
+            }
+
+            @Override
+            public List<ArrayDesignValueObject> transformListTyped( List<ArrayDesignValueObject> collection ) {
+                List<Long> ids = collection.stream()
+                        .filter( Objects::nonNull )
+                        .map( IdentifiableUtils::getRequiredId )
+                        .sorted()
+                        .distinct()
+                        .collect( Collectors.toList() );
+                // Batch-hydrate the three last*Event proxies that the row-mapping skipped. See
+                // #loadLastEventsByArrayDesignIds for the per-page SELECT shape.
+                Map<Long, AbstractCuratableValueObject.LastEventTriple> eventsByAdId =
+                        loadLastEventsByArrayDesignIds( ids );
+                for ( ArrayDesignValueObject vo : collection ) {
+                    if ( vo != null ) {
+                        vo.applyLastEventTriple( eventsByAdId.get( vo.getId() ) );
+                    }
+                }
+                return defaultTransformer.transformListTyped( collection );
+            }
+        };
+    }
+
+    /**
+     * Batch-load the three {@code last*Event} associations off {@code CurationDetails} for a page
+     * of ArrayDesigns, returning a per-AD {@link AbstractCuratableValueObject.LastEventTriple}. One
+     * SELECT per event-kind, all keyed on AD id (with {@code listByBatch} for chunking large
+     * pages); {@code eventType} ({@code fetch="join"} on the {@code AuditEvent} mapping) and
+     * {@code performer} ({@code lazy="false"} on the same mapping) come along automatically, so
+     * the downstream {@code AuditEventValueObject} constructor walks initialised state.
+     * <p>
+     * Replaces the six {@code left join fetch} lines on {@link #getFilteringQuery}: the join-fetch
+     * form bloated every multi-AD list query with three extra LEFT JOINs against
+     * {@code AUDIT_EVENT} + {@code AUDIT_EVENT_TYPE} regardless of whether the result-set payload
+     * was ever read. Mirrors {@code ExpressionExperimentDaoImpl#loadLastEventsByExperimentIds}.
+     */
+    private Map<Long, AbstractCuratableValueObject.LastEventTriple> loadLastEventsByArrayDesignIds( Collection<Long> adIds ) {
+        if ( adIds.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+        Session session = getSessionFactory().getCurrentSession();
+        //noinspection unchecked
+        List<Object[]> troubledRows = QueryUtils.listByBatch( session
+                        .createQuery( "select ad.id, e from ArrayDesign ad "
+                                + "join ad.curationDetails s "
+                                + "join s.lastTroubledEvent e "
+                                + "where ad.id in :adIds" ),
+                "adIds", adIds, 2048 );
+        //noinspection unchecked
+        List<Object[]> attentionRows = QueryUtils.listByBatch( session
+                        .createQuery( "select ad.id, e from ArrayDesign ad "
+                                + "join ad.curationDetails s "
+                                + "join s.lastNeedsAttentionEvent e "
+                                + "where ad.id in :adIds" ),
+                "adIds", adIds, 2048 );
+        //noinspection unchecked
+        List<Object[]> noteRows = QueryUtils.listByBatch( session
+                        .createQuery( "select ad.id, e from ArrayDesign ad "
+                                + "join ad.curationDetails s "
+                                + "join s.lastNoteUpdateEvent e "
+                                + "where ad.id in :adIds" ),
+                "adIds", adIds, 2048 );
+        Map<Long, AuditEvent> troubled = new HashMap<>();
+        for ( Object[] row : troubledRows ) {
+            troubled.put( ( Long ) row[0], ( AuditEvent ) row[1] );
+        }
+        Map<Long, AuditEvent> attention = new HashMap<>();
+        for ( Object[] row : attentionRows ) {
+            attention.put( ( Long ) row[0], ( AuditEvent ) row[1] );
+        }
+        Map<Long, AuditEvent> note = new HashMap<>();
+        for ( Object[] row : noteRows ) {
+            note.put( ( Long ) row[0], ( AuditEvent ) row[1] );
+        }
+        Map<Long, AbstractCuratableValueObject.LastEventTriple> result = new HashMap<>();
+        for ( Long adId : adIds ) {
+            AuditEvent t = troubled.get( adId );
+            AuditEvent a = attention.get( adId );
+            AuditEvent n = note.get( adId );
+            if ( t != null || a != null || n != null ) {
+                result.put( adId, new AbstractCuratableValueObject.LastEventTriple( t, a, n ) );
+            }
+        }
+        return result;
+    }
+
+    @Override
     public List<ArrayDesignValueObject> loadValueObjectsForEE( @Nullable Long eeId ) {
         if ( eeId == null ) {
             return Collections.emptyList();
@@ -1094,14 +1198,17 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Override
     protected Query getFilteringQuery( @Nullable Filters filters, @Nullable Sort sort ) {
         //language=HQL
+        // The three CurationDetails.last*Event proxies are batch-hydrated post-fetch via
+        // #loadLastEventsByArrayDesignIds and applied to each VO through
+        // AbstractCuratableValueObject#applyLastEventTriple — see getValueObjectTransformer().
+        // Reverting to the prior `left join fetch s.lastTroubledEvent / lastNeedsAttentionEvent /
+        // lastNoteUpdateEvent` form re-introduces three JOIN-FETCHes against AUDIT_EVENT (+
+        // AUDIT_EVENT_TYPE via fetch="join") on every AD list query, payload usually unread.
         return finishFilteringQuery( "select ad "
                 + "from ArrayDesign as ad "
                 + "left join fetch ad.curationDetails " + CURATION_DETAILS_ALIAS + " "
                 + "left join fetch ad.primaryTaxon " + PRIMARY_TAXON_ALIAS + " "
                 + "left join fetch ad.mergedInto m "
-                + "left join fetch s.lastNeedsAttentionEvent as eAttn "
-                + "left join fetch s.lastNoteUpdateEvent as eNote "
-                + "left join fetch s.lastTroubledEvent as eTrbl "
                 + "left join fetch ad.alternativeTo alt", filters, sort, groupByIfNecessary( sort, EXTERNAL_REFERENCE_ALIAS ) );
     }
 
@@ -1122,9 +1229,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                         + "left join ad.curationDetails " + CURATION_DETAILS_ALIAS + " "
                         + "left join ad.primaryTaxon " + PRIMARY_TAXON_ALIAS + " "
                         + "left join ad.mergedInto m "
-                        + "left join s.lastNeedsAttentionEvent as eAttn "
-                        + "left join s.lastNoteUpdateEvent as eNote "
-                        + "left join s.lastTroubledEvent as eTrbl "
                         + "left join ad.alternativeTo alt", filters, sort, groupByIfNecessary( sort, EXTERNAL_REFERENCE_ALIAS ) );
     }
 
@@ -1136,9 +1240,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                 + "left join ad.curationDetails " + CURATION_DETAILS_ALIAS + " "
                 + "left join ad.primaryTaxon " + PRIMARY_TAXON_ALIAS + " "
                 + "left join ad.mergedInto m "
-                + "left join s.lastNeedsAttentionEvent as eAttn "
-                + "left join s.lastNoteUpdateEvent as eNote "
-                + "left join s.lastTroubledEvent as eTrbl "
                 + "left join ad.alternativeTo alt", filters, null, null );
     }
 
