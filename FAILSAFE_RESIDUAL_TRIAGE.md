@@ -59,21 +59,26 @@ path — fix is upstream of the bag-initialization contract.
 - `GeneSetServiceTest.setUp` (3 errors, all setUps for tests that need
   `getTestPersistentGene`) — now pass.
 
-## Bucket C — Audit transactional rollback (3 remaining)
+## Bucket C — Audit transactional rollback (3 remaining) — RESOLVED 2026-05-22
 
-After fixing the date-equality assertions in `AuditTrailServiceImplTest`,
-3 still fail:
+> **Status**: all three failures already fixed in a prior session pass.
+> Re-verified 2026-05-22: `mvn verify -Dit.test='AuditTrailServiceImplTest'`
+> BUILD SUCCESS, 14/14 pass. Fixes are documented in-file (comments at
+> lines 172-176, 263-266, 290-304, 307-308 of `AuditTrailServiceImplTest`).
 
-- `testAddEventWhenTransactionIsRolledBack:248` — expected 1 event after
-  rollback, got 2. The audit event is persisted via a path that survives
-  the outer rollback.
-- `testAddEventWhenTransactionIsRolledBack2:265` — expected last event
-  to be UPDATE, got CREATE. Event ordering (date desc, id desc) probably
-  changed under HB6 / MySQL `datetime(3)` precision.
-- `testAddTroubleEventWhenCurationDetailsAreModified:285` —
-  `session.flush()` on an `sessionFactory.openSession()` instance not
-  bound to the test's `pta.getTransaction(...)` transaction throws
-  `TransactionRequired: no transaction is in progress`. HB6 tightened
+- `testAddEventWhenTransactionIsRolledBack:248` — plain `addUpdateEvent`
+  does NOT route through @AuditedOnError REQUIRES_NEW (only the Throwable
+  overload does); audit row IS rolled back. Assertion correct as-is.
+- `testAddEventWhenTransactionIsRolledBack2:265` — fixed by replacing
+  positional `events.get(0)` with `stream.filter(UPDATE)`. The audit bag
+  is `order-by="date"` only at `datetime(3)` precision, so CREATE +
+  REQUIRES_NEW UPDATE can land in the same millisecond.
+- `testAddTroubleEventWhenCurationDetailsAreModified:285` — fixed (a)
+  by switching from `sessionFactory.openSession()` to
+  `sessionFactory.getCurrentSession()` (HB6 requires flush on a bound
+  session), and (b) by dropping a now-redundant outer-tx `addUpdateEvent`
+  that deadlocked with the REQUIRES_NEW Throwable overload on the
+  AuditTrail.lastEvent FK row.
   this.
 
 **Needed:** the audit-lastEvent-denorm work + REQUIRES_NEW propagation
