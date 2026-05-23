@@ -27,27 +27,26 @@ public class SpringContextUtilsTest {
     }
 
     @AfterEach
-    public void clearRequireExplicitProfileSystemProperty() {
-        System.clearProperty( SpringContextUtils.REQUIRE_EXPLICIT_PROFILE_PROPERTY );
+    public void clearAllowDevFallbackSystemProperty() {
+        System.clearProperty( SpringContextUtils.ALLOW_DEV_FALLBACK_PROPERTY );
     }
 
     @Test
-    public void testPrepareContextFallsBackToDevWithLoudWarnWhenNoProfileActive() {
+    public void testPrepareContextFailsFastWhenNoProfileActive() {
+        GenericApplicationContext context = new GenericApplicationContext();
+        assertThrows( IllegalStateException.class, () -> SpringContextUtils.prepareContext( context ) );
+    }
+
+    @Test
+    public void testPrepareContextFallsBackToDevWhenAllowDevFallbackIsSet() {
+        System.setProperty( SpringContextUtils.ALLOW_DEV_FALLBACK_PROPERTY, "true" );
         GenericApplicationContext context = new GenericApplicationContext();
         SpringContextUtils.prepareContext( context );
         assertTrue( context.getEnvironment().acceptsProfiles( EnvironmentProfiles.DEV ) );
     }
 
     @Test
-    public void testPrepareContextFailsFastWhenRequireExplicitProfileIsSet() {
-        System.setProperty( SpringContextUtils.REQUIRE_EXPLICIT_PROFILE_PROPERTY, "true" );
-        GenericApplicationContext context = new GenericApplicationContext();
-        assertThrows( IllegalStateException.class, () -> SpringContextUtils.prepareContext( context ) );
-    }
-
-    @Test
     public void testPrepareContextDoesNotFailFastWhenProfileExplicitlyActive() {
-        System.setProperty( SpringContextUtils.REQUIRE_EXPLICIT_PROFILE_PROPERTY, "true" );
         GenericApplicationContext context = new GenericApplicationContext();
         context.getEnvironment().addActiveProfile( EnvironmentProfiles.TEST );
         SpringContextUtils.prepareContext( context );

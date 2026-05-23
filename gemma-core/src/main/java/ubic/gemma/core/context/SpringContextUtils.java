@@ -46,18 +46,18 @@ public class SpringContextUtils {
     private static final Log log = LogFactory.getLog( SpringContextUtils.class.getName() );
 
     /**
-     * System property / environment variable that, when set to {@code true}, makes
-     * {@link #prepareContext(ApplicationContext)} fail-fast instead of silently falling
-     * back to the {@code dev} profile when no environment profile is active.
+     * System property / environment variable that, when set to {@code false}, restores the
+     * legacy silent-fallback behaviour of {@link #prepareContext(ApplicationContext)} (i.e.
+     * activate the {@code dev} profile when no environment profile is otherwise resolved).
      * <p>
-     * The env-var form ({@code GEMMA_REQUIRE_EXPLICIT_PROFILE}) is intended for container
-     * deployments as an extra safety net; the Dockerfile already sets
-     * {@code -Dspring.profiles.active=production}, so the fallback path should never be
-     * hit in production. The system-property form ({@code gemma.profile.requireExplicit})
-     * lets developers opt in locally without polluting their shell environment.
+     * By default, the fallback is OFF and a missing profile throws
+     * {@link IllegalStateException} — see CONFIG_AUDIT.md HIGH #3. The escape hatch exists
+     * for legacy scripts that genuinely intended {@code dev}; new code should set
+     * {@code -Dspring.profiles.active=<production|dev|test>} or {@code SPRING_PROFILES_ACTIVE}
+     * explicitly. The escape hatch is expected to be removed in a follow-up release.
      */
-    static final String REQUIRE_EXPLICIT_PROFILE_PROPERTY = "gemma.profile.requireExplicit";
-    static final String REQUIRE_EXPLICIT_PROFILE_ENV = "GEMMA_REQUIRE_EXPLICIT_PROFILE";
+    static final String ALLOW_DEV_FALLBACK_PROPERTY = "gemma.profile.allowDevFallback";
+    static final String ALLOW_DEV_FALLBACK_ENV = "GEMMA_ALLOW_DEV_FALLBACK";
 
     /**
      * Obtain an application context for Gemma.
@@ -111,9 +111,11 @@ public class SpringContextUtils {
      * Perform the following steps:
      * <ul>
      * <li>ensure that the security context holder strategy is set to {@link SecurityContextHolder#MODE_INHERITABLETHREADLOCAL}</li>
-     * <li>activate the {@code dev} profile as a fallback if no profile are active, unless
-     * {@code -Dgemma.profile.requireExplicit=true} or {@code GEMMA_REQUIRE_EXPLICIT_PROFILE=true}
-     * is set, in which case startup fails with an {@link IllegalStateException}</li>
+     * <li>fail-fast with {@link IllegalStateException} if no environment profile is active
+     * (CONFIG_AUDIT.md HIGH #3); set {@code -Dspring.profiles.active=<production|dev|test>}
+     * or the {@code SPRING_PROFILES_ACTIVE} env var explicitly. The legacy silent fallback to
+     * {@code dev} can be re-enabled with {@code -Dgemma.profile.allowDevFallback=true} or
+     * {@code GEMMA_ALLOW_DEV_FALLBACK=true} — escape hatch for legacy scripts only.</li>
      * <li>activate the {@code scheduler} profile if {@code quartzOn} is set</li>
      * <li>verify that exactly one environment profile is active (see {@link EnvironmentProfiles})</li>
      * <li>log an informative message with the context version and active profiles</li>
@@ -128,20 +130,24 @@ public class SpringContextUtils {
         if ( context instanceof ConfigurableApplicationContext ) {
             ConfigurableApplicationContext cac = ( ConfigurableApplicationContext ) context;
             if ( !cac.getEnvironment().acceptsProfiles( EnvironmentProfiles.PRODUCTION, EnvironmentProfiles.DEV, EnvironmentProfiles.TEST ) ) {
-                if ( requireExplicitProfile() ) {
+                if ( !allowDevFallback() ) {
                     throw new IllegalStateException( String.format(
-                            "No Spring environment profile is active and explicit profiles are required (%s / %s is true). "
-                                    + "Set -Dspring.profiles.active=<%s|%s|%s> explicitly.",
-                            REQUIRE_EXPLICIT_PROFILE_PROPERTY, REQUIRE_EXPLICIT_PROFILE_ENV,
-                            EnvironmentProfiles.PRODUCTION, EnvironmentProfiles.DEV, EnvironmentProfiles.TEST ) );
+                            "No Spring environment profile is active. Set -Dspring.profiles.active=<%s|%s|%s> "
+                                    + "or the %s environment variable explicitly. "
+                                    + "The legacy silent fallback to '%s' has been removed (CONFIG_AUDIT.md HIGH #3) "
+                                    + "because it masks a missing -Dspring.profiles.active=production in container deployments. "
+                                    + "To restore the legacy fallback for a specific script, set -D%s=true or %s=true.",
+                            EnvironmentProfiles.PRODUCTION, EnvironmentProfiles.DEV, EnvironmentProfiles.TEST,
+                            "SPRING_PROFILES_ACTIVE", EnvironmentProfiles.DEV,
+                            ALLOW_DEV_FALLBACK_PROPERTY, ALLOW_DEV_FALLBACK_ENV ) );
                 }
                 log.warn( String.format(
-                        "No Spring environment profile is active; falling back to '%s'. "
+                        "No Spring environment profile is active; legacy fallback to '%s' is enabled via %s/%s. "
                                 + "This is a foot-gun if Gemma.properties points at a production database. "
-                                + "Set -Dspring.profiles.active=<%s|%s|%s> explicitly, or set %s=true (or -D%s=true) to fail-fast instead.",
+                                + "Set -Dspring.profiles.active=<%s|%s|%s> explicitly and remove the fallback flag.",
                         EnvironmentProfiles.DEV,
-                        EnvironmentProfiles.PRODUCTION, EnvironmentProfiles.DEV, EnvironmentProfiles.TEST,
-                        REQUIRE_EXPLICIT_PROFILE_ENV, REQUIRE_EXPLICIT_PROFILE_PROPERTY ) );
+                        ALLOW_DEV_FALLBACK_PROPERTY, ALLOW_DEV_FALLBACK_ENV,
+                        EnvironmentProfiles.PRODUCTION, EnvironmentProfiles.DEV, EnvironmentProfiles.TEST ) );
                 cac.getEnvironment().addActiveProfile( EnvironmentProfiles.DEV );
             }
             // enable the scheduler profile if quartzOn is set to true
@@ -173,16 +179,16 @@ public class SpringContextUtils {
     }
 
     /**
-     * @return {@code true} if either the {@link #REQUIRE_EXPLICIT_PROFILE_PROPERTY} system
-     * property or the {@link #REQUIRE_EXPLICIT_PROFILE_ENV} environment variable is set to
+     * @return {@code true} if either the {@link #ALLOW_DEV_FALLBACK_PROPERTY} system
+     * property or the {@link #ALLOW_DEV_FALLBACK_ENV} environment variable is set to
      * {@code true} (case-insensitive). The system property takes precedence.
      */
-    private static boolean requireExplicitProfile() {
-        String sys = System.getProperty( REQUIRE_EXPLICIT_PROFILE_PROPERTY );
+    private static boolean allowDevFallback() {
+        String sys = System.getProperty( ALLOW_DEV_FALLBACK_PROPERTY );
         if ( sys != null ) {
             return Boolean.parseBoolean( sys );
         }
-        String env = System.getenv( REQUIRE_EXPLICIT_PROFILE_ENV );
+        String env = System.getenv( ALLOW_DEV_FALLBACK_ENV );
         return env != null && Boolean.parseBoolean( env );
     }
 }
