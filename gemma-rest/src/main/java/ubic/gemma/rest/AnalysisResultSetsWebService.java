@@ -261,6 +261,60 @@ public class AnalysisResultSetsWebService {
     }
 
     /**
+     * Histogram-binned p-values for a differential-expression result set.
+     * <p>
+     * Computed on the fly with a single {@code GROUP BY FLOOR(p * bins)} aggregation over
+     * {@code DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT} keyed on the result-set FK; rows with a
+     * {@code NULL} p-value are excluded. Replaces UIB's "fetch full TSV + bin client-side" path
+     * for the histogram view — for a ~20K-probe microarray result set this is one indexed
+     * group-by, well under 200ms.
+     */
+    @GET
+    @Path("/{resultSet}/pvalueDistribution")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Binned p-value distribution for a differential-expression result set",
+            description = "Returns a histogram with `bins` equal-width bins over [0, 1]. The `column` "
+                    + "parameter selects between raw (PVALUE) and corrected (CORRECTED_PVALUE) p-values; "
+                    + "rows with a null p-value in the chosen column are excluded. Bin i covers "
+                    + "[i/bins, (i+1)/bins); the last bin is closed on the right so a p-value of exactly 1.0 "
+                    + "is counted in the final bin.",
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = PvalueDistributionResponseDataObject.class))),
+                    @ApiResponse(responseCode = "204", description = "The result set has no non-null p-values in the requested column."),
+                    @ApiResponse(responseCode = "400", description = "Invalid `bins` (must be 1..1000) or `column` (must be 'raw' or 'corrected').",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "404", description = "The analysis result set could not be found.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public Response getPvalueDistribution(
+            @PathParam("resultSet") ExpressionAnalysisResultSetArg analysisResultSet,
+            @Parameter(description = "Number of equal-width bins over [0, 1]; must be between 1 and 1000.",
+                    schema = @Schema(defaultValue = "20", minimum = "1", maximum = "1000"))
+            @QueryParam("bins") @DefaultValue("20") int bins,
+            @Parameter(description = "Which p-value column to bin.",
+                    schema = @Schema(defaultValue = "corrected", allowableValues = { "raw", "corrected" }))
+            @QueryParam("column") @DefaultValue("corrected") String column ) {
+        if ( bins < 1 || bins > 1000 ) {
+            throw new BadRequestException( "The 'bins' parameter must be between 1 and 1000 (got " + bins + ")." );
+        }
+        if ( !"raw".equals( column ) && !"corrected".equals( column ) ) {
+            throw new BadRequestException( "The 'column' parameter must be 'raw' or 'corrected' (got '" + column + "')." );
+        }
+        // resolves through the AbstractEntityArgService.getEntity path which 404s if missing and
+        // enforces ACL on the loaded result set.
+        ExpressionAnalysisResultSet ears = expressionAnalysisResultSetArgService.getEntity( analysisResultSet );
+        long[] counts = expressionAnalysisResultSetService.binPvalues( ears.getId(), column, bins );
+        long total = 0;
+        for ( long c : counts ) {
+            total += c;
+        }
+        if ( total == 0 ) {
+            return Response.noContent().build();
+        }
+        return Response.ok( respond( new PvalueDistributionValueObject( ears.getId(), column, counts ) ) ).build();
+    }
+
+    /**
      * Disk-cache + sendfile path for the TSV representation of a result set.
      * <p>
      * Result sets are immutable post-creation; the cached gzipped TSV under
@@ -337,6 +391,16 @@ public class AnalysisResultSetsWebService {
 
     private PaginatedResultsResponseDataObjectDifferentialExpressionAnalysisResultSetValueObject paginateResults( DifferentialExpressionAnalysisResultSetValueObject resultSet, @Nullable Double threshold, int offset, int limit, long totalElements ) {
         return new PaginatedResultsResponseDataObjectDifferentialExpressionAnalysisResultSetValueObject( resultSet, threshold, offset, limit, totalElements );
+    }
+
+    /**
+     * Concrete {@link ResponseDataObject} type for the pvalueDistribution endpoint so Swagger has a
+     * non-generic schema to reference.
+     */
+    public static class PvalueDistributionResponseDataObject extends ResponseDataObject<PvalueDistributionValueObject> {
+        public PvalueDistributionResponseDataObject( PvalueDistributionValueObject payload ) {
+            super( payload );
+        }
     }
 
     /**

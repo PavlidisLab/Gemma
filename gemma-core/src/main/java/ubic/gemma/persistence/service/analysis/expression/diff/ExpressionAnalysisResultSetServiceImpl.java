@@ -157,4 +157,10 @@ public class ExpressionAnalysisResultSetServiceImpl extends AbstractFilteringVoE
     public Histogram loadPvalueDistribution( ExpressionAnalysisResultSet resultSet ) {
         return voDao.loadPvalueDistribution( resultSet );
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long[] binPvalues( Long resultSetId, String column, int numberOfBins ) {
+        return voDao.binPvalues( resultSetId, column, numberOfBins );
+    }
 }
