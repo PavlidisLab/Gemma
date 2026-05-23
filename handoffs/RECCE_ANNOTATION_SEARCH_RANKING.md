@@ -110,7 +110,42 @@ class AnnotationSearchRankingStrategyTest {
 
 `AnnotationsWebService.searchAnnotations` gains an optional `?rank=lucene|usage|coverage|composite` (default: `lucene` for back-compat). Resolves via a `Map<String, AnnotationSearchRankingStrategy>` so adding a new strategy is one bean. Document in the OpenAPI block.
 
-### 5. Optional — synonym walk for query expansion
+### 5. Enrich search hits with `definition` + `parentLabel(s)` (Paul, 2026-05-23)
+
+The current `/annotations/search` response carries `value`, `valueUri`, `category`, `categoryUri`, `usageCount` — no `definition`, no parent. Paul wants both surfaced so the typeahead can disambiguate near-name terms ("chronic disease" vs "chronic kidney disease") via the term's definition and its nearest is-a / part-of parent.
+
+**Surface exists.** `gemma-core/src/main/java/ubic/gemma/core/ontology/OntologyService.java`:
+- `getDefinition(String uri, long timeout, TimeUnit)` — returns the obo:IAO_0000115 / rdfs:comment text.
+- `getParents(Collection<OntologyTerm>, boolean direct, boolean includeAdditionalProperties, long timeout, TimeUnit)` — `direct=true` gives the nearest parents only; `includeAdditionalProperties=true` walks `part_of` (BFO:0000050) alongside the default `rdfs:subClassOf`. The combo is exactly "nearest is_a OR part_of".
+
+**Shape change.** Add to `AnnotationSearchResultValueObject`:
+```java
+@Nullable String definition;
+@Nullable List<TermRef> parents;   // each {uri, label}; null = not enriched (lazy-load via /annotations/term)
+```
+`TermRef` is a tiny record/value-class; reuse `OntologyTermSimpleValueObject` (already exists in this file, lines ~615) if its shape fits.
+
+**Cost mitigation — top-N only.** 435 hits × 2 lookups each is too much per typeahead keystroke. Enrich only the top 25 hits inline; leave `definition=null, parents=null` for the rest as a sentinel the UI can use to trigger lazy-load via `/annotations/term?uri=X`.
+
+```java
+List<CharacteristicValueObject> topN = rawHits.subList(0, Math.min(25, rawHits.size()));
+Set<String> topUris = topN.stream()
+    .map(CharacteristicValueObject::getValueUri).filter(Objects::nonNull)
+    .collect(Collectors.toSet());
+Map<String, String> defByUri = batchGetDefinitions(topUris, remainingTimeoutMs);
+Map<String, List<OntologyTermSimpleValueObject>> parentsByUri = batchGetDirectParents(topUris, remainingTimeoutMs);
+// Then in the merge loop: if vo.valueUri in topUris, attach def + parents; otherwise leave null.
+```
+
+`batchGetDefinitions` and `batchGetDirectParents` are thin helpers that call `OntologyService` once with the full set rather than per-URI (the existing service API takes collections).
+
+**Lazy-load endpoint already exists.** `/annotations/term?uri=X` (`AnnotationsWebService:186`) already returns definition + label + obsolete + usageCount. The UI's hover-fetch path is one round-trip. Add `parents: List<OntologyTermSimpleValueObject>` to the existing `OntologyTermValueObject` (lines ~607-613) for consistency with the search VO.
+
+**Mock-test alongside the ranker.** Same fixture pattern — pre-canned definition strings and parent lists per URI; the test asserts that the top-N positions carry non-null `definition` and `parents`, the rest carry nulls, and the lazy-load endpoint returns the same shape.
+
+**What NOT to do.** Don't pre-resolve definitions in `OntologyService.findExperimentsCharacteristicTags` itself — keep ontology-search and metadata-enrichment as separate stages so the ranker can reorder before enrichment happens.
+
+### 6. Optional — synonym walk for query expansion
 
 Out of scope for the first iteration, but the real win for "chronic itch" requires the search to recognise `itch ≈ pruritus`. Options:
 - Walk the in-memory ontology service for `exactSynonym` / `relatedSynonym` annotations and OR them into the Lucene query.
