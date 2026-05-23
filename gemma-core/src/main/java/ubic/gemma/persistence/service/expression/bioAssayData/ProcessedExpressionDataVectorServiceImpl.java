@@ -405,6 +405,23 @@ public class ProcessedExpressionDataVectorServiceImpl
     private void addExperimentGeneVectors( Collection<ExperimentExpressionLevelsValueObject> vos,
             ExpressionExperiment ee, Collection<DoubleVectorValueObject> vectors, boolean keepGeneNonSpecific,
             @Nullable String consolidateMode ) {
+        // Pre-collect all referenced gene ids and resolve in one batch instead of calling
+        // geneService.load(gId) per (vector, gene) — for PCA + gene-level expression endpoints
+        // that is 100-300 redundant single-row loads per EE.
+        Set<Long> geneIds = new HashSet<>();
+        for ( DoubleVectorValueObject v : vectors ) {
+            if ( !v.getExpressionExperiment().getId().equals( ee.getId() ) ) {
+                continue;
+            }
+            if ( v.getGenes() != null ) {
+                geneIds.addAll( v.getGenes() );
+            }
+        }
+        Map<Long, Gene> genesById = new HashMap<>( geneIds.size() );
+        for ( Gene g : geneService.load( geneIds ) ) {
+            genesById.put( g.getId(), g );
+        }
+
         Map<Gene, List<DoubleVectorValueObject>> vectorsPerGene = new HashMap<>();
         for ( DoubleVectorValueObject v : vectors ) {
             if ( !v.getExpressionExperiment().getId().equals( ee.getId() ) ) {
@@ -419,7 +436,7 @@ public class ProcessedExpressionDataVectorServiceImpl
             }
 
             for ( Long gId : v.getGenes() ) {
-                Gene g = geneService.load( gId );
+                Gene g = genesById.get( gId );
                 if ( g != null ) {
                     if ( !vectorsPerGene.containsKey( g ) ) {
                         vectorsPerGene.put( g, new LinkedList<>() );
@@ -442,6 +459,21 @@ public class ProcessedExpressionDataVectorServiceImpl
     private void addExperimentGeneVectorsWithDiffExStats( Collection<ExperimentExpressionLevelsValueObject> vos,
             ExpressionExperiment ee, Collection<DoubleVectorValueObject> vectors, boolean keepGeneNonSpecific,
             @Nullable String consolidateMode, Map<Long, DifferentialExpressionValueObject> statsByProbeId ) {
+        // Batch-resolve referenced genes once; mirror of the addExperimentGeneVectors hoist.
+        Set<Long> geneIds = new HashSet<>();
+        for ( DoubleVectorValueObject v : vectors ) {
+            if ( !v.getExpressionExperiment().getId().equals( ee.getId() ) ) {
+                continue;
+            }
+            if ( v.getGenes() != null ) {
+                geneIds.addAll( v.getGenes() );
+            }
+        }
+        Map<Long, Gene> genesById = new HashMap<>( geneIds.size() );
+        for ( Gene g : geneService.load( geneIds ) ) {
+            genesById.put( g.getId(), g );
+        }
+
         Map<Gene, List<DoubleVectorValueObject>> vectorsPerGene = new HashMap<>();
         Map<Gene, DifferentialExpressionValueObject> bestStatsPerGene = new HashMap<>();
         for ( DoubleVectorValueObject v : vectors ) {
@@ -459,7 +491,7 @@ public class ProcessedExpressionDataVectorServiceImpl
             }
 
             for ( Long gId : v.getGenes() ) {
-                Gene g = geneService.load( gId );
+                Gene g = genesById.get( gId );
                 if ( g != null ) {
                     if ( !vectorsPerGene.containsKey( g ) ) {
                         vectorsPerGene.put( g, new LinkedList<>() );
