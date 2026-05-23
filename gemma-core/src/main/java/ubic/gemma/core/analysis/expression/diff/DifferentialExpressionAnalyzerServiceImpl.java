@@ -92,10 +92,14 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
             DifferentialExpressionAnalyzerServiceImpl.log
                     .info( "Deleting old differential expression analysis for experiment " + expressionExperiment
                             .getShortName() + ": Analysis ID=" + de.getId() );
+            // Capture result-set ids while the entity is still attached so we can clean their
+            // per-result-set TSV caches after the DB delete commits.
+            List<Long> resultSetIds = collectResultSetIds( de );
             differentialExpressionAnalysisService.remove( de );
 
             this.deleteStatistics( expressionExperiment, de );
             this.deleteAnalysisFiles( de );
+            deleteResultSetTsvCaches( resultSetIds );
             result++;
         }
 
@@ -118,10 +122,14 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         DifferentialExpressionAnalyzerServiceImpl.log
                 .info( "Deleting old differential expression analysis for experiment " + expressionExperiment
                         .getShortName() + " Analysis ID=" + existingAnalysis.getId() );
+        // Capture result-set ids while the entity is still attached so we can clean their
+        // per-result-set TSV caches after the DB delete commits.
+        List<Long> resultSetIds = collectResultSetIds( existingAnalysis );
         differentialExpressionAnalysisService.remove( existingAnalysis );
 
         this.deleteStatistics( expressionExperiment, existingAnalysis );
         expressionDataFileService.deleteDiffExArchiveFile( existingAnalysis );
+        deleteResultSetTsvCaches( resultSetIds );
     }
 
     @Override
@@ -392,6 +400,33 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
      */
     private void deleteAnalysisFiles( DifferentialExpressionAnalysis analysis ) {
         expressionDataFileService.deleteDiffExArchiveFile( analysis );
+    }
+
+    /**
+     * Collect the result-set ids associated with an analysis so its per-result-set TSV caches can be cleaned
+     * up after the entity is removed. Thaws the analysis first because callers may pass a lazy graph and this
+     * service runs at {@code Propagation.NEVER}, so the lazy {@code resultSets} collection cannot be
+     * initialized on demand from here.
+     */
+    private List<Long> collectResultSetIds( DifferentialExpressionAnalysis analysis ) {
+        DifferentialExpressionAnalysis thawed = differentialExpressionAnalysisService.thaw( analysis );
+        List<Long> ids = new ArrayList<>( thawed.getResultSets().size() );
+        for ( ExpressionAnalysisResultSet rs : thawed.getResultSets() ) {
+            if ( rs.getId() != null ) {
+                ids.add( rs.getId() );
+            }
+        }
+        return ids;
+    }
+
+    /**
+     * Clear the per-result-set TSV caches under {@code <dataDir>/resultSets/}. Best-effort; cache misses are
+     * silent and any IO failure is logged downstream by {@code ExpressionDataFileService}.
+     */
+    private void deleteResultSetTsvCaches( List<Long> resultSetIds ) {
+        for ( Long rsId : resultSetIds ) {
+            expressionDataFileService.deleteDifferentialExpressionResultSetTsvFile( rsId );
+        }
     }
 
     private void deleteOldAnalyses( ExpressionExperiment expressionExperiment,
