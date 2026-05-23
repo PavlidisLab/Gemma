@@ -21,6 +21,7 @@ package ubic.gemma.core.loader.expression.geo;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.core.io.ClassPathResource;
 import ubic.gemma.core.config.Settings;
@@ -35,6 +36,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -45,12 +47,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @Slf4j
 @Tag("slow")
+@Tag("network")
 @ExtendWith(NetworkAvailableExtension.class)
 public class DatasetCombinerTest {
 
     private Collection<GeoDataset> gds;
 
     @Test
+    @Timeout(value = 120, unit = TimeUnit.SECONDS)
     @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testFindGDSGrouping() {
         Collection<String> result = DatasetCombiner.findGDSforGSE( "GSE674", Settings.getString( "ncbi.efetch.apikey" ) );
@@ -59,6 +63,7 @@ public class DatasetCombinerTest {
     }
 
     @Test
+    @Timeout(value = 120, unit = TimeUnit.SECONDS)
     @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testFindGSEForGDS() {
         Collection<String> result = DatasetCombiner.findGSEforGDS( "GDS472", Settings.getString( "ncbi.efetch.apikey" ) );
@@ -109,6 +114,7 @@ public class DatasetCombinerTest {
     }
 
     @Test
+    @Timeout(value = 120, unit = TimeUnit.SECONDS)
     @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testFindGSE267() throws Exception {
         Collection<String> result = DatasetCombiner.findGDSforGSE( "GSE267", Settings.getString( "ncbi.efetch.apikey" ) );
