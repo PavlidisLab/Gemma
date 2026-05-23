@@ -228,9 +228,13 @@ public class ProcessedExpressionDataVectorServiceImpl
         // a second round-trip; this is the same data the endpoint already used to rank its top-N.
         Map<Long, DifferentialExpressionValueObject> statsByProbeId = this.getDiffExStatsByProbeId( diffExResultSetId, threshold, max );
 
+        // The vector retrieval is loop-invariant — the result set fixes the analyzed BioAssaySet, so the
+        // vectors are identical on every iteration. Hoist out of the loop to avoid re-thawing the result
+        // set, re-running findByResultSet, and re-fetching the DEDV vectors N times.
+        Collection<DoubleVectorValueObject> vectors = this.getDiffExVectors( diffExResultSetId, threshold, max );
+
         // Adapted from DEDV controller
         for ( ExpressionExperiment ee : ees ) {
-            Collection<DoubleVectorValueObject> vectors = this.getDiffExVectors( diffExResultSetId, threshold, max );
             this.addExperimentGeneVectorsWithDiffExStats( vos, ee, vectors, keepGeneNonSpecific, consolidateMode, statsByProbeId );
         }
 
