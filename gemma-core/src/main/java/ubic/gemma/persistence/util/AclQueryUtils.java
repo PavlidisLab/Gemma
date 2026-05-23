@@ -404,8 +404,11 @@ public class AclQueryUtils {
         // we don't want to interleave with).
         Long resolved;
         try ( org.hibernate.StatelessSession ss = sf.openStatelessSession() ) {
+            // Don't pass a result class: Hibernate 6 requires it to be concrete with
+            // a single-arg constructor (Number is abstract; Long has no Long(Number)
+            // ctor). The MySQL bigint comes back as java.lang.Long anyway.
             Number id = (Number) ss.createNativeQuery(
-                            "select id from acl_class where class = :c", Number.class )
+                            "select id from acl_class where class = :c" )
                     .setParameter( "c", className )
                     .getSingleResult();
             resolved = id.longValue();
