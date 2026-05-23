@@ -157,6 +157,26 @@ Together these address every P1/P2 hotspot called out in the perf-priority memo.
    dev → phase2-acl-migrate catch-up merge, ship phase2-acl-migrate
    as Gemma 2.0.
 
+## Delta after close (post-#157 verification)
+
+Confirmed `mvn -pl gemma-core test -Dtest=GeneDaoTest` post-`3e9764df13`
+(ACL test-context @Bean registration) and `94a16ddadf` (PCA hoist
+merge):
+
+- `IllegalStateException: AclQueryUtils.sessionFactory null` is GONE
+  in test contexts wired through `BaseDatabaseTestContextConfiguration`.
+  That was the root cause of the 53F+15E surefire signal earlier in
+  the day; #157 closed it.
+- `GeneDaoTest.testGetCompositeSequences` still errors, but with a
+  DIFFERENT shape: `NoResultException: No result found for query
+  [select id from acl_class where class = ?]`. The H2 fixture
+  (`V9000__acl_contract_fixture.sql`) populates `acl_class` for the
+  EE-side rows only — Gene (and likely CompositeSequence,
+  ArrayDesign, BioMaterial) need rows too. Pre-existing fixture gap,
+  not perf-wave regression. First task for next session.
+
+Tip at session close: `94a16ddadf`.
+
 ## Cross-references
 
 - `handoffs/STATUS_SESSION_SNAPSHOT_2026_05_22.md` — prior snapshot.
