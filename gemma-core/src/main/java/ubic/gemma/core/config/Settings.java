@@ -61,7 +61,9 @@ public class Settings {
             throw new RuntimeException( e );
         }
         // step through the result and do a final round of variable substitution.
-        PropertyPlaceholderHelper placeholderHelper = new PropertyPlaceholderHelper( "${", "}", ":", false );
+        // Spring 6.2 deprecated the 4-arg constructor in favor of the 5-arg one
+        // (adds an escape-character param). null = no escape, preserving prior behavior.
+        PropertyPlaceholderHelper placeholderHelper = new PropertyPlaceholderHelper( "${", "}", ":", null, false );
         for ( Iterator<String> it = Settings.config.getKeys(); it.hasNext(); ) {
             String key = it.next();
             Object val = Settings.config.getProperty( key );

@@ -26,7 +26,6 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.jdbc.Expectations;
 import org.hibernate.persister.entity.EntityPersister;
@@ -49,7 +48,6 @@ import ubic.gemma.persistence.util.IdentifiableUtils;
 import ubic.gemma.persistence.util.Thaws;
 
 import org.springframework.lang.Nullable;
-import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -218,10 +216,17 @@ class DifferentialExpressionAnalysisDaoImpl extends AbstractDao<DifferentialExpr
     private void insertRowsAndAssignGeneratedKeys( String insertSql, PreparedStatement insertStmt, List<?> objects, EntityPersister persister, SessionImplementor session ) throws SQLException {
         statementLogger.logStatement( insertSql + String.format( " [repeated %d times]", objects.size() ) );
         ensureExpectedRowsAreInserted( insertSql, insertStmt, insertStmt.executeBatch() );
+        // Direct JDBC read of getGeneratedKeys() instead of the deprecated
+        // IdentifierGeneratorHelper.getGeneratedIdentity(idProp, rs, PostInsertIdentityPersister, ...)
+        // — both PostInsertIdentityPersister and the helper method are marked for removal
+        // in Hibernate 7. DifferentialExpressionAnalysisResult's id is a Long, column 1 of the
+        // single-key result set, so rs.getLong(1) suffices.
         try ( ResultSet rs = insertStmt.getGeneratedKeys() ) {
-            String idProp = persister.getIdentifierPropertyName();
             for ( Object object : objects ) {
-                Serializable id = ( Serializable ) IdentifierGeneratorHelper.getGeneratedIdentity( idProp, rs, ( org.hibernate.id.PostInsertIdentityPersister ) persister, ( org.hibernate.type.descriptor.WrapperOptions ) session );
+                if ( !rs.next() ) {
+                    throw new HibernateException( "Expected a generated identity row for every batched insert into " + persister.getEntityName() );
+                }
+                Long id = rs.getLong( 1 );
                 persister.setIdentifier( object, id, session );
             }
         }
