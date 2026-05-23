@@ -1554,13 +1554,13 @@
 	</reporting>
 	<properties>
 		<!--
-		Renovations Phase 3: target bytecode 21 (was 17 during Phase 2; 11 during Phase 0/1;
-		Java 8 from pavlab-starter-parent originally). Spring 6.2 / Hibernate 6.6 / Jersey 3
-		are all JDK 21 LTS compatible. Their bundled CGLIB/ASM/ByteBuddy are
-		class-file-version-current, so we no longer need to hold bytecode below the runtime
-		JVM. Build + runtime JDK is amazon-corretto-21 (see RENOVATIONS.md).
+		Renovations Phase 3 (2026-05-22): target bytecode 25 (was 21 earlier in Phase 3;
+		17 during Phase 2; 11 during Phase 0/1; Java 8 from pavlab-starter-parent originally).
+		Production Tomcat runs JDK 25 LTS, so we hold bytecode at the runtime level.
+		Spring 6.2 / Hibernate 6.6 / Jersey 3 + their bundled CGLIB/ASM/ByteBuddy are all
+		class-file-version-current. Local build JDK: temurin-25 (see CLAUDE.md).
 		-->
-		<maven.compiler.release>21</maven.compiler.release>
+		<maven.compiler.release>25</maven.compiler.release>
 		<!-- Renovations Phase 3: emit parameter names in bytecode so Spring's
 		     DefaultParameterNameDiscoverer can resolve @PreAuthorize SpEL named bindings
 		     like `hasPermission(#group, 'administration')`. Without -parameters the

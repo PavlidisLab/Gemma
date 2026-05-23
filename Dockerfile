@@ -19,7 +19,7 @@
 # ---------------------------------------------------------------------------
 # Stage 1: build the WAR
 # ---------------------------------------------------------------------------
-FROM maven:3.9-eclipse-temurin-21 AS build
+FROM maven:3.9-eclipse-temurin-25 AS build
 
 WORKDIR /build
 
@@ -74,7 +74,7 @@ RUN ls -lh /build/gemma-rest/target/gemma-rest.war
 # Tomcat 10.1 is the jakarta.servlet 6 baseline. Tomcat 9 ships javax.servlet 4
 # and will NOT load gemma-rest -- after the servlet6 cutover the war references
 # jakarta.* packages exclusively.
-FROM tomcat:10.1-jdk21-temurin AS runtime
+FROM tomcat:10.1-jdk25-temurin AS runtime
 
 # Strip the stock Tomcat sample apps; we do not want them exposed and they
 # get in the way of deploying our WAR as ROOT.

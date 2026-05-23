@@ -4,11 +4,12 @@ Ground rules for adding features and tests in this repo. Project-specific; suppl
 
 ## Build
 
-- **JDK 21** (amazon-corretto-21). Builds fail with cryptic enforcer errors on JDKs older than the source level. Set `JAVA_HOME` before invoking `mvn` from a fresh shell:
+- **JDK 25** (temurin-25, matches production Tomcat). Builds fail with cryptic enforcer errors on JDKs older than the source level. Set `JAVA_HOME` before invoking `mvn` from a fresh shell:
   ```bash
-  export JAVA_HOME="/Library/Java/JavaVirtualMachines/amazon-corretto-21.jdk/Contents/Home"
+  export JAVA_HOME="/Library/Java/JavaVirtualMachines/temurin-25.jdk/Contents/Home"
   export PATH="$JAVA_HOME/bin:$PATH"
   ```
+  (Older corretto-21 paths in earlier commits / sub-agent briefs are stale — use temurin-25 going forward.)
 - **`mvn verify` canonical invocation** (full IT pass against MySQL gemdtest):
   ```bash
   mvn -pl gemma-core verify \
