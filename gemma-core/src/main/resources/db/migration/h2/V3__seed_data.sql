@@ -33,11 +33,19 @@ values (1, 'User', 'admin', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 -- From sql/init-acls.sql (INSERTs only -- schema is in V2)
 -- ============================================================
 
--- Class lookup table -- seed only the classes used by ACL object identities below.
--- New entity classes get their acl_class row inserted automatically on first
--- createAcl() by JdbcMutableAclService.
+-- Class lookup table -- seed the classes used by ACL object identities below
+-- AND the Securable entity classes that AclQueryUtils.resolveAclClassId looks up
+-- on every ACL-filtered HQL query (ExpressionExperiment, ArrayDesign,
+-- BibliographicReference). In production, JdbcMutableAclService inserts these
+-- rows on the first createAcl() per entity type; H2 unit tests rarely go
+-- through that path, so we pre-seed the rows here. Other Securable subclasses
+-- (Gene, CompositeSequence, FactorValue) are never passed to addAclParameters
+-- and so don't need a row.
 INSERT INTO acl_class (id, class) VALUES (1, 'ubic.gemma.model.common.auditAndSecurity.User');
 INSERT INTO acl_class (id, class) VALUES (2, 'ubic.gemma.model.common.auditAndSecurity.UserGroup');
+INSERT INTO acl_class (id, class) VALUES (3, 'ubic.gemma.model.expression.experiment.ExpressionExperiment');
+INSERT INTO acl_class (id, class) VALUES (4, 'ubic.gemma.model.expression.arrayDesign.ArrayDesign');
+INSERT INTO acl_class (id, class) VALUES (5, 'ubic.gemma.model.common.description.BibliographicReference');
 
 -- Base SIDs. Predictable ids so init-entities.sql + tests can reference them.
 -- principal=0 -> AclGrantedAuthoritySid; principal=1 -> AclPrincipalSid.

@@ -14,7 +14,8 @@
 --   ADMIN_ONLY       — only GROUP_ADMIN has READ
 --
 -- All inserted IDs are >= 9000 to avoid collisions with V3__seed_data.sql.
--- V3 already seeded acl_class ids 1-2 (User, UserGroup), acl_sid ids 1-6,
+-- V3 already seeded acl_class ids 1-5 (User, UserGroup, ExpressionExperiment,
+-- ArrayDesign, BibliographicReference), acl_sid ids 1-6,
 -- acl_object_identity ids 1-5, acl_entry ids 1-8.
 -- ============================================================================
 
@@ -33,15 +34,11 @@ VALUES (9001, 1, 'testuser-owner'),
        (9002, 1, 'testuser-collaborator');
 
 -- ----------------------------------------------------------------------------
--- acl_class rows for the entity types we seed. V3 only inserted User /
--- UserGroup; the canonical EE / AD / BibRef / FactorValue / Gene /
--- CompositeSequence acl_class rows are normally created on-demand by
--- JdbcMutableAclService at first createAcl() — here we materialize them up
--- front so the fixture is self-contained.
+-- acl_class rows for ExpressionExperiment / ArrayDesign / BibliographicReference
+-- are seeded by V3__seed_data.sql at ids 3, 4, 5 (used below as
+-- object_id_class FK values). FactorValue / Gene / CompositeSequence are not
+-- independently secured and have no acl_class row.
 -- ----------------------------------------------------------------------------
-INSERT INTO acl_class (id, class) VALUES (9001, 'ubic.gemma.model.expression.experiment.ExpressionExperiment');
-INSERT INTO acl_class (id, class) VALUES (9002, 'ubic.gemma.model.expression.arrayDesign.ArrayDesign');
-INSERT INTO acl_class (id, class) VALUES (9003, 'ubic.gemma.model.common.description.BibliographicReference');
 
 -- ----------------------------------------------------------------------------
 -- Taxon — already seeded? No, V3 only seeds AUDIT_TRAIL + USER_GROUP + CONTACT
@@ -146,16 +143,16 @@ VALUES (9101, 'Gene', 9001, 'ACLTEST1', 99000001),
 -- restrict on the OWNING EE's id.
 -- ============================================================================
 
--- Object identities. acl_class FK: 9001=ExpressionExperiment, 9002=ArrayDesign.
+-- Object identities. acl_class FK: 3=ExpressionExperiment, 4=ArrayDesign (V3-seeded).
 -- owner_sid: V3-seeded sid id=1 is GROUP_ADMIN; testuser-owner is sid 9001.
 INSERT INTO acl_object_identity (id, object_id_class, object_id_identity, parent_object, owner_sid, entries_inheriting)
-VALUES (9101, 9001, 9101, NULL, 9001, 0),  -- EE_PUBLIC,     owner=testuser-owner
-       (9102, 9001, 9102, NULL, 9001, 0),  -- EE_OWNED,      owner=testuser-owner
-       (9103, 9001, 9103, NULL, 9001, 0),  -- EE_SHARED,     owner=testuser-owner
-       (9104, 9001, 9104, NULL,    1, 0),  -- EE_ADMIN_ONLY, owner=GROUP_ADMIN
-       (9201, 9002, 9201, NULL, 9001, 0),  -- AD_PUBLIC,     owner=testuser-owner
-       (9202, 9002, 9202, NULL, 9001, 0),  -- AD_OWNED,      owner=testuser-owner
-       (9203, 9002, 9203, NULL,    1, 0);  -- AD_ADMIN_ONLY, owner=GROUP_ADMIN
+VALUES (9101, 3, 9101, NULL, 9001, 0),  -- EE_PUBLIC,     owner=testuser-owner
+       (9102, 3, 9102, NULL, 9001, 0),  -- EE_OWNED,      owner=testuser-owner
+       (9103, 3, 9103, NULL, 9001, 0),  -- EE_SHARED,     owner=testuser-owner
+       (9104, 3, 9104, NULL,    1, 0),  -- EE_ADMIN_ONLY, owner=GROUP_ADMIN
+       (9201, 4, 9201, NULL, 9001, 0),  -- AD_PUBLIC,     owner=testuser-owner
+       (9202, 4, 9202, NULL, 9001, 0),  -- AD_OWNED,      owner=testuser-owner
+       (9203, 4, 9203, NULL,    1, 0);  -- AD_ADMIN_ONLY, owner=GROUP_ADMIN
 
 -- ACL entries (mask=1 = READ per BasePermission.READ).
 -- sid id mapping (V3 + fixture):
