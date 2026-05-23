@@ -13,6 +13,24 @@
 > within default-excluded tag set — re-check explicitly before retiring.
 > Bucket G (HB6 lock mode in BLAT path) remains deferred per its note.
 >
+> Buckets now closed on this branch (do not re-investigate):
+>
+> | Bucket | Closing commit(s) | Note |
+> |---|---|---|
+> | B (`Gene altered from null to N`) | `c4f883546c` (HQL_SQL_AUDIT C4) | Side-effect delete in `GeneDao.find` removed. |
+> | C (AuditTrailServiceImplTest rollback) | already fixed pre-session | 14/14 pass on verify. |
+> | D (Quartz 1.x → 2.x) | landed prior to session | `SchedulerSecurityTest` / `BatchInfoRepopulationJobTest` clean. |
+> | E (AUDIT_TRAIL.LAST_EVENT_FK cascade) | `1b1b00cf32` | Pre-delete nulls `LAST_EVENT_FK` on `AuditEvent` cascade. |
+> | F (ACL after-invocation NotFoundException) | `a24d90cfca` | Provider swallows `NotFoundException`, returns empty collection. |
+> | H AclAdviceTest + DEA testCreate ObjectIdentity drift | `910d6de51f` | Immediate-first parent ACL lookup + relaxed inheritance assertions. |
+> | H thaw before/after | `bc944c9066` | `ThawTestUtils` fresh-session wrapper. |
+> | H GiRotation | `25d3738139` | Same-id self-match short-circuit in `handleGeneProductChangedGIs`. |
+> | H GeneSearchTest | `0cbd57fd91` (post-verify) | Free-text exclusion of `Integer ncbiGeneId`. |
+>
+> Slow-tagged sweep: `mvn verify -DexcludedGroups=network` was attempted
+> 2026-05-22 and hung on `DatasetCombinerTest` at ~30 minutes; that
+> variant is opt-in only and is not part of the day-to-day signal.
+>
 > The "Bucket H — Single-line drift" list below is mostly historical;
 > all but the deferred-by-brief items now pass.
 

@@ -1,5 +1,44 @@
 # AUDIT_RESIDUAL_INVENTORY.md
 
+> **Status 2026-05-22 (post-session)** — Inventory items #1 through #17
+> have all been migrated; #18 remains intentionally skipped (no event
+> class — the 2-arg `addUpdateEvent(ee, "note")` shape has no
+> `@Audited` equivalent). The `gemma-core/src/main/java` imperative
+> `addUpdateEvent` surface is now empty except for the framework
+> classes themselves and the javadoc-only references in the
+> `*AuditServiceImpl` companion beans. Tracked commits:
+>
+> | # | Commit | Notes |
+> |---|---|---|
+> | 1 | `ed8e3f7de7` | SC SubSet — `@Audited` + AuditEventPayload (2f) |
+> | 2 | `a952158eb9` | SC Aggregate — `@Audited` + payload (2f) |
+> | 3 | `fc98078138` | Preprocessor batchCorrect — helper-bean hoist + `@AuditedConditional` (2b/2g) |
+> | 4 | `1c5406704b` | BatchInfoPopulationHelper FASTQ branch — `@AuditedOnError` |
+> | 5 | `1c5406704b` | BatchInfoPopulationHelper singleton branch — `@AuditedOnError` |
+> | 6 | `8cae43289b` | DiffExAnalyzer.persistAnalyses — `@Audited` + payload (2f) |
+> | 7 | `b8b17e1c30` | OutlierFlagging.markAsMissing — `@Audited` + payload (2f/2c-i) |
+> | 8 | `b8b17e1c30` | OutlierFlagging.unmarkAsMissing — `@Audited` + payload (2f/2c-i) |
+> | 9 | `1bebd73e7e` | ExternalDatabaseService.updateReleaseDetails — `@Audited` + ReleaseDetailsUpdatePayload (2f, 5-arg) |
+> | 10 | `1bebd73e7e` | ExternalDatabaseService.updateReleaseLastUpdated — `@Audited` + payload (2f, 5-arg) |
+> | 11 | `349da5d1bf` | SC.changePreferredCellTypeAssignment — `@AuditedConditional` (2c-i) |
+> | 12 | `349da5d1bf` | SC.createCellTypeFactor — helper-bean hoist + `@Audited` (2g) |
+> | 13 | `349da5d1bf` | SC.removeCellTypeFactor — helper-bean hoist + `@Audited` (2g) |
+> | 14 | `82937fb9b4` | Preboarded.create — `@Audited` via `PreboardedAuditService` (2a) |
+> | 15 | `4712ddbe47` | EEWriteService.updateQuantitationType (preferred branch) — `@Audited` valueSpel (2i; required infra `0ced2929b4`) |
+> | 16 | `4712ddbe47` | EEWriteService.updateQuantitationType (cleared branch) — `@Audited` valueSpel (2i) |
+> | 17 | `559f197402` | ProcessedExpressionDataVector.createProcessedDataVectors — `@Audited` + payload (2f) |
+> | 18 | — | Skipped — 2-arg note-only form, no event class. |
+>
+> Out-of-scope surfaces:
+> - `gemma-web` (4 sites) — separate inventory, frontend retiring.
+> - `gemma-cli` (12 sites) — formally deferred in commit `6d0f94b8a3`
+>   (all sites self-invoke through subclass methods of
+>   `ExpressionExperimentManipulatingCli` / `AbstractCLI`; AOP cannot
+>   reach them. Recommended path is the helper-bean hoist precedent
+>   from `*AuditServiceImpl`, scheduled as a separate workstream.)
+>
+> The original inventory text below is preserved for traceability.
+
 Targeted inventory of the imperative `auditTrailService.addUpdateEvent(...)`
 callsites still living in `gemma-core/src/main/java` as of
 `64e468f72f3ef1a63c3c4cc2c884543eb93ff4ef`
