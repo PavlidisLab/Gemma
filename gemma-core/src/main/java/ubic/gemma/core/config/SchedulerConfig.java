@@ -20,6 +20,7 @@ import org.springframework.scheduling.quartz.JobDetailFactoryBean;
 import org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean;
 import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 import org.springframework.security.core.context.SecurityContext;
+import ubic.gemma.core.context.EnvironmentProfiles;
 
 import org.quartz.JobDetail;
 import org.quartz.Trigger;
@@ -70,7 +71,7 @@ import java.util.Map;
  * @author keshav (original XML)
  */
 @Configuration
-@Profile("scheduler")
+@Profile(EnvironmentProfiles.SCHEDULER)
 @EnableScheduling
 public class SchedulerConfig {
 

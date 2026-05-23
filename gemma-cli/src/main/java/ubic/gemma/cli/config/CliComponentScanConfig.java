@@ -20,6 +20,7 @@ import org.springframework.context.annotation.Profile;
 import ubic.gemma.cli.util.CLI;
 import ubic.gemma.cli.util.PrototypeScopeResolver;
 import ubic.gemma.core.context.BeanNameGenerator;
+import ubic.gemma.core.context.EnvironmentProfiles;
 import ubic.gemma.core.context.LazyInitByDefaultPostProcessor;
 import ubic.gemma.core.context.TestComponent;
 
@@ -56,7 +57,7 @@ import ubic.gemma.core.context.TestComponent;
  * without classpath-order surgery.
  */
 @Configuration
-@Profile("cli")
+@Profile(EnvironmentProfiles.CLI)
 @ComponentScans({
         // CLI-specific components
         @ComponentScan(

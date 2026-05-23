@@ -28,7 +28,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 @Configuration
-@Profile({ "!test" }) // we use a different set of ontologies in tests
+@Profile({ "!" + EnvironmentProfiles.TEST }) // we use a different set of ontologies in tests
 public class OntologyConfig {
 
     @Value("${load.ontologies}")

@@ -18,6 +18,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Profile;
 import org.springframework.mail.MailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
+import ubic.gemma.core.context.EnvironmentProfiles;
 import ubic.gemma.core.security.authentication.ManualAuthenticationServiceBasedSecurityContextFactory;
 import ubic.gemma.core.util.DummyMailSender;
 
@@ -90,7 +91,7 @@ public class DataSourceConfig {
      * {@code gemma.db.*} property overrides).
      */
     @Bean(name = "dataSource", destroyMethod = "close")
-    @Profile({ "production", "dev" })
+    @Profile({ EnvironmentProfiles.PRODUCTION, EnvironmentProfiles.DEV })
     public DataSource dataSource(
             @Value("${gemma.db.user}") String user,
             @Value("${gemma.db.password}") String password,
@@ -123,7 +124,7 @@ public class DataSourceConfig {
      * and so consume whichever of these two is active.
      */
     @Bean(name = "dataSource", destroyMethod = "close")
-    @Profile({ "test", "testdb" })
+    @Profile({ EnvironmentProfiles.TEST, "testdb" })
     public DataSource testDataSource(
             @Value("${gemma.testdb.user}") String user,
             @Value("${gemma.testdb.password}") String password,
@@ -160,7 +161,7 @@ public class DataSourceConfig {
      */
     @Bean(name = "groupAgentSecurityContext")
     @Lazy
-    @Profile({ "production", "dev" })
+    @Profile({ EnvironmentProfiles.PRODUCTION, EnvironmentProfiles.DEV })
     public ManualAuthenticationServiceBasedSecurityContextFactory groupAgentSecurityContext(
             ubic.gemma.core.security.authentication.ManualAuthenticationService manualAuthenticationService,
             @Value("${gemma.agent.userName}") String userName,
@@ -180,7 +181,7 @@ public class DataSourceConfig {
      */
     @Bean(name = "groupAgentSecurityContext")
     @Lazy
-    @Profile({ "test", "testdb" })
+    @Profile({ EnvironmentProfiles.TEST, "testdb" })
     public ManualAuthenticationServiceBasedSecurityContextFactory testGroupAgentSecurityContext(
             ubic.gemma.core.security.authentication.ManualAuthenticationService manualAuthenticationService,
             @Value("${gemma.testdb.agent.userName}") String userName,
@@ -198,7 +199,7 @@ public class DataSourceConfig {
     // ---------------------------------------------------------------------------
 
     @Bean(name = "mailSender")
-    @Profile("production")
+    @Profile(EnvironmentProfiles.PRODUCTION)
     public MailSender mailSender(
             @Value("${mail.host}") String host,
             @Value("${mail.protocol}") String protocol,
@@ -213,7 +214,7 @@ public class DataSourceConfig {
     }
 
     @Bean(name = "mailSender")
-    @Profile("!production")
+    @Profile("!" + EnvironmentProfiles.PRODUCTION)
     public MailSender dummyMailSender() {
         return new DummyMailSender();
     }
@@ -232,7 +233,7 @@ public class DataSourceConfig {
      * resolution — hence the stub here under the complementary profile.
      */
     @Bean(name = "createDatabaseInitializer")
-    @Profile({ "production", "dev" })
+    @Profile({ EnvironmentProfiles.PRODUCTION, EnvironmentProfiles.DEV })
     public Object createDatabaseInitializerStub() {
         return new Object();
     }
@@ -243,7 +244,7 @@ public class DataSourceConfig {
      * legacy XML kept a stub for symmetry. Preserved here verbatim.
      */
     @Bean(name = "dataSourceInitializer")
-    @Profile({ "production", "dev" })
+    @Profile({ EnvironmentProfiles.PRODUCTION, EnvironmentProfiles.DEV })
     public Object dataSourceInitializerStub() {
         return new Object();
     }

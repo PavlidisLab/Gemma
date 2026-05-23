@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
+import ubic.gemma.core.context.EnvironmentProfiles;
 import ubic.gemma.core.ontology.basecode.providers.*;
 import ubic.gemma.core.ontology.basecode.providers.OntologyService;
 import ubic.gemma.core.ontology.providers.GemmaOntologyService;
@@ -24,7 +25,7 @@ import ubic.gemma.core.util.TextResourceToSetOfLinesFactoryBean;
  * @author poirigui
  */
 @Configuration
-@Profile("test") // not needed since this is a test resource, but we need to be consistent with OntologyConfig
+@Profile(EnvironmentProfiles.TEST) // not needed since this is a test resource, but we need to be consistent with OntologyConfig
 public class TestOntologyConfig {
 
     // FIXME: inject it as a Set<String>, but Spring interpret this as a set of String beans

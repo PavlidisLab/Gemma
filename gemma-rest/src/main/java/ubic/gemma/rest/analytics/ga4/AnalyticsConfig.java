@@ -16,6 +16,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.authentication.AuthenticationTrustResolver;
 import org.springframework.web.context.request.RequestAttributes;
+import ubic.gemma.core.context.EnvironmentProfiles;
 
 import java.util.Arrays;
 
@@ -32,7 +33,7 @@ import java.util.Arrays;
  * ({@code googleAnalytics4Provider}) which matches what the XML produced.
  */
 @Configuration
-@Profile("web")
+@Profile(EnvironmentProfiles.WEB)
 public class AnalyticsConfig {
 
     @Value("${ga.tracker}")
