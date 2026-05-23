@@ -236,7 +236,19 @@ public class AnnotationsWebService {
             Integer usageCount = term.getUri() != null
                     ? getDistinctEeCountsByUri( Collections.singleton( term.getUri() ) ).getOrDefault( term.getUri(), 0 )
                     : null;
-            return respond( new OntologyTermValueObject( term.getUri(), term.getLabel(), definition, term.isObsolete(), usageCount ) );
+            // Direct + includeAdditionalProperties=true == nearest is_a OR part_of parents.
+            // Null when the term has no URI (matches the count-skip semantics above).
+            List<OntologyTermSimpleValueObject> parentVos;
+            if ( term.getUri() != null ) {
+                Collection<OntologyTerm> parents = ontologyService.getParents( Collections.singleton( term ),
+                        true, true, Math.max( 30000 - timer.getTime(), 0 ), TimeUnit.MILLISECONDS );
+                parentVos = parents.stream()
+                        .map( p -> new OntologyTermSimpleValueObject( p.getUri(), p.getLabel() ) )
+                        .collect( Collectors.toList() );
+            } else {
+                parentVos = null;
+            }
+            return respond( new OntologyTermValueObject( term.getUri(), term.getLabel(), definition, term.isObsolete(), usageCount, parentVos ) );
         } catch ( TimeoutException e ) {
             throw new ServiceUnavailableException( DateUtils.addSeconds( new Date(), 30 ), e );
         }
@@ -294,7 +306,8 @@ public class AnnotationsWebService {
             Map<String, Integer> countsByUri = getDistinctEeCountsByUri( uris );
             return terms.stream()
                     .map( t -> new AnnotationSearchResultValueObject( t.getLabel(), t.getUri(), null, null,
-                            t.getUri() != null ? countsByUri.getOrDefault( t.getUri(), 0 ) : null ) )
+                            t.getUri() != null ? countsByUri.getOrDefault( t.getUri(), 0 ) : null,
+                            null, null ) )
                     .collect( Collectors.toList() );
         } catch ( TimeoutException e ) {
             throw new ServiceUnavailableException( DateUtils.addSeconds( new Date(), 30 ), e );
@@ -617,13 +630,104 @@ public class AnnotationsWebService {
         // so the tokeniser sees the union.
         String joinedQuery = String.join( " ", arg.getValue() );
         List<CharacteristicValueObject> ranked = strategy.rank( joinedQuery, rawHits, countsByUri );
+
+        // Enrich the top-N ranked hits with definition + nearest is_a/part_of parents. The rest
+        // carry null sentinels so the UI can lazy-load via /annotations/term?uri=X. Lookups share
+        // the remaining ontology-search timeout budget; per-URI failures (timeout, missing term)
+        // degrade silently to null on that single field.
+        Set<String> topUris = collectTopUris( ranked, ENRICH_TOP_N );
+        Map<String, String> defByUri = new HashMap<>();
+        Map<String, List<OntologyTermSimpleValueObject>> parentsByUri = new HashMap<>();
+        if ( !topUris.isEmpty() ) {
+            try {
+                enrichTopHits( topUris, defByUri, parentsByUri, Math.max( timeoutMs - timer.getTime(), 0 ) );
+            } catch ( TimeoutException e ) {
+                // Budget exhausted mid-enrichment; surface whatever did resolve and leave the rest null.
+                log.debug( "annotation-search enrichment hit shared-budget timeout: {} of {} URIs enriched (definitions); {} URIs enriched (parents)",
+                        defByUri.size(), topUris.size(), parentsByUri.size() );
+            }
+        }
+
         LinkedHashSet<AnnotationSearchResultValueObject> vos = new LinkedHashSet<>();
         for ( CharacteristicValueObject vo : ranked ) {
             Integer count = vo.getValueUri() != null ? countsByUri.getOrDefault( vo.getValueUri(), 0 ) : null;
+            String uri = vo.getValueUri();
+            String definition = uri != null && topUris.contains( uri ) ? defByUri.get( uri ) : null;
+            List<OntologyTermSimpleValueObject> parents = uri != null && topUris.contains( uri ) ? parentsByUri.get( uri ) : null;
             vos.add( new AnnotationSearchResultValueObject( vo.getValue(), vo.getValueUri(), vo.getCategory(),
-                    vo.getCategoryUri(), count ) );
+                    vo.getCategoryUri(), count, definition, parents ) );
         }
         return vos;
+    }
+
+    /** Top-N hits to enrich inline with definition + parents on /annotations/search. */
+    private static final int ENRICH_TOP_N = 25;
+
+    private static Set<String> collectTopUris( List<CharacteristicValueObject> ranked, int topN ) {
+        Set<String> out = new LinkedHashSet<>();
+        int seen = 0;
+        for ( CharacteristicValueObject vo : ranked ) {
+            if ( seen >= topN ) {
+                break;
+            }
+            seen++;
+            String uri = vo.getValueUri();
+            if ( uri != null ) {
+                out.add( uri );
+            }
+        }
+        return out;
+    }
+
+    /**
+     * Per-URI definition + nearest-parents lookup with a shared timeout budget. OntologyService
+     * has no batch get-definition / get-parents-by-URI API, so this loops; each per-URI call
+     * sees what is left of the budget after prior calls subtract from it. Per-URI TimeoutException
+     * is logged and the offending URI is left unset (downstream renders null); a TimeoutException
+     * is rethrown only if the budget is exhausted upfront.
+     */
+    private void enrichTopHits( Set<String> topUris,
+            Map<String, String> defByUri,
+            Map<String, List<OntologyTermSimpleValueObject>> parentsByUri,
+            long budgetMs ) throws TimeoutException {
+        StopWatch local = StopWatch.createStarted();
+        for ( String uri : topUris ) {
+            long remaining = Math.max( budgetMs - local.getTime(), 0 );
+            if ( remaining <= 0 ) {
+                throw new TimeoutException( "annotation-search enrichment exhausted timeout budget" );
+            }
+            try {
+                String def = ontologyService.getDefinition( uri, remaining, TimeUnit.MILLISECONDS );
+                if ( def != null ) {
+                    defByUri.put( uri, def );
+                }
+            } catch ( TimeoutException e ) {
+                log.debug( "definition lookup timed out for {}", uri );
+            }
+            remaining = Math.max( budgetMs - local.getTime(), 0 );
+            if ( remaining <= 0 ) {
+                // budget used up; bail with whatever we have.
+                return;
+            }
+            try {
+                OntologyTerm term = ontologyService.getTerm( uri, remaining, TimeUnit.MILLISECONDS );
+                if ( term == null ) {
+                    continue;
+                }
+                remaining = Math.max( budgetMs - local.getTime(), 0 );
+                if ( remaining <= 0 ) {
+                    return;
+                }
+                Collection<OntologyTerm> parents = ontologyService.getParents( Collections.singleton( term ),
+                        true, true, remaining, TimeUnit.MILLISECONDS );
+                List<OntologyTermSimpleValueObject> parentVos = parents.stream()
+                        .map( p -> new OntologyTermSimpleValueObject( p.getUri(), p.getLabel() ) )
+                        .collect( Collectors.toList() );
+                parentsByUri.put( uri, parentVos );
+            } catch ( TimeoutException e ) {
+                log.debug( "parents lookup timed out for {}", uri );
+            }
+        }
     }
 
     /**
@@ -656,6 +760,18 @@ public class AnnotationsWebService {
         String category;
         String categoryUri;
         Integer usageCount;
+        /**
+         * Definition of the term, if enriched. Null indicates "not enriched" (the typeahead caller can
+         * lazy-load via {@code /annotations/term?uri=X}); empty string indicates "enriched, no definition
+         * known". Populated for the top-25 search hits only — see {@code getTerms}.
+         */
+        @Nullable String definition;
+        /**
+         * Nearest is_a OR part_of parents of this term, if enriched. Null indicates "not enriched"
+         * (sentinel for lazy-load); empty list indicates "enriched, no parents" (e.g. top-level term).
+         * Populated for the top-25 search hits only — see {@code getTerms}.
+         */
+        @Nullable List<OntologyTermSimpleValueObject> parents;
     }
 
     @Value
@@ -665,6 +781,11 @@ public class AnnotationsWebService {
         String definition;
         boolean obsolete;
         Integer usageCount;
+        /**
+         * Nearest is_a OR part_of parents of this term. Empty list when the term is a top-level node;
+         * null only if the lookup was skipped (e.g. term has no URI).
+         */
+        @Nullable List<OntologyTermSimpleValueObject> parents;
     }
 
     @Value
