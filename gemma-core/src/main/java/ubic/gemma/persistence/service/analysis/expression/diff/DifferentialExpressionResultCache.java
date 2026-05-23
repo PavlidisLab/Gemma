@@ -18,6 +18,7 @@ import org.springframework.lang.Nullable;
 import ubic.gemma.model.analysis.expression.diff.DiffExprGeneSearchResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.diff.ResultSetCountsValueObject;
 
 import java.util.Collection;
 import java.util.List;
@@ -68,5 +69,25 @@ public interface DifferentialExpressionResultCache {
      */
     @Nullable
     List<DifferentialExpressionValueObject> getTopHits( ExpressionAnalysisResultSet resultSet );
+
+    /**
+     * Retrieve cached per-result-set hit-list counts (the inputs to
+     * {@code DiffExResultSetSummaryValueObject}'s numberOfDiffExpressedProbes / up / down counts).
+     *
+     * @param resultSetId id
+     * @return counts VO, or null on miss.
+     */
+    @Nullable
+    ResultSetCountsValueObject getResultSetCounts( Long resultSetId );
+
+    /**
+     * Populate the per-result-set hit-list counts cache.
+     */
+    void addToResultSetCountsCache( Long resultSetId, ResultSetCountsValueObject counts );
+
+    /**
+     * Evict a single result-set entry from the counts cache (called on analysis deletion).
+     */
+    void clearResultSetCountsCache( Long resultSetId );
 
 }

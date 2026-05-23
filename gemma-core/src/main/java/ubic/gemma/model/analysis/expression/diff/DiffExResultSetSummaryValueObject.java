@@ -108,6 +108,32 @@ public class DiffExResultSetSummaryValueObject implements Serializable {
     }
 
     public DiffExResultSetSummaryValueObject( ExpressionAnalysisResultSet resultSet ) {
+        populateBase( resultSet );
+        // extract statistics for the default threshold (if available)
+        for ( HitListSize hitList : resultSet.getHitListSizes() ) {
+            applyHitListSize( hitList );
+        }
+    }
+
+    /**
+     * Variant constructor that uses a pre-aggregated counts snapshot (cached) for the hit-list
+     * fields instead of walking {@link ExpressionAnalysisResultSet#getHitListSizes()}.
+     * <p>
+     * Used by the {@code findByExperimentIds} enrichment path so warm requests skip the
+     * collection initialization on the {@code hitListSizes} association.
+     */
+    public DiffExResultSetSummaryValueObject( ExpressionAnalysisResultSet resultSet,
+            ubic.gemma.model.analysis.expression.diff.ResultSetCountsValueObject counts ) {
+        populateBase( resultSet );
+        if ( counts != null ) {
+            this.setThreshold( counts.getThreshold() );
+            this.setNumberOfDiffExpressedProbes( counts.getNumberOfDiffExpressedProbes() );
+            this.setUpregulatedCount( counts.getUpregulatedCount() );
+            this.setDownregulatedCount( counts.getDownregulatedCount() );
+        }
+    }
+
+    private void populateBase( ExpressionAnalysisResultSet resultSet ) {
         this.setId( resultSet.getId() );
         this.setFactorIds( IdentifiableUtils.getIds( resultSet.getExperimentalFactors() ) );
         this.setNumberOfGenesAnalyzed( resultSet.getNumberOfGenesTested() );
@@ -120,18 +146,17 @@ public class DiffExResultSetSummaryValueObject implements Serializable {
         if ( resultSet.getBaselineGroup() != null ) {
             this.setBaselineGroup( new FactorValueValueObject( resultSet.getBaselineGroup() ) );
         }
+    }
 
-        // extract statistics for the default threshold (if available)
-        for ( HitListSize hitList : resultSet.getHitListSizes() ) {
-            if ( hitList.getThresholdQvalue().equals( DifferentialExpressionAnalysisValueObject.DEFAULT_THRESHOLD ) ) {
-                this.setThreshold( hitList.getThresholdQvalue() );
-                if ( hitList.getDirection().equals( Direction.UP ) ) {
-                    this.setUpregulatedCount( hitList.getNumberOfProbes() );
-                } else if ( hitList.getDirection().equals( Direction.DOWN ) ) {
-                    this.setDownregulatedCount( hitList.getNumberOfProbes() );
-                } else if ( hitList.getDirection().equals( Direction.EITHER ) ) {
-                    this.setNumberOfDiffExpressedProbes( hitList.getNumberOfProbes() );
-                }
+    private void applyHitListSize( HitListSize hitList ) {
+        if ( hitList.getThresholdQvalue().equals( DifferentialExpressionAnalysisValueObject.DEFAULT_THRESHOLD ) ) {
+            this.setThreshold( hitList.getThresholdQvalue() );
+            if ( hitList.getDirection().equals( Direction.UP ) ) {
+                this.setUpregulatedCount( hitList.getNumberOfProbes() );
+            } else if ( hitList.getDirection().equals( Direction.DOWN ) ) {
+                this.setDownregulatedCount( hitList.getNumberOfProbes() );
+            } else if ( hitList.getDirection().equals( Direction.EITHER ) ) {
+                this.setNumberOfDiffExpressedProbes( hitList.getNumberOfProbes() );
             }
         }
     }

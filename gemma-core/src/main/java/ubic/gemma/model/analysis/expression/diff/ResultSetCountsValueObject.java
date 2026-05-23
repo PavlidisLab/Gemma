@@ -1,0 +1,51 @@
+/*
+ * The Gemma project
+ *
+ * Copyright (c) 2026 University of British Columbia
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ */
+package ubic.gemma.model.analysis.expression.diff;
+
+import lombok.Value;
+import org.springframework.lang.Nullable;
+
+import java.io.Serializable;
+
+/**
+ * Cacheable, immutable snapshot of the per-result-set hit-list counts displayed by
+ * {@code DiffExResultSetSummaryValueObject}.
+ * <p>
+ * Keyed by result-set id in {@link ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultCache}
+ * so the per-resultSet enrichment in
+ * {@code DifferentialExpressionAnalysisReadServiceImpl#findByExperimentIds} can skip the
+ * {@code Hibernate.initialize(resultSet.getHitListSizes())} call when warm. The shape mirrors
+ * the count fields populated from {@link HitListSize} rows at the default q-value threshold.
+ */
+@Value
+public class ResultSetCountsValueObject implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
+    @Nullable
+    Integer numberOfGenesAnalyzed;
+
+    @Nullable
+    Integer numberOfProbesAnalyzed;
+
+    @Nullable
+    Double threshold;
+
+    @Nullable
+    Integer numberOfDiffExpressedProbes;
+
+    @Nullable
+    Integer upregulatedCount;
+
+    @Nullable
+    Integer downregulatedCount;
+}
