@@ -12,6 +12,7 @@
 package ubic.gemma.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -94,6 +95,8 @@ public class DatasetVisualizationWebService {
      * @param pcaCount     how many top-loaded probes per PCA component. Default {@value #DEFAULT_PCA_COUNT}.
      * @param sampleSize   fallback random sample size when no other selection mode is given. Default {@value #DEFAULT_SAMPLE_SIZE}, max {@value #MAX_SAMPLE_SIZE}.
      * @param encoding     {@code "json"} (default) or {@code "base64f32"}.
+     * @param subSetId     optional {@link ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet} id;
+     *                     when present, the response is restricted to the subset's sample columns.
      */
     @GET
     @GZIP
@@ -105,10 +108,12 @@ public class DatasetVisualizationWebService {
                     + "Selection modes (mutually exclusive, listed in precedence order): (1) ?genes=csv, (2) ?probes=csv, "
                     + "(3) ?resultSet=N&threshold=p (diffex top hits), (4) ?pcaComponent=k&pcaCount=n (PCA-loaded probes), "
                     + "(5) default fallback: a random sample of ?sampleSize=n probes (default 20, max 150). "
+                    + "Optionally restrict the sample columns to a single ?subSet=N — useful for cell-type-resolved views on "
+                    + "single-cell data and for client-driven paging. "
                     + "NO ordering decisions are made server-side; the client sorts, groups, palettes, and renders.",
             responses = {
                     @ApiResponse(responseCode = "200", useReturnTypeSchema = true,
-                            content = @Content(examples = @ExampleObject(value = "{...see restapidocs/examples/dataset-heatmap-data.json...}"))),
+                            content = @Content(examples = @ExampleObject("classpath:/restapidocs/examples/dataset-heatmap-data.json"))),
                     @ApiResponse(responseCode = "400", description = "Malformed query parameters.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
@@ -122,7 +127,9 @@ public class DatasetVisualizationWebService {
             @QueryParam("pcaComponent") @Nullable Integer pcaComponent,
             @QueryParam("pcaCount") @Nullable Integer pcaCount,
             @QueryParam("sampleSize") @Nullable Integer sampleSize,
-            @QueryParam("encoding") @DefaultValue("json") String encoding ) {
+            @QueryParam("encoding") @DefaultValue("json") String encoding,
+            @Parameter(description = "Restrict the heatmap to a single subset's samples — useful for cell-type-resolved views on single-cell data. When omitted, the full matrix is returned.")
+            @QueryParam("subSet") @Nullable Long subSetId ) {
         if ( !"json".equalsIgnoreCase( encoding ) && !"base64f32".equalsIgnoreCase( encoding ) ) {
             throw new MalformedArgException( "encoding must be one of: json, base64f32" );
         }
@@ -142,16 +149,22 @@ public class DatasetVisualizationWebService {
 
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
 
-        HeatmapDataValueObject payload = heatmapDataService.buildHeatmapData(
-                ee,
-                geneIds,
-                probeIds,
-                resultSetId,
-                effectiveThreshold,
-                pcaComponent,
-                effectivePcaCount,
-                effectiveSampleSize,
-                encoding.toLowerCase() );
+        HeatmapDataValueObject payload;
+        try {
+            payload = heatmapDataService.buildHeatmapData(
+                    ee,
+                    geneIds,
+                    probeIds,
+                    resultSetId,
+                    effectiveThreshold,
+                    pcaComponent,
+                    effectivePcaCount,
+                    effectiveSampleSize,
+                    encoding.toLowerCase(),
+                    subSetId );
+        } catch ( IllegalArgumentException e ) {
+            throw new MalformedArgException( e.getMessage(), e );
+        }
 
         // For diffex-driven requests, flag rows whose pvalue meets the threshold as validated.
         // The legacy DEDVController computed this via a separate getProbeDiffExValidation pass;
