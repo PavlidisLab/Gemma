@@ -57,8 +57,13 @@ COPY gemma-core/src   gemma-core/src
 COPY gemma-rest/src   gemma-rest/src
 COPY gemma-cli/src    gemma-cli/src
 
+# Skip the git-commit-id plugin inside the build container; we don't COPY .git
+# (it's 800 MB), and the gitHash field on /rest/v2/info isn't load-bearing for
+# the dev image. Production deploy through the Jenkins pipeline still resolves
+# .git normally and populates gitHash.
 RUN --mount=type=cache,target=/root/.m2/repository \
-    mvn -B -ntp -P gemma-rest-war clean package -pl gemma-rest -am -DskipTests
+    mvn -B -ntp -P gemma-rest-war clean package -pl gemma-rest -am -DskipTests \
+        -Dmaven.gitcommitid.skip=true
 
 # Sanity: WAR must exist before we move to the runtime stage.
 RUN ls -lh /build/gemma-rest/target/gemma-rest.war
