@@ -1,0 +1,49 @@
+# TLS-terminating reverse proxy for gemma-rest.
+#
+# Place at /etc/caddy/Caddyfile then:
+#   systemctl reload caddy
+#
+# Caddy auto-fetches LetsEncrypt certs on first request, given a public DNS
+# A/AAAA record pointing at this host and outbound 443 open for the ACME
+# challenge. For air-gapped or staging deployments use `tls internal` instead.
+
+# TODO(sysop): replace the domain with the real public hostname. Must match
+# the DNS record and the GEMMA_HOSTURL in env.conf.
+gemma.example.org {
+    encode zstd gzip
+
+    reverse_proxy 127.0.0.1:8080 {
+        # gemma-rest is on a single host; no upstream pool to balance.
+        transport http {
+            keepalive 2m
+            keepalive_idle_conns 32
+        }
+        # Forward the original scheme/host so the app generates correct
+        # absolute URLs in OpenAPI + Location headers.
+        header_up X-Forwarded-Proto {scheme}
+        header_up X-Forwarded-Host  {host}
+    }
+
+    # Standard hardening headers. Adjust HSTS max-age downward during initial
+    # rollout if you want a quick rollback path.
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options    "nosniff"
+        Referrer-Policy           "strict-origin-when-cross-origin"
+        # TODO(sysop): if you serve a SPA from the same domain, add a CSP here.
+    }
+
+    # Gemma REST is the only app on this host in this template — if it shares
+    # the domain with another service (e.g. gemma-curation-ui), add a path
+    # matcher and a second reverse_proxy block above.
+
+    # Log access to a dedicated file; rotate via Caddy's built-in roller.
+    # TODO(sysop): adjust log path / retention to your aggregator.
+    log {
+        output file /var/log/caddy/gemma-rest.access.log {
+            roll_size 100mb
+            roll_keep 14
+        }
+        format json
+    }
+}
