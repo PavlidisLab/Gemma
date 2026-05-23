@@ -156,6 +156,16 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest5 {
         config.setAnalysisType( aa );
         config.addFactorsToInclude( factors );
         config.addInteractionToInclude( factors );
+        // The GSE8441_expmat_8probes fixture intentionally carries only 8 (+1 constant) probes
+        // across 22 samples so the ANOVA assertions on hand-computed p-values remain tractable.
+        // RepetitiveValuesFilter in AUTODETECT mode rank-transforms the matrix (LINEAR-scale
+        // input is not log2 and falls through to filterDistinctValuesByRanks); with at most 9
+        // distinct per-column rank buckets, a row's distinct-rank count rarely clears the
+        // production 30% threshold (7/22 distinct values per row) once column ties bite.
+        // Pin a smaller threshold here so the filter still prunes the zero-variance "constant"
+        // probe (1/22 distinct) without flushing every real probe. The threshold is a property
+        // of the fixture's narrow shape, not of the math under test.
+        config.setMinimumFractionOfUniqueValues( 0.1 );
 
         ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee, true );
         Collection<DifferentialExpressionAnalysis> result = analyzer.run( ee, dmatrix, config );
@@ -176,7 +186,10 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest5 {
 
         this.checkResults( refetched );
 
-        differentialExpressionAnalyzerService.redoAnalysis( ee, refetched );
+        // Use the threshold-pinned config so the redo path applies the same RepetitiveValuesFilter
+        // override as the initial analyze() call above; the no-config redoAnalysis(ee, dea) overload
+        // would construct a default config and re-hit the 30%-distinct-values trap.
+        differentialExpressionAnalyzerService.redoAnalysis( ee, refetched, config );
 
     }
 
