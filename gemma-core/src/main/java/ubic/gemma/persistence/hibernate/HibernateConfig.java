@@ -103,7 +103,7 @@ public class HibernateConfig {
     private static final Log log = LogFactory.getLog( HibernateConfig.class );
 
     // ---------------------------------------------------------------------------------------------
-    // Hibernate property placeholders (resolved from PropertySourcesConfiguration / hibernate.properties)
+    // Hibernate property placeholders (resolved from PropertySourcesConfiguration)
     // ---------------------------------------------------------------------------------------------
 
     @Value("${gemma.hibernate.hbm2ddl.auto}")
@@ -150,8 +150,8 @@ public class HibernateConfig {
      * <p>
      * The {@code MySQL57InnoDBDialect} is hard-coded (was a literal in the XML, not a placeholder).
      * Other Hibernate properties — hbm2ddl, batch sizes, sql logging — come from
-     * {@code ${gemma.hibernate.*}} placeholders resolved against {@code Settings.properties} /
-     * {@code hibernate.properties} by {@code PropertySourcesConfiguration}.
+     * {@code ${gemma.hibernate.*}} placeholders resolved against {@code Settings.properties}
+     * by {@code PropertySourcesConfiguration}.
      */
     @Bean(name = "sessionFactory")
     @org.springframework.context.annotation.DependsOn("createDatabaseInitializer")
