@@ -257,6 +257,18 @@ public class DataUpdaterImpl implements DataUpdater {
         // important: replaceData takes care of the platform switch if necessary; call first. It also deletes old QTs, so from here we have to remake them.
         this.replaceData( ee, targetArrayDesign, log2cpmEEMatrix );
 
+        // Re-thaw + re-snapshot the EE's QTs: replaceData ran in its own transaction
+        // and removed the old Counts/RPKM QTs from the DB, but the caller's detached
+        // ee still carries the pre-replace QT snapshot in its in-memory collection.
+        // Without a re-thaw, the reuse loops below would pin the new countqt/rpkmqt to
+        // the now-deleted QT instances (whose ids no longer resolve), and the duplicate-
+        // name guard in addRawDataVectors (DAO) would fail on the stale "Counts"/"RPKM"
+        // entries still glued to the in-memory collection. See the regression chased in
+        // DataUpdaterTest.testLoadRNASeqData second addCountData call (commit 7ab05158a8
+        // introduced the dup-name assertion that surfaces this).
+        ee = experimentService.thaw( ee );
+        oldQts = ee.getQuantitationTypes();
+
         QuantitationType countqt = this.makeCountQt();
         for ( QuantitationType oldqt : oldQts ) { // use old QT if possible
             if ( oldqt.getName().equals( countqt.getName() ) ) {
