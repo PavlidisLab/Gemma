@@ -335,7 +335,8 @@ public class AnnotationsWebService {
             @Parameter(description = "Ranking strategy to apply on top of the raw Lucene order. " +
                     "`lucene` (default) preserves today's behaviour. `usage` blends rank with per-URI " +
                     "experiment usage count. `coverage` sorts by fraction of query tokens present in " +
-                    "the hit's label.")
+                    "the hit's label. `composite` combines coverage, usage, and rank into a single " +
+                    "weighted score.")
             @QueryParam("rank") @DefaultValue(LuceneOrderRankingStrategy.NAME) String rank
     ) {
         if ( query == null || query.getValue().isEmpty() ) {

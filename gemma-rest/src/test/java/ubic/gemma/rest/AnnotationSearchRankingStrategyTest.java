@@ -16,6 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
+import ubic.gemma.rest.ranking.CompositeRankingStrategy;
 import ubic.gemma.rest.ranking.LuceneOrderRankingStrategy;
 import ubic.gemma.rest.ranking.TokenCoverageRankingStrategy;
 import ubic.gemma.rest.ranking.UsageWeightedRankingStrategy;
@@ -133,6 +134,72 @@ public class AnnotationSearchRankingStrategyTest {
         for ( int i = 0; i < Math.min( 10, hits.size() ); i++ ) {
             assertThat( ranked.get( i ).getValueUri() ).isEqualTo( hits.get( i ).getValueUri() );
         }
+    }
+
+    @Test
+    public void composite_pullsHighCoveragePlusHighUsageToTop() {
+        // Plant a synthetic hit that hits BOTH primary signals: full token coverage on "chronic itch"
+        // AND a high usage count. It should outscore every native fixture hit (which all max out at
+        // ~50% coverage on "chronic itch") and land at position 0.
+        List<CharacteristicValueObject> withSynthetic = new ArrayList<>( hits );
+        Map<String, Integer> usagePlus = new HashMap<>( usageCounts );
+        CharacteristicValueObject synthetic = new CharacteristicValueObject(
+                "chronic itch syndrome", "http://example.test/synthetic/chronic-itch-strong" );
+        withSynthetic.add( synthetic );
+        usagePlus.put( synthetic.getValueUri(), 50 );
+
+        CompositeRankingStrategy strategy = new CompositeRankingStrategy( 0.5, 0.3, 0.2 );
+        List<CharacteristicValueObject> ranked = strategy.rank( "chronic itch", withSynthetic, usagePlus );
+
+        assertThat( ranked ).hasSize( withSynthetic.size() );
+        assertThat( ranked.get( 0 ).getValueUri() )
+                .as( "composite should pull dual-signal synthetic to position 0" )
+                .isEqualTo( synthetic.getValueUri() );
+    }
+
+    @Test
+    public void composite_handlesEmptyUsageMap() {
+        // With no usage data the strategy degrades to a coverage+rank blend; must not blow up
+        // or drop hits.
+        CompositeRankingStrategy strategy = new CompositeRankingStrategy( 0.5, 0.3, 0.2 );
+        List<CharacteristicValueObject> ranked = strategy.rank( "chronic itch", hits, Collections.emptyMap() );
+        assertThat( ranked ).hasSize( hits.size() );
+    }
+
+    @Test
+    public void composite_handlesEmptyQuery() {
+        // Empty query => coverage component is 0 for every hit; usage + rank decide. Must not throw.
+        CompositeRankingStrategy strategy = new CompositeRankingStrategy( 0.5, 0.3, 0.2 );
+        List<CharacteristicValueObject> ranked = strategy.rank( "", hits, usageCounts );
+        assertThat( ranked ).hasSize( hits.size() );
+    }
+
+    @Test
+    public void composite_differsFromBothComponentsOnMixedSignal() {
+        // Composite output should not coincide exactly with either coverage-only or usage-only
+        // ordering on the staging fixture — proves the blend is doing real work.
+        CompositeRankingStrategy composite = new CompositeRankingStrategy( 0.5, 0.3, 0.2 );
+        TokenCoverageRankingStrategy coverage = new TokenCoverageRankingStrategy();
+        UsageWeightedRankingStrategy usage = new UsageWeightedRankingStrategy( 0.3, 0.7 );
+
+        List<String> compositeOrder = uriOrder( composite.rank( "chronic itch", hits, usageCounts ) );
+        List<String> coverageOrder = uriOrder( coverage.rank( "chronic itch", hits, usageCounts ) );
+        List<String> usageOrder = uriOrder( usage.rank( "chronic itch", hits, usageCounts ) );
+
+        assertThat( compositeOrder )
+                .as( "composite must differ from coverage-only on mixed-signal fixture" )
+                .isNotEqualTo( coverageOrder );
+        assertThat( compositeOrder )
+                .as( "composite must differ from usage-only on mixed-signal fixture" )
+                .isNotEqualTo( usageOrder );
+    }
+
+    private static List<String> uriOrder( List<CharacteristicValueObject> list ) {
+        List<String> out = new ArrayList<>( list.size() );
+        for ( CharacteristicValueObject vo : list ) {
+            out.add( vo.getValueUri() );
+        }
+        return out;
     }
 
     private static int indexOfUri( List<CharacteristicValueObject> list, String uri ) {
