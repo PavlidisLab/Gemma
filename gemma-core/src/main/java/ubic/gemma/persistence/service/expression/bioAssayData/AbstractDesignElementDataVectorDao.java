@@ -72,6 +72,9 @@ public abstract class AbstractDesignElementDataVectorDao<T extends BulkExpressio
         Hibernate.initialize( vector.getExpressionExperiment().getBioAssays() );
         thawDesignElement( vector.getDesignElement() );
         thawBioAssayDimension( vector.getBioAssayDimension() );
+        // quantitationType is lazy=proxy post c646639fa9 / 1520096ae2; callers of thaw()
+        // expect to read QT fields outside the loader's transaction.
+        Hibernate.initialize( vector.getQuantitationType() );
     }
 
     private void thawDesignElement( CompositeSequence designElement ) {

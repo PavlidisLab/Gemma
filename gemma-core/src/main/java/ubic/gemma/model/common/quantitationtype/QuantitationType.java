@@ -332,21 +332,26 @@ public class QuantitationType extends AbstractDescribable {
          * <p>
          * Note: since this is a new instance, we don't copy the {@link #getId()}, {@link #getIsPreferred()},
          * {@link #getIsMaskedPreferred()} or {@link #getIsSingleCellPreferred()} over.
+         * <p>
+         * Reads are routed through getters so a Hibernate lazy proxy (post {@code lazy=proxy} flip on
+         * {@code DataVector.quantitationType} in PERF round 3, commits {@code c646639fa9} /
+         * {@code 1520096ae2}) gets initialized — direct field access on a proxy returns null for every
+         * unwritten field on the proxy stub.
          */
         public static QuantitationType newInstance( QuantitationType quantitationType ) {
             QuantitationType result = newInstance();
             result.setName( quantitationType.getName() );
             result.setDescription( quantitationType.getDescription() );
-            result.scale = quantitationType.scale;
-            result.representation = quantitationType.representation;
-            result.type = quantitationType.type;
-            result.generalType = quantitationType.generalType;
-            result.isNormalized = quantitationType.isNormalized;
-            result.isRatio = quantitationType.isRatio;
-            result.isBackground = quantitationType.isBackground;
-            result.isBackgroundSubtracted = quantitationType.isBackgroundSubtracted;
-            result.isBatchCorrected = quantitationType.isBatchCorrected;
-            result.isRecomputedFromRawData = quantitationType.isRecomputedFromRawData;
+            result.scale = quantitationType.getScale();
+            result.representation = quantitationType.getRepresentation();
+            result.type = quantitationType.getType();
+            result.generalType = quantitationType.getGeneralType();
+            result.isNormalized = quantitationType.getIsNormalized();
+            result.isRatio = quantitationType.getIsRatio();
+            result.isBackground = quantitationType.getIsBackground();
+            result.isBackgroundSubtracted = quantitationType.getIsBackgroundSubtracted();
+            result.isBatchCorrected = quantitationType.getIsBatchCorrected();
+            result.isRecomputedFromRawData = quantitationType.getIsRecomputedFromRawData();
             return result;
         }
 

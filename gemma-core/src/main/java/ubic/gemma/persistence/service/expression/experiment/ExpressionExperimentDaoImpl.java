@@ -2739,6 +2739,13 @@ public class ExpressionExperimentDaoImpl
     private void thawRawVectors( ExpressionExperiment ee ) {
         StopWatch timer = StopWatch.createStarted();
         Hibernate.initialize( ee.getRawExpressionDataVectors() );
+        // bad+qt are lazy=proxy on RawExpressionDataVector (commit 1520096ae2); callers
+        // of thaw(ee) read vec.getBioAssayDimension() / vec.getQuantitationType() outside
+        // the @Transactional readOnly tx.
+        for ( RawExpressionDataVector v : ee.getRawExpressionDataVectors() ) {
+            Hibernate.initialize( v.getBioAssayDimension() );
+            Hibernate.initialize( v.getQuantitationType() );
+        }
         if ( timer.getTime() > 1000 ) {
             log.info( String.format( "Initializing %d raw vectors took %d ms", ee.getRawExpressionDataVectors().size(), timer.getTime() ) );
         }
@@ -2747,6 +2754,12 @@ public class ExpressionExperimentDaoImpl
     private void thawProcessedVectors( ExpressionExperiment ee ) {
         StopWatch timer = StopWatch.createStarted();
         Hibernate.initialize( ee.getProcessedExpressionDataVectors() );
+        // bad+qt are lazy=proxy on ProcessedExpressionDataVector (commit c646639fa9); see
+        // thawRawVectors for rationale.
+        for ( ProcessedExpressionDataVector v : ee.getProcessedExpressionDataVectors() ) {
+            Hibernate.initialize( v.getBioAssayDimension() );
+            Hibernate.initialize( v.getQuantitationType() );
+        }
         if ( timer.getTime() > 1000 ) {
             log.info( String.format( "Initializing %d processed vectors took %d ms", ee.getProcessedExpressionDataVectors().size(), timer.getTime() ) );
         }
@@ -4453,8 +4466,14 @@ public class ExpressionExperimentDaoImpl
     @Override
     public Collection<RawExpressionDataVector> getRawDataVectors( ExpressionExperiment ee, QuantitationType qt ) {
         //noinspection unchecked
+        // JOIN FETCH bad+qt: post lazy=proxy flip on RawExpressionDataVector (commit 1520096ae2)
+        // callers access vec.getBioAssayDimension() / vec.getQuantitationType() outside this
+        // method's transaction and would otherwise hit LazyInitializationException on the proxy.
         return getSessionFactory().getCurrentSession()
-                .createQuery( "select v from RawExpressionDataVector v where v.expressionExperiment = :ee and v.quantitationType = :qt" )
+                .createQuery( "select v from RawExpressionDataVector v "
+                        + "join fetch v.bioAssayDimension "
+                        + "join fetch v.quantitationType "
+                        + "where v.expressionExperiment = :ee and v.quantitationType = :qt" )
                 .setParameter( "ee", ee )
                 .setParameter( "qt", qt )
                 .list();
