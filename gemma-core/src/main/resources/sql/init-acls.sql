@@ -27,6 +27,17 @@ ALTER TABLE acl_entry ADD COLUMN audit_failure BIT NOT NULL DEFAULT 0;
 INSERT INTO acl_class (id, class) VALUES (1, 'ubic.gemma.model.common.auditAndSecurity.User');
 INSERT INTO acl_class (id, class) VALUES (2, 'ubic.gemma.model.common.auditAndSecurity.UserGroup');
 
+-- Eagerly seed acl_class rows for the three entity types referenced by AclQueryUtils.addAclParameters().
+-- Without this, single-test IT runs in isolation (no earlier test having lazily ACL-created an EE/AD/BR
+-- via JdbcMutableAclService.createAcl) hit "NoResultException: select id from acl_class where class = ?"
+-- on first ACL-filtered HQL. The full failsafe run currently masks this because some early test always
+-- happens to create the row, but `mvn verify -Dit.test=GeoDatasetServiceTest` in isolation fails without
+-- this seed. H2 unit tests get the same rows from db/migration/h2/V3__seed_data.sql.
+-- Let MySQL pick the ids (auto-increment); these rows are FK targets only by id, never by literal.
+INSERT INTO acl_class (class) VALUES ('ubic.gemma.model.expression.experiment.ExpressionExperiment');
+INSERT INTO acl_class (class) VALUES ('ubic.gemma.model.expression.arrayDesign.ArrayDesign');
+INSERT INTO acl_class (class) VALUES ('ubic.gemma.model.common.description.BibliographicReference');
+
 -- Base SIDs. Predictable ids so init-entities.sql + tests can reference them.
 -- principal=0 -> AclGrantedAuthoritySid; principal=1 -> AclPrincipalSid.
 -- Principal names must match init-entities.sql.
