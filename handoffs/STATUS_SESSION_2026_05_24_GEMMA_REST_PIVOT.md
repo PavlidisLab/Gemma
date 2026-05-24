@@ -34,7 +34,7 @@ Container `dc966cd09b03` (`gemma-rest` on tomcat:10.1-jdk25) serves everything b
 
 ## In flight at session close
 
-**Agent `agent-gse-enrich` (id `a3e45c6f5f39f1f4e`)** — still running in worktree `.claude/worktrees/agent-gse-enrich`, branch `agent-gse-enrich`. Brief: enrich PreboardedExperiment.identifyingMetadata with JSON-serialized GeoRecord fields + open ONE ticket per scrape batch targeting GeoScrapeWatermark via a new TicketTargetType.GEO_SCRAPE_WATERMARK enum value. When it reports back, merge it.
+None. `agent-gse-enrich` (`790aacdcb3`) merged. Production-path GeoScrape now: rich JSON `identifyingMetadata` (geoAccession, title, summary, organisms, platforms, seriesType, numSamples, releaseDate, libraryStrategy, sampleDetails, pubMedIds, meshHeadings, scrapedAt) + a single `GENERIC` ticket targeting `TicketTargetType.GEO_SCRAPE_WATERMARK` with the batch summary in a follow-up `COMMENT` event. Ticket failures are caught + logged, never fail the scrape.
 
 ## Follow-on owed (after agent merges)
 
