@@ -168,6 +168,131 @@ public class TicketsWebService {
     }
 
     /**
+     * Calling admin's own ticket queue: assigned-to-me + the few cheap counters that
+     * back a "My Queue" card in the curation-UI. Splits assigned tickets into open
+     * (OPEN + IN_PROGRESS) and recently-resolved buckets — both capped per request
+     * to keep the response compact.
+     */
+    @GET
+    @Path("/mine")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "List tickets assigned to the calling admin",
+            description = "Convenience view over `GET /tickets?assignee={me}`. Returns two lists: `open` (OPEN + IN_PROGRESS, capped at `limit`, default 50) sorted by `updatedAt desc`; and `recentlyResolved` (RESOLVED + CANCELLED with updatedAt within the last `resolvedWithinDays` days, default 7, capped at `limit`). Sorted by updatedAt desc. Both lists carry the lightweight TicketValueObject (no event log). Use `GET /tickets/{id}` for the full ticket including events.",
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class))),
+                    @ApiResponse(responseCode = "401", description = "Not authenticated.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<MyQueueResponse> getMyQueue(
+            @Parameter(description = "Max items in each list. Defaults to 50, capped at 200.")
+            @QueryParam("limit") @DefaultValue("50") int limit,
+            @Parameter(description = "Window for `recentlyResolved`, in days. Defaults to 7.")
+            @QueryParam("resolvedWithinDays") @DefaultValue("7") int resolvedWithinDays
+    ) {
+        Long meId = currentUserContactId();
+        int cappedLimit = Math.min( Math.max( limit, 1 ), 200 );
+
+        // Open + InProgress: reuse findTickets(openOnly=true, assignee=me)
+        List<Ticket> open = ticketService.findTickets( true, meId, null, 0, cappedLimit );
+
+        // Recently-resolved: pull a generous superset of resolved-by-me, filter by date in-memory.
+        // The dao doesn't expose a state+since filter today; pulling cappedLimit*3 keeps the
+        // payload bounded while still letting us trim to the time window. If this proves too
+        // coarse the next iteration can add a TicketDao.findResolvedSince(assignee, since, limit).
+        List<Ticket> resolvedSuperset = ticketService.findTickets( false, meId, null, 0, cappedLimit * 3 );
+        long cutoffMillis = System.currentTimeMillis() - resolvedWithinDays * 24L * 3600L * 1000L;
+        List<Ticket> recentlyResolved = new ArrayList<>();
+        for ( Ticket t : resolvedSuperset ) {
+            if ( t.getState() == TicketState.RESOLVED || t.getState() == TicketState.CANCELLED ) {
+                Date updated = t.getUpdatedAt();
+                if ( updated != null && updated.getTime() >= cutoffMillis ) {
+                    recentlyResolved.add( t );
+                    if ( recentlyResolved.size() >= cappedLimit ) break;
+                }
+            }
+        }
+
+        MyQueueResponse body = new MyQueueResponse();
+        body.assigneeContactId = meId;
+        body.openLimit = cappedLimit;
+        body.resolvedWithinDays = resolvedWithinDays;
+        body.open = open.stream().map( TicketValueObject::from ).collect( Collectors.toList() );
+        body.recentlyResolved = recentlyResolved.stream().map( TicketValueObject::from ).collect( Collectors.toList() );
+        body.openCount = body.open.size();
+        body.recentlyResolvedCount = body.recentlyResolved.size();
+        return respond( body );
+    }
+
+    /**
+     * Lightweight counters about the calling admin's ticket workload. Cheap (two count
+     * queries + one find for oldest-open); intended for top-of-page badges.
+     */
+    @GET
+    @Path("/summary/me")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Workload summary for the calling admin",
+            description = "Returns counts of open (OPEN+IN_PROGRESS) and total tickets assigned to the calling admin, plus the age of the oldest open ticket in days. No event logs, no list of tickets — see `/tickets/mine` for those.",
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class))),
+                    @ApiResponse(responseCode = "401", description = "Not authenticated.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<MyQueueSummaryResponse> getMyQueueSummary() {
+        Long meId = currentUserContactId();
+        long openCount = ticketService.countTickets( true, meId, null );
+        long totalCount = ticketService.countTickets( false, meId, null );
+        // Oldest open: ask for one ticket sorted ascending by updatedAt? The current dao sorts
+        // desc; for the dashboard we read the top-1 of a generous slice and pick the min created.
+        Long oldestOpenAgeDays = null;
+        if ( openCount > 0 ) {
+            List<Ticket> openSlice = ticketService.findTickets( true, meId, null, 0, 200 );
+            long oldestCreated = Long.MAX_VALUE;
+            for ( Ticket t : openSlice ) {
+                if ( t.getCreatedAt() != null && t.getCreatedAt().getTime() < oldestCreated ) {
+                    oldestCreated = t.getCreatedAt().getTime();
+                }
+            }
+            if ( oldestCreated != Long.MAX_VALUE ) {
+                oldestOpenAgeDays = ( System.currentTimeMillis() - oldestCreated ) / ( 24L * 3600L * 1000L );
+            }
+        }
+        MyQueueSummaryResponse body = new MyQueueSummaryResponse();
+        body.assigneeContactId = meId;
+        body.openCount = openCount;
+        body.totalCount = totalCount;
+        body.oldestOpenAgeDays = oldestOpenAgeDays;
+        return respond( body );
+    }
+
+    private Long currentUserContactId() {
+        User u = userManager.getCurrentUser();
+        if ( u == null ) {
+            throw new jakarta.ws.rs.NotAuthorizedException( "anonymous callers have no ticket queue" );
+        }
+        return u.getId();
+    }
+
+    public static class MyQueueResponse {
+        public Long assigneeContactId;
+        public int openLimit;
+        public int resolvedWithinDays;
+        public int openCount;
+        public int recentlyResolvedCount;
+        public List<TicketValueObject> open;
+        public List<TicketValueObject> recentlyResolved;
+    }
+
+    public static class MyQueueSummaryResponse {
+        public Long assigneeContactId;
+        public long openCount;
+        public long totalCount;
+        @Nullable
+        public Long oldestOpenAgeDays;
+    }
+
+    /**
      * Retrieve a single ticket, including its full event log.
      */
     @GET
