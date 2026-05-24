@@ -72,6 +72,9 @@ public interface GeoScrapeService {
         /** Lower bound of the scrape window. Null means "resume from the last successful scrape". */
         @Nullable
         private Date since;
+        /** Upper bound of the scrape window (publication date). Null means "today". */
+        @Nullable
+        private Date until;
         /** Hard cap on the number of GEO records examined; null means use the service default. */
         @Nullable
         private Integer maxRecords;
@@ -88,6 +91,15 @@ public interface GeoScrapeService {
 
         public void setSince( @Nullable Date since ) {
             this.since = since;
+        }
+
+        @Nullable
+        public Date getUntil() {
+            return until;
+        }
+
+        public void setUntil( @Nullable Date until ) {
+            this.until = until;
         }
 
         @Nullable

@@ -185,7 +185,8 @@ public class GeoScrapeServiceImpl implements GeoScrapeService {
             GeoQuery query = resolveGeoBrowser().searchGeoRecords(
                     GeoRecordType.SERIES, null, null,
                     ALLOWED_TAXA, null,
-                    EXPRESSION_PROFILING_TYPES );
+                    EXPRESSION_PROFILING_TYPES,
+                    req.getSince(), req.getUntil() );
             int pageStart = 0;
             int effectivePage = Math.max( 1, pageSize );
             while ( scanned < maxRecords ) {
@@ -277,7 +278,8 @@ public class GeoScrapeServiceImpl implements GeoScrapeService {
             GeoQuery query = resolveGeoBrowser().searchGeoRecords(
                     GeoRecordType.SERIES, null, null,
                     ALLOWED_TAXA, null,
-                    EXPRESSION_PROFILING_TYPES );
+                    EXPRESSION_PROFILING_TYPES,
+                    req.getSince(), req.getUntil() );
             int pageStart = 0;
             int effectivePage = Math.max( 1, pageSize );
             while ( scanned < maxRecords ) {

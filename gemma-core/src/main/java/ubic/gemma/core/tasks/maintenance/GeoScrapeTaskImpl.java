@@ -42,10 +42,12 @@ public class GeoScrapeTaskImpl extends AbstractTask<GeoScrapeTaskCommand>
         GeoScrapeTaskCommand cmd = getTaskCommand();
         GeoScrapeService.ScrapeRequest req = new GeoScrapeService.ScrapeRequest();
         req.setSince( cmd.getSince() );
+        req.setUntil( cmd.getUntil() );
         req.setMaxRecords( cmd.getMaxRecords() );
         req.setCriteria( cmd.getCriteria() );
         req.setDryRun( cmd.isDryRun() );
         log.info( "Starting GEO scrape: since=" + cmd.getSince()
+                + " until=" + cmd.getUntil()
                 + " maxRecords=" + cmd.getMaxRecords()
                 + " criteria=" + cmd.getCriteria()
                 + " dryRun=" + cmd.isDryRun() );

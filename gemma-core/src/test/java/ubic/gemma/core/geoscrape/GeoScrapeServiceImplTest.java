@@ -107,7 +107,7 @@ public class GeoScrapeServiceImplTest {
 
         // Default GeoBrowser plumbing — returns the configured slice from a single retrieve call.
         GeoQuery query = mock( GeoQuery.class );
-        when( geoBrowser.searchGeoRecords( any(), any(), any(), any(), any(), any() ) ).thenReturn( query );
+        when( geoBrowser.searchGeoRecords( any(), any(), any(), any(), any(), any(), any(), any() ) ).thenReturn( query );
     }
 
     private GeoRecord rec( String acc, String title, String organism ) {
@@ -211,6 +211,30 @@ public class GeoScrapeServiceImplTest {
         TicketTarget tt = targets.iterator().next();
         assertThat( tt.getTargetType() ).isEqualTo( TicketTargetType.GEO_SCRAPE_WATERMARK );
         assertThat( tt.getTargetId() ).isNotNull();
+    }
+
+    @Test
+    public void scrape_forwardsSinceAndUntilToGeoBrowser() throws Exception {
+        // Date-window plumbing: ScrapeRequest.since/until reach the GeoBrowser.searchGeoRecords
+        // 8-arg overload verbatim. The browser-side PDAT filter is added there; this test just
+        // proves the plumbing is wired so the GeoBrowser sees the dates.
+        wireSlice( Collections.emptyList() );
+
+        java.util.Date since = new java.util.GregorianCalendar( 2026, java.util.Calendar.APRIL, 1 ).getTime();
+        java.util.Date until = new java.util.GregorianCalendar( 2026, java.util.Calendar.APRIL, 14 ).getTime();
+        GeoScrapeService.ScrapeRequest req = new GeoScrapeService.ScrapeRequest();
+        req.setSince( since );
+        req.setUntil( until );
+        req.setMaxRecords( 10 );
+        req.setDryRun( true );
+
+        svc.scrapeDryRun( req );
+
+        ArgumentCaptor<java.util.Date> sinceCap = ArgumentCaptor.forClass( java.util.Date.class );
+        ArgumentCaptor<java.util.Date> untilCap = ArgumentCaptor.forClass( java.util.Date.class );
+        verify( geoBrowser ).searchGeoRecords( any(), any(), any(), any(), any(), any(), sinceCap.capture(), untilCap.capture() );
+        assertThat( sinceCap.getValue() ).isEqualTo( since );
+        assertThat( untilCap.getValue() ).isEqualTo( until );
     }
 
     @Test

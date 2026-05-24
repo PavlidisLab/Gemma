@@ -37,6 +37,8 @@ public class GeoScrapeTaskCommand extends TaskCommand {
     @Nullable
     private Date since;
     @Nullable
+    private Date until;
+    @Nullable
     private Integer maxRecords;
     @Nullable
     private Collection<String> criteria;

@@ -1067,6 +1067,7 @@ public class AdminWebService {
         if ( dryRun ) {
             GeoScrapeService.ScrapeRequest req = new GeoScrapeService.ScrapeRequest();
             req.setSince( body.since );
+            req.setUntil( body.until );
             req.setMaxRecords( body.maxRecords );
             req.setCriteria( body.criteria );
             req.setDryRun( true );
@@ -1076,6 +1077,7 @@ public class AdminWebService {
         GeoScrapeTaskCommand cmd = new GeoScrapeTaskCommand();
         if ( body != null ) {
             cmd.setSince( body.since );
+            cmd.setUntil( body.until );
             cmd.setMaxRecords( body.maxRecords );
             cmd.setCriteria( body.criteria );
             cmd.setDryRun( false );
@@ -1975,6 +1977,9 @@ public class AdminWebService {
         /** Lower bound of the scrape window. Null means "resume from last successful scrape's scanTo". */
         @Nullable
         public Date since;
+        /** Upper bound of the scrape window (publication date inclusive). Null means "today". */
+        @Nullable
+        public Date until;
         /** Hard cap on number of GEO records examined. Null means use service default. */
         @Nullable
         public Integer maxRecords;

@@ -250,7 +250,10 @@ public class GeoBrowserImpl implements GeoBrowser {
     }
 
     @Override
-    public GeoQuery searchGeoRecords( GeoRecordType recordType, @Nullable String searchTerms, @Nullable GeoSearchField field, @Nullable Collection<String> allowedTaxa, @Nullable Collection<String> limitPlatforms, @Nullable Collection<GeoSeriesType> seriesTypes ) throws IOException {
+    public GeoQuery searchGeoRecords( GeoRecordType recordType, @Nullable String searchTerms, @Nullable GeoSearchField field,
+            @Nullable Collection<String> allowedTaxa, @Nullable Collection<String> limitPlatforms,
+            @Nullable Collection<GeoSeriesType> seriesTypes,
+            @Nullable Date since, @Nullable Date until ) throws IOException {
         String term = entryTypeFromRecordType( recordType ) + "[" + GeoSearchField.ENTRY_TYPE + "]";
 
         if ( StringUtils.isNotBlank( searchTerms ) ) {
@@ -270,6 +273,16 @@ public class GeoBrowserImpl implements GeoBrowser {
 
         if ( seriesTypes != null ) {
             term += " AND (" + seriesTypes.stream().map( s -> quoteTerm( s.getIdentifier() ) + "[" + GeoSearchField.DATASET_TYPE + "]" ).collect( Collectors.joining( " OR " ) ) + ")";
+        }
+
+        if ( since != null || until != null ) {
+            // Entrez esearch accepts a single-field date range as quoted PDAT bounds. Fill missing
+            // bounds with safe sentinels: lower=GEO inception era, upper=today.
+            SimpleDateFormat fmt = new SimpleDateFormat( "yyyy/MM/dd" );
+            fmt.setTimeZone( TimeZone.getTimeZone( "UTC" ) );
+            String lo = fmt.format( since != null ? since : new GregorianCalendar( 1990, Calendar.JANUARY, 1 ).getTime() );
+            String hi = fmt.format( until != null ? until : new Date() );
+            term += " AND \"" + lo + "\"[PDAT] : \"" + hi + "\"[PDAT]";
         }
 
         return searchGeoRecords( recordType, term );
