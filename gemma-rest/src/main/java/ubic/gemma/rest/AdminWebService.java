@@ -17,10 +17,14 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.ClientErrorException;
+import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.NotFoundException;
+import jakarta.ws.rs.PATCH;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
@@ -51,9 +55,12 @@ import ubic.gemma.core.job.SubmittedTask;
 import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.core.ontology.basecode.providers.OntologyService;
 import ubic.gemma.core.security.AuthorityConstants;
+import ubic.gemma.core.security.authentication.UserDetailsImpl;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.ResponseErrorObject;
 
@@ -724,15 +731,15 @@ public class AdminWebService {
     /* ===== User management (read-only listing) ===== */
 
     /**
-     * Admin user listing. Read-only for this commit; create / disable / delete endpoints
-     * land in a follow-up that introduces the soft-delete tombstone columns.
+     * Admin user listing. Soft-deleted users (DELETED_AT IS NOT NULL) are hidden
+     * by default; pass {@code ?includeDeleted=true} to surface them.
      */
     @GET
     @Path("/users")
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasAuthority('GROUP_ADMIN')")
     @Operation(summary = "List all users",
-            description = "Returns every User row with their username, email, enabled flag, granted group authorities, signup token presence (a non-null token + enabled=false indicates an unverified signup), and signup token issuance date. Sorted alphabetically by username.",
+            description = "Returns every User row with their username, email, enabled flag, granted group authorities, signup-token-pending flag, soft-delete timestamps. Soft-deleted users are excluded unless `includeDeleted=true`. Sorted alphabetically by username.",
             security = {
                     @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
@@ -741,29 +748,18 @@ public class AdminWebService {
                     @ApiResponse(responseCode = "200",
                             content = @Content(schema = @Schema(implementation = ResponseDataObject.class)))
             })
-    public ResponseDataObject<UsersListResponse> getUsers() {
+    public ResponseDataObject<UsersListResponse> getUsers(
+            @QueryParam("includeDeleted") @DefaultValue("false") boolean includeDeleted ) {
         Collection<User> users = userManager.loadAll();
         List<UserValueObject> rows = new ArrayList<>( users.size() );
-        int enabled = 0, pending = 0;
+        int enabled = 0, pending = 0, deleted = 0;
         for ( User u : users ) {
-            UserValueObject vo = new UserValueObject();
-            vo.username = u.getUserName();
-            vo.email = u.getEmail();
-            vo.enabled = u.isEnabled();
-            vo.signupTokenPending = u.getSignupToken() != null && !u.isEnabled();
-            vo.signupTokenDate = u.getSignupTokenDatestamp();
-            if ( u.getGroups() != null ) {
-                List<String> groupNames = new ArrayList<>();
-                for ( UserGroup g : u.getGroups() ) {
-                    groupNames.add( g.getName() );
-                }
-                groupNames.sort( Comparator.naturalOrder() );
-                vo.groups = groupNames;
-                vo.isAdmin = groupNames.contains( AuthorityConstants.ADMIN_GROUP_NAME );
-            }
-            rows.add( vo );
-            if ( vo.enabled ) enabled++;
-            if ( vo.signupTokenPending ) pending++;
+            boolean isDeleted = u.getDeletedAt() != null;
+            if ( isDeleted ) deleted++;
+            if ( isDeleted && !includeDeleted ) continue;
+            rows.add( toUserValueObject( u ) );
+            if ( u.isEnabled() ) enabled++;
+            if ( u.getSignupToken() != null && !u.isEnabled() && !isDeleted ) pending++;
         }
         rows.sort( Comparator.comparing( ( UserValueObject v ) -> v.username,
                 Comparator.nullsLast( String.CASE_INSENSITIVE_ORDER ) ) );
@@ -771,8 +767,191 @@ public class AdminWebService {
         body.total = rows.size();
         body.enabledCount = enabled;
         body.pendingSignupCount = pending;
+        body.deletedCount = deleted;
         body.users = rows;
         return respond( body );
+    }
+
+    private UserValueObject toUserValueObject( User u ) {
+        UserValueObject vo = new UserValueObject();
+        vo.username = u.getUserName();
+        vo.email = u.getEmail();
+        vo.enabled = u.isEnabled();
+        vo.signupTokenPending = u.getSignupToken() != null && !u.isEnabled() && u.getDeletedAt() == null;
+        vo.signupTokenDate = u.getSignupTokenDatestamp();
+        vo.deletedAt = u.getDeletedAt();
+        vo.deletedBy = u.getDeletedBy();
+        if ( u.getGroups() != null ) {
+            List<String> groupNames = new ArrayList<>();
+            for ( UserGroup g : u.getGroups() ) {
+                groupNames.add( g.getName() );
+            }
+            groupNames.sort( Comparator.naturalOrder() );
+            vo.groups = groupNames;
+            vo.isAdmin = groupNames.contains( AuthorityConstants.ADMIN_GROUP_NAME );
+        }
+        return vo;
+    }
+
+    /**
+     * Create a new active user with a server-generated one-time temporary password.
+     * The plaintext password is returned in the response body — pass it to the new
+     * user out-of-band. It is not stored anywhere recoverable; if lost, an admin
+     * must reset it.
+     */
+    @POST
+    @Path("/users")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Create a user with a temporary password",
+            description = "Creates an immediately-enabled user (no email confirmation flow), generates a 16-character secure-random temp password, optionally grants admin role, and returns the plaintext temp password in the response body. The password appears in the response exactly once — store it elsewhere before navigating away. Returns 409 if username or email already exists.",
+            security = {
+                    @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
+            },
+            responses = {
+                    @ApiResponse(responseCode = "201",
+                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class))),
+                    @ApiResponse(responseCode = "400", description = "Missing or malformed username/email",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "409", description = "Username or email already taken",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
+            })
+    public Response createUser( CreateUserRequest req ) {
+        if ( req == null || req.username == null || req.username.trim().isEmpty() ) {
+            throw new BadRequestException( "username is required" );
+        }
+        if ( req.email == null || req.email.trim().isEmpty() ) {
+            throw new BadRequestException( "email is required" );
+        }
+        String username = req.username.trim();
+        String email = req.email.trim();
+        if ( userManager.userExists( username ) ) {
+            throw new ClientErrorException( "username '" + username + "' is already taken", Response.Status.CONFLICT );
+        }
+        if ( userManager.userWithEmailExists( email ) ) {
+            throw new ClientErrorException( "email '" + email + "' is already taken", Response.Status.CONFLICT );
+        }
+        String tempPassword = RandomStringUtils.secureStrong().nextAlphanumeric( 16 );
+        // enabled=true, no signup token — admin-created users skip email confirm.
+        UserDetailsImpl details = new UserDetailsImpl( tempPassword, username, true, null, email, null, null );
+        userManager.createUser( details );
+        if ( req.isAdmin ) {
+            userManager.addUserToGroup( username, AuthorityConstants.ADMIN_GROUP_NAME );
+        }
+        User created = userManager.findByUserName( username );
+        CreateUserResponse body = new CreateUserResponse();
+        body.user = toUserValueObject( created );
+        body.temporaryPassword = tempPassword;
+        body.warning = "Pass this temporary password to the user out-of-band. It is not stored anywhere recoverable.";
+        return Response.status( Response.Status.CREATED ).entity( respond( body ) ).build();
+    }
+
+    /**
+     * Partial update — toggle the enabled flag (lock/unlock) and/or admin role.
+     * Other User fields (email, password, name) are not touched by this endpoint;
+     * those go through the user-profile flow.
+     */
+    @PATCH
+    @Path("/users/{username}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Toggle a user's enabled flag and/or admin role",
+            description = "Body fields are optional; only the supplied fields are applied. `enabled=false` locks the account (the user can't log in). `isAdmin=true` adds the user to the Administrators group; `isAdmin=false` removes them. 404 if the username doesn't exist; 400 if the body is empty.",
+            security = {
+                    @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
+            },
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class))),
+                    @ApiResponse(responseCode = "400", description = "Empty body",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "404", description = "No user with that username",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
+            })
+    public ResponseDataObject<UserValueObject> patchUser( @PathParam("username") String username, UpdateUserRequest req ) {
+        if ( req == null || ( req.enabled == null && req.isAdmin == null ) ) {
+            throw new BadRequestException( "request body must specify at least one of: enabled, isAdmin" );
+        }
+        User u = userManager.findByUserName( username );
+        if ( u == null ) {
+            throw new NotFoundException( "No user with name=" + username );
+        }
+        if ( u.getDeletedAt() != null ) {
+            throw new ClientErrorException( "user '" + username + "' is soft-deleted; restore is not supported via this endpoint",
+                    Response.Status.CONFLICT );
+        }
+        if ( req.enabled != null && req.enabled != u.isEnabled() ) {
+            // Round-trip through UserDetailsImpl so UserManagerImpl.updateUser
+            // sees the right fields. Keep email + password unchanged.
+            UserDetailsImpl ud = new UserDetailsImpl( u.getPassword(), u.getUserName(), req.enabled, null,
+                    u.getEmail(), u.getSignupToken(), u.getSignupTokenDatestamp() );
+            userManager.updateUser( ud );
+        }
+        if ( req.isAdmin != null ) {
+            boolean currentlyAdmin = false;
+            for ( UserGroup g : u.getGroups() ) {
+                if ( AuthorityConstants.ADMIN_GROUP_NAME.equals( g.getName() ) ) {
+                    currentlyAdmin = true;
+                    break;
+                }
+            }
+            if ( req.isAdmin && !currentlyAdmin ) {
+                userManager.addUserToGroup( username, AuthorityConstants.ADMIN_GROUP_NAME );
+            } else if ( !req.isAdmin && currentlyAdmin ) {
+                userManager.removeUserFromGroup( username, AuthorityConstants.ADMIN_GROUP_NAME );
+            }
+        }
+        User refreshed = userManager.findByUserName( username );
+        return respond( toUserValueObject( refreshed ) );
+    }
+
+    /**
+     * Soft delete — marks the account as deleted, disables it, and preserves
+     * the row so dependent references (ACL sids, audit-event authorship FKs)
+     * don't dangle. Hard delete is intentionally not exposed via REST.
+     */
+    @DELETE
+    @Path("/users/{username}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Soft-delete a user",
+            description = "Sets deletedAt = now, deletedBy = the current admin's username, and enabled = false. The User row stays in the database — hard delete via REST is forbidden because ACL sids and audit-event authorship FKs reference the user. Idempotent: a second DELETE on an already-deleted user returns 204.",
+            security = {
+                    @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
+            },
+            responses = {
+                    @ApiResponse(responseCode = "204", description = "User soft-deleted (or already was)."),
+                    @ApiResponse(responseCode = "404", description = "No user with that username",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
+            })
+    public Response deleteUser( @PathParam("username") String username ) {
+        User u = userManager.findByUserName( username );
+        if ( u == null ) {
+            throw new NotFoundException( "No user with name=" + username );
+        }
+        String issuingAdmin = currentUsername();
+        if ( username.equals( issuingAdmin ) ) {
+            throw new ClientErrorException( "an admin cannot soft-delete their own account", Response.Status.CONFLICT );
+        }
+        userManager.softDeleteUser( username, issuingAdmin );
+        return Response.noContent().build();
+    }
+
+    private String currentUsername() {
+        try {
+            Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            if ( principal instanceof org.springframework.security.core.userdetails.UserDetails ) {
+                return ( (org.springframework.security.core.userdetails.UserDetails) principal ).getUsername();
+            }
+            return principal != null ? principal.toString() : "unknown";
+        } catch ( RuntimeException e ) {
+            return "unknown";
+        }
     }
 
     /* ===== DTOs ===== */
@@ -924,6 +1103,8 @@ public class AdminWebService {
         public int enabledCount;
         /** Users with a signup token outstanding AND not yet enabled (unverified). */
         public int pendingSignupCount;
+        /** Total count of soft-deleted users (regardless of whether they're included in the list). */
+        public int deletedCount;
         public List<UserValueObject> users;
     }
 
@@ -939,6 +1120,32 @@ public class AdminWebService {
         public boolean signupTokenPending;
         @Nullable
         public Date signupTokenDate;
+        /** Non-null when the user has been soft-deleted. */
+        @Nullable
+        public Date deletedAt;
+        @Nullable
+        public String deletedBy;
+    }
+
+    public static class CreateUserRequest {
+        public String username;
+        public String email;
+        /** Optional; defaults to false. If true the user is added to the Administrators group. */
+        public boolean isAdmin;
+    }
+
+    public static class CreateUserResponse {
+        public UserValueObject user;
+        /** Server-generated 16-char temp password. Shown exactly once — copy it before navigating away. */
+        public String temporaryPassword;
+        public String warning;
+    }
+
+    public static class UpdateUserRequest {
+        @Nullable
+        public Boolean enabled;
+        @Nullable
+        public Boolean isAdmin;
     }
 
     public static class OntologiesResponse {

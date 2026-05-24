@@ -34,6 +34,8 @@ public class User extends Person implements ubic.gemma.core.security.model.User 
     private boolean enabled;
     private String signupToken;
     private java.util.Date signupTokenDatestamp;
+    private java.util.Date deletedAt;
+    private String deletedBy;
     private Set<JobInfo> jobs = new java.util.HashSet<>();
     private Set<UserGroup> groups = new HashSet<>();
 
@@ -96,6 +98,31 @@ public class User extends Person implements ubic.gemma.core.security.model.User 
 
     public void setSignupTokenDatestamp( java.util.Date signupTokenDatestamp ) {
         this.signupTokenDatestamp = signupTokenDatestamp;
+    }
+
+    /**
+     * Timestamp of the admin soft-delete; null when the account is active.
+     * Hard-deleting users is forbidden — ACL sids, audit-event authors, and
+     * other references would dangle. See {@code V16__user_soft_delete.sql}.
+     */
+    public java.util.Date getDeletedAt() {
+        return this.deletedAt;
+    }
+
+    public void setDeletedAt( java.util.Date deletedAt ) {
+        this.deletedAt = deletedAt;
+    }
+
+    /**
+     * Username of the admin who soft-deleted this account; null when active.
+     * Free-form string (not an FK) so admin churn doesn't cascade.
+     */
+    public String getDeletedBy() {
+        return this.deletedBy;
+    }
+
+    public void setDeletedBy( String deletedBy ) {
+        this.deletedBy = deletedBy;
     }
 
     @Override

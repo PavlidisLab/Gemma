@@ -73,6 +73,17 @@ public interface UserManager extends UserDetailsManager, GroupManager {
     @Secured("GROUP_ADMIN")
     void deleteUser( String username );
 
+    /**
+     * Mark the named user as deleted without removing the row. Sets
+     * {@code deletedAt} = now, {@code deletedBy} = the supplied admin username,
+     * and {@code enabled} = false. ACL sids, audit-event authorship FKs, and
+     * other references to the row are preserved. Hard delete remains available
+     * via {@link #deleteUser(String)} for the rare cases where the row truly
+     * has no dependents.
+     */
+    @Secured("GROUP_ADMIN")
+    void softDeleteUser( String username, String deletedByUsername );
+
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
     String changePasswordForUser( String email, String username, String newPassword );

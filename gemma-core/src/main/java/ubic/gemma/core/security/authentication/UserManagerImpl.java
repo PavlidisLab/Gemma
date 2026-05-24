@@ -364,6 +364,24 @@ public class UserManagerImpl implements UserManager, UserDetailsPasswordService 
 
     @Override
     @Transactional
+    public void softDeleteUser( String username, String deletedByUsername ) {
+        User u = userService.findByUserName( username );
+        if ( u == null ) {
+            throw new IllegalArgumentException( "No user with name=" + username );
+        }
+        if ( u.getDeletedAt() != null ) {
+            // Idempotent — already soft-deleted; nothing to do.
+            return;
+        }
+        u.setDeletedAt( new Date() );
+        u.setDeletedBy( deletedByUsername );
+        u.setEnabled( false );
+        userService.update( u );
+        userCache.removeUserFromCache( username );
+    }
+
+    @Override
+    @Transactional
     public void deleteUser( String username ) {
         User user = this.loadUser( username );
         userService.delete( user );
