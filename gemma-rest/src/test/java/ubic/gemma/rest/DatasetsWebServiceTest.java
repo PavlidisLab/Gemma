@@ -1908,6 +1908,30 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
 
     @Test
     @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testRunDatasetGeeqWithModeBatch() {
+        ee.setId( 1L );
+        mockTaskSubmission( "task-geeq" );
+
+        assertThat( target( "/datasets/1/tasks/geeq" ).queryParam( "mode", "batch" ).request()
+                .post( jakarta.ws.rs.client.Entity.json( "" ) ) )
+                .hasStatus( Response.Status.ACCEPTED )
+                .hasHeaderSatisfying( "Location", values ->
+                        assertThat( values ).singleElement().asString().endsWith( "/tasks/task-geeq" ) )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.taskId", "task-geeq" );
+
+        ArgumentCaptor<ubic.gemma.core.tasks.analysis.expression.GeeqTaskCommand> cmd =
+                ArgumentCaptor.forClass( ubic.gemma.core.tasks.analysis.expression.GeeqTaskCommand.class );
+        verify( taskRunningService ).submitTaskCommand( cmd.capture() );
+        assertThat( cmd.getValue().getExpressionExperiment() ).isSameAs( ee );
+        assertThat( cmd.getValue().getMode() )
+                .isEqualTo( ubic.gemma.persistence.service.expression.experiment.GeeqService.ScoreMode.batch );
+        verify( expressionExperimentReportService, atLeastOnce() ).evictFromCache( 1L );
+        verifyNoInteractions( geeqService );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
     public void testRunDatasetDifferentialAnalysisWithoutBodyUsesAllNonBatchFactors() {
         ee.setId( 1L );
         ExperimentalDesign design = new ExperimentalDesign();

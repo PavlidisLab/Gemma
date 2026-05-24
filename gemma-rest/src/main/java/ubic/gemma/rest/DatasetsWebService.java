@@ -63,6 +63,7 @@ import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.core.tasks.analysis.diffex.DifferentialExpressionAnalysisRemoveTaskCommand;
 import ubic.gemma.core.tasks.analysis.diffex.DifferentialExpressionAnalysisTaskCommand;
 import ubic.gemma.core.tasks.analysis.expression.BatchInfoFetchTaskCommand;
+import ubic.gemma.core.tasks.analysis.expression.GeeqTaskCommand;
 import ubic.gemma.core.tasks.analysis.expression.SvdTaskCommand;
 import ubic.gemma.core.tasks.analysis.expression.ExpressionExperimentLoadTaskCommand;
 import ubic.gemma.core.tasks.analysis.expression.PreprocessTaskCommand;
@@ -2827,6 +2828,33 @@ public class DatasetsWebService {
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         BatchInfoFetchTaskCommand cmd = new BatchInfoFetchTaskCommand( ee );
+        expressionExperimentReportService.evictFromCache( ee.getId() );
+        return acceptedTaskResponse( taskRunningService.submitTaskCommand( cmd ) );
+    }
+
+    @POST
+    @Path("/{dataset}/tasks/geeq")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Recompute GEEQ quality scores for a dataset (async)",
+            description = "Submits an async task that recomputes the GEEQ quality and suitability scores for the "
+                    + "dataset and writes a `GeeqEvent` to the audit log. The optional `mode` query parameter "
+                    + "selects which subset of scores to recompute (`all`, `batch`, `reps`, `pub`); defaults to "
+                    + "`all`. Returns 202 with a `Location` header pointing at `/tasks/{taskId}`. The companion "
+                    + "synchronous endpoint `PUT /{dataset}/geeq` blocks until the recompute finishes; this task "
+                    + "variant returns immediately.",
+            security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
+            responses = {
+                    @ApiResponse(responseCode = "202", content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public Response runDatasetGeeq(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @QueryParam("mode") @DefaultValue("all") GeeqService.ScoreMode mode
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        GeeqTaskCommand cmd = new GeeqTaskCommand( ee, mode );
         expressionExperimentReportService.evictFromCache( ee.getId() );
         return acceptedTaskResponse( taskRunningService.submitTaskCommand( cmd ) );
     }
