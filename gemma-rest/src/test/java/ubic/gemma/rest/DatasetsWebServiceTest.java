@@ -359,6 +359,11 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         public ubic.gemma.persistence.service.expression.experiment.FactorValueNeedsAttentionService factorValueNeedsAttentionService() {
             return mock( ubic.gemma.persistence.service.expression.experiment.FactorValueNeedsAttentionService.class );
         }
+
+        @Bean
+        public ubic.gemma.core.analysis.service.ExpressionDataDeleterService expressionDataDeleterService() {
+            return mock( ubic.gemma.core.analysis.service.ExpressionDataDeleterService.class );
+        }
     }
 
     @Autowired
@@ -1591,6 +1596,55 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         assertThat( target( "/datasets/999/permissions" ).request().put( jakarta.ws.rs.client.Entity.json( body ) ) )
                 .hasStatus( Response.Status.NOT_FOUND );
         verifyNoInteractions( securityService );
+    }
+
+    @Autowired
+    private ubic.gemma.core.analysis.service.ExpressionDataDeleterService expressionDataDeleterService;
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testDeleteDatasetRawDataHappyPath() {
+        ee.setId( 1L );
+        QuantitationType preferredQt = mock( QuantitationType.class );
+        when( expressionExperimentService.getPreferredQuantitationType( ee ) ).thenReturn( Optional.of( preferredQt ) );
+
+        assertThat( target( "/datasets/1/data/raw" ).queryParam( "confirm", true ).request().delete() )
+                .hasStatus( Response.Status.NO_CONTENT );
+
+        verify( expressionDataDeleterService ).deleteRawData( ee, preferredQt );
+        reset( expressionDataDeleterService );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testDeleteDatasetRawDataWithoutConfirmIs400() {
+        ee.setId( 1L );
+        assertThat( target( "/datasets/1/data/raw" ).request().delete() )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        verifyNoInteractions( expressionDataDeleterService );
+        reset( expressionDataDeleterService );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testDeleteDatasetProcessedDataHappyPath() {
+        ee.setId( 1L );
+
+        assertThat( target( "/datasets/1/data/processed" ).queryParam( "confirm", true ).request().delete() )
+                .hasStatus( Response.Status.NO_CONTENT );
+
+        verify( expressionDataDeleterService ).deleteProcessedData( ee );
+        reset( expressionDataDeleterService );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testDeleteDatasetProcessedDataWithoutConfirmIs400() {
+        ee.setId( 1L );
+        assertThat( target( "/datasets/1/data/processed" ).request().delete() )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        verifyNoInteractions( expressionDataDeleterService );
+        reset( expressionDataDeleterService );
     }
 
     private void mockPipelineFixture( ubic.gemma.model.expression.arrayDesign.TechnologyType techType ) {
