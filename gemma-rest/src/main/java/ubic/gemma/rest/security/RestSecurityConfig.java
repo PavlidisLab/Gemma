@@ -13,6 +13,7 @@ package ubic.gemma.rest.security;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.security.access.AccessDecisionVoter;
 import org.springframework.security.access.vote.AffirmativeBased;
@@ -150,7 +151,16 @@ public class RestSecurityConfig {
      * here will correctly grant access to any authority that the role hierarchy resolves
      * as &ge; {@code GROUP_USER}.
      */
+    /**
+     * Registered with @Order(1) so this chain is consulted BEFORE the gemma-web XML
+     * `<s:http pattern="/**">` chain. Without an explicit order, FilterChainProxy uses
+     * bean-registration order — which is not source-file order — and the XML `/**`
+     * chain was winning for /rest/v2/login. The XML chain has CSRF enabled, so the
+     * SPA's POST /rest/v2/login was getting 403s. See
+     * `handoffs/HANDOFF_REST_CHAIN_ORDER_CSRF.md` (2026-05-24).
+     */
     @Bean
+    @Order(1)
     public SecurityFilterChain restSecurityFilterChain(
             HttpSecurity http,
             @Qualifier("restAuthEntryPoint") AuthenticationEntryPoint restAuthEntryPoint,
