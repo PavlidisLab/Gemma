@@ -62,6 +62,7 @@ import ubic.gemma.core.ontology.basecode.providers.OntologyService;
 import ubic.gemma.core.tasks.analysis.expression.ExpressionExperimentLoadTaskCommand;
 import ubic.gemma.core.tasks.maintenance.GeoScrapeTaskCommand;
 import ubic.gemma.core.tasks.maintenance.MultifunctionalityTaskCommand;
+import ubic.gemma.core.geoscrape.GeoScrapeDryRunCandidate;
 import ubic.gemma.core.geoscrape.GeoScrapeService;
 import ubic.gemma.model.expression.experiment.GeoScrapeWatermark;
 import ubic.gemma.core.security.AuthorityConstants;
@@ -1026,34 +1027,58 @@ public class AdminWebService {
     /* ===== GEO scrape & preboard pipeline ===== */
 
     /**
-     * Submit an async GEO scrape & preboard run. Iterates recent GEO records
-     * via {@link GeoScrapeService}, filters by taxon + matcher criteria, and
-     * creates {@code PreboardedExperiment} rows for matches. Returns 202 + the
-     * submitted task ID; poll {@code /tasks/{taskId}} for progress or
-     * {@code GET /admin/geo-scrape/last} for the lifecycle watermark.
+     * Submit a GEO scrape & preboard run. Iterates recent GEO records via
+     * {@link GeoScrapeService}, filters by taxon + matcher criteria, and
+     * creates {@code PreboardedExperiment} rows for matches.
+     *
+     * <p>Two modes:</p>
+     * <ul>
+     * <li>{@code dryRun=false} (default) — async; returns 202 + submitted
+     *     task ID. Poll {@code /tasks/{taskId}} for progress or
+     *     {@code GET /admin/geo-scrape/last} for the lifecycle watermark.</li>
+     * <li>{@code dryRun=true} — synchronous; matchers run but no
+     *     watermark / preboarded / ticket rows are written. Returns 200
+     *     with the candidate list inline. Used by gemma-curation-agents
+     *     to evaluate curation methods locally without writing to prod
+     *     gemd.</li>
+     * </ul>
      */
     @POST
     @Path("/tasks/geo-scrape")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasAuthority('GROUP_ADMIN')")
-    @Operation(summary = "Submit an async GEO scrape & preboard run",
-            description = "Iterates recent GEO records, filters to human/mouse/rat expression profiling, evaluates the registered matchers (subset selectable via `criteria`: {brain, scbrain, tfperturb}) and creates PreboardedExperiment rows for any matches. dryRun=true evaluates without persisting. Returns 202 + task ID.",
+    @Operation(summary = "Submit a GEO scrape & preboard run (async, or sync dry-run)",
+            description = "Iterates recent GEO records, filters to human/mouse/rat expression profiling, evaluates the registered matchers (subset selectable via `criteria`: {brain, scbrain, tfperturb}). With dryRun=false (default) creates PreboardedExperiment rows and returns 202 + async task ID. With dryRun=true evaluates only and returns 200 + the candidate list inline (no watermark, no preboarded rows, no ticket).",
             security = {
                     @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
             },
             responses = {
+                    @ApiResponse(responseCode = "200",
+                            description = "dryRun=true — candidates inline.",
+                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class))),
                     @ApiResponse(responseCode = "202",
+                            description = "dryRun=false — async submission.",
                             content = @Content(schema = @Schema(implementation = ResponseDataObject.class)))
             })
     public Response submitGeoScrape( @Nullable GeoScrapeRequest body ) {
+        boolean dryRun = body != null && body.dryRun != null && body.dryRun;
+        if ( dryRun ) {
+            GeoScrapeService.ScrapeRequest req = new GeoScrapeService.ScrapeRequest();
+            req.setSince( body.since );
+            req.setMaxRecords( body.maxRecords );
+            req.setCriteria( body.criteria );
+            req.setDryRun( true );
+            List<GeoScrapeDryRunCandidate> candidates = geoScrapeService.scrapeDryRun( req );
+            return Response.ok( respond( candidates ) ).build();
+        }
         GeoScrapeTaskCommand cmd = new GeoScrapeTaskCommand();
         if ( body != null ) {
             cmd.setSince( body.since );
             cmd.setMaxRecords( body.maxRecords );
             cmd.setCriteria( body.criteria );
-            cmd.setDryRun( body.dryRun != null && body.dryRun );
+            cmd.setDryRun( false );
         }
         String jobId = taskRunningService.submitTaskCommand( cmd );
         GeoScrapeSubmitResponse responseBody = new GeoScrapeSubmitResponse();

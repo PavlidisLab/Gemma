@@ -44,6 +44,21 @@ public interface GeoScrapeService {
     GeoScrapeWatermark scrape( ScrapeRequest req );
 
     /**
+     * Evaluate matchers against the same window {@link #scrape(ScrapeRequest)}
+     * would inspect, but persist nothing — no watermark row, no
+     * {@code PreboardedExperiment} row, no ticket. Intended for downstream
+     * callers (currently gemma-curation-agents) that mock-persist the
+     * results locally to evaluate curation methods without writing to prod
+     * gemd. Wire shape per candidate mirrors the existing preboarded GET
+     * response so the dry-run flag can flip off later without a shape
+     * change.
+     *
+     * @return the candidate list in scan order; {@code dryRun} on the
+     *         request is ignored (treated as {@code true} by contract).
+     */
+    List<GeoScrapeDryRunCandidate> scrapeDryRun( ScrapeRequest req );
+
+    /**
      * @return the most recent {@link GeoScrapeWatermark} row, or {@code null}
      *         if no scrape has ever been run.
      */

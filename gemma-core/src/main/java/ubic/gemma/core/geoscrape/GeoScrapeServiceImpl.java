@@ -266,6 +266,65 @@ public class GeoScrapeServiceImpl implements GeoScrapeService {
     }
 
     @Override
+    public List<GeoScrapeDryRunCandidate> scrapeDryRun( ScrapeRequest req ) {
+        if ( req == null ) req = new ScrapeRequest();
+        List<GeoRecordMatcher> active = selectActive( req.getCriteria() );
+        int maxRecords = req.getMaxRecords() != null ? req.getMaxRecords() : DEFAULT_MAX_RECORDS;
+
+        List<GeoScrapeDryRunCandidate> out = new ArrayList<>();
+        int scanned = 0;
+        try {
+            GeoQuery query = resolveGeoBrowser().searchGeoRecords(
+                    GeoRecordType.SERIES, null, null,
+                    ALLOWED_TAXA, null,
+                    EXPRESSION_PROFILING_TYPES );
+            int pageStart = 0;
+            int effectivePage = Math.max( 1, pageSize );
+            while ( scanned < maxRecords ) {
+                if ( Thread.interrupted() ) {
+                    break;
+                }
+                int remaining = maxRecords - scanned;
+                int thisPage = Math.min( effectivePage, remaining );
+                Slice<GeoRecord> slice = resolveGeoBrowser().retrieveGeoRecords( query, pageStart, thisPage,
+                        GeoRetrieveConfig.DETAILED );
+                if ( slice == null || slice.isEmpty() ) {
+                    break;
+                }
+                for ( GeoRecord r : slice ) {
+                    scanned++;
+                    if ( !isAllowedTaxon( r ) ) continue;
+                    if ( !isExpressionProfiling( r ) ) continue;
+                    List<String> matchedNames = new ArrayList<>( active.size() );
+                    for ( GeoRecordMatcher m : active ) {
+                        if ( m.evaluate( r ).isMatched() ) {
+                            matchedNames.add( m.name() );
+                        }
+                    }
+                    if ( matchedNames.isEmpty() ) continue;
+                    GeoScrapeDryRunCandidate c = new GeoScrapeDryRunCandidate();
+                    c.preboardedId = null;
+                    c.accession = r.getGeoAccession();
+                    c.source = "GEO";
+                    c.identifyingMetadata = buildIdentifyingMetadata( r );
+                    c.state = "Preboarded";
+                    c.enteredCurrentStateAt = null;
+                    c.proposalCount = 0L;
+                    c.latestProposal = null;
+                    c.auditTrailUrl = null;
+                    c.matchedCriteria = matchedNames;
+                    out.add( c );
+                }
+                pageStart += thisPage;
+            }
+        } catch ( IOException e ) {
+            log.warn( "GEO dry-run scrape failed: " + e.getMessage() );
+            // Surface partial results; caller is interactive and can retry.
+        }
+        return out;
+    }
+
+    @Override
     @Nullable
     public GeoScrapeWatermark getLastWatermark() {
         return transactionTemplate.execute( status -> {

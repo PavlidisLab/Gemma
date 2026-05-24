@@ -39,6 +39,7 @@ import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
 import ubic.gemma.core.loader.expression.geo.service.GeoRecordType;
 import ubic.gemma.core.loader.expression.geo.service.GeoRetrieveConfig;
+import ubic.gemma.core.geoscrape.GeoScrapeDryRunCandidate;
 import ubic.gemma.core.geoscrape.GeoScrapeService;
 import ubic.gemma.core.tasks.analysis.expression.ExpressionExperimentLoadTaskCommand;
 import ubic.gemma.core.tasks.maintenance.GeoScrapeTaskCommand;
@@ -889,7 +890,7 @@ public class AdminWebServiceTest {
         AdminWebService.GeoScrapeRequest req = new AdminWebService.GeoScrapeRequest();
         req.maxRecords = 50;
         req.criteria = Arrays.asList( "brain", "tfperturb" );
-        req.dryRun = true;
+        req.dryRun = false;
 
         Response resp = webService.submitGeoScrape( req );
 
@@ -905,7 +906,50 @@ public class AdminWebServiceTest {
         GeoScrapeTaskCommand cmd = captor.getValue();
         assertThat( cmd.getMaxRecords() ).isEqualTo( 50 );
         assertThat( cmd.getCriteria() ).containsExactly( "brain", "tfperturb" );
-        assertThat( cmd.isDryRun() ).isTrue();
+        assertThat( cmd.isDryRun() ).isFalse();
+        verify( geoScrapeService, org.mockito.Mockito.never() )
+                .scrapeDryRun( org.mockito.ArgumentMatchers.any() );
+    }
+
+    @Test
+    public void submitGeoScrape_dryRunTrue_returnsSyncCandidateList() {
+        GeoScrapeDryRunCandidate c = new GeoScrapeDryRunCandidate();
+        c.preboardedId = null;
+        c.accession = "GSE12345";
+        c.source = "GEO";
+        c.identifyingMetadata = "{\"geoAccession\":\"GSE12345\"}";
+        c.state = "Preboarded";
+        c.proposalCount = 0L;
+        c.matchedCriteria = Arrays.asList( "brain" );
+        when( geoScrapeService.scrapeDryRun( org.mockito.ArgumentMatchers.any() ) )
+                .thenReturn( Arrays.asList( c ) );
+
+        AdminWebService.GeoScrapeRequest req = new AdminWebService.GeoScrapeRequest();
+        req.maxRecords = 25;
+        req.criteria = Arrays.asList( "brain" );
+        req.dryRun = true;
+
+        Response resp = webService.submitGeoScrape( req );
+
+        assertThat( resp.getStatus() ).isEqualTo( 200 );
+        @SuppressWarnings("unchecked")
+        ResponseDataObject<List<GeoScrapeDryRunCandidate>> dataObj =
+                ( ResponseDataObject<List<GeoScrapeDryRunCandidate>> ) resp.getEntity();
+        assertThat( dataObj.getData() ).hasSize( 1 );
+        GeoScrapeDryRunCandidate got = dataObj.getData().get( 0 );
+        assertThat( got.accession ).isEqualTo( "GSE12345" );
+        assertThat( got.preboardedId ).isNull();
+        assertThat( got.matchedCriteria ).containsExactly( "brain" );
+
+        ArgumentCaptor<GeoScrapeService.ScrapeRequest> captor =
+                ArgumentCaptor.forClass( GeoScrapeService.ScrapeRequest.class );
+        verify( geoScrapeService ).scrapeDryRun( captor.capture() );
+        GeoScrapeService.ScrapeRequest sr = captor.getValue();
+        assertThat( sr.getMaxRecords() ).isEqualTo( 25 );
+        assertThat( sr.getCriteria() ).containsExactly( "brain" );
+        assertThat( sr.isDryRun() ).isTrue();
+        verify( taskRunningService, org.mockito.Mockito.never() )
+                .submitTaskCommand( org.mockito.ArgumentMatchers.any( GeoScrapeTaskCommand.class ) );
     }
 
     @Test
