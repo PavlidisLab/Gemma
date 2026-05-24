@@ -342,7 +342,14 @@ public class AnnotationsWebService {
             @Parameter(description = "Maximum number of hits to return. Defaults to 20 (typeahead UX). " +
                     "Hard upper bound is 50; values outside [1, 50] yield HTTP 400. The truncation is " +
                     "applied AFTER ranking, so reducing the limit also reduces top-N enrichment cost.")
-            @QueryParam("limit") @DefaultValue(SEARCH_DEFAULT_LIMIT_STR) int limit
+            @QueryParam("limit") @DefaultValue(SEARCH_DEFAULT_LIMIT_STR) int limit,
+            @Parameter(description = "Allow-list of URI namespace prefixes; the candidate set is " +
+                    "filtered to URIs containing one of these tokens BEFORE ranking + truncation. " +
+                    "Comma-separated (e.g. `CL_,EFO_`). When omitted, no filter is applied. " +
+                    "Pushing the filter server-side avoids the truncate-then-filter footgun where " +
+                    "allow-list survivors depend on which items the per-strategy `limit` happened " +
+                    "to keep.")
+            @QueryParam("prefixes") @DefaultValue("") String prefixesParam
     ) {
         if ( query == null || query.getValue().isEmpty() ) {
             throw new BadRequestException( "Search query cannot be empty." );
@@ -351,14 +358,15 @@ public class AnnotationsWebService {
             throw new BadRequestException( "The 'limit' parameter must be between 1 and " + SEARCH_MAX_LIMIT + " (got " + limit + ")." );
         }
         AnnotationSearchRankingStrategy strategy = resolveRankingStrategy( rank );
-        String cacheKey = buildSearchCacheKey( query.getValue(), strategy.getName(), limit );
+        List<String> prefixes = parsePrefixes( prefixesParam );
+        String cacheKey = buildSearchCacheKey( query.getValue(), strategy.getName(), limit, prefixes );
         List<AnnotationSearchResultValueObject> cached = SEARCH_CACHE.get( cacheKey );
         if ( cached != null ) {
             log.debug( "annotation-search cache HIT key={} (size={})", cacheKey, SEARCH_CACHE.size() );
             return respond( new ArrayList<>( cached ) );
         }
         try {
-            List<AnnotationSearchResultValueObject> result = new ArrayList<>( this.getTerms( query, strategy, limit, FIND_CHARACTERISTICS_TIMEOUT_MS ) );
+            List<AnnotationSearchResultValueObject> result = new ArrayList<>( this.getTerms( query, strategy, limit, prefixes, FIND_CHARACTERISTICS_TIMEOUT_MS ) );
             // store an unmodifiable defensive copy so callers can't mutate the cached value
             SEARCH_CACHE.put( cacheKey, Collections.unmodifiableList( new ArrayList<>( result ) ) );
             log.debug( "annotation-search cache MISS key={} stored {} hits (size={})", cacheKey, result.size(), SEARCH_CACHE.size() );
@@ -407,7 +415,7 @@ public class AnnotationsWebService {
     public ResponseDataObject<List<AnnotationSearchResultValueObject>> searchAnnotationsByPathQuery( // Params:
             @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE, description = SEARCH_QUERY_DESCRIPTION) @PathParam("query") @DefaultValue("") StringArrayArg query // Required
     ) {
-        return searchAnnotations( query, LuceneOrderRankingStrategy.NAME, SEARCH_DEFAULT_LIMIT );
+        return searchAnnotations( query, LuceneOrderRankingStrategy.NAME, SEARCH_DEFAULT_LIMIT, "" );
     }
 
     /**
@@ -622,7 +630,7 @@ public class AnnotationsWebService {
      * @return a collection of characteristics matching the input query.
      */
     private LinkedHashSet<AnnotationSearchResultValueObject> getTerms( StringArrayArg arg,
-            AnnotationSearchRankingStrategy strategy, int limit, long timeoutMs ) throws SearchException {
+            AnnotationSearchRankingStrategy strategy, int limit, List<String> prefixes, long timeoutMs ) throws SearchException {
         StopWatch timer = StopWatch.createStarted();
         List<CharacteristicValueObject> rawHits = new ArrayList<>();
         for ( String query : arg.getValue() ) {
@@ -634,6 +642,33 @@ public class AnnotationsWebService {
             } else {
                 rawHits.addAll( ontologyService.findExperimentsCharacteristicTags( query, 1000, false, Math.max( timeoutMs - timer.getTime(), 0 ), TimeUnit.MILLISECONDS ) );
             }
+        }
+        // Canonicalize candidate order so downstream ranking + truncation are deterministic
+        // across requests. The underlying Lucene/Hibernate-Search layer does not stabilize tie
+        // ordering, which leaks into position-based score components (e.g. composite/usage's
+        // `1/(1+rank)` term) — same query, different shuffle, different top-N. Sorting by URI
+        // ASC (label ASC tiebreaker for URI-less hits) gives every strategy a stable input.
+        rawHits.sort( Comparator
+                .comparing( CharacteristicValueObject::getValueUri, Comparator.nullsLast( Comparator.naturalOrder() ) )
+                .thenComparing( CharacteristicValueObject::getValue, Comparator.nullsLast( Comparator.naturalOrder() ) ) );
+        // Allow-list pushdown: when callers know which ontology namespaces are relevant (e.g.
+        // proposer agents passing `prefixes=CL_,EFO_`), filter BEFORE ranking + truncation so
+        // the kept top-N is determined by ranking among the allowed set, not by which items the
+        // strategy's truncate happened to keep. URI substring match (`.contains`) since the
+        // canonical namespace prefix lives after `/obo/` in OBO-style URIs.
+        if ( !prefixes.isEmpty() ) {
+            List<CharacteristicValueObject> kept = new ArrayList<>( rawHits.size() );
+            for ( CharacteristicValueObject h : rawHits ) {
+                String hitUri = h.getValueUri();
+                if ( hitUri == null ) continue;
+                for ( String p : prefixes ) {
+                    if ( hitUri.contains( p ) ) {
+                        kept.add( h );
+                        break;
+                    }
+                }
+            }
+            rawHits = kept;
         }
         Set<String> uris = rawHits.stream()
                 .map( CharacteristicValueObject::getValueUri )
@@ -972,18 +1007,39 @@ public class AnnotationsWebService {
     }
 
     /**
+     * Parse the {@code ?prefixes=} comma-separated list into a canonical lookup list. Trims each
+     * entry, drops blanks, preserves caller order so the cache key is stable. Returns an empty
+     * list when the param is null / blank.
+     */
+    private static List<String> parsePrefixes( @Nullable String raw ) {
+        if ( raw == null || raw.trim().isEmpty() ) {
+            return Collections.emptyList();
+        }
+        List<String> out = new ArrayList<>();
+        for ( String token : raw.split( "," ) ) {
+            String t = token.trim();
+            if ( !t.isEmpty() ) {
+                out.add( t );
+            }
+        }
+        return out;
+    }
+
+    /**
      * Build a stable cache key from the raw query payload. Trims each term and lowercases for plain-text
      * matches (the underlying LIKE search and ontology lookup are case-insensitive); URI-shaped terms keep
      * their case because URIs are case-sensitive on the path/query portion.
      */
-    private static String buildSearchCacheKey( List<String> values, String rankName, int limit ) {
+    private static String buildSearchCacheKey( List<String> values, String rankName, int limit, List<String> prefixes ) {
         StringBuilder sb = new StringBuilder( values.size() * 16 );
-        // Prefix the strategy name + limit so swapping rank= or limit= invalidates the cache
-        // without colliding with a different-query default-rank entry. STX separates the prefix
-        // from the query payload; SOH separates strategy name from limit.
+        // Prefix the strategy name + limit + namespaces so swapping any of them invalidates the
+        // cache without colliding with a different-query default-rank entry. STX separates the
+        // header section from the query payload; SOH separates header fields.
         sb.append( rankName != null ? rankName : LuceneOrderRankingStrategy.NAME );
         sb.append( '' );
         sb.append( limit );
+        sb.append( '' );
+        sb.append( String.join( ",", prefixes ) );
         sb.append( '' );
         for ( int i = 0; i < values.size(); i++ ) {
             String v = values.get( i );

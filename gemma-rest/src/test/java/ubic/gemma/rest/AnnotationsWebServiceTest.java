@@ -773,7 +773,10 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         // hits 51-60 are truncated by the ?limit=50 cap.
         List<CharacteristicValueObject> raw = new ArrayList<>();
         for ( int i = 0; i < 60; i++ ) {
-            raw.add( new CharacteristicValueObject( "term-" + i, "http://example.com/t" + i, "disease", "http://example.com/disease" ) );
+            // Zero-padded suffix so URI lex sort matches numeric order — the endpoint
+            // canonicalises hits by URI ASC before ranking, and un-padded t0..t59 would
+            // shuffle (t10 sorts before t2 lex-wise) and break position-based assertions.
+            raw.add( new CharacteristicValueObject( "term-" + i, String.format( "http://example.com/t%03d", i ), "disease", "http://example.com/disease" ) );
         }
         when( ontologyService.findExperimentsCharacteristicTags( eq( "diabetes" ), anyInt(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( raw );
@@ -814,7 +817,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
                         Map<?, ?> hit = ( Map<?, ?> ) hits.get( i );
                         assertThat( hit.get( "definition" ) )
                                 .as( "top-25 hit %d should carry definition", i )
-                                .isEqualTo( "def-for-http://example.com/t" + i );
+                                .isEqualTo( String.format( "def-for-http://example.com/t%03d", i ) );
                         assertThat( hit.get( "parents" ) )
                                 .as( "top-25 hit %d should carry parents", i )
                                 .isInstanceOf( List.class );
@@ -866,7 +869,10 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         // 30 raw hits → response truncated to 20 by the default ?limit=20.
         List<CharacteristicValueObject> raw = new ArrayList<>();
         for ( int i = 0; i < 30; i++ ) {
-            raw.add( new CharacteristicValueObject( "term-" + i, "http://example.com/t" + i, "disease", "http://example.com/disease" ) );
+            // Zero-padded suffix so URI lex sort matches numeric order — the endpoint
+            // canonicalises hits by URI ASC before ranking, and un-padded t0..t59 would
+            // shuffle (t10 sorts before t2 lex-wise) and break position-based assertions.
+            raw.add( new CharacteristicValueObject( "term-" + i, String.format( "http://example.com/t%03d", i ), "disease", "http://example.com/disease" ) );
         }
         when( ontologyService.findExperimentsCharacteristicTags( eq( "diabetes" ), anyInt(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( raw );
@@ -885,7 +891,10 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         // 60 raw hits → response truncated to the requested ?limit=50 (hard upper bound).
         List<CharacteristicValueObject> raw = new ArrayList<>();
         for ( int i = 0; i < 60; i++ ) {
-            raw.add( new CharacteristicValueObject( "term-" + i, "http://example.com/t" + i, "disease", "http://example.com/disease" ) );
+            // Zero-padded suffix so URI lex sort matches numeric order — the endpoint
+            // canonicalises hits by URI ASC before ranking, and un-padded t0..t59 would
+            // shuffle (t10 sorts before t2 lex-wise) and break position-based assertions.
+            raw.add( new CharacteristicValueObject( "term-" + i, String.format( "http://example.com/t%03d", i ), "disease", "http://example.com/disease" ) );
         }
         when( ontologyService.findExperimentsCharacteristicTags( eq( "diabetes" ), anyInt(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( raw );
@@ -1004,7 +1013,10 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         // (lazy-load sentinel), even when the limit allows them through.
         List<CharacteristicValueObject> raw = new ArrayList<>();
         for ( int i = 0; i < 30; i++ ) {
-            raw.add( new CharacteristicValueObject( "term-" + i, "http://example.com/t" + i, "disease", "http://example.com/disease" ) );
+            // Zero-padded suffix so URI lex sort matches numeric order — the endpoint
+            // canonicalises hits by URI ASC before ranking, and un-padded t0..t59 would
+            // shuffle (t10 sorts before t2 lex-wise) and break position-based assertions.
+            raw.add( new CharacteristicValueObject( "term-" + i, String.format( "http://example.com/t%03d", i ), "disease", "http://example.com/disease" ) );
         }
         when( ontologyService.findExperimentsCharacteristicTags( eq( "diabetes" ), anyInt(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( raw );
@@ -1086,5 +1098,97 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
                 .hasSize( 1 )
                 .first()
                 .satisfies( a -> assertThat( a ).containsEntry( "usageCount", 1 ) );
+    }
+
+    @Test
+    public void testSearchAnnotationsCanonicaliesInputOrderByUri() throws SearchException, TimeoutException {
+        // Underlying Lucene/Hibernate-Search can return tied-relevance hits in non-deterministic
+        // order across requests. The endpoint should sort hits by URI ASC at strategy entry so
+        // the final output is stable. Feed the mock a deliberately-shuffled order and assert
+        // the response comes back URI-sorted under the default (lucene) strategy.
+        CharacteristicValueObject zeta = new CharacteristicValueObject( "zeta term", "http://example.com/zeta", "cat", null );
+        CharacteristicValueObject alpha = new CharacteristicValueObject( "alpha term", "http://example.com/alpha", "cat", null );
+        CharacteristicValueObject mike = new CharacteristicValueObject( "mike term", "http://example.com/mike", "cat", null );
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "stable" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Arrays.asList( zeta, mike, alpha ) );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/annotations/search" ).queryParam( "query", "stable" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 3 )
+                .satisfies( hits -> {
+                    assertThat( ( ( Map<?, ?> ) hits.get( 0 ) ).get( "valueUri" ) ).isEqualTo( "http://example.com/alpha" );
+                    assertThat( ( ( Map<?, ?> ) hits.get( 1 ) ).get( "valueUri" ) ).isEqualTo( "http://example.com/mike" );
+                    assertThat( ( ( Map<?, ?> ) hits.get( 2 ) ).get( "valueUri" ) ).isEqualTo( "http://example.com/zeta" );
+                } );
+    }
+
+    @Test
+    public void testSearchAnnotationsPrefixesFilterAppliesBeforeRanking() throws SearchException, TimeoutException {
+        // `?prefixes=CL_,EFO_` should drop everything else BEFORE ranking + truncation. Feed a mix
+        // of CL_, EFO_, and MP_ URIs; assert only CL_ + EFO_ survive and the count limit applies
+        // to the filtered set (not the pre-filter set).
+        List<CharacteristicValueObject> mixed = new ArrayList<>();
+        mixed.add( new CharacteristicValueObject( "MP_1", "http://purl.obolibrary.org/obo/MP_0000001", "phenotype", null ) );
+        mixed.add( new CharacteristicValueObject( "CL_1", "http://purl.obolibrary.org/obo/CL_0000001", "cell", null ) );
+        mixed.add( new CharacteristicValueObject( "MP_2", "http://purl.obolibrary.org/obo/MP_0000002", "phenotype", null ) );
+        mixed.add( new CharacteristicValueObject( "EFO_1", "http://www.ebi.ac.uk/efo/EFO_0000001", "disease", null ) );
+        mixed.add( new CharacteristicValueObject( "MP_3", "http://purl.obolibrary.org/obo/MP_0000003", "phenotype", null ) );
+        mixed.add( new CharacteristicValueObject( "CL_2", "http://purl.obolibrary.org/obo/CL_0000002", "cell", null ) );
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "myeloid" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( mixed );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/annotations/search" )
+                .queryParam( "query", "myeloid" )
+                .queryParam( "prefixes", "CL_,EFO_" )
+                .request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 3 )
+                .satisfies( hits -> {
+                    // URI-ASC canonical order: CL_0000001 < CL_0000002 < EFO_0000001 lex-wise on full URI.
+                    assertThat( ( ( Map<?, ?> ) hits.get( 0 ) ).get( "valueUri" ) ).isEqualTo( "http://purl.obolibrary.org/obo/CL_0000001" );
+                    assertThat( ( ( Map<?, ?> ) hits.get( 1 ) ).get( "valueUri" ) ).isEqualTo( "http://purl.obolibrary.org/obo/CL_0000002" );
+                    assertThat( ( ( Map<?, ?> ) hits.get( 2 ) ).get( "valueUri" ) ).isEqualTo( "http://www.ebi.ac.uk/efo/EFO_0000001" );
+                } );
+    }
+
+    @Test
+    public void testSearchAnnotationsPrefixesFilterRespectsLimit() throws SearchException, TimeoutException {
+        // The truncate-then-filter footgun: server returns top-N, client filters → maybe nothing
+        // left. Pushdown should ensure ?limit=2 returns the top-2 OF the filtered set, not 2 from
+        // the unfiltered set possibly trimmed down to 0 by client-side filtering.
+        List<CharacteristicValueObject> mixed = new ArrayList<>();
+        for ( int i = 0; i < 5; i++ ) {
+            mixed.add( new CharacteristicValueObject( "MP_" + i, "http://purl.obolibrary.org/obo/MP_000000" + i, "phenotype", null ) );
+        }
+        for ( int i = 0; i < 5; i++ ) {
+            mixed.add( new CharacteristicValueObject( "CL_" + i, "http://purl.obolibrary.org/obo/CL_000000" + i, "cell", null ) );
+        }
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "scoped" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( mixed );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/annotations/search" )
+                .queryParam( "query", "scoped" )
+                .queryParam( "prefixes", "CL_" )
+                .queryParam( "limit", "2" )
+                .request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 2 )
+                .satisfies( hits -> {
+                    // After CL_-only filter + URI-ASC canonical sort, top-2 of the CL set:
+                    assertThat( ( ( Map<?, ?> ) hits.get( 0 ) ).get( "valueUri" ) ).isEqualTo( "http://purl.obolibrary.org/obo/CL_0000000" );
+                    assertThat( ( ( Map<?, ?> ) hits.get( 1 ) ).get( "valueUri" ) ).isEqualTo( "http://purl.obolibrary.org/obo/CL_0000001" );
+                } );
     }
 }
