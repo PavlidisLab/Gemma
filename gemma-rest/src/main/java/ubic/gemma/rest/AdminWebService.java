@@ -64,10 +64,19 @@ import ubic.gemma.core.tasks.maintenance.MultifunctionalityTaskCommand;
 import ubic.gemma.core.security.AuthorityConstants;
 import ubic.gemma.core.security.authentication.UserDetailsImpl;
 import ubic.gemma.core.security.authentication.UserManager;
+import ubic.gemma.model.blacklist.BlacklistedEntity;
+import ubic.gemma.model.blacklist.BlacklistedExperiment;
+import ubic.gemma.model.blacklist.BlacklistedPlatform;
+import ubic.gemma.model.blacklist.BlacklistedValueObject;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.common.description.ExternalDatabases;
+import ubic.gemma.persistence.service.blacklist.BlacklistedEntityService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketService;
+import ubic.gemma.persistence.service.common.description.ExternalDatabaseReadService;
 import ubic.gemma.persistence.service.expression.experiment.AgentProposalService;
 import ubic.gemma.model.genome.Taxon;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -95,6 +104,7 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -137,6 +147,8 @@ public class AdminWebService {
     private final AgentProposalService agentProposalService;
     private final TicketService ticketService;
     private final TaxonArgService taxonArgService;
+    private final BlacklistedEntityService blacklistedEntityService;
+    private final ExternalDatabaseReadService externalDatabaseReadService;
 
     @Value("${gemma.curationAgent.healthUrl:}")
     private String curationAgentHealthUrl;
@@ -174,7 +186,9 @@ public class AdminWebService {
             TaskRunningService taskRunningService, SessionRegistry sessionRegistry,
             List<OntologyService> ontologies, DataSource dataSource, UserManager userManager,
             AgentProposalService agentProposalService, TicketService ticketService,
-            TaxonArgService taxonArgService ) {
+            TaxonArgService taxonArgService,
+            BlacklistedEntityService blacklistedEntityService,
+            ExternalDatabaseReadService externalDatabaseReadService ) {
         this.cacheManager = cacheManager;
         this.sessionFactory = sessionFactory;
         this.taskRunningService = taskRunningService;
@@ -185,6 +199,8 @@ public class AdminWebService {
         this.agentProposalService = agentProposalService;
         this.ticketService = ticketService;
         this.taxonArgService = taxonArgService;
+        this.blacklistedEntityService = blacklistedEntityService;
+        this.externalDatabaseReadService = externalDatabaseReadService;
     }
 
     /* ===== Caches ===== */
@@ -1295,6 +1311,169 @@ public class AdminWebService {
         }
     }
 
+    /* ===== Blacklist ===== */
+
+    /**
+     * Adds a single blacklist entry. Port of the {@code -accession}/{@code -reason} arm of
+     * {@code BlacklistCli.doAuthenticatedWork()}: validates the accession, looks up the GEO
+     * {@link ExternalDatabase}, and creates either a {@link BlacklistedPlatform} (GPL*) or
+     * {@link BlacklistedExperiment} (GSE*) row with the supplied reason.
+     */
+    @POST
+    @Path("/blacklist")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Add a blacklist entry",
+            description = "Creates a blacklist row for the given GEO accession (GPL* → BlacklistedPlatform; GSE* → BlacklistedExperiment). "
+                    + "Synchronous: the row is persisted before the response returns. Returns 201 with the new entry's value object. "
+                    + "Returns 400 when accession or reason is missing, or when the accession prefix is neither GPL nor GSE. "
+                    + "Returns 409 when an entry for that accession already exists (to update the reason, delete the entry and re-add it).",
+            security = {
+                    @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
+            },
+            responses = {
+                    @ApiResponse(responseCode = "201",
+                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class))),
+                    @ApiResponse(responseCode = "400", description = "Body missing, accession blank, reason blank, or unrecognised prefix",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "409", description = "Accession is already blacklisted",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
+            })
+    public Response addBlacklistEntry( @Nullable BlacklistRequest body ) {
+        if ( body == null || body.accession == null || body.accession.trim().isEmpty() ) {
+            throw new BadRequestException( "`accession` is required" );
+        }
+        if ( body.reason == null || body.reason.trim().isEmpty() ) {
+            throw new BadRequestException( "`reason` is required" );
+        }
+        String accession = body.accession.trim();
+        String reason = body.reason.trim();
+
+        if ( blacklistedEntityService.findByAccession( accession ) != null ) {
+            throw new ClientErrorException( accession + " is already blacklisted. To update the reason, delete the entry and re-add it.",
+                    Response.Status.CONFLICT );
+        }
+
+        BlacklistedEntity entity;
+        if ( accession.startsWith( "GPL" ) ) {
+            entity = new BlacklistedPlatform();
+        } else if ( accession.startsWith( "GSE" ) ) {
+            entity = new BlacklistedExperiment();
+        } else {
+            throw new BadRequestException( "Unrecognised accession prefix for '" + accession
+                    + "': expected something starting with GPL or GSE." );
+        }
+
+        ExternalDatabase geo = externalDatabaseReadService.findByName( ExternalDatabases.GEO );
+        if ( geo == null ) {
+            throw new IllegalStateException( "GEO not found as an external database in the system" );
+        }
+
+        entity.setShortName( accession );
+        entity.setReason( reason );
+        DatabaseEntry d = DatabaseEntry.Factory.newInstance( accession, geo );
+        entity.setExternalAccession( d );
+
+        BlacklistedEntity created = blacklistedEntityService.create( entity );
+        return Response.status( Response.Status.CREATED )
+                .entity( respond( BlacklistedValueObject.fromEntity( created ) ) )
+                .build();
+    }
+
+    /**
+     * Removes a blacklist entry by its accession. Port of the {@code -accession -undo} arm
+     * of {@code BlacklistCli}. Returns 204 on success, 404 when the accession is not on the
+     * blacklist.
+     */
+    @DELETE
+    @Path("/blacklist/{accession}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Remove a blacklist entry",
+            description = "Removes the blacklist row matching `{accession}`. Returns 204 on success, 404 when no entry exists.",
+            security = {
+                    @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
+            },
+            responses = {
+                    @ApiResponse(responseCode = "204", description = "Entry removed."),
+                    @ApiResponse(responseCode = "404", description = "No blacklist entry for that accession",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
+            })
+    public Response deleteBlacklistEntry( @PathParam("accession") String accession ) {
+        BlacklistedEntity entity = blacklistedEntityService.findByAccession( accession );
+        if ( entity == null ) {
+            throw new NotFoundException( "No blacklist entry for accession=" + accession );
+        }
+        blacklistedEntityService.remove( entity );
+        return Response.noContent().build();
+    }
+
+    /**
+     * Lists current blacklist entries. Convenience sibling for the curation-UI; the CLI has
+     * no equivalent. The underlying service exposes only {@code loadAll()}, so pagination
+     * is applied in-process: results are sorted by accession (alphabetic, nulls last) and
+     * sliced by {@code offset}/{@code limit}.
+     */
+    @GET
+    @Path("/blacklist")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "List blacklist entries",
+            description = "Returns the current blacklist sorted by accession with `limit`/`offset` pagination applied in-process. "
+                    + "`limit` defaults to 100 and is capped at 1000; `offset` defaults to 0. The response includes the total count of "
+                    + "entries on the blacklist (independent of paging) so the UI can render a page navigator.",
+            security = {
+                    @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
+            },
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class)))
+            })
+    public ResponseDataObject<BlacklistListResponse> listBlacklistEntries(
+            @QueryParam("limit") @DefaultValue("100") int limit,
+            @QueryParam("offset") @DefaultValue("0") int offset ) {
+        if ( limit < 0 ) {
+            throw new BadRequestException( "`limit` must be non-negative" );
+        }
+        if ( offset < 0 ) {
+            throw new BadRequestException( "`offset` must be non-negative" );
+        }
+        int effectiveLimit = Math.min( limit, MAX_BLACKLIST_PAGE_SIZE );
+
+        Collection<BlacklistedEntity> all = blacklistedEntityService.loadAll();
+        List<BlacklistedEntity> sorted = new ArrayList<>( all );
+        sorted.sort( Comparator.comparing( ( BlacklistedEntity e ) -> {
+            DatabaseEntry de = e.getExternalAccession();
+            return de != null ? de.getAccession() : e.getShortName();
+        }, Comparator.nullsLast( Comparator.naturalOrder() ) ) );
+
+        List<BlacklistedValueObject> page;
+        if ( offset >= sorted.size() || effectiveLimit == 0 ) {
+            page = Collections.emptyList();
+        } else {
+            int end = Math.min( offset + effectiveLimit, sorted.size() );
+            page = new ArrayList<>( end - offset );
+            for ( BlacklistedEntity e : sorted.subList( offset, end ) ) {
+                page.add( BlacklistedValueObject.fromEntity( e ) );
+            }
+        }
+
+        BlacklistListResponse body = new BlacklistListResponse();
+        body.total = sorted.size();
+        body.limit = effectiveLimit;
+        body.offset = offset;
+        body.count = page.size();
+        body.entries = page;
+        return respond( body );
+    }
+
+    /** Upper bound on per-page entries returned by {@link #listBlacklistEntries(int, int)}. */
+    static final int MAX_BLACKLIST_PAGE_SIZE = 1000;
+
     /* ===== DTOs ===== */
 
     public static class ImportGeoBatchRequest {
@@ -1669,5 +1848,23 @@ public class AdminWebService {
         /** Most recent {@code ranAt} across the entire AgentProposal table; null if the table is empty. */
         @Nullable
         public Date lastRanAt;
+    }
+
+    public static class BlacklistRequest {
+        /** GEO accession (GPL* for platform; GSE* for experiment). Required. */
+        public String accession;
+        /** Reason for blacklisting. Required and non-blank. */
+        public String reason;
+    }
+
+    public static class BlacklistListResponse {
+        /** Total number of blacklist entries (independent of paging). */
+        public int total;
+        /** Effective limit applied (capped at {@value #MAX_BLACKLIST_PAGE_SIZE}). */
+        public int limit;
+        public int offset;
+        /** Number of entries actually returned in {@code entries}. */
+        public int count;
+        public List<BlacklistedValueObject> entries;
     }
 }
