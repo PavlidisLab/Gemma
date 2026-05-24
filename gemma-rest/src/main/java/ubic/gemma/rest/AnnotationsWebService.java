@@ -159,6 +159,23 @@ public class AnnotationsWebService {
     @org.springframework.beans.factory.annotation.Value("${gemma.upstream.annotationSearch.timeoutMs:25000}")
     private long upstreamTimeoutMs;
 
+    /**
+     * Raw {@code annotation.category.prefixes} property — semicolon-separated category:prefix
+     * pairs (e.g. {@code cellType:CL_,CLO_,EFO_;cellLine:CLO_,CL_,EFO_}). Parsed once into
+     * {@link #categoryPrefixesByKey} on first use. See default.properties for the shipped
+     * defaults and the format.
+     */
+    @org.springframework.beans.factory.annotation.Value("${annotation.category.prefixes:}")
+    private String categoryPrefixesRaw;
+
+    /**
+     * Parsed map from camelCase category key to ordered prefix list. Lazy-init since
+     * {@code @Value} fields aren't populated when the constructor runs. Empty list under any
+     * key means "no preference" (client picks). Absent key means "no entry configured".
+     */
+    @Nullable
+    private volatile Map<String, List<String>> categoryPrefixesByKey;
+
     /** Page size requested from upstream — we want the wide candidate set so local filtering has room. */
     private static final int UPSTREAM_LIMIT = 1000;
 
@@ -299,11 +316,69 @@ public class AnnotationsWebService {
     @Operation(summary = "Retrieve all ontology categories used in Gemma", responses = {
             @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content())
     })
-    public ResponseDataObject<List<OntologyTermSimpleValueObject>> getAnnotationCategories() {
-        List<OntologyTermSimpleValueObject> vos = ontologyService.getCategoryTerms().stream()
-                .map( t -> new OntologyTermSimpleValueObject( t.getUri(), t.getLabel() ) )
+    public ResponseDataObject<List<AnnotationCategoryValueObject>> getAnnotationCategories() {
+        Map<String, List<String>> prefixesByKey = resolveCategoryPrefixes();
+        List<AnnotationCategoryValueObject> vos = ontologyService.getCategoryTerms().stream()
+                .map( t -> {
+                    String label = t.getLabel();
+                    List<String> prefs = label != null
+                            ? prefixesByKey.getOrDefault( categoryKey( label ), Collections.emptyList() )
+                            : Collections.emptyList();
+                    return new AnnotationCategoryValueObject( t.getUri(), label, prefs );
+                } )
                 .collect( Collectors.toList() );
         return respond( vos );
+    }
+
+    /**
+     * Parse {@code annotation.category.prefixes} on first use, cache thereafter. Each entry is
+     * a {@code key:prefix,prefix,...} pair; entries are semicolon-separated. Whitespace and
+     * blank entries are tolerated.
+     */
+    Map<String, List<String>> resolveCategoryPrefixes() {
+        Map<String, List<String>> cached = categoryPrefixesByKey;
+        if ( cached != null ) return cached;
+        Map<String, List<String>> out = new LinkedHashMap<>();
+        if ( categoryPrefixesRaw != null && !categoryPrefixesRaw.trim().isEmpty() ) {
+            for ( String entry : categoryPrefixesRaw.split( ";" ) ) {
+                String e = entry.trim();
+                if ( e.isEmpty() ) continue;
+                int colon = e.indexOf( ':' );
+                if ( colon <= 0 ) continue;
+                String key = e.substring( 0, colon ).trim();
+                String prefixList = e.substring( colon + 1 );
+                List<String> prefixes = new ArrayList<>();
+                for ( String p : prefixList.split( "," ) ) {
+                    String t = p.trim();
+                    if ( !t.isEmpty() ) prefixes.add( t );
+                }
+                out.put( key, prefixes );
+            }
+        }
+        categoryPrefixesByKey = out;
+        return out;
+    }
+
+    /**
+     * Map an ontology category label (e.g. {@code "cell type"}) to its property-key form
+     * ({@code "cellType"}) — lowercase, split on non-alphanumerics, camelCase. Categories
+     * outside the configured set fall through to an empty preference list.
+     */
+    static String categoryKey( String label ) {
+        if ( label == null || label.isEmpty() ) return "";
+        String[] parts = label.toLowerCase( Locale.ROOT ).split( "[^a-z0-9]+" );
+        StringBuilder sb = new StringBuilder();
+        for ( int i = 0; i < parts.length; i++ ) {
+            String p = parts[i];
+            if ( p.isEmpty() ) continue;
+            if ( sb.length() == 0 ) {
+                sb.append( p );
+            } else {
+                sb.append( Character.toUpperCase( p.charAt( 0 ) ) );
+                if ( p.length() > 1 ) sb.append( p.substring( 1 ) );
+            }
+        }
+        return sb.toString();
     }
 
     /**
@@ -1055,6 +1130,20 @@ public class AnnotationsWebService {
     public static class OntologyTermSimpleValueObject {
         String uri;
         String label;
+    }
+
+    /**
+     * Wire shape for {@code GET /annotations/categories} — carries the ontology term info
+     * plus a preferred-prefix list per category (config-driven via
+     * {@code annotation.category.prefixes}). Curation-ui passes the listed prefixes as
+     * {@code ?prefixes=} on a downstream {@code /annotations/search} when the curator
+     * scopes the search to this category. Empty list = no preference; client decides.
+     */
+    @Value
+    public static class AnnotationCategoryValueObject {
+        String uri;
+        String label;
+        List<String> preferredPrefixes;
     }
 
     /**
