@@ -24,6 +24,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.concurrent.DelegatingSecurityContextCallable;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
@@ -53,6 +54,16 @@ public class TaskRunningServiceImpl implements TaskRunningService, InitializingB
     @Autowired
     private TaskPostProcessing taskPostProcessing;
 
+    /**
+     * Polite-wait budget for in-flight tasks at Spring context shutdown. Kept short by default so the
+     * Maven failsafe forker (default forkedProcessExitTimeoutInSeconds=30s, bumped to 120s in this repo)
+     * is not stalled by a stray submitted-but-undrained future when an IT context tears down. Production
+     * deployments that legitimately need a longer graceful drain (e.g. Tomcat shutdown with long-running
+     * curator tasks) can override via gemma.taskRunner.shutdownTimeoutSeconds in Gemma.properties.
+     */
+    @Value("${gemma.taskRunner.shutdownTimeoutSeconds:15}")
+    private int shutdownTimeoutSeconds;
+
     private ExecutorService executorService;
     private final VirtualThreadExecutorMetrics metrics = new VirtualThreadExecutorMetrics( "taskRunningService" );
     private final Map<String, SubmittedTask> submittedTasks = new ConcurrentHashMap<>();
@@ -70,10 +81,10 @@ public class TaskRunningServiceImpl implements TaskRunningService, InitializingB
     public void destroy() throws Exception {
         executorService.shutdown();
         if ( !executorService.isTerminated() ) {
-            log.warn( "There are still running tasks, will wait at most 5 minutes before shutting them down." );
+            log.warn( "There are still running tasks, will wait at most " + shutdownTimeoutSeconds + "s before shutting them down." );
         }
-        if ( !executorService.awaitTermination( 5, TimeUnit.MINUTES ) ) {
-            log.info( "TaskRunningService executor was still running after 5 minutes, interrupting pending tasks..." );
+        if ( !executorService.awaitTermination( shutdownTimeoutSeconds, TimeUnit.SECONDS ) ) {
+            log.info( "TaskRunningService executor was still running after " + shutdownTimeoutSeconds + "s, interrupting pending tasks..." );
             executorService.shutdownNow();
         }
     }
