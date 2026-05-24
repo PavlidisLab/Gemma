@@ -15,7 +15,7 @@ Wall-clock is `<testsuite time="…">`. All entries below have `errors=0, failur
 | # | time (s) | phase | n | class | one-line |
 |--:|---------:|------:|--:|------|----------|
 | 1  | 213.61 | IT | 2  | `core.loader.expression.singleCell.MexSingleCellDataLoaderTest` | `testGSE141552` alone burns 187 s — MEX read of an unsliced classpath fixture. |
-| 2  | 159.54 | SF | 15 | `core.loader.expression.geo.service.GeoBrowserTest` | Two methods (`testGSE97948` 75 s, `testGSE8579` 52 s) — GEO MINiML fetch + parse via cached classpath SOFT. |
+| 2  | 159.54 | SF | 15 | `core.loader.expression.geo.service.GeoBrowserTest` | ~~MINiML fetch~~ **CORRECTED 2026-05-23:** no classpath cache for GSE97948 / GSE8579; the 75 + 52 s is real HTTPS to GEO. Already `@Tag("slow") + @NetworkAvailable`; default `mvn verify` skips it. Not actionable. See `handoffs/GEOBROWSER_CHOP_BLOCKED.md`. |
 | 3  | 150.82 | SF |  1 | `core.loader.expression.geo.GeoTermReplacementTest` | Single test method — replays a large GEO characteristic-term rewrite over fixture. |
 | 4  | 148.89 | SF | 31 | `core.loader.expression.geo.GeoSingleCellDetectorTest` | `testGSE201032` 47 s, `testGSE196516` 33 s, `testGSE109774` 30 s — single-cell-fingerprint sniff on cached SOFT. |
 | 5  | 144.06 | IT | 19 | `core.loader.expression.geo.GeoSingleCellDetectorTest` | IT variant — `testGSE125708` 35 s + CXG/SRA probes 26-35 s each. |
