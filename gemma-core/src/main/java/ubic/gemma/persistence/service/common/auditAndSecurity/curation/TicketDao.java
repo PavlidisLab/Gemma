@@ -17,11 +17,14 @@ import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketPriority;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
 import ubic.gemma.persistence.service.BaseDao;
 import ubic.gemma.persistence.util.Cursor;
 import ubic.gemma.persistence.util.CursorPage;
 
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Persistence operations for {@link Ticket} (Phase B-1 of
@@ -142,4 +145,24 @@ public interface TicketDao extends BaseDao<Ticket> {
      * @param limit  page size; must be {@code > 0}
      */
     CursorPage<TicketEvent> findEventsByCursor( Ticket ticket, @Nullable Cursor cursor, int limit );
+
+    /**
+     * Count open ({@code OPEN} + {@code IN_PROGRESS}) tickets grouped by
+     * {@link TicketType}. Used by the admin curation-status surface.
+     */
+    Map<TicketType, Long> countOpenByType();
+
+    /**
+     * Count tickets in a non-terminal state ({@code OPEN} + {@code IN_PROGRESS}).
+     */
+    long countOpen();
+
+    /**
+     * @return the earliest {@code createdAt} across every ticket in a
+     *         non-terminal state, or {@code null} if no open tickets exist.
+     *         Used to surface "oldest open ticket age" on the admin
+     *         curation-status surface.
+     */
+    @Nullable
+    Date findOldestOpenCreatedAt();
 }

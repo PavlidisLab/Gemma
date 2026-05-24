@@ -30,13 +30,19 @@ import org.springframework.security.core.userdetails.UserDetails;
 import ubic.gemma.core.job.SubmittedTask;
 import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.core.security.authentication.UserManager;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
+import ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketService;
+import ubic.gemma.persistence.service.expression.experiment.AgentProposalService;
 import ubic.gemma.rest.util.ResponseDataObject;
 
 import javax.sql.DataSource;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -69,13 +75,17 @@ public class AdminWebServiceTest {
     private DataSource dataSource;
     @Mock
     private UserManager userManager;
+    @Mock
+    private AgentProposalService agentProposalService;
+    @Mock
+    private TicketService ticketService;
 
     private AdminWebService webService;
 
     @BeforeEach
     public void setUp() {
         webService = new AdminWebService( cacheManager, sessionFactory, taskRunningService, sessionRegistry,
-                Collections.emptyList(), dataSource, userManager );
+                Collections.emptyList(), dataSource, userManager, agentProposalService, ticketService );
     }
 
     /* ===== /admin/caches ===== */
@@ -323,5 +333,78 @@ public class AdminWebServiceTest {
         when( t.getStatus() ).thenReturn( status );
         when( t.getSubmissionTime() ).thenReturn( submittedAt );
         return t;
+    }
+
+    /* ===== /admin/curation-status ===== */
+
+    @Test
+    public void getCurationStatusSnapshotComposesProposalAndTicketAggregates() {
+        // Proposals: 5 in last 24h, 42 in last 7d, lifetime status histogram, 3 distinct runs in 7d,
+        // most recent ranAt = +/- now.
+        Date lastRan = new Date( 1_700_000_000_000L );
+        when( agentProposalService.countSince( org.mockito.ArgumentMatchers.any( Date.class ) ) )
+                .thenReturn( 5L )   // first call: 24h
+                .thenReturn( 42L ); // second call: 7d
+        Map<String, Long> byStatus = new LinkedHashMap<>();
+        byStatus.put( "OPEN", 18L );
+        byStatus.put( "FINALIZED", 1003L );
+        byStatus.put( "REOPENED", 7L );
+        when( agentProposalService.countByStatusSince( null ) ).thenReturn( byStatus );
+        when( agentProposalService.countDistinctRunIdsSince( org.mockito.ArgumentMatchers.any( Date.class ) ) )
+                .thenReturn( 12L );
+        when( agentProposalService.findLatestRanAt() ).thenReturn( lastRan );
+
+        // Tickets: 14 BATCH_INFO_NEEDED + 27 QUALITY_REVIEW open, total 41 open, oldest 5d ago.
+        Map<TicketType, Long> openByType = new LinkedHashMap<>();
+        openByType.put( TicketType.BATCH_INFO_NEEDED, 14L );
+        openByType.put( TicketType.QUALITY_REVIEW, 27L );
+        when( ticketService.countOpenByType() ).thenReturn( openByType );
+        when( ticketService.countOpen() ).thenReturn( 41L );
+        Date now = new Date();
+        Date fiveDaysAgo = new Date( now.getTime() - TimeUnit.DAYS.toMillis( 5 ) );
+        when( ticketService.findOldestOpenCreatedAt() ).thenReturn( fiveDaysAgo );
+
+        ResponseDataObject<AdminWebService.CurationStatusResponse> resp = webService.getCurationStatus();
+        AdminWebService.CurationStatusResponse body = resp.getData();
+
+        assertThat( body.proposals.totalLast24h ).isEqualTo( 5L );
+        assertThat( body.proposals.totalLast7d ).isEqualTo( 42L );
+        assertThat( body.proposals.byStatus )
+                .containsEntry( "OPEN", 18L )
+                .containsEntry( "FINALIZED", 1003L )
+                .containsEntry( "REOPENED", 7L );
+
+        assertThat( body.tickets.openCount ).isEqualTo( 41L );
+        assertThat( body.tickets.openCountByType )
+                .containsEntry( "BATCH_INFO_NEEDED", 14L )
+                .containsEntry( "QUALITY_REVIEW", 27L );
+        assertThat( body.tickets.oldestOpenAgeDays ).isEqualTo( 5L );
+
+        assertThat( body.agentRuns.distinctRunIds ).isEqualTo( 12L );
+        assertThat( body.agentRuns.lastRanAt ).isEqualTo( lastRan );
+    }
+
+    @Test
+    public void getCurationStatusEmptyTablesReturnsZeroes() {
+        when( agentProposalService.countSince( org.mockito.ArgumentMatchers.any( Date.class ) ) ).thenReturn( 0L );
+        when( agentProposalService.countByStatusSince( null ) ).thenReturn( Collections.emptyMap() );
+        when( agentProposalService.countDistinctRunIdsSince( org.mockito.ArgumentMatchers.any( Date.class ) ) )
+                .thenReturn( 0L );
+        when( agentProposalService.findLatestRanAt() ).thenReturn( null );
+        when( ticketService.countOpenByType() ).thenReturn( Collections.emptyMap() );
+        when( ticketService.countOpen() ).thenReturn( 0L );
+        when( ticketService.findOldestOpenCreatedAt() ).thenReturn( null );
+
+        ResponseDataObject<AdminWebService.CurationStatusResponse> resp = webService.getCurationStatus();
+        AdminWebService.CurationStatusResponse body = resp.getData();
+
+        assertThat( body.proposals.totalLast24h ).isZero();
+        assertThat( body.proposals.totalLast7d ).isZero();
+        assertThat( body.proposals.byStatus ).isEmpty();
+        assertThat( body.tickets.openCount ).isZero();
+        assertThat( body.tickets.openCountByType ).isEmpty();
+        assertThat( body.tickets.oldestOpenAgeDays ).isNull();
+        assertThat( body.agentRuns.distinctRunIds ).isZero();
+        assertThat( body.agentRuns.lastRanAt ).isNull();
     }
 }

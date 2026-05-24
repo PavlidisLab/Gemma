@@ -21,6 +21,7 @@ import ubic.gemma.model.common.auditAndSecurity.curation.TicketEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketPriority;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketState;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.Cursor;
 import ubic.gemma.persistence.util.CursorPage;
@@ -29,7 +30,10 @@ import ubic.gemma.persistence.util.Sort;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Hibernate implementation of {@link TicketDao}. Mirrors the lightweight CRUD
@@ -397,5 +401,41 @@ public class TicketDaoImpl extends AbstractDao<Ticket> implements TicketDao {
 
         Sort idSort = Sort.by( null, "id", Sort.Direction.ASC, Sort.NullMode.LAST, "id" );
         return new CursorPage<>( data, idSort, limit, nextCursor, prevCursor, null );
+    }
+
+    @Override
+    public Map<TicketType, Long> countOpenByType() {
+        //noinspection unchecked
+        List<Object[]> rows = ( List<Object[]> ) this.getSessionFactory().getCurrentSession().createQuery(
+                        "select t.type, count(t) from Ticket t "
+                                + "where t.state in :openStates "
+                                + "group by t.type" )
+                .setParameterList( "openStates", Arrays.asList( TicketState.OPEN, TicketState.IN_PROGRESS ) )
+                .list();
+        Map<TicketType, Long> out = new LinkedHashMap<>( rows.size() );
+        for ( Object[] row : rows ) {
+            TicketType type = ( TicketType ) row[0];
+            Long count = ( Long ) row[1];
+            out.put( type, count == null ? 0L : count );
+        }
+        return out;
+    }
+
+    @Override
+    public long countOpen() {
+        Long n = ( Long ) this.getSessionFactory().getCurrentSession().createQuery(
+                        "select count(t) from Ticket t where t.state in :openStates" )
+                .setParameterList( "openStates", Arrays.asList( TicketState.OPEN, TicketState.IN_PROGRESS ) )
+                .uniqueResult();
+        return n == null ? 0L : n;
+    }
+
+    @Nullable
+    @Override
+    public Date findOldestOpenCreatedAt() {
+        return ( Date ) this.getSessionFactory().getCurrentSession().createQuery(
+                        "select min(t.createdAt) from Ticket t where t.state in :openStates" )
+                .setParameterList( "openStates", Arrays.asList( TicketState.OPEN, TicketState.IN_PROGRESS ) )
+                .uniqueResult();
     }
 }

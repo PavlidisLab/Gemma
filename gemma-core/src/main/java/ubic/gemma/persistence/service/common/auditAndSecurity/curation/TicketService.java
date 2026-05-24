@@ -25,7 +25,9 @@ import ubic.gemma.persistence.util.Cursor;
 import ubic.gemma.persistence.util.CursorPage;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Service-layer API for the Phase B-1 Ticket layer
@@ -95,4 +97,14 @@ public interface TicketService extends BaseService<Ticket> {
 
     /** @see TicketDao#findEventsByCursor */
     CursorPage<TicketEvent> findEventsByCursor( Ticket ticket, @Nullable Cursor cursor, int limit );
+
+    /** @see TicketDao#countOpenByType */
+    Map<TicketType, Long> countOpenByType();
+
+    /** @see TicketDao#countOpen */
+    long countOpen();
+
+    /** @see TicketDao#findOldestOpenCreatedAt */
+    @Nullable
+    Date findOldestOpenCreatedAt();
 }
