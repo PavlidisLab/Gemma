@@ -83,6 +83,7 @@
         <mapping resource="ubic/gemma/model/expression/biomaterial/Treatment.hbm.xml"/>
         <mapping resource="ubic/gemma/model/expression/designElement/CompositeSequence.hbm.xml"/>
         <mapping resource="ubic/gemma/model/expression/experiment/AgentProposal.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/expression/experiment/GeoScrapeWatermark.hbm.xml"/>
         <mapping resource="ubic/gemma/model/expression/experiment/ExperimentalDesign.hbm.xml"/>
         <mapping resource="ubic/gemma/model/expression/experiment/ExperimentalFactor.hbm.xml"/>
         <mapping resource="ubic/gemma/model/expression/experiment/FactorValue.hbm.xml"/>
