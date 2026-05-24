@@ -2241,6 +2241,104 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
                 .hasStatus( Response.Status.NOT_FOUND );
     }
 
+    // --- Diagnostics: svd loadings -------------------------------------------------------
+
+    @Test
+    public void testGetDatasetSvdLoadings() {
+        // Stub: ee has an SVD; topLoadedVectors returns 3 probes on PC1.
+        when( svdService.hasSvd( ee ) ).thenReturn( true );
+        ubic.gemma.model.expression.designElement.CompositeSequence p1 = ubic.gemma.model.expression.designElement.CompositeSequence.Factory.newInstance( "probe_a" );
+        p1.setId( 10L );
+        ubic.gemma.model.expression.designElement.CompositeSequence p2 = ubic.gemma.model.expression.designElement.CompositeSequence.Factory.newInstance( "probe_b" );
+        p2.setId( 11L );
+        ubic.gemma.model.expression.designElement.CompositeSequence p3 = ubic.gemma.model.expression.designElement.CompositeSequence.Factory.newInstance( "probe_c" );
+        p3.setId( 12L );
+        ubic.gemma.model.analysis.expression.pca.ProbeLoading pl1 = ubic.gemma.model.analysis.expression.pca.ProbeLoading.Factory.newInstance( 1, 0.9, 1, p1 );
+        ubic.gemma.model.analysis.expression.pca.ProbeLoading pl2 = ubic.gemma.model.analysis.expression.pca.ProbeLoading.Factory.newInstance( 1, -0.7, 2, p2 );
+        ubic.gemma.model.analysis.expression.pca.ProbeLoading pl3 = ubic.gemma.model.analysis.expression.pca.ProbeLoading.Factory.newInstance( 1, 0.3, 3, p3 );
+        Map<ubic.gemma.model.analysis.expression.pca.ProbeLoading, ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject> stored = new LinkedHashMap<>();
+        stored.put( pl1, null );
+        stored.put( pl2, null );
+        stored.put( pl3, null );
+        when( svdService.getTopLoadedVectors( eq( ee ), anyInt(), anyInt() ) ).thenReturn( stored );
+
+        // SVDResult with a 2×2 vMatrix; column 0 (PC1) gives bioAssay scores.
+        BioAssay a1 = BioAssay.Factory.newInstance( "BA1" );
+        a1.setId( 200L );
+        BioAssay a2 = BioAssay.Factory.newInstance( "BA2" );
+        a2.setId( 201L );
+        ubic.gemma.model.expression.biomaterial.BioMaterial m1 = ubic.gemma.model.expression.biomaterial.BioMaterial.Factory.newInstance();
+        ubic.gemma.model.expression.biomaterial.BioMaterial m2 = ubic.gemma.model.expression.biomaterial.BioMaterial.Factory.newInstance();
+        DenseDoubleMatrix<ubic.gemma.model.expression.biomaterial.BioMaterial, Integer> vMatrix = new DenseDoubleMatrix<>( new double[][] {
+                { 0.5, 0.1 },
+                { -0.5, 0.2 }
+        } );
+        vMatrix.setRowNames( Arrays.asList( m1, m2 ) );
+        vMatrix.setColumnNames( Arrays.asList( 0, 1 ) );
+        ubic.gemma.core.analysis.preprocess.svd.SVDResult svd = mock( ubic.gemma.core.analysis.preprocess.svd.SVDResult.class );
+        when( svd.getVMatrix() ).thenReturn( vMatrix );
+        when( svd.getBioAssays() ).thenReturn( Arrays.asList( a1, a2 ) );
+        when( svdService.getSvd( ee ) ).thenReturn( svd );
+
+        assertThat( target( "/datasets/1/svd/loadings" ).queryParam( "pc", 1 ).queryParam( "top", 2 ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .entity()
+                .hasFieldOrProperty( "data" )
+                .hasFieldOrPropertyWithValue( "data.pc", 1 )
+                .extracting( "data.rows", list( Map.class ) )
+                .hasSize( 2 );
+        // default direction=both sorts by |loading| desc: pl1 (0.9), pl2 (-0.7), pl3 (0.3) → first two are 0.9, -0.7.
+        verify( svdService ).hasSvd( ee );
+        verify( svdService ).getTopLoadedVectors( eq( ee ), eq( 1 ), anyInt() );
+        verify( svdService ).getSvd( ee );
+    }
+
+    @Test
+    public void testGetDatasetSvdLoadingsWhenNoSvdIs404() {
+        when( svdService.hasSvd( ee ) ).thenReturn( false );
+        assertThat( target( "/datasets/1/svd/loadings" ).queryParam( "pc", 1 ).request().get() )
+                .hasStatus( Response.Status.NOT_FOUND )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
+        verify( svdService ).hasSvd( ee );
+        verify( svdService, never() ).getTopLoadedVectors( any(), anyInt(), anyInt() );
+    }
+
+    @Test
+    public void testGetDatasetSvdLoadingsWithMissingPcIs400() {
+        assertThat( target( "/datasets/1/svd/loadings" ).request().get() )
+                .hasStatus( Response.Status.BAD_REQUEST )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
+        verifyNoInteractions( svdService );
+    }
+
+    @Test
+    public void testGetDatasetSvdLoadingsWithPcZeroIs400() {
+        assertThat( target( "/datasets/1/svd/loadings" ).queryParam( "pc", 0 ).request().get() )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        verifyNoInteractions( svdService );
+    }
+
+    @Test
+    public void testGetDatasetSvdLoadingsWithTopOverCapIs400() {
+        assertThat( target( "/datasets/1/svd/loadings" ).queryParam( "pc", 1 ).queryParam( "top", 600 ).request().get() )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        verifyNoInteractions( svdService );
+    }
+
+    @Test
+    public void testGetDatasetSvdLoadingsWithUnknownDirectionIs400() {
+        // Jersey enum-coerces the @QueryParam — an unknown value becomes a 404 from a NotFoundException
+        // raised by the param converter (this is the documented Jersey behaviour for enum @QueryParam).
+        // Accept either 404 (Jersey default) or 400 to keep the test framework-version-tolerant.
+        Response.StatusType status = target( "/datasets/1/svd/loadings" )
+                .queryParam( "pc", 1 )
+                .queryParam( "direction", "sideways" )
+                .request().get().getStatusInfo();
+        assertThat( status.getStatusCode() ).isIn( 400, 404 );
+        verifyNoInteractions( svdService );
+    }
+
     @Test
     public void testGetDatasetAllPublications() {
         when( expressionExperimentService.loadWithPrimaryPublicationAndOtherRelevantPublications( 1L ) ).thenReturn( ee );

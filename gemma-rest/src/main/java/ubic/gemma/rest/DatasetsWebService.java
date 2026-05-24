@@ -49,6 +49,8 @@ import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.analysis.preprocess.filter.NoDesignElementsException;
 import ubic.gemma.core.analysis.preprocess.svd.SVDResult;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
+import ubic.gemma.model.analysis.expression.pca.ProbeLoading;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.analysis.service.OutlierFlaggingService;
 import ubic.gemma.core.job.SubmittedTask;
@@ -4419,6 +4421,68 @@ public class DatasetsWebService {
     }
 
     /**
+     * Sort direction for {@link #getDatasetSvdLoadings}: {@code both} sorts by |loading| desc,
+     * {@code positive} filters to loading &gt; 0 desc, {@code negative} filters to loading &lt; 0 asc.
+     */
+    public enum PcLoadingDirection {
+        both, positive, negative
+    }
+
+    private static final int SVD_LOADINGS_DEFAULT_TOP = 50;
+    private static final int SVD_LOADINGS_MAX_TOP = 500;
+
+    /**
+     * Retrieve the top-N probe loadings on a chosen principal component, plus the bioAssay
+     * scores on that PC. Backs the curation-UI Diagnostics tab's "click-PC → loaded-genes
+     * popup" flow.
+     * <p>
+     * Uses {@link SVDService#getTopLoadedVectors(ExpressionExperiment, int, int)} to fetch the
+     * stored {@link ProbeLoading} rows for the component (one DB hit; no expression-matrix
+     * recompute). bioAssay scores come from the SVDResult's vMatrix column for the PC. Returns
+     * 404 if the dataset has no SVD analysis, 400 if {@code pc} or {@code top} are out of range.
+     */
+    @GET
+    @Path("/{dataset}/svd/loadings")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve top-loaded probes on a principal component for a dataset",
+            description = "Returns the top-N probe loadings on the chosen PC (sorted by |loading| desc for "
+                    + "`direction=both`, signed for `positive` / `negative`) plus the bioAssay scores on that PC. "
+                    + "404 if SVD has not been computed.",
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "400", description = "Invalid pc, top, or direction.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist or has no SVD analysis.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<PcLoadingsValueObject> getDatasetSvdLoadings( // Params:
+            @PathParam("dataset") DatasetArg<?> datasetArg, // Required
+            @Parameter(description = "1-indexed principal component number.", required = true) @QueryParam("pc") Integer pc,
+            @Parameter(description = "Number of top loadings to return (max " + SVD_LOADINGS_MAX_TOP + ").",
+                    schema = @Schema(type = "integer", defaultValue = "" + SVD_LOADINGS_DEFAULT_TOP, minimum = "1", maximum = "" + SVD_LOADINGS_MAX_TOP))
+            @QueryParam("top") @DefaultValue("" + SVD_LOADINGS_DEFAULT_TOP) Integer top,
+            @Parameter(description = "`both` (sort by |loading| desc, default), `positive` (loading > 0 desc), `negative` (loading < 0 asc).")
+            @QueryParam("direction") @DefaultValue("both") PcLoadingDirection direction
+    ) {
+        if ( pc == null || pc < 1 ) {
+            throw new BadRequestException( "pc must be a positive 1-indexed integer." );
+        }
+        if ( top == null || top < 1 || top > SVD_LOADINGS_MAX_TOP ) {
+            throw new BadRequestException( "top must be in [1, " + SVD_LOADINGS_MAX_TOP + "]." );
+        }
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        if ( !svdService.hasSvd( ee ) ) {
+            throw new NotFoundException( ee.getShortName() + " does not have an SVD analysis." );
+        }
+        // SVDService.getTopLoadedVectors is 1-indexed on the component arg (component=1 is PC1).
+        // We over-fetch (top+spare) so the in-memory filter for direction=positive/negative still
+        // has top entries when the natural-rank top is mixed-sign; cap the over-fetch.
+        int fetchCount = direction == PcLoadingDirection.both ? top : Math.min( SVD_LOADINGS_MAX_TOP, top * 4 );
+        Map<ProbeLoading, DoubleVectorValueObject> loaded = svdService.getTopLoadedVectors( ee, pc, fetchCount );
+        SVDResult svd = svdService.getSvd( ee );
+        return respond( PcLoadingsValueObject.from( pc, top, direction, loaded, svd ) );
+    }
+
+    /**
      * Retrieve the expression levels of a given gene across all datasets.
      */
     @GET
@@ -5188,6 +5252,99 @@ public class DatasetsWebService {
         public static class Fit {
             double[] sortedMeans;
             double[] fittedVariances;
+        }
+    }
+
+    /**
+     * Wire shape for {@link #getDatasetSvdLoadings}: the top-N probe loadings on a principal
+     * component plus the bioAssay scores on the same PC.
+     */
+    @Value
+    public static class PcLoadingsValueObject {
+
+        /**
+         * 1-indexed principal component number this payload is for.
+         */
+        int pc;
+
+        /**
+         * Top-N probe loadings, sorted by |loading| desc ({@code direction=both}), descending
+         * loading ({@code positive}), or ascending loading ({@code negative}).
+         */
+        List<Row> rows;
+
+        /**
+         * Map of bioAssay id to the assay's score on this PC. Pulled from the SVDResult's
+         * v-matrix column for the requested PC.
+         */
+        Map<Long, Double> bioAssayScores;
+
+        public static PcLoadingsValueObject from( int pc, int top, PcLoadingDirection direction,
+                Map<ProbeLoading, DoubleVectorValueObject> loaded, SVDResult svd ) {
+            // Filter + sort the loadings.
+            List<Row> rows = loaded.keySet().stream()
+                    .filter( pl -> pl.getLoading() != null )
+                    .filter( pl -> {
+                        double v = pl.getLoading();
+                        switch ( direction ) {
+                            case positive:
+                                return v > 0;
+                            case negative:
+                                return v < 0;
+                            case both:
+                            default:
+                                return true;
+                        }
+                    } )
+                    .sorted( ( a, b ) -> {
+                        double av = a.getLoading();
+                        double bv = b.getLoading();
+                        switch ( direction ) {
+                            case positive:
+                                return Double.compare( bv, av );
+                            case negative:
+                                return Double.compare( av, bv );
+                            case both:
+                            default:
+                                return Double.compare( Math.abs( bv ), Math.abs( av ) );
+                        }
+                    } )
+                    .limit( top )
+                    .map( pl -> {
+                        CompositeSequence probe = pl.getProbe();
+                        Long deId = probe != null ? probe.getId() : null;
+                        String deName = probe != null ? probe.getName() : null;
+                        return new Row( deId, deName, null, pl.getLoading() );
+                    } )
+                    .collect( Collectors.toList() );
+
+            // bioAssayScores: pull column `pc-1` of the v-matrix (1-indexed PC).
+            Map<Long, Double> scores = new LinkedHashMap<>();
+            int colIdx = pc - 1;
+            DoubleMatrix<BioMaterial, Integer> v = svd.getVMatrix();
+            if ( v != null && colIdx >= 0 && colIdx < v.columns() ) {
+                List<BioAssay> assays = svd.getBioAssays();
+                for ( int i = 0; i < assays.size() && i < v.rows(); i++ ) {
+                    BioAssay ba = assays.get( i );
+                    if ( ba.getId() != null ) {
+                        scores.put( ba.getId(), v.get( i, colIdx ) );
+                    }
+                }
+            }
+
+            return new PcLoadingsValueObject( pc, rows, scores );
+        }
+
+        @Value
+        public static class Row {
+            @Nullable Long designElementId;
+            @Nullable String designElementName;
+            /**
+             * Reserved — gene-symbol enrichment via the CompositeSequence → Gene mapping path
+             * is deferred. Currently always null.
+             */
+            @Nullable String geneSymbol;
+            double loading;
         }
     }
 
