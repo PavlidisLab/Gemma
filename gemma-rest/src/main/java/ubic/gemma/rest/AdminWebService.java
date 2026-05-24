@@ -53,6 +53,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.job.SubmittedTask;
 import ubic.gemma.core.job.TaskRunningService;
+import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
+import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
+import ubic.gemma.core.loader.expression.geo.service.GeoBrowserImpl;
+import ubic.gemma.core.loader.expression.geo.service.GeoRecordType;
+import ubic.gemma.core.loader.expression.geo.service.GeoRetrieveConfig;
 import ubic.gemma.core.ontology.basecode.providers.OntologyService;
 import ubic.gemma.core.security.AuthorityConstants;
 import ubic.gemma.core.security.authentication.UserDetailsImpl;
@@ -132,6 +137,22 @@ public class AdminWebService {
 
     @Value("${gemma.curationAgent.healthTimeoutMs:3000}")
     private int curationAgentHealthTimeoutMs;
+
+    /**
+     * NCBI E-utilities API key, threaded into the {@link GeoBrowser} so GEO scrapes
+     * don't get rate-throttled. Blank when unconfigured (NCBI then enforces the
+     * default 3-req/s limit).
+     */
+    @Value("${entrez.efetch.apikey:}")
+    private String ncbiApiKey;
+
+    /**
+     * Lazily-initialised GeoBrowser used by {@link #grabGeoRecords(GeoGrabRequest)}.
+     * Package-private setter exists for tests; production code constructs a
+     * {@link GeoBrowserImpl} on first use.
+     */
+    @Nullable
+    private GeoBrowser geoBrowser;
 
     /**
      * Filesystem root holding the per-entity Hibernate Search 7 Lucene index
@@ -739,6 +760,114 @@ public class AdminWebService {
         return respond( body );
     }
 
+    /* ===== GEO scrape (preview without import) ===== */
+
+    /**
+     * Scrape GEO record metadata by accession without importing into Gemma. Port of
+     * {@code GeoGrabberCli}'s -e / --acc mode. Synchronous: NCBI E-utilities responses
+     * are sub-second per accession in the typical case, so the curation-UI can call
+     * this on-demand to preview a GEO record before triggering a full import.
+     *
+     * <p>Returns one {@link GeoRecordValueObject} per requested accession that GEO
+     * successfully returns; accessions GEO doesn't know about are silently dropped
+     * (matching the CLI's behavior).</p>
+     */
+    @POST
+    @Path("/tasks/geo-grab")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Scrape GEO record metadata by accession",
+            description = "Fetches GEO series metadata for the given accessions and returns it without importing into Gemma. Useful for previewing a GEO record from the curation-UI before triggering a full import. Synchronous; expect sub-second latency per accession. Uses the DETAILED retrieve preset (sub-series status, MeSH headings, library strategy, sample details, errors ignored).",
+            security = {
+                    @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
+            },
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class))),
+                    @ApiResponse(responseCode = "400", description = "Empty or missing accessions list",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "502", description = "GEO E-utilities request failed",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
+            })
+    public ResponseDataObject<GeoGrabResponse> grabGeoRecords( GeoGrabRequest req ) {
+        if ( req == null || req.accessions == null || req.accessions.isEmpty() ) {
+            throw new BadRequestException( "accessions list is required and must be non-empty" );
+        }
+        List<String> cleaned = new ArrayList<>();
+        for ( String a : req.accessions ) {
+            if ( a != null && !a.trim().isEmpty() ) {
+                cleaned.add( a.trim() );
+            }
+        }
+        if ( cleaned.isEmpty() ) {
+            throw new BadRequestException( "accessions list contains only blank entries" );
+        }
+        GeoBrowser browser = resolveGeoBrowser();
+        Collection<GeoRecord> records;
+        try {
+            // DETAILED preset matches GeoGrabberCli.getDatasets — sub-series, MeSH,
+            // library strategy, sample details. ignoreErrors=true on the preset so
+            // a single bad sub-fetch doesn't poison the whole batch.
+            records = browser.getGeoRecords( GeoRecordType.SERIES, cleaned, GeoRetrieveConfig.builder()
+                    .subSeriesStatus( true )
+                    .meshHeadings( true )
+                    .libraryStrategy( true )
+                    .sampleDetails( true )
+                    .ignoreErrors( true )
+                    .build() );
+        } catch ( IOException e ) {
+            log.warn( "GEO scrape failed for accessions=" + cleaned + ": " + e.getMessage() );
+            throw new jakarta.ws.rs.ServerErrorException( "GEO E-utilities request failed: " + e.getMessage(),
+                    Response.Status.BAD_GATEWAY );
+        }
+        List<GeoRecordValueObject> vos = new ArrayList<>( records.size() );
+        for ( GeoRecord r : records ) {
+            vos.add( toGeoRecordValueObject( r ) );
+        }
+        GeoGrabResponse body = new GeoGrabResponse();
+        body.requestedCount = cleaned.size();
+        body.returnedCount = vos.size();
+        body.records = vos;
+        return respond( body );
+    }
+
+    private synchronized GeoBrowser resolveGeoBrowser() {
+        if ( geoBrowser == null ) {
+            geoBrowser = new GeoBrowserImpl( ncbiApiKey == null ? "" : ncbiApiKey );
+        }
+        return geoBrowser;
+    }
+
+    /** Test seam: package-private setter so unit tests can inject a mock GeoBrowser. */
+    void setGeoBrowser( GeoBrowser geoBrowser ) {
+        this.geoBrowser = geoBrowser;
+    }
+
+    private static GeoRecordValueObject toGeoRecordValueObject( GeoRecord r ) {
+        GeoRecordValueObject vo = new GeoRecordValueObject();
+        vo.geoAccession = r.getGeoAccession();
+        vo.title = r.getTitle();
+        vo.summary = r.getSummary();
+        vo.overallDesign = r.getOverallDesign();
+        vo.organisms = r.getOrganisms() == null ? null : new ArrayList<>( r.getOrganisms() );
+        vo.platform = r.getPlatform();
+        vo.releaseDate = r.getReleaseDate();
+        vo.seriesType = r.getSeriesType();
+        vo.numSamples = r.getNumSamples();
+        vo.subSeries = r.isSubSeries();
+        vo.subSeriesOf = r.getSubSeriesOf();
+        vo.superSeries = r.isSuperSeries();
+        vo.pubMedIds = r.getPubMedIds() == null ? null : new ArrayList<>( r.getPubMedIds() );
+        vo.meshHeadings = r.getMeshHeadings() == null ? null : new ArrayList<>( r.getMeshHeadings() );
+        vo.libraryStrategy = r.getLibraryStrategy();
+        vo.librarySource = r.getLibrarySource();
+        vo.sampleDetails = r.getSampleDetails();
+        vo.contactName = r.getContactName();
+        return vo;
+    }
+
     /* ===== Curation lifecycle status ===== */
 
     /**
@@ -1311,6 +1440,55 @@ public class AdminWebService {
         /** Days since the oldest non-terminal ticket was created; null when no open tickets exist. */
         @Nullable
         public Long oldestOpenAgeDays;
+    }
+
+    public static class GeoGrabRequest {
+        /** GEO series accessions (e.g. {@code GSE12345}) to fetch metadata for. */
+        public List<String> accessions;
+    }
+
+    public static class GeoGrabResponse {
+        /** Number of accessions in the request after trimming blanks. */
+        public int requestedCount;
+        /** Number of GEO records actually returned by NCBI (may be less than requestedCount). */
+        public int returnedCount;
+        public List<GeoRecordValueObject> records;
+    }
+
+    public static class GeoRecordValueObject {
+        public String geoAccession;
+        @Nullable
+        public String title;
+        @Nullable
+        public String summary;
+        @Nullable
+        public String overallDesign;
+        @Nullable
+        public List<String> organisms;
+        /** Semicolon-delimited platform accessions (e.g. {@code GPL570;GPL96}). */
+        @Nullable
+        public String platform;
+        @Nullable
+        public Date releaseDate;
+        @Nullable
+        public String seriesType;
+        public int numSamples;
+        public boolean subSeries;
+        @Nullable
+        public String subSeriesOf;
+        public boolean superSeries;
+        @Nullable
+        public List<String> pubMedIds;
+        @Nullable
+        public List<String> meshHeadings;
+        @Nullable
+        public String libraryStrategy;
+        @Nullable
+        public String librarySource;
+        @Nullable
+        public String sampleDetails;
+        @Nullable
+        public String contactName;
     }
 
     public static class AgentRunsBlock {

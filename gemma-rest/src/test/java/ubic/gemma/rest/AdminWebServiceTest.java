@@ -35,6 +35,10 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import ubic.gemma.core.job.SubmittedTask;
 import ubic.gemma.core.job.TaskRunningService;
+import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
+import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
+import ubic.gemma.core.loader.expression.geo.service.GeoRecordType;
+import ubic.gemma.core.loader.expression.geo.service.GeoRetrieveConfig;
 import ubic.gemma.core.security.AuthorityConstants;
 import ubic.gemma.core.security.authentication.UserDetailsImpl;
 import ubic.gemma.core.security.authentication.UserManager;
@@ -45,6 +49,7 @@ import ubic.gemma.persistence.service.expression.experiment.AgentProposalService
 import ubic.gemma.rest.util.ResponseDataObject;
 
 import javax.sql.DataSource;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -92,6 +97,8 @@ public class AdminWebServiceTest {
     private AgentProposalService agentProposalService;
     @Mock
     private TicketService ticketService;
+    @Mock
+    private GeoBrowser geoBrowser;
 
     private AdminWebService webService;
 
@@ -662,5 +669,79 @@ public class AdminWebServiceTest {
                 .isInstanceOf( ClientErrorException.class )
                 .matches( ex -> ( ( ClientErrorException ) ex ).getResponse().getStatus() == 409 );
         verify( userManager, never() ).softDeleteUser( anyString(), anyString() );
+    }
+
+    /* ===== /admin/tasks/geo-grab ===== */
+
+    @Test
+    public void grabGeoRecords_returnsMappedValueObjects() throws IOException {
+        webService.setGeoBrowser( geoBrowser );
+        GeoRecord rec = new GeoRecord();
+        rec.setGeoAccession( "GSE12345" );
+        rec.setTitle( "A study of foo" );
+        rec.setSummary( "Some summary" );
+        rec.setOverallDesign( "Some design" );
+        rec.setOrganisms( Arrays.asList( "Homo sapiens" ) );
+        rec.setPlatform( "GPL570" );
+        rec.setSeriesType( "Expression profiling by array" );
+        rec.setNumSamples( 24 );
+        rec.setReleaseDate( new Date( 1_700_000_000_000L ) );
+        when( geoBrowser.getGeoRecords( eq( GeoRecordType.SERIES ),
+                eq( Collections.singletonList( "GSE12345" ) ),
+                org.mockito.ArgumentMatchers.any( GeoRetrieveConfig.class ) ) )
+                .thenReturn( Collections.singletonList( rec ) );
+
+        AdminWebService.GeoGrabRequest req = new AdminWebService.GeoGrabRequest();
+        req.accessions = Collections.singletonList( "GSE12345" );
+
+        ResponseDataObject<AdminWebService.GeoGrabResponse> resp = webService.grabGeoRecords( req );
+        AdminWebService.GeoGrabResponse body = resp.getData();
+
+        assertThat( body.requestedCount ).isEqualTo( 1 );
+        assertThat( body.returnedCount ).isEqualTo( 1 );
+        assertThat( body.records ).hasSize( 1 );
+        AdminWebService.GeoRecordValueObject vo = body.records.get( 0 );
+        assertThat( vo.geoAccession ).isEqualTo( "GSE12345" );
+        assertThat( vo.title ).isEqualTo( "A study of foo" );
+        assertThat( vo.summary ).isEqualTo( "Some summary" );
+        assertThat( vo.overallDesign ).isEqualTo( "Some design" );
+        assertThat( vo.organisms ).containsExactly( "Homo sapiens" );
+        assertThat( vo.platform ).isEqualTo( "GPL570" );
+        assertThat( vo.seriesType ).isEqualTo( "Expression profiling by array" );
+        assertThat( vo.numSamples ).isEqualTo( 24 );
+        assertThat( vo.releaseDate.getTime() ).isEqualTo( 1_700_000_000_000L );
+    }
+
+    @Test
+    public void grabGeoRecords_returns400_whenAccessionsEmpty() {
+        AdminWebService.GeoGrabRequest req = new AdminWebService.GeoGrabRequest();
+        req.accessions = Collections.emptyList();
+
+        assertThatThrownBy( () -> webService.grabGeoRecords( req ) )
+                .isInstanceOf( BadRequestException.class );
+
+        AdminWebService.GeoGrabRequest blank = new AdminWebService.GeoGrabRequest();
+        blank.accessions = Arrays.asList( "  ", null, "" );
+        assertThatThrownBy( () -> webService.grabGeoRecords( blank ) )
+                .isInstanceOf( BadRequestException.class );
+
+        assertThatThrownBy( () -> webService.grabGeoRecords( null ) )
+                .isInstanceOf( BadRequestException.class );
+    }
+
+    @Test
+    public void grabGeoRecords_returns502_whenGeoBrowserThrowsIOException() throws IOException {
+        webService.setGeoBrowser( geoBrowser );
+        when( geoBrowser.getGeoRecords( eq( GeoRecordType.SERIES ),
+                org.mockito.ArgumentMatchers.anyCollection(),
+                org.mockito.ArgumentMatchers.any( GeoRetrieveConfig.class ) ) )
+                .thenThrow( new IOException( "NCBI down" ) );
+
+        AdminWebService.GeoGrabRequest req = new AdminWebService.GeoGrabRequest();
+        req.accessions = Collections.singletonList( "GSE12345" );
+
+        assertThatThrownBy( () -> webService.grabGeoRecords( req ) )
+                .isInstanceOf( jakarta.ws.rs.ServerErrorException.class )
+                .matches( ex -> ( ( jakarta.ws.rs.ServerErrorException ) ex ).getResponse().getStatus() == 502 );
     }
 }
