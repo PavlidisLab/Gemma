@@ -25,6 +25,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeriesType;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
+import ubic.gemma.core.loader.expression.geo.service.GeoBrowserImpl;
 import ubic.gemma.core.loader.expression.geo.service.GeoQuery;
 import ubic.gemma.core.loader.expression.geo.service.GeoRecordType;
 import ubic.gemma.core.loader.expression.geo.service.GeoRetrieveConfig;
@@ -83,7 +84,6 @@ public class GeoScrapeServiceImpl implements GeoScrapeService {
 
     private static final int DEFAULT_MAX_RECORDS = 1000;
 
-    private final GeoBrowser geoBrowser;
     private final SessionFactory sessionFactory;
     private final PreboardedExperimentService preboardedExperimentService;
     private final List<GeoRecordMatcher> matchers;
@@ -92,17 +92,38 @@ public class GeoScrapeServiceImpl implements GeoScrapeService {
     @Value("${gemma.geoScrape.pageSize:200}")
     private int pageSize = 200;
 
+    /**
+     * NCBI API key used by the lazily-constructed {@link GeoBrowserImpl}. Same wire
+     * pattern as {@code AdminWebService}'s geo-grab endpoint — GeoBrowser is not a
+     * Spring-managed bean in this codebase; CLIs and services construct it on demand.
+     */
+    @Value("${entrez.efetch.apikey:}")
+    private String ncbiApiKey;
+
+    @Nullable
+    private GeoBrowser geoBrowser;
+
     @Autowired
-    public GeoScrapeServiceImpl( GeoBrowser geoBrowser,
-            SessionFactory sessionFactory,
+    public GeoScrapeServiceImpl( SessionFactory sessionFactory,
             PreboardedExperimentService preboardedExperimentService,
             List<GeoRecordMatcher> matchers,
             PlatformTransactionManager transactionManager ) {
-        this.geoBrowser = geoBrowser;
         this.sessionFactory = sessionFactory;
         this.preboardedExperimentService = preboardedExperimentService;
         this.matchers = matchers != null ? matchers : Collections.emptyList();
         this.transactionTemplate = new TransactionTemplate( transactionManager );
+    }
+
+    private synchronized GeoBrowser resolveGeoBrowser() {
+        if ( geoBrowser == null ) {
+            geoBrowser = new GeoBrowserImpl( ncbiApiKey == null ? "" : ncbiApiKey );
+        }
+        return geoBrowser;
+    }
+
+    /** Test seam. */
+    synchronized void setGeoBrowser( GeoBrowser browser ) {
+        this.geoBrowser = browser;
     }
 
     /** Test seam — package-private setter. */
@@ -133,7 +154,7 @@ public class GeoScrapeServiceImpl implements GeoScrapeService {
 
         int scanned = 0, matched = 0;
         try {
-            GeoQuery query = geoBrowser.searchGeoRecords(
+            GeoQuery query = resolveGeoBrowser().searchGeoRecords(
                     GeoRecordType.SERIES, null, null,
                     ALLOWED_TAXA, null,
                     EXPRESSION_PROFILING_TYPES );
@@ -150,7 +171,7 @@ public class GeoScrapeServiceImpl implements GeoScrapeService {
                 }
                 int remaining = maxRecords - scanned;
                 int thisPage = Math.min( effectivePage, remaining );
-                Slice<GeoRecord> slice = geoBrowser.retrieveGeoRecords( query, pageStart, thisPage,
+                Slice<GeoRecord> slice = resolveGeoBrowser().retrieveGeoRecords( query, pageStart, thisPage,
                         GeoRetrieveConfig.DETAILED );
                 if ( slice == null || slice.isEmpty() ) {
                     break;
