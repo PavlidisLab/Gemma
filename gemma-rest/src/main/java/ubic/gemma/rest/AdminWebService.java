@@ -18,14 +18,18 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import com.zaxxer.hikari.HikariDataSource;
+import com.zaxxer.hikari.HikariPoolMXBean;
 import lombok.extern.apachecommons.CommonsLog;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -39,13 +43,33 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.lang.Nullable;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.session.SessionInformation;
+import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.job.SubmittedTask;
 import ubic.gemma.core.job.TaskRunningService;
+import ubic.gemma.core.ontology.basecode.providers.OntologyService;
+import ubic.gemma.core.security.AuthorityConstants;
+import ubic.gemma.core.security.authentication.UserManager;
+import ubic.gemma.model.common.auditAndSecurity.User;
+import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.ResponseErrorObject;
 
+import javax.sql.DataSource;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
+import java.lang.management.MemoryMXBean;
+import java.lang.management.MemoryUsage;
+import java.lang.management.OperatingSystemMXBean;
+import java.lang.management.RuntimeMXBean;
+import java.lang.management.ThreadMXBean;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.Instant;
@@ -83,6 +107,16 @@ public class AdminWebService {
     private final CacheManager cacheManager;
     private final SessionFactory sessionFactory;
     private final TaskRunningService taskRunningService;
+    private final SessionRegistry sessionRegistry;
+    private final List<OntologyService> ontologies;
+    private final DataSource dataSource;
+    private final UserManager userManager;
+
+    @Value("${gemma.curationAgent.healthUrl:}")
+    private String curationAgentHealthUrl;
+
+    @Value("${gemma.curationAgent.healthTimeoutMs:3000}")
+    private int curationAgentHealthTimeoutMs;
 
     /**
      * Filesystem root holding the per-entity Hibernate Search 7 Lucene index
@@ -95,10 +129,15 @@ public class AdminWebService {
 
     @Autowired
     public AdminWebService( CacheManager cacheManager, SessionFactory sessionFactory,
-            TaskRunningService taskRunningService ) {
+            TaskRunningService taskRunningService, SessionRegistry sessionRegistry,
+            List<OntologyService> ontologies, DataSource dataSource, UserManager userManager ) {
         this.cacheManager = cacheManager;
         this.sessionFactory = sessionFactory;
         this.taskRunningService = taskRunningService;
+        this.sessionRegistry = sessionRegistry;
+        this.ontologies = ontologies;
+        this.dataSource = dataSource;
+        this.userManager = userManager;
     }
 
     /* ===== Caches ===== */
@@ -392,6 +431,350 @@ public class AdminWebService {
         return vo;
     }
 
+    /* ===== JVM / OS snapshot ===== */
+
+    /**
+     * Process-level memory / GC / thread / load snapshot. Complements the anonymous
+     * {@code /info} endpoint (build + JVM identity + OS identity) with the live, admin-only
+     * resource numbers the legacy {@code systemStats.jsp} hand-rolled. Single read; no
+     * historical series — that's what {@code /metrics} is for.
+     */
+    @GET
+    @Path("/system")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "JVM and OS resource snapshot",
+            description = "Returns a single-read snapshot of process resources: heap and non-heap memory (used/committed/max bytes), thread counts (live, daemon, peak), uptime, OS name/version/arch, processor count, and 1-minute system load average. For historical series use `/metrics` (Prometheus).",
+            security = {
+                    @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
+            },
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class)))
+            })
+    public ResponseDataObject<SystemSnapshotResponse> getSystem() {
+        MemoryMXBean mem = ManagementFactory.getMemoryMXBean();
+        MemoryUsage heap = mem.getHeapMemoryUsage();
+        MemoryUsage nonHeap = mem.getNonHeapMemoryUsage();
+        ThreadMXBean threads = ManagementFactory.getThreadMXBean();
+        RuntimeMXBean rt = ManagementFactory.getRuntimeMXBean();
+        OperatingSystemMXBean os = ManagementFactory.getOperatingSystemMXBean();
+
+        SystemSnapshotResponse body = new SystemSnapshotResponse();
+        body.heap = new MemoryBlock( heap.getUsed(), heap.getCommitted(), heap.getMax() );
+        body.nonHeap = new MemoryBlock( nonHeap.getUsed(), nonHeap.getCommitted(), nonHeap.getMax() );
+        body.threads = new ThreadBlock( threads.getThreadCount(), threads.getDaemonThreadCount(), threads.getPeakThreadCount() );
+        body.startTimeMillis = rt.getStartTime();
+        body.uptimeMillis = rt.getUptime();
+        body.osName = os.getName();
+        body.osVersion = os.getVersion();
+        body.osArch = os.getArch();
+        body.availableProcessors = os.getAvailableProcessors();
+        // -1 on platforms where the JVM can't read load average (e.g. some Windows builds)
+        body.systemLoadAverage = os.getSystemLoadAverage();
+        return respond( body );
+    }
+
+    /* ===== Authenticated sessions ===== */
+
+    /**
+     * Authenticated session listing. The legacy {@code activeUsers.jsp} surfaced a count
+     * via {@code SecurityController.getAuthenticatedUserCount} and a JSP comment promising
+     * a table of users that was never built. This endpoint delivers that table: distinct
+     * authenticated principals (across both browser and basic-auth callers), each with
+     * the count of currently-tracked sessions, the most recent request time, and any
+     * granted GROUP_* authorities.
+     */
+    @GET
+    @Path("/sessions")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "List authenticated users with active sessions",
+            description = "Enumerates every principal registered with the Spring Security `SessionRegistry`. For each principal returns the username, the count of currently-tracked sessions (excluding expired), the timestamp of the most recent request across those sessions, and the list of granted authorities when the principal is a `UserDetails`. Anonymous sessions are not included — only authenticated ones are tracked.",
+            security = {
+                    @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
+            },
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class)))
+            })
+    public ResponseDataObject<SessionsResponse> getSessions() {
+        List<Object> principals = sessionRegistry.getAllPrincipals();
+        List<SessionPrincipalValueObject> rows = new ArrayList<>( principals.size() );
+        int totalActiveSessions = 0;
+        for ( Object principal : principals ) {
+            // includeExpiredSessions=false: we want a live picture, not a forensic one
+            List<SessionInformation> sessions = sessionRegistry.getAllSessions( principal, false );
+            if ( sessions.isEmpty() ) {
+                continue;
+            }
+            SessionPrincipalValueObject vo = new SessionPrincipalValueObject();
+            vo.username = principalUsername( principal );
+            vo.sessionCount = sessions.size();
+            totalActiveSessions += sessions.size();
+            Date mostRecent = null;
+            for ( SessionInformation s : sessions ) {
+                Date r = s.getLastRequest();
+                if ( r != null && ( mostRecent == null || r.after( mostRecent ) ) ) {
+                    mostRecent = r;
+                }
+            }
+            vo.lastRequest = mostRecent;
+            if ( principal instanceof UserDetails ) {
+                List<String> auths = new ArrayList<>();
+                ( (UserDetails) principal ).getAuthorities()
+                        .forEach( a -> auths.add( a.getAuthority() ) );
+                auths.sort( Comparator.naturalOrder() );
+                vo.authorities = auths;
+            }
+            rows.add( vo );
+        }
+        // newest activity first; principals with no last-request time sort last
+        rows.sort( Comparator.comparing( ( SessionPrincipalValueObject v ) -> v.lastRequest,
+                Comparator.nullsLast( Comparator.reverseOrder() ) ) );
+        SessionsResponse body = new SessionsResponse();
+        body.authenticatedUserCount = rows.size();
+        body.activeSessionCount = totalActiveSessions;
+        body.principals = rows;
+        return respond( body );
+    }
+
+    private static String principalUsername( Object principal ) {
+        if ( principal instanceof UserDetails ) {
+            return ( (UserDetails) principal ).getUsername();
+        }
+        return principal.toString();
+    }
+
+    /* ===== Loaded ontologies ===== */
+
+    /**
+     * Per-ontology load status. Enumerates every {@code OntologyService} bean (Mondo, PATO,
+     * CHEBI, Uberon, CellType, the unified TDB, etc.) and reports each one's enable / load
+     * / initialization-thread state plus its inference and search settings. Term counts
+     * are skipped by default because {@code getAllURIs()} can be expensive on large
+     * ontologies; opt in with {@code ?includeTermCount=true}.
+     */
+    @GET
+    @Path("/ontologies")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Loaded-ontology status snapshot",
+            description = "Enumerates every OntologyService bean and reports enabled / loaded / initialization-thread state, inference mode, language level, search-enabled flag, and process-imports flag. Term counts are not included by default (`getAllURIs()` traverses the in-memory model); pass `?includeTermCount=true` to include them. If a bean throws while being inspected the error message is captured in the row's `error` field and inspection of the remaining ontologies continues.",
+            security = {
+                    @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
+            },
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class)))
+            })
+    public ResponseDataObject<OntologiesResponse> getOntologies(
+            @QueryParam("includeTermCount") @DefaultValue("false") boolean includeTermCount ) {
+        List<OntologyStatusValueObject> rows = new ArrayList<>( ontologies.size() );
+        int enabled = 0, loaded = 0, initializing = 0;
+        for ( OntologyService o : ontologies ) {
+            OntologyStatusValueObject vo = inspect( o, includeTermCount );
+            rows.add( vo );
+            if ( Boolean.TRUE.equals( vo.enabled ) ) enabled++;
+            if ( Boolean.TRUE.equals( vo.loaded ) ) loaded++;
+            if ( Boolean.TRUE.equals( vo.initializing ) ) initializing++;
+        }
+        rows.sort( Comparator.comparing( (OntologyStatusValueObject v) -> v.name,
+                Comparator.nullsLast( Comparator.naturalOrder() ) ) );
+        OntologiesResponse body = new OntologiesResponse();
+        body.count = rows.size();
+        body.enabledCount = enabled;
+        body.loadedCount = loaded;
+        body.initializingCount = initializing;
+        body.ontologies = rows;
+        return respond( body );
+    }
+
+    private OntologyStatusValueObject inspect( OntologyService o, boolean includeTermCount ) {
+        OntologyStatusValueObject vo = new OntologyStatusValueObject();
+        vo.className = o.getClass().getSimpleName();
+        try {
+            vo.name = o.getName();
+            vo.description = o.getDescription();
+            vo.enabled = o.isEnabled();
+            vo.loaded = o.isOntologyLoaded();
+            vo.initializing = o.isInitializationThreadAlive();
+            vo.initializationCancelled = o.isInitializationThreadCancelled();
+            vo.inferenceMode = o.getInferenceMode() != null ? o.getInferenceMode().name() : null;
+            vo.languageLevel = o.getLanguageLevel() != null ? o.getLanguageLevel().name() : null;
+            vo.searchEnabled = o.isSearchEnabled();
+            vo.processImports = o.getProcessImports();
+            if ( includeTermCount && Boolean.TRUE.equals( vo.loaded ) ) {
+                try {
+                    vo.termCount = (long) o.getAllURIs().size();
+                } catch ( RuntimeException e ) {
+                    log.warn( "Failed to count terms for " + vo.className + ": " + e.getMessage() );
+                    vo.termCount = -1L;
+                }
+            }
+        } catch ( RuntimeException e ) {
+            log.warn( "Failed to inspect ontology bean " + vo.className + ": " + e.getMessage() );
+            vo.error = e.getClass().getSimpleName() + ": " + e.getMessage();
+        }
+        return vo;
+    }
+
+    /* ===== Database connection pool ===== */
+
+    /**
+     * HikariCP pool snapshot. Reports the live connection census plus the configured
+     * upper bound, so the admin panel can show "12 / 50 active" at a glance and
+     * surface "threads awaiting" when the pool is saturated.
+     */
+    @GET
+    @Path("/db/pool")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Database connection pool snapshot",
+            description = "Returns HikariCP pool stats: active / idle / total connections, threads currently awaiting a connection, plus the configured maximum pool size and connection-timeout. 503 if the configured DataSource is not a HikariDataSource.",
+            security = {
+                    @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
+            },
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class))),
+                    @ApiResponse(responseCode = "503", description = "Configured DataSource is not HikariCP",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
+            })
+    public Response getDbPool() {
+        if ( !( dataSource instanceof HikariDataSource ) ) {
+            return Response.status( Response.Status.SERVICE_UNAVAILABLE )
+                    .entity( "DataSource is not HikariCP (type=" + dataSource.getClass().getSimpleName() + ")" )
+                    .build();
+        }
+        HikariDataSource hikari = (HikariDataSource) dataSource;
+        HikariPoolMXBean mx = hikari.getHikariPoolMXBean();
+        DbPoolResponse body = new DbPoolResponse();
+        body.poolName = hikari.getPoolName();
+        body.maximumPoolSize = hikari.getMaximumPoolSize();
+        body.minimumIdle = hikari.getMinimumIdle();
+        body.connectionTimeoutMillis = hikari.getConnectionTimeout();
+        body.idleTimeoutMillis = hikari.getIdleTimeout();
+        body.maxLifetimeMillis = hikari.getMaxLifetime();
+        if ( mx != null ) {
+            body.activeConnections = mx.getActiveConnections();
+            body.idleConnections = mx.getIdleConnections();
+            body.totalConnections = mx.getTotalConnections();
+            body.threadsAwaitingConnection = mx.getThreadsAwaitingConnection();
+        }
+        return Response.ok( respond( body ) ).build();
+    }
+
+    /* ===== Curation-agents liveness ===== */
+
+    /**
+     * Out-of-process liveness probe for the gemma-curation-agents Python service.
+     * Configured via {@code gemma.curationAgent.healthUrl} (unset = endpoint reports
+     * "not configured" with 200, so the admin UI can render a neutral pill instead
+     * of an alarming red one).
+     */
+    @GET
+    @Path("/curation-agent/health")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Curation-agents service liveness probe",
+            description = "Issues a GET against `gemma.curationAgent.healthUrl` with a `gemma.curationAgent.healthTimeoutMs`-millisecond timeout (default 3000). Returns `status` = UP / DOWN / NOT_CONFIGURED, latencyMillis, and either the upstream HTTP status code or the exception class name. Always returns HTTP 200 — even when DOWN — so the UI can poll without triggering error handlers.",
+            security = {
+                    @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
+            },
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class)))
+            })
+    public ResponseDataObject<CurationAgentHealthResponse> getCurationAgentHealth() {
+        CurationAgentHealthResponse body = new CurationAgentHealthResponse();
+        body.url = curationAgentHealthUrl == null || curationAgentHealthUrl.trim().isEmpty() ? null : curationAgentHealthUrl;
+        body.timeoutMillis = curationAgentHealthTimeoutMs;
+        if ( body.url == null ) {
+            body.status = "NOT_CONFIGURED";
+            return respond( body );
+        }
+        long start = System.currentTimeMillis();
+        try {
+            HttpClient client = HttpClient.newBuilder()
+                    .connectTimeout( Duration.ofMillis( curationAgentHealthTimeoutMs ) )
+                    .build();
+            HttpRequest req = HttpRequest.newBuilder( URI.create( body.url ) )
+                    .timeout( Duration.ofMillis( curationAgentHealthTimeoutMs ) )
+                    .GET()
+                    .build();
+            HttpResponse<String> resp = client.send( req, HttpResponse.BodyHandlers.ofString() );
+            body.latencyMillis = System.currentTimeMillis() - start;
+            body.httpStatus = resp.statusCode();
+            body.status = resp.statusCode() >= 200 && resp.statusCode() < 400 ? "UP" : "DOWN";
+        } catch ( Exception e ) {
+            body.latencyMillis = System.currentTimeMillis() - start;
+            body.status = "DOWN";
+            body.error = e.getClass().getSimpleName() + ": " + e.getMessage();
+            log.debug( "curation-agent health probe failed: " + body.error );
+        }
+        return respond( body );
+    }
+
+    /* ===== User management (read-only listing) ===== */
+
+    /**
+     * Admin user listing. Read-only for this commit; create / disable / delete endpoints
+     * land in a follow-up that introduces the soft-delete tombstone columns.
+     */
+    @GET
+    @Path("/users")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "List all users",
+            description = "Returns every User row with their username, email, enabled flag, granted group authorities, signup token presence (a non-null token + enabled=false indicates an unverified signup), and signup token issuance date. Sorted alphabetically by username.",
+            security = {
+                    @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
+            },
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class)))
+            })
+    public ResponseDataObject<UsersListResponse> getUsers() {
+        Collection<User> users = userManager.loadAll();
+        List<UserValueObject> rows = new ArrayList<>( users.size() );
+        int enabled = 0, pending = 0;
+        for ( User u : users ) {
+            UserValueObject vo = new UserValueObject();
+            vo.username = u.getUserName();
+            vo.email = u.getEmail();
+            vo.enabled = u.isEnabled();
+            vo.signupTokenPending = u.getSignupToken() != null && !u.isEnabled();
+            vo.signupTokenDate = u.getSignupTokenDatestamp();
+            if ( u.getGroups() != null ) {
+                List<String> groupNames = new ArrayList<>();
+                for ( UserGroup g : u.getGroups() ) {
+                    groupNames.add( g.getName() );
+                }
+                groupNames.sort( Comparator.naturalOrder() );
+                vo.groups = groupNames;
+                vo.isAdmin = groupNames.contains( AuthorityConstants.ADMIN_GROUP_NAME );
+            }
+            rows.add( vo );
+            if ( vo.enabled ) enabled++;
+            if ( vo.signupTokenPending ) pending++;
+        }
+        rows.sort( Comparator.comparing( ( UserValueObject v ) -> v.username,
+                Comparator.nullsLast( String.CASE_INSENSITIVE_ORDER ) ) );
+        UsersListResponse body = new UsersListResponse();
+        body.total = rows.size();
+        body.enabledCount = enabled;
+        body.pendingSignupCount = pending;
+        body.users = rows;
+        return respond( body );
+    }
+
     /* ===== DTOs ===== */
 
     public static class CacheListResponse {
@@ -440,6 +823,160 @@ public class AdminWebService {
         @Nullable
         public Instant lastModified;
         /** Populated only when {@code documentCount == -1}. */
+        @Nullable
+        public String error;
+    }
+
+    public static class SystemSnapshotResponse {
+        public MemoryBlock heap;
+        public MemoryBlock nonHeap;
+        public ThreadBlock threads;
+        public long startTimeMillis;
+        public long uptimeMillis;
+        public String osName;
+        public String osVersion;
+        public String osArch;
+        public int availableProcessors;
+        /** -1.0 on platforms where the load average is unavailable (e.g. some Windows JVMs). */
+        public double systemLoadAverage;
+    }
+
+    public static class MemoryBlock {
+        public long usedBytes;
+        public long committedBytes;
+        /** -1 when the JVM does not define a maximum (e.g. non-heap on some collectors). */
+        public long maxBytes;
+
+        public MemoryBlock() {
+        }
+
+        public MemoryBlock( long usedBytes, long committedBytes, long maxBytes ) {
+            this.usedBytes = usedBytes;
+            this.committedBytes = committedBytes;
+            this.maxBytes = maxBytes;
+        }
+    }
+
+    public static class ThreadBlock {
+        public int liveCount;
+        public int daemonCount;
+        public int peakCount;
+
+        public ThreadBlock() {
+        }
+
+        public ThreadBlock( int liveCount, int daemonCount, int peakCount ) {
+            this.liveCount = liveCount;
+            this.daemonCount = daemonCount;
+            this.peakCount = peakCount;
+        }
+    }
+
+    public static class SessionsResponse {
+        /** Distinct authenticated principals currently tracked by Spring Security's SessionRegistry. */
+        public int authenticatedUserCount;
+        /** Sum of non-expired sessions across all principals. */
+        public int activeSessionCount;
+        public List<SessionPrincipalValueObject> principals;
+    }
+
+    public static class SessionPrincipalValueObject {
+        public String username;
+        public int sessionCount;
+        /** Most recent {@code SessionInformation#getLastRequest()} across this principal's sessions. */
+        @Nullable
+        public Date lastRequest;
+        /** Granted authorities, alphabetically sorted; null when the principal isn't a UserDetails. */
+        @Nullable
+        public List<String> authorities;
+    }
+
+    public static class DbPoolResponse {
+        public String poolName;
+        public int maximumPoolSize;
+        public int minimumIdle;
+        public long connectionTimeoutMillis;
+        public long idleTimeoutMillis;
+        public long maxLifetimeMillis;
+        public int activeConnections;
+        public int idleConnections;
+        public int totalConnections;
+        public int threadsAwaitingConnection;
+    }
+
+    public static class CurationAgentHealthResponse {
+        /** UP, DOWN, or NOT_CONFIGURED. */
+        public String status;
+        @Nullable
+        public String url;
+        public int timeoutMillis;
+        public long latencyMillis;
+        /** HTTP status code from the upstream service; 0 when the request didn't complete. */
+        @Nullable
+        public Integer httpStatus;
+        /** Populated when the probe threw (timeout, connection refused, malformed URL, etc.). */
+        @Nullable
+        public String error;
+    }
+
+    public static class UsersListResponse {
+        public int total;
+        public int enabledCount;
+        /** Users with a signup token outstanding AND not yet enabled (unverified). */
+        public int pendingSignupCount;
+        public List<UserValueObject> users;
+    }
+
+    public static class UserValueObject {
+        public String username;
+        @Nullable
+        public String email;
+        public boolean enabled;
+        public boolean isAdmin;
+        @Nullable
+        public List<String> groups;
+        /** True when a signup token is present and the user is not yet enabled — never-completed signup. */
+        public boolean signupTokenPending;
+        @Nullable
+        public Date signupTokenDate;
+    }
+
+    public static class OntologiesResponse {
+        public int count;
+        public int enabledCount;
+        public int loadedCount;
+        public int initializingCount;
+        public List<OntologyStatusValueObject> ontologies;
+    }
+
+    public static class OntologyStatusValueObject {
+        /** Java simple class name (always available, even if inspection fails). */
+        public String className;
+        @Nullable
+        public String name;
+        @Nullable
+        public String description;
+        @Nullable
+        public Boolean enabled;
+        @Nullable
+        public Boolean loaded;
+        /** True while the background load thread is alive. */
+        @Nullable
+        public Boolean initializing;
+        @Nullable
+        public Boolean initializationCancelled;
+        @Nullable
+        public String inferenceMode;
+        @Nullable
+        public String languageLevel;
+        @Nullable
+        public Boolean searchEnabled;
+        @Nullable
+        public Boolean processImports;
+        /** Populated only when the request specifies `includeTermCount=true` AND the ontology is loaded. -1 on query failure. */
+        @Nullable
+        public Long termCount;
+        /** Set if inspection threw; the rest of the row will be partially populated. */
         @Nullable
         public String error;
     }

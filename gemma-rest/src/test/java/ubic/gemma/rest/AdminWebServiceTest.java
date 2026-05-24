@@ -22,13 +22,21 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.session.SessionInformation;
+import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import ubic.gemma.core.job.SubmittedTask;
 import ubic.gemma.core.job.TaskRunningService;
+import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.rest.util.ResponseDataObject;
 
+import javax.sql.DataSource;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -55,12 +63,19 @@ public class AdminWebServiceTest {
     private Cache barCache;
     @Mock
     private TaskRunningService taskRunningService;
+    @Mock
+    private SessionRegistry sessionRegistry;
+    @Mock
+    private DataSource dataSource;
+    @Mock
+    private UserManager userManager;
 
     private AdminWebService webService;
 
     @BeforeEach
     public void setUp() {
-        webService = new AdminWebService( cacheManager, sessionFactory, taskRunningService );
+        webService = new AdminWebService( cacheManager, sessionFactory, taskRunningService, sessionRegistry,
+                Collections.emptyList(), dataSource, userManager );
     }
 
     /* ===== /admin/caches ===== */
@@ -211,6 +226,95 @@ public class AdminWebServiceTest {
         assertThat( body.failed ).isEqualTo( 1 );
         assertThat( body.tasks ).extracting( TaskStatusValueObject::getTaskId )
                 .containsExactly( "f-1", "r-1", "c-1", "q-1" );
+    }
+
+    /* ===== /admin/system ===== */
+
+    @Test
+    public void getSystemReturnsHeapNonHeapThreadsAndOsBlocks() {
+        ResponseDataObject<AdminWebService.SystemSnapshotResponse> resp = webService.getSystem();
+        AdminWebService.SystemSnapshotResponse body = resp.getData();
+
+        // Heap/non-heap and thread MX beans are always present on the JVM;
+        // the only assertion we can make is non-null and non-negative-ish.
+        assertThat( body.heap ).isNotNull();
+        assertThat( body.heap.usedBytes ).isGreaterThanOrEqualTo( 0L );
+        assertThat( body.heap.committedBytes ).isGreaterThanOrEqualTo( 0L );
+        assertThat( body.nonHeap ).isNotNull();
+        assertThat( body.threads ).isNotNull();
+        assertThat( body.threads.liveCount ).isPositive();
+        assertThat( body.osName ).isNotBlank();
+        assertThat( body.osArch ).isNotBlank();
+        assertThat( body.availableProcessors ).isPositive();
+        assertThat( body.uptimeMillis ).isGreaterThanOrEqualTo( 0L );
+    }
+
+    /* ===== /admin/sessions ===== */
+
+    @Test
+    public void getSessionsReturnsEmptyWhenNoPrincipals() {
+        when( sessionRegistry.getAllPrincipals() ).thenReturn( Collections.emptyList() );
+
+        ResponseDataObject<AdminWebService.SessionsResponse> resp = webService.getSessions();
+        AdminWebService.SessionsResponse body = resp.getData();
+
+        assertThat( body.authenticatedUserCount ).isZero();
+        assertThat( body.activeSessionCount ).isZero();
+        assertThat( body.principals ).isEmpty();
+    }
+
+    @Test
+    public void getSessionsSkipsPrincipalsWithNoActiveSessions() {
+        // SessionRegistry retains principals after all sessions expire; we filter those out.
+        Object stalePrincipal = "ghost-user";
+        when( sessionRegistry.getAllPrincipals() ).thenReturn( Collections.singletonList( stalePrincipal ) );
+        when( sessionRegistry.getAllSessions( stalePrincipal, false ) )
+                .thenReturn( Collections.emptyList() );
+
+        ResponseDataObject<AdminWebService.SessionsResponse> resp = webService.getSessions();
+        AdminWebService.SessionsResponse body = resp.getData();
+
+        assertThat( body.authenticatedUserCount ).isZero();
+        assertThat( body.activeSessionCount ).isZero();
+        assertThat( body.principals ).isEmpty();
+    }
+
+    @Test
+    public void getSessionsAggregatesUserDetailsAndStringPrincipals() {
+        UserDetails alice = new User( "alice", "x",
+                Arrays.asList( new SimpleGrantedAuthority( "GROUP_USER" ),
+                        new SimpleGrantedAuthority( "GROUP_ADMIN" ) ) );
+        Object bob = "bob"; // basic-auth principals can be plain strings
+        when( sessionRegistry.getAllPrincipals() ).thenReturn( Arrays.asList( alice, bob ) );
+
+        SessionInformation aliceS1 = sessionInfo( alice, "s-a1", new Date( 1_000L ) );
+        SessionInformation aliceS2 = sessionInfo( alice, "s-a2", new Date( 5_000L ) );
+        SessionInformation bobS1 = sessionInfo( bob, "s-b1", new Date( 3_000L ) );
+        when( sessionRegistry.getAllSessions( alice, false ) ).thenReturn( Arrays.asList( aliceS1, aliceS2 ) );
+        when( sessionRegistry.getAllSessions( bob, false ) ).thenReturn( Collections.singletonList( bobS1 ) );
+
+        ResponseDataObject<AdminWebService.SessionsResponse> resp = webService.getSessions();
+        AdminWebService.SessionsResponse body = resp.getData();
+
+        assertThat( body.authenticatedUserCount ).isEqualTo( 2 );
+        assertThat( body.activeSessionCount ).isEqualTo( 3 );
+        // Most recent activity first: alice (last 5_000) ahead of bob (last 3_000)
+        assertThat( body.principals ).extracting( vo -> vo.username )
+                .containsExactly( "alice", "bob" );
+
+        AdminWebService.SessionPrincipalValueObject aliceVo = body.principals.get( 0 );
+        assertThat( aliceVo.sessionCount ).isEqualTo( 2 );
+        assertThat( aliceVo.lastRequest ).isEqualTo( new Date( 5_000L ) );
+        assertThat( aliceVo.authorities ).containsExactly( "GROUP_ADMIN", "GROUP_USER" );
+
+        AdminWebService.SessionPrincipalValueObject bobVo = body.principals.get( 1 );
+        assertThat( bobVo.sessionCount ).isEqualTo( 1 );
+        assertThat( bobVo.lastRequest ).isEqualTo( new Date( 3_000L ) );
+        assertThat( bobVo.authorities ).isNull();
+    }
+
+    private SessionInformation sessionInfo( Object principal, String sessionId, Date lastRequest ) {
+        return new SessionInformation( principal, sessionId, lastRequest );
     }
 
     private SubmittedTask mockTask( String id, SubmittedTask.Status status, Date submittedAt ) {
