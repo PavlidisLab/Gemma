@@ -1279,6 +1279,138 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
     }
 
     @Test
+    public void testGetDatasetAuditEventsCompactFalseReturnsFullList() {
+        Date when = new Date( 1_700_000_000_000L );
+        AuditEvent a = AuditEvent.Factory.newInstance( when, AuditAction.UPDATE, "n1", null, null,
+                new ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent() );
+        AuditEvent b = AuditEvent.Factory.newInstance( new Date( when.getTime() + 1000L ), AuditAction.UPDATE, "n2", null, null,
+                new ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent() );
+        when( auditEventService.getEvents( ee ) ).thenReturn( Arrays.asList( a, b ) );
+
+        // compact=false explicitly — should NOT carry collapsedCount
+        assertThat( target( "/datasets/1/auditEvents" ).queryParam( "compact", "false" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 2 )
+                .satisfiesExactly(
+                        e -> assertThat( e ).doesNotContainKey( "collapsedCount" ),
+                        e -> assertThat( e ).doesNotContainKey( "collapsedCount" ) );
+
+        verify( auditEventService ).getEvents( ee );
+    }
+
+    @Test
+    public void testGetDatasetAuditEventsCompactCollapsesConsecutiveSameTypeAndPerformer() {
+        Date d1 = new Date( 1_700_000_000_000L );
+        Date d2 = new Date( 1_700_000_001_000L );
+        Date d3 = new Date( 1_700_000_002_000L );
+        ubic.gemma.model.common.auditAndSecurity.User performer = ubic.gemma.model.common.auditAndSecurity.User.Factory.newInstance( "alice" );
+        AuditEvent e1 = AuditEvent.Factory.newInstance( d1, AuditAction.UPDATE, "first", null, performer,
+                new ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent() );
+        AuditEvent e2 = AuditEvent.Factory.newInstance( d2, AuditAction.UPDATE, "second", null, performer,
+                new ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent() );
+        AuditEvent e3 = AuditEvent.Factory.newInstance( d3, AuditAction.UPDATE, "third", null, performer,
+                new ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent() );
+        when( auditEventService.getEvents( ee ) ).thenReturn( Arrays.asList( e1, e2, e3 ) );
+
+        assertThat( target( "/datasets/1/auditEvents" ).queryParam( "compact", "true" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 1 )
+                .satisfiesExactly(
+                        entry -> {
+                            assertThat( entry )
+                                    .containsEntry( "collapsedCount", 3 )
+                                    .containsEntry( "note", "first" )
+                                    .containsKey( "lastOccurrence" );
+                            // lastOccurrence carries the LAST event's date; serialized as ISO string
+                            // -- assert it's distinct from the head event's date (= d1).
+                            assertThat( entry.get( "lastOccurrence" ) ).isNotEqualTo( entry.get( "date" ) );
+                        } );
+    }
+
+    @Test
+    public void testGetDatasetAuditEventsCompactAlternatingTypesProducesAllSolo() {
+        Date base = new Date( 1_700_000_000_000L );
+        ubic.gemma.model.common.auditAndSecurity.User performer = ubic.gemma.model.common.auditAndSecurity.User.Factory.newInstance( "alice" );
+        AuditEvent a1 = AuditEvent.Factory.newInstance( new Date( base.getTime() ), AuditAction.UPDATE, "a1", null, performer,
+                new ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent() );
+        AuditEvent b1 = AuditEvent.Factory.newInstance( new Date( base.getTime() + 1000L ), AuditAction.UPDATE, "b1", null, performer,
+                new ubic.gemma.model.common.auditAndSecurity.eventType.DatasetPublishedEvent() );
+        AuditEvent a2 = AuditEvent.Factory.newInstance( new Date( base.getTime() + 2000L ), AuditAction.UPDATE, "a2", null, performer,
+                new ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent() );
+        AuditEvent b2 = AuditEvent.Factory.newInstance( new Date( base.getTime() + 3000L ), AuditAction.UPDATE, "b2", null, performer,
+                new ubic.gemma.model.common.auditAndSecurity.eventType.DatasetPublishedEvent() );
+        when( auditEventService.getEvents( ee ) ).thenReturn( Arrays.asList( a1, b1, a2, b2 ) );
+
+        assertThat( target( "/datasets/1/auditEvents" ).queryParam( "compact", "true" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 4 )
+                .satisfiesExactly(
+                        e -> assertThat( e ).containsEntry( "collapsedCount", 1 ).containsEntry( "note", "a1" ),
+                        e -> assertThat( e ).containsEntry( "collapsedCount", 1 ).containsEntry( "note", "b1" ),
+                        e -> assertThat( e ).containsEntry( "collapsedCount", 1 ).containsEntry( "note", "a2" ),
+                        e -> assertThat( e ).containsEntry( "collapsedCount", 1 ).containsEntry( "note", "b2" ) );
+    }
+
+    @Test
+    public void testGetDatasetAuditEventsCompactMixedAABA() {
+        Date base = new Date( 1_700_000_000_000L );
+        ubic.gemma.model.common.auditAndSecurity.User performer = ubic.gemma.model.common.auditAndSecurity.User.Factory.newInstance( "alice" );
+        AuditEvent a1 = AuditEvent.Factory.newInstance( new Date( base.getTime() ), AuditAction.UPDATE, "a1", null, performer,
+                new ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent() );
+        Date a2Date = new Date( base.getTime() + 1000L );
+        AuditEvent a2 = AuditEvent.Factory.newInstance( a2Date, AuditAction.UPDATE, "a2", null, performer,
+                new ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent() );
+        AuditEvent b1 = AuditEvent.Factory.newInstance( new Date( base.getTime() + 2000L ), AuditAction.UPDATE, "b1", null, performer,
+                new ubic.gemma.model.common.auditAndSecurity.eventType.DatasetPublishedEvent() );
+        AuditEvent a3 = AuditEvent.Factory.newInstance( new Date( base.getTime() + 3000L ), AuditAction.UPDATE, "a3", null, performer,
+                new ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent() );
+        when( auditEventService.getEvents( ee ) ).thenReturn( Arrays.asList( a1, a2, b1, a3 ) );
+
+        assertThat( target( "/datasets/1/auditEvents" ).queryParam( "compact", "true" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 3 )
+                .satisfiesExactly(
+                        e -> {
+                            assertThat( e )
+                                    .containsEntry( "collapsedCount", 2 )
+                                    .containsEntry( "note", "a1" )
+                                    .containsKey( "lastOccurrence" );
+                            // lastOccurrence == LAST event's date, distinct from head's date
+                            assertThat( e.get( "lastOccurrence" ) ).isNotEqualTo( e.get( "date" ) );
+                        },
+                        e -> {
+                            assertThat( e ).containsEntry( "collapsedCount", 1 ).containsEntry( "note", "b1" );
+                            // solo event: lastOccurrence == date
+                            assertThat( e.get( "lastOccurrence" ) ).isEqualTo( e.get( "date" ) );
+                        },
+                        e -> {
+                            assertThat( e ).containsEntry( "collapsedCount", 1 ).containsEntry( "note", "a3" );
+                            assertThat( e.get( "lastOccurrence" ) ).isEqualTo( e.get( "date" ) );
+                        } );
+    }
+
+    @Test
+    public void testGetDatasetAuditEventsCompactOnEmptyIsEmpty() {
+        when( auditEventService.getEvents( ee ) ).thenReturn( Collections.emptyList() );
+
+        assertThat( target( "/datasets/1/auditEvents" ).queryParam( "compact", "true" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .isEmpty();
+
+        verify( auditEventService ).getEvents( ee );
+    }
+
+    @Test
     @WithMockUser
     public void testGetDatasetCurationDetails() {
         ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails cd =
