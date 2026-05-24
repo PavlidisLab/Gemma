@@ -11,25 +11,34 @@
  */
 package ubic.gemma.rest;
 
+import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.ClientErrorException;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.core.Response;
 import org.hibernate.SessionFactory;
 import org.hibernate.stat.Statistics;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import ubic.gemma.core.job.SubmittedTask;
 import ubic.gemma.core.job.TaskRunningService;
+import ubic.gemma.core.security.AuthorityConstants;
+import ubic.gemma.core.security.authentication.UserDetailsImpl;
 import ubic.gemma.core.security.authentication.UserManager;
+import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketService;
 import ubic.gemma.persistence.service.expression.experiment.AgentProposalService;
@@ -39,13 +48,17 @@ import javax.sql.DataSource;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -406,5 +419,248 @@ public class AdminWebServiceTest {
         assertThat( body.tickets.oldestOpenAgeDays ).isNull();
         assertThat( body.agentRuns.distinctRunIds ).isZero();
         assertThat( body.agentRuns.lastRanAt ).isNull();
+    }
+
+    /* ===== /admin/users (CRUD) ===== */
+
+    @AfterEach
+    public void clearSecurityContext() {
+        SecurityContextHolder.clearContext();
+    }
+
+    /** Build a minimally-populated User model (Gemma's User, not Spring's). */
+    private ubic.gemma.model.common.auditAndSecurity.User gemmaUser( String username, boolean enabled, Date deletedAt,
+            String... groupNames ) {
+        ubic.gemma.model.common.auditAndSecurity.User u = new ubic.gemma.model.common.auditAndSecurity.User();
+        u.setUserName( username );
+        u.setEnabled( enabled );
+        u.setEmail( username + "@example.org" );
+        u.setDeletedAt( deletedAt );
+        Set<UserGroup> groups = new HashSet<>();
+        for ( String g : groupNames ) {
+            UserGroup ug = new UserGroup();
+            ug.setName( g );
+            groups.add( ug );
+        }
+        u.setGroups( groups );
+        return u;
+    }
+
+    @Test
+    public void getUsers_excludesSoftDeleted_byDefault() {
+        ubic.gemma.model.common.auditAndSecurity.User alice = gemmaUser( "alice", true, null );
+        ubic.gemma.model.common.auditAndSecurity.User bob = gemmaUser( "bob", true, null );
+        ubic.gemma.model.common.auditAndSecurity.User ghost = gemmaUser( "ghost", false, new Date() );
+        when( userManager.loadAll() ).thenReturn( Arrays.asList( alice, bob, ghost ) );
+
+        ResponseDataObject<AdminWebService.UsersListResponse> resp = webService.getUsers( false );
+        AdminWebService.UsersListResponse body = resp.getData();
+
+        assertThat( body.users ).hasSize( 2 );
+        assertThat( body.users ).extracting( v -> v.username ).containsExactly( "alice", "bob" );
+        assertThat( body.deletedCount ).isEqualTo( 1 );
+    }
+
+    @Test
+    public void getUsers_includesSoftDeleted_whenFlagTrue() {
+        ubic.gemma.model.common.auditAndSecurity.User alice = gemmaUser( "alice", true, null );
+        ubic.gemma.model.common.auditAndSecurity.User bob = gemmaUser( "bob", true, null );
+        ubic.gemma.model.common.auditAndSecurity.User ghost = gemmaUser( "ghost", false, new Date() );
+        when( userManager.loadAll() ).thenReturn( Arrays.asList( alice, bob, ghost ) );
+
+        ResponseDataObject<AdminWebService.UsersListResponse> resp = webService.getUsers( true );
+        AdminWebService.UsersListResponse body = resp.getData();
+
+        assertThat( body.users ).hasSize( 3 );
+        assertThat( body.deletedCount ).isEqualTo( 1 );
+    }
+
+    @Test
+    public void getUsers_marksAdminFlag_whenAdministratorsGroupPresent() {
+        ubic.gemma.model.common.auditAndSecurity.User admin = gemmaUser( "alice", true, null, AuthorityConstants.ADMIN_GROUP_NAME );
+        when( userManager.loadAll() ).thenReturn( Collections.singletonList( admin ) );
+
+        ResponseDataObject<AdminWebService.UsersListResponse> resp = webService.getUsers( false );
+        AdminWebService.UsersListResponse body = resp.getData();
+
+        assertThat( body.users ).hasSize( 1 );
+        assertThat( body.users.get( 0 ).isAdmin ).isTrue();
+        assertThat( body.users.get( 0 ).groups ).contains( AuthorityConstants.ADMIN_GROUP_NAME );
+    }
+
+    @Test
+    public void createUser_returnsTempPassword_andCallsManager() {
+        when( userManager.userExists( "alice" ) ).thenReturn( false );
+        when( userManager.userWithEmailExists( "alice@example.org" ) ).thenReturn( false );
+        ubic.gemma.model.common.auditAndSecurity.User created = gemmaUser( "alice", true, null );
+        when( userManager.findByUserName( "alice" ) ).thenReturn( created );
+
+        AdminWebService.CreateUserRequest req = new AdminWebService.CreateUserRequest();
+        req.username = "alice";
+        req.email = "alice@example.org";
+        req.isAdmin = false;
+
+        Response resp = webService.createUser( req );
+
+        assertThat( resp.getStatus() ).isEqualTo( 201 );
+        @SuppressWarnings("unchecked")
+        ResponseDataObject<AdminWebService.CreateUserResponse> dataObj =
+                ( ResponseDataObject<AdminWebService.CreateUserResponse> ) resp.getEntity();
+        AdminWebService.CreateUserResponse body = dataObj.getData();
+        assertThat( body.temporaryPassword ).isNotNull();
+        assertThat( body.temporaryPassword ).hasSize( 16 );
+        assertThat( body.temporaryPassword ).matches( "[A-Za-z0-9]+" );
+
+        ArgumentCaptor<UserDetails> ud = ArgumentCaptor.forClass( UserDetails.class );
+        verify( userManager ).createUser( ud.capture() );
+        assertThat( ud.getValue() ).isInstanceOf( UserDetailsImpl.class );
+        assertThat( ud.getValue().getUsername() ).isEqualTo( "alice" );
+        assertThat( ud.getValue().isEnabled() ).isTrue();
+    }
+
+    @Test
+    public void createUser_returns409_whenUsernameTaken() {
+        when( userManager.userExists( "alice" ) ).thenReturn( true );
+
+        AdminWebService.CreateUserRequest req = new AdminWebService.CreateUserRequest();
+        req.username = "alice";
+        req.email = "alice@example.org";
+
+        assertThatThrownBy( () -> webService.createUser( req ) )
+                .isInstanceOf( ClientErrorException.class )
+                .matches( ex -> ( ( ClientErrorException ) ex ).getResponse().getStatus() == 409 );
+    }
+
+    @Test
+    public void createUser_returns409_whenEmailTaken() {
+        when( userManager.userExists( "alice" ) ).thenReturn( false );
+        when( userManager.userWithEmailExists( "alice@example.org" ) ).thenReturn( true );
+
+        AdminWebService.CreateUserRequest req = new AdminWebService.CreateUserRequest();
+        req.username = "alice";
+        req.email = "alice@example.org";
+
+        assertThatThrownBy( () -> webService.createUser( req ) )
+                .isInstanceOf( ClientErrorException.class )
+                .matches( ex -> ( ( ClientErrorException ) ex ).getResponse().getStatus() == 409 );
+    }
+
+    @Test
+    public void createUser_addsToAdminGroup_whenIsAdminTrue() {
+        when( userManager.userExists( "alice" ) ).thenReturn( false );
+        when( userManager.userWithEmailExists( "alice@example.org" ) ).thenReturn( false );
+        when( userManager.findByUserName( "alice" ) )
+                .thenReturn( gemmaUser( "alice", true, null, AuthorityConstants.ADMIN_GROUP_NAME ) );
+
+        AdminWebService.CreateUserRequest req = new AdminWebService.CreateUserRequest();
+        req.username = "alice";
+        req.email = "alice@example.org";
+        req.isAdmin = true;
+
+        webService.createUser( req );
+
+        verify( userManager ).addUserToGroup( "alice", AuthorityConstants.ADMIN_GROUP_NAME );
+    }
+
+    @Test
+    public void patchUser_togglesEnabled() {
+        ubic.gemma.model.common.auditAndSecurity.User u = gemmaUser( "alice", true, null );
+        when( userManager.findByUserName( "alice" ) ).thenReturn( u );
+
+        AdminWebService.UpdateUserRequest req = new AdminWebService.UpdateUserRequest();
+        req.enabled = false;
+
+        webService.patchUser( "alice", req );
+
+        ArgumentCaptor<UserDetails> ud = ArgumentCaptor.forClass( UserDetails.class );
+        verify( userManager ).updateUser( ud.capture() );
+        assertThat( ud.getValue() ).isInstanceOf( UserDetailsImpl.class );
+        assertThat( ud.getValue().getUsername() ).isEqualTo( "alice" );
+        assertThat( ud.getValue().isEnabled() ).isFalse();
+    }
+
+    @Test
+    public void patchUser_addsToAdminGroup_whenIsAdminTrueAndNotAlready() {
+        ubic.gemma.model.common.auditAndSecurity.User u = gemmaUser( "alice", true, null );
+        when( userManager.findByUserName( "alice" ) ).thenReturn( u );
+
+        AdminWebService.UpdateUserRequest req = new AdminWebService.UpdateUserRequest();
+        req.isAdmin = true;
+
+        webService.patchUser( "alice", req );
+
+        verify( userManager ).addUserToGroup( "alice", AuthorityConstants.ADMIN_GROUP_NAME );
+        verify( userManager, never() ).removeUserFromGroup( anyString(), anyString() );
+    }
+
+    @Test
+    public void patchUser_removesFromAdminGroup_whenIsAdminFalseAndCurrentlyAdmin() {
+        ubic.gemma.model.common.auditAndSecurity.User u = gemmaUser( "alice", true, null, AuthorityConstants.ADMIN_GROUP_NAME );
+        when( userManager.findByUserName( "alice" ) ).thenReturn( u );
+
+        AdminWebService.UpdateUserRequest req = new AdminWebService.UpdateUserRequest();
+        req.isAdmin = false;
+
+        webService.patchUser( "alice", req );
+
+        verify( userManager ).removeUserFromGroup( "alice", AuthorityConstants.ADMIN_GROUP_NAME );
+        verify( userManager, never() ).addUserToGroup( anyString(), anyString() );
+    }
+
+    @Test
+    public void patchUser_returns400_whenBodyEmpty() {
+        assertThatThrownBy( () -> webService.patchUser( "alice", null ) )
+                .isInstanceOf( BadRequestException.class );
+
+        AdminWebService.UpdateUserRequest empty = new AdminWebService.UpdateUserRequest();
+        assertThatThrownBy( () -> webService.patchUser( "alice", empty ) )
+                .isInstanceOf( BadRequestException.class );
+    }
+
+    @Test
+    public void patchUser_returns404_whenUserNotFound() {
+        when( userManager.findByUserName( "ghost" ) ).thenReturn( null );
+
+        AdminWebService.UpdateUserRequest req = new AdminWebService.UpdateUserRequest();
+        req.enabled = false;
+
+        assertThatThrownBy( () -> webService.patchUser( "ghost", req ) )
+                .isInstanceOf( NotFoundException.class );
+    }
+
+    @Test
+    public void deleteUser_callsSoftDelete_andReturns204() {
+        // The current admin is "admin", target is "bob" — no self-delete.
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken( "admin", "x", Collections.emptyList() ) );
+        ubic.gemma.model.common.auditAndSecurity.User bob = gemmaUser( "bob", true, null );
+        when( userManager.findByUserName( "bob" ) ).thenReturn( bob );
+
+        Response resp = webService.deleteUser( "bob" );
+
+        assertThat( resp.getStatus() ).isEqualTo( 204 );
+        verify( userManager ).softDeleteUser( eq( "bob" ), anyString() );
+    }
+
+    @Test
+    public void deleteUser_returns404_whenUserNotFound() {
+        when( userManager.findByUserName( "ghost" ) ).thenReturn( null );
+
+        assertThatThrownBy( () -> webService.deleteUser( "ghost" ) )
+                .isInstanceOf( NotFoundException.class );
+        verify( userManager, never() ).softDeleteUser( anyString(), anyString() );
+    }
+
+    @Test
+    public void deleteUser_returns409_whenSelfDelete() {
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken( "alice", "x", Collections.emptyList() ) );
+        ubic.gemma.model.common.auditAndSecurity.User alice = gemmaUser( "alice", true, null );
+        when( userManager.findByUserName( "alice" ) ).thenReturn( alice );
+
+        assertThatThrownBy( () -> webService.deleteUser( "alice" ) )
+                .isInstanceOf( ClientErrorException.class )
+                .matches( ex -> ( ( ClientErrorException ) ex ).getResponse().getStatus() == 409 );
+        verify( userManager, never() ).softDeleteUser( anyString(), anyString() );
     }
 }
