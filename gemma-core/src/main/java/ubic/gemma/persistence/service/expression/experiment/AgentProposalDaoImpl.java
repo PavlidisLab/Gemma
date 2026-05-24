@@ -21,7 +21,10 @@ import ubic.gemma.model.expression.experiment.AgentCurationSummaryValueObject;
 import ubic.gemma.model.expression.experiment.AgentProposal;
 import ubic.gemma.persistence.service.AbstractDao;
 
+import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Hibernate implementation of {@link AgentProposalDao}.
@@ -153,5 +156,68 @@ public class AgentProposalDaoImpl extends AbstractDao<AgentProposal>
         }
         Long n = ( Long ) q.uniqueResult();
         return n == null ? 0L : n;
+    }
+
+    @Override
+    public long countSince( @Nullable Date since ) {
+        StringBuilder hql = new StringBuilder( "select count(p) from AgentProposal p" );
+        if ( since != null ) {
+            hql.append( " where p.ranAt >= :since" );
+        }
+        org.hibernate.query.Query<?> q = getSessionFactory().getCurrentSession()
+                .createQuery( hql.toString() );
+        if ( since != null ) {
+            q.setParameter( "since", since );
+        }
+        Long n = ( Long ) q.uniqueResult();
+        return n == null ? 0L : n;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public Map<String, Long> countByStatusSince( @Nullable Date since ) {
+        StringBuilder hql = new StringBuilder(
+                "select p.status, count(p) from AgentProposal p" );
+        if ( since != null ) {
+            hql.append( " where p.ranAt >= :since" );
+        }
+        hql.append( " group by p.status" );
+        org.hibernate.query.Query<Object[]> q = getSessionFactory().getCurrentSession()
+                .createQuery( hql.toString(), Object[].class );
+        if ( since != null ) {
+            q.setParameter( "since", since );
+        }
+        List<Object[]> rows = q.list();
+        Map<String, Long> out = new LinkedHashMap<>( rows.size() );
+        for ( Object[] row : rows ) {
+            String status = row[0] != null ? row[0].toString() : "null";
+            Long count = ( Long ) row[1];
+            out.put( status, count == null ? 0L : count );
+        }
+        return out;
+    }
+
+    @Override
+    public long countDistinctRunIdsSince( @Nullable Date since ) {
+        StringBuilder hql = new StringBuilder(
+                "select count(distinct p.runId) from AgentProposal p" );
+        if ( since != null ) {
+            hql.append( " where p.ranAt >= :since" );
+        }
+        org.hibernate.query.Query<?> q = getSessionFactory().getCurrentSession()
+                .createQuery( hql.toString() );
+        if ( since != null ) {
+            q.setParameter( "since", since );
+        }
+        Long n = ( Long ) q.uniqueResult();
+        return n == null ? 0L : n;
+    }
+
+    @Nullable
+    @Override
+    public Date findLatestRanAt() {
+        return ( Date ) getSessionFactory().getCurrentSession()
+                .createQuery( "select max(p.ranAt) from AgentProposal p" )
+                .uniqueResult();
     }
 }

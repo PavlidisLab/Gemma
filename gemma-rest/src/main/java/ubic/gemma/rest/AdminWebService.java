@@ -59,6 +59,9 @@ import ubic.gemma.core.security.authentication.UserDetailsImpl;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
+import ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketService;
+import ubic.gemma.persistence.service.expression.experiment.AgentProposalService;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.rest.util.ResponseDataObject;
@@ -84,8 +87,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeSet;
+import java.util.concurrent.TimeUnit;
 
 import static ubic.gemma.rest.util.Responders.respond;
 
@@ -118,6 +124,8 @@ public class AdminWebService {
     private final List<OntologyService> ontologies;
     private final DataSource dataSource;
     private final UserManager userManager;
+    private final AgentProposalService agentProposalService;
+    private final TicketService ticketService;
 
     @Value("${gemma.curationAgent.healthUrl:}")
     private String curationAgentHealthUrl;
@@ -137,7 +145,8 @@ public class AdminWebService {
     @Autowired
     public AdminWebService( CacheManager cacheManager, SessionFactory sessionFactory,
             TaskRunningService taskRunningService, SessionRegistry sessionRegistry,
-            List<OntologyService> ontologies, DataSource dataSource, UserManager userManager ) {
+            List<OntologyService> ontologies, DataSource dataSource, UserManager userManager,
+            AgentProposalService agentProposalService, TicketService ticketService ) {
         this.cacheManager = cacheManager;
         this.sessionFactory = sessionFactory;
         this.taskRunningService = taskRunningService;
@@ -145,6 +154,8 @@ public class AdminWebService {
         this.ontologies = ontologies;
         this.dataSource = dataSource;
         this.userManager = userManager;
+        this.agentProposalService = agentProposalService;
+        this.ticketService = ticketService;
     }
 
     /* ===== Caches ===== */
@@ -728,6 +739,74 @@ public class AdminWebService {
         return respond( body );
     }
 
+    /* ===== Curation lifecycle status ===== */
+
+    /**
+     * Snapshot of the agent-proposal -&gt; ticket lifecycle: per-status
+     * {@link ubic.gemma.model.expression.experiment.AgentProposal} counts in
+     * the recent windows, open-ticket counts by {@link TicketType}, distinct
+     * agent run id count, and last-ranAt timestamp.
+     * <p>
+     * Backs the curation-UI "what's the Python agent doing right now"
+     * indicator. Counts are computed with bounded aggregates against the
+     * AGENT_PROPOSAL and TICKET tables — no per-row fetch.
+     */
+    @GET
+    @Path("/curation-status")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Agent-proposal + ticket lifecycle snapshot",
+            description = "Per-status breakdown of AgentProposal rows (last 24h / 7d / by status) plus open-ticket counts by TicketType and the oldest open-ticket age. Read-only.",
+            security = {
+                    @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
+            },
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class)))
+            })
+    public ResponseDataObject<CurationStatusResponse> getCurationStatus() {
+        Date now = new Date();
+        Date since24h = new Date( now.getTime() - TimeUnit.HOURS.toMillis( 24 ) );
+        Date since7d = new Date( now.getTime() - TimeUnit.DAYS.toMillis( 7 ) );
+
+        CurationStatusResponse body = new CurationStatusResponse();
+
+        ProposalsBlock proposals = new ProposalsBlock();
+        proposals.totalLast24h = agentProposalService.countSince( since24h );
+        proposals.totalLast7d = agentProposalService.countSince( since7d );
+        // byStatus: lifetime breakdown — the rolling-window status breakdown
+        // would multiply the round-trip count; the curation-UI only needs
+        // "how many are sitting in each bucket right now". TODO: revisit if
+        // a windowed view is useful once we have more agent-run history.
+        proposals.byStatus = agentProposalService.countByStatusSince( null );
+        body.proposals = proposals;
+
+        TicketsBlock tickets = new TicketsBlock();
+        Map<TicketType, Long> openByType = ticketService.countOpenByType();
+        Map<String, Long> openByTypeWire = new LinkedHashMap<>( openByType.size() );
+        for ( Map.Entry<TicketType, Long> e : openByType.entrySet() ) {
+            String key = e.getKey() != null ? e.getKey().name() : "null";
+            openByTypeWire.put( key, e.getValue() );
+        }
+        tickets.openCountByType = openByTypeWire;
+        tickets.openCount = ticketService.countOpen();
+        Date oldest = ticketService.findOldestOpenCreatedAt();
+        tickets.oldestOpenAgeDays = oldest == null
+                ? null
+                : TimeUnit.MILLISECONDS.toDays( now.getTime() - oldest.getTime() );
+        body.tickets = tickets;
+
+        AgentRunsBlock runs = new AgentRunsBlock();
+        // Distinct runIds in the 7d window — bounded; lifetime distinct count
+        // would scan the full agent_proposal table on prod and isn't useful.
+        runs.distinctRunIds = agentProposalService.countDistinctRunIdsSince( since7d );
+        runs.lastRanAt = agentProposalService.findLatestRanAt();
+        body.agentRuns = runs;
+
+        return respond( body );
+    }
+
     /* ===== User management (read-only listing) ===== */
 
     /**
@@ -1206,5 +1285,39 @@ public class AdminWebService {
         public long secondLevelCacheHitCount;
         public long secondLevelCacheMissCount;
         public long secondLevelCachePutCount;
+    }
+
+    /**
+     * Response shape for {@link #getCurationStatus()}. The wire field names
+     * mirror the JSON contract documented on the endpoint.
+     */
+    public static class CurationStatusResponse {
+        public ProposalsBlock proposals;
+        public TicketsBlock tickets;
+        public AgentRunsBlock agentRuns;
+    }
+
+    public static class ProposalsBlock {
+        public long totalLast24h;
+        public long totalLast7d;
+        /** Lifetime per-status counts (OPEN / FINALIZED / REOPENED / future values). */
+        public Map<String, Long> byStatus;
+    }
+
+    public static class TicketsBlock {
+        /** Open-ticket counts keyed by {@link TicketType#name()}. */
+        public Map<String, Long> openCountByType;
+        public long openCount;
+        /** Days since the oldest non-terminal ticket was created; null when no open tickets exist. */
+        @Nullable
+        public Long oldestOpenAgeDays;
+    }
+
+    public static class AgentRunsBlock {
+        /** Distinct {@code runId}s seen on AgentProposal rows in the last 7 days. */
+        public long distinctRunIds;
+        /** Most recent {@code ranAt} across the entire AgentProposal table; null if the table is empty. */
+        @Nullable
+        public Date lastRanAt;
     }
 }

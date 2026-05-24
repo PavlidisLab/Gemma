@@ -32,6 +32,7 @@ import ubic.gemma.persistence.util.CursorPage;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -204,6 +205,25 @@ public class TicketServiceImpl extends AbstractService<Ticket> implements Ticket
     public CursorPage<TicketEvent> findEventsByCursor( Ticket ticket, @Nullable Cursor cursor, int limit ) {
         Assert.notNull( ticket, "Ticket cannot be null." );
         return ticketDao.findEventsByCursor( ticket, cursor, limit );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<TicketType, Long> countOpenByType() {
+        return ticketDao.countOpenByType();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countOpen() {
+        return ticketDao.countOpen();
+    }
+
+    @Nullable
+    @Override
+    @Transactional(readOnly = true)
+    public Date findOldestOpenCreatedAt() {
+        return ticketDao.findOldestOpenCreatedAt();
     }
 
     private static void bumpUpdated( Ticket t ) {

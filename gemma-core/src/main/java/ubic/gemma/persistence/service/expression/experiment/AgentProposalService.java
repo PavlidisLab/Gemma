@@ -19,6 +19,7 @@ import ubic.gemma.model.expression.experiment.AgentProposal;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Service surface for append-only {@link AgentProposal} rows. Drives both
@@ -179,6 +180,27 @@ public interface AgentProposalService {
      */
     @Nullable
     AgentProposal reopenProposal( Long id );
+
+    /**
+     * @see AgentProposalDao#countSince(Date)
+     */
+    long countSince( @Nullable Date since );
+
+    /**
+     * @see AgentProposalDao#countByStatusSince(Date)
+     */
+    Map<String, Long> countByStatusSince( @Nullable Date since );
+
+    /**
+     * @see AgentProposalDao#countDistinctRunIdsSince(Date)
+     */
+    long countDistinctRunIdsSince( @Nullable Date since );
+
+    /**
+     * @see AgentProposalDao#findLatestRanAt()
+     */
+    @Nullable
+    Date findLatestRanAt();
 
     /**
      * Return value of {@link #attach(Investigation, String, String, String, Date, String)}.

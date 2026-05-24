@@ -25,6 +25,7 @@ import ubic.gemma.model.expression.experiment.AgentProposal;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Default {@link AgentProposalService} implementation.
@@ -205,6 +206,31 @@ public class AgentProposalServiceImpl implements AgentProposalService {
         p.setLastUpdated( now );
         agentProposalDao.update( p );
         return p;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countSince( @Nullable Date since ) {
+        return agentProposalDao.countSince( since );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, Long> countByStatusSince( @Nullable Date since ) {
+        return agentProposalDao.countByStatusSince( since );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countDistinctRunIdsSince( @Nullable Date since ) {
+        return agentProposalDao.countDistinctRunIdsSince( since );
+    }
+
+    @Nullable
+    @Override
+    @Transactional(readOnly = true)
+    public Date findLatestRanAt() {
+        return agentProposalDao.findLatestRanAt();
     }
 
     @Nullable

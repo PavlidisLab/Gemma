@@ -18,7 +18,9 @@ import ubic.gemma.model.expression.experiment.AgentCurationSummaryValueObject;
 import ubic.gemma.model.expression.experiment.AgentProposal;
 import ubic.gemma.persistence.service.BaseDao;
 
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 /**
  * DAO for {@link AgentProposal} rows. The contract is small because
@@ -105,4 +107,40 @@ public interface AgentProposalDao extends BaseDao<AgentProposal> {
      */
     long countSummaries( @Nullable AgentCurationKind kindFilter,
             @Nullable List<Long> investigationIds );
+
+    /**
+     * Count {@link AgentProposal} rows whose {@code ranAt} is on or after
+     * {@code since} (or all rows if {@code since} is null). Used by the
+     * admin curation-status surface to populate "proposals in the last 24h /
+     * 7d" buckets without paging the full table.
+     */
+    long countSince( @Nullable Date since );
+
+    /**
+     * Group {@link AgentProposal} rows by {@code status} (the lifecycle
+     * column — OPEN / FINALIZED / REOPENED / future values), counting per
+     * bucket. Rows with {@code ranAt &gt;= since} only when {@code since}
+     * is non-null. Rows with {@code null} status (legacy / migration edge)
+     * are bucketed under the literal string {@code "null"} so the map is
+     * unambiguous on the wire.
+     */
+    Map<String, Long> countByStatusSince( @Nullable Date since );
+
+    /**
+     * Number of distinct {@code runId}s seen on rows with
+     * {@code ranAt &gt;= since} (or all-time if {@code since} is null).
+     * The Python curation agent uses one {@code runId} per agent run, so
+     * this approximates "how many agent runs have we ingested in the
+     * window".
+     */
+    long countDistinctRunIdsSince( @Nullable Date since );
+
+    /**
+     * @return the most-recent {@code ranAt} across every {@link AgentProposal}
+     *         row, or {@code null} if the table is empty. Answers "when did
+     *         the Python agent last produce a payload?" for the admin
+     *         status surface.
+     */
+    @Nullable
+    Date findLatestRanAt();
 }
