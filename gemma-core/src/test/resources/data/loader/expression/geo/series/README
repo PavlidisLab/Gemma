@@ -1,0 +1,54 @@
+SOFT family files cached from GEO FTP for GeoSingleCellDetectorTest etc.
+Raw downloads come from ftp://ftp.ncbi.nlm.nih.gov/geo/series/{GSE*nnn}/{GSE*}/soft/{GSE*}_family.soft.gz
+
+The following fixtures have been chopped to reduce FTP probe fanout
+during GeoSingleCellDetectorTest slow runs (per-supplementary-archive
+FTP open + entry enumeration dominates wall-clock; see
+handoffs/SLOW_SURVIVORS_PERF_PROBE_2026_05_23.md).
+
+GSE109774_family.soft.gz — kept only the FIRST !Series_supplementary_file
+TAR (Bladder); dropped 18 other organ-level TARs. Samples (46) kept verbatim
+since their !Sample_supplementary_file = NONE so they contribute zero
+network probes. Detector still finds single-cell data via the one TAR
+that remains.
+
+GSE196516_family.soft.gz — kept 2 of 12 ^SAMPLE blocks (GSM5885669, an
+ATAC-seq sample, + GSM5885676, the first scRNA-Seq sample). !Series_sample_id
+list pruned to match. Test only asserts hasSingleCellData == true and
+getSingleCellDataType == MEX; one transcriptomic sample is enough to
+satisfy the MEX detector.
+
+GSE201032_family.soft.gz — kept 1 of 8 ^SAMPLE blocks (GSM6049315).
+!Series_sample_id list pruned. Test assertion in testGSE201032()
+updated from hasSize(8) to hasSize(1) accordingly. All 8 original
+samples shared the same series-level metadata supplementary, so a
+single sample exercises the same code path.
+
+Regen recipe (one-shot Python, NOT in repo):
+
+  import gzip, sys
+  def chop_by_samples(lines, keep_accessions):
+      out, in_sample, keep_current = [], False, False
+      for line in lines:
+          if line.startswith("^SAMPLE"):
+              in_sample = True
+              acc = line.split("=",1)[1].strip()
+              keep_current = acc in keep_accessions
+              if keep_current: out.append(line)
+              continue
+          if in_sample:
+              if line.startswith("^"):
+                  in_sample = False
+              else:
+                  if keep_current: out.append(line)
+                  continue
+          if line.startswith("!Series_sample_id"):
+              if line.split("=",1)[1].strip() in keep_accessions:
+                  out.append(line)
+          else:
+              out.append(line)
+      return out
+
+To refresh from upstream, re-download from
+ftp://ftp.ncbi.nlm.nih.gov/geo/series/{GSE*nnn}/{GSE*}/soft/{GSE*}_family.soft.gz
+and re-apply the chop.
