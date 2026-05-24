@@ -23,6 +23,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.cli.audit.CliArrayDesignAuditService;
 import ubic.gemma.core.analysis.sequence.Blat;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService;
 import ubic.gemma.core.loader.genome.BlatResultParser;
@@ -51,6 +52,8 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
     private ArrayDesignSequenceAlignmentService arrayDesignSequenceAlignmentService;
     @Autowired
     private TaxonService taxonService;
+    @Autowired
+    private CliArrayDesignAuditService cliArrayDesignAuditService;
 
     private Taxon taxon;
     private String blatResultFile = null;
@@ -184,7 +187,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
     private void audit( ArrayDesign arrayDesign, String note ) {
         arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
-        auditTrailService.addUpdateEvent( arrayDesign, ArrayDesignSequenceAnalysisEvent.class, note );
+        cliArrayDesignAuditService.recordSequenceAnalysis( arrayDesign, note );
     }
 
     /**

@@ -20,8 +20,8 @@ package ubic.gemma.apps;
 
 import org.apache.commons.cli.Options;
 import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.cli.audit.CliExpressionExperimentAuditService;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
-import ubic.gemma.model.common.auditAndSecurity.eventType.FailedSampleCorrelationAnalysisEvent;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
 
@@ -34,6 +34,8 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
 
     @Autowired
     private SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService;
+    @Autowired
+    private CliExpressionExperimentAuditService cliExpressionExperimentAuditService;
 
     @Override
     public String getCommandName() {
@@ -59,22 +61,20 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
         ee = eeService.thawLiter( ee );
         try {
             if ( isForce() ) {
-                sampleCoexpressionAnalysisService.compute( ee, sampleCoexpressionAnalysisService.prepare( ee ) );
+                cliExpressionExperimentAuditService.computeSampleCorrelation( ee );
                 addSuccessObject( ee, "Recomputed coexpression matrix." );
             } else {
                 if ( sampleCoexpressionAnalysisService.retrieveExisting( ee ) == null ) {
-                    sampleCoexpressionAnalysisService.compute( ee, sampleCoexpressionAnalysisService.prepare( ee ) );
+                    cliExpressionExperimentAuditService.computeSampleCorrelation( ee );
                     addSuccessObject( ee, "Recomputed coexpression matrix." );
                 } else {
                     addSuccessObject( ee, "Experiment already has a coexpression matrix." );
                 }
             }
         } catch ( FilteringException e ) {
-            auditTrailService.addUpdateEvent( ee, FailedSampleCorrelationAnalysisEvent.class, null, e );
+            // FailedSampleCorrelationAnalysisEvent already recorded by
+            // @AuditedOnError on computeSampleCorrelation.
             throw new RuntimeException( e );
-        } catch ( Exception e ) {
-            auditTrailService.addUpdateEvent( ee, FailedSampleCorrelationAnalysisEvent.class, null, e );
-            throw e;
         }
     }
 }

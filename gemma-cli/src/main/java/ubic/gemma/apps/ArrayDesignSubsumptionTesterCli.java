@@ -23,10 +23,11 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.cli.audit.CliArrayDesignAuditService;
 import ubic.gemma.cli.completion.CompletionType;
 import ubic.gemma.cli.completion.CompletionUtils;
 import ubic.gemma.cli.util.EnumeratedByCommandStringConverter;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSubsumeCheckEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 
@@ -38,6 +39,9 @@ import java.util.*;
  * @author pavlidis
  */
 public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipulatingCli {
+
+    @Autowired
+    private CliArrayDesignAuditService cliArrayDesignAuditService;
 
     private Collection<String> otherArrayDesignNames;
     private boolean allWays = false;
@@ -149,6 +153,6 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
     }
 
     private void audit( ArrayDesign arrayDesign, String note ) {
-        auditTrailService.addUpdateEvent( arrayDesign, ArrayDesignSubsumeCheckEvent.class, note );
+        cliArrayDesignAuditService.recordSubsumeCheck( arrayDesign, note );
     }
 }

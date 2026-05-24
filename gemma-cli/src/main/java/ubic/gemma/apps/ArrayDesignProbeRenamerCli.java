@@ -22,7 +22,8 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignProbeRenamingEvent;
+import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.cli.audit.CliArrayDesignAuditService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
@@ -44,6 +45,9 @@ import static ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceP
 public class ArrayDesignProbeRenamerCli extends ArrayDesignSequenceManipulatingCli {
 
     private static final String FILE_OPT = "f";
+
+    @Autowired
+    private CliArrayDesignAuditService cliArrayDesignAuditService;
 
     private String fileName;
 
@@ -129,7 +133,7 @@ public class ArrayDesignProbeRenamerCli extends ArrayDesignSequenceManipulatingC
 
     private void audit( ArrayDesign arrayDesign, String note ) {
         arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
-        auditTrailService.addUpdateEvent( arrayDesign, ArrayDesignProbeRenamingEvent.class, note );
+        cliArrayDesignAuditService.recordProbeRenaming( arrayDesign, note );
     }
 
     private Map<String, String> parseIdFile( InputStream newIdFile ) throws IOException {

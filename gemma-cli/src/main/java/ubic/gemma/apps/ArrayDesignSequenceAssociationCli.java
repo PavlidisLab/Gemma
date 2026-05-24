@@ -24,9 +24,9 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.cli.audit.CliArrayDesignAuditService;
 import ubic.gemma.core.util.FileTools;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceUpdateEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -48,6 +48,8 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
 
     @Autowired
     private ArrayDesignSequenceProcessingService arrayDesignSequenceProcessingService;
+    @Autowired
+    private CliArrayDesignAuditService cliArrayDesignAuditService;
 
     private boolean force = false;
     private String idFile = null;
@@ -240,6 +242,6 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
     private void audit( ArrayDesign arrayDesign, String note ) {
         // minor : don't add audit event if no sequences were changed, or --force.
         arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
-        auditTrailService.addUpdateEvent( arrayDesign, ArrayDesignSequenceUpdateEvent.class, note );
+        cliArrayDesignAuditService.recordSequenceUpdate( arrayDesign, note );
     }
 }

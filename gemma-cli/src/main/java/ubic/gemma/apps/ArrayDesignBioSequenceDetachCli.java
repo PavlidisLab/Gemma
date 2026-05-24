@@ -23,7 +23,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceRemoveEvent;
+import ubic.gemma.cli.audit.CliArrayDesignAuditService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -46,6 +46,8 @@ public class ArrayDesignBioSequenceDetachCli extends ArrayDesignSequenceManipula
 
     @Autowired
     private BioSequenceService bioSequenceService;
+    @Autowired
+    private CliArrayDesignAuditService cliArrayDesignAuditService;
 
     private boolean delete;
 
@@ -111,7 +113,7 @@ public class ArrayDesignBioSequenceDetachCli extends ArrayDesignSequenceManipula
 
     private void audit( ArrayDesign arrayDesign, String message ) {
         arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
-        auditTrailService.addUpdateEvent( arrayDesign, ArrayDesignSequenceRemoveEvent.class, message );
+        cliArrayDesignAuditService.recordSequenceRemove( arrayDesign, message );
     }
 
 }
