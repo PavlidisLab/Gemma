@@ -4336,6 +4336,36 @@ public class DatasetsWebService {
     }
 
     /**
+     * Retrieves the per-probe mean / variance pre-computed by {@link ubic.gemma.core.analysis.preprocess.MeanVarianceService}.
+     * <p>
+     * 404 when {@link ExpressionExperiment#getMeanVarianceRelation()} is null (i.e. the
+     * mean-variance step hasn't been run for the dataset). Backs the curation-UI Diagnostics
+     * tab's mean-variance scatter.
+     */
+    @GET
+    @Path("/{dataset}/mean-variance")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve the per-probe mean / variance for a dataset",
+            description = "Returns parallel mean[] and variance[] arrays computed by the mean-variance step. "
+                    + "404 if the dataset has no MeanVarianceRelation. Note: design-element ids and names are "
+                    + "currently omitted (Gemma's MeanVarianceRelation stores only the numeric arrays); the UI "
+                    + "indexes by position.",
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist or has no mean-variance relation.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<MeanVarianceValueObject> getDatasetMeanVariance( // Params:
+            @PathParam("dataset") DatasetArg<?> datasetArg // Required
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        MeanVarianceRelation mvr = ee.getMeanVarianceRelation();
+        if ( mvr == null || mvr.getMeans() == null || mvr.getVariances() == null ) {
+            throw new NotFoundException( ee.getShortName() + " does not have a mean-variance relation." );
+        }
+        return respond( new MeanVarianceValueObject( mvr ) );
+    }
+
+    /**
      * Retrieves the sample-sample correlation matrix for the given dataset.
      * <p>
      * The matrix is the regressed (best) correlation matrix when available, otherwise the full
@@ -5098,6 +5128,66 @@ public class DatasetsWebService {
             this.values = matrix.getRawMatrix();
             this.filterDescription = null;
             this.method = "pearson";
+        }
+    }
+
+    /**
+     * Wire shape for {@link #getDatasetMeanVariance}: parallel mean / variance arrays per probe.
+     * Design-element ids / names and the optional limma/edgeR fit curve are placeholders for now:
+     * Gemma's {@link MeanVarianceRelation} stores only the numeric arrays.
+     */
+    @Value
+    public static class MeanVarianceValueObject {
+
+        /**
+         * Reserved — Gemma's {@link MeanVarianceRelation} does not currently carry design-element
+         * ids; the UI indexes the parallel arrays positionally.
+         */
+        @Nullable
+        Long[] designElementIds;
+
+        /**
+         * Reserved — see {@link #designElementIds}.
+         */
+        @Nullable
+        String[] designElementNames;
+
+        /**
+         * Per-probe means (typically log-CPM or normalized intensity).
+         */
+        double[] means;
+
+        /**
+         * Per-probe variances (squared SD or robust variance), parallel to {@link #means}.
+         */
+        double[] variances;
+
+        /**
+         * Reserved — Gemma's {@link MeanVarianceRelation} does not currently expose a fit curve.
+         */
+        @Nullable
+        Fit fit;
+
+        /**
+         * Reserved — placeholder for the producing method (e.g. {@code "limma_voom"},
+         * {@code "edger_glmqlf"}, {@code "naive"}). Currently always {@code null}.
+         */
+        @Nullable
+        String source;
+
+        public MeanVarianceValueObject( MeanVarianceRelation mvr ) {
+            this.designElementIds = null;
+            this.designElementNames = null;
+            this.means = mvr.getMeans();
+            this.variances = mvr.getVariances();
+            this.fit = null;
+            this.source = null;
+        }
+
+        @Value
+        public static class Fit {
+            double[] sortedMeans;
+            double[] fittedVariances;
         }
     }
 

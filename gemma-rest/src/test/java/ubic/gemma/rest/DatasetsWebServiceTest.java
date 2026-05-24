@@ -2210,6 +2210,37 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         verify( sampleCoexpressionAnalysisService, never() ).loadBestMatrix( any() );
     }
 
+    // --- Diagnostics: mean-variance ------------------------------------------------------
+
+    @Test
+    public void testGetDatasetMeanVariance() {
+        double[] means = { 1.0, 2.0, 3.0, 4.0 };
+        double[] variances = { 0.1, 0.4, 0.9, 1.6 };
+        ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation mvr = ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation.Factory.newInstance( means, variances );
+        ee.setMeanVarianceRelation( mvr );
+        assertThat( target( "/datasets/1/mean-variance" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .entity()
+                .hasFieldOrProperty( "data" )
+                .extracting( "data.means", list( Double.class ) )
+                .containsExactly( 1.0, 2.0, 3.0, 4.0 );
+    }
+
+    @Test
+    public void testGetDatasetMeanVarianceWhenNoneIs404() {
+        ee.setMeanVarianceRelation( null );
+        assertThat( target( "/datasets/1/mean-variance" ).request().get() )
+                .hasStatus( Response.Status.NOT_FOUND )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
+    }
+
+    @Test
+    public void testGetDatasetMeanVarianceWhenDatasetMissingIs404() {
+        assertThat( target( "/datasets/999/mean-variance" ).request().get() )
+                .hasStatus( Response.Status.NOT_FOUND );
+    }
+
     @Test
     public void testGetDatasetAllPublications() {
         when( expressionExperimentService.loadWithPrimaryPublicationAndOtherRelevantPublications( 1L ) ).thenReturn( ee );
