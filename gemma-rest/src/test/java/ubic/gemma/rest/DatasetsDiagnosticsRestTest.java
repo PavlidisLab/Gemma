@@ -21,6 +21,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponentAnalysisService;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -78,6 +79,9 @@ public class DatasetsDiagnosticsRestTest extends BaseJerseyIntegrationTest5 {
     private BioAssayService bioAssayService;
 
     @Autowired
+    private ArrayDesignService arrayDesignService;
+
+    @Autowired
     private PersistentDummyObjectHelper testHelper;
 
     private ExpressionExperiment eeWithMvr;
@@ -125,8 +129,10 @@ public class DatasetsDiagnosticsRestTest extends BaseJerseyIntegrationTest5 {
         bad = bioAssayDimensionService.findOrCreate( bad );
 
         // Pull two CompositeSequences off the bioAssays' shared ArrayDesign for the U matrix rows.
+        // getCompositeSequences runs in its own @Transactional read so the lazy collection on
+        // the bioAssay-side ArrayDesign proxy doesn't have to be initialized in this thread.
         List<CompositeSequence> probes = new ArrayList<>(
-                assays.get( 0 ).getArrayDesignUsed().getCompositeSequences() );
+                arrayDesignService.getCompositeSequences( assays.get( 0 ).getArrayDesignUsed() ) );
         // Take the first two — synthetic numbers, just need referential integrity.
         List<CompositeSequence> uRows = probes.subList( 0, Math.min( 2, probes.size() ) );
 
