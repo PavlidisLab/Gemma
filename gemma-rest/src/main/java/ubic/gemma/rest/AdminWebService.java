@@ -60,6 +60,7 @@ import ubic.gemma.core.loader.expression.geo.service.GeoRecordType;
 import ubic.gemma.core.loader.expression.geo.service.GeoRetrieveConfig;
 import ubic.gemma.core.ontology.basecode.providers.OntologyService;
 import ubic.gemma.core.tasks.analysis.expression.ExpressionExperimentLoadTaskCommand;
+import ubic.gemma.core.tasks.maintenance.MultifunctionalityTaskCommand;
 import ubic.gemma.core.security.AuthorityConstants;
 import ubic.gemma.core.security.authentication.UserDetailsImpl;
 import ubic.gemma.core.security.authentication.UserManager;
@@ -68,10 +69,13 @@ import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketService;
 import ubic.gemma.persistence.service.expression.experiment.AgentProposalService;
+import ubic.gemma.model.genome.Taxon;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.ResponseErrorObject;
+import ubic.gemma.rest.util.args.TaxonArg;
+import ubic.gemma.rest.util.args.TaxonArgService;
 
 import javax.sql.DataSource;
 import java.io.IOException;
@@ -132,6 +136,7 @@ public class AdminWebService {
     private final UserManager userManager;
     private final AgentProposalService agentProposalService;
     private final TicketService ticketService;
+    private final TaxonArgService taxonArgService;
 
     @Value("${gemma.curationAgent.healthUrl:}")
     private String curationAgentHealthUrl;
@@ -168,7 +173,8 @@ public class AdminWebService {
     public AdminWebService( CacheManager cacheManager, SessionFactory sessionFactory,
             TaskRunningService taskRunningService, SessionRegistry sessionRegistry,
             List<OntologyService> ontologies, DataSource dataSource, UserManager userManager,
-            AgentProposalService agentProposalService, TicketService ticketService ) {
+            AgentProposalService agentProposalService, TicketService ticketService,
+            TaxonArgService taxonArgService ) {
         this.cacheManager = cacheManager;
         this.sessionFactory = sessionFactory;
         this.taskRunningService = taskRunningService;
@@ -178,6 +184,7 @@ public class AdminWebService {
         this.userManager = userManager;
         this.agentProposalService = agentProposalService;
         this.ticketService = ticketService;
+        this.taxonArgService = taxonArgService;
     }
 
     /* ===== Caches ===== */
@@ -458,6 +465,52 @@ public class AdminWebService {
         responseBody.submittedJobIds = submittedJobIds;
         responseBody.count = submittedJobIds.size();
         return Response.status( Response.Status.ACCEPTED ).entity( respond( responseBody ) ).build();
+    }
+
+    /* ===== Multifunctionality recompute ===== */
+
+    /**
+     * Async port of {@code MultifunctionalityCli}: recompute per-gene multifunctionality
+     * scores for a single taxon. Submits a {@link MultifunctionalityTaskCommand}; the caller
+     * polls {@code /tasks/{taskId}} for completion.
+     *
+     * <p>Taxon identifier may be the common name (e.g. {@code human}), scientific name,
+     * NCBI ID, or Gemma taxon ID — same shape as elsewhere in the REST API
+     * ({@link TaxonArg#valueOf(String)}).</p>
+     */
+    @POST
+    @Path("/tasks/multifunctionality")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Submit an async recompute of per-gene multifunctionality for one taxon",
+            description = "Port of `MultifunctionalityCli`. Resolves `taxon` (common name, scientific name, NCBI ID, or Gemma taxon ID) and submits a single async task that calls `GeneMultifunctionalityPopulationService.updateMultifunctionality(taxon)`. Returns 202 with the submitted task ID; poll `/tasks/{taskId}` for progress.",
+            security = {
+                    @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
+            },
+            responses = {
+                    @ApiResponse(responseCode = "202",
+                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class))),
+                    @ApiResponse(responseCode = "400", description = "Missing or malformed taxon identifier",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "404", description = "No taxon matches the supplied identifier",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
+            })
+    public Response submitMultifunctionalityRecompute( @QueryParam("taxon") TaxonArg<?> taxonArg ) {
+        if ( taxonArg == null ) {
+            throw new BadRequestException( "`taxon` query parameter is required." );
+        }
+        Taxon taxon = taxonArgService.getEntity( taxonArg );
+        MultifunctionalityTaskCommand cmd = new MultifunctionalityTaskCommand( taxon );
+        String jobId = taskRunningService.submitTaskCommand( cmd );
+        MultifunctionalityRecomputeResponse body = new MultifunctionalityRecomputeResponse();
+        body.submittedJobId = jobId;
+        body.taxonId = taxon.getId();
+        body.taxonName = taxon.getCommonName();
+        return Response.status( Response.Status.ACCEPTED )
+                .location( URI.create( "/tasks/" + jobId ) )
+                .entity( respond( body ) )
+                .build();
     }
 
     /* ===== Search indices ===== */
@@ -1270,6 +1323,17 @@ public class AdminWebService {
         public int count;
         /** Submitted task IDs in the same order as the cleaned accession list. Poll each at `/tasks/{taskId}`. */
         public List<String> submittedJobIds;
+    }
+
+    public static class MultifunctionalityRecomputeResponse {
+        /** Submitted task ID. Poll at `/tasks/{taskId}`. */
+        public String submittedJobId;
+        /** Resolved Gemma taxon ID. */
+        @Nullable
+        public Long taxonId;
+        /** Resolved taxon common name (e.g. "human"). */
+        @Nullable
+        public String taxonName;
     }
 
     public static class CacheListResponse {
