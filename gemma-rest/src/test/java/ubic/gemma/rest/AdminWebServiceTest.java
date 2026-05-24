@@ -39,8 +39,11 @@ import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
 import ubic.gemma.core.loader.expression.geo.service.GeoRecordType;
 import ubic.gemma.core.loader.expression.geo.service.GeoRetrieveConfig;
+import ubic.gemma.core.geoscrape.GeoScrapeService;
 import ubic.gemma.core.tasks.analysis.expression.ExpressionExperimentLoadTaskCommand;
+import ubic.gemma.core.tasks.maintenance.GeoScrapeTaskCommand;
 import ubic.gemma.core.tasks.maintenance.MultifunctionalityTaskCommand;
+import ubic.gemma.model.expression.experiment.GeoScrapeWatermark;
 import ubic.gemma.core.security.AuthorityConstants;
 import ubic.gemma.core.security.authentication.UserDetailsImpl;
 import ubic.gemma.core.security.authentication.UserManager;
@@ -119,6 +122,8 @@ public class AdminWebServiceTest {
     private BlacklistedEntityService blacklistedEntityService;
     @Mock
     private ExternalDatabaseReadService externalDatabaseReadService;
+    @Mock
+    private GeoScrapeService geoScrapeService;
 
     private AdminWebService webService;
 
@@ -134,7 +139,7 @@ public class AdminWebServiceTest {
         taxonArgService = new TaxonArgService( innerTaxonService, innerChromosomeService, innerGeneService );
         webService = new AdminWebService( cacheManager, sessionFactory, taskRunningService, sessionRegistry,
                 Collections.emptyList(), dataSource, userManager, agentProposalService, ticketService,
-                taxonArgService, blacklistedEntityService, externalDatabaseReadService );
+                taxonArgService, blacklistedEntityService, externalDatabaseReadService, geoScrapeService );
     }
 
     /* ===== /admin/caches ===== */
@@ -871,6 +876,84 @@ public class AdminWebServiceTest {
         assertThatThrownBy( () -> webService.grabGeoRecords( req ) )
                 .isInstanceOf( jakarta.ws.rs.ServerErrorException.class )
                 .matches( ex -> ( ( jakarta.ws.rs.ServerErrorException ) ex ).getResponse().getStatus() == 502 );
+    }
+
+    /* ===== /admin/tasks/geo-scrape ===== */
+
+    @Test
+    public void submitGeoScrape_happyPath_submits202() {
+        when( taskRunningService.submitTaskCommand(
+                org.mockito.ArgumentMatchers.any( GeoScrapeTaskCommand.class ) ) )
+                .thenReturn( "task-scrape-1" );
+
+        AdminWebService.GeoScrapeRequest req = new AdminWebService.GeoScrapeRequest();
+        req.maxRecords = 50;
+        req.criteria = Arrays.asList( "brain", "tfperturb" );
+        req.dryRun = true;
+
+        Response resp = webService.submitGeoScrape( req );
+
+        assertThat( resp.getStatus() ).isEqualTo( 202 );
+        assertThat( resp.getLocation() ).hasToString( "/tasks/task-scrape-1" );
+        @SuppressWarnings("unchecked")
+        ResponseDataObject<AdminWebService.GeoScrapeSubmitResponse> dataObj =
+                ( ResponseDataObject<AdminWebService.GeoScrapeSubmitResponse> ) resp.getEntity();
+        assertThat( dataObj.getData().submittedJobId ).isEqualTo( "task-scrape-1" );
+
+        ArgumentCaptor<GeoScrapeTaskCommand> captor = ArgumentCaptor.forClass( GeoScrapeTaskCommand.class );
+        verify( taskRunningService ).submitTaskCommand( captor.capture() );
+        GeoScrapeTaskCommand cmd = captor.getValue();
+        assertThat( cmd.getMaxRecords() ).isEqualTo( 50 );
+        assertThat( cmd.getCriteria() ).containsExactly( "brain", "tfperturb" );
+        assertThat( cmd.isDryRun() ).isTrue();
+    }
+
+    @Test
+    public void submitGeoScrape_nullBody_submitsDefaults() {
+        when( taskRunningService.submitTaskCommand(
+                org.mockito.ArgumentMatchers.any( GeoScrapeTaskCommand.class ) ) )
+                .thenReturn( "task-scrape-2" );
+
+        Response resp = webService.submitGeoScrape( null );
+
+        assertThat( resp.getStatus() ).isEqualTo( 202 );
+        ArgumentCaptor<GeoScrapeTaskCommand> captor = ArgumentCaptor.forClass( GeoScrapeTaskCommand.class );
+        verify( taskRunningService ).submitTaskCommand( captor.capture() );
+        assertThat( captor.getValue().isDryRun() ).isFalse();
+        assertThat( captor.getValue().getMaxRecords() ).isNull();
+    }
+
+    /* ===== GET /admin/geo-scrape/last ===== */
+
+    @Test
+    public void getLastGeoScrape_happyPath_returnsValueObject() {
+        GeoScrapeWatermark wm = new GeoScrapeWatermark();
+        wm.setId( 7L );
+        wm.setScannedAt( new Date( 1_700_000_000_000L ) );
+        wm.setScanFrom( new Date( 1_699_000_000_000L ) );
+        wm.setScanTo( new Date( 1_700_500_000_000L ) );
+        wm.setRecordsScanned( 200 );
+        wm.setRecordsMatched( 8 );
+        wm.setCriteriaApplied( "brain,tfperturb" );
+        wm.setStatus( GeoScrapeWatermark.Status.COMPLETED );
+        when( geoScrapeService.getLastWatermark() ).thenReturn( wm );
+
+        ResponseDataObject<AdminWebService.GeoScrapeWatermarkValueObject> resp = webService.getLastGeoScrape();
+
+        AdminWebService.GeoScrapeWatermarkValueObject vo = resp.getData();
+        assertThat( vo.id ).isEqualTo( 7L );
+        assertThat( vo.recordsScanned ).isEqualTo( 200 );
+        assertThat( vo.recordsMatched ).isEqualTo( 8 );
+        assertThat( vo.criteriaApplied ).isEqualTo( "brain,tfperturb" );
+        assertThat( vo.status ).isEqualTo( "COMPLETED" );
+    }
+
+    @Test
+    public void getLastGeoScrape_returns404_whenNoWatermark() {
+        when( geoScrapeService.getLastWatermark() ).thenReturn( null );
+
+        assertThatThrownBy( () -> webService.getLastGeoScrape() )
+                .isInstanceOf( NotFoundException.class );
     }
 
     /* ===== /admin/tasks/multifunctionality ===== */

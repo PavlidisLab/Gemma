@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hibernate-mapping xmlns="http://www.hibernate.org/xsd/hibernate-mapping"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.hibernate.org/xsd/hibernate-mapping http://hibernate.org/xsd/hibernate-mapping-4.0.xsd">
+    <!--
+        Append-only log of GEO scrape runs. One row per POST /admin/tasks/geo-scrape
+        invocation. The latest COMPLETED row's SCAN_TO is the resume watermark for
+        the next scrape.
+
+        Schema: Flyway mysql/V17__geo_scrape_watermark.sql + h2/V19__geo_scrape_watermark.sql.
+        Paul-approved 2026-05-23.
+    -->
+    <class name="ubic.gemma.model.expression.experiment.GeoScrapeWatermark" table="GEO_SCRAPE_WATERMARK">
+        <id name="id" type="java.lang.Long" unsaved-value="null">
+            <column name="ID" sql-type="BIGINT"/>
+            <generator class="native"/>
+        </id>
+        <property name="scannedAt" type="java.util.Date">
+            <column name="SCANNED_AT" not-null="true" unique="false"
+                    sql-type="DATETIME(3)"
+                    index="GEO_SCRAPE_WATERMARK_SCANNED_AT_IDX"/>
+        </property>
+        <property name="scanFrom" type="java.util.Date">
+            <column name="SCAN_FROM" not-null="false" unique="false"
+                    sql-type="DATETIME(3)"/>
+        </property>
+        <property name="scanTo" type="java.util.Date">
+            <column name="SCAN_TO" not-null="false" unique="false"
+                    sql-type="DATETIME(3)"/>
+        </property>
+        <property name="recordsScanned" type="java.lang.Integer">
+            <column name="RECORDS_SCANNED" not-null="true" unique="false"
+                    sql-type="INTEGER"/>
+        </property>
+        <property name="recordsMatched" type="java.lang.Integer">
+            <column name="RECORDS_MATCHED" not-null="true" unique="false"
+                    sql-type="INTEGER"/>
+        </property>
+        <property name="criteriaApplied" type="java.lang.String">
+            <column name="CRITERIA_APPLIED" not-null="false" unique="false"
+                    sql-type="VARCHAR(1024)"/>
+        </property>
+        <property name="status">
+            <column name="STATUS" not-null="true" unique="false"
+                    sql-type="VARCHAR(32)"/>
+            <type name="org.hibernate.type.EnumType">
+                <param name="enumClass">ubic.gemma.model.expression.experiment.GeoScrapeWatermark$Status</param>
+                <param name="useNamed">true</param>
+            </type>
+        </property>
+        <property name="errorMessage" type="org.hibernate.type.MaterializedClobType">
+            <column name="ERROR_MESSAGE" not-null="false" unique="false"
+                    sql-type="TEXT"/>
+        </property>
+    </class>
+</hibernate-mapping>

@@ -60,7 +60,10 @@ import ubic.gemma.core.loader.expression.geo.service.GeoRecordType;
 import ubic.gemma.core.loader.expression.geo.service.GeoRetrieveConfig;
 import ubic.gemma.core.ontology.basecode.providers.OntologyService;
 import ubic.gemma.core.tasks.analysis.expression.ExpressionExperimentLoadTaskCommand;
+import ubic.gemma.core.tasks.maintenance.GeoScrapeTaskCommand;
 import ubic.gemma.core.tasks.maintenance.MultifunctionalityTaskCommand;
+import ubic.gemma.core.geoscrape.GeoScrapeService;
+import ubic.gemma.model.expression.experiment.GeoScrapeWatermark;
 import ubic.gemma.core.security.AuthorityConstants;
 import ubic.gemma.core.security.authentication.UserDetailsImpl;
 import ubic.gemma.core.security.authentication.UserManager;
@@ -149,6 +152,7 @@ public class AdminWebService {
     private final TaxonArgService taxonArgService;
     private final BlacklistedEntityService blacklistedEntityService;
     private final ExternalDatabaseReadService externalDatabaseReadService;
+    private final GeoScrapeService geoScrapeService;
 
     @Value("${gemma.curationAgent.healthUrl:}")
     private String curationAgentHealthUrl;
@@ -188,7 +192,8 @@ public class AdminWebService {
             AgentProposalService agentProposalService, TicketService ticketService,
             TaxonArgService taxonArgService,
             BlacklistedEntityService blacklistedEntityService,
-            ExternalDatabaseReadService externalDatabaseReadService ) {
+            ExternalDatabaseReadService externalDatabaseReadService,
+            GeoScrapeService geoScrapeService ) {
         this.cacheManager = cacheManager;
         this.sessionFactory = sessionFactory;
         this.taskRunningService = taskRunningService;
@@ -201,6 +206,7 @@ public class AdminWebService {
         this.taxonArgService = taxonArgService;
         this.blacklistedEntityService = blacklistedEntityService;
         this.externalDatabaseReadService = externalDatabaseReadService;
+        this.geoScrapeService = geoScrapeService;
     }
 
     /* ===== Caches ===== */
@@ -1014,6 +1020,89 @@ public class AdminWebService {
         vo.librarySource = r.getLibrarySource();
         vo.sampleDetails = r.getSampleDetails();
         vo.contactName = r.getContactName();
+        return vo;
+    }
+
+    /* ===== GEO scrape & preboard pipeline ===== */
+
+    /**
+     * Submit an async GEO scrape & preboard run. Iterates recent GEO records
+     * via {@link GeoScrapeService}, filters by taxon + matcher criteria, and
+     * creates {@code PreboardedExperiment} rows for matches. Returns 202 + the
+     * submitted task ID; poll {@code /tasks/{taskId}} for progress or
+     * {@code GET /admin/geo-scrape/last} for the lifecycle watermark.
+     */
+    @POST
+    @Path("/tasks/geo-scrape")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Submit an async GEO scrape & preboard run",
+            description = "Iterates recent GEO records, filters to human/mouse/rat expression profiling, evaluates the registered matchers (subset selectable via `criteria`: {brain, scbrain, tfperturb}) and creates PreboardedExperiment rows for any matches. dryRun=true evaluates without persisting. Returns 202 + task ID.",
+            security = {
+                    @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
+            },
+            responses = {
+                    @ApiResponse(responseCode = "202",
+                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class)))
+            })
+    public Response submitGeoScrape( @Nullable GeoScrapeRequest body ) {
+        GeoScrapeTaskCommand cmd = new GeoScrapeTaskCommand();
+        if ( body != null ) {
+            cmd.setSince( body.since );
+            cmd.setMaxRecords( body.maxRecords );
+            cmd.setCriteria( body.criteria );
+            cmd.setDryRun( body.dryRun != null && body.dryRun );
+        }
+        String jobId = taskRunningService.submitTaskCommand( cmd );
+        GeoScrapeSubmitResponse responseBody = new GeoScrapeSubmitResponse();
+        responseBody.submittedJobId = jobId;
+        return Response.status( Response.Status.ACCEPTED )
+                .location( URI.create( "/tasks/" + jobId ) )
+                .entity( respond( responseBody ) )
+                .build();
+    }
+
+    /**
+     * Latest {@link GeoScrapeWatermark} row. Returns 404 when no scrape has
+     * been run.
+     */
+    @GET
+    @Path("/geo-scrape/last")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Most recent GEO scrape watermark",
+            description = "Returns the most recently created GeoScrapeWatermark row (IN_PROGRESS / COMPLETED / FAILED / CANCELLED), or 404 if no scrape has ever been run.",
+            security = {
+                    @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
+            },
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class))),
+                    @ApiResponse(responseCode = "404", description = "No scrape has been run.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
+            })
+    public ResponseDataObject<GeoScrapeWatermarkValueObject> getLastGeoScrape() {
+        GeoScrapeWatermark wm = geoScrapeService.getLastWatermark();
+        if ( wm == null ) {
+            throw new NotFoundException( "No GEO scrape has been run." );
+        }
+        return respond( toWatermarkVo( wm ) );
+    }
+
+    private static GeoScrapeWatermarkValueObject toWatermarkVo( GeoScrapeWatermark wm ) {
+        GeoScrapeWatermarkValueObject vo = new GeoScrapeWatermarkValueObject();
+        vo.id = wm.getId();
+        vo.scannedAt = wm.getScannedAt();
+        vo.scanFrom = wm.getScanFrom();
+        vo.scanTo = wm.getScanTo();
+        vo.recordsScanned = wm.getRecordsScanned();
+        vo.recordsMatched = wm.getRecordsMatched();
+        vo.criteriaApplied = wm.getCriteriaApplied();
+        vo.status = wm.getStatus() == null ? null : wm.getStatus().name();
+        vo.errorMessage = wm.getErrorMessage();
         return vo;
     }
 
@@ -1855,6 +1944,42 @@ public class AdminWebService {
         public String accession;
         /** Reason for blacklisting. Required and non-blank. */
         public String reason;
+    }
+
+    public static class GeoScrapeRequest {
+        /** Lower bound of the scrape window. Null means "resume from last successful scrape's scanTo". */
+        @Nullable
+        public Date since;
+        /** Hard cap on number of GEO records examined. Null means use service default. */
+        @Nullable
+        public Integer maxRecords;
+        /** Subset of matcher names to apply (e.g. {@code ["brain","tfperturb"]}); null/empty = all available. */
+        @Nullable
+        public Collection<String> criteria;
+        /** If true, evaluate matches but do not persist any PreboardedExperiment rows. */
+        @Nullable
+        public Boolean dryRun;
+    }
+
+    public static class GeoScrapeSubmitResponse {
+        public String submittedJobId;
+    }
+
+    public static class GeoScrapeWatermarkValueObject {
+        public Long id;
+        public Date scannedAt;
+        @Nullable
+        public Date scanFrom;
+        @Nullable
+        public Date scanTo;
+        public int recordsScanned;
+        public int recordsMatched;
+        @Nullable
+        public String criteriaApplied;
+        @Nullable
+        public String status;
+        @Nullable
+        public String errorMessage;
     }
 
     public static class BlacklistListResponse {

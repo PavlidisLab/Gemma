@@ -45,6 +45,13 @@ public class PreboardedExperiment extends Investigation {
      * — the structured proposal lives separately in {@code AgentProposal}.
      */
     private String identifyingMetadata;
+    /**
+     * JSON-as-string listing the matcher names that flagged this preboarded
+     * during a {@code GeoScrapeService} run (e.g. {@code ["brain","tfperturb"]}).
+     * Null for preboardeds created outside the scrape pipeline (e.g. via the
+     * curation-agent runner directly).
+     */
+    private String matchedCriteria;
 
     public PreboardedExperiment() {
         super();
@@ -87,6 +94,19 @@ public class PreboardedExperiment extends Investigation {
 
     public void setIdentifyingMetadata( String identifyingMetadata ) {
         this.identifyingMetadata = identifyingMetadata;
+    }
+
+    /**
+     * @return JSON-as-string listing matcher names from the GEO scrape pipeline
+     *         that flagged this preboarded, or {@code null} if not produced by
+     *         the scrape pipeline.
+     */
+    public String getMatchedCriteria() {
+        return matchedCriteria;
+    }
+
+    public void setMatchedCriteria( String matchedCriteria ) {
+        this.matchedCriteria = matchedCriteria;
     }
 
     @Override
