@@ -40,6 +40,7 @@ import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
 import ubic.gemma.core.loader.expression.geo.service.GeoRecordType;
 import ubic.gemma.core.loader.expression.geo.service.GeoRetrieveConfig;
 import ubic.gemma.core.tasks.analysis.expression.ExpressionExperimentLoadTaskCommand;
+import ubic.gemma.core.tasks.maintenance.MultifunctionalityTaskCommand;
 import ubic.gemma.core.security.AuthorityConstants;
 import ubic.gemma.core.security.authentication.UserDetailsImpl;
 import ubic.gemma.core.security.authentication.UserManager;
@@ -47,7 +48,10 @@ import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketService;
 import ubic.gemma.persistence.service.expression.experiment.AgentProposalService;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.rest.util.ResponseDataObject;
+import ubic.gemma.rest.util.args.TaxonArg;
+import ubic.gemma.rest.util.args.TaxonArgService;
 
 import javax.sql.DataSource;
 import java.io.IOException;
@@ -100,13 +104,16 @@ public class AdminWebServiceTest {
     private TicketService ticketService;
     @Mock
     private GeoBrowser geoBrowser;
+    @Mock
+    private TaxonArgService taxonArgService;
 
     private AdminWebService webService;
 
     @BeforeEach
     public void setUp() {
         webService = new AdminWebService( cacheManager, sessionFactory, taskRunningService, sessionRegistry,
-                Collections.emptyList(), dataSource, userManager, agentProposalService, ticketService );
+                Collections.emptyList(), dataSource, userManager, agentProposalService, ticketService,
+                taxonArgService );
     }
 
     /* ===== /admin/caches ===== */
@@ -843,5 +850,35 @@ public class AdminWebServiceTest {
         assertThatThrownBy( () -> webService.grabGeoRecords( req ) )
                 .isInstanceOf( jakarta.ws.rs.ServerErrorException.class )
                 .matches( ex -> ( ( jakarta.ws.rs.ServerErrorException ) ex ).getResponse().getStatus() == 502 );
+    }
+
+    /* ===== /admin/tasks/multifunctionality ===== */
+
+    @Test
+    public void submitMultifunctionalityRecompute_happyPath_submitsTaskWithResolvedTaxon() {
+        Taxon human = new Taxon();
+        human.setId( 1L );
+        human.setCommonName( "human" );
+        TaxonArg<?> taxonArg = TaxonArg.valueOf( "human" );
+        when( taxonArgService.getEntity( taxonArg ) ).thenReturn( human );
+        when( taskRunningService.submitTaskCommand( org.mockito.ArgumentMatchers.any( MultifunctionalityTaskCommand.class ) ) )
+                .thenReturn( "task-mf-1" );
+
+        Response resp = webService.submitMultifunctionalityRecompute( taxonArg );
+
+        assertThat( resp.getStatus() ).isEqualTo( 202 );
+        assertThat( resp.getLocation() ).hasToString( "/tasks/task-mf-1" );
+        @SuppressWarnings("unchecked")
+        ResponseDataObject<AdminWebService.MultifunctionalityRecomputeResponse> dataObj =
+                ( ResponseDataObject<AdminWebService.MultifunctionalityRecomputeResponse> ) resp.getEntity();
+        AdminWebService.MultifunctionalityRecomputeResponse body = dataObj.getData();
+        assertThat( body.submittedJobId ).isEqualTo( "task-mf-1" );
+        assertThat( body.taxonId ).isEqualTo( 1L );
+        assertThat( body.taxonName ).isEqualTo( "human" );
+
+        ArgumentCaptor<MultifunctionalityTaskCommand> cmd =
+                ArgumentCaptor.forClass( MultifunctionalityTaskCommand.class );
+        verify( taskRunningService ).submitTaskCommand( cmd.capture() );
+        assertThat( cmd.getValue().getTaxon() ).isSameAs( human );
     }
 }
