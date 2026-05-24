@@ -53,11 +53,15 @@ import ubic.gemma.model.analysis.expression.pca.ProbeLoading;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.analysis.service.OutlierFlaggingService;
+import ubic.gemma.persistence.service.expression.experiment.FactorValueNeedsAttentionService;
+import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
+import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.core.job.SubmittedTask;
 import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.core.tasks.analysis.diffex.DifferentialExpressionAnalysisRemoveTaskCommand;
 import ubic.gemma.core.tasks.analysis.diffex.DifferentialExpressionAnalysisTaskCommand;
 import ubic.gemma.core.tasks.analysis.expression.BatchInfoFetchTaskCommand;
+import ubic.gemma.core.tasks.analysis.expression.SvdTaskCommand;
 import ubic.gemma.core.tasks.analysis.expression.ExpressionExperimentLoadTaskCommand;
 import ubic.gemma.core.tasks.analysis.expression.PreprocessTaskCommand;
 import ubic.gemma.core.analysis.service.DifferentialExpressionAnalysisResultListFileService;
@@ -264,6 +268,10 @@ public class DatasetsWebService {
     private BioAssayService bioAssayService;
     @Autowired
     private OutlierFlaggingService outlierFlaggingService;
+    @Autowired
+    private FactorValueService factorValueService;
+    @Autowired
+    private FactorValueNeedsAttentionService factorValueNeedsAttentionService;
 
     @Context
     private UriInfo uriInfo;
@@ -1113,6 +1121,111 @@ public class DatasetsWebService {
         refreshed = bioAssayService.thaw( refreshed );
         BioAssayValueObject vo = new BioAssayValueObject( refreshed, false );
         return respond( vo );
+    }
+
+    /**
+     * Request body for {@link #markFactorValueNeedsAttention} and
+     * {@link #clearFactorValueNeedsAttention}. {@code note} is the human-readable
+     * reason recorded on the Ticket the service opens / resolves.
+     */
+    public static class FactorValueNeedsAttentionRequest {
+        @Nullable
+        private String note;
+
+        @Nullable
+        public String getNote() {
+            return note;
+        }
+
+        public void setNote( @Nullable String note ) {
+            this.note = note;
+        }
+    }
+
+    /**
+     * Open a "needs attention" ticket against a factor value.
+     * <p>
+     * Replaces the legacy gemma-web {@code ExperimentalDesignController.markFactorValuesAsNeedsAttention}
+     * AJAX call. Routes through {@link FactorValueNeedsAttentionService}, which opens a
+     * {@code TicketType.GENERIC} ticket targeting both the factor value and its owning EE.
+     */
+    @POST
+    @Path("/{dataset}/factor-values/{factorValueId}/needs-attention")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_USER')")
+    @Operation(summary = "Mark a factor value as needing curator attention",
+            description = "Opens a curator ticket against the factor value. Body: `{\"note\": \"...\"}` — the note is the ticket title suffix. The factor value must belong to the path-derived dataset; otherwise a 400 is returned. Idempotency is enforced by the underlying service: marking an already-flagged factor value throws 409.",
+            security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_USER" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_USER" }) },
+            responses = {
+                    @ApiResponse(responseCode = "204", description = "Ticket opened."),
+                    @ApiResponse(responseCode = "400", description = "The factor value does not belong to the dataset.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "404", description = "The dataset or factor value does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "409", description = "The factor value already has an open needs-attention ticket.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public Response markFactorValueNeedsAttention(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @PathParam("factorValueId") Long factorValueId,
+            @Nullable FactorValueNeedsAttentionRequest body
+    ) {
+        FactorValue fv = resolveFactorValueForDataset( datasetArg, factorValueId );
+        String note = body != null && body.getNote() != null ? body.getNote() : "";
+        try {
+            factorValueNeedsAttentionService.markAsNeedsAttention( fv, note );
+        } catch ( IllegalArgumentException e ) {
+            // Service throws IAE when the FV already needs attention (see service contract).
+            throw new ClientErrorException( e.getMessage(), Response.Status.CONFLICT );
+        }
+        return Response.noContent().build();
+    }
+
+    /**
+     * Resolve every open needs-attention ticket on a factor value.
+     */
+    @DELETE
+    @Path("/{dataset}/factor-values/{factorValueId}/needs-attention")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_USER')")
+    @Operation(summary = "Clear the needs-attention flag on a factor value",
+            description = "Resolves every open ticket targeting the factor value. `note` is recorded as the resolution reason. 409 if the factor value is not currently flagged.",
+            security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_USER" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_USER" }) },
+            responses = {
+                    @ApiResponse(responseCode = "204", description = "Tickets resolved."),
+                    @ApiResponse(responseCode = "400", description = "The factor value does not belong to the dataset.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "404", description = "The dataset or factor value does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "409", description = "The factor value has no open needs-attention ticket.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public Response clearFactorValueNeedsAttention(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @PathParam("factorValueId") Long factorValueId,
+            @Parameter(description = "Resolution reason; recorded on every ticket transition.") @QueryParam("note") @Nullable String note
+    ) {
+        FactorValue fv = resolveFactorValueForDataset( datasetArg, factorValueId );
+        try {
+            factorValueNeedsAttentionService.clearNeedsAttentionFlag( fv, note != null ? note : "" );
+        } catch ( IllegalArgumentException e ) {
+            throw new ClientErrorException( e.getMessage(), Response.Status.CONFLICT );
+        }
+        return Response.noContent().build();
+    }
+
+    private FactorValue resolveFactorValueForDataset( DatasetArg<?> datasetArg, Long factorValueId ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        FactorValue fv = factorValueService.loadWithExperimentalFactorOrFail( factorValueId, NotFoundException::new );
+        if ( fv.getExperimentalFactor() == null
+                || fv.getExperimentalFactor().getExperimentalDesign() == null
+                || ee.getExperimentalDesign() == null
+                || !ee.getExperimentalDesign().getId().equals( fv.getExperimentalFactor().getExperimentalDesign().getId() ) ) {
+            throw new BadRequestException( "FactorValue " + factorValueId
+                    + " does not belong to dataset " + ee.getShortName() + "." );
+        }
+        return fv;
     }
 
     @GET
@@ -2565,6 +2678,29 @@ public class DatasetsWebService {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         PreprocessTaskCommand cmd = new PreprocessTaskCommand( ee );
         cmd.setDiagnosticsOnly( true );
+        expressionExperimentReportService.evictFromCache( ee.getId() );
+        return acceptedTaskResponse( taskRunningService.submitTaskCommand( cmd ) );
+    }
+
+    @POST
+    @Path("/{dataset}/tasks/svd")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Recompute the singular value decomposition for a dataset",
+            description = "Submits an async task that recomputes the SVD of the dataset's expression matrix and "
+                    + "persists the result. The companion `GET /{dataset}/svd` reads the stored result. Returns 202 "
+                    + "with a `Location` header pointing at `/tasks/{taskId}`.",
+            security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
+            responses = {
+                    @ApiResponse(responseCode = "202", content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public Response runDatasetSvd(
+            @PathParam("dataset") DatasetArg<?> datasetArg
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        SvdTaskCommand cmd = new SvdTaskCommand( ee );
         expressionExperimentReportService.evictFromCache( ee.getId() );
         return acceptedTaskResponse( taskRunningService.submitTaskCommand( cmd ) );
     }
