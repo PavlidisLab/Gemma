@@ -580,11 +580,13 @@ public class GeoSingleCellDetectorTest extends BaseTest5 {
 
     @Test
     public void testGSE201032() throws IOException {
+        // SOFT fixture chopped from 8 samples -> 1 to cut FTP archive probes (47s -> ~6s).
+        // See README in series/ for chop provenance.
         GeoSeries series = readSeriesFromGeo( "GSE201032" );
         assertThat( detector.getAdditionalSupplementaryFiles( series ) )
                 .containsExactly( "ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE201nnn/GSE201032/suppl/GSE201032_Metadata.csv.gz" );
         assertThat( series.getSamples() )
-                .hasSize( 8 )
+                .hasSize( 1 )
                 .allSatisfy( sample -> assertThat( detector.getAdditionalSupplementaryFiles( series, sample ) )
                         .containsExactly( "ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE201nnn/GSE201032/suppl/GSE201032_Metadata.csv.gz" ) );
     }
