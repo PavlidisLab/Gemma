@@ -131,7 +131,10 @@ public class SVDServiceImpl implements SVDService {
         try {
             return new SVDResult( pca );
         } catch ( Exception e ) {
-            SVDServiceImpl.log.error( e.getLocalizedMessage() );
+            // Pass the throwable so the stack lands in the log. The previous form
+            // (message-only) silently hid the SVDResult-ctor ClassCastException that
+            // surfaced /svd as 404 and /svd/loadings as 500.
+            SVDServiceImpl.log.error( "Failed to build SVDResult for " + ee + ": " + e.getMessage(), e );
             return null;
         }
     }

@@ -20,6 +20,7 @@
 package ubic.gemma.core.analysis.preprocess.svd;
 
 import lombok.Value;
+import org.hibernate.Hibernate;
 import ubic.gemma.core.util.matrix.DenseDoubleMatrix;
 import ubic.gemma.core.util.matrix.DoubleMatrix;
 import ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis;
@@ -107,7 +108,13 @@ public class SVDResult {
     Map<Integer, Map<ExperimentalFactor, Double>> factorPVals = new HashMap<>();
 
     public SVDResult( PrincipalComponentAnalysis pca ) {
-        this.experimentAnalyzed = pca.getExperimentAnalyzed();
+        // SingleExperimentAnalysis<T extends BioAssaySet> erases to BioAssaySet at runtime.
+        // Hibernate returns a BioAssaySet-typed proxy for experimentAnalyzed; the implicit
+        // checkcast inserted by javac on assignment to ExpressionExperiment fails with
+        // ClassCastException. Unproxy first so the underlying ExpressionExperiment surfaces.
+        // The catch-and-log in SVDServiceImpl.getSvd was previously swallowing this and
+        // returning null silently, surfacing in /svd as 404 and /svd/loadings as 500.
+        this.experimentAnalyzed = (ExpressionExperiment) Hibernate.unproxy( pca.getExperimentAnalyzed() );
         this.bioAssays = assaysFromPca( pca );
         this.bioMaterials = samplesFromPca( pca );
         this.variances = pca.getVarianceFractions();
