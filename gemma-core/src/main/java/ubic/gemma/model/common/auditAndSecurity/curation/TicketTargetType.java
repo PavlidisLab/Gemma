@@ -29,5 +29,12 @@ public enum TicketTargetType {
      * {@code FactorValueNeedsAttentionServiceImpl} for the canonical
      * dual-target usage.
      */
-    FACTOR_VALUE
+    FACTOR_VALUE,
+    /**
+     * A {@link ubic.gemma.model.expression.experiment.GeoScrapeWatermark}
+     * row. Used by the GEO scrape pipeline to file a per-batch ticket when
+     * a scrape completes with at least one match, so the curator queue
+     * surfaces the new preboarded candidates as a single work item.
+     */
+    GEO_SCRAPE_WATERMARK
 }

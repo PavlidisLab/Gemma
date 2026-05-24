@@ -11,6 +11,9 @@
  */
 package ubic.gemma.core.geoscrape;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.SessionFactory;
@@ -29,20 +32,31 @@ import ubic.gemma.core.loader.expression.geo.service.GeoBrowserImpl;
 import ubic.gemma.core.loader.expression.geo.service.GeoQuery;
 import ubic.gemma.core.loader.expression.geo.service.GeoRecordType;
 import ubic.gemma.core.loader.expression.geo.service.GeoRetrieveConfig;
+import ubic.gemma.core.security.authentication.UserManager;
+import ubic.gemma.model.common.auditAndSecurity.User;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
 import ubic.gemma.model.expression.experiment.GeoScrapeWatermark;
+import ubic.gemma.model.expression.experiment.PreboardedExperiment;
+import ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketService;
 import ubic.gemma.persistence.service.expression.experiment.PreboardedExperimentService;
 import ubic.gemma.persistence.util.Slice;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
+import java.util.TimeZone;
 
 /**
  * Default {@link GeoScrapeService} implementation.
@@ -88,6 +102,9 @@ public class GeoScrapeServiceImpl implements GeoScrapeService {
     private final PreboardedExperimentService preboardedExperimentService;
     private final List<GeoRecordMatcher> matchers;
     private final TransactionTemplate transactionTemplate;
+    private final TicketService ticketService;
+    private final UserManager userManager;
+    private final ObjectMapper jsonMapper;
 
     @Value("${gemma.geoScrape.pageSize:200}")
     private int pageSize = 200;
@@ -107,11 +124,17 @@ public class GeoScrapeServiceImpl implements GeoScrapeService {
     public GeoScrapeServiceImpl( SessionFactory sessionFactory,
             PreboardedExperimentService preboardedExperimentService,
             List<GeoRecordMatcher> matchers,
-            PlatformTransactionManager transactionManager ) {
+            PlatformTransactionManager transactionManager,
+            TicketService ticketService,
+            UserManager userManager ) {
         this.sessionFactory = sessionFactory;
         this.preboardedExperimentService = preboardedExperimentService;
         this.matchers = matchers != null ? matchers : Collections.emptyList();
         this.transactionTemplate = new TransactionTemplate( transactionManager );
+        this.ticketService = ticketService;
+        this.userManager = userManager;
+        this.jsonMapper = new ObjectMapper()
+                .configure( SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false );
     }
 
     private synchronized GeoBrowser resolveGeoBrowser() {
@@ -153,6 +176,11 @@ public class GeoScrapeServiceImpl implements GeoScrapeService {
         wm = persistWatermark( wm );
 
         int scanned = 0, matched = 0;
+        List<Long> createdPreboardedIds = new ArrayList<>();
+        Map<String, Integer> matchedByCriterion = new LinkedHashMap<>();
+        for ( GeoRecordMatcher m : active ) {
+            matchedByCriterion.put( m.name(), 0 );
+        }
         try {
             GeoQuery query = resolveGeoBrowser().searchGeoRecords(
                     GeoRecordType.SERIES, null, null,
@@ -188,12 +216,19 @@ public class GeoScrapeServiceImpl implements GeoScrapeService {
                     }
                     if ( matchedNames.isEmpty() ) continue;
                     matched++;
+                    for ( String n : matchedNames ) {
+                        matchedByCriterion.merge( n, 1, Integer::sum );
+                    }
                     if ( !req.isDryRun() ) {
                         try {
-                            preboardedExperimentService.createPreboarded(
+                            String enriched = buildIdentifyingMetadata( r );
+                            PreboardedExperiment pb = preboardedExperimentService.createPreboarded(
                                     r.getGeoAccession(),
                                     "GEO",
-                                    null );
+                                    enriched );
+                            if ( pb != null && pb.getId() != null ) {
+                                createdPreboardedIds.add( pb.getId() );
+                            }
                             updateMatchedCriteria( r.getGeoAccession(), toJsonArray( matchedNames ) );
                         } catch ( PreboardedExperimentService.AccessionAlreadyExistsException ex ) {
                             // Already preboarded or loaded — skip; not an error condition during a scrape.
@@ -208,6 +243,9 @@ public class GeoScrapeServiceImpl implements GeoScrapeService {
             wm.setRecordsScanned( scanned );
             wm.setRecordsMatched( matched );
             updateWatermark( wm );
+            if ( !req.isDryRun() && matched > 0 ) {
+                openScrapeBatchTicket( wm, matchedByCriterion, createdPreboardedIds );
+            }
         } catch ( IOException e ) {
             log.warn( "GEO scrape failed: " + e.getMessage() );
             wm.setStatus( GeoScrapeWatermark.Status.FAILED );
@@ -241,7 +279,7 @@ public class GeoScrapeServiceImpl implements GeoScrapeService {
     }
 
     @Nullable
-    private GeoScrapeWatermark getLastCompletedWatermark() {
+    GeoScrapeWatermark getLastCompletedWatermark() {
         return transactionTemplate.execute( status -> {
             @SuppressWarnings("unchecked")
             List<GeoScrapeWatermark> rows = sessionFactory.getCurrentSession()
@@ -253,7 +291,7 @@ public class GeoScrapeServiceImpl implements GeoScrapeService {
         } );
     }
 
-    private GeoScrapeWatermark persistWatermark( GeoScrapeWatermark wm ) {
+    GeoScrapeWatermark persistWatermark( GeoScrapeWatermark wm ) {
         return transactionTemplate.execute( status -> {
             sessionFactory.getCurrentSession().persist( wm );
             sessionFactory.getCurrentSession().flush();
@@ -261,7 +299,7 @@ public class GeoScrapeServiceImpl implements GeoScrapeService {
         } );
     }
 
-    private void updateWatermark( GeoScrapeWatermark wm ) {
+    void updateWatermark( GeoScrapeWatermark wm ) {
         wm.setScannedAt( new Date() );
         transactionTemplate.execute( new TransactionCallbackWithoutResult() {
             @Override
@@ -271,7 +309,7 @@ public class GeoScrapeServiceImpl implements GeoScrapeService {
         } );
     }
 
-    private void updateMatchedCriteria( String accession, String json ) {
+    void updateMatchedCriteria( String accession, String json ) {
         transactionTemplate.execute( new TransactionCallbackWithoutResult() {
             @Override
             protected void doInTransactionWithoutResult( TransactionStatus status ) {
@@ -341,6 +379,146 @@ public class GeoScrapeServiceImpl implements GeoScrapeService {
             sb.append( '"' ).append( names.get( i ).replace( "\"", "\\\"" ) ).append( '"' );
         }
         sb.append( ']' );
+        return sb.toString();
+    }
+
+    /**
+     * Serialize the curator-relevant fields of a {@link GeoRecord} into a
+     * compact JSON object suitable for the
+     * {@code PreboardedExperiment.identifyingMetadata} column.
+     *
+     * <p>Null / empty fields are omitted (Jackson is configured to write
+     * dates as ISO-8601 strings). Returns {@code null} if the record
+     * carries nothing worth recording, or if serialization fails (the
+     * scrape continues — the matched-criteria column is the curator's
+     * fallback signal).</p>
+     */
+    @Nullable
+    String buildIdentifyingMetadata( GeoRecord r ) {
+        if ( r == null ) return null;
+        Map<String, Object> payload = new LinkedHashMap<>();
+        putIfNotBlank( payload, "geoAccession", r.getGeoAccession() );
+        putIfNotBlank( payload, "title", r.getTitle() );
+        putIfNotBlank( payload, "summary", r.getSummary() );
+        putIfNotBlank( payload, "overallDesign", r.getOverallDesign() );
+        if ( r.getOrganisms() != null && !r.getOrganisms().isEmpty() ) {
+            payload.put( "organisms", new ArrayList<>( r.getOrganisms() ) );
+        }
+        putIfNotBlank( payload, "platform", r.getPlatform() );
+        putIfNotBlank( payload, "seriesType", r.getSeriesType() );
+        if ( r.getNumSamples() > 0 ) {
+            payload.put( "numSamples", r.getNumSamples() );
+        }
+        if ( r.getReleaseDate() != null ) {
+            SimpleDateFormat fmt = new SimpleDateFormat( "yyyy-MM-dd" );
+            fmt.setTimeZone( TimeZone.getTimeZone( "UTC" ) );
+            payload.put( "releaseDate", fmt.format( r.getReleaseDate() ) );
+        }
+        putIfNotBlank( payload, "libraryStrategy", r.getLibraryStrategy() );
+        putIfNotBlank( payload, "librarySource", r.getLibrarySource() );
+        putIfNotBlank( payload, "sampleDetails", r.getSampleDetails() );
+        if ( r.getPubMedIds() != null && !r.getPubMedIds().isEmpty() ) {
+            payload.put( "pubMedIds", new ArrayList<>( r.getPubMedIds() ) );
+        }
+        if ( r.getMeshHeadings() != null && !r.getMeshHeadings().isEmpty() ) {
+            payload.put( "meshHeadings", new ArrayList<>( r.getMeshHeadings() ) );
+        }
+        SimpleDateFormat iso = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss'Z'" );
+        iso.setTimeZone( TimeZone.getTimeZone( "UTC" ) );
+        payload.put( "scrapedAt", iso.format( new Date() ) );
+        if ( payload.isEmpty() ) return null;
+        try {
+            return jsonMapper.writeValueAsString( payload );
+        } catch ( JsonProcessingException e ) {
+            log.warn( "Failed to serialize GeoRecord identifyingMetadata for "
+                    + r.getGeoAccession() + ": " + e.getMessage() );
+            return null;
+        }
+    }
+
+    private static void putIfNotBlank( Map<String, Object> m, String key, @Nullable String value ) {
+        if ( value != null && !value.trim().isEmpty() ) {
+            m.put( key, value );
+        }
+    }
+
+    /**
+     * Open one ticket summarising a successful scrape batch. Target is the
+     * {@link GeoScrapeWatermark} row so the curator queue can pivot from
+     * "open work" back to "what scrape produced this".
+     *
+     * <p>The note lists per-criterion match counts plus the preboarded
+     * ids, truncated at 20 ids with a trailing "(...and N more)" marker
+     * to keep the payload bounded for very large batches.</p>
+     */
+    void openScrapeBatchTicket( GeoScrapeWatermark wm,
+            Map<String, Integer> matchedByCriterion,
+            List<Long> preboardedIds ) {
+        User reporter;
+        try {
+            reporter = userManager.getCurrentUser();
+        } catch ( RuntimeException e ) {
+            log.warn( "No current user resolvable for scrape ticket; skipping ticket creation: " + e.getMessage() );
+            return;
+        }
+        if ( reporter == null ) {
+            log.warn( "No current user resolved for scrape ticket; skipping ticket creation." );
+            return;
+        }
+        SimpleDateFormat dayFmt = new SimpleDateFormat( "yyyy-MM-dd" );
+        dayFmt.setTimeZone( TimeZone.getTimeZone( "UTC" ) );
+        String day = dayFmt.format( wm.getScannedAt() != null ? wm.getScannedAt() : new Date() );
+        String title = "GEO scrape " + day + ": " + wm.getRecordsMatched() + " candidates";
+        String note = buildTicketNote( matchedByCriterion, preboardedIds );
+        TicketTarget target = TicketTarget.Factory.newInstance(
+                TicketTargetType.GEO_SCRAPE_WATERMARK, wm.getId() );
+        try {
+            ticketService.openTicket( reporter, TicketType.GENERIC, title,
+                    Collections.singleton( target ) );
+            log.info( "Opened GEO scrape batch ticket for watermark " + wm.getId()
+                    + " (" + wm.getRecordsMatched() + " matches, "
+                    + preboardedIds.size() + " preboarded)." );
+            if ( !note.isEmpty() ) {
+                // ticketService.openTicket doesn't accept an opening payload — the OPEN event
+                // carries no body. Comment is appended as a second event for the curator note.
+                List<ubic.gemma.model.common.auditAndSecurity.curation.Ticket> open =
+                        ticketService.findOpenForTarget( TicketTargetType.GEO_SCRAPE_WATERMARK, wm.getId() );
+                if ( !open.isEmpty() ) {
+                    ticketService.addComment( open.get( 0 ), reporter, note );
+                }
+            }
+        } catch ( RuntimeException e ) {
+            // Don't fail the scrape over a ticket-emission glitch; the watermark itself is the audit row.
+            log.warn( "Failed to open GEO scrape batch ticket: " + e.getMessage(), e );
+        }
+    }
+
+    static String buildTicketNote( Map<String, Integer> matchedByCriterion, List<Long> preboardedIds ) {
+        StringBuilder sb = new StringBuilder();
+        sb.append( "matched: " );
+        boolean first = true;
+        for ( Map.Entry<String, Integer> e : matchedByCriterion.entrySet() ) {
+            if ( e.getValue() == null || e.getValue() == 0 ) continue;
+            if ( !first ) sb.append( ", " );
+            sb.append( e.getKey() ).append( '×' ).append( e.getValue() );
+            first = false;
+        }
+        if ( first ) {
+            // no per-criterion counts (shouldn't happen — caller gates on matched>0) — drop the prefix
+            sb.setLength( 0 );
+        }
+        if ( preboardedIds != null && !preboardedIds.isEmpty() ) {
+            if ( sb.length() > 0 ) sb.append( "; " );
+            sb.append( "preboarded ids: " );
+            int cap = Math.min( 20, preboardedIds.size() );
+            for ( int i = 0; i < cap; i++ ) {
+                if ( i > 0 ) sb.append( ',' );
+                sb.append( preboardedIds.get( i ) );
+            }
+            if ( preboardedIds.size() > cap ) {
+                sb.append( " (...and " ).append( preboardedIds.size() - cap ).append( " more)" );
+            }
+        }
         return sb.toString();
     }
 }
