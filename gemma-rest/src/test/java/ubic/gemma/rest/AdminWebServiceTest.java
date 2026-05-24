@@ -111,7 +111,9 @@ public class AdminWebServiceTest {
     private TicketService ticketService;
     @Mock
     private GeoBrowser geoBrowser;
-    @Mock
+    // TaxonArgService cannot be Mockito-mocked under JDK 25 + Mockito 5.21 because its
+    // abstract-supertype generics confuse ByteBuddy's instrumentation. Use a real instance
+    // built from mocked dependencies; tests stub through the inner TaxonService.
     private TaxonArgService taxonArgService;
     @Mock
     private BlacklistedEntityService blacklistedEntityService;
@@ -120,8 +122,16 @@ public class AdminWebServiceTest {
 
     private AdminWebService webService;
 
+    @org.mockito.Mock
+    private ubic.gemma.persistence.service.genome.taxon.TaxonService innerTaxonService;
+    @org.mockito.Mock
+    private ubic.gemma.persistence.service.genome.ChromosomeService innerChromosomeService;
+    @org.mockito.Mock
+    private ubic.gemma.persistence.service.genome.gene.GeneService innerGeneService;
+
     @BeforeEach
     public void setUp() {
+        taxonArgService = new TaxonArgService( innerTaxonService, innerChromosomeService, innerGeneService );
         webService = new AdminWebService( cacheManager, sessionFactory, taskRunningService, sessionRegistry,
                 Collections.emptyList(), dataSource, userManager, agentProposalService, ticketService,
                 taxonArgService, blacklistedEntityService, externalDatabaseReadService );
@@ -871,7 +881,8 @@ public class AdminWebServiceTest {
         human.setId( 1L );
         human.setCommonName( "human" );
         TaxonArg<?> taxonArg = TaxonArg.valueOf( "human" );
-        when( taxonArgService.getEntity( taxonArg ) ).thenReturn( human );
+        // Real TaxonArgService routes the "human" lookup through TaxonService.findByCommonName.
+        when( innerTaxonService.findByCommonName( "human" ) ).thenReturn( human );
         when( taskRunningService.submitTaskCommand( org.mockito.ArgumentMatchers.any( MultifunctionalityTaskCommand.class ) ) )
                 .thenReturn( "task-mf-1" );
 
