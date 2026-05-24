@@ -108,6 +108,15 @@ class CorrelationStatsConcurrencyTest {
      * Build inputs with disjoint {@code (bin, dof)} cache slots so each input has a unique slot in the underlying
      * sparse matrix. Without this, two distinct correlations could hash to the same bin and disagree on which
      * p-value the cache should hold — making the assertion "got == reference" ambiguous.
+     * <p>
+     * IMPORTANT: the cache slot is keyed by {@code ceil(|correl| / BINSIZE)}, which is not exactly invertible in
+     * floating-point. For some bin values {@code b}, the candidate correlation {@code b * BINSIZE} suffers
+     * representation error such that {@code ceil((b * BINSIZE) / BINSIZE) == b + 1} (concrete example:
+     * {@code 28 * 0.005 / 0.005 == 28.000000000000004}, ceil 29). We therefore key {@code usedSlots} by the
+     * production-computed bin, not the candidate bin, and skip candidates that would collide with another input's
+     * actual slot. Without this, two distinct candidate correlations can map to the same runtime cache slot — and
+     * since their true p-values differ, threads racing to populate the cache observe disagreeing values and the
+     * consensus assertion fails intermittently.
      */
     private static List<Input> buildInputs( long seed ) {
         Random rng = new Random( seed );
@@ -123,11 +132,12 @@ class CorrelationStatsConcurrencyTest {
             int bin = 3 + rng.nextInt( 195 ); // bins 3..197
             int n = sampleSizes[rng.nextInt( sampleSizes.length )];
             int dof = n - 2;
-            long slot = ( long ) bin * 100_000L + dof;
-            if ( !usedSlots.add( slot ) ) continue;
-            // bin-aligned correlation: ceil(correl/BINSIZE) == bin iff correl is in ((bin-1)*BINSIZE, bin*BINSIZE].
-            // Use the right endpoint so the input is the canonical representative of its bin.
             double correl = bin * BINSIZE;
+            // Production bin under the same formula CorrelationStats uses. Differs from `bin` when bin*BINSIZE
+            // rounds up due to floating-point representation error (e.g. bin=28 -> actualBin=29).
+            int actualBin = ( int ) Math.ceil( Math.abs( correl ) / BINSIZE );
+            long slot = ( long ) actualBin * 100_000L + dof;
+            if ( !usedSlots.add( slot ) ) continue;
             uniq.add( new Input( correl, n ) );
         }
         if ( uniq.size() < target ) {
