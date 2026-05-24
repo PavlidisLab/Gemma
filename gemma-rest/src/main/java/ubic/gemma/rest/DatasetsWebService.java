@@ -52,6 +52,8 @@ import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.model.analysis.expression.pca.ProbeLoading;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
+import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
+import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.service.OutlierFlaggingService;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueNeedsAttentionService;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
@@ -268,6 +270,8 @@ public class DatasetsWebService {
     private BioAssayService bioAssayService;
     @Autowired
     private OutlierFlaggingService outlierFlaggingService;
+    @Autowired
+    private OutlierDetectionService outlierDetectionService;
     @Autowired
     private FactorValueService factorValueService;
     @Autowired
@@ -1121,6 +1125,106 @@ public class DatasetsWebService {
         refreshed = bioAssayService.thaw( refreshed );
         BioAssayValueObject vo = new BioAssayValueObject( refreshed, false );
         return respond( vo );
+    }
+
+    /**
+     * Request body for {@link #batchMarkSampleOutliers}. {@code mark} flips the listed
+     * assays to outlier=true; {@code unmark} flips the listed assays to outlier=false.
+     * Both arrays are optional; null/empty means "no change in that direction". Ids that
+     * appear in BOTH arrays are rejected with 400 (caller bug).
+     */
+    public static class BatchOutlierRequest {
+        @Nullable
+        public List<Long> mark;
+        @Nullable
+        public List<Long> unmark;
+    }
+
+    /**
+     * Batch outlier mark / unmark. Pairs with {@code GET /sample-correlation} — the UI
+     * builds up mark/unmark deltas as the curator clicks samples, then sends a single
+     * request to persist the change. Delta semantics (not declarative replacement) so a
+     * filtered UI view can't accidentally unflag samples the user couldn't see.
+     */
+    @POST
+    @Path("/{dataset}/samples/outliers")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Batch mark or unmark sample outliers",
+            description = "Body: `{\"mark\": [bioAssayId,...], \"unmark\": [bioAssayId,...]}`. The listed assays must all belong to the path-derived dataset; otherwise a 400 is returned and NOTHING is mutated (validation runs before any service call). Returns the updated full outlier set (across the dataset).",
+            security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "400", description = "An id appears in both mark and unmark, or doesn't belong to the dataset.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<BatchOutlierResponse> batchMarkSampleOutliers(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Nullable BatchOutlierRequest body
+    ) {
+        List<Long> mark = body != null && body.mark != null ? body.mark : Collections.emptyList();
+        List<Long> unmark = body != null && body.unmark != null ? body.unmark : Collections.emptyList();
+        // Reject ambiguous deltas — caller bug.
+        Set<Long> markSet = new HashSet<>( mark );
+        for ( Long id : unmark ) {
+            if ( markSet.contains( id ) ) {
+                throw new BadRequestException( "BioAssay id " + id + " appears in both `mark` and `unmark`." );
+            }
+        }
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        ee = expressionExperimentService.thawBioAssays( ee );
+        // Build (and validate) the assay sets up front; touch the service only after every id is known-valid.
+        Map<Long, BioAssay> byId = new HashMap<>();
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            byId.put( ba.getId(), ba );
+        }
+        List<BioAssay> toMark = new ArrayList<>( mark.size() );
+        List<BioAssay> toUnmark = new ArrayList<>( unmark.size() );
+        for ( Long id : mark ) {
+            BioAssay ba = byId.get( id );
+            if ( ba == null ) {
+                throw new BadRequestException( "BioAssay " + id + " does not belong to dataset " + ee.getShortName() + "." );
+            }
+            toMark.add( ba );
+        }
+        for ( Long id : unmark ) {
+            BioAssay ba = byId.get( id );
+            if ( ba == null ) {
+                throw new BadRequestException( "BioAssay " + id + " does not belong to dataset " + ee.getShortName() + "." );
+            }
+            toUnmark.add( ba );
+        }
+        if ( !toMark.isEmpty() ) {
+            outlierFlaggingService.markAsMissing( toMark );
+        }
+        if ( !toUnmark.isEmpty() ) {
+            outlierFlaggingService.unmarkAsMissing( toUnmark );
+        }
+        // Rebuild outlier set from authoritative state.
+        ExpressionExperiment refreshed = expressionExperimentService.thawBioAssays(
+                expressionExperimentService.loadOrFail( ee.getId(), NotFoundException::new, "ee gone after outlier batch?" ) );
+        List<Long> outlierIds = new ArrayList<>();
+        for ( BioAssay ba : refreshed.getBioAssays() ) {
+            if ( ba.getIsOutlier() ) {
+                outlierIds.add( ba.getId() );
+            }
+        }
+        outlierIds.sort( Comparator.naturalOrder() );
+        BatchOutlierResponse out = new BatchOutlierResponse();
+        out.outlierBioAssayIds = outlierIds;
+        out.markedCount = toMark.size();
+        out.unmarkedCount = toUnmark.size();
+        return respond( out );
+    }
+
+    public static class BatchOutlierResponse {
+        /** Full sorted list of outlier-flagged bioAssay ids in this dataset after the mutation. */
+        public List<Long> outlierBioAssayIds;
+        public int markedCount;
+        public int unmarkedCount;
     }
 
     /**
@@ -4504,32 +4608,56 @@ public class DatasetsWebService {
     }
 
     /**
-     * Retrieves the sample-sample correlation matrix for the given dataset.
+     * Retrieves the sample-sample correlation matrix plus both outlier classifications
+     * (curator-flagged + algorithmic), unmasked.
      * <p>
-     * The matrix is the regressed (best) correlation matrix when available, otherwise the full
-     * non-regressed matrix. Returns a symmetric N×N Pearson correlation matrix with bioAssay ids /
-     * short names parallel to the rows and columns. This is the data backing the curation-UI
-     * Diagnostics tab's sample-correlation heatmap.
+     * The UI applies its own masking interactively so the curator can see the effect of
+     * including / excluding outliers on the correlation distribution. Two outlier sets
+     * accompany the matrix:
+     * <ul>
+     *   <li>{@code actualOutlierBioAssayIds} — bioAssays the curator has flagged via
+     *       {@code PUT /samples/{id}/outlier} ({@link BioAssay#getIsOutlier()}).
+     *   <li>{@code predictedOutlierBioAssayIds} — bioAssays the median-correlation algorithm
+     *       picks as outliers ({@link OutlierDetectionService#getOutlierDetails}); cached.
+     * </ul>
      */
     @GET
     @Path("/{dataset}/sample-correlation")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the sample-sample correlation matrix for a dataset",
-            description = "Returns the regressed (best) sample correlation matrix if available; otherwise the full non-regressed matrix. "
-                    + "404 if no correlation analysis has been computed for the dataset.",
+    @Operation(summary = "Retrieve the sample-sample correlation matrix + outlier classifications",
+            description = "Returns the regressed (best) sample correlation matrix UNMASKED, plus two parallel outlier-id lists: `actualOutlierBioAssayIds` (curator-flagged) and `predictedOutlierBioAssayIds` (algorithmic). The UI applies any visualization masking it wants. 404 if no correlation analysis has been computed for the dataset.",
             responses = {
                     @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist or has no sample correlation matrix.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
-    public ResponseDataObject<SampleCorrelationMatrixValueObject> getDatasetSampleCorrelation( // Params:
-            @PathParam("dataset") DatasetArg<?> datasetArg // Required
+    public ResponseDataObject<SampleCorrelationMatrixValueObject> getDatasetSampleCorrelation(
+            @PathParam("dataset") DatasetArg<?> datasetArg
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         DoubleMatrix<BioAssay, BioAssay> matrix = sampleCoexpressionAnalysisService.loadBestMatrix( ee );
         if ( matrix == null ) {
             throw new NotFoundException( ee.getShortName() + " does not have a sample correlation matrix." );
         }
-        return respond( new SampleCorrelationMatrixValueObject( matrix ) );
+        // Thaw bioassays so isOutlier reads from the persisted set.
+        ExpressionExperiment thawed = expressionExperimentService.thawBioAssays( ee );
+        Set<Long> actualOutliers = new HashSet<>();
+        for ( BioAssay ba : thawed.getBioAssays() ) {
+            if ( ba.getIsOutlier() ) {
+                actualOutliers.add( ba.getId() );
+            }
+        }
+        Set<Long> predictedOutliers = new HashSet<>();
+        try {
+            outlierDetectionService.getOutlierDetails( thawed ).ifPresent( details -> {
+                for ( OutlierDetails d : details ) {
+                    predictedOutliers.add( d.getBioAssayId() );
+                }
+            } );
+        } catch ( RuntimeException e ) {
+            // Detection is best-effort; if it throws (empty matrix, etc.) just leave the set empty.
+            log.warn( "predicted-outlier detection failed for " + thawed.getShortName() + ": " + e.getMessage() );
+        }
+        return respond( new SampleCorrelationMatrixValueObject( matrix, actualOutliers, predictedOutliers ) );
     }
 
     /**
@@ -5305,8 +5433,21 @@ public class DatasetsWebService {
         /**
          * Symmetric, row-major, N×N Pearson correlation matrix. {@code values[i][j]} is the
          * correlation in [-1, 1] between the i'th and j'th bioAssay.
+         * Always sent UNMASKED — the UI applies any outlier-driven masking interactively.
          */
         double[][] values;
+
+        /**
+         * BioAssay ids the curator has explicitly flagged as outliers ({@link BioAssay#getIsOutlier()}).
+         */
+        Long[] actualOutlierBioAssayIds;
+
+        /**
+         * BioAssay ids the median-correlation algorithm flags as outliers
+         * ({@link OutlierDetectionService#getOutlierDetails}). May overlap with
+         * {@link #actualOutlierBioAssayIds} or stand alone.
+         */
+        Long[] predictedOutlierBioAssayIds;
 
         /**
          * Currently always {@code null}; placeholder for a probe-filter caption once
@@ -5321,11 +5462,14 @@ public class DatasetsWebService {
         @Nullable
         String method;
 
-        public SampleCorrelationMatrixValueObject( DoubleMatrix<BioAssay, BioAssay> matrix ) {
+        public SampleCorrelationMatrixValueObject( DoubleMatrix<BioAssay, BioAssay> matrix,
+                Set<Long> actualOutlierIds, Set<Long> predictedOutlierIds ) {
             List<BioAssay> rowAssays = matrix.getRowNames();
             this.bioAssayIds = rowAssays.stream().map( BioAssay::getId ).toArray( Long[]::new );
             this.bioAssayShortNames = rowAssays.stream().map( BioAssay::getName ).toArray( String[]::new );
             this.values = matrix.getRawMatrix();
+            this.actualOutlierBioAssayIds = actualOutlierIds.stream().sorted().toArray( Long[]::new );
+            this.predictedOutlierBioAssayIds = predictedOutlierIds.stream().sorted().toArray( Long[]::new );
             this.filterDescription = null;
             this.method = "pearson";
         }
