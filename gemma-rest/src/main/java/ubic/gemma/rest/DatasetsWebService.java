@@ -126,6 +126,7 @@ import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
+import ubic.gemma.core.analysis.service.ExpressionDataDeleterService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
 import ubic.gemma.core.util.matrix.DoubleMatrix;
@@ -278,6 +279,8 @@ public class DatasetsWebService {
     private FactorValueService factorValueService;
     @Autowired
     private FactorValueNeedsAttentionService factorValueNeedsAttentionService;
+    @Autowired
+    private ExpressionDataDeleterService expressionDataDeleterService;
 
     @Context
     private UriInfo uriInfo;
@@ -3229,6 +3232,90 @@ public class DatasetsWebService {
             @PathParam("analysisId") Long analysisId
     ) {
         return removeDatasetDifferentialAnalysis( datasetArg, analysisId );
+    }
+
+    /**
+     * Delete the raw expression data vectors for a dataset (port of {@code deleteRawData} CLI).
+     * <p>
+     * Synchronous DB delete. Requires the destructive-intent guard {@code confirm=true}; without it the
+     * request is rejected as a {@code 400} so an accidental call (mistyped URL, stale browser tab) cannot
+     * wipe vectors. The {@code quantitationType} query param selects which raw QT to delete; when omitted
+     * the dataset's preferred raw QT is used.
+     */
+    @DELETE
+    @Path("/{dataset}/data/raw")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Delete raw expression data vectors for a dataset",
+            description = "Synchronous deletion of the raw expression data vectors for the dataset. "
+                    + "The `confirm=true` query parameter MUST be supplied; without it the call returns `400` "
+                    + "to guard against accidental destruction. The optional `quantitationType` query param "
+                    + "selects which raw QT to delete; if omitted, the preferred raw QT is used. Port of the "
+                    + "`deleteRawData` CLI.",
+            security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
+            responses = {
+                    @ApiResponse(responseCode = "204", description = "Raw data vectors deleted."),
+                    @ApiResponse(responseCode = "400", description = "The `confirm=true` guard was not supplied.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public Response deleteDatasetRawData(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Optional quantitation-type selector; defaults to the dataset's preferred raw QT.")
+            @QueryParam("quantitationType") QuantitationTypeArg<?> quantitationTypeArg,
+            @Parameter(description = "Must be `true` to authorize the destructive delete.")
+            @QueryParam("confirm") @DefaultValue("false") boolean confirm
+    ) {
+        if ( !confirm ) {
+            throw new BadRequestException( "Refusing to delete raw data without `confirm=true`." );
+        }
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        QuantitationType qt;
+        if ( quantitationTypeArg != null ) {
+            qt = quantitationTypeArgService.getEntity( quantitationTypeArg, ee );
+        } else {
+            qt = expressionExperimentService.getPreferredQuantitationType( ee )
+                    .orElseThrow( () -> new NotFoundException( ee.getShortName()
+                            + " has no preferred raw quantitation type; supply `quantitationType` explicitly." ) );
+        }
+        expressionDataDeleterService.deleteRawData( ee, qt );
+        return Response.noContent().build();
+    }
+
+    /**
+     * Delete the processed expression data vectors for a dataset (port of {@code deleteProcessedData} CLI).
+     * <p>
+     * Synchronous DB delete. Requires the destructive-intent guard {@code confirm=true}; without it the
+     * request is rejected as a {@code 400} so an accidental call cannot wipe vectors.
+     */
+    @DELETE
+    @Path("/{dataset}/data/processed")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Delete processed expression data vectors for a dataset",
+            description = "Synchronous deletion of the processed expression data vectors for the dataset. "
+                    + "The `confirm=true` query parameter MUST be supplied; without it the call returns `400` "
+                    + "to guard against accidental destruction. Port of the `deleteProcessedData` CLI.",
+            security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
+            responses = {
+                    @ApiResponse(responseCode = "204", description = "Processed data vectors deleted."),
+                    @ApiResponse(responseCode = "400", description = "The `confirm=true` guard was not supplied.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public Response deleteDatasetProcessedData(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Must be `true` to authorize the destructive delete.")
+            @QueryParam("confirm") @DefaultValue("false") boolean confirm
+    ) {
+        if ( !confirm ) {
+            throw new BadRequestException( "Refusing to delete processed data without `confirm=true`." );
+        }
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        expressionDataDeleterService.deleteProcessedData( ee );
+        return Response.noContent().build();
     }
 
     private Response acceptedTaskResponse( String taskId ) {
