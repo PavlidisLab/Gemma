@@ -452,7 +452,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
 
     @AfterEach
     public void resetMocks() {
-        reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService, taxonArgService, geneArgService, searchService, auditEventService, auditTrailService, securityService, geeqService, taskRunningService, differentialExpressionAnalysisService, userManager, ticketService, sampleCoexpressionAnalysisService, svdService );
+        reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService, taxonArgService, geneArgService, searchService, auditEventService, auditTrailService, securityService, geeqService, taskRunningService, differentialExpressionAnalysisService, userManager, ticketService, sampleCoexpressionAnalysisService, svdService, processedExpressionDataVectorService, expressionExperimentReportService );
     }
 
     @Test
@@ -942,6 +942,63 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         verify( processedExpressionDataVectorService ).evictFromCache( ee );
         verify( expressionExperimentService ).loadValueObject( ee );
         verify( expressionExperimentReportService ).evictFromCache( 1L );
+    }
+
+    @Test
+    @WithMockUser
+    public void testRefreshDatasetWithDefaultsDoesNotEvictCaches() {
+        ee.setId( 1L );
+        when( expressionExperimentService.loadAndThawLiteWithRefreshCacheMode( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.loadValueObject( ee ) ).thenReturn( new ExpressionExperimentValueObject( ee ) );
+        assertThat( target( "/datasets/1/refresh" ).request().get() )
+                .hasStatus( Response.Status.CREATED );
+        verify( expressionExperimentService ).loadAndThawLiteWithRefreshCacheMode( 1L );
+        verify( expressionExperimentService ).loadValueObject( ee );
+        verify( processedExpressionDataVectorService, never() ).evictFromCache( any() );
+        verify( expressionExperimentReportService, never() ).evictFromCache( anyLong() );
+    }
+
+    @Test
+    @WithMockUser
+    public void testRefreshDatasetVectorsOnly() {
+        ee.setId( 1L );
+        when( expressionExperimentService.loadAndThawLiteWithRefreshCacheMode( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.loadValueObject( ee ) ).thenReturn( new ExpressionExperimentValueObject( ee ) );
+        assertThat( target( "/datasets/1/refresh" )
+                .queryParam( "refreshVectors", true )
+                .request().get() )
+                .hasStatus( Response.Status.CREATED );
+        verify( processedExpressionDataVectorService ).evictFromCache( ee );
+        verify( expressionExperimentReportService, never() ).evictFromCache( anyLong() );
+    }
+
+    @Test
+    @WithMockUser
+    public void testRefreshDatasetReportsOnly() {
+        ee.setId( 1L );
+        when( expressionExperimentService.loadAndThawLiteWithRefreshCacheMode( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.loadValueObject( ee ) ).thenReturn( new ExpressionExperimentValueObject( ee ) );
+        assertThat( target( "/datasets/1/refresh" )
+                .queryParam( "refreshReports", true )
+                .request().get() )
+                .hasStatus( Response.Status.CREATED );
+        verify( expressionExperimentReportService ).evictFromCache( 1L );
+        verify( processedExpressionDataVectorService, never() ).evictFromCache( any() );
+    }
+
+    @Test
+    @WithMockUser
+    public void testRefreshDatasetNotFound() {
+        when( expressionExperimentService.loadAndThawLiteWithRefreshCacheMode( 1L ) ).thenReturn( null );
+        assertThat( target( "/datasets/1/refresh" )
+                .queryParam( "refreshVectors", true )
+                .queryParam( "refreshReports", true )
+                .request().get() )
+                .hasStatus( Response.Status.NOT_FOUND );
+        verify( expressionExperimentService ).loadAndThawLiteWithRefreshCacheMode( 1L );
+        verify( processedExpressionDataVectorService, never() ).evictFromCache( any() );
+        verify( expressionExperimentReportService, never() ).evictFromCache( anyLong() );
+        verify( expressionExperimentService, never() ).loadValueObject( any() );
     }
 
     @Test
