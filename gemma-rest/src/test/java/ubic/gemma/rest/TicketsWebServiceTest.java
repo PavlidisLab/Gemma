@@ -107,9 +107,17 @@ public class TicketsWebServiceTest {
 
     @Test
     public void testGetTickets_passesFiltersThrough() {
-        when( ticketService.findTickets( eq( true ), eq( 42L ), eq( TicketPriority.HIGH ), anyInt(), anyInt() ) )
+        when( ticketService.findTickets( eq( true ), eq( 42L ), eq( TicketPriority.HIGH ),
+                eq( ( ubic.gemma.model.common.auditAndSecurity.curation.TicketType ) null ),
+                eq( ( ubic.gemma.model.common.auditAndSecurity.curation.TicketState ) null ),
+                eq( ( ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType ) null ),
+                eq( ( java.util.Date ) null ), anyInt(), anyInt() ) )
                 .thenReturn( Collections.singletonList( ticket ) );
-        when( ticketService.countTickets( eq( true ), eq( 42L ), eq( TicketPriority.HIGH ) ) ).thenReturn( 1L );
+        when( ticketService.countTickets( eq( true ), eq( 42L ), eq( TicketPriority.HIGH ),
+                eq( ( ubic.gemma.model.common.auditAndSecurity.curation.TicketType ) null ),
+                eq( ( ubic.gemma.model.common.auditAndSecurity.curation.TicketState ) null ),
+                eq( ( ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType ) null ),
+                eq( ( java.util.Date ) null ) ) ).thenReturn( 1L );
 
         // Cursor parameter added in step 1o (CURSOR_PAGINATION_STEP1_PLAN.md); legacy
         // offset-mode tests pass null and cast the Object result back to the legacy
@@ -117,6 +125,7 @@ public class TicketsWebServiceTest {
         @SuppressWarnings("unchecked")
         PaginatedResponseDataObject<TicketValueObject> resp = ( PaginatedResponseDataObject<TicketValueObject> ) webService.getTickets(
                 true, 42L, TicketPriority.HIGH,
+                null, null, null, null,
                 ubic.gemma.rest.util.args.OffsetArg.valueOf( "0" ),
                 ubic.gemma.rest.util.args.LimitArg.valueOf( "20" ),
                 null );
@@ -128,23 +137,24 @@ public class TicketsWebServiceTest {
         // targets are present
         assertThat( resp.getData().get( 0 ).getTargets() ).hasSize( 1 );
 
-        verify( ticketService ).findTickets( true, 42L, TicketPriority.HIGH, 0, 20 );
-        verify( ticketService ).countTickets( true, 42L, TicketPriority.HIGH );
+        verify( ticketService ).findTickets( true, 42L, TicketPriority.HIGH, null, null, null, null, 0, 20 );
+        verify( ticketService ).countTickets( true, 42L, TicketPriority.HIGH, null, null, null, null );
     }
 
     @Test
     public void testGetTickets_defaultsAreNullFilters() {
-        when( ticketService.findTickets( anyBoolean(), any(), any(), anyInt(), anyInt() ) )
+        when( ticketService.findTickets( anyBoolean(), any(), any(), any(), any(), any(), any(), anyInt(), anyInt() ) )
                 .thenReturn( Collections.emptyList() );
-        when( ticketService.countTickets( anyBoolean(), any(), any() ) ).thenReturn( 0L );
+        when( ticketService.countTickets( anyBoolean(), any(), any(), any(), any(), any(), any() ) ).thenReturn( 0L );
 
         webService.getTickets(
                 false, null, null,
+                null, null, null, null,
                 ubic.gemma.rest.util.args.OffsetArg.valueOf( "0" ),
                 ubic.gemma.rest.util.args.LimitArg.valueOf( "20" ),
                 null );
 
-        verify( ticketService ).findTickets( false, null, null, 0, 20 );
+        verify( ticketService ).findTickets( false, null, null, null, null, null, null, 0, 20 );
     }
 
     @Test

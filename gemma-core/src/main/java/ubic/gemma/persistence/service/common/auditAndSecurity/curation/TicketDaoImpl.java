@@ -21,6 +21,7 @@ import ubic.gemma.model.common.auditAndSecurity.curation.TicketEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketPriority;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketState;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.Cursor;
 import ubic.gemma.persistence.util.CursorPage;
@@ -29,6 +30,7 @@ import ubic.gemma.persistence.util.Sort;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -71,27 +73,26 @@ public class TicketDaoImpl extends AbstractDao<Ticket> implements TicketDao {
 
     @Override
     public List<Ticket> findTickets( boolean openOnly, @Nullable Long assigneeId, @Nullable TicketPriority priority, int offset, int limit ) {
-        StringBuilder hql = new StringBuilder( "select t from Ticket t where 1=1" );
-        if ( openOnly ) {
-            hql.append( " and t.state in :openStates" );
+        return findTickets( openOnly, assigneeId, priority, null, null, null, null, offset, limit );
+    }
+
+    @Override
+    public List<Ticket> findTickets( boolean openOnly, @Nullable Long assigneeId, @Nullable TicketPriority priority,
+            @Nullable TicketType type, @Nullable TicketState state, @Nullable TicketTargetType targetType,
+            @Nullable Date updatedSince, int offset, int limit ) {
+        StringBuilder hql = new StringBuilder( "select " );
+        if ( targetType != null ) {
+            hql.append( "distinct " );
         }
-        if ( assigneeId != null ) {
-            hql.append( " and t.assignee.id = :assigneeId" );
+        hql.append( "t from Ticket t" );
+        if ( targetType != null ) {
+            hql.append( " join t.targets tt" );
         }
-        if ( priority != null ) {
-            hql.append( " and t.priority = :priority" );
-        }
+        hql.append( " where 1=1" );
+        appendTicketFilters( hql, openOnly, assigneeId, priority, type, state, targetType, updatedSince );
         hql.append( " order by t.updatedAt desc" );
         org.hibernate.query.Query<?> q = this.getSessionFactory().getCurrentSession().createQuery( hql.toString() );
-        if ( openOnly ) {
-            q.setParameterList( "openStates", Arrays.asList( TicketState.OPEN, TicketState.IN_PROGRESS ) );
-        }
-        if ( assigneeId != null ) {
-            q.setParameter( "assigneeId", assigneeId );
-        }
-        if ( priority != null ) {
-            q.setParameter( "priority", priority );
-        }
+        bindTicketFilters( q, openOnly, assigneeId, priority, type, state, targetType, updatedSince );
         if ( offset > 0 ) {
             q.setFirstResult( offset );
         }
@@ -102,9 +103,76 @@ public class TicketDaoImpl extends AbstractDao<Ticket> implements TicketDao {
         return ( List<Ticket> ) q.list();
     }
 
+    /**
+     * Build the WHERE-clause fragments shared by the offset and cursor variants of
+     * {@code findTickets} / {@code countTickets}. When {@code state} is non-null it
+     * overrides {@code openOnly} (a passed {@code state} pins the predicate to a
+     * single value rather than the OPEN/IN_PROGRESS pair).
+     */
+    private static void appendTicketFilters( StringBuilder hql, boolean openOnly,
+            @Nullable Long assigneeId, @Nullable TicketPriority priority,
+            @Nullable TicketType type, @Nullable TicketState state,
+            @Nullable TicketTargetType targetType, @Nullable Date updatedSince ) {
+        if ( state != null ) {
+            hql.append( " and t.state = :state" );
+        } else if ( openOnly ) {
+            hql.append( " and t.state in :openStates" );
+        }
+        if ( assigneeId != null ) {
+            hql.append( " and t.assignee.id = :assigneeId" );
+        }
+        if ( priority != null ) {
+            hql.append( " and t.priority = :priority" );
+        }
+        if ( type != null ) {
+            hql.append( " and t.type = :type" );
+        }
+        if ( targetType != null ) {
+            hql.append( " and tt.targetType = :targetType" );
+        }
+        if ( updatedSince != null ) {
+            hql.append( " and t.updatedAt >= :updatedSince" );
+        }
+    }
+
+    /** Bind parameters matching {@link #appendTicketFilters}. */
+    private static void bindTicketFilters( org.hibernate.query.Query<?> q, boolean openOnly,
+            @Nullable Long assigneeId, @Nullable TicketPriority priority,
+            @Nullable TicketType type, @Nullable TicketState state,
+            @Nullable TicketTargetType targetType, @Nullable Date updatedSince ) {
+        if ( state != null ) {
+            q.setParameter( "state", state );
+        } else if ( openOnly ) {
+            q.setParameterList( "openStates", Arrays.asList( TicketState.OPEN, TicketState.IN_PROGRESS ) );
+        }
+        if ( assigneeId != null ) {
+            q.setParameter( "assigneeId", assigneeId );
+        }
+        if ( priority != null ) {
+            q.setParameter( "priority", priority );
+        }
+        if ( type != null ) {
+            q.setParameter( "type", type );
+        }
+        if ( targetType != null ) {
+            q.setParameter( "targetType", targetType );
+        }
+        if ( updatedSince != null ) {
+            q.setParameter( "updatedSince", updatedSince );
+        }
+    }
+
     @Override
     public CursorPage<Ticket> findTicketsByCursor( boolean openOnly, @Nullable Long assigneeId,
             @Nullable TicketPriority priority, @Nullable Cursor cursor, int limit ) {
+        return findTicketsByCursor( openOnly, assigneeId, priority, null, null, null, null, cursor, limit );
+    }
+
+    @Override
+    public CursorPage<Ticket> findTicketsByCursor( boolean openOnly, @Nullable Long assigneeId,
+            @Nullable TicketPriority priority, @Nullable TicketType type, @Nullable TicketState state,
+            @Nullable TicketTargetType targetType, @Nullable Date updatedSince,
+            @Nullable Cursor cursor, int limit ) {
         // Step 1o: keyset pagination over /tickets. Mirrors the offset-mode shape of
         // findTickets but with single-component +id sort enforced (the offset variant
         // sorts by t.updatedAt desc for human-readable dashboards; cursor mode trades
@@ -136,16 +204,16 @@ public class TicketDaoImpl extends AbstractDao<Ticket> implements TicketDao {
             }
         }
 
-        StringBuilder hql = new StringBuilder( "select t from Ticket t where 1=1" );
-        if ( openOnly ) {
-            hql.append( " and t.state in :openStates" );
+        StringBuilder hql = new StringBuilder( "select " );
+        if ( targetType != null ) {
+            hql.append( "distinct " );
         }
-        if ( assigneeId != null ) {
-            hql.append( " and t.assignee.id = :assigneeId" );
+        hql.append( "t from Ticket t" );
+        if ( targetType != null ) {
+            hql.append( " join t.targets tt" );
         }
-        if ( priority != null ) {
-            hql.append( " and t.priority = :priority" );
-        }
+        hql.append( " where 1=1" );
+        appendTicketFilters( hql, openOnly, assigneeId, priority, type, state, targetType, updatedSince );
         if ( lastSeenId != null ) {
             // forward: id > x; backward: id < x (id-asc client-visible order). When backward,
             // we reverse the order in the driver query and reverse the returned page below.
@@ -155,15 +223,7 @@ public class TicketDaoImpl extends AbstractDao<Ticket> implements TicketDao {
         hql.append( backward ? " order by t.id desc" : " order by t.id asc" );
 
         org.hibernate.query.Query<?> q = this.getSessionFactory().getCurrentSession().createQuery( hql.toString() );
-        if ( openOnly ) {
-            q.setParameterList( "openStates", Arrays.asList( TicketState.OPEN, TicketState.IN_PROGRESS ) );
-        }
-        if ( assigneeId != null ) {
-            q.setParameter( "assigneeId", assigneeId );
-        }
-        if ( priority != null ) {
-            q.setParameter( "priority", priority );
-        }
+        bindTicketFilters( q, openOnly, assigneeId, priority, type, state, targetType, updatedSince );
         if ( lastSeenId != null ) {
             q.setParameter( "lastSeenId", lastSeenId );
         }
@@ -292,26 +352,24 @@ public class TicketDaoImpl extends AbstractDao<Ticket> implements TicketDao {
 
     @Override
     public long countTickets( boolean openOnly, @Nullable Long assigneeId, @Nullable TicketPriority priority ) {
-        StringBuilder hql = new StringBuilder( "select count(t) from Ticket t where 1=1" );
-        if ( openOnly ) {
-            hql.append( " and t.state in :openStates" );
+        return countTickets( openOnly, assigneeId, priority, null, null, null, null );
+    }
+
+    @Override
+    public long countTickets( boolean openOnly, @Nullable Long assigneeId, @Nullable TicketPriority priority,
+            @Nullable TicketType type, @Nullable TicketState state, @Nullable TicketTargetType targetType,
+            @Nullable Date updatedSince ) {
+        StringBuilder hql = new StringBuilder( "select count(" );
+        // when joining the target collection we count DISTINCT tickets to avoid fan-out
+        hql.append( targetType != null ? "distinct t" : "t" );
+        hql.append( ") from Ticket t" );
+        if ( targetType != null ) {
+            hql.append( " join t.targets tt" );
         }
-        if ( assigneeId != null ) {
-            hql.append( " and t.assignee.id = :assigneeId" );
-        }
-        if ( priority != null ) {
-            hql.append( " and t.priority = :priority" );
-        }
+        hql.append( " where 1=1" );
+        appendTicketFilters( hql, openOnly, assigneeId, priority, type, state, targetType, updatedSince );
         org.hibernate.query.Query<?> q = this.getSessionFactory().getCurrentSession().createQuery( hql.toString() );
-        if ( openOnly ) {
-            q.setParameterList( "openStates", Arrays.asList( TicketState.OPEN, TicketState.IN_PROGRESS ) );
-        }
-        if ( assigneeId != null ) {
-            q.setParameter( "assigneeId", assigneeId );
-        }
-        if ( priority != null ) {
-            q.setParameter( "priority", priority );
-        }
+        bindTicketFilters( q, openOnly, assigneeId, priority, type, state, targetType, updatedSince );
         return ( Long ) q.uniqueResult();
     }
 

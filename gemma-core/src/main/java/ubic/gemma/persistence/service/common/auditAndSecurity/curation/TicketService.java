@@ -25,6 +25,7 @@ import ubic.gemma.persistence.util.Cursor;
 import ubic.gemma.persistence.util.CursorPage;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -79,15 +80,31 @@ public interface TicketService extends BaseService<Ticket> {
     /** @see TicketDao#findAssignedTo */
     List<Ticket> findAssignedTo( Contact assignee );
 
-    /** @see TicketDao#findTickets */
+    /** @see TicketDao#findTickets(boolean, Long, TicketPriority, int, int) */
     List<Ticket> findTickets( boolean openOnly, @Nullable Long assigneeId, @Nullable TicketPriority priority, int offset, int limit );
 
-    /** @see TicketDao#countTickets */
+    /** @see TicketDao#findTickets(boolean, Long, TicketPriority, TicketType, TicketState, TicketTargetType, Date, int, int) */
+    List<Ticket> findTickets( boolean openOnly, @Nullable Long assigneeId, @Nullable TicketPriority priority,
+            @Nullable TicketType type, @Nullable TicketState state, @Nullable TicketTargetType targetType,
+            @Nullable Date updatedSince, int offset, int limit );
+
+    /** @see TicketDao#countTickets(boolean, Long, TicketPriority) */
     long countTickets( boolean openOnly, @Nullable Long assigneeId, @Nullable TicketPriority priority );
 
-    /** @see TicketDao#findTicketsByCursor */
+    /** @see TicketDao#countTickets(boolean, Long, TicketPriority, TicketType, TicketState, TicketTargetType, Date) */
+    long countTickets( boolean openOnly, @Nullable Long assigneeId, @Nullable TicketPriority priority,
+            @Nullable TicketType type, @Nullable TicketState state, @Nullable TicketTargetType targetType,
+            @Nullable Date updatedSince );
+
+    /** @see TicketDao#findTicketsByCursor(boolean, Long, TicketPriority, Cursor, int) */
     CursorPage<Ticket> findTicketsByCursor( boolean openOnly, @Nullable Long assigneeId,
             @Nullable TicketPriority priority, @Nullable Cursor cursor, int limit );
+
+    /** @see TicketDao#findTicketsByCursor(boolean, Long, TicketPriority, TicketType, TicketState, TicketTargetType, Date, Cursor, int) */
+    CursorPage<Ticket> findTicketsByCursor( boolean openOnly, @Nullable Long assigneeId,
+            @Nullable TicketPriority priority, @Nullable TicketType type, @Nullable TicketState state,
+            @Nullable TicketTargetType targetType, @Nullable Date updatedSince,
+            @Nullable Cursor cursor, int limit );
 
     /** @see TicketDao#findOpenForTargetByCursor */
     CursorPage<Ticket> findOpenForTargetByCursor( TicketTargetType targetType, Long targetId,
