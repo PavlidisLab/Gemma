@@ -18,12 +18,12 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.cli.audit.CliArrayDesignAuditService;
 import ubic.gemma.cli.util.AbstractAuthenticatedCLI;
 import ubic.gemma.cli.util.EntityLocator;
 import ubic.gemma.cli.util.FileUtils;
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AnnotationBasedGeneMappingEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
@@ -33,7 +33,6 @@ import ubic.gemma.model.genome.biosequence.PolymerType;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
@@ -73,7 +72,7 @@ public class GenericGenelistDesignGenerator extends AbstractAuthenticatedCLI {
     @Autowired
     private EntityLocator entityLocator;
     @Autowired
-    private AuditTrailService auditTrailService;
+    private CliArrayDesignAuditService cliArrayDesignAuditService;
 
     private String platformShortName = null;
     private String geneListFileName = null;
@@ -322,7 +321,7 @@ public class GenericGenelistDesignGenerator extends AbstractAuthenticatedCLI {
                 + " updated elements; " + numWithNoTranscript + " genes had no transcript; " + geneNotFound + " genes from the file could not be found";
         log.info( auditMessage );
 
-        if ( !noDB ) auditTrailService.addUpdateEvent( platform, AnnotationBasedGeneMappingEvent.class, auditMessage );
+        if ( !noDB ) cliArrayDesignAuditService.recordAnnotationBasedGeneMapping( platform, auditMessage );
 
         log.info( "Don't forget to update the annotation files, any old ones will be deleted (unless dry run)" );
         if ( !noDB ) arrayDesignAnnotationService.deleteExistingFiles( platform );

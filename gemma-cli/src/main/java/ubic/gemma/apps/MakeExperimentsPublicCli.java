@@ -14,9 +14,9 @@
  */
 package ubic.gemma.apps;
 
+import ubic.gemma.cli.audit.CliExpressionExperimentAuditService;
 import ubic.gemma.core.security.SecurityService;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.model.common.auditAndSecurity.eventType.MakePublicEvent;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -28,6 +28,8 @@ public class MakeExperimentsPublicCli extends ExpressionExperimentManipulatingCL
 
     @Autowired
     private SecurityService securityService;
+    @Autowired
+    private CliExpressionExperimentAuditService cliExpressionExperimentAuditService;
 
     @Override
     public String getCommandName() {
@@ -42,7 +44,7 @@ public class MakeExperimentsPublicCli extends ExpressionExperimentManipulatingCL
     @Override
     protected void processExpressionExperiment( ExpressionExperiment ee ) {
         securityService.makePublic( ee );
-        this.auditTrailService.addUpdateEvent( ee, MakePublicEvent.class, "Made public from command line" );
+        cliExpressionExperimentAuditService.recordMadePublic( ee, "Made public from command line" );
         addSuccessObject( ee, "Experiment was made public." );
     }
 }
