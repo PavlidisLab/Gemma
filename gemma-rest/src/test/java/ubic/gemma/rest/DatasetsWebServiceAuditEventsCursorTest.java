@@ -50,7 +50,7 @@ import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for the cursor-pagination branch added to
- * {@link DatasetsWebService#getDatasetAuditEvents(DatasetArg, CursorArg, LimitArg, boolean)}
+ * {@link DatasetsWebService#getDatasetAuditEvents(DatasetArg, CursorArg, LimitArg, boolean, boolean)}
  * as step 1q of {@code CURSOR_PAGINATION_STEP1_PLAN.md}. Pure Mockito &mdash; the
  * goal is to verify the WebService routes cursor vs legacy modes to the right
  * helper and emits the right response wrapper, not to retest the DAO (the
@@ -143,7 +143,7 @@ public class DatasetsWebServiceAuditEventsCursorTest {
         when( auditEventService.getEvents( ee ) )
                 .thenReturn( Arrays.asList( event1, event2 ) );
 
-        Object response = webService.getDatasetAuditEvents( datasetArg, null, limit( "20" ), false );
+        Object response = webService.getDatasetAuditEvents( datasetArg, null, limit( "20" ), false, false );
 
         assertThat( response ).isInstanceOf( ResponseDataObject.class );
         @SuppressWarnings("unchecked")
@@ -170,7 +170,7 @@ public class DatasetsWebServiceAuditEventsCursorTest {
         when( auditEventService.getEventsByCursor( eq( ee ), eq( c ), eq( 20 ) ) ).thenReturn( cp );
 
         CursorArg arg = CursorArg.valueOf( c.encode() );
-        Object response = webService.getDatasetAuditEvents( datasetArg, arg, limit( "20" ), false );
+        Object response = webService.getDatasetAuditEvents( datasetArg, arg, limit( "20" ), false, false );
 
         assertThat( response ).isInstanceOf( CursorPaginatedResponseDataObject.class );
         @SuppressWarnings("unchecked")
@@ -199,7 +199,7 @@ public class DatasetsWebServiceAuditEventsCursorTest {
                 Collections.singletonList( event2 ), null, 5, null, "prev", null );
         when( auditEventService.getEventsByCursor( eq( ee ), eq( c ), eq( 5 ) ) ).thenReturn( cp );
 
-        Object response = webService.getDatasetAuditEvents( datasetArg, CursorArg.valueOf( c.encode() ), limit( "5" ), false );
+        Object response = webService.getDatasetAuditEvents( datasetArg, CursorArg.valueOf( c.encode() ), limit( "5" ), false, false );
 
         assertThat( response ).isInstanceOf( CursorPaginatedResponseDataObject.class );
         verify( auditEventService ).getEventsByCursor( ee, c, 5 );
@@ -214,7 +214,7 @@ public class DatasetsWebServiceAuditEventsCursorTest {
                 Collections.singletonList( event1 ), null, 10, null, null, null );
         when( auditEventService.getEventsByCursor( eq( ee ), eq( c ), eq( 10 ) ) ).thenReturn( cp );
 
-        webService.getDatasetAuditEvents( datasetArg, CursorArg.valueOf( c.encode() ), limit( "10" ), false );
+        webService.getDatasetAuditEvents( datasetArg, CursorArg.valueOf( c.encode() ), limit( "10" ), false, false );
 
         verify( auditEventService ).getEventsByCursor( ee, c, 10 );
     }
@@ -228,7 +228,7 @@ public class DatasetsWebServiceAuditEventsCursorTest {
                 Collections.emptyList(), null, 20, /* nextCursor */ null, /* prevCursor */ null, null );
         when( auditEventService.getEventsByCursor( any(), eq( c ), eq( 20 ) ) ).thenReturn( cp );
 
-        Object response = webService.getDatasetAuditEvents( datasetArg, CursorArg.valueOf( c.encode() ), limit( "20" ), false );
+        Object response = webService.getDatasetAuditEvents( datasetArg, CursorArg.valueOf( c.encode() ), limit( "20" ), false, false );
 
         assertThat( response ).isInstanceOf( CursorPaginatedResponseDataObject.class );
         @SuppressWarnings("unchecked")
@@ -250,7 +250,7 @@ public class DatasetsWebServiceAuditEventsCursorTest {
                 Arrays.asList( event1, event2 ), null, 10, null, null, null );
         when( auditEventService.getEventsByCursor( any(), eq( c ), eq( 10 ) ) ).thenReturn( cp );
 
-        Object response = webService.getDatasetAuditEvents( datasetArg, CursorArg.valueOf( c.encode() ), limit( "10" ), false );
+        Object response = webService.getDatasetAuditEvents( datasetArg, CursorArg.valueOf( c.encode() ), limit( "10" ), false, false );
 
         @SuppressWarnings("unchecked")
         CursorPaginatedResponseDataObject<AuditEventValueObject> page =

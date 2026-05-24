@@ -1411,6 +1411,63 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
     }
 
     @Test
+    public void testGetDatasetAuditEventsExcludeEmptyDropsTypelessBlankEvents() {
+        Date base = new Date( 1_700_000_000_000L );
+        ubic.gemma.model.common.auditAndSecurity.User performer =
+                ubic.gemma.model.common.auditAndSecurity.User.Factory.newInstance( "alice" );
+        // Boring: no eventType, blank note + detail
+        AuditEvent boring = AuditEvent.Factory.newInstance( base, AuditAction.UPDATE, null, null, performer, null );
+        // Meaningful: typed event
+        AuditEvent typed = AuditEvent.Factory.newInstance( new Date( base.getTime() + 1000L ),
+                AuditAction.UPDATE, null, null, performer,
+                new ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent() );
+        // Meaningful: untyped but with a note
+        AuditEvent noted = AuditEvent.Factory.newInstance( new Date( base.getTime() + 2000L ),
+                AuditAction.UPDATE, "saw something", null, performer, null );
+        when( auditEventService.getEvents( ee ) ).thenReturn( Arrays.asList( boring, typed, noted ) );
+
+        assertThat( target( "/datasets/1/auditEvents" ).queryParam( "excludeEmpty", "true" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 2 );
+        verify( auditEventService ).getEvents( ee );
+    }
+
+    @Test
+    public void testGetDatasetAuditEventsExcludeEmptyComposesWithCompact() {
+        // excludeEmpty filters first; compact then collapses over the survivors.
+        // Input: BORING, TYPED-A, TYPED-A, TYPED-B
+        // After excludeEmpty: TYPED-A, TYPED-A, TYPED-B
+        // After compact:      [A run of 2], [B solo]
+        Date base = new Date( 1_700_000_000_000L );
+        ubic.gemma.model.common.auditAndSecurity.User performer =
+                ubic.gemma.model.common.auditAndSecurity.User.Factory.newInstance( "alice" );
+        AuditEvent boring = AuditEvent.Factory.newInstance( base, AuditAction.UPDATE, null, null, performer, null );
+        AuditEvent a1 = AuditEvent.Factory.newInstance( new Date( base.getTime() + 1000L ),
+                AuditAction.UPDATE, "a1", null, performer,
+                new ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent() );
+        AuditEvent a2 = AuditEvent.Factory.newInstance( new Date( base.getTime() + 2000L ),
+                AuditAction.UPDATE, "a2", null, performer,
+                new ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent() );
+        AuditEvent b1 = AuditEvent.Factory.newInstance( new Date( base.getTime() + 3000L ),
+                AuditAction.UPDATE, "b1", null, performer,
+                new ubic.gemma.model.common.auditAndSecurity.eventType.DatasetPublishedEvent() );
+        when( auditEventService.getEvents( ee ) ).thenReturn( Arrays.asList( boring, a1, a2, b1 ) );
+
+        assertThat( target( "/datasets/1/auditEvents" )
+                .queryParam( "excludeEmpty", "true" )
+                .queryParam( "compact", "true" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 2 )
+                .satisfiesExactly(
+                        e -> assertThat( e ).containsEntry( "collapsedCount", 2 ).containsEntry( "note", "a1" ),
+                        e -> assertThat( e ).containsEntry( "collapsedCount", 1 ).containsEntry( "note", "b1" ) );
+    }
+
+    @Test
     @WithMockUser
     public void testGetDatasetCurationDetails() {
         ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails cd =

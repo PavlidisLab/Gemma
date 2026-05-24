@@ -1438,7 +1438,11 @@ public class DatasetsWebService {
                     + "Pass `compact=true` to collapse consecutive same-(eventType, performer) events into a "
                     + "single entry carrying `collapsedCount` (run length) and `lastOccurrence` (last event's "
                     + "date); the first event's message is kept verbatim. Compression happens within the "
-                    + "response page only — runs are never merged across cursor boundaries.",
+                    + "response page only — runs are never merged across cursor boundaries. "
+                    + "Pass `excludeEmpty=true` to drop entries that have no eventType AND blank note/detail "
+                    + "(plain audit ticks that carry no story); when combined with `compact=true`, filtering "
+                    + "happens FIRST so collapsing runs over the post-filter sequence. Default for both "
+                    + "options is `false` (full fidelity).",
             responses = {
                     @ApiResponse(responseCode = "200",
                             content = @Content(schema = @Schema(oneOf = {
@@ -1454,13 +1458,23 @@ public class DatasetsWebService {
             @Parameter(description = "Page size for cursor mode (ignored when no `cursor` is supplied).")
             @QueryParam("limit") @DefaultValue("20") LimitArg limitArg,
             @Parameter(description = "Collapse runs of consecutive same-(eventType, performer) events into one entry with `collapsedCount` + `lastOccurrence`. Default `false`.")
-            @QueryParam("compact") @DefaultValue("false") boolean compact
+            @QueryParam("compact") @DefaultValue("false") boolean compact,
+            @Parameter(description = "Drop entries with no eventType AND blank note/detail (boring update ticks). Default `false`. Combine with `compact=true` for a tight curator-story view.")
+            @QueryParam("excludeEmpty") @DefaultValue("false") boolean excludeEmpty
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         if ( cursorArg != null ) {
             CursorPage<AuditEventValueObject> page = auditEventService
                     .getEventsByCursor( ee, cursorArg.getValue(), limitArg.getValue() )
                     .map( AuditEventValueObject::new );
+            if ( excludeEmpty ) {
+                // CursorPage extends AbstractList<O>, so stream directly off it
+                List<AuditEventValueObject> filtered = page.stream()
+                        .filter( e -> !isEmptyUpdate( e ) )
+                        .collect( Collectors.toList() );
+                page = new CursorPage<>( filtered, page.getSort(), page.getLimit(),
+                        page.getNextCursor(), page.getPrevCursor(), page.getTotalElements() );
+            }
             if ( compact ) {
                 List<CompactAuditEventValueObject> collapsed = collapseAuditEvents( page );
                 CursorPage<CompactAuditEventValueObject> compactPage = new CursorPage<>(
@@ -1477,10 +1491,26 @@ public class DatasetsWebService {
         List<AuditEventValueObject> out = auditEventService.getEvents( ee ).stream()
                 .map( AuditEventValueObject::new )
                 .collect( Collectors.toList() );
+        if ( excludeEmpty ) {
+            out = out.stream().filter( e -> !isEmptyUpdate( e ) ).collect( Collectors.toList() );
+        }
         if ( compact ) {
             return respond( collapseAuditEvents( out ) );
         }
         return respond( out );
+    }
+
+    /**
+     * An audit event entry is "empty" / boring when it carries no specific {@code eventType} and
+     * its {@code note} + {@code detail} are both blank — i.e. just a "something was touched" tick
+     * with no story value to a curator scanning the trail.
+     */
+    private static boolean isEmptyUpdate( AuditEventValueObject e ) {
+        if ( e.getEventType() != null ) {
+            return false;
+        }
+        return ( e.getNote() == null || e.getNote().trim().isEmpty() )
+                && ( e.getDetail() == null || e.getDetail().trim().isEmpty() );
     }
 
     /**
