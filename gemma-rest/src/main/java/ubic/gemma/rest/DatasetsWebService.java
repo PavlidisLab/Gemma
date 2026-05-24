@@ -4747,6 +4747,13 @@ public class DatasetsWebService {
         int fetchCount = direction == PcLoadingDirection.both ? top : Math.min( SVD_LOADINGS_MAX_TOP, top * 4 );
         Map<ProbeLoading, DoubleVectorValueObject> loaded = svdService.getTopLoadedVectors( ee, pc, fetchCount );
         SVDResult svd = svdService.getSvd( ee );
+        if ( svd == null ) {
+            // hasSvd() can be true (probe-loading rows exist) while getSvd() returns null
+            // (no full SVDResult entity stored). Avoid the NPE that surfaces as a 500 on the
+            // Diagnostics tab; treat as "no usable SVD" so the UI can render the gracefully-empty
+            // state next to the working sample-correlation / mean-variance panes.
+            throw new NotFoundException( ee.getShortName() + " has SVD loadings but no full SVDResult; rerun the SVD task to populate." );
+        }
         return respond( PcLoadingsValueObject.from( pc, top, direction, loaded, svd ) );
     }
 
