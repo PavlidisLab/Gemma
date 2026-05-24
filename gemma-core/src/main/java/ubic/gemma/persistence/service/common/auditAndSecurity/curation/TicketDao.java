@@ -16,11 +16,14 @@ import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketPriority;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketState;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
 import ubic.gemma.persistence.service.BaseDao;
 import ubic.gemma.persistence.util.Cursor;
 import ubic.gemma.persistence.util.CursorPage;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -60,10 +63,43 @@ public interface TicketDao extends BaseDao<Ticket> {
     List<Ticket> findTickets( boolean openOnly, @Nullable Long assigneeId, @Nullable TicketPriority priority, int offset, int limit );
 
     /**
+     * Paged, filtered list query for the REST surface — extended filter set
+     * (queue-filter expansion). All filter arguments are independently
+     * optional; passing {@code null} disables that filter. Results are
+     * ordered by {@code updatedAt} desc.
+     *
+     * <p>When {@code state} is non-null it OVERRIDES the {@code openOnly}
+     * predicate; pass any boolean for {@code openOnly} and it is ignored.
+     * When {@code state} is null, {@code openOnly == true} continues to
+     * restrict to OPEN/IN_PROGRESS (the legacy behaviour).</p>
+     *
+     * @param openOnly     if true and {@code state} is null, restrict to OPEN/IN_PROGRESS
+     * @param assigneeId   filter by current assignee {@link Contact#getId()} (nullable)
+     * @param priority     filter by priority (nullable)
+     * @param type         filter by {@link TicketType} (nullable)
+     * @param state        filter by exact {@link TicketState}; overrides {@code openOnly} when non-null
+     * @param targetType   filter to tickets whose target collection includes a target of this type (nullable)
+     * @param updatedSince filter to tickets with {@code updatedAt >= updatedSince} (nullable)
+     * @param offset       first row to return (0-based)
+     * @param limit        max rows to return; values &lt;= 0 are treated as "no limit"
+     */
+    List<Ticket> findTickets( boolean openOnly, @Nullable Long assigneeId, @Nullable TicketPriority priority,
+            @Nullable TicketType type, @Nullable TicketState state, @Nullable TicketTargetType targetType,
+            @Nullable Date updatedSince, int offset, int limit );
+
+    /**
      * Count tickets matching the same filters as
      * {@link #findTickets(boolean, Long, TicketPriority, int, int)}.
      */
     long countTickets( boolean openOnly, @Nullable Long assigneeId, @Nullable TicketPriority priority );
+
+    /**
+     * Count tickets matching the same extended filter set as
+     * {@link #findTickets(boolean, Long, TicketPriority, TicketType, TicketState, TicketTargetType, Date, int, int)}.
+     */
+    long countTickets( boolean openOnly, @Nullable Long assigneeId, @Nullable TicketPriority priority,
+            @Nullable TicketType type, @Nullable TicketState state, @Nullable TicketTargetType targetType,
+            @Nullable Date updatedSince );
 
     /**
      * Keyset-pagination counterpart to {@link #findOpenForTarget(TicketTargetType, Long)}
@@ -115,6 +151,21 @@ public interface TicketDao extends BaseDao<Ticket> {
      */
     CursorPage<Ticket> findTicketsByCursor( boolean openOnly, @Nullable Long assigneeId,
             @Nullable TicketPriority priority, @Nullable Cursor cursor, int limit );
+
+    /**
+     * Extended-filter cursor-mode counterpart to
+     * {@link #findTickets(boolean, Long, TicketPriority, TicketType, TicketState, TicketTargetType, Date, int, int)}.
+     * Same id-asc single-component cursor semantics as
+     * {@link #findTicketsByCursor(boolean, Long, TicketPriority, Cursor, int)};
+     * accepts the same extended filter set as the offset variant, with identical
+     * {@code state}-overrides-{@code openOnly} precedence when {@code state} is non-null.
+     *
+     * @see #findTicketsByCursor(boolean, Long, TicketPriority, Cursor, int)
+     */
+    CursorPage<Ticket> findTicketsByCursor( boolean openOnly, @Nullable Long assigneeId,
+            @Nullable TicketPriority priority, @Nullable TicketType type, @Nullable TicketState state,
+            @Nullable TicketTargetType targetType, @Nullable Date updatedSince,
+            @Nullable Cursor cursor, int limit );
 
     /**
      * Keyset-pagination counterpart to the {@code Ticket.events} collection on a

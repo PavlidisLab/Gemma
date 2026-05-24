@@ -33,6 +33,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
+
 /**
  * Phase B-1 implementation of {@link TicketService}. Each mutating method
  * appends a {@link TicketEvent} to the ticket; persistence is via the HBM
@@ -153,8 +154,24 @@ public class TicketServiceImpl extends AbstractService<Ticket> implements Ticket
 
     @Override
     @Transactional(readOnly = true)
+    public List<Ticket> findTickets( boolean openOnly, @Nullable Long assigneeId, @Nullable TicketPriority priority,
+            @Nullable TicketType type, @Nullable TicketState state, @Nullable TicketTargetType targetType,
+            @Nullable Date updatedSince, int offset, int limit ) {
+        return ticketDao.findTickets( openOnly, assigneeId, priority, type, state, targetType, updatedSince, offset, limit );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public long countTickets( boolean openOnly, @Nullable Long assigneeId, @Nullable TicketPriority priority ) {
         return ticketDao.countTickets( openOnly, assigneeId, priority );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countTickets( boolean openOnly, @Nullable Long assigneeId, @Nullable TicketPriority priority,
+            @Nullable TicketType type, @Nullable TicketState state, @Nullable TicketTargetType targetType,
+            @Nullable Date updatedSince ) {
+        return ticketDao.countTickets( openOnly, assigneeId, priority, type, state, targetType, updatedSince );
     }
 
     @Override
@@ -162,6 +179,15 @@ public class TicketServiceImpl extends AbstractService<Ticket> implements Ticket
     public CursorPage<Ticket> findTicketsByCursor( boolean openOnly, @Nullable Long assigneeId,
             @Nullable TicketPriority priority, @Nullable Cursor cursor, int limit ) {
         return ticketDao.findTicketsByCursor( openOnly, assigneeId, priority, cursor, limit );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CursorPage<Ticket> findTicketsByCursor( boolean openOnly, @Nullable Long assigneeId,
+            @Nullable TicketPriority priority, @Nullable TicketType type, @Nullable TicketState state,
+            @Nullable TicketTargetType targetType, @Nullable Date updatedSince,
+            @Nullable Cursor cursor, int limit ) {
+        return ticketDao.findTicketsByCursor( openOnly, assigneeId, priority, type, state, targetType, updatedSince, cursor, limit );
     }
 
     @Override

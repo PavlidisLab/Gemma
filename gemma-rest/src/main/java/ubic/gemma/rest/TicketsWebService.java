@@ -122,9 +122,14 @@ public class TicketsWebService {
                     + "`offset` and `cursor` are mutually exclusive — passing a non-null "
                     + "`cursor` selects cursor mode. In cursor mode the result is always "
                     + "sorted by ascending `id` (cursor mode forces a single-component id "
-                    + "sort pending the indexed-column audit in phase B); the filter triple "
-                    + "(`openOnly`, `assignee`, `priority`) is honoured identically in both "
-                    + "modes; `totalElements` is `null` by default (no count query per request).",
+                    + "sort pending the indexed-column audit in phase B); the full filter set "
+                    + "(`openOnly`, `assignee`, `priority`, `type`, `state`, `targetType`, "
+                    + "`updatedSince`) is honoured identically in both modes; `totalElements` "
+                    + "is `null` by default (no count query per request).\n\n"
+                    + "Filter precedence note: `state` and `openOnly` are mutually exclusive — "
+                    + "a passed `state` pins the predicate to that single state and the "
+                    + "`openOnly` flag is ignored. With no `state` parameter, `openOnly=true` "
+                    + "retains its legacy OPEN+IN_PROGRESS semantics.",
             responses = {
                     @ApiResponse(responseCode = "200",
                             content = @Content(schema = @Schema(oneOf = {
@@ -133,12 +138,20 @@ public class TicketsWebService {
                             }))),
             })
     public Object getTickets(
-            @Parameter(description = "If true, restrict to OPEN/IN_PROGRESS tickets.")
+            @Parameter(description = "If true, restrict to OPEN/IN_PROGRESS tickets. Ignored when `state` is supplied.")
             @QueryParam("openOnly") @DefaultValue("false") boolean openOnly,
             @Parameter(description = "Filter by current assignee (Contact id).")
             @QueryParam("assignee") @Nullable Long assigneeId,
             @Parameter(description = "Filter by priority.")
             @QueryParam("priority") @Nullable TicketPriority priority,
+            @Parameter(description = "Filter by ticket type (e.g. GENERIC, AGENT_PROPOSAL, NEEDS_ATTENTION).")
+            @QueryParam("type") @Nullable TicketType type,
+            @Parameter(description = "Filter by exact ticket state (OPEN, IN_PROGRESS, RESOLVED, CANCELLED). When supplied this overrides `openOnly`.")
+            @QueryParam("state") @Nullable TicketState state,
+            @Parameter(description = "Filter to tickets whose target collection includes a target of this type (EXPRESSION_EXPERIMENT, ARRAY_DESIGN, etc).")
+            @QueryParam("targetType") @Nullable TicketTargetType targetType,
+            @Parameter(description = "ISO-8601 date/time; restrict to tickets with `updatedAt >=` this value.")
+            @QueryParam("updatedSince") @Nullable Date updatedSince,
             @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
             @QueryParam("limit") @DefaultValue("20") LimitArg limitArg,
             @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.")
@@ -148,18 +161,21 @@ public class TicketsWebService {
         if ( cursorArg != null ) {
             // Mutual-exclusion: a non-null cursor selects cursor mode. The default offset=0 is
             // not considered user-supplied (parallels GET /genes step 1b and the other 1c-1n
-            // conversions). In cursor mode the filter triple (openOnly, assigneeId, priority)
-            // is honoured identically; the legacy updatedAt-desc sort is swapped for a
-            // single-component +id ascending sort because the DAO restricts cursors to
-            // id-only sorts until the phase-B index audit lands.
+            // conversions). In cursor mode the full filter set (openOnly, assigneeId, priority,
+            // type, state, targetType, updatedSince) is honoured identically; the legacy
+            // updatedAt-desc sort is swapped for a single-component +id ascending sort because
+            // the DAO restricts cursors to id-only sorts until the phase-B index audit lands.
             CursorPage<Ticket> page = ticketService.findTicketsByCursor(
-                    openOnly, assigneeId, priority, cursorArg.getValue(), limit );
+                    openOnly, assigneeId, priority, type, state, targetType, updatedSince,
+                    cursorArg.getValue(), limit );
             CursorPage<TicketValueObject> voPage = page.map( TicketValueObject::from );
             return paginateByCursor( voPage, new String[] { "id" } );
         }
         int offset = offsetArg.getValue();
-        List<Ticket> tickets = ticketService.findTickets( openOnly, assigneeId, priority, offset, limit );
-        long total = ticketService.countTickets( openOnly, assigneeId, priority );
+        List<Ticket> tickets = ticketService.findTickets( openOnly, assigneeId, priority,
+                type, state, targetType, updatedSince, offset, limit );
+        long total = ticketService.countTickets( openOnly, assigneeId, priority,
+                type, state, targetType, updatedSince );
         List<TicketValueObject> vos = tickets.stream()
                 .map( TicketValueObject::from )
                 .collect( Collectors.toList() );

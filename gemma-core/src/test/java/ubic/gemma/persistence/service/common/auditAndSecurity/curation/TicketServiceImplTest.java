@@ -22,12 +22,14 @@ import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketEventType;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketPriority;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketState;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Set;
@@ -38,6 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -210,6 +213,65 @@ public class TicketServiceImplTest {
         for ( Map.Entry<TicketState, TicketEventType> e : expected.entrySet() ) {
             verifyTransitionEmitsEvent( TicketState.OPEN, e.getKey(), e.getValue() );
         }
+    }
+
+    // ---- extended filter dispatch -----------------------------------------
+
+    /**
+     * Extended {@code findTickets} dispatches each of the four new filter
+     * arguments (type / state / targetType / updatedSince) through to the DAO
+     * unchanged, preserving the {@code state} value (it doesn't get coerced
+     * into the legacy openOnly path).
+     */
+    @Test
+    public void findTicketsExtended_passesAllFiltersThroughToDao() {
+        Date since = new Date( 1000L );
+        when( ticketDao.findTickets( eq( false ), eq( 7L ), eq( TicketPriority.HIGH ),
+                eq( TicketType.QUALITY_REVIEW ), eq( TicketState.RESOLVED ),
+                eq( TicketTargetType.EXPRESSION_EXPERIMENT ), eq( since ), eq( 5 ), eq( 25 ) ) )
+                .thenReturn( Collections.emptyList() );
+
+        service.findTickets( false, 7L, TicketPriority.HIGH,
+                TicketType.QUALITY_REVIEW, TicketState.RESOLVED,
+                TicketTargetType.EXPRESSION_EXPERIMENT, since, 5, 25 );
+
+        verify( ticketDao ).findTickets( false, 7L, TicketPriority.HIGH,
+                TicketType.QUALITY_REVIEW, TicketState.RESOLVED,
+                TicketTargetType.EXPRESSION_EXPERIMENT, since, 5, 25 );
+    }
+
+    /**
+     * Extended {@code countTickets} mirrors {@code findTickets} in dispatch —
+     * each filter argument lands on the DAO without massaging.
+     */
+    @Test
+    public void countTicketsExtended_passesAllFiltersThroughToDao() {
+        Date since = new Date( 2000L );
+        when( ticketDao.countTickets( eq( true ), eq( ( Long ) null ), eq( ( TicketPriority ) null ),
+                eq( ( TicketType ) null ), eq( TicketState.OPEN ),
+                eq( ( TicketTargetType ) null ), eq( since ) ) )
+                .thenReturn( 3L );
+
+        long n = service.countTickets( true, null, null, null, TicketState.OPEN, null, since );
+
+        assertEquals( 3L, n );
+        verify( ticketDao ).countTickets( true, null, null, null, TicketState.OPEN, null, since );
+    }
+
+    /**
+     * Cursor-mode dispatch parity: extended cursor signature forwards each of
+     * the four new filter arguments verbatim to the DAO.
+     */
+    @Test
+    public void findTicketsByCursorExtended_passesAllFiltersThroughToDao() {
+        Date since = new Date( 3000L );
+        service.findTicketsByCursor( false, null, TicketPriority.LOW,
+                TicketType.REALIGNMENT_NEEDED, TicketState.IN_PROGRESS,
+                TicketTargetType.ARRAY_DESIGN, since, null, 10 );
+
+        verify( ticketDao ).findTicketsByCursor( false, null, TicketPriority.LOW,
+                TicketType.REALIGNMENT_NEEDED, TicketState.IN_PROGRESS,
+                TicketTargetType.ARRAY_DESIGN, since, null, 10 );
     }
 
     // ---- helpers -----------------------------------------------------------

@@ -126,11 +126,19 @@ public class TicketsWebServiceCursorTest {
     @Test
     public void offsetModeRoutesToLegacyHelperAndReturnsPaginatedResponse() {
         // Legacy path: TicketService.findTickets + countTickets → paginate(Slice).
-        when( ticketService.findTickets( eq( false ), eq( ( Long ) null ), eq( ( TicketPriority ) null ), eq( 0 ), eq( 20 ) ) )
+        when( ticketService.findTickets( eq( false ), eq( ( Long ) null ), eq( ( TicketPriority ) null ),
+                eq( ( ubic.gemma.model.common.auditAndSecurity.curation.TicketType ) null ),
+                eq( ( ubic.gemma.model.common.auditAndSecurity.curation.TicketState ) null ),
+                eq( ( ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType ) null ),
+                eq( ( java.util.Date ) null ), eq( 0 ), eq( 20 ) ) )
                 .thenReturn( Arrays.asList( ticket1, ticket2 ) );
-        when( ticketService.countTickets( eq( false ), eq( ( Long ) null ), eq( ( TicketPriority ) null ) ) ).thenReturn( 2L );
+        when( ticketService.countTickets( eq( false ), eq( ( Long ) null ), eq( ( TicketPriority ) null ),
+                eq( ( ubic.gemma.model.common.auditAndSecurity.curation.TicketType ) null ),
+                eq( ( ubic.gemma.model.common.auditAndSecurity.curation.TicketState ) null ),
+                eq( ( ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType ) null ),
+                eq( ( java.util.Date ) null ) ) ).thenReturn( 2L );
 
-        Object response = webService.getTickets( false, null, null, offset( "0" ), limit( "20" ), null );
+        Object response = webService.getTickets( false, null, null, null, null, null, null, offset( "0" ), limit( "20" ), null );
 
         assertThat( response ).isInstanceOf( PaginatedResponseDataObject.class );
         @SuppressWarnings("unchecked")
@@ -144,7 +152,7 @@ public class TicketsWebServiceCursorTest {
         assertThat( page.getTotalElements() ).isEqualTo( 2L );
 
         // Cursor helper must not be touched in legacy mode.
-        verify( ticketService, never() ).findTicketsByCursor( anyBoolean(), any(), any(), any(), anyInt() );
+        verify( ticketService, never() ).findTicketsByCursor( anyBoolean(), any(), any(), any(), any(), any(), any(), any(), anyInt() );
     }
 
     @Test
@@ -157,11 +165,15 @@ public class TicketsWebServiceCursorTest {
                 /* nextCursor */ "next-cursor-token",
                 /* prevCursor */ "prev-cursor-token",
                 /* totalElements */ null );
-        when( ticketService.findTicketsByCursor( eq( false ), eq( ( Long ) null ), eq( ( TicketPriority ) null ), eq( c ), eq( 20 ) ) )
+        when( ticketService.findTicketsByCursor( eq( false ), eq( ( Long ) null ), eq( ( TicketPriority ) null ),
+                eq( ( ubic.gemma.model.common.auditAndSecurity.curation.TicketType ) null ),
+                eq( ( ubic.gemma.model.common.auditAndSecurity.curation.TicketState ) null ),
+                eq( ( ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType ) null ),
+                eq( ( java.util.Date ) null ), eq( c ), eq( 20 ) ) )
                 .thenReturn( cp );
 
         CursorArg arg = CursorArg.valueOf( c.encode() );
-        Object response = webService.getTickets( false, null, null, offset( "0" ), limit( "20" ), arg );
+        Object response = webService.getTickets( false, null, null, null, null, null, null, offset( "0" ), limit( "20" ), arg );
 
         assertThat( response ).isInstanceOf( CursorPaginatedResponseDataObject.class );
         @SuppressWarnings("unchecked")
@@ -179,8 +191,8 @@ public class TicketsWebServiceCursorTest {
         assertThat( page.getLimit() ).isEqualTo( 20 );
 
         // Legacy helpers must not be touched in cursor mode.
-        verify( ticketService, never() ).findTickets( anyBoolean(), any(), any(), anyInt(), anyInt() );
-        verify( ticketService, never() ).countTickets( anyBoolean(), any(), any() );
+        verify( ticketService, never() ).findTickets( anyBoolean(), any(), any(), any(), any(), any(), any(), anyInt(), anyInt() );
+        verify( ticketService, never() ).countTickets( anyBoolean(), any(), any(), any(), any(), any(), any() );
     }
 
     @Test
@@ -191,14 +203,19 @@ public class TicketsWebServiceCursorTest {
         Cursor c = new Cursor( "+id", new Object[] { 1L }, Cursor.Direction.FORWARD );
         CursorPage<Ticket> cp = new CursorPage<>(
                 Collections.singletonList( ticket2 ), null, 5, null, "prev", null );
-        when( ticketService.findTicketsByCursor( eq( true ), eq( 42L ), eq( TicketPriority.HIGH ), eq( c ), eq( 5 ) ) )
+        when( ticketService.findTicketsByCursor( eq( true ), eq( 42L ), eq( TicketPriority.HIGH ),
+                eq( ( ubic.gemma.model.common.auditAndSecurity.curation.TicketType ) null ),
+                eq( ( ubic.gemma.model.common.auditAndSecurity.curation.TicketState ) null ),
+                eq( ( ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType ) null ),
+                eq( ( java.util.Date ) null ), eq( c ), eq( 5 ) ) )
                 .thenReturn( cp );
 
         Object response = webService.getTickets( true, 42L, TicketPriority.HIGH,
+                null, null, null, null,
                 offset( "0" ), limit( "5" ), CursorArg.valueOf( c.encode() ) );
 
         assertThat( response ).isInstanceOf( CursorPaginatedResponseDataObject.class );
-        verify( ticketService ).findTicketsByCursor( true, 42L, TicketPriority.HIGH, c, 5 );
+        verify( ticketService ).findTicketsByCursor( true, 42L, TicketPriority.HIGH, null, null, null, null, c, 5 );
     }
 
     @Test
@@ -208,13 +225,18 @@ public class TicketsWebServiceCursorTest {
         Cursor c = new Cursor( "+id", new Object[] { 1L }, Cursor.Direction.FORWARD );
         CursorPage<Ticket> cp = new CursorPage<>(
                 Collections.singletonList( ticket1 ), null, 10, null, null, null );
-        when( ticketService.findTicketsByCursor( eq( true ), eq( 7L ), eq( TicketPriority.LOW ), eq( c ), eq( 10 ) ) )
+        when( ticketService.findTicketsByCursor( eq( true ), eq( 7L ), eq( TicketPriority.LOW ),
+                eq( ( ubic.gemma.model.common.auditAndSecurity.curation.TicketType ) null ),
+                eq( ( ubic.gemma.model.common.auditAndSecurity.curation.TicketState ) null ),
+                eq( ( ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType ) null ),
+                eq( ( java.util.Date ) null ), eq( c ), eq( 10 ) ) )
                 .thenReturn( cp );
 
         webService.getTickets( true, 7L, TicketPriority.LOW,
+                null, null, null, null,
                 offset( "0" ), limit( "10" ), CursorArg.valueOf( c.encode() ) );
 
-        verify( ticketService ).findTicketsByCursor( true, 7L, TicketPriority.LOW, c, 10 );
+        verify( ticketService ).findTicketsByCursor( true, 7L, TicketPriority.LOW, null, null, null, null, c, 10 );
     }
 
     @Test
@@ -224,10 +246,11 @@ public class TicketsWebServiceCursorTest {
         Cursor c = new Cursor( "+id", new Object[] { 999999L }, Cursor.Direction.FORWARD );
         CursorPage<Ticket> cp = new CursorPage<>(
                 Collections.emptyList(), null, 20, /* nextCursor */ null, /* prevCursor */ null, null );
-        when( ticketService.findTicketsByCursor( anyBoolean(), any(), any(), eq( c ), eq( 20 ) ) )
+        when( ticketService.findTicketsByCursor( anyBoolean(), any(), any(), any(), any(), any(), any(), eq( c ), eq( 20 ) ) )
                 .thenReturn( cp );
 
         Object response = webService.getTickets( false, null, null,
+                null, null, null, null,
                 offset( "0" ), limit( "20" ), CursorArg.valueOf( c.encode() ) );
 
         assertThat( response ).isInstanceOf( CursorPaginatedResponseDataObject.class );
@@ -248,10 +271,11 @@ public class TicketsWebServiceCursorTest {
         Cursor c = new Cursor( "+id", new Object[] { 1L }, Cursor.Direction.FORWARD );
         CursorPage<Ticket> cp = new CursorPage<>(
                 Arrays.asList( ticket1, ticket2 ), null, 10, null, null, null );
-        when( ticketService.findTicketsByCursor( anyBoolean(), any(), any(), eq( c ), eq( 10 ) ) )
+        when( ticketService.findTicketsByCursor( anyBoolean(), any(), any(), any(), any(), any(), any(), eq( c ), eq( 10 ) ) )
                 .thenReturn( cp );
 
         Object response = webService.getTickets( false, null, null,
+                null, null, null, null,
                 offset( "0" ), limit( "10" ), CursorArg.valueOf( c.encode() ) );
 
         @SuppressWarnings("unchecked")
