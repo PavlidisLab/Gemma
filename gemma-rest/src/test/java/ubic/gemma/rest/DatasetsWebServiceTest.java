@@ -413,6 +413,9 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
     private GeeqService geeqService;
 
     @Autowired
+    private ArrayDesignService arrayDesignService;
+
+    @Autowired
     private TaskRunningService taskRunningService;
 
     @Autowired
@@ -452,7 +455,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
 
     @AfterEach
     public void resetMocks() {
-        reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService, taxonArgService, geneArgService, searchService, auditEventService, auditTrailService, securityService, geeqService, taskRunningService, differentialExpressionAnalysisService, userManager, ticketService, sampleCoexpressionAnalysisService, svdService, processedExpressionDataVectorService, expressionExperimentReportService );
+        reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService, taxonArgService, geneArgService, searchService, auditEventService, auditTrailService, securityService, geeqService, taskRunningService, differentialExpressionAnalysisService, userManager, ticketService, sampleCoexpressionAnalysisService, svdService, processedExpressionDataVectorService, expressionExperimentReportService, arrayDesignService );
     }
 
     @Test
@@ -1985,6 +1988,63 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
                 .isEqualTo( ubic.gemma.persistence.service.expression.experiment.GeeqService.ScoreMode.batch );
         verify( expressionExperimentReportService, atLeastOnce() ).evictFromCache( 1L );
         verifyNoInteractions( geeqService );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testRunDatasetSwitchPlatformWithTargetShortName() {
+        ee.setId( 1L );
+        ubic.gemma.model.expression.arrayDesign.ArrayDesign target = ubic.gemma.model.expression.arrayDesign.ArrayDesign.Factory.newInstance();
+        target.setId( 42L );
+        target.setShortName( "GPL570" );
+        when( arrayDesignService.findByShortName( "GPL570" ) ).thenReturn( target );
+        mockTaskSubmission( "task-switch" );
+
+        assertThat( target( "/datasets/1/tasks/switch-platform" ).request()
+                .post( jakarta.ws.rs.client.Entity.json( "{\"targetArrayDesignName\":\"GPL570\"}" ) ) )
+                .hasStatus( Response.Status.ACCEPTED )
+                .hasHeaderSatisfying( "Location", values ->
+                        assertThat( values ).singleElement().asString().endsWith( "/tasks/task-switch" ) )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.taskId", "task-switch" );
+
+        ArgumentCaptor<ubic.gemma.core.tasks.analysis.expression.ExpressionExperimentPlatformSwitchTaskCommand> cmd =
+                ArgumentCaptor.forClass( ubic.gemma.core.tasks.analysis.expression.ExpressionExperimentPlatformSwitchTaskCommand.class );
+        verify( taskRunningService ).submitTaskCommand( cmd.capture() );
+        assertThat( cmd.getValue().getExpressionExperiment() ).isSameAs( ee );
+        assertThat( cmd.getValue().getTargetArrayDesign() ).isSameAs( target );
+        verify( expressionExperimentReportService, atLeastOnce() ).evictFromCache( 1L );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testRunDatasetSwitchPlatformWithoutBodyAutoDetectsMerged() {
+        ee.setId( 1L );
+        mockTaskSubmission( "task-switch-auto" );
+
+        assertThat( target( "/datasets/1/tasks/switch-platform" ).request()
+                .post( jakarta.ws.rs.client.Entity.json( "{}" ) ) )
+                .hasStatus( Response.Status.ACCEPTED );
+
+        ArgumentCaptor<ubic.gemma.core.tasks.analysis.expression.ExpressionExperimentPlatformSwitchTaskCommand> cmd =
+                ArgumentCaptor.forClass( ubic.gemma.core.tasks.analysis.expression.ExpressionExperimentPlatformSwitchTaskCommand.class );
+        verify( taskRunningService ).submitTaskCommand( cmd.capture() );
+        assertThat( cmd.getValue().getExpressionExperiment() ).isSameAs( ee );
+        assertThat( cmd.getValue().getTargetArrayDesign() ).isNull();
+        verifyNoInteractions( arrayDesignService );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testRunDatasetSwitchPlatformUnknownShortNameIs400() {
+        ee.setId( 1L );
+        when( arrayDesignService.findByShortName( "GPL_NOSUCH" ) ).thenReturn( null );
+
+        assertThat( target( "/datasets/1/tasks/switch-platform" ).request()
+                .post( jakarta.ws.rs.client.Entity.json( "{\"targetArrayDesignName\":\"GPL_NOSUCH\"}" ) ) )
+                .hasStatus( Response.Status.BAD_REQUEST );
+
+        verifyNoInteractions( taskRunningService );
     }
 
     @Test

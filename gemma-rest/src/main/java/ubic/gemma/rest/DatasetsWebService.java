@@ -63,6 +63,7 @@ import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.core.tasks.analysis.diffex.DifferentialExpressionAnalysisRemoveTaskCommand;
 import ubic.gemma.core.tasks.analysis.diffex.DifferentialExpressionAnalysisTaskCommand;
 import ubic.gemma.core.tasks.analysis.expression.BatchInfoFetchTaskCommand;
+import ubic.gemma.core.tasks.analysis.expression.ExpressionExperimentPlatformSwitchTaskCommand;
 import ubic.gemma.core.tasks.analysis.expression.GeeqTaskCommand;
 import ubic.gemma.core.tasks.analysis.expression.SvdTaskCommand;
 import ubic.gemma.core.tasks.analysis.expression.ExpressionExperimentLoadTaskCommand;
@@ -2855,6 +2856,63 @@ public class DatasetsWebService {
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         GeeqTaskCommand cmd = new GeeqTaskCommand( ee, mode );
+        expressionExperimentReportService.evictFromCache( ee.getId() );
+        return acceptedTaskResponse( taskRunningService.submitTaskCommand( cmd ) );
+    }
+
+    /**
+     * Optional request body for {@link #runDatasetSwitchPlatform}.
+     */
+    public static class PlatformSwitchRequest {
+        @Nullable
+        private String targetArrayDesignName;
+
+        @Nullable
+        public String getTargetArrayDesignName() {
+            return targetArrayDesignName;
+        }
+
+        public void setTargetArrayDesignName( @Nullable String targetArrayDesignName ) {
+            this.targetArrayDesignName = targetArrayDesignName;
+        }
+    }
+
+    @POST
+    @Path("/{dataset}/tasks/switch-platform")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Switch a dataset to use a different (typically merged) array design (async)",
+            description = "Submits an async task that switches every BioAssay on the experiment to use the supplied "
+                    + "target ArrayDesign (looked up by short name, e.g. `GPL570`), remaps composite-sequence-keyed "
+                    + "vectors, and writes an `ExpressionExperimentPlatformSwitchEvent` to the audit log. If "
+                    + "`targetArrayDesignName` is omitted (or the request body is omitted entirely) the service "
+                    + "auto-detects a merged platform that the experiment's current ArrayDesigns are merged into; "
+                    + "fails if none exists or the merge is ambiguous. This task is potentially long-running because "
+                    + "it remaps every raw vector and regenerates processed vectors. Returns 202 with a `Location` "
+                    + "header pointing at `/tasks/{taskId}`. Mirrors the `switchExperimentPlatform` CLI.",
+            security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
+            responses = {
+                    @ApiResponse(responseCode = "202", content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
+                    @ApiResponse(responseCode = "400", description = "The supplied target ArrayDesign short name does not match any platform.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public Response runDatasetSwitchPlatform(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Nullable PlatformSwitchRequest body
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        ArrayDesign target = null;
+        if ( body != null && body.getTargetArrayDesignName() != null && !body.getTargetArrayDesignName().isBlank() ) {
+            target = arrayDesignService.findByShortName( body.getTargetArrayDesignName() );
+            if ( target == null ) {
+                throw new BadRequestException(
+                        "No ArrayDesign with short_name '" + body.getTargetArrayDesignName() + "' exists." );
+            }
+        }
+        ExpressionExperimentPlatformSwitchTaskCommand cmd = new ExpressionExperimentPlatformSwitchTaskCommand( ee, target );
         expressionExperimentReportService.evictFromCache( ee.getId() );
         return acceptedTaskResponse( taskRunningService.submitTaskCommand( cmd ) );
     }
