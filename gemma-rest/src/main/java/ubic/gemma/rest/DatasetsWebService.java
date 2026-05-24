@@ -117,6 +117,8 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
+import ubic.gemma.core.util.matrix.DoubleMatrix;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
@@ -202,6 +204,8 @@ public class DatasetsWebService {
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
     @Autowired
     private SVDService svdService;
+    @Autowired
+    private SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService;
     @Autowired
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
     @Autowired
@@ -4332,6 +4336,35 @@ public class DatasetsWebService {
     }
 
     /**
+     * Retrieves the sample-sample correlation matrix for the given dataset.
+     * <p>
+     * The matrix is the regressed (best) correlation matrix when available, otherwise the full
+     * non-regressed matrix. Returns a symmetric N×N Pearson correlation matrix with bioAssay ids /
+     * short names parallel to the rows and columns. This is the data backing the curation-UI
+     * Diagnostics tab's sample-correlation heatmap.
+     */
+    @GET
+    @Path("/{dataset}/sample-correlation")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve the sample-sample correlation matrix for a dataset",
+            description = "Returns the regressed (best) sample correlation matrix if available; otherwise the full non-regressed matrix. "
+                    + "404 if no correlation analysis has been computed for the dataset.",
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist or has no sample correlation matrix.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<SampleCorrelationMatrixValueObject> getDatasetSampleCorrelation( // Params:
+            @PathParam("dataset") DatasetArg<?> datasetArg // Required
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        DoubleMatrix<BioAssay, BioAssay> matrix = sampleCoexpressionAnalysisService.loadBestMatrix( ee );
+        if ( matrix == null ) {
+            throw new NotFoundException( ee.getShortName() + " does not have a sample correlation matrix." );
+        }
+        return respond( new SampleCorrelationMatrixValueObject( matrix ) );
+    }
+
+    /**
      * Retrieves the design for the given dataset.
      *
      * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
@@ -5018,6 +5051,53 @@ public class DatasetsWebService {
             bioMaterialIds = svd.getBioMaterials().stream().map( BioMaterial::getId ).collect( Collectors.toList() );
             variances = svd.getVariances();
             vMatrix = svd.getVMatrix().getRawMatrix();
+        }
+    }
+
+    /**
+     * Wire shape for {@link #getDatasetSampleCorrelation}: a symmetric N×N Pearson correlation
+     * matrix with bioAssay ids + short names parallel to the rows/columns.
+     */
+    @Value
+    public static class SampleCorrelationMatrixValueObject {
+
+        /**
+         * BioAssay ids in the order the rows / columns of {@link #values} appear.
+         */
+        Long[] bioAssayIds;
+
+        /**
+         * BioAssay short names parallel to {@link #bioAssayIds}, for axis labels. Entries may be
+         * null for assays whose name has not been set.
+         */
+        String[] bioAssayShortNames;
+
+        /**
+         * Symmetric, row-major, N×N Pearson correlation matrix. {@code values[i][j]} is the
+         * correlation in [-1, 1] between the i'th and j'th bioAssay.
+         */
+        double[][] values;
+
+        /**
+         * Currently always {@code null}; placeholder for a probe-filter caption once
+         * {@link SampleCoexpressionAnalysisService} surfaces it.
+         */
+        @Nullable
+        String filterDescription;
+
+        /**
+         * Currently always {@code "pearson"} — Gemma's only supported correlation method here.
+         */
+        @Nullable
+        String method;
+
+        public SampleCorrelationMatrixValueObject( DoubleMatrix<BioAssay, BioAssay> matrix ) {
+            List<BioAssay> rowAssays = matrix.getRowNames();
+            this.bioAssayIds = rowAssays.stream().map( BioAssay::getId ).toArray( Long[]::new );
+            this.bioAssayShortNames = rowAssays.stream().map( BioAssay::getName ).toArray( String[]::new );
+            this.values = matrix.getRawMatrix();
+            this.filterDescription = null;
+            this.method = "pearson";
         }
     }
 

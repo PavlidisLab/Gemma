@@ -23,6 +23,10 @@ import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
+import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
+import ubic.gemma.core.util.matrix.DenseDoubleMatrix;
+import ubic.gemma.core.util.matrix.DoubleMatrix;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.analysis.service.DifferentialExpressionAnalysisResultListFileService;
 import ubic.gemma.core.analysis.service.ExpressionAnalysisResultSetFileService;
@@ -140,6 +144,11 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         @Bean
         public SVDService svdService() {
             return mock( SVDService.class );
+        }
+
+        @Bean
+        public SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService() {
+            return mock( SampleCoexpressionAnalysisService.class );
         }
 
         @Bean
@@ -400,6 +409,12 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
     @Autowired
     private TicketService ticketService;
 
+    @Autowired
+    private SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService;
+
+    @Autowired
+    private SVDService svdService;
+
     private ExpressionExperiment ee;
 
     @BeforeEach
@@ -422,7 +437,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
 
     @AfterEach
     public void resetMocks() {
-        reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService, taxonArgService, geneArgService, searchService, auditEventService, auditTrailService, securityService, geeqService, taskRunningService, differentialExpressionAnalysisService, userManager, ticketService );
+        reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService, taxonArgService, geneArgService, searchService, auditEventService, auditTrailService, securityService, geeqService, taskRunningService, differentialExpressionAnalysisService, userManager, ticketService, sampleCoexpressionAnalysisService, svdService );
     }
 
     @Test
@@ -2148,6 +2163,51 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
                 .put( jakarta.ws.rs.client.Entity.json( new ExperimentalDesignValueObject() ) ) )
                 .hasStatus( Response.Status.NOT_FOUND );
         verify( expressionExperimentService, never() ).applyDesignChange( any(), any() );
+    }
+
+    // --- Diagnostics: sample-correlation -------------------------------------------------
+
+    @Test
+    public void testGetDatasetSampleCorrelation() {
+        BioAssay a1 = BioAssay.Factory.newInstance( "BA1" );
+        a1.setId( 100L );
+        BioAssay a2 = BioAssay.Factory.newInstance( "BA2" );
+        a2.setId( 101L );
+        BioAssay a3 = BioAssay.Factory.newInstance( "BA3" );
+        a3.setId( 102L );
+        List<BioAssay> assays = Arrays.asList( a1, a2, a3 );
+        DenseDoubleMatrix<BioAssay, BioAssay> matrix = new DenseDoubleMatrix<>( new double[][] {
+                { 1.0, 0.5, 0.1 },
+                { 0.5, 1.0, 0.2 },
+                { 0.1, 0.2, 1.0 }
+        } );
+        matrix.setRowNames( assays );
+        matrix.setColumnNames( assays );
+        when( sampleCoexpressionAnalysisService.loadBestMatrix( ee ) ).thenReturn( matrix );
+        assertThat( target( "/datasets/1/sample-correlation" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .entity()
+                .hasFieldOrProperty( "data" )
+                .extracting( "data.bioAssayIds", list( Integer.class ) )
+                .containsExactly( 100, 101, 102 );
+        verify( sampleCoexpressionAnalysisService ).loadBestMatrix( ee );
+    }
+
+    @Test
+    public void testGetDatasetSampleCorrelationWhenNoneIs404() {
+        when( sampleCoexpressionAnalysisService.loadBestMatrix( ee ) ).thenReturn( null );
+        assertThat( target( "/datasets/1/sample-correlation" ).request().get() )
+                .hasStatus( Response.Status.NOT_FOUND )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
+        verify( sampleCoexpressionAnalysisService ).loadBestMatrix( ee );
+    }
+
+    @Test
+    public void testGetDatasetSampleCorrelationWhenDatasetMissingIs404() {
+        assertThat( target( "/datasets/999/sample-correlation" ).request().get() )
+                .hasStatus( Response.Status.NOT_FOUND );
+        verify( sampleCoexpressionAnalysisService, never() ).loadBestMatrix( any() );
     }
 
     @Test
