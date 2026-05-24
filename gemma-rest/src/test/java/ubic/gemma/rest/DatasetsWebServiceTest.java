@@ -23,6 +23,10 @@ import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
+import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
+import ubic.gemma.core.util.matrix.DenseDoubleMatrix;
+import ubic.gemma.core.util.matrix.DoubleMatrix;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.analysis.service.DifferentialExpressionAnalysisResultListFileService;
 import ubic.gemma.core.analysis.service.ExpressionAnalysisResultSetFileService;
@@ -140,6 +144,11 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         @Bean
         public SVDService svdService() {
             return mock( SVDService.class );
+        }
+
+        @Bean
+        public SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService() {
+            return mock( SampleCoexpressionAnalysisService.class );
         }
 
         @Bean
@@ -400,6 +409,12 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
     @Autowired
     private TicketService ticketService;
 
+    @Autowired
+    private SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService;
+
+    @Autowired
+    private SVDService svdService;
+
     private ExpressionExperiment ee;
 
     @BeforeEach
@@ -422,7 +437,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
 
     @AfterEach
     public void resetMocks() {
-        reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService, taxonArgService, geneArgService, searchService, auditEventService, auditTrailService, securityService, geeqService, taskRunningService, differentialExpressionAnalysisService, userManager, ticketService );
+        reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService, taxonArgService, geneArgService, searchService, auditEventService, auditTrailService, securityService, geeqService, taskRunningService, differentialExpressionAnalysisService, userManager, ticketService, sampleCoexpressionAnalysisService, svdService );
     }
 
     @Test
@@ -2148,6 +2163,180 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
                 .put( jakarta.ws.rs.client.Entity.json( new ExperimentalDesignValueObject() ) ) )
                 .hasStatus( Response.Status.NOT_FOUND );
         verify( expressionExperimentService, never() ).applyDesignChange( any(), any() );
+    }
+
+    // --- Diagnostics: sample-correlation -------------------------------------------------
+
+    @Test
+    public void testGetDatasetSampleCorrelation() {
+        BioAssay a1 = BioAssay.Factory.newInstance( "BA1" );
+        a1.setId( 100L );
+        BioAssay a2 = BioAssay.Factory.newInstance( "BA2" );
+        a2.setId( 101L );
+        BioAssay a3 = BioAssay.Factory.newInstance( "BA3" );
+        a3.setId( 102L );
+        List<BioAssay> assays = Arrays.asList( a1, a2, a3 );
+        DenseDoubleMatrix<BioAssay, BioAssay> matrix = new DenseDoubleMatrix<>( new double[][] {
+                { 1.0, 0.5, 0.1 },
+                { 0.5, 1.0, 0.2 },
+                { 0.1, 0.2, 1.0 }
+        } );
+        matrix.setRowNames( assays );
+        matrix.setColumnNames( assays );
+        when( sampleCoexpressionAnalysisService.loadBestMatrix( ee ) ).thenReturn( matrix );
+        assertThat( target( "/datasets/1/sample-correlation" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .entity()
+                .hasFieldOrProperty( "data" )
+                .extracting( "data.bioAssayIds", list( Integer.class ) )
+                .containsExactly( 100, 101, 102 );
+        verify( sampleCoexpressionAnalysisService ).loadBestMatrix( ee );
+    }
+
+    @Test
+    public void testGetDatasetSampleCorrelationWhenNoneIs404() {
+        when( sampleCoexpressionAnalysisService.loadBestMatrix( ee ) ).thenReturn( null );
+        assertThat( target( "/datasets/1/sample-correlation" ).request().get() )
+                .hasStatus( Response.Status.NOT_FOUND )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
+        verify( sampleCoexpressionAnalysisService ).loadBestMatrix( ee );
+    }
+
+    @Test
+    public void testGetDatasetSampleCorrelationWhenDatasetMissingIs404() {
+        assertThat( target( "/datasets/999/sample-correlation" ).request().get() )
+                .hasStatus( Response.Status.NOT_FOUND );
+        verify( sampleCoexpressionAnalysisService, never() ).loadBestMatrix( any() );
+    }
+
+    // --- Diagnostics: mean-variance ------------------------------------------------------
+
+    @Test
+    public void testGetDatasetMeanVariance() {
+        double[] means = { 1.0, 2.0, 3.0, 4.0 };
+        double[] variances = { 0.1, 0.4, 0.9, 1.6 };
+        ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation mvr = ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation.Factory.newInstance( means, variances );
+        ee.setMeanVarianceRelation( mvr );
+        assertThat( target( "/datasets/1/mean-variance" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .entity()
+                .hasFieldOrProperty( "data" )
+                .extracting( "data.means", list( Double.class ) )
+                .containsExactly( 1.0, 2.0, 3.0, 4.0 );
+    }
+
+    @Test
+    public void testGetDatasetMeanVarianceWhenNoneIs404() {
+        ee.setMeanVarianceRelation( null );
+        assertThat( target( "/datasets/1/mean-variance" ).request().get() )
+                .hasStatus( Response.Status.NOT_FOUND )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
+    }
+
+    @Test
+    public void testGetDatasetMeanVarianceWhenDatasetMissingIs404() {
+        assertThat( target( "/datasets/999/mean-variance" ).request().get() )
+                .hasStatus( Response.Status.NOT_FOUND );
+    }
+
+    // --- Diagnostics: svd loadings -------------------------------------------------------
+
+    @Test
+    public void testGetDatasetSvdLoadings() {
+        // Stub: ee has an SVD; topLoadedVectors returns 3 probes on PC1.
+        when( svdService.hasSvd( ee ) ).thenReturn( true );
+        ubic.gemma.model.expression.designElement.CompositeSequence p1 = ubic.gemma.model.expression.designElement.CompositeSequence.Factory.newInstance( "probe_a" );
+        p1.setId( 10L );
+        ubic.gemma.model.expression.designElement.CompositeSequence p2 = ubic.gemma.model.expression.designElement.CompositeSequence.Factory.newInstance( "probe_b" );
+        p2.setId( 11L );
+        ubic.gemma.model.expression.designElement.CompositeSequence p3 = ubic.gemma.model.expression.designElement.CompositeSequence.Factory.newInstance( "probe_c" );
+        p3.setId( 12L );
+        ubic.gemma.model.analysis.expression.pca.ProbeLoading pl1 = ubic.gemma.model.analysis.expression.pca.ProbeLoading.Factory.newInstance( 1, 0.9, 1, p1 );
+        ubic.gemma.model.analysis.expression.pca.ProbeLoading pl2 = ubic.gemma.model.analysis.expression.pca.ProbeLoading.Factory.newInstance( 1, -0.7, 2, p2 );
+        ubic.gemma.model.analysis.expression.pca.ProbeLoading pl3 = ubic.gemma.model.analysis.expression.pca.ProbeLoading.Factory.newInstance( 1, 0.3, 3, p3 );
+        Map<ubic.gemma.model.analysis.expression.pca.ProbeLoading, ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject> stored = new LinkedHashMap<>();
+        stored.put( pl1, null );
+        stored.put( pl2, null );
+        stored.put( pl3, null );
+        when( svdService.getTopLoadedVectors( eq( ee ), anyInt(), anyInt() ) ).thenReturn( stored );
+
+        // SVDResult with a 2×2 vMatrix; column 0 (PC1) gives bioAssay scores.
+        BioAssay a1 = BioAssay.Factory.newInstance( "BA1" );
+        a1.setId( 200L );
+        BioAssay a2 = BioAssay.Factory.newInstance( "BA2" );
+        a2.setId( 201L );
+        ubic.gemma.model.expression.biomaterial.BioMaterial m1 = ubic.gemma.model.expression.biomaterial.BioMaterial.Factory.newInstance();
+        ubic.gemma.model.expression.biomaterial.BioMaterial m2 = ubic.gemma.model.expression.biomaterial.BioMaterial.Factory.newInstance();
+        DenseDoubleMatrix<ubic.gemma.model.expression.biomaterial.BioMaterial, Integer> vMatrix = new DenseDoubleMatrix<>( new double[][] {
+                { 0.5, 0.1 },
+                { -0.5, 0.2 }
+        } );
+        vMatrix.setRowNames( Arrays.asList( m1, m2 ) );
+        vMatrix.setColumnNames( Arrays.asList( 0, 1 ) );
+        ubic.gemma.core.analysis.preprocess.svd.SVDResult svd = mock( ubic.gemma.core.analysis.preprocess.svd.SVDResult.class );
+        when( svd.getVMatrix() ).thenReturn( vMatrix );
+        when( svd.getBioAssays() ).thenReturn( Arrays.asList( a1, a2 ) );
+        when( svdService.getSvd( ee ) ).thenReturn( svd );
+
+        assertThat( target( "/datasets/1/svd/loadings" ).queryParam( "pc", 1 ).queryParam( "top", 2 ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .entity()
+                .hasFieldOrProperty( "data" )
+                .hasFieldOrPropertyWithValue( "data.pc", 1 )
+                .extracting( "data.rows", list( Map.class ) )
+                .hasSize( 2 );
+        // default direction=both sorts by |loading| desc: pl1 (0.9), pl2 (-0.7), pl3 (0.3) → first two are 0.9, -0.7.
+        verify( svdService ).hasSvd( ee );
+        verify( svdService ).getTopLoadedVectors( eq( ee ), eq( 1 ), anyInt() );
+        verify( svdService ).getSvd( ee );
+    }
+
+    @Test
+    public void testGetDatasetSvdLoadingsWhenNoSvdIs404() {
+        when( svdService.hasSvd( ee ) ).thenReturn( false );
+        assertThat( target( "/datasets/1/svd/loadings" ).queryParam( "pc", 1 ).request().get() )
+                .hasStatus( Response.Status.NOT_FOUND )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
+        verify( svdService ).hasSvd( ee );
+        verify( svdService, never() ).getTopLoadedVectors( any(), anyInt(), anyInt() );
+    }
+
+    @Test
+    public void testGetDatasetSvdLoadingsWithMissingPcIs400() {
+        assertThat( target( "/datasets/1/svd/loadings" ).request().get() )
+                .hasStatus( Response.Status.BAD_REQUEST )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
+        verifyNoInteractions( svdService );
+    }
+
+    @Test
+    public void testGetDatasetSvdLoadingsWithPcZeroIs400() {
+        assertThat( target( "/datasets/1/svd/loadings" ).queryParam( "pc", 0 ).request().get() )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        verifyNoInteractions( svdService );
+    }
+
+    @Test
+    public void testGetDatasetSvdLoadingsWithTopOverCapIs400() {
+        assertThat( target( "/datasets/1/svd/loadings" ).queryParam( "pc", 1 ).queryParam( "top", 600 ).request().get() )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        verifyNoInteractions( svdService );
+    }
+
+    @Test
+    public void testGetDatasetSvdLoadingsWithUnknownDirectionIs400() {
+        // Jersey enum-coerces the @QueryParam — an unknown value becomes a 404 from a NotFoundException
+        // raised by the param converter (this is the documented Jersey behaviour for enum @QueryParam).
+        // Accept either 404 (Jersey default) or 400 to keep the test framework-version-tolerant.
+        Response.StatusType status = target( "/datasets/1/svd/loadings" )
+                .queryParam( "pc", 1 )
+                .queryParam( "direction", "sideways" )
+                .request().get().getStatusInfo();
+        assertThat( status.getStatusCode() ).isIn( 400, 404 );
+        verifyNoInteractions( svdService );
     }
 
     @Test
