@@ -4,7 +4,7 @@
 
 Very little filtering is done for bulk RNA-Seq data.
 
-RNA-Seq data is normalized in log2cpm. We also import FPKM and raw counts.
+RNA-Seq data is normalized in $$\log_2\mathrm{cpm}$$. We also import FPKM and raw counts.
 
 ## Single-cell import (single-cell only)
 
@@ -13,14 +13,14 @@ barcodes that might have genes expressed, but for which there is no design
 element in the target platform (e.g. lncRNA or predicted genes).
 
 For Cell Ranger, we import the filtered data which results from applying the
-OrdMag and EmptyDrops[^ordmag+emptydrops] algorithms to identify and exclude
+OrdMag and EmptyDrops[^ordmag-emptydrops] algorithms to identify and exclude
 doublets. When data is reprocessed by us, this is done systematically. When
 data is imported from GEO, we apply some heuristics to detect if the data is
 unfiltered and reapply the exact same algorithm Cell Ranger uses.
 
 For other platforms, we assume that the authors have adequately filtered cells.
 
-[^ordmag+emptydrops]: https://www.10xgenomics.com/support/software/cell-ranger/latest/algorithms-overview/cr-gex-algorithm#est-multiplet-rate
+[^ordmag-emptydrops]: [Calling cell barcodes](https://www.10xgenomics.com/support/software/cell-ranger/latest/algorithms-overview/cr-gex-algorithm#cell_calling)
 
 ## Pseudo-bulk aggregation (single-cell only)
 
@@ -33,14 +33,14 @@ Gemma also keep tracks of how many cells were involved in the calculation of
 every single aggregated value. This is used later on to filter samples or genes
 with too few cells.
 
-Aggregated data are normalized in log2cpm by normalizing each pseudo-bulk by
-its library size.
+Aggregated data are normalized in $$\log_2\mathrm{cpm}$$ by normalizing each
+pseudo-bulk by its library size.
 
 ## Processed data creation
 
 Pseudo-bulk aggregation and bulk data import results in "raw" data vectors that
 needs to be "processed". This mainly consists of ensuring that the data is on
-a log2 scale and performing quantile normalization.
+a $$\log_2$$ scale and performing quantile normalization.
 
  1. outliers are masked (deprecated)
  2. quantile normalization
@@ -59,11 +59,11 @@ Processed data in Gemma is subject to filters prior to perform any analysis.
 For differential expression analysis:
 
 1. outliers are masked (e.g. replaced with missing value indicators)
-2. samples with too few cells are masked (<100; single-cell only)
-3. genes with too few cells are dropped (<3; single-cell only)
+2. samples with too few cells are masked ($$<100$$; single-cell only)
+3. genes with too few cells are dropped ($$<3$$; single-cell only)
 4. genes with too many repeated values are dropped (at least 30% of the number
    of samples; there must be at least 4 samples to apply this filter)
-5. genes low variance are dropped (<0.01[^note-on-variance])
+5. genes low variance are dropped ($$<0.01$$[^note-on-variance])
 
 For other analyses (PCA, sample correlation, etc), the filtering is a bit more
 stringent:
@@ -73,12 +73,20 @@ stringent:
 2. Affymetrix control probes are dropped (Microarray only)
 3. outliers are masked (e.g. replaced with missing value indicators)
 4. genes with too many missing values are dropped (at least 7 values or 30% of the number of samples)
-6. genes with low expression are dropped (<0.2)
-5. genes low variance are dropped (<0.01[^note-on-variance])
+6. genes with low expression are dropped ($$<0.2$$)
+5. genes low variance are dropped ($$<0.01$$[^note-on-variance])
 
-[^note-on-variance]: Data is always represented on a log2 scale when filtering
-is performed, so a variance filter of 0.01 results in a standard deviation
-filter of 0.1.
+[^note-on-variance]: Data is always represented on a $$\log_2$$ scale when
+                     filtering is performed, so a variance filter of $$0.01$$
+                     results in a standard deviation filter of $$0.1$$.
+
+### Probes with biological sequence filter
+
+TODO
+
+### Affymetrix control probe filter
+
+TODO
 
 ### Outliers filter
 
@@ -95,9 +103,13 @@ The samples are masked *before* considering the number of cells for a given
 gene. This ensures that a sample that is not going to be considered for the
 analysis does not contribute to the cell count for the genes it expresses.
 
+### Missing values filter
+
+TODO
+
 ### Low variance filter
 
-Genes with less than 0.01 of variance (adjusted?) are removed.
+Genes with less than $$0.01$$ of variance are removed.
 
 ### Repetitive values filter
 
