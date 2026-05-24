@@ -59,6 +59,7 @@ import ubic.gemma.core.loader.expression.geo.service.GeoBrowserImpl;
 import ubic.gemma.core.loader.expression.geo.service.GeoRecordType;
 import ubic.gemma.core.loader.expression.geo.service.GeoRetrieveConfig;
 import ubic.gemma.core.ontology.basecode.providers.OntologyService;
+import ubic.gemma.core.tasks.analysis.expression.ExpressionExperimentLoadTaskCommand;
 import ubic.gemma.core.security.AuthorityConstants;
 import ubic.gemma.core.security.authentication.UserDetailsImpl;
 import ubic.gemma.core.security.authentication.UserManager;
@@ -378,6 +379,85 @@ public class AdminWebService {
         body.unknown = unknown;
         body.tasks = snapshots;
         return respond( body );
+    }
+
+    /* ===== Batch GEO import ===== */
+
+    /**
+     * Maximum number of accessions accepted per batch — keeps a stray paste from spawning
+     * thousands of jobs and saturating the in-memory task store.
+     */
+    static final int MAX_IMPORT_GEO_BATCH = 100;
+
+    /**
+     * Batch GEO accession import. Ports the bulk path of
+     * {@code ubic.gemma.apps.LoadExpressionDataCli}: iterate the accession list and
+     * submit one {@link ExpressionExperimentLoadTaskCommand} per accession, returning
+     * the resulting task-id list so the caller can poll each one through
+     * {@code /tasks/{taskId}}.
+     *
+     * <p>The optional flags on the request body (loadPlatformOnly, suppressMatching, etc.)
+     * are applied to every accession in the batch. For one-off imports use
+     * {@code POST /datasets/import}.</p>
+     */
+    @POST
+    @Path("/tasks/import-geo")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Submit a batch of GEO accessions for async import",
+            description = "Iterates `accessions` and submits one async load task per accession (port of "
+                    + "`LoadExpressionDataCli`'s bulk path). Optional flags are applied uniformly across the batch. "
+                    + "Returns 202 with the list of submitted task IDs — poll each one via `/tasks/{taskId}`. "
+                    + "Rejects an empty list or more than " + MAX_IMPORT_GEO_BATCH + " accessions with 400. "
+                    + "Blank entries inside the list are silently skipped; if every entry is blank the request is rejected.",
+            security = {
+                    @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
+            },
+            responses = {
+                    @ApiResponse(responseCode = "202",
+                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class))),
+                    @ApiResponse(responseCode = "400", description = "Body missing, accession list empty, or batch over cap",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
+            })
+    public Response importGeoBatch( @Nullable ImportGeoBatchRequest body ) {
+        if ( body == null || body.accessions == null || body.accessions.isEmpty() ) {
+            throw new BadRequestException( "Request body must include a non-empty `accessions` array." );
+        }
+        if ( body.accessions.size() > MAX_IMPORT_GEO_BATCH ) {
+            throw new BadRequestException( "Batch size " + body.accessions.size()
+                    + " exceeds the per-call cap of " + MAX_IMPORT_GEO_BATCH + "." );
+        }
+        // Trim+dedupe blanks; mirrors LoadExpressionDataCli's StringUtils.strip / isBlank skip.
+        List<String> cleaned = new ArrayList<>( body.accessions.size() );
+        for ( String a : body.accessions ) {
+            if ( a == null ) continue;
+            String trimmed = a.trim();
+            if ( trimmed.isEmpty() ) continue;
+            cleaned.add( trimmed );
+        }
+        if ( cleaned.isEmpty() ) {
+            throw new BadRequestException( "`accessions` contained no non-blank entries." );
+        }
+        List<String> submittedJobIds = new ArrayList<>( cleaned.size() );
+        for ( String accession : cleaned ) {
+            ExpressionExperimentLoadTaskCommand cmd = new ExpressionExperimentLoadTaskCommand();
+            cmd.setAccession( accession );
+            if ( body.arrayDesignName != null ) cmd.setArrayDesignName( body.arrayDesignName );
+            if ( body.loadPlatformOnly != null ) cmd.setLoadPlatformOnly( body.loadPlatformOnly );
+            if ( body.suppressMatching != null ) cmd.setSuppressMatching( body.suppressMatching );
+            if ( body.splitByPlatform != null ) cmd.setSplitByPlatform( body.splitByPlatform );
+            if ( body.aggressiveQtRemoval != null ) cmd.setAggressiveQtRemoval( body.aggressiveQtRemoval );
+            if ( body.allowSuperSeriesLoad != null ) cmd.setAllowSuperSeriesLoad( body.allowSuperSeriesLoad );
+            if ( body.allowArrayExpressDesign != null ) cmd.setAllowArrayExpressDesign( body.allowArrayExpressDesign );
+            if ( body.isArrayExpress != null ) cmd.setArrayExpress( body.isArrayExpress );
+            submittedJobIds.add( taskRunningService.submitTaskCommand( cmd ) );
+        }
+        ImportGeoBatchResponse responseBody = new ImportGeoBatchResponse();
+        responseBody.submittedJobIds = submittedJobIds;
+        responseBody.count = submittedJobIds.size();
+        return Response.status( Response.Status.ACCEPTED ).entity( respond( responseBody ) ).build();
     }
 
     /* ===== Search indices ===== */
@@ -1163,6 +1243,34 @@ public class AdminWebService {
     }
 
     /* ===== DTOs ===== */
+
+    public static class ImportGeoBatchRequest {
+        /** GEO (or ArrayExpress) accessions to import. Must be non-empty and at most {@value #MAX_IMPORT_GEO_BATCH}. */
+        public List<String> accessions;
+        @Nullable
+        public String arrayDesignName;
+        @Nullable
+        public Boolean loadPlatformOnly;
+        @Nullable
+        public Boolean suppressMatching;
+        @Nullable
+        public Boolean splitByPlatform;
+        @Nullable
+        public Boolean aggressiveQtRemoval;
+        @Nullable
+        public Boolean allowSuperSeriesLoad;
+        @Nullable
+        public Boolean allowArrayExpressDesign;
+        @Nullable
+        public Boolean isArrayExpress;
+    }
+
+    public static class ImportGeoBatchResponse {
+        /** Number of tasks actually submitted (post-blank-skip). */
+        public int count;
+        /** Submitted task IDs in the same order as the cleaned accession list. Poll each at `/tasks/{taskId}`. */
+        public List<String> submittedJobIds;
+    }
 
     public static class CacheListResponse {
         public int count;

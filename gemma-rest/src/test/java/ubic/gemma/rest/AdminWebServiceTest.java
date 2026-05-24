@@ -39,6 +39,7 @@ import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
 import ubic.gemma.core.loader.expression.geo.service.GeoRecordType;
 import ubic.gemma.core.loader.expression.geo.service.GeoRetrieveConfig;
+import ubic.gemma.core.tasks.analysis.expression.ExpressionExperimentLoadTaskCommand;
 import ubic.gemma.core.security.AuthorityConstants;
 import ubic.gemma.core.security.authentication.UserDetailsImpl;
 import ubic.gemma.core.security.authentication.UserManager;
@@ -656,6 +657,105 @@ public class AdminWebServiceTest {
         assertThatThrownBy( () -> webService.deleteUser( "ghost" ) )
                 .isInstanceOf( NotFoundException.class );
         verify( userManager, never() ).softDeleteUser( anyString(), anyString() );
+    }
+
+    /* ===== /admin/tasks/import-geo ===== */
+
+    @Test
+    public void importGeoBatch_happyPath_submitsOneTaskPerAccession() {
+        when( taskRunningService.submitTaskCommand( org.mockito.ArgumentMatchers.any( ExpressionExperimentLoadTaskCommand.class ) ) )
+                .thenReturn( "task-1", "task-2", "task-3" );
+
+        AdminWebService.ImportGeoBatchRequest req = new AdminWebService.ImportGeoBatchRequest();
+        req.accessions = Arrays.asList( "GSE1", "GSE2", "GSE3" );
+        req.loadPlatformOnly = false;
+        req.suppressMatching = true;
+
+        Response resp = webService.importGeoBatch( req );
+
+        assertThat( resp.getStatus() ).isEqualTo( 202 );
+        @SuppressWarnings("unchecked")
+        ResponseDataObject<AdminWebService.ImportGeoBatchResponse> dataObj =
+                ( ResponseDataObject<AdminWebService.ImportGeoBatchResponse> ) resp.getEntity();
+        AdminWebService.ImportGeoBatchResponse body = dataObj.getData();
+        assertThat( body.count ).isEqualTo( 3 );
+        assertThat( body.submittedJobIds ).containsExactly( "task-1", "task-2", "task-3" );
+
+        ArgumentCaptor<ExpressionExperimentLoadTaskCommand> cmd =
+                ArgumentCaptor.forClass( ExpressionExperimentLoadTaskCommand.class );
+        verify( taskRunningService, org.mockito.Mockito.times( 3 ) ).submitTaskCommand( cmd.capture() );
+        assertThat( cmd.getAllValues() ).extracting( ExpressionExperimentLoadTaskCommand::getAccession )
+                .containsExactly( "GSE1", "GSE2", "GSE3" );
+        // Flags propagate to every submitted command.
+        assertThat( cmd.getAllValues() ).allMatch( c -> !c.isLoadPlatformOnly() && c.isSuppressMatching() );
+    }
+
+    @Test
+    public void importGeoBatch_skipsBlankEntries_butSubmitsTheRest() {
+        when( taskRunningService.submitTaskCommand( org.mockito.ArgumentMatchers.any( ExpressionExperimentLoadTaskCommand.class ) ) )
+                .thenReturn( "task-a", "task-b" );
+
+        AdminWebService.ImportGeoBatchRequest req = new AdminWebService.ImportGeoBatchRequest();
+        req.accessions = Arrays.asList( "  GSE1  ", "", "   ", "GSE2", null );
+
+        Response resp = webService.importGeoBatch( req );
+
+        assertThat( resp.getStatus() ).isEqualTo( 202 );
+        @SuppressWarnings("unchecked")
+        ResponseDataObject<AdminWebService.ImportGeoBatchResponse> dataObj =
+                ( ResponseDataObject<AdminWebService.ImportGeoBatchResponse> ) resp.getEntity();
+        assertThat( dataObj.getData().submittedJobIds ).containsExactly( "task-a", "task-b" );
+
+        ArgumentCaptor<ExpressionExperimentLoadTaskCommand> cmd =
+                ArgumentCaptor.forClass( ExpressionExperimentLoadTaskCommand.class );
+        verify( taskRunningService, org.mockito.Mockito.times( 2 ) ).submitTaskCommand( cmd.capture() );
+        assertThat( cmd.getAllValues() ).extracting( ExpressionExperimentLoadTaskCommand::getAccession )
+                .containsExactly( "GSE1", "GSE2" );
+    }
+
+    @Test
+    public void importGeoBatch_returns400_whenBodyMissing() {
+        assertThatThrownBy( () -> webService.importGeoBatch( null ) )
+                .isInstanceOf( BadRequestException.class );
+        verify( taskRunningService, never() )
+                .submitTaskCommand( org.mockito.ArgumentMatchers.any( ExpressionExperimentLoadTaskCommand.class ) );
+    }
+
+    @Test
+    public void importGeoBatch_returns400_whenAccessionsEmpty() {
+        AdminWebService.ImportGeoBatchRequest req = new AdminWebService.ImportGeoBatchRequest();
+        req.accessions = Collections.emptyList();
+
+        assertThatThrownBy( () -> webService.importGeoBatch( req ) )
+                .isInstanceOf( BadRequestException.class );
+        verify( taskRunningService, never() )
+                .submitTaskCommand( org.mockito.ArgumentMatchers.any( ExpressionExperimentLoadTaskCommand.class ) );
+    }
+
+    @Test
+    public void importGeoBatch_returns400_whenAllAccessionsBlank() {
+        AdminWebService.ImportGeoBatchRequest req = new AdminWebService.ImportGeoBatchRequest();
+        req.accessions = Arrays.asList( "", "   ", null );
+
+        assertThatThrownBy( () -> webService.importGeoBatch( req ) )
+                .isInstanceOf( BadRequestException.class );
+        verify( taskRunningService, never() )
+                .submitTaskCommand( org.mockito.ArgumentMatchers.any( ExpressionExperimentLoadTaskCommand.class ) );
+    }
+
+    @Test
+    public void importGeoBatch_returns400_whenBatchExceedsCap() {
+        java.util.List<String> tooMany = new java.util.ArrayList<>();
+        for ( int i = 0; i < AdminWebService.MAX_IMPORT_GEO_BATCH + 1; i++ ) {
+            tooMany.add( "GSE" + i );
+        }
+        AdminWebService.ImportGeoBatchRequest req = new AdminWebService.ImportGeoBatchRequest();
+        req.accessions = tooMany;
+
+        assertThatThrownBy( () -> webService.importGeoBatch( req ) )
+                .isInstanceOf( BadRequestException.class );
+        verify( taskRunningService, never() )
+                .submitTaskCommand( org.mockito.ArgumentMatchers.any( ExpressionExperimentLoadTaskCommand.class ) );
     }
 
     @Test
