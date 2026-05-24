@@ -1434,7 +1434,11 @@ public class DatasetsWebService {
                     + "(cursor mode forces a single-component id sort pending the indexed-column audit in phase B; "
                     + "audit events are append-only so id-asc tracks date-asc in practice); the path-derived "
                     + "dataset (AuditTrail) scope is preserved; `totalElements` is `null` by default "
-                    + "(no count query per request).",
+                    + "(no count query per request). "
+                    + "Pass `compact=true` to collapse consecutive same-(eventType, performer) events into a "
+                    + "single entry carrying `collapsedCount` (run length) and `lastOccurrence` (last event's "
+                    + "date); the first event's message is kept verbatim. Compression happens within the "
+                    + "response page only — runs are never merged across cursor boundaries.",
             responses = {
                     @ApiResponse(responseCode = "200",
                             content = @Content(schema = @Schema(oneOf = {
@@ -1448,19 +1452,70 @@ public class DatasetsWebService {
             @Parameter(description = "Opaque keyset-pagination cursor token.")
             @QueryParam("cursor") CursorArg cursorArg,
             @Parameter(description = "Page size for cursor mode (ignored when no `cursor` is supplied).")
-            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg
+            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg,
+            @Parameter(description = "Collapse runs of consecutive same-(eventType, performer) events into one entry with `collapsedCount` + `lastOccurrence`. Default `false`.")
+            @QueryParam("compact") @DefaultValue("false") boolean compact
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         if ( cursorArg != null ) {
             CursorPage<AuditEventValueObject> page = auditEventService
                     .getEventsByCursor( ee, cursorArg.getValue(), limitArg.getValue() )
                     .map( AuditEventValueObject::new );
+            if ( compact ) {
+                List<CompactAuditEventValueObject> collapsed = collapseAuditEvents( page );
+                CursorPage<CompactAuditEventValueObject> compactPage = new CursorPage<>(
+                        collapsed,
+                        page.getSort(),
+                        page.getLimit(),
+                        page.getNextCursor(),
+                        page.getPrevCursor(),
+                        page.getTotalElements() );
+                return paginateByCursor( compactPage, new String[] { "id" } );
+            }
             return paginateByCursor( page, new String[] { "id" } );
         }
         List<AuditEventValueObject> out = auditEventService.getEvents( ee ).stream()
                 .map( AuditEventValueObject::new )
                 .collect( Collectors.toList() );
+        if ( compact ) {
+            return respond( collapseAuditEvents( out ) );
+        }
         return respond( out );
+    }
+
+    /**
+     * Fold a chronological audit-event list into runs sharing the same (eventType, performer) pair.
+     * Each maximal run emits ONE {@link CompactAuditEventValueObject} carrying the first event's full
+     * content, a {@code collapsedCount} = run length, and a {@code lastOccurrence} = date of the LAST
+     * event in the run (= the first event's date for a solo entry).
+     */
+    private static List<CompactAuditEventValueObject> collapseAuditEvents( List<AuditEventValueObject> events ) {
+        List<CompactAuditEventValueObject> out = new ArrayList<>();
+        if ( events == null || events.isEmpty() ) {
+            return out;
+        }
+        AuditEventValueObject runHead = null;
+        int runCount = 0;
+        Date runLast = null;
+        for ( AuditEventValueObject ev : events ) {
+            if ( runHead != null
+                    && Objects.equals( ev.getEventType(), runHead.getEventType() )
+                    && Objects.equals( ev.getPerformer(), runHead.getPerformer() ) ) {
+                runCount++;
+                if ( ev.getDate() != null ) {
+                    runLast = ev.getDate();
+                }
+            } else {
+                if ( runHead != null ) {
+                    out.add( new CompactAuditEventValueObject( runHead, runCount, runLast ) );
+                }
+                runHead = ev;
+                runCount = 1;
+                runLast = ev.getDate();
+            }
+        }
+        out.add( new CompactAuditEventValueObject( runHead, runCount, runLast ) );
+        return out;
     }
 
     /*
