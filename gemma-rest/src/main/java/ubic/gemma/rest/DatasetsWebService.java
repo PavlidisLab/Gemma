@@ -4599,8 +4599,12 @@ public class DatasetsWebService {
     public ResponseDataObject<MeanVarianceValueObject> getDatasetMeanVariance( // Params:
             @PathParam("dataset") DatasetArg<?> datasetArg // Required
     ) {
+        // Re-load via loadWithMeanVarianceRelation: the entity from getEntity() carries a lazy
+        // MVR proxy, so accessing getMeans()/getVariances() outside the open session throws
+        // LazyInitializationException. The eager-loading variant fetches the arrays in-session.
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
-        MeanVarianceRelation mvr = ee.getMeanVarianceRelation();
+        ExpressionExperiment eeWithMvr = expressionExperimentService.loadWithMeanVarianceRelation( ee.getId() );
+        MeanVarianceRelation mvr = eeWithMvr != null ? eeWithMvr.getMeanVarianceRelation() : null;
         if ( mvr == null || mvr.getMeans() == null || mvr.getVariances() == null ) {
             throw new NotFoundException( ee.getShortName() + " does not have a mean-variance relation." );
         }
