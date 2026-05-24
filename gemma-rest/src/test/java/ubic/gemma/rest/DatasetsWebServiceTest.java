@@ -344,6 +344,21 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         public ubic.gemma.core.analysis.service.OutlierFlaggingService outlierFlaggingService() {
             return mock( ubic.gemma.core.analysis.service.OutlierFlaggingService.class );
         }
+
+        @Bean
+        public ubic.gemma.core.analysis.preprocess.OutlierDetectionService outlierDetectionService() {
+            return mock( ubic.gemma.core.analysis.preprocess.OutlierDetectionService.class );
+        }
+
+        @Bean
+        public ubic.gemma.persistence.service.expression.experiment.FactorValueService factorValueService() {
+            return mock( ubic.gemma.persistence.service.expression.experiment.FactorValueService.class );
+        }
+
+        @Bean
+        public ubic.gemma.persistence.service.expression.experiment.FactorValueNeedsAttentionService factorValueNeedsAttentionService() {
+            return mock( ubic.gemma.persistence.service.expression.experiment.FactorValueNeedsAttentionService.class );
+        }
     }
 
     @Autowired
@@ -2184,6 +2199,12 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         matrix.setRowNames( assays );
         matrix.setColumnNames( assays );
         when( sampleCoexpressionAnalysisService.loadBestMatrix( ee ) ).thenReturn( matrix );
+        // Handler now thaws bioassays + reads outlier flags. Stub so the thawed EE
+        // surfaces with the same BioAssays the matrix is keyed on, so the actualOutlierBioAssayIds
+        // path can iterate without NPE.
+        ee.getBioAssays().clear();
+        ee.getBioAssays().addAll( assays );
+        when( expressionExperimentService.thawBioAssays( ee ) ).thenReturn( ee );
         assertThat( target( "/datasets/1/sample-correlation" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
@@ -2218,6 +2239,8 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         double[] variances = { 0.1, 0.4, 0.9, 1.6 };
         ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation mvr = ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation.Factory.newInstance( means, variances );
         ee.setMeanVarianceRelation( mvr );
+        // Handler now re-loads via loadWithMeanVarianceRelation (LazyInit fix a70e3dc8f6).
+        when( expressionExperimentService.loadWithMeanVarianceRelation( ee.getId() ) ).thenReturn( ee );
         assertThat( target( "/datasets/1/mean-variance" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
@@ -2230,6 +2253,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
     @Test
     public void testGetDatasetMeanVarianceWhenNoneIs404() {
         ee.setMeanVarianceRelation( null );
+        when( expressionExperimentService.loadWithMeanVarianceRelation( ee.getId() ) ).thenReturn( ee );
         assertThat( target( "/datasets/1/mean-variance" ).request().get() )
                 .hasStatus( Response.Status.NOT_FOUND )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
