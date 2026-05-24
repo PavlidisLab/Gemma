@@ -1160,6 +1160,21 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
     }
 
     @Test
+    public void testSearchAnnotationsUpstreamReturns400WhenUrlUnset() throws SearchException, TimeoutException {
+        // `?upstream=true` with no `gemma.upstream.annotationSearch.url` configured must 400.
+        // The test bean's TestPropertyPlaceholderConfigurer doesn't set the url property, so this
+        // exercises the unconfigured branch. The endpoint must not silently fall back to local.
+        assertThat( target( "/annotations/search" )
+                .queryParam( "query", "anything" )
+                .queryParam( "upstream", "true" )
+                .request().get() )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        // ontologyService must NOT be called when upstream=true and url is unset; the 400 should
+        // fire before any work.
+        verify( ontologyService, never() ).findExperimentsCharacteristicTags( anyString(), anyInt(), anyBoolean(), anyLong(), any() );
+    }
+
+    @Test
     public void testSearchAnnotationsPrefixesFilterRespectsLimit() throws SearchException, TimeoutException {
         // The truncate-then-filter footgun: server returns top-N, client filters → maybe nothing
         // left. Pushdown should ensure ?limit=2 returns the top-2 OF the filtered set, not 2 from

@@ -62,11 +62,19 @@ import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.ResponseErrorObject;
 import ubic.gemma.rest.util.args.*;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.lang.Nullable;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.net.URI;
+import java.net.URLEncoder;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -128,6 +136,33 @@ public class AnnotationsWebService {
      */
     @Nullable
     private Map<String, AnnotationSearchRankingStrategy> rankingStrategies;
+
+    /**
+     * Optional upstream gemma-rest URL to delegate the ontology Lucene-index lookup to. When set
+     * and the request carries {@code ?upstream=true}, this service issues a server-to-server GET
+     * to {@code <url>/rest/v2/annotations/search?rank=lucene&limit=<UPSTREAM_LIMIT>} with the same
+     * query, parses the hits, and runs the local post-processing pipeline (prefix filter,
+     * canonical sort, ranking, enrichment) against the shared gemd. Lets 2.0 ship new filtering /
+     * ranking on top of staging's richer ontology index without ingesting OWLs locally.
+     * <p>
+     * Empty (the default) disables the path — requests with {@code ?upstream=true} return 400.
+     */
+    @org.springframework.beans.factory.annotation.Value("${gemma.upstream.annotationSearch.url:}")
+    private String upstreamUrl;
+
+    @org.springframework.beans.factory.annotation.Value("${gemma.upstream.annotationSearch.username:}")
+    private String upstreamUsername;
+
+    @org.springframework.beans.factory.annotation.Value("${gemma.upstream.annotationSearch.password:}")
+    private String upstreamPassword;
+
+    @org.springframework.beans.factory.annotation.Value("${gemma.upstream.annotationSearch.timeoutMs:25000}")
+    private long upstreamTimeoutMs;
+
+    /** Page size requested from upstream — we want the wide candidate set so local filtering has room. */
+    private static final int UPSTREAM_LIMIT = 1000;
+
+    private final ObjectMapper upstreamMapper = new ObjectMapper();
 
     /**
      * Required by spring
@@ -349,7 +384,13 @@ public class AnnotationsWebService {
                     "Pushing the filter server-side avoids the truncate-then-filter footgun where " +
                     "allow-list survivors depend on which items the per-strategy `limit` happened " +
                     "to keep.")
-            @QueryParam("prefixes") @DefaultValue("") String prefixesParam
+            @QueryParam("prefixes") @DefaultValue("") String prefixesParam,
+            @Parameter(description = "When `true`, delegate the ontology Lucene-index lookup to the " +
+                    "upstream gemma-rest configured by `gemma.upstream.annotationSearch.url` (e.g. " +
+                    "staging). Lets a local 2.0 instance benefit from staging's richer ontology " +
+                    "index while still applying 2.0's local filtering / ranking on top. Returns " +
+                    "400 if the upstream URL is unset. Default `false` (local path).")
+            @QueryParam("upstream") @DefaultValue("false") boolean upstream
     ) {
         if ( query == null || query.getValue().isEmpty() ) {
             throw new BadRequestException( "Search query cannot be empty." );
@@ -359,14 +400,18 @@ public class AnnotationsWebService {
         }
         AnnotationSearchRankingStrategy strategy = resolveRankingStrategy( rank );
         List<String> prefixes = parsePrefixes( prefixesParam );
-        String cacheKey = buildSearchCacheKey( query.getValue(), strategy.getName(), limit, prefixes );
+        if ( upstream && ( upstreamUrl == null || upstreamUrl.trim().isEmpty() ) ) {
+            throw new BadRequestException( "Upstream delegation requested but "
+                    + "`gemma.upstream.annotationSearch.url` is unset on this server." );
+        }
+        String cacheKey = buildSearchCacheKey( query.getValue(), strategy.getName(), limit, prefixes, upstream );
         List<AnnotationSearchResultValueObject> cached = SEARCH_CACHE.get( cacheKey );
         if ( cached != null ) {
             log.debug( "annotation-search cache HIT key={} (size={})", cacheKey, SEARCH_CACHE.size() );
             return respond( new ArrayList<>( cached ) );
         }
         try {
-            List<AnnotationSearchResultValueObject> result = new ArrayList<>( this.getTerms( query, strategy, limit, prefixes, FIND_CHARACTERISTICS_TIMEOUT_MS ) );
+            List<AnnotationSearchResultValueObject> result = new ArrayList<>( this.getTerms( query, strategy, limit, prefixes, upstream, FIND_CHARACTERISTICS_TIMEOUT_MS ) );
             // store an unmodifiable defensive copy so callers can't mutate the cached value
             SEARCH_CACHE.put( cacheKey, Collections.unmodifiableList( new ArrayList<>( result ) ) );
             log.debug( "annotation-search cache MISS key={} stored {} hits (size={})", cacheKey, result.size(), SEARCH_CACHE.size() );
@@ -415,7 +460,7 @@ public class AnnotationsWebService {
     public ResponseDataObject<List<AnnotationSearchResultValueObject>> searchAnnotationsByPathQuery( // Params:
             @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE, description = SEARCH_QUERY_DESCRIPTION) @PathParam("query") @DefaultValue("") StringArrayArg query // Required
     ) {
-        return searchAnnotations( query, LuceneOrderRankingStrategy.NAME, SEARCH_DEFAULT_LIMIT, "" );
+        return searchAnnotations( query, LuceneOrderRankingStrategy.NAME, SEARCH_DEFAULT_LIMIT, "", false );
     }
 
     /**
@@ -630,7 +675,7 @@ public class AnnotationsWebService {
      * @return a collection of characteristics matching the input query.
      */
     private LinkedHashSet<AnnotationSearchResultValueObject> getTerms( StringArrayArg arg,
-            AnnotationSearchRankingStrategy strategy, int limit, List<String> prefixes, long timeoutMs ) throws SearchException {
+            AnnotationSearchRankingStrategy strategy, int limit, List<String> prefixes, boolean upstream, long timeoutMs ) throws SearchException {
         StopWatch timer = StopWatch.createStarted();
         List<CharacteristicValueObject> rawHits = new ArrayList<>();
         for ( String query : arg.getValue() ) {
@@ -639,6 +684,12 @@ public class AnnotationsWebService {
             if ( uri != null ) {
                 rawHits.addAll( characteristicService.loadValueObjects( characteristicService
                         .findByUri( StringUtils.strip( query ), null, null, true, -1 ) ) );
+            } else if ( upstream ) {
+                // Delegate the ontology Lucene-index lookup; downstream pipeline runs locally
+                // against shared gemd. Failure here propagates as SearchException so the caller
+                // sees a 5xx (or 503 via the existing timeout mapping), rather than silently
+                // falling back to local — the curator explicitly asked for staging's index.
+                rawHits.addAll( fetchUpstreamHits( query, Math.max( timeoutMs - timer.getTime(), 0 ) ) );
             } else {
                 rawHits.addAll( ontologyService.findExperimentsCharacteristicTags( query, 1000, false, Math.max( timeoutMs - timer.getTime(), 0 ), TimeUnit.MILLISECONDS ) );
             }
@@ -1007,6 +1058,77 @@ public class AnnotationsWebService {
     }
 
     /**
+     * Fetch the raw ontology hits from the configured upstream gemma-rest. Server-to-server GET
+     * against {@code <upstreamUrl>/rest/v2/annotations/search?query=<q>&rank=lucene&limit=UPSTREAM_LIMIT}.
+     * Basic auth using the configured credentials when both username + password are non-blank;
+     * otherwise issues unauthenticated (lets a local devbox point at a public upstream).
+     * <p>
+     * Parses the {@code data} array from the standard {@code ResponseDataObject} envelope and
+     * lifts each hit into a {@link CharacteristicValueObject} carrying {@code value} / {@code valueUri}
+     * / {@code category} / {@code categoryUri}. The local downstream pipeline (sort, prefix
+     * filter, ranking, enrichment, truncation, usage counts) runs on these as if they came
+     * from the local ontology service.
+     */
+    List<CharacteristicValueObject> fetchUpstreamHits( String query, long timeoutMs ) throws SearchException {
+        long budget = Math.max( timeoutMs, 1 );
+        try {
+            String encoded = URLEncoder.encode( query, StandardCharsets.UTF_8 );
+            URI target = URI.create( upstreamUrl.replaceAll( "/+$", "" )
+                    + "/rest/v2/annotations/search?query=" + encoded
+                    + "&rank=" + LuceneOrderRankingStrategy.NAME + "&limit=" + UPSTREAM_LIMIT );
+            HttpClient client = HttpClient.newBuilder()
+                    .connectTimeout( Duration.ofMillis( Math.min( budget, upstreamTimeoutMs ) ) )
+                    .build();
+            HttpRequest.Builder reqB = HttpRequest.newBuilder( target )
+                    .timeout( Duration.ofMillis( Math.min( budget, upstreamTimeoutMs ) ) )
+                    .header( "Accept", "application/json" )
+                    .GET();
+            if ( StringUtils.isNotBlank( upstreamUsername ) && StringUtils.isNotBlank( upstreamPassword ) ) {
+                String credToken = Base64.getEncoder().encodeToString(
+                        ( upstreamUsername + ":" + upstreamPassword ).getBytes( StandardCharsets.UTF_8 ) );
+                reqB.header( "Authorization", "Basic " + credToken );
+            }
+            HttpResponse<String> resp = client.send( reqB.build(), HttpResponse.BodyHandlers.ofString() );
+            if ( resp.statusCode() < 200 || resp.statusCode() >= 300 ) {
+                throw new SearchException( "upstream annotation-search returned HTTP " + resp.statusCode()
+                        + " for query '" + query + "'", null );
+            }
+            JsonNode root = upstreamMapper.readTree( resp.body() );
+            JsonNode dataArr = root.path( "data" );
+            List<CharacteristicValueObject> out = new ArrayList<>( Math.max( dataArr.size(), 16 ) );
+            if ( dataArr.isArray() ) {
+                for ( JsonNode hit : dataArr ) {
+                    CharacteristicValueObject vo = new CharacteristicValueObject(
+                            jsonString( hit, "value" ),
+                            jsonString( hit, "valueUri" ),
+                            jsonString( hit, "category" ),
+                            jsonString( hit, "categoryUri" ) );
+                    out.add( vo );
+                }
+            }
+            return out;
+        } catch ( SearchException e ) {
+            throw e;
+        } catch ( java.net.http.HttpTimeoutException e ) {
+            // Wrap HttpTimeoutException (extends IOException) into the j.u.c.TimeoutException
+            // the SearchTimeoutException constructor expects.
+            java.util.concurrent.TimeoutException wrapped = new java.util.concurrent.TimeoutException(
+                    "upstream annotation-search timed out after " + upstreamTimeoutMs + "ms for query '" + query + "'" );
+            wrapped.initCause( e );
+            throw new SearchTimeoutException( wrapped.getMessage(), wrapped );
+        } catch ( Exception e ) {
+            throw new SearchException( "upstream annotation-search failed for query '" + query
+                    + "': " + e.getClass().getSimpleName() + ": " + e.getMessage(), e );
+        }
+    }
+
+    @Nullable
+    private static String jsonString( JsonNode hit, String field ) {
+        JsonNode n = hit.path( field );
+        return n.isMissingNode() || n.isNull() ? null : n.asText();
+    }
+
+    /**
      * Parse the {@code ?prefixes=} comma-separated list into a canonical lookup list. Trims each
      * entry, drops blanks, preserves caller order so the cache key is stable. Returns an empty
      * list when the param is null / blank.
@@ -1030,7 +1152,7 @@ public class AnnotationsWebService {
      * matches (the underlying LIKE search and ontology lookup are case-insensitive); URI-shaped terms keep
      * their case because URIs are case-sensitive on the path/query portion.
      */
-    private static String buildSearchCacheKey( List<String> values, String rankName, int limit, List<String> prefixes ) {
+    private static String buildSearchCacheKey( List<String> values, String rankName, int limit, List<String> prefixes, boolean upstream ) {
         StringBuilder sb = new StringBuilder( values.size() * 16 );
         // Prefix the strategy name + limit + namespaces so swapping any of them invalidates the
         // cache without colliding with a different-query default-rank entry. STX separates the
@@ -1040,6 +1162,8 @@ public class AnnotationsWebService {
         sb.append( limit );
         sb.append( '' );
         sb.append( String.join( ",", prefixes ) );
+        sb.append( '' );
+        sb.append( upstream ? "u" : "l" );
         sb.append( '' );
         for ( int i = 0; i < values.size(); i++ ) {
             String v = values.get( i );
