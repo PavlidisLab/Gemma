@@ -37,8 +37,10 @@ import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.args.LimitArg;
 
 import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.NotAuthorizedException;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.core.Response;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -155,6 +157,122 @@ public class TicketsWebServiceTest {
                 null );
 
         verify( ticketService ).findTickets( false, null, null, null, null, null, null, 0, 20 );
+    }
+
+    @Test
+    public void getTickets_passesNewFilterArgs_through() {
+        Date since = new Date( 1700000000000L );
+        when( ticketService.findTickets( eq( true ), isNull(), isNull(),
+                eq( TicketType.GENERIC ), eq( TicketState.OPEN ),
+                eq( TicketTargetType.EXPRESSION_EXPERIMENT ),
+                any( Date.class ), anyInt(), anyInt() ) )
+                .thenReturn( Collections.emptyList() );
+        when( ticketService.countTickets( eq( true ), isNull(), isNull(),
+                eq( TicketType.GENERIC ), eq( TicketState.OPEN ),
+                eq( TicketTargetType.EXPRESSION_EXPERIMENT ),
+                any( Date.class ) ) ).thenReturn( 0L );
+
+        webService.getTickets(
+                true, null, null,
+                TicketType.GENERIC, TicketState.OPEN, TicketTargetType.EXPRESSION_EXPERIMENT, since,
+                ubic.gemma.rest.util.args.OffsetArg.valueOf( "0" ),
+                ubic.gemma.rest.util.args.LimitArg.valueOf( "20" ),
+                null );
+
+        verify( ticketService ).findTickets(
+                eq( true ), isNull(), isNull(),
+                eq( TicketType.GENERIC ), eq( TicketState.OPEN ),
+                eq( TicketTargetType.EXPRESSION_EXPERIMENT ),
+                any( Date.class ), anyInt(), anyInt() );
+        verify( ticketService ).countTickets(
+                eq( true ), isNull(), isNull(),
+                eq( TicketType.GENERIC ), eq( TicketState.OPEN ),
+                eq( TicketTargetType.EXPRESSION_EXPERIMENT ),
+                any( Date.class ) );
+    }
+
+    /* -------------- dashboard endpoints (/tickets/mine, /tickets/summary/me) -------------- */
+
+    @Test
+    public void getMyQueue_returnsOpenAndRecentlyResolved_forCallingUser() {
+        when( userManager.getCurrentUser() ).thenReturn( reporter );
+
+        // First call: openOnly=true slice → 3 OPEN/IN_PROGRESS tickets
+        List<Ticket> openSlice = new ArrayList<>();
+        for ( int i = 0; i < 3; i++ ) {
+            openSlice.add( newTicket( 100L + i, TicketState.OPEN, new Date() ) );
+        }
+
+        // Second call: openOnly=false superset → 5 mixed tickets:
+        //   2 recently RESOLVED + 1 recently CANCELLED + 2 OPEN
+        Date recent = new Date(); // within window
+        List<Ticket> superset = new ArrayList<>();
+        superset.add( newTicket( 200L, TicketState.RESOLVED, recent ) );
+        superset.add( newTicket( 201L, TicketState.RESOLVED, recent ) );
+        superset.add( newTicket( 202L, TicketState.CANCELLED, recent ) );
+        superset.add( newTicket( 203L, TicketState.OPEN, recent ) );
+        superset.add( newTicket( 204L, TicketState.OPEN, recent ) );
+
+        // Service is called twice with different limits; openSlice for the small one,
+        // superset for the large one. Use any-int matchers for limit; assert on call shape.
+        when( ticketService.findTickets( eq( true ), eq( 42L ), isNull(), eq( 0 ), anyInt() ) )
+                .thenReturn( openSlice );
+        when( ticketService.findTickets( eq( false ), eq( 42L ), isNull(), eq( 0 ), anyInt() ) )
+                .thenReturn( superset );
+
+        ResponseDataObject<TicketsWebService.MyQueueResponse> resp = webService.getMyQueue( 50, 7 );
+
+        assertThat( resp.getData() ).isNotNull();
+        assertThat( resp.getData().assigneeContactId ).isEqualTo( 42L );
+        assertThat( resp.getData().openCount ).isEqualTo( 3 );
+        // 2 RESOLVED + 1 CANCELLED, all within window
+        assertThat( resp.getData().recentlyResolvedCount ).isEqualTo( 3 );
+        assertThat( resp.getData().open ).hasSize( 3 );
+        assertThat( resp.getData().recentlyResolved ).hasSize( 3 );
+    }
+
+    @Test
+    public void getMyQueue_returns401_whenAnonymous() {
+        when( userManager.getCurrentUser() ).thenReturn( null );
+        assertThatThrownBy( () -> webService.getMyQueue( 50, 7 ) )
+                .isInstanceOf( NotAuthorizedException.class );
+    }
+
+    @Test
+    public void getMyQueueSummary_returnsCountsAndOldestOpen() {
+        when( userManager.getCurrentUser() ).thenReturn( reporter );
+        when( ticketService.countTickets( eq( true ), eq( 42L ), isNull() ) ).thenReturn( 5L );
+        when( ticketService.countTickets( eq( false ), eq( 42L ), isNull() ) ).thenReturn( 12L );
+
+        // oldestOpen slice: youngest first, but oldest age is what the endpoint computes.
+        Ticket young = newTicket( 300L, TicketState.OPEN, new Date() );
+        young.setCreatedAt( new Date() );
+        Ticket old = newTicket( 301L, TicketState.OPEN, new Date() );
+        // 10 days ago
+        old.setCreatedAt( new Date( System.currentTimeMillis() - 10L * 24L * 3600L * 1000L ) );
+        when( ticketService.findTickets( eq( true ), eq( 42L ), isNull(), eq( 0 ), anyInt() ) )
+                .thenReturn( Arrays.asList( young, old ) );
+
+        ResponseDataObject<TicketsWebService.MyQueueSummaryResponse> resp = webService.getMyQueueSummary();
+
+        assertThat( resp.getData().assigneeContactId ).isEqualTo( 42L );
+        assertThat( resp.getData().openCount ).isEqualTo( 5L );
+        assertThat( resp.getData().totalCount ).isEqualTo( 12L );
+        // oldestOpenAgeDays must be ~10 (allow ±1 for boundary)
+        assertThat( resp.getData().oldestOpenAgeDays ).isNotNull();
+        assertThat( resp.getData().oldestOpenAgeDays ).isBetween( 9L, 11L );
+    }
+
+    /** Helper: minimal Ticket carrying id, state, updatedAt. */
+    private Ticket newTicket( long id, TicketState state, Date updatedAt ) {
+        Ticket t = Ticket.Factory.newInstance( TicketType.GENERIC, "t-" + id, reporter );
+        t.setId( id );
+        t.setState( state );
+        t.setCreatedAt( updatedAt );
+        t.setUpdatedAt( updatedAt );
+        t.setTargets( new HashSet<>() );
+        t.setEvents( new HashSet<>() );
+        return t;
     }
 
     @Test
