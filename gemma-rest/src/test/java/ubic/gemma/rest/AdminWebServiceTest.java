@@ -43,9 +43,16 @@ import ubic.gemma.core.tasks.analysis.expression.ExpressionExperimentLoadTaskCom
 import ubic.gemma.core.security.AuthorityConstants;
 import ubic.gemma.core.security.authentication.UserDetailsImpl;
 import ubic.gemma.core.security.authentication.UserManager;
+import ubic.gemma.model.blacklist.BlacklistedEntity;
+import ubic.gemma.model.blacklist.BlacklistedExperiment;
+import ubic.gemma.model.blacklist.BlacklistedPlatform;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.persistence.service.blacklist.BlacklistedEntityService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketService;
+import ubic.gemma.persistence.service.common.description.ExternalDatabaseReadService;
 import ubic.gemma.persistence.service.expression.experiment.AgentProposalService;
 import ubic.gemma.rest.util.ResponseDataObject;
 
@@ -100,13 +107,18 @@ public class AdminWebServiceTest {
     private TicketService ticketService;
     @Mock
     private GeoBrowser geoBrowser;
+    @Mock
+    private BlacklistedEntityService blacklistedEntityService;
+    @Mock
+    private ExternalDatabaseReadService externalDatabaseReadService;
 
     private AdminWebService webService;
 
     @BeforeEach
     public void setUp() {
         webService = new AdminWebService( cacheManager, sessionFactory, taskRunningService, sessionRegistry,
-                Collections.emptyList(), dataSource, userManager, agentProposalService, ticketService );
+                Collections.emptyList(), dataSource, userManager, agentProposalService, ticketService,
+                blacklistedEntityService, externalDatabaseReadService );
     }
 
     /* ===== /admin/caches ===== */
@@ -843,5 +855,194 @@ public class AdminWebServiceTest {
         assertThatThrownBy( () -> webService.grabGeoRecords( req ) )
                 .isInstanceOf( jakarta.ws.rs.ServerErrorException.class )
                 .matches( ex -> ( ( jakarta.ws.rs.ServerErrorException ) ex ).getResponse().getStatus() == 502 );
+    }
+
+    /* ===== /admin/blacklist ===== */
+
+    @Test
+    public void addBlacklistEntry_happyPath_createsBlacklistedExperiment() {
+        when( blacklistedEntityService.findByAccession( "GSE99999" ) ).thenReturn( null );
+        ExternalDatabase geo = new ExternalDatabase();
+        geo.setName( "GEO" );
+        when( externalDatabaseReadService.findByName( "GEO" ) ).thenReturn( geo );
+        ArgumentCaptor<BlacklistedEntity> captor = ArgumentCaptor.forClass( BlacklistedEntity.class );
+        when( blacklistedEntityService.create( captor.capture() ) )
+                .thenAnswer( inv -> inv.getArgument( 0 ) );
+
+        AdminWebService.BlacklistRequest req = new AdminWebService.BlacklistRequest();
+        req.accession = "GSE99999";
+        req.reason = "withdrawn by submitter";
+
+        Response resp = webService.addBlacklistEntry( req );
+
+        assertThat( resp.getStatus() ).isEqualTo( 201 );
+        BlacklistedEntity created = captor.getValue();
+        assertThat( created ).isInstanceOf( BlacklistedExperiment.class );
+        assertThat( created.getShortName() ).isEqualTo( "GSE99999" );
+        assertThat( created.getReason() ).isEqualTo( "withdrawn by submitter" );
+        DatabaseEntry de = created.getExternalAccession();
+        assertThat( de ).isNotNull();
+        assertThat( de.getAccession() ).isEqualTo( "GSE99999" );
+        assertThat( de.getExternalDatabase() ).isSameAs( geo );
+    }
+
+    @Test
+    public void addBlacklistEntry_happyPath_createsBlacklistedPlatform() {
+        when( blacklistedEntityService.findByAccession( "GPL1234" ) ).thenReturn( null );
+        ExternalDatabase geo = new ExternalDatabase();
+        geo.setName( "GEO" );
+        when( externalDatabaseReadService.findByName( "GEO" ) ).thenReturn( geo );
+        ArgumentCaptor<BlacklistedEntity> captor = ArgumentCaptor.forClass( BlacklistedEntity.class );
+        when( blacklistedEntityService.create( captor.capture() ) )
+                .thenAnswer( inv -> inv.getArgument( 0 ) );
+
+        AdminWebService.BlacklistRequest req = new AdminWebService.BlacklistRequest();
+        req.accession = "GPL1234";
+        req.reason = "deprecated platform";
+
+        Response resp = webService.addBlacklistEntry( req );
+
+        assertThat( resp.getStatus() ).isEqualTo( 201 );
+        assertThat( captor.getValue() ).isInstanceOf( BlacklistedPlatform.class );
+    }
+
+    @Test
+    public void addBlacklistEntry_returns409_whenAlreadyBlacklisted() {
+        BlacklistedExperiment existing = new BlacklistedExperiment();
+        existing.setShortName( "GSE99999" );
+        when( blacklistedEntityService.findByAccession( "GSE99999" ) ).thenReturn( existing );
+
+        AdminWebService.BlacklistRequest req = new AdminWebService.BlacklistRequest();
+        req.accession = "GSE99999";
+        req.reason = "dup";
+
+        assertThatThrownBy( () -> webService.addBlacklistEntry( req ) )
+                .isInstanceOf( ClientErrorException.class )
+                .matches( ex -> ( ( ClientErrorException ) ex ).getResponse().getStatus() == 409 );
+        verify( blacklistedEntityService, never() ).create( org.mockito.ArgumentMatchers.any( BlacklistedEntity.class ) );
+    }
+
+    @Test
+    public void addBlacklistEntry_returns400_whenBodyMissing() {
+        assertThatThrownBy( () -> webService.addBlacklistEntry( null ) )
+                .isInstanceOf( BadRequestException.class );
+        verify( blacklistedEntityService, never() ).create( org.mockito.ArgumentMatchers.any( BlacklistedEntity.class ) );
+    }
+
+    @Test
+    public void addBlacklistEntry_returns400_whenReasonBlank() {
+        AdminWebService.BlacklistRequest req = new AdminWebService.BlacklistRequest();
+        req.accession = "GSE1";
+        req.reason = "   ";
+
+        assertThatThrownBy( () -> webService.addBlacklistEntry( req ) )
+                .isInstanceOf( BadRequestException.class );
+        verify( blacklistedEntityService, never() ).create( org.mockito.ArgumentMatchers.any( BlacklistedEntity.class ) );
+    }
+
+    @Test
+    public void addBlacklistEntry_returns400_whenAccessionPrefixUnrecognised() {
+        when( blacklistedEntityService.findByAccession( "FOO123" ) ).thenReturn( null );
+
+        AdminWebService.BlacklistRequest req = new AdminWebService.BlacklistRequest();
+        req.accession = "FOO123";
+        req.reason = "test";
+
+        assertThatThrownBy( () -> webService.addBlacklistEntry( req ) )
+                .isInstanceOf( BadRequestException.class );
+        verify( blacklistedEntityService, never() ).create( org.mockito.ArgumentMatchers.any( BlacklistedEntity.class ) );
+    }
+
+    @Test
+    public void deleteBlacklistEntry_happyPath_returns204() {
+        BlacklistedExperiment existing = new BlacklistedExperiment();
+        existing.setShortName( "GSE99999" );
+        when( blacklistedEntityService.findByAccession( "GSE99999" ) ).thenReturn( existing );
+
+        Response resp = webService.deleteBlacklistEntry( "GSE99999" );
+
+        assertThat( resp.getStatus() ).isEqualTo( 204 );
+        verify( blacklistedEntityService ).remove( existing );
+    }
+
+    @Test
+    public void deleteBlacklistEntry_returns404_whenAccessionNotFound() {
+        when( blacklistedEntityService.findByAccession( "GSE0" ) ).thenReturn( null );
+
+        assertThatThrownBy( () -> webService.deleteBlacklistEntry( "GSE0" ) )
+                .isInstanceOf( NotFoundException.class );
+        verify( blacklistedEntityService, never() ).remove( org.mockito.ArgumentMatchers.any( BlacklistedEntity.class ) );
+    }
+
+    @Test
+    public void listBlacklistEntries_paginatesAndSortsByAccession() {
+        ExternalDatabase geo = new ExternalDatabase();
+        geo.setName( "GEO" );
+        BlacklistedExperiment a = makeBlacklistedExperiment( "GSE1", "r1", geo );
+        BlacklistedExperiment b = makeBlacklistedExperiment( "GSE2", "r2", geo );
+        BlacklistedPlatform c = makeBlacklistedPlatform( "GPL3", "r3", geo );
+        when( blacklistedEntityService.loadAll() ).thenReturn( Arrays.asList( b, a, c ) );
+
+        // Page 1: limit=2, offset=0 → GPL3, GSE1
+        ResponseDataObject<AdminWebService.BlacklistListResponse> resp1 =
+                webService.listBlacklistEntries( 2, 0 );
+        AdminWebService.BlacklistListResponse body1 = resp1.getData();
+        assertThat( body1.total ).isEqualTo( 3 );
+        assertThat( body1.limit ).isEqualTo( 2 );
+        assertThat( body1.offset ).isEqualTo( 0 );
+        assertThat( body1.count ).isEqualTo( 2 );
+        assertThat( body1.entries ).extracting( v -> v.getAccession() )
+                .containsExactly( "GPL3", "GSE1" );
+
+        // Page 2: limit=2, offset=2 → GSE2
+        ResponseDataObject<AdminWebService.BlacklistListResponse> resp2 =
+                webService.listBlacklistEntries( 2, 2 );
+        AdminWebService.BlacklistListResponse body2 = resp2.getData();
+        assertThat( body2.total ).isEqualTo( 3 );
+        assertThat( body2.count ).isEqualTo( 1 );
+        assertThat( body2.entries ).extracting( v -> v.getAccession() )
+                .containsExactly( "GSE2" );
+
+        // Offset past end: empty
+        ResponseDataObject<AdminWebService.BlacklistListResponse> resp3 =
+                webService.listBlacklistEntries( 100, 10 );
+        assertThat( resp3.getData().count ).isEqualTo( 0 );
+        assertThat( resp3.getData().entries ).isEmpty();
+    }
+
+    @Test
+    public void listBlacklistEntries_returns400_whenLimitNegative() {
+        assertThatThrownBy( () -> webService.listBlacklistEntries( -1, 0 ) )
+                .isInstanceOf( BadRequestException.class );
+        assertThatThrownBy( () -> webService.listBlacklistEntries( 10, -1 ) )
+                .isInstanceOf( BadRequestException.class );
+    }
+
+    @Test
+    public void listBlacklistEntries_capsLimitAtMaxPageSize() {
+        when( blacklistedEntityService.loadAll() ).thenReturn( Collections.emptyList() );
+
+        ResponseDataObject<AdminWebService.BlacklistListResponse> resp =
+                webService.listBlacklistEntries( AdminWebService.MAX_BLACKLIST_PAGE_SIZE + 500, 0 );
+
+        assertThat( resp.getData().limit ).isEqualTo( AdminWebService.MAX_BLACKLIST_PAGE_SIZE );
+    }
+
+    private BlacklistedExperiment makeBlacklistedExperiment( String acc, String reason, ExternalDatabase db ) {
+        BlacklistedExperiment e = new BlacklistedExperiment();
+        e.setShortName( acc );
+        e.setReason( reason );
+        DatabaseEntry de = DatabaseEntry.Factory.newInstance( acc, db );
+        e.setExternalAccession( de );
+        return e;
+    }
+
+    private BlacklistedPlatform makeBlacklistedPlatform( String acc, String reason, ExternalDatabase db ) {
+        BlacklistedPlatform p = new BlacklistedPlatform();
+        p.setShortName( acc );
+        p.setReason( reason );
+        DatabaseEntry de = DatabaseEntry.Factory.newInstance( acc, db );
+        p.setExternalAccession( de );
+        return p;
     }
 }
