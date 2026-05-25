@@ -69,8 +69,13 @@ public class PrincipalComponentAnalysisDaoImpl extends AbstractDao<PrincipalComp
         if ( ee == null || ee.getId() == null )
             return Collections.emptyList();
 
+        // join fetch the probe (CompositeSequence) — ProbeLoading.probe is lazy=false
+        // fetch=select, so without this each row triggers a follow-up SELECT. 1:1 so no
+        // cartesian; setMaxResults still applies in SQL since this isn't a collection fetch.
+        // See RECCE_PCA_SVD_NPLUS1.md #2 (sub-pattern: per-probe lazy CompositeSequence).
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( "select pr from PrincipalComponentAnalysis p join p.probeLoadings pr"
+                + " join fetch pr.probe"
                 + " where p.experimentAnalyzed = :ee and pr.componentNumber = :cmp order by pr.loadingRank " )
                 .setParameter( "ee", ee ).setParameter( "cmp", component )
                 // HB6 rejects setMaxResults(<0); treat <=0 as "no limit".
