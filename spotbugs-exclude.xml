@@ -94,6 +94,48 @@
     </Match>
 
     <!--
+        Lombok @Value (+ @EqualsAndHashCode) on persistence.util value classes
+        emits equals/hashCode/getters/ctor with redundant null-checks and direct
+        collection storage that SpotBugs flags as RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE
+        and EI_EXPOSE_REP/EI_EXPOSE_REP2. Well-known Lombok patterns; nothing
+        to fix at source level without dropping @Value. Scope: the @Value-
+        carrying classes only.
+    -->
+    <Match>
+        <Or>
+            <Class name="ubic.gemma.persistence.util.Subquery"/>
+            <Class name="ubic.gemma.persistence.util.Subquery$Alias"/>
+            <Class name="ubic.gemma.persistence.util.Filter"/>
+            <Class name="ubic.gemma.persistence.util.Sort"/>
+        </Or>
+        <Bug pattern="RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE,EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
+    </Match>
+
+    <!--
+        Filter.getConversionService() returns the static ConversionService
+        singleton wired via Spring at application startup. Wrapping or copying
+        the service would defeat its purpose (it's the shared converter
+        registry every Filter uses to parse string operand values). The
+        MS_EXPOSE_REP finding is by-design infrastructure exposure.
+    -->
+    <Match>
+        <Class name="ubic.gemma.persistence.util.Filter"/>
+        <Method name="getConversionService"/>
+        <Bug pattern="MS_EXPOSE_REP"/>
+    </Match>
+
+    <!--
+        Slice is an AbstractList wrapper that shares its underlying List by
+        design — callers (pagination consumers) expect to see the same list
+        the slice was built over, not a defensive copy. EI_EXPOSE_REP2 on the
+        constructor reflects that contract.
+    -->
+    <Match>
+        <Class name="ubic.gemma.persistence.util.Slice"/>
+        <Bug pattern="EI_EXPOSE_REP2"/>
+    </Match>
+
+    <!--
         OBJECT_DESERIALIZATION: every ObjectInputStream.readObject() call in
         these 5 classes installs an ObjectInputFilter via the canonical
         allow-list (`ubic.gemma.**;java.util.**;java.lang.**;...;!*`) BEFORE

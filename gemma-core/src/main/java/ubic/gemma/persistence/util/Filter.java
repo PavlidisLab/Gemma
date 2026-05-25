@@ -21,6 +21,8 @@ package ubic.gemma.persistence.util;
 import com.fasterxml.jackson.databind.util.StdDateFormat;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
+
+import static java.util.Objects.requireNonNull;
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.convert.ConversionException;
@@ -328,7 +330,8 @@ public class Filter implements PropertyMapping {
                     .map( Filter::quoteIfNecessary )
                     .collect( Collectors.joining( ", " ) ) + ")";
         } else {
-            requiredValueString = conversionService.convert( requiredValue, String.class );
+            requiredValueString = requireNonNull( conversionService.convert( requiredValue, String.class ),
+                    "ConversionService produced null while converting requiredValue to String." );
             requiredValueString = quoteIfNecessary( requiredValueString );
         }
         return String.format( "%s %s %s",
@@ -395,7 +398,8 @@ public class Filter implements PropertyMapping {
 
     private static Object parseItem( String rv, Class<?> pt ) throws IllegalArgumentException {
         try {
-            return conversionService.convert( rv, pt );
+            return requireNonNull( conversionService.convert( rv, pt ),
+                    "ConversionService produced null while parsing operand '" + rv + "' to " + pt.getSimpleName() + "." );
         } catch ( ConversionException e ) {
             throw new IllegalArgumentException( e );
         }

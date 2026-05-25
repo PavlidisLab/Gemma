@@ -3,6 +3,7 @@ package ubic.gemma.persistence.util;
 import org.hibernate.Hibernate;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
@@ -57,11 +58,13 @@ public class Thaws {
      * cheap proxy/eager touch (one or two round-trips per BA at most).
      */
     public static void thawBioAssayPlatforms( BioAssay ba ) {
-        Hibernate.initialize( ba.getArrayDesignUsed() );
-        Hibernate.initialize( ba.getArrayDesignUsed().getDesignProvider() );
-        if ( ba.getOriginalPlatform() != null ) {
-            Hibernate.initialize( ba.getOriginalPlatform() );
-            Hibernate.initialize( ba.getOriginalPlatform().getDesignProvider() );
+        ArrayDesign arrayDesignUsed = ba.getArrayDesignUsed();
+        Hibernate.initialize( arrayDesignUsed );
+        Hibernate.initialize( arrayDesignUsed.getDesignProvider() );
+        ArrayDesign originalPlatform = ba.getOriginalPlatform();
+        if ( originalPlatform != null ) {
+            Hibernate.initialize( originalPlatform );
+            Hibernate.initialize( originalPlatform.getDesignProvider() );
         }
     }
 

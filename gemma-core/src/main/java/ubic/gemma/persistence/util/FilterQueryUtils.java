@@ -38,14 +38,13 @@ public class FilterQueryUtils {
                 ret.append( formProperty( sort ) );
             }
 
-            //noinspection StatementWithEmptyBody
-            if ( sort.getDirection() == null ) {
-                // use default direction
-            } else if ( sort.getDirection().equals( Sort.Direction.ASC ) ) {
+            Sort.Direction direction = sort.getDirection();
+            if ( direction == Sort.Direction.ASC ) {
                 ret.append( " asc" );
-            } else if ( sort.getDirection().equals( Sort.Direction.DESC ) ) {
+            } else if ( direction == Sort.Direction.DESC ) {
                 ret.append( " desc" );
             }
+            // direction == null falls through to default direction
 
             switch ( sort.getNullMode() ) {
                 case DEFAULT:
@@ -161,8 +160,7 @@ public class FilterQueryUtils {
         }
 
         disjunction.append( ' ' );
-        if ( filter.getRequiredValue() instanceof Subquery ) {
-            Subquery s = ( Subquery ) filter.getRequiredValue();
+        if ( filter.getRequiredValue() instanceof Subquery s ) {
             // check if the root alias is declared, otherwise use 'e' as default
             String rootAlias = s.getRootAlias();
             disjunction
@@ -232,12 +230,12 @@ public class FilterQueryUtils {
                     Subquery s = ( Subquery ) requireNonNull( subClause.getRequiredValue() );
                     addRestrictionParameters( query, Filters.by( s.getFilter() ), i - 1 );
                 } else if ( subClause.getOperator().equals( Filter.Operator.in ) || subClause.getOperator().equals( Filter.Operator.notIn ) ) {
-                    if ( !( subClause.getRequiredValue() instanceof Collection ) ) {
+                    if ( !( subClause.getRequiredValue() instanceof Collection<?> coll ) ) {
                         throw new IllegalArgumentException( "Required value must be a non-null collection for the 'in' operator." );
                     }
                     // order is unimportant for this operation, so we can ensure that it is consistent and therefore cacheable
                     //noinspection rawtypes,unchecked
-                    query.setParameterList( paramName, optimizeParameterList( ( Collection ) subClause.getRequiredValue() ) );
+                    query.setParameterList( paramName, optimizeParameterList( (Collection) coll ) );
                 } else if ( subClause.getOperator().equals( Filter.Operator.like ) || subClause.getOperator().equals( Filter.Operator.notLike ) ) {
                     query.setParameter( paramName, escapeLike( ( String ) requireNonNull( subClause.getRequiredValue(), "Required value cannot be null for the 'like' operator." ) ) + "%" );
                 } else {

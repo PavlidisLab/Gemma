@@ -41,8 +41,8 @@ public class FiltersUtils {
      * Unnest a filter from a subquery.
      */
     public static Filter unnestSubquery( Filter f ) {
-        while ( f.getRequiredValue() instanceof Subquery ) {
-            f = ( ( Subquery ) f.getRequiredValue() ).getFilter();
+        while ( f.getRequiredValue() instanceof Subquery sq ) {
+            f = sq.getFilter();
         }
         return f;
     }

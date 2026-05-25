@@ -94,13 +94,13 @@ public class FilterJpaUtils {
         // Subquery filters: build a JPA jakarta.persistence.criteria.Subquery and emit an IN /
         // NOT IN predicate against the outer root path. Pre-Phase-2 this lived in the deleted
         // FilterCriteriaUtils; the HQL equivalent is in FilterQueryUtils.formSubClause.
-        if ( f.getRequiredValue() instanceof Subquery ) {
+        if ( f.getRequiredValue() instanceof Subquery sq ) {
             if ( !( enclosingQuery instanceof AbstractQuery ) ) {
                 throw new UnsupportedOperationException(
                         "Subquery filters require a CriteriaQuery / Subquery to host the nested SELECT; "
                                 + "caller passed null. Use the (CriteriaBuilder, CommonAbstractCriteria, Root, Filters) overload." );
             }
-            return buildSubqueryPredicate( cb, ( AbstractQuery<?> ) enclosingQuery, root, f );
+            return buildSubqueryPredicate( cb, ( AbstractQuery<?> ) enclosingQuery, root, f, sq );
         }
         // .size-suffix filters: cb.size(collection-expression) returns an Expression<Integer>.
         if ( f.getPropertyName().endsWith( ".size" ) ) {
@@ -160,8 +160,7 @@ public class FilterJpaUtils {
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private static Predicate buildSubqueryPredicate( CriteriaBuilder cb, AbstractQuery<?> enclosingQuery, Root<?> root, Filter f ) {
-        Subquery sq = ( Subquery ) f.getRequiredValue();
+    private static Predicate buildSubqueryPredicate( CriteriaBuilder cb, AbstractQuery<?> enclosingQuery, Root<?> root, Filter f, Subquery sq ) {
         // Locate the entity class via thread-context classloader so we don't need the call site to
         // pass it explicitly. The Subquery model carries the FQN as a String.
         Class<?> subRootEntityClass;
