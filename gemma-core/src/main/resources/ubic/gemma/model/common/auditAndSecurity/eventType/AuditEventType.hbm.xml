@@ -51,6 +51,8 @@
                       name="ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent">
                 <subclass abstract="false" discriminator-value="RankComputationEvent"
                           name="ubic.gemma.model.common.auditAndSecurity.eventType.RankComputationEvent"/>
+                <subclass abstract="false" discriminator-value="VectorsReorderedEvent"
+                          name="ubic.gemma.model.common.auditAndSecurity.eventType.VectorsReorderedEvent"/>
 
             </subclass>
             <subclass abstract="false" discriminator-value="BioMaterialMappingUpdate"

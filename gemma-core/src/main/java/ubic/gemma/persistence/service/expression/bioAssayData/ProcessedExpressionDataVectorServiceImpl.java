@@ -15,6 +15,7 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObje
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedProcessedVectorComputationEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.VectorsReorderedEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
@@ -26,7 +27,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorDao.RankMethod;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
@@ -58,8 +58,6 @@ public class ProcessedExpressionDataVectorServiceImpl
     private DifferentialExpressionResultService differentialExpressionResultService;
     @Autowired
     private ProcessedExpressionDataVectorHelperService helperService;
-    @Autowired
-    private AuditTrailService auditTrailService;
     @Autowired
     private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
     @Autowired
@@ -145,9 +143,9 @@ public class ProcessedExpressionDataVectorServiceImpl
 
     @Override
     @Transactional
+    @Audited(value = VectorsReorderedEvent.class, message = "Reordered the data vectors by experimental design")
     public void reorderByDesign( ExpressionExperiment ee ) {
         this.helperService.reorderByDesign( ee );
-        this.auditTrailService.addUpdateEvent( ee, "Reordered the data vectors by experimental design" );
         cachedProcessedExpressionDataVectorService.evict( ee );
     }
 
