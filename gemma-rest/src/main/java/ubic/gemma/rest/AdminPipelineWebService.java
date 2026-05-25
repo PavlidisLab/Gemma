@@ -30,6 +30,7 @@ import org.springframework.stereotype.Service;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.pipeline.PipelineJobBatch;
+import ubic.gemma.model.pipeline.PipelineJobEvent;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.pipeline.PipelineJobBatchService;
@@ -39,6 +40,7 @@ import static ubic.gemma.rest.util.Responders.respond;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -128,6 +130,22 @@ public class AdminPipelineWebService {
         pipelineJobBatchService.cancelBatch( batchId );
         PipelineJobBatch batch = pipelineJobBatchService.get( batchId );
         return respond( batch );
+    }
+
+    @GET
+    @Path("/batches/{batchId}/jobs/{jobId}/events")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "List progress events for one job")
+    public ResponseDataObject<List<PipelineJobEvent>> jobEvents(
+            @PathParam("batchId") Long batchId,
+            @PathParam("jobId") Long jobId,
+            @QueryParam("sinceMillis") Long sinceMillis,
+            @QueryParam("limit") Integer limit ) {
+        // batchId is a path-readability hint only; events are scoped by jobId.
+        Date since = sinceMillis != null ? new Date( sinceMillis ) : null;
+        List<PipelineJobEvent> events = pipelineJobBatchService.findEvents( jobId, since, limit != null ? limit : 200 );
+        return respond( events );
     }
 
     @POST

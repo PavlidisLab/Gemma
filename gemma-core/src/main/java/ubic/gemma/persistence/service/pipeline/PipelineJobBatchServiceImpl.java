@@ -195,6 +195,16 @@ public class PipelineJobBatchServiceImpl implements PipelineJobBatchService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<PipelineJobEvent> findEvents( Long jobId, @Nullable Date since, int limit ) {
+        PipelineJob job = jobDao.load( jobId );
+        if ( job == null ) {
+            return Collections.emptyList();
+        }
+        return eventDao.findByJob( job, since, limit );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<PipelineJob> findStaleJobs( int staleMinutes, int limit ) {
         Date cutoff = new Date( System.currentTimeMillis() - ( long ) staleMinutes * 60_000L );
         // Two non-terminal states get polled: QUEUED + RUNNING. PENDING is pre-

@@ -70,6 +70,17 @@ public interface PipelineJobBatchService {
     PipelineJobEvent recordEvent( Long jobId, String kind, @Nullable String payloadJson );
 
     /**
+     * Events on the given job ordered by {@code occurredAt} ascending. Used
+     * by the admin UI to render per-job progress timelines.
+     *
+     * @param jobId the job
+     * @param since cutoff: only events with {@code occurredAt > since}
+     *              (nullable; null = full history)
+     * @param limit max rows; {@code <= 0} treated as no limit
+     */
+    List<PipelineJobEvent> findEvents( Long jobId, @Nullable java.util.Date since, int limit );
+
+    /**
      * For the reconciler: jobs in non-terminal state whose {@code lastEventAt}
      * is older than {@code staleMinutes}. The reconciler iterates these and
      * calls {@code scheduler.poll(handle)} for each.
