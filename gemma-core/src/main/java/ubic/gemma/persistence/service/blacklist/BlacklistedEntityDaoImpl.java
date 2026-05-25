@@ -83,7 +83,7 @@ public class BlacklistedEntityDaoImpl extends AbstractVoEnabledDao<BlacklistedEn
         } else {
             count = ( Long ) this.getSessionFactory().getCurrentSession()
                     .createQuery( "select count(distinct bp.id) from BlacklistedPlatform bp "
-                            + "left join bp.externalAccessions ea "
+                            + "left join bp.externalAccession ea "
                             + "where bp.shortName = :shortName or ea.accession in :accessions" )
                     .setParameter( "shortName", platform.getShortName() )
                     .setParameterList( "accessions", accessions )
