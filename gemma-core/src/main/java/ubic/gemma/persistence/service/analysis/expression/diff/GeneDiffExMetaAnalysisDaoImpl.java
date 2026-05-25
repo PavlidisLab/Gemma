@@ -192,12 +192,17 @@ public class GeneDiffExMetaAnalysisDaoImpl extends AbstractDao<GeneDifferentialE
 
     @Override
     public Collection<GeneDifferentialExpressionMetaAnalysis> findByTaxon( Taxon taxon ) {
+        // HB6 rejects access to `ee.bioAssays` when `ee` is typed as the
+        // abstract `BioAssaySet` because the `bioAssays` collection is declared
+        // independently on both `ExpressionExperiment` and `ExpressionExperimentSubSet`.
+        // Differential-expression meta-analyses only operate over full ExpressionExperiments,
+        // so narrow the traversal with `treat(... as ExpressionExperiment)`.
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
                 .createQuery( "select a from GeneDifferentialExpressionMetaAnalysis a "
                         + "join a.resultSetsIncluded rs "
                         + "join rs.analysis ra "
-                        + "join ra.experimentAnalyzed ee "
+                        + "join treat(ra.experimentAnalyzed as ExpressionExperiment) ee "
                         + "join ee.bioAssays as ba "
                         + "join ba.sampleUsed as sample "
                         + "where sample.sourceTaxon = :taxon "
