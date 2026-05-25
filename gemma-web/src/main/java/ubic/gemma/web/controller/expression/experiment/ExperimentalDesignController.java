@@ -38,7 +38,9 @@ import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExperimentalDesignUpdatedEvent;
+import ubic.gemma.model.common.description.Categories;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.CharacteristicUtils;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.model.common.measurement.MeasurementType;
@@ -612,6 +614,34 @@ public class ExperimentalDesignController {
 
         return ee.getExperimentalDesign().getExperimentalFactors().stream()
                 .map( ExperimentalFactorValueObject::new )
+                .collect( Collectors.toSet() );
+    }
+
+    /**
+     * AJAX
+     * <p>
+     * Returns the EE's experimental factors filtered for sample-level views (e.g. the Sample
+     * details grid). For single-cell experiments, the cell-type factor is excluded since its
+     * values are assigned to pseudo-bulk subset BioMaterials rather than source samples, and
+     * would otherwise render as "Unassigned" for every sample.
+     */
+    public Collection<ExperimentalFactorValueObject> getSampleLevelExperimentalFactors( EntityDelegator<?> e ) {
+        Collection<ExperimentalFactorValueObject> factors = getExperimentalFactors( e );
+        if ( factors == null || factors.isEmpty() ) {
+            return factors;
+        }
+        ExpressionExperiment ee;
+        if ( e.holds( ExpressionExperiment.class ) ) {
+            ee = expressionExperimentService.loadAndThawLiteOrFail( e.getId(), EntityNotFoundException::new );
+        } else {
+            ee = expressionExperimentService.findByDesignId( e.getId() );
+        }
+        if ( ee == null || !expressionExperimentService.isSingleCell( ee ) ) {
+            return factors;
+        }
+        return factors.stream()
+                .filter( f -> !CharacteristicUtils.equals( f.getCategory(), f.getCategoryUri(),
+                        Categories.CELL_TYPE.getCategory(), Categories.CELL_TYPE.getCategoryUri() ) )
                 .collect( Collectors.toSet() );
     }
 

@@ -49,6 +49,9 @@ ExperimentalDesignController.createExperimentalFactor = function(p0, p1, callbac
 ExperimentalDesignController.getExperimentalFactors = function(p0, callback) {
   dwr.engine._execute(ExperimentalDesignController._path, 'ExperimentalDesignController', 'getExperimentalFactors', p0, callback);
 }
+ExperimentalDesignController.getSampleLevelExperimentalFactors = function(p0, callback) {
+  dwr.engine._execute(ExperimentalDesignController._path, 'ExperimentalDesignController', 'getSampleLevelExperimentalFactors', p0, callback);
+}
 ExperimentalDesignController.updateBioMaterials = function(p0, callback) {
   dwr.engine._execute(ExperimentalDesignController._path, 'ExperimentalDesignController', 'updateBioMaterials', p0, callback);
 }
