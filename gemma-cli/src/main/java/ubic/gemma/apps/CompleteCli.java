@@ -1,6 +1,8 @@
 package ubic.gemma.apps;
 
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,8 +64,26 @@ public class CompleteCli extends AbstractAuthenticatedCLI {
     @Nullable
     private String[] completeArgs;
 
+    /**
+     * Case-insensitive prefix used to filter the emitted completions (PavlidisLab/Gemma#1615).
+     * Empty / null means "no prefix filter".
+     */
+    @Nullable
+    private String prefix;
+
     public CompleteCli() {
         setAllowPositionalArguments();
+    }
+
+    @Override
+    protected void buildOptions( Options options ) {
+        super.buildOptions( options );
+        options.addOption( Option.builder( "p" )
+                .longOpt( "prefix" )
+                .hasArg()
+                .argName( "PREFIX" )
+                .desc( "Only emit completion values whose value starts with this case-insensitive prefix." )
+                .build() );
     }
 
     @Override
@@ -97,6 +117,7 @@ public class CompleteCli extends AbstractAuthenticatedCLI {
         } else {
             completeArgs = new String[0];
         }
+        prefix = commandLine.getOptionValue( "prefix" );
     }
 
     @Override
@@ -170,6 +191,13 @@ public class CompleteCli extends AbstractAuthenticatedCLI {
     }
 
     private void printCompletion( String value, @Nullable String description ) {
+        if ( value == null ) {
+            return;
+        }
+        if ( prefix != null && !prefix.isEmpty()
+                && !value.toLowerCase( java.util.Locale.ROOT ).startsWith( prefix.toLowerCase( java.util.Locale.ROOT ) ) ) {
+            return;
+        }
         getCliContext().getOutputStream().printf( "%s\t%s%n", value, TsvUtils.format( description ) );
     }
 }
