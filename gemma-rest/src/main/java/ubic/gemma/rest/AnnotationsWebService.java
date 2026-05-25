@@ -465,7 +465,15 @@ public class AnnotationsWebService {
                     "staging). Lets a local 2.0 instance benefit from staging's richer ontology " +
                     "index while still applying 2.0's local filtering / ranking on top. Returns " +
                     "400 if the upstream URL is unset. Default `false` (local path).")
-            @QueryParam("upstream") @DefaultValue("false") boolean upstream
+            @QueryParam("upstream") @DefaultValue("false") boolean upstream,
+            @Parameter(description = "When `true`, keep only candidates whose label is case-" +
+                    "insensitively equal to the (trimmed) query string. Cuts wire traffic for " +
+                    "resolver-style callers that already know the exact label and only need the " +
+                    "canonical row(s). Filter is applied BEFORE ranking + truncation, so `top_k`/" +
+                    "`limit` still applies when an exact match has multiple alternate-URI rows. " +
+                    "Empty result is `200` with `data: []`. Default `false` (current substring " +
+                    "behaviour). See handoffs/HANDOFF_2026-05-25_EXACT_LABEL_PARAM.md.")
+            @QueryParam("exact_label") @DefaultValue("false") boolean exactLabel
     ) {
         if ( query == null || query.getValue().isEmpty() ) {
             throw new BadRequestException( "Search query cannot be empty." );
@@ -479,14 +487,14 @@ public class AnnotationsWebService {
             throw new BadRequestException( "Upstream delegation requested but "
                     + "`gemma.upstream.annotationSearch.url` is unset on this server." );
         }
-        String cacheKey = buildSearchCacheKey( query.getValue(), strategy.getName(), limit, prefixes, upstream );
+        String cacheKey = buildSearchCacheKey( query.getValue(), strategy.getName(), limit, prefixes, upstream, exactLabel );
         List<AnnotationSearchResultValueObject> cached = SEARCH_CACHE.get( cacheKey );
         if ( cached != null ) {
             log.debug( "annotation-search cache HIT key={} (size={})", cacheKey, SEARCH_CACHE.size() );
             return respond( new ArrayList<>( cached ) );
         }
         try {
-            List<AnnotationSearchResultValueObject> result = new ArrayList<>( this.getTerms( query, strategy, limit, prefixes, upstream, FIND_CHARACTERISTICS_TIMEOUT_MS ) );
+            List<AnnotationSearchResultValueObject> result = new ArrayList<>( this.getTerms( query, strategy, limit, prefixes, upstream, exactLabel, FIND_CHARACTERISTICS_TIMEOUT_MS ) );
             // store an unmodifiable defensive copy so callers can't mutate the cached value
             SEARCH_CACHE.put( cacheKey, Collections.unmodifiableList( new ArrayList<>( result ) ) );
             log.debug( "annotation-search cache MISS key={} stored {} hits (size={})", cacheKey, result.size(), SEARCH_CACHE.size() );
@@ -535,7 +543,7 @@ public class AnnotationsWebService {
     public ResponseDataObject<List<AnnotationSearchResultValueObject>> searchAnnotationsByPathQuery( // Params:
             @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE, description = SEARCH_QUERY_DESCRIPTION) @PathParam("query") @DefaultValue("") StringArrayArg query // Required
     ) {
-        return searchAnnotations( query, LuceneOrderRankingStrategy.NAME, SEARCH_DEFAULT_LIMIT, "", false );
+        return searchAnnotations( query, LuceneOrderRankingStrategy.NAME, SEARCH_DEFAULT_LIMIT, "", false, false );
     }
 
     /**
@@ -750,7 +758,8 @@ public class AnnotationsWebService {
      * @return a collection of characteristics matching the input query.
      */
     private LinkedHashSet<AnnotationSearchResultValueObject> getTerms( StringArrayArg arg,
-            AnnotationSearchRankingStrategy strategy, int limit, List<String> prefixes, boolean upstream, long timeoutMs ) throws SearchException {
+            AnnotationSearchRankingStrategy strategy, int limit, List<String> prefixes, boolean upstream,
+            boolean exactLabel, long timeoutMs ) throws SearchException {
         StopWatch timer = StopWatch.createStarted();
         List<CharacteristicValueObject> rawHits = new ArrayList<>();
         for ( String query : arg.getValue() ) {
@@ -777,6 +786,27 @@ public class AnnotationsWebService {
         rawHits.sort( Comparator
                 .comparing( CharacteristicValueObject::getValueUri, Comparator.nullsLast( Comparator.naturalOrder() ) )
                 .thenComparing( CharacteristicValueObject::getValue, Comparator.nullsLast( Comparator.naturalOrder() ) ) );
+        // Exact-label pushdown for resolver-style callers (cuts 5-10x candidate payload).
+        // Case-insensitive equality against the trimmed query — mirrors the trim+lowercase
+        // that callers do client-side today. Applies AFTER the canonical sort so the kept
+        // subset is also deterministic. Empty result is a valid outcome.
+        if ( exactLabel ) {
+            String wantedLower = arg.getValue().stream()
+                    .map( s -> s != null ? s.trim().toLowerCase( Locale.ROOT ) : "" )
+                    .filter( s -> !s.isEmpty() )
+                    .findFirst()
+                    .orElse( "" );
+            if ( !wantedLower.isEmpty() ) {
+                List<CharacteristicValueObject> exact = new ArrayList<>( rawHits.size() );
+                for ( CharacteristicValueObject h : rawHits ) {
+                    String label = h.getValue();
+                    if ( label != null && label.trim().toLowerCase( Locale.ROOT ).equals( wantedLower ) ) {
+                        exact.add( h );
+                    }
+                }
+                rawHits = exact;
+            }
+        }
         // Allow-list pushdown: when callers know which ontology namespaces are relevant (e.g.
         // proposer agents passing `prefixes=CL_,EFO_`), filter BEFORE ranking + truncation so
         // the kept top-N is determined by ranking among the allowed set, not by which items the
@@ -1241,7 +1271,7 @@ public class AnnotationsWebService {
      * matches (the underlying LIKE search and ontology lookup are case-insensitive); URI-shaped terms keep
      * their case because URIs are case-sensitive on the path/query portion.
      */
-    private static String buildSearchCacheKey( List<String> values, String rankName, int limit, List<String> prefixes, boolean upstream ) {
+    private static String buildSearchCacheKey( List<String> values, String rankName, int limit, List<String> prefixes, boolean upstream, boolean exactLabel ) {
         StringBuilder sb = new StringBuilder( values.size() * 16 );
         // Prefix the strategy name + limit + namespaces so swapping any of them invalidates the
         // cache without colliding with a different-query default-rank entry. STX separates the
@@ -1253,6 +1283,8 @@ public class AnnotationsWebService {
         sb.append( String.join( ",", prefixes ) );
         sb.append( '' );
         sb.append( upstream ? "u" : "l" );
+        sb.append( '' );
+        sb.append( exactLabel ? "e" : "s" );
         sb.append( '' );
         for ( int i = 0; i < values.size(); i++ ) {
             String v = values.get( i );
