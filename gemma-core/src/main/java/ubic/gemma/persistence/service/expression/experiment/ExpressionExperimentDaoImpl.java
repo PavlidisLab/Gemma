@@ -2670,10 +2670,83 @@ public class ExpressionExperimentDaoImpl
             // those need to be removed afterward because otherwise the BioAssay.sampleUsed would become transient while
             // cascading and that is not allowed in the data model
             log.info( String.format( "Removing %d BioMaterial that are no longer attached to any BioAssay", samplesToRemove.size() ) );
-            for ( BioMaterial bm : samplesToRemove ) {
+            // Order matters when single-cell datasets carry a BioMaterial hierarchy: a cell-level
+            // BM points its SOURCE_BIO_MATERIAL_FK at the sample-level BM, so the sample-level
+            // (parent) row cannot be deleted while a cell-level (child) row still references it
+            // (BIO_MATERIAL_SOURCE_BIO_MATERIAL_FKC violation, github #1530). Topologically sort
+            // so children — anything whose sourceBioMaterial is also in samplesToRemove — are
+            // deleted first; surviving siblings outside the set are detached from their deleted
+            // parents via sourceBioMaterial=null so the FK on the to-stay row is cleared before
+            // the parent is deleted.
+            for ( BioMaterial bm : sortBioMaterialsForDeletion( samplesToRemove ) ) {
                 log.debug( "Removing " + bm + "..." );
                 getSessionFactory().getCurrentSession().delete( bm );
             }
+        }
+    }
+
+    /**
+     * Order BioMaterials so that any BM whose {@code sourceBioMaterial} is also in {@code toRemove}
+     * appears AFTER its parent in the returned list — reversed so we delete child-first.
+     * <p>
+     * Also detaches surviving cell-level BMs (those NOT in {@code toRemove} but whose
+     * {@code sourceBioMaterial} IS being deleted) by setting their {@code sourceBioMaterial} to
+     * null, so the FK doesn't reference a row about to disappear.
+     */
+    private List<BioMaterial> sortBioMaterialsForDeletion( Set<BioMaterial> toRemove ) {
+        if ( toRemove.size() <= 1 ) {
+            return new ArrayList<>( toRemove );
+        }
+        Set<Long> toRemoveIds = new HashSet<>();
+        for ( BioMaterial bm : toRemove ) {
+            toRemoveIds.add( bm.getId() );
+        }
+        // Detach surviving children that reference any BM in toRemove via sourceBioMaterial.
+        //noinspection unchecked
+        List<BioMaterial> survivingChildren = getSessionFactory().getCurrentSession()
+                .createQuery( "select bm from BioMaterial bm where bm.sourceBioMaterial.id in :ids and bm.id not in :ids" )
+                .setParameter( "ids", toRemoveIds )
+                .list();
+        for ( BioMaterial child : survivingChildren ) {
+            log.warn( child + " references a BioMaterial being deleted via sourceBioMaterial; clearing the link before parent delete." );
+            child.setSourceBioMaterial( null );
+        }
+        // Topological sort: children first (highest depth first).
+        Map<Long, BioMaterial> byId = new HashMap<>();
+        for ( BioMaterial bm : toRemove ) {
+            byId.put( bm.getId(), bm );
+        }
+        Map<Long, Integer> depthCache = new HashMap<>();
+        List<BioMaterial> sorted = new ArrayList<>( toRemove );
+        sorted.sort( ( a, b ) -> Integer.compare(
+                depthInRemovalSet( b, byId, depthCache, new HashSet<>() ),
+                depthInRemovalSet( a, byId, depthCache, new HashSet<>() ) ) );
+        return sorted;
+    }
+
+    private int depthInRemovalSet( BioMaterial bm, Map<Long, BioMaterial> byId, Map<Long, Integer> cache, Set<Long> visiting ) {
+        Long id = bm.getId();
+        Integer cached = cache.get( id );
+        if ( cached != null ) {
+            return cached;
+        }
+        if ( !visiting.add( id ) ) {
+            // cycle defence (shouldn't happen for sourceBioMaterial but be safe)
+            return 0;
+        }
+        try {
+            int depth = 0;
+            BioMaterial parent = bm.getSourceBioMaterial();
+            if ( parent != null && parent.getId() != null ) {
+                BioMaterial parentInSet = byId.get( parent.getId() );
+                if ( parentInSet != null ) {
+                    depth = 1 + depthInRemovalSet( parentInSet, byId, cache, visiting );
+                }
+            }
+            cache.put( id, depth );
+            return depth;
+        } finally {
+            visiting.remove( id );
         }
     }
 
