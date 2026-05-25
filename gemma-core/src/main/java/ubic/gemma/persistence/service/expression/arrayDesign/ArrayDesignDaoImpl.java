@@ -891,7 +891,8 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
             return ( Long ) this.getSessionFactory().getCurrentSession()
                     .createQuery( "select count(distinct cs) from CompositeSequence as cs join cs.arrayDesign as ar "
                             + ", BioSequence2GeneProduct bs2gp, Gene gene join gene.products gp "
-                            + "where bs2gp.bioSequence=cs.biologicalCharacteristic and bs2gp.geneProduct=gp" )
+                            + "where bs2gp.bioSequence=cs.biologicalCharacteristic and bs2gp.geneProduct=gp "
+                            + "and gp.dummy = false" )
                     .uniqueResult();
         }
     }
@@ -906,7 +907,8 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
             return ( Long ) this.getSessionFactory().getCurrentSession()
                     .createQuery( "select count(distinct gene) from  CompositeSequence as cs join cs.arrayDesign as ar "
                             + ", BioSequence2GeneProduct bs2gp, Gene gene join gene.products gp "
-                            + "where bs2gp.bioSequence=cs.biologicalCharacteristic and  bs2gp.geneProduct=gp" )
+                            + "where bs2gp.bioSequence=cs.biologicalCharacteristic and  bs2gp.geneProduct=gp "
+                            + "and gp.dummy = false" )
                     .uniqueResult();
         }
     }
@@ -964,7 +966,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                     .createQuery( "select count(distinct cs) from  CompositeSequence as cs join cs.arrayDesign as ar "
                             + " , BioSequence2GeneProduct bs2gp, Gene gene join gene.products gp "
                             + "where bs2gp.bioSequence=cs.biologicalCharacteristic and "
-                            + "bs2gp.geneProduct=gp and ar = :ar" )
+                            + "bs2gp.geneProduct=gp and gp.dummy = false and ar = :ar" )
                     .setParameter( "ar", arrayDesign ).uniqueResult();
         }
     }
@@ -981,7 +983,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                     .createQuery( "select count(distinct cs) from  CompositeSequence as cs join cs.arrayDesign as ar "
                             + " , BioSequence2GeneProduct bs2gp, Gene gene join gene.products gp "
                             + "where bs2gp.bioSequence=cs.biologicalCharacteristic and "
-                            + "bs2gp.geneProduct=gp and ar in :ar" )
+                            + "bs2gp.geneProduct=gp and gp.dummy = false and ar in :ar" )
                     .setParameterList( "ar", arrayDesigns ).uniqueResult();
         }
     }
@@ -999,7 +1001,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                     .createQuery( "select count(distinct gene) from CompositeSequence cs "
                             + "join cs.biologicalCharacteristic bs "
                             + "join bs.bioSequence2GeneProduct bs2gp join bs2gp.geneProduct gp join gp.gene gene "
-                            + "where cs.arrayDesign = :ad" )
+                            + "where cs.arrayDesign = :ad and gp.dummy = false" )
                     .setParameter( "ad", arrayDesign )
                     .uniqueResult();
         }
