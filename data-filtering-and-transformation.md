@@ -1,12 +1,18 @@
 # Data filtering and transformation performed by Gemma
 
-## Bulk import (RNA-Seq or Microarray)
+## Bulk data import (RNA-Seq or Microarray)
 
-Very little filtering is done for bulk RNA-Seq data.
+Bulk RNA-Seq data is imported as counts and FPKM. Counts are normalized to
+$$\log_2\mathrm{cpm}$$ which are then used for subsequent filtering steps and
+analyses.
 
-RNA-Seq data is normalized in $$\log_2\mathrm{cpm}$$. We also import FPKM and raw counts.
+Microarray data is loaded as a $$\log_2$$-scaled signal ratio (for two-color
+arrays).
 
-## Single-cell import (single-cell only)
+Gemma keeps curated platforms with known design elements for Microarray and
+RNA-Seq.
+
+## Single-cell data import (single-cell only)
 
 For storage efficiency, we drop barcodes that lack data points. This includes
 barcodes that might have genes expressed, but for which there is no design
@@ -14,11 +20,12 @@ element in the target platform (e.g. lncRNA or predicted genes).
 
 For Cell Ranger, we import the filtered data which results from applying the
 OrdMag and EmptyDrops[^ordmag-emptydrops] algorithms to identify and exclude
-doublets. When data is reprocessed by us, this is done systematically. When
-data is imported from GEO, we apply some heuristics to detect if the data is
-unfiltered and reapply the exact same algorithm Cell Ranger uses.
+empty droplets. When data is reprocessed by us, this is done systematically.
+When data is imported from GEO, we apply some heuristics to detect if the data
+is unfiltered and reapply the exact same algorithm Cell Ranger uses.
 
-For other platforms, we assume that the authors have adequately filtered cells.
+For other data sources (e.g. CELLxGENE, UCSC Cell Browser), we assume that the
+authors have adequately filtered cells.
 
 [^ordmag-emptydrops]: [Calling cell barcodes](https://www.10xgenomics.com/support/software/cell-ranger/latest/algorithms-overview/cr-gex-algorithm#cell_calling)
 
@@ -26,7 +33,7 @@ For other platforms, we assume that the authors have adequately filtered cells.
 
 When aggregating pseudo-bulks, cells that were identified as outliers by the
 cell type annotation pipeline are excluded. They are not counted toward cell
-statistics. Gemma stores these outliers as masks in the cell-level
+statistics. Gemma stores these outliers as binary masks in the cell-level
 characteristics.
 
 Gemma also keep tracks of how many cells were involved in the calculation of
@@ -41,12 +48,6 @@ pseudo-bulk by its library size.
 Pseudo-bulk aggregation and bulk data import results in "raw" data vectors that
 needs to be "processed". This mainly consists of ensuring that the data is on
 a $$\log_2$$ scale and performing quantile normalization.
-
- 1. outliers are masked (deprecated)
- 2. quantile normalization
-
-Outliers are currently masked in processed data vectors, but this is going to
-be removed at some point in favour of masking data prior to an analysis.
 
 Quantile normalization has an impact on later stage filtering because it
 assigns values from a common mean distribution. This results in identical
