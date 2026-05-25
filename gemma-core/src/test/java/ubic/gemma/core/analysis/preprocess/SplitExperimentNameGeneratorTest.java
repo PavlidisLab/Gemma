@@ -8,8 +8,8 @@ import ubic.gemma.model.expression.experiment.Statement;
 
 import java.nio.charset.StandardCharsets;
 
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static ubic.gemma.core.analysis.preprocess.SplitExperimentServiceImpl.generateNameForSplit;
 
 public class SplitExperimentNameGeneratorTest {
@@ -31,10 +31,18 @@ public class SplitExperimentNameGeneratorTest {
         assertEquals( 253, name.length() );
         assertEquals( 255, name.getBytes( StandardCharsets.UTF_8 ).length );
         assertEquals( "Split part 1 of: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa… [foo = bar]", name );
+        // Issue #1019: when the FV stringification is long enough that the full suffix
+        // [foo = <long-subject>] cannot fit, we abbreviate the FV string rather than throw.
         ee.setName( "test" );
         c.setSubject( String.join( "", java.util.Collections.nCopies( 255, "a" ) ) );
-        assertThatThrownBy( () -> generateNameForSplit( ee, 1, fv ) )
-                .isInstanceOf( IllegalArgumentException.class );
+        String longSubjectName = generateNameForSplit( ee, 1, fv );
+        assertTrue( longSubjectName.getBytes( StandardCharsets.UTF_8 ).length <= 255,
+                "name must fit in 255 bytes, got: " + longSubjectName.length() + " chars / "
+                        + longSubjectName.getBytes( StandardCharsets.UTF_8 ).length + " bytes" );
+        assertTrue( longSubjectName.startsWith( "Split part 1 of: test [foo = " ),
+                "name must keep the split-part prefix, got: " + longSubjectName );
+        assertTrue( longSubjectName.contains( "…" ),
+                "name must show ellipsis for truncated FV, got: " + longSubjectName );
 
         // make sure that whitespaces before the ellipsis are trimmed
         int lengthOfEverythingElse = "Split part 1 of: [foo = bar]".length();
