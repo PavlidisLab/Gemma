@@ -146,6 +146,13 @@ public class ExpressionExperimentDataVectorServiceImpl implements ExpressionExpe
             }
         }
 
+        // Issues #902 / #1129: when prior replace cycles failed to cascade their QT delete
+        // (or when AffyFromCel re-runs over an EE that already had a stub QT pre-attached),
+        // ee.quantitationTypes holds orphan rows that no vector references. The previous
+        // implementation derived `existingQts` from vectors only and left those orphans behind,
+        // producing "stray preferred" QTs and downstream FK violations on subsequent imports.
+        expressionExperimentDao.removeOrphanQuantitationTypes( ee );
+
         return replaced;
     }
 

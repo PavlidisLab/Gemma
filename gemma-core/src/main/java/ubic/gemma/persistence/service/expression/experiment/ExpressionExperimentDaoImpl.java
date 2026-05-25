@@ -5036,6 +5036,46 @@ public class ExpressionExperimentDaoImpl
         }
     }
 
+    @Override
+    public int removeOrphanQuantitationTypes( ExpressionExperiment ee ) {
+        Assert.notNull( ee.getId(), "ExpressionExperiment must be persistent." );
+        ee = ensureEeInSession( ee );
+        Session session = getSessionFactory().getCurrentSession();
+        // Snapshot to avoid CME while we mutate ee.quantitationTypes inside the loop.
+        List<QuantitationType> candidates = new ArrayList<>( ee.getQuantitationTypes() );
+        int removed = 0;
+        for ( QuantitationType qt : candidates ) {
+            // Skip QTs that are still referenced by any vector class (raw, processed, single-cell).
+            // We touch each vector entity individually rather than reusing bulkDataVectorTypes
+            // because single-cell vectors are not in that set and we still want to keep their QTs.
+            long usageCount = ( Long ) session
+                    .createQuery( "select count(*) from RawExpressionDataVector v where v.quantitationType = :qt" )
+                    .setParameter( "qt", qt )
+                    .uniqueResult();
+            if ( usageCount == 0L ) {
+                usageCount = ( Long ) session
+                        .createQuery( "select count(*) from ProcessedExpressionDataVector v where v.quantitationType = :qt" )
+                        .setParameter( "qt", qt )
+                        .uniqueResult();
+            }
+            if ( usageCount == 0L ) {
+                usageCount = ( Long ) session
+                        .createQuery( "select count(*) from SingleCellExpressionDataVector v where v.quantitationType = :qt" )
+                        .setParameter( "qt", qt )
+                        .uniqueResult();
+            }
+            if ( usageCount > 0L ) {
+                continue;
+            }
+            log.warn( "Removing stray quantitation type " + qt + " from " + ee + " that no vector references." );
+            ee.getQuantitationTypes().remove( qt );
+            QuantitationType managedQt = session.get( QuantitationType.class, qt.getId() );
+            session.delete( managedQt != null ? managedQt : qt );
+            removed++;
+        }
+        return removed;
+    }
+
     private void removeUnusedDimensions( ExpressionExperiment ee, Collection<BioAssayDimension> dimensions ) {
         for ( BioAssayDimension dim : dimensions ) {
             long otherUsers = 0;
