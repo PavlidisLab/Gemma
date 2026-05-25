@@ -80,18 +80,6 @@ public class TestOntologyConfig {
     }
 
     @Bean
-    @Deprecated
-    public FactoryBean<NIFSTDOntologyService> nisftOntologyServiceFactory( @Qualifier("ontologyTaskExecutor") TaskExecutor taskExecutor ) {
-        return createOntologyFactory( NIFSTDOntologyService.class, taskExecutor );
-    }
-
-    @Bean
-    @Deprecated
-    public FactoryBean<FMAOntologyService> fmaOntologyService( @Qualifier("ontologyTaskExecutor") TaskExecutor taskExecutor ) {
-        return createOntologyFactory( FMAOntologyService.class, taskExecutor );
-    }
-
-    @Bean
     public FactoryBean<UberonOntologyService> uberonOntologyService( @Qualifier("ontologyTaskExecutor") TaskExecutor taskExecutor ) {
         return createOntologyFactory( UberonOntologyService.class, taskExecutor );
     }

@@ -15,7 +15,6 @@ import org.springframework.core.task.TaskExecutor;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.ontology.basecode.providers.ChebiOntologyService;
 import ubic.gemma.core.ontology.basecode.providers.ExperimentalFactorOntologyService;
-import ubic.gemma.core.ontology.basecode.providers.FMAOntologyService;
 import ubic.gemma.core.ontology.basecode.providers.ObiService;
 import ubic.gemma.core.ontology.basecode.search.OntologySearchException;
 import ubic.gemma.core.ontology.basecode.simple.OntologyTermSimple;
@@ -97,12 +96,6 @@ public class OntologyServiceTest extends BaseTest5 {
 
         @Bean
         public ExperimentalFactorOntologyService experimentalFactorOntologyService() {
-            return mock();
-        }
-
-        @Deprecated
-        @Bean
-        public FMAOntologyService fmaOntologyService() {
             return mock();
         }
 
