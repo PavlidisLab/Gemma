@@ -90,7 +90,11 @@ public class InternalPipelineWebService {
             throw new NotAuthorizedException( "missing or malformed Authorization header" );
         }
         String supplied = authHeader.substring( "Bearer ".length() ).trim();
-        if ( !expectedToken.equals( supplied ) ) {
+        // Constant-time comparison — protects against timing attacks even
+        // though the realistic threat on an internal network is low.
+        if ( !java.security.MessageDigest.isEqual(
+                expectedToken.getBytes( java.nio.charset.StandardCharsets.UTF_8 ),
+                supplied.getBytes( java.nio.charset.StandardCharsets.UTF_8 ) ) ) {
             throw new NotAuthorizedException( "invalid token" );
         }
     }
