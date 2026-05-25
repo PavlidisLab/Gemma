@@ -125,6 +125,8 @@ public class AdminWebServiceTest {
     private ExternalDatabaseReadService externalDatabaseReadService;
     @Mock
     private GeoScrapeService geoScrapeService;
+    @Mock
+    private ubic.gemma.core.search.indexer.IndexerService indexerService;
 
     private AdminWebService webService;
 
@@ -140,7 +142,8 @@ public class AdminWebServiceTest {
         taxonArgService = new TaxonArgService( innerTaxonService, innerChromosomeService, innerGeneService );
         webService = new AdminWebService( cacheManager, sessionFactory, taskRunningService, sessionRegistry,
                 Collections.emptyList(), dataSource, userManager, agentProposalService, ticketService,
-                taxonArgService, blacklistedEntityService, externalDatabaseReadService, geoScrapeService );
+                taxonArgService, blacklistedEntityService, externalDatabaseReadService, geoScrapeService,
+                indexerService );
     }
 
     /* ===== /admin/caches ===== */

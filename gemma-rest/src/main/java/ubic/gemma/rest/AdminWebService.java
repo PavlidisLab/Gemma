@@ -53,6 +53,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.job.SubmittedTask;
 import ubic.gemma.core.job.TaskRunningService;
+import ubic.gemma.core.search.indexer.IndexerService;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowserImpl;
@@ -64,6 +65,15 @@ import ubic.gemma.core.tasks.maintenance.GeoScrapeTaskCommand;
 import ubic.gemma.core.tasks.maintenance.MultifunctionalityTaskCommand;
 import ubic.gemma.core.geoscrape.GeoScrapeDryRunCandidate;
 import ubic.gemma.core.geoscrape.GeoScrapeService;
+import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.expression.experiment.GeoScrapeWatermark;
 import ubic.gemma.core.security.AuthorityConstants;
 import ubic.gemma.core.security.authentication.UserDetailsImpl;
@@ -115,7 +125,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static ubic.gemma.rest.util.Responders.respond;
 
@@ -186,6 +199,41 @@ public class AdminWebService {
     @Value("${gemma.search.dir:}")
     private String searchIndexBase;
 
+    private final IndexerService indexerService;
+
+    /**
+     * Map from user-facing entity name (used as path/query param) to the
+     * {@code @Indexed} class the mass-indexer drives. Kept in sync with
+     * {@code IndexGemmaCLI.INDEXABLE_ENTITIES}; the CLI is still the canonical
+     * source-of-truth for which roots Gemma indexes.
+     */
+    private static final Map<String, Class<? extends Identifiable>> INDEXABLE_ENTITIES;
+    static {
+        Map<String, Class<? extends Identifiable>> m = new LinkedHashMap<>();
+        m.put( "genes", Gene.class );
+        m.put( "datasets", ExpressionExperiment.class );
+        m.put( "platforms", ArrayDesign.class );
+        m.put( "bibliographicReferences", BibliographicReference.class );
+        m.put( "probes", CompositeSequence.class );
+        m.put( "sequences", BioSequence.class );
+        m.put( "datasetGroups", ExpressionExperimentSet.class );
+        m.put( "geneSets", GeneSet.class );
+        INDEXABLE_ENTITIES = Collections.unmodifiableMap( m );
+    }
+
+    /**
+     * Single-flight gate for the destructive mass-reindex path. Concurrent POSTs
+     * receive {@code 409 Conflict} rather than racing each other through HS 7's
+     * mass-indexer (which would purge each other's just-written segments).
+     */
+    private final AtomicBoolean reindexInProgress = new AtomicBoolean( false );
+
+    /**
+     * Per-entity status of the most recent reindex job (running / completed / failed).
+     * Surfaced via {@code GET /admin/search/indices} alongside the doc-count read.
+     */
+    private final ConcurrentMap<String, String> reindexStatus = new ConcurrentHashMap<>();
+
     @Autowired
     public AdminWebService( CacheManager cacheManager, SessionFactory sessionFactory,
             TaskRunningService taskRunningService, SessionRegistry sessionRegistry,
@@ -194,7 +242,8 @@ public class AdminWebService {
             TaxonArgService taxonArgService,
             BlacklistedEntityService blacklistedEntityService,
             ExternalDatabaseReadService externalDatabaseReadService,
-            GeoScrapeService geoScrapeService ) {
+            GeoScrapeService geoScrapeService,
+            IndexerService indexerService ) {
         this.cacheManager = cacheManager;
         this.sessionFactory = sessionFactory;
         this.taskRunningService = taskRunningService;
@@ -208,6 +257,7 @@ public class AdminWebService {
         this.blacklistedEntityService = blacklistedEntityService;
         this.externalDatabaseReadService = externalDatabaseReadService;
         this.geoScrapeService = geoScrapeService;
+        this.indexerService = indexerService;
     }
 
     /* ===== Caches ===== */
@@ -624,6 +674,98 @@ public class AdminWebService {
             }
         }
         return vo;
+    }
+
+    /**
+     * Trigger a Hibernate Search 7 mass-reindex for one entity (or all of them).
+     * <p>
+     * Destructive: HS 7's mass-indexer purges the existing on-disk Lucene index
+     * for the entity before rebuilding ({@code purgeAllOnStart(true)}). Runs
+     * asynchronously on a background thread; this endpoint returns
+     * {@code 202 Accepted} as soon as the work is queued. Use
+     * {@link #getSearchIndices()} to monitor doc-count progress and the
+     * {@code reindexStatus} field per entity.
+     * <p>
+     * Concurrent reindex requests are rejected with {@code 409 Conflict} — the
+     * mass-indexer is single-flight per JVM so two parallel calls would purge
+     * each other's just-written segments.
+     *
+     * @param entity user-facing entity name (one of {@code genes}, {@code datasets},
+     *               {@code platforms}, {@code bibliographicReferences}, {@code probes},
+     *               {@code sequences}, {@code datasetGroups}, {@code geneSets}); or
+     *               omit to reindex all indexable roots sequentially.
+     */
+    @POST
+    @Path("/search/indices")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Trigger a Hibernate Search 7 mass-reindex",
+            description = "Kicks off a destructive rebuild of the on-disk Lucene index "
+                    + "for one (or all) indexable entities. Returns 202 with a list of "
+                    + "queued entities. Run via the legacy CLI (IndexGemmaCLI) too — this "
+                    + "endpoint is the curation-UI / ops-script equivalent so an admin can "
+                    + "rebuild without shelling onto the container.",
+            security = {
+                    @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
+            },
+            responses = {
+                    @ApiResponse(responseCode = "202",
+                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class))),
+                    @ApiResponse(responseCode = "400", description = "Unknown entity name.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "409", description = "Another reindex is already running.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+            })
+    public Response reindexSearchIndices(
+            @QueryParam("entity") @Nullable String entity ) {
+        List<Class<? extends Identifiable>> targets = new ArrayList<>();
+        if ( entity == null || entity.trim().isEmpty() || "all".equalsIgnoreCase( entity.trim() ) ) {
+            targets.addAll( INDEXABLE_ENTITIES.values() );
+        } else {
+            Class<? extends Identifiable> cls = INDEXABLE_ENTITIES.get( entity.trim() );
+            if ( cls == null ) {
+                throw new BadRequestException( "Unknown entity '" + entity + "'. Supported: " + INDEXABLE_ENTITIES.keySet() );
+            }
+            targets.add( cls );
+        }
+        if ( !reindexInProgress.compareAndSet( false, true ) ) {
+            throw new ClientErrorException( "Another reindex is already running. Wait for it to finish, "
+                    + "then re-issue this request. Status is exposed via GET /admin/search/indices.",
+                    Response.Status.CONFLICT );
+        }
+        // Capture for the worker thread; copy out so the closure doesn't retain the request scope.
+        final List<Class<? extends Identifiable>> work = new ArrayList<>( targets );
+        for ( Class<? extends Identifiable> c : work ) {
+            reindexStatus.put( c.getSimpleName(), "queued" );
+        }
+        Thread.startVirtualThread( () -> {
+            try {
+                for ( Class<? extends Identifiable> c : work ) {
+                    reindexStatus.put( c.getSimpleName(), "running" );
+                    log.info( "/admin/search/indices: reindexing " + c.getSimpleName() + "…" );
+                    try {
+                        indexerService.index( c );
+                        reindexStatus.put( c.getSimpleName(), "completed" );
+                        log.info( "/admin/search/indices: " + c.getSimpleName() + " reindex complete." );
+                    } catch ( RuntimeException e ) {
+                        reindexStatus.put( c.getSimpleName(), "failed: " + e.getClass().getSimpleName() + " — " + e.getMessage() );
+                        log.error( "/admin/search/indices: " + c.getSimpleName() + " reindex failed.", e );
+                    }
+                }
+            } finally {
+                reindexInProgress.set( false );
+            }
+        } );
+        List<String> queued = new ArrayList<>( work.size() );
+        for ( Class<? extends Identifiable> c : work ) queued.add( c.getSimpleName() );
+        return Response.accepted( respond( new ReindexAcceptedResponse( queued ) ) ).build();
+    }
+
+    /** Wire shape for {@link #reindexSearchIndices}: list of entity classes whose reindex was queued. */
+    @lombok.Value
+    public static class ReindexAcceptedResponse {
+        List<String> queued;
     }
 
     /* ===== JVM / OS snapshot ===== */
