@@ -88,6 +88,7 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
 
     @Override
     protected void processExpressionExperiment( ExpressionExperiment ee ) {
+        getPipelineJobReporter().stage( "processed-data:" + ee.getShortName() );
         if ( expressionExperimentService.isTroubled( ee ) && !isForce() ) {
             addWarningObject( ee, "Skipping troubled experiment " + ee.getShortName() + ", use -" + FORCE_OPTION + " to process." );
             return;

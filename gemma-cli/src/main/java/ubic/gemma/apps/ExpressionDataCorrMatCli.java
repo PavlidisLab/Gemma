@@ -54,6 +54,7 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
 
     @Override
     protected void processExpressionExperiment( ExpressionExperiment ee ) {
+        getPipelineJobReporter().stage( "corrmat:" + ee.getShortName() );
         if ( this.noNeedToRun( ee, null ) ) {
             addSuccessObject( ee, "No need to compute coexpression matrix." );
             return;
