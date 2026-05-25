@@ -126,6 +126,16 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
      */
     private volatile BatchTaskExecutorService executorService = null;
 
+    /**
+     * Pipeline-job progress reporter. Resolved from the process environment on
+     * each {@code executeCommand} entry and pushed to the Gemma pipeline framework
+     * when {@code GEMMA_JOB_ID} is set. {@link ubic.gemma.cli.pipeline.PipelineJobReporter#NOOP}
+     * outside a pipeline context; subclasses call {@link #getPipelineJobReporter()}
+     * to emit per-stage progress without conditionals.
+     */
+    private volatile ubic.gemma.cli.pipeline.PipelineJobReporter pipelineJobReporter =
+            ubic.gemma.cli.pipeline.PipelineJobReporter.NOOP;
+
     @Override
     public String getCommandName() {
         return null;
@@ -211,12 +221,20 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
             cliContext.setExitStatus( FAILURE, e );
             return;
         }
+        // Resolve the pipeline reporter — NOOP unless GEMMA_JOB_ID env var is set.
+        this.pipelineJobReporter = ubic.gemma.cli.pipeline.PipelineJobReporter.fromEnv();
+        if ( this.pipelineJobReporter.isActive() ) {
+            this.pipelineJobReporter.stage( getActualCommandName() );
+        }
         try ( BatchTaskExecutorService executorService = createBatchTaskExecutor() ) {
             this.executorService = executorService;
             doWork();
             executorService.shutdownAndAwaitTermination();
             if ( executorService.getProgressReporter().hasErrorObjects() ) {
                 cliContext.setExitStatus( FAILURE_FROM_ERROR_OBJECTS, null );
+                this.pipelineJobReporter.error( new RuntimeException( "completed with error objects" ) );
+            } else {
+                this.pipelineJobReporter.completed();
             }
         } catch ( Exception e ) {
             if ( e instanceof InterruptedException ) {
@@ -229,13 +247,27 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
             if ( e instanceof WorkAbortedException ) {
                 log.warn( "Operation was aborted by the current user." );
                 cliContext.setExitStatus( ABORTED, e );
+                this.pipelineJobReporter.killed( e.getMessage() );
             } else {
                 log.error( getActualCommandName() + " failed:", e );
                 cliContext.setExitStatus( FAILURE, e );
+                this.pipelineJobReporter.error( e );
             }
         } finally {
             this.executorService = null;
         }
+    }
+
+    /**
+     * Obtain the pipeline-job progress reporter for this run.
+     * <p>
+     * Returns {@link ubic.gemma.cli.pipeline.PipelineJobReporter#NOOP} when the
+     * CLI was launched outside a pipeline context (i.e. {@code GEMMA_JOB_ID}
+     * env var unset), so subclasses can call
+     * {@code getPipelineJobReporter().stage("phase")} unconditionally.
+     */
+    protected final ubic.gemma.cli.pipeline.PipelineJobReporter getPipelineJobReporter() {
+        return pipelineJobReporter;
     }
 
     /**

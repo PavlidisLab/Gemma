@@ -365,6 +365,10 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
     @Override
     protected void processExpressionExperiment( ExpressionExperiment ee ) {
+        // Per-EE progress hook for the pipeline framework. NOOP outside a
+        // pipeline context (GEMMA_JOB_ID unset).
+        getPipelineJobReporter().stage( "dea:" + ee.getShortName() );
+
         ee = this.eeService.thawLite( ee );
 
         if ( mode == Mode.DELETE ) {
