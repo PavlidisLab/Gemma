@@ -206,7 +206,11 @@ public class AnnotationsWebService {
             LuceneOrderRankingStrategy fallback = new LuceneOrderRankingStrategy();
             this.rankingStrategies = Collections.singletonMap( fallback.getName(), fallback );
         } else {
-            this.rankingStrategies = rankingStrategies;
+            // Spring injects with bean-name keys (e.g. luceneOrderRankingStrategy); the REST surface
+            // uses the strategy's short getName() (e.g. lucene). Re-key so resolveRankingStrategy()
+            // finds the strategy by its public-facing name.
+            this.rankingStrategies = rankingStrategies.values().stream()
+                    .collect( Collectors.toMap( AnnotationSearchRankingStrategy::getName, s -> s ) );
         }
     }
 
