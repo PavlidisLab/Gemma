@@ -214,8 +214,9 @@ class ExpressionDataFileHelperService {
 
     public DifferentialExpressionAnalysis getAnalysis( BioAssaySet experimentAnalyzed, DifferentialExpressionAnalysis analysis, Map<CompositeSequence, String[]> geneAnnotations, AtomicBoolean hasSignificantBatchConfound ) {
         geneAnnotations.putAll( getGeneAnnotationsAsStrings( experimentAnalyzed ) );
-        ExpressionExperiment ee = experimentForBioAssaySet( experimentAnalyzed );
-        hasSignificantBatchConfound.set( expressionExperimentBatchInformationService.hasSignificantBatchConfound( ee ) );
+        // For subset analyses, test against the subset's assays so a parent-EE-only confound does not
+        // trigger the warning in the per-subset result-file header (see #110).
+        hasSignificantBatchConfound.set( expressionExperimentBatchInformationService.hasSignificantBatchConfound( experimentAnalyzed ) );
 
         if ( analysis.getExperimentAnalyzed().getId() == null ) {// this can happen when using -nodb
             analysis.getExperimentAnalyzed().setId( experimentAnalyzed.getId() );
@@ -229,14 +230,4 @@ class ExpressionDataFileHelperService {
         return analysis;
     }
 
-    private ExpressionExperiment experimentForBioAssaySet( BioAssaySet bas ) {
-        ExpressionExperiment ee;
-        bas = ( BioAssaySet ) Hibernate.unproxy( bas );
-        if ( bas instanceof ExpressionExperimentSubSet ) {
-            ee = ( ( ExpressionExperimentSubSet ) bas ).getSourceExperiment();
-        } else {
-            ee = ( ExpressionExperiment ) bas;
-        }
-        return ee;
-    }
 }

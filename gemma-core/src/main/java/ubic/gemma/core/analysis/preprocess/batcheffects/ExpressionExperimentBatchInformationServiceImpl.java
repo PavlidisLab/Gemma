@@ -157,6 +157,35 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
 
     @Override
     @Transactional(readOnly = true)
+    public boolean hasSignificantBatchConfound( BioAssaySet bas ) {
+        if ( bas instanceof ExpressionExperiment ) {
+            return hasSignificantBatchConfound( ( ExpressionExperiment ) bas );
+        }
+        if ( !( bas instanceof ExpressionExperimentSubSet ) ) {
+            throw new IllegalArgumentException( "Unsupported BioAssaySet type: " + bas.getClass().getName() );
+        }
+        ExpressionExperimentSubSet subset = ( ExpressionExperimentSubSet ) bas;
+        ExpressionExperiment parent = subset.getSourceExperiment();
+        if ( parent == null || !this.checkHasUsableBatchInfo( parent ) ) {
+            return false;
+        }
+        Collection<BatchConfound> confounds;
+        try {
+            confounds = BatchConfoundUtils.test( subset );
+        } catch ( NotStrictlyPositiveException e ) {
+            log.error( String.format( "Batch confound test for %s threw a NonStrictlyPositiveException! Returning false.", subset ), e );
+            return false;
+        }
+        for ( BatchConfound c : confounds ) {
+            if ( c.getPValue() < BATCH_CONFOUND_THRESHOLD ) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<BatchConfound> getSignificantBatchConfounds( ExpressionExperiment ee ) {
         ee = expressionExperimentService.thawLite( ee );
 
