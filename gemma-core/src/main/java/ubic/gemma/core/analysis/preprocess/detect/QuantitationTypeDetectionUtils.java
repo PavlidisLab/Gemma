@@ -39,8 +39,16 @@ public class QuantitationTypeDetectionUtils {
 
     /**
      * Check if a given quantitation type adequately describes a given expression data matrix.
+     * <p>
+     * For non-microarray data (RNA-seq, single-cell, etc.), the QT is curator-controlled and the
+     * heuristic inference is noisy enough to produce frequent false-positive warnings (issue #968).
+     * Skip the checks in that case — the platform technology type is the gate.
      */
     public static void lintQuantitationType( QuantitationType quantitationType, ExpressionDataMatrix<?> dmatrix, boolean ignoreQuantitationMismatch ) throws InferredQuantitationMismatchException {
+        if ( !isMicroarray( dmatrix ) ) {
+            // RNA-seq and other sequencing-based data: curator controls scale/type; skip inference checks.
+            return;
+        }
         QuantitationTypeDetectionUtils.InferredQuantitationType inferredQuantitationType = infer( dmatrix, quantitationType );
 
         if ( quantitationType.getType() != inferredQuantitationType.getType() ) {
@@ -104,6 +112,24 @@ public class QuantitationTypeDetectionUtils {
         return qt;
     }
 
+    /**
+     * Detect whether the data matrix uses a microarray platform. Sequencing-based platforms
+     * (RNA-seq, single-cell, etc.) return false. Used by {@link #lintQuantitationType} to skip
+     * inference-based scale/type checks for curator-controlled data (issue #968).
+     */
+    private static boolean isMicroarray( ExpressionDataMatrix<?> expressionData ) {
+        try {
+            return expressionData.getDesignElements().stream()
+                    .map( CompositeSequence::getArrayDesign )
+                    .distinct()
+                    .map( ArrayDesign::getTechnologyType )
+                    .anyMatch( TechnologyType.MICROARRAY::contains );
+        } catch ( LazyInitializationException e ) {
+            log.warn( String.format( "Failed to determine if the data matrix contains microarray platforms: %s.", e.getMessage() ) );
+            return false;
+        }
+    }
+
     private static InferredQuantitationType infer( ExpressionDataMatrix<?> expressionData, @Nullable QuantitationType qt ) {
         Object matrix;
         if ( expressionData instanceof ExpressionDataDoubleMatrix ) {
@@ -114,17 +140,7 @@ public class QuantitationTypeDetectionUtils {
             throw new UnsupportedOperationException( "Unsupported expression data matrix type " + expressionData.getClass().getName() + "." );
         }
 
-        boolean isMicroarray;
-        try {
-            isMicroarray = expressionData.getDesignElements().stream()
-                    .map( CompositeSequence::getArrayDesign )
-                    .distinct()
-                    .map( ArrayDesign::getTechnologyType )
-                    .anyMatch( TechnologyType.MICROARRAY::contains );
-        } catch ( LazyInitializationException e ) {
-            log.warn( String.format( "Failed to determine if the data matrix contains microarray platforms: %s.", e.getMessage() ) );
-            isMicroarray = false;
-        }
+        boolean isMicroarray = isMicroarray( expressionData );
 
         // no data, there's nothing we can do
         if ( isEmpty( matrix ) ) {

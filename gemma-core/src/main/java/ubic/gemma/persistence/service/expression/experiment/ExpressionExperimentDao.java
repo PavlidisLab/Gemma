@@ -622,6 +622,18 @@ public interface ExpressionExperimentDao
     int replaceRawDataVectors( ExpressionExperiment ee, QuantitationType qt, Collection<RawExpressionDataVector> vectors );
 
     /**
+     * Remove quantitation types attached to {@code ee} that are not referenced by any data vector.
+     * <p>
+     * These orphan rows appear after partial replace cycles fail to cascade their QT delete and
+     * after re-runs of importers that pre-attached a stub QT (e.g. AffyFromCel). Skipping them
+     * leaves stray "preferred" QTs in the experiment and triggers FK violations on subsequent
+     * imports (issues #902, #1129).
+     *
+     * @return the number of removed quantitation types
+     */
+    int removeOrphanQuantitationTypes( ExpressionExperiment ee );
+
+    /**
      * Retrieve the processed vector for an experiment.
      * <p>
      * Unlike {@link ExpressionExperiment#getProcessedExpressionDataVectors()}, this is guaranteed to return only one
