@@ -2410,8 +2410,9 @@ public class ExpressionExperimentDaoImpl
     @Override
     public Collection<ExpressionExperiment> loadLackingFactors() {
         //noinspection unchecked
+        // Hibernate 6 rejects `<plural>.size` member access; use size(<plural>).
         return this.getSessionFactory().getCurrentSession().createQuery(
-                        "select e from ExpressionExperiment e join e.experimentalDesign d where d.experimentalFactors.size =  0" )
+                        "select e from ExpressionExperiment e join e.experimentalDesign d where size(d.experimentalFactors) = 0" )
                 .list();
     }
 
