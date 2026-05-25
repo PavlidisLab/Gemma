@@ -98,7 +98,6 @@ public abstract class AbstractPersister implements Persister {
     @Override
     @Transactional
     public <T extends Identifiable> T persist( T entity ) {
-        FlushMode previousFlushMode = sessionFactory.getCurrentSession().getFlushMode();
         try {
             sessionFactory.getCurrentSession().setFlushMode( FlushMode.MANUAL );
             AbstractPersister.log.trace( String.format( "Persisting a %s.", formatEntity( entity ) ) );
@@ -106,7 +105,7 @@ public abstract class AbstractPersister implements Persister {
             sessionFactory.getCurrentSession().flush();
             return persistedEntity;
         } finally {
-            sessionFactory.getCurrentSession().setFlushMode( previousFlushMode );
+            sessionFactory.getCurrentSession().setFlushMode( FlushMode.AUTO );
         }
     }
 
