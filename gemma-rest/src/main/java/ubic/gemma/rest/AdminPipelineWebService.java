@@ -25,6 +25,7 @@ import jakarta.ws.rs.core.MediaType;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import ubic.gemma.model.common.auditAndSecurity.User;
@@ -40,6 +41,7 @@ import static ubic.gemma.rest.util.Responders.respond;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -64,6 +66,33 @@ public class AdminPipelineWebService {
 
     @Autowired
     private UserManager userManager;
+
+    /**
+     * Comma-separated list of pipeline names this Gemma instance knows about.
+     * Used to back the {@code /admin/pipeline/registry} dropdown.
+     * Empty = no registry (UI falls back to free-text).
+     */
+    @Value("${gemma.pipeline.registry:}")
+    private String pipelineRegistryCsv;
+
+    @GET
+    @Path("/registry")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "List pipeline names known to this Gemma instance")
+    public ResponseDataObject<List<String>> pipelineRegistry() {
+        if ( pipelineRegistryCsv == null || pipelineRegistryCsv.isBlank() ) {
+            return respond( Collections.emptyList() );
+        }
+        List<String> names = new ArrayList<>();
+        for ( String name : pipelineRegistryCsv.split( "," ) ) {
+            String trimmed = name.trim();
+            if ( !trimmed.isEmpty() ) {
+                names.add( trimmed );
+            }
+        }
+        return respond( names );
+    }
 
     @POST
     @Path("/batches")
