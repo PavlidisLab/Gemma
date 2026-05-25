@@ -20,7 +20,6 @@ import ubic.gemma.core.pipeline.PipelineScheduler;
 import ubic.gemma.core.pipeline.PipelineSchedulerException;
 import ubic.gemma.core.pipeline.SchedulerHandle;
 import ubic.gemma.core.pipeline.SubmitRequest;
-import ubic.gemma.core.security.audit.Audited;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedPipelineRunEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.PipelineBatchCancelledEvent;
@@ -125,7 +124,6 @@ public class PipelineJobBatchServiceImpl implements PipelineJobBatchService {
 
     @Override
     @Transactional
-    @Audited(value = PipelineBatchCancelledEvent.class, message = "Batch cancellation requested")
     public void cancelBatch( Long batchId ) {
         PipelineJobBatch batch = batchDao.load( batchId );
         if ( batch == null ) {
@@ -138,6 +136,10 @@ public class PipelineJobBatchServiceImpl implements PipelineJobBatchService {
             transitionTo( job, JobState.CANCELLING, "batch cancel" );
         }
         batchDao.update( batch );
+        // @Audited can't fire here — first arg is Long, not Auditable. Emit
+        // imperatively (same pattern as cancelJob).
+        auditTrailService.addUpdateEvent( batch, PipelineBatchCancelledEvent.class,
+                "Batch cancellation requested (" + active.size() + " active jobs)" );
     }
 
     @Override

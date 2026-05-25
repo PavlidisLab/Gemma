@@ -95,70 +95,98 @@ public final class PipelineJobReporter {
     /**
      * Report a stage boundary (e.g. {@code "loading-vectors"}, {@code "running-anova"}).
      * Service-side this transitions QUEUED → RUNNING on first arrival.
+     * Non-terminal: fire-and-forget.
      */
     public void stage( String phase ) {
-        post( "stage", Map.of( "phase", phase ) );
+        post( "stage", Map.of( "phase", phase ), false );
     }
 
     /**
      * Report a progress sample. {@code percent} may be {@code null} when the
      * CLI knows step-level progress but not percent-complete.
+     * Non-terminal: fire-and-forget.
      */
     public void progress( Integer percent, String message ) {
         Map<String, Object> body = ( percent != null )
                 ? Map.of( "percent", percent, "message", message != null ? message : "" )
                 : Map.of( "message", message != null ? message : "" );
-        post( "progress", body );
+        post( "progress", body, false );
     }
 
     /**
-     * Terminal success. Caller should not emit any further events after this.
+     * Terminal success. Sync-wait so the event reaches the server before the
+     * JVM exits. Caller should not emit any further events after this.
      */
     public void completed() {
-        post( "completed", Map.of() );
+        post( "completed", Map.of(), true );
     }
 
     /**
-     * Terminal failure. Caller should not emit any further events after this.
+     * Terminal failure. Sync-wait so the event reaches the server before the
+     * JVM exits. Caller should not emit any further events after this.
      */
     public void error( Throwable t ) {
         post( "error", Map.of(
                 "message", t.getMessage() != null ? t.getMessage() : t.getClass().getSimpleName(),
-                "class", t.getClass().getName() ) );
+                "class", t.getClass().getName() ), true );
     }
 
     /**
-     * Terminal cancelled. Use when the CLI catches an interrupt + wants to
-     * report cooperative shutdown.
+     * Terminal cancelled. Sync-wait so the event reaches the server before
+     * the JVM exits. Use when the CLI catches an interrupt + wants to report
+     * cooperative shutdown.
      */
     public void killed( String reason ) {
-        post( "killed", Map.of( "reason", reason != null ? reason : "" ) );
+        post( "killed", Map.of( "reason", reason != null ? reason : "" ), true );
     }
 
-    private void post( String kind, Map<String, ?> payload ) {
+    private void post( String kind, Map<String, ?> payload, boolean terminal ) {
         if ( !isActive() ) {
             return;
         }
-        try {
-            String body = String.format( "{\"kind\":%s,\"payloadJson\":%s}",
-                    jsonString( kind ), jsonString( payloadAsJson( payload ) ) );
-            HttpRequest req = HttpRequest.newBuilder()
-                    .uri( URI.create( callbackBaseUrl.replaceAll( "/+$", "" ) + "/jobs/" + jobId + "/events" ) )
-                    .header( "Authorization", "Bearer " + token )
-                    .header( "Content-Type", "application/json" )
-                    .timeout( TIMEOUT )
-                    .POST( HttpRequest.BodyPublishers.ofString( body, StandardCharsets.UTF_8 ) )
-                    .build();
-            HttpResponse<String> resp = http.send( req, HttpResponse.BodyHandlers.ofString() );
-            if ( resp.statusCode() / 100 != 2 ) {
-                log.warn( String.format( "pipeline callback non-2xx: %d for kind=%s (body=%s)",
-                        resp.statusCode(), kind, resp.body() ) );
+        // Non-terminal events: fire-and-forget. A slow or unreachable
+        // gemma-rest must NOT block the CLI — sync send() would add 10s of
+        // latency to every stage report; for a 100-step pipeline that's 16+
+        // minutes of pure callback waste.
+        //
+        // Terminal events (completed | error | killed): sync-wait so the
+        // event reaches the server before the JVM exits. Without this an
+        // async request would be cancelled mid-flight when System.exit()
+        // hits. The reconciler poll loop closes any remaining push gap.
+        String body = String.format( "{\"kind\":%s,\"payloadJson\":%s}",
+                jsonString( kind ), jsonString( payloadAsJson( payload ) ) );
+        HttpRequest req = HttpRequest.newBuilder()
+                .uri( URI.create( callbackBaseUrl.replaceAll( "/+$", "" ) + "/jobs/" + jobId + "/events" ) )
+                .header( "Authorization", "Bearer " + token )
+                .header( "Content-Type", "application/json" )
+                .timeout( TIMEOUT )
+                .POST( HttpRequest.BodyPublishers.ofString( body, StandardCharsets.UTF_8 ) )
+                .build();
+        if ( terminal ) {
+            try {
+                HttpResponse<String> resp = http.send( req, HttpResponse.BodyHandlers.ofString() );
+                if ( resp.statusCode() / 100 != 2 ) {
+                    log.warn( String.format( "pipeline callback non-2xx: %d for kind=%s (body=%s)",
+                            resp.statusCode(), kind, resp.body() ) );
+                }
+            } catch ( IOException | InterruptedException e ) {
+                log.warn( "pipeline callback failed for kind=" + kind + ": " + e.getMessage() );
+                if ( e instanceof InterruptedException ) {
+                    Thread.currentThread().interrupt();
+                }
             }
-        } catch ( IOException | InterruptedException e ) {
-            log.warn( "pipeline callback failed for kind=" + kind + ": " + e.getMessage() );
-            if ( e instanceof InterruptedException ) {
-                Thread.currentThread().interrupt();
-            }
+        } else {
+            http.sendAsync( req, HttpResponse.BodyHandlers.ofString() )
+                    .thenAccept( resp -> {
+                        if ( resp.statusCode() / 100 != 2 ) {
+                            log.warn( String.format( "pipeline callback non-2xx: %d for kind=%s (body=%s)",
+                                    resp.statusCode(), kind, resp.body() ) );
+                        }
+                    } )
+                    .exceptionally( e -> {
+                        log.warn( "pipeline callback failed for kind=" + kind + ": " + e.getMessage() );
+                        return null;
+                    } );
         }
     }
 
