@@ -106,11 +106,15 @@ VOLUME ["/data/gemma"]
 #   limit (do NOT set -Xmx; let cgroup memory drive sizing on k8s).
 # - ExitOnOutOfMemoryError so the orchestrator restarts on OOM instead of
 #   leaving a poisoned heap.
-# - UseZGC + ZGenerational: JDK 21 generational ZGC. Trades a bit of throughput
-#   for sub-millisecond pause times — well-matched to Gemma's allocation profile
-#   (large transient matrices, ResultSet streaming). Needs >2GB heap to benefit;
-#   production deploys multi-GB heaps. Memory observability dashboards keyed
-#   on "G1 Old Gen" need to be updated to "ZGC Old Generation".
+# - UseZGC: JDK 25 ZGC is generational by default. The `-XX:+ZGenerational`
+#   flag was removed in JDK 24 (no-op then hard-reject); do NOT add it back.
+#   ZGC needs >2GB heap to benefit; production deploys multi-GB heaps.
+#   Memory observability dashboards keyed on "G1 Old Gen" need updating to
+#   "ZGC Old Generation".
+# - MaxRAMPercentage=75.0 sizes from the *container's* cgroup limit. Run with
+#   `--memory=8g` (or your target) so the heap target is bounded; otherwise
+#   the container sees the host's entire RAM and ZGC tries to map all of it,
+#   blowing past /proc/sys/vm/max_map_count (host kernel default 65530).
 # - gemma.appdata.home pointed at the VOLUME path above.
 # - spring.profiles.active=production to avoid the SpringContextUtils 'dev'
 #   profile fallback documented in CONFIG_AUDIT.md HIGH #3.
@@ -120,8 +124,7 @@ ENV GEMMA_APPDATA_HOME=/data/gemma \
                    -Djava.security.egd=file:/dev/./urandom \
                    -XX:MaxRAMPercentage=75.0 \
                    -XX:+ExitOnOutOfMemoryError \
-                   -XX:+UseZGC \
-                   -XX:+ZGenerational"
+                   -XX:+UseZGC"
 
 # Non-root runtime user. UID/GID idempotent because newer tomcat base images
 # (e.g. 10.1-jdk25-temurin / -jdk21-temurin on recent debian) already define
