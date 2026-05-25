@@ -1,5 +1,6 @@
 package ubic.gemma.core.analysis.preprocess.batcheffects;
 
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 
@@ -47,6 +48,16 @@ public interface ExpressionExperimentBatchInformationService {
      * Check if a given experiment has a significant batch confound.
      */
     boolean hasSignificantBatchConfound( ExpressionExperiment ee );
+
+    /**
+     * Check if a given {@link BioAssaySet} has a significant batch confound.
+     * <p>
+     * For an {@link ExpressionExperiment} this is equivalent to {@link #hasSignificantBatchConfound(ExpressionExperiment)}.
+     * For an {@link ExpressionExperimentSubSet} the test is restricted to the subset's assays so that confounds
+     * arising only in the full experiment do not propagate into per-subset DEA result-file headers
+     * (see <a href="https://github.com/PavlidisLab/Gemma/issues/110">#110</a>).
+     */
+    boolean hasSignificantBatchConfound( BioAssaySet bas );
 
     /**
      * Obtain the significant batch confounds for a dataset.
