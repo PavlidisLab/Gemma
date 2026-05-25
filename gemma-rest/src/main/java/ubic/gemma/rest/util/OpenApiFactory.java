@@ -5,6 +5,10 @@ import io.swagger.v3.jaxrs2.integration.JaxrsOpenApiContextBuilder;
 import io.swagger.v3.oas.integration.OpenApiContextLocator;
 import io.swagger.v3.oas.integration.api.OpenApiContext;
 import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.Operation;
+import io.swagger.v3.oas.models.PathItem;
+import io.swagger.v3.oas.models.media.Schema;
+import io.swagger.v3.oas.models.parameters.Parameter;
 import io.swagger.v3.oas.models.servers.Server;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -101,7 +105,47 @@ public class OpenApiFactory extends AbstractAsyncFactoryBean<OpenAPI> implements
             }
         } );
         visitor.visit( spec );
+        applyFilterAndSortArgDefaults( spec );
         return spec;
+    }
+
+    /**
+     * Surface default values for {@code FilterArg} and {@code SortArg} parameters in the rendered spec.
+     * <p>
+     * The {@code CustomModelResolver} emits these parameter types as {@code $ref}s to global schemas (so the
+     * descriptions and {@code x-gemma-filterable-properties} extensions can be reused across endpoints). In
+     * OpenAPI 3.0 a schema object containing {@code $ref} discards sibling keywords, so any {@code default}
+     * set on the parameter schema is lost to renderers (Swagger UI, generated clients, etc.) — see
+     * https://github.com/PavlidisLab/Gemma/issues/786.
+     * <p>
+     * Across the REST surface the {@code @DefaultValue} on these parameters is uniform: {@code ""} for filter
+     * and {@code "+id"} for sort. Reflect that convention on the parameter object directly (via
+     * {@link Parameter#setExample(Object)}) so consumers see the effective default without breaking the
+     * shared {@code $ref}.
+     */
+    private void applyFilterAndSortArgDefaults( OpenAPI spec ) {
+        if ( spec.getPaths() == null ) {
+            return;
+        }
+        for ( PathItem pathItem : spec.getPaths().values() ) {
+            for ( Operation op : pathItem.readOperations() ) {
+                if ( op.getParameters() == null ) {
+                    continue;
+                }
+                for ( Parameter p : op.getParameters() ) {
+                    Schema<?> schema = p.getSchema();
+                    if ( schema == null || schema.get$ref() == null ) {
+                        continue;
+                    }
+                    String refName = schema.get$ref().replaceFirst( "^#/components/schemas/", "" );
+                    if ( refName.startsWith( "FilterArg" ) && p.getExample() == null ) {
+                        p.setExample( "" );
+                    } else if ( refName.startsWith( "SortArg" ) && p.getExample() == null ) {
+                        p.setExample( "+id" );
+                    }
+                }
+            }
+        }
     }
 
     @Override
