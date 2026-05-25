@@ -1,5 +1,12 @@
 # AUDIT_PHASE_C_RECCE.md
 
+> **CLOSED 2026-05-24.** Phase C migration complete: gemma-core 44 sites
+> done, gemma-cli 12 sites closed 2026-05-23 via `f844b62287` +
+> `2b62a0fe93` (helper-bean hoist for self-invokes), gemma-web 4 sites
+> intentionally skipped (frontend retiring). Last lone callsite migrated
+> 2026-05-24 via `899137a7f0` (`VectorsReorderedEvent`). Doc retained for
+> the bucket-by-bucket retrospective; no further action.
+
 Recce-only doc for Phase C of the audit-migration sweep started in
 commit `da5957ecfc`. NO CODE CHANGES — categorizes the deferred
 imperative `auditTrailService.add*` callers and shortlists 10 that

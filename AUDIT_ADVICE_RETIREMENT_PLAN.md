@@ -1,5 +1,15 @@
 # AuditAdvice retirement plan
 
+> **CLOSED 2026-05-24.** Headline retirement landed on `auditadvice-retire`
+> branch; `AuditAdvice.java`, `IgnoreAudit.java`, and the orphaned
+> `Pointcuts.{daoMethod,loader,creator,updater,saver,deleter,modifier}`
+> deleted (per §8 post-retirement note). Last open follow-up — generic
+> `addUpdateEvent` callsite in `ProcessedExpressionDataVectorServiceImpl.reorderByDesign`
+> — closed via `899137a7f0` (`VectorsReorderedEvent` + `@Audited` migration).
+> gemma-cli 12-site migration closed 2026-05-23 via `f844b62287` +
+> `2b62a0fe93`. Doc retained for the retrospective + cross-references; no
+> further action.
+
 Branch baseline: `audit-advice-retirement-recce` at `119e5dc898` (tip of `phase2-acl-migrate`).
 Scope: terminal step of Phase C — fully retire `AuditAdvice` after Phase C-2 has already
 migrated CREATE/DELETE emission to the Hibernate listener.
