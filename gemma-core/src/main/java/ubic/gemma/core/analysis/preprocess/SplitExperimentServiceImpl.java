@@ -349,6 +349,31 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
                 splitValue.getExperimentalFactor().getCategory().getValue() :
                 splitValue.getExperimentalFactor().getName() );
         String factorValueString = FactorValueUtils.getSummaryString( splitValue );
+        // The full prefix has the form "Split part N of: <ee-name>"; reserve at least PREFIX_MIN_BUDGET
+        // bytes for it so the suffix never consumes the entire MAX_NAME_LENGTH budget. Issue #1019: when
+        // the FV stringification was longer than 255 chars, the old abbreviateWithSuffix call threw
+        // IllegalArgumentException because the suffix budget went negative. We now truncate the
+        // factorValueString instead — the split-part suffix still differentiates the parts.
+        final int PREFIX_MIN_BUDGET = 32; // enough for "Split part NN of: …" + a few chars of name
+        final String suffixFrame = " [" + categoryString + " = ]"; // bytes contributed by frame around FV
+        int frameBytes = ubic.gemma.core.util.StringUtils.sizeInBytes( suffixFrame, StandardCharsets.UTF_8 );
+        int maxFvBudget = ExpressionExperiment.MAX_NAME_LENGTH - PREFIX_MIN_BUDGET - frameBytes;
+        if ( maxFvBudget < 4 ) {
+            // category alone is too long; abbreviate it so we still produce a usable name
+            String shortCategory = ubic.gemma.core.util.StringUtils.abbreviateInBytes( categoryString, "…",
+                    Math.max( 4, ExpressionExperiment.MAX_NAME_LENGTH - PREFIX_MIN_BUDGET - " [ = ]".length() - 4 ),
+                    true, StandardCharsets.UTF_8 );
+            categoryString = shortCategory != null ? shortCategory : "?";
+            maxFvBudget = ExpressionExperiment.MAX_NAME_LENGTH - PREFIX_MIN_BUDGET
+                    - ubic.gemma.core.util.StringUtils.sizeInBytes( " [" + categoryString + " = ]", StandardCharsets.UTF_8 );
+        }
+        if ( ubic.gemma.core.util.StringUtils.sizeInBytes( factorValueString, StandardCharsets.UTF_8 ) > maxFvBudget ) {
+            String abbreviated = ubic.gemma.core.util.StringUtils.abbreviateInBytes( factorValueString, "…",
+                    maxFvBudget, true, StandardCharsets.UTF_8 );
+            if ( abbreviated != null ) {
+                factorValueString = abbreviated;
+            }
+        }
         String suffix = String.format( " [%s = %s]", categoryString, factorValueString );
         return abbreviateWithSuffix(
                 String.format( "Split part %d of: %s", splitNumber, StringUtils.strip( toSplit.getName() ) ), suffix,
