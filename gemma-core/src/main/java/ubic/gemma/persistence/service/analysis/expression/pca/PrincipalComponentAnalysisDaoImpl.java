@@ -41,9 +41,18 @@ public class PrincipalComponentAnalysisDaoImpl extends AbstractDao<PrincipalComp
 
     @Override
     public Collection<PrincipalComponentAnalysis> findByExperiment( ExpressionExperiment ee ) {
+        // Join-fetch the BAD assays + per-assay sampleUsed proxy to close the cold-path N+1 in
+        // SVDResult.samplesFromPca (line 132, BioAssay::getSampleUsed). BAD itself is already
+        // join-fetched via PCA's eager mapping; eigenValues/eigenVectors stay on their separate
+        // read-only L2 cached selects so no MultipleBagFetchException risk. distinct collapses
+        // the N-row cartesian (1 PCA × #BAs) back to one PCA. See RECCE_PCA_SVD_NPLUS1.md #3.
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                "select p from PrincipalComponentAnalysis as p where p.experimentAnalyzed = :ee" )
+                "select distinct p from PrincipalComponentAnalysis as p "
+                        + "join fetch p.bioAssayDimension bad "
+                        + "left join fetch bad.bioAssays b "
+                        + "left join fetch b.sampleUsed "
+                        + "where p.experimentAnalyzed = :ee" )
                 .setParameter( "ee", ee ).list();
     }
 
