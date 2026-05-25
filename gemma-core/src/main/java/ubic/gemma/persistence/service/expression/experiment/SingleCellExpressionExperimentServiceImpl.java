@@ -1015,11 +1015,14 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         }
         Assert.isTrue( !dimension.getCellTypeAssignments().contains( cta ), dimension + " already has a cell type assignment matching " + cta + "." );
         if ( cta.isPreferred() ) {
+            // github #1538: there is no DB-level constraint preventing multiple preferred CTAs
+            // on the same dimension, so prod data can already have >1 preferred. Demote ALL of
+            // them, not just the first — otherwise the new CTA layers on top of stale preferred
+            // rows and the dimension ends up with multiple preferred again.
             for ( CellTypeAssignment a : dimension.getCellTypeAssignments() ) {
                 if ( a.isPreferred() ) {
-                    log.info( "Marking existing cell type assignment as non-preferred, a new preferred assignment will be added." );
+                    log.info( "Marking existing cell type assignment " + a + " as non-preferred; a new preferred assignment will be added." );
                     a.setPreferred( false );
-                    break;
                 }
             }
         }

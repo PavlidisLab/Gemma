@@ -254,6 +254,17 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
         }
         log.debug( String.format( "%s was detached from %d samples.", factorValue, bms.size() ) );
 
+        // github #1497: force the BIO_MATERIAL_FACTOR_VALUES join-table deletes to run BEFORE
+        // the FACTOR_VALUE row delete that super.remove() schedules. Hibernate's default flush
+        // ordering does not guarantee collection-table mutations precede owning-side deletes on
+        // unrelated entities, so without this flush the join-table rows can still reference the
+        // FV when the FV row is deleted, tripping BIO_MATERIAL_FACTOR_VALUES_FKC. The above loop
+        // only mutates the in-memory collections; the SQL DELETE on the join table is queued
+        // until the session flushes.
+        if ( !bms.isEmpty() ) {
+            this.getSessionFactory().getCurrentSession().flush();
+        }
+
         super.remove( factorValue );
     }
 
