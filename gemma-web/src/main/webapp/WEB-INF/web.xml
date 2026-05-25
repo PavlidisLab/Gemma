@@ -177,6 +177,15 @@
     <listener>
         <listener-class>org.springframework.web.util.IntrospectorCleanupListener</listener-class>
     </listener>
+    <!--
+        Deregister WEB-INF/lib JDBC drivers (mysql-connector-j) on undeploy, otherwise
+        DriverManager (system ClassLoader) pins the webapp ClassLoader and Tomcat emits
+        a WARN about the leaked driver. See ubic.gemma.rest.servlet.JdbcDriverDeregistrationListener
+        and GitHub issue #534.
+    -->
+    <listener>
+        <listener-class>ubic.gemma.rest.servlet.JdbcDriverDeregistrationListener</listener-class>
+    </listener>
     <listener>
         <listener-class>ubic.gemma.web.listener.StartupListener</listener-class>
     </listener>
