@@ -1348,6 +1348,37 @@
 					<groupId>com.github.spotbugs</groupId>
 					<artifactId>spotbugs-maven-plugin</artifactId>
 					<version>${spotbugs.maven.plugin.version}</version>
+					<!-- Override the bundled ASM (which doesn't know class major v69 = JDK 25)
+					     with a current standalone ASM. Drop this block when spotbugs-maven-plugin
+					     ships an ASM that reads v69 natively. See feedback_spotbugs_jdk21_workaround
+					     memory for the prior two-step JDK-21-rebuild dance this replaces. -->
+					<dependencies>
+						<dependency>
+							<groupId>org.ow2.asm</groupId>
+							<artifactId>asm</artifactId>
+							<version>${asm.override.version}</version>
+						</dependency>
+						<dependency>
+							<groupId>org.ow2.asm</groupId>
+							<artifactId>asm-tree</artifactId>
+							<version>${asm.override.version}</version>
+						</dependency>
+						<dependency>
+							<groupId>org.ow2.asm</groupId>
+							<artifactId>asm-analysis</artifactId>
+							<version>${asm.override.version}</version>
+						</dependency>
+						<dependency>
+							<groupId>org.ow2.asm</groupId>
+							<artifactId>asm-commons</artifactId>
+							<version>${asm.override.version}</version>
+						</dependency>
+						<dependency>
+							<groupId>org.ow2.asm</groupId>
+							<artifactId>asm-util</artifactId>
+							<version>${asm.override.version}</version>
+						</dependency>
+					</dependencies>
 					<configuration>
 						<effort>Max</effort>
 						<threshold>Medium</threshold>
@@ -1706,7 +1737,10 @@
 		     The exclude filter lives at ${project.parent.basedir}/spotbugs-exclude.xml;
 		     all direct children of this top-level pom (gemma-core, gemma-rest, gemma-cli,
 		     gemma-web) resolve project.parent.basedir to this repo root. -->
-		<spotbugs.maven.plugin.version>4.8.6.4</spotbugs.maven.plugin.version>
+		<spotbugs.maven.plugin.version>4.9.3.0</spotbugs.maven.plugin.version>
 		<findsecbugs.plugin.version>1.13.0</findsecbugs.plugin.version>
+		<!-- Standalone ASM injected into the spotbugs-maven-plugin classpath so it can
+		     read JDK-25 (class major v69) bytecode. Drop when the bundled ASM catches up. -->
+		<asm.override.version>9.9.1</asm.override.version>
 	</properties>
 </project>
