@@ -84,8 +84,15 @@ public class SearchIndexBootstrapper {
             log.warn( "Search-index bootstrap: no @Indexed entities were discovered by Hibernate Search; nothing to do." );
             return;
         }
-        // Run the surveying in one Session, then fire reindexes on their own
-        // virtual threads so a slow one doesn't block the others.
+        // Survey current doc counts, collect the empties, then dispatch a
+        // SINGLE virtual thread that reindexes them sequentially. We learned
+        // the hard way (2026-05-25 frink boot) that fanning out one VT per
+        // entity exhausts the Hibernate JDBC pool: each MassIndexer grabs a
+        // connection for its run, and with ~17 indexed entities the 10-slot
+        // pool times out the rest after 10s. Serial is fine — first-boot
+        // indexing isn't on a hot path and the cumulative wall-time is what
+        // we'd budget anyway.
+        java.util.List<Class<? extends Identifiable>> needsRebuild = new java.util.ArrayList<>();
         try ( Session session = sessionFactory.openSession() ) {
             for ( SearchIndexedEntity<?> ent : indexed ) {
                 Class<?> raw = ent.javaClass();
@@ -110,17 +117,27 @@ public class SearchIndexBootstrapper {
                     log.info( "Search-index bootstrap: {} index has {} docs — skipping.", clazz.getSimpleName(), count );
                     continue;
                 }
-                log.info( "Search-index bootstrap: {} index is empty — kicking off mass-reindex in background.", clazz.getSimpleName() );
-                final Class<? extends Identifiable> finalClazz = clazz;
-                Thread.startVirtualThread( () -> {
-                    try {
-                        indexerService.index( finalClazz );
-                        log.info( "Search-index bootstrap: {} reindex completed.", finalClazz.getSimpleName() );
-                    } catch ( RuntimeException e ) {
-                        log.error( "Search-index bootstrap: {} reindex failed.", finalClazz.getSimpleName(), e );
-                    }
-                } );
+                needsRebuild.add( clazz );
             }
         }
+        if ( needsRebuild.isEmpty() ) {
+            log.info( "Search-index bootstrap: every @Indexed entity has docs; nothing to rebuild." );
+            return;
+        }
+        log.info( "Search-index bootstrap: {} indices are empty — kicking off serial mass-reindex in background ({}).",
+                needsRebuild.size(),
+                needsRebuild.stream().map( Class::getSimpleName ).collect( java.util.stream.Collectors.joining( ", " ) ) );
+        Thread.startVirtualThread( () -> {
+            for ( Class<? extends Identifiable> clazz : needsRebuild ) {
+                log.info( "Search-index bootstrap: reindexing {} …", clazz.getSimpleName() );
+                try {
+                    indexerService.index( clazz );
+                    log.info( "Search-index bootstrap: {} reindex completed.", clazz.getSimpleName() );
+                } catch ( RuntimeException e ) {
+                    log.error( "Search-index bootstrap: {} reindex failed.", clazz.getSimpleName(), e );
+                }
+            }
+            log.info( "Search-index bootstrap: all queued reindexes finished." );
+        } );
     }
 }
