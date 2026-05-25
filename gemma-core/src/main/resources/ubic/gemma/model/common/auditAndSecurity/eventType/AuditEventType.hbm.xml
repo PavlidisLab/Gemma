@@ -55,6 +55,8 @@
                           name="ubic.gemma.model.common.auditAndSecurity.eventType.VectorsReorderedEvent"/>
 
             </subclass>
+            <subclass abstract="false" discriminator-value="PipelineRunEvent"
+                      name="ubic.gemma.model.common.auditAndSecurity.eventType.PipelineRunEvent"/>
             <subclass abstract="false" discriminator-value="BioMaterialMappingUpdate"
                       name="ubic.gemma.model.common.auditAndSecurity.eventType.BioMaterialMappingUpdate"/>
             <subclass abstract="false" discriminator-value="ExpressionExperimentPlatformSwitchEvent"
@@ -196,6 +198,8 @@
                               name="ubic.gemma.model.common.auditAndSecurity.eventType.FailedPCAAnalysisEvent"/>
                     <subclass abstract="false" discriminator-value="FailedProcessedVectorComputationEvent"
                               name="ubic.gemma.model.common.auditAndSecurity.eventType.FailedProcessedVectorComputationEvent"/>
+                    <subclass abstract="false" discriminator-value="FailedPipelineRunEvent"
+                              name="ubic.gemma.model.common.auditAndSecurity.eventType.FailedPipelineRunEvent"/>
                     <subclass abstract="false" discriminator-value="FailedLinkAnalysisEvent"
                               name="ubic.gemma.model.common.auditAndSecurity.eventType.FailedLinkAnalysisEvent"/>
                     <subclass abstract="false" discriminator-value="FailedMissingValueAnalysisEvent"
@@ -248,6 +252,18 @@
                   name="ubic.gemma.model.common.auditAndSecurity.eventType.VersionedEvent">
             <subclass abstract="false" discriminator-value="ReleaseDetailsUpdateEvent"
                       name="ubic.gemma.model.common.auditAndSecurity.eventType.ReleaseDetailsUpdateEvent"/>
+        </subclass>
+
+        <subclass abstract="true" discriminator-value="PipelineBatchEvent"
+                  name="ubic.gemma.model.common.auditAndSecurity.eventType.PipelineBatchEvent">
+            <subclass abstract="false" discriminator-value="PipelineBatchSubmittedEvent"
+                      name="ubic.gemma.model.common.auditAndSecurity.eventType.PipelineBatchSubmittedEvent"/>
+            <subclass abstract="false" discriminator-value="PipelineBatchPhaseEvent"
+                      name="ubic.gemma.model.common.auditAndSecurity.eventType.PipelineBatchPhaseEvent"/>
+            <subclass abstract="false" discriminator-value="PipelineBatchCancelledEvent"
+                      name="ubic.gemma.model.common.auditAndSecurity.eventType.PipelineBatchCancelledEvent"/>
+            <subclass abstract="false" discriminator-value="PipelineBatchClosedEvent"
+                      name="ubic.gemma.model.common.auditAndSecurity.eventType.PipelineBatchClosedEvent"/>
         </subclass>
 
     </class>

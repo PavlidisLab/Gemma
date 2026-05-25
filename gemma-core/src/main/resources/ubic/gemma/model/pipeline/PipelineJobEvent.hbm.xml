@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hibernate-mapping xmlns="http://www.hibernate.org/xsd/hibernate-mapping"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.hibernate.org/xsd/hibernate-mapping http://hibernate.org/xsd/hibernate-mapping-4.0.xsd">
+
+    <class name="ubic.gemma.model.pipeline.PipelineJobEvent" table="PIPELINE_JOB_EVENT">
+        <id name="id" type="java.lang.Long" unsaved-value="null">
+            <column name="ID" sql-type="BIGINT"/>
+            <generator class="native"/>
+        </id>
+        <many-to-one name="job" class="ubic.gemma.model.pipeline.PipelineJob"
+                     lazy="proxy" fetch="select">
+            <column name="JOB_FK" not-null="true" sql-type="BIGINT" index="IDX_PIPELINE_JOB_EVENT_JOB_AT"/>
+        </many-to-one>
+        <property name="occurredAt" type="java.util.Date">
+            <column name="OCCURRED_AT" not-null="true" sql-type="DATETIME(3)" index="IDX_PIPELINE_JOB_EVENT_JOB_AT"/>
+        </property>
+        <property name="kind" type="java.lang.String">
+            <column name="KIND" not-null="true" sql-type="VARCHAR(32)"/>
+        </property>
+        <property name="payloadJson" type="org.hibernate.type.MaterializedClobType">
+            <column name="PAYLOAD_JSON" not-null="false" sql-type="text"/>
+        </property>
+    </class>
+</hibernate-mapping>
