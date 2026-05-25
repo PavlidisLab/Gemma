@@ -1554,22 +1554,16 @@ public class ExpressionExperimentDaoImpl
     @Override
     @Nullable
     public Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment ee, QuantitationType qt ) {
-        // HQL_SQL_AUDIT P7: single polymorphic HQL over the unmapped BulkExpressionDataVector base.
-        // Hibernate 6 implicit polymorphism resolves all mapped subclasses (RawExpressionDataVector,
-        // ProcessedExpressionDataVector, ...) and emits one query per concrete subclass under the hood,
-        // but the caller side reduces to a single HQL invocation instead of an N-way loop over
-        // bulkDataVectorTypes. Caller-visible semantics: returns the merged distinct BADs, or null if
-        // none were found. The pre-existing NonUniqueResultException guard (raised when distinct
-        // subclasses disagreed on the BAD set) is intentionally dropped — the union is the answer the
-        // callers actually want, and per-subclass disagreement is not a bug here.
-        //noinspection unchecked
-        List<BioAssayDimension> dimensions = getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct v.bioAssayDimension from BulkExpressionDataVector v "
-                        + "where v.expressionExperiment = :ee and v.quantitationType = :qt" )
-                .setParameter( "ee", ee )
-                .setParameter( "qt", qt )
-                .list();
-        return dimensions.isEmpty() ? null : dimensions;
+        // HQL_SQL_AUDIT P7: previously tried a single polymorphic HQL over BulkExpressionDataVector,
+        // but BulkExpressionDataVector is not a mapped Hibernate entity (no <class> in the HBMs —
+        // only RawExpressionDataVector and ProcessedExpressionDataVector are mapped). HB6 SQM cannot
+        // resolve it as a root entity (UnknownEntityException — caught by HqlSmokeIT). Fall back to
+        // the per-subtype loop, but keep the union semantics from the P7 commit (no NonUniqueResultException).
+        Set<BioAssayDimension> merged = new LinkedHashSet<>();
+        for ( Class<? extends BulkExpressionDataVector> vectorType : bulkDataVectorTypes ) {
+            merged.addAll( getBioAssayDimensions( ee, qt, vectorType ) );
+        }
+        return merged.isEmpty() ? null : merged;
     }
 
     @Override

@@ -100,5 +100,10 @@
         <mapping resource="ubic/gemma/model/genome/gene/GeneSetMember.hbm.xml"/>
         <mapping resource="ubic/gemma/model/genome/gene/Multifunctionality.hbm.xml"/>
         <mapping resource="ubic/gemma/model/genome/sequenceAnalysis/SequenceSimilaritySearchResult.hbm.xml"/>
+
+        <!-- Pipeline (job scheduling) -->
+        <mapping resource="ubic/gemma/model/pipeline/PipelineJobBatch.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/pipeline/PipelineJob.hbm.xml"/>
+        <mapping resource="ubic/gemma/model/pipeline/PipelineJobEvent.hbm.xml"/>
     </session-factory>
 </hibernate-configuration>
