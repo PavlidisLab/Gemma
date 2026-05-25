@@ -20,7 +20,9 @@ package ubic.gemma.model.pipeline;
  */
 public enum SchedulerKind {
     LUIGI,
-    NEXTFLOW;
+    NEXTFLOW,
+    /** In-JVM mock used for local-mode smoke testing. Never set by a real scheduler. */
+    MOCK;
 
     @com.fasterxml.jackson.annotation.JsonValue
     public String wireValue() {
