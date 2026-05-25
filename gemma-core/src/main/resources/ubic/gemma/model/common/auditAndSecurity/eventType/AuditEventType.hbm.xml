@@ -258,8 +258,6 @@
                   name="ubic.gemma.model.common.auditAndSecurity.eventType.PipelineBatchEvent">
             <subclass abstract="false" discriminator-value="PipelineBatchSubmittedEvent"
                       name="ubic.gemma.model.common.auditAndSecurity.eventType.PipelineBatchSubmittedEvent"/>
-            <subclass abstract="false" discriminator-value="PipelineBatchPhaseEvent"
-                      name="ubic.gemma.model.common.auditAndSecurity.eventType.PipelineBatchPhaseEvent"/>
             <subclass abstract="false" discriminator-value="PipelineBatchCancelledEvent"
                       name="ubic.gemma.model.common.auditAndSecurity.eventType.PipelineBatchCancelledEvent"/>
             <subclass abstract="false" discriminator-value="PipelineBatchClosedEvent"
