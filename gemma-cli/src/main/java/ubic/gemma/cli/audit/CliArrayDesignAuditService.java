@@ -64,9 +64,8 @@ public interface CliArrayDesignAuditService {
     void recordSequenceRemove( ArrayDesign arrayDesign, String note );
 
     /**
-     * Records an {@code ArrayDesignProbeRenamingEvent} on the platform. Used
-     * by {@code ArrayDesignProbeRenamerCli} after applying a probe-renaming
-     * map.
+     * Records an {@code ArrayDesignProbeRenamingEvent} on the platform.
+     * Called after applying a probe-renaming map.
      */
     void recordProbeRenaming( ArrayDesign arrayDesign, String note );
 

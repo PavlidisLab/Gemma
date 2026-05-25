@@ -1,5 +1,13 @@
 # Gemma CLI dead-code audit
 
+> **DELETE candidates SHIPPED 2026-05-24.** All 5 high-confidence
+> deprecated CLIs deleted: `ArrayDesignProbeRenamerCli`,
+> `ExpressionExperimentDataFileGeneratorCli`, `FactorValueMigratorCLI`
+> (+ its test), `MeshTermFetcherCli`, `RNASeqBatchInfoCli`. Net −733 LoC.
+> One Javadoc reference in `CliArrayDesignAuditService` generalized.
+> The KEEP-INVESTIGATE follow-up (~50 files needing ops/dev confirmation)
+> is still open as a separate workstream — does NOT block Gemma 2.0.
+
 **Scope:** every `*.java` under `gemma-cli/src/main/java/ubic/gemma/apps/`.
 **Branch:** `phase2-acl-migrate` (HEAD `1cc7560f07`).
 **Context:** CRUFT_INVENTORY.md §4.1 flagged this package as KEEP-INVESTIGATE,
