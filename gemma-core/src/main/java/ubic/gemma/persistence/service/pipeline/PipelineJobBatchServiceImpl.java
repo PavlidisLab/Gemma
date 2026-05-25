@@ -72,19 +72,21 @@ public class PipelineJobBatchServiceImpl implements PipelineJobBatchService {
     @Override
     @Transactional
     public PipelineJobBatch submit( String pipeline, Collection<ExpressionExperiment> experiments,
-            @Nullable String paramsJson, @Nullable String note ) {
+            Contact submittedBy, @Nullable String paramsJson, @Nullable String note ) {
         if ( experiments.isEmpty() ) {
             throw new IllegalArgumentException( "submit requires at least one experiment" );
+        }
+        if ( submittedBy == null ) {
+            throw new IllegalArgumentException( "submittedBy is required" );
         }
         if ( scheduler == null ) {
             throw new IllegalStateException( "no PipelineScheduler bean configured; activate a scheduler-* Spring profile" );
         }
-        Contact owner = resolveCurrentCurator();
         PipelineJobBatch batch = new PipelineJobBatch();
         batch.setName( buildBatchName( pipeline, experiments.size() ) );
         batch.setDescription( note );
         batch.setPipeline( pipeline );
-        batch.setSubmittedBy( owner );
+        batch.setSubmittedBy( submittedBy );
         batch.setSubmittedAt( new Date() );
         batch.setParamsJson( paramsJson );
         batch.setState( PipelineJobBatch.BatchState.OPEN );
@@ -297,12 +299,6 @@ public class PipelineJobBatchServiceImpl implements PipelineJobBatchService {
         batchDao.update( batch );
         auditTrailService.addUpdateEvent( batch, PipelineBatchClosedEvent.class,
                 "All " + batch.getJobs().size() + " jobs reached terminal state" );
-    }
-
-    private Contact resolveCurrentCurator() {
-        // TODO: wire to the security context (gemma-rest's SecurityUtils pattern).
-        // Punted until the REST surface lands; tests inject a fixed Contact.
-        throw new UnsupportedOperationException( "resolveCurrentCurator not yet wired to security context" );
     }
 
     private String buildBatchName( String pipeline, int n ) {

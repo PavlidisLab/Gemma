@@ -12,6 +12,7 @@
 package ubic.gemma.persistence.service.pipeline;
 
 import org.springframework.lang.Nullable;
+import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.pipeline.PipelineJob;
 import ubic.gemma.model.pipeline.PipelineJobBatch;
@@ -42,7 +43,7 @@ public interface PipelineJobBatchService {
      * @param note        optional curator-supplied note
      */
     PipelineJobBatch submit( String pipeline, Collection<ExpressionExperiment> experiments,
-            @Nullable String paramsJson, @Nullable String note );
+            Contact submittedBy, @Nullable String paramsJson, @Nullable String note );
 
     PipelineJobBatch get( Long batchId );
 
