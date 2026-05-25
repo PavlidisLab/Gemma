@@ -2649,6 +2649,89 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
                 .hasStatus( Response.Status.NOT_FOUND );
     }
 
+    // --- Preprocessing metadata files ----------------------------------------------------
+
+    @Test
+    public void testListDatasetMetadataFilesEmpty() throws IOException {
+        when( expressionDataFileService.getMetadataFile( eq( ee ),
+                any( ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentMetaFileType.class ),
+                eq( false ) ) ).thenReturn( Optional.empty() );
+        assertThat( target( "/datasets/1/metadata" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .entity()
+                .hasFieldOrProperty( "data" )
+                .extracting( "data", list( Object.class ) )
+                .isEmpty();
+    }
+
+    @Test
+    public void testListDatasetMetadataFilesReturnsAvailable() throws IOException {
+        // Make BASE_METADATA present on disk; everything else absent. Probe must point at a
+        // readable file so the isReadable() filter keeps it.
+        java.nio.file.Path probe = java.nio.file.Files.createTempFile( "ee.base.metadata", ".txt" );
+        java.nio.file.Files.writeString( probe, "stub" );
+        LockedPath lp = mock( LockedPath.class );
+        when( lp.getPath() ).thenReturn( probe );
+        when( expressionDataFileService.getMetadataFile( eq( ee ),
+                any( ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentMetaFileType.class ),
+                eq( false ) ) ).thenReturn( Optional.empty() );
+        when( expressionDataFileService.getMetadataFile( eq( ee ),
+                eq( ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentMetaFileType.BASE_METADATA ),
+                eq( false ) ) ).thenReturn( Optional.of( lp ) );
+
+        assertThat( target( "/datasets/1/metadata" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Object.class ) )
+                .singleElement()
+                .extracting( "type" )
+                .isEqualTo( "BASE_METADATA" );
+    }
+
+    @Test
+    public void testGetDatasetMetadataFileWithUnknownTypeIs400() {
+        assertThat( target( "/datasets/1/metadata/NOT_A_REAL_TYPE" ).request().get() )
+                .hasStatus( Response.Status.BAD_REQUEST );
+    }
+
+    @Test
+    public void testGetDatasetMetadataFileForDirectoryTypeIs400() {
+        // ADDITIONAL_PIPELINE_CONFIGURATIONS has isDirectory=true; should not be downloadable directly.
+        assertThat( target( "/datasets/1/metadata/ADDITIONAL_PIPELINE_CONFIGURATIONS" ).request().get() )
+                .hasStatus( Response.Status.BAD_REQUEST );
+    }
+
+    @Test
+    public void testGetDatasetMetadataFileWhenAbsentIs404() throws IOException {
+        when( expressionDataFileService.getMetadataFile( eq( ee ),
+                eq( ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentMetaFileType.BASE_METADATA ),
+                eq( false ) ) ).thenReturn( Optional.empty() );
+        assertThat( target( "/datasets/1/metadata/BASE_METADATA" ).request().get() )
+                .hasStatus( Response.Status.NOT_FOUND );
+    }
+
+    @Test
+    public void testGetDatasetMetadataFileServesPayload() throws IOException {
+        java.nio.file.Path payload = java.nio.file.Files.createTempFile( "ee.base.metadata", ".txt" );
+        java.nio.file.Files.writeString( payload, "alignment summary contents" );
+        LockedPath lp = mock( LockedPath.class );
+        when( lp.getPath() ).thenReturn( payload );
+        when( expressionDataFileService.getMetadataFile( eq( ee ),
+                eq( ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentMetaFileType.BASE_METADATA ),
+                eq( false ) ) ).thenReturn( Optional.of( lp ) );
+
+        assertThat( target( "/datasets/1/metadata/BASE_METADATA" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.TEXT_PLAIN_TYPE );
+    }
+
+    @Test
+    public void testGetDatasetMetadataFileWhenDatasetMissingIs404() {
+        assertThat( target( "/datasets/999/metadata/BASE_METADATA" ).request().get() )
+                .hasStatus( Response.Status.NOT_FOUND );
+    }
+
     // --- Diagnostics: svd loadings -------------------------------------------------------
 
     @Test

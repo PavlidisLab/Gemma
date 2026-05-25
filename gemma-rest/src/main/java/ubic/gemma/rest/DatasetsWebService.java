@@ -141,6 +141,7 @@ import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeSe
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentMetaFileType;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.GeeqService;
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
@@ -4719,6 +4720,152 @@ public class DatasetsWebService {
         } catch ( InterruptedException e ) {
             Thread.currentThread().interrupt();
             throw new InternalServerErrorException( e );
+        }
+    }
+
+    /**
+     * List the preprocessing-metadata files available for a dataset.
+     * <p>
+     * Entries reflect {@link ExpressionExperimentMetaFileType} instances whose underlying file
+     * exists on disk for the given experiment. The {@code MULTIQC_REPORT} alias is suppressed
+     * (it duplicates {@code RNASEQ_PIPELINE_REPORT} with the same id).
+     */
+    @GET
+    @Path("/{dataset}/metadata")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "List the preprocessing-metadata files available for a dataset",
+            description = "Returns one entry per metadata file present on disk. Each entry exposes "
+                    + "the type identifier (used to fetch the file via /datasets/{id}/metadata/{type}), "
+                    + "a human-readable display name, the download filename, the MIME content-type, "
+                    + "and a flag indicating whether the metadata is organized as a directory.",
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<List<DatasetMetadataFileValueObject>> getDatasetMetadataFiles( // Params:
+            @PathParam("dataset") DatasetArg<?> datasetArg // Required
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        List<DatasetMetadataFileValueObject> entries = new ArrayList<>();
+        for ( ExpressionExperimentMetaFileType type : ExpressionExperimentMetaFileType.values() ) {
+            if ( type == ExpressionExperimentMetaFileType.MULTIQC_REPORT ) {
+                // deprecated alias for RNASEQ_PIPELINE_REPORT; same id, would double-list.
+                continue;
+            }
+            try ( LockedPath probe = expressionDataFileService.getMetadataFile( ee, type, false ).orElse( null ) ) {
+                if ( probe == null ) {
+                    continue;
+                }
+                if ( !Files.isReadable( probe.getPath() ) ) {
+                    continue;
+                }
+                entries.add( new DatasetMetadataFileValueObject( type, ee ) );
+            } catch ( IOException e ) {
+                log.warn( "Failed to probe metadata file " + type + " for " + ee.getShortName(), e );
+            }
+        }
+        return respond( entries );
+    }
+
+    /**
+     * Stream a single preprocessing-metadata file by type for a dataset.
+     * <p>
+     * Returns 404 if the file is absent on disk or the type is a directory with no contents.
+     * Successful responses use the file's native MIME type from {@link ExpressionExperimentMetaFileType#getContentType()}.
+     */
+    @GET
+    @Path("/{dataset}/metadata/{type}")
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    @Operation(summary = "Retrieve a single preprocessing-metadata file by type",
+            description = "Streams the metadata file. The {type} path parameter is the "
+                    + "ExpressionExperimentMetaFileType enum name (e.g. BASE_METADATA, ALIGNMENT_METADATA, "
+                    + "RNASEQ_PIPELINE_REPORT). Use GET /datasets/{id}/metadata to discover available types. "
+                    + "The response Content-Type reflects the type's native MIME (e.g. text/plain, "
+                    + "application/json, text/html); pass ?download=true to force application/octet-stream.",
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM, schema = @Schema(type = "string", format = "binary"))),
+                    @ApiResponse(responseCode = "400", description = "The metadata type is not a recognised enum value, or it refers to a directory-organised metadata.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist or has no metadata of the requested type.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public Response getDatasetMetadataFile( // Params:
+            @PathParam("dataset") DatasetArg<?> datasetArg, // Required
+            @PathParam("type") String typeArg, // Required
+            @Parameter(hidden = true) @QueryParam("download") @DefaultValue("false") Boolean download
+    ) {
+        ExpressionExperimentMetaFileType type;
+        try {
+            type = ExpressionExperimentMetaFileType.valueOf( typeArg );
+        } catch ( IllegalArgumentException e ) {
+            throw new BadRequestException( "Unknown metadata file type '" + typeArg + "'." );
+        }
+        if ( type == ExpressionExperimentMetaFileType.MULTIQC_REPORT ) {
+            // Deprecated alias; redirect callers to the canonical name to avoid drift.
+            throw new BadRequestException( "MULTIQC_REPORT is a deprecated alias; use RNASEQ_PIPELINE_REPORT instead." );
+        }
+        if ( type.isDirectory() ) {
+            // The legacy DWR controller streamed individual files inside the directory by separate
+            // type ids (e.g. RNASEQ_PIPELINE_REPORT_DATA). Mirror that here: no bare directory download.
+            throw new BadRequestException( "Metadata type " + type + " is a directory; request a specific contained file type instead." );
+        }
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        try ( LockedPath file = expressionDataFileService.getMetadataFile( ee, type, false )
+                .orElseThrow( () -> new NotFoundException( ee.getShortName() + " does not have metadata of type " + type + "." ) ) ) {
+            if ( !Files.isReadable( file.getPath() ) ) {
+                throw new NotFoundException( ee.getShortName() + " does not have metadata of type " + type + "." );
+            }
+            String downloadName = type.getDownloadName( ee );
+            return sendfile( file.getPath() )
+                    .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : MediaType.valueOf( type.getContentType() ) )
+                    .header( "Content-Disposition", ( type.isMultiQC() ? "inline" : "attachment" ) + "; filename=\"" + downloadName + "\"" )
+                    .build();
+        } catch ( IOException e ) {
+            log.error( "Failed to stream metadata file " + type + " for " + ee, e );
+            throw new InternalServerErrorException( e );
+        }
+    }
+
+    /**
+     * Wire shape for {@link #getDatasetMetadataFiles}: one entry per available metadata file.
+     */
+    @Value
+    public static class DatasetMetadataFileValueObject {
+
+        /**
+         * Enum name of the metadata file type — use this value as the {@code {type}} path
+         * parameter on {@code GET /datasets/{id}/metadata/{type}} to fetch the file.
+         */
+        String type;
+
+        /**
+         * Human-readable label suitable for UI display.
+         */
+        String displayName;
+
+        /**
+         * Filename the server will use in the {@code Content-Disposition} header on download.
+         */
+        String downloadName;
+
+        /**
+         * MIME content type the server will serve the file with.
+         */
+        String contentType;
+
+        /**
+         * True when the underlying metadata is organised as a directory; in that case the file
+         * cannot be downloaded directly via {@code /metadata/{type}} — request a specific
+         * sub-type (e.g. {@code RNASEQ_PIPELINE_REPORT_DATA}) instead.
+         */
+        boolean directory;
+
+        public DatasetMetadataFileValueObject( ExpressionExperimentMetaFileType type, ExpressionExperiment ee ) {
+            this.type = type.name();
+            this.displayName = type.getDisplayName();
+            this.downloadName = type.getDownloadName( ee );
+            this.contentType = type.getContentType();
+            this.directory = type.isDirectory();
         }
     }
 
