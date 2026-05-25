@@ -1,6 +1,7 @@
 package ubic.gemma.core.logging.log4j;
 
 import com.slack.api.Slack;
+import com.slack.api.SlackConfig;
 import com.slack.api.methods.SlackApiException;
 import com.slack.api.methods.request.chat.ChatPostMessageRequest;
 import com.slack.api.model.Attachment;
@@ -117,7 +118,13 @@ public class SlackAppender extends AbstractAppender {
     private synchronized Slack getSlackInstance() {
         Slack instance = slackInstance;
         if ( instance == null ) {
-            instance = Objects.requireNonNull( Slack.getInstance(), "Slack.getInstance() returned null" );
+            // Use a fresh SlackConfig (NOT SlackConfig.DEFAULT) so that the metrics-datastore
+            // background thread + per-config ThreadPools are owned by THIS instance and can
+            // actually be released on stop(). Slack.getInstance() (the JVM-static singleton)
+            // would otherwise reuse SlackConfig.DEFAULT whose close() is a no-op, leaking
+            // the "slack-api-metrics" ScheduledExecutorService across Tomcat redeploys (#1074).
+            instance = Objects.requireNonNull( Slack.getInstance( new SlackConfig() ),
+                    "Slack.getInstance(SlackConfig) returned null" );
             slackInstance = instance;
         }
         return instance;
