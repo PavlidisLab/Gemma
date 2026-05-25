@@ -209,8 +209,13 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
     private ExpressionDataDoubleMatrix getFilteredMatrix( @Nullable ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> dataVectors,
             Collection<ArrayDesign> arrayDesignsUsed, ExpressionExperimentFilterConfig filterConfig, boolean logTransform
     ) throws FilteringException {
-        if ( dataVectors.isEmpty() )
-            throw new IllegalArgumentException( "Vectors must be provided" );
+        if ( dataVectors.isEmpty() ) {
+            // Surface this as a filtering failure so the REST layer can downgrade to an empty/204 response
+            // instead of bubbling an IllegalArgumentException through UnhandledExceptionMapper as a 500.
+            // See https://github.com/PavlidisLab/Gemma/issues/408.
+            throw new NoDesignElementsException( "No processed vectors were provided"
+                    + ( ee != null ? " for " + ee : "" ) + "; cannot construct a filtered matrix." );
+        }
         dataVectors = this.processedExpressionDataVectorService.thaw( dataVectors );
         ExpressionDataDoubleMatrix eeDoubleMatrix = new ExpressionDataDoubleMatrix( ee, dataVectors );
         if ( logTransform ) {
