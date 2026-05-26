@@ -17,6 +17,7 @@ import org.semanticweb.owlapi.model.OWLSubClassOfAxiom;
 import org.semanticweb.owlapi.model.parameters.Imports;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 import uk.ac.manchester.cs.owlapi.modularity.ModuleType;
 import uk.ac.manchester.cs.owlapi.modularity.SyntacticLocalityModuleExtractor;
 
@@ -55,6 +56,7 @@ import java.util.Set;
  * <p>This class is stateless and thread-safe — the OWL-API manager is created per call
  * so concurrent extractions don't share mutable cache state.
  */
+@Component
 public class ChebiSlimExtractor {
 
     private static final Logger log = LoggerFactory.getLogger( ChebiSlimExtractor.class );
