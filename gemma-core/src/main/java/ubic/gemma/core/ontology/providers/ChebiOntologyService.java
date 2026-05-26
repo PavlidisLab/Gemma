@@ -141,35 +141,53 @@ public class ChebiOntologyService extends UrlOntologyService {
         }
 
         if ( slim != null ) {
-            log.info( "Slim CHEBI cache missing or stale at {}; loading full source.", slim );
+            log.info( "Slim CHEBI cache missing or stale at {}; loading full source. "
+                    + "Slim rebuild is NOT triggered automatically on first boot — "
+                    + "even on a daemon thread the OWL-API parse holds a multi-GB second "
+                    + "copy alongside the live Jena model and risks OOM on a constrained "
+                    + "heap. Use POST /admin/ontologies/CHEBI/rebuild-slim once the service "
+                    + "is healthy and on a host with enough headroom for the extraction.",
+                    slim );
         }
-        OntologyModel full = super.loadModel( processImports, languageLevel, inferenceMode );
+        return super.loadModel( processImports, languageLevel, inferenceMode );
+    }
 
-        if ( slim != null && slimMeta != null && slimExtractor != null && currentSeeds != null ) {
-            // Run the slim extraction OFF the main load thread. Inline-running the
-            // OWL-API parse used to hold a second full-CHEBI copy alongside the live
-            // Jena model on the loading thread, OOM-ing the JVM on real-size CHEBI
-            // (multi-GB Jena model + multi-GB OWL-API model concurrently). Async also
-            // unblocks Spring init: the FactoryBean's caller continues immediately,
-            // CHEBI becomes serving via the full model, and the slim is written to
-            // disk for the next boot once the extractor finishes. If the extraction
-            // OOMs on its own, we lose the slim for this boot — but the running
-            // service stays up.
-            final File slimRef = slim;
-            final File slimMetaRef = slimMeta;
-            final Set<String> seedsRef = currentSeeds;
-            Thread t = new Thread( () -> {
-                try {
-                    rebuildSlim( slimRef, slimMetaRef, seedsRef );
-                } catch ( Throwable e ) {
-                    log.warn( "Slim CHEBI extraction failed; this boot serves the full ontology, "
-                            + "next boot will re-attempt extraction.", e );
-                }
-            }, "chebi-slim-extractor" );
-            t.setDaemon( true );
-            t.start();
+    /**
+     * Build the slim cache from the currently-loaded Jena model + the live corpus seed
+     * set. Intended to be invoked from an admin endpoint after the service is fully
+     * loaded and the host has memory headroom for the OWL-API parse. Runs synchronously
+     * on the caller's thread — the admin endpoint can dispatch it asynchronously if it
+     * wants a 202-style response.
+     *
+     * <p>Returns immediately without action if the slim path isn't wired (test contexts,
+     * missing seedResolver, etc.).
+     *
+     * @throws IllegalStateException if the service hasn't been loaded yet — there's
+     *         no point trying to extract a slim before the live model exists.
+     */
+    public void triggerSlimRebuild() {
+        if ( !isOntologyLoaded() ) {
+            throw new IllegalStateException( "Cannot rebuild slim: CHEBI is not loaded yet." );
         }
-        return full;
+        File slim = resolveSlimFile();
+        File slimMeta = resolveSlimMetaFile();
+        if ( slim == null || slimMeta == null || slimExtractor == null || seedResolver == null ) {
+            log.warn( "Slim rebuild requested but the slim plumbing is not fully wired "
+                    + "(extractor / resolver / cache dir absent). No-op." );
+            return;
+        }
+        Set<String> seeds;
+        try {
+            seeds = seedResolver.resolveCorpusSeeds();
+        } catch ( Exception e ) {
+            log.warn( "Slim rebuild aborted: seed resolver failed.", e );
+            return;
+        }
+        try {
+            rebuildSlim( slim, slimMeta, seeds );
+        } catch ( IOException e ) {
+            log.warn( "Slim rebuild failed.", e );
+        }
     }
 
     private OntologyModel loadFromFile( File source, boolean processImports,

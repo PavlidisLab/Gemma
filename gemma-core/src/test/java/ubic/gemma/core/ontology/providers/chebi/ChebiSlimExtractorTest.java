@@ -25,11 +25,33 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.stereotype.Component;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ChebiSlimExtractorTest {
+
+    /**
+     * Regression: ChebiSlimExtractor shipped without {@code @Component} on 2026-05-26.
+     * OntologyConfig autowires it as required=false; missing annotation meant
+     * slimExtractor stayed null in production and the slim path was silently disabled,
+     * so first-boot CHEBI loaded the full source on every restart. Pin the stereotype.
+     */
+    @org.junit.jupiter.api.Test
+    void hasSpringComponentStereotype() {
+        assertTrue( ChebiSlimExtractor.class.isAnnotationPresent( Component.class ),
+                "ChebiSlimExtractor must be @Component so OntologyConfig.chebiOntologyService "
+                        + "can autowire it; without it the slim path is silently disabled." );
+    }
+
+    @org.junit.jupiter.api.Test
+    void seedResolverHasSpringComponentStereotype() {
+        assertTrue( ChebiSeedResolver.class.isAnnotationPresent( Component.class ),
+                "ChebiSeedResolver must be @Component for the same reason: OntologyConfig "
+                        + "autowires it required=false and silently falls back if it's missing." );
+    }
 
     private static final String SORAFENIB = "http://purl.obolibrary.org/obo/CHEBI_50924";
     private static final String ESTRADIOL = "http://purl.obolibrary.org/obo/CHEBI_23965";
