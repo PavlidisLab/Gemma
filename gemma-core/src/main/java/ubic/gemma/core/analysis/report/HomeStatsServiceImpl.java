@@ -35,6 +35,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.expression.experiment.SingleCellDimensionExperimentDao;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.persistence.util.QueryUtils;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
@@ -44,6 +45,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -434,22 +436,30 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
      * etc.), with a {@code "none"} bucket for datasets without an external accession.
      * Sorted descending by count.
      * <p>
-     * Two queries because HQL can't COALESCE across the {@code left join} the way SQL can —
-     * the grouped-by-name query naturally drops rows where the joined accession or
-     * externalDatabase is null. We fold the no-accession bucket in via a separate count.
-     * Not ACL-filtered for the same reason as other corpus-shape fields here: the public/
-     * private partition has a tiny effect on the breakdown and the cost of the per-EE ACL
-     * join would dominate the refresh.
+     * ACL-filtered to public EEs only — we pre-fetch the public-readable id set via
+     * {@code expressionExperimentService.loadIdsWithCache(Filters.empty(), null)} (which
+     * applies the EE2C ACL EXISTS clause) and then restrict the group-by to that set. The
+     * sum of all buckets equals {@link HomeStats#getDatasetCount()}; if it doesn't the
+     * count is broken, not the data. Two queries instead of one because HQL can't COALESCE
+     * across a left-join — the grouped query naturally drops null-accession rows, so we
+     * fold the no-accession bucket in via a separate count.
      */
     private List<HomeStats.AccessionSourceStat> computeDatasetsByAccessionSource() {
+        Collection<Long> publicEeIds = QueryUtils.optimizeParameterList(
+                expressionExperimentService.loadIdsWithCache( Filters.empty(), null ) );
+        if ( publicEeIds.isEmpty() ) {
+            return Collections.emptyList();
+        }
         @SuppressWarnings("unchecked")
         List<Object[]> rows = sessionFactory.getCurrentSession()
                 .createQuery( "select ed.name, count(distinct ee.id) "
                         + "from ExpressionExperiment ee "
                         + "join ee.accession a "
                         + "join a.externalDatabase ed "
+                        + "where ee.id in (:eeIds) "
                         + "group by ed.name "
                         + "order by count(distinct ee.id) desc" )
+                .setParameterList( "eeIds", publicEeIds )
                 .setCacheable( true )
                 .list();
         List<HomeStats.AccessionSourceStat> out = new ArrayList<>( rows.size() + 1 );
@@ -459,7 +469,9 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
             out.add( new HomeStats.AccessionSourceStat( name, count != null ? count : 0L ) );
         }
         Long noneCount = ( Long ) sessionFactory.getCurrentSession()
-                .createQuery( "select count(distinct ee.id) from ExpressionExperiment ee where ee.accession is null" )
+                .createQuery( "select count(distinct ee.id) from ExpressionExperiment ee "
+                        + "where ee.accession is null and ee.id in (:eeIds)" )
+                .setParameterList( "eeIds", publicEeIds )
                 .setCacheable( true )
                 .uniqueResult();
         if ( noneCount != null && noneCount > 0 ) {
