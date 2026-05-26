@@ -1,0 +1,64 @@
+{
+  "_comment": [
+    "Bucket spec for /stats/home treatmentSubcategories.",
+    "",
+    "Each bucket can match terms three ways (apply in order; OR-combined within a bucket):",
+    "  parentSubtreeUris — ontology parent URIs; expanded via OntologyService.getChildren",
+    "                      (CHEBI must be loaded for these to populate; otherwise 0).",
+    "  uriPrefixes       — exact valueUri prefix match (startsWith).",
+    "  uriExactMatches   — full-URI equality match.",
+    "",
+    "Bucket order is first-match-wins: a term that's both a drug AND a hormone lands",
+    "in the bucket listed first.",
+    "",
+    "Two catchalls are emitted automatically:",
+    "  other_chemical   — CHEBI URIs not in any explicit bucket.",
+    "  other            — non-CHEBI URIs not in any explicit bucket.",
+    "",
+    "To override: drop a treatment-buckets.json into ${gemma.appdata.home}/HomeStats/.",
+    "If present it replaces this classpath default. Otherwise this file ships."
+  ],
+  "buckets": [
+    {
+      "key": "approved_drug",
+      "label": "Approved drugs",
+      "parentSubtreeUris": ["http://purl.obolibrary.org/obo/CHEBI_23888"]
+    },
+    {
+      "key": "hormone",
+      "label": "Hormones",
+      "parentSubtreeUris": ["http://purl.obolibrary.org/obo/CHEBI_24621"]
+    },
+    {
+      "key": "vitamin",
+      "label": "Vitamins / nutrients",
+      "parentSubtreeUris": ["http://purl.obolibrary.org/obo/CHEBI_33229"]
+    },
+    {
+      "key": "toxin",
+      "label": "Toxins / pollutants",
+      "parentSubtreeUris": ["http://purl.obolibrary.org/obo/CHEBI_27026"]
+    },
+    {
+      "key": "biologic",
+      "label": "Biologics",
+      "uriPrefixes": [
+        "http://purl.obolibrary.org/obo/PR_",
+        "http://purl.org/commons/record/ncbi_gene/"
+      ]
+    },
+    {
+      "key": "pathogen",
+      "label": "Pathogens",
+      "uriPrefixes": ["http://purl.obolibrary.org/obo/NCBITaxon_"]
+    },
+    {
+      "key": "control",
+      "label": "Control / reference",
+      "uriExactMatches": [
+        "http://purl.obolibrary.org/obo/OBI_0000025",
+        "http://purl.obolibrary.org/obo/OBI_0000220"
+      ]
+    }
+  ]
+}

@@ -43,12 +43,12 @@ import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -137,47 +137,23 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
     @Autowired
     private ManualAuthenticationService manualAuthenticationService;
 
-    /** URI prefix marking CHEBI chemical-entity terms. Used to narrow the "drug count" tile
-     *  to actual chemicals (vs the broader `treatment` category-label, which also captures
-     *  radiation exposure, behavioural interventions, etc.). */
+    /** URI prefix marking CHEBI chemical-entity terms. Used to narrow the top-level
+     *  {@code drugCount} field to actual chemicals (vs the broader {@code treatment}
+     *  category-label, which also captures radiation, behavioural interventions, etc.).
+     *  Also drives the {@code other_chemical} catchall in {@code treatmentSubcategories}. */
     private static final String CHEBI_URI_PREFIX = "http://purl.obolibrary.org/obo/CHEBI_";
-    /** NCBI Taxonomy URIs — used as a pathogen-bucket proxy in treatmentSubcategories. */
-    private static final String NCBITAXON_URI_PREFIX = "http://purl.obolibrary.org/obo/NCBITaxon_";
-    /** Protein Ontology URIs — used as a biologic-bucket proxy in treatmentSubcategories. */
-    private static final String PR_URI_PREFIX = "http://purl.obolibrary.org/obo/PR_";
 
-    /**
-     * CHEBI parent classes used to slice the {@code drug} bucket in
-     * {@code treatmentSubcategories}. Each entry maps a stable lowercase-snake-case bucket
-     * key to a CHEBI URI; on refresh we expand each parent into its subClassOf descendants
-     * via {@link OntologyService#getChildren}. Membership in the descendant set drives the
-     * sub-bucketing; CHEBI-tagged treatments not in any subtree fall into
-     * {@code other_chemical}.
-     * <p>
-     * Order controls the JSON list ordering before the sort-desc-by-count happens.
-     */
-    private static final List<ChebiBucket> CHEBI_BUCKETS = Arrays.asList(
-            new ChebiBucket( "approved_drug", "Approved drugs", "http://purl.obolibrary.org/obo/CHEBI_23888" ),
-            new ChebiBucket( "hormone",       "Hormones",       "http://purl.obolibrary.org/obo/CHEBI_24621" ),
-            new ChebiBucket( "vitamin",       "Vitamins / nutrients", "http://purl.obolibrary.org/obo/CHEBI_33229" ),
-            new ChebiBucket( "toxin",         "Toxins / pollutants",  "http://purl.obolibrary.org/obo/CHEBI_27026" )
-    );
+    /** Classpath default location for the treatment-buckets spec — see
+     *  {@link TreatmentBucketsConfig} and {@code treatment-buckets.json} in the same package. */
+    private static final String TREATMENT_BUCKETS_CLASSPATH = "/ubic/gemma/core/analysis/report/treatment-buckets.json";
 
-    /** CHEBI-subtree expansion timeout. Ontology lookups can be slow if CHEBI isn't loaded
-     *  yet; bound them tightly so the refresh degrades to "everything in other_chemical"
-     *  rather than blocking. */
-    private static final long CHEBI_SUBTREE_TIMEOUT_MS = 30_000L;
+    /** Filename for the optional override under {@code ${gemma.appdata.home}/HomeStats/}. */
+    private static final String TREATMENT_BUCKETS_OVERRIDE = "treatment-buckets.json";
 
-    private static final class ChebiBucket {
-        final String key;
-        final String label;
-        final String parentUri;
-        ChebiBucket( String key, String label, String parentUri ) {
-            this.key = key;
-            this.label = label;
-            this.parentUri = parentUri;
-        }
-    }
+    /** Subtree-expansion timeout per parent URI. Ontology lookups can be slow if the
+     *  underlying ontology isn't loaded yet; bound them tightly so the refresh degrades
+     *  to "fall into the catch-all" rather than blocking. */
+    private static final long SUBTREE_EXPANSION_TIMEOUT_MS = 30_000L;
 
     /** Maximum number of factor-value-by-category rows to retain. Sorted desc by value. */
     private static final int FACTOR_VALUE_CATEGORY_LIMIT = 50;
@@ -609,21 +585,27 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
     }
 
     /**
-     * Slice the treatment-category term list into buckets — CHEBI splits into
-     * approved_drug / hormone / vitamin / toxin via {@code subClassOf} descendant
-     * lookup against the configured CHEBI parent URIs; CHEBI rows not in any subtree
-     * fall into {@code other_chemical}. Non-CHEBI rows still split by URI prefix:
-     * pathogen (NCBITaxon), biologic (PR / Protein Ontology), other. ACL-filtered via
-     * the same {@code getAnnotationsUsageFrequency} surface that
+     * Slice the treatment-category term list into buckets defined by
+     * {@code treatment-buckets.json}. Each bucket can match terms three ways
+     * (subtree-descendants, URI-prefix, exact-URI); first-match-wins across the bucket
+     * list. ACL-filtered via the same {@code getAnnotationsUsageFrequency} surface that
      * {@code byAnnotationCategory.treatment} uses, so all sub-buckets sum to that
      * field's value.
      * <p>
-     * If CHEBI isn't loaded in the OntologyService (the parent lookup returns null,
-     * or {@code getChildren} times out), the four CHEBI sub-buckets stay at zero and
-     * every CHEBI row falls into {@code other_chemical}. Daily refreshes after CHEBI
-     * loads will pick up the right buckets without any intervention.
+     * Two catchalls are emitted automatically:
+     * {@code other_chemical} for CHEBI URIs not in any explicit bucket, and {@code other}
+     * for non-CHEBI URIs not in any explicit bucket. (Splitting CHEBI-other from
+     * everything-else lets the UI tell "we have CHEBI we haven't classified" apart from
+     * "we have ontology terms outside our taxonomy".)
+     * <p>
+     * If any ontology subtree expansion fails (parent not loaded, timeout) the affected
+     * bucket stays at 0 and rows fall through the bucket list; the catchall picks them
+     * up. Daily refreshes after the ontology loads pick up the right buckets without
+     * intervention.
      */
     private List<HomeStats.TreatmentBucketStat> computeTreatmentSubcategories() {
+        TreatmentBucketsConfig config = loadTreatmentBucketsConfig();
+
         List<String> freeTextSentinel = Collections.singletonList( ExpressionExperimentService.FREE_TEXT );
         List<ExpressionExperimentService.CharacteristicWithUsageStatisticsAndOntologyTerm> terms;
         try {
@@ -643,92 +625,142 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
             return Collections.emptyList();
         }
 
-        // Expand each CHEBI parent into its subClassOf-descendant URI set. Order matters
-        // only if a term sits under multiple parents — first-match wins; the CHEBI_BUCKETS
-        // list is ordered most-specific to least-specific (drugs first).
-        LinkedHashMap<String, Set<String>> chebiBucketUris = new LinkedHashMap<>();
-        for ( ChebiBucket b : CHEBI_BUCKETS ) {
-            chebiBucketUris.put( b.key, expandChebiSubtree( b.parentUri, b.label ) );
+        // Expand subtree-URIs for buckets that use them, once per refresh. Cache the
+        // expanded URI sets alongside the bucket spec so the per-term matcher is O(1).
+        List<ExpandedBucket> expanded = new ArrayList<>();
+        for ( TreatmentBucketsConfig.Bucket b : config.getBuckets() ) {
+            expanded.add( new ExpandedBucket( b, expandSubtreeUris( b ) ) );
         }
 
-        Map<String, Long> chebiCounts = new LinkedHashMap<>();
-        for ( ChebiBucket b : CHEBI_BUCKETS ) {
-            chebiCounts.put( b.key, 0L );
+        Map<String, Long> bucketCounts = new LinkedHashMap<>();
+        for ( ExpandedBucket b : expanded ) {
+            bucketCounts.put( b.spec.getKey(), 0L );
         }
-        long otherChemical = 0, pathogen = 0, biologic = 0, other = 0;
+        long otherChemical = 0, other = 0;
         for ( ExpressionExperimentService.CharacteristicWithUsageStatisticsAndOntologyTerm vo : terms ) {
             String uri = vo.getCharacteristic() != null ? vo.getCharacteristic().getValueUri() : null;
             if ( uri == null ) {
                 // free-text sentinel should have excluded these already; defensive
                 other++;
+                continue;
+            }
+            ExpandedBucket hit = matchBucket( uri, expanded );
+            if ( hit != null ) {
+                bucketCounts.merge( hit.spec.getKey(), 1L, Long::sum );
             } else if ( uri.startsWith( CHEBI_URI_PREFIX ) ) {
-                String bucket = findChebiBucket( uri, chebiBucketUris );
-                if ( bucket != null ) {
-                    chebiCounts.merge( bucket, 1L, Long::sum );
-                } else {
-                    otherChemical++;
-                }
-            } else if ( uri.startsWith( NCBITAXON_URI_PREFIX ) ) {
-                pathogen++;
-            } else if ( uri.startsWith( PR_URI_PREFIX ) ) {
-                biologic++;
+                otherChemical++;
             } else {
                 other++;
             }
         }
 
         List<HomeStats.TreatmentBucketStat> out = new ArrayList<>();
-        for ( ChebiBucket b : CHEBI_BUCKETS ) {
-            out.add( new HomeStats.TreatmentBucketStat( b.key, b.label, chebiCounts.getOrDefault( b.key, 0L ) ) );
+        for ( ExpandedBucket b : expanded ) {
+            out.add( new HomeStats.TreatmentBucketStat(
+                    b.spec.getKey(), b.spec.getLabel(),
+                    bucketCounts.getOrDefault( b.spec.getKey(), 0L ) ) );
         }
         out.add( new HomeStats.TreatmentBucketStat( "other_chemical", "Other chemicals", otherChemical ) );
-        out.add( new HomeStats.TreatmentBucketStat( "pathogen",       "Pathogens",       pathogen ) );
-        out.add( new HomeStats.TreatmentBucketStat( "biologic",       "Biologics",       biologic ) );
         out.add( new HomeStats.TreatmentBucketStat( "other",          "Other",           other ) );
         out.sort( ( a, b ) -> Long.compare( b.getCount(), a.getCount() ) );
         return out;
     }
 
     /**
-     * Expand a CHEBI parent URI into the set of all its {@code subClassOf} descendant URIs
-     * (including the parent itself). Returns an empty set if the parent isn't loaded in the
-     * OntologyService or the lookup times out — the caller falls back to
-     * {@code other_chemical} for those rows.
+     * Load the treatment-buckets spec — appdata override at
+     * {@code ${gemma.appdata.home}/HomeStats/treatment-buckets.json} if present,
+     * otherwise the packaged classpath default. Errors fall back to an empty spec,
+     * which leaves every treatment term in the {@code other_chemical} / {@code other}
+     * catchalls — the home page tile keeps rendering rather than failing the refresh.
      */
-    private Set<String> expandChebiSubtree( String parentUri, String bucketLabel ) {
-        try {
-            OntologyTerm parent = ontologyService.getTerm( parentUri, CHEBI_SUBTREE_TIMEOUT_MS, TimeUnit.MILLISECONDS );
-            if ( parent == null ) {
-                log.warn( "HomeStats: CHEBI parent " + parentUri + " (" + bucketLabel + ") not found in OntologyService;"
-                        + " '" + bucketLabel + "' bucket will be 0" );
-                return Collections.emptySet();
+    private TreatmentBucketsConfig loadTreatmentBucketsConfig() {
+        Path override = Paths.get( homeDir, HOME_STATS_DIR, TREATMENT_BUCKETS_OVERRIDE );
+        if ( Files.exists( override ) ) {
+            try {
+                TreatmentBucketsConfig cfg = json.readValue( override.toFile(), TreatmentBucketsConfig.class );
+                log.info( "HomeStats: loaded treatment-buckets override from " + override
+                        + " (" + cfg.getBuckets().size() + " buckets)" );
+                return cfg;
+            } catch ( IOException e ) {
+                log.warn( "HomeStats: failed to read override at " + override + "; falling back to classpath default", e );
             }
-            Set<OntologyTerm> descendants = ontologyService.getChildren(
-                    Collections.singleton( parent ), false, false,
-                    CHEBI_SUBTREE_TIMEOUT_MS, TimeUnit.MILLISECONDS );
-            Set<String> uris = new HashSet<>( descendants.size() + 1 );
-            uris.add( parent.getUri() );
-            for ( OntologyTerm child : descendants ) {
-                if ( child.getUri() != null ) {
-                    uris.add( child.getUri() );
-                }
+        }
+        try ( InputStream in = HomeStatsServiceImpl.class.getResourceAsStream( TREATMENT_BUCKETS_CLASSPATH ) ) {
+            if ( in == null ) {
+                log.warn( "HomeStats: classpath default " + TREATMENT_BUCKETS_CLASSPATH + " not found; no treatment buckets" );
+                return new TreatmentBucketsConfig();
             }
-            log.debug( "HomeStats: CHEBI bucket '" + bucketLabel + "' (" + parentUri + ") expanded to " + uris.size() + " URIs" );
-            return uris;
-        } catch ( TimeoutException e ) {
-            log.warn( "HomeStats: CHEBI subtree expansion timed out for " + parentUri + " (" + bucketLabel + "); bucket will be 0", e );
-            return Collections.emptySet();
+            TreatmentBucketsConfig cfg = json.readValue( in, TreatmentBucketsConfig.class );
+            log.debug( "HomeStats: loaded treatment-buckets classpath default (" + cfg.getBuckets().size() + " buckets)" );
+            return cfg;
+        } catch ( IOException e ) {
+            log.warn( "HomeStats: failed to read classpath default treatment-buckets.json; no treatment buckets", e );
+            return new TreatmentBucketsConfig();
         }
     }
 
+    /**
+     * Expand a bucket's {@code parentSubtreeUris} (if any) into a flat
+     * {@code subClassOf}-descendant URI set, including the parent itself. Empty set if
+     * the bucket has no subtree URIs or the ontology isn't loaded.
+     */
+    private Set<String> expandSubtreeUris( TreatmentBucketsConfig.Bucket bucket ) {
+        if ( bucket.getParentSubtreeUris() == null || bucket.getParentSubtreeUris().isEmpty() ) {
+            return Collections.emptySet();
+        }
+        Set<String> uris = new HashSet<>();
+        for ( String parentUri : bucket.getParentSubtreeUris() ) {
+            try {
+                OntologyTerm parent = ontologyService.getTerm( parentUri, SUBTREE_EXPANSION_TIMEOUT_MS, TimeUnit.MILLISECONDS );
+                if ( parent == null ) {
+                    log.warn( "HomeStats: bucket '" + bucket.getLabel() + "' parent " + parentUri
+                            + " not loaded in OntologyService — bucket may be undercounted" );
+                    continue;
+                }
+                uris.add( parent.getUri() );
+                Set<OntologyTerm> descendants = ontologyService.getChildren(
+                        Collections.singleton( parent ), false, false,
+                        SUBTREE_EXPANSION_TIMEOUT_MS, TimeUnit.MILLISECONDS );
+                for ( OntologyTerm child : descendants ) {
+                    if ( child.getUri() != null ) {
+                        uris.add( child.getUri() );
+                    }
+                }
+            } catch ( TimeoutException e ) {
+                log.warn( "HomeStats: subtree expansion timed out for " + parentUri
+                        + " (bucket '" + bucket.getLabel() + "'); bucket may be undercounted", e );
+            }
+        }
+        if ( !uris.isEmpty() ) {
+            log.debug( "HomeStats: bucket '" + bucket.getLabel() + "' expanded to " + uris.size() + " URIs" );
+        }
+        return uris;
+    }
+
     @Nullable
-    private String findChebiBucket( String uri, LinkedHashMap<String, Set<String>> chebiBucketUris ) {
-        for ( Map.Entry<String, Set<String>> e : chebiBucketUris.entrySet() ) {
-            if ( e.getValue().contains( uri ) ) {
-                return e.getKey();
+    private ExpandedBucket matchBucket( String uri, List<ExpandedBucket> buckets ) {
+        for ( ExpandedBucket b : buckets ) {
+            if ( b.subtreeUris.contains( uri ) ) return b;
+            if ( b.spec.getUriPrefixes() != null ) {
+                for ( String prefix : b.spec.getUriPrefixes() ) {
+                    if ( uri.startsWith( prefix ) ) return b;
+                }
+            }
+            if ( b.spec.getUriExactMatches() != null && b.spec.getUriExactMatches().contains( uri ) ) {
+                return b;
             }
         }
         return null;
+    }
+
+    /** Bucket spec + its pre-expanded subClassOf URI set. */
+    private static final class ExpandedBucket {
+        final TreatmentBucketsConfig.Bucket spec;
+        final Set<String> subtreeUris;
+        ExpandedBucket( TreatmentBucketsConfig.Bucket spec, Set<String> subtreeUris ) {
+            this.spec = spec;
+            this.subtreeUris = subtreeUris;
+        }
     }
 
     /**
