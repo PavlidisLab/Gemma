@@ -2551,6 +2551,7 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
+    @Transactional(readOnly = true)
     public boolean isSingleCell( ExpressionExperiment ee ) {
         return ( ee.getCharacteristics().stream()
                 .anyMatch( c -> hasCategory( c, Categories.ASSAY ) && hasAnyValue( c,

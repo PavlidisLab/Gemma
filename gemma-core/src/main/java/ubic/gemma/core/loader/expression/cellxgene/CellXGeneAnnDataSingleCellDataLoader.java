@@ -3,9 +3,13 @@ package ubic.gemma.core.loader.expression.cellxgene;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.Strings;
 import ubic.gemma.core.loader.expression.singleCell.AnnDataSingleCellDataLoader;
+import ubic.gemma.core.loader.util.anndata.AnnData;
 import ubic.gemma.core.loader.util.mapper.SimpleBioAssayMapper;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
+import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 
 import java.io.IOException;
@@ -48,6 +52,26 @@ public class CellXGeneAnnDataSingleCellDataLoader extends AnnDataSingleCellDataL
     public Map<BioMaterial, Set<Characteristic>> getSamplesCharacteristics( Collection<BioAssay> samples ) throws IOException {
         return super.getSamplesCharacteristics( samples ).entrySet().stream()
                 .collect( Collectors.toMap( Map.Entry::getKey, e -> mergeOntologyTerms( e.getValue() ) ) );
+    }
+
+    @Override
+    public Set<CellTypeAssignment> getCellTypeAssignments( SingleCellDimension dimension ) throws IOException {
+        Set<CellTypeAssignment> assignments = super.getCellTypeAssignments( dimension );
+        for ( CellTypeAssignment cta : assignments ) {
+            cta.setPreferred( true );
+        }
+        return assignments;
+    }
+
+    @Override
+    public Set<QuantitationType> getQuantitationTypes() throws IOException {
+        Set<QuantitationType> qts = super.getQuantitationTypes();
+        for ( QuantitationType qt : qts ) {
+            if ( qt.getDescription() != null && qt.getDescription().contains( "Data from a layer located at 'X'" ) ) {
+                qt.setIsSingleCellPreferred( true );
+            }
+        }
+        return qts;
     }
 
     /**

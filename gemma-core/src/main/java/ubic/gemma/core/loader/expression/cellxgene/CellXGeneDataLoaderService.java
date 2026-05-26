@@ -30,7 +30,7 @@ public interface CellXGeneDataLoaderService {
      * @throws IllegalArgumentException if a dataset with the given short name already exists in the database, or if the
      * platform taxon does not match that of the CELLxGENE dataset
      */
-    ExpressionExperiment fetchAndLoad( String collectionId, @Nullable String datasetId, @Nullable String assetId, ArrayDesign platform, String datasetShortName, boolean loadSingleCellData, boolean keepPooledSample, boolean keepUnknownSample ) throws IOException;
+    ExpressionExperiment fetchAndLoad( String collectionId, @Nullable String datasetId, @Nullable String assetId, ArrayDesign platform, String datasetShortName, boolean loadSingleCellData, boolean keepPooledSample, boolean keepUnknownSample, boolean dryRun ) throws IOException;
 
     /**
      * Set the progress reporter factory to use for reporting progress during data downloading.

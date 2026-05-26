@@ -7,12 +7,24 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.EnumMap;
+import java.util.Map;
 
 /**
  * @author poirigui
  */
 @CommonsLog
 public class SingleCellDataTransformationUtils {
+
+    private static final Map<SingleCellDataType, String> FILE_EXTENSION_MAP;
+
+    static {
+        FILE_EXTENSION_MAP = new EnumMap<>(SingleCellDataType.class);
+        FILE_EXTENSION_MAP.put(SingleCellDataType.ANNDATA, ".h5ad");
+        FILE_EXTENSION_MAP.put(SingleCellDataType.SEURAT_DISK, ".h5Seurat");
+        FILE_EXTENSION_MAP.put(SingleCellDataType.LOOM, ".loom");
+        FILE_EXTENSION_MAP.put(SingleCellDataType.MEX, ".mex");
+    }
 
     /**
      * Obtain a temporary file for the output of a transformation.
@@ -23,27 +35,13 @@ public class SingleCellDataTransformationUtils {
      */
     public static Path createTemporaryFile( @Nullable Path scratchDir, SingleCellDataType dataType ) throws IOException {
         boolean isDir;
-        String fileExt;
-        switch ( dataType ) {
-            case ANNDATA:
-                isDir = false;
-                fileExt = ".h5ad";
-                break;
-            case SEURAT_DISK:
-                isDir = false;
-                fileExt = ".h5Seurat";
-                break;
-            case LOOM:
-                isDir = false;
-                fileExt = ".loom";
-                break;
-            case MEX:
-                isDir = true;
-                fileExt = ".mex";
-                break;
-            default:
-                throw new IllegalArgumentException( "Unknown single-cell data type: " + dataType );
+        String fileExt = FILE_EXTENSION_MAP.get(dataType);
+        isDir = dataType == SingleCellDataType.MEX;
+
+        if (fileExt == null) {
+            throw new IllegalArgumentException("Unknown single-cell data type: " + dataType);
         }
+
         if ( scratchDir != null ) {
             if ( !Files.exists( scratchDir ) ) {
                 log.info( "Scratch directory " + scratchDir + " does not exist, creating it." );
