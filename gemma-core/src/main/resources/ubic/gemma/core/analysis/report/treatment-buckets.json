@@ -34,14 +34,41 @@
       ]
     },
     {
+      "_comment": "Subtree URIs ARE preferred — they auto-pick-up new CHEBI terms — but they require CHEBI loaded in OntologyService. As a fallback, each bucket also carries a curated uriExactMatches list of CHEBI IDs we know belong in it. When CHEBI is loaded, the subtree expansion catches everything in it; when not, the exact list still gives a useful bucket. Either way: this list can be edited without recompile.",
       "key": "approved_drug",
       "label": "Approved drugs",
-      "parentSubtreeUris": ["http://purl.obolibrary.org/obo/CHEBI_23888"]
+      "parentSubtreeUris": ["http://purl.obolibrary.org/obo/CHEBI_23888"],
+      "uriExactMatches": [
+        "http://purl.obolibrary.org/obo/CHEBI_50845",
+        "http://purl.obolibrary.org/obo/CHEBI_41879",
+        "http://purl.obolibrary.org/obo/CHEBI_137113",
+        "http://purl.obolibrary.org/obo/CHEBI_41774",
+        "http://purl.obolibrary.org/obo/CHEBI_28748",
+        "http://purl.obolibrary.org/obo/CHEBI_9168",
+        "http://purl.obolibrary.org/obo/CHEBI_27958",
+        "http://purl.obolibrary.org/obo/CHEBI_6801",
+        "http://purl.obolibrary.org/obo/CHEBI_91091",
+        "http://purl.obolibrary.org/obo/CHEBI_50131",
+        "http://purl.obolibrary.org/obo/CHEBI_18723",
+        "http://purl.obolibrary.org/obo/CHEBI_39867",
+        "http://purl.obolibrary.org/obo/CHEBI_45716",
+        "http://purl.obolibrary.org/obo/CHEBI_27899",
+        "http://purl.obolibrary.org/obo/CHEBI_46024",
+        "http://purl.obolibrary.org/obo/CHEBI_50122",
+        "http://purl.obolibrary.org/obo/CHEBI_52717",
+        "http://purl.obolibrary.org/obo/CHEBI_45783"
+      ]
     },
     {
       "key": "hormone",
       "label": "Hormones",
-      "parentSubtreeUris": ["http://purl.obolibrary.org/obo/CHEBI_24621"]
+      "parentSubtreeUris": ["http://purl.obolibrary.org/obo/CHEBI_24621"],
+      "uriExactMatches": [
+        "http://purl.obolibrary.org/obo/CHEBI_26536",
+        "http://purl.obolibrary.org/obo/CHEBI_23965",
+        "http://purl.obolibrary.org/obo/CHEBI_15367",
+        "http://purl.obolibrary.org/obo/CHEBI_16330"
+      ]
     },
     {
       "key": "vitamin",
@@ -51,7 +78,11 @@
     {
       "key": "toxin",
       "label": "Toxins / pollutants",
-      "parentSubtreeUris": ["http://purl.obolibrary.org/obo/CHEBI_27026"]
+      "parentSubtreeUris": ["http://purl.obolibrary.org/obo/CHEBI_27026"],
+      "uriExactMatches": [
+        "http://purl.obolibrary.org/obo/CHEBI_16412",
+        "http://purl.obolibrary.org/obo/CHEBI_84491"
+      ]
     },
     {
       "key": "biologic",
