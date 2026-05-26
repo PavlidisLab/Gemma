@@ -300,9 +300,18 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
                     String key = label != null ? CATEGORY_LABEL_TO_KEY.get( label ) : null;
                     HomeStats.CategoryStat cs = new HomeStats.CategoryStat(
                             key, label, e.getKey().getCategoryUri(), e.getValue() );
+                    // Diversity companion: distinct ontology-backed terms in this
+                    // category. Pre-computed for the six tile-surfaced categories
+                    // (disease, organism_part, cell_type, treatment, strain, cell_line);
+                    // computed on demand for the rest so the row never lies with a
+                    // zero where the field simply wasn't computed.
+                    Long terms = null;
                     if ( key != null && byCategory.containsKey( key ) ) {
-                        cs.setNumberOfDistinctTerms( byCategory.get( key ) );
+                        terms = byCategory.get( key );
+                    } else if ( label != null ) {
+                        terms = countAnnotationTerms( empty, label, freeTextSentinel );
                     }
+                    cs.setNumberOfDistinctTerms( terms != null ? terms : 0L );
                     return cs;
                 } )
                 .collect( Collectors.toList() );
