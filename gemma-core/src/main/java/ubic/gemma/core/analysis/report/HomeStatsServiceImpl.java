@@ -14,6 +14,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.security.authentication.ManualAuthenticationService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
@@ -41,6 +43,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -120,7 +123,17 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
     @Autowired
     private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
     @Autowired
+    private SessionFactory sessionFactory;
+    @Autowired
     private ManualAuthenticationService manualAuthenticationService;
+
+    /** URI prefix marking CHEBI chemical-entity terms. Used to narrow the "drug count" tile
+     *  to actual chemicals (vs the broader `treatment` category-label, which also captures
+     *  radiation exposure, behavioural interventions, etc.). */
+    private static final String CHEBI_URI_PREFIX = "http://purl.obolibrary.org/obo/CHEBI_";
+
+    /** Maximum number of factor-value-by-category rows to retain. Sorted desc by value. */
+    private static final int FACTOR_VALUE_CATEGORY_LIMIT = 50;
 
     @Value("${gemma.appdata.home}")
     private String homeDir;
@@ -267,6 +280,19 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
         // reflects what an anonymous caller can actually retrieve via /resultSets.
         stats.setDeaResultSetCount( expressionAnalysisResultSetService.count( Filters.empty() ) );
 
+        // Drug count — CHEBI-anchored characteristics only. Narrower than the `treatment`
+        // category-label count which captures non-drug treatments too.
+        stats.setDrugCount( countDistinctValueUrisByPrefix( CHEBI_URI_PREFIX ) );
+
+        // Manipulated-gene count — distinct gene URIs annotating experiments as
+        // perturbation targets. Genes carry the NCBI gene-record namespace, see Gene#NCBI_URI_PREFIX.
+        stats.setGeneManipulatedCount( countDistinctValueUrisByPrefix( Gene.NCBI_URI_PREFIX ) );
+
+        // Factor-value distribution by EF category — "how many distinct disease-state factor
+        // values exist", "how many distinct genotypes", etc. Reflects the range of experimental
+        // axes Gemma has measured along.
+        stats.setFactorValuesByCategory( computeFactorValuesByCategory() );
+
         long elapsed = System.currentTimeMillis() - t0;
         log.info( "HomeStats: snapshot recomputed in " + elapsed + " ms — "
                 + stats.getDatasetCount() + " datasets ("
@@ -275,7 +301,10 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
                 + stats.getSampleCount() + " samples, "
                 + stats.getByTaxon().size() + " taxa, "
                 + stats.getOntologyTermCount() + " ontology terms, "
+                + stats.getDrugCount() + " drugs, "
+                + stats.getGeneManipulatedCount() + " manipulated genes, "
                 + stats.getDeaResultSetCount() + " DEA result sets, "
+                + stats.getFactorValuesByCategory().size() + " FV-category rows, "
                 + stats.getRecentExperiments().size() + " recent" );
         return stats;
     }
@@ -304,6 +333,56 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
             log.warn( "HomeStats: annotations-usage count timed out for category=" + category + "; reporting 0", e );
             return 0L;
         }
+    }
+
+    /**
+     * Count distinct {@code Characteristic.valueUri} values that start with the given prefix,
+     * across all characteristics in the database. Used for the CHEBI-drug count and the
+     * manipulated-gene count.
+     * <p>
+     * Not ACL-filtered — the count reflects the corpus, not what's visible to the
+     * anonymous viewer. The cost of ACL-filtering this would be a per-characteristic
+     * EE-lookup; for a stat tile that's not worth the precision (the public/private
+     * partition has a tiny effect on a count like "distinct drugs in Gemma").
+     */
+    private long countDistinctValueUrisByPrefix( String uriPrefix ) {
+        Long n = ( Long ) sessionFactory.getCurrentSession()
+                .createQuery( "select count(distinct c.valueUri) from Characteristic c "
+                        + "where c.valueUri like :prefix" )
+                .setParameter( "prefix", uriPrefix + "%" )
+                .setCacheable( true )
+                .uniqueResult();
+        return n != null ? n : 0L;
+    }
+
+    /**
+     * Distinct factor-value count grouped by ExperimentalFactor.category.category. Reflects
+     * the range of experimental conditions Gemma has measured along each axis.
+     * <p>
+     * Joins {@code ExperimentalFactor → factorValues} and counts distinct FVs grouped by
+     * the category Characteristic.category label. EFs with a null category are folded into
+     * a single null-keyed bucket. Top {@link #FACTOR_VALUE_CATEGORY_LIMIT} buckets retained,
+     * sorted descending by count.
+     */
+    private List<HomeStats.FactorValueCategoryStat> computeFactorValuesByCategory() {
+        @SuppressWarnings("unchecked")
+        List<Object[]> rows = sessionFactory.getCurrentSession()
+                .createQuery( "select ef.category.category, ef.category.categoryUri, count(distinct fv.id) "
+                        + "from ExperimentalFactor ef "
+                        + "join ef.factorValues fv "
+                        + "group by ef.category.category, ef.category.categoryUri "
+                        + "order by count(distinct fv.id) desc" )
+                .setCacheable( true )
+                .setMaxResults( FACTOR_VALUE_CATEGORY_LIMIT )
+                .list();
+        List<HomeStats.FactorValueCategoryStat> out = new ArrayList<>( rows.size() );
+        for ( Object[] row : rows ) {
+            String category = ( String ) row[0];
+            String categoryUri = ( String ) row[1];
+            Long count = ( Long ) row[2];
+            out.add( new HomeStats.FactorValueCategoryStat( category, categoryUri, count != null ? count : 0L ) );
+        }
+        return out;
     }
 
     private Path snapshotFile() {

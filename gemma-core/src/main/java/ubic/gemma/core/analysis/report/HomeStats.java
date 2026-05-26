@@ -70,6 +70,25 @@ public class HomeStats {
      *  DEA library — the corpus of comparisons callers can query / re-use. */
     private long deaResultSetCount;
 
+    /** Distinct CHEBI-anchored drug / chemical annotations in use (characteristics whose
+     *  {@code valueUri} starts with {@code http://purl.obolibrary.org/obo/CHEBI_}). Narrower
+     *  than {@link #byAnnotationCategory}.{@code treatment} — that bucket includes non-drug
+     *  treatments like radiation exposure or behavioural interventions. */
+    private long drugCount;
+
+    /** Distinct genes annotated as manipulation targets across the corpus (characteristics
+     *  whose {@code valueUri} starts with {@link ubic.gemma.model.genome.Gene#NCBI_URI_PREFIX},
+     *  typically under a genotype / genetic-perturbation category). Reflects how many distinct
+     *  genes Gemma has perturbation data for (knockouts, knockdowns, overexpression, etc.). */
+    private long geneManipulatedCount;
+
+    /** Distinct factor-value count per ExperimentalFactor category. Reflects the range of
+     *  experimental conditions Gemma has measured along each axis (e.g. how many distinct
+     *  disease-state factor values exist across the corpus, how many genotypes, how many
+     *  treatments). Keys are the canonical category labels carried on {@code ExperimentalFactor.category};
+     *  sorted descending by value. */
+    private List<FactorValueCategoryStat> factorValuesByCategory = new ArrayList<>();
+
     /**
      * Total distinct ontology-backed annotation terms in use across all public datasets.
      * Free-text characteristics (no {@code valueUri}) are excluded — same semantics as
@@ -131,6 +150,25 @@ public class HomeStats {
             this.category = category;
             this.categoryUri = categoryUri;
             this.numberOfExpressionExperiments = numberOfExpressionExperiments;
+        }
+    }
+
+    @Data
+    @NoArgsConstructor
+    public static class FactorValueCategoryStat {
+        /** Gemma's canonical category label carried on {@code ExperimentalFactor.category}
+         *  (e.g. {@code disease state}, {@code treatment}, {@code genotype}).
+         *  May be {@code null} for factors with no category set. */
+        private String category;
+        /** Ontology URI of the category, if any. */
+        private String categoryUri;
+        /** Distinct factor values existing under this category across the corpus. */
+        private long numberOfDistinctFactorValues;
+
+        public FactorValueCategoryStat( String category, String categoryUri, long numberOfDistinctFactorValues ) {
+            this.category = category;
+            this.categoryUri = categoryUri;
+            this.numberOfDistinctFactorValues = numberOfDistinctFactorValues;
         }
     }
 
