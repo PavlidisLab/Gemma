@@ -27,8 +27,10 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.SingleCellDimensionExperimentDao;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
@@ -113,6 +115,10 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
     private ArrayDesignService arrayDesignService;
     @Autowired
     private GeneService geneService;
+    @Autowired
+    private SingleCellDimensionExperimentDao singleCellDimensionExperimentDao;
+    @Autowired
+    private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
     @Autowired
     private ManualAuthenticationService manualAuthenticationService;
 
@@ -250,16 +256,26 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
                 .collect( Collectors.toList() );
         stats.setCategoryDistribution( categoryDistribution );
 
-        // Still on the v2 wishlist (need new HQL aggregates): single-cell EE count and
-        // distinct-DEA-condition count. See HOME_STATS_WISHLIST.md.
+        // Single-cell experiment count — distinct EEs that have at least one SingleCellDimension
+        // recorded. Counted against the full SCD link table without ACL filtering: an EE either
+        // is or is not single-cell; the public/private partition only matters when surfacing
+        // the EE itself, not when measuring corpus shape.
+        stats.setSingleCellCount( singleCellDimensionExperimentDao.countDistinctExperiments() );
+
+        // DEA result-set count — the per-contrast output unit. Uses the existing filterable count;
+        // FilteringService.count applies the ACL EXISTS clause on the underlying EE so the number
+        // reflects what an anonymous caller can actually retrieve via /resultSets.
+        stats.setDeaResultSetCount( expressionAnalysisResultSetService.count( Filters.empty() ) );
 
         long elapsed = System.currentTimeMillis() - t0;
         log.info( "HomeStats: snapshot recomputed in " + elapsed + " ms — "
-                + stats.getDatasetCount() + " datasets, "
+                + stats.getDatasetCount() + " datasets ("
+                + stats.getSingleCellCount() + " single-cell), "
                 + stats.getPlatformCount() + " platforms, "
                 + stats.getSampleCount() + " samples, "
                 + stats.getByTaxon().size() + " taxa, "
                 + stats.getOntologyTermCount() + " ontology terms, "
+                + stats.getDeaResultSetCount() + " DEA result sets, "
                 + stats.getRecentExperiments().size() + " recent" );
         return stats;
     }

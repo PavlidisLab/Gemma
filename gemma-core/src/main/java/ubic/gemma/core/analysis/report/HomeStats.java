@@ -59,8 +59,16 @@ public class HomeStats {
      */
     private Map<String, Long> byPlatformType = new LinkedHashMap<>();
 
-    /** Number of public single-cell experiments (orthogonal to platform-technology type). */
+    /** Number of public experiments that have at least one single-cell dimension recorded
+     *  (orthogonal to platform-technology type — a single-cell experiment usually rides on
+     *  a GENELIST platform). */
     private long singleCellCount;
+
+    /** Total distinct differential-expression analysis result sets across public datasets.
+     *  A DEA result set is the per-contrast unit of analysis output (e.g. "diseased vs
+     *  control on factor 'disease state'"), so this number reflects the size of Gemma's
+     *  DEA library — the corpus of comparisons callers can query / re-use. */
+    private long deaResultSetCount;
 
     /**
      * Total distinct ontology-backed annotation terms in use across all public datasets.
