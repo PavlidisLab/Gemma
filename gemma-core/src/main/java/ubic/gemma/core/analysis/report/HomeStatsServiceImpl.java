@@ -141,6 +141,10 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
     /** Maximum number of factor-value-by-category rows to retain. Sorted desc by value. */
     private static final int FACTOR_VALUE_CATEGORY_LIMIT = 50;
 
+    /** Top-N perturbed genes retained in the {@code topPerturbedGenes} field. UI renders
+     *  ~top 12; this keeps headroom for the chart's hover-deeper interactions. */
+    private static final int TOP_PERTURBED_GENES_LIMIT = 25;
+
     @Value("${gemma.appdata.home}")
     private String homeDir;
 
@@ -331,6 +335,10 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
         // into drug / pathogen / biologic / other for the Treatments-tile (i) tooltip.
         stats.setTreatmentSubcategories( computeTreatmentSubcategories() );
 
+        // Top-25 perturbed genes — per-gene ranking for the home-page middle-column
+        // bar chart. Companion to geneManipulatedCount (which is just the total).
+        stats.setTopPerturbedGenes( computeTopPerturbedGenes( publicEeIds ) );
+
         long elapsed = System.currentTimeMillis() - t0;
         log.info( "HomeStats: snapshot recomputed in " + elapsed + " ms — "
                 + stats.getDatasetCount() + " datasets ("
@@ -511,6 +519,52 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
                 .setCacheable( true )
                 .uniqueResult();
         return n != null ? n : 0L;
+    }
+
+    /**
+     * Top-N perturbed genes by experiment coverage — for the home-page middle-column bar
+     * chart. Joins {@code EXPRESSION_EXPERIMENT2CHARACTERISTIC} (the denormalization that
+     * catches gene-URI characteristics on tags + samples + factor values uniformly) to
+     * {@code CHROMOSOME_FEATURE} on the NCBI gene URI, restricted to the public EE id set.
+     * <p>
+     * Goes native because the join key is a computed string
+     * ({@code CONCAT(NCBI_URI_PREFIX, g.NCBI_GENE_ID) = ee2c.VALUE_URI}) and we need the
+     * discriminator filter on {@code CHROMOSOME_FEATURE.class = 'Gene'} to avoid
+     * matching other subclasses. The {@code VALUE_URI LIKE prefix%} predicate prunes
+     * non-gene-URI rows before the join — by far the bulk of EE2C is non-gene URIs.
+     */
+    private List<HomeStats.PerturbedGeneStat> computeTopPerturbedGenes( Collection<Long> publicEeIds ) {
+        if ( publicEeIds.isEmpty() ) {
+            return Collections.emptyList();
+        }
+        @SuppressWarnings("unchecked")
+        List<Object[]> rows = sessionFactory.getCurrentSession()
+                .createNativeQuery( "SELECT g.OFFICIAL_SYMBOL AS sym, "
+                        + "       t.COMMON_NAME AS tax, "
+                        + "       COUNT(DISTINCT ee2c.EXPRESSION_EXPERIMENT_FK) AS cnt "
+                        + "FROM EXPRESSION_EXPERIMENT2CHARACTERISTIC ee2c "
+                        + "INNER JOIN CHROMOSOME_FEATURE g "
+                        + "  ON g.class = 'Gene' "
+                        + "  AND ee2c.VALUE_URI = CONCAT(:prefix, g.NCBI_GENE_ID) "
+                        + "LEFT JOIN TAXON t ON g.TAXON_FK = t.ID "
+                        + "WHERE ee2c.VALUE_URI LIKE :prefixLike "
+                        + "  AND ee2c.EXPRESSION_EXPERIMENT_FK IN (:eeIds) "
+                        + "GROUP BY g.ID, g.OFFICIAL_SYMBOL, t.COMMON_NAME "
+                        + "ORDER BY cnt DESC" )
+                .setParameter( "prefix", Gene.NCBI_URI_PREFIX )
+                .setParameter( "prefixLike", Gene.NCBI_URI_PREFIX + "%" )
+                .setParameterList( "eeIds", publicEeIds )
+                .setMaxResults( TOP_PERTURBED_GENES_LIMIT )
+                .setCacheable( true )
+                .list();
+        List<HomeStats.PerturbedGeneStat> out = new ArrayList<>( rows.size() );
+        for ( Object[] row : rows ) {
+            String sym = ( String ) row[0];
+            String taxon = ( String ) row[1];
+            Number cnt = ( Number ) row[2];
+            out.add( new HomeStats.PerturbedGeneStat( sym, taxon, cnt != null ? cnt.longValue() : 0L ) );
+        }
+        return out;
     }
 
     /**

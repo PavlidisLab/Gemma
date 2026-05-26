@@ -131,6 +131,13 @@ public class HomeStats {
     private List<TreatmentBucketStat> treatmentSubcategories = new ArrayList<>();
 
     /**
+     * Per-gene ranking of how many public EEs carry that gene as a perturbation-target
+     * annotation. Top 25, sorted descending by {@code numberOfExpressionExperiments}.
+     * Drives the home-page middle-column bar chart of most-studied perturbed genes.
+     */
+    private List<PerturbedGeneStat> topPerturbedGenes = new ArrayList<>();
+
+    /**
      * Total distinct ontology-backed annotation terms in use across all public datasets.
      * Free-text characteristics (no {@code valueUri}) are excluded — same semantics as
      * {@code GET /datasets/annotations/count?excludeFreeText=true}.
@@ -207,6 +214,25 @@ public class HomeStats {
         public AccessionSourceStat( String source, long count ) {
             this.source = source;
             this.count = count;
+        }
+    }
+
+    @Data
+    @NoArgsConstructor
+    public static class PerturbedGeneStat {
+        /** Canonical Gemma gene symbol (e.g. {@code TP53}, {@code Trp53}, {@code MYC}). */
+        private String geneSymbol;
+        /** Lowercase common name of the gene's taxon, matching {@link TaxonStat#commonName}.
+         *  May be {@code null} if the gene has no taxon recorded. Human and mouse orthologs
+         *  surface as separate rows ({@code TP53 / human} vs {@code Trp53 / mouse}). */
+        private String taxon;
+        /** Distinct public experiments carrying this gene as a perturbation target. */
+        private long numberOfExpressionExperiments;
+
+        public PerturbedGeneStat( String geneSymbol, String taxon, long numberOfExpressionExperiments ) {
+            this.geneSymbol = geneSymbol;
+            this.taxon = taxon;
+            this.numberOfExpressionExperiments = numberOfExpressionExperiments;
         }
     }
 
