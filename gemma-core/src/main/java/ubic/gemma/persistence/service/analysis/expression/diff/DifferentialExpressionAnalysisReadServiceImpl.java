@@ -233,8 +233,23 @@ public class DifferentialExpressionAnalysisReadServiceImpl implements Differenti
                 ? Collections.emptyMap()
                 : expressionAnalysisResultSetDao.getPrefetchForVo( allResultSetIds );
 
-        Map<Long, ExpressionExperimentDetailsValueObject> idMap = IdentifiableUtils.getIdMap( expressionExperimentDao
-                .loadDetailsValueObjectsByIds( IdentifiableUtils.getIds( hits.keySet() ) ) );
+        // Build the EE-keyed details VOs from the entities we already have rather than
+        // re-running the full ExpressionExperimentDao#loadDetailsValueObjectsByIds query
+        // path. All three callers of findByExperimentIds use these VOs only for their id
+        // (the map key + IdentifiableValueObject.@EqualsAndHashCode(of="id") gives them
+        // hash-equality with any externally-supplied eeVo of the same id):
+        //   - DatasetsWebService.getDatasetDifferentialExpressionAnalyses throws the key
+        //     away entirely (it returns map.values().flatten()),
+        //   - DifferentialExpressionSearchTaskImpl reads only bas.getId(),
+        //   - ExpressionExperimentReportServiceImpl.getStats calls containsKey/get with
+        //     its own eeVo and writes the result back to that eeVo, never reading the
+        //     map's key.
+        // The skipEvents=true ctor avoids the three last*Event lazy-init round-trips per
+        // EE; the rest of the EE-VO ctor is field reads on the already-loaded entity.
+        Map<Long, ExpressionExperimentDetailsValueObject> idMap = new HashMap<>();
+        for ( ExpressionExperiment ee : hits.keySet() ) {
+            idMap.put( ee.getId(), new ExpressionExperimentDetailsValueObject( ee, true ) );
+        }
 
         Map<ExpressionExperimentDetailsValueObject, Collection<DifferentialExpressionAnalysisValueObject>> result = new HashMap<>();
 
