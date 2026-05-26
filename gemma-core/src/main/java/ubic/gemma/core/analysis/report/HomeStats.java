@@ -122,11 +122,13 @@ public class HomeStats {
     private List<FactorValueCategoryStat> factorValuesByCategory = new ArrayList<>();
 
     /**
-     * Distinct treatment-category terms broken down by URI-prefix bucket: {@code drug}
-     * (CHEBI), {@code pathogen} (NCBITaxon), {@code biologic} (PR / Protein Ontology),
-     * {@code other} (everything else tagged {@code treatment}, including behavioural /
-     * physical exposures that would need ontology-subtree lookups to bucket precisely).
-     * Counts sum to {@link #byAnnotationCategory}.{@code treatment}. Sorted descending.
+     * Treatment-category terms broken down by bucket (see {@code treatment-buckets.json}):
+     * {@code approved_drug}, {@code hormone}, {@code vitamin}, {@code toxin}, {@code vehicle},
+     * {@code biologic} (PR / NCBI Gene), {@code pathogen} (NCBITaxon), {@code control},
+     * plus the {@code other_chemical} catchall (unbucketed CHEBI) and {@code other} catchall
+     * (non-CHEBI). Counts are EE-mention sums (Σ {@code numberOfExpressionExperiments} over
+     * each bucket's matched terms), not distinct-URI counts — a single popular drug used in
+     * 40 datasets contributes 40, not 1. Sorted descending by count.
      */
     private List<TreatmentBucketStat> treatmentSubcategories = new ArrayList<>();
 

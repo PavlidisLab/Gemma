@@ -589,8 +589,14 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
      * {@code treatment-buckets.json}. Each bucket can match terms three ways
      * (subtree-descendants, URI-prefix, exact-URI); first-match-wins across the bucket
      * list. ACL-filtered via the same {@code getAnnotationsUsageFrequency} surface that
-     * {@code byAnnotationCategory.treatment} uses, so all sub-buckets sum to that
-     * field's value.
+     * {@code byAnnotationCategory.treatment} uses.
+     * <p>
+     * Counts are weighted by EE-mentions ({@code numberOfExpressionExperiments} on each
+     * matched term), not by distinct URI count — a popular drug used in 40 datasets
+     * contributes 40, a long-tail unbucketed term contributes 1. This makes the home-page
+     * bar chart reflect annotation burden rather than catalogue size, so an empirical
+     * rebalance of {@code uriExactMatches} for the head of the distribution moves the
+     * needle visibly without having to enumerate the entire long tail.
      * <p>
      * Two catchalls are emitted automatically:
      * {@code other_chemical} for CHEBI URIs not in any explicit bucket, and {@code other}
@@ -632,6 +638,12 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
             expanded.add( new ExpandedBucket( b, expandSubtreeUris( b ) ) );
         }
 
+        // Weight by EE-mentions, not URI count: a popular drug (cyclophosphamide,
+        // insulin — ~30–50 EEs each) should dominate a long-tail unbucketed term
+        // (1 EE). With raw URI counts, adding 18 explicit drug URIs only nudged
+        // approved_drug by 18 while "Other chemicals" stayed near 2,800. Summing
+        // numberOfExpressionExperiments per matched URI flips the bar chart to
+        // reflect annotation burden rather than annotation diversity.
         Map<String, Long> bucketCounts = new LinkedHashMap<>();
         for ( ExpandedBucket b : expanded ) {
             bucketCounts.put( b.spec.getKey(), 0L );
@@ -639,18 +651,20 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
         long otherChemical = 0, other = 0;
         for ( ExpressionExperimentService.CharacteristicWithUsageStatisticsAndOntologyTerm vo : terms ) {
             String uri = vo.getCharacteristic() != null ? vo.getCharacteristic().getValueUri() : null;
+            long weight = vo.getNumberOfExpressionExperiments() != null
+                    ? vo.getNumberOfExpressionExperiments() : 0L;
             if ( uri == null ) {
                 // free-text sentinel should have excluded these already; defensive
-                other++;
+                other += weight;
                 continue;
             }
             ExpandedBucket hit = matchBucket( uri, expanded );
             if ( hit != null ) {
-                bucketCounts.merge( hit.spec.getKey(), 1L, Long::sum );
+                bucketCounts.merge( hit.spec.getKey(), weight, Long::sum );
             } else if ( uri.startsWith( CHEBI_URI_PREFIX ) ) {
-                otherChemical++;
+                otherChemical += weight;
             } else {
-                other++;
+                other += weight;
             }
         }
 
