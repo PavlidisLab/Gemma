@@ -111,9 +111,6 @@ public class SingleCellExpressionExperimentSubSetServiceTest extends BaseTest {
             cta.getCellTypes().add( ct );
             cf.getFactorValues().add( FactorValue.Factory.newInstance( cf, ct ) );
         }
-        // Single-cell dimension covers all four sample bioassays — none are dataless.
-        SingleCellDimension scd = new SingleCellDimension();
-        scd.getBioAssays().addAll( ee.getBioAssays() );
         when( bioMaterialService.create( any( BioMaterial.class ) ) ).thenAnswer( a -> a.getArgument( 0 ) );
         when( bioAssayService.create( any( BioAssay.class ) ) ).thenAnswer( a -> a.getArgument( 0 ) );
         when( singleCellExpressionExperimentService.getPreferredCellTypeAssignment( ee ) )
@@ -198,9 +195,6 @@ public class SingleCellExpressionExperimentSubSetServiceTest extends BaseTest {
                 cf.getFactorValues().add( FactorValue.Factory.newInstance( cf, ct ) );
             }
         }
-        // Single-cell dimension covers all four sample bioassays — none are dataless.
-        SingleCellDimension scd = new SingleCellDimension();
-        scd.getBioAssays().addAll( ee.getBioAssays() );
         when( bioMaterialService.create( any( BioMaterial.class ) ) ).thenAnswer( a -> a.getArgument( 0 ) );
         when( bioAssayService.create( any( BioAssay.class ) ) ).thenAnswer( a -> a.getArgument( 0 ) );
         when( singleCellExpressionExperimentService.getPreferredCellTypeAssignment( ee ) )
