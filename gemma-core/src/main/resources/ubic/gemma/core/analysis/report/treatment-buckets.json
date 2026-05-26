@@ -34,10 +34,17 @@
       ]
     },
     {
-      "_comment": "Subtree URIs ARE preferred — they auto-pick-up new CHEBI terms — but they require CHEBI loaded in OntologyService. As a fallback, each bucket also carries a curated uriExactMatches list of CHEBI IDs we know belong in it. When CHEBI is loaded, the subtree expansion catches everything in it; when not, the exact list still gives a useful bucket. Either way: this list can be edited without recompile.",
+      "_comment": "Subtree URIs ARE preferred — they auto-pick-up new CHEBI terms — but they require CHEBI loaded in OntologyService. As a fallback, each bucket carries a curated uriExactMatches list, expanded 2026-05-26 with the top CHEBI URIs that were falling into 'Other chemicals' per HOME_PAGE_TREATMENT_SUBCATS_REBALANCE_2026_05_26.md. When CHEBI is loaded the subtree expansion catches everything in it; when not, the exact list still gives a useful bucket. Either way: this file is editable without recompile.",
       "key": "approved_drug",
       "label": "Approved drugs",
-      "parentSubtreeUris": ["http://purl.obolibrary.org/obo/CHEBI_23888"],
+      "parentSubtreeUris": [
+        "http://purl.obolibrary.org/obo/CHEBI_23888",
+        "http://purl.obolibrary.org/obo/CHEBI_35470",
+        "http://purl.obolibrary.org/obo/CHEBI_35702",
+        "http://purl.obolibrary.org/obo/CHEBI_67079",
+        "http://purl.obolibrary.org/obo/CHEBI_33282",
+        "http://purl.obolibrary.org/obo/CHEBI_60048"
+      ],
       "uriExactMatches": [
         "http://purl.obolibrary.org/obo/CHEBI_50845",
         "http://purl.obolibrary.org/obo/CHEBI_41879",
@@ -56,32 +63,80 @@
         "http://purl.obolibrary.org/obo/CHEBI_46024",
         "http://purl.obolibrary.org/obo/CHEBI_50122",
         "http://purl.obolibrary.org/obo/CHEBI_52717",
-        "http://purl.obolibrary.org/obo/CHEBI_45783"
+        "http://purl.obolibrary.org/obo/CHEBI_45783",
+        "http://purl.obolibrary.org/obo/CHEBI_4027",
+        "http://purl.obolibrary.org/obo/CHEBI_50924",
+        "http://purl.obolibrary.org/obo/CHEBI_85990",
+        "http://purl.obolibrary.org/obo/CHEBI_63637",
+        "http://purl.obolibrary.org/obo/CHEBI_63791",
+        "http://purl.obolibrary.org/obo/CHEBI_45863",
+        "http://purl.obolibrary.org/obo/CHEBI_46345",
+        "http://purl.obolibrary.org/obo/CHEBI_68534",
+        "http://purl.obolibrary.org/obo/CHEBI_31638",
+        "http://purl.obolibrary.org/obo/CHEBI_44616",
+        "http://purl.obolibrary.org/obo/CHEBI_17303",
+        "http://purl.obolibrary.org/obo/CHEBI_5118",
+        "http://purl.obolibrary.org/obo/CHEBI_6809",
+        "http://purl.obolibrary.org/obo/CHEBI_4031",
+        "http://purl.obolibrary.org/obo/CHEBI_132082",
+        "http://purl.obolibrary.org/obo/CHEBI_2038",
+        "http://purl.obolibrary.org/obo/CHEBI_28001",
+        "http://purl.obolibrary.org/obo/CHEBI_9288"
       ]
     },
     {
       "key": "hormone",
       "label": "Hormones",
-      "parentSubtreeUris": ["http://purl.obolibrary.org/obo/CHEBI_24621"],
+      "parentSubtreeUris": [
+        "http://purl.obolibrary.org/obo/CHEBI_24621",
+        "http://purl.obolibrary.org/obo/CHEBI_50114",
+        "http://purl.obolibrary.org/obo/CHEBI_36773",
+        "http://purl.obolibrary.org/obo/CHEBI_24532"
+      ],
       "uriExactMatches": [
         "http://purl.obolibrary.org/obo/CHEBI_26536",
         "http://purl.obolibrary.org/obo/CHEBI_23965",
         "http://purl.obolibrary.org/obo/CHEBI_15367",
-        "http://purl.obolibrary.org/obo/CHEBI_16330"
+        "http://purl.obolibrary.org/obo/CHEBI_16330",
+        "http://purl.obolibrary.org/obo/CHEBI_16469",
+        "http://purl.obolibrary.org/obo/CHEBI_17026",
+        "http://purl.obolibrary.org/obo/CHEBI_17347",
+        "http://purl.obolibrary.org/obo/CHEBI_16827",
+        "http://purl.obolibrary.org/obo/CHEBI_17823",
+        "http://purl.obolibrary.org/obo/CHEBI_48432",
+        "http://purl.obolibrary.org/obo/CHEBI_145810"
       ]
     },
     {
       "key": "vitamin",
       "label": "Vitamins / nutrients",
-      "parentSubtreeUris": ["http://purl.obolibrary.org/obo/CHEBI_33229"]
+      "parentSubtreeUris": [
+        "http://purl.obolibrary.org/obo/CHEBI_33229",
+        "http://purl.obolibrary.org/obo/CHEBI_23357"
+      ],
+      "uriExactMatches": [
+        "http://purl.obolibrary.org/obo/CHEBI_17234",
+        "http://purl.obolibrary.org/obo/CHEBI_27470"
+      ]
     },
     {
       "key": "toxin",
       "label": "Toxins / pollutants",
-      "parentSubtreeUris": ["http://purl.obolibrary.org/obo/CHEBI_27026"],
+      "parentSubtreeUris": [
+        "http://purl.obolibrary.org/obo/CHEBI_27026",
+        "http://purl.obolibrary.org/obo/CHEBI_50904"
+      ],
       "uriExactMatches": [
         "http://purl.obolibrary.org/obo/CHEBI_16412",
-        "http://purl.obolibrary.org/obo/CHEBI_84491"
+        "http://purl.obolibrary.org/obo/CHEBI_84491",
+        "http://purl.obolibrary.org/obo/CHEBI_28119",
+        "http://purl.obolibrary.org/obo/CHEBI_33216",
+        "http://purl.obolibrary.org/obo/CHEBI_16240",
+        "http://purl.obolibrary.org/obo/CHEBI_31746",
+        "http://purl.obolibrary.org/obo/CHEBI_9516",
+        "http://purl.obolibrary.org/obo/CHEBI_29699",
+        "http://purl.obolibrary.org/obo/CHEBI_37537",
+        "http://purl.obolibrary.org/obo/CHEBI_27666"
       ]
     },
     {
