@@ -26,6 +26,13 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.analysis.sequence.ArrayDesignMapResultService;
 import ubic.gemma.core.analysis.sequence.CompositeSequenceMapValueObject;
+import ubic.gemma.core.search.SearchContext;
+import ubic.gemma.core.search.SearchException;
+import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.search.SearchTimeoutException;
+import ubic.gemma.core.search.ParseSearchException;
+import ubic.gemma.model.common.search.SearchResult;
+import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
@@ -87,6 +94,10 @@ public class GeneWebService {
     private CompositeSequenceService compositeSequenceService;
     @Autowired
     private ArrayDesignMapResultService arrayDesignMapResultService;
+    @Autowired
+    private SearchService searchService;
+    @Autowired
+    private TaxonArgService taxonArgService;
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -130,6 +141,82 @@ public class GeneWebService {
      *              Do not combine different identifiers in one query.
      *              </p>
      */
+    /**
+     * Free-text typeahead for genes. Shim over {@link SearchService} so the
+     * curation-UI can keep calling {@code GET /genes/search?query=...} instead
+     * of the canonical {@code GET /search?query=...&resultTypes=...Gene}.
+     * <p>
+     * Path is declared before {@link #getGenesByIds(GeneArrayArg)} (which owns
+     * {@code GET /genes/{genes}}) so JAX-RS resolves the literal {@code "search"}
+     * segment before falling through to the template variable.
+     *
+     * @param query     non-empty free-text query (symbol, alias, NCBI id, …).
+     * @param taxonArg  optional — when supplied, results are scoped to that taxon.
+     * @param limit     1..{@value #SEARCH_MAX_LIMIT}; default 20.
+     */
+    @GET
+    @Path("/search")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Free-text gene search (typeahead)",
+            description = "Delegates to the search service with `resultTypes=Gene`. "
+                    + "Returns gene value-objects ordered by search score. Hard-cap on `limit` is "
+                    + SEARCH_MAX_LIMIT_STR + "; default is " + SEARCH_DEFAULT_LIMIT_STR + ".",
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "400", description = "Empty / invalid query, or `limit` out of range.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "503", description = "The search timed out.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+            })
+    public ResponseDataObject<List<GeneValueObject>> searchGenes(
+            @QueryParam("query") String query,
+            @QueryParam("taxon") TaxonArg<?> taxonArg,
+            @QueryParam("limit") @DefaultValue(SEARCH_DEFAULT_LIMIT_STR) int limit
+    ) {
+        if ( query == null || query.trim().isEmpty() ) {
+            throw new BadRequestException( "Search query cannot be empty." );
+        }
+        if ( limit < 1 || limit > SEARCH_MAX_LIMIT ) {
+            throw new BadRequestException( "'limit' must be between 1 and " + SEARCH_MAX_LIMIT
+                    + " (got " + limit + ")." );
+        }
+        SearchSettings settings = SearchSettings.builder()
+                .query( query.trim() )
+                .taxonConstraint( taxonArg != null ? taxonArgService.getEntity( taxonArg ) : null )
+                .resultTypes( Collections.singleton( Gene.class ) )
+                .maxResults( limit )
+                .fillResults( true )
+                .build();
+        List<SearchResult<?>> raw;
+        try {
+            raw = searchService.search( settings, new SearchContext( null, null ) ).toList();
+        } catch ( ParseSearchException e ) {
+            throw new BadRequestException( "Invalid search query: " + e.getQuery(), e );
+        } catch ( SearchTimeoutException e ) {
+            throw new ServiceUnavailableException( e.getMessage(), 30L, e.getCause() );
+        } catch ( SearchException e ) {
+            throw new InternalServerErrorException( e );
+        }
+        List<GeneValueObject> vos = new ArrayList<>( raw.size() );
+        for ( SearchResult<?> sr : raw ) {
+            Object o = sr.getResultObject();
+            if ( o instanceof GeneValueObject ) {
+                vos.add( ( GeneValueObject ) o );
+            } else if ( o instanceof Gene ) {
+                vos.add( new GeneValueObject( ( Gene ) o ) );
+            }
+            // SearchResults with null resultObject (see #417) are dropped silently.
+        }
+        return respond( vos );
+    }
+
+    /** Default {@code limit} for {@link #searchGenes}; sized for typeahead. */
+    static final int SEARCH_DEFAULT_LIMIT = 20;
+    private static final String SEARCH_DEFAULT_LIMIT_STR = "20";
+    /** Upper bound on {@code limit}; requests above this are 400. */
+    static final int SEARCH_MAX_LIMIT = 50;
+    private static final String SEARCH_MAX_LIMIT_STR = "50";
+
     @GET
     @Path("/{genes}")
     @Produces(MediaType.APPLICATION_JSON)
