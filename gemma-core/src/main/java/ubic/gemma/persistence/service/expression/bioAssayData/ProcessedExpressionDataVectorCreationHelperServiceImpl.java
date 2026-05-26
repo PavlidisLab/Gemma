@@ -1,16 +1,15 @@
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
+import cern.colt.list.DoubleArrayList;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
-import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
-import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.basecode.math.Rank;
 import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
 import ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionException;
-import ubic.gemma.core.analysis.preprocess.normalize.QuantileNormalizer;
 import ubic.gemma.core.analysis.preprocess.slice.BulkDataSlicerUtils;
 import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrixUtils;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
@@ -319,48 +318,164 @@ class ProcessedExpressionDataVectorCreationHelperServiceImpl implements Processe
     }
 
     /**
-     * Quantile normalize data. This should be one of the last steps in processing before persisting
+     * Quantile normalize data, in place. This should be one of the last steps in processing before persisting.
      */
     private void quantileNormalize( Map<CompositeSequence, double[]> vectors ) {
         Assert.isTrue( vectors.size() >= MIN_SIZE_FOR_RENORMALIZATION,
                 "At least " + MIN_SIZE_FOR_RENORMALIZATION + " vector are required for renormalization." );
 
         int cols = vectors.values().iterator().next().length;
-        int rows = vectors.size();
-        DoubleMatrix<CompositeSequence, Integer> mat = new DenseDoubleMatrix<>( rows, cols );
-        for ( int i = 0; i < cols; i++ ) {
-            mat.setColumnName( i, i );
+        log.info( String.format( "Quantile normalizing %d vectors × %d samples...", vectors.size(), cols ) );
+        double[][] data = new double[vectors.size()][];
+        int idx = 0;
+        for ( double[] v : vectors.values() ) {
+            if ( v.length != cols ) {
+                throw new IllegalStateException( "Unexpected vector length: expected " + cols + ", got " + v.length + "." );
+            }
+            data[idx++] = v;
+        }
+        quantileNormalizeInPlace( data );
+        log.info( "Quantile normalization done." );
+    }
+
+    /**
+     * Bolstad quantile normalisation, in place, on a row-major {@code double[][]}.
+     * <p>
+     * Reproduces the procedure used by {@code ubic.basecode.math.MatrixNormalizer#quantileNormalize}
+     * (averaged-rank ties, row-mean imputation of missing values for the ranking step, NaN preserved in output)
+     * but works directly on the row arrays to avoid the ≥3× matrix copies a dense Colt matrix round-trip incurs.
+     */
+    static void quantileNormalizeInPlace( double[][] data ) {
+        int totalRows = data.length;
+        if ( totalRows == 0 ) {
+            return;
+        }
+        int cols = data[0].length;
+
+        // RowMissingFilter(minPresentCount=1) equivalent: drop rows that are entirely NaN from the algorithm.
+        // Those rows stay all-NaN in the output (no impute, no rank), matching the basecode behaviour.
+        int[] activeIdx = new int[totalRows];
+        int activeRows = 0;
+        for ( int r = 0; r < totalRows; r++ ) {
+            double[] row = data[r];
+            for ( int j = 0; j < cols; j++ ) {
+                if ( !Double.isNaN( row[j] ) ) {
+                    activeIdx[activeRows++] = r;
+                    break;
+                }
+            }
+        }
+        if ( activeRows == 0 ) {
+            return;
+        }
+        if ( activeRows < totalRows ) {
+            log.info( String.format( "Dropped %d all-NaN row(s); %d active row(s) remain.", totalRows - activeRows, activeRows ) );
         }
 
-        int i = 0;
-        for ( Map.Entry<CompositeSequence, double[]> c : vectors.entrySet() ) {
-            CompositeSequence designElement = c.getKey();
-            double[] data = c.getValue();
-            if ( data.length != cols ) {
-                throw new IllegalStateException( "Unexpected vector length for design element " + designElement + "." );
-            }
+        // step at which we log per-column progress; ~10 messages per phase, never more than one per column
+        int progressStep = Math.max( cols / 10, 1 );
+
+        // Capture the original NaN positions of the active rows as a packed bitmap so we can restore them
+        // after the rank-based replacement. ~1/64 of the cost of an extra double[][].
+        BitSet originalNaN = new BitSet( activeRows * cols );
+        int nanCount = 0;
+        for ( int ri = 0; ri < activeRows; ri++ ) {
+            double[] row = data[activeIdx[ri]];
+            int base = ri * cols;
             for ( int j = 0; j < cols; j++ ) {
-                mat.set( i, j, data[j] );
+                if ( Double.isNaN( row[j] ) ) {
+                    originalNaN.set( base + j );
+                    nanCount++;
+                }
             }
-            mat.setRowName( designElement, i );
-            i++;
+        }
+        if ( nanCount > 0 ) {
+            log.info( String.format( "Captured %d NaN cell(s); imputing with row means for the ranking step.", nanCount ) );
+            // Impute missing values with the row mean (in place). Matches MatrixNormalizer.imputeMissing, which mutates
+            // its argument before the ranking step. Active rows have at least one non-NaN, so the mean is defined.
+            for ( int ri = 0; ri < activeRows; ri++ ) {
+                double[] row = data[activeIdx[ri]];
+                double sum = 0.0;
+                int n = 0;
+                for ( int j = 0; j < cols; j++ ) {
+                    double v = row[j];
+                    if ( !Double.isNaN( v ) ) {
+                        sum += v;
+                        n++;
+                    }
+                }
+                double mean = sum / n;
+                for ( int j = 0; j < cols; j++ ) {
+                    if ( Double.isNaN( row[j] ) ) {
+                        row[j] = mean;
+                    }
+                }
+            }
         }
 
-        assert mat.columns() == cols;
-        assert mat.rows() == rows;
+        // Phase 1: build the mean curve by accumulating the j-th sorted column into sortedSum[i].
+        // After all columns: meanCurve[i] = sortedSum[i] / cols.
+        log.info( String.format( "Phase 1/2: building mean curve from %d sorted columns...", cols ) );
+        long phase1Start = System.currentTimeMillis();
+        double[] sortedSum = new double[activeRows];
+        double[] colBuf = new double[activeRows];
+        for ( int j = 0; j < cols; j++ ) {
+            for ( int ri = 0; ri < activeRows; ri++ ) {
+                colBuf[ri] = data[activeIdx[ri]][j];
+            }
+            Arrays.sort( colBuf );
+            for ( int ri = 0; ri < activeRows; ri++ ) {
+                sortedSum[ri] += colBuf[ri];
+            }
+            if ( ( j + 1 ) % progressStep == 0 ) {
+                log.info( String.format( "Phase 1/2: sorted %d / %d columns", j + 1, cols ) );
+            }
+        }
+        double[] meanCurve = sortedSum;
+        for ( int ri = 0; ri < activeRows; ri++ ) {
+            meanCurve[ri] /= cols;
+        }
+        log.info( String.format( "Phase 1/2: done in %d ms.", System.currentTimeMillis() - phase1Start ) );
 
-        DoubleMatrix<CompositeSequence, Integer> normalizedMat = new QuantileNormalizer<CompositeSequence, Integer>()
-                .normalize( mat );
+        // Phase 2: for each column, compute averaged ranks (via baseCode's Rank.rankTransform for exact parity)
+        // and write the quantile-normalized value back into the input arrays.
+        log.info( String.format( "Phase 2/2: applying ranks to %d columns...", cols ) );
+        long phase2Start = System.currentTimeMillis();
+        for ( int j = 0; j < cols; j++ ) {
+            for ( int ri = 0; ri < activeRows; ri++ ) {
+                colBuf[ri] = data[activeIdx[ri]][j];
+            }
+            DoubleArrayList ranks = Rank.rankTransform( new DoubleArrayList( colBuf ) );
+            for ( int ri = 0; ri < activeRows; ri++ ) {
+                double rank = ranks.get( ri ) - 1.0; // 0-indexed
+                int rankFloor = ( int ) Math.floor( rank );
+                double val;
+                // Quirk preserved from MatrixNormalizer: tied (fractional) ranks average rankFloor with rankFloor - 1
+                // (the position below), not rankFloor + 1. The QuantileNormalizerTest fixture (-0.525 at [0,9]) bakes this in.
+                if ( rank - rankFloor > 0.4 && rankFloor > 0 ) {
+                    val = ( meanCurve[rankFloor] + meanCurve[rankFloor - 1] ) / 2.0;
+                } else {
+                    val = meanCurve[rankFloor];
+                }
+                data[activeIdx[ri]][j] = val;
+            }
+            if ( ( j + 1 ) % progressStep == 0 ) {
+                log.info( String.format( "Phase 2/2: ranked %d / %d columns", j + 1, cols ) );
+            }
+        }
+        log.info( String.format( "Phase 2/2: done in %d ms.", System.currentTimeMillis() - phase2Start ) );
 
-        assert normalizedMat.columns() == cols;
-        assert normalizedMat.rows() == rows;
-
-        // rewrite the vectors with normalized data
-        for ( i = 0; i < rows; i++ ) {
-            CompositeSequence c = normalizedMat.getRowName( i );
-            double[] vector = vectors.get( c );
+        if ( nanCount > 0 ) {
+            log.info( "Restoring NaN positions..." );
+        }
+        // Restore original NaN positions.
+        for ( int ri = 0; ri < activeRows; ri++ ) {
+            double[] row = data[activeIdx[ri]];
+            int base = ri * cols;
             for ( int j = 0; j < cols; j++ ) {
-                vector[j] = normalizedMat.get( i, j );
+                if ( originalNaN.get( base + j ) ) {
+                    row[j] = Double.NaN;
+                }
             }
         }
     }
