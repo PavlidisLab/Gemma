@@ -162,6 +162,13 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
      *  ~top 12; this keeps headroom for the chart's hover-deeper interactions. */
     private static final int TOP_PERTURBED_GENES_LIMIT = 25;
 
+    /** Top-N terms attached to each {@link HomeStats.TreatmentBucketStat#getTopTerms()}.
+     *  Drives the iterative-bucketing loop on the catchall buckets (other_chemical,
+     *  other) — the curator scans the head of those lists, adds URIs to a more
+     *  specific bucket in {@code treatment-buckets.json}, redeploys, and the head
+     *  shrinks. */
+    private static final int TOP_TERMS_PER_BUCKET = 15;
+
     @Value("${gemma.appdata.home}")
     private String homeDir;
 
@@ -631,53 +638,88 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
             return Collections.emptyList();
         }
 
-        // Expand subtree-URIs for buckets that use them, once per refresh. Cache the
-        // expanded URI sets alongside the bucket spec so the per-term matcher is O(1).
-        List<ExpandedBucket> expanded = new ArrayList<>();
+        // Build accumulators for each top-level bucket (recursing into sub-buckets).
+        // Each accumulator carries EE-mention sum, distinct-URI set, full term list
+        // for top-N extraction at the end, and a nested sub-bucket tree if the spec
+        // defines one. Subtree expansion happens once per bucket here, not per term.
+        List<BucketAccum> topLevel = new ArrayList<>();
         for ( TreatmentBucketsConfig.Bucket b : config.getBuckets() ) {
-            expanded.add( new ExpandedBucket( b, expandSubtreeUris( b ) ) );
+            topLevel.add( buildAccum( b ) );
         }
+        // Two implicit catchalls. Synthetic specs (no matchers) — they only ever
+        // receive terms that fell through the explicit buckets. group=unclassified
+        // so the UI can dim them.
+        BucketAccum otherChemical = new BucketAccum( virtualBucket( "other_chemical", "Other chemicals", "unclassified" ) );
+        BucketAccum other = new BucketAccum( virtualBucket( "other", "Other", "unclassified" ) );
 
-        // Weight by EE-mentions, not URI count: a popular drug (cyclophosphamide,
-        // insulin — ~30–50 EEs each) should dominate a long-tail unbucketed term
-        // (1 EE). With raw URI counts, adding 18 explicit drug URIs only nudged
-        // approved_drug by 18 while "Other chemicals" stayed near 2,800. Summing
-        // numberOfExpressionExperiments per matched URI flips the bar chart to
-        // reflect annotation burden rather than annotation diversity.
-        Map<String, Long> bucketCounts = new LinkedHashMap<>();
-        for ( ExpandedBucket b : expanded ) {
-            bucketCounts.put( b.spec.getKey(), 0L );
-        }
-        long otherChemical = 0, other = 0;
         for ( ExpressionExperimentService.CharacteristicWithUsageStatisticsAndOntologyTerm vo : terms ) {
-            String uri = vo.getCharacteristic() != null ? vo.getCharacteristic().getValueUri() : null;
+            Characteristic c = vo.getCharacteristic();
+            String uri = c != null ? c.getValueUri() : null;
             long weight = vo.getNumberOfExpressionExperiments() != null
                     ? vo.getNumberOfExpressionExperiments() : 0L;
+            String termLabel = ( c != null && c.getValue() != null ) ? c.getValue()
+                    : ( uri != null ? labelFromUri( uri ) : "?" );
             if ( uri == null ) {
                 // free-text sentinel should have excluded these already; defensive
-                other += weight;
+                other.add( null, termLabel, weight );
                 continue;
             }
-            ExpandedBucket hit = matchBucket( uri, expanded );
+            BucketAccum hit = matchAccum( uri, topLevel );
             if ( hit != null ) {
-                bucketCounts.merge( hit.spec.getKey(), weight, Long::sum );
+                hit.add( uri, termLabel, weight );
             } else if ( uri.startsWith( CHEBI_URI_PREFIX ) ) {
-                otherChemical += weight;
+                otherChemical.add( uri, termLabel, weight );
             } else {
-                other += weight;
+                other.add( uri, termLabel, weight );
             }
         }
 
         List<HomeStats.TreatmentBucketStat> out = new ArrayList<>();
-        for ( ExpandedBucket b : expanded ) {
-            out.add( new HomeStats.TreatmentBucketStat(
-                    b.spec.getKey(), b.spec.getLabel(),
-                    bucketCounts.getOrDefault( b.spec.getKey(), 0L ) ) );
+        for ( BucketAccum a : topLevel ) {
+            out.add( a.toStat() );
         }
-        out.add( new HomeStats.TreatmentBucketStat( "other_chemical", "Other chemicals", otherChemical ) );
-        out.add( new HomeStats.TreatmentBucketStat( "other",          "Other",           other ) );
+        out.add( otherChemical.toStat() );
+        out.add( other.toStat() );
         out.sort( ( a, b ) -> Long.compare( b.getCount(), a.getCount() ) );
         return out;
+    }
+
+    /** Recursively build a {@link BucketAccum} from a spec, expanding subtree URIs
+     *  and constructing sub-bucket accumulators. */
+    private BucketAccum buildAccum( TreatmentBucketsConfig.Bucket spec ) {
+        Set<String> subtreeUris = expandSubtreeUris( spec );
+        BucketAccum accum = new BucketAccum( spec, subtreeUris );
+        if ( spec.getSubBuckets() != null && !spec.getSubBuckets().isEmpty() ) {
+            List<BucketAccum> children = new ArrayList<>();
+            for ( TreatmentBucketsConfig.Bucket sub : spec.getSubBuckets() ) {
+                children.add( buildAccum( sub ) );
+            }
+            // Implicit catchall sub-bucket: <parentKey>_other carries terms that
+            // match the parent but none of the parent's sub-buckets.
+            BucketAccum sink = new BucketAccum( virtualBucket(
+                    spec.getKey() + "_other",
+                    "Other " + spec.getLabel().toLowerCase(),
+                    spec.getGroup() ) );
+            accum.subBuckets = children;
+            accum.subBucketSink = sink;
+        }
+        return accum;
+    }
+
+    /** Construct a synthetic bucket spec for the implicit catchalls (no matchers). */
+    private TreatmentBucketsConfig.Bucket virtualBucket( String key, String label, @Nullable String group ) {
+        TreatmentBucketsConfig.Bucket b = new TreatmentBucketsConfig.Bucket();
+        b.setKey( key );
+        b.setLabel( label );
+        b.setGroup( group );
+        return b;
+    }
+
+    /** Last-resort label when a term has no curator-visible value. Pulls the
+     *  identifier off the end of the URI so the topTerms list stays readable. */
+    private String labelFromUri( String uri ) {
+        int slash = Math.max( uri.lastIndexOf( '/' ), uri.lastIndexOf( '#' ) );
+        return slash >= 0 && slash + 1 < uri.length() ? uri.substring( slash + 1 ) : uri;
     }
 
     /**
@@ -751,29 +793,107 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
         return uris;
     }
 
+    /** First-match-wins URI matcher against a flat list of accumulators. */
     @Nullable
-    private ExpandedBucket matchBucket( String uri, List<ExpandedBucket> buckets ) {
-        for ( ExpandedBucket b : buckets ) {
-            if ( b.subtreeUris.contains( uri ) ) return b;
-            if ( b.spec.getUriPrefixes() != null ) {
-                for ( String prefix : b.spec.getUriPrefixes() ) {
-                    if ( uri.startsWith( prefix ) ) return b;
+    private BucketAccum matchAccum( String uri, List<BucketAccum> accums ) {
+        for ( BucketAccum a : accums ) {
+            if ( a.subtreeUris.contains( uri ) ) return a;
+            if ( a.spec.getUriPrefixes() != null ) {
+                for ( String prefix : a.spec.getUriPrefixes() ) {
+                    if ( uri.startsWith( prefix ) ) return a;
                 }
             }
-            if ( b.spec.getUriExactMatches() != null && b.spec.getUriExactMatches().contains( uri ) ) {
-                return b;
+            if ( a.spec.getUriExactMatches() != null && a.spec.getUriExactMatches().contains( uri ) ) {
+                return a;
             }
         }
         return null;
     }
 
-    /** Bucket spec + its pre-expanded subClassOf URI set. */
-    private static final class ExpandedBucket {
+    /**
+     * Mutable per-bucket accumulator. Tracks EE-mention sum, distinct-URI set,
+     * full term list (for top-N extraction at the end), and an optional sub-bucket
+     * tree. When a term lands here:
+     * <ul>
+     *   <li>The parent bucket's count + termCount + topTerms always update.</li>
+     *   <li>If sub-buckets exist, the term is also assigned to exactly one
+     *       sub-bucket (first-match-wins among children, or the implicit
+     *       {@code <key>_other} sink if none match), keeping the invariant
+     *       parent.count = Σ children.count.</li>
+     * </ul>
+     */
+    private static final class BucketAccum {
         final TreatmentBucketsConfig.Bucket spec;
         final Set<String> subtreeUris;
-        ExpandedBucket( TreatmentBucketsConfig.Bucket spec, Set<String> subtreeUris ) {
+        long count = 0;
+        final Set<String> matchedUris = new HashSet<>();
+        final List<HomeStats.TermStat> termRefs = new ArrayList<>();
+        @Nullable List<BucketAccum> subBuckets;
+        @Nullable BucketAccum subBucketSink;
+
+        BucketAccum( TreatmentBucketsConfig.Bucket spec ) {
+            this( spec, Collections.emptySet() );
+        }
+
+        BucketAccum( TreatmentBucketsConfig.Bucket spec, Set<String> subtreeUris ) {
             this.spec = spec;
             this.subtreeUris = subtreeUris;
+        }
+
+        void add( @Nullable String uri, String label, long weight ) {
+            count += weight;
+            if ( uri != null ) {
+                matchedUris.add( uri );
+            }
+            termRefs.add( new HomeStats.TermStat( uri, label, weight ) );
+            if ( subBuckets != null && uri != null ) {
+                BucketAccum hit = null;
+                for ( BucketAccum sub : subBuckets ) {
+                    if ( sub.subtreeUris.contains( uri )
+                            || ( sub.spec.getUriExactMatches() != null && sub.spec.getUriExactMatches().contains( uri ) )
+                            || prefixMatch( uri, sub.spec.getUriPrefixes() ) ) {
+                        hit = sub;
+                        break;
+                    }
+                }
+                if ( hit != null ) {
+                    hit.add( uri, label, weight );
+                } else if ( subBucketSink != null ) {
+                    subBucketSink.add( uri, label, weight );
+                }
+            }
+        }
+
+        private static boolean prefixMatch( String uri, @Nullable List<String> prefixes ) {
+            if ( prefixes == null ) return false;
+            for ( String p : prefixes ) {
+                if ( uri.startsWith( p ) ) return true;
+            }
+            return false;
+        }
+
+        HomeStats.TreatmentBucketStat toStat() {
+            HomeStats.TreatmentBucketStat s = new HomeStats.TreatmentBucketStat( spec.getKey(), spec.getLabel() );
+            s.setGroup( spec.getGroup() );
+            s.setCount( count );
+            s.setTermCount( matchedUris.size() );
+            // Top terms by EE-mention count; the matcher only adds once per
+            // characteristic row so each TermStat is a unique URI already.
+            termRefs.sort( ( a, b ) -> Long.compare( b.getCount(), a.getCount() ) );
+            int cap = Math.min( TOP_TERMS_PER_BUCKET, termRefs.size() );
+            s.setTopTerms( new ArrayList<>( termRefs.subList( 0, cap ) ) );
+            if ( subBuckets != null ) {
+                List<HomeStats.TreatmentBucketStat> children = new ArrayList<>();
+                for ( BucketAccum sub : subBuckets ) {
+                    children.add( sub.toStat() );
+                }
+                if ( subBucketSink != null && subBucketSink.count > 0 ) {
+                    children.add( subBucketSink.toStat() );
+                }
+                children.sort( ( a, b ) -> Long.compare( b.getCount(), a.getCount() ) );
+                s.setSubBuckets( children );
+            }
+            return s;
         }
     }
 

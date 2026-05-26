@@ -47,6 +47,12 @@ public class TreatmentBucketsConfig {
         private String key;
         /** Visitor-facing label (canonical phrasing). */
         private String label;
+        /** Coarse UI grouping. Lets the frontend cluster bars (and dim or visually
+         *  separate the "control-like" buckets — control + vehicle — which are
+         *  accurate annotations but not pharmacology of interest). Free string,
+         *  recommended values: {@code control}, {@code pharmacology},
+         *  {@code biological}, {@code unclassified}. Null = ungrouped. */
+        private String group;
         /** Ontology parent URIs; expanded via {@code OntologyService.getChildren} into a
          *  full subClassOf descendant set. Empty / null if no subtree matching is desired. */
         private List<String> parentSubtreeUris = Collections.emptyList();
@@ -54,5 +60,10 @@ public class TreatmentBucketsConfig {
         private List<String> uriPrefixes = Collections.emptyList();
         /** Full-URI equality matchers. Empty / null if no exact matching. */
         private List<String> uriExactMatches = Collections.emptyList();
+        /** Optional nested partition. When this bucket matches a term, the term is
+         *  ALSO matched against the sub-buckets (first-match-wins among them) and
+         *  attributed to exactly one sub-bucket — or to an implicit {@code <key>_other}
+         *  sub-bucket if none match. Parent count = sum of sub-bucket counts. */
+        private List<Bucket> subBuckets = Collections.emptyList();
     }
 }

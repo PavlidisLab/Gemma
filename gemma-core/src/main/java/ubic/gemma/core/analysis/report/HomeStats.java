@@ -241,17 +241,54 @@ public class HomeStats {
     @Data
     @NoArgsConstructor
     public static class TreatmentBucketStat {
-        /** Stable lowercase-snake-case identifier the frontend matches in code — {@code drug},
-         *  {@code pathogen}, {@code biologic}, {@code other}. */
+        /** Stable lowercase-snake-case identifier the frontend matches in code — e.g.
+         *  {@code approved_drug}, {@code pathogen}, {@code biologic}, {@code control},
+         *  {@code other_chemical}, {@code other}. */
         private String key;
-        /** Visitor-facing string with the canonical phrasing — "Drugs / chemicals",
-         *  "Pathogens", "Biologics", "Other". */
+        /** Visitor-facing label with the canonical phrasing. */
         private String label;
-        /** Distinct ontology-backed terms in this bucket. */
+        /** Coarse UI grouping carried through from the bucket spec — {@code control},
+         *  {@code pharmacology}, {@code biological}, {@code unclassified}. Lets the
+         *  frontend cluster bars together (and visually separate the control-like
+         *  buckets — control + vehicle — from pharmacology of interest). */
+        private String group;
+        /** Annotation-burden metric: Σ {@code numberOfExpressionExperiments} over each
+         *  matched term — a popular drug used in 40 datasets contributes 40, not 1. */
+        private long count;
+        /** Annotation-diversity metric: distinct URIs that landed in this bucket. */
+        private long termCount;
+        /** Top representative terms in this bucket, sorted desc by EE-mention count.
+         *  For the {@code other_chemical} / {@code other} catchalls this drives the
+         *  iterative-bucketing loop: the curator looks at what's still drowning
+         *  unclassified, adds those URIs to a more specific bucket, redeploys, and
+         *  the head of the catchall list shrinks. */
+        private List<TermStat> topTerms = new ArrayList<>();
+        /** Nested partition. When this bucket has sub-buckets, every matched term is
+         *  attributed to exactly one sub-bucket (or to an implicit {@code <key>_other}
+         *  if no sub-bucket matches). Parent {@link #count} = Σ child {@code count}. */
+        private List<TreatmentBucketStat> subBuckets = new ArrayList<>();
+
+        public TreatmentBucketStat( String key, String label ) {
+            this.key = key;
+            this.label = label;
+        }
+    }
+
+    /** A single annotation term with its EE-mention count — used inside
+     *  {@link TreatmentBucketStat#topTerms} for the catchall-iteration loop. */
+    @Data
+    @NoArgsConstructor
+    public static class TermStat {
+        /** Ontology URI (CHEBI, OBI, EFO, …). */
+        private String uri;
+        /** Curator-visible label (the {@code Characteristic.value}). May fall back to
+         *  the URI tail if no human label is attached. */
+        private String label;
+        /** Number of expression experiments carrying this term as a treatment annotation. */
         private long count;
 
-        public TreatmentBucketStat( String key, String label, long count ) {
-            this.key = key;
+        public TermStat( String uri, String label, long count ) {
+            this.uri = uri;
             this.label = label;
             this.count = count;
         }

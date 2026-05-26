@@ -11,18 +11,37 @@
     "Bucket order is first-match-wins: a term that's both a drug AND a hormone lands",
     "in the bucket listed first.",
     "",
+    "Optional fields:",
+    "  group       — coarse UI category, used by the frontend to cluster bars together",
+    "                visually. Recommended values: control, pharmacology, biological,",
+    "                unclassified. Lets the UI separate 'control-like' bars (control +",
+    "                vehicle) from pharmacology of interest without baking that into",
+    "                the order of the bar chart.",
+    "  subBuckets  — nested partition. When a term matches this bucket, it is ALSO",
+    "                matched against the sub-buckets (first-match-wins). Each matched",
+    "                term is attributed to exactly one sub-bucket — or to an implicit",
+    "                <key>_other sub-bucket if none match. Parent count = Σ child count.",
+    "                Sub-buckets carry the same fields as top-level buckets; can nest",
+    "                further if needed.",
+    "",
     "Two catchalls are emitted automatically:",
-    "  other_chemical   — CHEBI URIs not in any explicit bucket.",
-    "  other            — non-CHEBI URIs not in any explicit bucket.",
+    "  other_chemical   — CHEBI URIs not in any explicit bucket. group=unclassified.",
+    "  other            — non-CHEBI URIs not in any explicit bucket. group=unclassified.",
+    "",
+    "Top 15 terms by EE-mention count are reported on every bucket as topTerms[],",
+    "including the catchalls — that's the iterative-bucketing loop: scan the head of",
+    "other_chemical / other, move whatever's pharmacologically meaningful into a more",
+    "specific bucket here, redeploy.",
     "",
     "To override: drop a treatment-buckets.json into ${gemma.appdata.home}/HomeStats/.",
     "If present it replaces this classpath default. Otherwise this file ships."
   ],
   "buckets": [
     {
-      "_comment": "Vehicles / solvent controls. Listed FIRST so e.g. DMSO matches `vehicle` before falling through into the broader CHEBI:23888 'drug' subtree under `approved_drug`. The UI can hide this bucket from the bar chart — it's not pharmacology data, but worth classifying so curators can see what's there.",
+      "_comment": "Vehicles / solvent controls. Listed FIRST so e.g. DMSO matches `vehicle` before falling through into the broader CHEBI:23888 'drug' subtree under `approved_drug`. group=control so the UI can cluster it with the explicit control bucket (both are accurate annotations but not pharmacology of interest).",
       "key": "vehicle",
       "label": "Vehicles / solvents",
+      "group": "control",
       "uriExactMatches": [
         "http://purl.obolibrary.org/obo/CHEBI_28262",
         "http://purl.obolibrary.org/obo/CHEBI_16236",
@@ -34,9 +53,10 @@
       ]
     },
     {
-      "_comment": "Subtree URIs ARE preferred — they auto-pick-up new CHEBI terms — but they require CHEBI loaded in OntologyService. As a fallback, each bucket carries a curated uriExactMatches list, expanded 2026-05-26 with the top CHEBI URIs that were falling into 'Other chemicals' per HOME_PAGE_TREATMENT_SUBCATS_REBALANCE_2026_05_26.md. When CHEBI is loaded the subtree expansion catches everything in it; when not, the exact list still gives a useful bucket. Either way: this file is editable without recompile.",
+      "_comment": "Subtree URIs ARE preferred — they auto-pick-up new CHEBI terms — but they require CHEBI loaded in OntologyService. As a fallback, each bucket carries a curated uriExactMatches list (expanded 2026-05-26 with the top CHEBI URIs that were falling into 'Other chemicals'). Sub-buckets partition approved_drug by mechanism / drug class so curators can see the pharmacology distribution. Sub-bucket order is first-match-wins: a drug that's both a kinase inhibitor AND an antineoplastic (sorafenib, vemurafenib) lands under kinase_inhibitor because it appears first — mechanism over purpose.",
       "key": "approved_drug",
       "label": "Approved drugs",
+      "group": "pharmacology",
       "parentSubtreeUris": [
         "http://purl.obolibrary.org/obo/CHEBI_23888",
         "http://purl.obolibrary.org/obo/CHEBI_35470",
@@ -82,11 +102,80 @@
         "http://purl.obolibrary.org/obo/CHEBI_2038",
         "http://purl.obolibrary.org/obo/CHEBI_28001",
         "http://purl.obolibrary.org/obo/CHEBI_9288"
+      ],
+      "subBuckets": [
+        {
+          "_comment": "Kinase inhibitors. Listed first so mechanism-of-action (kinase inhibitor) wins over therapeutic purpose (antineoplastic) for drugs like sorafenib / vemurafenib.",
+          "key": "kinase_inhibitor",
+          "label": "Kinase inhibitors",
+          "parentSubtreeUris": ["http://purl.obolibrary.org/obo/CHEBI_35702"],
+          "uriExactMatches": [
+            "http://purl.obolibrary.org/obo/CHEBI_50924",
+            "http://purl.obolibrary.org/obo/CHEBI_63637"
+          ]
+        },
+        {
+          "_comment": "Epigenetic modifiers — HDAC inhibitors, DNMT inhibitors. Listed before antineoplastic for the same reason.",
+          "key": "epigenetic_modifier",
+          "label": "Epigenetic modifiers",
+          "uriExactMatches": [
+            "http://purl.obolibrary.org/obo/CHEBI_85990",
+            "http://purl.obolibrary.org/obo/CHEBI_132082",
+            "http://purl.obolibrary.org/obo/CHEBI_2038"
+          ]
+        },
+        {
+          "key": "immunosuppressant",
+          "label": "Immunosuppressants",
+          "parentSubtreeUris": ["http://purl.obolibrary.org/obo/CHEBI_35470"],
+          "uriExactMatches": [
+            "http://purl.obolibrary.org/obo/CHEBI_4031",
+            "http://purl.obolibrary.org/obo/CHEBI_63791"
+          ]
+        },
+        {
+          "key": "antimicrobial",
+          "label": "Antimicrobials",
+          "parentSubtreeUris": ["http://purl.obolibrary.org/obo/CHEBI_33282"],
+          "uriExactMatches": [
+            "http://purl.obolibrary.org/obo/CHEBI_28001"
+          ]
+        },
+        {
+          "key": "anti_inflammatory",
+          "label": "Anti-inflammatories",
+          "parentSubtreeUris": ["http://purl.obolibrary.org/obo/CHEBI_67079"]
+        },
+        {
+          "_comment": "Antineoplastics last among the mechanistic / disease-purpose pairs — chemo drugs that aren't already classified by mechanism (kinase, epigenetic, immune) land here.",
+          "key": "antineoplastic",
+          "label": "Antineoplastics",
+          "parentSubtreeUris": ["http://purl.obolibrary.org/obo/CHEBI_60048"],
+          "uriExactMatches": [
+            "http://purl.obolibrary.org/obo/CHEBI_4027",
+            "http://purl.obolibrary.org/obo/CHEBI_45863",
+            "http://purl.obolibrary.org/obo/CHEBI_46345",
+            "http://purl.obolibrary.org/obo/CHEBI_68534",
+            "http://purl.obolibrary.org/obo/CHEBI_31638",
+            "http://purl.obolibrary.org/obo/CHEBI_44616",
+            "http://purl.obolibrary.org/obo/CHEBI_9288"
+          ]
+        },
+        {
+          "key": "psychoactive",
+          "label": "Psychoactives / CNS",
+          "uriExactMatches": [
+            "http://purl.obolibrary.org/obo/CHEBI_17303",
+            "http://purl.obolibrary.org/obo/CHEBI_5118",
+            "http://purl.obolibrary.org/obo/CHEBI_6809"
+          ]
+        }
       ]
     },
     {
       "key": "hormone",
       "label": "Hormones",
+      "group": "pharmacology",
       "parentSubtreeUris": [
         "http://purl.obolibrary.org/obo/CHEBI_24621",
         "http://purl.obolibrary.org/obo/CHEBI_50114",
@@ -110,6 +199,7 @@
     {
       "key": "vitamin",
       "label": "Vitamins / nutrients",
+      "group": "pharmacology",
       "parentSubtreeUris": [
         "http://purl.obolibrary.org/obo/CHEBI_33229",
         "http://purl.obolibrary.org/obo/CHEBI_23357"
@@ -122,6 +212,7 @@
     {
       "key": "toxin",
       "label": "Toxins / pollutants",
+      "group": "pharmacology",
       "parentSubtreeUris": [
         "http://purl.obolibrary.org/obo/CHEBI_27026",
         "http://purl.obolibrary.org/obo/CHEBI_50904"
@@ -142,6 +233,7 @@
     {
       "key": "biologic",
       "label": "Biologics",
+      "group": "biological",
       "uriPrefixes": [
         "http://purl.obolibrary.org/obo/PR_",
         "http://purl.org/commons/record/ncbi_gene/"
@@ -150,11 +242,13 @@
     {
       "key": "pathogen",
       "label": "Pathogens",
+      "group": "biological",
       "uriPrefixes": ["http://purl.obolibrary.org/obo/NCBITaxon_"]
     },
     {
       "key": "control",
       "label": "Control / reference",
+      "group": "control",
       "uriExactMatches": [
         "http://purl.obolibrary.org/obo/OBI_0000025",
         "http://purl.obolibrary.org/obo/OBI_0000220"
