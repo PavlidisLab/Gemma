@@ -147,10 +147,13 @@
           "parentSubtreeUris": ["http://purl.obolibrary.org/obo/CHEBI_67079"]
         },
         {
-          "_comment": "Antineoplastics last among the mechanistic / disease-purpose pairs — chemo drugs that aren't already classified by mechanism (kinase, epigenetic, immune) land here.",
+          "_comment": "Antineoplastics last among the mechanistic / disease-purpose pairs — chemo drugs that aren't already classified by mechanism (kinase, epigenetic, immune) land here. CHEBI:35610 'antineoplastic agent' is the standard role-class parent — added 2026-05-26 after has_role traversal landed (per Paul: 'yes' to broadening the antineoplastic sub-bucket).",
           "key": "antineoplastic",
           "label": "Antineoplastics",
-          "parentSubtreeUris": ["http://purl.obolibrary.org/obo/CHEBI_60048"],
+          "parentSubtreeUris": [
+            "http://purl.obolibrary.org/obo/CHEBI_35610",
+            "http://purl.obolibrary.org/obo/CHEBI_60048"
+          ],
           "uriExactMatches": [
             "http://purl.obolibrary.org/obo/CHEBI_4027",
             "http://purl.obolibrary.org/obo/CHEBI_45863",
