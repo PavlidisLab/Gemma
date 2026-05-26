@@ -13,6 +13,8 @@ package ubic.gemma.model.expression.experiment;
 
 import ubic.gemma.model.analysis.Investigation;
 
+import java.util.Objects;
+
 /**
  * Subclass of {@link Investigation} representing a proposed-but-not-yet-loaded
  * dataset.
@@ -32,7 +34,7 @@ import ubic.gemma.model.analysis.Investigation;
 public class PreboardedExperiment extends Investigation {
 
     private String accession;
-    private String source = "GEO";
+    private String source;
     /**
      * Free-form JSON payload of identifying metadata the agent harvested before
      * loading (title, summary, submitter, pubmed id, etc.). Stored as LONGTEXT.
@@ -41,6 +43,21 @@ public class PreboardedExperiment extends Investigation {
 
     public PreboardedExperiment() {
         super();
+    }
+
+    public static final class Factory {
+
+        /**
+         * @param source    upstream source (e.g. {@code "GEO"}, {@code "ArrayExpress"},
+         *                  {@code "manual"}); must not be {@code null}.
+         * @param accession upstream accession (e.g. {@code "GSE12345"}).
+         */
+        public static PreboardedExperiment newInstance( String source, String accession ) {
+            PreboardedExperiment pb = new PreboardedExperiment();
+            pb.setSource( Objects.requireNonNull( source, "source must be specified" ) );
+            pb.setAccession( accession );
+            return pb;
+        }
     }
 
     /**
@@ -55,9 +72,8 @@ public class PreboardedExperiment extends Investigation {
     }
 
     /**
-     * @return the upstream source this accession belongs to. Defaults to
-     *         {@code "GEO"}; future values may include {@code "ArrayExpress"},
-     *         {@code "manual"}.
+     * @return the upstream source this accession belongs to (e.g. {@code "GEO"},
+     *         {@code "ArrayExpress"}, {@code "manual"}).
      */
     public String getSource() {
         return source;
@@ -82,11 +98,8 @@ public class PreboardedExperiment extends Investigation {
 
     @Override
     public int hashCode() {
-        if ( getId() != null ) {
-            return getId().hashCode();
-        }
         if ( accession != null ) {
-            return accession.hashCode();
+            return Objects.hash(accession);
         }
         return System.identityHashCode( this );
     }

@@ -59,10 +59,8 @@ public class PreboardedExperimentMappingTest extends BaseDatabaseTest {
 
     @Test
     public void preboardedRoundTripsThroughHibernate() {
-        PreboardedExperiment pb = new PreboardedExperiment();
+        PreboardedExperiment pb = PreboardedExperiment.Factory.newInstance( "GEO", "GSE12345" );
         pb.setName( "GSE12345 (preboarded)" );
-        pb.setAccession( "GSE12345" );
-        pb.setSource( "GEO" );
         pb.setIdentifyingMetadata( "{\"title\":\"test\",\"pubmed\":\"1\"}" );
 
         Session session = sessionFactory.getCurrentSession();
