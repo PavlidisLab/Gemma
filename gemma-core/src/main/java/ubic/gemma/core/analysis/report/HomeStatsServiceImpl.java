@@ -802,8 +802,13 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
                     continue;
                 }
                 uris.add( parent.getUri() );
+                // includeAdditionalProperties=true so per-ontology object properties (e.g.
+                // CHEBI's RO:0000087 has_role) participate in the descendant walk. For CHEBI
+                // role classes, this pulls in chemicals bearing the role — exactly what
+                // bucket-matching wants. Ontologies that don't configure additional properties
+                // are unaffected.
                 Set<OntologyTerm> descendants = ontologyService.getChildren(
-                        Collections.singleton( parent ), false, false,
+                        Collections.singleton( parent ), false, true,
                         SUBTREE_EXPANSION_TIMEOUT_MS, TimeUnit.MILLISECONDS );
                 for ( OntologyTerm child : descendants ) {
                     if ( child.getUri() != null ) {
