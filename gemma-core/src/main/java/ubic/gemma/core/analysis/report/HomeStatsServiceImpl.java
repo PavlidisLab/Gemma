@@ -288,6 +288,10 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
         // perturbation targets. Genes carry the NCBI gene-record namespace, see Gene#NCBI_URI_PREFIX.
         stats.setGeneManipulatedCount( countDistinctValueUrisByPrefix( Gene.NCBI_URI_PREFIX ) );
 
+        // Companion: count of experiments touched by any gene-URI annotation (vs the
+        // distinct-genes count above, which counts the genes themselves).
+        stats.setGeneManipulatedExperimentCount( countDistinctExperimentsByCharacteristicUriPrefix( Gene.NCBI_URI_PREFIX ) );
+
         // Factor-value distribution by EF category — "how many distinct disease-state factor
         // values exist", "how many distinct genotypes", etc. Reflects the range of experimental
         // axes Gemma has measured along.
@@ -302,7 +306,8 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
                 + stats.getByTaxon().size() + " taxa, "
                 + stats.getOntologyTermCount() + " ontology terms, "
                 + stats.getDrugCount() + " drugs, "
-                + stats.getGeneManipulatedCount() + " manipulated genes, "
+                + stats.getGeneManipulatedCount() + " manipulated genes ("
+                + stats.getGeneManipulatedExperimentCount() + " experiments), "
                 + stats.getDeaResultSetCount() + " DEA result sets, "
                 + stats.getFactorValuesByCategory().size() + " FV-category rows, "
                 + stats.getRecentExperiments().size() + " recent" );
@@ -353,6 +358,24 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
                 .setCacheable( true )
                 .uniqueResult();
         return n != null ? n : 0L;
+    }
+
+    /**
+     * Count distinct experiments touched by at least one characteristic whose {@code valueUri}
+     * starts with the given prefix. Walks the {@code EXPRESSION_EXPERIMENT2CHARACTERISTIC}
+     * denormalization table (the same surface {@code getAnnotationsUsageFrequency} reads from),
+     * so the count includes tags, sample-level annotations, and factor-value characteristics
+     * uniformly. Not ACL-filtered — tile semantics are corpus shape, not anonymous visibility.
+     */
+    private long countDistinctExperimentsByCharacteristicUriPrefix( String uriPrefix ) {
+        Number n = ( Number ) sessionFactory.getCurrentSession()
+                .createNativeQuery( "select count(distinct EXPRESSION_EXPERIMENT_FK) "
+                        + "from EXPRESSION_EXPERIMENT2CHARACTERISTIC "
+                        + "where VALUE_URI like :prefix" )
+                .setParameter( "prefix", uriPrefix + "%" )
+                .setCacheable( true )
+                .uniqueResult();
+        return n != null ? n.longValue() : 0L;
     }
 
     /**

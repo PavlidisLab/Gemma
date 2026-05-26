@@ -82,6 +82,11 @@ public class HomeStats {
      *  genes Gemma has perturbation data for (knockouts, knockdowns, overexpression, etc.). */
     private long geneManipulatedCount;
 
+    /** Companion to {@link #geneManipulatedCount}: number of distinct experiments that carry
+     *  at least one gene-URI annotation. {@link #geneManipulatedCount} counts the genes;
+     *  this counts how many experiments have any gene perturbation at all. */
+    private long geneManipulatedExperimentCount;
+
     /** Distinct factor-value count per ExperimentalFactor category. Reflects the range of
      *  experimental conditions Gemma has measured along each axis (e.g. how many distinct
      *  disease-state factor values exist across the corpus, how many genotypes, how many
