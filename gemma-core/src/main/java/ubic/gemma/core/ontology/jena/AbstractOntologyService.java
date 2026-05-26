@@ -387,17 +387,21 @@ public abstract class AbstractOntologyService implements OntologyService {
         if ( Thread.currentThread().isInterrupted() )
             return;
 
-        if ( this.state != null ) {
-            try {
-                this.state.close();
-            } catch ( Exception e ) {
-                log.error( "Failed to close current state.", e );
-            }
-        }
-
+        // Swap-then-close: install the new state first, THEN close the old one. This narrows
+        // the read-after-close window so a concurrent {@code getState()} during a refresh
+        // never sees the closed-but-not-yet-replaced state. Critical for the hot-refresh
+        // path where initialize() runs repeatedly over the JVM lifetime.
+        State oldState = this.state;
         this.state = new State( model, index, excludedWordsFromStemming, additionalRestrictions, languageLevel,
             inferenceMode, processImports, additionalProperties.stream().map( Property::getURI ).collect( Collectors.toSet() ),
             allowedUriPrefixes, null );
+        if ( oldState != null ) {
+            try {
+                oldState.close();
+            } catch ( Exception e ) {
+                log.error( "Failed to close previous state.", e );
+            }
+        }
         if ( cacheName != null ) {
             // now that the terms have been replaced, we can clear old caches
             try {

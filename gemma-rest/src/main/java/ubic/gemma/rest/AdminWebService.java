@@ -930,6 +930,81 @@ public class AdminWebService {
         return respond( body );
     }
 
+    /**
+     * Refresh a single ontology in-process: re-run {@code initialize(forceLoad=true)} on a
+     * background thread so the source is re-fetched, the model is rebuilt, and the in-memory
+     * state is atomically swapped without a container restart. Returns 202 immediately; the
+     * caller polls {@link #getOntologies(boolean)} to watch the {@code initializing} flag
+     * flip back to false.
+     *
+     * <p>Matches the ontology by {@code OntologyService.getName()} (case-sensitive). 404 if
+     * no bean matches, 409 if a refresh is already in flight on that bean.
+     *
+     * <p>For the slim-CHEBI path the refresh re-runs the {@code loadModel} override, which
+     * checks the seed-hash sidecar and re-extracts the slim if the corpus has drifted.
+     */
+    @POST
+    @Path("/ontologies/{name}/refresh")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Refresh a single ontology in-process",
+            description = "Kicks off an asynchronous re-initialization of the named ontology. The currently-loaded model keeps serving reads until the new model is built and atomically swapped in. Use the per-ontology load-status endpoint to watch progress. 404 if no bean matches the given name; 409 if a refresh on that ontology is already running.",
+            security = {
+                    @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
+            },
+            responses = {
+                    @ApiResponse(responseCode = "202", description = "Refresh accepted; the initialization thread is now running.",
+                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class))),
+                    @ApiResponse(responseCode = "404", description = "No ontology with that name.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "409", description = "A refresh is already in progress for that ontology.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+            })
+    public Response refreshOntology(
+            @PathParam("name") String name,
+            @QueryParam("forceIndexing") @DefaultValue("false") boolean forceIndexing ) {
+        OntologyService match = null;
+        for ( OntologyService o : ontologies ) {
+            try {
+                if ( name.equals( o.getName() ) ) {
+                    match = o;
+                    break;
+                }
+            } catch ( RuntimeException ignored ) {
+                // skip beans that throw from getName() — they wouldn't be refreshable anyway
+            }
+        }
+        if ( match == null ) {
+            throw new NotFoundException( "No ontology found with name=" + name );
+        }
+        if ( match.isInitializationThreadAlive() ) {
+            throw new ClientErrorException(
+                    "Refresh already in progress for ontology=" + name, Response.Status.CONFLICT );
+        }
+        log.info( "Hot-refresh requested for ontology=" + name + " (forceIndexing=" + forceIndexing + ")" );
+        // forceLoad=true is the whole point — we want the cached source re-validated and the
+        // model rebuilt. forceIndexing defaults to false so we don't blow away a still-valid
+        // Lucene index unless the caller explicitly asks.
+        match.startInitializationThread( true, forceIndexing );
+        return Response.accepted( respond( new OntologyRefreshResponse( name, "refreshing" ) ) ).build();
+    }
+
+    /** Body shape for {@link #refreshOntology(String, boolean)} returns. */
+    @Schema(name = "OntologyRefreshResponse")
+    public static class OntologyRefreshResponse {
+        public String name;
+        public String status;
+
+        public OntologyRefreshResponse() {
+        }
+
+        public OntologyRefreshResponse( String name, String status ) {
+            this.name = name;
+            this.status = status;
+        }
+    }
+
     private OntologyStatusValueObject inspect( OntologyService o, boolean includeTermCount ) {
         OntologyStatusValueObject vo = new OntologyStatusValueObject();
         vo.className = o.getClass().getSimpleName();
