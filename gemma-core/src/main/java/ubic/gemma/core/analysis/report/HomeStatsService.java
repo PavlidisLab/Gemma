@@ -11,12 +11,21 @@
 package ubic.gemma.core.analysis.report;
 
 import org.springframework.lang.Nullable;
-import org.springframework.security.access.annotation.Secured;
 
 /**
  * Read + refresh the cached public home-page statistics snapshot.
  * <p>
  * Reads are anonymous-safe; the snapshot represents only what an anonymous user would see.
+ * <p>
+ * No method-level {@code @Secured} guards intentionally — the security boundary is the REST
+ * surface ({@code POST /stats/home/refresh} carries
+ * {@code @PreAuthorize("hasAuthority('GROUP_ADMIN')")}), and the {@code HomeStatsRefresher}
+ * background thread invokes {@link #refresh()} without a SecurityContext (the startup
+ * lifecycle event doesn't propagate one, and adding one would require an authenticate-as-
+ * agent dance for the dev container). Instead, the impl sets up an anonymous SecurityContext
+ * internally for the actual data reads, so the snapshot still represents only what an
+ * anonymous user would see. Call-site discipline keeps this safe — only the REST endpoint
+ * and the refresher itself call this.
  */
 public interface HomeStatsService {
 
@@ -30,8 +39,7 @@ public interface HomeStatsService {
 
     /**
      * Recompute the snapshot from scratch (anonymous-user perspective), persist to disk, and
-     * update the in-memory cache. Restricted to the scheduler agent role.
+     * update the in-memory cache.
      */
-    @Secured({ "GROUP_AGENT" })
     HomeStats refresh();
 }
