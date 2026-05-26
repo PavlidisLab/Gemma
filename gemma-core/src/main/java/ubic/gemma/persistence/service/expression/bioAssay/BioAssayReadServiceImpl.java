@@ -134,9 +134,15 @@ public class BioAssayReadServiceImpl implements BioAssayReadService {
                 arrayDesigns.put( ba.getOriginalPlatform().getId(), ba.getOriginalPlatform() );
             }
         }
-        Map<ArrayDesign, ArrayDesignValueObject> ba2vo = arrayDesignDao.loadValueObjects( arrayDesigns.values() )
-                .stream()
-                .collect( Collectors.toMap( vo -> arrayDesigns.get( vo.getId() ), Function.identity() ) );
+        // Build AD VOs directly rather than going through arrayDesignDao.loadValueObjects,
+        // which fires the postProcessValueObjects pipeline (populateExpressionExperimentCount,
+        // populateSwitchedExpressionExperimentCount, populateBlacklisted, populateIsMerged,
+        // populateExternalReferences) — five queries, two of them ACL-restricted native joins
+        // on EXPRESSION_EXPERIMENT2ARRAY_DESIGN, none of whose results are read by
+        // BioAssayValueObject. On a single-platform EE that dominated /samples wall-clock for
+        // a payload that only needs id/name/technologyType/taxon off the AD.
+        Map<ArrayDesign, ArrayDesignValueObject> ba2vo = arrayDesigns.values().stream()
+                .collect( Collectors.toMap( Function.identity(), ad -> new ArrayDesignValueObject( ad, true ) ) );
         return bioAssayDao.loadValueObjects( entities, ba2vo, assay2sourceAssayMap, basic, allFactorValues );
     }
 
