@@ -17,8 +17,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
-import ubic.gemma.core.ontology.basecode.model.OntologyTerm;
-import ubic.gemma.core.ontology.basecode.providers.UberonOntologyService;
+import ubic.gemma.core.ontology.model.OntologyTerm;
+import ubic.gemma.core.ontology.providers.UberonOntologyService;
 
 import java.util.Arrays;
 import java.util.Collection;

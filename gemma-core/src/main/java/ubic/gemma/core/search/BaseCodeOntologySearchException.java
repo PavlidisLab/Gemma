@@ -1,6 +1,6 @@
 package ubic.gemma.core.search;
 
-import ubic.gemma.core.ontology.basecode.search.OntologySearchException;
+import ubic.gemma.core.ontology.search.OntologySearchException;
 
 /**
  * Exception that wraps a baseCode {@link OntologySearchException}.

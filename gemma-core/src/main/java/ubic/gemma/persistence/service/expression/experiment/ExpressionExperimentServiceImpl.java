@@ -29,7 +29,7 @@ import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.association.GOEvidenceCode;
 import org.apache.commons.lang3.StringUtils;
-import ubic.gemma.core.ontology.basecode.model.OntologyTerm;
+import ubic.gemma.core.ontology.model.OntologyTerm;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.security.audit.Audited;
 import ubic.gemma.core.security.audit.AuditedConditional;

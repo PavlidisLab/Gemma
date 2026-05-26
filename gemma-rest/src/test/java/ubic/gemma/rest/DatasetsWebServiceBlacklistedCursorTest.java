@@ -256,10 +256,10 @@ public class DatasetsWebServiceBlacklistedCursorTest {
         when( datasetArgService.getFilters( any( FilterArg.class ), any(), any( Collection.class ) ) )
                 .thenAnswer( inv -> {
                     @SuppressWarnings("unchecked")
-                    Collection<ubic.gemma.core.ontology.basecode.model.OntologyTerm> inferred =
-                            ( Collection<ubic.gemma.core.ontology.basecode.model.OntologyTerm> ) inv.getArgument( 2 );
+                    Collection<ubic.gemma.core.ontology.model.OntologyTerm> inferred =
+                            ( Collection<ubic.gemma.core.ontology.model.OntologyTerm> ) inv.getArgument( 2 );
                     if ( inferred != null ) {
-                        inferred.add( new ubic.gemma.core.ontology.basecode.simple.OntologyTermSimple(
+                        inferred.add( new ubic.gemma.core.ontology.simple.OntologyTermSimple(
                                 "http://example.org/OT_1", "test-term" ) );
                     }
                     return Filters.empty();

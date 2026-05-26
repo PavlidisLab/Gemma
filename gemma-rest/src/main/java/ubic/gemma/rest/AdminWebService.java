@@ -59,7 +59,7 @@ import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowserImpl;
 import ubic.gemma.core.loader.expression.geo.service.GeoRecordType;
 import ubic.gemma.core.loader.expression.geo.service.GeoRetrieveConfig;
-import ubic.gemma.core.ontology.basecode.providers.OntologyService;
+import ubic.gemma.core.ontology.providers.OntologyService;
 import ubic.gemma.core.tasks.analysis.expression.ExpressionExperimentLoadTaskCommand;
 import ubic.gemma.core.tasks.maintenance.GeoScrapeTaskCommand;
 import ubic.gemma.core.tasks.maintenance.MultifunctionalityTaskCommand;

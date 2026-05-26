@@ -2,7 +2,7 @@ package ubic.gemma.core.ontology.providers;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import ubic.gemma.core.ontology.basecode.model.OntologyTerm;
+import ubic.gemma.core.ontology.model.OntologyTerm;
 import ubic.gemma.core.util.test.NetworkAvailable;
 import ubic.gemma.core.util.test.NetworkAvailableExtension;
 
@@ -21,8 +21,8 @@ public class GemmaOntologyServiceTest {
         GemmaOntologyService gemmaOntology = new GemmaOntologyService();
         gemmaOntology.setSearchEnabled( false );
         gemmaOntology.setProcessImports( false ); // FIXME: remove this once https://github.com/PavlidisLab/TGEMO/pull/20 is merged
-        assertEquals( ubic.gemma.core.ontology.basecode.providers.OntologyService.LanguageLevel.FULL, gemmaOntology.getLanguageLevel() );
-        assertEquals( ubic.gemma.core.ontology.basecode.providers.OntologyService.InferenceMode.TRANSITIVE, gemmaOntology.getInferenceMode() );
+        assertEquals( ubic.gemma.core.ontology.providers.OntologyService.LanguageLevel.FULL, gemmaOntology.getLanguageLevel() );
+        assertEquals( ubic.gemma.core.ontology.providers.OntologyService.InferenceMode.TRANSITIVE, gemmaOntology.getInferenceMode() );
         gemmaOntology.initialize( true, false );
         OntologyTerm overexpression = gemmaOntology.getTerm( "http://gemma.msl.ubc.ca/ont/TGEMO_00004" );
         assertNotNull( overexpression );

@@ -45,9 +45,9 @@
         <Logger name="org.hibernate.engine.loading.LoadContexts" level="ERROR"/>
 
         <!-- baseCode ontology classes were pulled in-tree in Phase 3; loggers
-             updated to the new package names (ubic.gemma.core.ontology.basecode.*). -->
-        <Logger name="ubic.gemma.core.ontology.basecode.jena.PropertyFactory" level="ERROR"/>
-        <Logger name="ubic.gemma.core.ontology.basecode.providers" level="WARN"/>
+             updated to the new package names (ubic.gemma.core.ontology.*). -->
+        <Logger name="ubic.gemma.core.ontology.jena.PropertyFactory" level="ERROR"/>
+        <Logger name="ubic.gemma.core.ontology.providers" level="WARN"/>
 
         <Logger name="org.glassfish.jersey.internal.Errors" level="ERROR"/>
         <Logger name="org.glassfish.jersey.server.ServerRuntime$Responder" level="INFO"/>

@@ -18,7 +18,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import ubic.gemma.core.ontology.basecode.model.OntologyTerm;
+import ubic.gemma.core.ontology.model.OntologyTerm;
 import ubic.gemma.model.expression.bioAssayData.ExperimentExpressionLevelsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
@@ -293,7 +293,7 @@ public class DatasetsWebServiceExpressionLevelsForGeneCursorTest {
                     @SuppressWarnings("unchecked")
                     Collection<OntologyTerm> inferred = ( Collection<OntologyTerm> ) inv.getArgument( 2 );
                     if ( inferred != null ) {
-                        inferred.add( new ubic.gemma.core.ontology.basecode.simple.OntologyTermSimple(
+                        inferred.add( new ubic.gemma.core.ontology.simple.OntologyTermSimple(
                                 "http://example.org/OT_1", "test-term" ) );
                     }
                     return Filters.empty();

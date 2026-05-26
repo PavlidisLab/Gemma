@@ -119,8 +119,8 @@
 
         <!-- baseCode classes were pulled in-tree in Phase 3 (ontology, util,
              Configuration). Loggers updated to the new package names. -->
-        <Logger name="ubic.gemma.core.ontology.basecode.jena.PropertyFactory" level="ERROR"/>
-        <Logger name="ubic.gemma.core.ontology.basecode.providers" level="WARN"/>
+        <Logger name="ubic.gemma.core.ontology.jena.PropertyFactory" level="ERROR"/>
+        <Logger name="ubic.gemma.core.ontology.providers" level="WARN"/>
 
         <Logger name="ubic.gemma" level="INFO">
             <AppenderRef ref="progressUpdate"/>

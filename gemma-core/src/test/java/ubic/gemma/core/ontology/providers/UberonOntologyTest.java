@@ -2,8 +2,8 @@ package ubic.gemma.core.ontology.providers;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
-import ubic.gemma.core.ontology.basecode.model.OntologyTerm;
-import ubic.gemma.core.ontology.basecode.providers.UberonOntologyService;
+import ubic.gemma.core.ontology.model.OntologyTerm;
+import ubic.gemma.core.ontology.providers.UberonOntologyService;
 
 import java.io.InputStream;
 import java.util.Collections;
@@ -25,8 +25,8 @@ public class UberonOntologyTest {
     @Test
     public void testSubstantiaNigraInUberon() throws Exception {
         UberonOntologyService uberonOntologyService = new UberonOntologyService();
-        assertEquals( ubic.gemma.core.ontology.basecode.providers.OntologyService.LanguageLevel.FULL, uberonOntologyService.getLanguageLevel() );
-        assertEquals( ubic.gemma.core.ontology.basecode.providers.OntologyService.InferenceMode.TRANSITIVE, uberonOntologyService.getInferenceMode() );
+        assertEquals( ubic.gemma.core.ontology.providers.OntologyService.LanguageLevel.FULL, uberonOntologyService.getLanguageLevel() );
+        assertEquals( ubic.gemma.core.ontology.providers.OntologyService.InferenceMode.TRANSITIVE, uberonOntologyService.getInferenceMode() );
         try ( InputStream is = new GZIPInputStream(
                 new ClassPathResource( "/data/loader/ontology/uberon.test.owl.gz" ).getInputStream() ) ) {
             uberonOntologyService.initialize( is, false );

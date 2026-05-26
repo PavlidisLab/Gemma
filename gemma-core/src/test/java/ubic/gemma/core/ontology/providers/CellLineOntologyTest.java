@@ -2,10 +2,10 @@ package ubic.gemma.core.ontology.providers;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
-import ubic.gemma.core.ontology.basecode.model.OntologyTerm;
-import ubic.gemma.core.ontology.basecode.providers.CellLineOntologyService;
-import ubic.gemma.core.ontology.basecode.search.OntologySearchException;
-import ubic.gemma.core.ontology.basecode.search.OntologySearchResult;
+import ubic.gemma.core.ontology.model.OntologyTerm;
+import ubic.gemma.core.ontology.providers.CellLineOntologyService;
+import ubic.gemma.core.ontology.search.OntologySearchException;
+import ubic.gemma.core.ontology.search.OntologySearchResult;
 
 import java.io.IOException;
 import java.io.InputStream;

@@ -1,9 +1,9 @@
 package ubic.gemma.core.ontology;
 
 import org.junit.jupiter.api.Test;
-import ubic.gemma.core.ontology.basecode.model.AnnotationProperty;
-import ubic.gemma.core.ontology.basecode.model.OntologyTerm;
-import ubic.gemma.core.ontology.basecode.simple.OntologyTermSimple;
+import ubic.gemma.core.ontology.model.AnnotationProperty;
+import ubic.gemma.core.ontology.model.OntologyTerm;
+import ubic.gemma.core.ontology.simple.OntologyTermSimple;
 
 import java.io.IOException;
 

@@ -55,7 +55,7 @@ public class FindObsoleteTermsCliTest extends BaseCliTest5 {
         }
 
         @Bean
-        public ubic.gemma.core.ontology.basecode.providers.OntologyService ontology1() {
+        public ubic.gemma.core.ontology.providers.OntologyService ontology1() {
             return mock();
         }
 
@@ -77,7 +77,7 @@ public class FindObsoleteTermsCliTest extends BaseCliTest5 {
     private OntologyService ontologyService;
 
     @Autowired
-    private ubic.gemma.core.ontology.basecode.providers.OntologyService ontology1;
+    private ubic.gemma.core.ontology.providers.OntologyService ontology1;
 
     @Test
     @WithMockUser
@@ -86,7 +86,7 @@ public class FindObsoleteTermsCliTest extends BaseCliTest5 {
         findObsoleteTermsCli.executeCommand( cliContext );
         assertEquals( 0, cliContext.getExitStatus() );
         verify( ontology1 ).setSearchEnabled( false );
-        verify( ontology1 ).setInferenceMode( ubic.gemma.core.ontology.basecode.providers.OntologyService.InferenceMode.NONE );
+        verify( ontology1 ).setInferenceMode( ubic.gemma.core.ontology.providers.OntologyService.InferenceMode.NONE );
         verify( ontology1 ).initialize( true, false );
         verify( ontologyService ).findObsoleteTermUsage( 4, TimeUnit.HOURS );
     }

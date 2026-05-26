@@ -31,9 +31,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.test.context.ContextConfiguration;
-import ubic.gemma.core.ontology.basecode.model.OntologyTerm;
-import ubic.gemma.core.ontology.basecode.search.OntologySearchException;
-import ubic.gemma.core.ontology.basecode.search.OntologySearchResult;
+import ubic.gemma.core.ontology.model.OntologyTerm;
+import ubic.gemma.core.ontology.search.OntologySearchException;
+import ubic.gemma.core.ontology.search.OntologySearchResult;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
@@ -110,7 +110,7 @@ public class GeneOntologyServiceTest extends BaseTest5 implements InitializingBe
 
     // Phase 3 search/ontology Step 3 (2026-05-19): re-enabled. The baseCode
     // ontology classes are now in-tree under
-    // ubic.gemma.core.ontology.basecode.* and OntologyIndexer builds a real
+    // ubic.gemma.core.ontology.* and OntologyIndexer builds a real
     // Lucene 9 in-memory index over the in-memory OntModel via
     // LuceneOntologySearchIndex, so gos.findTerm() actually returns hits.
     @Test
