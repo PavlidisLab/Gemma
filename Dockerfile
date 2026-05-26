@@ -124,7 +124,8 @@ ENV GEMMA_APPDATA_HOME=/data/gemma \
                    -Djava.security.egd=file:/dev/./urandom \
                    -XX:MaxRAMPercentage=75.0 \
                    -XX:+ExitOnOutOfMemoryError \
-                   -XX:+UseZGC"
+                   -XX:+UseZGC \
+                   --enable-native-access=ALL-UNNAMED"
 
 # Non-root runtime user. UID/GID idempotent because newer tomcat base images
 # (e.g. 10.1-jdk25-temurin / -jdk21-temurin on recent debian) already define

@@ -93,6 +93,15 @@
     </listener>
 
     <!--
+        Suppress known-benign third-party startup warnings: Jersey "not resolvable to a concrete
+        type" (~138 occurrences from generic abstract Arg<?> types resolved via static valueOf),
+        Lucene Vector API "please update" hint on JDK 23+. See ubic.gemma.rest.servlet.StartupLogNoiseFilter.
+    -->
+    <listener>
+        <listener-class>ubic.gemma.rest.servlet.StartupLogNoiseFilter</listener-class>
+    </listener>
+
+    <!--
         CORS. Same wiring as gemma-web/web.xml:84–103 so gemma-curation-ui (the
         SPA replacing gemma-web) can hit /rest/v2/** cross-origin. The CorsFilter
         class itself lives in gemma-rest already (ubic.gemma.rest.servlet.CorsFilter),
