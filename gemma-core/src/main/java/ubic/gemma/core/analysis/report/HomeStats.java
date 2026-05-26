@@ -71,11 +71,20 @@ public class HomeStats {
 
     /**
      * Per-category distinct-term counts. Keys are stable lowercase-snake-case strings:
-     * {@code disease}, {@code organism_part}, {@code cell_type}, {@code treatment}.
-     * Each value is the count of distinct ontology-backed terms in that category (free-text
-     * excluded). The {@code treatment} bucket carries the drug-annotation count.
+     * {@code disease}, {@code organism_part}, {@code cell_type}, {@code treatment},
+     * {@code strain}, {@code cell_line}. Each value is the count of distinct
+     * ontology-backed terms in that category (free-text excluded). The {@code treatment}
+     * bucket carries the drug-annotation count.
      */
     private Map<String, Long> byAnnotationCategory = new LinkedHashMap<>();
+
+    /**
+     * Distribution of annotation categories observed across public datasets — the top-N
+     * categories Gemma actually uses, with the number of experiments each appears on.
+     * Reflects the range of experimental conditions / annotation dimensions represented
+     * in the corpus. Sorted descending by {@code numberOfExpressionExperiments}.
+     */
+    private List<CategoryStat> categoryDistribution = new ArrayList<>();
 
     /** Most-recently curated public experiments, for the scrolling-names widget. */
     private List<RecentExperiment> recentExperiments = new ArrayList<>();
@@ -93,6 +102,27 @@ public class HomeStats {
             this.commonName = commonName;
             this.scientificName = scientificName;
             this.count = count;
+        }
+    }
+
+    @Data
+    @NoArgsConstructor
+    public static class CategoryStat {
+        /** Stable lowercase-snake-case label used in {@code byAnnotationCategory} (e.g. {@code organism_part}),
+         *  or {@code null} if this category isn't one we surface as a tile. */
+        private String key;
+        /** Gemma's canonical category label (e.g. {@code organism part}). */
+        private String category;
+        /** Ontology URI of the category, if any. */
+        private String categoryUri;
+        /** Number of public experiments carrying at least one annotation in this category. */
+        private long numberOfExpressionExperiments;
+
+        public CategoryStat( String key, String category, String categoryUri, long numberOfExpressionExperiments ) {
+            this.key = key;
+            this.category = category;
+            this.categoryUri = categoryUri;
+            this.numberOfExpressionExperiments = numberOfExpressionExperiments;
         }
     }
 

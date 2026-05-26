@@ -23,6 +23,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.security.authentication.ManualAuthenticationService;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Taxon;
@@ -82,7 +83,23 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
         m.put( "organism_part", "organism part" );
         m.put( "cell_type", "cell type" );
         m.put( "treatment", "treatment" );
+        m.put( "strain", "strain" );
+        m.put( "cell_line", "cell line" );
         ANNOTATION_CATEGORIES = Collections.unmodifiableMap( m );
+    }
+
+    /** How many top categories to retain in the {@code categoryDistribution} surface field. */
+    private static final int CATEGORY_DISTRIBUTION_LIMIT = 25;
+
+    /** Reverse lookup — Gemma canonical category label → home-page tile key. Used so the
+     *  category-distribution entries know whether they correspond to one of the tile buckets. */
+    private static final Map<String, String> CATEGORY_LABEL_TO_KEY;
+    static {
+        Map<String, String> m = new LinkedHashMap<>();
+        for ( Map.Entry<String, String> e : ANNOTATION_CATEGORIES.entrySet() ) {
+            m.put( e.getValue(), e.getKey() );
+        }
+        CATEGORY_LABEL_TO_KEY = Collections.unmodifiableMap( m );
     }
 
     /** Per-category annotation-count timeout. Tight enough that a runaway query doesn't stall
@@ -212,6 +229,26 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
             byCategory.put( e.getKey(), countAnnotationTerms( empty, e.getValue(), freeTextSentinel ) );
         }
         stats.setByAnnotationCategory( byCategory );
+
+        // Category distribution — top-N annotation categories actually used across public
+        // datasets, with their experiment counts. Reflects the range of experimental
+        // conditions / annotation dimensions represented in the corpus (factor-value
+        // categories ride here too — getCategoriesUsageFrequency aggregates across
+        // experiment tags, samples and factor values per its operation description).
+        Map<Characteristic, Long> categoryUsage = expressionExperimentService.getCategoriesUsageFrequency(
+                empty, null, null, null, null, CATEGORY_DISTRIBUTION_LIMIT );
+        List<HomeStats.CategoryStat> categoryDistribution = categoryUsage.entrySet().stream()
+                .sorted( Map.Entry.<Characteristic, Long>comparingByValue().reversed() )
+                .map( e -> {
+                    String label = e.getKey().getCategory();
+                    return new HomeStats.CategoryStat(
+                            label != null ? CATEGORY_LABEL_TO_KEY.get( label ) : null,
+                            label,
+                            e.getKey().getCategoryUri(),
+                            e.getValue() );
+                } )
+                .collect( Collectors.toList() );
+        stats.setCategoryDistribution( categoryDistribution );
 
         // Still on the v2 wishlist (need new HQL aggregates): single-cell EE count and
         // distinct-DEA-condition count. See HOME_STATS_WISHLIST.md.
