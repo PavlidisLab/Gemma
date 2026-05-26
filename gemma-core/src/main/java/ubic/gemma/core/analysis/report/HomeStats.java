@@ -42,6 +42,13 @@ public class HomeStats {
     /** Total public platforms (array designs). */
     private long platformCount;
 
+    /**
+     * Distinct external accessions across all public EEs. {@code <= datasetCount} — the
+     * difference is the EEs split off a parent submission ("1 GSE → 2 Gemma EEs"). Drives
+     * the Datasets-tile sub-line "from N distinct accessions".
+     */
+    private long distinctAccessionCount;
+
     /** Total distinct biomaterials across all public experiments. */
     private long sampleCount;
 

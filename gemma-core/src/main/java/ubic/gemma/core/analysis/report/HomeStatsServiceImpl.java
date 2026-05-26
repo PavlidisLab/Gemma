@@ -321,7 +321,11 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
 
         // Datasets-by-accession-source distribution — for the home page Datasets-tile
         // nested footnote ("GEO 22000 · ArrayExpress 800 · CELLxGENE 150 · none 599").
-        stats.setDatasetsByAccessionSource( computeDatasetsByAccessionSource() );
+        // Walks the public-EE id set, which we also reuse for distinctAccessionCount below.
+        Collection<Long> publicEeIds = QueryUtils.optimizeParameterList(
+                expressionExperimentService.loadIdsWithCache( Filters.empty(), null ) );
+        stats.setDatasetsByAccessionSource( computeDatasetsByAccessionSource( publicEeIds ) );
+        stats.setDistinctAccessionCount( countDistinctAccessions( publicEeIds ) );
 
         // Treatment-subcategory breakdown — slices the byAnnotationCategory.treatment bucket
         // into drug / pathogen / biologic / other for the Treatments-tile (i) tooltip.
@@ -444,17 +448,14 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
      * etc.), with a {@code "none"} bucket for datasets without an external accession.
      * Sorted descending by count.
      * <p>
-     * ACL-filtered to public EEs only — we pre-fetch the public-readable id set via
-     * {@code expressionExperimentService.loadIdsWithCache(Filters.empty(), null)} (which
-     * applies the EE2C ACL EXISTS clause) and then restrict the group-by to that set. The
-     * sum of all buckets equals {@link HomeStats#getDatasetCount()}; if it doesn't the
-     * count is broken, not the data. Two queries instead of one because HQL can't COALESCE
-     * across a left-join — the grouped query naturally drops null-accession rows, so we
-     * fold the no-accession bucket in via a separate count.
+     * ACL-filtered to public EEs only — the caller passes in the public-readable id set
+     * obtained via {@code expressionExperimentService.loadIdsWithCache(Filters.empty(),
+     * null)}. The sum of all buckets equals {@link HomeStats#getDatasetCount()}; if it
+     * doesn't the count is broken, not the data. Two queries instead of one because HQL
+     * can't COALESCE across a left-join — the grouped query naturally drops null-accession
+     * rows, so we fold the no-accession bucket in via a separate count.
      */
-    private List<HomeStats.AccessionSourceStat> computeDatasetsByAccessionSource() {
-        Collection<Long> publicEeIds = QueryUtils.optimizeParameterList(
-                expressionExperimentService.loadIdsWithCache( Filters.empty(), null ) );
+    private List<HomeStats.AccessionSourceStat> computeDatasetsByAccessionSource( Collection<Long> publicEeIds ) {
         if ( publicEeIds.isEmpty() ) {
             return Collections.emptyList();
         }
@@ -487,6 +488,29 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
             out.sort( ( a, b ) -> Long.compare( b.getCount(), a.getCount() ) );
         }
         return out;
+    }
+
+    /**
+     * Count distinct {@code Accession.accession} strings across the public EE id set. Drives
+     * the Datasets-tile sub-line "from N distinct accessions" — collapsed-source companion
+     * to {@link #computeDatasetsByAccessionSource} (the per-source breakdown is ~99.9% GEO,
+     * so the collapsed total is what the home page actually surfaces). {@code <=
+     * datasetCount}; the gap reflects EE splits off a parent submission.
+     */
+    private long countDistinctAccessions( Collection<Long> publicEeIds ) {
+        if ( publicEeIds.isEmpty() ) {
+            return 0L;
+        }
+        Long n = ( Long ) sessionFactory.getCurrentSession()
+                .createQuery( "select count(distinct a.accession) "
+                        + "from ExpressionExperiment ee "
+                        + "join ee.accession a "
+                        + "where ee.id in (:eeIds) "
+                        + "and a.accession is not null" )
+                .setParameterList( "eeIds", publicEeIds )
+                .setCacheable( true )
+                .uniqueResult();
+        return n != null ? n : 0L;
     }
 
     /**
