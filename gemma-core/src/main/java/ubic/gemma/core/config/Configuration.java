@@ -66,12 +66,21 @@ public class Configuration {
 
     /**
      * Obtain a configuration value by key.
+     * <p>
+     * Resolution order: runtime overrides set via {@link #setString(String, String)}, then JVM system properties
+     * (preferring the {@code basecode.}-prefixed form for backward compatibility, falling back to the bare key),
+     * then defaults from the {@code basecode.properties} classpath resource. The bare-key fallback exists so that
+     * {@code -Dload.chebiOntology=true} works without forcing callers to remember the legacy prefix; the prefixed
+     * form is still consulted first, so existing deployments are unaffected.
      */
     @Nullable
     public static String getString( String key ) {
         String val = props.getProperty( key );
         if ( val == null ) {
             val = System.getProperty( SYSTEM_PROPERTY_PREFIX + key );
+        }
+        if ( val == null ) {
+            val = System.getProperty( key );
         }
         if ( val == null ) {
             val = defaultProps.getProperty( key );
