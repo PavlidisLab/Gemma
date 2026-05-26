@@ -13,24 +13,34 @@ package ubic.gemma.core.analysis.report;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 /**
- * Daily {@code @Scheduled} task that recomputes {@link HomeStats}. Fires in every
- * Spring context (REST, CLI, dev, scheduler) — dropping the previous
- * {@code @Profile(EnvironmentProfiles.SCHEDULER)} gate so local-dev containers
- * populate the snapshot on startup without needing the scheduler profile active.
+ * Refreshes {@link HomeStats} on a daily cron AND on every Spring context refresh
+ * (startup). The two triggers use different Spring mechanisms on purpose:
  * <p>
- * The startup pass runs once a couple of minutes after boot so a freshly-deployed
- * container doesn't wait until the next cron tick to populate the snapshot. The cron
- * default is 4 AM daily, after the 3 AM Lucene reindex in
- * {@code ScheduledSearchReindexer} so the two heavy nightly passes don't race for
- * the connection pool.
+ * <b>Startup pass</b> rides on {@link ContextRefreshedEvent} so it fires in every
+ * context — REST, CLI, dev, scheduler — regardless of whether
+ * {@code @EnableScheduling} is active. {@code SchedulerConfig} is profile-gated to
+ * {@link ubic.gemma.core.context.EnvironmentProfiles#SCHEDULER}, so a {@code @Scheduled}
+ * method would never fire on a local-dev container. The lifecycle event always fires.
+ * It runs the refresh in a background thread so Spring startup isn't blocked by the
+ * minute-or-two cold-cache aggregation pass.
+ * <p>
+ * <b>Daily cron</b> stays on {@link Scheduled}. It only fires on nodes with the
+ * scheduler profile active (which is what we want — daily refresh is a single-node
+ * responsibility on the production scheduler). The cron default is 4 AM, after the
+ * 3 AM Lucene reindex in {@code ScheduledSearchReindexer} so the two heavy nightly
+ * passes don't race for the connection pool.
  * <p>
  * Multi-container concurrency is benign: {@link HomeStatsService#refresh()} writes
  * to disk atomically (temp file + ATOMIC_MOVE) and the recompute itself is read-only,
- * so two nodes racing the same cron tick at worst do the work twice.
+ * so two nodes racing the same tick at worst do the work twice.
  */
 @Component
 public class HomeStatsRefresher {
@@ -40,26 +50,43 @@ public class HomeStatsRefresher {
     @Autowired
     private HomeStatsService homeStatsService;
 
+    /** Guard against re-entry — multiple {@code ContextRefreshedEvent}s fire over a
+     *  context's lifetime (each child context, refresh-by-actuator, etc.). Only the
+     *  first matters for the startup pass. */
+    private final AtomicBoolean startupRefreshArmed = new AtomicBoolean( true );
+
     /**
-     * Initial population a couple of minutes after startup if the on-disk snapshot
-     * is absent or stale. A late initialDelay keeps Spring context startup fast.
+     * Initial population on context startup if the on-disk snapshot is absent. Runs
+     * in a background thread so the minute-or-two cold-cache aggregation pass doesn't
+     * block the Spring context coming up. Idempotent: if a snapshot was already
+     * loaded from disk by {@link HomeStatsServiceImpl#afterPropertiesSet()}, this is
+     * a no-op.
      */
-    @Scheduled(initialDelay = 120_000L, fixedDelay = Long.MAX_VALUE)
+    @EventListener(ContextRefreshedEvent.class)
     public void refreshOnStartup() {
+        if ( !startupRefreshArmed.compareAndSet( true, false ) ) {
+            return;
+        }
         if ( homeStatsService.getCached() != null ) {
             log.info( "HomeStats: startup refresh skipped — disk snapshot already loaded" );
             return;
         }
-        log.info( "HomeStats: startup refresh — no cached snapshot found" );
-        try {
-            homeStatsService.refresh();
-        } catch ( Exception e ) {
-            log.error( "HomeStats: startup refresh failed; will retry at next scheduled tick", e );
-        }
+        log.info( "HomeStats: startup refresh — no cached snapshot found, recomputing in background" );
+        Thread t = new Thread( () -> {
+            try {
+                homeStatsService.refresh();
+            } catch ( Exception e ) {
+                log.error( "HomeStats: startup refresh failed", e );
+            }
+        }, "HomeStats-startup-refresh" );
+        t.setDaemon( true );
+        t.start();
     }
 
     /**
      * Daily refresh. Default cron: 4 AM, after {@code ScheduledSearchReindexer}.
+     * Only fires on nodes with {@code @EnableScheduling} active (the production
+     * scheduler profile); local-dev containers rely on the startup pass above.
      */
     @Scheduled(cron = "${gemma.homeStats.refresh.cron:0 0 4 * * *}")
     public void refreshDaily() {
