@@ -24,6 +24,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.ConverterNotFoundException;
 import org.springframework.core.convert.TypeDescriptor;
@@ -241,6 +242,19 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         }
     }
 
+    /**
+     * Walk the cause chain to the deepest Throwable and return its message — used by the
+     * VO-conversion fallback to surface "LazyInitializationException: AuditEvent#…" in the
+     * log line instead of the wrapping ConversionFailedException's generic stringification.
+     */
+    private static String rootMessage( Throwable t ) {
+        Throwable cur = t;
+        while ( cur.getCause() != null && cur.getCause() != cur ) {
+            cur = cur.getCause();
+        }
+        return cur.getClass().getSimpleName() + ": " + cur.getMessage();
+    }
+
     @Override
     @Transactional(readOnly = true)
     public List<SearchResult<? extends IdentifiableValueObject<?>>> loadValueObjects( Collection<SearchResult<?>> searchResults ) throws IllegalArgumentException {
@@ -280,8 +294,16 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
                 }
             }
             Map<Long, IdentifiableValueObject<?>> perType = voIndex.computeIfAbsent( resultType, k -> new HashMap<>() );
-            try {
-                if ( !entities.isEmpty() ) {
+            // Entity-path: fast (no re-query) but only safe when the entity returned by the
+            // search source still has a Hibernate session attached and any lazy associations
+            // its converter walks (e.g. AuditEvent on ExpressionExperiment / ArrayDesign) are
+            // initialized. The HibernateSearch source returns detached entities for the
+            // anonymous /search path (2026-05-25 frink hit: ConversionFailedException ->
+            // LazyInitializationException on AuditEvent), so on ConversionFailedException we
+            // promote the detached entities to id-only and fall through to the ID path,
+            // which fetches a fresh attached set via load(ids).
+            if ( !entities.isEmpty() ) {
+                try {
                     TypeDescriptor entityCollectionType = TypeDescriptor.collection( Collection.class, TypeDescriptor.valueOf( resultType ) );
                     TypeDescriptor voListType = TypeDescriptor.collection( List.class, TypeDescriptor.valueOf( voType ) );
                     @SuppressWarnings("unchecked")
@@ -293,8 +315,21 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
                             }
                         }
                     }
+                } catch ( ConversionFailedException convEx ) {
+                    log.warn( "Entity-path VO conversion failed for " + resultType.getSimpleName()
+                            + " (" + entities.size() + " entities) — promoting to id-path. Cause: "
+                            + rootMessage( convEx ) );
+                    for ( Identifiable ent : entities ) {
+                        if ( ent.getId() != null ) {
+                            idsOnly.add( ent.getId() );
+                        }
+                    }
+                } catch ( ConverterNotFoundException ex ) {
+                    throw new IllegalArgumentException( "Result type " + resultType + " is not supported for VO conversion.", ex );
                 }
-                if ( !idsOnly.isEmpty() ) {
+            }
+            if ( !idsOnly.isEmpty() ) {
+                try {
                     TypeDescriptor idCollectionType = TypeDescriptor.collection( Collection.class, TypeDescriptor.valueOf( Long.class ) );
                     TypeDescriptor voListType = TypeDescriptor.collection( List.class, TypeDescriptor.valueOf( voType ) );
                     @SuppressWarnings("unchecked")
@@ -306,9 +341,9 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
                             }
                         }
                     }
+                } catch ( ConverterNotFoundException ex ) {
+                    throw new IllegalArgumentException( "Result type " + resultType + " is not supported for VO conversion.", ex );
                 }
-            } catch ( ConverterNotFoundException ex ) {
-                throw new IllegalArgumentException( "Result type " + resultType + " is not supported for VO conversion.", ex );
             }
         }
         // Reassemble in original iteration order. Results whose entity has been removed

@@ -10,6 +10,8 @@ import org.hibernate.search.mapper.orm.session.SearchSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.acls.domain.BasePermission;
+import org.springframework.security.acls.model.Acl;
+import org.springframework.security.acls.model.NotFoundException;
 import org.springframework.security.acls.model.ObjectIdentity;
 import org.springframework.security.acls.model.Sid;
 import org.springframework.security.acls.model.SidRetrievalStrategy;
@@ -433,12 +435,32 @@ public class HibernateSearchSource implements FieldAwareSearchSource {
                 .map( r -> new AclObjectIdentity( resultType, r.getResultId() ) )
                 .collect( Collectors.toList() );
         Set<Long> filteredIds = aclService.readAclsById( aclIdentities ).values().stream()
-                .filter( acl -> acl.isGranted( Collections.singletonList( BasePermission.READ ), sids, false ) )
+                .filter( acl -> aclGrantsRead( acl, sids ) )
                 .map( acl -> ( Long ) acl.getObjectIdentity().getIdentifier() )
                 .collect( Collectors.toSet() );
         return results.stream()
                 .filter( s -> filteredIds.contains( s.getResultId() ) )
                 .collect( Collectors.toList() );
+    }
+
+    /**
+     * Quiet equivalent of {@code acl.isGranted(READ, sids, false)}: Spring Security's
+     * {@link org.springframework.security.acls.domain.DefaultPermissionGrantingStrategy}
+     * throws {@link NotFoundException} when an ACL has no matching ACE and no parent to
+     * inherit from. For a search post-filter "no ACE matches" is the same as "deny" —
+     * we just want to drop the hit, not 500 the whole request. This wrapper translates
+     * the exception into {@code false}.
+     * <p>
+     * Hit observed 2026-05-25 on frink: anonymous {@code /search?query=BRCA1} (no
+     * resultTypes) crossed an entity whose ACL was loaded but had no anonymous READ
+     * ACE; the stock thrower bubbled up to the REST layer as a 500.
+     */
+    private static boolean aclGrantsRead( Acl acl, List<Sid> sids ) {
+        try {
+            return acl.isGranted( Collections.singletonList( BasePermission.READ ), sids, false );
+        } catch ( NotFoundException e ) {
+            return false;
+        }
     }
 
     /**
