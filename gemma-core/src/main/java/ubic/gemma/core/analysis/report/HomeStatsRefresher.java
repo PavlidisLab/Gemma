@@ -56,22 +56,22 @@ public class HomeStatsRefresher {
     private final AtomicBoolean startupRefreshArmed = new AtomicBoolean( true );
 
     /**
-     * Initial population on context startup if the on-disk snapshot is absent. Runs
-     * in a background thread so the minute-or-two cold-cache aggregation pass doesn't
-     * block the Spring context coming up. Idempotent: if a snapshot was already
-     * loaded from disk by {@link HomeStatsServiceImpl#afterPropertiesSet()}, this is
-     * a no-op.
+     * Recompute the snapshot on context startup. Always runs (no skip-if-cached) so a
+     * fresh redeploy picks up new aggregation shape immediately — the on-disk snapshot
+     * loaded by {@link HomeStatsServiceImpl#afterPropertiesSet()} is what
+     * {@code GET /stats/home} serves until this background refresh completes; the
+     * stale-from-previous-build data stays available rather than 503-ing, but it's
+     * replaced as soon as the new compute finishes.
+     * <p>
+     * Runs in a background thread so the cold-cache aggregation pass (~15-25s on a
+     * fresh DB cache) doesn't block Spring startup.
      */
     @EventListener(ContextRefreshedEvent.class)
     public void refreshOnStartup() {
         if ( !startupRefreshArmed.compareAndSet( true, false ) ) {
             return;
         }
-        if ( homeStatsService.getCached() != null ) {
-            log.info( "HomeStats: startup refresh skipped — disk snapshot already loaded" );
-            return;
-        }
-        log.info( "HomeStats: startup refresh — no cached snapshot found, recomputing in background" );
+        log.info( "HomeStats: startup refresh — recomputing in background" );
         Thread t = new Thread( () -> {
             try {
                 homeStatsService.refresh();
