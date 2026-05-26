@@ -23,18 +23,23 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 /**
- * Spring Security 6 {@link PasswordEncoder} that understands two formats:
+ * Spring Security 6 {@link PasswordEncoder} that understands three formats:
  *
  * <ol>
  *   <li><b>Legacy SHA-1 + username-as-salt</b>: stored as a bare 40-char hex digest with no
  *       prefix, computed as {@code SHA-1(rawPassword + "{" + username + "}")} (the exact
  *       output of Spring Security 3/4's {@code ShaPasswordEncoder} configured with
  *       {@code ReflectionSaltSource(userPropertyToUse="username")} — see Gemma's pre-Phase-2
- *       {@code applicationContext-security.xml}). This is what is in the production database
- *       and in {@code sql/init-data.sql}.</li>
- *   <li><b>BCrypt</b>: stored with the {@code {bcrypt}} prefix per Spring Security 5/6's
+ *       {@code applicationContext-security.xml}). Found in {@code sql/init-data.sql} and
+ *       very old prod rows.</li>
+ *   <li><b>Bare BCrypt</b>: starts with {@code $2a$} / {@code $2b$} / {@code $2y$}, no
+ *       {@code {bcrypt}} prefix. What Gemma 1.x / Spring Security 4-era
+ *       {@code BCryptPasswordEncoder.encode} produced before
+ *       {@code DelegatingPasswordEncoder} introduced the {@code {…}} prefix convention in
+ *       Spring Security 5. The bulk of production Gemma rows are in this format.</li>
+ *   <li><b>{bcrypt}-prefixed BCrypt</b>: Spring Security 5/6's
  *       {@link org.springframework.security.crypto.password.DelegatingPasswordEncoder}
- *       convention.</li>
+ *       convention. What {@link #encode} produces for new passwords.</li>
  * </ol>
  *
  * <h2>How the username is supplied</h2>
@@ -93,11 +98,18 @@ public class GemmaLegacyAwarePasswordEncoder implements PasswordEncoder {
         if ( encodedPassword.startsWith( BCRYPT_PREFIX ) ) {
             return bcrypt.matches( rawPassword, encodedPassword.substring( BCRYPT_PREFIX.length() ) );
         }
-        // Legacy hashes are intentionally not verified here — the username is not available
-        // through the PasswordEncoder API. LegacyAwareDaoAuthenticationProvider intercepts
-        // legacy stored hashes before super.additionalAuthenticationChecks delegates to this
-        // encoder. Fail closed for defence-in-depth: anything that reaches matches() with a
-        // non-bcrypt format is rejected.
+        if ( isBareBcrypt( encodedPassword ) ) {
+            // Bare BCrypt hash (no {bcrypt} prefix) — what Gemma 1.x / Spring Security 4-era
+            // BCryptPasswordEncoder.encode produced before DelegatingPasswordEncoder added
+            // the {…} prefix convention in Spring Security 5. Production gemd rows are in
+            // this format. BCryptPasswordEncoder.matches accepts the bare hash directly.
+            return bcrypt.matches( rawPassword, encodedPassword );
+        }
+        // Legacy SHA-1 hashes are intentionally not verified here — the username is not
+        // available through the PasswordEncoder API. LegacyAwareDaoAuthenticationProvider
+        // intercepts legacy stored hashes before super.additionalAuthenticationChecks
+        // delegates to this encoder. Fail closed for defence-in-depth: anything that reaches
+        // matches() with an unrecognized format is rejected.
         return false;
     }
 
@@ -106,10 +118,32 @@ public class GemmaLegacyAwarePasswordEncoder implements PasswordEncoder {
         if ( encodedPassword == null ) {
             return false;
         }
-        // Any non-bcrypt format should be re-encoded on next successful login. The framework
-        // (DaoAuthenticationProvider) calls passwordEncoder.encode(presented) + then
-        // userDetailsPasswordService.updatePassword(user, newHash).
-        return !encodedPassword.startsWith( BCRYPT_PREFIX );
+        // Only flag formats that genuinely need re-encoding: legacy bare-40-hex SHA-1 (would
+        // become {bcrypt}…). Bare BCrypt is functionally equivalent to {bcrypt}-prefixed and
+        // works fine through matches(); marking it for upgrade buys little and would churn
+        // every prod row on first successful login. {bcrypt}-prefixed is current and stays
+        // as-is.
+        if ( encodedPassword.startsWith( BCRYPT_PREFIX ) ) return false;
+        if ( isBareBcrypt( encodedPassword ) ) return false;
+        return true;
+    }
+
+    /**
+     * @return {@code true} iff {@code encodedPassword} looks like a bare BCrypt hash —
+     *         starts with {@code $2a$}, {@code $2b$}, or {@code $2y$} (the standard BCrypt
+     *         version tags) and has plausible length. Spring Security 4's
+     *         {@code BCryptPasswordEncoder.encode} produced hashes in this form without the
+     *         {@code {bcrypt}} prefix the {@code DelegatingPasswordEncoder} convention
+     *         expects — Gemma 1.x rows are stored this way and the production database is
+     *         full of them.
+     */
+    public static boolean isBareBcrypt( String encodedPassword ) {
+        if ( encodedPassword == null || encodedPassword.length() < 59 ) {
+            return false;
+        }
+        return encodedPassword.startsWith( "$2a$" )
+                || encodedPassword.startsWith( "$2b$" )
+                || encodedPassword.startsWith( "$2y$" );
     }
 
     /**

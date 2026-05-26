@@ -93,6 +93,49 @@ public class GemmaLegacyAwarePasswordEncoderTest {
     }
 
     @Test
+    public void bareBcrypt_matchesWithoutPrefix() {
+        // Bare BCrypt hash (no {bcrypt} prefix) — Gemma 1.x / Spring Security 4-era format.
+        // Production gemd rows are in this shape. Generated here via BCryptPasswordEncoder
+        // directly so we exercise the exact wire format the encoder must accept.
+        org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder bare =
+                new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
+        String stored = bare.encode( "hunter2" );
+        // Sanity: no {bcrypt} prefix, starts with $2a$/$2b$/$2y$
+        assertFalse( stored.startsWith( GemmaLegacyAwarePasswordEncoder.BCRYPT_PREFIX ),
+                "fixture must not carry the {bcrypt} prefix to exercise the bare path" );
+        assertTrue( GemmaLegacyAwarePasswordEncoder.isBareBcrypt( stored ) );
+
+        assertTrue( encoder.matches( "hunter2", stored ),
+                "encoder must accept bare-BCrypt (no prefix) — Gemma 1.x prod format" );
+        assertFalse( encoder.matches( "wrong", stored ) );
+
+        // Not flagged for upgrade — bare-BCrypt is functionally fine, rewriting every prod
+        // row to add the {bcrypt} prefix on first login would be churn for no security gain.
+        assertFalse( encoder.upgradeEncoding( stored ),
+                "bare BCrypt is equivalent to {bcrypt}-prefixed and need not be upgraded" );
+    }
+
+    @Test
+    public void isBareBcrypt_acceptsKnownVariants() {
+        // $2a$ — canonical
+        assertTrue( GemmaLegacyAwarePasswordEncoder
+                .isBareBcrypt( "$2a$10$abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZab" ) );
+        // $2b$ — newer Java BCrypt
+        assertTrue( GemmaLegacyAwarePasswordEncoder
+                .isBareBcrypt( "$2b$10$abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZab" ) );
+        // $2y$ — PHP-style; less common in Java but well-defined
+        assertTrue( GemmaLegacyAwarePasswordEncoder
+                .isBareBcrypt( "$2y$10$abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZab" ) );
+
+        assertFalse( GemmaLegacyAwarePasswordEncoder.isBareBcrypt( null ) );
+        assertFalse( GemmaLegacyAwarePasswordEncoder.isBareBcrypt( "" ) );
+        assertFalse( GemmaLegacyAwarePasswordEncoder.isBareBcrypt( "$2a$too-short" ) );
+        // {bcrypt}-prefixed is NOT bare
+        assertFalse( GemmaLegacyAwarePasswordEncoder.isBareBcrypt(
+                "{bcrypt}$2a$10$abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZab" ) );
+    }
+
+    @Test
     public void isLegacySha1Hex_rejectsBcryptAndOther() {
         assertFalse( GemmaLegacyAwarePasswordEncoder.isLegacySha1Hex( null ) );
         assertFalse( GemmaLegacyAwarePasswordEncoder.isLegacySha1Hex( "" ) );
