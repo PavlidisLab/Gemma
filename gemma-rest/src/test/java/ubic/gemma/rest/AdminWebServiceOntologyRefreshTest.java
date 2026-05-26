@@ -2,6 +2,7 @@ package ubic.gemma.rest;
 
 import jakarta.ws.rs.ClientErrorException;
 import jakarta.ws.rs.NotFoundException;
+import jakarta.ws.rs.ServiceUnavailableException;
 import jakarta.ws.rs.core.Response;
 import org.hibernate.SessionFactory;
 import org.junit.jupiter.api.BeforeEach;
@@ -115,6 +116,80 @@ class AdminWebServiceOntologyRefreshTest {
                 .satisfies( e -> assertThat( ( ( ClientErrorException ) e ).getResponse().getStatus() )
                         .isEqualTo( 409 ) );
         verify( chebi, org.mockito.Mockito.never() ).startInitializationThread( anyBoolean(), anyBoolean() );
+    }
+
+    /* ===== /admin/ontologies/{name}/rebuild-slim ===== */
+
+    @Test
+    void rebuildSlimRefusesNonChebiOntology() {
+        when( chebi.getName() ).thenReturn( "MONDO" );
+        // a generic OntologyService mock that says its name is MONDO — not a ChebiOntologyService
+        assertThatThrownBy( () -> service.rebuildOntologySlim( "MONDO" ) )
+                .isInstanceOf( NotFoundException.class )
+                .hasMessageContaining( "does not support slim rebuild" );
+    }
+
+    @Test
+    void rebuildSlimUnknownNameThrows404() {
+        when( chebi.getName() ).thenReturn( "CHEBI" );
+        when( mondo.getName() ).thenReturn( "MONDO" );
+
+        assertThatThrownBy( () -> service.rebuildOntologySlim( "UBERON" ) )
+                .isInstanceOf( NotFoundException.class )
+                .hasMessageContaining( "UBERON" );
+    }
+
+    @Test
+    void rebuildSlimReturns503WhenNotLoaded() {
+        ubic.gemma.core.ontology.providers.ChebiOntologyService realChebi =
+                mock( ubic.gemma.core.ontology.providers.ChebiOntologyService.class );
+        when( realChebi.getName() ).thenReturn( "CHEBI" );
+        when( realChebi.triggerSlimRebuildAsync() )
+                .thenThrow( new IllegalStateException( "CHEBI is not loaded yet." ) );
+
+        AdminWebService svc = new AdminWebService( cacheManager, sessionFactory, taskRunningService,
+                sessionRegistry, java.util.List.of( realChebi ), dataSource, userManager,
+                agentProposalService, ticketService, taxonArgService, blacklistedEntityService,
+                externalDatabaseReadService, geoScrapeService, indexerService );
+
+        assertThatThrownBy( () -> svc.rebuildOntologySlim( "CHEBI" ) )
+                .isInstanceOf( ServiceUnavailableException.class );
+    }
+
+    @Test
+    void rebuildSlimReturns409WhenAlreadyInFlight() {
+        ubic.gemma.core.ontology.providers.ChebiOntologyService realChebi =
+                mock( ubic.gemma.core.ontology.providers.ChebiOntologyService.class );
+        when( realChebi.getName() ).thenReturn( "CHEBI" );
+        when( realChebi.triggerSlimRebuildAsync() ).thenReturn( false );
+
+        AdminWebService svc = new AdminWebService( cacheManager, sessionFactory, taskRunningService,
+                sessionRegistry, java.util.List.of( realChebi ), dataSource, userManager,
+                agentProposalService, ticketService, taxonArgService, blacklistedEntityService,
+                externalDatabaseReadService, geoScrapeService, indexerService );
+
+        assertThatThrownBy( () -> svc.rebuildOntologySlim( "CHEBI" ) )
+                .isInstanceOf( ClientErrorException.class )
+                .satisfies( e -> assertThat( ( ( ClientErrorException ) e ).getResponse().getStatus() )
+                        .isEqualTo( 409 ) );
+    }
+
+    @Test
+    void rebuildSlimReturns202OnHappyPath() {
+        ubic.gemma.core.ontology.providers.ChebiOntologyService realChebi =
+                mock( ubic.gemma.core.ontology.providers.ChebiOntologyService.class );
+        when( realChebi.getName() ).thenReturn( "CHEBI" );
+        when( realChebi.triggerSlimRebuildAsync() ).thenReturn( true );
+
+        AdminWebService svc = new AdminWebService( cacheManager, sessionFactory, taskRunningService,
+                sessionRegistry, java.util.List.of( realChebi ), dataSource, userManager,
+                agentProposalService, ticketService, taxonArgService, blacklistedEntityService,
+                externalDatabaseReadService, geoScrapeService, indexerService );
+
+        Response resp = svc.rebuildOntologySlim( "CHEBI" );
+
+        assertThat( resp.getStatus() ).isEqualTo( 202 );
+        verify( realChebi ).triggerSlimRebuildAsync();
     }
 
     @Test

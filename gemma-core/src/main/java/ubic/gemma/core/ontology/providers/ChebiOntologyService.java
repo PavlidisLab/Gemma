@@ -84,6 +84,8 @@ public class ChebiOntologyService extends UrlOntologyService {
     @Nullable
     private File slimCacheDir;
     private Duration slimMaxAge = DEFAULT_SLIM_MAX_AGE;
+    private final java.util.concurrent.atomic.AtomicReference<Thread> slimRebuildThread =
+            new java.util.concurrent.atomic.AtomicReference<>();
 
     public ChebiOntologyService() {
         super( "CHEBI",
@@ -153,41 +155,60 @@ public class ChebiOntologyService extends UrlOntologyService {
     }
 
     /**
-     * Build the slim cache from the currently-loaded Jena model + the live corpus seed
-     * set. Intended to be invoked from an admin endpoint after the service is fully
-     * loaded and the host has memory headroom for the OWL-API parse. Runs synchronously
-     * on the caller's thread — the admin endpoint can dispatch it asynchronously if it
-     * wants a 202-style response.
+     * Build the slim cache from the currently-loaded source + the live corpus seed set,
+     * asynchronously. Intended for the admin endpoint
+     * {@code POST /admin/ontologies/CHEBI/rebuild-slim}: returns immediately so the
+     * admin response is 202; the extraction continues on a daemon thread.
      *
-     * <p>Returns immediately without action if the slim path isn't wired (test contexts,
-     * missing seedResolver, etc.).
+     * <p>At most one rebuild runs at a time per service. If a rebuild is already in
+     * flight, returns {@code false} and does not start a new one.
      *
-     * @throws IllegalStateException if the service hasn't been loaded yet — there's
-     *         no point trying to extract a slim before the live model exists.
+     * @return {@code true} if a new rebuild thread was started; {@code false} if a
+     *         rebuild was already running.
+     * @throws IllegalStateException if the service isn't loaded yet — the source file
+     *         on disk is what the extractor reads, and we lean on the service's
+     *         initialise flow to have downloaded it. Also thrown if the slim plumbing
+     *         isn't wired (no extractor / resolver / cache dir).
      */
-    public void triggerSlimRebuild() {
+    public boolean triggerSlimRebuildAsync() {
         if ( !isOntologyLoaded() ) {
             throw new IllegalStateException( "Cannot rebuild slim: CHEBI is not loaded yet." );
         }
+        if ( slimExtractor == null || seedResolver == null || slimCacheDir == null ) {
+            throw new IllegalStateException( "Slim plumbing is not wired on this bean "
+                    + "(extractor / resolver / cache dir absent). Check OntologyConfig." );
+        }
         File slim = resolveSlimFile();
         File slimMeta = resolveSlimMetaFile();
-        if ( slim == null || slimMeta == null || slimExtractor == null || seedResolver == null ) {
-            log.warn( "Slim rebuild requested but the slim plumbing is not fully wired "
-                    + "(extractor / resolver / cache dir absent). No-op." );
-            return;
+        Thread existing = slimRebuildThread.get();
+        if ( existing != null && existing.isAlive() ) {
+            return false;
         }
-        Set<String> seeds;
-        try {
-            seeds = seedResolver.resolveCorpusSeeds();
-        } catch ( Exception e ) {
-            log.warn( "Slim rebuild aborted: seed resolver failed.", e );
-            return;
+        Thread t = new Thread( () -> {
+            try {
+                Set<String> seeds = seedResolver.resolveCorpusSeeds();
+                rebuildSlim( slim, slimMeta, seeds );
+            } catch ( Throwable e ) {
+                log.warn( "Slim rebuild failed.", e );
+            } finally {
+                slimRebuildThread.compareAndSet( Thread.currentThread(), null );
+            }
+        }, "chebi-slim-rebuild" );
+        t.setDaemon( true );
+        if ( !slimRebuildThread.compareAndSet( null, t ) ) {
+            // race lost: another caller started a rebuild between our check and the CAS
+            return false;
         }
-        try {
-            rebuildSlim( slim, slimMeta, seeds );
-        } catch ( IOException e ) {
-            log.warn( "Slim rebuild failed.", e );
-        }
+        t.start();
+        return true;
+    }
+
+    /**
+     * @return {@code true} if a slim rebuild is currently in flight on the background thread.
+     */
+    public boolean isSlimRebuildInFlight() {
+        Thread t = slimRebuildThread.get();
+        return t != null && t.isAlive();
     }
 
     private OntologyModel loadFromFile( File source, boolean processImports,

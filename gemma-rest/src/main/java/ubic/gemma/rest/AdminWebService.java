@@ -1005,6 +1005,72 @@ public class AdminWebService {
         }
     }
 
+    /**
+     * Rebuild the slim-cache OWL for an ontology that supports it (currently CHEBI only).
+     * The service must already be loaded so the extractor can read the on-disk source.
+     * Returns 202 immediately and the extraction runs on a daemon thread; poll
+     * {@link #getOntologies(boolean)} to watch the result land
+     * (a fresh slim file at {@code ${ontology.cache.dir}/ontology/chebiOntology-slim.owl}).
+     *
+     * <p>Memory note: STAR module extraction via OWL-API holds the full CHEBI in heap
+     * during the run (~3 GB peak after this commit's source-release fix). Invoke on a
+     * host with that headroom, and not during another resource-intensive operation.
+     */
+    @POST
+    @Path("/ontologies/{name}/rebuild-slim")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Rebuild the slim-cache for an ontology",
+            description = "Currently only CHEBI is supported (other ontologies return 404). Kicks off the slim extraction asynchronously and returns 202. The service must already be loaded. 409 if a rebuild is already in flight.",
+            security = {
+                    @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
+            },
+            responses = {
+                    @ApiResponse(responseCode = "202", description = "Rebuild started.",
+                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class))),
+                    @ApiResponse(responseCode = "404", description = "Ontology not found or doesn't support slim rebuild.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "409", description = "Rebuild already in progress.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "503", description = "Ontology is not loaded yet.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+            })
+    public Response rebuildOntologySlim( @PathParam("name") String name ) {
+        OntologyService match = null;
+        for ( OntologyService o : ontologies ) {
+            try {
+                if ( name.equals( o.getName() ) ) {
+                    match = o;
+                    break;
+                }
+            } catch ( RuntimeException ignored ) {
+            }
+        }
+        if ( match == null ) {
+            throw new NotFoundException( "No ontology found with name=" + name );
+        }
+        if ( !( match instanceof ubic.gemma.core.ontology.providers.ChebiOntologyService ) ) {
+            throw new NotFoundException( "Ontology " + name + " does not support slim rebuild." );
+        }
+        ubic.gemma.core.ontology.providers.ChebiOntologyService chebi =
+                ( ubic.gemma.core.ontology.providers.ChebiOntologyService ) match;
+        try {
+            if ( !chebi.triggerSlimRebuildAsync() ) {
+                throw new ClientErrorException(
+                        "Slim rebuild already in progress for ontology=" + name,
+                        Response.Status.CONFLICT );
+            }
+        } catch ( IllegalStateException e ) {
+            // Not loaded yet, or plumbing missing — treat as 503 service-unavailable so
+            // the operator knows to retry later (vs the 404 / 409 above which are
+            // client-correctable).
+            throw new jakarta.ws.rs.ServiceUnavailableException( e.getMessage() );
+        }
+        log.info( "Slim rebuild kicked for ontology=" + name );
+        return Response.accepted( respond( new OntologyRefreshResponse( name, "rebuilding-slim" ) ) ).build();
+    }
+
     private OntologyStatusValueObject inspect( OntologyService o, boolean includeTermCount ) {
         OntologyStatusValueObject vo = new OntologyStatusValueObject();
         vo.className = o.getClass().getSimpleName();
