@@ -101,6 +101,62 @@ public class LegacyAwareDaoAuthenticationProviderTest {
     }
 
     @Test
+    public void fixedSaltHash_authenticatesViaGooblyfoobly() {
+        // Pre-2009 SystemWideSaltSource format: SHA-1(password + "{" + systemSalt + "}") where
+        // systemSalt is the configured constant ("gooblyfoobly" per commit 66f574e926, 2008-10-02).
+        // We construct the stored hash via the encoder itself rather than hard-coding a value —
+        // the historical init-data.sql hashes in the 2008 commit don't reproduce under plain
+        // ShaPasswordEncoder formula (possibly hand-edited at the time), so we test the
+        // round-trip against the encoder's canonical output instead.
+        String fixedSaltHash = GemmaLegacyAwarePasswordEncoder
+                .sha1HexUsernameSalt( "test", LegacyAwareDaoAuthenticationProvider.SYSTEM_WIDE_SALT );
+        assertTrue( GemmaLegacyAwarePasswordEncoder.isLegacySha1Hex( fixedSaltHash ),
+                "encoder output must be a 40-char hex SHA-1" );
+
+        UserDetails legacyAdmin = User.withUsername( "administrator" )
+                .password( fixedSaltHash )
+                .authorities( AuthorityUtils.createAuthorityList( "GROUP_ADMIN" ) )
+                .build();
+        provider.setUserDetailsService( username -> {
+            if ( "administrator".equals( username ) ) {
+                return legacyAdmin;
+            }
+            throw new UsernameNotFoundException( username );
+        } );
+
+        // Username-salt would NOT match this hash — only the fixed-salt fallback rescues it.
+        Authentication result = provider.authenticate(
+                new UsernamePasswordAuthenticationToken( "administrator", "test" ) );
+        assertTrue( result.isAuthenticated(),
+                "fixed-salt fallback must verify pre-2009 hashes whose stored value matches"
+                        + " SHA-1(password + \"{gooblyfoobly}\")" );
+    }
+
+    @Test
+    public void fixedSaltHash_wrongPassword_rejected() {
+        String fixedSaltHash = GemmaLegacyAwarePasswordEncoder
+                .sha1HexUsernameSalt( "test", LegacyAwareDaoAuthenticationProvider.SYSTEM_WIDE_SALT );
+        UserDetails legacyAdmin = User.withUsername( "administrator" )
+                .password( fixedSaltHash )
+                .authorities( AuthorityUtils.createAuthorityList( "GROUP_ADMIN" ) )
+                .build();
+        provider.setUserDetailsService( username -> {
+            if ( "administrator".equals( username ) ) {
+                return legacyAdmin;
+            }
+            throw new UsernameNotFoundException( username );
+        } );
+
+        try {
+            provider.authenticate(
+                    new UsernamePasswordAuthenticationToken( "administrator", "not-the-password" ) );
+            fail( "expected BadCredentialsException for wrong fixed-salt password" );
+        } catch ( BadCredentialsException expected ) {
+            // ok
+        }
+    }
+
+    @Test
     public void legacyHash_wrongPassword_rejected() {
         Authentication request = new UsernamePasswordAuthenticationToken( "administrator", "not-the-password" );
         try {

@@ -181,10 +181,17 @@ public class SecurityConfig {
     @Bean(name = "daoAuthenticationProvider")
     public LegacyAwareDaoAuthenticationProvider daoAuthenticationProvider(
             @Qualifier("userManager") UserDetailsService userManager,
-            @Qualifier("passwordEncoder") PasswordEncoder passwordEncoder ) {
+            @Qualifier("passwordEncoder") PasswordEncoder passwordEncoder,
+            @Value("${gemma.legacy.salt:gooblyfoobly}") String legacySalt ) {
         LegacyAwareDaoAuthenticationProvider provider = new LegacyAwareDaoAuthenticationProvider();
         provider.setUserDetailsService( userManager );
         provider.setPasswordEncoder( passwordEncoder );
+        // Pre-2009 SystemWideSaltSource fallback. Default "gooblyfoobly" matches the
+        // historical build.properties value (commit 66f574e926, 2008-10-02). Override via
+        // gemma.legacy.salt if production has rotated the salt at any point — accounts
+        // whose passwords pre-date the 2009-11-23 switch to username-salt are the only ones
+        // affected.
+        provider.setSystemWideSalt( legacySalt );
         // Password-upgrade hook NOT wired: DaoAuthenticationProvider's auto-upgrade
         // calls UserDetailsPasswordService.updatePassword(...), which on UserManagerImpl
         // is @Secured("GROUP_ADMIN"). The upgrade fires during authenticate() — BEFORE

@@ -24,10 +24,25 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 
 /**
- * {@link DaoAuthenticationProvider} that understands Gemma's pre-Phase-2 legacy password
- * format ({@code SHA-1(rawPassword + "{" + username + "}")}, bare 40-char hex digest, no
- * prefix — see {@code sql/init-data.sql}). For any other stored hash format ({@code {bcrypt}}
- * being the only other currently supported format) it falls through to the stock
+ * {@link DaoAuthenticationProvider} that understands Gemma's two pre-Phase-2 legacy
+ * password formats, both bare 40-char hex SHA-1 with no prefix:
+ *
+ * <ol>
+ *   <li><b>Username-salt</b> (post-2009-11-23): {@code SHA-1(rawPassword + "{" + username + "}")} —
+ *       configured via {@code <s:salt-source user-property="username"/>}. See
+ *       {@code sql/init-data.sql}.</li>
+ *   <li><b>Fixed system-wide salt</b> (pre-2009-11-23): {@code SHA-1(rawPassword + "{gooblyfoobly}")} —
+ *       configured via {@code SystemWideSaltSource} with {@code gemma.salt=gooblyfoobly} in
+ *       build.properties (commit {@code 66f574e926}, 2008-10-02). Users created before the
+ *       2009 salt-source switch (notably the original {@code administrator} account) still
+ *       have hashes in this format in production gemd if their password hasn't been rotated.</li>
+ * </ol>
+ *
+ * <p>The two are structurally indistinguishable (both 40-char SHA-1 hex), so verification
+ * tries username-salt first, then fixed-salt; only if both miss is the password rejected.</p>
+ *
+ * <p>For any other stored hash format ({@code {bcrypt}}-prefixed or bare BCrypt are the
+ * currently supported alternatives) verification falls through to the stock
  * {@code DaoAuthenticationProvider} machinery, which delegates to the configured
  * {@link org.springframework.security.crypto.password.PasswordEncoder}
  * ({@link GemmaLegacyAwarePasswordEncoder}).
@@ -65,6 +80,26 @@ public class LegacyAwareDaoAuthenticationProvider extends DaoAuthenticationProvi
 
     private static final Log log = LogFactory.getLog( LegacyAwareDaoAuthenticationProvider.class );
 
+    /** Historical SystemWideSaltSource value from {@code build.properties} (commit
+     *  {@code 66f574e926}, 2008-10-02). Used by the {@code administrator} row and any other
+     *  account whose password has not been rotated since the 2009-11-23 switch to
+     *  username-salt. Default; override via {@link #setSystemWideSalt(String)} (or the
+     *  {@code gemma.legacy.salt} property if Spring-wired) if the production salt has been
+     *  rotated since 2008. */
+    public static final String SYSTEM_WIDE_SALT = "gooblyfoobly";
+
+    private String systemWideSalt = SYSTEM_WIDE_SALT;
+
+    /** Override the system-wide salt used for the pre-2009 fixed-salt fallback. Setter form
+     *  so Spring can inject from a property without restructuring the constructor. */
+    public void setSystemWideSalt( String salt ) {
+        this.systemWideSalt = salt == null ? SYSTEM_WIDE_SALT : salt;
+    }
+
+    public String getSystemWideSalt() {
+        return systemWideSalt;
+    }
+
     @Override
     protected void additionalAuthenticationChecks( UserDetails userDetails,
             UsernamePasswordAuthenticationToken authentication ) throws AuthenticationException {
@@ -81,18 +116,26 @@ public class LegacyAwareDaoAuthenticationProvider extends DaoAuthenticationProvi
                         "Bad credentials" ) );
             }
             String presented = authentication.getCredentials().toString();
-            String computed = GemmaLegacyAwarePasswordEncoder
+            // Try username-salt first (post-2009 hashes — newer accounts and any rotated
+            // since the switch).
+            String usernameSaltHash = GemmaLegacyAwarePasswordEncoder
                     .sha1HexUsernameSalt( presented, userDetails.getUsername() );
-            if ( !GemmaLegacyAwarePasswordEncoder.constantTimeHexEquals( computed, storedHash ) ) {
-                log.debug( "Authentication failed: password does not match stored value (legacy SHA-1)" );
-                throw new BadCredentialsException( messages.getMessage(
-                        "AbstractUserDetailsAuthenticationProvider.badCredentials",
-                        "Bad credentials" ) );
+            if ( GemmaLegacyAwarePasswordEncoder.constantTimeHexEquals( usernameSaltHash, storedHash ) ) {
+                return;
             }
-            // Match — fall out. The stock authenticate() will see
-            // passwordEncoder.upgradeEncoding(legacyHash) == true and trigger the bcrypt
-            // upgrade via UserDetailsPasswordService.
-            return;
+            // Fall back to the pre-2009 SystemWideSaltSource — used to be the only salt;
+            // pre-2009 accounts (notably the original administrator) still carry these
+            // hashes in production gemd.
+            String fixedSaltHash = GemmaLegacyAwarePasswordEncoder
+                    .sha1HexUsernameSalt( presented, systemWideSalt );
+            if ( GemmaLegacyAwarePasswordEncoder.constantTimeHexEquals( fixedSaltHash, storedHash ) ) {
+                return;
+            }
+            log.debug( "Authentication failed: password does not match stored value under either"
+                    + " username-salt or fixed-salt (legacy SHA-1)" );
+            throw new BadCredentialsException( messages.getMessage(
+                    "AbstractUserDetailsAuthenticationProvider.badCredentials",
+                    "Bad credentials" ) );
         }
 
         super.additionalAuthenticationChecks( userDetails, authentication );
