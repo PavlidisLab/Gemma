@@ -192,8 +192,14 @@ public class HomeStats {
         private String category;
         /** Ontology URI of the category, if any. */
         private String categoryUri;
-        /** Number of public experiments carrying at least one annotation in this category. */
+        /** Annotation-burden metric: number of public experiments carrying at least one
+         *  annotation in this category. */
         private long numberOfExpressionExperiments;
+        /** Annotation-diversity metric: number of distinct ontology-backed terms in use
+         *  under this category (free-text excluded). Mirrors the value reported in the
+         *  top-level {@code byAnnotationCategory} map; carried here too so callers don't
+         *  have to cross-reference. {@code 0} if not pre-computed for this category. */
+        private long numberOfDistinctTerms;
 
         public CategoryStat( String key, String category, String categoryUri, long numberOfExpressionExperiments ) {
             this.key = key;
@@ -303,13 +309,20 @@ public class HomeStats {
         private String category;
         /** Ontology URI of the category, if any. */
         private String categoryUri;
-        /** Distinct factor values existing under this category across the corpus. */
+        /** Diversity metric: distinct factor values existing under this category across the corpus. */
         private long numberOfDistinctFactorValues;
+        /** Burden metric: distinct experiments carrying at least one factor under this
+         *  category. A category used by 200 EEs each with 5 distinct genotype FVs would
+         *  read 200 here and 1000 in {@link #numberOfDistinctFactorValues}. */
+        private long numberOfExpressionExperiments;
 
-        public FactorValueCategoryStat( String category, String categoryUri, long numberOfDistinctFactorValues ) {
+        public FactorValueCategoryStat( String category, String categoryUri,
+                                        long numberOfDistinctFactorValues,
+                                        long numberOfExpressionExperiments ) {
             this.category = category;
             this.categoryUri = categoryUri;
             this.numberOfDistinctFactorValues = numberOfDistinctFactorValues;
+            this.numberOfExpressionExperiments = numberOfExpressionExperiments;
         }
     }
 

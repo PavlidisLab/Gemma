@@ -288,17 +288,22 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
         // conditions / annotation dimensions represented in the corpus (factor-value
         // categories ride here too — getCategoriesUsageFrequency aggregates across
         // experiment tags, samples and factor values per its operation description).
+        // Each row reports BOTH numberOfExpressionExperiments (burden) and
+        // numberOfDistinctTerms (diversity, mirrored from byAnnotationCategory) so the
+        // caller has both metrics in one place.
         Map<Characteristic, Long> categoryUsage = expressionExperimentService.getCategoriesUsageFrequency(
                 empty, null, null, null, null, CATEGORY_DISTRIBUTION_LIMIT );
         List<HomeStats.CategoryStat> categoryDistribution = categoryUsage.entrySet().stream()
                 .sorted( Map.Entry.<Characteristic, Long>comparingByValue().reversed() )
                 .map( e -> {
                     String label = e.getKey().getCategory();
-                    return new HomeStats.CategoryStat(
-                            label != null ? CATEGORY_LABEL_TO_KEY.get( label ) : null,
-                            label,
-                            e.getKey().getCategoryUri(),
-                            e.getValue() );
+                    String key = label != null ? CATEGORY_LABEL_TO_KEY.get( label ) : null;
+                    HomeStats.CategoryStat cs = new HomeStats.CategoryStat(
+                            key, label, e.getKey().getCategoryUri(), e.getValue() );
+                    if ( key != null && byCategory.containsKey( key ) ) {
+                        cs.setNumberOfDistinctTerms( byCategory.get( key ) );
+                    }
+                    return cs;
                 } )
                 .collect( Collectors.toList() );
         stats.setCategoryDistribution( categoryDistribution );
@@ -452,12 +457,22 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
      * Joins {@code ExperimentalFactor → factorValues} and counts distinct FVs grouped by
      * the category Characteristic.category label. EFs with a null category are folded into
      * a single null-keyed bucket. Top {@link #FACTOR_VALUE_CATEGORY_LIMIT} buckets retained,
-     * sorted descending by count.
+     * sorted descending by FV count.
+     * <p>
+     * Reports both metrics: {@code numberOfDistinctFactorValues} (diversity — how many
+     * distinct values exist under this axis) and {@code numberOfExpressionExperiments}
+     * (burden — how many EEs actually carry a factor under this axis). Counts distinct
+     * {@code ExperimentalDesign.id} as a 1-to-1 proxy for distinct EEs (an ED belongs to
+     * exactly one EE in the Gemma model). Not ACL-filtered, same as the pre-existing
+     * FV-count query — the populator runs anonymously but this naked HQL doesn't pick up
+     * the EE-level voter; consistent with the prior behaviour. Tightening to public-only
+     * is a follow-up.
      */
     private List<HomeStats.FactorValueCategoryStat> computeFactorValuesByCategory() {
         @SuppressWarnings("unchecked")
         List<Object[]> rows = sessionFactory.getCurrentSession()
-                .createQuery( "select ef.category.category, ef.category.categoryUri, count(distinct fv.id) "
+                .createQuery( "select ef.category.category, ef.category.categoryUri, "
+                        + "       count(distinct fv.id), count(distinct ef.experimentalDesign.id) "
                         + "from ExperimentalFactor ef "
                         + "join ef.factorValues fv "
                         + "group by ef.category.category, ef.category.categoryUri "
@@ -469,8 +484,12 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
         for ( Object[] row : rows ) {
             String category = ( String ) row[0];
             String categoryUri = ( String ) row[1];
-            Long count = ( Long ) row[2];
-            out.add( new HomeStats.FactorValueCategoryStat( category, categoryUri, count != null ? count : 0L ) );
+            Long fvCount = ( Long ) row[2];
+            Long eeCount = ( Long ) row[3];
+            out.add( new HomeStats.FactorValueCategoryStat(
+                    category, categoryUri,
+                    fvCount != null ? fvCount : 0L,
+                    eeCount != null ? eeCount : 0L ) );
         }
         return out;
     }
