@@ -3,7 +3,7 @@ package ubic.gemma.core.ontology.jena;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.ResourceFactory;
 
-class RO {
+public class RO {
 
     private static final String NS = "http://purl.obolibrary.org/obo/";
 

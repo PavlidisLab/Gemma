@@ -19,8 +19,14 @@
 
 package ubic.gemma.core.ontology.providers;
 
+import ubic.gemma.core.config.Configuration;
+import ubic.gemma.core.ontology.jena.RO;
+import ubic.gemma.core.ontology.jena.UrlOntologyService;
+
 import java.util.HashSet;
 import java.util.Set;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * <a href="https://obofoundry.org/ontology/chebi.html">Chemical Entities of Biological Interest</a>
@@ -33,17 +39,21 @@ import java.util.Set;
  * walks both {@code subClassOf} (to subroles) AND the inverse of {@code has_role} (to chemicals
  * bearing the role), returning a unified set that callers can intersect with the corpus.
  *
+ * <p>Extends {@link UrlOntologyService} directly (not via {@link AbstractDelegatingOntologyService})
+ * so CHEBI-specific overrides — notably {@code loadModel} for the slim-CHEBI cache planned in
+ * Phase 4 of the ontology-hierarchy refactor — can hook into the load path.
+ *
  * @author klc
  */
-public class ChebiOntologyService extends AbstractBaseCodeOntologyService {
-
-    /** {@code RO:0000087 has role} — links chemicals to their pharmacological roles. */
-    private static final String HAS_ROLE_URI = "http://purl.obolibrary.org/obo/RO_0000087";
+public class ChebiOntologyService extends UrlOntologyService {
 
     public ChebiOntologyService() {
-        super( "CHEBI", "chebiOntology" );
+        super( "CHEBI",
+            requireNonNull( Configuration.getString( "url.chebiOntology" ) ),
+            Boolean.TRUE.equals( Configuration.getBoolean( "load.chebiOntology" ) ),
+            "chebiOntology" );
         Set<String> props = new HashSet<>( getAdditionalPropertyUris() );
-        props.add( HAS_ROLE_URI );
+        props.add( RO.hasRole.getURI() );
         setAdditionalPropertyUris( props );
     }
 }
