@@ -824,6 +824,10 @@ public class DatasetsWebService {
             description = "Returns the number of distinct value+valueUri annotation terms seen across datasets matching the filter. "
                     + "Pass `category` as either an ontology URI (e.g. `http://purl.obolibrary.org/obo/UBERON_0001062`) "
                     + "or a category label (e.g. `disease`, `organism part`, `cell type`, `treatment`); empty means uncategorized. "
+                    + "By default free-text characteristics (those without a `valueUri`) are counted as distinct terms; pass "
+                    + "`excludeFreeText=true` to restrict the count to ontology-backed terms — typically the right answer "
+                    + "for an \"ontology terms in use\" tile (curator-submitted strings like `lung tissue` / `Lung` / "
+                    + "`lung biopsy from patient 3` inflate the count otherwise). "
                     + "Cheaper than walking `GET /datasets/annotations` and counting the payload — backed by the same usage-frequency "
                     + "query with `maxResults=0` (unlimited).",
             responses = {
@@ -836,7 +840,9 @@ public class DatasetsWebService {
             @Parameter(description = "Annotation category URI or label; empty for uncategorized; omitted for all categories.")
             @QueryParam("category") String category,
             @Parameter(description = "Minimum number of associated datasets per term (default 1).")
-            @QueryParam("minFrequency") @DefaultValue("1") Integer minFrequency
+            @QueryParam("minFrequency") @DefaultValue("1") Integer minFrequency,
+            @Parameter(description = "Exclude free-text characteristics (those with a null `valueUri`) from the count. Default false.")
+            @QueryParam("excludeFreeText") @DefaultValue("false") Boolean excludeFreeText
     ) {
         if ( minFrequency < 0 ) {
             throw new BadRequestException( "Minimum frequency must be non-negative." );
@@ -854,6 +860,9 @@ public class DatasetsWebService {
         } else {
             extraIds = null;
         }
+        // Same plumbing /datasets/annotations uses for `excludeFreeTextTerms`: appends the
+        // FREE_TEXT sentinel to excludedTermUris so the DAO drops rows with null valueUri.
+        Collection<String> excludedTermUris = datasetArgService.getExcludedUris( null, excludeFreeText, false );
         try {
             Filters filters = datasetArgService.getFilters( filter, null, inferredTerms, Math.max( timeoutMs - timer.getTime(), 0 ), TimeUnit.MILLISECONDS );
             List<ExpressionExperimentService.CharacteristicWithUsageStatisticsAndOntologyTerm> terms = expressionExperimentService.getAnnotationsUsageFrequency(
@@ -861,7 +870,7 @@ public class DatasetsWebService {
                     extraIds,
                     category,
                     null,
-                    null,
+                    excludedTermUris,
                     minFrequency,
                     null,
                     0, // unlimited — we count rather than render
