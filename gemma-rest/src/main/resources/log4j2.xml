@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  gemma-rest container logging configuration.
+
+  Previously the container ran with log4j2's DefaultConfiguration (no config
+  on classpath at all), which leaks every Jersey-side error as ERROR with a
+  full stack trace via org.glassfish.jersey.server.ServerRuntime$Responder.
+  When a noisy unauthenticated client polls /me at 2-3 QPS, that's gigs of
+  log per day.
+
+  Strategy:
+    - Console-only appender (docker captures stdout; no filesystem path coupling).
+    - Root at WARN. ubic.gemma at INFO so application messages survive.
+    - Mute ServerRuntime$Responder at OFF. AccessDeniedExceptionMapper and
+      friends turn the exception into a clean 4xx response; Jersey logging
+      the wrapped MappableException at ERROR adds no diagnostic value, only
+      stack-trace noise.
+    - Mirror useful per-package levels from gemma-web's log4j2.xml so the
+      two deployments behave consistently for shared libraries.
+-->
+<Configuration status="WARN" xmlns="https://logging.apache.org/xml/ns"
+               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               xsi:schemaLocation="
+                   https://logging.apache.org/xml/ns
+                   https://logging.apache.org/xml/ns/log4j-config-2.xsd">
+    <Appenders>
+        <Console name="console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{ISO8601} %-5p [%t] %X{requestId} %c{1} - %m%n"/>
+        </Console>
+    </Appenders>
+    <Loggers>
+        <Root level="WARN">
+            <AppenderRef ref="console"/>
+        </Root>
+
+        <!-- The noisy one: Jersey logs every exception that propagates out of a
+             resource method at ERROR, even when an ExceptionMapper handles it
+             cleanly. AccessDeniedException (from @PreAuthorize on /me etc.)
+             flows through this every request. OFF kills the firehose. -->
+        <Logger name="org.glassfish.jersey.server.ServerRuntime$Responder" level="OFF"/>
+
+        <!-- Other Jersey noise -->
+        <Logger name="org.glassfish.jersey.internal.Errors" level="ERROR"/>
+
+        <!-- Hibernate / Spring defaults mirroring gemma-web -->
+        <Logger name="org.hibernate" level="WARN"/>
+        <Logger name="org.hibernate.cache.ReadWriteCache" level="ERROR"/>
+        <Logger name="org.hibernate.engine.loading.LoadContexts" level="ERROR"/>
+        <Logger name="org.springframework" level="WARN"/>
+        <Logger name="org.springframework.beans.GenericTypeAwarePropertyDescriptor" level="FATAL"/>
+        <Logger name="org.springframework.security.access.event.LoggerListener" level="INFO"/>
+        <Logger name="org.springframework.security.authentication.event.LoggerListener" level="ERROR"/>
+        <Logger name="org.springframework.web.servlet.PageNotFound" level="ERROR"/>
+
+        <!-- Jena chatty defaults -->
+        <Logger name="org.apache.jena.riot.RDFLanguages" level="ERROR"/>
+        <Logger name="ubic.gemma.core.ontology.jena.PropertyFactory" level="ERROR"/>
+        <Logger name="ubic.gemma.core.ontology.providers" level="WARN"/>
+
+        <!-- App-level loggers at INFO so warm-up + slim-cache messages survive -->
+        <Logger name="ubic.gemma" level="INFO"/>
+    </Loggers>
+</Configuration>
