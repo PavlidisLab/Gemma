@@ -84,6 +84,15 @@
     </listener>
 
     <!--
+        Suppress Jersey's SEVERE log when a client disconnects mid-response — broken-pipe /
+        connection-reset wrapped in ClientAbortException. Always client-side, never actionable;
+        was drowning out real errors. See ubic.gemma.rest.servlet.JerseyClientAbortLogFilter.
+    -->
+    <listener>
+        <listener-class>ubic.gemma.rest.servlet.JerseyClientAbortLogFilter</listener-class>
+    </listener>
+
+    <!--
         CORS. Same wiring as gemma-web/web.xml:84–103 so gemma-curation-ui (the
         SPA replacing gemma-web) can hit /rest/v2/** cross-origin. The CorsFilter
         class itself lives in gemma-rest already (ubic.gemma.rest.servlet.CorsFilter),
