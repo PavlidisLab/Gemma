@@ -499,6 +499,21 @@ public class DatasetsWebService {
                 .addWarnings( warnings, "query", LocationType.QUERY );
     }
 
+    @GET
+    @Path("/samples/count")
+    @CacheControl(maxAge = 1200)
+    @CacheControl(isPrivate = true, authorities = { "GROUP_USER" })
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Count distinct biomaterials (samples) across datasets matching the provided filter",
+            description = "Corpus-wide sample-count aggregate, used by the public home page tile. "
+                    + "Same `filter` grammar as `GET /datasets`. Cached on the same TTL as the other usage-stats endpoints.")
+    public ResponseDataObject<Long> getNumberOfSamples(
+            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter
+    ) {
+        Filters filters = datasetArgService.getFilters( filter );
+        return respond( expressionExperimentService.countBioMaterials( filters ) );
+    }
+
     public interface UsageStatistics {
         Long getNumberOfExpressionExperiments();
     }
@@ -797,6 +812,75 @@ public class DatasetsWebService {
             super( c );
             this.numberOfExpressionExperiments = numberOfExpressionExperiments;
             this.parentTerms = parentTerms;
+        }
+    }
+
+    @GET
+    @Path("/annotations/count")
+    @CacheControl(maxAge = 1200)
+    @CacheControl(isPrivate = true, authorities = { "GROUP_USER" })
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Count distinct annotation terms in use, optionally constrained by category",
+            description = "Returns the number of distinct value+valueUri annotation terms seen across datasets matching the filter. "
+                    + "Pass `category` as either an ontology URI (e.g. `http://purl.obolibrary.org/obo/UBERON_0001062`) "
+                    + "or a category label (e.g. `disease`, `organism part`, `cell type`, `treatment`); empty means uncategorized. "
+                    + "By default free-text characteristics (those without a `valueUri`) are counted as distinct terms; pass "
+                    + "`excludeFreeText=true` to restrict the count to ontology-backed terms — typically the right answer "
+                    + "for an \"ontology terms in use\" tile (curator-submitted strings like `lung tissue` / `Lung` / "
+                    + "`lung biopsy from patient 3` inflate the count otherwise). "
+                    + "Cheaper than walking `GET /datasets/annotations` and counting the payload — backed by the same usage-frequency "
+                    + "query with `maxResults=0` (unlimited).",
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+            })
+    public ResponseDataObject<Long> getNumberOfAnnotations(
+            @QueryParam("query") QueryArg query,
+            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
+            @Parameter(description = "Annotation category URI or label; empty for uncategorized; omitted for all categories.")
+            @QueryParam("category") String category,
+            @Parameter(description = "Minimum number of associated datasets per term (default 1).")
+            @QueryParam("minFrequency") @DefaultValue("1") Integer minFrequency,
+            @Parameter(description = "Exclude free-text characteristics (those with a null `valueUri`) from the count. Default false.")
+            @QueryParam("excludeFreeText") @DefaultValue("false") Boolean excludeFreeText
+    ) {
+        if ( minFrequency < 0 ) {
+            throw new BadRequestException( "Minimum frequency must be non-negative." );
+        }
+        if ( category != null && category.isEmpty() ) {
+            category = ExpressionExperimentService.UNCATEGORIZED;
+        }
+        int timeoutMs = 30000;
+        StopWatch timer = StopWatch.createStarted();
+        Collection<OntologyTerm> inferredTerms = new HashSet<>();
+        Set<Long> extraIds;
+        LinkedHashSet<Throwable> warnings = new LinkedHashSet<>();
+        if ( query != null ) {
+            extraIds = datasetArgService.getIdsForSearchQuery( query, warnings );
+        } else {
+            extraIds = null;
+        }
+        // Same plumbing /datasets/annotations uses for `excludeFreeTextTerms`: appends the
+        // FREE_TEXT sentinel to excludedTermUris so the DAO drops rows with null valueUri.
+        Collection<String> excludedTermUris = datasetArgService.getExcludedUris( null, excludeFreeText, false );
+        try {
+            Filters filters = datasetArgService.getFilters( filter, null, inferredTerms, Math.max( timeoutMs - timer.getTime(), 0 ), TimeUnit.MILLISECONDS );
+            List<ExpressionExperimentService.CharacteristicWithUsageStatisticsAndOntologyTerm> terms = expressionExperimentService.getAnnotationsUsageFrequency(
+                    filters,
+                    extraIds,
+                    category,
+                    null,
+                    excludedTermUris,
+                    minFrequency,
+                    null,
+                    0, // unlimited — we count rather than render
+                    false, false,
+                    Math.max( timeoutMs - timer.getTime(), 0 ),
+                    TimeUnit.MILLISECONDS );
+            return respond( ( long ) terms.size() )
+                    .addWarnings( warnings, "query", LocationType.QUERY );
+        } catch ( TimeoutException e ) {
+            throw new ServiceUnavailableException( DateUtils.addSeconds( new Date(), 30 ), e );
         }
     }
 

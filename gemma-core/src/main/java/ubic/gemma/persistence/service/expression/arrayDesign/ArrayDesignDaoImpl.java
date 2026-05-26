@@ -728,12 +728,23 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
      */
     @Override
     protected ArrayDesignValueObject doLoadValueObject( ArrayDesign ad ) {
-        return new ArrayDesignValueObject( ad );
+        // skipEvents=true — the three last*Event proxies are batch-hydrated post-hoc in
+        // postProcessValueObjects(populateLastEvents). Without skipEvents the ctor would
+        // walk AbstractCuratableValueObject's eager-init path which reads
+        // curationDetails.last*Event.getPerformer(); since a557a37122 dropped the
+        // matching JOIN FETCH lastXEvent lines from the filtering query, the lazy
+        // proxies on a detached entity (e.g. an AD passed in from a prior query in
+        // DatasetsWebService.getDatasetsPlatformsUsageStatistics) blow up with
+        // LazyInitializationException. The filtering-query path already does the
+        // skipEvents+batch pattern via transformListTyped; this brings the direct-
+        // entity-list path (loadValueObjects(Collection<O>)) into parity.
+        return new ArrayDesignValueObject( ad, true );
     }
 
     @Override
     protected void postProcessValueObjects( List<ArrayDesignValueObject> results ) {
         StopWatch timer = StopWatch.createStarted();
+        populateLastEvents( results );
         populateIsMerged( results );
         populateBlacklisted( results );
         populateExpressionExperimentCount( results );
@@ -741,6 +752,35 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         populateExternalReferences( results );
         if ( timer.getTime( TimeUnit.MILLISECONDS ) > 100 ) {
             log.warn( String.format( "Populating %d ArrayDesign VOs took %d ms.", results.size(), timer.getTime( TimeUnit.MILLISECONDS ) ) );
+        }
+    }
+
+    /**
+     * Batch-hydrate the three {@code last*Event} proxies (lastTroubledEvent /
+     * lastNeedsAttentionEvent / lastNoteUpdateEvent) for the VOs that came in with
+     * {@code skipEvents=true} from {@link #doLoadValueObject(ArrayDesign)}.
+     * <p>
+     * Same batched-load shape used by {@link #getValueObjectTransformer()
+     * transformListTyped} on the filtering-query path — three HQL queries grouped by
+     * AD id, applied to the VOs via {@link AbstractCuratableValueObject#applyLastEventTriple}.
+     * For the typical small AD pages this is a single round-trip per event-kind.
+     */
+    private void populateLastEvents( Collection<ArrayDesignValueObject> results ) {
+        if ( results.isEmpty() ) {
+            return;
+        }
+        List<Long> ids = results.stream()
+                .filter( Objects::nonNull )
+                .map( IdentifiableUtils::getRequiredId )
+                .sorted()
+                .distinct()
+                .collect( Collectors.toList() );
+        Map<Long, AbstractCuratableValueObject.LastEventTriple> eventsByAdId =
+                loadLastEventsByArrayDesignIds( ids );
+        for ( ArrayDesignValueObject vo : results ) {
+            if ( vo != null ) {
+                vo.applyLastEventTriple( eventsByAdId.get( vo.getId() ) );
+            }
         }
     }
 

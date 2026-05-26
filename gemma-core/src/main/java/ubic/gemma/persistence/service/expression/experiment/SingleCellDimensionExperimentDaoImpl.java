@@ -140,6 +140,15 @@ public class SingleCellDimensionExperimentDaoImpl extends AbstractDao<SingleCell
                 .executeUpdate() );
     }
 
+    @Override
+    public long countDistinctExperiments() {
+        Long n = ( Long ) getSessionFactory().getCurrentSession()
+                .createQuery( "select count(distinct e.expressionExperiment.id) from SingleCellDimensionExperiment e" )
+                .setCacheable( true )
+                .uniqueResult();
+        return n != null ? n : 0L;
+    }
+
     /**
      * Run the given query with autoflush disabled.
      * <p>

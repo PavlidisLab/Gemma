@@ -70,4 +70,11 @@ public interface SingleCellDimensionExperimentDao extends BaseDao<SingleCellDime
      * Remove every link row that references the given dimension. Returns the number of rows deleted.
      */
     int removeBySingleCellDimension( SingleCellDimension scd );
+
+    /**
+     * Count distinct {@link ExpressionExperiment ExpressionExperiments} that have at least one
+     * single-cell dimension recorded. Not ACL-filtered — caller intersects with a public-EE set
+     * if a public-only count is needed. Backs the home-page "single-cell experiments" tile.
+     */
+    long countDistinctExperiments();
 }
