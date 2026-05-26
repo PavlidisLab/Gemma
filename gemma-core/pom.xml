@@ -199,6 +199,100 @@
             </exclusions>
         </dependency>
 
+        <!-- OWL-API (Phase 4 of ontology-hierarchy refactor): drives the slim-CHEBI
+             module extraction via uk.ac.manchester.cs.owlapi.modularity.SyntacticLocalityModuleExtractor
+             (the STAR algorithm ROBOT wraps in its extract CLI).
+             We use the OWL-API library directly rather than ROBOT-the-library because
+             ROBOT 1.9.x pins on Jena 3.17.0 and would collide with Gemma's Jena 4.10.0.
+             owlapi-impl brings Caffeine 2.9.3; Gemma's transitive Caffeine is 3.2.2 and
+             they're binary-compatible for the OWL-API caching surface, so we let
+             dependencyManagement force 3.2.2. -->
+        <dependency>
+            <groupId>net.sourceforge.owlapi</groupId>
+            <artifactId>owlapi-api</artifactId>
+            <version>4.5.29</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.google.code.findbugs</groupId>
+                    <artifactId>jsr305</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>commons-io</groupId>
+                    <artifactId>commons-io</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>net.sourceforge.owlapi</groupId>
+            <artifactId>owlapi-impl</artifactId>
+            <version>4.5.29</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.google.code.findbugs</groupId>
+                    <artifactId>jsr305</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.github.ben-manes.caffeine</groupId>
+                    <artifactId>caffeine</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>commons-io</groupId>
+                    <artifactId>commons-io</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>net.sourceforge.owlapi</groupId>
+            <artifactId>owlapi-parsers</artifactId>
+            <version>4.5.29</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-io</groupId>
+                    <artifactId>commons-io</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>net.sourceforge.owlapi</groupId>
+            <artifactId>owlapi-tools</artifactId>
+            <version>4.5.29</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-io</groupId>
+                    <artifactId>commons-io</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>net.sourceforge.owlapi</groupId>
+            <artifactId>owlapi-apibinding</artifactId>
+            <version>4.5.29</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-io</groupId>
+                    <artifactId>commons-io</artifactId>
+                </exclusion>
+                <!-- owlapi-rio drags RDF4J + httpclient 4.5.13 (Gemma has 4.5.14); we
+                     don't need the RDF4J Rio integration for the CHEBI slim path. -->
+                <exclusion>
+                    <groupId>net.sourceforge.owlapi</groupId>
+                    <artifactId>owlapi-rio</artifactId>
+                </exclusion>
+                <!-- owlapi-oboformat brings the OBO 1.x parser; CHEBI is OWL/RDF, not
+                     OBO, so we don't need it. -->
+                <exclusion>
+                    <groupId>net.sourceforge.owlapi</groupId>
+                    <artifactId>owlapi-oboformat</artifactId>
+                </exclusion>
+                <!-- owlapi-fixers patches a handful of "wrong but in-the-wild" OWL
+                     fragments; we don't need it for CHEBI. -->
+                <exclusion>
+                    <groupId>net.sourceforge.owlapi</groupId>
+                    <artifactId>owlapi-fixers</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
         <!-- Apache Commons -->
         <dependency>
             <groupId>org.apache.commons</groupId>

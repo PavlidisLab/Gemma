@@ -1,0 +1,102 @@
+<?xml version="1.0"?>
+<!--
+  Hand-rolled minimal CHEBI fixture for ChebiSlimExtractor unit tests.
+
+  Shape (role subtree on left, chemical subtree on right):
+      role (CHEBI:50906)                  chemical entity (CHEBI:24431)
+        : drug (50300)                      : sorafenib (50924) has_role kinase-inhibitor
+        :   kinase inhibitor (35222)        : estradiol (23965) has_role hormone
+        : hormone (61120)                   : water (15377) no role
+
+  Seed of {sorafenib} should pull in: sorafenib, chemical entity (ancestor),
+  drug, kinase inhibitor (via has_role plus ancestors), role (ancestor chain).
+  Should NOT pull in: estradiol, hormone, water.
+-->
+<rdf:RDF xmlns="http://purl.obolibrary.org/obo/chebi/"
+         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+         xmlns:owl="http://www.w3.org/2002/07/owl#"
+         xmlns:obo="http://purl.obolibrary.org/obo/"
+         xmlns:oboInOwl="http://www.geneontology.org/formats/oboInOwl#"
+         xml:base="http://purl.obolibrary.org/obo/chebi">
+
+    <owl:Ontology rdf:about="http://purl.obolibrary.org/obo/chebi-mini.owl"/>
+
+    <!-- Object property: has_role (RO:0000087) -->
+    <owl:ObjectProperty rdf:about="http://purl.obolibrary.org/obo/RO_0000087">
+        <rdfs:label>has role</rdfs:label>
+    </owl:ObjectProperty>
+
+    <!-- Annotation property: hasExactSynonym -->
+    <owl:AnnotationProperty rdf:about="http://www.geneontology.org/formats/oboInOwl#hasExactSynonym"/>
+
+    <!-- Annotation property: IAO definition -->
+    <owl:AnnotationProperty rdf:about="http://purl.obolibrary.org/obo/IAO_0000115">
+        <rdfs:label>definition</rdfs:label>
+    </owl:AnnotationProperty>
+
+    <!-- ====================== ROLE HIERARCHY ====================== -->
+
+    <owl:Class rdf:about="http://purl.obolibrary.org/obo/CHEBI_50906">
+        <rdfs:label>role</rdfs:label>
+        <obo:IAO_0000115>A particular function during which a chemical entity manifests a particular behaviour.</obo:IAO_0000115>
+    </owl:Class>
+
+    <owl:Class rdf:about="http://purl.obolibrary.org/obo/CHEBI_50300">
+        <rdfs:label>drug</rdfs:label>
+        <obo:IAO_0000115>A pharmaceutical role borne by a substance intended for therapeutic use.</obo:IAO_0000115>
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/CHEBI_50906"/>
+    </owl:Class>
+
+    <owl:Class rdf:about="http://purl.obolibrary.org/obo/CHEBI_35222">
+        <rdfs:label>kinase inhibitor</rdfs:label>
+        <obo:IAO_0000115>A role borne by any substance that inhibits a kinase enzyme.</obo:IAO_0000115>
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/CHEBI_50300"/>
+    </owl:Class>
+
+    <owl:Class rdf:about="http://purl.obolibrary.org/obo/CHEBI_61120">
+        <rdfs:label>hormone</rdfs:label>
+        <obo:IAO_0000115>A role of an endogenous regulatory signalling molecule.</obo:IAO_0000115>
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/CHEBI_50906"/>
+    </owl:Class>
+
+    <!-- ====================== CHEMICAL HIERARCHY ====================== -->
+
+    <owl:Class rdf:about="http://purl.obolibrary.org/obo/CHEBI_24431">
+        <rdfs:label>chemical entity</rdfs:label>
+        <obo:IAO_0000115>A chemical entity is a physical entity of interest in chemistry.</obo:IAO_0000115>
+    </owl:Class>
+
+    <owl:Class rdf:about="http://purl.obolibrary.org/obo/CHEBI_50924">
+        <rdfs:label>sorafenib</rdfs:label>
+        <oboInOwl:hasExactSynonym>Nexavar</oboInOwl:hasExactSynonym>
+        <obo:IAO_0000115>A pharmaceutical kinase inhibitor used for kidney and liver cancers.</obo:IAO_0000115>
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/CHEBI_24431"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://purl.obolibrary.org/obo/RO_0000087"/>
+                <owl:someValuesFrom rdf:resource="http://purl.obolibrary.org/obo/CHEBI_35222"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+    </owl:Class>
+
+    <owl:Class rdf:about="http://purl.obolibrary.org/obo/CHEBI_23965">
+        <rdfs:label>estradiol</rdfs:label>
+        <oboInOwl:hasExactSynonym>17-beta-estradiol</oboInOwl:hasExactSynonym>
+        <obo:IAO_0000115>The major female sex hormone.</obo:IAO_0000115>
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/CHEBI_24431"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://purl.obolibrary.org/obo/RO_0000087"/>
+                <owl:someValuesFrom rdf:resource="http://purl.obolibrary.org/obo/CHEBI_61120"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+    </owl:Class>
+
+    <owl:Class rdf:about="http://purl.obolibrary.org/obo/CHEBI_15377">
+        <rdfs:label>water</rdfs:label>
+        <obo:IAO_0000115>An oxygen hydride consisting of an oxygen atom that is covalently bonded to two hydrogen atoms.</obo:IAO_0000115>
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/CHEBI_24431"/>
+    </owl:Class>
+
+</rdf:RDF>
