@@ -38,9 +38,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -63,6 +67,28 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
 
     /** How many recent experiments to keep in the snapshot for the scrolling widget. */
     private static final int RECENT_EXPERIMENTS_LIMIT = 50;
+
+    /**
+     * Per-category breakdowns we expose on the home page. Keys are stable lowercase-snake-case
+     * tile labels; values are the canonical Gemma category labels that {@code Characteristic.category}
+     * carries. (Could also be URIs, but the labels are what the data is loaded with — switching to
+     * URIs would force a per-deployment lookup of the categoryURI-for-this-label.) Insertion order
+     * controls the order of the {@code byAnnotationCategory} map in the JSON payload.
+     */
+    private static final Map<String, String> ANNOTATION_CATEGORIES;
+    static {
+        Map<String, String> m = new LinkedHashMap<>();
+        m.put( "disease", "disease" );
+        m.put( "organism_part", "organism part" );
+        m.put( "cell_type", "cell type" );
+        m.put( "treatment", "treatment" );
+        ANNOTATION_CATEGORIES = Collections.unmodifiableMap( m );
+    }
+
+    /** Per-category annotation-count timeout. Tight enough that a runaway query doesn't stall
+     *  the daily refresh; generous enough that the four category queries plus the total all
+     *  finish in the typical refresh window. */
+    private static final long ANNOTATION_COUNT_TIMEOUT_MS = 60_000L;
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
@@ -173,11 +199,22 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
                         vo.getLastUpdated() ) )
                 .collect( Collectors.toList() ) );
 
-        // Wishlist for future passes (deliberately omitted from v1 to keep the daily-refresh
-        // budget tight): single-cell EE count, distinct-ontology-term count, distinct
-        // DEA-condition count, drug-annotation count, disease/tissue/cell-type term counts.
-        // These need new HQL aggregates on Characteristic / FactorValue / SingleCellDimension —
-        // see HOME_STATS_WISHLIST.md.
+        // Distinct ontology-term count + per-category breakdown — same semantics as
+        // /datasets/annotations/count?excludeFreeText=true. We pre-seed excludedTermUris with
+        // the FREE_TEXT sentinel so getAnnotationsUsageFrequencyInternal drops rows with null
+        // valueUri (free-text characteristics like `lung tissue` / `Lung` would otherwise
+        // each count as a distinct "term" — the 482K-result bug bro reported).
+        List<String> freeTextSentinel = Collections.singletonList( ExpressionExperimentService.FREE_TEXT );
+        stats.setOntologyTermCount( countAnnotationTerms( empty, null, freeTextSentinel ) );
+
+        Map<String, Long> byCategory = new LinkedHashMap<>();
+        for ( Map.Entry<String, String> e : ANNOTATION_CATEGORIES.entrySet() ) {
+            byCategory.put( e.getKey(), countAnnotationTerms( empty, e.getValue(), freeTextSentinel ) );
+        }
+        stats.setByAnnotationCategory( byCategory );
+
+        // Still on the v2 wishlist (need new HQL aggregates): single-cell EE count and
+        // distinct-DEA-condition count. See HOME_STATS_WISHLIST.md.
 
         long elapsed = System.currentTimeMillis() - t0;
         log.info( "HomeStats: snapshot recomputed in " + elapsed + " ms — "
@@ -185,8 +222,35 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
                 + stats.getPlatformCount() + " platforms, "
                 + stats.getSampleCount() + " samples, "
                 + stats.getByTaxon().size() + " taxa, "
+                + stats.getOntologyTermCount() + " ontology terms, "
                 + stats.getRecentExperiments().size() + " recent" );
         return stats;
+    }
+
+    /**
+     * Count distinct ontology-backed annotation terms via the existing usage-frequency
+     * service method with {@code maxResults=0} (the DAO "no-limit" sentinel). The result
+     * list size is the distinct-term count — we throw the per-term details away. Wraps
+     * the {@link TimeoutException} as a logged zero so a single slow category doesn't
+     * abort the whole daily snapshot.
+     */
+    private long countAnnotationTerms( Filters filters, String category, List<String> excludedTermUris ) {
+        try {
+            return ( long ) expressionExperimentService.getAnnotationsUsageFrequency(
+                    filters,
+                    null,
+                    category,
+                    null,
+                    excludedTermUris,
+                    1,           // minFrequency — at least one experiment uses the term
+                    null,
+                    0,           // maxResults — unlimited; we count rather than render
+                    false, false,
+                    ANNOTATION_COUNT_TIMEOUT_MS, TimeUnit.MILLISECONDS ).size();
+        } catch ( TimeoutException e ) {
+            log.warn( "HomeStats: annotations-usage count timed out for category=" + category + "; reporting 0", e );
+            return 0L;
+        }
     }
 
     private Path snapshotFile() {

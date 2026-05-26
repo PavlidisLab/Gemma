@@ -62,6 +62,21 @@ public class HomeStats {
     /** Number of public single-cell experiments (orthogonal to platform-technology type). */
     private long singleCellCount;
 
+    /**
+     * Total distinct ontology-backed annotation terms in use across all public datasets.
+     * Free-text characteristics (no {@code valueUri}) are excluded — same semantics as
+     * {@code GET /datasets/annotations/count?excludeFreeText=true}.
+     */
+    private long ontologyTermCount;
+
+    /**
+     * Per-category distinct-term counts. Keys are stable lowercase-snake-case strings:
+     * {@code disease}, {@code organism_part}, {@code cell_type}, {@code treatment}.
+     * Each value is the count of distinct ontology-backed terms in that category (free-text
+     * excluded). The {@code treatment} bucket carries the drug-annotation count.
+     */
+    private Map<String, Long> byAnnotationCategory = new LinkedHashMap<>();
+
     /** Most-recently curated public experiments, for the scrolling-names widget. */
     private List<RecentExperiment> recentExperiments = new ArrayList<>();
 
