@@ -28,6 +28,7 @@ import ubic.gemma.core.ontology.jena.UrlOntologyService;
 import ubic.gemma.core.ontology.model.OntologyModel;
 import ubic.gemma.core.ontology.providers.chebi.ChebiSeedResolver;
 import ubic.gemma.core.ontology.providers.chebi.ChebiSlimExtractor;
+import ubic.gemma.core.ontology.providers.chebi.ChebiSlimMeta;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -74,6 +75,7 @@ public class ChebiOntologyService extends UrlOntologyService {
     private static final Duration DEFAULT_SLIM_MAX_AGE = Duration.ofDays( 7 );
 
     private static final String SLIM_FILE_NAME = "chebiOntology-slim.owl";
+    private static final String SLIM_META_NAME = "chebiOntology-slim.meta.json";
 
     @Nullable
     private ChebiSlimExtractor slimExtractor;
@@ -118,7 +120,21 @@ public class ChebiOntologyService extends UrlOntologyService {
     protected OntologyModel loadModel( boolean processImports, LanguageLevel languageLevel,
                                        InferenceMode inferenceMode ) throws IOException {
         File slim = resolveSlimFile();
-        if ( slim != null && isSlimFresh( slim ) ) {
+        File slimMeta = resolveSlimMetaFile();
+        // Compute current seeds once: needed both for freshness check (compare to meta) and
+        // for rebuild on a miss. If the resolver fails (e.g. DB not up yet), fall back to
+        // the legacy full load.
+        Set<String> currentSeeds = null;
+        if ( seedResolver != null ) {
+            try {
+                currentSeeds = seedResolver.resolveCorpusSeeds();
+            } catch ( Exception e ) {
+                log.warn( "Seed resolver failed; this boot serves the full ontology.", e );
+            }
+        }
+
+        if ( slim != null && slimMeta != null && currentSeeds != null
+                && isSlimFresh( slim, slimMeta, currentSeeds ) ) {
             log.info( "Loading CHEBI from slim cache {} ({} bytes); skipping full source parse.",
                     slim, slim.length() );
             return loadFromFile( slim, processImports, languageLevel, inferenceMode );
@@ -129,9 +145,9 @@ public class ChebiOntologyService extends UrlOntologyService {
         }
         OntologyModel full = super.loadModel( processImports, languageLevel, inferenceMode );
 
-        if ( slim != null && slimExtractor != null && seedResolver != null ) {
+        if ( slim != null && slimMeta != null && slimExtractor != null && currentSeeds != null ) {
             try {
-                rebuildSlim( slim );
+                rebuildSlim( slim, slimMeta, currentSeeds );
             } catch ( Exception e ) {
                 // Don't fail the boot if slim extraction has a bad day — log and continue
                 // serving the freshly-loaded full ontology. Next boot will retry.
@@ -162,20 +178,59 @@ public class ChebiOntologyService extends UrlOntologyService {
         return new File( slimCacheDir, SLIM_FILE_NAME );
     }
 
+    @Nullable
+    private File resolveSlimMetaFile() {
+        if ( slimCacheDir == null ) {
+            return null;
+        }
+        return new File( slimCacheDir, SLIM_META_NAME );
+    }
+
     /**
-     * Phase-4b freshness check: file exists and is younger than {@link #slimMaxAge}. Phase 4c
-     * will replace this with a seed-coverage + source-ETag check against a sidecar
-     * {@code .meta.json}.
+     * Freshness check (Phase 4c):
+     * <ul>
+     *     <li>slim file exists and is non-empty;</li>
+     *     <li>meta.json exists and parses;</li>
+     *     <li>meta {@code seedHash} matches the hash of the current corpus seeds — so any
+     *         curator-driven seed-set drift forces re-extraction;</li>
+     *     <li>slim age is within {@link #slimMaxAge} — a belt-and-suspenders ceiling so a
+     *         long-running container eventually picks up upstream source updates even if
+     *         seeds haven't changed.</li>
+     * </ul>
      */
-    private boolean isSlimFresh( File slim ) {
+    private boolean isSlimFresh( File slim, File meta, Set<String> currentSeeds ) {
         if ( !slim.isFile() || slim.length() == 0 ) {
+            log.debug( "Slim freshness: file missing or empty at {}", slim );
+            return false;
+        }
+        if ( !meta.isFile() ) {
+            log.info( "Slim freshness: meta sidecar missing at {} — will rebuild.", meta );
+            return false;
+        }
+        ChebiSlimMeta cached;
+        try {
+            cached = ChebiSlimMeta.readFrom( meta );
+        } catch ( IOException e ) {
+            log.warn( "Slim freshness: meta sidecar unreadable at {} — will rebuild.", meta, e );
+            return false;
+        }
+        String currentHash = ChebiSlimMeta.hashSeeds( currentSeeds );
+        if ( !currentHash.equals( cached.seedHash ) ) {
+            log.info( "Slim freshness: corpus seed set drift ({} seeds in meta, {} now); "
+                    + "will rebuild.", cached.seedCount, currentSeeds.size() );
             return false;
         }
         long ageMillis = System.currentTimeMillis() - slim.lastModified();
-        return ageMillis < slimMaxAge.toMillis();
+        if ( ageMillis >= slimMaxAge.toMillis() ) {
+            log.info( "Slim freshness: slim is {} days old (max {} days); will rebuild to "
+                    + "pick up any upstream source changes.",
+                    ageMillis / 86_400_000L, slimMaxAge.toDays() );
+            return false;
+        }
+        return true;
     }
 
-    private void rebuildSlim( File slimOut ) throws IOException {
+    private void rebuildSlim( File slimOut, File metaOut, Set<String> seeds ) throws IOException {
         File source = OntologyLoader.getDiskCachePath( requireNonNull( getCacheName() ) );
         if ( !source.isFile() ) {
             log.warn( "Cannot extract slim: source CHEBI not on disk at {}. The upstream "
@@ -183,7 +238,6 @@ public class ChebiOntologyService extends UrlOntologyService {
                     + "slim build for this boot.", source );
             return;
         }
-        Set<String> seeds = seedResolver.resolveCorpusSeeds();
         if ( seeds.isEmpty() ) {
             log.warn( "Skipping slim extraction: no CHEBI seeds in the corpus. The slim "
                     + "would collapse to an empty ontology; falling back to the full load." );
@@ -201,9 +255,15 @@ public class ChebiOntologyService extends UrlOntologyService {
         } catch ( Exception e ) {
             throw new IOException( "ChebiSlimExtractor failed on " + source, e );
         }
-        log.info( "Slim CHEBI extracted in {} ms: {} (seeds covered: {} / {}). "
-                        + "Subsequent boots will load the slim directly.",
-                System.currentTimeMillis() - start, result, result.getCoveredSeedUris().size(),
-                seeds.size() );
+        long elapsedMs = System.currentTimeMillis() - start;
+
+        ChebiSlimMeta meta = ChebiSlimMeta.create(
+                getOntologyUrl(), seeds, slimOut.length(),
+                result.getClassCount(), result.getAxiomCount() );
+        meta.writeTo( metaOut );
+
+        log.info( "Slim CHEBI extracted in {} ms: {} (seeds covered: {} / {}). Meta sidecar "
+                        + "written to {}. Subsequent boots will load the slim directly.",
+                elapsedMs, result, result.getCoveredSeedUris().size(), seeds.size(), metaOut );
     }
 }

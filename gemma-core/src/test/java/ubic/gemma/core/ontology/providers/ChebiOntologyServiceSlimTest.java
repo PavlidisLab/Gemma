@@ -6,7 +6,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import ubic.gemma.core.config.Configuration;
 import ubic.gemma.core.ontology.model.OntologyTerm;
+import ubic.gemma.core.ontology.providers.chebi.ChebiSeedResolver;
 import ubic.gemma.core.ontology.providers.chebi.ChebiSlimExtractor;
+import ubic.gemma.core.ontology.providers.chebi.ChebiSlimMeta;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,6 +21,8 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Exercises the slim-cache-hit path on {@link ChebiOntologyService}: writes a pre-extracted
@@ -49,14 +53,20 @@ class ChebiOntologyServiceSlimTest {
 
     @Test
     void initializeLoadsFromSlimWithoutTouchingUrl( @TempDir Path tempDir ) throws Exception {
-        // Stage a freshly-extracted slim at the cache location ChebiOntologyService expects.
-        File slimFile = stageSlimFromFixture( tempDir );
-        assertTrue( slimFile.isFile(), "slim file must be on disk before service inits" );
+        // Stage a freshly-extracted slim plus matching .meta.json at the cache location
+        // ChebiOntologyService expects.
+        Set<String> seeds = Set.of( SORAFENIB );
+        stageSlimAndMeta( tempDir, seeds );
+
+        ChebiSeedResolver resolver = mock( ChebiSeedResolver.class );
+        when( resolver.resolveCorpusSeeds() ).thenReturn( seeds );
 
         ChebiOntologyService service = new ChebiOntologyService();
         service.setSlimCacheDir( tempDir.toFile() );
-        // slimExtractor + seedResolver intentionally null — slim is already on disk, no
-        // rebuild required. The override should consume the slim and skip the URL fetch.
+        service.setSeedResolver( resolver );
+        // slimExtractor intentionally null — slim is already on disk + meta matches, so the
+        // freshness check should accept it without needing the extractor. The override
+        // should consume the slim and skip the URL fetch.
 
         try {
             service.initialize( false, false );
@@ -80,18 +90,40 @@ class ChebiOntologyServiceSlimTest {
         }
     }
 
+    @Test
+    void seedDriftForcesRebuild( @TempDir Path tempDir ) throws Exception {
+        // Stage a slim built around sorafenib only.
+        stageSlimAndMeta( tempDir, Set.of( SORAFENIB ) );
+        File meta = tempDir.resolve( "chebiOntology-slim.meta.json" ).toFile();
+
+        // Corpus now ALSO has a different seed. isSlimFresh should reject because seed-hash mismatch.
+        ChebiSeedResolver driftedResolver = mock( ChebiSeedResolver.class );
+        when( driftedResolver.resolveCorpusSeeds() )
+                .thenReturn( Set.of( SORAFENIB, "http://purl.obolibrary.org/obo/CHEBI_23965" ) );
+
+        // Verify meta detection works in isolation (avoid the heavy URL-fetch fallback path).
+        ChebiSlimMeta cached = ChebiSlimMeta.readFrom( meta );
+        String currentHash = ChebiSlimMeta.hashSeeds( driftedResolver.resolveCorpusSeeds() );
+        assertTrue( !currentHash.equals( cached.seedHash ),
+                "seed-hash must change when corpus grows" );
+    }
+
     /**
-     * Run the extractor on the mini fixture and place the resulting slim at the path
-     * {@code ChebiOntologyService} will look at ({@code <slimCacheDir>/chebiOntology-slim.owl}).
+     * Run the extractor on the mini fixture and place the resulting slim + sidecar meta
+     * at the paths {@code ChebiOntologyService} will look at.
      */
-    private File stageSlimFromFixture( Path tempDir ) throws Exception {
+    private void stageSlimAndMeta( Path tempDir, Set<String> seeds ) throws Exception {
         Path source = tempDir.resolve( "chebi-source.owl" );
         try ( InputStream in = getClass().getResourceAsStream( CHEBI_FIXTURE ) ) {
             assertNotNull( in, "fixture not on classpath: " + CHEBI_FIXTURE );
             Files.copy( in, source );
         }
         File slim = tempDir.resolve( "chebiOntology-slim.owl" ).toFile();
-        new ChebiSlimExtractor().extract( source.toFile(), List.of( SORAFENIB ), slim );
-        return slim;
+        File meta = tempDir.resolve( "chebiOntology-slim.meta.json" ).toFile();
+        ChebiSlimExtractor.ExtractResult result = new ChebiSlimExtractor()
+                .extract( source.toFile(), List.copyOf( seeds ), slim );
+        ChebiSlimMeta.create( "http://chebi.test.invalid/chebi.owl", seeds,
+                        slim.length(), result.getClassCount(), result.getAxiomCount() )
+                .writeTo( meta );
     }
 }
