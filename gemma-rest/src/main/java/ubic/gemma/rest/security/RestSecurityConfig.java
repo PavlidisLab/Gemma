@@ -164,9 +164,20 @@ public class RestSecurityConfig {
     public SecurityFilterChain restSecurityFilterChain(
             HttpSecurity http,
             @Qualifier("restAuthEntryPoint") AuthenticationEntryPoint restAuthEntryPoint,
+            @Qualifier("authenticationManager") org.springframework.security.authentication.AuthenticationManager authenticationManager,
             TokenStore tokenStore
     ) throws Exception {
         return http
+                // Wire OUR AuthenticationManager (the ProviderManager configured in
+                // SecurityConfig with LegacyAwareDaoAuthenticationProvider at position 0).
+                // Without this, HttpSecurity builds its own default DaoAuthenticationProvider
+                // backed by the configured UserDetailsService + PasswordEncoder — bypassing
+                // LegacyAwareDaoAuthenticationProvider entirely. That meant the legacy SHA-1
+                // verify path (additionalAuthenticationChecks override) was never invoked,
+                // and legacy-format password rows could not authenticate via /rest/v2 Basic
+                // auth even though our PasswordEncoder + AuthenticationProvider beans were
+                // present in the context.
+                .authenticationManager( authenticationManager )
                 // Use AntPathRequestMatcher explicitly to avoid Spring Security's
                 // auto-pick of MvcRequestMatcher when spring-webmvc is on the classpath.
                 // The Jersey-only standalone WAR has no DispatcherServlet, so
