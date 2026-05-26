@@ -39,9 +39,11 @@ public class RequestExceptionLogger implements ApplicationEventListener {
                 // anonymous probes of authenticated endpoints (e.g. the UI's /me check
                 // on every page load). They produce stack traces identical to every
                 // other "not logged in" call, so we log the message at WARN without
-                // the trace to keep the loop quiet.
-                if ( ex instanceof AccessDeniedException || ex instanceof AuthenticationException ) {
-                    log.warn( m + " (" + ex.getClass().getSimpleName() + ": " + ex.getMessage() + ")" );
+                // the trace to keep the loop quiet. Jersey wraps the real exception in
+                // a MappableException, so walk the cause chain to find the actual type.
+                Throwable rootMatch = findCause( ex, AccessDeniedException.class, AuthenticationException.class );
+                if ( rootMatch != null ) {
+                    log.warn( m + " (" + rootMatch.getClass().getSimpleName() + ": " + rootMatch.getMessage() + ")" );
                 } else if ( ex instanceof ClientErrorException
                         // these should be treated as 400 errors, but they do not inherit from BadRequestException
                         || ex instanceof ParamException
@@ -56,5 +58,26 @@ public class RequestExceptionLogger implements ApplicationEventListener {
                 }
             }
         };
+    }
+
+    /**
+     * Walk {@code t}'s cause chain looking for an instance of one of {@code targets}.
+     * Returns the first match (cause-first preferred over wrapper) or {@code null}.
+     * Bounded so self-referential cause chains can't spin.
+     */
+    @SafeVarargs
+    private static Throwable findCause( Throwable t, Class<? extends Throwable>... targets ) {
+        Throwable cur = t;
+        for ( int hops = 0; cur != null && hops < 16; hops++, cur = cur.getCause() ) {
+            for ( Class<? extends Throwable> target : targets ) {
+                if ( target.isInstance( cur ) ) {
+                    return cur;
+                }
+            }
+            if ( cur.getCause() == cur ) {
+                break;
+            }
+        }
+        return null;
     }
 }
