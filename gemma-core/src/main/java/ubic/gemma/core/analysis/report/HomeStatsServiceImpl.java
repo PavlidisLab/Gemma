@@ -133,6 +133,10 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
      *  to actual chemicals (vs the broader `treatment` category-label, which also captures
      *  radiation exposure, behavioural interventions, etc.). */
     private static final String CHEBI_URI_PREFIX = "http://purl.obolibrary.org/obo/CHEBI_";
+    /** NCBI Taxonomy URIs — used as a pathogen-bucket proxy in treatmentSubcategories. */
+    private static final String NCBITAXON_URI_PREFIX = "http://purl.obolibrary.org/obo/NCBITaxon_";
+    /** Protein Ontology URIs — used as a biologic-bucket proxy in treatmentSubcategories. */
+    private static final String PR_URI_PREFIX = "http://purl.obolibrary.org/obo/PR_";
 
     /** Maximum number of factor-value-by-category rows to retain. Sorted desc by value. */
     private static final int FACTOR_VALUE_CATEGORY_LIMIT = 50;
@@ -319,6 +323,10 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
         // nested footnote ("GEO 22000 · ArrayExpress 800 · CELLxGENE 150 · none 599").
         stats.setDatasetsByAccessionSource( computeDatasetsByAccessionSource() );
 
+        // Treatment-subcategory breakdown — slices the byAnnotationCategory.treatment bucket
+        // into drug / pathogen / biologic / other for the Treatments-tile (i) tooltip.
+        stats.setTreatmentSubcategories( computeTreatmentSubcategories() );
+
         long elapsed = System.currentTimeMillis() - t0;
         log.info( "HomeStats: snapshot recomputed in " + elapsed + " ms — "
                 + stats.getDatasetCount() + " datasets ("
@@ -478,6 +486,61 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
             out.add( new HomeStats.AccessionSourceStat( "none", noneCount ) );
             out.sort( ( a, b ) -> Long.compare( b.getCount(), a.getCount() ) );
         }
+        return out;
+    }
+
+    /**
+     * Slice the treatment-category term list into URI-prefix buckets — drug (CHEBI),
+     * pathogen (NCBITaxon), biologic (PR / Protein Ontology), other. ACL-filtered via
+     * the same {@code getAnnotationsUsageFrequency} surface that {@code byAnnotationCategory.treatment}
+     * uses, so the sub-buckets sum to that field's value.
+     * <p>
+     * Behavioural / physical exposures aren't pulled out as their own buckets — those need
+     * ontology-subtree lookups (descendant-of EFO/PATO/ERO branches) that we don't pay for
+     * here. They fall into {@code other}; if the curation team wants them broken out later
+     * we'll add the subtree-aware path.
+     */
+    private List<HomeStats.TreatmentBucketStat> computeTreatmentSubcategories() {
+        List<String> freeTextSentinel = Collections.singletonList( ExpressionExperimentService.FREE_TEXT );
+        List<ExpressionExperimentService.CharacteristicWithUsageStatisticsAndOntologyTerm> terms;
+        try {
+            terms = expressionExperimentService.getAnnotationsUsageFrequency(
+                    Filters.empty(),
+                    null,
+                    "treatment",
+                    null,
+                    freeTextSentinel,
+                    1,
+                    null,
+                    0,
+                    false, false,
+                    ANNOTATION_COUNT_TIMEOUT_MS, TimeUnit.MILLISECONDS );
+        } catch ( TimeoutException e ) {
+            log.warn( "HomeStats: treatment-subcategory term load timed out; reporting empty breakdown", e );
+            return Collections.emptyList();
+        }
+        long drug = 0, pathogen = 0, biologic = 0, other = 0;
+        for ( ExpressionExperimentService.CharacteristicWithUsageStatisticsAndOntologyTerm vo : terms ) {
+            String uri = vo.getCharacteristic() != null ? vo.getCharacteristic().getValueUri() : null;
+            if ( uri == null ) {
+                // free-text sentinel should have excluded these already; defensive
+                other++;
+            } else if ( uri.startsWith( CHEBI_URI_PREFIX ) ) {
+                drug++;
+            } else if ( uri.startsWith( NCBITAXON_URI_PREFIX ) ) {
+                pathogen++;
+            } else if ( uri.startsWith( PR_URI_PREFIX ) ) {
+                biologic++;
+            } else {
+                other++;
+            }
+        }
+        List<HomeStats.TreatmentBucketStat> out = new ArrayList<>( 4 );
+        out.add( new HomeStats.TreatmentBucketStat( "drug",     "Drugs / chemicals", drug ) );
+        out.add( new HomeStats.TreatmentBucketStat( "pathogen", "Pathogens",         pathogen ) );
+        out.add( new HomeStats.TreatmentBucketStat( "biologic", "Biologics",         biologic ) );
+        out.add( new HomeStats.TreatmentBucketStat( "other",    "Other",             other ) );
+        out.sort( ( a, b ) -> Long.compare( b.getCount(), a.getCount() ) );
         return out;
     }
 

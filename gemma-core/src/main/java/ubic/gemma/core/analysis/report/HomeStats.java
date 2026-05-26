@@ -115,6 +115,15 @@ public class HomeStats {
     private List<FactorValueCategoryStat> factorValuesByCategory = new ArrayList<>();
 
     /**
+     * Distinct treatment-category terms broken down by URI-prefix bucket: {@code drug}
+     * (CHEBI), {@code pathogen} (NCBITaxon), {@code biologic} (PR / Protein Ontology),
+     * {@code other} (everything else tagged {@code treatment}, including behavioural /
+     * physical exposures that would need ontology-subtree lookups to bucket precisely).
+     * Counts sum to {@link #byAnnotationCategory}.{@code treatment}. Sorted descending.
+     */
+    private List<TreatmentBucketStat> treatmentSubcategories = new ArrayList<>();
+
+    /**
      * Total distinct ontology-backed annotation terms in use across all public datasets.
      * Free-text characteristics (no {@code valueUri}) are excluded — same semantics as
      * {@code GET /datasets/annotations/count?excludeFreeText=true}.
@@ -190,6 +199,25 @@ public class HomeStats {
 
         public AccessionSourceStat( String source, long count ) {
             this.source = source;
+            this.count = count;
+        }
+    }
+
+    @Data
+    @NoArgsConstructor
+    public static class TreatmentBucketStat {
+        /** Stable lowercase-snake-case identifier the frontend matches in code — {@code drug},
+         *  {@code pathogen}, {@code biologic}, {@code other}. */
+        private String key;
+        /** Visitor-facing string with the canonical phrasing — "Drugs / chemicals",
+         *  "Pathogens", "Biologics", "Other". */
+        private String label;
+        /** Distinct ontology-backed terms in this bucket. */
+        private long count;
+
+        public TreatmentBucketStat( String key, String label, long count ) {
+            this.key = key;
+            this.label = label;
             this.count = count;
         }
     }
