@@ -87,6 +87,19 @@ public class HomeStats {
      *  this counts how many experiments have any gene perturbation at all. */
     private long geneManipulatedExperimentCount;
 
+    /** Total individual cells measured across all single-cell experiments — sum of
+     *  {@code BioAssay.numberOfCells} for assays attached to EEs with a SingleCellDimension.
+     *  Typically reported in millions on the home page. */
+    private long totalCells;
+
+    /**
+     * Sample (biomaterial) counts broken down by technology bucket — companion to
+     * {@link #sampleCount}. Keys are stable lowercase-snake-case labels: {@code single_cell},
+     * {@code rna_seq} (bulk RNA-seq only, single-cell excluded), {@code microarray}. Counts
+     * distinct {@code ba.sampleUsed} biomaterials per bucket, not cells / sub-biomaterials.
+     */
+    private Map<String, Long> samplesByTech = new LinkedHashMap<>();
+
     /** Distinct factor-value count per ExperimentalFactor category. Reflects the range of
      *  experimental conditions Gemma has measured along each axis (e.g. how many distinct
      *  disease-state factor values exist across the corpus, how many genotypes, how many

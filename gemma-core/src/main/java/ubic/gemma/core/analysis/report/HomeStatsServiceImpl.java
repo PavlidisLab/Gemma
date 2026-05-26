@@ -292,6 +292,22 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
         // distinct-genes count above, which counts the genes themselves).
         stats.setGeneManipulatedExperimentCount( countDistinctExperimentsByCharacteristicUriPrefix( Gene.NCBI_URI_PREFIX ) );
 
+        // Total cells across single-cell experiments — sum of BioAssay.numberOfCells for
+        // assays attached to EEs with a SingleCellDimension. Reported in millions on the
+        // home page tile; this is the raw cell-level count.
+        stats.setTotalCells( computeTotalCellsInSingleCellExperiments() );
+
+        // Sample (biomaterial) counts split by tech bucket: single_cell / rna_seq / microarray.
+        // Mutually exclusive — a single-cell RNA-seq study counts in single_cell only.
+        // Companion to the corpus-wide sampleCount above; this is the tech-axis breakdown.
+        Map<String, Long> samplesByTech = new LinkedHashMap<>();
+        samplesByTech.put( "single_cell", countBioMaterialsInSingleCellExperiments() );
+        samplesByTech.put( "rna_seq", countBioMaterialsByTechExcludingSingleCell(
+                TechnologyType.SEQUENCING, TechnologyType.GENELIST ) );
+        samplesByTech.put( "microarray", countBioMaterialsByTech(
+                TechnologyType.ONECOLOR, TechnologyType.TWOCOLOR, TechnologyType.DUALMODE ) );
+        stats.setSamplesByTech( samplesByTech );
+
         // Factor-value distribution by EF category — "how many distinct disease-state factor
         // values exist", "how many distinct genotypes", etc. Reflects the range of experimental
         // axes Gemma has measured along.
@@ -302,7 +318,7 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
                 + stats.getDatasetCount() + " datasets ("
                 + stats.getSingleCellCount() + " single-cell), "
                 + stats.getPlatformCount() + " platforms, "
-                + stats.getSampleCount() + " samples, "
+                + stats.getSampleCount() + " samples (" + stats.getTotalCells() + " cells), "
                 + stats.getByTaxon().size() + " taxa, "
                 + stats.getOntologyTermCount() + " ontology terms, "
                 + stats.getDrugCount() + " drugs, "
@@ -406,6 +422,85 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
             out.add( new HomeStats.FactorValueCategoryStat( category, categoryUri, count != null ? count : 0L ) );
         }
         return out;
+    }
+
+    /**
+     * Total individual cells across all single-cell experiments — sum of
+     * {@code BioAssay.numberOfCells} for assays attached to EEs with a SingleCellDimension.
+     */
+    private long computeTotalCellsInSingleCellExperiments() {
+        Number n = ( Number ) sessionFactory.getCurrentSession()
+                .createQuery( "select sum(ba.numberOfCells) "
+                        + "from ExpressionExperiment ee "
+                        + "join ee.bioAssays ba "
+                        + "where ba.numberOfCells is not null "
+                        + "and exists ( "
+                        + "  select 1 from SingleCellDimensionExperiment scde "
+                        + "  where scde.expressionExperiment = ee "
+                        + ")" )
+                .setCacheable( true )
+                .uniqueResult();
+        return n != null ? n.longValue() : 0L;
+    }
+
+    /**
+     * Distinct biomaterials (samples) in single-cell experiments.
+     */
+    private long countBioMaterialsInSingleCellExperiments() {
+        Long n = ( Long ) sessionFactory.getCurrentSession()
+                .createQuery( "select count(distinct bm) "
+                        + "from ExpressionExperiment ee "
+                        + "join ee.bioAssays ba "
+                        + "join ba.sampleUsed bm "
+                        + "where exists ( "
+                        + "  select 1 from SingleCellDimensionExperiment scde "
+                        + "  where scde.expressionExperiment = ee "
+                        + ")" )
+                .setCacheable( true )
+                .uniqueResult();
+        return n != null ? n : 0L;
+    }
+
+    /**
+     * Distinct biomaterials (samples) on assays whose platform sits in any of the given
+     * technology types. Used for the microarray bucket where there's no need to exclude
+     * single-cell (single-cell EEs aren't on ONECOLOR/TWOCOLOR/DUALMODE platforms).
+     */
+    private long countBioMaterialsByTech( TechnologyType... techs ) {
+        Long n = ( Long ) sessionFactory.getCurrentSession()
+                .createQuery( "select count(distinct bm) "
+                        + "from ExpressionExperiment ee "
+                        + "join ee.bioAssays ba "
+                        + "join ba.sampleUsed bm "
+                        + "join ba.arrayDesignUsed ad "
+                        + "where ad.technologyType in (:techs)" )
+                .setParameterList( "techs", techs )
+                .setCacheable( true )
+                .uniqueResult();
+        return n != null ? n : 0L;
+    }
+
+    /**
+     * Variant of {@link #countBioMaterialsByTech} that excludes single-cell EEs. Used for
+     * the rna_seq bucket so a single-cell RNA-seq study isn't double-counted across the
+     * single_cell and rna_seq tiles.
+     */
+    private long countBioMaterialsByTechExcludingSingleCell( TechnologyType... techs ) {
+        Long n = ( Long ) sessionFactory.getCurrentSession()
+                .createQuery( "select count(distinct bm) "
+                        + "from ExpressionExperiment ee "
+                        + "join ee.bioAssays ba "
+                        + "join ba.sampleUsed bm "
+                        + "join ba.arrayDesignUsed ad "
+                        + "where ad.technologyType in (:techs) "
+                        + "and not exists ( "
+                        + "  select 1 from SingleCellDimensionExperiment scde "
+                        + "  where scde.expressionExperiment = ee "
+                        + ")" )
+                .setParameterList( "techs", techs )
+                .setCacheable( true )
+                .uniqueResult();
+        return n != null ? n : 0L;
     }
 
     private Path snapshotFile() {
