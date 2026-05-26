@@ -124,8 +124,18 @@ public class ChebiSlimExtractor {
                 new SyntacticLocalityModuleExtractor( manager, fullOntology, ModuleType.STAR );
         OWLOntology slim = extractor.extractAsOntology( signature, IRI.create( slimOut.toURI() ) );
         long classCount = slim.getClassesInSignature().size();
+        int axiomCount = slim.getAxiomCount();
         log.info( "STAR extraction returned {} classes / {} axioms in {} ms.",
-                classCount, slim.getAxiomCount(), System.currentTimeMillis() - extractStart );
+                classCount, axiomCount, System.currentTimeMillis() - extractStart );
+
+        // Release the source OWL-API representation BEFORE serialising the slim. This is
+        // the critical memory step on real-size CHEBI: the in-memory full ontology is
+        // multi-GB and is unneeded once STAR has run. Without this the saveOntology
+        // call below runs with both the source and the extracted module live in heap.
+        manager.removeOntology( fullOntology );
+        fullOntology = null;
+        signature.clear();
+        System.gc();
 
         log.info( "Writing slim to {} as RDF/XML...", slimOut );
         long writeStart = System.currentTimeMillis();
@@ -134,7 +144,7 @@ public class ChebiSlimExtractor {
         log.info( "Wrote {} axioms in {} ms.", slim.getAxiomCount(),
                 System.currentTimeMillis() - writeStart );
 
-        return new ExtractResult( coveredSeeds, missingSeedCount, slim.getAxiomCount(), classCount );
+        return new ExtractResult( coveredSeeds, missingSeedCount, axiomCount, classCount );
     }
 
     /**

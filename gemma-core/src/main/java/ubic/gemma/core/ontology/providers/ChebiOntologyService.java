@@ -146,14 +146,28 @@ public class ChebiOntologyService extends UrlOntologyService {
         OntologyModel full = super.loadModel( processImports, languageLevel, inferenceMode );
 
         if ( slim != null && slimMeta != null && slimExtractor != null && currentSeeds != null ) {
-            try {
-                rebuildSlim( slim, slimMeta, currentSeeds );
-            } catch ( Exception e ) {
-                // Don't fail the boot if slim extraction has a bad day — log and continue
-                // serving the freshly-loaded full ontology. Next boot will retry.
-                log.warn( "Slim CHEBI extraction failed; this boot serves the full ontology, "
-                        + "next boot will re-attempt extraction.", e );
-            }
+            // Run the slim extraction OFF the main load thread. Inline-running the
+            // OWL-API parse used to hold a second full-CHEBI copy alongside the live
+            // Jena model on the loading thread, OOM-ing the JVM on real-size CHEBI
+            // (multi-GB Jena model + multi-GB OWL-API model concurrently). Async also
+            // unblocks Spring init: the FactoryBean's caller continues immediately,
+            // CHEBI becomes serving via the full model, and the slim is written to
+            // disk for the next boot once the extractor finishes. If the extraction
+            // OOMs on its own, we lose the slim for this boot — but the running
+            // service stays up.
+            final File slimRef = slim;
+            final File slimMetaRef = slimMeta;
+            final Set<String> seedsRef = currentSeeds;
+            Thread t = new Thread( () -> {
+                try {
+                    rebuildSlim( slimRef, slimMetaRef, seedsRef );
+                } catch ( Throwable e ) {
+                    log.warn( "Slim CHEBI extraction failed; this boot serves the full ontology, "
+                            + "next boot will re-attempt extraction.", e );
+                }
+            }, "chebi-slim-extractor" );
+            t.setDaemon( true );
+            t.start();
         }
         return full;
     }
