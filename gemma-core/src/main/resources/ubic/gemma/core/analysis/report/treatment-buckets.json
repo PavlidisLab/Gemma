@@ -20,6 +20,20 @@
   ],
   "buckets": [
     {
+      "_comment": "Vehicles / solvent controls. Listed FIRST so e.g. DMSO matches `vehicle` before falling through into the broader CHEBI:23888 'drug' subtree under `approved_drug`. The UI can hide this bucket from the bar chart — it's not pharmacology data, but worth classifying so curators can see what's there.",
+      "key": "vehicle",
+      "label": "Vehicles / solvents",
+      "uriExactMatches": [
+        "http://purl.obolibrary.org/obo/CHEBI_28262",
+        "http://purl.obolibrary.org/obo/CHEBI_16236",
+        "http://purl.obolibrary.org/obo/CHEBI_15377",
+        "http://purl.obolibrary.org/obo/CHEBI_32588",
+        "http://purl.obolibrary.org/obo/CHEBI_26710",
+        "http://www.ebi.ac.uk/efo/EFO_0002677",
+        "http://purl.obolibrary.org/obo/OBI_0100046"
+      ]
+    },
+    {
       "key": "approved_drug",
       "label": "Approved drugs",
       "parentSubtreeUris": ["http://purl.obolibrary.org/obo/CHEBI_23888"]
