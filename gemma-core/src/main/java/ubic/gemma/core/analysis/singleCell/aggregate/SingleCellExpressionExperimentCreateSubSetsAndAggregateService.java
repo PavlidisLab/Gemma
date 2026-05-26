@@ -36,7 +36,7 @@ public interface SingleCellExpressionExperimentCreateSubSetsAndAggregateService 
     /**
      * Create subsets and aggregate by any cell-level characteristics.
      *
-     * @see SingleCellExpressionExperimentSubSetService#createSubSets(ExpressionExperiment, CellLevelCharacteristics, ExperimentalFactor, Map, SingleCellExperimentSubSetsCreationConfig)
+     * @see SingleCellExpressionExperimentSubSetService#createSubSets(ExpressionExperiment, ubic.gemma.model.expression.bioAssayData.SingleCellDimension, CellLevelCharacteristics, ExperimentalFactor, Map, SingleCellExperimentSubSetsCreationConfig)
      * @see SingleCellExpressionExperimentAggregateService#aggregateVectors(ExpressionExperiment, QuantitationType, List, CellLevelCharacteristics, ExperimentalFactor, Map, SingleCellAggregationConfig)
      */
     QuantitationType createSubSetsAndAggregate( ExpressionExperiment expressionExperiment, QuantitationType scQt,
