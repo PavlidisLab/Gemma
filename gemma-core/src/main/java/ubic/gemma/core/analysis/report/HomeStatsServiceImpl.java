@@ -197,7 +197,7 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
 
         stats.setDatasetCount( expressionExperimentService.countWithCache( empty, null ) );
         stats.setPlatformCount( arrayDesignService.count( empty ) );
-        stats.setSampleCount( expressionExperimentService.countBioMaterials( empty ) );
+        stats.setSampleCount( countRootBioMaterials() );
         stats.setGeneCount( geneService.countAll() );
 
         // Taxon breakdown — already ACL-aware via the underlying ee2c/ee2ad query plumbing.
@@ -444,11 +444,34 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
     }
 
     /**
-     * Distinct biomaterials (samples) in single-cell experiments.
+     * Count distinct ROOT biomaterials (sample-level, not cell-level / sub-) across the corpus.
+     * <p>
+     * The selector is {@code coalesce(bm.sourceBioMaterial.id, bm.id)} — collapses each
+     * {@code ba.sampleUsed} BioMaterial to its parent if it's a sub-BM, otherwise itself.
+     * This is the "biomaterials, not sub-biomaterials" semantic Paul flagged: in single-cell
+     * studies each (sample, cell-type) pseudo-sample is stored as a derived BM with
+     * {@code sourceBioMaterial} pointing back at the actual donor sample, and counting
+     * {@code ba.sampleUsed} directly inflates the number by the cell-type cardinality.
+     * One-level collapse only — chains deeper than (root → sub) are not walked, which is
+     * fine for Gemma's current import pattern.
+     */
+    private long countRootBioMaterials() {
+        Long n = ( Long ) sessionFactory.getCurrentSession()
+                .createQuery( "select count(distinct coalesce(bm.sourceBioMaterial.id, bm.id)) "
+                        + "from ExpressionExperiment ee "
+                        + "join ee.bioAssays ba "
+                        + "join ba.sampleUsed bm" )
+                .setCacheable( true )
+                .uniqueResult();
+        return n != null ? n : 0L;
+    }
+
+    /**
+     * Distinct root biomaterials (samples, not cell-type sub-BMs) in single-cell experiments.
      */
     private long countBioMaterialsInSingleCellExperiments() {
         Long n = ( Long ) sessionFactory.getCurrentSession()
-                .createQuery( "select count(distinct bm) "
+                .createQuery( "select count(distinct coalesce(bm.sourceBioMaterial.id, bm.id)) "
                         + "from ExpressionExperiment ee "
                         + "join ee.bioAssays ba "
                         + "join ba.sampleUsed bm "
@@ -462,13 +485,15 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
     }
 
     /**
-     * Distinct biomaterials (samples) on assays whose platform sits in any of the given
-     * technology types. Used for the microarray bucket where there's no need to exclude
-     * single-cell (single-cell EEs aren't on ONECOLOR/TWOCOLOR/DUALMODE platforms).
+     * Distinct root biomaterials on assays whose platform sits in any of the given technology
+     * types. Used for the microarray bucket where there's no need to exclude single-cell
+     * (single-cell EEs aren't on ONECOLOR/TWOCOLOR/DUALMODE platforms). For bulk data the
+     * source-BM collapse is a no-op — ba.sampleUsed is already root — so the result matches
+     * the natural sample count.
      */
     private long countBioMaterialsByTech( TechnologyType... techs ) {
         Long n = ( Long ) sessionFactory.getCurrentSession()
-                .createQuery( "select count(distinct bm) "
+                .createQuery( "select count(distinct coalesce(bm.sourceBioMaterial.id, bm.id)) "
                         + "from ExpressionExperiment ee "
                         + "join ee.bioAssays ba "
                         + "join ba.sampleUsed bm "
@@ -487,7 +512,7 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
      */
     private long countBioMaterialsByTechExcludingSingleCell( TechnologyType... techs ) {
         Long n = ( Long ) sessionFactory.getCurrentSession()
-                .createQuery( "select count(distinct bm) "
+                .createQuery( "select count(distinct coalesce(bm.sourceBioMaterial.id, bm.id)) "
                         + "from ExpressionExperiment ee "
                         + "join ee.bioAssays ba "
                         + "join ba.sampleUsed bm "
