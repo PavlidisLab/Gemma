@@ -12,9 +12,12 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.concurrent.ConcurrentTaskExecutor;
 import ubic.gemma.core.metrics.binder.VirtualThreadExecutorMetrics;
+import ubic.gemma.core.ontology.jena.OntologyLoader;
 import ubic.gemma.core.ontology.jena.TdbOntologyService;
 import ubic.gemma.core.ontology.providers.*;
 import ubic.gemma.core.ontology.providers.OntologyService;
+import ubic.gemma.core.ontology.providers.chebi.ChebiSeedResolver;
+import ubic.gemma.core.ontology.providers.chebi.ChebiSlimExtractor;
 import ubic.gemma.core.context.EnvironmentProfiles;
 import ubic.gemma.core.ontology.providers.GemmaOntologyService;
 import ubic.gemma.core.ontology.providers.MondoOntologyService;
@@ -24,6 +27,7 @@ import ubic.gemma.core.ontology.search.JenaTextOntologySearchService;
 import ubic.gemma.core.ontology.search.OntologySearchService;
 import ubic.gemma.core.util.TextResourceToSetOfLinesFactoryBean;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 
@@ -128,10 +132,43 @@ public class OntologyConfig {
         return createOntologyFactory( CellTypeOntologyService.class, "http://purl.obolibrary.org/obo/CL_" );
     }
 
+    /**
+     * Bean for the CHEBI ontology with slim-cache wiring.
+     * <p>
+     * Uses the pre-built {@link OntologyServiceFactory#OntologyServiceFactory(OntologyService)}
+     * constructor rather than the reflective class-instantiation path so the slim extractor
+     * and seed resolver land on the service instance BEFORE the factory's auto-load thread
+     * calls {@code initialize()}. Spring's autowiring doesn't run on FactoryBean products by
+     * default, so explicit setter wiring here is the safer pattern.
+     */
     @Bean
-    public FactoryBean<ChebiOntologyService> chebiOntologyService() {
-        OntologyServiceFactory<ChebiOntologyService> factory = createOntologyFactory( ChebiOntologyService.class, "http://purl.obolibrary.org/obo/CHEBI_" );
+    public FactoryBean<ChebiOntologyService> chebiOntologyService(
+            @Autowired(required = false) ChebiSlimExtractor slimExtractor,
+            @Autowired(required = false) ChebiSeedResolver seedResolver ) {
+        ChebiOntologyService service = new ChebiOntologyService();
+        // When slimExtractor or seedResolver are absent (test contexts that don't import
+        // the chebi/ stereotypes), the service falls back to UrlOntologyService's full-load
+        // behaviour. Both null + the slim-cache-dir below results in the legacy load path.
+        service.setSlimExtractor( slimExtractor );
+        service.setSeedResolver( seedResolver );
+        if ( slimExtractor != null && seedResolver != null ) {
+            // Slim file lands alongside the cached source: ${ontology.cache.dir}/ontology/.
+            // Derive from OntologyLoader so any future change to the path convention stays in
+            // one place.
+            File cacheDir = OntologyLoader.getDiskCachePath( "chebiOntology" ).getParentFile();
+            service.setSlimCacheDir( cacheDir );
+        }
+
+        OntologyServiceFactory<ChebiOntologyService> factory = new OntologyServiceFactory<>( service );
+        factory.setAutoLoad( loadOntologies );
+        factory.setTaskExecutor( ontologyTaskExecutor() );
         factory.setInferenceMode( OntologyService.InferenceMode.NONE );
+        factory.setAllowedUriPrefixes( new String[]{ "http://purl.obolibrary.org/obo/CHEBI_" } );
+        try {
+            factory.setExcludedWordsFromStemming( excludedWordsFromStemming.getObject() );
+        } catch ( Exception e ) {
+            throw new RuntimeException( e );
+        }
         return factory;
     }
 

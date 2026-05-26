@@ -49,7 +49,7 @@ import java.nio.file.StandardCopyOption;
  *
  * @author paul
  */
-class OntologyLoader {
+public class OntologyLoader {
 
     private static final Logger log = LoggerFactory.getLogger( OntologyLoader.class );
 
@@ -287,9 +287,14 @@ class OntologyLoader {
     }
 
     /**
-     * Obtain the path for the ontology cache.
+     * Obtain the on-disk path where the cached source OWL for an ontology lives.
+     * <p>
+     * Public so per-ontology customizations (e.g.
+     * {@code ubic.gemma.core.ontology.providers.chebi.ChebiSlimExtractor}) can read the cached
+     * source without having to know the path computation; the path is a stable function of
+     * {@code ontology.cache.dir} plus the cacheName.
      */
-    static File getDiskCachePath( String name ) {
+    public static File getDiskCachePath( String name ) {
         if ( StringUtils.isBlank( name ) ) {
             throw new IllegalArgumentException( "The ontology must have a suitable name for being loaded from cache." );
         }
