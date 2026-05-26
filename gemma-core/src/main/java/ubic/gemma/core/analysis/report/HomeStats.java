@@ -52,6 +52,13 @@ public class HomeStats {
     private List<TaxonStat> byTaxon = new ArrayList<>();
 
     /**
+     * Per-external-database dataset counts — GEO, ArrayExpress, CELLxGENE, etc.,
+     * plus a {@code "none"} bucket for datasets without an external accession
+     * (direct lab submissions / Gemma-native). Sorted descending by count.
+     */
+    private List<AccessionSourceStat> datasetsByAccessionSource = new ArrayList<>();
+
+    /**
      * Per-platform-technology-type dataset counts. Keys are {@code TechnologyType}
      * enum names (ONECOLOR / TWOCOLOR / DUALMODE / SEQUENCING / GENELIST / OTHER).
      * Frontend rolls these up into microarray (ONECOLOR+TWOCOLOR+DUALMODE) and
@@ -168,6 +175,22 @@ public class HomeStats {
             this.category = category;
             this.categoryUri = categoryUri;
             this.numberOfExpressionExperiments = numberOfExpressionExperiments;
+        }
+    }
+
+    @Data
+    @NoArgsConstructor
+    public static class AccessionSourceStat {
+        /** External-database name (e.g. {@code GEO}, {@code ArrayExpress},
+         *  {@code CELLxGENE}) or the literal {@code "none"} for datasets without
+         *  an external accession. */
+        private String source;
+        /** Number of public expression experiments with this accession source. */
+        private long count;
+
+        public AccessionSourceStat( String source, long count ) {
+            this.source = source;
+            this.count = count;
         }
     }
 

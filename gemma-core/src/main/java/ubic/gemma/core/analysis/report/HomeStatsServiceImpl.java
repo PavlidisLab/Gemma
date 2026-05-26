@@ -313,6 +313,10 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
         // axes Gemma has measured along.
         stats.setFactorValuesByCategory( computeFactorValuesByCategory() );
 
+        // Datasets-by-accession-source distribution — for the home page Datasets-tile
+        // nested footnote ("GEO 22000 · ArrayExpress 800 · CELLxGENE 150 · none 599").
+        stats.setDatasetsByAccessionSource( computeDatasetsByAccessionSource() );
+
         long elapsed = System.currentTimeMillis() - t0;
         log.info( "HomeStats: snapshot recomputed in " + elapsed + " ms — "
                 + stats.getDatasetCount() + " datasets ("
@@ -326,6 +330,7 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
                 + stats.getGeneManipulatedExperimentCount() + " experiments), "
                 + stats.getDeaResultSetCount() + " DEA result sets, "
                 + stats.getFactorValuesByCategory().size() + " FV-category rows, "
+                + stats.getDatasetsByAccessionSource().size() + " accession sources, "
                 + stats.getRecentExperiments().size() + " recent" );
         return stats;
     }
@@ -420,6 +425,46 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
             String categoryUri = ( String ) row[1];
             Long count = ( Long ) row[2];
             out.add( new HomeStats.FactorValueCategoryStat( category, categoryUri, count != null ? count : 0L ) );
+        }
+        return out;
+    }
+
+    /**
+     * Datasets grouped by their external-database source (GEO, ArrayExpress, CELLxGENE,
+     * etc.), with a {@code "none"} bucket for datasets without an external accession.
+     * Sorted descending by count.
+     * <p>
+     * Two queries because HQL can't COALESCE across the {@code left join} the way SQL can —
+     * the grouped-by-name query naturally drops rows where the joined accession or
+     * externalDatabase is null. We fold the no-accession bucket in via a separate count.
+     * Not ACL-filtered for the same reason as other corpus-shape fields here: the public/
+     * private partition has a tiny effect on the breakdown and the cost of the per-EE ACL
+     * join would dominate the refresh.
+     */
+    private List<HomeStats.AccessionSourceStat> computeDatasetsByAccessionSource() {
+        @SuppressWarnings("unchecked")
+        List<Object[]> rows = sessionFactory.getCurrentSession()
+                .createQuery( "select ed.name, count(distinct ee.id) "
+                        + "from ExpressionExperiment ee "
+                        + "join ee.accession a "
+                        + "join a.externalDatabase ed "
+                        + "group by ed.name "
+                        + "order by count(distinct ee.id) desc" )
+                .setCacheable( true )
+                .list();
+        List<HomeStats.AccessionSourceStat> out = new ArrayList<>( rows.size() + 1 );
+        for ( Object[] row : rows ) {
+            String name = ( String ) row[0];
+            Long count = ( Long ) row[1];
+            out.add( new HomeStats.AccessionSourceStat( name, count != null ? count : 0L ) );
+        }
+        Long noneCount = ( Long ) sessionFactory.getCurrentSession()
+                .createQuery( "select count(distinct ee.id) from ExpressionExperiment ee where ee.accession is null" )
+                .setCacheable( true )
+                .uniqueResult();
+        if ( noneCount != null && noneCount > 0 ) {
+            out.add( new HomeStats.AccessionSourceStat( "none", noneCount ) );
+            out.sort( ( a, b ) -> Long.compare( b.getCount(), a.getCount() ) );
         }
         return out;
     }
