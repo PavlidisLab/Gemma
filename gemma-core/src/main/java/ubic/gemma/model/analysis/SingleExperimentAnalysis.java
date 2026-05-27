@@ -39,7 +39,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 @Entity
 public abstract class SingleExperimentAnalysis<T extends BioAssaySet> extends ExpressionAnalysis implements SecuredChild<ExpressionExperiment> {
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.EAGER, targetEntity = BioAssaySet.class)
     @JoinColumn(name = "EXPERIMENT_ANALYZED_FK", columnDefinition = "BIGINT")
     private T experimentAnalyzed;
 
