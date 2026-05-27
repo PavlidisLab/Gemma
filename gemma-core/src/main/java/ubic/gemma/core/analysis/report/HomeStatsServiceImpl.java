@@ -52,6 +52,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -364,8 +365,10 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
         // Datasets-by-accession-source distribution — for the home page Datasets-tile
         // nested footnote ("GEO 22000 · ArrayExpress 800 · CELLxGENE 150 · none 599").
         // Walks the public-EE id set, which we also reuse for distinctAccessionCount below.
-        Collection<Long> publicEeIds = QueryUtils.optimizeParameterList(
-                expressionExperimentService.loadIdsWithCache( Filters.empty(), null ) );
+        // The raw id set is currently ~23k on frink — well past Hibernate's
+        // MAX_PARAMETER_LIST_SIZE — so each consumer batches its own IN-list rather than
+        // taking optimizeParameterList's fallback (which warned + dropped the limit).
+        Collection<Long> publicEeIds = expressionExperimentService.loadIdsWithCache( Filters.empty(), null );
         stats.setDatasetsByAccessionSource( computeDatasetsByAccessionSource( publicEeIds ) );
         stats.setDistinctAccessionCount( countDistinctAccessions( publicEeIds ) );
 
@@ -519,34 +522,47 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
         if ( publicEeIds.isEmpty() ) {
             return Collections.emptyList();
         }
-        @SuppressWarnings("unchecked")
-        List<Object[]> rows = sessionFactory.getCurrentSession()
-                .createQuery( "select ed.name, count(distinct ee.id) "
-                        + "from ExpressionExperiment ee "
-                        + "join ee.accession a "
-                        + "join a.externalDatabase ed "
-                        + "where ee.id in (:eeIds) "
-                        + "group by ed.name "
-                        + "order by count(distinct ee.id) desc" )
-                .setParameterList( "eeIds", publicEeIds )
-                .setCacheable( true )
-                .list();
-        List<HomeStats.AccessionSourceStat> out = new ArrayList<>( rows.size() + 1 );
-        for ( Object[] row : rows ) {
-            String name = ( String ) row[0];
-            Long count = ( Long ) row[1];
-            out.add( new HomeStats.AccessionSourceStat( name, count != null ? count : 0L ) );
+        // Batches are disjoint EE-id subsets, so per-source counts sum across batches:
+        // sum( count(distinct ee.id) per batch ) = count(distinct ee.id) over the union.
+        Map<String, Long> byName = new LinkedHashMap<>();
+        long noneCount = 0L;
+        for ( List<Long> batch : QueryUtils.batchParameterList( publicEeIds, QueryUtils.MAX_PARAMETER_LIST_SIZE ) ) {
+            @SuppressWarnings("unchecked")
+            List<Object[]> rows = sessionFactory.getCurrentSession()
+                    .createQuery( "select ed.name, count(distinct ee.id) "
+                            + "from ExpressionExperiment ee "
+                            + "join ee.accession a "
+                            + "join a.externalDatabase ed "
+                            + "where ee.id in (:eeIds) "
+                            + "group by ed.name" )
+                    .setParameterList( "eeIds", batch )
+                    .setCacheable( true )
+                    .list();
+            for ( Object[] row : rows ) {
+                String name = ( String ) row[0];
+                Long c = ( Long ) row[1];
+                if ( c != null ) {
+                    byName.merge( name, c, Long::sum );
+                }
+            }
+            Long batchNone = ( Long ) sessionFactory.getCurrentSession()
+                    .createQuery( "select count(distinct ee.id) from ExpressionExperiment ee "
+                            + "where ee.accession is null and ee.id in (:eeIds)" )
+                    .setParameterList( "eeIds", batch )
+                    .setCacheable( true )
+                    .uniqueResult();
+            if ( batchNone != null ) {
+                noneCount += batchNone;
+            }
         }
-        Long noneCount = ( Long ) sessionFactory.getCurrentSession()
-                .createQuery( "select count(distinct ee.id) from ExpressionExperiment ee "
-                        + "where ee.accession is null and ee.id in (:eeIds)" )
-                .setParameterList( "eeIds", publicEeIds )
-                .setCacheable( true )
-                .uniqueResult();
-        if ( noneCount != null && noneCount > 0 ) {
+        List<HomeStats.AccessionSourceStat> out = new ArrayList<>( byName.size() + 1 );
+        for ( Map.Entry<String, Long> e : byName.entrySet() ) {
+            out.add( new HomeStats.AccessionSourceStat( e.getKey(), e.getValue() ) );
+        }
+        if ( noneCount > 0 ) {
             out.add( new HomeStats.AccessionSourceStat( "none", noneCount ) );
-            out.sort( ( a, b ) -> Long.compare( b.getCount(), a.getCount() ) );
         }
+        out.sort( ( a, b ) -> Long.compare( b.getCount(), a.getCount() ) );
         return out;
     }
 
@@ -561,16 +577,24 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
         if ( publicEeIds.isEmpty() ) {
             return 0L;
         }
-        Long n = ( Long ) sessionFactory.getCurrentSession()
-                .createQuery( "select count(distinct a.accession) "
-                        + "from ExpressionExperiment ee "
-                        + "join ee.accession a "
-                        + "where ee.id in (:eeIds) "
-                        + "and a.accession is not null" )
-                .setParameterList( "eeIds", publicEeIds )
-                .setCacheable( true )
-                .uniqueResult();
-        return n != null ? n : 0L;
+        // Different EEs can share an accession (rare but real — re-runs / splits off the
+        // same GSE), so count(distinct) doesn't merge cleanly across batches. Pull the
+        // distinct strings per batch into a Set, return its cardinality.
+        Set<String> accessions = new HashSet<>();
+        for ( List<Long> batch : QueryUtils.batchParameterList( publicEeIds, QueryUtils.MAX_PARAMETER_LIST_SIZE ) ) {
+            @SuppressWarnings("unchecked")
+            List<String> rows = sessionFactory.getCurrentSession()
+                    .createQuery( "select distinct a.accession "
+                            + "from ExpressionExperiment ee "
+                            + "join ee.accession a "
+                            + "where ee.id in (:eeIds) "
+                            + "and a.accession is not null" )
+                    .setParameterList( "eeIds", batch )
+                    .setCacheable( true )
+                    .list();
+            accessions.addAll( rows );
+        }
+        return accessions.size();
     }
 
     /**
@@ -589,34 +613,50 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
         if ( publicEeIds.isEmpty() ) {
             return Collections.emptyList();
         }
-        @SuppressWarnings("unchecked")
-        List<Object[]> rows = sessionFactory.getCurrentSession()
-                .createNativeQuery( "SELECT g.OFFICIAL_SYMBOL AS sym, "
-                        + "       t.COMMON_NAME AS tax, "
-                        + "       COUNT(DISTINCT ee2c.EXPRESSION_EXPERIMENT_FK) AS cnt "
-                        + "FROM EXPRESSION_EXPERIMENT2CHARACTERISTIC ee2c "
-                        + "INNER JOIN CHROMOSOME_FEATURE g "
-                        + "  ON g.class = 'Gene' "
-                        + "  AND ee2c.VALUE_URI = CONCAT(:prefix, g.NCBI_GENE_ID) "
-                        + "LEFT JOIN TAXON t ON g.TAXON_FK = t.ID "
-                        + "WHERE ee2c.VALUE_URI LIKE :prefixLike "
-                        + "  AND ee2c.EXPRESSION_EXPERIMENT_FK IN (:eeIds) "
-                        + "GROUP BY g.ID, g.OFFICIAL_SYMBOL, t.COMMON_NAME "
-                        + "ORDER BY cnt DESC" )
-                .setParameter( "prefix", Gene.NCBI_URI_PREFIX )
-                .setParameter( "prefixLike", Gene.NCBI_URI_PREFIX + "%" )
-                .setParameterList( "eeIds", publicEeIds )
-                .setMaxResults( TOP_PERTURBED_GENES_LIMIT )
-                .setCacheable( true )
-                .list();
-        List<HomeStats.PerturbedGeneStat> out = new ArrayList<>( rows.size() );
-        for ( Object[] row : rows ) {
-            String sym = ( String ) row[0];
-            String taxon = ( String ) row[1];
-            Number cnt = ( Number ) row[2];
-            out.add( new HomeStats.PerturbedGeneStat( sym, taxon, cnt != null ? cnt.longValue() : 0L ) );
+        // Batches partition publicEeIds (disjoint), so per-batch distinct-EE counts sum to
+        // the global distinct count per gene. Cannot apply setMaxResults per batch — a gene
+        // missing per-batch top-N might still make the global top-N once summed; collect
+        // every row from every batch, merge by (symbol, taxon), then sort + truncate.
+        Map<String, long[]> byGene = new LinkedHashMap<>();
+        Map<String, String> taxonByGene = new HashMap<>();
+        for ( List<Long> batch : QueryUtils.batchParameterList( publicEeIds, QueryUtils.MAX_PARAMETER_LIST_SIZE ) ) {
+            @SuppressWarnings("unchecked")
+            List<Object[]> rows = sessionFactory.getCurrentSession()
+                    .createNativeQuery( "SELECT g.OFFICIAL_SYMBOL AS sym, "
+                            + "       t.COMMON_NAME AS tax, "
+                            + "       COUNT(DISTINCT ee2c.EXPRESSION_EXPERIMENT_FK) AS cnt "
+                            + "FROM EXPRESSION_EXPERIMENT2CHARACTERISTIC ee2c "
+                            + "INNER JOIN CHROMOSOME_FEATURE g "
+                            + "  ON g.class = 'Gene' "
+                            + "  AND ee2c.VALUE_URI = CONCAT(:prefix, g.NCBI_GENE_ID) "
+                            + "LEFT JOIN TAXON t ON g.TAXON_FK = t.ID "
+                            + "WHERE ee2c.VALUE_URI LIKE :prefixLike "
+                            + "  AND ee2c.EXPRESSION_EXPERIMENT_FK IN (:eeIds) "
+                            + "GROUP BY g.ID, g.OFFICIAL_SYMBOL, t.COMMON_NAME" )
+                    .setParameter( "prefix", Gene.NCBI_URI_PREFIX )
+                    .setParameter( "prefixLike", Gene.NCBI_URI_PREFIX + "%" )
+                    .setParameterList( "eeIds", batch )
+                    .setCacheable( true )
+                    .list();
+            for ( Object[] row : rows ) {
+                String sym = ( String ) row[0];
+                String taxon = ( String ) row[1];
+                Number cnt = ( Number ) row[2];
+                if ( sym == null || cnt == null ) continue;
+                String key = sym + "|" + ( taxon == null ? "" : taxon );
+                byGene.computeIfAbsent( key, k -> new long[1] )[0] += cnt.longValue();
+                taxonByGene.putIfAbsent( key, taxon );
+            }
         }
-        return out;
+        List<HomeStats.PerturbedGeneStat> all = new ArrayList<>( byGene.size() );
+        for ( Map.Entry<String, long[]> e : byGene.entrySet() ) {
+            String sym = e.getKey().substring( 0, e.getKey().indexOf( '|' ) );
+            all.add( new HomeStats.PerturbedGeneStat( sym, taxonByGene.get( e.getKey() ), e.getValue()[0] ) );
+        }
+        all.sort( ( a, b ) -> Long.compare( b.getNumberOfExpressionExperiments(), a.getNumberOfExpressionExperiments() ) );
+        return all.size() > TOP_PERTURBED_GENES_LIMIT
+                ? new ArrayList<>( all.subList( 0, TOP_PERTURBED_GENES_LIMIT ) )
+                : all;
     }
 
     /**
