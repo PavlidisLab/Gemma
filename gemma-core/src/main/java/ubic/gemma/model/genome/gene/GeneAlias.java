@@ -18,6 +18,12 @@
  */
 package ubic.gemma.model.genome.gene;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.KeywordField;
@@ -29,9 +35,13 @@ import java.util.Objects;
  * Hibernate Search 7 mapping: contributes its {@link #getAlias()} as a keyword (non-tokenized)
  * field via {@code @IndexedEmbedded} from {@link ubic.gemma.model.genome.Gene}.
  */
+@Entity
+@Table(name = "GENE_ALIAS", indexes = @Index(name = "ALIAS", columnList = "ALIAS"))
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @Indexed
 public class GeneAlias extends AbstractIdentifiable {
 
+    @Column(name = "ALIAS", nullable = false, columnDefinition = "VARCHAR(255)")
     private String alias;
 
     @KeywordField

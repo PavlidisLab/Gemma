@@ -18,6 +18,12 @@
  */
 package ubic.gemma.model.expression.arrayDesign;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
@@ -31,9 +37,13 @@ import java.util.Objects;
  * for symmetry with the pre-strip HS 5 mapping, even though the only Lucene path that consumes
  * AlternateName documents today is the {@code ArrayDesign.alternateNames} embedded path.
  */
+@Entity
+@Table(name = "ALTERNATE_NAME", indexes = @Index(name = "name", columnList = "NAME"))
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @Indexed
 public class AlternateName extends AbstractIdentifiable {
 
+    @Column(name = "NAME", nullable = false, columnDefinition = "VARCHAR(255)")
     private String name;
 
     @Override
