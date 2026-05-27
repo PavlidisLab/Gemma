@@ -19,21 +19,35 @@
 
 package ubic.gemma.model.expression.experiment;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.search.engine.backend.types.Projectable;
+import org.hibernate.search.mapper.pojo.automaticindexing.ReindexOnUpdate;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexedEmbedded;
-import org.hibernate.search.mapper.pojo.automaticindexing.ReindexOnUpdate;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexingDependency;
+import org.springframework.lang.Nullable;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.DescribableUtils;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 import ubic.gemma.model.common.description.Category;
 import ubic.gemma.model.common.description.Characteristic;
 
-import org.springframework.lang.Nullable;
-import jakarta.persistence.Transient;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Objects;
@@ -48,6 +62,9 @@ import java.util.Set;
  *
  * @author Paul
  */
+@Entity
+@Table(name = "EXPERIMENTAL_FACTOR")
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @Indexed
 public class ExperimentalFactor extends AbstractDescribable implements SecuredChild<ExpressionExperiment> {
 
@@ -55,13 +72,25 @@ public class ExperimentalFactor extends AbstractDescribable implements SecuredCh
             .thenComparing( ExperimentalFactor::getCategory, Comparator.nullsLast( Comparator.naturalOrder() ) )
             .thenComparing( ExperimentalFactor::getId, Comparator.nullsLast( Comparator.naturalOrder() ) );
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "TYPE", nullable = false, columnDefinition = "VARCHAR(255)")
     private FactorType type;
     @Nullable
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinColumn(name = "CATEGORY_FK", unique = true, columnDefinition = "BIGINT")
     private Characteristic category;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "EXPERIMENTAL_DESIGN_FK", nullable = false, columnDefinition = "BIGINT")
     private ExperimentalDesign experimentalDesign;
+    @OneToMany(mappedBy = "experimentalFactor", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<FactorValue> factorValues = new HashSet<>();
     @Deprecated
+    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinColumn(name = "EXPERIMENTAL_FACTOR_FK", columnDefinition = "BIGINT", foreignKey = @ForeignKey(name = "CHARACTERISTIC_EXPERIMENTAL_FACTOR_FKC"))
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<Characteristic> annotations = new HashSet<>();
+    @Transient
     private ExpressionExperiment securityOwner;
 
     /**
@@ -71,12 +100,15 @@ public class ExperimentalFactor extends AbstractDescribable implements SecuredCh
      * factors not yet visited by the proposer pipeline).
      */
     @Nullable
+    @Column(name = "BASELINE_RELEVANCE", columnDefinition = "VARCHAR(32)")
     private String baselineRelevance;
 
     /**
      * Free-text rationale for the baselineRelevance value. {@code null} when not set.
      */
     @Nullable
+    @Lob
+    @Column(name = "BASELINE_RELEVANCE_REASON", columnDefinition = "text")
     private String baselineRelevanceReason;
 
     /**
@@ -103,7 +135,6 @@ public class ExperimentalFactor extends AbstractDescribable implements SecuredCh
         return super.getDescription();
     }
 
-    @Transient
     @Override
     public ExpressionExperiment getSecurityOwner() {
         return this.securityOwner;

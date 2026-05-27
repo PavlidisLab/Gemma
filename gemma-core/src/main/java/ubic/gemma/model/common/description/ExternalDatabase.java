@@ -19,13 +19,28 @@
 
 package ubic.gemma.model.common.description;
 
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.springframework.lang.Nullable;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.DescribableUtils;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 
-import org.springframework.lang.Nullable;
 import java.net.URL;
 import java.util.Date;
 import java.util.HashSet;
@@ -34,23 +49,42 @@ import java.util.Set;
 /**
  * @author Paul
  */
+@Entity
+@Table(name = "EXTERNAL_DATABASE")
+@AttributeOverride(name = "name", column = @Column(name = "NAME", nullable = false, unique = true, columnDefinition = "VARCHAR(255)"))
+@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class ExternalDatabase extends AbstractDescribable implements Auditable, Versioned {
 
+    @Column(name = "LOCAL_INSTALL_DB_NAME", columnDefinition = "VARCHAR(255)")
     private String localInstallDbName;
+    @Column(name = "WEB_URI", columnDefinition = "VARCHAR(255)")
     private String webUri;
+    @Column(name = "FTP_URI", columnDefinition = "VARCHAR(255)")
     private String ftpUri;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "TYPE", columnDefinition = "VARCHAR(255)")
     private DatabaseType type;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "DATABASE_SUPPLIER_FK", columnDefinition = "BIGINT")
     private Contact databaseSupplier;
     /**
      * Related external databases.
      */
+    @OneToMany(fetch = FetchType.EAGER)
+    @JoinColumn(name = "EXTERNAL_DATABASE_FK", columnDefinition = "BIGINT", foreignKey = @ForeignKey(name = "EXTERNAL_DATABASE_FKC"))
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<ExternalDatabase> externalDatabases = new HashSet<>();
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "AUDIT_TRAIL_FK", nullable = false, unique = true, columnDefinition = "BIGINT")
     private AuditTrail auditTrail = new AuditTrail();
     @Nullable
+    @Column(name = "RELEASE_VERSION", columnDefinition = "VARCHAR(255)")
     private String releaseVersion;
     @Nullable
+    @Column(name = "RELEASE_URL", columnDefinition = "VARCHAR(255)")
     private URL releaseUrl;
     @Nullable
+    @Column(name = "LAST_UPDATED", columnDefinition = "DATETIME(3)")
     private Date lastUpdated;
 
     public Contact getDatabaseSupplier() {
