@@ -678,7 +678,7 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
         // receive terms that fell through the explicit buckets. group=unclassified
         // so the UI can dim them.
         BucketAccum otherChemical = new BucketAccum( virtualBucket( "other_chemical", "Other chemicals", "unclassified" ) );
-        BucketAccum other = new BucketAccum( virtualBucket( "other", "Other", "unclassified" ) );
+        BucketAccum other = new BucketAccum( virtualBucket( "other", "Other treatments", "unclassified" ) );
 
         for ( ExpressionExperimentService.CharacteristicWithUsageStatisticsAndOntologyTerm vo : terms ) {
             Characteristic c = vo.getCharacteristic();
