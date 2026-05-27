@@ -50,6 +50,18 @@ public interface Gene2GOAssociationDao extends BaseDao<Gene2GOAssociation> {
 
     Collection<Gene> findByGoTermUris( Collection<String> uris, Taxon taxon );
 
+    /**
+     * Count distinct genes annotated to any of the given GO term URIs. Cheaper than
+     * {@link #findByGoTermUris} because it skips Gene-entity materialization — a single
+     * {@code COUNT(DISTINCT gene.id)} aggregate, batched if the URI set exceeds the IN-list cap.
+     */
+    long countByGoTermUris( Collection<String> uris );
+
+    /**
+     * Taxon-scoped variant of {@link #countByGoTermUris(Collection)}.
+     */
+    long countByGoTermUris( Collection<String> uris, Taxon taxon );
+
     Map<Taxon, Collection<Gene>> findByGoTermUrisPerTaxon( Collection<String> uris );
 
     int removeAll();

@@ -84,6 +84,12 @@ public class Gene2GOAssociationServiceImpl extends AbstractService<Gene2GOAssoci
 
     @Override
     @Transactional(readOnly = true)
+    public long countByGOTermUris( Collection<String> uris, @Nullable Taxon taxon ) {
+        return gene2GOAssociationReadService.countByGOTermUris( uris, taxon );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Map<Taxon, Collection<Gene>> findByGOTermUrisPerTaxon( Collection<String> uris ) {
         return gene2GOAssociationReadService.findByGOTermUrisPerTaxon( uris );
     }

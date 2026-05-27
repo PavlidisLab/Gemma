@@ -67,6 +67,13 @@ public interface Gene2GOAssociationReadService {
     Collection<Gene> findByGOTermUris( Collection<String> uris, @Nullable Taxon taxon );
 
     /**
+     * Count distinct genes annotated to any of the given GO term URIs. Bypasses Gene
+     * materialization — cheap enough to use in the typeahead-style "N genes annotated to
+     * this term" hint without dragging full Gene rows from the DB.
+     */
+    long countByGOTermUris( Collection<String> uris, @Nullable Taxon taxon );
+
+    /**
      * Find all genes associated with a given set of GO terms, grouped by taxon.
      */
     Map<Taxon, Collection<Gene>> findByGOTermUrisPerTaxon( Collection<String> uris );

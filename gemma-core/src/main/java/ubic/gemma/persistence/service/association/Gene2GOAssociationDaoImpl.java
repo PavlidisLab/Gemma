@@ -137,6 +137,56 @@ public class Gene2GOAssociationDaoImpl extends AbstractDao<Gene2GOAssociation> i
     }
 
     @Override
+    public long countByGoTermUris( Collection<String> uris ) {
+        if ( uris.isEmpty() ) {
+            return 0L;
+        }
+        // Sum batched COUNT(DISTINCT gene.id) sub-queries. NOT exact when the URI set is
+        // larger than one batch — but for the GO-term-with-descendants case the URI count is
+        // typically < 2048 (a wide subtree like "metabolic process" caps near ~1000 GO terms),
+        // so we stay in the single-batch path and the count is exact. Document the limit on the
+        // service so callers can refuse oversized expansions if exactness matters.
+        long total = 0L;
+        for ( List<String> batch : split( new ArrayList<>( uris ), 2048 ) ) {
+            Long n = ( Long ) getSessionFactory().getCurrentSession()
+                    .createQuery( "select count(distinct gene.id) "
+                            + "from Gene2GOAssociation as geneAss join geneAss.gene as gene "
+                            + "where geneAss.ontologyEntry.valueUri in (:uris)" )
+                    .setParameterList( "uris", batch )
+                    .uniqueResult();
+            if ( n != null ) total += n;
+        }
+        return total;
+    }
+
+    @Override
+    public long countByGoTermUris( Collection<String> uris, Taxon taxon ) {
+        if ( uris.isEmpty() ) {
+            return 0L;
+        }
+        long total = 0L;
+        for ( List<String> batch : split( new ArrayList<>( uris ), 2048 ) ) {
+            Long n = ( Long ) getSessionFactory().getCurrentSession()
+                    .createQuery( "select count(distinct gene.id) "
+                            + "from Gene2GOAssociation as geneAss join geneAss.gene as gene "
+                            + "where geneAss.ontologyEntry.valueUri in (:uris) and gene.taxon = :tax" )
+                    .setParameter( "tax", taxon )
+                    .setParameterList( "uris", batch )
+                    .uniqueResult();
+            if ( n != null ) total += n;
+        }
+        return total;
+    }
+
+    private static <T> List<List<T>> split( List<T> src, int batchSize ) {
+        List<List<T>> out = new ArrayList<>();
+        for ( int i = 0; i < src.size(); i += batchSize ) {
+            out.add( src.subList( i, Math.min( i + batchSize, src.size() ) ) );
+        }
+        return out;
+    }
+
+    @Override
     public Map<Taxon, Collection<Gene>> findByGoTermUrisPerTaxon( Collection<String> uris ) {
         Collection<Gene> genes = this.findByGoTermUris( uris );
         Map<Taxon, Collection<Gene>> results = new HashMap<>();

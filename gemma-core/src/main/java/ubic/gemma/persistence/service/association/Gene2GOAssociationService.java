@@ -58,6 +58,12 @@ public interface Gene2GOAssociationService extends BaseImmutableService<Gene2GOA
     Collection<Gene> findByGOTermUris( Collection<String> uris, @Nullable Taxon taxon );
 
     /**
+     * Count distinct genes annotated to any of the given GO term URIs. See
+     * {@link Gene2GOAssociationReadService#countByGOTermUris(Collection, Taxon)}.
+     */
+    long countByGOTermUris( Collection<String> uris, @Nullable Taxon taxon );
+
+    /**
      * Find all genes associated with a given set of GO terms, grouped by taxon.
      */
     Map<Taxon, Collection<Gene>> findByGOTermUrisPerTaxon( Collection<String> uris );

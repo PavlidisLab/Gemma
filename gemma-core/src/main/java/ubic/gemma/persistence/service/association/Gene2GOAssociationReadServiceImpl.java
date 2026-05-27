@@ -126,6 +126,16 @@ public class Gene2GOAssociationReadServiceImpl implements Gene2GOAssociationRead
 
     @Override
     @Transactional(readOnly = true)
+    public long countByGOTermUris( Collection<String> uris, @Nullable Taxon taxon ) {
+        if ( taxon == null ) {
+            return this.gene2GOAssociationDao.countByGoTermUris( uris );
+        } else {
+            return this.gene2GOAssociationDao.countByGoTermUris( uris, taxon );
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Map<Taxon, Collection<Gene>> findByGOTermUrisPerTaxon( Collection<String> uris ) {
         return this.gene2GOAssociationDao.findByGoTermUrisPerTaxon( uris );
     }

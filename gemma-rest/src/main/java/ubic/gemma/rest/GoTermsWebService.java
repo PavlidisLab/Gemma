@@ -48,6 +48,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -122,7 +123,9 @@ public class GoTermsWebService {
             @Parameter(description = "Maximum genes per page; capped at 200.")
             @QueryParam("limit") @DefaultValue("100") LimitArg limitArg,
             @Parameter(description = "Walk GO subClassOf descendants of {termUri} and union the gene sets. Default false.")
-            @QueryParam("propagate") @DefaultValue("false") boolean propagate
+            @QueryParam("propagate") @DefaultValue("false") boolean propagate,
+            @Parameter(description = "When `propagate=true`, cap the breadth-first descendant walk at this many terms (including the root). Default 0 = unbounded (full subtree).")
+            @QueryParam("maxTerms") @DefaultValue("0") int maxTerms
     ) {
         if ( termUri == null || termUri.trim().isEmpty() ) {
             throw new BadRequestException( "GO term URI is required." );
@@ -132,10 +135,13 @@ public class GoTermsWebService {
         if ( limit < 1 ) {
             throw new BadRequestException( "limit must be >= 1." );
         }
+        if ( maxTerms < 0 ) {
+            throw new BadRequestException( "maxTerms must be >= 0." );
+        }
 
         Taxon taxon = taxonArg != null ? taxonArgService.getEntity( taxonArg ) : null;
 
-        Set<String> uris = expandUris( termUri, propagate );
+        Set<String> uris = expandUris( termUri, propagate, maxTerms );
         Collection<Gene> genes = gene2GOAssociationService.findByGOTermUris( uris, taxon );
 
         // Sort genes by officialSymbol (case-insensitive); stable for paging.
@@ -159,12 +165,18 @@ public class GoTermsWebService {
 
     /**
      * Expand {@code termUri} to the set of URIs to look up. When {@code propagate=false}
-     * the set is just the supplied URI. When {@code true} we add every
-     * {@code subClassOf} descendant. If the GO ontology isn't loaded, fall back to the
-     * single-URI case (logged) rather than 503.
+     * the set is just the supplied URI. When {@code true} and {@code maxTerms <= 0} we add
+     * every {@code subClassOf} descendant (the original full-subtree behaviour). When
+     * {@code maxTerms > 0} we run a bounded breadth-first walk through direct children and
+     * stop as soon as {@code maxTerms} URIs (root included) have been collected — useful for
+     * very broad parents like "metabolic process" where a full descendant walk produces
+     * thousands of URIs that the caller doesn't actually need.
+     * <p>
+     * If the GO ontology isn't loaded, fall back to the single-URI case (logged) rather
+     * than 503.
      */
-    private Set<String> expandUris( String termUri, boolean propagate ) {
-        Set<String> uris = new HashSet<>();
+    private Set<String> expandUris( String termUri, boolean propagate, int maxTerms ) {
+        Set<String> uris = new LinkedHashSet<>();
         uris.add( termUri );
         if ( !propagate ) {
             return uris;
@@ -176,20 +188,103 @@ public class GoTermsWebService {
                         + " not loaded in OntologyService; falling back to exact-term lookup" );
                 return uris;
             }
-            Set<OntologyTerm> descendants = ontologyService.getChildren(
-                    Collections.singleton( term ), false, false,
-                    PROPAGATE_TIMEOUT_MS, TimeUnit.MILLISECONDS );
-            for ( OntologyTerm d : descendants ) {
-                if ( d.getUri() != null ) {
-                    uris.add( d.getUri() );
+            if ( maxTerms <= 0 ) {
+                Set<OntologyTerm> descendants = ontologyService.getChildren(
+                        Collections.singleton( term ), false, false,
+                        PROPAGATE_TIMEOUT_MS, TimeUnit.MILLISECONDS );
+                for ( OntologyTerm d : descendants ) {
+                    if ( d.getUri() != null ) {
+                        uris.add( d.getUri() );
+                    }
+                }
+            } else {
+                long deadline = System.currentTimeMillis() + PROPAGATE_TIMEOUT_MS;
+                List<OntologyTerm> frontier = new ArrayList<>();
+                frontier.add( term );
+                while ( !frontier.isEmpty() && uris.size() < maxTerms ) {
+                    long remaining = deadline - System.currentTimeMillis();
+                    if ( remaining <= 0 ) break;
+                    Set<OntologyTerm> next = ontologyService.getChildren(
+                            frontier, true, false, remaining, TimeUnit.MILLISECONDS );
+                    List<OntologyTerm> newFrontier = new ArrayList<>();
+                    for ( OntologyTerm c : next ) {
+                        if ( c.getUri() == null ) continue;
+                        if ( uris.add( c.getUri() ) ) {
+                            newFrontier.add( c );
+                            if ( uris.size() >= maxTerms ) break;
+                        }
+                    }
+                    frontier = newFrontier;
                 }
             }
-            log.debug( "GoTermsWebService: propagate from " + termUri + " expanded to " + uris.size() + " URIs" );
+            log.debug( "GoTermsWebService: propagate from " + termUri + " expanded to " + uris.size() + " URIs"
+                    + ( maxTerms > 0 ? " (maxTerms=" + maxTerms + ")" : "" ) );
             return uris;
         } catch ( TimeoutException e ) {
             throw new ServiceUnavailableException(
                     "GO subtree expansion timed out; retry without propagate=true or wait for the ontology to finish loading.",
                     DateUtils.addSeconds( new Date(), 30 ), e );
         }
+    }
+
+    /**
+     * Distinct-gene count for the given GO term, optionally including descendants. Cheap —
+     * goes through {@code countByGOTermUris}, which runs {@code COUNT(DISTINCT gene.id)}
+     * without materializing Gene rows. Use this in place of fetching the full gene list
+     * just to display "N genes annotated to {term}" badges.
+     */
+    @GET
+    @Path("/{termUri}/genes/count")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Count of genes annotated to a GO term (optionally including descendants)",
+            description = "Companion to `/goTerms/{termUri}/genes` for callers that only want " +
+                    "the count. `propagate=true` includes descendants. `maxTerms` (default 0) " +
+                    "caps the BFS descendant walk; useful for very broad parent terms.",
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "400", description = "Invalid termUri / taxon / maxTerms.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "503", description = "Ontology subtree expansion timed out (propagate=true only).",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+            })
+    public ubic.gemma.rest.util.ResponseDataObject<GoTermGeneCountValueObject> countGenesByGoTerm(
+            @PathParam("termUri") String termUri,
+            @QueryParam("taxon") TaxonArg<?> taxonArg,
+            @QueryParam("propagate") @DefaultValue("false") boolean propagate,
+            @Parameter(description = "When `propagate=true`, cap the breadth-first descendant walk at this many terms (including the root). Default 0 = unbounded.")
+            @QueryParam("maxTerms") @DefaultValue("0") int maxTerms
+    ) {
+        if ( termUri == null || termUri.trim().isEmpty() ) {
+            throw new BadRequestException( "GO term URI is required." );
+        }
+        if ( maxTerms < 0 ) {
+            throw new BadRequestException( "maxTerms must be >= 0." );
+        }
+        Taxon taxon = taxonArg != null ? taxonArgService.getEntity( taxonArg ) : null;
+        Set<String> uris = expandUris( termUri, propagate, maxTerms );
+        long count = gene2GOAssociationService.countByGOTermUris( uris, taxon );
+        return ubic.gemma.rest.util.Responders.respond(
+                new GoTermGeneCountValueObject( termUri, count, uris.size(), propagate, maxTerms ) );
+    }
+
+    /**
+     * Wire payload for {@code GET /goTerms/{termUri}/genes/count}. Fields:
+     * <ul>
+     *   <li>{@code termUri} — the URI whose count is reported.</li>
+     *   <li>{@code geneCount} — number of distinct genes annotated, including the
+     *       descendants traversed during expansion when {@code propagate=true}.</li>
+     *   <li>{@code termsScanned} — how many GO URIs the count covers (root + descendants
+     *       that were walked under the {@code maxTerms} cap).</li>
+     *   <li>{@code propagate} / {@code maxTerms} — echoed back from the request so callers
+     *       can detect "I asked for unbounded but got bounded" or vice versa.</li>
+     * </ul>
+     */
+    @lombok.Value
+    public static class GoTermGeneCountValueObject {
+        String termUri;
+        long geneCount;
+        int termsScanned;
+        boolean propagate;
+        int maxTerms;
     }
 }
