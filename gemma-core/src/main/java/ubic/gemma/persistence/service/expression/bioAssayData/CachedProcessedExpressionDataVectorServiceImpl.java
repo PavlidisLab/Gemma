@@ -726,7 +726,12 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
     }
 
     private Collection<BioAssayDimension> getBioAssayDimensions( BioAssaySet bas ) {
-        return expressionExperimentService.getProcessedBioAssayDimensionsWithAssays( getExperiment( bas ) );
+        // Delegate to the batched multi-EE path so the per-bioassay lazy-init chain
+        // (arrayDesign / designProvider / sourceTaxon / treatments / factorValues.EF for
+        // every assay in every BAD) collapses into the batched BioMaterial loader instead
+        // of N+1 round-trips. Saves ~13s cold on /datasets/{id}/expressions/differential.
+        Map<BioAssaySet, Collection<BioAssayDimension>> m = getBioAssayDimensions( Collections.singletonList( bas ) );
+        return m.getOrDefault( bas, Collections.emptyList() );
     }
 
     private ExpressionExperiment getExperiment( BioAssaySet bas ) {
