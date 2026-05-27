@@ -18,6 +18,10 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MappedSuperclass;
 import lombok.Getter;
 import lombok.Setter;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -30,8 +34,13 @@ import java.util.Objects;
  */
 @Getter
 @Setter
+@MappedSuperclass
 public abstract class DesignElementDataVector extends DataVector {
 
+    // EAGER matches the hbm default (lazy="false") for the bulk + single-cell vector tables; the
+    // single-cell entity adds a named foreign-key via @AssociationOverride.
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "DESIGN_ELEMENT_FK", nullable = false, columnDefinition = "BIGINT")
     private CompositeSequence designElement;
 
     /**

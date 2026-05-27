@@ -18,6 +18,12 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -33,6 +39,8 @@ import java.util.Objects;
  */
 @Getter
 @Setter
+@Entity
+@Table(name = "PROCESSED_EXPRESSION_DATA_VECTOR")
 public class ProcessedExpressionDataVector extends BulkExpressionDataVector {
 
     /**
@@ -45,6 +53,7 @@ public class ProcessedExpressionDataVector extends BulkExpressionDataVector {
      * this vector.
      */
     @Nullable
+    @Column(name = "RANK_BY_MEAN", columnDefinition = "DOUBLE")
     private Double rankByMean;
 
     /**
@@ -58,6 +67,7 @@ public class ProcessedExpressionDataVector extends BulkExpressionDataVector {
      * this vector.
      */
     @Nullable
+    @Column(name = "RANK_BY_MAX", columnDefinition = "DOUBLE")
     private Double rankByMax;
 
     /**
@@ -67,6 +77,7 @@ public class ProcessedExpressionDataVector extends BulkExpressionDataVector {
      * @see BioAssay#getNumberOfCells()
      */
     @Nullable
+    @OneToOne(fetch = FetchType.EAGER, mappedBy = "vector", cascade = CascadeType.ALL, orphanRemoval = true)
     private ProcessedExpressionDataVectorNumberOfCells numberOfCellsObject;
 
     @Nullable

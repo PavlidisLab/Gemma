@@ -1,7 +1,6 @@
 package ubic.gemma.model.expression.bioAssayData;
 
-import lombok.Getter;
-import lombok.Setter;
+import jakarta.persistence.MappedSuperclass;
 import ubic.gemma.model.common.AbstractIdentifiable;
 
 /**
@@ -13,14 +12,13 @@ import ubic.gemma.model.common.AbstractIdentifiable;
  * <p>
  * This is intentionally made package-private, you should only interact with {@link BulkExpressionDataVector#getNumberOfCells()}
  * and {@link BulkExpressionDataVector#setNumberOfCells(int[])}.
+ * <p>
+ * The {@code vector} association + the {@code numberOfCells} payload live on the concrete subclasses because the
+ * {@code vector} association target type is subclass-specific (raw vs processed) and shared-PK mapping via
+ * {@link jakarta.persistence.MapsId} must be declared on the owning entity.
  *
  * @author poirigui
  */
-@Getter
-@Setter
+@MappedSuperclass
 abstract class BulkExpressionDataVectorNumberOfCells extends AbstractIdentifiable {
-
-    private BulkExpressionDataVector vector;
-
-    private int[] numberOfCells;
 }

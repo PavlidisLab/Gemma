@@ -18,6 +18,13 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.Transient;
 import lombok.Getter;
 import lombok.Setter;
 import ubic.gemma.model.common.AbstractIdentifiable;
@@ -25,7 +32,6 @@ import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-import jakarta.persistence.Transient;
 import java.nio.*;
 import java.util.Arrays;
 import java.util.Objects;
@@ -38,10 +44,23 @@ import static ubic.gemma.persistence.util.ByteArrayUtils.*;
  */
 @Getter
 @Setter
+@MappedSuperclass
 public abstract class DataVector extends AbstractIdentifiable {
 
+    // Bulk-vector defaults (RawED + ProcessedED): expressionExperiment LAZY/not-null, quantitationType
+    // LAZY/nullable. SingleCellExpressionDataVector overrides not-null + foreign-key names via
+    // @AssociationOverride at the entity level; fetch=LAZY is preserved (@AssociationOverride cannot
+    // change fetch mode — single-cell loaders use explicit JOIN FETCH already).
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "EXPRESSION_EXPERIMENT_FK", nullable = false, columnDefinition = "BIGINT")
     private ExpressionExperiment expressionExperiment;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "QUANTITATION_TYPE_FK", columnDefinition = "BIGINT")
     private QuantitationType quantitationType;
+
+    @Lob
+    @Column(name = "DATA", nullable = false, columnDefinition = "LONGBLOB")
     private byte[] data;
 
     /**
