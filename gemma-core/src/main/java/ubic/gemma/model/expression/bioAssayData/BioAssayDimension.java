@@ -18,10 +18,22 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OrderColumn;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Immutable;
+import org.springframework.lang.Nullable;
 import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 
-import org.springframework.lang.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -30,8 +42,20 @@ import java.util.Objects;
  * Stores the order of BioAssays referred to in DataVectors.
  * Note: Not a SecuredChild - maybe should be?
  */
+@Entity
+@Table(name = "BIO_ASSAY_DIMENSION")
+@Immutable
+@Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
 public class BioAssayDimension extends AbstractIdentifiable {
 
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(name = "BIO_ASSAY_DIMENSIONS2BIO_ASSAYS",
+            joinColumns = @JoinColumn(name = "BIO_ASSAY_DIMENSIONS_FK", columnDefinition = "BIGINT"),
+            inverseJoinColumns = @JoinColumn(name = "BIO_ASSAYS_FK", columnDefinition = "BIGINT"),
+            foreignKey = @ForeignKey(name = "BIO_ASSAY_BIO_ASSAY_DIMENSIONS_FKC"),
+            inverseForeignKey = @ForeignKey(name = "BIO_ASSAYS_FKC"))
+    @OrderColumn(name = "ORDERING")
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private List<BioAssay> bioAssays = new ArrayList<>();
 
     /**
@@ -39,6 +63,7 @@ public class BioAssayDimension extends AbstractIdentifiable {
      * TODO: switch to a regular boolean once all the entities have been migrated to the new schema.
      */
     @Nullable
+    @Column(name = "IS_MERGED", columnDefinition = "TINYINT")
     private Boolean merged;
 
     public List<BioAssay> getBioAssays() {
