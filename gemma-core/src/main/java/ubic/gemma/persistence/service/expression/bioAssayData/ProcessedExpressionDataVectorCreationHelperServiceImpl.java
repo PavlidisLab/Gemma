@@ -89,6 +89,8 @@ class ProcessedExpressionDataVectorCreationHelperServiceImpl implements Processe
                         RawExpressionDataVector::getNumberOfCells ) );
 
         Map<CompositeSequence, double[]> preferredData = unpackData( rawPreferredDataVectors, dimension );
+        // try to free some memory, only preferredData is used after this point
+        rawPreferredDataVectors = null;
 
         boolean isTwoChannel = expressionExperimentService.isTwoChannel( expressionExperiment );
         Collection<RawExpressionDataVector> missingValueVectors = getMissingValueVectors( expressionExperiment );

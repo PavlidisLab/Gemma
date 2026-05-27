@@ -4466,11 +4466,46 @@ public class ExpressionExperimentDaoImpl
         Assert.notNull( qt.getId(), "Quantitation type must be persistent." );
         Assert.isTrue( qt.getIsMaskedPreferred(), "QuantitationType must be marked as masked preferred." );
         checkVectors( ee, qt, vectors );
+
+        // persist metadata changes first without adding the vectors. vectors are added below in batches.
         ee.getQuantitationTypes().add( qt );
-        ee.getProcessedExpressionDataVectors().addAll( vectors );
         ee.setNumberOfDataVectors( vectors.size() );
-        updateWithNewVectors( ee, vectors );
-        return vectors.size();
+        update( ee );
+
+        // replicate the solution from createSingleCellDataVectors to batch then evict
+        // the vectors
+        Session session = getSessionFactory().getCurrentSession();
+        int batchSize = 500;
+        int count = 0;
+        List<ProcessedExpressionDataVector> batch = new ArrayList<>( batchSize );
+        for ( ProcessedExpressionDataVector v : vectors ) {
+            session.persist( v );
+            batch.add( v );
+            if ( ++count % batchSize == 0 ) {
+                session.flush();
+                for ( ProcessedExpressionDataVector b : batch ) {
+                    session.evict( b );
+                }
+                batch.clear();
+                log.info( String.format( "Persisted %d / %d processed vectors", count, vectors.size() ) );
+            }
+        }
+        if ( !batch.isEmpty() ) {
+            session.flush();
+            for ( ProcessedExpressionDataVector b : batch ) {
+                session.evict( b );
+            }
+            batch.clear();
+        }
+        log.info( String.format( "Persisted %d processed vectors for %s.", count, ee ) );
+
+        // Intentionally NOT calling session.refresh(ee): doing so resets the EE's already-initialised
+        // collections (e.g. quantitationTypes) to fresh lazy proxies, which then fail once the surrounding
+        // @Transactional boundary closes. The in-memory state is kept consistent by the earlier mutations
+        // (added qt to getQuantitationTypes(), set numberOfDataVectors). ee.getProcessedExpressionDataVectors()
+        // will be empty in-memory after the call — callers that need the populated collection should reload.
+
+        return count;
     }
 
     @Override
