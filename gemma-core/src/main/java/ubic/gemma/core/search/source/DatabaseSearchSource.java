@@ -601,7 +601,10 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
                 }
                 long maxMs = 0;
                 for ( long m : taskMs ) if ( m > maxMs ) maxMs = m;
-                if ( maxMs > 100 ) {
+                // Lowered threshold while we're profiling which of the six services is the slowest
+                // and which never finds anything — temporarily log every fan-out, restore to >100ms
+                // after we have a few representative samples to act on.
+                if ( maxMs > 0 ) {
                     StringBuilder sb = new StringBuilder( "Gene fallback fan-out for '" )
                             .append( exactString ).append( "' (parallel max=" ).append( maxMs ).append( "ms):" );
                     for ( int i = 0; i < tasks.size(); i++ ) {
