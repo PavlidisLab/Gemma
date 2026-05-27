@@ -14,7 +14,23 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.search.engine.backend.types.Projectable;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
@@ -53,6 +69,8 @@ import java.util.Set;
  *
  * @author paul
  */
+@Entity
+@DiscriminatorValue("ExpressionExperiment")
 @Indexed
 @Slf4j
 public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild, Curatable {
@@ -68,45 +86,72 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     public static final int MAX_BATCH_CONFOUND_LENGTH = 65535;
 
     @Nullable
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "ACCESSION_FK", columnDefinition = "BIGINT", unique = true)
     private DatabaseEntry accession;
 
     /**
      * Type of batch effect detected or corrected for. See {@link BatchEffectType} enum for possible values.
      */
     @Nullable
+    @Enumerated(EnumType.STRING)
+    @Column(name = "BATCH_EFFECT", columnDefinition = "VARCHAR(255)")
     private BatchEffectType batchEffect;
     /**
      * Summary statistics of the batch effect, if present.
      */
     @Nullable
+    @Column(name = "BATCH_EFFECT_STATISTICS", columnDefinition = "VARCHAR(255)")
     private String batchEffectStatistics;
     /**
      * A string describing the batch confound if a batch effect is present and confounded with one of the experimental
      * factor.
      */
     @Nullable
+    @Lob
+    @Column(name = "BATCH_CONFOUND", columnDefinition = "TEXT")
     private String batchConfound;
+
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinColumn(name = "CURATION_DETAILS_FK", columnDefinition = "BIGINT", unique = true)
     private CurationDetails curationDetails = new CurationDetails();
+
     @Nullable
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "EXPERIMENTAL_DESIGN_FK", columnDefinition = "BIGINT", unique = true)
     private ExperimentalDesign experimentalDesign;
+
     @Nullable
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "GEEQ_FK", columnDefinition = "BIGINT", unique = true)
     private Geeq geeq;
+
     @Nullable
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "MEAN_VARIANCE_RELATION_FK", columnDefinition = "BIGINT", unique = true)
     private MeanVarianceRelation meanVarianceRelation;
+
     @Nullable
+    @Lob
+    @Column(name = "METADATA", columnDefinition = "text")
     private String metadata;
     /**
      * TODO: allow this to be null in case there are no processed vectors
      */
+    @Column(name = "NUMBER_OF_DATA_VECTORS", columnDefinition = "INTEGER")
     private Integer numberOfDataVectors = 0;
     /**
      * TODO: rename this to numberOfAssays and add a numberOfSamples field that truly reflect the number of associated
      * {@link ubic.gemma.model.expression.biomaterial.BioMaterial}.
      */
+    @Column(name = "NUMBER_OF_SAMPLES", columnDefinition = "INTEGER")
     private Integer numberOfSamples = 0;
     @Nullable
+    @Column(name = "NUMBER_OF_CELLS", columnDefinition = "INTEGER")
     private Integer numberOfCells;
     @Nullable
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "TAXON_FK", columnDefinition = "BIGINT")
     private Taxon taxon;
 
     /**
@@ -125,17 +170,46 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     /**
      * If this experiment was split off of a larger experiment, link to its relatives.
      */
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "EXPRESSION_EXPERIMENT_SPLIT_RELATION",
+            joinColumns = @JoinColumn(name = "EXPRESSION_EXPERIMENT_FK", columnDefinition = "BIGINT"),
+            inverseJoinColumns = @JoinColumn(name = "OTHER_PART_FK", columnDefinition = "BIGINT"),
+            foreignKey = @ForeignKey(name = "EXPRESSION_EXPERIMENT_OTHER_PART_FKC"))
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<ExpressionExperiment> otherParts = new HashSet<>();
+
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "EXPRESSION_EXPERIMENT_FK", columnDefinition = "BIGINT",
+            foreignKey = @ForeignKey(name = "QUANTITATION_TYPE_EXPRESSION_EXPERIMENT_FKC"))
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<QuantitationType> quantitationTypes = new HashSet<>();
 
+    @OneToMany(mappedBy = "expressionExperiment", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Set<SingleCellExpressionDataVector> singleCellExpressionDataVectors = new HashSet<>();
+
+    @OneToMany(mappedBy = "expressionExperiment", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Set<RawExpressionDataVector> rawExpressionDataVectors = new HashSet<>();
+
+    @OneToMany(mappedBy = "expressionExperiment", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Set<ProcessedExpressionDataVector> processedExpressionDataVectors = new HashSet<>();
+
+    @Column(name = "SHORT_NAME", unique = true, columnDefinition = "VARCHAR(255)")
     private String shortName;
 
+    @Column(name = "SOURCE", columnDefinition = "VARCHAR(255)")
     private String source;
 
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "EXPRESSION_EXPERIMENT2CHARACTERISTIC",
+            joinColumns = @JoinColumn(name = "EXPRESSION_EXPERIMENT_FK", columnDefinition = "BIGINT", insertable = false, updatable = false),
+            inverseJoinColumns = @JoinColumn(name = "ID", columnDefinition = "BIGINT", insertable = false, updatable = false))
     private Set<Characteristic> allCharacteristics;
+
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "EXPRESSION_EXPERIMENT_FK", columnDefinition = "BIGINT",
+            foreignKey = @ForeignKey(name = "BIO_ASSAY_EXPRESSION_EXPERIMENT_FKC"))
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+    private Set<BioAssay> bioAssays = new HashSet<>();
 
     @Override
     @DocumentId
@@ -159,7 +233,12 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
     @IndexedEmbedded
     public Set<BioAssay> getBioAssays() {
-        return super.getBioAssays();
+        return bioAssays;
+    }
+
+    @Override
+    public void setBioAssays( Set<BioAssay> bioAssays ) {
+        this.bioAssays = bioAssays;
     }
 
     @Nullable

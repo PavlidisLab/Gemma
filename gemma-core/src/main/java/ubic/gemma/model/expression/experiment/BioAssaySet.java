@@ -19,10 +19,10 @@
 
 package ubic.gemma.model.expression.experiment;
 
+import jakarta.persistence.Entity;
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 
-import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -30,18 +30,19 @@ import java.util.Set;
  * <p>
  * This is not associated with any actual data, and soley represents a logical grouping of "samples" that can be used
  * for any purpose. These could be a published grouping, or a subset of samples from a published study.
+ * <p>
+ * The {@code bioAssays} association is declared independently on each concrete subclass —
+ * {@link ExpressionExperiment} stores them as a one-to-many on the {@code BIO_ASSAY} table, while
+ * {@link ExpressionExperimentSubSet} stores them via the {@code BIO_ASSAYS2EXPRESSION_EXPERIMENT_SUB_SET}
+ * many-to-many join table. The getter is abstract here so callers can target {@code BioAssaySet}
+ * polymorphically without forcing JPA to pick one mapping at the intermediate level.
  * @see ExpressionExperiment
  * @see ExpressionExperimentSubSet
  */
+@Entity
 public abstract class BioAssaySet extends Investigation {
 
-    private Set<BioAssay> bioAssays = new HashSet<>();
+    public abstract Set<BioAssay> getBioAssays();
 
-    public Set<BioAssay> getBioAssays() {
-        return bioAssays;
-    }
-
-    public void setBioAssays( Set<BioAssay> bioAssays ) {
-        this.bioAssays = bioAssays;
-    }
+    public abstract void setBioAssays( Set<BioAssay> bioAssays );
 }

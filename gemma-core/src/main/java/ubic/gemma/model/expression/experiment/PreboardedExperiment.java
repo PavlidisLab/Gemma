@@ -11,6 +11,10 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Lob;
 import ubic.gemma.model.analysis.Investigation;
 
 /**
@@ -35,15 +39,22 @@ import ubic.gemma.model.analysis.Investigation;
  * construction (collapsing handoff states 1+2; see STATUS file). Promotion
  * advances the resulting EE to {@link WorkflowState#Loaded}.</p>
  */
+@Entity
+@DiscriminatorValue("PreboardedExperiment")
 public class PreboardedExperiment extends Investigation {
 
+    @Column(name = "PREBOARDED_ACCESSION", columnDefinition = "VARCHAR(255)")
     private String accession;
+
+    @Column(name = "PREBOARDED_SOURCE", columnDefinition = "VARCHAR(32)")
     private String source = "GEO";
     /**
      * Free-form JSON payload of identifying metadata the agent harvested before
      * loading (title, summary, submitter, pubmed id, etc.). Stored as LONGTEXT
      * — the structured proposal lives separately in {@code AgentProposal}.
      */
+    @Lob
+    @Column(name = "PREBOARDED_IDENTIFYING_METADATA", columnDefinition = "LONGTEXT")
     private String identifyingMetadata;
     /**
      * JSON-as-string listing the matcher names that flagged this preboarded
@@ -51,6 +62,8 @@ public class PreboardedExperiment extends Investigation {
      * Null for preboardeds created outside the scrape pipeline (e.g. via the
      * curation-agent runner directly).
      */
+    @Lob
+    @Column(name = "PREBOARDED_MATCHED_CRITERIA", columnDefinition = "TEXT")
     private String matchedCriteria;
 
     public PreboardedExperiment() {
