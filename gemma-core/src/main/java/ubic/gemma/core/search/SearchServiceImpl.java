@@ -29,7 +29,10 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.ConverterNotFoundException;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.Assert;
 import org.springframework.util.LinkedMultiValueMap;
 import ubic.gemma.core.search.source.CompositeSearchSource;
@@ -126,8 +129,24 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     @Qualifier("valueObjectConversionService")
     private ConversionService valueObjectConversionService;
 
+    @Autowired(required = false)
+    private PlatformTransactionManager transactionManager;
+
     /** Composite source assembled from all registered {@link SearchSource} beans. */
     private CompositeSearchSource searchSource;
+
+    /**
+     * Sub-transaction template used to isolate the entity-path VO conversion from the outer
+     * search transaction. When a converter on a detached entity throws {@code LazyInitException},
+     * its own {@code @Transactional} advisor marks the surrounding transaction rollback-only;
+     * without containment, the outer commit then fails with {@code UnexpectedRollbackException}
+     * even though the catch-and-promote fallback has already produced valid results. Running
+     * the brittle convert call in {@link TransactionDefinition#PROPAGATION_REQUIRES_NEW} keeps
+     * the rollback flag scoped to the sub-transaction. Null in unit-test contexts that don't
+     * wire a {@code PlatformTransactionManager}; the entity-path then runs in the outer txn
+     * (same behaviour as before — tests don't reproduce the txn-poisoning anyway).
+     */
+    private TransactionTemplate entityPathTxTemplate;
 
     private final Map<Class<? extends Identifiable>, Class<? extends IdentifiableValueObject<?>>> supportedResultTypes = new HashMap<>();
 
@@ -135,6 +154,12 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     public void afterPropertiesSet() {
         searchSource = new CompositeSearchSource( searchSources );
         initializeSupportedResultTypes();
+        if ( transactionManager != null ) {
+            entityPathTxTemplate = new TransactionTemplate( transactionManager );
+            entityPathTxTemplate.setPropagationBehavior( TransactionDefinition.PROPAGATION_REQUIRES_NEW );
+            entityPathTxTemplate.setReadOnly( true );
+            entityPathTxTemplate.setName( "SearchServiceImpl.entityPathVoConvert" );
+        }
     }
 
     @Override
@@ -243,6 +268,28 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     }
 
     /**
+     * Convert entities to VOs in a {@link TransactionDefinition#PROPAGATION_REQUIRES_NEW}
+     * sub-transaction so a {@code LazyInitException} thrown by an inner converter (and
+     * promoted to rollback-only by its own {@code @Transactional} advisor) does not poison
+     * the outer search transaction. The caller's catch on {@link ConversionFailedException}
+     * still sees the wrapped exception and falls through to the id-path. When no
+     * {@code PlatformTransactionManager} is wired (unit-test contexts) we run the convert
+     * inline; tests don't exercise the @Transactional advice chain that produces the
+     * poisoning, so the contained-rollback semantics are moot there.
+     */
+    @SuppressWarnings("unchecked")
+    private List<IdentifiableValueObject<?>> convertEntityPathIsolated( List<Identifiable> entities,
+                                                                        TypeDescriptor entityCollectionType,
+                                                                        TypeDescriptor voListType ) {
+        if ( entityPathTxTemplate == null ) {
+            return ( List<IdentifiableValueObject<?>> ) valueObjectConversionService.convert(
+                    entities, entityCollectionType, voListType );
+        }
+        return entityPathTxTemplate.execute( status -> ( List<IdentifiableValueObject<?>> ) valueObjectConversionService.convert(
+                entities, entityCollectionType, voListType ) );
+    }
+
+    /**
      * Walk the cause chain to the deepest Throwable and return its message — used by the
      * VO-conversion fallback to surface "LazyInitializationException: AuditEvent#…" in the
      * log line instead of the wrapping ConversionFailedException's generic stringification.
@@ -299,15 +346,20 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             // its converter walks (e.g. AuditEvent on ExpressionExperiment / ArrayDesign) are
             // initialized. The HibernateSearch source returns detached entities for the
             // anonymous /search path (2026-05-25 frink hit: ConversionFailedException ->
-            // LazyInitializationException on AuditEvent), so on ConversionFailedException we
-            // promote the detached entities to id-only and fall through to the ID path,
-            // which fetches a fresh attached set via load(ids).
+            // LazyInitializationException on AuditEvent). Two layers of defence:
+            //   1. Run the convert call in a REQUIRES_NEW sub-transaction so the inner
+            //      converter's @Transactional advisor sets rollback-only on the sub-txn, not
+            //      the outer search txn — otherwise the outer commit then throws
+            //      UnexpectedRollbackException and the whole response (incl. successful
+            //      Gene/Taxon/etc. hits) collapses to a 500.
+            //   2. On ConversionFailedException, promote the detached entities to id-only
+            //      and fall through to the ID path, which fetches a fresh attached set via
+            //      load(ids) in the (still-clean) outer transaction.
             if ( !entities.isEmpty() ) {
                 try {
                     TypeDescriptor entityCollectionType = TypeDescriptor.collection( Collection.class, TypeDescriptor.valueOf( resultType ) );
                     TypeDescriptor voListType = TypeDescriptor.collection( List.class, TypeDescriptor.valueOf( voType ) );
-                    @SuppressWarnings("unchecked")
-                    List<IdentifiableValueObject<?>> vos = ( List<IdentifiableValueObject<?>> ) valueObjectConversionService.convert( entities, entityCollectionType, voListType );
+                    List<IdentifiableValueObject<?>> vos = convertEntityPathIsolated( entities, entityCollectionType, voListType );
                     if ( vos != null ) {
                         for ( IdentifiableValueObject<?> vo : vos ) {
                             if ( vo != null ) {
