@@ -19,6 +19,17 @@
 
 package ubic.gemma.model.analysis;
 
+import jakarta.persistence.DiscriminatorColumn;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Index;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.protocol.Protocol;
 
@@ -30,9 +41,18 @@ import org.springframework.lang.Nullable;
  *
  * @author Paul
  */
+@Entity
+@Table(name = "ANALYSIS", indexes = {
+        @Index(name = "ANALYSIS_NUMBER_OF_ELEMENTS_ANALYZED", columnList = "NUMBER_OF_ELEMENTS_ANALYZED")
+})
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "class")
+@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public abstract class Analysis extends AbstractDescribable {
 
     @Nullable
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "PROTOCOL_FK", columnDefinition = "BIGINT")
     private Protocol protocol;
 
     /**

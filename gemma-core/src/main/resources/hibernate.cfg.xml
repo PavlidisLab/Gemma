@@ -22,7 +22,14 @@
         <mapping class="ubic.gemma.core.security.acl.domain.AclGrantedAuthoritySid"/>
 
         <!-- Gemma analysis -->
-        <mapping resource="ubic/gemma/model/analysis/Analysis.hbm.xml"/>
+        <mapping class="ubic.gemma.model.analysis.Analysis"/>
+        <mapping class="ubic.gemma.model.analysis.expression.ExpressionAnalysis"/>
+        <mapping class="ubic.gemma.model.analysis.SingleExperimentAnalysis"/>
+        <mapping class="ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis"/>
+        <mapping class="ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionAnalysis"/>
+        <mapping class="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis"/>
+        <mapping class="ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis"/>
+        <mapping class="ubic.gemma.model.expression.bioAssayData.CellTypeAssignment"/>
         <mapping class="ubic.gemma.model.analysis.AnalysisResultSet"/>
         <mapping class="ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet"/>
         <mapping class="ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet"/>

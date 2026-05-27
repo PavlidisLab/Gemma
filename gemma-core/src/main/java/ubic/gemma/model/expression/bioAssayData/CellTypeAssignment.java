@@ -1,12 +1,25 @@
 package ubic.gemma.model.expression.bioAssayData;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderColumn;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Immutable;
+import org.hibernate.annotations.Parameter;
+import org.hibernate.annotations.Type;
 import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.annotations.MayBeUninitialized;
 import ubic.gemma.model.common.DescribableUtils;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.util.ModelUtils;
+import ubic.gemma.persistence.hibernate.ByteArrayType;
 
 import org.springframework.lang.Nullable;
 import java.util.ArrayList;
@@ -23,6 +36,8 @@ import java.util.stream.Collectors;
  */
 @Getter
 @Setter
+@Entity
+@DiscriminatorValue("CellTypeAssignment")
 public class CellTypeAssignment extends Analysis implements CellLevelCharacteristics {
 
     public static final Comparator<CellTypeAssignment> COMPARATOR = Comparator
@@ -40,6 +55,8 @@ public class CellTypeAssignment extends Analysis implements CellLevelCharacteris
      * <p>
      * There can only be one preferred cell type assignment for a given {@link SingleCellDimension}.
      */
+    // hbm carried not-null="false" because of other Analysis subclasses sharing the table; preserve that.
+    @Column(name = "IS_PREFERRED", columnDefinition = "TINYINT")
     private boolean preferred;
 
     /**
@@ -47,15 +64,24 @@ public class CellTypeAssignment extends Analysis implements CellLevelCharacteris
      * <p>
      * The value {@code -1} is used to indicate an unknown cell type.
      */
+    @Type(value = ByteArrayType.class, parameters = @Parameter(name = "arrayType", value = "int"))
+    @Column(name = "CELL_TYPE_INDICES", columnDefinition = "LONGBLOB")
     private int[] cellTypeIndices;
 
     @Nullable
+    @Column(name = "NUMBER_OF_ASSIGNED_CELLS", columnDefinition = "INTEGER")
     private Integer numberOfAssignedCells;
 
     /**
      * List of cell types.
      */
+    // The cell types live in the CHARACTERISTIC table; spell out the FK + ordering column.
     @MayBeUninitialized
+    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinColumn(name = "CELL_TYPE_ASSIGNMENT_FK", columnDefinition = "BIGINT",
+            foreignKey = @ForeignKey(name = "CHARACTERISTIC_CELL_TYPE_ASSIGNMENT_FKC"))
+    @OrderColumn(name = "CELL_TYPE_ASSIGNMENT_ORDERING")
+    @Immutable
     private List<Characteristic> cellTypes = new ArrayList<>();
 
     /**
@@ -63,6 +89,7 @@ public class CellTypeAssignment extends Analysis implements CellLevelCharacteris
      * <p>
      * This must always be equal to number of elements of {@link #cellTypes}.
      */
+    @Column(name = "NUMBER_OF_CELL_TYPES", columnDefinition = "INTEGER")
     private int numberOfCellTypes;
 
     /**
