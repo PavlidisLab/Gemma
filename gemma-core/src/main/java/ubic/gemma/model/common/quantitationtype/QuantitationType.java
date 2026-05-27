@@ -18,6 +18,15 @@
  */
 package ubic.gemma.model.common.quantitationtype;
 
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.springframework.lang.NonNull;
 import org.springframework.util.Assert;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.DescribableUtils;
@@ -26,25 +35,31 @@ import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 
-import org.springframework.lang.NonNull;
 import java.util.Objects;
 
+@Entity
+@Table(name = "QUANTITATION_TYPE")
+@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+@AttributeOverride(name = "name", column = @Column(name = "NAME", nullable = false, columnDefinition = "VARCHAR(255)"))
 public class QuantitationType extends AbstractDescribable {
 
     /**
      * This will be false except for some Qts on two-colour platforms.
      */
+    @Column(name = "IS_BACKGROUND", nullable = false, columnDefinition = "TINYINT")
     private boolean isBackground;
 
     /**
      * True if this is explicitly background-subtracted by Gemma. This is not very important and would only apply to
      * two-colour platforms since we don't background-subtract otherwise.
      */
+    @Column(name = "IS_BACKGROUND_SUBTRACTED", nullable = false, columnDefinition = "TINYINT")
     private boolean isBackgroundSubtracted;
 
     /**
      * Refers to batch correction by Gemma. This should only ever be true for the ProcessedData.
      */
+    @Column(name = "IS_BATCH_CORRECTED", nullable = false, columnDefinition = "TINYINT")
     private boolean isBatchCorrected;
 
     /**
@@ -54,22 +69,27 @@ public class QuantitationType extends AbstractDescribable {
      * <p>
      * For raw data, this is pretty confusing since we don't make clear what we mean by "normalized".
      */
+    @Column(name = "IS_NORMALIZED", nullable = false, columnDefinition = "TINYINT")
     private boolean isNormalized;
 
     /**
      * Indicate if the data is aggregated, usually from single-cell data.
      */
+    @Column(name = "IS_AGGREGATED", nullable = false, columnDefinition = "TINYINT")
     private boolean isAggregated;
 
     /**
      * Indicate which set of {@link ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector} is
      * preferred.
      */
+    // this needs a default to remain backward-compatible with 1.31, it can be removed once the release is out
+    @Column(name = "IS_SINGLE_CELL_PREFERRED", nullable = false, columnDefinition = "TINYINT default false")
     private boolean isSingleCellPreferred;
 
     /**
      * Indicate which set of {@link ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector} is preferred.
      */
+    @Column(name = "IS_PREFERRED", nullable = false, columnDefinition = "TINYINT")
     private boolean isPreferred;
 
     /**
@@ -78,18 +98,33 @@ public class QuantitationType extends AbstractDescribable {
      * @deprecated this is useless as there can only be one QT for processed data per dataset.
      */
     @Deprecated
+    @Column(name = "IS_MASKED_PREFERRED", nullable = false, columnDefinition = "TINYINT")
     private boolean isMaskedPreferred;
 
     /**
      * This is also confusing: it is an attempt to capture whether we just used the data from GEO (or whatever) or went
      * back to raw CEL or fastq files.
      */
+    @Column(name = "IS_RECOMPUTED_FROM_RAW_DATA", nullable = false, columnDefinition = "TINYINT")
     private boolean isRecomputedFromRawData = false;
 
+    @Column(name = "IS_RATIO", nullable = false, columnDefinition = "TINYINT")
     private boolean isRatio;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "GENERAL_TYPE", nullable = false, columnDefinition = "VARCHAR(255)")
     private GeneralType generalType;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "REPRESENTATION", nullable = false, columnDefinition = "VARCHAR(255)")
     private PrimitiveType representation;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "SCALE", nullable = false, columnDefinition = "VARCHAR(255)")
     private ScaleType scale;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "TYPE", nullable = false, columnDefinition = "VARCHAR(255)")
     private StandardQuantitationType type;
 
     public GeneralType getGeneralType() {

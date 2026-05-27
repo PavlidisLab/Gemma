@@ -1,7 +1,23 @@
 package ubic.gemma.model.expression.bioAssayData;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderColumn;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Immutable;
+import org.hibernate.annotations.Parameter;
+import org.hibernate.annotations.Type;
 import ubic.gemma.core.datastructure.sparse.SparseListUtils;
 import ubic.gemma.model.annotations.MayBeUninitialized;
 import ubic.gemma.model.common.AbstractIdentifiable;
@@ -21,11 +37,13 @@ import static ubic.gemma.core.datastructure.sparse.SparseListUtils.getSparseRang
  * @author poirigui
  * @see SingleCellExpressionDataVector
  */
+@Entity
+@Table(name = "SINGLE_CELL_DIMENSION")
+@Immutable
+@Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
 @Getter
 @Setter
 public class SingleCellDimension extends AbstractIdentifiable implements Identifiable {
-
-    private Long id;
 
     /**
      * Cell identifiers.
@@ -34,7 +52,11 @@ public class SingleCellDimension extends AbstractIdentifiable implements Identif
      * <p>
      * This is stored as a compressed, gzipped blob in the database. See {@link CompressedStringListType} for more details.
      */
+    // FIXME: the delimiter is not a real newline, but a backslash followed by a n, we would need to rewrite all
+    //        the cell IDs we have to fix this, see https://github.com/PavlidisLab/Gemma/issues/1365
     @MayBeUninitialized(hasSize = true)
+    @Type(value = CompressedStringListType.class, parameters = @Parameter(name = "delimiter", value = "\\n"))
+    @Column(name = "CELL_IDS", nullable = false, columnDefinition = "LONGBLOB")
     private List<String> cellIds = new ArrayList<>();
 
     /**
@@ -44,6 +66,8 @@ public class SingleCellDimension extends AbstractIdentifiable implements Identif
      * <p>
      * This must always be equal to the size of {@link #cellIds}.
      */
+    // TODO: rename to NUMBER_OF_CELL_IDS
+    @Column(name = "NUMBER_OF_CELLS", nullable = false, columnDefinition = "INTEGER")
     private int numberOfCellIds = 0;
 
     /**
@@ -56,6 +80,14 @@ public class SingleCellDimension extends AbstractIdentifiable implements Identif
      * To find the {@link BioAssay} of a given cell, use {@link #getBioAssay(int)}.
      */
     @MayBeUninitialized
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(name = "BIO_ASSAYS2SINGLE_CELL_DIMENSIONS",
+            joinColumns = @JoinColumn(name = "SINGLE_CELL_DIMENSIONS_FK", columnDefinition = "BIGINT"),
+            inverseJoinColumns = @JoinColumn(name = "BIO_ASSAYS_FK", columnDefinition = "BIGINT"),
+            foreignKey = @ForeignKey(name = "SINGLE_CELL_DIMENSIONS_FKC"),
+            inverseForeignKey = @ForeignKey(name = "BIO_ASSAYS_SC_FKC"))
+    @OrderColumn(name = "ORDERING")
+    @Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
     private List<BioAssay> bioAssays = new ArrayList<>();
 
     /**
@@ -67,6 +99,8 @@ public class SingleCellDimension extends AbstractIdentifiable implements Identif
      * <p>
      * This may be set to {@code null} to keep the model lightweight.
      */
+    @Type(value = ByteArrayType.class, parameters = @Parameter(name = "arrayType", value = "int"))
+    @Column(name = "BIO_ASSAYS_OFFSET", nullable = false, columnDefinition = "LONGBLOB")
     private int[] bioAssaysOffset = new int[0];
 
     /**
@@ -76,6 +110,9 @@ public class SingleCellDimension extends AbstractIdentifiable implements Identif
      * {@link CellTypeAssignment#isPreferred()} if non-empty.
      */
     @MayBeUninitialized
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "SINGLE_CELL_DIMENSION_FK", columnDefinition = "BIGINT",
+            foreignKey = @ForeignKey(name = "SINGLE_CELL_DIMENSION_FKC"))
     private Set<CellTypeAssignment> cellTypeAssignments = new HashSet<>();
 
     /**
@@ -84,6 +121,9 @@ public class SingleCellDimension extends AbstractIdentifiable implements Identif
      * Cell types have a special treatment and should be added to {@link #cellTypeAssignments}.
      */
     @MayBeUninitialized
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "SINGLE_CELL_DIMENSION_FK", columnDefinition = "BIGINT",
+            foreignKey = @ForeignKey(name = "CELL_LEVEL_CHARACTERISTICS_SINGLE_SINGLE_CELL_DIMENSION_FKC"))
     private Set<CellLevelCharacteristics> cellLevelCharacteristics = new HashSet<>();
 
     /**
@@ -143,8 +183,8 @@ public class SingleCellDimension extends AbstractIdentifiable implements Identif
         if ( !( obj instanceof SingleCellDimension ) )
             return false;
         SingleCellDimension scd = ( SingleCellDimension ) obj;
-        if ( id != null && scd.id != null )
-            return id.equals( scd.id );
+        if ( getId() != null && scd.getId() != null )
+            return getId().equals( scd.getId() );
         // bioAssays might be uninitialized, ignore it when comparing
         return ModelUtils.equals( bioAssays, scd.bioAssays ) == ModelUtils.EqualityOutcome.EQUAL
                 && Arrays.equals( bioAssaysOffset, scd.bioAssaysOffset )

@@ -18,6 +18,18 @@
  */
 package ubic.gemma.model.common.description;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.search.engine.backend.types.Projectable;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
@@ -36,34 +48,90 @@ import java.util.Set;
 /**
  * Hibernate Search 7 indexed root.
  */
+@Entity
+@Table(name = "BIBLIOGRAPHIC_REFERENCE")
+@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 @Indexed
 public class BibliographicReference extends AbstractDescribable {
 
+    @Lob
+    @Column(name = "AUTHOR_LIST", columnDefinition = "text")
     private String authorList;
+
+    @Lob
+    @Column(name = "TITLE", columnDefinition = "text")
     private String title;
+
+    @Column(name = "PUBLISHER", columnDefinition = "VARCHAR(255)")
     private String publisher;
+
+    @Column(name = "EDITOR", columnDefinition = "VARCHAR(255)")
     private String editor;
+
+    @Column(name = "VOLUME", columnDefinition = "VARCHAR(255)")
     private String volume;
+
+    @Column(name = "ISSUE", columnDefinition = "VARCHAR(255)")
     private String issue;
+
+    @Column(name = "PAGES", columnDefinition = "VARCHAR(255)")
     private String pages;
+
+    @Column(name = "PUBLICATION", columnDefinition = "VARCHAR(255)")
     private String publication;
+
+    @Column(name = "FULL_TEXT_URI", columnDefinition = "VARCHAR(255)")
     private String fullTextUri;
+
+    @Lob
+    @Column(name = "ABSTRACT_TEXT", columnDefinition = "text")
     private String abstractText;
+
+    @Lob
+    @Column(name = "CITATION", columnDefinition = "text")
     private String citation;
+
+    @Column(name = "PUBLICATION_DATE", columnDefinition = "DATE")
     private Date publicationDate;
+
     @Deprecated
+    @Lob
+    @Column(name = "ANNOTATED_ABSTRACT", columnDefinition = "text")
     private String annotatedAbstract;
+
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinColumn(name = "PUB_ACCESSION_FK", unique = true, columnDefinition = "BIGINT")
     private DatabaseEntry pubAccession;
+
+    @Column(name = "RETRACTED", columnDefinition = "TINYINT")
     private Boolean retracted = false;
 
     /**
      * @deprecated never used
      */
     @Deprecated
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "BIBLIOGRAPHIC_REFERENCE_FK", columnDefinition = "BIGINT",
+            foreignKey = @ForeignKey(name = "CHARACTERISTIC_BIBLIOGRAPHIC_REFERENCE_FKC"))
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<Characteristic> annotations = new HashSet<>();
 
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "MESH_BIB_REF_FK", columnDefinition = "BIGINT",
+            foreignKey = @ForeignKey(name = "MEDICAL_SUBJECT_HEADING_MESH_BIB_REF_FKC"))
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<MedicalSubjectHeading> meshTerms = new HashSet<>();
+
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "KEYWORD_BIB_REF_FK", columnDefinition = "BIGINT",
+            foreignKey = @ForeignKey(name = "KEYWORD_KEYWORD_BIB_REF_FKC"))
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<Keyword> keywords = new HashSet<>();
+
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "BIBLIOGRAPHIC_REFERENCE_FK", columnDefinition = "BIGINT",
+            foreignKey = @ForeignKey(name = "COMPOUND_BIBLIOGRAPHIC_REFERENCE_FKC"))
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<Compound> chemicals = new HashSet<>();
 
     @Override

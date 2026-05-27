@@ -19,12 +19,27 @@
 
 package ubic.gemma.model.expression.biomaterial;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexedEmbedded;
 import org.hibernate.search.mapper.pojo.automaticindexing.ReindexOnUpdate;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexingDependency;
+import org.springframework.lang.Nullable;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.DescribableUtils;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
@@ -35,8 +50,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
 
-import org.springframework.lang.Nullable;
-import jakarta.persistence.Transient;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Set;
@@ -57,6 +70,9 @@ import static ubic.gemma.persistence.service.expression.biomaterial.BioMaterialU
  * Drops its historical {@code @ContainedIn} on {@code bioAssaysUsedIn} — HS 7 derives the inverse
  * side automatically from the {@code @IndexedEmbedded} on {@code BioAssay.sampleUsed}.
  */
+@Entity
+@Table(name = "BIO_MATERIAL", indexes = @Index(name = "BIO_MATERIAL_NAME", columnList = "NAME"))
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @Indexed
 public class BioMaterial extends AbstractDescribable implements SecuredChild<ExpressionExperiment> {
 
@@ -67,16 +83,46 @@ public class BioMaterial extends AbstractDescribable implements SecuredChild<Exp
             .thenComparing( BioMaterial::getId, Comparator.nullsLast( Comparator.naturalOrder() ) );
 
     @Nullable
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "SOURCE_BIO_MATERIAL_FK", columnDefinition = "BIGINT",
+            foreignKey = @ForeignKey(name = "BIO_MATERIAL_SOURCE_BIO_MATERIAL_FKC"))
     private BioMaterial sourceBioMaterial;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "SOURCE_TAXON_FK", nullable = false, columnDefinition = "BIGINT")
     private Taxon sourceTaxon;
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(name = "BIO_MATERIAL_FACTOR_VALUES",
+            joinColumns = @JoinColumn(name = "BIO_MATERIALS_FK", columnDefinition = "BIGINT"),
+            inverseJoinColumns = @JoinColumn(name = "FACTOR_VALUES_FK", columnDefinition = "BIGINT"),
+            foreignKey = @ForeignKey(name = "FACTOR_VALUE_BIO_MATERIALS_FKC"))
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<FactorValue> factorValues = new HashSet<>();
+
+    @OneToMany(mappedBy = "sampleUsed", fetch = FetchType.EAGER)
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<BioAssay> bioAssaysUsedIn = new HashSet<>();
+
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "BIO_MATERIALS_FK", columnDefinition = "BIGINT",
+            foreignKey = @ForeignKey(name = "TREATMENT_BIO_MATERIALS_FKC"))
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<Treatment> treatments = new HashSet<>();
+
+    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinColumn(name = "BIO_MATERIAL_FK", columnDefinition = "BIGINT",
+            foreignKey = @ForeignKey(name = "CHARACTERISTIC_BIO_MATERIAL_FKC"))
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<Characteristic> characteristics = new HashSet<>();
+
     @Nullable
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinColumn(name = "EXTERNAL_ACCESSION_FK", unique = true, columnDefinition = "BIGINT")
     private DatabaseEntry externalAccession;
 
     @Nullable
+    @Transient
     private ExpressionExperiment securityOwner;
 
     @Override

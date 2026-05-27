@@ -57,14 +57,14 @@
 
         <!-- Common: description / measurement / protocol / quantitation -->
         <mapping resource="ubic/gemma/model/common/description/BibRefAnnotation.hbm.xml"/>
-        <mapping resource="ubic/gemma/model/common/description/BibliographicReference.hbm.xml"/>
+        <mapping class="ubic.gemma.model.common.description.BibliographicReference"/>
         <mapping resource="ubic/gemma/model/common/description/Characteristic.hbm.xml"/>
         <mapping class="ubic.gemma.model.common.description.DatabaseEntry"/>
         <mapping class="ubic.gemma.model.common.description.ExternalDatabase"/>
         <mapping class="ubic.gemma.model.common.measurement.Measurement"/>
         <mapping class="ubic.gemma.model.common.measurement.Unit"/>
         <mapping class="ubic.gemma.model.common.protocol.Protocol"/>
-        <mapping resource="ubic/gemma/model/common/quantitationtype/QuantitationType.hbm.xml"/>
+        <mapping class="ubic.gemma.model.common.quantitationtype.QuantitationType"/>
 
         <!-- Expression: arrays / bioassays / biomaterials -->
         <mapping class="ubic.gemma.model.expression.arrayDesign.AlternateName"/>
@@ -77,10 +77,10 @@
         <mapping resource="ubic/gemma/model/expression/bioAssayData/ProcessedExpressionDataVectorNumberOfCells.hbm.xml"/>
         <mapping resource="ubic/gemma/model/expression/bioAssayData/RawExpressionDataVector.hbm.xml"/>
         <mapping resource="ubic/gemma/model/expression/bioAssayData/RawExpressionDataVectorNumberOfCells.hbm.xml"/>
-        <mapping resource="ubic/gemma/model/expression/bioAssayData/SingleCellDimension.hbm.xml"/>
+        <mapping class="ubic.gemma.model.expression.bioAssayData.SingleCellDimension"/>
         <mapping class="ubic.gemma.model.expression.bioAssayData.SingleCellDimensionExperiment"/>
         <mapping resource="ubic/gemma/model/expression/bioAssayData/SingleCellExpressionDataVector.hbm.xml"/>
-        <mapping resource="ubic/gemma/model/expression/biomaterial/BioMaterial.hbm.xml"/>
+        <mapping class="ubic.gemma.model.expression.biomaterial.BioMaterial"/>
         <mapping class="ubic.gemma.model.expression.biomaterial.Compound"/>
         <mapping class="ubic.gemma.model.expression.biomaterial.Treatment"/>
         <mapping class="ubic.gemma.model.expression.designElement.CompositeSequence"/>
@@ -96,7 +96,7 @@
         <mapping resource="ubic/gemma/model/genome/ChromosomeFeature.hbm.xml"/>
         <mapping resource="ubic/gemma/model/genome/PhysicalLocation.hbm.xml"/>
         <mapping class="ubic.gemma.model.genome.Taxon"/>
-        <mapping resource="ubic/gemma/model/genome/biosequence/BioSequence.hbm.xml"/>
+        <mapping class="ubic.gemma.model.genome.biosequence.BioSequence"/>
         <mapping class="ubic.gemma.model.genome.gene.GeneAlias"/>
         <mapping class="ubic.gemma.model.genome.gene.GeneSet"/>
         <mapping class="ubic.gemma.model.genome.gene.GeneSetMember"/>
