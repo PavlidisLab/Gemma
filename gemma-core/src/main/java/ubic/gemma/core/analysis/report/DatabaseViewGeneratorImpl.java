@@ -23,6 +23,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import ubic.gemma.model.analysis.expression.diff.ContrastResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
@@ -72,9 +73,12 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
     @Autowired
     private ArrayDesignService arrayDesignService;
 
+    @Value("${gemma.appdata.home}")
+    private String appDataHome;
+
     @Override
     public File getOutputFile( String filename ) {
-        String fullFilePath = DatabaseViewGenerator.VIEW_DIR + filename;
+        String fullFilePath = appDataHome + File.separatorChar + "dataFiles" + File.separatorChar + filename;
         File f = new File( fullFilePath );
 
         if ( f.exists() ) {
