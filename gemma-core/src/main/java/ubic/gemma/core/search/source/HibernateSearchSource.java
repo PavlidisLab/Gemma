@@ -251,7 +251,20 @@ public class HibernateSearchSource implements FieldAwareSearchSource {
 
     @Override
     public Collection<ubic.gemma.model.common.search.SearchResult<Gene>> searchGene( SearchSettings settings, SearchContext context ) throws SearchException {
-        return searchFor( settings, context, Gene.class, settings.getMode() == SearchSettings.SearchMode.EXACT ? GENE_EXACT_FIELDS : GENE_FIELDS );
+        Collection<ubic.gemma.model.common.search.SearchResult<Gene>> hits =
+                searchFor( settings, context, Gene.class, settings.getMode() == SearchSettings.SearchMode.EXACT ? GENE_EXACT_FIELDS : GENE_FIELDS );
+        // DatabaseSearchSource already applies this filter inside searchGene; the HS leg
+        // is missing the equivalent which is why cross-taxa hits (e.g. human GRIN1 on a
+        // taxon=mouse query) leak through. Filter against the Gene's taxon — null result
+        // objects (fillResults=false callers) and null taxons are dropped conservatively.
+        if ( settings.getTaxonConstraint() != null ) {
+            ubic.gemma.model.genome.Taxon want = settings.getTaxonConstraint();
+            hits.removeIf( r -> {
+                Gene g = r.getResultObject();
+                return g == null || g.getTaxon() == null || !g.getTaxon().equals( want );
+            } );
+        }
+        return hits;
     }
 
     @Override

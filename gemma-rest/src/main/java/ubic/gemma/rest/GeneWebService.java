@@ -180,9 +180,10 @@ public class GeneWebService {
             throw new BadRequestException( "'limit' must be between 1 and " + SEARCH_MAX_LIMIT
                     + " (got " + limit + ")." );
         }
+        ubic.gemma.model.genome.Taxon taxon = taxonArg != null ? taxonArgService.getEntity( taxonArg ) : null;
         SearchSettings settings = SearchSettings.builder()
                 .query( query.trim() )
-                .taxonConstraint( taxonArg != null ? taxonArgService.getEntity( taxonArg ) : null )
+                .taxonConstraint( taxon )
                 .resultTypes( Collections.singleton( Gene.class ) )
                 .maxResults( limit )
                 .fillResults( true )
@@ -198,14 +199,26 @@ public class GeneWebService {
             throw new InternalServerErrorException( e );
         }
         List<GeneValueObject> vos = new ArrayList<>( raw.size() );
+        // Endpoint-level taxon filter: SearchService aggregates from multiple sources and not all
+        // honour SearchSettings.taxonConstraint (HibernateSearchSource and the GO source historically
+        // bypassed it). Backstop here so /genes/search never leaks cross-taxa hits.
+        Long wantTaxonId = taxon != null ? taxon.getId() : null;
         for ( SearchResult<?> sr : raw ) {
             Object o = sr.getResultObject();
+            GeneValueObject vo;
             if ( o instanceof GeneValueObject ) {
-                vos.add( ( GeneValueObject ) o );
+                vo = ( GeneValueObject ) o;
             } else if ( o instanceof Gene ) {
-                vos.add( new GeneValueObject( ( Gene ) o ) );
+                vo = new GeneValueObject( ( Gene ) o );
+            } else {
+                // SearchResults with null resultObject (see #417) are dropped silently.
+                continue;
             }
-            // SearchResults with null resultObject (see #417) are dropped silently.
+            if ( wantTaxonId != null
+                    && ( vo.getTaxon() == null || !wantTaxonId.equals( vo.getTaxon().getId() ) ) ) {
+                continue;
+            }
+            vos.add( vo );
         }
         return respond( vos );
     }
