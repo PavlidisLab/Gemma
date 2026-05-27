@@ -81,6 +81,16 @@ public class GoTermsWebService {
     @Autowired
     private OntologyService ontologyService;
 
+    /**
+     * GO ontology is autowired separately from the generic {@link OntologyService} list because
+     * {@link ubic.gemma.core.ontology.providers.GeneOntologyServiceImpl} wraps basecode's GO
+     * service and isn't picked up by the {@code List<OntologyService>} autowiring. Without this,
+     * {@code ontologyService.getTerm("http://purl.obolibrary.org/obo/GO_0008152")} returns null
+     * and propagate=true silently falls back to exact-term lookup.
+     */
+    @Autowired
+    private ubic.gemma.core.ontology.providers.GeneOntologyService geneOntologyService;
+
     @Autowired
     private TaxonArgService taxonArgService;
 
@@ -214,50 +224,56 @@ public class GoTermsWebService {
         if ( !propagate ) {
             return uris;
         }
-        try {
-            OntologyTerm term = ontologyService.getTerm( termUri, PROPAGATE_TIMEOUT_MS, TimeUnit.MILLISECONDS );
-            if ( term == null ) {
-                log.warn( "GoTermsWebService: propagate=true requested but " + termUri
-                        + " not loaded in OntologyService; falling back to exact-term lookup" );
-                return uris;
-            }
-            if ( maxTerms <= 0 ) {
-                Set<OntologyTerm> descendants = ontologyService.getChildren(
-                        Collections.singleton( term ), false, false,
-                        PROPAGATE_TIMEOUT_MS, TimeUnit.MILLISECONDS );
-                for ( OntologyTerm d : descendants ) {
-                    if ( d.getUri() != null ) {
-                        uris.add( d.getUri() );
-                    }
+        // Resolve via GeneOntologyService directly — see field-level comment for why the generic
+        // ontologyService doesn't see GO. {@code getTerm(uri)} accepts both the full OBO URI and
+        // GO:NNNNNNN / GO_NNNNNNN short forms, so normalizeGoUri is enough at the boundary.
+        if ( !geneOntologyService.isOntologyLoaded() ) {
+            log.warn( "GoTermsWebService: propagate=true requested but GO ontology not loaded; "
+                    + "falling back to exact-term lookup for " + termUri );
+            return uris;
+        }
+        OntologyTerm term = geneOntologyService.getTerm( termUri );
+        if ( term == null ) {
+            log.warn( "GoTermsWebService: propagate=true requested but " + termUri
+                    + " not present in GO; falling back to exact-term lookup" );
+            return uris;
+        }
+        if ( maxTerms <= 0 ) {
+            // Full subtree. Walk via OntologyTerm.getChildren(false, false): transitive
+            // subClassOf, no additional-property edges, no self.
+            Collection<OntologyTerm> descendants = term.getChildren( false, false );
+            for ( OntologyTerm d : descendants ) {
+                if ( d.getUri() != null ) {
+                    uris.add( d.getUri() );
                 }
-            } else {
-                long deadline = System.currentTimeMillis() + PROPAGATE_TIMEOUT_MS;
-                List<OntologyTerm> frontier = new ArrayList<>();
-                frontier.add( term );
-                while ( !frontier.isEmpty() && uris.size() < maxTerms ) {
-                    long remaining = deadline - System.currentTimeMillis();
-                    if ( remaining <= 0 ) break;
-                    Set<OntologyTerm> next = ontologyService.getChildren(
-                            frontier, true, false, remaining, TimeUnit.MILLISECONDS );
-                    List<OntologyTerm> newFrontier = new ArrayList<>();
-                    for ( OntologyTerm c : next ) {
+            }
+        } else {
+            // BFS via direct children. Bounded by maxTerms and by PROPAGATE_TIMEOUT_MS as a
+            // safety net — basecode's getChildren is purely in-memory once GO is loaded, so
+            // the timeout rarely fires, but keep it for the edge case of a still-warming index.
+            long deadline = System.currentTimeMillis() + PROPAGATE_TIMEOUT_MS;
+            List<OntologyTerm> frontier = new ArrayList<>();
+            frontier.add( term );
+            while ( !frontier.isEmpty() && uris.size() < maxTerms
+                    && System.currentTimeMillis() < deadline ) {
+                List<OntologyTerm> newFrontier = new ArrayList<>();
+                for ( OntologyTerm f : frontier ) {
+                    Collection<OntologyTerm> direct = f.getChildren( true, false );
+                    for ( OntologyTerm c : direct ) {
                         if ( c.getUri() == null ) continue;
                         if ( uris.add( c.getUri() ) ) {
                             newFrontier.add( c );
                             if ( uris.size() >= maxTerms ) break;
                         }
                     }
-                    frontier = newFrontier;
+                    if ( uris.size() >= maxTerms ) break;
                 }
+                frontier = newFrontier;
             }
-            log.debug( "GoTermsWebService: propagate from " + termUri + " expanded to " + uris.size() + " URIs"
-                    + ( maxTerms > 0 ? " (maxTerms=" + maxTerms + ")" : "" ) );
-            return uris;
-        } catch ( TimeoutException e ) {
-            throw new ServiceUnavailableException(
-                    "GO subtree expansion timed out; retry without propagate=true or wait for the ontology to finish loading.",
-                    DateUtils.addSeconds( new Date(), 30 ), e );
         }
+        log.debug( "GoTermsWebService: propagate from " + termUri + " expanded to " + uris.size() + " URIs"
+                + ( maxTerms > 0 ? " (maxTerms=" + maxTerms + ")" : "" ) );
+        return uris;
     }
 
     /**
