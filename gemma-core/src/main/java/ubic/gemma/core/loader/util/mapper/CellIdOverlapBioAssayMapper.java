@@ -70,7 +70,7 @@ public class CellIdOverlapBioAssayMapper extends MapBasedEntityMapper<BioAssay> 
                         ambiguousAssays.add( bioAssays.get( j ) );
                     }
                 }
-                log.warn( String.format( "Overlap for %s was not unique: %d assays have %.2f%% matching cell IDs:\n\t%s",
+                log.warn( String.format( "Overlap for %s was not unique: %d assays have %.2f%% matching cell IDs:%n\t%s",
                         sampleName, maxCount, 100 * max, ambiguousAssays.stream().map( String::valueOf ).collect( Collectors.joining( "\n\t" ) ) ) );
                 continue;
             }

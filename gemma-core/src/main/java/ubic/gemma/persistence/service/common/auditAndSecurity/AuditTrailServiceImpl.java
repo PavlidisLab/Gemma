@@ -101,7 +101,7 @@ public class AuditTrailServiceImpl extends AbstractService<AuditTrail> implement
         Long id = auditable.getId();
         auditable = ( Auditable ) sessionFactory.getCurrentSession().get( entityClass, id );
         if ( auditable == null ) {
-            log.error( String.format( "Failed to retrieve an auditable entity with class %s and ID %d in order to add an audit event with an exception.\n\tEvent Type: %s%s",
+            log.error( String.format( "Failed to retrieve an auditable entity with class %s and ID %d in order to add an audit event with an exception.%n\tEvent Type: %s%s",
                     entityClass.getName(), id, type.getName(), note != null ? "\n\tNote: " + note : "" ), throwable );
             return createAuditEvent( type, note, ExceptionUtils.getStackTrace( throwable ), new Date() );
         }

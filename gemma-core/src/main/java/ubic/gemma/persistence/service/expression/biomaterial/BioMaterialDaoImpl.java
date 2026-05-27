@@ -258,7 +258,7 @@ public class BioMaterialDaoImpl extends AbstractVoEnabledDao<BioMaterial, BioMat
                         filter( fv2 -> fv2.getExperimentalFactor().getId().equals( fv.getExperimentalFactor().getId() ) )
                         .map( FactorValue::toString )
                         .collect( Collectors.joining( "\n\t" ) );
-                throw new IllegalArgumentException( String.format( "%s has more than one factor values for %s:\n\t%s",
+                throw new IllegalArgumentException( String.format( "%s has more than one factor values for %s:%n\t%s",
                         bm,
                         IdentifiableUtils.toString( fv.getExperimentalFactor(), ExperimentalFactor.class ),
                         affectedFvs ) );

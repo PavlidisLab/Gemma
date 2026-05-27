@@ -147,7 +147,7 @@ public class DifferentialExpressionAnalysisFilter implements ExpressionDataFilte
             throw new NoSamplesException( "All samples were filtered out." );
         }
 
-        log.info( String.format( "Filter summary for %s of %s:\n%s", dataMatrix.getQuantitationType(),
+        log.info( String.format( "Filter summary for %s of %s:%n%s", dataMatrix.getQuantitationType(),
                 dataMatrix.getExpressionExperiment(), describeFilterResult( filterResult ) ) );
 
         return dataMatrix;

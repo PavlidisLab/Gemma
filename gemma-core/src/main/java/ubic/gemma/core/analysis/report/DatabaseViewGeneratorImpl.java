@@ -148,7 +148,7 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
                         if ( StringUtils.isNotBlank( c.getValueUri() ) )
                             uri = c.getValueUri();
 
-                        writer.write( String.format( "%d\t%s\t%s\n", gemmaId, c.getValue(), uri ) );
+                        writer.write( String.format( "%d\t%s\t%s", gemmaId, c.getValue(), uri ) + "\n" );
 
                     }
 
@@ -218,8 +218,8 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
                     manufacturers.append( ad.getDesignProvider().getName() ).append( "," );
                 }
 
-                writer.write( String.format( "%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", gemmaId, source, acc, shortName, name,
-                        description, taxon.getCommonName(), StringUtils.removeEnd( manufacturers.toString(), "," ) ) );
+                writer.write( String.format( "%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s", gemmaId, source, acc, shortName, name,
+                        description, taxon.getCommonName(), StringUtils.removeEnd( manufacturers.toString(), "," ) ) + "\n" );
 
                 if ( limit != null && ( limit > 0 && ++i > limit ) )
                     break;
@@ -361,9 +361,9 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
             String factorValueDescription;
             factorValueDescription = factorValue != null ? FactorValueUtils.getSummaryString( factorValue, " | " ) : "";
 
-            buf.append( String.format( "%d\t%s\t%s\t%d\t%s\t%s\t%s\t%s\t%s\n", ee.getId(), ee.getShortName(),
+            buf.append( String.format( "%d\t%s\t%s\t%d\t%s\t%s\t%s\t%s\t%s", ee.getId(), ee.getShortName(),
                     g.getNcbiGeneId().toString(), g.getId(), factorName, factorURI, baselineDescription,
-                    factorValueDescription, direction ) );
+                    factorValueDescription, direction ) ).append( "\n" );
         }
 
         return buf.toString();

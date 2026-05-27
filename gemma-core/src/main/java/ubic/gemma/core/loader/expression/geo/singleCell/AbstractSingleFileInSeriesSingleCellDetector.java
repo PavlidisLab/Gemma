@@ -61,7 +61,7 @@ public abstract class AbstractSingleFileInSeriesSingleCellDetector extends Abstr
         boolean found = false;
         for ( String file : series.getSupplementaryFiles() ) {
             if ( accepts( file ) ) {
-                log.info( String.format( "%s: Found %s in supplementary materials:\n\t%s", series.getGeoAccession(), name, file ) );
+                log.info( String.format( "%s: Found %s in supplementary materials:%n\t%s", series.getGeoAccession(), name, file ) );
                 found = true;
             }
         }

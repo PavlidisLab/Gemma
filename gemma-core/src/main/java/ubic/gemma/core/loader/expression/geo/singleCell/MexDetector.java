@@ -161,11 +161,11 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
         }
 
         if ( barcodes != null && features != null && matrix != null ) {
-            log.info( String.format( "%s: Found MEX files in supplementary materials:\n\t%s\n\t%s\n\t%s",
+            log.info( String.format( "%s: Found MEX files in supplementary materials:%n\t%s%n\t%s%n\t%s",
                     geoAccession, barcodes, features, matrix ) );
             return true;
         } else if ( barcodes != null || features != null || matrix != null ) {
-            log.warn( String.format( "%s: Found incomplete MEX files in supplementary materials:\n\t%s",
+            log.warn( String.format( "%s: Found incomplete MEX files in supplementary materials:%n\t%s",
                     geoAccession,
                     Stream.of( barcodes, features, matrix ).filter( Objects::nonNull ).collect( Collectors.joining( "\n\t" ) ) ) );
         }
@@ -232,11 +232,11 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
                                 }
                             }
                             if ( barcodesT != null && featuresT != null && matrixT != null ) {
-                                log.info( String.format( "%s: Found MEX files bundled in an archive %s:\n\t\t%s\n\t\t%s\n\t\t%s",
+                                log.info( String.format( "%s: Found MEX files bundled in an archive %s:%n\t\t%s%n\t\t%s%n\t\t%s",
                                         geoAccession, file, barcodesT, featuresT, matrixT ) );
                                 return true;
                             } else if ( barcodesT != null || featuresT != null || matrixT != null ) {
-                                log.warn( String.format( "%s: Found incomplete MEX files bundled in an archive %s:\n\t%s",
+                                log.warn( String.format( "%s: Found incomplete MEX files bundled in an archive %s:%n\t%s",
                                         geoAccession, file,
                                         Stream.of( barcodesT, featuresT, matrixT ).filter( Objects::nonNull ).collect( Collectors.joining( "\n\t" ) ) ) );
                             }

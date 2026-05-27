@@ -29,7 +29,7 @@ public class LoomSingleCellDetector extends AbstractSingleFileInSeriesSingleCell
         boolean found = false;
         for ( String file : sample.getSupplementaryFiles() ) {
             if ( accepts( file ) ) {
-                log.info( String.format( "%s: Found Loom in supplementary materials:\n\t%s", sample.getGeoAccession(), file ) );
+                log.info( String.format( "%s: Found Loom in supplementary materials:%n\t%s", sample.getGeoAccession(), file ) );
                 found = true;
             }
         }

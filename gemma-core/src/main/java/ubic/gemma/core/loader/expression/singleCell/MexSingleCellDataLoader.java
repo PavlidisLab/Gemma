@@ -140,10 +140,10 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
             }
         }
         if ( numberOfSamples > 0 && bas.isEmpty() ) {
-            throw new IllegalArgumentException( String.format( "No samples were matched. Possible identifiers are:\n\t%s",
+            throw new IllegalArgumentException( String.format( "No samples were matched. Possible identifiers are:%n\t%s",
                     EntityMapperUtils.getPossibleIdentifiers( bioAssays, bioAssayToSampleNameMapper ) ) );
         } else if ( !unmatchedSamples.isEmpty() ) {
-            String message = String.format( "No matching samples found for: %s. Possible identifiers are:\n\t%s",
+            String message = String.format( "No matching samples found for: %s. Possible identifiers are:%n\t%s",
                     unmatchedSamples.stream().sorted().collect( Collectors.joining( ", " ) ),
                     EntityMapperUtils.getPossibleIdentifiers( bas, bioAssayToSampleNameMapper ) );
             if ( ignoreUnmatchedSamples ) {

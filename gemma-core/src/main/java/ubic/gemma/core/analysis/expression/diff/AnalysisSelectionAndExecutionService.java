@@ -74,7 +74,7 @@ class AnalysisSelectionAndExecutionService {
         if ( config.getSubsetFactor() != null ) {
             Map<FactorValue, ExpressionExperimentSubSet> subsets = expressionExperimentService.getSubSetsByFactorValue( expressionExperiment, config.getSubsetFactor(), dmatrix.getBioAssayDimension() );
             if ( subsets != null ) {
-                log.info( String.format( "%s already has subsets for %s, reusing them:\n\t%s", expressionExperiment,
+                log.info( String.format( "%s already has subsets for %s, reusing them:%n\t%s", expressionExperiment,
                         config.getSubsetFactor(),
                         subsets.entrySet().stream().map( e -> e.getKey() + " -> " + e.getValue() ).collect( Collectors.joining( "\n\t" ) ) ) );
                 return diffExAnalyzer.run( expressionExperiment, subsets, dmatrix, config );

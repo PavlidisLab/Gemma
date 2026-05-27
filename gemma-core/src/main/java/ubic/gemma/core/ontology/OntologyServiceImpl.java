@@ -1179,7 +1179,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         while ( ( future = completionService.poll( ( long ) recheckMs, TimeUnit.MILLISECONDS ) ) == null ) {
             long remainingTimeMs = Math.max( timeoutMs - timer.getTime(), 0 );
             long i = futures.stream().filter( Future::isDone ).count();
-            String message = String.format( "%s is taking too long (%d/%d completed so far, %s elapsed). The following tasks %s:\n\t%s",
+            String message = String.format( "%s is taking too long (%d/%d completed so far, %s elapsed). The following tasks %s:%n\t%s",
                     description, i, futures.size(), timer,
                     remainingTimeMs > 0 ? "are still running" : "will be cancelled",
                     futures.stream()

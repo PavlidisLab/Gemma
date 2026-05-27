@@ -53,7 +53,7 @@ public class SingleCellExpressionExperimentCreateSubSetsAndAggregateServiceImpl 
     public QuantitationType createSubSetsAndAggregateByCellType( ExpressionExperiment expressionExperiment, SingleCellExperimentSubSetsCreationConfig singleCellExperimentSubSetsCreationConfig, SingleCellAggregationConfig config ) {
         List<ExpressionExperimentSubSet> subsets = singleCellExpressionExperimentSubSetService.createSubSetsByCellType( expressionExperiment, singleCellExperimentSubSetsCreationConfig );
         int longestSubsetName = subsets.stream().map( ExpressionExperimentSubSet::getName ).mapToInt( String::length ).max().orElse( 0 );
-        log.info( String.format( "Created %d subsets of %s for each cell type:\n\t%s", subsets.size(), expressionExperiment,
+        log.info( String.format( "Created %d subsets of %s for each cell type:%n\t%s", subsets.size(), expressionExperiment,
                 subsets.stream().map( subset -> StringUtils.rightPad( subset.getName(), longestSubsetName ) + "\t" + entityUrlBuilder.fromHostUrl().entity( subset ).web().toUri() ).collect( Collectors.joining( "\n\t" ) ) ) );
         List<BioAssay> cellBAs = new ArrayList<>();
         for ( ExpressionExperimentSubSet subset : subsets ) {
@@ -75,7 +75,7 @@ public class SingleCellExpressionExperimentCreateSubSetsAndAggregateServiceImpl 
         }
         List<ExpressionExperimentSubSet> subsets = singleCellExpressionExperimentSubSetService.createSubSets( expressionExperiment, scd, clc, cellTypeFactor, c2f, singleCellExperimentSubSetsCreationConfig );
         int longestSubsetName = subsets.stream().map( ExpressionExperimentSubSet::getName ).mapToInt( String::length ).max().orElse( 0 );
-        log.info( String.format( "Created %d subsets of %s for each cell type:\n\t%s", subsets.size(), expressionExperiment,
+        log.info( String.format( "Created %d subsets of %s for each cell type:%n\t%s", subsets.size(), expressionExperiment,
                 subsets.stream().map( subset -> StringUtils.rightPad( subset.getName(), longestSubsetName ) + "\t" + entityUrlBuilder.fromHostUrl().entity( subset ).web().toUri() ).collect( Collectors.joining( "\n\t" ) ) ) );
 
         List<BioAssay> cellBAs = new ArrayList<>( subsets.size() * clc.getCharacteristics().size() );

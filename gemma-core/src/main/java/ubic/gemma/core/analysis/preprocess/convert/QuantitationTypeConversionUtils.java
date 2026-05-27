@@ -160,7 +160,7 @@ public class QuantitationTypeConversionUtils {
             detectSuspiciousValues( log2Matrix, log2Qts.values().iterator().next() );
         } catch ( SuspiciousValuesForQuantitationException e ) {
             if ( ignoreQuantitationMismatch ) {
-                log.warn( String.format( "Expression data matrix contains suspicious values:\n\n - %s",
+                log.warn( String.format( "Expression data matrix contains suspicious values:%n%n - %s",
                         e.getSuspiciousValues().stream()
                                 .map( SuspiciousValuesForQuantitationException.SuspiciousValueResult::toString )
                                 .collect( Collectors.joining( "\n - " ) ) ) );

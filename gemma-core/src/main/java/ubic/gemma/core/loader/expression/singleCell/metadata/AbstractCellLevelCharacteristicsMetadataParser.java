@@ -134,7 +134,7 @@ abstract class AbstractCellLevelCharacteristicsMetadataParser<T extends CellLeve
                         String sampleNameCandidates = EntityMapperUtils.getPossibleIdentifiers( singleCellDimension.getBioAssays(), bioAssayMapper );
                         Set<BioAssay> bas = bioAssayMapper.matchAll( singleCellDimension.getBioAssays(), sampleName );
                         if ( bas.isEmpty() ) {
-                            String m = String.format( "No assay found for %s. Possible values are:\n\t%s",
+                            String m = String.format( "No assay found for %s. Possible values are:%n\t%s",
                                     sampleName, sampleNameCandidates );
                             if ( ignoreUnmatchedSamples ) {
                                 log.warn( m );
@@ -143,7 +143,7 @@ abstract class AbstractCellLevelCharacteristicsMetadataParser<T extends CellLeve
                                 throw new IllegalArgumentException( m );
                             }
                         } else if ( bas.size() > 1 ) {
-                            throw new IllegalArgumentException( String.format( "More than one assay match %s. There might be a better identifier to use, possible values are: \n\t%s",
+                            throw new IllegalArgumentException( String.format( "More than one assay match %s. There might be a better identifier to use, possible values are: %n\t%s",
                                     sampleName, sampleNameCandidates ) );
                         }
                         return bas.iterator().next();

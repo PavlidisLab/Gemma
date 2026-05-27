@@ -69,10 +69,10 @@ public class SingleCellExpressionExperimentSubSetServiceImpl implements SingleCe
         unmappedFactorValues.removeAll( mappedCellTypeFactors.values() );
         if ( !unmappedFactorValues.isEmpty() ) {
             if ( config.isIgnoreUnmatchedFactorValues() ) {
-                log.warn( String.format( "Not all factor values in %s are mapped to cell types in %s, subsets for the following factor values will not be created:\n\t%s",
+                log.warn( String.format( "Not all factor values in %s are mapped to cell types in %s, subsets for the following factor values will not be created:%n\t%s",
                         factor, clc, unmappedFactorValues.stream().map( FactorValue::toString ).collect( Collectors.joining( "\n\t" ) ) ) );
             } else {
-                throw new IllegalStateException( String.format( "Not all factor values in %s are mapped to cell types in %s. Remove these factor values or set allowUnmappedFactorValues to true:\n\t%s",
+                throw new IllegalStateException( String.format( "Not all factor values in %s are mapped to cell types in %s. Remove these factor values or set allowUnmappedFactorValues to true:%n\t%s",
                         factor, clc, unmappedFactorValues.stream().map( FactorValue::toString ).collect( Collectors.joining( "\n\t" ) ) ) );
             }
         }
@@ -88,7 +88,7 @@ public class SingleCellExpressionExperimentSubSetServiceImpl implements SingleCe
             }
         }
         if ( !samplesWithoutData.isEmpty() ) {
-            log.warn( String.format( "%d sample(s) of %s are not present in %s and will be excluded from pseudo-bulk aggregation:\n\t%s",
+            log.warn( String.format( "%d sample(s) of %s are not present in %s and will be excluded from pseudo-bulk aggregation:%n\t%s",
                     samplesWithoutData.size(), ee, scd,
                     samplesWithoutData.stream().map( BioAssay::toString ).collect( Collectors.joining( "\n\t" ) ) ) );
         }

@@ -189,7 +189,7 @@ public class ExpressionExperimentFilter implements ExpressionDataFilter<Expressi
         result.setFinalRows( dataMatrix.rows() );
         result.setFinalColumns( ExpressionDataFilterUtils.countSamplesWithData( dataMatrix ) );
 
-        String buf = String.format( "Filter summary for %s of %s:\n%s", dataMatrix.getQuantitationType(),
+        String buf = String.format( "Filter summary for %s of %s:%n%s", dataMatrix.getQuantitationType(),
                 dataMatrix.getExpressionExperiment(), describeFilterResult( result ) );
         ExpressionExperimentFilter.log.info( buf );
 

@@ -1098,7 +1098,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
         Assert.notNull( cm.getDatasets(), "Cannot select a dataset from a shallow collection metadata." );
         List<DatasetMetadata> matchedDatasets = cm.getDatasets().stream().filter( this::hasSingleCellData ).collect( Collectors.toList() );
         if ( matchedDatasets.size() > 1 ) {
-            throw new IllegalArgumentException( String.format( "More than one single-cell dataset found %s in CELLxGENE collection %s. Choose one among:\n\t%s",
+            throw new IllegalArgumentException( String.format( "More than one single-cell dataset found %s in CELLxGENE collection %s. Choose one among:%n\t%s",
                     geoSeries, cm.getId(), matchedDatasets.stream()
                             .map( dm -> String.format( "%s: %s (%s)",
                                     dm.getId(), dm.getName(),
@@ -1120,7 +1120,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
                 .filter( CellXGeneUtils::isAnnData )
                 .collect( Collectors.toList() );
         if ( annDataAssets.size() > 1 ) {
-            throw new IllegalArgumentException( String.format( "More than one asset found for CELLxGENE dataset %s. Choose one among:\t\n%s",
+            throw new IllegalArgumentException( String.format( "More than one asset found for CELLxGENE dataset %s. Choose one among:\t%n%s",
                     datasetMetadata.getId(), annDataAssets.stream().map( DatasetAsset::getId ).collect( Collectors.joining( "\t\n" ) ) ) );
         } else if ( annDataAssets.size() == 1 ) {
             DatasetAsset asset = annDataAssets.iterator().next();

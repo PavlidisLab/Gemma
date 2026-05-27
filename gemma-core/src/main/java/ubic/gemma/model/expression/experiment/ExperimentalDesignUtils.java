@@ -65,7 +65,7 @@ public class ExperimentalDesignUtils {
                     } else if ( values.size() == 1 ) {
                         value = values.iterator().next();
                     } else {
-                        throw new IllegalStateException( String.format( "%s has more than one value for %s:\n\t%s",
+                        throw new IllegalStateException( String.format( "%s has more than one value for %s:%n\t%s",
                                 sample, factor,
                                 values.stream().map( FactorValue::toString ).collect( Collectors.joining( "\n\t" ) ) ) );
                     }
