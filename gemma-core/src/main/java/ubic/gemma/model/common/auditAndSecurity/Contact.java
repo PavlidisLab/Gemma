@@ -23,6 +23,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Index;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.Table;
@@ -40,7 +41,7 @@ import java.util.Objects;
  * @author Paul
  */
 @Entity
-@Table(name = "CONTACT")
+@Table(name = "CONTACT", indexes = @Index(name = "CONTACT_DELETED_AT_IDX", columnList = "DELETED_AT"))
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "class")
 @DiscriminatorValue("Contact")

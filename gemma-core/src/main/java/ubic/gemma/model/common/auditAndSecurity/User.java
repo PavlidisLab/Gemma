@@ -22,10 +22,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.Index;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 
@@ -39,7 +37,6 @@ import java.util.Set;
  */
 @Entity
 @DiscriminatorValue("User")
-@Table(indexes = @Index(name = "CONTACT_DELETED_AT_IDX", columnList = "DELETED_AT"))
 public class User extends Person implements ubic.gemma.core.security.model.User {
 
     @Column(name = "USER_NAME", unique = true, updatable = false, columnDefinition = "VARCHAR(255)")
