@@ -65,6 +65,12 @@ import static org.apache.commons.lang3.StringUtils.stripToNull;
 @Table(name = "CHARACTERISTIC")
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "class", discriminatorType = DiscriminatorType.STRING)
+// hbm default for a <class> root without explicit discriminator-value was the entity name,
+// which in hbm meant the FQN (since hbm didn't set an explicit entity-name). Existing rows in
+// prod CHARACTERISTIC have class="ubic.gemma.model.common.description.Characteristic". JPA's
+// default would be the simple name "Characteristic", which doesn't match — leaving the value
+// implicit makes Hibernate fail with "EntityPersister null" when loading those rows.
+@DiscriminatorValue("ubic.gemma.model.common.description.Characteristic")
 @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @Indexed
 public class Characteristic extends AbstractDescribable implements Comparable<Characteristic> {
