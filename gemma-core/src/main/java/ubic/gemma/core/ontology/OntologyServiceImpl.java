@@ -886,7 +886,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             ontologyServicesToUse = this.ontologyServices;
         }
 
-        return searchInThreads( ontologyService -> {
+        Collection<CharacteristicValueObject> fromOntologies = searchInThreads( ontologyService -> {
             Collection<OntologySearchResult<OntologyTerm>> ontologyTerms = ontologyCache.findTerm( ontologyService, searchQuery, maxResults );
             Collection<CharacteristicValueObject> characteristicsFromOntology = new HashSet<>();
             for ( OntologySearchResult<OntologyTerm> ontologyTerm : ontologyTerms ) {
@@ -902,6 +902,29 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             }
             return characteristicsFromOntology;
         }, ontologyServicesToUse, "terms matching " + searchQuery, timeoutMs );
+
+        // GeneOntologyServiceImpl isn't part of the autowired ontologyServices list (it's a
+        // delegating-bean wrapper around basecode's GO service); the sibling findTerms() method
+        // adds it explicitly. Mirror that so /annotations/search?prefixes=GO_ actually returns
+        // GO terms — without this, the Visualize tab's GO-term picker returns 0 hits for any
+        // query because findExperimentsCharacteristicTags never asked GO.
+        if ( !useNeuroCartaOntology && geneOntologyService.isOntologyLoaded() ) {
+            try {
+                Collection<OntologySearchResult<OntologyTerm>> goTerms = ontologyCache.findTerm( geneOntologyService, searchQuery, maxResults );
+                List<CharacteristicValueObject> combined = new ArrayList<>( fromOntologies );
+                for ( OntologySearchResult<OntologyTerm> hit : goTerms ) {
+                    OntologyTerm t = hit.getResult();
+                    if ( t.getLabel() == null || characteristicFromDatabaseWithValueUri.get( t.getUri() ) != null ) {
+                        continue;
+                    }
+                    combined.add( new CharacteristicValueObject( t.getLabel().toLowerCase(), t.getUri() ) );
+                }
+                return combined;
+            } catch ( OntologySearchException e ) {
+                throw convertBaseCodeOntologySearchExceptionToSearchException( e, searchQuery );
+            }
+        }
+        return fromOntologies;
     }
 
     /**
