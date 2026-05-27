@@ -18,10 +18,25 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.Immutable;
+import org.springframework.lang.Nullable;
 import ubic.gemma.model.analysis.AnalysisResult;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
-import org.springframework.lang.Nullable;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -30,23 +45,60 @@ import java.util.Set;
  * Result of an analysis of differences in expression levels -- a single test (e.g., for one gene or one probe), for one
  * factor. These statistics are based on ANOVA-style analysis, with a collection of ContrastResults storing the
  * associated contrasts.
+ * <p>
+ * Intentionally no {@code @Cache} on this entity or its {@code contrasts} bag. This is the inner level of the
+ * two-level ExpressionAnalysisResultSet -&gt; DifferentialExpressionAnalysisResult chain flagged by
+ * HIBERNATE6_CASCADE_AUDIT.md risk #3 (matches the AuditTrail/AuditEvent shape fixed in ab8b4c443c): a read-only L2
+ * cache on a {@code mutable="false"} child of a {@code mutable="false"} parent causes Hibernate 6 to serve stale
+ * empty-bag results to fresh-session reads after cross-tx writes. {@code @Immutable} is retained because the rows
+ * ARE write-once-immutable; do not re-add an L2 cache directive without first re-validating the audit's read-path
+ * scenario.
  */
+@Entity
+@Table(name = "DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT",
+        indexes = @Index(name = "DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_CORRECTED_PVALUE",
+                columnList = "CORRECTED_PVALUE"))
+@Access(AccessType.FIELD)
+@Immutable
 public class DifferentialExpressionAnalysisResult extends AnalysisResult {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "ID", columnDefinition = "BIGINT")
+    private Long id;
+
     @Nullable
+    @Column(name = "PVALUE", columnDefinition = "DOUBLE")
     private Double pvalue;
+
     /**
      * Typically actually a qvalue.
      */
     @Nullable
+    @Column(name = "CORRECTED_PVALUE", columnDefinition = "DOUBLE")
     private Double correctedPvalue;
+
     @Nullable
+    @Column(name = "RANK", columnDefinition = "DOUBLE")
     private Double rank;
+
     @Nullable
+    @Column(name = "CORRECTED_P_VALUE_BIN", columnDefinition = "INTEGER")
     private Integer correctedPValueBin;
-    private Long id;
+
+    // FIXME: use cascade=ALL when https://github.com/PavlidisLab/Gemma/issues/825 is resolved
+    @OneToMany(fetch = FetchType.LAZY)
+    @JoinColumn(name = "DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK", columnDefinition = "BIGINT", nullable = false,
+            foreignKey = @ForeignKey(name = "CONTRAST_RESULT_DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FKC"))
+    @Immutable
     private Set<ContrastResult> contrasts = new HashSet<>();
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "RESULT_SET_FK", nullable = false, columnDefinition = "BIGINT")
     private ExpressionAnalysisResultSet resultSet;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "PROBE_FK", nullable = false, columnDefinition = "BIGINT")
     private CompositeSequence probe;
 
     private static int getBin( Double value ) {

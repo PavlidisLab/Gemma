@@ -31,7 +31,7 @@
         <mapping class="ubic.gemma.model.analysis.expression.ExpressionExperimentSet"/>
         <mapping class="ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionMatrix"/>
         <mapping class="ubic.gemma.model.analysis.expression.diff.ContrastResult"/>
-        <mapping resource="ubic/gemma/model/analysis/expression/diff/DifferentialExpressionAnalysisResult.hbm.xml"/>
+        <mapping class="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult"/>
         <mapping class="ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisResult"/>
         <mapping class="ubic.gemma.model.analysis.expression.diff.HitListSize"/>
         <mapping class="ubic.gemma.model.analysis.expression.diff.PvalueDistribution"/>
