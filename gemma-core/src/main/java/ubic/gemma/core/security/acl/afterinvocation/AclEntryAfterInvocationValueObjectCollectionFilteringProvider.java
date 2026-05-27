@@ -70,14 +70,20 @@ public class AclEntryAfterInvocationValueObjectCollectionFilteringProvider exten
         }
 
         String currentUsername = SecurityUtil.getCurrentUsername();
-        boolean isAdmin = SecurityUtil.isUserAdmin();
-
         // Admin bypass: mirror AclQueryUtils.formNativeAclRestrictionClause's SQL-side
         // short-circuit so the after-filter doesn't reject rows the SQL filter already
-        // let through. Without this, an admin viewing a private dataset gets data=[]
-        // because acl.isGranted(READ, sids, false) requires an explicit ACE granting
-        // GROUP_ADMIN on every object — frink's older filter chain bypassed this in
-        // gsec library code.
+        // let through. Inspect the supplied Authentication directly (rather than
+        // SecurityContextHolder) so unit-test paths that pass an Authentication without
+        // installing it in the context still see the right answer.
+        boolean isAdmin = false;
+        if ( authentication != null && authentication.getAuthorities() != null ) {
+            for ( org.springframework.security.core.GrantedAuthority ga : authentication.getAuthorities() ) {
+                if ( ubic.gemma.core.security.AuthorityConstants.ADMIN_GROUP_AUTHORITY.equals( ga.getAuthority() ) ) {
+                    isAdmin = true;
+                    break;
+                }
+            }
+        }
         if ( isAdmin ) {
             Arrays.fill( perms, true );
             // Still populate VO security fields for any SecureValueObject elements so

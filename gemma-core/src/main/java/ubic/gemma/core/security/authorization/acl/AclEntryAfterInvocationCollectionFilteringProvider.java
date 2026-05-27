@@ -24,7 +24,8 @@ import org.springframework.security.access.AuthorizationServiceException;
 import org.springframework.security.access.ConfigAttribute;
 import org.springframework.security.acls.model.*;
 import org.springframework.security.core.Authentication;
-import ubic.gemma.core.security.util.SecurityUtil;
+import org.springframework.security.core.GrantedAuthority;
+import ubic.gemma.core.security.AuthorityConstants;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -120,7 +121,7 @@ public class AclEntryAfterInvocationCollectionFilteringProvider extends org.spri
     @Override
     @Deprecated
     protected final boolean hasPermission( Authentication authentication, Object domainObject ) {
-        if ( SecurityUtil.isUserAdmin() ) {
+        if ( isAdmin( authentication ) ) {
             // Mirror the bulk-path admin bypass so the legacy per-element route stays consistent.
             return true;
         }
@@ -160,7 +161,7 @@ public class AclEntryAfterInvocationCollectionFilteringProvider extends org.spri
         // admin short-circuit. Without this, admins must rely on cached ACEs containing
         // an explicit GROUP_ADMIN grant; a cold or empty entries cache flips admin to a
         // 0-row response on private datasets even though the SQL filter let the row through.
-        if ( SecurityUtil.isUserAdmin() ) {
+        if ( isAdmin( authentication ) ) {
             Arrays.fill( perms, true );
             return perms;
         }
@@ -197,6 +198,18 @@ public class AclEntryAfterInvocationCollectionFilteringProvider extends org.spri
 
     protected boolean hasPermission( Acl acl, List<Sid> sids ) {
         return acl.isGranted( requirePermission, sids, false );
+    }
+
+    private static boolean isAdmin( Authentication authentication ) {
+        if ( authentication == null || authentication.getAuthorities() == null ) {
+            return false;
+        }
+        for ( GrantedAuthority ga : authentication.getAuthorities() ) {
+            if ( AuthorityConstants.ADMIN_GROUP_AUTHORITY.equals( ga.getAuthority() ) ) {
+                return true;
+            }
+        }
+        return false;
     }
 
     protected List<ObjectIdentity> getObjectIdentities( List<Object> domainObjects ) {
