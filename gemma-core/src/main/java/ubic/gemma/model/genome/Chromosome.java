@@ -18,22 +18,42 @@
  */
 package ubic.gemma.model.genome;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Immutable;
+import org.springframework.lang.Nullable;
 import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
-import org.springframework.lang.Nullable;
 import java.util.Objects;
 
 /**
  * Immutable representation of a chromosome
  */
+@Entity
+@Table(name = "CHROMOSOME")
+@Immutable
+@Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
 public class Chromosome extends AbstractIdentifiable {
 
+    @Column(name = "NAME", nullable = false, columnDefinition = "VARCHAR(255)")
     private String name;
     @Nullable
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ASSEMBLY_DATABASE_FK", columnDefinition = "BIGINT")
     private ExternalDatabase assemblyDatabase;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "SEQUENCE_FK", columnDefinition = "BIGINT")
     private BioSequence sequence;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "TAXON_FK", nullable = false, columnDefinition = "BIGINT")
     private Taxon taxon;
 
     public String getName() {

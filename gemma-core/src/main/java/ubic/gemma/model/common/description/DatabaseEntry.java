@@ -18,12 +18,21 @@
  */
 package ubic.gemma.model.common.description;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Immutable;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.KeywordField;
+import org.springframework.lang.Nullable;
 import ubic.gemma.model.common.AbstractIdentifiable;
 
-import org.springframework.lang.Nullable;
 import java.util.Comparator;
 import java.util.Objects;
 
@@ -36,6 +45,10 @@ import java.util.Objects;
  * {@code @IndexedEmbedded} from many indexed roots ({@link ubic.gemma.model.expression.experiment.ExpressionExperiment#getAccession()},
  * {@link ubic.gemma.model.expression.arrayDesign.ArrayDesign#getExternalReferences()}, etc.).
  */
+@Entity
+@Table(name = "DATABASE_ENTRY")
+@Immutable
+@Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
 @Indexed
 public class DatabaseEntry extends AbstractIdentifiable {
 
@@ -58,14 +71,19 @@ public class DatabaseEntry extends AbstractIdentifiable {
                 .thenComparing( DatabaseEntry::getId, Comparator.nullsLast( Comparator.naturalOrder() ) );
     }
 
+    @Column(name = "ACCESSION", columnDefinition = "VARCHAR(255)")
     private String accession;
+    @Column(name = "ACCESSION_VERSION", columnDefinition = "VARCHAR(255)")
     private String accessionVersion;
     /**
      * If present, overrides the default URI construction for this database entry which is usually based on
      * {@link ExternalDatabase#getWebUri()}.
      */
     @Nullable
+    @Column(name = "URI", columnDefinition = "VARCHAR(255)")
     private String uri;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "EXTERNAL_DATABASE_FK", nullable = false, columnDefinition = "BIGINT")
     private ExternalDatabase externalDatabase;
 
     @KeywordField

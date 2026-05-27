@@ -11,6 +11,14 @@
  */
 package ubic.gemma.model.pipeline;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.lang.Nullable;
@@ -29,17 +37,26 @@ import java.util.Objects;
  * <p>Conventional kinds: {@code progress}, {@code stage}, {@code stderr},
  * {@code killed}, {@code error}, {@code completed}.</p>
  */
+@Entity
+@Table(name = "PIPELINE_JOB_EVENT",
+        indexes = @Index(name = "IDX_PIPELINE_JOB_EVENT_JOB_AT", columnList = "JOB_FK, OCCURRED_AT"))
 @Getter
 @Setter
 public class PipelineJobEvent extends AbstractIdentifiable {
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "JOB_FK", nullable = false, columnDefinition = "BIGINT")
     private PipelineJob job;
 
+    @Column(name = "OCCURRED_AT", nullable = false, columnDefinition = "DATETIME(3)")
     private Date occurredAt = new Date();
 
+    @Column(name = "KIND", nullable = false, columnDefinition = "VARCHAR(32)")
     private String kind;
 
+    @Lob
     @Nullable
+    @Column(name = "PAYLOAD_JSON", columnDefinition = "text")
     private String payloadJson;
 
     @Override

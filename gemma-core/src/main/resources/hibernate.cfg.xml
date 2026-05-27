@@ -57,7 +57,7 @@
         <mapping resource="ubic/gemma/model/common/description/BibRefAnnotation.hbm.xml"/>
         <mapping resource="ubic/gemma/model/common/description/BibliographicReference.hbm.xml"/>
         <mapping resource="ubic/gemma/model/common/description/Characteristic.hbm.xml"/>
-        <mapping resource="ubic/gemma/model/common/description/DatabaseEntry.hbm.xml"/>
+        <mapping class="ubic.gemma.model.common.description.DatabaseEntry"/>
         <mapping resource="ubic/gemma/model/common/description/ExternalDatabase.hbm.xml"/>
         <mapping resource="ubic/gemma/model/common/measurement/Measurement.hbm.xml"/>
         <mapping class="ubic.gemma.model.common.measurement.Unit"/>
@@ -70,7 +70,7 @@
         <mapping resource="ubic/gemma/model/expression/bioAssay/BioAssay.hbm.xml"/>
         <mapping resource="ubic/gemma/model/expression/bioAssayData/BioAssayDimension.hbm.xml"/>
         <mapping resource="ubic/gemma/model/expression/bioAssayData/CellLevelCharacteristics.hbm.xml"/>
-        <mapping resource="ubic/gemma/model/expression/bioAssayData/MeanVarianceRelation.hbm.xml"/>
+        <mapping class="ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation"/>
         <mapping resource="ubic/gemma/model/expression/bioAssayData/ProcessedExpressionDataVector.hbm.xml"/>
         <mapping resource="ubic/gemma/model/expression/bioAssayData/ProcessedExpressionDataVectorNumberOfCells.hbm.xml"/>
         <mapping resource="ubic/gemma/model/expression/bioAssayData/RawExpressionDataVector.hbm.xml"/>
@@ -81,7 +81,7 @@
         <mapping resource="ubic/gemma/model/expression/biomaterial/BioMaterial.hbm.xml"/>
         <mapping class="ubic.gemma.model.expression.biomaterial.Compound"/>
         <mapping class="ubic.gemma.model.expression.biomaterial.Treatment"/>
-        <mapping resource="ubic/gemma/model/expression/designElement/CompositeSequence.hbm.xml"/>
+        <mapping class="ubic.gemma.model.expression.designElement.CompositeSequence"/>
         <mapping resource="ubic/gemma/model/expression/experiment/AgentProposal.hbm.xml"/>
         <mapping resource="ubic/gemma/model/expression/experiment/GeoScrapeWatermark.hbm.xml"/>
         <mapping resource="ubic/gemma/model/expression/experiment/ExperimentalDesign.hbm.xml"/>
@@ -90,7 +90,7 @@
         <mapping resource="ubic/gemma/model/expression/experiment/Geeq.hbm.xml"/>
 
         <!-- Genome -->
-        <mapping resource="ubic/gemma/model/genome/Chromosome.hbm.xml"/>
+        <mapping class="ubic.gemma.model.genome.Chromosome"/>
         <mapping resource="ubic/gemma/model/genome/ChromosomeFeature.hbm.xml"/>
         <mapping resource="ubic/gemma/model/genome/PhysicalLocation.hbm.xml"/>
         <mapping resource="ubic/gemma/model/genome/Taxon.hbm.xml"/>
@@ -104,6 +104,6 @@
         <!-- Pipeline (job scheduling) -->
         <mapping resource="ubic/gemma/model/pipeline/PipelineJobBatch.hbm.xml"/>
         <mapping resource="ubic/gemma/model/pipeline/PipelineJob.hbm.xml"/>
-        <mapping resource="ubic/gemma/model/pipeline/PipelineJobEvent.hbm.xml"/>
+        <mapping class="ubic.gemma.model.pipeline.PipelineJobEvent"/>
     </session-factory>
 </hibernate-configuration>
