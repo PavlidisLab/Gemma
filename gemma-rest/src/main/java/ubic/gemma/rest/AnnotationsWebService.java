@@ -48,6 +48,7 @@ import ubic.gemma.model.common.search.SearchResult;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSearchService;
@@ -477,7 +478,17 @@ public class AnnotationsWebService {
                     "`limit` still applies when an exact match has multiple alternate-URI rows. " +
                     "Empty result is `200` with `data: []`. Default `false` (current substring " +
                     "behaviour). See handoffs/HANDOFF_2026-05-25_EXACT_LABEL_PARAM.md.")
-            @QueryParam("exact_label") @DefaultValue("false") boolean exactLabel
+            @QueryParam("exact_label") @DefaultValue("false") boolean exactLabel,
+            @Parameter(description = "Hint from the calling widget about what kind of annotation " +
+                    "is being edited. Accepts a canonical category label (e.g. `genotype`, " +
+                    "`organism part`) or the matching EFO URI. The response shape does not vary " +
+                    "by category today: gene-symbol matches (value=symbol, valueUri=NCBI Gene " +
+                    "URI, category=`gene`) are merged in unconditionally so STAT5B finds the gene " +
+                    "whether the picker is on Genotype, Treatment, or a generic characteristic. " +
+                    "Future ranking strategies will use the category to boost relevant ontology " +
+                    "URIs (e.g. UBERON when category=organism part). The parameter keys the " +
+                    "response cache so any future per-category divergence stays correct.")
+            @QueryParam("category") @DefaultValue("") String category
     ) {
         if ( query == null || query.getValue().isEmpty() ) {
             throw new BadRequestException( "Search query cannot be empty." );
@@ -491,14 +502,14 @@ public class AnnotationsWebService {
             throw new BadRequestException( "Upstream delegation requested but "
                     + "`gemma.upstream.annotationSearch.url` is unset on this server." );
         }
-        String cacheKey = buildSearchCacheKey( query.getValue(), strategy.getName(), limit, prefixes, upstream, exactLabel );
+        String cacheKey = buildSearchCacheKey( query.getValue(), strategy.getName(), limit, prefixes, upstream, exactLabel, category );
         List<AnnotationSearchResultValueObject> cached = SEARCH_CACHE.get( cacheKey );
         if ( cached != null ) {
             log.debug( "annotation-search cache HIT key={} (size={})", cacheKey, SEARCH_CACHE.size() );
             return respond( new ArrayList<>( cached ) );
         }
         try {
-            List<AnnotationSearchResultValueObject> result = new ArrayList<>( this.getTerms( query, strategy, limit, prefixes, upstream, exactLabel, FIND_CHARACTERISTICS_TIMEOUT_MS ) );
+            List<AnnotationSearchResultValueObject> result = new ArrayList<>( this.getTerms( query, strategy, limit, prefixes, upstream, exactLabel, category, FIND_CHARACTERISTICS_TIMEOUT_MS ) );
             // store an unmodifiable defensive copy so callers can't mutate the cached value
             SEARCH_CACHE.put( cacheKey, Collections.unmodifiableList( new ArrayList<>( result ) ) );
             log.debug( "annotation-search cache MISS key={} stored {} hits (size={})", cacheKey, result.size(), SEARCH_CACHE.size() );
@@ -547,7 +558,7 @@ public class AnnotationsWebService {
     public ResponseDataObject<List<AnnotationSearchResultValueObject>> searchAnnotationsByPathQuery( // Params:
             @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE, description = SEARCH_QUERY_DESCRIPTION) @PathParam("query") @DefaultValue("") StringArrayArg query // Required
     ) {
-        return searchAnnotations( query, LuceneOrderRankingStrategy.NAME, SEARCH_DEFAULT_LIMIT, "", false, false );
+        return searchAnnotations( query, LuceneOrderRankingStrategy.NAME, SEARCH_DEFAULT_LIMIT, "", false, false, "" );
     }
 
     /**
@@ -763,7 +774,7 @@ public class AnnotationsWebService {
      */
     private LinkedHashSet<AnnotationSearchResultValueObject> getTerms( StringArrayArg arg,
             AnnotationSearchRankingStrategy strategy, int limit, List<String> prefixes, boolean upstream,
-            boolean exactLabel, long timeoutMs ) throws SearchException {
+            boolean exactLabel, String category, long timeoutMs ) throws SearchException {
         StopWatch timer = StopWatch.createStarted();
         List<CharacteristicValueObject> rawHits = new ArrayList<>();
         for ( String query : arg.getValue() ) {
@@ -880,7 +891,84 @@ public class AnnotationsWebService {
             vos.add( new AnnotationSearchResultValueObject( vo.getValue(), vo.getValueUri(), vo.getCategory(),
                     vo.getCategoryUri(), count, definition, parents, matchedVia, matchedText ) );
         }
+        // Always merge gene hits in, regardless of category — the typeahead surface should
+        // surface STAT5B whether the curator is in a Genotype factor, a Treatment factor, or a
+        // generic characteristic picker. Category-aware ranking (e.g. boost UBERON URIs when
+        // category=organism part, boost gene rows when category=genotype) is a future ranking-
+        // strategy concern; for now the merge is unconditional and ranking is unchanged.
+        // The category param is still accepted (and keyed into the cache) so future per-category
+        // boosting can land without breaking on-wire callers.
+        //
+        // Cost: one extra Hibernate-Search gene query per call. Cache hits cover repeat calls
+        // within the 5-min window, so a 20-keystroke typeahead session pays it once per query.
+        LinkedHashSet<AnnotationSearchResultValueObject> geneRows = new LinkedHashSet<>();
+        for ( String q : arg.getValue() ) {
+            if ( q == null ) continue;
+            String trimmed = q.trim();
+            if ( trimmed.isEmpty() ) continue;
+            geneRows.addAll( resolveGeneHits( trimmed, limit ) );
+        }
+        if ( !geneRows.isEmpty() ) {
+            // Prepend so an exact-symbol match (STAT5B etc.) lands above ontology hits. Generic
+            // queries with no real gene match yield an empty geneRows and we return vos as-is.
+            LinkedHashSet<AnnotationSearchResultValueObject> merged = new LinkedHashSet<>( geneRows );
+            merged.addAll( vos );
+            if ( merged.size() > limit ) {
+                LinkedHashSet<AnnotationSearchResultValueObject> trimmedSet = new LinkedHashSet<>();
+                int n = 0;
+                for ( AnnotationSearchResultValueObject e : merged ) {
+                    if ( n++ >= limit ) break;
+                    trimmedSet.add( e );
+                }
+                return trimmedSet;
+            }
+            return merged;
+        }
         return vos;
+    }
+
+    /**
+     * Resolve gene matches for the query via {@link SearchService}, render each as a synthetic
+     * {@link AnnotationSearchResultValueObject} with category="gene" and valueUri=NCBI Gene URI.
+     * Returns empty on any search failure; gene resolution is best-effort and must never break
+     * the wider annotation-search response.
+     */
+    private LinkedHashSet<AnnotationSearchResultValueObject> resolveGeneHits( String query, int limit ) {
+        LinkedHashSet<AnnotationSearchResultValueObject> out = new LinkedHashSet<>();
+        try {
+            SearchSettings settings = SearchSettings.builder()
+                    .query( query )
+                    .resultType( Gene.class )
+                    .maxResults( limit )
+                    .fillResults( true )
+                    .build();
+            SearchService.SearchResultMap map = searchService.search( settings, new SearchContext( null, null ) );
+            if ( map == null ) {
+                return out;
+            }
+            List<SearchResult<Gene>> hits = map.getByResultObjectType( Gene.class );
+            if ( hits == null ) {
+                return out;
+            }
+            for ( SearchResult<Gene> sr : hits ) {
+                if ( sr == null ) continue;
+                Gene g = sr.getResultObject();
+                if ( g == null ) continue;
+                String label = g.getOfficialSymbol();
+                if ( label == null || label.isEmpty() ) continue;
+                String uri = g.getNcbiGeneId() != null
+                        ? "http://purl.org/commons/record/ncbi_gene/" + g.getNcbiGeneId()
+                        : null;
+                out.add( new AnnotationSearchResultValueObject( label, uri, "gene", null,
+                        0, null, null, "search:gene", label ) );
+            }
+        } catch ( Exception e ) {
+            // Gene resolution is strictly additive; ANY failure must not break the wider
+            // annotation-search response. Test contexts in particular wire a stub
+            // SearchService whose .search(...) may return null or throw a generic exception.
+            log.debug( "Gene resolution skipped for query '{}': {}", query, e.toString() );
+        }
+        return out;
     }
 
     /** Top-N hits to enrich inline with definition + parents on /annotations/search. */
@@ -1275,7 +1363,7 @@ public class AnnotationsWebService {
      * matches (the underlying LIKE search and ontology lookup are case-insensitive); URI-shaped terms keep
      * their case because URIs are case-sensitive on the path/query portion.
      */
-    private static String buildSearchCacheKey( List<String> values, String rankName, int limit, List<String> prefixes, boolean upstream, boolean exactLabel ) {
+    private static String buildSearchCacheKey( List<String> values, String rankName, int limit, List<String> prefixes, boolean upstream, boolean exactLabel, String category ) {
         StringBuilder sb = new StringBuilder( values.size() * 16 );
         // Prefix the strategy name + limit + namespaces so swapping any of them invalidates the
         // cache without colliding with a different-query default-rank entry. STX separates the
@@ -1289,6 +1377,10 @@ public class AnnotationsWebService {
         sb.append( upstream ? "u" : "l" );
         sb.append( '' );
         sb.append( exactLabel ? "e" : "s" );
+        sb.append( '' );
+        // Category affects whether synthetic gene rows are merged in, so it must key the cache
+        // (lowercased + trimmed to canonicalize EFO label casing).
+        sb.append( category != null ? category.trim().toLowerCase( Locale.ROOT ) : "" );
         sb.append( '' );
         for ( int i = 0; i < values.size(); i++ ) {
             String v = values.get( i );
