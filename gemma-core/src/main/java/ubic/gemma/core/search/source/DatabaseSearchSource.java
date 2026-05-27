@@ -525,15 +525,55 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
         }
 
         if ( canContinue( results, settings, SearchSettings.SearchMode.EXACT ) ) {
-            results.addAll( toSearchResults( settings, Gene.class, geneService.findByAlias( exactString ), MATCH_BY_ALIAS_SCORE, "GeneService.findByAlias" ) );
-            Gene geneByEnsemblId = geneService.findByEnsemblId( exactString );
-            if ( geneByEnsemblId != null ) {
-                results.add( SearchResult.from( Gene.class, geneByEnsemblId, MATCH_BY_ACCESSION_SCORE, null, "GeneService.findByEnsemblId" ) );
+            // Six independent identifier-lookup queries against four services. On a high-
+            // latency DB link (e.g. the prod-tunneled gemd) each query is ~250ms; serially
+            // that's 1.5s of typeahead lag for queries that don't match an official symbol
+            // or name (i.e. the path most callers exercise). Fan out on a small bounded
+            // pool — each @Transactional call gets its own session in the new thread, so
+            // there's no cross-thread Hibernate state to worry about.
+            final String es = exactString;
+            java.util.List<java.util.function.Supplier<java.util.Collection<SearchResult<Gene>>>> tasks =
+                    java.util.Arrays.asList(
+                            () -> toSearchResults( settings, Gene.class, geneService.findByAlias( es ),
+                                    MATCH_BY_ALIAS_SCORE, "GeneService.findByAlias" ),
+                            () -> {
+                                Gene g = geneService.findByEnsemblId( es );
+                                return g != null
+                                        ? java.util.Collections.singleton( SearchResult.from( Gene.class, g,
+                                                MATCH_BY_ACCESSION_SCORE, null, "GeneService.findByEnsemblId" ) )
+                                        : java.util.Collections.emptyList();
+                            },
+                            () -> toSearchResults( settings, Gene.class, geneProductService.getGenesByName( es ),
+                                    INDIRECT_HIT_PENALTY * MATCH_BY_NAME_SCORE, "GeneProductService.getGenesByName" ),
+                            () -> toSearchResults( settings, Gene.class, geneProductService.getGenesByNcbiId( es ),
+                                    INDIRECT_HIT_PENALTY * MATCH_BY_ACCESSION_SCORE, "GeneProductService.getGenesByNcbiId" ),
+                            () -> toSearchResults( settings, Gene.class, bioSequenceService.getGenesByAccession( es ),
+                                    INDIRECT_HIT_PENALTY * MATCH_BY_ACCESSION_SCORE, "BioSequenceService.GetGenesByAccession" ),
+                            () -> toSearchResults( settings, Gene.class, bioSequenceService.getGenesByName( es ),
+                                    INDIRECT_HIT_PENALTY * MATCH_BY_NAME_SCORE, "BioSequenceService.getGenesByName" )
+                    );
+            int parallelism = Math.min( tasks.size(), 6 );
+            java.util.concurrent.ExecutorService pool =
+                    java.util.concurrent.Executors.newFixedThreadPool( parallelism );
+            try {
+                java.util.List<java.util.concurrent.Future<java.util.Collection<SearchResult<Gene>>>> futures =
+                        new java.util.ArrayList<>( tasks.size() );
+                for ( java.util.function.Supplier<java.util.Collection<SearchResult<Gene>>> t : tasks ) {
+                    futures.add( pool.submit( t::get ) );
+                }
+                for ( java.util.concurrent.Future<java.util.Collection<SearchResult<Gene>>> f : futures ) {
+                    try {
+                        results.addAll( f.get() );
+                    } catch ( InterruptedException ie ) {
+                        Thread.currentThread().interrupt();
+                        return;
+                    } catch ( java.util.concurrent.ExecutionException ee ) {
+                        log.debug( "Gene fallback lookup failed", ee.getCause() );
+                    }
+                }
+            } finally {
+                pool.shutdownNow();
             }
-            results.addAll( toSearchResults( settings, Gene.class, geneProductService.getGenesByName( exactString ), INDIRECT_HIT_PENALTY * MATCH_BY_NAME_SCORE, "GeneProductService.getGenesByName" ) );
-            results.addAll( toSearchResults( settings, Gene.class, geneProductService.getGenesByNcbiId( exactString ), INDIRECT_HIT_PENALTY * MATCH_BY_ACCESSION_SCORE, "GeneProductService.getGenesByNcbiId" ) );
-            results.addAll( toSearchResults( settings, Gene.class, bioSequenceService.getGenesByAccession( exactString ), INDIRECT_HIT_PENALTY * MATCH_BY_ACCESSION_SCORE, "BioSequenceService.GetGenesByAccession" ) );
-            results.addAll( toSearchResults( settings, Gene.class, bioSequenceService.getGenesByName( exactString ), INDIRECT_HIT_PENALTY * MATCH_BY_NAME_SCORE, "BioSequenceService.getGenesByName" ) );
         }
     }
 
