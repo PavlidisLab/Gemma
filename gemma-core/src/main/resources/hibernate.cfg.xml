@@ -26,7 +26,7 @@
         <mapping resource="ubic/gemma/model/analysis/Investigation.hbm.xml"/>
         <mapping class="ubic.gemma.model.analysis.expression.ExpressionExperimentSet"/>
         <mapping class="ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionMatrix"/>
-        <mapping resource="ubic/gemma/model/analysis/expression/diff/ContrastResult.hbm.xml"/>
+        <mapping class="ubic.gemma.model.analysis.expression.diff.ContrastResult"/>
         <mapping resource="ubic/gemma/model/analysis/expression/diff/DifferentialExpressionAnalysisResult.hbm.xml"/>
         <mapping class="ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisResult"/>
         <mapping class="ubic.gemma.model.analysis.expression.diff.HitListSize"/>
@@ -46,7 +46,7 @@
         <mapping resource="ubic/gemma/model/common/auditAndSecurity/AuditTrail.hbm.xml"/>
         <mapping resource="ubic/gemma/model/common/auditAndSecurity/Contact.hbm.xml"/>
         <mapping class="ubic.gemma.model.common.auditAndSecurity.GroupAuthority"/>
-        <mapping resource="ubic/gemma/model/common/auditAndSecurity/JobInfo.hbm.xml"/>
+        <mapping class="ubic.gemma.model.common.auditAndSecurity.JobInfo"/>
         <mapping class="ubic.gemma.model.common.auditAndSecurity.UserGroup"/>
         <mapping class="ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails"/>
         <mapping class="ubic.gemma.model.common.auditAndSecurity.curation.CurationDraft"/>
@@ -68,7 +68,7 @@
 
         <!-- Expression: arrays / bioassays / biomaterials -->
         <mapping class="ubic.gemma.model.expression.arrayDesign.AlternateName"/>
-        <mapping resource="ubic/gemma/model/expression/arrayDesign/ArrayDesign.hbm.xml"/>
+        <mapping class="ubic.gemma.model.expression.arrayDesign.ArrayDesign"/>
         <mapping class="ubic.gemma.model.expression.bioAssay.BioAssay"/>
         <mapping class="ubic.gemma.model.expression.bioAssayData.BioAssayDimension"/>
         <mapping resource="ubic/gemma/model/expression/bioAssayData/CellLevelCharacteristics.hbm.xml"/>
@@ -85,7 +85,7 @@
         <mapping class="ubic.gemma.model.expression.biomaterial.Treatment"/>
         <mapping class="ubic.gemma.model.expression.designElement.CompositeSequence"/>
         <mapping class="ubic.gemma.model.expression.experiment.AgentProposal"/>
-        <mapping resource="ubic/gemma/model/expression/experiment/GeoScrapeWatermark.hbm.xml"/>
+        <mapping class="ubic.gemma.model.expression.experiment.GeoScrapeWatermark"/>
         <mapping class="ubic.gemma.model.expression.experiment.ExperimentalDesign"/>
         <mapping class="ubic.gemma.model.expression.experiment.ExperimentalFactor"/>
         <mapping class="ubic.gemma.model.expression.experiment.FactorValue"/>

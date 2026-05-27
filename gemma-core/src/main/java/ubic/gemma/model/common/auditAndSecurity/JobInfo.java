@@ -19,25 +19,67 @@
 
 package ubic.gemma.model.common.auditAndSecurity;
 
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import ubic.gemma.model.common.Identifiable;
 
 import java.util.Date;
 
+@Entity
+@Table(name = "JOB_INFO")
+@Access(AccessType.FIELD)
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @Getter
 @Setter
 public class JobInfo implements Identifiable, SecuredNotChild {
 
-    private Boolean runningStatus = Boolean.TRUE;
-    private String failedMessage;
-    private Date startTime;
-    private Date endTime;
-    private Integer phases = 1;
-    private String description;
-    private String messages;
-    private String taskId;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "ID", columnDefinition = "BIGINT")
     private Long id;
+
+    @Column(name = "RUNNING_STATUS", nullable = false, columnDefinition = "TINYINT")
+    private Boolean runningStatus = Boolean.TRUE;
+
+    @Lob
+    @Column(name = "FAILED_MESSAGE", columnDefinition = "text")
+    private String failedMessage;
+
+    @Column(name = "START_TIME", nullable = false, columnDefinition = "DATETIME(3)")
+    private Date startTime;
+
+    @Column(name = "END_TIME", columnDefinition = "DATETIME(3)")
+    private Date endTime;
+
+    @Column(name = "PHASES", nullable = false, columnDefinition = "INTEGER")
+    private Integer phases = 1;
+
+    @Column(name = "DESCRIPTION", columnDefinition = "VARCHAR(255)")
+    private String description;
+
+    @Lob
+    @Column(name = "MESSAGES", columnDefinition = "longtext")
+    private String messages;
+
+    @Column(name = "TASK_ID", columnDefinition = "VARCHAR(255)")
+    private String taskId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "USER_FK", columnDefinition = "BIGINT")
     private User user;
 
     @Override
