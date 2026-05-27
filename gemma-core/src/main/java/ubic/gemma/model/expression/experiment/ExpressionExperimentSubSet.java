@@ -18,11 +18,22 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Transient;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 
-import jakarta.persistence.Transient;
 import java.nio.charset.StandardCharsets;
+import java.util.HashSet;
+import java.util.Set;
 
 import static ubic.gemma.core.util.StringUtils.abbreviateWithSuffix;
 
@@ -36,6 +47,8 @@ import static ubic.gemma.core.util.StringUtils.abbreviateWithSuffix;
  *
  * @author Paul
  */
+@Entity
+@DiscriminatorValue("ExpressionExperimentSubSet")
 public class ExpressionExperimentSubSet extends BioAssaySet implements SecuredChild<ExpressionExperiment> {
 
     /**
@@ -48,7 +61,16 @@ public class ExpressionExperimentSubSet extends BioAssaySet implements SecuredCh
      */
     public static final String NAME_DELIMITER = " - ";
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "SOURCE_EXPERIMENT_FK", columnDefinition = "BIGINT")
     private ExpressionExperiment sourceExperiment;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "BIO_ASSAYS2EXPRESSION_EXPERIMENT_SUB_SET",
+            joinColumns = @JoinColumn(name = "EXPRESSION_EXPERIMENT_SUB_SET_FK", columnDefinition = "BIGINT"),
+            inverseJoinColumns = @JoinColumn(name = "BIO_ASSAYS_FK", columnDefinition = "BIGINT"),
+            foreignKey = @ForeignKey(name = "BIO_ASSAY_EXPRESSION_EXPERIMENT_SUB_SET_FKC"))
+    private Set<BioAssay> bioAssays = new HashSet<>();
 
     /**
      * No-arg constructor added to satisfy javabean contract
@@ -61,6 +83,16 @@ public class ExpressionExperimentSubSet extends BioAssaySet implements SecuredCh
 
     public void setSourceExperiment( ExpressionExperiment sourceExperiment ) {
         this.sourceExperiment = sourceExperiment;
+    }
+
+    @Override
+    public Set<BioAssay> getBioAssays() {
+        return bioAssays;
+    }
+
+    @Override
+    public void setBioAssays( Set<BioAssay> bioAssays ) {
+        this.bioAssays = bioAssays;
     }
 
     @Transient

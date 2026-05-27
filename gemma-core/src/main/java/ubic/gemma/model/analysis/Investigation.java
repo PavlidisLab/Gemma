@@ -19,6 +19,27 @@
 
 package ubic.gemma.model.analysis;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorColumn;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.Index;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import ubic.gemma.model.common.auditAndSecurity.AbstractAuditable;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
@@ -33,12 +54,40 @@ import java.util.Set;
 /**
  * An abstract concept of a scientific study
  */
+@Entity
+@Table(name = "INVESTIGATION", indexes = {
+        @Index(name = "INVESTIGATION_NAME", columnList = "NAME"),
+        @Index(name = "INVESTIGATION_WORKFLOW_STATE", columnList = "WORKFLOW_STATE"),
+        @Index(name = "INVESTIGATION_NUMBER_OF_DATA_VECTORS", columnList = "NUMBER_OF_DATA_VECTORS"),
+        @Index(name = "INVESTIGATION_NUMBER_OF_SAMPLES", columnList = "NUMBER_OF_SAMPLES"),
+        @Index(name = "INVESTIGATION_PREBOARDED_ACCESSION", columnList = "PREBOARDED_ACCESSION")
+})
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "class")
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public abstract class Investigation extends AbstractAuditable implements Securable {
 
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "INVESTIGATION_FK", columnDefinition = "BIGINT",
+            foreignKey = @ForeignKey(name = "CHARACTERISTIC_INVESTIGATION_FKC"))
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<Characteristic> characteristics = new HashSet<>();
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "RELEVANT_PUBLICATIONS",
+            joinColumns = @JoinColumn(name = "INVESTIGATIONS_FK", columnDefinition = "BIGINT"),
+            inverseJoinColumns = @JoinColumn(name = "OTHER_RELEVANT_PUBLICATIONS_FK", columnDefinition = "BIGINT"),
+            foreignKey = @ForeignKey(name = "BIBLIOGRAPHIC_REFERENCE_INVESTIGATIONS_FKC"))
     private Set<BibliographicReference> otherRelevantPublications = new HashSet<>();
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "OWNER_FK", columnDefinition = "BIGINT")
     private Contact owner;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "PRIMARY_PUBLICATION_FK", columnDefinition = "BIGINT")
     private BibliographicReference primaryPublication;
+
     /**
      * Eight-state workflow lifecycle position. See
      * {@link ubic.gemma.model.expression.experiment.WorkflowState} and
@@ -46,12 +95,17 @@ public abstract class Investigation extends AbstractAuditable implements Securab
      * {@link WorkflowState#Loaded} on legacy rows (the migration backfill is
      * the same — a curator-approved refinement is deferred).
      */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "WORKFLOW_STATE", nullable = false, columnDefinition = "VARCHAR(32)")
     private WorkflowState workflowState = WorkflowState.Loaded;
+
     /**
      * Timestamp at which the dataset entered its current
      * {@link #workflowState}. Null on legacy rows that pre-date the column;
      * populated by the workflow service on every transition.
      */
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "WORKFLOW_STATE_ENTERED_AT", columnDefinition = "DATETIME")
     private Date workflowStateEnteredAt;
 
     /**
