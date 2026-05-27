@@ -19,6 +19,19 @@
 
 package ubic.gemma.model.expression.arrayDesign;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.search.engine.backend.types.Projectable;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
@@ -47,6 +60,9 @@ import java.util.Set;
  *
  * @author Paul
  */
+@Entity
+@Table(name = "ARRAY_DESIGN")
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @Indexed
 public class ArrayDesign extends AbstractAuditable implements Curatable, SecuredNotChild {
 
@@ -64,21 +80,66 @@ public class ArrayDesign extends AbstractAuditable implements Curatable, Secured
         }
     }
 
-    private Integer advertisedNumberOfDesignElements;
-    private Set<AlternateName> alternateNames = new HashSet<>();
-    private ArrayDesign alternativeTo; // for affymetrix
-    private Set<CompositeSequence> compositeSequences = new HashSet<>();
+    /* The curation details are a single-row thing with only eagerly join-fetched many-to-one relationships, so it's no big deal */
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JoinColumn(name = "CURATION_DETAILS_FK", nullable = false, unique = true, columnDefinition = "BIGINT")
     private CurationDetails curationDetails = new CurationDetails();
-    private Contact designProvider;
-    private Set<DatabaseEntry> externalReferences = new HashSet<>();
-    private ArrayDesign mergedInto;
-    private Set<ArrayDesign> mergees = new HashSet<>();
-    private Taxon primaryTaxon;
+
+    @Column(name = "ADVERTISED_NUMBER_OF_DESIGN_ELEMENTS", columnDefinition = "INTEGER")
+    private Integer advertisedNumberOfDesignElements;
+
+    @Column(name = "SHORT_NAME", unique = true, columnDefinition = "VARCHAR(255)")
     private String shortName;
-    private Set<ArrayDesign> subsumedArrayDesigns = new HashSet<>();
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "TECHNOLOGY_TYPE", columnDefinition = "VARCHAR(255)")
+    private TechnologyType technologyType;
+
+    /* fetched with select because taxon are very redundant */
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "PRIMARY_TAXON_FK", nullable = false, columnDefinition = "BIGINT")
+    private Taxon primaryTaxon;
+
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "ARRAY_DESIGN_FK", columnDefinition = "BIGINT", foreignKey = @ForeignKey(name = "DATABASE_ENTRY_ARRAY_DESIGN_FKC"))
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+    private Set<DatabaseEntry> externalReferences = new HashSet<>();
+
+    @OneToMany(mappedBy = "arrayDesign", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+    private Set<CompositeSequence> compositeSequences = new HashSet<>();
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "MERGED_INTO_FK", columnDefinition = "BIGINT")
+    private ArrayDesign mergedInto;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "SUBSUMING_ARRAY_DESIGN_FK", columnDefinition = "BIGINT")
     private ArrayDesign subsumingArrayDesign;
 
-    private TechnologyType technologyType;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ALTERNATIVE_TO_FK", columnDefinition = "BIGINT")
+    private ArrayDesign alternativeTo; // for affymetrix
+
+    @OneToMany(mappedBy = "subsumingArrayDesign", fetch = FetchType.LAZY)
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+    private Set<ArrayDesign> subsumedArrayDesigns = new HashSet<>();
+
+    @OneToMany(mappedBy = "mergedInto", fetch = FetchType.LAZY)
+    @org.hibernate.annotations.Cascade({ org.hibernate.annotations.CascadeType.SAVE_UPDATE })
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+    private Set<ArrayDesign> mergees = new HashSet<>();
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "DESIGN_PROVIDER_FK", columnDefinition = "BIGINT")
+    private Contact designProvider;
+
+    /* this is assumed readily available in the frontend */
+    /* it makes sense to use an eager select here because we pro-actively cache them, so it never really result in an additional query */
+    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinColumn(name = "ARRAY_DESIGN_FK", columnDefinition = "BIGINT", foreignKey = @ForeignKey(name = "ALTERNATE_NAME_ARRAY_DESIGN_FKC"))
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+    private Set<AlternateName> alternateNames = new HashSet<>();
 
     /**
      * No-arg constructor added to satisfy javabean contract

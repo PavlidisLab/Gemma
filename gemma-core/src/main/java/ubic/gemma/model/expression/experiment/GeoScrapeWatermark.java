@@ -11,6 +11,19 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.Lob;
+import jakarta.persistence.Table;
+
 import java.io.Serializable;
 import java.util.Date;
 
@@ -27,6 +40,10 @@ import java.util.Date;
  * <p>Schema: Flyway {@code mysql/V17__geo_scrape_watermark.sql} +
  * {@code h2/V19__geo_scrape_watermark.sql}. Paul-approved 2026-05-23.</p>
  */
+@Entity
+@Table(name = "GEO_SCRAPE_WATERMARK",
+        indexes = @Index(name = "GEO_SCRAPE_WATERMARK_SCANNED_AT_IDX", columnList = "SCANNED_AT"))
+@Access(AccessType.FIELD)
 public class GeoScrapeWatermark implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -42,14 +59,35 @@ public class GeoScrapeWatermark implements Serializable {
         CANCELLED
     }
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "ID", columnDefinition = "BIGINT")
     private Long id;
+
+    @Column(name = "SCANNED_AT", nullable = false, columnDefinition = "DATETIME(3)")
     private Date scannedAt;
+
+    @Column(name = "SCAN_FROM", columnDefinition = "DATETIME(3)")
     private Date scanFrom;
+
+    @Column(name = "SCAN_TO", columnDefinition = "DATETIME(3)")
     private Date scanTo;
+
+    @Column(name = "RECORDS_SCANNED", nullable = false, columnDefinition = "INTEGER")
     private int recordsScanned;
+
+    @Column(name = "RECORDS_MATCHED", nullable = false, columnDefinition = "INTEGER")
     private int recordsMatched;
+
+    @Column(name = "CRITERIA_APPLIED", columnDefinition = "VARCHAR(1024)")
     private String criteriaApplied;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "STATUS", nullable = false, columnDefinition = "VARCHAR(32)")
     private Status status = Status.IN_PROGRESS;
+
+    @Lob
+    @Column(name = "ERROR_MESSAGE", columnDefinition = "TEXT")
     private String errorMessage;
 
     public Long getId() {

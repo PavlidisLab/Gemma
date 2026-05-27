@@ -18,32 +18,65 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.Immutable;
+import org.springframework.lang.Nullable;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.expression.experiment.FactorValue;
-
-import org.springframework.lang.Nullable;
 
 /**
  * Represents a contrast between "conditions". In practice, this is the comparison between a factor level and the
  * baseline; for interactions it is the difference of comparisons.
  */
+@Entity
+@Table(name = "CONTRAST_RESULT")
+@Access(AccessType.FIELD)
+@Immutable
 public class ContrastResult implements Identifiable {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "ID", columnDefinition = "BIGINT")
+    private Long id;
+
     @Nullable
+    @Column(name = "PVALUE", columnDefinition = "DOUBLE")
     private Double pvalue;
+
     @Nullable
+    @Column(name = "TSTAT", columnDefinition = "DOUBLE")
     private Double tStat;
+
     @Nullable
+    @Column(name = "COEFFICIENT", columnDefinition = "DOUBLE")
     private Double coefficient;
+
     /**
      * TODO: rename this to log2FoldChange to avoid confusion with the logarithm base used.
      */
     @Nullable
+    @Column(name = "LOG_FOLD_CHANGE", columnDefinition = "DOUBLE")
     private Double logFoldChange;
-    private Long id;
+
+    /* assumed available in ContrastResultValueObject, and almost always needed */
     @Nullable
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "FACTOR_VALUE_FK", columnDefinition = "BIGINT")
     private FactorValue factorValue;
+
     @Nullable
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "SECOND_FACTOR_VALUE_FK", columnDefinition = "BIGINT")
     private FactorValue secondFactorValue;
 
     /**
