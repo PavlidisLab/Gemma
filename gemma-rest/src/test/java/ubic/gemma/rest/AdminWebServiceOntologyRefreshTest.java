@@ -127,11 +127,11 @@ class AdminWebServiceOntologyRefreshTest {
      */
 
     @Test
-    void rebuildSlimRefusesNonChebiName() {
-        // The path argument has to identify CHEBI somehow; "MONDO" doesn't.
-        assertThatThrownBy( () -> service.rebuildOntologySlim( "MONDO" ) )
+    void rebuildSlimRefusesUnknownName() {
+        assertThatThrownBy( () -> service.rebuildOntologySlim( "FOOBAR" ) )
                 .isInstanceOf( NotFoundException.class )
-                .hasMessageContaining( "only CHEBI is supported" );
+                .hasMessageContaining( "FOOBAR" )
+                .hasMessageContaining( "try CHEBI or MONDO" );
     }
 
     @Test
@@ -142,12 +142,12 @@ class AdminWebServiceOntologyRefreshTest {
     }
 
     @Test
-    void rebuildSlimReturns404IfNoChebiBeanRegistered() {
-        // service was constructed with chebi + mondo as plain OntologyService mocks,
-        // neither is a ChebiOntologyService instance, so the lookup misses.
+    void rebuildSlimReturns404IfNoSlimmableBeanRegistered() {
+        // service was constructed with two plain OntologyService mocks, neither implements
+        // SlimmableOntologyService, so the lookup misses regardless of the path name.
         assertThatThrownBy( () -> service.rebuildOntologySlim( "CHEBI" ) )
                 .isInstanceOf( NotFoundException.class )
-                .hasMessageContaining( "ChebiOntologyService" );
+                .hasMessageContaining( "try CHEBI or MONDO" );
     }
 
     @Test
@@ -211,7 +211,7 @@ class AdminWebServiceOntologyRefreshTest {
                 agentProposalService, ticketService, taxonArgService, blacklistedEntityService,
                 externalDatabaseReadService, geoScrapeService, indexerService );
 
-        for ( String alias : new String[]{ "CHEBI", "chebi", "ChebiOntologyService", "chebiOntology" } ) {
+        for ( String alias : new String[]{ "CHEBI", "chebi", "ChebiOntologyService" } ) {
             assertThat( svc.rebuildOntologySlim( alias ).getStatus() ).isEqualTo( 202 );
         }
     }

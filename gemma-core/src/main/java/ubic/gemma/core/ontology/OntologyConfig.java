@@ -21,6 +21,7 @@ import ubic.gemma.core.ontology.providers.chebi.ChebiSlimExtractor;
 import ubic.gemma.core.context.EnvironmentProfiles;
 import ubic.gemma.core.ontology.providers.GemmaOntologyService;
 import ubic.gemma.core.ontology.providers.MondoOntologyService;
+import ubic.gemma.core.ontology.providers.mondo.MondoSeedResolver;
 import ubic.gemma.core.ontology.providers.OntologyServiceFactory;
 import ubic.gemma.core.ontology.providers.PatoOntologyService;
 import ubic.gemma.core.ontology.search.JenaTextOntologySearchService;
@@ -207,9 +208,32 @@ public class OntologyConfig {
         return createOntologyFactory( PatoOntologyService.class, "http://purl.obolibrary.org/obo/PATO_" );
     }
 
+    /**
+     * MONDO with slim-cache wiring, parallel to {@link #chebiOntologyService}. Uses the
+     * pre-built {@link OntologyServiceFactory#OntologyServiceFactory(OntologyService)}
+     * constructor so the slim plumbing lands BEFORE the factory's auto-load thread runs.
+     */
     @Bean
-    public FactoryBean<MondoOntologyService> mondoOntologyServiceOntologyService() {
-        return createOntologyFactory( MondoOntologyService.class, "http://purl.obolibrary.org/obo/MONDO_" );
+    public FactoryBean<MondoOntologyService> mondoOntologyServiceOntologyService(
+            @Autowired(required = false) ChebiSlimExtractor slimExtractor,
+            @Autowired(required = false) MondoSeedResolver seedResolver ) {
+        MondoOntologyService service = new MondoOntologyService();
+        service.setSlimExtractor( slimExtractor );
+        service.setSeedResolver( seedResolver );
+        if ( slimExtractor != null && seedResolver != null ) {
+            File cacheDir = OntologyLoader.getDiskCachePath( "mondoOntology" ).getParentFile();
+            service.setSlimCacheDir( cacheDir );
+        }
+        OntologyServiceFactory<MondoOntologyService> factory = new OntologyServiceFactory<>( service );
+        factory.setAutoLoad( loadOntologies );
+        factory.setTaskExecutor( ontologyTaskExecutor() );
+        factory.setAllowedUriPrefixes( new String[]{ "http://purl.obolibrary.org/obo/MONDO_" } );
+        try {
+            factory.setExcludedWordsFromStemming( excludedWordsFromStemming.getObject() );
+        } catch ( Exception e ) {
+            throw new RuntimeException( e );
+        }
+        return factory;
     }
 
     /**

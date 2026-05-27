@@ -62,7 +62,7 @@ import static java.util.Objects.requireNonNull;
  *
  * @author klc
  */
-public class ChebiOntologyService extends UrlOntologyService {
+public class ChebiOntologyService extends UrlOntologyService implements SlimmableOntologyService {
 
     private static final Logger log = LoggerFactory.getLogger( ChebiOntologyService.class );
 

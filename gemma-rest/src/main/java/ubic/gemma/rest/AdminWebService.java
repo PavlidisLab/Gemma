@@ -1037,43 +1037,46 @@ public class AdminWebService {
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public Response rebuildOntologySlim( @PathParam("name") String name ) {
-        // OntologyService.getName() returns the OWL's dc:title literal, which CHEBI
-        // doesn't ship — so name-matching via getName() fails for the very bean we're
-        // looking for. The rebuild-slim path is CHEBI-only right now anyway: find the
-        // ChebiOntologyService bean directly and accept any case-insensitive variant
-        // of "CHEBI" / class name as the path argument.
-        if ( !"CHEBI".equalsIgnoreCase( name )
-                && !"chebi".equalsIgnoreCase( name )
-                && !"ChebiOntologyService".equalsIgnoreCase( name )
-                && !"chebiOntology".equalsIgnoreCase( name ) ) {
-            throw new NotFoundException( "Ontology " + name + " does not support slim rebuild "
-                    + "(only CHEBI is supported)." );
-        }
-        ubic.gemma.core.ontology.providers.ChebiOntologyService chebi = null;
+        // Resolve the path argument to a SlimmableOntologyService. Match strategy:
+        // case-insensitive against the bean's simple class name (e.g. "ChebiOntologyService")
+        // and a short form (e.g. "CHEBI"). OntologyService.getName() can't be used — it
+        // returns the OWL's dc:title which several ontologies don't ship. getCacheName()
+        // is protected on AbstractOntologyService so we don't probe it.
+        ubic.gemma.core.ontology.providers.SlimmableOntologyService slimmable = null;
         for ( OntologyService o : ontologies ) {
-            if ( o instanceof ubic.gemma.core.ontology.providers.ChebiOntologyService ) {
-                chebi = ( ubic.gemma.core.ontology.providers.ChebiOntologyService ) o;
+            if ( !( o instanceof ubic.gemma.core.ontology.providers.SlimmableOntologyService ) ) {
+                continue;
+            }
+            // Use the deepest non-synthetic class so Spring CGLIB / Mockito proxy
+            // subclasses don't break the simpleName match.
+            Class<?> c = o.getClass();
+            while ( c != null && c.getSimpleName().contains( "$" ) ) {
+                c = c.getSuperclass();
+            }
+            String className = c == null ? "" : c.getSimpleName();
+            String shortName = className.replaceFirst( "OntologyService$", "" ); // CHEBI / Mondo / etc.
+            if ( name.equalsIgnoreCase( className ) || name.equalsIgnoreCase( shortName ) ) {
+                slimmable = ( ubic.gemma.core.ontology.providers.SlimmableOntologyService ) o;
                 break;
             }
         }
-        if ( chebi == null ) {
-            throw new NotFoundException( "No ChebiOntologyService bean registered." );
+        if ( slimmable == null ) {
+            throw new NotFoundException( "No slimmable ontology found matching name=" + name
+                    + " (try CHEBI or MONDO)." );
         }
         try {
-            if ( !chebi.triggerSlimRebuildAsync() ) {
+            if ( !slimmable.triggerSlimRebuildAsync() ) {
                 throw new ClientErrorException(
                         "Slim rebuild already in progress for ontology=" + name,
                         Response.Status.CONFLICT );
             }
         } catch ( IllegalStateException e ) {
-            // Not loaded yet, or plumbing missing — treat as 503 service-unavailable so
-            // the operator knows to retry later (vs the 404 / 409 above which are
-            // client-correctable).
             throw new jakarta.ws.rs.ServiceUnavailableException( e.getMessage() );
         }
-        log.info( "Slim rebuild kicked for ontology=" + name );
+        log.info( "Slim rebuild kicked for ontology=" + name + " (" + slimmable.getClass().getSimpleName() + ")" );
         return Response.accepted( respond( new OntologyRefreshResponse( name, "rebuilding-slim" ) ) ).build();
     }
+
 
     private OntologyStatusValueObject inspect( OntologyService o, boolean includeTermCount ) {
         OntologyStatusValueObject vo = new OntologyStatusValueObject();
