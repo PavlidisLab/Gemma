@@ -79,6 +79,21 @@ public class GoTermsWebService {
     private Gene2GOAssociationService gene2GOAssociationService;
 
     @Autowired
+    private org.springframework.cache.CacheManager cacheManager;
+
+    /** Lazy-init handle to the GoTermGeneCountCache region; see EhcacheConfig. */
+    private volatile org.springframework.cache.Cache geneCountCache;
+
+    private org.springframework.cache.Cache geneCountCache() {
+        org.springframework.cache.Cache c = geneCountCache;
+        if ( c == null ) {
+            c = cacheManager.getCache( "GoTermGeneCountCache" );
+            geneCountCache = c;
+        }
+        return c;
+    }
+
+    @Autowired
     private OntologyService ontologyService;
 
     /**
@@ -311,6 +326,18 @@ public class GoTermsWebService {
         }
         Taxon taxon = taxonArg != null ? taxonArgService.getEntity( taxonArg ) : null;
         String canonicalUri = normalizeGoUri( termUri );
+        // Cache key: canonical URI + propagate + maxTerms + taxon id. SQL count is 1-5s on
+        // broad subtrees; once computed the count is stable until GO is reloaded or
+        // annotations are updated. Evict via POST /goTerms/cache/evict or by restarting.
+        String cacheKey = canonicalUri + "|p=" + propagate + "|m=" + maxTerms
+                + "|t=" + ( taxon != null ? taxon.getId() : "null" );
+        org.springframework.cache.Cache c = geneCountCache();
+        if ( c != null ) {
+            org.springframework.cache.Cache.ValueWrapper hit = c.get( cacheKey );
+            if ( hit != null && hit.get() instanceof GoTermGeneCountValueObject ) {
+                return ubic.gemma.rest.util.Responders.respond( ( GoTermGeneCountValueObject ) hit.get() );
+            }
+        }
         long t0 = System.currentTimeMillis();
         Set<String> uris = expandUris( canonicalUri, propagate, maxTerms );
         long tExpand = System.currentTimeMillis() - t0;
@@ -322,8 +349,36 @@ public class GoTermsWebService {
                     "goTerms/genes/count uri=%s propagate=%s maxTerms=%d uris=%d count=%d expand=%dms count=%dms",
                     canonicalUri, propagate, maxTerms, uris.size(), count, tExpand, tCount ) );
         }
-        return ubic.gemma.rest.util.Responders.respond(
-                new GoTermGeneCountValueObject( canonicalUri, count, uris.size(), propagate, maxTerms ) );
+        GoTermGeneCountValueObject vo = new GoTermGeneCountValueObject( canonicalUri, count, uris.size(), propagate, maxTerms );
+        if ( c != null ) {
+            c.put( cacheKey, vo );
+        }
+        return ubic.gemma.rest.util.Responders.respond( vo );
+    }
+
+    /**
+     * Evict the GoTermGeneCountCache. Mirrors the
+     * {@code POST /annotations/search/cache/evict} pattern — every shared in-process cache
+     * gets an admin endpoint per CLAUDE.md's "evict, don't bake in" rule.
+     */
+    @jakarta.ws.rs.POST
+    @Path("/cache/evict")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Evict the /goTerms/{uri}/genes/count response cache",
+            security = {
+                    @io.swagger.v3.oas.annotations.security.SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @io.swagger.v3.oas.annotations.security.SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
+            })
+    public ubic.gemma.rest.util.ResponseDataObject<java.util.Map<String, Object>> evictGeneCountCache() {
+        org.springframework.cache.Cache c = geneCountCache();
+        if ( c != null ) {
+            c.clear();
+            log.info( "GoTermGeneCountCache cleared by admin" );
+        }
+        java.util.Map<String, Object> out = new java.util.LinkedHashMap<>();
+        out.put( "evicted", true );
+        return ubic.gemma.rest.util.Responders.respond( out );
     }
 
     /**

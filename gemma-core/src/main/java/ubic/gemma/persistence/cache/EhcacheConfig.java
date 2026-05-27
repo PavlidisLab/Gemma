@@ -123,6 +123,12 @@ public class EhcacheConfig {
         // the LRU prune the long tail. TTL kept generous since recompute is expensive.
         APP_CACHES.put( "ProcessedExpressionDataVectorCache", new CacheSpec( 1000, Duration.ofHours( 6 ) ) );
         APP_CACHES.put( "ProcessedExpressionDataVectorByGeneCache", new CacheSpec( 1000, Duration.ofHours( 6 ) ) );
+
+        // GoTerms gene-count results: keyed by (canonical URI, propagate, maxTerms, taxonId).
+        // The underlying SQL is a 1-5s scan over Gene2GOAssociation for broad subtrees; once
+        // computed the result is stable (changes only when GO is reloaded or annotations are
+        // updated). 12h TTL matches the diffex / vector caches.
+        APP_CACHES.put( "GoTermGeneCountCache", new CacheSpec( 5000, Duration.ofHours( 12 ) ) );
     }
 
     static {
