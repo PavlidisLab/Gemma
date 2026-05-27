@@ -1,5 +1,11 @@
 package ubic.gemma.model.expression.bioAssayData;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 import ubic.gemma.model.common.AbstractIdentifiable;
@@ -21,12 +27,25 @@ import java.util.Objects;
  * Today every {@code (EE, QT)} maps to exactly one {@code SingleCellDimension}; the schema enforces
  * that via a unique constraint on {@code (EXPRESSION_EXPERIMENT_FK, QUANTITATION_TYPE_FK)}.
  */
+@Entity
+@Table(name = "SINGLE_CELL_DIMENSION_EXPERIMENT")
 @Getter
 @Setter
 public class SingleCellDimensionExperiment extends AbstractIdentifiable {
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "EXPRESSION_EXPERIMENT_FK", nullable = false, columnDefinition = "BIGINT",
+            foreignKey = @ForeignKey(name = "FK_SCDE_EXPRESSION_EXPERIMENT"))
     private ExpressionExperiment expressionExperiment;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "QUANTITATION_TYPE_FK", nullable = false, columnDefinition = "BIGINT",
+            foreignKey = @ForeignKey(name = "FK_SCDE_QUANTITATION_TYPE"))
     private QuantitationType quantitationType;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "SINGLE_CELL_DIMENSION_FK", nullable = false, columnDefinition = "BIGINT",
+            foreignKey = @ForeignKey(name = "FK_SCDE_SINGLE_CELL_DIMENSION"))
     private SingleCellDimension singleCellDimension;
 
     @Override
