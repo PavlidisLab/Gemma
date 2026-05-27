@@ -149,43 +149,34 @@ public class Gene2GOAssociationDaoImpl extends AbstractDao<Gene2GOAssociation> i
     /**
      * Resolve {@code uris} to a deduplicated set of gene ids, optionally taxon-scoped. Used by
      * both {@link #countByGoTermUris(Collection)} overloads. Returns IDs (not COUNT) so we can
-     * union-dedup across batches correctly — a {@code SUM(COUNT(DISTINCT g.id))} across the
-     * IN-list batches would double-count genes annotated to URIs in different batches. Cheap
-     * over the wire: one Long per gene-id, no entity hydration, no associations.
+     * union-dedup correctly when this layer needs it. Cheap over the wire: one Long per
+     * gene-id, no entity hydration, no associations.
      * <p>
-     * Each batch selects distinct gene ids over a subset of the URI list. On the prod-tunneled
-     * DB this is faster than the COUNT aggregate path was — the count-distinct over a large IN
-     * list forced MySQL into a sort-distinct that took ~300ms/batch on the gene2GO table.
-     * Returning ids lets the planner use the existing valueUri index without aggregation.
+     * Single un-batched IN-list by design. An earlier version batched at 2048 URIs to keep
+     * each fragment small, but EXPLAIN against prod showed that small IN-lists (2-4k entries)
+     * push MySQL into a {@code CHARACTERISTIC.VALUE_URI} range scan that walks hundreds of
+     * thousands of non-G2G characteristic rows; once the IN-list passes ~8k entries, the
+     * planner switches to a full scan of {@code GENE2GO_ASSOCIATION} (~1.1M rows) and the
+     * query drops from 5-8 s to ~2 s. Batching at 2048 was therefore pinning us in the
+     * worst-plan zone of the optimizer. {@code max_allowed_packet} on prod is 256 MB; the
+     * largest realistic IN-list (biological_process = ~24k URIs) is ~1 MB of SQL text.
      */
     private Set<Long> distinctGeneIdsByGoUris( Collection<String> uris, @Nullable Taxon taxon ) {
         if ( uris == null || uris.isEmpty() ) {
             return Collections.emptySet();
         }
-        Set<Long> ids = new HashSet<>();
         String hql = taxon != null
                 ? "select distinct gene.id from Gene2GOAssociation as geneAss join geneAss.gene as gene "
                         + "where geneAss.ontologyEntry.valueUri in (:uris) and gene.taxon = :tax"
                 : "select distinct gene.id from Gene2GOAssociation as geneAss join geneAss.gene as gene "
                         + "where geneAss.ontologyEntry.valueUri in (:uris)";
-        for ( List<String> batch : split( new ArrayList<>( uris ), 2048 ) ) {
-            org.hibernate.query.Query<Long> q = getSessionFactory().getCurrentSession()
-                    .createQuery( hql, Long.class )
-                    .setParameterList( "uris", batch );
-            if ( taxon != null ) {
-                q.setParameter( "tax", taxon );
-            }
-            ids.addAll( q.list() );
+        org.hibernate.query.Query<Long> q = getSessionFactory().getCurrentSession()
+                .createQuery( hql, Long.class )
+                .setParameterList( "uris", uris );
+        if ( taxon != null ) {
+            q.setParameter( "tax", taxon );
         }
-        return ids;
-    }
-
-    private static <T> List<List<T>> split( List<T> src, int batchSize ) {
-        List<List<T>> out = new ArrayList<>();
-        for ( int i = 0; i < src.size(); i += batchSize ) {
-            out.add( src.subList( i, Math.min( i + batchSize, src.size() ) ) );
-        }
-        return out;
+        return new HashSet<>( q.list() );
     }
 
     @Override
