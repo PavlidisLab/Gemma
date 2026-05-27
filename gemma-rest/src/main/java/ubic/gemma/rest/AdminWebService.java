@@ -1037,24 +1037,28 @@ public class AdminWebService {
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public Response rebuildOntologySlim( @PathParam("name") String name ) {
-        OntologyService match = null;
+        // OntologyService.getName() returns the OWL's dc:title literal, which CHEBI
+        // doesn't ship — so name-matching via getName() fails for the very bean we're
+        // looking for. The rebuild-slim path is CHEBI-only right now anyway: find the
+        // ChebiOntologyService bean directly and accept any case-insensitive variant
+        // of "CHEBI" / class name as the path argument.
+        if ( !"CHEBI".equalsIgnoreCase( name )
+                && !"chebi".equalsIgnoreCase( name )
+                && !"ChebiOntologyService".equalsIgnoreCase( name )
+                && !"chebiOntology".equalsIgnoreCase( name ) ) {
+            throw new NotFoundException( "Ontology " + name + " does not support slim rebuild "
+                    + "(only CHEBI is supported)." );
+        }
+        ubic.gemma.core.ontology.providers.ChebiOntologyService chebi = null;
         for ( OntologyService o : ontologies ) {
-            try {
-                if ( name.equals( o.getName() ) ) {
-                    match = o;
-                    break;
-                }
-            } catch ( RuntimeException ignored ) {
+            if ( o instanceof ubic.gemma.core.ontology.providers.ChebiOntologyService ) {
+                chebi = ( ubic.gemma.core.ontology.providers.ChebiOntologyService ) o;
+                break;
             }
         }
-        if ( match == null ) {
-            throw new NotFoundException( "No ontology found with name=" + name );
+        if ( chebi == null ) {
+            throw new NotFoundException( "No ChebiOntologyService bean registered." );
         }
-        if ( !( match instanceof ubic.gemma.core.ontology.providers.ChebiOntologyService ) ) {
-            throw new NotFoundException( "Ontology " + name + " does not support slim rebuild." );
-        }
-        ubic.gemma.core.ontology.providers.ChebiOntologyService chebi =
-                ( ubic.gemma.core.ontology.providers.ChebiOntologyService ) match;
         try {
             if ( !chebi.triggerSlimRebuildAsync() ) {
                 throw new ClientErrorException(
