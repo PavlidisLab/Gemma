@@ -140,8 +140,9 @@ public class GoTermsWebService {
         }
 
         Taxon taxon = taxonArg != null ? taxonArgService.getEntity( taxonArg ) : null;
+        String canonicalUri = normalizeGoUri( termUri );
 
-        Set<String> uris = expandUris( termUri, propagate, maxTerms );
+        Set<String> uris = expandUris( canonicalUri, propagate, maxTerms );
         Collection<Gene> genes = gene2GOAssociationService.findByGOTermUris( uris, taxon );
 
         // Sort genes by officialSymbol (case-insensitive); stable for paging.
@@ -161,6 +162,38 @@ public class GoTermsWebService {
                 new ubic.gemma.persistence.util.Slice<>(
                         page, null, offset, limit, totalElements ),
                 new String[] { "id" } );
+    }
+
+    /** Canonical GO URI prefix used by Gene2GOAssociation.ontologyEntry.valueUri rows. */
+    private static final String GO_URI_PREFIX = "http://purl.obolibrary.org/obo/GO_";
+
+    /**
+     * Normalize a caller-supplied GO term identifier to the canonical full-URI form stored
+     * on {@code Gene2GOAssociation.ontologyEntry.valueUri}. Accepts:
+     * <ul>
+     *   <li>The full URI ({@code http://purl.obolibrary.org/obo/GO_0001889}).</li>
+     *   <li>The OBO-foundry short form ({@code GO_0001889}).</li>
+     *   <li>The colon-separated short form ({@code GO:0001889}) — what most clients
+     *       and {@code valueUri}-free callers send.</li>
+     * </ul>
+     * Tomcat's default {@code allowEncodedSlash=false} rejects {@code %2F} in path segments
+     * so the full-URI form is rarely usable via the path parameter; the two short forms
+     * are the common case. Returns the input unchanged if it doesn't match any known
+     * pattern (lets the caller see the empty result rather than a synthetic 404).
+     */
+    private static String normalizeGoUri( String raw ) {
+        if ( raw == null ) return null;
+        String s = raw.trim();
+        if ( s.startsWith( "http://" ) || s.startsWith( "https://" ) ) {
+            return s;
+        }
+        if ( s.startsWith( "GO:" ) ) {
+            return GO_URI_PREFIX + s.substring( 3 );
+        }
+        if ( s.startsWith( "GO_" ) ) {
+            return GO_URI_PREFIX + s.substring( 3 );
+        }
+        return s;
     }
 
     /**
@@ -261,10 +294,11 @@ public class GoTermsWebService {
             throw new BadRequestException( "maxTerms must be >= 0." );
         }
         Taxon taxon = taxonArg != null ? taxonArgService.getEntity( taxonArg ) : null;
-        Set<String> uris = expandUris( termUri, propagate, maxTerms );
+        String canonicalUri = normalizeGoUri( termUri );
+        Set<String> uris = expandUris( canonicalUri, propagate, maxTerms );
         long count = gene2GOAssociationService.countByGOTermUris( uris, taxon );
         return ubic.gemma.rest.util.Responders.respond(
-                new GoTermGeneCountValueObject( termUri, count, uris.size(), propagate, maxTerms ) );
+                new GoTermGeneCountValueObject( canonicalUri, count, uris.size(), propagate, maxTerms ) );
     }
 
     /**
