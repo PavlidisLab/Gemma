@@ -311,8 +311,17 @@ public class GoTermsWebService {
         }
         Taxon taxon = taxonArg != null ? taxonArgService.getEntity( taxonArg ) : null;
         String canonicalUri = normalizeGoUri( termUri );
+        long t0 = System.currentTimeMillis();
         Set<String> uris = expandUris( canonicalUri, propagate, maxTerms );
+        long tExpand = System.currentTimeMillis() - t0;
+        long t1 = System.currentTimeMillis();
         long count = gene2GOAssociationService.countByGOTermUris( uris, taxon );
+        long tCount = System.currentTimeMillis() - t1;
+        if ( tExpand + tCount > 200 ) {
+            log.info( String.format(
+                    "goTerms/genes/count uri=%s propagate=%s maxTerms=%d uris=%d count=%d expand=%dms count=%dms",
+                    canonicalUri, propagate, maxTerms, uris.size(), count, tExpand, tCount ) );
+        }
         return ubic.gemma.rest.util.Responders.respond(
                 new GoTermGeneCountValueObject( canonicalUri, count, uris.size(), propagate, maxTerms ) );
     }
