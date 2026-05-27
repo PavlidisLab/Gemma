@@ -18,6 +18,21 @@
  */
 package ubic.gemma.model.genome.biosequence;
 
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
@@ -47,20 +62,58 @@ import java.util.Set;
  * Hibernate Search 7 mapping: indexed root and embedded contributor via
  * {@link ubic.gemma.model.expression.designElement.CompositeSequence#getBiologicalCharacteristic()}.
  */
+@Entity
+@Table(name = "BIO_SEQUENCE", indexes = @Index(name = "BIO_SEQUENCE_NAME", columnList = "NAME"))
+@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 @Indexed
 public class BioSequence extends AbstractDescribable {
 
+    @Nullable
+    @Column(name = "LENGTH", columnDefinition = "BIGINT")
     private Long length;
+
+    @Nullable
+    @Lob
+    @Column(name = "SEQUENCE", columnDefinition = "longtext")
     private String sequence;
+
+    @Nullable
+    @Column(name = "IS_APPROXIMATE_LENGTH", columnDefinition = "TINYINT")
     private Boolean isApproximateLength;
+
+    @Nullable
+    @Column(name = "IS_CIRCULAR", columnDefinition = "TINYINT")
     private Boolean isCircular;
+
     @Nullable
+    @Enumerated(EnumType.STRING)
+    @Column(name = "POLYMER_TYPE", columnDefinition = "VARCHAR(255)")
     private PolymerType polymerType;
+
     @Nullable
+    @Enumerated(EnumType.STRING)
+    @Column(name = "TYPE", columnDefinition = "VARCHAR(255)")
     private SequenceType type;
+
+    @Nullable
+    @Column(name = "FRACTION_REPEATS", columnDefinition = "DOUBLE")
     private Double fractionRepeats;
-    private ubic.gemma.model.common.description.DatabaseEntry sequenceDatabaseEntry;
+
+    // cascade=all is a problem since same entry can be associated with geneproduct - see chromosomefeature configuration
+    // this must be eager because BioSequenceValueObject assumes it is readily available
+    @Nullable
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinColumn(name = "SEQUENCE_DATABASE_ENTRY_FK", unique = true, columnDefinition = "BIGINT")
+    private DatabaseEntry sequenceDatabaseEntry;
+
+    // assumed readily available in BioSequenceValueObject
+    // this should be accessed via a select because taxa are shared for many, many probes
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "TAXON_FK", nullable = false, columnDefinition = "BIGINT")
     private Taxon taxon;
+
+    @OneToMany(mappedBy = "bioSequence", fetch = FetchType.LAZY)
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<BioSequence2GeneProduct> bioSequence2GeneProduct = new java.util.HashSet<>();
 
     @Override
