@@ -31,18 +31,24 @@ COPY gemma-rest/pom.xml      gemma-rest/pom.xml
 COPY gemma-cli/pom.xml       gemma-cli/pom.xml
 COPY gemma-web/pom.xml       gemma-web/pom.xml
 
-# Install the hdf5 jar (org.hdf5group:hdf5:1.12.3 is not on Maven Central or
-# the pavlab mirror; vendored in-repo at vendor/hdf5/ so CI and fresh dev
-# clones build without depending on a hand-installed host-side maven repo).
-COPY vendor/hdf5/hdf5-1.12.3.jar vendor/hdf5/hdf5-1.12.3.pom /tmp/hdf5/
-RUN --mount=type=cache,target=/root/.m2/repository \
-    mvn -B -ntp install:install-file \
-        -Dfile=/tmp/hdf5/hdf5-1.12.3.jar \
-        -DpomFile=/tmp/hdf5/hdf5-1.12.3.pom
+# Stage the hdf5 jar (org.hdf5group:hdf5:1.12.3 is not on Maven Central or the
+# pavlab mirror; vendored in-repo at vendor/hdf5/ so CI and fresh dev clones
+# build without a hand-installed host-side maven repo).
+#
+# Critical: the staged files land at a stable image-layer path (/opt/local-mvn-repo),
+# NOT in a cache-mounted /root/.m2/repository. Cache mounts (`type=cache`) do
+# not persist across builds in GHA — BuildKit caches the LAYER ("install-file
+# already ran"), but the mount it wrote to is empty next time, so a later
+# source-changed build runs against an empty repo and can't resolve hdf5.
+# Seeding from /opt/local-mvn-repo into the cache mount at the start of each
+# subsequent RUN makes the layer-cache + cache-mount combo work correctly.
+COPY vendor/hdf5/hdf5-1.12.3.jar vendor/hdf5/hdf5-1.12.3.pom /opt/local-mvn-repo/org/hdf5group/hdf5/1.12.3/
 
 # Prime the local repo. -fae so partial misses (a sibling module that's not
-# wired here) don't kill the cache; we re-run the real build below.
+# wired here) don't kill the cache; we re-run the real build below. `cp -rn`
+# seeds hdf5 from the image-layer stash into the cache mount idempotently.
 RUN --mount=type=cache,target=/root/.m2/repository \
+    cp -rn /opt/local-mvn-repo/* /root/.m2/repository/ 2>/dev/null || true && \
     mvn -B -ntp -pl gemma-rest -am dependency:go-offline -DskipTests -fae \
     || true
 
@@ -55,7 +61,12 @@ COPY gemma-cli/src    gemma-cli/src
 # (it's 800 MB), and the gitHash field on /rest/v2/info isn't load-bearing for
 # the dev image. Production deploy through the Jenkins pipeline still resolves
 # .git normally and populates gitHash.
+#
+# Re-seed hdf5 here too — this RUN's layer cache invalidates on every source
+# change, so the seeding step inside it always actually executes (the prime
+# RUN above may be cached and not re-run, leaving the cache mount empty).
 RUN --mount=type=cache,target=/root/.m2/repository \
+    cp -rn /opt/local-mvn-repo/* /root/.m2/repository/ 2>/dev/null || true && \
     mvn -B -ntp -P gemma-rest-war clean package -pl gemma-rest -am -DskipTests \
         -Dmaven.gitcommitid.skip=true
 
