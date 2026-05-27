@@ -1,4 +1,4 @@
-package ubic.gemma.core.ontology.providers.chebi;
+package ubic.gemma.core.ontology.providers;
 
 import org.apache.jena.ontology.OntClass;
 import org.apache.jena.ontology.OntModel;
@@ -13,6 +13,7 @@ import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
 import org.semanticweb.owlapi.model.parameters.Imports;
+import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -25,32 +26,23 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.springframework.stereotype.Component;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class ChebiSlimExtractorTest {
+class OntologySlimExtractorTest {
 
     /**
-     * Regression: ChebiSlimExtractor shipped without {@code @Component} on 2026-05-26.
+     * Regression: the extractor shipped without {@code @Component} on 2026-05-26.
      * OntologyConfig autowires it as required=false; missing annotation meant
      * slimExtractor stayed null in production and the slim path was silently disabled,
      * so first-boot CHEBI loaded the full source on every restart. Pin the stereotype.
      */
-    @org.junit.jupiter.api.Test
+    @Test
     void hasSpringComponentStereotype() {
-        assertTrue( ChebiSlimExtractor.class.isAnnotationPresent( Component.class ),
-                "ChebiSlimExtractor must be @Component so OntologyConfig.chebiOntologyService "
-                        + "can autowire it; without it the slim path is silently disabled." );
-    }
-
-    @org.junit.jupiter.api.Test
-    void seedResolverHasSpringComponentStereotype() {
-        assertTrue( ChebiSeedResolver.class.isAnnotationPresent( Component.class ),
-                "ChebiSeedResolver must be @Component for the same reason: OntologyConfig "
-                        + "autowires it required=false and silently falls back if it's missing." );
+        assertTrue( OntologySlimExtractor.class.isAnnotationPresent( Component.class ),
+                "OntologySlimExtractor must be @Component so OntologyConfig.chebiOntologyService / "
+                        + "mondoOntologyService can autowire it; without it the slim path is silently disabled." );
     }
 
     private static final String SORAFENIB = "http://purl.obolibrary.org/obo/CHEBI_50924";
@@ -67,7 +59,7 @@ class ChebiSlimExtractorTest {
         File source = copyFixture( tempDir, "chebi-mini.test.owl.xml" );
         File slim = tempDir.resolve( "slim.owl" ).toFile();
 
-        ChebiSlimExtractor.ExtractResult result = new ChebiSlimExtractor()
+        OntologySlimExtractor.ExtractResult result = new OntologySlimExtractor()
                 .extract( source, List.of( SORAFENIB ), slim );
 
         assertEquals( 1, result.getCoveredSeedUris().size() );
@@ -100,7 +92,7 @@ class ChebiSlimExtractorTest {
         File source = copyFixture( tempDir, "chebi-mini.test.owl.xml" );
         File slim = tempDir.resolve( "slim.owl" ).toFile();
 
-        ChebiSlimExtractor.ExtractResult result = new ChebiSlimExtractor()
+        OntologySlimExtractor.ExtractResult result = new OntologySlimExtractor()
                 .extract( source,
                         List.of( SORAFENIB, "http://purl.obolibrary.org/obo/CHEBI_99999999" ),
                         slim );
@@ -115,7 +107,7 @@ class ChebiSlimExtractorTest {
         File source = copyFixture( tempDir, "chebi-mini.test.owl.xml" );
         File slim = tempDir.resolve( "slim.owl" ).toFile();
 
-        new ChebiSlimExtractor().extract( source, List.of( SORAFENIB ), slim );
+        new OntologySlimExtractor().extract( source, List.of( SORAFENIB ), slim );
 
         // Load the extractor's output via Jena — this is the runtime read path that
         // ChebiOntologyService.loadModel will use. Confirms the slim is consumable
@@ -152,7 +144,7 @@ class ChebiSlimExtractorTest {
         File source = copyFixture( tempDir, "chebi-mini.test.owl.xml" );
         File slim = tempDir.resolve( "slim.owl" ).toFile();
 
-        new ChebiSlimExtractor().extract( source, List.of( SORAFENIB, ESTRADIOL ), slim );
+        new OntologySlimExtractor().extract( source, List.of( SORAFENIB, ESTRADIOL ), slim );
 
         Set<String> retainedClasses = loadClassUris( slim );
         assertTrue( retainedClasses.contains( SORAFENIB ) );

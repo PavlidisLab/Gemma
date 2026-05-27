@@ -27,8 +27,6 @@ import ubic.gemma.core.ontology.jena.RO;
 import ubic.gemma.core.ontology.jena.UrlOntologyService;
 import ubic.gemma.core.ontology.model.OntologyModel;
 import ubic.gemma.core.ontology.providers.chebi.ChebiSeedResolver;
-import ubic.gemma.core.ontology.providers.chebi.ChebiSlimExtractor;
-import ubic.gemma.core.ontology.providers.chebi.ChebiSlimMeta;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -78,7 +76,7 @@ public class ChebiOntologyService extends UrlOntologyService implements Slimmabl
     private static final String SLIM_META_NAME = "chebiOntology-slim.meta.json";
 
     @Nullable
-    private ChebiSlimExtractor slimExtractor;
+    private OntologySlimExtractor slimExtractor;
     @Nullable
     private ChebiSeedResolver seedResolver;
     @Nullable
@@ -97,7 +95,7 @@ public class ChebiOntologyService extends UrlOntologyService implements Slimmabl
         setAdditionalPropertyUris( props );
     }
 
-    public void setSlimExtractor( @Nullable ChebiSlimExtractor slimExtractor ) {
+    public void setSlimExtractor( @Nullable OntologySlimExtractor slimExtractor ) {
         this.slimExtractor = slimExtractor;
     }
 
@@ -260,14 +258,14 @@ public class ChebiOntologyService extends UrlOntologyService implements Slimmabl
             log.info( "Slim freshness: meta sidecar missing at {} — will rebuild.", meta );
             return false;
         }
-        ChebiSlimMeta cached;
+        OntologySlimMeta cached;
         try {
-            cached = ChebiSlimMeta.readFrom( meta );
+            cached = OntologySlimMeta.readFrom( meta );
         } catch ( IOException e ) {
             log.warn( "Slim freshness: meta sidecar unreadable at {} — will rebuild.", meta, e );
             return false;
         }
-        String currentHash = ChebiSlimMeta.hashSeeds( currentSeeds );
+        String currentHash = OntologySlimMeta.hashSeeds( currentSeeds );
         if ( !currentHash.equals( cached.seedHash ) ) {
             log.info( "Slim freshness: corpus seed set drift ({} seeds in meta, {} now); "
                     + "will rebuild.", cached.seedCount, currentSeeds.size() );
@@ -302,15 +300,15 @@ public class ChebiOntologyService extends UrlOntologyService implements Slimmabl
             parent.mkdirs();
         }
         long start = System.currentTimeMillis();
-        ChebiSlimExtractor.ExtractResult result;
+        OntologySlimExtractor.ExtractResult result;
         try {
             result = slimExtractor.extract( source, seeds, slimOut );
         } catch ( Exception e ) {
-            throw new IOException( "ChebiSlimExtractor failed on " + source, e );
+            throw new IOException( "OntologySlimExtractor failed on " + source, e );
         }
         long elapsedMs = System.currentTimeMillis() - start;
 
-        ChebiSlimMeta meta = ChebiSlimMeta.create(
+        OntologySlimMeta meta = OntologySlimMeta.create(
                 getOntologyUrl(), seeds, slimOut.length(),
                 result.getClassCount(), result.getAxiomCount() );
         meta.writeTo( metaOut );

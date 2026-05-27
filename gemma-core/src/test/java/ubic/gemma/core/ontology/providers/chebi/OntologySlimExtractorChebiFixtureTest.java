@@ -7,6 +7,7 @@ import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.util.iterator.ExtendedIterator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import ubic.gemma.core.ontology.providers.OntologySlimExtractor;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -23,13 +24,13 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Exercises {@link ChebiSlimExtractor} against real-shaped fixtures generated via ROBOT
- * STAR extraction from upstream CHEBI ({@code chebi-mini-medium.test.owl},
+ * Exercises {@link OntologySlimExtractor} against real-shaped CHEBI fixtures generated
+ * via ROBOT STAR extraction from upstream CHEBI ({@code chebi-mini-medium.test.owl},
  * 365 KB, from chebi_lite) and from the heavyweight full CHEBI ({@code
  * chebi-mini-medium-from-full.test.owl.gz}, 1.4 MB raw, carries the chemical-structure
  * annotation axioms that chebi_lite drops). Pins the reduction ratio + Jena
  * round-trip on shapes much closer to production than the 8-class
- * hand-rolled fixture.
+ * hand-rolled fixture covered by {@code OntologySlimExtractorTest}.
  *
  * <p>Each test asserts:
  * <ul>
@@ -43,7 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * {@code ~/chebi-fixtures/build-mini-chebi.sh} on frink — re-run that script when CHEBI
  * upstream rolls a new release if the fixtures need refreshing.
  */
-class ChebiSlimExtractorRealFixtureTest {
+class OntologySlimExtractorChebiFixtureTest {
 
     private static final String CHEBI_LITE_MEDIUM = "/data/loader/ontology/chebi-mini-medium.test.owl";
     private static final String FULL_DERIVED_MEDIUM_GZ =
@@ -60,7 +61,7 @@ class ChebiSlimExtractorRealFixtureTest {
         long sourceBytes = source.length();
         File slim = tempDir.resolve( "slim.owl" ).toFile();
 
-        ChebiSlimExtractor.ExtractResult result = new ChebiSlimExtractor()
+        OntologySlimExtractor.ExtractResult result = new OntologySlimExtractor()
                 .extract( source, List.of( ANTINEOPLASTIC ), slim );
 
         long slimBytes = slim.length();
@@ -89,7 +90,7 @@ class ChebiSlimExtractorRealFixtureTest {
         long sourceBytes = source.length();
         File slim = tempDir.resolve( "slim.owl" ).toFile();
 
-        new ChebiSlimExtractor().extract( source, List.of( ANTINEOPLASTIC, IMMUNOSUPPRESSANT ), slim );
+        new OntologySlimExtractor().extract( source, List.of( ANTINEOPLASTIC, IMMUNOSUPPRESSANT ), slim );
 
         long slimBytes = slim.length();
         // Observed on 2026-05-26: 119× reduction (1.4 MB → 12 KB) for a 2-term seed

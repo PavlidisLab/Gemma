@@ -16,8 +16,8 @@ import ubic.gemma.core.ontology.jena.OntologyLoader;
 import ubic.gemma.core.ontology.jena.TdbOntologyService;
 import ubic.gemma.core.ontology.providers.*;
 import ubic.gemma.core.ontology.providers.OntologyService;
+import ubic.gemma.core.ontology.providers.OntologySlimExtractor;
 import ubic.gemma.core.ontology.providers.chebi.ChebiSeedResolver;
-import ubic.gemma.core.ontology.providers.chebi.ChebiSlimExtractor;
 import ubic.gemma.core.context.EnvironmentProfiles;
 import ubic.gemma.core.ontology.providers.GemmaOntologyService;
 import ubic.gemma.core.ontology.providers.MondoOntologyService;
@@ -144,7 +144,7 @@ public class OntologyConfig {
      */
     @Bean
     public FactoryBean<ChebiOntologyService> chebiOntologyService(
-            @Autowired(required = false) ChebiSlimExtractor slimExtractor,
+            @Autowired(required = false) OntologySlimExtractor slimExtractor,
             @Autowired(required = false) ChebiSeedResolver seedResolver ) {
         ChebiOntologyService service = new ChebiOntologyService();
         // When slimExtractor or seedResolver are absent (test contexts that don't import
@@ -215,7 +215,7 @@ public class OntologyConfig {
      */
     @Bean
     public FactoryBean<MondoOntologyService> mondoOntologyServiceOntologyService(
-            @Autowired(required = false) ChebiSlimExtractor slimExtractor,
+            @Autowired(required = false) OntologySlimExtractor slimExtractor,
             @Autowired(required = false) MondoSeedResolver seedResolver ) {
         MondoOntologyService service = new MondoOntologyService();
         service.setSlimExtractor( slimExtractor );

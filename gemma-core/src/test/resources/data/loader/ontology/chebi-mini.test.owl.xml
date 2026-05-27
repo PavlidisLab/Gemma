@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!--
-  Hand-rolled minimal CHEBI fixture for ChebiSlimExtractor unit tests.
+  Hand-rolled minimal CHEBI fixture for OntologySlimExtractor unit tests.
 
   Shape (role subtree on left, chemical subtree on right):
       role (CHEBI:50906)                  chemical entity (CHEBI:24431)

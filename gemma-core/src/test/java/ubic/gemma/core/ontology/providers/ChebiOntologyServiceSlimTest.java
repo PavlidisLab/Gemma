@@ -7,8 +7,6 @@ import org.junit.jupiter.api.io.TempDir;
 import ubic.gemma.core.config.Configuration;
 import ubic.gemma.core.ontology.model.OntologyTerm;
 import ubic.gemma.core.ontology.providers.chebi.ChebiSeedResolver;
-import ubic.gemma.core.ontology.providers.chebi.ChebiSlimExtractor;
-import ubic.gemma.core.ontology.providers.chebi.ChebiSlimMeta;
 
 import java.io.File;
 import java.io.IOException;
@@ -102,8 +100,8 @@ class ChebiOntologyServiceSlimTest {
                 .thenReturn( Set.of( SORAFENIB, "http://purl.obolibrary.org/obo/CHEBI_23965" ) );
 
         // Verify meta detection works in isolation (avoid the heavy URL-fetch fallback path).
-        ChebiSlimMeta cached = ChebiSlimMeta.readFrom( meta );
-        String currentHash = ChebiSlimMeta.hashSeeds( driftedResolver.resolveCorpusSeeds() );
+        OntologySlimMeta cached = OntologySlimMeta.readFrom( meta );
+        String currentHash = OntologySlimMeta.hashSeeds( driftedResolver.resolveCorpusSeeds() );
         assertTrue( !currentHash.equals( cached.seedHash ),
                 "seed-hash must change when corpus grows" );
     }
@@ -120,9 +118,9 @@ class ChebiOntologyServiceSlimTest {
         }
         File slim = tempDir.resolve( "chebiOntology-slim.owl" ).toFile();
         File meta = tempDir.resolve( "chebiOntology-slim.meta.json" ).toFile();
-        ChebiSlimExtractor.ExtractResult result = new ChebiSlimExtractor()
+        OntologySlimExtractor.ExtractResult result = new OntologySlimExtractor()
                 .extract( source.toFile(), List.copyOf( seeds ), slim );
-        ChebiSlimMeta.create( "http://chebi.test.invalid/chebi.owl", seeds,
+        OntologySlimMeta.create( "http://chebi.test.invalid/chebi.owl", seeds,
                         slim.length(), result.getClassCount(), result.getAxiomCount() )
                 .writeTo( meta );
     }

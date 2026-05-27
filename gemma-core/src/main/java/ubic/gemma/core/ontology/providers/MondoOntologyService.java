@@ -6,8 +6,6 @@ import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.ontology.jena.OntologyLoader;
 import ubic.gemma.core.ontology.jena.UrlOntologyService;
 import ubic.gemma.core.ontology.model.OntologyModel;
-import ubic.gemma.core.ontology.providers.chebi.ChebiSlimExtractor;
-import ubic.gemma.core.ontology.providers.chebi.ChebiSlimMeta;
 import ubic.gemma.core.ontology.providers.mondo.MondoSeedResolver;
 
 import javax.annotation.Nullable;
@@ -32,11 +30,10 @@ import static java.util.Objects.requireNonNull;
  *
  * <p>Extends {@link UrlOntologyService} directly (not via {@code AbstractDelegatingOntologyService})
  * so {@link #loadModel} can be overridden for a corpus-tailored slim cache. Same
- * machinery as {@code ChebiOntologyService}: {@code ChebiSlimExtractor} (mis-named
- * — it's actually a generic OWL-API STAR extractor) runs against the cached source
- * with a seed of every MONDO URI from {@code Characteristic.valueUri}. Expected
- * reduction: ~10-20× because the corpus uses only a few thousand of the 25K MONDO
- * classes, and STAR drops the xref/synonym overhead on unreferenced terms.
+ * machinery as {@code ChebiOntologyService}: {@link OntologySlimExtractor} runs against
+ * the cached source with a seed of every MONDO URI from {@code Characteristic.valueUri}.
+ * Expected reduction: ~10-20× because the corpus uses only a few thousand of the 25K
+ * MONDO classes, and STAR drops the xref/synonym overhead on unreferenced terms.
  *
  * <p>Auto-rebuild on first boot is intentionally disabled — same OOM risk as CHEBI
  * before chebi_lite. Trigger via {@code POST /admin/ontologies/MONDO/rebuild-slim}
@@ -53,7 +50,7 @@ public class MondoOntologyService extends UrlOntologyService implements Slimmabl
     private static final String SLIM_META_NAME = "mondoOntology-slim.meta.json";
 
     @Nullable
-    private ChebiSlimExtractor slimExtractor;
+    private OntologySlimExtractor slimExtractor;
     @Nullable
     private MondoSeedResolver seedResolver;
     @Nullable
@@ -68,7 +65,7 @@ public class MondoOntologyService extends UrlOntologyService implements Slimmabl
                 "mondoOntology" );
     }
 
-    public void setSlimExtractor( @Nullable ChebiSlimExtractor slimExtractor ) {
+    public void setSlimExtractor( @Nullable OntologySlimExtractor slimExtractor ) {
         this.slimExtractor = slimExtractor;
     }
 
@@ -175,14 +172,14 @@ public class MondoOntologyService extends UrlOntologyService implements Slimmabl
             log.info( "Slim freshness: MONDO meta sidecar missing at {} — will rebuild.", meta );
             return false;
         }
-        ChebiSlimMeta cached;
+        OntologySlimMeta cached;
         try {
-            cached = ChebiSlimMeta.readFrom( meta );
+            cached = OntologySlimMeta.readFrom( meta );
         } catch ( IOException e ) {
             log.warn( "Slim freshness: MONDO meta sidecar unreadable at {} — will rebuild.", meta, e );
             return false;
         }
-        String currentHash = ChebiSlimMeta.hashSeeds( currentSeeds );
+        String currentHash = OntologySlimMeta.hashSeeds( currentSeeds );
         if ( !currentHash.equals( cached.seedHash ) ) {
             log.info( "Slim freshness: MONDO corpus seed set drift ({} -> {}); will rebuild.",
                     cached.seedCount, currentSeeds.size() );
@@ -213,7 +210,7 @@ public class MondoOntologyService extends UrlOntologyService implements Slimmabl
             parent.mkdirs();
         }
         long start = System.currentTimeMillis();
-        ChebiSlimExtractor.ExtractResult result;
+        OntologySlimExtractor.ExtractResult result;
         try {
             result = slimExtractor.extract( source, seeds, slimOut );
         } catch ( Exception e ) {
@@ -221,7 +218,7 @@ public class MondoOntologyService extends UrlOntologyService implements Slimmabl
         }
         long elapsedMs = System.currentTimeMillis() - start;
 
-        ChebiSlimMeta meta = ChebiSlimMeta.create(
+        OntologySlimMeta meta = OntologySlimMeta.create(
                 getOntologyUrl(), seeds, slimOut.length(),
                 result.getClassCount(), result.getAxiomCount() );
         meta.writeTo( metaOut );

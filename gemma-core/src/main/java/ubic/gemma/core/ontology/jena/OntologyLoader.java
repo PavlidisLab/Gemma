@@ -290,7 +290,7 @@ public class OntologyLoader {
      * Obtain the on-disk path where the cached source OWL for an ontology lives.
      * <p>
      * Public so per-ontology customizations (e.g.
-     * {@code ubic.gemma.core.ontology.providers.chebi.ChebiSlimExtractor}) can read the cached
+     * {@code ubic.gemma.core.ontology.providers.OntologySlimExtractor}) can read the cached
      * source without having to know the path computation; the path is a stable function of
      * {@code ontology.cache.dir} plus the cacheName.
      */

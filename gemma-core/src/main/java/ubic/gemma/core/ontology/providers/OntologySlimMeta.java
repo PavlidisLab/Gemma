@@ -1,4 +1,4 @@
-package ubic.gemma.core.ontology.providers.chebi;
+package ubic.gemma.core.ontology.providers;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -17,18 +17,19 @@ import java.util.HexFormat;
 import java.util.List;
 
 /**
- * Sidecar metadata for {@code chebiOntology-slim.owl}.
+ * Sidecar metadata for an {@code *Ontology-slim.owl} cache.
  *
- * <p>Written by {@code ChebiOntologyService.rebuildSlim(...)} after extraction; read on
- * boot to decide whether the existing slim still covers the current corpus seeds. A
- * mismatch between {@link #seedHash} and the freshly-computed hash of the current corpus
- * seeds means the slim is stale and must be re-extracted, regardless of age.
+ * <p>Written by a {@link SlimmableOntologyService}'s rebuild path after extraction;
+ * read on boot to decide whether the existing slim still covers the current corpus
+ * seeds. A mismatch between {@link #seedHash} and the freshly-computed hash of the
+ * current corpus seeds means the slim is stale and must be re-extracted, regardless
+ * of age.
  *
  * <p>Format is a single JSON object — small enough that humans can eyeball it in a deploy
  * directory and large diagnostic tooling isn't worth building.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public final class ChebiSlimMeta {
+public final class OntologySlimMeta {
 
     private static final ObjectMapper MAPPER = new ObjectMapper()
             .enable( SerializationFeature.INDENT_OUTPUT );
@@ -55,9 +56,9 @@ public final class ChebiSlimMeta {
     @JsonProperty("axiom_count")
     public int axiomCount;
 
-    public static ChebiSlimMeta create( String sourceUrl, Collection<String> seeds,
-                                        long slimSizeBytes, long classCount, int axiomCount ) {
-        ChebiSlimMeta meta = new ChebiSlimMeta();
+    public static OntologySlimMeta create( String sourceUrl, Collection<String> seeds,
+                                           long slimSizeBytes, long classCount, int axiomCount ) {
+        OntologySlimMeta meta = new OntologySlimMeta();
         meta.sourceUrl = sourceUrl;
         meta.generatedAt = Instant.now().toString();
         meta.seedCount = seeds.size();
@@ -72,8 +73,8 @@ public final class ChebiSlimMeta {
         MAPPER.writeValue( out, this );
     }
 
-    public static ChebiSlimMeta readFrom( File in ) throws IOException {
-        return MAPPER.readValue( in, ChebiSlimMeta.class );
+    public static OntologySlimMeta readFrom( File in ) throws IOException {
+        return MAPPER.readValue( in, OntologySlimMeta.class );
     }
 
     /**

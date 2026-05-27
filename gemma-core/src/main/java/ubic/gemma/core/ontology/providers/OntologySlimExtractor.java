@@ -1,4 +1,4 @@
-package ubic.gemma.core.ontology.providers.chebi;
+package ubic.gemma.core.ontology.providers;
 
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.formats.RDFXMLDocumentFormat;
@@ -31,13 +31,13 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * Module-extract a slim subset of the CHEBI ontology around a given seed of CHEBI URIs.
+ * Module-extract a slim subset of an OWL ontology around a given seed of term URIs.
  *
- * <p>Backs the {@code chebiOntology-slim.owl} cache that {@code ChebiOntologyService}
- * consults on startup so the runtime Jena load drops from minutes (full ~812 MB CHEBI)
- * to seconds (~5–15 MB slim). The slim cadence is decoupled from container restart by
- * the parallel ontology-hot-refresh work; see Phase 4 design notes in
- * {@code handoffs/RECCE_ONTOLOGY_HIERARCHY_REFACTOR.md}.
+ * <p>Backs the {@code *Ontology-slim.owl} caches that {@link SlimmableOntologyService}
+ * implementations consult on startup so the runtime Jena load drops from minutes (full
+ * source) to seconds (slim subset). Used today by {@code ChebiOntologyService} and
+ * {@code MondoOntologyService}; any future slimmable provider can reuse this class
+ * unchanged.
  *
  * <p>Algorithm: OWL-API's {@link SyntacticLocalityModuleExtractor} with
  * {@link ModuleType#STAR}, which preserves entailments over the seed signature. STAR
@@ -52,14 +52,16 @@ import java.util.Set;
  * <em>expanded</em> before extraction: each seed term contributes its transitive
  * {@code subClassOf} ancestors and the chemical-side of every {@code RO:0000087 has_role}
  * axiom it carries (plus those targets' ancestors). STAR then runs over the expanded set.
+ * The {@code has_role} unwrap is CHEBI-shaped — it's a no-op on ontologies that don't
+ * use that relation (MONDO, GO, etc.).
  *
  * <p>This class is stateless and thread-safe — the OWL-API manager is created per call
  * so concurrent extractions don't share mutable cache state.
  */
 @Component
-public class ChebiSlimExtractor {
+public class OntologySlimExtractor {
 
-    private static final Logger log = LoggerFactory.getLogger( ChebiSlimExtractor.class );
+    private static final Logger log = LoggerFactory.getLogger( OntologySlimExtractor.class );
 
     private static final String HAS_ROLE_IRI = "http://purl.obolibrary.org/obo/RO_0000087";
 
@@ -67,9 +69,9 @@ public class ChebiSlimExtractor {
      * Extract a STAR module of {@code source} around {@code seedUris}, writing the
      * resulting OWL to {@code slimOut} as RDF/XML.
      *
-     * @param source   the full CHEBI OWL file on disk (already downloaded + cached by
+     * @param source   the full source OWL file on disk (already downloaded + cached by
      *                 the upstream {@code OntologyLoader})
-     * @param seedUris CHEBI term URIs to anchor the slim around. The extractor adds
+     * @param seedUris term URIs to anchor the slim around. The extractor adds
      *                 ancestors + axiom-closure terms automatically.
      * @param slimOut  destination file for the extracted slim. Parent directory must
      *                 exist. Overwrites if present.
@@ -90,7 +92,7 @@ public class ChebiSlimExtractor {
         OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
         OWLDataFactory df = manager.getOWLDataFactory();
 
-        log.info( "Loading CHEBI source from {} for slim extraction...", source );
+        log.info( "Loading source OWL from {} for slim extraction...", source );
         long loadStart = System.currentTimeMillis();
         OWLOntology fullOntology = manager.loadOntologyFromOntologyDocument( source );
         log.info( "Loaded {} axioms in {} ms.", fullOntology.getAxiomCount(),
@@ -129,7 +131,7 @@ public class ChebiSlimExtractor {
                 classCount, axiomCount, System.currentTimeMillis() - extractStart );
 
         // Release the source OWL-API representation BEFORE serialising the slim. This is
-        // the critical memory step on real-size CHEBI: the in-memory full ontology is
+        // the critical memory step on real-size sources: the in-memory full ontology is
         // multi-GB and is unneeded once STAR has run. Without this the saveOntology
         // call below runs with both the source and the extracted module live in heap.
         manager.removeOntology( fullOntology );

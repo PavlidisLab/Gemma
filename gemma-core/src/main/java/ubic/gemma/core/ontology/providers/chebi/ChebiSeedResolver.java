@@ -12,8 +12,9 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Resolves the corpus-side seed set for {@link ChebiSlimExtractor}: every CHEBI URI
- * currently used as a {@code Characteristic.valueUri} anywhere in the gemd corpus.
+ * Resolves the corpus-side seed set for the CHEBI slim build (consumed by
+ * {@code ubic.gemma.core.ontology.providers.OntologySlimExtractor}): every CHEBI
+ * URI currently used as a {@code Characteristic.valueUri} anywhere in the gemd corpus.
  *
  * <p>The slim extraction wants a seed of "every CHEBI term we have annotated or might
  * annotate". The corpus query covers "have annotated"; the {@code has_role} closure
