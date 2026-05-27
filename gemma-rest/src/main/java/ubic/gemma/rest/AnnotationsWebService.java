@@ -952,6 +952,11 @@ public class AnnotationsWebService {
             }
             for ( SearchResult<Gene> sr : hits ) {
                 if ( sr == null ) continue;
+                // Gate on the exact-symbol score (DatabaseSearchSource.MATCH_BY_OFFICIAL_SYMBOL_SCORE = 1.0).
+                // Inexact and full-text matches score <= 0.9 and we don't want them prepended above
+                // ontology hits — typing "wild type" should surface "wild type genotype" (EFO), not
+                // some gene whose name/alias Lucene happened to substring-match.
+                if ( sr.getScore() < 1.0 ) continue;
                 Gene g = sr.getResultObject();
                 if ( g == null ) continue;
                 String label = g.getOfficialSymbol();
