@@ -528,48 +528,87 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
             // Six independent identifier-lookup queries against four services. On a high-
             // latency DB link (e.g. the prod-tunneled gemd) each query is ~250ms; serially
             // that's 1.5s of typeahead lag for queries that don't match an official symbol
-            // or name (i.e. the path most callers exercise). Fan out on a small bounded
-            // pool — each @Transactional call gets its own session in the new thread, so
-            // there's no cross-thread Hibernate state to worry about.
+            // or name. Fan out on a small bounded pool — each @Transactional call gets its
+            // own session in the new thread (Spring TX is thread-local) so there's no
+            // cross-thread Hibernate state to share.
+            //
+            // Per-task timing logged at >100ms so we have data to drop low-value high-cost
+            // services. (See CLAUDE.md "Performance testing" for the threshold-log pattern.)
             final String es = exactString;
-            java.util.List<java.util.function.Supplier<java.util.Collection<SearchResult<Gene>>>> tasks =
-                    java.util.Arrays.asList(
+            class Task {
+                final String name;
+                final java.util.function.Supplier<java.util.Collection<SearchResult<Gene>>> body;
+                Task( String n, java.util.function.Supplier<java.util.Collection<SearchResult<Gene>>> b ) { name = n; body = b; }
+            }
+            java.util.List<Task> tasks = java.util.Arrays.asList(
+                    new Task( "GeneService.findByAlias",
                             () -> toSearchResults( settings, Gene.class, geneService.findByAlias( es ),
-                                    MATCH_BY_ALIAS_SCORE, "GeneService.findByAlias" ),
-                            () -> {
-                                Gene g = geneService.findByEnsemblId( es );
-                                return g != null
-                                        ? java.util.Collections.singleton( SearchResult.from( Gene.class, g,
-                                                MATCH_BY_ACCESSION_SCORE, null, "GeneService.findByEnsemblId" ) )
-                                        : java.util.Collections.emptyList();
-                            },
+                                    MATCH_BY_ALIAS_SCORE, "GeneService.findByAlias" ) ),
+                    new Task( "GeneService.findByEnsemblId", () -> {
+                        Gene g = geneService.findByEnsemblId( es );
+                        return g != null
+                                ? java.util.Collections.singleton( SearchResult.from( Gene.class, g,
+                                        MATCH_BY_ACCESSION_SCORE, null, "GeneService.findByEnsemblId" ) )
+                                : java.util.Collections.emptyList();
+                    } ),
+                    new Task( "GeneProductService.getGenesByName",
                             () -> toSearchResults( settings, Gene.class, geneProductService.getGenesByName( es ),
-                                    INDIRECT_HIT_PENALTY * MATCH_BY_NAME_SCORE, "GeneProductService.getGenesByName" ),
+                                    INDIRECT_HIT_PENALTY * MATCH_BY_NAME_SCORE, "GeneProductService.getGenesByName" ) ),
+                    new Task( "GeneProductService.getGenesByNcbiId",
                             () -> toSearchResults( settings, Gene.class, geneProductService.getGenesByNcbiId( es ),
-                                    INDIRECT_HIT_PENALTY * MATCH_BY_ACCESSION_SCORE, "GeneProductService.getGenesByNcbiId" ),
+                                    INDIRECT_HIT_PENALTY * MATCH_BY_ACCESSION_SCORE, "GeneProductService.getGenesByNcbiId" ) ),
+                    new Task( "BioSequenceService.getGenesByAccession",
                             () -> toSearchResults( settings, Gene.class, bioSequenceService.getGenesByAccession( es ),
-                                    INDIRECT_HIT_PENALTY * MATCH_BY_ACCESSION_SCORE, "BioSequenceService.GetGenesByAccession" ),
+                                    INDIRECT_HIT_PENALTY * MATCH_BY_ACCESSION_SCORE, "BioSequenceService.GetGenesByAccession" ) ),
+                    new Task( "BioSequenceService.getGenesByName",
                             () -> toSearchResults( settings, Gene.class, bioSequenceService.getGenesByName( es ),
-                                    INDIRECT_HIT_PENALTY * MATCH_BY_NAME_SCORE, "BioSequenceService.getGenesByName" )
-                    );
+                                    INDIRECT_HIT_PENALTY * MATCH_BY_NAME_SCORE, "BioSequenceService.getGenesByName" ) )
+            );
             int parallelism = Math.min( tasks.size(), 6 );
             java.util.concurrent.ExecutorService pool =
                     java.util.concurrent.Executors.newFixedThreadPool( parallelism );
             try {
-                java.util.List<java.util.concurrent.Future<java.util.Collection<SearchResult<Gene>>>> futures =
-                        new java.util.ArrayList<>( tasks.size() );
-                for ( java.util.function.Supplier<java.util.Collection<SearchResult<Gene>>> t : tasks ) {
-                    futures.add( pool.submit( t::get ) );
+                java.util.List<java.util.concurrent.Future<long[]>> futures = new java.util.ArrayList<>( tasks.size() );
+                final String[] taskNames = new String[tasks.size()];
+                final int[] taskHits = new int[tasks.size()];
+                final long[] taskMs = new long[tasks.size()];
+                for ( int i = 0; i < tasks.size(); i++ ) {
+                    final int idx = i;
+                    final Task t = tasks.get( i );
+                    taskNames[idx] = t.name;
+                    futures.add( pool.submit( () -> {
+                        long t0 = System.currentTimeMillis();
+                        java.util.Collection<SearchResult<Gene>> r = t.body.get();
+                        long ms = System.currentTimeMillis() - t0;
+                        int hits = r != null ? r.size() : 0;
+                        synchronized ( results ) {
+                            if ( r != null ) results.addAll( r );
+                        }
+                        taskHits[idx] = hits;
+                        taskMs[idx] = ms;
+                        return new long[]{ ms, hits };
+                    } ) );
                 }
-                for ( java.util.concurrent.Future<java.util.Collection<SearchResult<Gene>>> f : futures ) {
+                for ( java.util.concurrent.Future<long[]> f : futures ) {
                     try {
-                        results.addAll( f.get() );
+                        f.get();
                     } catch ( InterruptedException ie ) {
                         Thread.currentThread().interrupt();
                         return;
                     } catch ( java.util.concurrent.ExecutionException ee ) {
                         log.debug( "Gene fallback lookup failed", ee.getCause() );
                     }
+                }
+                long maxMs = 0;
+                for ( long m : taskMs ) if ( m > maxMs ) maxMs = m;
+                if ( maxMs > 100 ) {
+                    StringBuilder sb = new StringBuilder( "Gene fallback fan-out for '" )
+                            .append( exactString ).append( "' (parallel max=" ).append( maxMs ).append( "ms):" );
+                    for ( int i = 0; i < tasks.size(); i++ ) {
+                        sb.append( ' ' ).append( taskNames[i] ).append( '=' ).append( taskMs[i] )
+                                .append( "ms/" ).append( taskHits[i] ).append( "hit" );
+                    }
+                    log.info( sb.toString() );
                 }
             } finally {
                 pool.shutdownNow();
