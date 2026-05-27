@@ -1,5 +1,9 @@
 package ubic.gemma.model.expression.bioAssayData;
 
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MappedSuperclass;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,11 +16,17 @@ import org.springframework.lang.Nullable;
  */
 @Getter
 @Setter
+@MappedSuperclass
 public abstract class BulkExpressionDataVector extends DesignElementDataVector {
 
     /**
      * A dimension of {@link ubic.gemma.model.expression.bioAssay.BioAssay} the elements of this vector apply to.
      */
+    // Flipped to LAZY in the hbm (lazy="proxy") to dodge an N+1 on bulk vector loads. Hot loaders
+    // (RawExpressionDataVectorDaoImpl, ProcessedExpressionDataVectorDaoImpl) JOIN FETCH the BAD
+    // where the caller needs it.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "BIO_ASSAY_DIMENSION_FK", nullable = false, columnDefinition = "BIGINT")
     private BioAssayDimension bioAssayDimension;
 
     /**
