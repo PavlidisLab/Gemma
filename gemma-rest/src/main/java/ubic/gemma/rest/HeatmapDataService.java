@@ -94,7 +94,7 @@ public class HeatmapDataService {
      * @param threshold    p-value threshold for the resultSetId mode (default 0.01)
      * @param pcaComponent query mode: top-loaded vectors for this PCA component (1-based)
      * @param pcaCount     how many probes per PCA component (default 20)
-     * @param sampleSize   fallback random-N size when no other mode applies (default 20, max 150)
+     * @param sampleSize   fallback random-N size when no other mode applies (default 20, max 200)
      * @param encoding     {@code "json"} (default) or {@code "base64f32"} for the matrix encoding
      * @param subSetId     optional {@link ExpressionExperimentSubSet} id; when non-null, the response
      *                     is restricted to that subset's sample columns. The subset must belong to
@@ -263,7 +263,7 @@ public class HeatmapDataService {
             return processedExpressionDataVectorService.getProcessedDataArraysByProbe( ee, probes );
         }
         if ( resultSetId != null ) {
-            return processedExpressionDataVectorService.getDiffExVectors( resultSetId, threshold, 150 );
+            return processedExpressionDataVectorService.getDiffExVectors( resultSetId, threshold, DatasetVisualizationWebService.MAX_SAMPLE_SIZE );
         }
         if ( pcaComponent != null ) {
             Map<ProbeLoading, DoubleVectorValueObject> topLoaded = svdService.getTopLoadedVectors( ee, pcaComponent, pcaCount );

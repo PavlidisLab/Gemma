@@ -68,8 +68,8 @@ import java.util.List;
 @Slf4j
 public class DatasetVisualizationWebService {
 
-    /** Hard upper bound on {@code ?sampleSize=}; mirrors the legacy DEDVController MAX_RESULTS_TO_RETURN. */
-    static final int MAX_SAMPLE_SIZE = 150;
+    /** Hard upper bound on {@code ?sampleSize=}. */
+    static final int MAX_SAMPLE_SIZE = 200;
     static final int DEFAULT_SAMPLE_SIZE = 20;
     static final int DEFAULT_PCA_COUNT = 20;
     static final double DEFAULT_DIFFEX_THRESHOLD = 0.01;
@@ -107,7 +107,7 @@ public class DatasetVisualizationWebService {
             description = "Returns a probe×sample expression matrix plus per-row, per-column and per-factor metadata. "
                     + "Selection modes (mutually exclusive, listed in precedence order): (1) ?genes=csv, (2) ?probes=csv, "
                     + "(3) ?resultSet=N&threshold=p (diffex top hits), (4) ?pcaComponent=k&pcaCount=n (PCA-loaded probes), "
-                    + "(5) default fallback: a random sample of ?sampleSize=n probes (default 20, max 150). "
+                    + "(5) default fallback: a random sample of ?sampleSize=n probes (default 20, max 200). "
                     + "Optionally restrict the sample columns to a single ?subSet=N — useful for cell-type-resolved views on "
                     + "single-cell data and for client-driven paging. "
                     + "NO ordering decisions are made server-side; the client sorts, groups, palettes, and renders.",
