@@ -604,9 +604,9 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
                     final Task t = tasks.get( i );
                     taskNames[idx] = t.name;
                     futures.add( pool.submit( () -> {
-                        long t0 = System.currentTimeMillis();
+                        long taskStart = System.currentTimeMillis();
                         java.util.Collection<SearchResult<Gene>> r = t.body.get();
-                        long ms = System.currentTimeMillis() - t0;
+                        long ms = System.currentTimeMillis() - taskStart;
                         int hits = r != null ? r.size() : 0;
                         synchronized ( results ) {
                             if ( r != null ) results.addAll( r );
