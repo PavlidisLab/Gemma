@@ -150,6 +150,11 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
     }
 
     @Override
+    public Collection<Gene> findByOfficialSymbolInexact( final String officialSymbol, final Taxon taxon ) {
+        return geneReadService.findByOfficialSymbolInexact( officialSymbol, taxon );
+    }
+
+    @Override
     public Map<String, GeneValueObject> findByOfficialSymbols( Collection<String> query, Long taxonId ) {
         return geneReadService.findByOfficialSymbols( query, taxonId );
     }

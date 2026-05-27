@@ -20,6 +20,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.persistence.service.blacklist.BlacklistedEntityService;
@@ -501,20 +502,26 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
         long stepMs;
         long t0 = System.currentTimeMillis();
         String symbolStep;
+        // When a taxon is constrained, push it into the LIKE-prefix query — the underlying
+        // table is gene-table-wide, the LOWER(symbol) LIKE pattern can't use a B-tree index
+        // on its own, but the taxon FK index prunes the candidate set first.
+        Taxon taxonConstraint = settings.getTaxonConstraint();
+        String inexactPattern = ( exactString.length() <= 5 && !isWildcard( settings ) )
+                ? inexactString + "%" : inexactString;
+        java.util.function.Function<String, Collection<Gene>> inexact =
+                taxonConstraint != null
+                        ? p -> geneService.findByOfficialSymbolInexact( p, taxonConstraint )
+                        : p -> geneService.findByOfficialSymbolInexact( p );
         if ( exactString.length() <= 1 ) {
             results.addAll( toSearchResults( settings, Gene.class, geneService.findByOfficialSymbol( exactString ), MATCH_BY_OFFICIAL_SYMBOL_SCORE, "GeneService.findByOfficialSymbol" ) );
             symbolStep = "findByOfficialSymbol";
         } else if ( exactString.length() <= 5 ) {
-            if ( isWildcard( settings ) ) {
-                results.addAll( toSearchResults( settings, Gene.class, geneService.findByOfficialSymbolInexact( inexactString ), MATCH_BY_OFFICIAL_SYMBOL_INEXACT_SCORE, "GeneService.findByOfficialSymbolInexact" ) );
-            } else {
-                results.addAll( toSearchResults( settings, Gene.class, geneService.findByOfficialSymbolInexact( inexactString + "%" ), MATCH_BY_OFFICIAL_SYMBOL_INEXACT_SCORE, "GeneService.findByOfficialSymbolInexact" ) );
-            }
-            symbolStep = "findByOfficialSymbolInexact";
+            results.addAll( toSearchResults( settings, Gene.class, inexact.apply( inexactPattern ), MATCH_BY_OFFICIAL_SYMBOL_INEXACT_SCORE, "GeneService.findByOfficialSymbolInexact" ) );
+            symbolStep = "findByOfficialSymbolInexact" + ( taxonConstraint != null ? "(taxon)" : "" );
         } else {
             if ( isWildcard( settings ) ) {
-                results.addAll( toSearchResults( settings, Gene.class, geneService.findByOfficialSymbolInexact( inexactString ), MATCH_BY_OFFICIAL_SYMBOL_INEXACT_SCORE, "GeneService.findByOfficialSymbolInexact" ) );
-                symbolStep = "findByOfficialSymbolInexact";
+                results.addAll( toSearchResults( settings, Gene.class, inexact.apply( inexactString ), MATCH_BY_OFFICIAL_SYMBOL_INEXACT_SCORE, "GeneService.findByOfficialSymbolInexact" ) );
+                symbolStep = "findByOfficialSymbolInexact" + ( taxonConstraint != null ? "(taxon)" : "" );
             } else {
                 results.addAll( toSearchResults( settings, Gene.class, geneService.findByOfficialSymbol( exactString ), MATCH_BY_OFFICIAL_SYMBOL_SCORE, "GeneService.findByOfficialSymbol" ) );
                 symbolStep = "findByOfficialSymbol";

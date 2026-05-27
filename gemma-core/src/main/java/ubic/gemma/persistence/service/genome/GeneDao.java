@@ -77,6 +77,16 @@ public interface GeneDao extends FilteringVoEnabledDao<Gene, GeneValueObject> {
     Collection<Gene> findByOfficialSymbolInexact( String officialSymbol );
 
     /**
+     * Taxon-scoped variant of {@link #findByOfficialSymbolInexact(String)}. Use when the
+     * caller has a taxon constraint — pushing the predicate into the SQL lets MySQL prune
+     * by the indexed taxon FK before the case-insensitive LIKE prefix scan, dropping the
+     * cost from a ~2s full-table scan to ms-range. Without the taxon prefilter the
+     * underlying {@code lower(official_symbol) LIKE} expression can't use the standard
+     * official_symbol index.
+     */
+    Collection<Gene> findByOfficialSymbolInexact( String officialSymbol, Taxon taxon );
+
+    /**
      * Quickly load exact matches.
      *
      * @param query   query

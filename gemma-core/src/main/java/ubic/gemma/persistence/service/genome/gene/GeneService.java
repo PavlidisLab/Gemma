@@ -100,6 +100,12 @@ public interface GeneService extends AdminEditableBaseService<Gene>, FilteringVo
     Collection<Gene> findByOfficialSymbolInexact( String officialSymbol );
 
     /**
+     * Taxon-pruned variant of {@link #findByOfficialSymbolInexact(String)}. Use when
+     * the caller has a taxon constraint — see {@link ubic.gemma.persistence.service.genome.GeneDao#findByOfficialSymbolInexact(String, Taxon)}.
+     */
+    Collection<Gene> findByOfficialSymbolInexact( String officialSymbol, Taxon taxon );
+
+    /**
      * Quickly load exact matches.
      *
      * @param query   query

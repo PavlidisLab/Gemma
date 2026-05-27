@@ -89,6 +89,8 @@ public interface GeneReadService {
 
     Collection<Gene> findByOfficialSymbolInexact( String officialSymbol );
 
+    Collection<Gene> findByOfficialSymbolInexact( String officialSymbol, Taxon taxon );
+
     Map<String, GeneValueObject> findByOfficialSymbols( Collection<String> query, Long taxonId );
 
     long getCompositeSequenceCount( Gene gene, boolean includeDummyProducts );

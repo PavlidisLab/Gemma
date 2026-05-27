@@ -130,6 +130,12 @@ public class GeneReadServiceImpl implements GeneReadService {
 
     @Override
     @Transactional(readOnly = true)
+    public Collection<Gene> findByOfficialSymbolInexact( final String officialSymbol, final Taxon taxon ) {
+        return this.geneDao.findByOfficialSymbolInexact( officialSymbol, taxon );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Map<String, GeneValueObject> findByOfficialSymbols( Collection<String> query, Long taxonId ) {
         Map<String, GeneValueObject> result = new HashMap<>();
         Map<String, Gene> genes = this.geneDao.findByOfficialSymbols( query, taxonId );
