@@ -11,6 +11,10 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
  * Emitted when an {@code AgentProposal} row is appended to a
  * {@code PreboardedExperiment} (or, for the private curation API, to a
@@ -22,5 +26,7 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * row's {@code NOTE} until the structured {@code AUDIT_EVENT.PAYLOAD}
  * column lands).</p>
  */
+@Entity
+@DiscriminatorValue("AgentProposalEvent")
 public class AgentProposalEvent extends AuditEventType {
 }

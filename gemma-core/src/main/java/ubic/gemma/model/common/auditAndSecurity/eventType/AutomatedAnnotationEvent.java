@@ -18,6 +18,10 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
  * @deprecated this event type was used by the auto-tagger, which has been removed. This event type has been kept
  * so that the audit-trails can still properly display these events, but creation new events of this type should not
@@ -25,6 +29,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Still present in database
 @Deprecated
+@Entity
+@DiscriminatorValue("AutomatedAnnotationEvent")
 public class AutomatedAnnotationEvent extends ubic.gemma.model.common.auditAndSecurity.eventType.AnnotationEvent {
 
 }

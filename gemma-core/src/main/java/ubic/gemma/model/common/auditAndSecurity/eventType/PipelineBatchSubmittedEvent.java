@@ -11,10 +11,16 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
  * Curator submitted a new pipeline batch. Fired by {@code @Audited} on
  * {@code PipelineJobBatchService.submit}.
  */
+@Entity
+@DiscriminatorValue("PipelineBatchSubmittedEvent")
 public class PipelineBatchSubmittedEvent extends PipelineBatchEvent {
 
 }

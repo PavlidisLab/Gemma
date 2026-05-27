@@ -11,6 +11,10 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
  * A pipeline job reached terminal success on an experiment.
  *
@@ -23,6 +27,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * {@code PipelineJobBatch.auditTrail} (batch-level governance). This event
  * lives on the EXPERIMENT and answers "what was last done to this experiment."</p>
  */
+@Entity
+@DiscriminatorValue("PipelineRunEvent")
 public class PipelineRunEvent extends ExpressionExperimentAnalysisEvent {
 
 }

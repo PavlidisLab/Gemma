@@ -20,6 +20,8 @@
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
 
 /**
  * Event that tracks when batch effects or problems are detected.
@@ -32,6 +34,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  *</ul>
  * @author paul
  */
+@Entity
+@DiscriminatorValue("BatchProblemsUpdateEvent")
 public class BatchProblemsUpdateEvent extends ExpressionExperimentAnalysisEvent {
 
 }

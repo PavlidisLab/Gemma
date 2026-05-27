@@ -11,6 +11,10 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
  * Emitted by {@code POST /preboarded} when a {@code PreboardedExperiment}
  * is created for a previously-unknown accession.
@@ -19,5 +23,7 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * Authored via the declarative {@code @Audited(PreboardedCreatedEvent.class)}
  * pattern; the audit row's {@code NOTE} carries the accession.</p>
  */
+@Entity
+@DiscriminatorValue("PreboardedCreatedEvent")
 public class PreboardedCreatedEvent extends AuditEventType {
 }

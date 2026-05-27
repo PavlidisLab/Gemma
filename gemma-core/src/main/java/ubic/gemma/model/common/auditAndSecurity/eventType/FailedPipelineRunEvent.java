@@ -11,6 +11,10 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
  * A pipeline job reached terminal failure on an experiment.
  *
@@ -18,6 +22,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * when a {@code PipelineJob} transitions to {@code FAILED} or {@code CANCELLED}.
  * Sibling of {@link FailedProcessedVectorComputationEvent} in spirit.</p>
  */
+@Entity
+@DiscriminatorValue("FailedPipelineRunEvent")
 public class FailedPipelineRunEvent extends ExpressionExperimentAnalysisEvent {
 
 }

@@ -1,6 +1,7 @@
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
+import jakarta.persistence.Entity;
 
 /**
  * Base class for events that alter the {@link CurationDetails#getTroubled()} flag.
@@ -12,6 +13,7 @@ import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
  * tickets.
  */
 @Deprecated
+@Entity
 public abstract class TroubledStatusFlagAlteringEvent extends CurationDetailsEvent {
 
 }

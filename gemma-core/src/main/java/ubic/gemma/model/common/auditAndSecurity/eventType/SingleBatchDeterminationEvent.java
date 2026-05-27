@@ -19,12 +19,18 @@
 
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
  * Indicates that we got batch information, but there was (as far as we can tell) just one batch. For example, a single
  * HiSeq lane.
  *
  * @author paul
  */
+@Entity
+@DiscriminatorValue("SingleBatchDeterminationEvent")
 public class SingleBatchDeterminationEvent extends BatchInformationFetchingEvent {
 
 }

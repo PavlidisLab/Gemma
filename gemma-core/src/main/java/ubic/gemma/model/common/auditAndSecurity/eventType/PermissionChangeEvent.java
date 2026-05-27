@@ -19,10 +19,16 @@
 
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
  * Represents a change in permissions of an {@link ubic.gemma.model.common.auditAndSecurity.Auditable} entity.
  * @author paul
  */
+@Entity
+@DiscriminatorValue("PermissionChangeEvent")
 public class PermissionChangeEvent extends AuditEventType {
 
 }

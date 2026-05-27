@@ -18,10 +18,16 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
  * Describes an event that involved a change of assignment of factor value to bio material, or other changes in the
  * experimental design.
  */
+@Entity
+@DiscriminatorValue("ExperimentalDesignUpdatedEvent")
 public class ExperimentalDesignUpdatedEvent extends AuditEventType {
 
 }

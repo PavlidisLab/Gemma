@@ -18,9 +18,13 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+
 /**
  * An event involving the analysis of an ArrayDesign
  */
+@Entity
 public abstract class ArrayDesignAnalysisEvent extends AuditEventType {
 
 }

@@ -11,6 +11,10 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
  * Emitted on {@code POST /preboarded/{id}/promote}, when a
  * {@code PreboardedExperiment} is promoted to a loaded
@@ -22,5 +26,7 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * appended to the EE's audit trail so the post-promotion history is
  * unified on the EE side.</p>
  */
+@Entity
+@DiscriminatorValue("PreboardedPromotedEvent")
 public class PreboardedPromotedEvent extends AuditEventType {
 }

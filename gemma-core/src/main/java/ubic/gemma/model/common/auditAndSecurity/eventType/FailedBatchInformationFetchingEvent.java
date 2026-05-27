@@ -18,11 +18,17 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
  * Indicates that the attempt to get batch information failed due to an error.
  * <p>
  * If the problem is that the information just isn't available, use {@link BatchInformationMissingEvent} instead.
  */
+@Entity
+@DiscriminatorValue("FailedBatchInformationFetchingEvent")
 public class FailedBatchInformationFetchingEvent extends BatchInformationFetchingEvent {
 
 }

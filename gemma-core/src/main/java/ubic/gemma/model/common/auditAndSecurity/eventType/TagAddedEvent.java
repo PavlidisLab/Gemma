@@ -18,6 +18,10 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
  * Emitted when a single experiment-level annotation (tag) is added to an
  * {@link ubic.gemma.model.expression.experiment.ExpressionExperiment} via the
@@ -29,6 +33,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * trail required by {@code HANDOFF_DATASETS_ANNOTATIONS_WRITE.md} answers
  * "what was the state of this EE's tags at time T?" correctly.
  */
+@Entity
+@DiscriminatorValue("TagAddedEvent")
 public class TagAddedEvent extends AnnotationEvent {
 
 }

@@ -18,9 +18,15 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
  * To signify the array design was mapped from an external source, not by our own sequence analysis.
  */
+@Entity
+@DiscriminatorValue("AnnotationBasedGeneMappingEvent")
 public class AnnotationBasedGeneMappingEvent extends ArrayDesignGeneMappingEvent {
 
 }

@@ -20,6 +20,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
 
 /**
  * Event indicating that a curation note has added.
@@ -32,6 +34,8 @@ import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
  * so the legacy {@code curationNote} field on {@link CurationDetails} stays populated.
  */
 @Deprecated
+@Entity
+@DiscriminatorValue("CurationNoteUpdateEvent")
 public class CurationNoteUpdateEvent extends CurationDetailsEvent {
 
     /**
