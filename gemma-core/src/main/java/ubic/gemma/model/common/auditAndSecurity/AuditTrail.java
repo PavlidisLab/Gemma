@@ -18,6 +18,16 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
+import jakarta.persistence.Table;
 import org.springframework.lang.Nullable;
 import ubic.gemma.model.common.AbstractIdentifiable;
 
@@ -29,8 +39,16 @@ import java.util.List;
  * The trail of events (create or update) that occurred in an objects lifetime. The first event added must be a "Create"
  * event, or an exception will be thrown.
  */
+@Entity
+@Table(name = "AUDIT_TRAIL", indexes = {
+        @Index(name = "IDX_AUDIT_TRAIL_LAST_EVENT", columnList = "LAST_EVENT_FK")
+})
 public class AuditTrail extends AbstractIdentifiable {
 
+    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinColumn(name = "AUDIT_TRAIL_FK", columnDefinition = "BIGINT",
+            foreignKey = @ForeignKey(name = "AUDIT_EVENT_AUDIT_TRAIL_FKC"))
+    @OrderBy("date")
     private List<AuditEvent> events = new ArrayList<>();
 
     /**
@@ -47,6 +65,9 @@ public class AuditTrail extends AbstractIdentifiable {
      * NULL on the FK so deleting an AuditEvent row doesn't break the trail.
      */
     @Nullable
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "LAST_EVENT_FK", columnDefinition = "BIGINT",
+            foreignKey = @ForeignKey(name = "FK_AUDIT_TRAIL_LAST_EVENT"))
     private AuditEvent lastEvent;
 
     public List<AuditEvent> getEvents() {

@@ -18,11 +18,26 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.Immutable;
+import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.search.mapper.pojo.automaticindexing.ReindexOnUpdate;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexedEmbedded;
-import org.hibernate.search.mapper.pojo.automaticindexing.ReindexOnUpdate;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexingDependency;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
@@ -30,8 +45,6 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.persistence.util.IdentifiableUtils;
 
-import org.springframework.lang.Nullable;
-import jakarta.persistence.Transient;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -45,22 +58,54 @@ import java.util.stream.Collectors;
  * (a {@link Characteristic} subtype with predicate + object slots) into the EE document.
  */
 @Indexed
+@Entity
+@Table(name = "FACTOR_VALUE")
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class FactorValue extends AbstractIdentifiable implements SecuredChild<ExpressionExperiment> {
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "EXPERIMENTAL_FACTOR_FK", nullable = false, columnDefinition = "BIGINT")
     private ExperimentalFactor experimentalFactor;
+
     @Nullable
     @Deprecated
+    @Column(name = "`VALUE`", columnDefinition = "VARCHAR(255)")
     private String value;
+
     @Nullable
+    @Column(name = "IS_BASELINE", columnDefinition = "TINYINT")
     private Boolean isBaseline;
+
+    // assumed readily available in FactorValueValueObject
     @Nullable
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinColumn(name = "MEASUREMENT_FK", columnDefinition = "BIGINT", unique = true)
     private Measurement measurement;
+
+    // assumed readily available in FactorValueValueObject
+    // remove the where clause when old-style characteristics have been removed (see https://github.com/PavlidisLab/Gemma/issues/929 for details)
+    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinColumn(name = "FACTOR_VALUE_FK", columnDefinition = "BIGINT",
+            foreignKey = @jakarta.persistence.ForeignKey(name = "CHARACTERISTIC_FACTOR_VALUE_FKC"))
+    @SQLRestriction("class = 'Statement'")
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<Statement> characteristics = new HashSet<>();
+
+    // non-migrated characteristics
+    // remove this mapping once all old-style characteristics have been migrated (see https://github.com/PavlidisLab/Gemma/issues/929 for details)
+    @OneToMany(fetch = FetchType.LAZY)
+    @JoinColumn(name = "FACTOR_VALUE_FK", columnDefinition = "BIGINT",
+            foreignKey = @jakarta.persistence.ForeignKey(name = "CHARACTERISTIC_FACTOR_VALUE_FKC"))
+    @SQLRestriction("class is null")
+    @Immutable
+    @Cascade({ org.hibernate.annotations.CascadeType.DETACH, org.hibernate.annotations.CascadeType.REMOVE })
     @Deprecated
     private Set<Characteristic> oldStyleCharacteristics = new HashSet<>();
 
+    @Column(name = "NEEDS_ATTENTION", nullable = false, columnDefinition = "TINYINT")
     private boolean needsAttention;
 
+    @Transient
     private ExpressionExperiment securityOwner = null;
 
     @Override
