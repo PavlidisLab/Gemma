@@ -510,9 +510,17 @@ public class AnnotationsWebService {
         }
         try {
             List<AnnotationSearchResultValueObject> result = new ArrayList<>( this.getTerms( query, strategy, limit, prefixes, upstream, exactLabel, category, FIND_CHARACTERISTICS_TIMEOUT_MS ) );
-            // store an unmodifiable defensive copy so callers can't mutate the cached value
-            SEARCH_CACHE.put( cacheKey, Collections.unmodifiableList( new ArrayList<>( result ) ) );
-            log.debug( "annotation-search cache MISS key={} stored {} hits (size={})", cacheKey, result.size(), SEARCH_CACHE.size() );
+            // Cache only non-empty results. An empty hit list is almost always either (a) genuinely
+            // no match, where re-running is cheap, or (b) a transient gap (ontologies still warming
+            // after a restart, basecode Lucene index temporarily empty, etc.) — caching the empty
+            // would pin the typeahead at "no results" until either an explicit cache flush or a
+            // restart. Both classes lose nothing by recomputing.
+            if ( !result.isEmpty() ) {
+                SEARCH_CACHE.put( cacheKey, Collections.unmodifiableList( new ArrayList<>( result ) ) );
+                log.debug( "annotation-search cache MISS key={} stored {} hits (size={})", cacheKey, result.size(), SEARCH_CACHE.size() );
+            } else {
+                log.debug( "annotation-search cache MISS key={} empty result — not cached", cacheKey );
+            }
             return respond( result );
         } catch ( SearchTimeoutException e ) {
             throw new ServiceUnavailableException( e.getMessage(), DateUtils.addSeconds( new Date(), 30 ), e.getCause() );
@@ -540,6 +548,30 @@ public class AnnotationsWebService {
                     + ( rankingStrategies != null ? rankingStrategies.keySet() : Collections.emptySet() ) + "." );
         }
         return s;
+    }
+
+    /**
+     * Evict the in-process {@code /annotations/search} response cache. Used when a typeahead has
+     * been pinned to a stale set of hits (e.g. the cache absorbed a transient empty during
+     * ontology warm-up before our skip-empty rule landed, or a curator added new ontology terms
+     * and wants the typeahead to refresh without bouncing the container).
+     */
+    @POST
+    @Path("/search/cache/evict")
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Evict the /annotations/search response cache",
+            security = {
+                    @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
+            })
+    public ResponseDataObject<Map<String, Object>> evictAnnotationSearchCache() {
+        int dropped = SEARCH_CACHE.size();
+        SEARCH_CACHE.clear();
+        log.info( "annotation-search cache cleared by admin ({} entries dropped)", dropped );
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put( "evicted", dropped );
+        return respond( out );
     }
 
     /**
@@ -776,6 +808,7 @@ public class AnnotationsWebService {
             AnnotationSearchRankingStrategy strategy, int limit, List<String> prefixes, boolean upstream,
             boolean exactLabel, String category, long timeoutMs ) throws SearchException {
         StopWatch timer = StopWatch.createStarted();
+        long phaseStart = timer.getTime();
         List<CharacteristicValueObject> rawHits = new ArrayList<>();
         for ( String query : arg.getValue() ) {
             query = query.trim();
@@ -793,6 +826,8 @@ public class AnnotationsWebService {
                 rawHits.addAll( ontologyService.findExperimentsCharacteristicTags( query, 1000, false, Math.max( timeoutMs - timer.getTime(), 0 ), TimeUnit.MILLISECONDS ) );
             }
         }
+        long tFindCharacteristics = timer.getTime() - phaseStart;
+        int rawCount = rawHits.size();
         // Order hits by relevance tier (exact label ≺ starts-with ≺ word-boundary-contains ≺
         // substring ≺ other), with the prefixes parameter's order honoured as the next tier
         // and URI ASC as the deterministic tiebreaker inside each tier. Without the tier sort,
@@ -867,11 +902,15 @@ public class AnnotationsWebService {
             }
             rawHits = kept;
         }
+        long tFilters = timer.getTime() - phaseStart - tFindCharacteristics;
+        phaseStart = timer.getTime();
         Set<String> uris = rawHits.stream()
                 .map( CharacteristicValueObject::getValueUri )
                 .filter( Objects::nonNull )
                 .collect( Collectors.toSet() );
         Map<String, Integer> countsByUri = getDistinctEeCountsByUri( uris );
+        long tCounts = timer.getTime() - phaseStart;
+        phaseStart = timer.getTime();
         // Apply the requested ranking strategy. The joined query text drives token-coverage; for
         // multi-term StringArrayArg inputs (typically comma-joined keywords), pass them space-joined
         // so the tokeniser sees the union.
@@ -883,6 +922,8 @@ public class AnnotationsWebService {
         if ( ranked.size() > limit ) {
             ranked = new ArrayList<>( ranked.subList( 0, limit ) );
         }
+        long tRank = timer.getTime() - phaseStart;
+        phaseStart = timer.getTime();
 
         // Enrich the top-N ranked hits with definition + nearest is_a/part_of parents + match
         // attribution (matchedVia/matchedText). The rest carry null sentinels so the UI can
@@ -902,6 +943,13 @@ public class AnnotationsWebService {
                 log.debug( "annotation-search enrichment hit shared-budget timeout: {} of {} URIs enriched (definitions); {} URIs enriched (parents)",
                         defByUri.size(), topUris.size(), parentsByUri.size() );
             }
+        }
+        long tEnrich = timer.getTime() - phaseStart;
+        if ( timer.getTime() > 1000 ) {
+            log.info( String.format(
+                    "annotation-search: query='%s' raw=%d top=%d total=%dms (find=%dms filter=%dms counts=%dms rank=%dms enrich=%dms)",
+                    arg.getValue(), rawCount, topUris.size(), timer.getTime(),
+                    tFindCharacteristics, tFilters, tCounts, tRank, tEnrich ) );
         }
 
         LinkedHashSet<AnnotationSearchResultValueObject> vos = new LinkedHashSet<>();
