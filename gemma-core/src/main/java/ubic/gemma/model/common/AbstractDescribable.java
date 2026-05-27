@@ -18,13 +18,20 @@
  */
 package ubic.gemma.model.common;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Lob;
+import jakarta.persistence.MappedSuperclass;
 import org.springframework.lang.Nullable;
 import java.util.Objects;
 
+@MappedSuperclass
 public abstract class AbstractDescribable extends AbstractIdentifiable implements Describable {
 
+    @Column(name = "NAME", columnDefinition = "VARCHAR(255)")
     private String name;
+    @Lob
     @Nullable
+    @Column(name = "DESCRIPTION", columnDefinition = "text")
     private String description;
 
     @Override

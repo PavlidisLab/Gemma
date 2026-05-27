@@ -18,6 +18,12 @@
  */
 package ubic.gemma.model.expression.biomaterial;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Immutable;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
@@ -28,9 +34,14 @@ import ubic.gemma.model.common.AbstractDescribable;
  * Hibernate Search 7 mapping: chemicals attached to {@link ubic.gemma.model.common.description.BibliographicReference}
  * via {@code @IndexedEmbedded}; {@code name} is tokenized, {@code registryNumber} is keyword (CAS).
  */
+@Entity
+@Table(name = "COMPOUND")
+@Immutable
+@Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
 @Indexed
 public class Compound extends AbstractDescribable {
 
+    @Column(name = "REGISTRY_NUMBER", columnDefinition = "VARCHAR(255)")
     private String registryNumber;
 
     @Override

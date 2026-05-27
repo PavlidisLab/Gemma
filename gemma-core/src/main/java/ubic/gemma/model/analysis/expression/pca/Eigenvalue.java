@@ -18,14 +18,27 @@
  */
 package ubic.gemma.model.analysis.expression.pca;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Immutable;
 import ubic.gemma.model.common.AbstractIdentifiable;
 
 import java.util.Objects;
 
+@Entity
+@Table(name = "EIGENVALUE")
+@Immutable
+@Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
 public class Eigenvalue extends AbstractIdentifiable {
 
+    @Column(name = "COMPONENT_NUMBER", nullable = false, columnDefinition = "INTEGER")
     private Integer componentNumber;
+    @Column(name = "`VALUE`", nullable = false, columnDefinition = "DOUBLE")
     private Double value;
+    @Column(name = "VARIANCE_FRACTION", columnDefinition = "DOUBLE")
     private Double varianceFraction;
 
     public Integer getComponentNumber() {

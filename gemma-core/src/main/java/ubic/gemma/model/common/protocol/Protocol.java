@@ -18,9 +18,18 @@
  */
 package ubic.gemma.model.common.protocol;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Immutable;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 
+@Entity
+@Table(name = "PROTOCOL")
+@Immutable
+@Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
 public class Protocol extends AbstractDescribable implements Securable {
 
     @Override
