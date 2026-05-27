@@ -18,23 +18,60 @@
  */
 package ubic.gemma.model.analysis.expression.pca;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Transient;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Immutable;
 import ubic.gemma.model.analysis.SingleExperimentAnalysis;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-import jakarta.persistence.Transient;
 import java.util.*;
 
+@Entity
+@DiscriminatorValue("PrincipalComponentAnalysis")
 public class PrincipalComponentAnalysis extends SingleExperimentAnalysis<ExpressionExperiment> {
 
+    @Column(name = "NUM_COMPONENTS_STORED", columnDefinition = "INTEGER")
     private Integer numComponentsStored;
+
+    @Column(name = "MAX_NUM_PROBES_PER_COMPONENT", columnDefinition = "INTEGER")
     private Integer maxNumProbesPerComponent;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "BIO_ASSAY_DIMENSION_FK", columnDefinition = "BIGINT")
     private BioAssayDimension bioAssayDimension;
+
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "PRINCIPAL_COMPONENT_ANALYSIS_FK", columnDefinition = "BIGINT",
+            foreignKey = @ForeignKey(name = "PROBE_LOADING_PRINCIPAL_COMPONENT_ANALYSIS_FKC"))
+    @Immutable
     private Set<ProbeLoading> probeLoadings = new HashSet<>();
+
+    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinColumn(name = "PRINCIPAL_COMPONENT_ANALYSIS_FK", columnDefinition = "BIGINT",
+            foreignKey = @ForeignKey(name = "EIGENVALUE_PRINCIPAL_COMPONENT_ANALYSIS_FKC"))
+    @Immutable
+    @Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
     private Set<Eigenvalue> eigenValues = new HashSet<>();
+
+    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinColumn(name = "PRINCIPAL_COMPONENT_ANALYSIS_FK", columnDefinition = "BIGINT",
+            foreignKey = @ForeignKey(name = "EIGENVECTOR_PRINCIPAL_COMPONENT_ANALYSIS_FKC"))
+    @Immutable
+    @Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
     private Set<Eigenvector> eigenVectors = new HashSet<>();
 
     public ubic.gemma.model.expression.bioAssayData.BioAssayDimension getBioAssayDimension() {

@@ -18,20 +18,34 @@
  */
 package ubic.gemma.model.analysis.expression.coexpression;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Transient;
 import ubic.gemma.model.analysis.SingleExperimentAnalysis;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import org.springframework.lang.Nullable;
-import jakarta.persistence.Transient;
 
 /**
  * The 'analysis' in the name is a bit of a stretch here, as this object servers purely as an aggregator
  * of all the sample coexpression matrices.
  */
+@Entity
+@DiscriminatorValue("SampleCoexpressionAnalysis")
 public class SampleCoexpressionAnalysis extends SingleExperimentAnalysis<ExpressionExperiment> {
 
+    // using select because the matrices can be cached
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinColumn(name = "SAMPLE_COEXPRESSION_MATRIX_RAW_FK", unique = true, columnDefinition = "BIGINT")
     private SampleCoexpressionMatrix fullCoexpressionMatrix;
+
     @Nullable
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinColumn(name = "SAMPLE_COEXPRESSION_MATRIX_REG_FK", unique = true, columnDefinition = "BIGINT")
     private SampleCoexpressionMatrix regressedCoexpressionMatrix;
 
     /**

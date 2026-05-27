@@ -19,22 +19,31 @@
 
 package ubic.gemma.model.analysis;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Transient;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysis;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 
-import jakarta.persistence.Transient;
-
 /**
  * An analysis of a single experiment or subset.
  * @param <T> the type of experiment analyzed, usually {@link ubic.gemma.model.expression.experiment.ExpressionExperiment},
  *            but you can use {@link BioAssaySet} to also allow {@link ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet}.
  */
+@Entity
 public abstract class SingleExperimentAnalysis<T extends BioAssaySet> extends ExpressionAnalysis implements SecuredChild<ExpressionExperiment> {
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "EXPERIMENT_ANALYZED_FK", columnDefinition = "BIGINT")
     private T experimentAnalyzed;
+
+    @Column(name = "NUMBER_OF_ELEMENTS_ANALYZED", columnDefinition = "INTEGER")
     private Integer numberOfElementsAnalyzed;
 
     public T getExperimentAnalyzed() {
