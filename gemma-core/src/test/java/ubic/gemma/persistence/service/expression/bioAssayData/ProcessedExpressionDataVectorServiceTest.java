@@ -135,13 +135,12 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
         }
         expressionExperimentService.update( ee );
         processedDataVectorService.createProcessedDataVectors( ee, false );
+        // re-thaw ee since creation no longer populates ee.getProcessedExpressionDataVectors()
+        ee = expressionExperimentService.thaw( ee );
         Set<ProcessedExpressionDataVector> createdVectors = ee.getProcessedExpressionDataVectors();
         assertThat( createdVectors ).hasSize( 10 );
-        ee = expressionExperimentService.thaw( ee );
         assertThat( ee.getNumberOfDataVectors() )
                 .isEqualTo( 10 );
-        assertThat( ee.getProcessedExpressionDataVectors() )
-                .containsExactlyInAnyOrderElementsOf( createdVectors );
         // effectively transform the processed vectors
         List<ProcessedExpressionDataVector> newVectors = new ArrayList<>();
         for ( ProcessedExpressionDataVector v : ee.getProcessedExpressionDataVectors() ) {
