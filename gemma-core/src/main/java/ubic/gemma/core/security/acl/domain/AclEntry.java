@@ -18,6 +18,21 @@
  */
 package ubic.gemma.core.security.acl.domain;
 
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Immutable;
 import org.springframework.security.acls.domain.DefaultPermissionFactory;
 import org.springframework.security.acls.domain.PermissionFactory;
 import org.springframework.security.acls.model.AccessControlEntry;
@@ -38,22 +53,36 @@ import java.util.Objects;
  *
  * @author paul
  */
+@Entity
+@Table(name = "acl_entry")
+@Access(AccessType.FIELD)
+@Immutable
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class AclEntry implements AccessControlEntry, Comparable<AclEntry> {
 
     private static final PermissionFactory permissionFactory = new DefaultPermissionFactory();
 
     private static final long serialVersionUID = -4697361841061166973L;
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", columnDefinition = "BIGINT")
     private Long id;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "sid", nullable = false, columnDefinition = "BIGINT")
     private AclSid sid;
 
+    @Column(name = "granting", nullable = false, columnDefinition = "BIT")
     private boolean granting;
 
+    @Column(name = "mask", nullable = false, columnDefinition = "INTEGER")
     private int mask;
 
+    @Transient
     private Acl acl;
 
+    @Column(name = "ace_order", nullable = false, columnDefinition = "INTEGER")
     private int aceOrder;
 
     @SuppressWarnings("unused")
