@@ -18,6 +18,10 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
  * Emitted by the {@code PUT /datasets/{id}/design} apply path when a proposed
  * {@link ubic.gemma.model.expression.experiment.ExperimentalDesignValueObject}
@@ -36,5 +40,7 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * {@code AUDIT_PHASE_C_RECCE.md} for the declarative-audit pattern this event
  * participates in.
  */
+@Entity
+@DiscriminatorValue("DesignChangeEvent")
 public class DesignChangeEvent extends ExperimentalDesignUpdatedEvent {
 }

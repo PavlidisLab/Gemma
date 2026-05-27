@@ -20,6 +20,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
 
 /**
  * Indicates that previous validation is being invalidated.
@@ -33,6 +35,8 @@ import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
  * instead. See {@link CurationDetailsEvent} for the full migration map.
  */
 @Deprecated
+@Entity
+@DiscriminatorValue("NeedsAttentionEvent")
 public class NeedsAttentionEvent extends NeedsAttentionAlteringEvent {
 
     @Override

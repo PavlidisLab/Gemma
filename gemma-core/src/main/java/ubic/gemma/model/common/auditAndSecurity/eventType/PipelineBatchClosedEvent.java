@@ -11,12 +11,18 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
  * All child jobs in a batch reached a terminal state and the batch moved to
  * {@code CLOSED}. Fired by the service when the last non-terminal job
  * transitions. The {@code AuditEvent.detail} carries the done/failed/cancelled
  * counts.
  */
+@Entity
+@DiscriminatorValue("PipelineBatchClosedEvent")
 public class PipelineBatchClosedEvent extends PipelineBatchEvent {
 
 }

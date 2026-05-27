@@ -18,10 +18,16 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
  * For backwards compatibility only.
  */
 @Deprecated
+@Entity
+@DiscriminatorValue("RankComputationEvent")
 public class RankComputationEvent extends ProcessedVectorComputationEvent {
 
 }

@@ -18,9 +18,15 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
  * Indicates that the data set had too few samples or probes to be analyzed (after filtering), and was skipped
  */
+@Entity
+@DiscriminatorValue("TooSmallDatasetLinkAnalysisEvent")
 public class TooSmallDatasetLinkAnalysisEvent extends LinkAnalysisEvent {
 
 }

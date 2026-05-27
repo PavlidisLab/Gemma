@@ -15,6 +15,10 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
  * Emitted on {@code POST /datasets/{id}/publish?reviewer=X}, when a curator
  * publishes a dataset under a named reviewer.
@@ -29,5 +33,7 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  *
  * <p>See {@code GEMMA_UI_ENDPOINT_GAP.md} §3g for the UI-side motivation.</p>
  */
+@Entity
+@DiscriminatorValue("DatasetPublishedEvent")
 public class DatasetPublishedEvent extends AuditEventType {
 }

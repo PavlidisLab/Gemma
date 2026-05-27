@@ -18,9 +18,15 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
  * The sequence alignment analysis of an ArrayDesign
  */
+@Entity
+@DiscriminatorValue("ArrayDesignSequenceAnalysisEvent")
 public class ArrayDesignSequenceAnalysisEvent extends ArrayDesignAnalysisEvent {
 
 }

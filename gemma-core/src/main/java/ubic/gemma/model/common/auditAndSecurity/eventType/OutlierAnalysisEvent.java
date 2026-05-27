@@ -18,6 +18,11 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+
+@Entity
+
 public abstract class OutlierAnalysisEvent extends ExpressionExperimentAnalysisEvent {
 
 }

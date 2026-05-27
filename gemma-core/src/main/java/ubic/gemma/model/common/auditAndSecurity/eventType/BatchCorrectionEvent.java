@@ -19,9 +19,15 @@
 
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
  * @author paul
  */
+@Entity
+@DiscriminatorValue("BatchCorrectionEvent")
 public class BatchCorrectionEvent extends ExpressionExperimentAnalysisEvent {
 
 }

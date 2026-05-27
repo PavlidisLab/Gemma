@@ -11,11 +11,15 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+
 /**
  * Abstract base for audit events that live on a {@code PipelineJobBatch}'s
  * audit trail. Subtypes mark batch-level governance + milestones distinct
  * from per-job runtime telemetry ({@code PipelineJobEvent}).
  */
+@Entity
 public abstract class PipelineBatchEvent extends AuditEventType {
 
 }

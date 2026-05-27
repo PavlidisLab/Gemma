@@ -20,6 +20,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
 
 /**
  * This event type resets the trouble flag of curation details of a curatable object.
@@ -34,6 +36,8 @@ import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
  * See {@link CurationDetailsEvent} for the full migration map.
  */
 @Deprecated
+@Entity
+@DiscriminatorValue("NotTroubledStatusFlagEvent")
 public class NotTroubledStatusFlagEvent extends TroubledStatusFlagAlteringEvent {
 
 

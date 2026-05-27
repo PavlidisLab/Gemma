@@ -18,6 +18,10 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
  * Emitted when a single experiment-level annotation (tag) is removed from an
  * {@link ubic.gemma.model.expression.experiment.ExpressionExperiment} via the
@@ -25,6 +29,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * its javadoc for the rationale (per-tag granularity over the per-call
  * granularity provided by {@link ManualAnnotationEvent}).
  */
+@Entity
+@DiscriminatorValue("TagRemovedEvent")
 public class TagRemovedEvent extends AnnotationEvent {
 
 }

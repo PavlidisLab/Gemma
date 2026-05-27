@@ -18,9 +18,15 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
  * Computing coexpression links for an expression experiment
  */
+@Entity
+@DiscriminatorValue("LinkAnalysisEvent")
 public class LinkAnalysisEvent extends ExpressionExperimentAnalysisEvent {
 
 }

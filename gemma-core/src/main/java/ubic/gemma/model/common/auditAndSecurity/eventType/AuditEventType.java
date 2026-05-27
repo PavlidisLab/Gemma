@@ -18,10 +18,24 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+import jakarta.persistence.DiscriminatorColumn;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Immutable;
 import ubic.gemma.model.common.AbstractIdentifiable;
 
 import java.util.Objects;
 
+@Entity
+@Table(name = "AUDIT_EVENT_TYPE")
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "class")
+@Immutable
+@Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
 public abstract class AuditEventType extends AbstractIdentifiable {
 
     /**

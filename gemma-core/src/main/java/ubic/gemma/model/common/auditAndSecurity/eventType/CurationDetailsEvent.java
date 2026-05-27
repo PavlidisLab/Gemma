@@ -21,6 +21,7 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
+import jakarta.persistence.Entity;
 
 /**
  * Event types that can change {@link CurationDetails} of {@link Curatable} objects.
@@ -52,6 +53,7 @@ import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
  * @deprecated use {@link ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketService}.
  */
 @Deprecated
+@Entity
 public abstract class CurationDetailsEvent extends AuditEventType {
 
     /**

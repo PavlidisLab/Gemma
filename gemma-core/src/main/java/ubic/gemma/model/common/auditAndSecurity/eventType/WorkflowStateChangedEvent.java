@@ -15,6 +15,10 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
  * Emitted on every successful workflow-state transition of an
  * {@link ubic.gemma.model.analysis.Investigation} (currently:
@@ -29,5 +33,7 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  *
  * <p>See {@code HANDOFF_WORKFLOW_STATE_STORAGE.md} §"Audit-event hooks".</p>
  */
+@Entity
+@DiscriminatorValue("WorkflowStateChangedEvent")
 public class WorkflowStateChangedEvent extends AuditEventType {
 }
