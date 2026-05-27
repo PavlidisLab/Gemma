@@ -21,7 +21,13 @@ package ubic.gemma.model.expression.experiment;
 
 import ubic.gemma.model.common.AbstractIdentifiable;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 
 /**
  * Represents quality information about a data set. The class name comes from the research project name, GEEQ.
@@ -31,58 +37,101 @@ import jakarta.persistence.Transient;
  *
  * @author paul, tesarst
  */
+@Entity
+@Table(name = "GEEQ", indexes = {
+        @Index(name = "GEEQ_DETECTED_QUALITY_SCORE", columnList = "DETECTED_QUALITY_SCORE"),
+        @Index(name = "GEEQ_MANUAL_QUALITY_SCORE", columnList = "MANUAL_QUALITY_SCORE"),
+        @Index(name = "GEEQ_MANUAL_QUALITY_OVERRIDE", columnList = "MANUAL_QUALITY_OVERRIDE"),
+        @Index(name = "GEEQ_DETECTED_SUITABILITY_SCORE", columnList = "DETECTED_SUITABILITY_SCORE"),
+        @Index(name = "GEEQ_MANUAL_SUITABILITY_SCORE", columnList = "MANUAL_SUITABILITY_SCORE"),
+        @Index(name = "GEEQ_MANUAL_SUITABILITY_OVERRIDE", columnList = "MANUAL_SUITABILITY_OVERRIDE")
+})
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class Geeq extends AbstractIdentifiable {
 
+    @Column(name = "DETECTED_QUALITY_SCORE", nullable = false, columnDefinition = "DOUBLE")
     private double detectedQualityScore;
+    @Column(name = "MANUAL_QUALITY_SCORE", nullable = false, columnDefinition = "DOUBLE")
     private double manualQualityScore;
+    @Column(name = "MANUAL_QUALITY_OVERRIDE", nullable = false, columnDefinition = "BIT")
     private boolean manualQualityOverride;
 
+    @Column(name = "DETECTED_SUITABILITY_SCORE", nullable = false, columnDefinition = "DOUBLE")
     private double detectedSuitabilityScore;
+    @Column(name = "MANUAL_SUITABILITY_SCORE", nullable = false, columnDefinition = "DOUBLE")
     private double manualSuitabilityScore;
+    @Column(name = "MANUAL_SUITABILITY_OVERRIDE", nullable = false, columnDefinition = "BIT")
     private boolean manualSuitabilityOverride;
 
     /*
      * Suitability score factors
      */
 
+    @Column(name = "SCORE_PUBLICATION", nullable = false, columnDefinition = "DOUBLE")
     private double sScorePublication;
+    @Column(name = "SCORE_PLATFORM_AMOUNT", nullable = false, columnDefinition = "DOUBLE")
     private double sScorePlatformAmount;
+    @Column(name = "SCORE_PLATFORMS_TECH_MULTI", nullable = false, columnDefinition = "DOUBLE")
     private double sScorePlatformsTechMulti;
+    @Column(name = "SCORE_AVG_PLATFORM_POPULARITY", nullable = false, columnDefinition = "DOUBLE")
     private double sScoreAvgPlatformPopularity;
+    @Column(name = "SCORE_AVG_PLATFORM_SIZE", nullable = false, columnDefinition = "DOUBLE")
     private double sScoreAvgPlatformSize;
+    @Column(name = "SCORE_SAMPLE_SIZE", nullable = false, columnDefinition = "DOUBLE")
     private double sScoreSampleSize;
+    @Column(name = "SCORE_RAW_DATA", nullable = false, columnDefinition = "DOUBLE")
     private double sScoreRawData;
 
+    @Column(name = "SCORE_MISSING_VALUES", nullable = false, columnDefinition = "DOUBLE")
     private double sScoreMissingValues;
+    @Column(name = "NO_VECTORS", nullable = false, columnDefinition = "BIT")
     private boolean noVectors;
 
     /*
      * Quality score factors
      */
 
+    @Column(name = "SCORE_OUTLIERS", nullable = false, columnDefinition = "DOUBLE")
     private double qScoreOutliers;
+    @Column(name = "CORRMAT_ISSUES", nullable = false, columnDefinition = "TINYINT")
     private byte corrMatIssues;
 
+    @Column(name = "SCORE_SAMPLE_MEAN_CORRELATION", nullable = false, columnDefinition = "DOUBLE")
     private double qScoreSampleMeanCorrelation;
+    @Column(name = "SCORE_SAMPLE_MEDIAN_CORRELATION", nullable = false, columnDefinition = "DOUBLE")
     private double qScoreSampleMedianCorrelation;
+    @Column(name = "SCORE_SAMPLE_CORRELATION_VARIANCE", nullable = false, columnDefinition = "DOUBLE")
     private double qScoreSampleCorrelationVariance;
+    @Column(name = "SCORE_PLATFORMS_TECH", nullable = false, columnDefinition = "DOUBLE")
     private double qScorePlatformsTech;
 
+    @Column(name = "SCORE_REPLICATES", nullable = false, columnDefinition = "DOUBLE")
     private double qScoreReplicates;
+    @Column(name = "REPLICATES_ISSUES", nullable = false, columnDefinition = "TINYINT")
     private byte replicatesIssues;
 
+    @Column(name = "SCORE_BATCH_INFO", nullable = false, columnDefinition = "DOUBLE")
     private double qScoreBatchInfo;
+    @Column(name = "BATCH_CORRECTED", nullable = false, columnDefinition = "BIT")
     private boolean batchCorrected;
 
+    @Column(name = "SCORE_BATCH_EFFECT", nullable = false, columnDefinition = "DOUBLE")
     private double qScoreBatchEffect;
+    @Column(name = "MANUAL_HAS_STRONG_BATCH_EFFECT", nullable = false, columnDefinition = "BIT")
     private boolean manualHasStrongBatchEffect;
+    @Column(name = "MANUAL_HAS_NO_BATCH_EFFECT", nullable = false, columnDefinition = "BIT")
     private boolean manualHasNoBatchEffect;
+    @Column(name = "MANUAL_BATCH_EFFECT_ACTIVE", nullable = false, columnDefinition = "BIT")
     private boolean manualBatchEffectActive;
 
+    @Column(name = "SCORE_BATCH_CONFOUND", nullable = false, columnDefinition = "DOUBLE")
     private double qScoreBatchConfound;
+    @Column(name = "MANUAL_HAS_BATCH_CONFOUND", nullable = false, columnDefinition = "BIT")
     private boolean manualHasBatchConfound;
+    @Column(name = "MANUAL_BATCH_CONFOUND_ACTIVE", nullable = false, columnDefinition = "BIT")
     private boolean manualBatchConfoundActive;
 
+    @Column(name = "OTHER_ISSUES", columnDefinition = "VARCHAR(500)")
     private String otherIssues;
 
     @Transient
