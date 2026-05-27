@@ -22,6 +22,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.Nullable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.analysis.sequence.ArrayDesignMapResultService;
@@ -31,6 +32,7 @@ import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.search.SearchTimeoutException;
 import ubic.gemma.core.search.ParseSearchException;
+import ubic.gemma.core.util.math.StringDistance;
 import ubic.gemma.model.common.search.SearchResult;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject;
@@ -61,8 +63,10 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -190,7 +194,7 @@ public class GeneWebService {
                 .build();
         List<SearchResult<?>> raw;
         try {
-            raw = searchService.search( settings, new SearchContext( null, null ) ).toList();
+            raw = new ArrayList<>( searchService.search( settings, new SearchContext( null, null ) ).toList() );
         } catch ( ParseSearchException e ) {
             throw new BadRequestException( "Invalid search query: " + e.getQuery(), e );
         } catch ( SearchTimeoutException e ) {
@@ -198,6 +202,20 @@ public class GeneWebService {
         } catch ( SearchException e ) {
             throw new InternalServerErrorException( e );
         }
+        // Secondary sort within score bands: SearchResultSet collapses to a score-DESC order, but
+        // ties (multiple alias-band hits at 0.9, multiple inexact-symbol hits at 0.9, etc.) fall to
+        // HashMap-bucket-arbitrary. For a query like ?query=tp53&taxon=mouse there is no exact
+        // symbol match (TP53 is human; mouse uses Trp53), so every hit lands in the alias / inexact
+        // band and the "right" gene gets buried behind unrelated alias-list members (Hipk2, Muc1,
+        // Bcl3). Re-rank within each score by symbol-shape tier then edit-distance-to-query so
+        // Trp53 surfaces for tp53. Mirrors the AnnotationsWebService.getTerms tierFn pattern.
+        final String qLc = query.trim().toLowerCase( Locale.ROOT );
+        raw.sort( Comparator
+                .<SearchResult<?>>comparingDouble( sr -> -sr.getScore() )
+                .thenComparingInt( sr -> symbolTier( symbolOf( sr ), qLc ) )
+                .thenComparingInt( sr -> editDistanceOrMax( symbolOf( sr ), qLc ) )
+                .thenComparingInt( sr -> symbolOf( sr ) == null ? Integer.MAX_VALUE : symbolOf( sr ).length() )
+                .thenComparing( sr -> symbolOf( sr ), Comparator.nullsLast( String.CASE_INSENSITIVE_ORDER ) ) );
         List<GeneValueObject> vos = new ArrayList<>( raw.size() );
         // Endpoint-level taxon filter: SearchService aggregates from multiple sources and not all
         // honour SearchSettings.taxonConstraint (HibernateSearchSource and the GO source historically
@@ -229,6 +247,41 @@ public class GeneWebService {
     /** Upper bound on {@code limit}; requests above this are 400. */
     static final int SEARCH_MAX_LIMIT = 50;
     private static final String SEARCH_MAX_LIMIT_STR = "50";
+
+    /**
+     * Extract a lowercased official symbol from a search result that may hold either a
+     * {@link Gene} entity or a {@link GeneValueObject}. {@code null} when neither carries one.
+     */
+    @Nullable
+    private static String symbolOf( SearchResult<?> sr ) {
+        Object o = sr.getResultObject();
+        String s = null;
+        if ( o instanceof GeneValueObject ) {
+            s = ( ( GeneValueObject ) o ).getOfficialSymbol();
+        } else if ( o instanceof Gene ) {
+            s = ( ( Gene ) o ).getOfficialSymbol();
+        }
+        return s != null ? s.toLowerCase( Locale.ROOT ) : null;
+    }
+
+    /**
+     * Rank a candidate's official symbol against the lowercased query by shape:
+     * 0 = exact match, 1 = startsWith, 2 = endsWith, 3 = contains, 4 = symbol present
+     * but no overlap (alias / name match only), 5 = no symbol available.
+     */
+    static int symbolTier( @Nullable String symLc, String qLc ) {
+        if ( symLc == null ) return 5;
+        if ( symLc.equals( qLc ) ) return 0;
+        if ( symLc.startsWith( qLc ) ) return 1;
+        if ( symLc.endsWith( qLc ) ) return 2;
+        if ( symLc.contains( qLc ) ) return 3;
+        return 4;
+    }
+
+    /** Levenshtein distance to the query, or {@link Integer#MAX_VALUE} when the symbol is null. */
+    static int editDistanceOrMax( @Nullable String symLc, String qLc ) {
+        return symLc == null ? Integer.MAX_VALUE : StringDistance.editDistance( symLc, qLc );
+    }
 
     @GET
     @Path("/{genes}")
