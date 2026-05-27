@@ -1,0 +1,157 @@
+# Build the gemma-rest container image on every push, publish to GHCR, and
+# (on phase2-acl-migrate only) trigger frink to pull + bounce.
+#
+# Trigger model: every push, every branch. Image tags carry branch slug +
+# short SHA, so feature-branch builds are addressable without colliding with
+# the canonical `:2.0.0-alpha` / `:latest` tags reserved for phase2-acl-migrate.
+#
+# Tests: NOT gated on tests during the 2.0 alpha cycle (Option A). Frink
+# autodeploys on every successful image push, so the local safety net is
+# `feedback_focused_tests_before_push` — run focused mvn tests before pushing.
+# When we cut over to production, add a `test` job ahead of `build` and gate
+# `build.needs: [test]`.
+#
+# Secrets used (deploy job is a no-op unless both are present):
+#   FRINK_DEPLOY_SSH_KEY   - private ed25519 key whose pub is in
+#                            paul@frink:~/.ssh/authorized_keys with a
+#                            command="~/Gemma2.0/bin/update.sh" forced-command
+#                            restriction. See reference_gha_frink_ssh_setup.
+#   FRINK_KNOWN_HOSTS      - output of `ssh-keyscan -p 22000 -t ed25519
+#                            frink.msl.ubc.ca` for host-key pinning.
+
+name: publish-image
+
+on:
+  push:
+    branches: ["**"]
+  workflow_dispatch: {}
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: pavlidislab/gemma-rest
+
+jobs:
+  build:
+    name: build + push image to GHCR
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image_digest: ${{ steps.build.outputs.digest }}
+      primary_tag: ${{ steps.tags.outputs.primary_tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Compute the tag set:
+      #   - Always: <branch-slug>-<sha7>  AND  <branch-slug>-latest
+      #   - For phase2-acl-migrate only: also :2.0.0-alpha + :latest, so the
+      #     frink update.sh script (which pulls :2.0.0-alpha) keeps working
+      #     unchanged. Other branches MUST NOT touch those canonical tags.
+      - name: Compute image tags
+        id: tags
+        run: |
+          set -euo pipefail
+          branch="${GITHUB_REF_NAME}"
+          slug="${branch//\//-}"
+          short_sha="${GITHUB_SHA::7}"
+          primary="${REGISTRY}/${IMAGE_NAME}:${slug}-${short_sha}"
+          tags="${primary}"$'\n'"${REGISTRY}/${IMAGE_NAME}:${slug}-latest"
+          if [ "${branch}" = "phase2-acl-migrate" ]; then
+            tags="${tags}"$'\n'"${REGISTRY}/${IMAGE_NAME}:2.0.0-alpha"
+            tags="${tags}"$'\n'"${REGISTRY}/${IMAGE_NAME}:latest"
+          fi
+          {
+            echo "primary_tag=${primary}"
+            echo "tags<<EOF"
+            echo "${tags}"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Build and push
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          tags: ${{ steps.tags.outputs.tags }}
+          # GHA registry layer cache: cheap incremental rebuilds, source of
+          # truth lives in the registry rather than the runner's local disk.
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
+          provenance: false
+
+      - name: Summary
+        run: |
+          echo "### Image published" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Primary tag: \`${{ steps.tags.outputs.primary_tag }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Digest: \`${{ steps.build.outputs.digest }}\`" >> "$GITHUB_STEP_SUMMARY"
+
+  deploy-frink:
+    name: deploy to frink (phase2-acl-migrate)
+    needs: build
+    # Only deploy from the alpha branch — feature/hotfix branches publish
+    # images but don't bounce frink. Skips cleanly if the SSH secret is
+    # missing (initial cutover safety).
+    if: github.ref == 'refs/heads/phase2-acl-migrate'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Guard on secrets
+        id: guard
+        env:
+          KEY: ${{ secrets.FRINK_DEPLOY_SSH_KEY }}
+          HOSTS: ${{ secrets.FRINK_KNOWN_HOSTS }}
+        run: |
+          if [ -z "${KEY}" ] || [ -z "${HOSTS}" ]; then
+            echo "SSH secrets not configured; skipping frink deploy. Set FRINK_DEPLOY_SSH_KEY + FRINK_KNOWN_HOSTS to enable."
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Configure SSH
+        if: steps.guard.outputs.configured == 'true'
+        env:
+          SSH_KEY: ${{ secrets.FRINK_DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.FRINK_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "${SSH_KEY}" > ~/.ssh/gha_deploy_frink
+          chmod 600 ~/.ssh/gha_deploy_frink
+          printf '%s\n' "${KNOWN_HOSTS}" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Trigger frink update.sh
+        if: steps.guard.outputs.configured == 'true'
+        run: |
+          # The forced-command on frink's authorized_keys runs update.sh
+          # regardless of what we send — the explicit command is for
+          # documentation. -o BatchMode=yes makes failures hard-fail rather
+          # than hang on a prompt.
+          ssh -i ~/.ssh/gha_deploy_frink \
+              -p 22000 \
+              -o BatchMode=yes \
+              -o StrictHostKeyChecking=yes \
+              paul@frink.msl.ubc.ca \
+              '~/Gemma2.0/bin/update.sh'
+
+      - name: Summary
+        if: steps.guard.outputs.configured == 'true'
+        run: |
+          echo "### Frink updated" >> "$GITHUB_STEP_SUMMARY"
+          echo "Triggered \`~/Gemma2.0/bin/update.sh\` via SSH; image pulled from \`${{ needs.build.outputs.primary_tag }}\`." >> "$GITHUB_STEP_SUMMARY"

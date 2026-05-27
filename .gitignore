@@ -56,6 +56,7 @@ test-build
 build
 andromda*.exc
 *.jar
+!vendor/**/*.jar
 *.log
 velocity.log.*
 .myumldata
