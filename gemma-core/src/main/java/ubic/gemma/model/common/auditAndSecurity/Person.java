@@ -18,6 +18,9 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
 import jakarta.persistence.Transient;
 import lombok.Getter;
 import lombok.Setter;
@@ -32,8 +35,11 @@ import lombok.Setter;
 @Deprecated
 @Getter
 @Setter
+@Entity
+@DiscriminatorValue("Person")
 public class Person extends Contact {
 
+    @Column(name = "LAST_NAME", columnDefinition = "VARCHAR(255)")
     private String lastName;
 
     @Transient

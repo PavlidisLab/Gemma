@@ -19,8 +19,17 @@
 package ubic.gemma.model.common.description;
 
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
 
 import java.util.HashSet;
@@ -32,9 +41,14 @@ import java.util.Set;
  */
 @Getter
 @Setter
+@Entity
+@DiscriminatorValue("MedicalSubjectHeading")
 @Indexed
 public class MedicalSubjectHeading extends BibRefAnnotation {
 
+    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinColumn(name = "QUALIFIES_FK", columnDefinition = "BIGINT", foreignKey = @ForeignKey(name = "MEDICAL_SUBJECT_HEADING_QUALIFIES_FKC"))
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<MedicalSubjectHeading> qualifiers = new HashSet<>();
 
     public static final class Factory {
