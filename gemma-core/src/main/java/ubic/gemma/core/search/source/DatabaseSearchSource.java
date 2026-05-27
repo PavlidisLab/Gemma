@@ -516,8 +516,17 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
             results.addAll( toSearchResults( settings, Gene.class, geneService.findByOfficialSymbol( exactString ), MATCH_BY_OFFICIAL_SYMBOL_SCORE, "GeneService.findByOfficialSymbol" ) );
             symbolStep = "findByOfficialSymbol";
         } else if ( exactString.length() <= 5 ) {
+            // Run BOTH the exact-symbol query (score 1.0) AND the LIKE-prefix inexact query
+            // (score 0.9). SearchResultSet dedupes by id and keeps the higher score, so a hit
+            // that matches both ranks at 1.0. Without the exact pass a query like "grin1"
+            // only ever hit the LIKE path — both Grin1 (exact) and Grin1os (alias) tied at
+            // 0.9 and order degenerated to HashMap-bucket-arbitrary, putting the non-exact
+            // match first. The exact query is a unique-index point lookup on OFFICIAL_SYMBOL
+            // (sub-ms even on the prod-tunneled DB) so the added cost is negligible.
+            results.addAll( toSearchResults( settings, Gene.class, geneService.findByOfficialSymbol( exactString ),
+                    MATCH_BY_OFFICIAL_SYMBOL_SCORE, "GeneService.findByOfficialSymbol" ) );
             results.addAll( toSearchResults( settings, Gene.class, inexact.apply( inexactPattern ), MATCH_BY_OFFICIAL_SYMBOL_INEXACT_SCORE, "GeneService.findByOfficialSymbolInexact" ) );
-            symbolStep = "findByOfficialSymbolInexact" + ( taxonConstraint != null ? "(taxon)" : "" );
+            symbolStep = "findByOfficialSymbol+Inexact" + ( taxonConstraint != null ? "(taxon)" : "" );
         } else {
             if ( isWildcard( settings ) ) {
                 results.addAll( toSearchResults( settings, Gene.class, inexact.apply( inexactString ), MATCH_BY_OFFICIAL_SYMBOL_INEXACT_SCORE, "GeneService.findByOfficialSymbolInexact" ) );
