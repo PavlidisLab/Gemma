@@ -103,10 +103,21 @@ jobs:
   deploy-frink:
     name: deploy to frink (phase2-acl-migrate)
     needs: build
-    # Only deploy from the alpha branch — feature/hotfix branches publish
-    # images but don't bounce frink. Skips cleanly if the SSH secret is
-    # missing (initial cutover safety).
-    if: github.ref == 'refs/heads/phase2-acl-migrate'
+    # Disabled 2026-05-27: GHA-hosted Azure runners can't reach
+    # frink.msl.ubc.ca:22000 (UBC firewall drops outside-network SSH).
+    # Self-hosted runner registration on frink is the planned fix; until
+    # then, deploy manually from a UBC-network host after each successful
+    # build:
+    #
+    #     ssh -p 22000 paul@frink.msl.ubc.ca '~/Gemma2.0/bin/update.sh'
+    #
+    # To re-enable: register the runner on frink (Settings → Actions →
+    # Runners → New self-hosted runner), then change `if: false` below to
+    # `if: github.ref == 'refs/heads/phase2-acl-migrate'` AND change
+    # `runs-on: ubuntu-latest` to `runs-on: [self-hosted, frink]`, AND
+    # rip out the Configure SSH + Trigger steps (replace with a single
+    # `run: ~/Gemma2.0/bin/update.sh` since the runner is on frink itself).
+    if: false
     runs-on: ubuntu-latest
     steps:
       - name: Guard on secrets
