@@ -4499,11 +4499,16 @@ public class ExpressionExperimentDaoImpl
         }
         log.info( String.format( "Persisted %d processed vectors for %s.", count, ee ) );
 
-        // Intentionally NOT calling session.refresh(ee): doing so resets the EE's already-initialised
-        // collections (e.g. quantitationTypes) to fresh lazy proxies, which then fail once the surrounding
-        // @Transactional boundary closes. The in-memory state is kept consistent by the earlier mutations
-        // (added qt to getQuantitationTypes(), set numberOfDataVectors). ee.getProcessedExpressionDataVectors()
-        // will be empty in-memory after the call — callers that need the populated collection should reload.
+        // repopulate ee.getProcessedExpressionDataVectors() from the DB to allow access to the persisted vectors
+        // (eg. ProcessedExpressionDataVectorHelperServiceImpl.updateRanks)
+        // not using session.refresh(ee) to avoid losing other thawed collections
+        //noinspection unchecked
+        Collection<ProcessedExpressionDataVector> reloaded = session
+                .createQuery( "select vec from ProcessedExpressionDataVector vec where vec.expressionExperiment = :ee and vec.quantitationType = :qt" )
+                .setParameter( "ee", ee )
+                .setParameter( "qt", qt )
+                .list();
+        ee.getProcessedExpressionDataVectors().addAll( reloaded );
 
         return count;
     }
