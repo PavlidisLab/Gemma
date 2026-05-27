@@ -168,21 +168,25 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
 
     @Override
     public Collection<Gene> findByOfficialSymbolInexact( final String officialSymbol ) {
+        // Drop the LOWER() wrappers: gemd's official_symbol column uses the table default
+        // collation (utf8mb4_general_ci or equivalent _ci), so case-insensitive comparison
+        // is already what plain LIKE provides. With LOWER() in place, MySQL can't use the
+        // standard B-tree index on official_symbol — it does a full-table scan that took
+        // ~2s on the prod-tunneled DB regardless of hit count. Without LOWER() the index
+        // services LIKE 'prefix%' patterns in milliseconds.
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
-                .createQuery( "from Gene g where lower(g.officialSymbol) like lower(:officialSymbol) order by g.officialSymbol" )
+                .createQuery( "from Gene g where g.officialSymbol like :officialSymbol order by g.officialSymbol" )
                 .setParameter( "officialSymbol", officialSymbol ).setMaxResults( GeneDaoImpl.MAX_RESULTS ).list();
     }
 
     @Override
     public Collection<Gene> findByOfficialSymbolInexact( final String officialSymbol, final Taxon taxon ) {
-        // Taxon-pruned variant of the LIKE-prefix search. The single-arg form does a
-        // full-table scan because MySQL can't use a B-tree index on lower(official_symbol);
-        // adding the taxon predicate up front lets the planner prune by the indexed
-        // taxon_fk before the LIKE filter, dropping the per-query cost from ~2s to ms.
+        // Same drop-LOWER() rationale as the no-taxon variant, plus an indexed taxon FK
+        // prefilter for endpoints with a taxon constraint.
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
-                .createQuery( "from Gene g where g.taxon = :taxon and lower(g.officialSymbol) like lower(:officialSymbol) order by g.officialSymbol" )
+                .createQuery( "from Gene g where g.taxon = :taxon and g.officialSymbol like :officialSymbol order by g.officialSymbol" )
                 .setParameter( "officialSymbol", officialSymbol )
                 .setParameter( "taxon", taxon )
                 .setMaxResults( GeneDaoImpl.MAX_RESULTS )
