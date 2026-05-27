@@ -18,24 +18,48 @@
  */
 package ubic.gemma.model.genome;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.springframework.lang.Nullable;
 import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.description.ExternalDatabase;
 
-import org.springframework.lang.Nullable;
 import java.util.Objects;
 
+@Entity
+@Table(name = "TAXON", indexes = {
+        @Index(name = "TAXON_SCIENTIFIC_NAME", columnList = "SCIENTIFIC_NAME"),
+        @Index(name = "TAXON_COMMON_NAME", columnList = "COMMON_NAME"),
+        @Index(name = "TAXON_NCBI_ID", columnList = "NCBI_ID"),
+        @Index(name = "TAXON_SECONDARY_NCBI_ID", columnList = "SECONDARY_NCBI_ID")
+})
+@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class Taxon extends AbstractIdentifiable {
 
     @Nullable
+    @Column(name = "SCIENTIFIC_NAME", unique = true, columnDefinition = "VARCHAR(255)")
     private String scientificName;
     @Nullable
+    @Column(name = "COMMON_NAME", unique = true, columnDefinition = "VARCHAR(255)")
     private String commonName;
     @Nullable
+    @Column(name = "NCBI_ID", unique = true, columnDefinition = "INTEGER")
     private Integer ncbiId;
+    @Column(name = "IS_GENES_USABLE", nullable = false, columnDefinition = "TINYINT")
     private boolean isGenesUsable;
     @Nullable
+    @Column(name = "SECONDARY_NCBI_ID", columnDefinition = "INTEGER")
     private Integer secondaryNcbiId;
     @Nullable
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "EXTERNAL_DATABASE_FK", unique = true, columnDefinition = "BIGINT")
     private ExternalDatabase externalDatabase;
 
     @Override
