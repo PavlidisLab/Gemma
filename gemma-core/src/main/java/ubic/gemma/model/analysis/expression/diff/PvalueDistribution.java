@@ -18,14 +18,30 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Immutable;
+import org.hibernate.annotations.Parameter;
+import org.hibernate.annotations.Type;
 import ubic.gemma.model.common.AbstractIdentifiable;
+import ubic.gemma.persistence.hibernate.ByteArrayType;
 
 import java.util.Arrays;
 import java.util.Objects;
 
+@Entity
+@Table(name = "PVALUE_DISTRIBUTION")
+@Immutable
+@Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
 public class PvalueDistribution extends AbstractIdentifiable {
 
+    @Column(name = "NUM_BINS", nullable = false, columnDefinition = "INTEGER")
     private int numBins;
+    @Type(value = ByteArrayType.class, parameters = @Parameter(name = "arrayType", value = "double"))
+    @Column(name = "BIN_COUNTS", nullable = false, columnDefinition = "BLOB")
     private double[] binCounts;
 
     public double[] getBinCounts() {

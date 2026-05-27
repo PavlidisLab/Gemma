@@ -18,7 +18,16 @@
  */
 package ubic.gemma.model.analysis.expression.pca;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Immutable;
+import org.hibernate.annotations.Parameter;
+import org.hibernate.annotations.Type;
 import ubic.gemma.model.common.AbstractIdentifiable;
+import ubic.gemma.persistence.hibernate.ByteArrayType;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -26,9 +35,16 @@ import java.util.Objects;
 /**
  * A right singular vector (a.k.a. eigengenes)
  */
+@Entity
+@Table(name = "EIGENVECTOR")
+@Immutable
+@Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
 public class Eigenvector extends AbstractIdentifiable {
 
+    @Column(name = "COMPONENT_NUMBER", nullable = false, columnDefinition = "INTEGER")
     private Integer componentNumber;
+    @Type(value = ByteArrayType.class, parameters = @Parameter(name = "arrayType", value = "double"))
+    @Column(name = "VECTOR", nullable = false, columnDefinition = "LONGBLOB")
     private double[] vector;
 
     /**

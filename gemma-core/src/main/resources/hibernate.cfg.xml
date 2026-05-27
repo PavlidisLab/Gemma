@@ -30,9 +30,9 @@
         <mapping resource="ubic/gemma/model/analysis/expression/diff/DifferentialExpressionAnalysisResult.hbm.xml"/>
         <mapping resource="ubic/gemma/model/analysis/expression/diff/GeneDifferentialExpressionMetaAnalysisResult.hbm.xml"/>
         <mapping resource="ubic/gemma/model/analysis/expression/diff/HitListSize.hbm.xml"/>
-        <mapping resource="ubic/gemma/model/analysis/expression/diff/PvalueDistribution.hbm.xml"/>
+        <mapping class="ubic.gemma.model.analysis.expression.diff.PvalueDistribution"/>
         <mapping class="ubic.gemma.model.analysis.expression.pca.Eigenvalue"/>
-        <mapping resource="ubic/gemma/model/analysis/expression/pca/Eigenvector.hbm.xml"/>
+        <mapping class="ubic.gemma.model.analysis.expression.pca.Eigenvector"/>
         <mapping class="ubic.gemma.model.analysis.expression.pca.ProbeLoading"/>
 
         <!-- Gemma association -->
