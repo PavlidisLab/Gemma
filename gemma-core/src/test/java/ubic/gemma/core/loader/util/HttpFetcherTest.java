@@ -47,6 +47,7 @@ public class HttpFetcherTest {
     @Test
     public void testFetch() {
         HttpFetcher hf = new HttpFetcher();
+        hf.setLocalBasePath( System.getProperty( "java.io.tmpdir" ) );
 
         try {
             hf.setForce( true );

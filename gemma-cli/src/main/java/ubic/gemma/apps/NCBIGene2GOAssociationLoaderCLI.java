@@ -22,6 +22,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import ubic.gemma.core.loader.association.NCBIGene2GOAssociationLoader;
 import ubic.gemma.core.loader.association.NCBIGene2GOAssociationParser;
 import ubic.gemma.core.loader.util.fetcher.HttpFetcher;
@@ -58,6 +59,9 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractAuthenticatedCLI {
     @Autowired
     private ExternalDatabaseService externalDatabaseService;
 
+    @Value("${gemma.download.path}")
+    private String downloadPath;
+
     private String filePath = null;
 
     @Override
@@ -83,6 +87,7 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractAuthenticatedCLI {
         gene2GOAssLoader.setParser( new NCBIGene2GOAssociationParser( taxa ) );
 
         HttpFetcher fetcher = new HttpFetcher();
+        fetcher.setLocalBasePath( downloadPath );
 
         Collection<File> files;
         if ( filePath != null ) {

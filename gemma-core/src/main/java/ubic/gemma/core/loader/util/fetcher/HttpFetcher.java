@@ -20,7 +20,6 @@ package ubic.gemma.core.loader.util.fetcher;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.util.concurrent.Executors;
 
 import java.io.*;
@@ -45,7 +44,9 @@ public class HttpFetcher extends AbstractFetcher {
     public Collection<File> fetch( String url, String outputFileName ) {
         AbstractFetcher.log.info( "Seeking " + url );
 
-        this.localBasePath = Settings.getDownloadPath();
+        if ( this.localBasePath == null ) {
+            throw new IllegalStateException( "localBasePath must be set via setLocalBasePath(...) before calling fetch()" );
+        }
 
         try {
 
