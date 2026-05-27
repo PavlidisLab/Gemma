@@ -1,5 +1,13 @@
 package ubic.gemma.model.common;
 
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
+import jakarta.persistence.Column;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
+
 /**
  * Base class for identifiable entities.
  * <p>
@@ -7,8 +15,13 @@ package ubic.gemma.model.common;
  * hashCode() and equals().
  * @author poirigui
  */
+@MappedSuperclass
+@Access(AccessType.FIELD)
 public abstract class AbstractIdentifiable implements Identifiable {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "ID", columnDefinition = "BIGINT")
     private Long id;
 
     public Long getId() {

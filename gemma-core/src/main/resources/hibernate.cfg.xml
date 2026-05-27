@@ -39,14 +39,11 @@
         <mapping resource="ubic/gemma/model/association/BioSequence2GeneProduct.hbm.xml"/>
         <mapping resource="ubic/gemma/model/association/Gene2GOAssociation.hbm.xml"/>
 
-        <!-- Common: shared mapped-superclasses (declare once; entity orm.xml files inherit via Java) -->
-        <mapping resource="ubic/gemma/model/common/AbstractIdentifiable.orm.xml"/>
-
         <!-- Common: audit and security -->
         <mapping resource="ubic/gemma/model/common/auditAndSecurity/AuditEvent.hbm.xml"/>
         <mapping resource="ubic/gemma/model/common/auditAndSecurity/AuditTrail.hbm.xml"/>
         <mapping resource="ubic/gemma/model/common/auditAndSecurity/Contact.hbm.xml"/>
-        <mapping resource="ubic/gemma/model/common/auditAndSecurity/GroupAuthority.orm.xml"/>
+        <mapping class="ubic.gemma.model.common.auditAndSecurity.GroupAuthority"/>
         <mapping resource="ubic/gemma/model/common/auditAndSecurity/JobInfo.hbm.xml"/>
         <mapping resource="ubic/gemma/model/common/auditAndSecurity/UserGroup.hbm.xml"/>
         <mapping resource="ubic/gemma/model/common/auditAndSecurity/curation/CurationDetails.hbm.xml"/>

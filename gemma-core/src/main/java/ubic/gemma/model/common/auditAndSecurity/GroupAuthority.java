@@ -18,6 +18,11 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import ubic.gemma.model.common.AbstractIdentifiable;
 
 import java.util.Objects;
@@ -25,8 +30,12 @@ import java.util.Objects;
 /**
  * Authority for groups (kind of like a "user role", but for group-based authorization)
  */
+@Entity
+@Table(name = "GROUP_AUTHORITY")
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class GroupAuthority extends AbstractIdentifiable implements ubic.gemma.core.security.model.GroupAuthority {
 
+    @Column(name = "AUTHORITY", nullable = false, columnDefinition = "VARCHAR(255)")
     private String authority;
 
     @Override
