@@ -18,6 +18,20 @@
  */
 package ubic.gemma.model.association;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorColumn;
+import jakarta.persistence.DiscriminatorType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -29,15 +43,39 @@ import ubic.gemma.model.genome.sequenceAnalysis.ThreePrimeDistanceMethod;
  * BlatAssociation in order to capture the scores and other parameters that document why we think there is a connection
  * between a given sequence and a gene product.
  */
+@Entity
+@Table(name = "BIO_SEQUENCE2_GENE_PRODUCT")
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "class", discriminatorType = DiscriminatorType.STRING)
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public abstract class BioSequence2GeneProduct extends AbstractIdentifiable {
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "SOURCE_ANALYSIS_FK", columnDefinition = "BIGINT")
     private Analysis sourceAnalysis = null;
+
+    @Column(name = "OVERLAP", columnDefinition = "INTEGER")
     private Integer overlap = null;
+
+    @Column(name = "SCORE", columnDefinition = "DOUBLE")
     private Double score = null;
+
+    @Column(name = "THREE_PRIME_DISTANCE", columnDefinition = "BIGINT")
     private Long threePrimeDistance = null;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "THREE_PRIME_DISTANCE_MEASUREMENT_METHOD", columnDefinition = "VARCHAR(255)")
     private ThreePrimeDistanceMethod threePrimeDistanceMeasurementMethod = null;
+
+    @Column(name = "SPECIFICITY", columnDefinition = "DOUBLE")
     private Double specificity = null;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "BIO_SEQUENCE_FK", columnDefinition = "BIGINT")
     private BioSequence bioSequence = null;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "GENE_PRODUCT_FK", columnDefinition = "BIGINT")
     private GeneProduct geneProduct = null;
 
     public BioSequence getBioSequence() {

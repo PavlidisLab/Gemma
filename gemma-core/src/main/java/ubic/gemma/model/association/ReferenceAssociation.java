@@ -18,14 +18,23 @@
  */
 package ubic.gemma.model.association;
 
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.persistence.util.IdentifiableUtils;
 
 /**
  * An association between a BioSequence and a GeneProduct based on external database identifiers.
  */
+@Entity
+@DiscriminatorValue("ReferenceAssociationImpl")
 public class ReferenceAssociation extends BioSequence2GeneProduct {
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "REFERENCED_DATABASE_ENTRY_FK", columnDefinition = "BIGINT")
     private DatabaseEntry referencedDatabaseEntry;
 
     public DatabaseEntry getReferencedDatabaseEntry() {
