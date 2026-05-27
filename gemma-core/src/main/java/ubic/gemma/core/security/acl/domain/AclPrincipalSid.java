@@ -14,6 +14,9 @@
  */
 package ubic.gemma.core.security.acl.domain;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
 import org.springframework.security.acls.model.Sid;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -31,9 +34,13 @@ import java.util.Objects;
  *
  * @author Paul
  */
+@Entity
+@DiscriminatorValue("1")
 public class AclPrincipalSid extends AclSid {
 
     private static final long serialVersionUID = -4679911678447417301L;
+
+    @Column(name = "sid", nullable = false, columnDefinition = "VARCHAR(255)", insertable = false, updatable = false)
     private String principal;
 
     public AclPrincipalSid() {

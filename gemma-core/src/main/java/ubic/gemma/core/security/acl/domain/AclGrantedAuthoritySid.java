@@ -14,6 +14,9 @@
  */
 package ubic.gemma.core.security.acl.domain;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
 import org.springframework.security.acls.model.Sid;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.util.Assert;
@@ -30,9 +33,13 @@ import java.util.Objects;
  *
  * @author Paul
  */
+@Entity
+@DiscriminatorValue("0")
 public class AclGrantedAuthoritySid extends AclSid {
 
     private static final long serialVersionUID = 7755206462003052441L;
+
+    @Column(name = "sid", nullable = false, columnDefinition = "VARCHAR(255)", insertable = false, updatable = false)
     private String grantedAuthority;
 
     public AclGrantedAuthoritySid( GrantedAuthority grantedAuthority ) {

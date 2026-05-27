@@ -14,6 +14,23 @@
  */
 package ubic.gemma.core.security.acl.domain;
 
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorColumn;
+import jakarta.persistence.DiscriminatorType;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Immutable;
+
 /**
  * Hibernate-mapped abstract base for {@code acl_sid} rows. Phase B of the gsec absorption
  * decoupled this hierarchy from Spring Security's {@link org.springframework.security.acls.model.Sid}
@@ -26,9 +43,21 @@ package ubic.gemma.core.security.acl.domain;
  *
  * @author Paul
  */
+@Entity
+@Table(name = "acl_sid")
+@Access(AccessType.FIELD)
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "principal", discriminatorType = DiscriminatorType.INTEGER, columnDefinition = "BIT")
+@DiscriminatorValue("-1")
+@Immutable
+@Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
 public abstract class AclSid implements java.io.Serializable {
 
     private static final long serialVersionUID = -3256613712125656321L;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", columnDefinition = "BIGINT")
     private Long id;
 
     public Long getId() {

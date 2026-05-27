@@ -19,6 +19,25 @@
 
 package ubic.gemma.core.security.acl.domain;
 
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
+import jakarta.persistence.Column;
+import jakarta.persistence.ConstraintMode;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Formula;
+import org.hibernate.annotations.Immutable;
 import ubic.gemma.core.security.model.Securable;
 import org.springframework.security.acls.domain.GrantedAuthoritySid;
 import org.springframework.security.acls.domain.PrincipalSid;
@@ -37,16 +56,26 @@ import java.util.Set;
  * @author Paul
  * @version $Id: AclObjectIdentity.java,v 1.1 2013/09/14 16:55:18 paul Exp $
  */
+@Entity
+@Table(name = "acl_object_identity")
+@Access(AccessType.FIELD)
+@Immutable
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class AclObjectIdentity implements ObjectIdentity {
 
     private static final long serialVersionUID = -6715898560226971244L;
 
     // of this objectidentity
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", columnDefinition = "BIGINT")
     private Long id;
 
     // of the entity
+    @Column(name = "object_id_identity", nullable = false, columnDefinition = "BIGINT")
     private Long identifier;
 
+    @Formula("(select c.class from acl_class c where c.id = object_id_class)")
     private String type;
 
     /**
@@ -56,14 +85,24 @@ public class AclObjectIdentity implements ObjectIdentity {
      * this field exists so Hibernate's hbm2ddl generates the canonical column for Spring Security's
      * stock JdbcMutableAclService to read/write through JDBC.
      */
+    @Column(name = "object_id_class", nullable = false, columnDefinition = "BIGINT")
     private Long objectIdClass;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "owner_sid", nullable = false, columnDefinition = "BIGINT")
     private AclSid ownerSid;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "parent_object", columnDefinition = "BIGINT")
     private AclObjectIdentity parentObject;
 
+    @OneToMany(fetch = FetchType.EAGER)
+    @JoinColumn(name = "acl_object_identity", columnDefinition = "BIGINT", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+    @OrderBy("aceOrder")
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<AclEntry> entries = new HashSet<>();
 
+    @Column(name = "entries_inheriting", nullable = false, columnDefinition = "BIT")
     private boolean entriesInheriting = false;
 
     @SuppressWarnings("unused")

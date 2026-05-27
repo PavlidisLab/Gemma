@@ -14,10 +14,12 @@
 -->
 <hibernate-configuration>
     <session-factory>
-        <!-- gsec ACL mappings (loaded from the gsec jar on the classpath) -->
-        <mapping resource="ubic/gemma/core/security/model/AclEntry.hbm.xml"/>
-        <mapping resource="ubic/gemma/core/security/model/AclObjectIdentity.hbm.xml"/>
-        <mapping resource="ubic/gemma/core/security/model/AclSid.hbm.xml"/>
+        <!-- gsec ACL mappings -->
+        <mapping class="ubic.gemma.core.security.acl.domain.AclEntry"/>
+        <mapping class="ubic.gemma.core.security.acl.domain.AclObjectIdentity"/>
+        <mapping class="ubic.gemma.core.security.acl.domain.AclSid"/>
+        <mapping class="ubic.gemma.core.security.acl.domain.AclPrincipalSid"/>
+        <mapping class="ubic.gemma.core.security.acl.domain.AclGrantedAuthoritySid"/>
 
         <!-- Gemma analysis -->
         <mapping resource="ubic/gemma/model/analysis/Analysis.hbm.xml"/>
