@@ -35,15 +35,21 @@ public class RequestExceptionLogger implements ApplicationEventListener {
                     m = "Exception was raised, but there is no current request.";
                 }
                 Throwable ex = event.getException();
-                // Spring-Security auth/authz exceptions are the normal 401/403 path for
-                // anonymous probes of authenticated endpoints (e.g. the UI's /me check
-                // on every page load). They produce stack traces identical to every
-                // other "not logged in" call, so we log the message at WARN without
-                // the trace to keep the loop quiet. Jersey wraps the real exception in
-                // a MappableException, so walk the cause chain to find the actual type.
-                Throwable rootMatch = findCause( ex, AccessDeniedException.class, AuthenticationException.class );
-                if ( rootMatch != null ) {
-                    log.warn( m + " (" + rootMatch.getClass().getSimpleName() + ": " + rootMatch.getMessage() + ")" );
+                // Triage policy: this logger's job is to surface SERVER-side problems.
+                // Client-side outcomes (4xx) are already captured in the access log; a
+                // duplicate app-log line with a stack trace adds no diagnostic value and
+                // produces gigabytes of noise when a misbehaving client polls in a tight
+                // loop (the 2026-05-26 /me firehose). So:
+                //   - AccessDeniedException / AuthenticationException → DEBUG (anonymous
+                //     probes of authenticated endpoints are normal traffic; absent any
+                //     diagnostic interest, don't log).
+                //   - Other 4xx-mapped exceptions → WARN with message only (no stack).
+                //   - Everything else → ERROR with full stack (the actual server faults).
+                // Jersey wraps in MappableException; walk the cause chain to find the
+                // actual type so the branches match.
+                Throwable authMatch = findCause( ex, AccessDeniedException.class, AuthenticationException.class );
+                if ( authMatch != null ) {
+                    log.debug( "{} ({}: {})", m, authMatch.getClass().getSimpleName(), authMatch.getMessage() );
                 } else if ( ex instanceof ClientErrorException
                         // these should be treated as 400 errors, but they do not inherit from BadRequestException
                         || ex instanceof ParamException
@@ -52,7 +58,7 @@ public class RequestExceptionLogger implements ApplicationEventListener {
                         // have the class definition
                         || "org.apache.catalina.connector.ClientAbortException".equals( ex.getClass().getName() )
                         || ex instanceof ServiceUnavailableException ) {
-                    log.warn( m, ex );
+                    log.warn( "{} ({}: {})", m, ex.getClass().getSimpleName(), ex.getMessage() );
                 } else {
                     log.error( m, ex );
                 }
