@@ -129,6 +129,15 @@ public class EhcacheConfig {
         // computed the result is stable (changes only when GO is reloaded or annotations are
         // updated). 12h TTL matches the diffex / vector caches.
         APP_CACHES.put( "GoTermGeneCountCache", new CacheSpec( 5000, Duration.ofHours( 12 ) ) );
+
+        // /annotations/search response payloads (per query + flags). Previously a static
+        // LinkedHashMap inside AnnotationsWebService with a bespoke evict endpoint — moving
+        // it into the Spring CacheManager surfaces it via /admin/caches alongside every
+        // other cache, so the unified admin endpoint can flush it. 30-minute TTL matches
+        // the typeahead's "session in the curator's head" — long enough to absorb the
+        // repeated keystrokes of one editing session, short enough that ontology refreshes
+        // become visible without an explicit evict.
+        APP_CACHES.put( "AnnotationsSearchResponseCache", new CacheSpec( 500, Duration.ofMinutes( 30 ) ) );
     }
 
     static {

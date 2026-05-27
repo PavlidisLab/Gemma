@@ -105,22 +105,15 @@ public class AnnotationsWebService {
     private static final long FIND_CHARACTERISTICS_TIMEOUT_MS = 30000;
 
     /**
-     * Bounded LRU cache for successful {@code /annotations/search} responses. Absorbs repeat queries from
-     * curation pipelines that ask for the same terms across many experiments. Keyed by the normalized
-     * (trimmed + lowercased) query payload; only success results are cached, exceptions propagate uncached.
+     * Spring-registered cache for successful {@code /annotations/search} responses. Absorbs repeat
+     * queries from curation pipelines that ask for the same terms across many experiments. Keyed by
+     * the normalized (trimmed + lowercased) query payload + the flags that affect the response
+     * shape; only success results are cached, exceptions propagate uncached.
      * <p>
-     * Process-local, access-order eviction; size bound is the eviction signal. Plain {@link LinkedHashMap}
-     * wrapped in {@link Collections#synchronizedMap} — no Guava on the classpath here.
+     * Configured in {@code EhcacheConfig#APP_CACHES} so it appears in {@code GET /admin/caches}
+     * with hit/miss stats and can be flushed via the unified {@code DELETE /admin/caches/{name}}.
      */
-    private static final int SEARCH_CACHE_MAX_ENTRIES = 500;
-
-    private static final Map<String, List<AnnotationSearchResultValueObject>> SEARCH_CACHE = Collections.synchronizedMap(
-            new LinkedHashMap<String, List<AnnotationSearchResultValueObject>>( 64, 0.75f, true ) {
-                @Override
-                protected boolean removeEldestEntry( Map.Entry<String, List<AnnotationSearchResultValueObject>> eldest ) {
-                    return size() > SEARCH_CACHE_MAX_ENTRIES;
-                }
-            } );
+    private static final String SEARCH_CACHE_NAME = "AnnotationsSearchResponseCache";
 
     private OntologyService ontologyService;
     private SearchService searchService;
@@ -133,6 +126,18 @@ public class AnnotationsWebService {
     private ubic.gemma.persistence.service.association.Gene2GOAssociationService gene2GOAssociationService;
     @Autowired(required = false)
     private ubic.gemma.core.ontology.providers.GeneOntologyService geneOntologyService;
+    @Autowired(required = false)
+    private org.springframework.cache.CacheManager cacheManager;
+    private volatile org.springframework.cache.Cache searchResponseCache;
+
+    private org.springframework.cache.Cache searchResponseCache() {
+        org.springframework.cache.Cache c = searchResponseCache;
+        if ( c == null && cacheManager != null ) {
+            c = cacheManager.getCache( SEARCH_CACHE_NAME );
+            searchResponseCache = c;
+        }
+        return c;
+    }
     /**
      * Strategy registry keyed by short name ({@code lucene}, {@code usage}, {@code coverage}).
      * Spring populates this from every {@link AnnotationSearchRankingStrategy} bean — the bean name
@@ -525,10 +530,16 @@ public class AnnotationsWebService {
         // hit a cached "without counts" payload.
         String cacheKey = buildSearchCacheKey( query.getValue(), strategy.getName(), limit, prefixes, upstream, exactLabel, category )
                 + ( includeGeneCount ? "|gc=" + geneCountMaxTerms : "" );
-        List<AnnotationSearchResultValueObject> cached = SEARCH_CACHE.get( cacheKey );
-        if ( cached != null ) {
-            log.debug( "annotation-search cache HIT key={} (size={})", cacheKey, SEARCH_CACHE.size() );
-            return respond( new ArrayList<>( cached ) );
+        org.springframework.cache.Cache searchCache = searchResponseCache();
+        if ( searchCache != null ) {
+            org.springframework.cache.Cache.ValueWrapper hit = searchCache.get( cacheKey );
+            if ( hit != null && hit.get() instanceof List ) {
+                //noinspection unchecked
+                List<AnnotationSearchResultValueObject> cached =
+                        (List<AnnotationSearchResultValueObject>) hit.get();
+                log.debug( "annotation-search cache HIT key={}", cacheKey );
+                return respond( new ArrayList<>( cached ) );
+            }
         }
         try {
             List<AnnotationSearchResultValueObject> result = new ArrayList<>( this.getTerms( query, strategy, limit, prefixes, upstream, exactLabel, category, FIND_CHARACTERISTICS_TIMEOUT_MS ) );
@@ -540,10 +551,10 @@ public class AnnotationsWebService {
             // after a restart, basecode Lucene index temporarily empty, etc.) — caching the empty
             // would pin the typeahead at "no results" until either an explicit cache flush or a
             // restart. Both classes lose nothing by recomputing.
-            if ( !result.isEmpty() ) {
-                SEARCH_CACHE.put( cacheKey, Collections.unmodifiableList( new ArrayList<>( result ) ) );
-                log.debug( "annotation-search cache MISS key={} stored {} hits (size={})", cacheKey, result.size(), SEARCH_CACHE.size() );
-            } else {
+            if ( !result.isEmpty() && searchCache != null ) {
+                searchCache.put( cacheKey, Collections.unmodifiableList( new ArrayList<>( result ) ) );
+                log.debug( "annotation-search cache MISS key={} stored {} hits", cacheKey, result.size() );
+            } else if ( result.isEmpty() ) {
                 log.debug( "annotation-search cache MISS key={} empty result — not cached", cacheKey );
             }
             return respond( result );
@@ -575,29 +586,10 @@ public class AnnotationsWebService {
         return s;
     }
 
-    /**
-     * Evict the in-process {@code /annotations/search} response cache. Used when a typeahead has
-     * been pinned to a stale set of hits (e.g. the cache absorbed a transient empty during
-     * ontology warm-up before our skip-empty rule landed, or a curator added new ontology terms
-     * and wants the typeahead to refresh without bouncing the container).
-     */
-    @POST
-    @Path("/search/cache/evict")
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Evict the /annotations/search response cache",
-            security = {
-                    @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
-                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
-            })
-    public ResponseDataObject<Map<String, Object>> evictAnnotationSearchCache() {
-        int dropped = SEARCH_CACHE.size();
-        SEARCH_CACHE.clear();
-        log.info( "annotation-search cache cleared by admin ({} entries dropped)", dropped );
-        Map<String, Object> out = new LinkedHashMap<>();
-        out.put( "evicted", dropped );
-        return respond( out );
-    }
+    // Bespoke /search/cache/evict was removed once SEARCH_CACHE moved into the Spring
+    // CacheManager (region name AnnotationsSearchResponseCache). Use
+    // DELETE /admin/caches/AnnotationsSearchResponseCache (or DELETE /admin/caches
+    // for everything) — same admin endpoint that lists hit/miss stats.
 
     /**
      * @see #searchAnnotations(StringArrayArg)

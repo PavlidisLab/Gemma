@@ -121,9 +121,15 @@ When a perf probe lands a slow case, surface where time goes before guessing at 
 - **100-500 ms** — fix the hotspot if it's a clean win (parallel fan-out, batched IN-clause, skip-when-unneeded). Cache as a backstop if the fix is structural.
 - **>1s** — must have a structural fix. Caching alone is not acceptable because the first-hit user pays.
 
-### Don't cache, evict instead
+### Caches go through the unified admin endpoint
 
-Every shared in-process cache should ship with an admin eviction endpoint. Example: `POST /annotations/search/cache/evict` (GROUP_ADMIN). Spot a new cache without one → add one in the same commit.
+There's exactly one cache-eviction endpoint surface: `AdminWebService` at `GET /admin/caches` (list with hit/miss stats), `DELETE /admin/caches` (flush all), `DELETE /admin/caches/{cacheName}` (flush one). Browser admin views drive that.
+
+A new in-process cache becomes admin-evictable by:
+1. Registering it in `EhcacheConfig#APP_CACHES` with a `CacheSpec(maxEntries, ttl)`.
+2. Resolving via `cacheManager.getCache(NAME)` at the use site (lazy field, since the CacheManager isn't available at constructor time on some Spring boot orderings).
+
+Don't add per-endpoint bespoke `POST /foo/cache/evict` handlers — they duplicate `/admin/caches/{name}` and bypass the stats / unified eviction view. We retired `POST /annotations/search/cache/evict` and `POST /goTerms/cache/evict` for exactly this reason.
 
 ### Performance is critical
 

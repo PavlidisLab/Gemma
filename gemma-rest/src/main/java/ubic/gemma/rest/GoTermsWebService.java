@@ -356,30 +356,10 @@ public class GoTermsWebService {
         return ubic.gemma.rest.util.Responders.respond( vo );
     }
 
-    /**
-     * Evict the GoTermGeneCountCache. Mirrors the
-     * {@code POST /annotations/search/cache/evict} pattern — every shared in-process cache
-     * gets an admin endpoint per CLAUDE.md's "evict, don't bake in" rule.
-     */
-    @jakarta.ws.rs.POST
-    @Path("/cache/evict")
-    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('GROUP_ADMIN')")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Evict the /goTerms/{uri}/genes/count response cache",
-            security = {
-                    @io.swagger.v3.oas.annotations.security.SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
-                    @io.swagger.v3.oas.annotations.security.SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
-            })
-    public ubic.gemma.rest.util.ResponseDataObject<java.util.Map<String, Object>> evictGeneCountCache() {
-        org.springframework.cache.Cache c = geneCountCache();
-        if ( c != null ) {
-            c.clear();
-            log.info( "GoTermGeneCountCache cleared by admin" );
-        }
-        java.util.Map<String, Object> out = new java.util.LinkedHashMap<>();
-        out.put( "evicted", true );
-        return ubic.gemma.rest.util.Responders.respond( out );
-    }
+    // Bespoke /cache/evict was removed once GoTermGeneCountCache became a Spring-registered
+    // cache region (see EhcacheConfig#APP_CACHES). The unified admin endpoint covers it:
+    // DELETE /admin/caches/GoTermGeneCountCache (or DELETE /admin/caches for everything),
+    // plus the GET /admin/caches stats view shows hit/miss counters.
 
     /**
      * Wire payload for {@code GET /goTerms/{termUri}/genes/count}. Fields:
