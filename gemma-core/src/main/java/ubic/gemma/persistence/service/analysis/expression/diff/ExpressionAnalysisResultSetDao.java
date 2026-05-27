@@ -56,6 +56,14 @@ public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<Dif
     ExpressionAnalysisResultSet loadWithResultsAndContrasts( Long id );
 
     /**
+     * Load a result set with its analysis and the analysis' experimentAnalyzed fully initialized,
+     * in a single round-trip. Avoids the sequential lazy-init chain that thaw() does — the dominant
+     * cost on the /datasets/{id}/expressions/differential endpoint over a high-latency DB link.
+     */
+    @Nullable
+    ExpressionAnalysisResultSet loadWithAnalysisAndExperimentAnalyzed( Long id );
+
+    /**
      * Load a slice of an analysis result set.
      * <p>
      * Results are sorted by ascending correct P-value.

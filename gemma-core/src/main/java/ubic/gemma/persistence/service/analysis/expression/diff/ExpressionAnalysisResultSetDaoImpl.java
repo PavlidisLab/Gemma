@@ -83,6 +83,19 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
     }
 
     @Override
+    @Nullable
+    public ExpressionAnalysisResultSet loadWithAnalysisAndExperimentAnalyzed( Long id ) {
+        List<ExpressionAnalysisResultSet> rows = getSessionFactory().getCurrentSession()
+                .createQuery( "select rs from ExpressionAnalysisResultSet rs "
+                        + "left join fetch rs.analysis a "
+                        + "left join fetch a.experimentAnalyzed "
+                        + "where rs.id = :id", ExpressionAnalysisResultSet.class )
+                .setParameter( "id", id )
+                .list();
+        return rows.isEmpty() ? null : rows.get( 0 );
+    }
+
+    @Override
     public ExpressionAnalysisResultSet loadWithResultsAndContrasts( Long id ) {
         StopWatch timer = StopWatch.createStarted();
         ExpressionAnalysisResultSet ears = load( id );

@@ -90,6 +90,7 @@ public class DifferentialExpressionAnalysisResult extends AnalysisResult {
     @OneToMany(fetch = FetchType.LAZY)
     @JoinColumn(name = "DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK", columnDefinition = "BIGINT", nullable = false,
             foreignKey = @ForeignKey(name = "CONTRAST_RESULT_DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FKC"))
+    @org.hibernate.annotations.BatchSize(size = 128)
     @Immutable
     private Set<ContrastResult> contrasts = new HashSet<>();
 

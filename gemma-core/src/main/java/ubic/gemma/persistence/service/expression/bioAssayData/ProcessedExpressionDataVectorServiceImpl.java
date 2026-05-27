@@ -222,46 +222,54 @@ public class ProcessedExpressionDataVectorServiceImpl
             boolean keepGeneNonSpecific, @Nullable String consolidateMode ) {
         List<ExperimentExpressionLevelsValueObject> vos = new ArrayList<>( ees.size() );
 
-        // Compute the diff-ex stats map once (probeId -> DEVO) so we can enrich the per-gene VO without
-        // a second round-trip; this is the same data the endpoint already used to rank its top-N.
-        Map<Long, DifferentialExpressionValueObject> statsByProbeId = this.getDiffExStatsByProbeId( diffExResultSetId, threshold, max );
+        // Run the per-probe top-hits query exactly once and use it to power BOTH the gene-stat
+        // enrichment and the vector resort. The two-method split that existed previously made it
+        // tempting to call each independently — each one ran resultSetService.load + thaw plus
+        // differentialExpressionResultService.findByResultSet, doubling the wall time on what is
+        // already the slowest part of the endpoint.
+        // Skip the full thaw() (5-7 sequential lazy round-trips for subsetFactorValue / baselineGroup /
+        // experimentalFactors etc. that this endpoint never reads). One join-fetch query loads exactly
+        // what we need — the analysis and its experimentAnalyzed — in a single round-trip.
+        ExpressionAnalysisResultSet ar = expressionAnalysisResultSetService.loadWithAnalysis( diffExResultSetId );
+        if ( ar == null ) {
+            log.warn( "No diff ex result set with ID=" + diffExResultSetId );
+            return vos;
+        }
 
-        // The vector retrieval is loop-invariant — the result set fixes the analyzed BioAssaySet, so the
-        // vectors are identical on every iteration. Hoist out of the loop to avoid re-thawing the result
-        // set, re-running findByResultSet, and re-fetching the DEDV vectors N times.
-        Collection<DoubleVectorValueObject> vectors = this.getDiffExVectors( diffExResultSetId, threshold, max );
+        List<DifferentialExpressionValueObject> rows = differentialExpressionResultService
+                .findByResultSet( ar, threshold, max, DIFFEX_MIN_NUMBER_OF_RESULTS );
 
-        // Adapted from DEDV controller
+        Map<Long, DifferentialExpressionValueObject> statsByProbeId = new HashMap<>( rows.size() );
+        Map<Long, Double> pvalues = new HashMap<>( rows.size() );
+        Set<Long> probes = new HashSet<>( rows.size() );
+        for ( DifferentialExpressionValueObject r : rows ) {
+            // If the same probe appears twice (shouldn't happen for a single result set), keep the
+            // more-significant row — same tie-break the endpoint uses for ranking.
+            DifferentialExpressionValueObject prev = statsByProbeId.get( r.getProbeId() );
+            if ( prev == null || isMoreSignificant( r, prev ) ) {
+                statsByProbeId.put( r.getProbeId(), r );
+            }
+            probes.add( r.getProbeId() );
+            pvalues.put( r.getProbeId(), r.getP() );
+        }
+
+        BioAssaySet analyzedSet = ar.getAnalysis().getExperimentAnalyzed();
+        Collection<DoubleVectorValueObject> processedDataArraysByProbe =
+                cachedProcessedExpressionDataVectorService.getProcessedDataArraysByProbeIds( analyzedSet, probes );
+        List<DoubleVectorValueObject> vectors = processedDataArraysByProbe.stream()
+                .map( DoubleVectorValueObject::copy )
+                .collect( Collectors.toList() );
+        for ( DoubleVectorValueObject v : vectors ) {
+            v.setPvalue( pvalues.get( v.getDesignElement().getId() ) );
+        }
+        vectors.sort( Comparator.comparing( DoubleVectorValueObject::getPvalue,
+                Comparator.nullsLast( Comparator.naturalOrder() ) ) );
+
         for ( ExpressionExperiment ee : ees ) {
             this.addExperimentGeneVectorsWithDiffExStats( vos, ee, vectors, keepGeneNonSpecific, consolidateMode, statsByProbeId );
         }
 
         return vos;
-    }
-
-    /**
-     * Mirror of the per-probe top-hits query used by {@link #getDiffExVectors}, but returning the DEVOs keyed
-     * by probe id so callers can pull corrected p-value / log2-fold-change for the contrast represented by
-     * the result-set.
-     */
-    private Map<Long, DifferentialExpressionValueObject> getDiffExStatsByProbeId( Long resultSetId, double threshold, int max ) {
-        ExpressionAnalysisResultSet ar = expressionAnalysisResultSetService.load( resultSetId );
-        if ( ar == null ) {
-            return Collections.emptyMap();
-        }
-        ar = expressionAnalysisResultSetService.thaw( ar );
-        List<DifferentialExpressionValueObject> rows = differentialExpressionResultService
-                .findByResultSet( ar, threshold, max, DIFFEX_MIN_NUMBER_OF_RESULTS );
-        Map<Long, DifferentialExpressionValueObject> byProbe = new HashMap<>( rows.size() );
-        for ( DifferentialExpressionValueObject r : rows ) {
-            // If the same probe appears twice (shouldn't happen for a single result set), keep the more-
-            // significant row — same tie-break the endpoint uses for ranking.
-            DifferentialExpressionValueObject prev = byProbe.get( r.getProbeId() );
-            if ( prev == null || isMoreSignificant( r, prev ) ) {
-                byProbe.put( r.getProbeId(), r );
-            }
-        }
-        return byProbe;
     }
 
     private static boolean isMoreSignificant( DifferentialExpressionValueObject a, DifferentialExpressionValueObject b ) {

@@ -39,11 +39,11 @@ public class ExpressionAnalysisResultSetServiceImpl extends AbstractFilteringVoE
     @Nullable
     @Transactional(readOnly = true)
     public ExpressionAnalysisResultSet loadWithAnalysis( Long id ) {
-        ExpressionAnalysisResultSet rs = load( id );
-        if ( rs != null ) {
-            Hibernate.initialize( rs.getAnalysis() );
-        }
-        return rs;
+        // Delegates to the DAO's single-query fetch-join, which materializes analysis +
+        // experimentAnalyzed in one round-trip. Over a high-latency DB link this is the
+        // dominant cost on the /datasets/{id}/expressions/differential endpoint, where the
+        // prior implementation issued load + lazy-init + lazy-hop sequentially.
+        return voDao.loadWithAnalysisAndExperimentAnalyzed( id );
     }
 
     @Override
