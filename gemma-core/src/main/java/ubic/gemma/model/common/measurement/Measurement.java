@@ -21,15 +21,37 @@ package ubic.gemma.model.common.measurement;
 import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 
-import org.springframework.lang.Nullable;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.springframework.lang.Nullable;
 import java.util.Comparator;
 import java.util.Objects;
 
+@Entity
+@Table(name = "MEASUREMENT", indexes = {
+        @Index(name = "MEASUREMENT_TYPE", columnList = "TYPE"),
+        @Index(name = "MEASUREMENT_VALUE", columnList = "`VALUE`"),
+        @Index(name = "MEASUREMENT_KIND_CV", columnList = "KIND_C_V"),
+        @Index(name = "MEASUREMENT_OTHER_KIND", columnList = "OTHER_KIND"),
+        @Index(name = "MEASUREMENT_REPRESENTATION", columnList = "REPRESENTATION")
+})
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class Measurement extends AbstractIdentifiable {
 
     public static final Comparator<Measurement> COMPARATOR = Comparator.comparing( Measurement::getValue );
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "TYPE", nullable = false, columnDefinition = "VARCHAR(255)")
     private MeasurementType type;
     /**
      * The measurement value.
@@ -37,10 +59,19 @@ public class Measurement extends AbstractIdentifiable {
      * Null indicates a missing value.
      */
     @Nullable
+    @Column(name = "`VALUE`", columnDefinition = "VARCHAR(255)")
     private String value;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "KIND_C_V", columnDefinition = "VARCHAR(255)")
     private MeasurementKind kindCV;
+    @Column(name = "OTHER_KIND", columnDefinition = "VARCHAR(255)")
     private String otherKind;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "REPRESENTATION", nullable = false, columnDefinition = "VARCHAR(255)")
     private PrimitiveType representation;
+    // absolutely necessary for this entity, so always fetched; there's only a handful of units, so select and cache
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "UNIT_FK", columnDefinition = "BIGINT")
     private Unit unit;
 
     public MeasurementKind getKindCV() {

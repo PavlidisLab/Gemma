@@ -14,6 +14,18 @@ package ubic.gemma.model.expression.experiment;
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.common.AbstractIdentifiable;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import java.util.Date;
 import java.util.Objects;
 
@@ -41,14 +53,30 @@ import java.util.Objects;
  * (one entity feeds both {@code /preboarded/{id}/proposals} and
  * {@code /datasets/{id}/curation-proposals}).</p>
  */
+@Entity
+@Table(name = "AGENT_PROPOSAL",
+        uniqueConstraints = @UniqueConstraint(name = "UK_AGENT_PROPOSAL_INVESTIGATION_KIND_RUN",
+                columnNames = { "INVESTIGATION_FK", "KIND", "RUN_ID" }),
+        indexes = @Index(name = "IDX_AGENT_PROPOSAL_INVESTIGATION", columnList = "INVESTIGATION_FK"))
 public class AgentProposal extends AbstractIdentifiable {
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "INVESTIGATION_FK", nullable = false, columnDefinition = "BIGINT",
+            foreignKey = @ForeignKey(name = "FK_AGENT_PROPOSAL_INVESTIGATION"))
     private Investigation investigation;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "KIND", nullable = false, columnDefinition = "VARCHAR(16)")
     private AgentCurationKind kind = AgentCurationKind.PROPOSAL;
+    @Column(name = "RUN_ID", nullable = false, columnDefinition = "VARCHAR(255)")
     private String runId;
+    @Column(name = "AGENT_VERSION", columnDefinition = "VARCHAR(255)")
     private String agentVersion;
+    @Column(name = "MODEL", columnDefinition = "VARCHAR(255)")
     private String model;
+    @Column(name = "RAN_AT", columnDefinition = "DATETIME")
     private Date ranAt;
+    @Lob
+    @Column(name = "PAYLOAD_JSON", columnDefinition = "LONGTEXT")
     private String payloadJson;
 
     /**
@@ -59,6 +87,7 @@ public class AgentProposal extends AbstractIdentifiable {
      * so wire vocabulary can evolve without a schema migration; see Flyway
      * mysql/V15 + h2/V17.
      */
+    @Column(name = "STATUS", nullable = false, columnDefinition = "VARCHAR(32)")
     private String status = "OPEN";
 
     /**
@@ -67,12 +96,16 @@ public class AgentProposal extends AbstractIdentifiable {
      * {@code edit}, {@code park}. Null until the curator dispositions the
      * row. See {@code handoffs/RECCE_AGENT_CURATION_UNIFICATION.md} §4.1.
      */
+    @Column(name = "DISPOSITION", columnDefinition = "VARCHAR(32)")
     private String disposition;
 
     /** Optional free-text curator note attached to the disposition. */
+    @Lob
+    @Column(name = "DISPOSITION_NOTE", columnDefinition = "TEXT")
     private String dispositionNote;
 
     /** Timestamp the row was finalized; reset to {@code null} on reopen. */
+    @Column(name = "FINALIZED_AT", columnDefinition = "DATETIME(3)")
     private Date finalizedAt;
 
     /**
@@ -80,6 +113,7 @@ public class AgentProposal extends AbstractIdentifiable {
      * keeps it fresh on prod; the service layer stamps it on save() so H2
      * (no {@code ON UPDATE} semantics) stays behaviourally aligned.
      */
+    @Column(name = "LAST_UPDATED", columnDefinition = "DATETIME(3)")
     private Date lastUpdated;
 
     public AgentProposal() {

@@ -22,6 +22,16 @@ import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.springframework.lang.Nullable;
 import java.util.Date;
 
@@ -32,19 +42,34 @@ import java.util.Date;
  *
  * @author tesarst
  */
+@Entity
+@Table(name = "CURATION_DETAILS", indexes = @Index(name = "TROUBLED_IX", columnList = "TROUBLED"))
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class CurationDetails extends AbstractIdentifiable {
 
     @Nullable
+    @Column(name = "LAST_UPDATED", columnDefinition = "DATETIME(3)")
     private Date lastUpdated;
+    // cascade=all on these events causes problems with EE deletion; however, making them 'none' exposed other issues.
+    // lastXEvent associations are loaded lazily; eager-join made every EE hydration pay the cost regardless of whether the caller reads the events.
     @Nullable
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "ATTENTION_AUDIT_EVENT_FK", unique = true, columnDefinition = "BIGINT")
     private AuditEvent lastNeedsAttentionEvent;
+    @Column(name = "NEEDS_ATTENTION", nullable = false, columnDefinition = "TINYINT")
     private boolean needsAttention;
     @Nullable
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "TROUBLE_AUDIT_EVENT_FK", unique = true, columnDefinition = "BIGINT")
     private AuditEvent lastTroubledEvent;
+    @Column(name = "TROUBLED", nullable = false, columnDefinition = "TINYINT")
     private boolean troubled;
     @Nullable
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "NOTE_AUDIT_EVENT_FK", unique = true, columnDefinition = "BIGINT")
     private AuditEvent lastNoteUpdateEvent;
     @Nullable
+    @Column(name = "NOTE", columnDefinition = "VARCHAR(255)")
     private String curationNote;
 
     /**

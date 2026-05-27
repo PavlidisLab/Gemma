@@ -16,6 +16,16 @@ import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.expression.experiment.AgentProposal;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import java.util.Date;
 import java.util.Objects;
 
@@ -48,16 +58,42 @@ import java.util.Objects;
  * step downstream emits typed audit events through the existing
  * design/annotation write endpoints.</p>
  */
+@Entity
+@Table(name = "CURATION_DRAFT",
+        uniqueConstraints = @UniqueConstraint(name = "UQ_CURATION_DRAFT_PER_CURATOR_EE",
+                columnNames = { "INVESTIGATION_FK", "CURATOR_FK" }),
+        indexes = {
+                @Index(name = "IDX_CURATION_DRAFT_PROPOSAL", columnList = "PROPOSAL_FK"),
+                @Index(name = "IDX_CURATION_DRAFT_CURATOR_RECENT", columnList = "LAST_EDITED_AT")
+        })
 public class CurationDraft extends AbstractIdentifiable {
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "INVESTIGATION_FK", nullable = false, columnDefinition = "BIGINT",
+            foreignKey = @ForeignKey(name = "FK_CURATION_DRAFT_INVESTIGATION"))
     private Investigation investigation;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "CURATOR_FK", nullable = false, columnDefinition = "BIGINT",
+            foreignKey = @ForeignKey(name = "FK_CURATION_DRAFT_CURATOR"))
     private Contact curator;
+    @Lob
+    @Column(name = "PAYLOAD_JSON", nullable = false, columnDefinition = "LONGTEXT")
     private String payloadJson;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "PROPOSAL_FK", columnDefinition = "BIGINT",
+            foreignKey = @ForeignKey(name = "FK_CURATION_DRAFT_PROPOSAL"))
     private AgentProposal proposal;
+    @Lob
+    @Column(name = "PROPOSAL_SNAPSHOT_JSON", columnDefinition = "LONGTEXT")
     private String proposalSnapshotJson;
+    @Lob
+    @Column(name = "PARKED_ELEMENTS", columnDefinition = "LONGTEXT")
     private String parkedElements;
+    @Column(name = "STARTED_AT", nullable = false, columnDefinition = "DATETIME")
     private Date startedAt;
+    @Column(name = "LAST_EDITED_AT", nullable = false, columnDefinition = "DATETIME")
     private Date lastEditedAt;
+    @Column(name = "FINALIZED_AT", columnDefinition = "DATETIME")
     private Date finalizedAt;
 
     public CurationDraft() {
