@@ -26,6 +26,7 @@ import org.springframework.security.access.AuthorizationServiceException;
 import org.springframework.security.access.ConfigAttribute;
 import org.springframework.security.acls.model.*;
 import org.springframework.security.core.Authentication;
+import ubic.gemma.core.security.util.SecurityUtil;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -111,6 +112,11 @@ public class AclEntryAfterInvocationCollectionFilteringProvider extends org.spri
     @Override
     @Deprecated
     protected final boolean hasPermission( Authentication authentication, Object domainObject ) {
+        if ( SecurityUtil.isUserAdmin() ) {
+            // Admin bypass mirrors AclQueryUtils.formNativeAclRestrictionClause's SQL-side
+            // short-circuit so the after-filter doesn't reject rows the SQL filter let through.
+            return true;
+        }
         if ( domainObjectsWithPermission.get() != null ) {
             DomainObjectWithPermission dowp = domainObjectsWithPermission.get().next();
             if ( domainObject == dowp.domainObject ) {
@@ -139,6 +145,10 @@ public class AclEntryAfterInvocationCollectionFilteringProvider extends org.spri
     protected boolean[] hasPermission( Authentication authentication, List<Object> domainObjects ) {
         boolean[] perms = new boolean[domainObjects.size()];
         if ( domainObjects.isEmpty() ) {
+            return perms;
+        }
+        if ( SecurityUtil.isUserAdmin() ) {
+            Arrays.fill( perms, true );
             return perms;
         }
         List<Sid> sids = this.sidRetrievalStrategy.getSids( authentication );

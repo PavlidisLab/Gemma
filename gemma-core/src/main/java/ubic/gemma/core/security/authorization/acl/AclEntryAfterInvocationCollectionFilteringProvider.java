@@ -24,6 +24,7 @@ import org.springframework.security.access.AuthorizationServiceException;
 import org.springframework.security.access.ConfigAttribute;
 import org.springframework.security.acls.model.*;
 import org.springframework.security.core.Authentication;
+import ubic.gemma.core.security.util.SecurityUtil;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -119,6 +120,10 @@ public class AclEntryAfterInvocationCollectionFilteringProvider extends org.spri
     @Override
     @Deprecated
     protected final boolean hasPermission( Authentication authentication, Object domainObject ) {
+        if ( SecurityUtil.isUserAdmin() ) {
+            // Mirror the bulk-path admin bypass so the legacy per-element route stays consistent.
+            return true;
+        }
         if ( domainObjectsWithPermission.get() != null ) {
             DomainObjectWithPermission dowp = domainObjectsWithPermission.get().next();
             if ( domainObject == dowp.domainObject ) {
@@ -149,6 +154,14 @@ public class AclEntryAfterInvocationCollectionFilteringProvider extends org.spri
     protected boolean[] hasPermission( Authentication authentication, List<Object> domainObjects ) {
         boolean[] perms = new boolean[domainObjects.size()];
         if ( domainObjects.isEmpty() ) {
+            return perms;
+        }
+        // Admin bypass: mirrors AclQueryUtils.formNativeAclRestrictionClause's SQL-side
+        // admin short-circuit. Without this, admins must rely on cached ACEs containing
+        // an explicit GROUP_ADMIN grant; a cold or empty entries cache flips admin to a
+        // 0-row response on private datasets even though the SQL filter let the row through.
+        if ( SecurityUtil.isUserAdmin() ) {
+            Arrays.fill( perms, true );
             return perms;
         }
         List<Sid> sids = this.sidRetrievalStrategy.getSids( authentication );

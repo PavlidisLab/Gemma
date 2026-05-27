@@ -25,6 +25,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.security.acls.model.*;
 import org.springframework.security.core.Authentication;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -70,6 +71,27 @@ public class AclEntryAfterInvocationValueObjectCollectionFilteringProvider exten
 
         String currentUsername = SecurityUtil.getCurrentUsername();
         boolean isAdmin = SecurityUtil.isUserAdmin();
+
+        // Admin bypass: mirror AclQueryUtils.formNativeAclRestrictionClause's SQL-side
+        // short-circuit so the after-filter doesn't reject rows the SQL filter already
+        // let through. Without this, an admin viewing a private dataset gets data=[]
+        // because acl.isGranted(READ, sids, false) requires an explicit ACE granting
+        // GROUP_ADMIN on every object — frink's older filter chain bypassed this in
+        // gsec library code.
+        if ( isAdmin ) {
+            Arrays.fill( perms, true );
+            // Still populate VO security fields for any SecureValueObject elements so
+            // isPublic/canWrite/isShared remain meaningful in the admin response.
+            int j = 0;
+            for ( ObjectIdentity oi : ois ) {
+                Acl acl = aclsById.get( oi );
+                Object domainObject = domainObjects.get( j++ );
+                if ( acl != null && domainObject instanceof SecureValueObject ) {
+                    populateValueObject( ( SecureValueObject ) domainObject, acl, sids, requirePermission, currentUsername, true );
+                }
+            }
+            return perms;
+        }
 
         int i = 0;
         for ( ObjectIdentity oi : ois ) {
