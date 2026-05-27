@@ -103,6 +103,8 @@ import ubic.gemma.rest.util.args.TaxonArgService;
 import javax.sql.DataSource;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -121,6 +123,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.Set;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -286,7 +289,60 @@ public class AdminWebService {
         CacheListResponse body = new CacheListResponse();
         body.count = sorted.size();
         body.names = sorted;
+        body.caches = new ArrayList<>( sorted.size() );
+        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+        for ( String name : sorted ) {
+            body.caches.add( readCacheStats( mbs, name ) );
+        }
         return respond( body );
+    }
+
+    /**
+     * Read JCache standard stats for a single cache via the
+     * {@code javax.cache:type=CacheStatistics,CacheManager=*,Cache=<name>} MBean.
+     * Returns a row with null stat fields if the MBean is missing (cache configured
+     * without statisticsEnabled, or non-JCache cache provider). The row always has its
+     * name set so the UI can render it as a "stats unavailable" entry rather than skip.
+     */
+    private CacheStatRow readCacheStats( MBeanServer mbs, String name ) {
+        CacheStatRow row = new CacheStatRow();
+        row.name = name;
+        try {
+            // The Cache attribute can be quoted or unquoted depending on the JCache
+            // provider's bean registration. Probe quoted first (Ehcache 3 default).
+            ObjectName quoted = new ObjectName( "javax.cache:type=CacheStatistics,CacheManager=*,Cache=" + ObjectName.quote( name ) );
+            Set<ObjectName> found = mbs.queryNames( quoted, null );
+            if ( found.isEmpty() ) {
+                ObjectName unquoted = new ObjectName( "javax.cache:type=CacheStatistics,CacheManager=*,Cache=" + name );
+                found = mbs.queryNames( unquoted, null );
+            }
+            if ( !found.isEmpty() ) {
+                ObjectName on = found.iterator().next();
+                row.hits = longAttr( mbs, on, "CacheHits" );
+                row.misses = longAttr( mbs, on, "CacheMisses" );
+                row.gets = longAttr( mbs, on, "CacheGets" );
+                row.puts = longAttr( mbs, on, "CachePuts" );
+                row.removals = longAttr( mbs, on, "CacheRemovals" );
+                row.evictions = longAttr( mbs, on, "CacheEvictions" );
+                Object hitPct = mbs.getAttribute( on, "CacheHitPercentage" );
+                if ( hitPct instanceof Number ) {
+                    row.hitPercentage = ( ( Number ) hitPct ).floatValue();
+                }
+            }
+        } catch ( Exception e ) {
+            log.debug( "MBean stats unavailable for cache '" + name + "': " + e.getMessage() );
+        }
+        return row;
+    }
+
+    @Nullable
+    private static Long longAttr( MBeanServer mbs, ObjectName on, String attr ) {
+        try {
+            Object v = mbs.getAttribute( on, attr );
+            return v instanceof Number ? ( ( Number ) v ).longValue() : null;
+        } catch ( Exception e ) {
+            return null;
+        }
     }
 
     /**
@@ -1924,7 +1980,32 @@ public class AdminWebService {
 
     public static class CacheListResponse {
         public int count;
+        /** Names only — preserved for backward compat with pre-stats clients. */
         public List<String> names;
+        /** Per-cache stats roll-up; same ordering as {@link #names}. Stat fields are
+         *  null on caches whose JCache stats MBean is missing (non-JCache or stats
+         *  disabled). Drives the admin Systems Monitoring Caches table. */
+        public List<CacheStatRow> caches;
+    }
+
+    public static class CacheStatRow {
+        public String name;
+        @Nullable
+        public Long hits;
+        @Nullable
+        public Long misses;
+        /** Total gets — hits + misses; some providers report it directly. */
+        @Nullable
+        public Long gets;
+        @Nullable
+        public Long puts;
+        @Nullable
+        public Long removals;
+        @Nullable
+        public Long evictions;
+        /** Percentage in [0, 100]; null if stats unavailable or never queried. */
+        @Nullable
+        public Float hitPercentage;
     }
 
     public static class JobsListResponse {

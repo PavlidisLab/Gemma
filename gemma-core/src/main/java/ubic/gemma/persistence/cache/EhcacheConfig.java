@@ -4,6 +4,8 @@ import org.ehcache.config.builders.CacheConfigurationBuilder;
 import org.ehcache.config.builders.ExpiryPolicyBuilder;
 import org.ehcache.config.builders.ResourcePoolsBuilder;
 import org.ehcache.jsr107.Eh107Configuration;
+import org.ehcache.jsr107.config.ConfigurationElementState;
+import org.ehcache.jsr107.config.Jsr107CacheConfiguration;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.jcache.JCacheCacheManager;
 import org.springframework.context.annotation.Bean;
@@ -302,6 +304,15 @@ public class EhcacheConfig {
         } else {
             b = b.withExpiry( ExpiryPolicyBuilder.noExpiration() );
         }
+        // Enable JCache standard MBeans so /admin/caches can read per-cache hits/misses/
+        // gets/puts via javax.cache:type=CacheStatistics,CacheManager=<URI>,Cache=<name>.
+        // statisticsEnabled drives the stats MBean; managementEnabled the CacheMXBean
+        // (config view). Eh107Configuration.setStatisticsEnabled is package-private, so
+        // we attach the Jsr107CacheConfiguration service-config to the builder instead —
+        // the JSR-107 adapter reads it when materializing the JCache Configuration.
+        b = b.withService( new Jsr107CacheConfiguration(
+                ConfigurationElementState.ENABLED,   // statistics
+                ConfigurationElementState.ENABLED ) ); // management
         return Eh107Configuration.fromEhcacheCacheConfiguration( b.build() );
     }
 
