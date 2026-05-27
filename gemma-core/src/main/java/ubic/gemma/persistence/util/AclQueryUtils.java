@@ -98,11 +98,11 @@ public class AclQueryUtils {
     //language=HQL
     private static final String CURRENT_USER_SIDS_HQL =
             "select sid from UserGroup as ug join ug.authorities as ga, AclGrantedAuthoritySid sid "
-                    + "where sid.sid = CONCAT('GROUP_', ga.authority) "
+                    + "where sid.grantedAuthority = CONCAT('GROUP_', ga.authority) "
                     + "and ug.name in (select ug.name from UserGroup ug join ug.groupMembers memb where memb.userName = :" + USER_NAME_PARAM + ")";
 
     //language=HQL
-    private static final String ANONYMOUS_SID_HQL = "select sid from AclGrantedAuthoritySid sid where sid.sid = 'IS_AUTHENTICATED_ANONYMOUSLY'";
+    private static final String ANONYMOUS_SID_HQL = "select sid from AclGrantedAuthoritySid sid where sid.grantedAuthority = 'IS_AUTHENTICATED_ANONYMOUSLY'";
 
     /**
      * Native SQL version of {@link #CURRENT_USER_SIDS_HQL}.

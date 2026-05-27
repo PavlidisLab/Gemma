@@ -14,6 +14,7 @@
  */
 package ubic.gemma.core.security.acl.domain;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import org.springframework.security.acls.model.Sid;
@@ -38,11 +39,14 @@ public class AclGrantedAuthoritySid extends AclSid {
 
     private static final long serialVersionUID = 7755206462003052441L;
 
+    @Column(name = "sid", nullable = false, columnDefinition = "VARCHAR(255)", insertable = false, updatable = false)
+    private String grantedAuthority;
+
     public AclGrantedAuthoritySid( GrantedAuthority grantedAuthority ) {
         Assert.notNull( grantedAuthority, "GrantedAuthority required" );
         Assert.notNull( grantedAuthority.getAuthority(),
             "This Sid is only compatible with GrantedAuthoritys that provide a non-null getAuthority()" );
-        setSid( grantedAuthority.getAuthority() );
+        this.grantedAuthority = grantedAuthority.getAuthority();
     }
 
     @SuppressWarnings("unused")
@@ -51,26 +55,26 @@ public class AclGrantedAuthoritySid extends AclSid {
     }
 
     public AclGrantedAuthoritySid( String grantedAuthority ) {
-        setSid( grantedAuthority );
+        this.grantedAuthority = grantedAuthority;
     }
 
     public String getGrantedAuthority() {
-        return getSid();
+        return grantedAuthority;
     }
 
     @SuppressWarnings("unused")
     public void setGrantedAuthority( String grantedAuthority ) {
-        setSid( grantedAuthority );
+        this.grantedAuthority = grantedAuthority;
     }
 
     @Override
     public Sid toSid() {
-        return new org.springframework.security.acls.domain.GrantedAuthoritySid( getSid() );
+        return new org.springframework.security.acls.domain.GrantedAuthoritySid( grantedAuthority );
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash( getSid() );
+        return Objects.hash( grantedAuthority );
     }
 
     @Override
@@ -83,6 +87,6 @@ public class AclGrantedAuthoritySid extends AclSid {
 
     @Override
     public String toString() {
-        return "AclGrantedAuthoritySid[" + getSid() + "]";
+        return "AclGrantedAuthoritySid[" + this.grantedAuthority + "]";
     }
 }

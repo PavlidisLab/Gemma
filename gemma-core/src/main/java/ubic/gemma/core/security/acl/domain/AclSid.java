@@ -60,37 +60,12 @@ public abstract class AclSid implements java.io.Serializable {
     @Column(name = "id", columnDefinition = "BIGINT")
     private Long id;
 
-    /**
-     * The {@code sid} column on {@code acl_sid}. Holds the principal name for
-     * {@link AclPrincipalSid} rows (discriminator {@code principal=1}) and the granted-authority
-     * name for {@link AclGrantedAuthoritySid} rows (discriminator {@code principal=0}). Lives on
-     * the root because Hibernate's single-table inheritance + per-subclass duplicate-column
-     * mapping with {@code insertable=false, updatable=false} on BOTH subclasses caused one of
-     * the two fields to read back NULL — breaking the ACL check that compares the loaded sid
-     * value against the current user's principal name. With the field on the root, every
-     * AclSid row loads with a populated {@code sid} regardless of subclass; the semantic
-     * accessors {@link AclPrincipalSid#getPrincipal()} and
-     * {@link AclGrantedAuthoritySid#getGrantedAuthority()} delegate here.
-     */
-    @Column(name = "sid", nullable = false, columnDefinition = "VARCHAR(255)")
-    private String sid;
-
     public Long getId() {
         return id;
     }
 
     public void setId( Long id ) {
         this.id = id;
-    }
-
-    /** Package-private accessor for subclasses' semantic getters. */
-    String getSid() {
-        return sid;
-    }
-
-    /** Package-private mutator for subclasses' semantic setters. */
-    void setSid( String sid ) {
-        this.sid = sid;
     }
 
     /**
