@@ -29,7 +29,7 @@
         <mapping resource="ubic/gemma/model/analysis/expression/diff/ContrastResult.hbm.xml"/>
         <mapping resource="ubic/gemma/model/analysis/expression/diff/DifferentialExpressionAnalysisResult.hbm.xml"/>
         <mapping resource="ubic/gemma/model/analysis/expression/diff/GeneDifferentialExpressionMetaAnalysisResult.hbm.xml"/>
-        <mapping resource="ubic/gemma/model/analysis/expression/diff/HitListSize.hbm.xml"/>
+        <mapping class="ubic.gemma.model.analysis.expression.diff.HitListSize"/>
         <mapping class="ubic.gemma.model.analysis.expression.diff.PvalueDistribution"/>
         <mapping class="ubic.gemma.model.analysis.expression.pca.Eigenvalue"/>
         <mapping class="ubic.gemma.model.analysis.expression.pca.Eigenvector"/>
@@ -37,7 +37,7 @@
 
         <!-- Gemma association -->
         <mapping resource="ubic/gemma/model/association/BioSequence2GeneProduct.hbm.xml"/>
-        <mapping resource="ubic/gemma/model/association/Gene2GOAssociation.hbm.xml"/>
+        <mapping class="ubic.gemma.model.association.Gene2GOAssociation"/>
 
         <!-- Common: audit and security -->
         <mapping resource="ubic/gemma/model/common/auditAndSecurity/AuditEvent.hbm.xml"/>
@@ -76,7 +76,7 @@
         <mapping resource="ubic/gemma/model/expression/bioAssayData/RawExpressionDataVector.hbm.xml"/>
         <mapping resource="ubic/gemma/model/expression/bioAssayData/RawExpressionDataVectorNumberOfCells.hbm.xml"/>
         <mapping resource="ubic/gemma/model/expression/bioAssayData/SingleCellDimension.hbm.xml"/>
-        <mapping resource="ubic/gemma/model/expression/bioAssayData/SingleCellDimensionExperiment.hbm.xml"/>
+        <mapping class="ubic.gemma.model.expression.bioAssayData.SingleCellDimensionExperiment"/>
         <mapping resource="ubic/gemma/model/expression/bioAssayData/SingleCellExpressionDataVector.hbm.xml"/>
         <mapping resource="ubic/gemma/model/expression/biomaterial/BioMaterial.hbm.xml"/>
         <mapping class="ubic.gemma.model.expression.biomaterial.Compound"/>

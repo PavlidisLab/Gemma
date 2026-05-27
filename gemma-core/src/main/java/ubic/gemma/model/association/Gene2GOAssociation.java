@@ -18,6 +18,18 @@
  */
 package ubic.gemma.model.association;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Immutable;
 import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.genome.Gene;
@@ -25,11 +37,23 @@ import ubic.gemma.model.genome.Gene;
 import org.springframework.lang.Nullable;
 import java.util.Objects;
 
+@Entity
+@Table(name = "GENE2GO_ASSOCIATION")
+@Immutable
+@Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
 public class Gene2GOAssociation extends AbstractIdentifiable {
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "GENE_FK", nullable = false, columnDefinition = "BIGINT")
     private Gene gene;
+
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinColumn(name = "ONTOLOGY_ENTRY_FK", nullable = false, unique = true, columnDefinition = "BIGINT")
     private Characteristic ontologyEntry;
+
     @Nullable
+    @Enumerated(EnumType.STRING)
+    @Column(name = "EVIDENCE_CODE", columnDefinition = "VARCHAR(255)")
     private GOEvidenceCode evidenceCode;
 
     public Gene getGene() {
