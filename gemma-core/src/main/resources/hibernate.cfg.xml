@@ -25,7 +25,7 @@
         <mapping resource="ubic/gemma/model/analysis/BlacklistedEntity.hbm.xml"/>
         <mapping resource="ubic/gemma/model/analysis/Investigation.hbm.xml"/>
         <mapping resource="ubic/gemma/model/analysis/expression/ExpressionExperimentSet.hbm.xml"/>
-        <mapping resource="ubic/gemma/model/analysis/expression/coexpression/SampleCoexpressionMatrix.hbm.xml"/>
+        <mapping class="ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionMatrix"/>
         <mapping resource="ubic/gemma/model/analysis/expression/diff/ContrastResult.hbm.xml"/>
         <mapping resource="ubic/gemma/model/analysis/expression/diff/DifferentialExpressionAnalysisResult.hbm.xml"/>
         <mapping resource="ubic/gemma/model/analysis/expression/diff/GeneDifferentialExpressionMetaAnalysisResult.hbm.xml"/>
@@ -33,7 +33,7 @@
         <mapping resource="ubic/gemma/model/analysis/expression/diff/PvalueDistribution.hbm.xml"/>
         <mapping class="ubic.gemma.model.analysis.expression.pca.Eigenvalue"/>
         <mapping resource="ubic/gemma/model/analysis/expression/pca/Eigenvector.hbm.xml"/>
-        <mapping resource="ubic/gemma/model/analysis/expression/pca/ProbeLoading.hbm.xml"/>
+        <mapping class="ubic.gemma.model.analysis.expression.pca.ProbeLoading"/>
 
         <!-- Gemma association -->
         <mapping resource="ubic/gemma/model/association/BioSequence2GeneProduct.hbm.xml"/>
@@ -97,7 +97,7 @@
         <mapping resource="ubic/gemma/model/genome/biosequence/BioSequence.hbm.xml"/>
         <mapping class="ubic.gemma.model.genome.gene.GeneAlias"/>
         <mapping resource="ubic/gemma/model/genome/gene/GeneSet.hbm.xml"/>
-        <mapping resource="ubic/gemma/model/genome/gene/GeneSetMember.hbm.xml"/>
+        <mapping class="ubic.gemma.model.genome.gene.GeneSetMember"/>
         <mapping class="ubic.gemma.model.genome.gene.Multifunctionality"/>
         <mapping resource="ubic/gemma/model/genome/sequenceAnalysis/SequenceSimilaritySearchResult.hbm.xml"/>
 

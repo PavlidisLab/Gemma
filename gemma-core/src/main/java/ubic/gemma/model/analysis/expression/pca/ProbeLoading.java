@@ -18,6 +18,13 @@
  */
 package ubic.gemma.model.analysis.expression.pca;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.Immutable;
 import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
@@ -26,11 +33,19 @@ import java.util.Objects;
 /**
  * Only stored for some of the probes (e.g. the top ones)
  */
+@Entity
+@Table(name = "PROBE_LOADING")
+@Immutable
 public class ProbeLoading extends AbstractIdentifiable {
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "PROBE_FK", nullable = false, columnDefinition = "BIGINT")
     private CompositeSequence probe;
+    @Column(name = "COMPONENT_NUMBER", nullable = false, columnDefinition = "INTEGER")
     private Integer componentNumber;
+    @Column(name = "LOADING", nullable = false, columnDefinition = "DOUBLE")
     private Double loading;
+    @Column(name = "LOADING_RANK", nullable = false, columnDefinition = "INTEGER")
     private Integer loadingRank;
 
     public CompositeSequence getProbe() {
