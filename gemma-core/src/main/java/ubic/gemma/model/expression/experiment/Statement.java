@@ -9,6 +9,9 @@ import ubic.gemma.model.common.description.CharacteristicUtils;
 
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
 import jakarta.persistence.Transient;
 import java.util.Comparator;
 import java.util.Objects;
@@ -25,6 +28,8 @@ import static org.apache.commons.lang3.StringUtils.stripToNull;
  * {@link #getObject(int)} and {@link #getNumberOfStatements()}.
  * @author poirigui
  */
+@Entity
+@DiscriminatorValue("Statement")
 public class Statement extends Characteristic {
 
     private static final Comparator<Statement> COMPARATOR = Comparator
@@ -63,39 +68,47 @@ public class Statement extends Characteristic {
      * The predicate of the statement.
      */
     @Nullable
+    @Column(name = "PREDICATE", columnDefinition = "VARCHAR(255)")
     private String predicate;
 
     /**
      * The predicate URI of the statement.
      */
     @Nullable
+    @Column(name = "PREDICATE_URI", columnDefinition = "VARCHAR(255)")
     private String predicateUri;
 
     /**
      * The object of the statement.
      */
     @Nullable
+    @Column(name = "OBJECT", columnDefinition = "VARCHAR(255)")
     private String object;
 
     @Nullable
+    @Column(name = "OBJECT_URI", columnDefinition = "VARCHAR(255)")
     private String objectUri;
 
     /**
      * The second predicate.
      */
     @Nullable
+    @Column(name = "SECOND_PREDICATE", columnDefinition = "VARCHAR(255)")
     private String secondPredicate;
 
     @Nullable
+    @Column(name = "SECOND_PREDICATE_URI", columnDefinition = "VARCHAR(255)")
     private String secondPredicateUri;
 
     /**
      * The second object.
      */
     @Nullable
+    @Column(name = "SECOND_OBJECT", columnDefinition = "VARCHAR(255)")
     private String secondObject;
 
     @Nullable
+    @Column(name = "SECOND_OBJECT_URI", columnDefinition = "VARCHAR(255)")
     private String secondObjectUri;
 
     /**

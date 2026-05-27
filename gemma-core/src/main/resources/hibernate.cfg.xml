@@ -60,7 +60,8 @@
         <!-- Common: description / measurement / protocol / quantitation -->
         <mapping resource="ubic/gemma/model/common/description/BibRefAnnotation.hbm.xml"/>
         <mapping class="ubic.gemma.model.common.description.BibliographicReference"/>
-        <mapping resource="ubic/gemma/model/common/description/Characteristic.hbm.xml"/>
+        <mapping class="ubic.gemma.model.common.description.Characteristic"/>
+        <mapping class="ubic.gemma.model.expression.experiment.Statement"/>
         <mapping class="ubic.gemma.model.common.description.DatabaseEntry"/>
         <mapping class="ubic.gemma.model.common.description.ExternalDatabase"/>
         <mapping class="ubic.gemma.model.common.measurement.Measurement"/>
@@ -103,7 +104,8 @@
         <mapping class="ubic.gemma.model.genome.gene.GeneSet"/>
         <mapping class="ubic.gemma.model.genome.gene.GeneSetMember"/>
         <mapping class="ubic.gemma.model.genome.gene.Multifunctionality"/>
-        <mapping resource="ubic/gemma/model/genome/sequenceAnalysis/SequenceSimilaritySearchResult.hbm.xml"/>
+        <mapping class="ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResult"/>
+        <mapping class="ubic.gemma.model.genome.sequenceAnalysis.BlatResult"/>
 
         <!-- Pipeline (job scheduling) -->
         <mapping class="ubic.gemma.model.pipeline.PipelineJobBatch"/>

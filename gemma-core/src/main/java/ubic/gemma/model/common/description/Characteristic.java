@@ -19,7 +19,20 @@
 
 package ubic.gemma.model.common.description;
 
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorColumn;
+import jakarta.persistence.DiscriminatorType;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.Table;
 import org.apache.commons.lang3.StringUtils;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
@@ -48,6 +61,11 @@ import static org.apache.commons.lang3.StringUtils.stripToNull;
  *
  * @author Paul
  */
+@Entity
+@Table(name = "CHARACTERISTIC")
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "class", discriminatorType = DiscriminatorType.STRING)
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @Indexed
 public class Characteristic extends AbstractDescribable implements Comparable<Characteristic> {
 
@@ -93,17 +111,24 @@ public class Characteristic extends AbstractDescribable implements Comparable<Ch
     }
 
     @Nullable
+    @Column(name = "CATEGORY", columnDefinition = "VARCHAR(255)")
     private String category;
     @Nullable
+    @Column(name = "CATEGORY_URI", columnDefinition = "VARCHAR(255)")
     private String categoryUri;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "EVIDENCE_CODE", columnDefinition = "VARCHAR(255)")
     private GOEvidenceCode evidenceCode;
     /**
      * Stores the value this characteristic had before it was assigned a URI for the term.
      */
     @Nullable
+    @Column(name = "ORIGINAL_VALUE", columnDefinition = "VARCHAR(255)")
     private String originalValue = null;
+    @Column(name = "`VALUE`", columnDefinition = "VARCHAR(255)")
     private String value;
     @Nullable
+    @Column(name = "VALUE_URI", columnDefinition = "VARCHAR(255)")
     private String valueUri;
     /**
      * Indicate if this "old-style" characteristic has been migrated to a {@link ubic.gemma.model.expression.experiment.Statement}.
@@ -111,6 +136,7 @@ public class Characteristic extends AbstractDescribable implements Comparable<Ch
      * @deprecated do not rely on this field, it will be removed once the migration is completed.
      */
     @Deprecated
+    @Column(name = "MIGRATED_TO_STATEMENT", nullable = false, columnDefinition = "TINYINT")
     private boolean migratedToStatement;
 
 
