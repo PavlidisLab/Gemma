@@ -94,7 +94,7 @@
         <!-- Genome -->
         <mapping class="ubic.gemma.model.genome.Chromosome"/>
         <mapping resource="ubic/gemma/model/genome/ChromosomeFeature.hbm.xml"/>
-        <mapping resource="ubic/gemma/model/genome/PhysicalLocation.hbm.xml"/>
+        <mapping class="ubic.gemma.model.genome.PhysicalLocation"/>
         <mapping class="ubic.gemma.model.genome.Taxon"/>
         <mapping class="ubic.gemma.model.genome.biosequence.BioSequence"/>
         <mapping class="ubic.gemma.model.genome.gene.GeneAlias"/>

@@ -18,18 +18,32 @@
  */
 package ubic.gemma.model.genome;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.springframework.lang.Nullable;
+
 import java.util.Objects;
 
+@Entity
+@Table(name = "PHYSICAL_LOCATION", indexes = @Index(name = "BIN_KEY", columnList = "BIN"))
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class PhysicalLocation extends ChromosomeLocation {
 
+    @Column(name = "NUCLEOTIDE", columnDefinition = "BIGINT")
     private Long nucleotide;
+    @Column(name = "NUCLEOTIDE_LENGTH", columnDefinition = "INTEGER")
     private Integer nucleotideLength = 1;
+    @Column(name = "STRAND", columnDefinition = "VARCHAR(255)")
     private String strand;
     /**
      * Index to speed up queries.
      */
     @Nullable
+    @Column(name = "BIN", columnDefinition = "INTEGER")
     private Integer bin;
 
     public Long getNucleotide() {
