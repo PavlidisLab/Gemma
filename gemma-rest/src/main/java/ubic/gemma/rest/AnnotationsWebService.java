@@ -904,11 +904,21 @@ public class AnnotationsWebService {
         }
         long tFilters = timer.getTime() - phaseStart - tFindCharacteristics;
         phaseStart = timer.getTime();
-        Set<String> uris = rawHits.stream()
-                .map( CharacteristicValueObject::getValueUri )
-                .filter( Objects::nonNull )
-                .collect( Collectors.toSet() );
-        Map<String, Integer> countsByUri = getDistinctEeCountsByUri( uris );
+        // Only fetch usage counts up-front when the ranking strategy actually consumes them.
+        // For the default lucene/relevance-tier path, the heavy IN-clause across 400-1000
+        // candidate URIs (~2.8s on the prod-tunneled DB) is wasted work — the relevance tiers
+        // already drive the order. Counts for the visible top-N are still loaded after
+        // truncation so the response payload's usageCount field stays populated.
+        Map<String, Integer> countsByUri;
+        if ( strategy.requiresUsageCounts() ) {
+            Set<String> uris = rawHits.stream()
+                    .map( CharacteristicValueObject::getValueUri )
+                    .filter( Objects::nonNull )
+                    .collect( Collectors.toSet() );
+            countsByUri = getDistinctEeCountsByUri( uris );
+        } else {
+            countsByUri = Collections.emptyMap();
+        }
         long tCounts = timer.getTime() - phaseStart;
         phaseStart = timer.getTime();
         // Apply the requested ranking strategy. The joined query text drives token-coverage; for
@@ -923,6 +933,20 @@ public class AnnotationsWebService {
             ranked = new ArrayList<>( ranked.subList( 0, limit ) );
         }
         long tRank = timer.getTime() - phaseStart;
+        phaseStart = timer.getTime();
+        // Top-N usage counts for the response payload (display). When the ranking strategy
+        // didn't need counts, this is the only count query that fires — a much narrower
+        // IN-clause (≤ limit URIs) than the original full-candidate scan.
+        if ( !strategy.requiresUsageCounts() && !ranked.isEmpty() ) {
+            Set<String> topUrisForCount = ranked.stream()
+                    .map( CharacteristicValueObject::getValueUri )
+                    .filter( Objects::nonNull )
+                    .collect( Collectors.toSet() );
+            if ( !topUrisForCount.isEmpty() ) {
+                countsByUri = getDistinctEeCountsByUri( topUrisForCount );
+            }
+        }
+        long tTopCounts = timer.getTime() - phaseStart;
         phaseStart = timer.getTime();
 
         // Enrich the top-N ranked hits with definition + nearest is_a/part_of parents + match
@@ -947,9 +971,9 @@ public class AnnotationsWebService {
         long tEnrich = timer.getTime() - phaseStart;
         if ( timer.getTime() > 1000 ) {
             log.info( String.format(
-                    "annotation-search: query='%s' raw=%d top=%d total=%dms (find=%dms filter=%dms counts=%dms rank=%dms enrich=%dms)",
+                    "annotation-search: query='%s' raw=%d top=%d total=%dms (find=%dms filter=%dms counts=%dms rank=%dms topCounts=%dms enrich=%dms)",
                     arg.getValue(), rawCount, topUris.size(), timer.getTime(),
-                    tFindCharacteristics, tFilters, tCounts, tRank, tEnrich ) );
+                    tFindCharacteristics, tFilters, tCounts, tRank, tTopCounts, tEnrich ) );
         }
 
         LinkedHashSet<AnnotationSearchResultValueObject> vos = new LinkedHashSet<>();

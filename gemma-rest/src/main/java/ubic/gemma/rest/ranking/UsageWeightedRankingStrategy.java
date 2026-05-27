@@ -77,6 +77,11 @@ public class UsageWeightedRankingStrategy implements AnnotationSearchRankingStra
         return NAME;
     }
 
+    @Override
+    public boolean requiresUsageCounts() {
+        return true;
+    }
+
     private static final class Scored {
         final CharacteristicValueObject hit;
         final int originalRank;

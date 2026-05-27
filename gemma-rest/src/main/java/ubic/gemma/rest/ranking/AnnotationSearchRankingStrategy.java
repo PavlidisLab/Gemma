@@ -54,4 +54,16 @@ public interface AnnotationSearchRankingStrategy {
      * name in the strategy registry. Lowercase, single word.
      */
     String getName();
+
+    /**
+     * Whether this strategy reads the {@code usageCountsByUri} map during {@link #rank}.
+     * Default {@code false}; strategies that do (usage, composite) override to {@code true}.
+     * When {@code false}, callers can skip the count lookup entirely for the candidate set
+     * and only compute counts for the truncated top-N display payload — turning the dominant
+     * cost on the typeahead path (~2-3s for a 400-1000 candidate IN-clause against the
+     * characteristic-by-uri index) into a much cheaper top-N query.
+     */
+    default boolean requiresUsageCounts() {
+        return false;
+    }
 }

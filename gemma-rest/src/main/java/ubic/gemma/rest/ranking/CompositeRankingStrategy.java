@@ -111,6 +111,11 @@ public class CompositeRankingStrategy implements AnnotationSearchRankingStrategy
         return NAME;
     }
 
+    @Override
+    public boolean requiresUsageCounts() {
+        return true;
+    }
+
     /**
      * Saturating log normalisation: {@code min(1, log1p(usage) / log1p(MAX_EXPECTED_USAGE))}.
      * Returns a value in [0, 1].
