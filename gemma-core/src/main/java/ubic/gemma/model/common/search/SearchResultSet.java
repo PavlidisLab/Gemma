@@ -3,8 +3,10 @@ package ubic.gemma.model.common.search;
 import ubic.gemma.model.common.Identifiable;
 
 import java.util.AbstractSet;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -30,7 +32,14 @@ public class SearchResultSet<T extends Identifiable> extends AbstractSet<SearchR
 
     @Override
     public Iterator<SearchResult<T>> iterator() {
-        return results.values().iterator();
+        // SearchResult.compareTo is descending by score, so natural-order sort puts the highest
+        // score first. Exact identifier matches (DatabaseSearchSource score 1.0 for
+        // findByOfficialSymbol) thus land above inexact / full-text matches (HibernateSearchSource
+        // caps at FULL_TEXT_SCORE_PENALTY = 0.9). HashMap iteration without this sort returned
+        // results in bucket order, burying exact-symbol hits below substring matches.
+        List<SearchResult<T>> sorted = new ArrayList<>( results.values() );
+        sorted.sort( null );
+        return sorted.iterator();
     }
 
     @Override
