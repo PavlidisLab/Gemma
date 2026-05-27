@@ -495,33 +495,60 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
         // trim unescaped reserved characters to derive the "exact" string
         String exactString = inexactString.replaceAll( "([^\\\\])[%_\\\\]", "$1" );
 
+        // Per-step timing for the symbol + name path. The 2s floor on /genes/search for short
+        // / no-match inputs lives in these calls, not the parallel fallback fan-out below;
+        // surface each step's cost so the next perf pass can target the right query.
+        long stepMs;
+        long t0 = System.currentTimeMillis();
+        String symbolStep;
         if ( exactString.length() <= 1 ) {
             results.addAll( toSearchResults( settings, Gene.class, geneService.findByOfficialSymbol( exactString ), MATCH_BY_OFFICIAL_SYMBOL_SCORE, "GeneService.findByOfficialSymbol" ) );
+            symbolStep = "findByOfficialSymbol";
         } else if ( exactString.length() <= 5 ) {
             if ( isWildcard( settings ) ) {
                 results.addAll( toSearchResults( settings, Gene.class, geneService.findByOfficialSymbolInexact( inexactString ), MATCH_BY_OFFICIAL_SYMBOL_INEXACT_SCORE, "GeneService.findByOfficialSymbolInexact" ) );
             } else {
                 results.addAll( toSearchResults( settings, Gene.class, geneService.findByOfficialSymbolInexact( inexactString + "%" ), MATCH_BY_OFFICIAL_SYMBOL_INEXACT_SCORE, "GeneService.findByOfficialSymbolInexact" ) );
             }
+            symbolStep = "findByOfficialSymbolInexact";
         } else {
             if ( isWildcard( settings ) ) {
                 results.addAll( toSearchResults( settings, Gene.class, geneService.findByOfficialSymbolInexact( inexactString ), MATCH_BY_OFFICIAL_SYMBOL_INEXACT_SCORE, "GeneService.findByOfficialSymbolInexact" ) );
+                symbolStep = "findByOfficialSymbolInexact";
             } else {
                 results.addAll( toSearchResults( settings, Gene.class, geneService.findByOfficialSymbol( exactString ), MATCH_BY_OFFICIAL_SYMBOL_SCORE, "GeneService.findByOfficialSymbol" ) );
+                symbolStep = "findByOfficialSymbol";
             }
         }
+        long symbolMs = System.currentTimeMillis() - t0;
+        int afterSymbol = results.size();
 
+        long nameMs = 0;
+        String nameStep = null;
+        int afterName = afterSymbol;
         if ( canContinue( results, settings, SearchSettings.SearchMode.EXACT ) ) {
+            t0 = System.currentTimeMillis();
             Collection<Gene> r = geneService.findByOfficialName( StringUtils.strip( settings.getQuery() ) );
             if ( !r.isEmpty() ) {
                 results.addAll( toSearchResults( settings, Gene.class, r, MATCH_BY_OFFICIAL_NAME_SCORE, "GeneService.findByOfficialName" ) );
+                nameStep = "findByOfficialName";
             } else {
                 if ( isWildcard( settings ) ) {
                     results.addAll( toSearchResults( settings, Gene.class, geneService.findByOfficialNameInexact( inexactString ), MATCH_BY_OFFICIAL_NAME_INEXACT_SCORE, "GeneService.findByOfficialNameInexact" ) );
+                    nameStep = "findByOfficialName+Inexact";
                 } else {
                     results.addAll( toSearchResults( settings, Gene.class, geneService.findByOfficialName( exactString ), MATCH_BY_OFFICIAL_NAME_SCORE, "GeneService.findByOfficialName" ) );
+                    nameStep = "findByOfficialName+exact";
                 }
             }
+            nameMs = System.currentTimeMillis() - t0;
+            afterName = results.size();
+        }
+        if ( symbolMs + nameMs > 500 ) {
+            log.info( String.format(
+                    "Gene searchGeneExpanded '%s' (len=%d): %s=%dms/+%dhit name=%s %dms/+%dhit",
+                    exactString, exactString.length(), symbolStep, symbolMs, afterSymbol,
+                    nameStep, nameMs, afterName - afterSymbol ) );
         }
 
         if ( canContinue( results, settings, SearchSettings.SearchMode.EXACT ) ) {
@@ -601,10 +628,7 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
                 }
                 long maxMs = 0;
                 for ( long m : taskMs ) if ( m > maxMs ) maxMs = m;
-                // Lowered threshold while we're profiling which of the six services is the slowest
-                // and which never finds anything — temporarily log every fan-out, restore to >100ms
-                // after we have a few representative samples to act on.
-                if ( maxMs > 0 ) {
+                if ( maxMs > 100 ) {
                     StringBuilder sb = new StringBuilder( "Gene fallback fan-out for '" )
                             .append( exactString ).append( "' (parallel max=" ).append( maxMs ).append( "ms):" );
                     for ( int i = 0; i < tasks.size(); i++ ) {
