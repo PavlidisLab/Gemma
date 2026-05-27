@@ -128,6 +128,7 @@ public class AnnotationsWebService {
     private ExpressionExperimentService expressionExperimentService;
     private DatasetArgService datasetArgService;
     private TaxonArgService taxonArgService;
+    private ubic.gemma.persistence.service.genome.gene.GeneService geneService;
     /**
      * Strategy registry keyed by short name ({@code lucene}, {@code usage}, {@code coverage}).
      * Spring populates this from every {@link AnnotationSearchRankingStrategy} bean — the bean name
@@ -195,6 +196,7 @@ public class AnnotationsWebService {
     public AnnotationsWebService( OntologyService ontologyService, SearchService searchService,
             CharacteristicService characteristicService, ExpressionExperimentService expressionExperimentService,
             DatasetArgService datasetArgService, TaxonArgService taxonArgService,
+            ubic.gemma.persistence.service.genome.gene.GeneService geneService,
             @Nullable Map<String, AnnotationSearchRankingStrategy> rankingStrategies ) {
         this.ontologyService = ontologyService;
         this.searchService = searchService;
@@ -202,6 +204,7 @@ public class AnnotationsWebService {
         this.expressionExperimentService = expressionExperimentService;
         this.datasetArgService = datasetArgService;
         this.taxonArgService = taxonArgService;
+        this.geneService = geneService;
         if ( rankingStrategies == null || rankingStrategies.isEmpty() ) {
             // Test contexts may omit ranker beans; degrade to no-op so default-rank queries still work.
             LuceneOrderRankingStrategy fallback = new LuceneOrderRankingStrategy();
@@ -223,7 +226,7 @@ public class AnnotationsWebService {
             CharacteristicService characteristicService, ExpressionExperimentService expressionExperimentService,
             DatasetArgService datasetArgService, TaxonArgService taxonArgService ) {
         this( ontologyService, searchService, characteristicService, expressionExperimentService,
-                datasetArgService, taxonArgService, null );
+                datasetArgService, taxonArgService, null, null );
     }
 
     /*https://www.w3.org/TR/owl-ref/#subClassOf-def*
@@ -1033,29 +1036,22 @@ public class AnnotationsWebService {
      */
     private LinkedHashSet<AnnotationSearchResultValueObject> resolveGeneHits( String query, int limit ) {
         LinkedHashSet<AnnotationSearchResultValueObject> out = new LinkedHashSet<>();
+        // Previously this went through SearchService.search(Gene.class), which fans out across
+        // every SearchSource — including GeneOntologySearchSource, which for queries like
+        // "metabolism" or "neuron" walks the entire GO subtree (~30s wall on prod-tunneled DB).
+        // We only keep exact-symbol matches (score >= 1.0) downstream, so the GO walk is wasted
+        // work. Call GeneService.findByOfficialSymbol directly — same matches, no GO traversal,
+        // a couple of ms instead of tens of seconds.
+        if ( geneService == null ) {
+            return out;
+        }
         try {
-            SearchSettings settings = SearchSettings.builder()
-                    .query( query )
-                    .resultType( Gene.class )
-                    .maxResults( limit )
-                    .fillResults( true )
-                    .build();
-            SearchService.SearchResultMap map = searchService.search( settings, new SearchContext( null, null ) );
-            if ( map == null ) {
+            Collection<Gene> genes = geneService.findByOfficialSymbol( query );
+            if ( genes == null || genes.isEmpty() ) {
                 return out;
             }
-            List<SearchResult<Gene>> hits = map.getByResultObjectType( Gene.class );
-            if ( hits == null ) {
-                return out;
-            }
-            for ( SearchResult<Gene> sr : hits ) {
-                if ( sr == null ) continue;
-                // Gate on the exact-symbol score (DatabaseSearchSource.MATCH_BY_OFFICIAL_SYMBOL_SCORE = 1.0).
-                // Inexact and full-text matches score <= 0.9 and we don't want them prepended above
-                // ontology hits — typing "wild type" should surface "wild type genotype" (EFO), not
-                // some gene whose name/alias Lucene happened to substring-match.
-                if ( sr.getScore() < 1.0 ) continue;
-                Gene g = sr.getResultObject();
+            for ( Gene g : genes ) {
+                if ( out.size() >= limit ) break;
                 if ( g == null ) continue;
                 String label = g.getOfficialSymbol();
                 if ( label == null || label.isEmpty() ) continue;
@@ -1066,9 +1062,6 @@ public class AnnotationsWebService {
                         0, null, null, "search:gene", label ) );
             }
         } catch ( Exception e ) {
-            // Gene resolution is strictly additive; ANY failure must not break the wider
-            // annotation-search response. Test contexts in particular wire a stub
-            // SearchService whose .search(...) may return null or throw a generic exception.
             log.debug( "Gene resolution skipped for query '{}': {}", query, e.toString() );
         }
         return out;
