@@ -18,6 +18,10 @@
  */
 package ubic.gemma.model.genome.sequenceAnalysis;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Lob;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -33,24 +37,46 @@ import lombok.Setter;
  */
 @Getter
 @Setter
+@Entity
+@DiscriminatorValue("BlatResultImpl")
 public class BlatResult extends SequenceSimilaritySearchResult {
 
+    @Column(name = "BLOCK_COUNT", columnDefinition = "INTEGER")
     private Integer blockCount;
+    @Lob
+    @Column(name = "BLOCK_SIZES", columnDefinition = "text")
     private String blockSizes;
+    @Column(name = "MATCHES", columnDefinition = "INTEGER")
     private Integer matches;
+    @Column(name = "MISMATCHES", columnDefinition = "INTEGER")
     private Integer mismatches;
+    @Column(name = "NS", columnDefinition = "INTEGER")
     private Integer ns;
+    @Column(name = "QUERY_END", columnDefinition = "INTEGER")
     private Integer queryEnd;
+    @Column(name = "QUERY_GAP_BASES", columnDefinition = "INTEGER")
     private Integer queryGapBases;
+    @Column(name = "QUERY_GAP_COUNT", columnDefinition = "INTEGER")
     private Integer queryGapCount;
+    @Column(name = "QUERY_START", columnDefinition = "INTEGER")
     private Integer queryStart;
+    @Lob
+    @Column(name = "QUERY_STARTS", columnDefinition = "text")
     private String queryStarts;
+    @Column(name = "REP_MATCHES", columnDefinition = "INTEGER")
     private Integer repMatches;
+    @Column(name = "STRAND", columnDefinition = "VARCHAR(255)")
     private String strand;
+    @Column(name = "TARGET_END", columnDefinition = "BIGINT")
     private Long targetEnd;
+    @Column(name = "TARGET_GAP_BASES", columnDefinition = "INTEGER")
     private Integer targetGapBases;
+    @Column(name = "TARGET_GAP_COUNT", columnDefinition = "INTEGER")
     private Integer targetGapCount;
+    @Column(name = "TARGET_START", columnDefinition = "BIGINT")
     private Long targetStart;
+    @Lob
+    @Column(name = "TARGET_STARTS", columnDefinition = "text")
     private String targetStarts;
 
     @Override

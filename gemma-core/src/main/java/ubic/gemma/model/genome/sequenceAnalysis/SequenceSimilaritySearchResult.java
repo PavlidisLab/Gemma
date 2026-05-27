@@ -18,6 +18,19 @@
  */
 package ubic.gemma.model.genome.sequenceAnalysis;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.DiscriminatorColumn;
+import jakarta.persistence.DiscriminatorType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Immutable;
 import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.Chromosome;
@@ -25,12 +38,32 @@ import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.util.IdentifiableUtils;
 
+@Entity
+@Table(name = "SEQUENCE_SIMILARITY_SEARCH_RESULT")
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "class", discriminatorType = DiscriminatorType.STRING)
+@Immutable
+@Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
 public abstract class SequenceSimilaritySearchResult extends AbstractIdentifiable {
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "QUERY_SEQUENCE_FK", nullable = false, columnDefinition = "BIGINT")
     private BioSequence querySequence;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "TARGET_SEQUENCE_FK", columnDefinition = "BIGINT")
     private BioSequence targetSequence;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "TARGET_CHROMOSOME_FK", columnDefinition = "BIGINT")
     private Chromosome targetChromosome;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "SEARCHED_DATABASE_FK", columnDefinition = "BIGINT")
     private ExternalDatabase searchedDatabase;
+
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinColumn(name = "TARGET_ALIGNED_REGION_FK", unique = true, columnDefinition = "BIGINT")
     private PhysicalLocation targetAlignedRegion;
 
     public BioSequence getQuerySequence() {
