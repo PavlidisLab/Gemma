@@ -19,6 +19,17 @@
 
 package ubic.gemma.model.common.auditAndSecurity;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 
@@ -29,22 +40,45 @@ import java.util.Objects;
 /**
  * An event in the life of an object.
  */
+@Entity
+@Table(name = "AUDIT_EVENT", indexes = {
+        @Index(name = "AUDIT_EVENT_DATE", columnList = "DATE"),
+        @Index(name = "AUDIT_EVENT_ACTION", columnList = "ACTION")
+})
 public class AuditEvent extends AbstractIdentifiable {
 
     public static final int
             MAX_NOTE_LENGTH = 65535,
             MAX_DETAIL_LENGTH = 65535;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "ACTION", nullable = false, columnDefinition = "VARCHAR(255)")
     private AuditAction action = null;
+
+    @Column(name = "DATE", nullable = false, columnDefinition = "DATETIME(3)")
     private Date date = null;
+
+    @Lob
     @Nullable
+    @Column(name = "DETAIL", columnDefinition = "text")
     private String detail = null;
+
+    // we cannot use component mapping here because of the polymorphism of auditeventtypes see HHH1152
     @Nullable
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinColumn(name = "EVENT_TYPE_FK", columnDefinition = "BIGINT", unique = true)
     private AuditEventType eventType = null;
+
+    @Lob
     @Nullable
+    @Column(name = "NOTE", columnDefinition = "text")
     private String note = null;
+
     @Nullable
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "PERFORMER_FK", columnDefinition = "BIGINT")
     private User performer = null;
+
     /**
      * Raw JSON serialisation of an {@link
      * ubic.gemma.core.security.audit.AuditEventPayload} record, when the
@@ -54,7 +88,9 @@ public class AuditEvent extends AbstractIdentifiable {
      * {@code objectMapper.readValue(payload, AuditEventPayload.class)}.
      * Phase A of {@code AUDIT_SYSTEM_AUDIT.md}.
      */
+    @Lob
     @Nullable
+    @Column(name = "PAYLOAD", columnDefinition = "json")
     private String payload = null;
 
     @Override

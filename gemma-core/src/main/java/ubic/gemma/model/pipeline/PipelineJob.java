@@ -11,8 +11,23 @@
  */
 package ubic.gemma.model.pipeline;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.springframework.lang.Nullable;
 import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -31,41 +46,69 @@ import java.util.Set;
  */
 @Getter
 @Setter
+@Entity
+@Table(name = "PIPELINE_JOB", indexes = {
+        @Index(name = "IDX_PIPELINE_JOB_BATCH", columnList = "BATCH_FK"),
+        @Index(name = "IDX_PIPELINE_JOB_EXPERIMENT", columnList = "EXPERIMENT_FK"),
+        @Index(name = "IDX_PIPELINE_JOB_STATE", columnList = "STATE"),
+        @Index(name = "IDX_PIPELINE_JOB_LAST_EVENT", columnList = "LAST_EVENT_AT")
+})
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class PipelineJob extends AbstractIdentifiable {
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "BATCH_FK", nullable = false, columnDefinition = "BIGINT")
     private PipelineJobBatch batch;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "EXPERIMENT_FK", nullable = false, columnDefinition = "BIGINT")
     private ExpressionExperiment experiment;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "STATE", nullable = false, columnDefinition = "VARCHAR(16)")
     private JobState state = JobState.PENDING;
 
     @Nullable
+    @Enumerated(EnumType.STRING)
+    @Column(name = "SCHEDULER_KIND", columnDefinition = "VARCHAR(16)")
     private SchedulerKind schedulerKind;
 
     @Nullable
+    @Column(name = "SCHEDULER_HANDLE", columnDefinition = "VARCHAR(255)")
     private String schedulerHandle;
 
     @Nullable
+    @Column(name = "SUBMITTED_AT", columnDefinition = "DATETIME(3)")
     private Date submittedAt;
 
     @Nullable
+    @Column(name = "STARTED_AT", columnDefinition = "DATETIME(3)")
     private Date startedAt;
 
     @Nullable
+    @Column(name = "FINISHED_AT", columnDefinition = "DATETIME(3)")
     private Date finishedAt;
 
     @Nullable
+    @Column(name = "LAST_EVENT_AT", columnDefinition = "DATETIME(3)")
     private Date lastEventAt;
 
     @Nullable
+    @Column(name = "LAST_EVENT_KIND", columnDefinition = "VARCHAR(32)")
     private String lastEventKind;
 
+    @Lob
     @Nullable
+    @Column(name = "LAST_PROGRESS_JSON", columnDefinition = "text")
     private String lastProgressJson;
 
+    @Lob
     @Nullable
+    @Column(name = "ERROR_MESSAGE", columnDefinition = "text")
     private String errorMessage;
 
+    @OneToMany(mappedBy = "job", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("occurredAt")
     private Set<PipelineJobEvent> events = new HashSet<>();
 
     @Override

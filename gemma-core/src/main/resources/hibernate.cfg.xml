@@ -40,7 +40,9 @@
         <mapping class="ubic.gemma.model.association.Gene2GOAssociation"/>
 
         <!-- Common: audit and security -->
-        <mapping resource="ubic/gemma/model/common/auditAndSecurity/AuditEvent.hbm.xml"/>
+        <mapping class="ubic.gemma.model.common.auditAndSecurity.AuditEvent"/>
+        <mapping class="ubic.gemma.model.common.auditAndSecurity.AuditTrail"/>
+        <!-- AuditTrail.hbm.xml retained for <database-object> ON DELETE SET NULL DDL hooks (entity moved to JPA annotations) -->
         <mapping resource="ubic/gemma/model/common/auditAndSecurity/AuditTrail.hbm.xml"/>
         <mapping resource="ubic/gemma/model/common/auditAndSecurity/Contact.hbm.xml"/>
         <mapping class="ubic.gemma.model.common.auditAndSecurity.GroupAuthority"/>
@@ -86,7 +88,7 @@
         <mapping resource="ubic/gemma/model/expression/experiment/GeoScrapeWatermark.hbm.xml"/>
         <mapping resource="ubic/gemma/model/expression/experiment/ExperimentalDesign.hbm.xml"/>
         <mapping resource="ubic/gemma/model/expression/experiment/ExperimentalFactor.hbm.xml"/>
-        <mapping resource="ubic/gemma/model/expression/experiment/FactorValue.hbm.xml"/>
+        <mapping class="ubic.gemma.model.expression.experiment.FactorValue"/>
         <mapping class="ubic.gemma.model.expression.experiment.Geeq"/>
 
         <!-- Genome -->
@@ -103,7 +105,7 @@
 
         <!-- Pipeline (job scheduling) -->
         <mapping class="ubic.gemma.model.pipeline.PipelineJobBatch"/>
-        <mapping resource="ubic/gemma/model/pipeline/PipelineJob.hbm.xml"/>
+        <mapping class="ubic.gemma.model.pipeline.PipelineJob"/>
         <mapping class="ubic.gemma.model.pipeline.PipelineJobEvent"/>
     </session-factory>
 </hibernate-configuration>
