@@ -11,6 +11,17 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.curation;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.Immutable;
 import org.springframework.lang.Nullable;
 import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
@@ -29,11 +40,25 @@ import java.util.Objects;
  *
  * @author paul
  */
+@Entity
+@Table(name = "TICKET_EVENT",
+        indexes = @Index(name = "TICKET_EVENT_OCCURRED_AT", columnList = "OCCURRED_AT"))
+@Immutable
 public class TicketEvent extends AbstractIdentifiable {
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "TICKET_FK", nullable = false, columnDefinition = "BIGINT")
     private Ticket ticket;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ACTOR_FK", nullable = false, columnDefinition = "BIGINT")
     private Contact actor;
+
+    @Column(name = "OCCURRED_AT", nullable = false, columnDefinition = "DATETIME(3)")
     private Date occurredAt = new Date();
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "TYPE", nullable = false, columnDefinition = "VARCHAR(64)")
     private TicketEventType type;
 
     /**
@@ -42,7 +67,9 @@ public class TicketEvent extends AbstractIdentifiable {
      * Kept as an opaque string at the entity layer; callers that want typed
      * access decode with Jackson at the service layer.
      */
+    @Lob
     @Nullable
+    @Column(name = "PAYLOAD", columnDefinition = "json")
     private String payload;
 
     public Ticket getTicket() {

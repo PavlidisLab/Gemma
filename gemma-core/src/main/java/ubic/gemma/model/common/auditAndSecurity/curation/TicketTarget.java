@@ -11,6 +11,14 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.curation;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import ubic.gemma.model.common.AbstractIdentifiable;
 
 import java.util.Objects;
@@ -26,10 +34,19 @@ import java.util.Objects;
  *
  * @author paul
  */
+@Entity
+@Table(name = "TICKET_TARGET")
 public class TicketTarget extends AbstractIdentifiable {
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "TICKET_FK", nullable = false, columnDefinition = "BIGINT")
     private Ticket ticket;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "TARGET_TYPE", nullable = false, columnDefinition = "VARCHAR(32)")
     private TicketTargetType targetType;
+
+    @Column(name = "TARGET_ID", nullable = false, columnDefinition = "BIGINT")
     private Long targetId;
 
     public Ticket getTicket() {
