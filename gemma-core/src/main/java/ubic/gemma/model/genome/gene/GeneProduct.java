@@ -18,6 +18,17 @@ package ubic.gemma.model.genome.gene;
  *
  */
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Transient;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
@@ -31,7 +42,6 @@ import ubic.gemma.model.genome.ChromosomeFeature;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 
-import jakarta.persistence.Transient;
 import java.util.Objects;
 import java.util.Set;
 
@@ -40,22 +50,33 @@ import java.util.Set;
  * its {@code accessions} (via {@code @IndexedEmbedded} -> {@code DatabaseEntry.accession}) up to
  * {@link Gene}'s document via the {@link Gene#getProducts()} embedded path.
  */
+@Entity
+@DiscriminatorValue("GeneProduct")
 @Indexed
 public class GeneProduct extends ChromosomeFeature {
 
+    @Column(name = "NCBI_GI", columnDefinition = "VARCHAR(255)")
     private String ncbiGi;
+    // Cascade-all here is a problem since the same entry can be associated with a biosequence as well.
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "GENE_PRODUCT_FK", columnDefinition = "BIGINT")
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<DatabaseEntry> accessions = new java.util.HashSet<>();
     /**
      * Only used in transient instances in sequence analysis. The entity relation in the database is never used and will
      * be removed.
      */
+    @Transient
     private Set<PhysicalLocation> exons = new java.util.HashSet<>();
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "GENE_FK", columnDefinition = "BIGINT")
     private Gene gene;
     /**
      * Indicate if this GeneProduct is dummy.
      * <p>
      * Dummy {@link GeneProduct} are not listed in the {@link Gene#getProducts()} associations.
      */
+    @Column(name = "DUMMY", columnDefinition = "TINYINT")
     private boolean dummy;
 
     @Override

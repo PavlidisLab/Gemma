@@ -78,7 +78,7 @@
         <mapping class="ubic.gemma.model.expression.arrayDesign.ArrayDesign"/>
         <mapping class="ubic.gemma.model.expression.bioAssay.BioAssay"/>
         <mapping class="ubic.gemma.model.expression.bioAssayData.BioAssayDimension"/>
-        <mapping resource="ubic/gemma/model/expression/bioAssayData/CellLevelCharacteristics.hbm.xml"/>
+        <mapping class="ubic.gemma.model.expression.bioAssayData.GenericCellLevelCharacteristics"/>
         <mapping class="ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation"/>
         <mapping resource="ubic/gemma/model/expression/bioAssayData/ProcessedExpressionDataVector.hbm.xml"/>
         <mapping resource="ubic/gemma/model/expression/bioAssayData/ProcessedExpressionDataVectorNumberOfCells.hbm.xml"/>
@@ -100,7 +100,9 @@
 
         <!-- Genome -->
         <mapping class="ubic.gemma.model.genome.Chromosome"/>
-        <mapping resource="ubic/gemma/model/genome/ChromosomeFeature.hbm.xml"/>
+        <mapping class="ubic.gemma.model.genome.ChromosomeFeature"/>
+        <mapping class="ubic.gemma.model.genome.Gene"/>
+        <mapping class="ubic.gemma.model.genome.gene.GeneProduct"/>
         <mapping class="ubic.gemma.model.genome.PhysicalLocation"/>
         <mapping class="ubic.gemma.model.genome.Taxon"/>
         <mapping class="ubic.gemma.model.genome.biosequence.BioSequence"/>
