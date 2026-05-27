@@ -24,7 +24,7 @@
         <mapping resource="ubic/gemma/model/analysis/AnalysisResultSet.hbm.xml"/>
         <mapping resource="ubic/gemma/model/analysis/BlacklistedEntity.hbm.xml"/>
         <mapping resource="ubic/gemma/model/analysis/Investigation.hbm.xml"/>
-        <mapping resource="ubic/gemma/model/analysis/expression/ExpressionExperimentSet.hbm.xml"/>
+        <mapping class="ubic.gemma.model.analysis.expression.ExpressionExperimentSet"/>
         <mapping class="ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionMatrix"/>
         <mapping resource="ubic/gemma/model/analysis/expression/diff/ContrastResult.hbm.xml"/>
         <mapping resource="ubic/gemma/model/analysis/expression/diff/DifferentialExpressionAnalysisResult.hbm.xml"/>
@@ -45,10 +45,10 @@
         <mapping resource="ubic/gemma/model/common/auditAndSecurity/Contact.hbm.xml"/>
         <mapping class="ubic.gemma.model.common.auditAndSecurity.GroupAuthority"/>
         <mapping resource="ubic/gemma/model/common/auditAndSecurity/JobInfo.hbm.xml"/>
-        <mapping resource="ubic/gemma/model/common/auditAndSecurity/UserGroup.hbm.xml"/>
+        <mapping class="ubic.gemma.model.common.auditAndSecurity.UserGroup"/>
         <mapping resource="ubic/gemma/model/common/auditAndSecurity/curation/CurationDetails.hbm.xml"/>
         <mapping resource="ubic/gemma/model/common/auditAndSecurity/curation/CurationDraft.hbm.xml"/>
-        <mapping resource="ubic/gemma/model/common/auditAndSecurity/curation/Ticket.hbm.xml"/>
+        <mapping class="ubic.gemma.model.common.auditAndSecurity.curation.Ticket"/>
         <mapping class="ubic.gemma.model.common.auditAndSecurity.curation.TicketEvent"/>
         <mapping class="ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget"/>
         <mapping resource="ubic/gemma/model/common/auditAndSecurity/eventType/AuditEventType.hbm.xml"/>
@@ -96,13 +96,13 @@
         <mapping class="ubic.gemma.model.genome.Taxon"/>
         <mapping resource="ubic/gemma/model/genome/biosequence/BioSequence.hbm.xml"/>
         <mapping class="ubic.gemma.model.genome.gene.GeneAlias"/>
-        <mapping resource="ubic/gemma/model/genome/gene/GeneSet.hbm.xml"/>
+        <mapping class="ubic.gemma.model.genome.gene.GeneSet"/>
         <mapping class="ubic.gemma.model.genome.gene.GeneSetMember"/>
         <mapping class="ubic.gemma.model.genome.gene.Multifunctionality"/>
         <mapping resource="ubic/gemma/model/genome/sequenceAnalysis/SequenceSimilaritySearchResult.hbm.xml"/>
 
         <!-- Pipeline (job scheduling) -->
-        <mapping resource="ubic/gemma/model/pipeline/PipelineJobBatch.hbm.xml"/>
+        <mapping class="ubic.gemma.model.pipeline.PipelineJobBatch"/>
         <mapping resource="ubic/gemma/model/pipeline/PipelineJob.hbm.xml"/>
         <mapping class="ubic.gemma.model.pipeline.PipelineJobEvent"/>
     </session-factory>

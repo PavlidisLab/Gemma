@@ -19,12 +19,25 @@
 
 package ubic.gemma.model.genome.gene;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.search.engine.backend.types.Projectable;
+import org.hibernate.search.mapper.pojo.automaticindexing.ReindexOnUpdate;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexedEmbedded;
-import org.hibernate.search.mapper.pojo.automaticindexing.ReindexOnUpdate;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexingDependency;
 import ubic.gemma.model.common.auditAndSecurity.AbstractAuditable;
 import ubic.gemma.model.common.auditAndSecurity.SecuredNotChild;
@@ -43,12 +56,31 @@ import java.util.Set;
  * {@link #getCharacteristics()}, source accession, literature references, and members
  * (which in turn embed each {@link Gene}).
  */
+@Entity
+@Table(name = "GENE_SET", indexes = @Index(name = "GENE_SET_NAME", columnList = "NAME"))
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @Indexed
 public class GeneSet extends AbstractAuditable implements SecuredNotChild {
 
+    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinColumn(name = "GENE_SET_FK", columnDefinition = "BIGINT", foreignKey = @ForeignKey(name = "CHARACTERISTIC_GENE_SET_FKC"))
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<Characteristic> characteristics = new HashSet<>();
+
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JoinColumn(name = "SOURCE_ACCESSION_FK", unique = true, columnDefinition = "BIGINT")
     private DatabaseEntry sourceAccession;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "GENE_SETS2LITERATURE_SOURCES",
+            joinColumns = @JoinColumn(name = "GENE_SETS_FK", columnDefinition = "BIGINT"),
+            inverseJoinColumns = @JoinColumn(name = "LITERATURE_SOURCES_FK", columnDefinition = "BIGINT"),
+            foreignKey = @ForeignKey(name = "BIBLIOGRAPHIC_REFERENCE_GENE_SETS_FKC"))
     private Set<BibliographicReference> literatureSources = new HashSet<>();
+
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "GENE_SET_FK", columnDefinition = "BIGINT", foreignKey = @ForeignKey(name = "GENE_SET_MEMBER_GENE_SET_FKC"))
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<GeneSetMember> members = new HashSet<>();
 
     static public GeneSetMember containsGene( Gene g, GeneSet gs ) {

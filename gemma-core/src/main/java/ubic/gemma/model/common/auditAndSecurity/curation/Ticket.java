@@ -11,6 +11,21 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.curation;
 
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.springframework.lang.Nullable;
 import ubic.gemma.model.common.auditAndSecurity.AbstractAuditable;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
@@ -42,28 +57,60 @@ import java.util.Set;
  *
  * @author paul
  */
+@Entity
+@Table(name = "TICKET", indexes = {
+        @Index(name = "TICKET_NAME", columnList = "NAME"),
+        @Index(name = "TICKET_TYPE", columnList = "TYPE"),
+        @Index(name = "TICKET_STATE", columnList = "STATE")
+})
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+@AttributeOverride(name = "name", column = @Column(name = "NAME", nullable = false, columnDefinition = "VARCHAR(255)"))
 public class Ticket extends AbstractAuditable {
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "TYPE", nullable = false, columnDefinition = "VARCHAR(64)")
     private TicketType type;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "STATE", nullable = false, columnDefinition = "VARCHAR(32)")
     private TicketState state = TicketState.OPEN;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "PRIORITY", nullable = false, columnDefinition = "VARCHAR(16)")
     private TicketPriority priority = TicketPriority.NORMAL;
 
     @Nullable
+    @Column(name = "DUE_DATE", columnDefinition = "DATETIME(3)")
     private Date dueDate;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "REPORTER_FK", nullable = false, columnDefinition = "BIGINT")
     private Contact reporter;
 
     @Nullable
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ASSIGNEE_FK", columnDefinition = "BIGINT")
     private Contact assignee;
 
+    @Column(name = "CREATED_AT", nullable = false, columnDefinition = "DATETIME(3)")
     private Date createdAt = new Date();
+
+    @Column(name = "UPDATED_AT", nullable = false, columnDefinition = "DATETIME(3)")
     private Date updatedAt = new Date();
 
     @Nullable
+    @Column(name = "EXTERNAL_ISSUE_URL", columnDefinition = "VARCHAR(512)")
     private String externalIssueUrl;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "EXTERNAL_ISSUE_SYNC_STATE", nullable = false, columnDefinition = "VARCHAR(16)")
     private ExternalIssueSyncState externalIssueSyncState = ExternalIssueSyncState.NONE;
 
+    @OneToMany(mappedBy = "ticket", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<TicketTarget> targets = new HashSet<>();
+
+    @OneToMany(mappedBy = "ticket", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("occurredAt")
     private Set<TicketEvent> events = new HashSet<>();
 
     public TicketType getType() {
