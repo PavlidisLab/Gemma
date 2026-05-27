@@ -19,6 +19,17 @@
 
 package ubic.gemma.model.common.auditAndSecurity;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import ubic.gemma.model.common.DescribableUtils;
 
 import java.util.HashSet;
@@ -29,9 +40,21 @@ import java.util.Set;
  *
  * @author Paul
  */
+@Entity
+@Table(name = "USER_GROUP")
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class UserGroup extends AbstractAuditable implements ubic.gemma.core.security.model.UserGroup {
 
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(name = "GROUP_MEMBERS",
+            joinColumns = @JoinColumn(name = "USER_GROUPS_FK", columnDefinition = "BIGINT"),
+            inverseJoinColumns = @JoinColumn(name = "GROUP_MEMBERS_FK", columnDefinition = "BIGINT"),
+            foreignKey = @ForeignKey(name = "USER_USER_GROUPS_FKC"))
     private Set<User> groupMembers = new HashSet<>();
+
+    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinColumn(name = "GROUP_FK", columnDefinition = "BIGINT", foreignKey = @ForeignKey(name = "GROUP_AUTHORITY_GROUP_FKC"))
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<GroupAuthority> authorities = new HashSet<>();
 
     /**

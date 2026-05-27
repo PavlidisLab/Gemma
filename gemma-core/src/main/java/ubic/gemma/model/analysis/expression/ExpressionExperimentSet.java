@@ -19,13 +19,25 @@
 
 package ubic.gemma.model.analysis.expression;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.search.engine.backend.types.Projectable;
+import org.hibernate.search.mapper.pojo.automaticindexing.ReindexOnUpdate;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexedEmbedded;
-import org.hibernate.search.mapper.pojo.automaticindexing.ReindexOnUpdate;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexingDependency;
+import org.springframework.lang.Nullable;
 import ubic.gemma.model.common.DescribableUtils;
 import ubic.gemma.model.common.auditAndSecurity.AbstractAuditable;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
@@ -33,7 +45,6 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 
-import org.springframework.lang.Nullable;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -45,12 +56,27 @@ import java.util.Set;
  *
  * @author Paul
  */
+@Entity
+@Table(name = "EXPRESSION_EXPERIMENT_SET")
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @Indexed
 public class ExpressionExperimentSet extends AbstractAuditable implements Securable {
 
     @Nullable
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "ACCESSION_FK", unique = true, columnDefinition = "BIGINT",
+            foreignKey = @ForeignKey(name = "EXPRESSION_EXPERIMENT_SET_ACCESSION_FKC"))
     private DatabaseEntry accession;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "TAXON_FK", columnDefinition = "BIGINT")
     private Taxon taxon;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "EXPERIMENTS2EXPRESSION_EXPERIMENT_SETS",
+            joinColumns = @JoinColumn(name = "EXPRESSION_EXPERIMENT_SETS_FK", columnDefinition = "BIGINT"),
+            inverseJoinColumns = @JoinColumn(name = "EXPERIMENTS_FK", columnDefinition = "BIGINT"),
+            foreignKey = @ForeignKey(name = "EXPRESSION_EXPERIMENTS_EXPRESSION_EXPERIMENT_SETS_FKC"))
     private Set<ExpressionExperiment> experiments = new HashSet<>();
 
     /**
