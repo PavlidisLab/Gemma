@@ -184,14 +184,14 @@ public class AclDaoImpl implements AclDao {
         if ( sid instanceof PrincipalSid ) {
             PrincipalSid p = ( PrincipalSid ) sid;
             return ( AclSid ) session
-                .createQuery( "from AclPrincipalSid where principal = :p" )
+                .createQuery( "from AclPrincipalSid where sid = :p" )
                 .setParameter( "p", p.getPrincipal() )
                 .setCacheable( true )
                 .uniqueResult();
         } else if ( sid instanceof GrantedAuthoritySid ) {
             GrantedAuthoritySid g = ( GrantedAuthoritySid ) sid;
             return ( AclSid ) session
-                .createQuery( "from AclGrantedAuthoritySid where grantedAuthority = :g" )
+                .createQuery( "from AclGrantedAuthoritySid where sid = :g" )
                 .setParameter( "g", g.getGrantedAuthority() )
                 .setCacheable( true )
                 .uniqueResult();
@@ -211,7 +211,7 @@ public class AclDaoImpl implements AclDao {
                 return ( AclSid ) session.get( AclPrincipalSid.class, p.getId() );
             }
             return ( AclSid ) session
-                .createQuery( "from AclPrincipalSid where principal = :p" )
+                .createQuery( "from AclPrincipalSid where sid = :p" )
                 .setParameter( "p", p.getPrincipal() )
                 .setCacheable( true )
                 .uniqueResult();
@@ -221,7 +221,7 @@ public class AclDaoImpl implements AclDao {
                 return ( AclSid ) session.get( AclGrantedAuthoritySid.class, g.getId() );
             }
             return ( AclSid ) session
-                .createQuery( "from AclGrantedAuthoritySid where grantedAuthority = :g" )
+                .createQuery( "from AclGrantedAuthoritySid where sid = :g" )
                 .setParameter( "g", g.getGrantedAuthority() )
                 .setCacheable( true )
                 .uniqueResult();

@@ -14,7 +14,6 @@
  */
 package ubic.gemma.core.security.acl.domain;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import org.springframework.security.acls.model.Sid;
@@ -40,9 +39,6 @@ public class AclPrincipalSid extends AclSid {
 
     private static final long serialVersionUID = -4679911678447417301L;
 
-    @Column(name = "sid", nullable = false, columnDefinition = "VARCHAR(255)", insertable = false, updatable = false)
-    private String principal;
-
     public AclPrincipalSid() {
     }
 
@@ -51,33 +47,33 @@ public class AclPrincipalSid extends AclSid {
         Assert.notNull( authentication.getPrincipal(), "Principal required" );
 
         if ( authentication.getPrincipal() instanceof UserDetails ) {
-            this.principal = ( ( UserDetails ) authentication.getPrincipal() ).getUsername();
+            setSid( ( ( UserDetails ) authentication.getPrincipal() ).getUsername() );
         } else {
-            this.principal = authentication.getPrincipal().toString();
+            setSid( authentication.getPrincipal().toString() );
         }
     }
 
     public AclPrincipalSid( String principal ) {
         super();
-        this.principal = principal;
+        setSid( principal );
     }
 
     public String getPrincipal() {
-        return principal;
+        return getSid();
     }
 
     public void setPrincipal( String principal ) {
-        this.principal = principal;
+        setSid( principal );
     }
 
     @Override
     public Sid toSid() {
-        return new org.springframework.security.acls.domain.PrincipalSid( principal );
+        return new org.springframework.security.acls.domain.PrincipalSid( getSid() );
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash( principal );
+        return Objects.hash( getSid() );
     }
 
     @Override
@@ -90,6 +86,6 @@ public class AclPrincipalSid extends AclSid {
 
     @Override
     public String toString() {
-        return "AclPrincipalSid[" + this.principal + "]";
+        return "AclPrincipalSid[" + getSid() + "]";
     }
 }
