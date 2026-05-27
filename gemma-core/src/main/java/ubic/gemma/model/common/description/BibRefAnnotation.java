@@ -18,6 +18,14 @@
  */
 package ubic.gemma.model.common.description;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorColumn;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
 import ubic.gemma.model.common.AbstractIdentifiable;
@@ -29,10 +37,17 @@ import java.util.Objects;
  * annotation lives on the concrete subclasses. The {@code term} field is the only Lucene-indexed
  * property in the hierarchy.
  */
+@Entity
+@Table(name = "BIB_REF_ANNOTATION")
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "class")
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public abstract class BibRefAnnotation extends AbstractIdentifiable {
 
+    @Column(name = "IS_MAJOR_TOPIC", columnDefinition = "TINYINT")
     private Boolean isMajorTopic;
 
+    @Column(name = "TERM", nullable = false, columnDefinition = "VARCHAR(255)")
     private String term;
 
     @Override
