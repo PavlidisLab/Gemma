@@ -90,6 +90,45 @@ Always preserve the over-the-wire variant as `@Tag("integration")` (or `@Tag("ne
 - `BaseDatabaseTest5` disables L2 cache — assertions about L2-amplified cache-staleness CANNOT be reproduced through this path. Write a regression guard that pins the cross-session-reload invariants instead; the L2 amplifier is downstream.
 - Network gating via `@ExtendWith(NetworkAvailableExtension.class)` + `@NetworkAvailable(url = "...")` at the class or method level.
 
+## Performance testing
+
+Perf is treated as a first-class regression target — the `mvn verify` suite catches behavioural breaks, but slow responses against the real prod-shape database have to be measured against a running instance.
+
+### Reusable perf probe — `scripts/perf_search.py`
+
+Single Python file, no extra deps. Hits a configurable base URL (default `frink:8080`), authenticates via macOS Keychain (`GEMMA_USERNAME` / `GEMMA_PASSWORD` → POST `/rest/v2/login` → Bearer token), runs a fixed matrix of queries against every search-adjacent endpoint we've tuned, reports min/p50/p95/max per case grouped by endpoint.
+
+```bash
+scripts/perf_search.py                            # default frink, 3 runs, stdout
+scripts/perf_search.py --runs 5 --out perf-$(date +%Y%m%d).md
+scripts/perf_search.py --evict --only annotations # response-cache busted per probe
+scripts/perf_search.py --base http://localhost:8080 --anonymous
+```
+
+Re-run after every perf-touching commit lands on frink. Targets covered: `/genes/search`, `/annotations/search`, `/goTerms/{id}/genes` + `/genes/count`, `/datasets`, `/datasets/{id}/expressions/differential`. Adding a new endpoint to the matrix is one entry in the `*_cases()` builder.
+
+### Hotspot identification — pattern
+
+When a perf probe lands a slow case, surface where time goes before guessing at fixes. Three layered tools:
+
+1. **CompositeSearchSource per-source log** (already emitted at WARN). For Gene / annotation searches it breaks down wall time across `DatabaseSearchSource`, `HibernateSearchSource`, `GeneOntologySearchSource`, `OntologySearchSource` — you immediately see whether the DB leg, Lucene, or a GO subtree walk owns the latency.
+2. **Per-phase StopWatch + threshold log** on a hot endpoint. `AnnotationsWebService.getTerms` emits one INFO line when `total > 1000ms` with `find/filter/counts/rank/topCounts/enrich` ms breakdown; ditto `ProcessedExpressionDataVectorServiceImpl.getExpressionLevelsDiffEx`. Same pattern: cheap to leave on, surfaces regressions automatically, no temp-commit logging needed.
+3. **DAO-side `Diff ex results: Nms` / `Fetched N vectors in Nms` warnings**. Already in place for the diffex / vector-cache hot paths; mirror that style when adding a new DAO method that could become a hotspot.
+
+### What to fix vs. what to cache
+
+- **Sub-100 ms responses** — don't bother caching; the response cache is a poison surface (transient empties pin the UI). See `AnnotationsWebService.SEARCH_CACHE` — only non-empty results are cached, and an admin POST endpoint exists to flush it.
+- **100-500 ms** — fix the hotspot if it's a clean win (parallel fan-out, batched IN-clause, skip-when-unneeded). Cache as a backstop if the fix is structural.
+- **>1s** — must have a structural fix. Caching alone is not acceptable because the first-hit user pays.
+
+### Don't cache, evict instead
+
+Every shared in-process cache should ship with an admin eviction endpoint. Example: `POST /annotations/search/cache/evict` (GROUP_ADMIN). Spot a new cache without one → add one in the same commit.
+
+### Performance is critical
+
+If something is slow, fix it. Re-engineer if necessary — caching to hide bad code is a temporary solution, not a permanent one.
+
 ## Feature workflow
 
 - **Scope minimal.** Don't add features, refactor, or introduce abstractions beyond what the task requires. A bug fix doesn't need surrounding cleanup. Don't design for hypothetical future requirements.

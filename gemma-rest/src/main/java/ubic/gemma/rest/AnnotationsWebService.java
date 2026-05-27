@@ -129,6 +129,10 @@ public class AnnotationsWebService {
     private DatasetArgService datasetArgService;
     private TaxonArgService taxonArgService;
     private ubic.gemma.persistence.service.genome.gene.GeneService geneService;
+    @Autowired(required = false)
+    private ubic.gemma.persistence.service.association.Gene2GOAssociationService gene2GOAssociationService;
+    @Autowired(required = false)
+    private ubic.gemma.core.ontology.providers.GeneOntologyService geneOntologyService;
     /**
      * Strategy registry keyed by short name ({@code lucene}, {@code usage}, {@code coverage}).
      * Spring populates this from every {@link AnnotationSearchRankingStrategy} bean — the bean name
@@ -426,7 +430,7 @@ public class AnnotationsWebService {
             return terms.stream()
                     .map( t -> new AnnotationSearchResultValueObject( t.getLabel(), t.getUri(), null, null,
                             t.getUri() != null ? countsByUri.getOrDefault( t.getUri(), 0 ) : null,
-                            null, null, null, null ) )
+                            null, null, null, null, null ) )
                     .collect( Collectors.toList() );
         } catch ( TimeoutException e ) {
             throw new ServiceUnavailableException( DateUtils.addSeconds( new Date(), 30 ), e );
@@ -491,7 +495,16 @@ public class AnnotationsWebService {
                     "Future ranking strategies will use the category to boost relevant ontology " +
                     "URIs (e.g. UBERON when category=organism part). The parameter keys the " +
                     "response cache so any future per-category divergence stays correct.")
-            @QueryParam("category") @DefaultValue("") String category
+            @QueryParam("category") @DefaultValue("") String category,
+            @Parameter(description = "When true, populate `geneCount` on each hit with the distinct " +
+                    "number of genes annotated to that GO term (including descendants walked under " +
+                    "the `geneCountMaxTerms` cap). Adds a parallel fan-out at the response shape " +
+                    "boundary; sub-100ms on a warm GO index. Default false.")
+            @QueryParam("includeGeneCount") @DefaultValue("false") boolean includeGeneCount,
+            @Parameter(description = "When `includeGeneCount=true`, cap the per-hit BFS descendant " +
+                    "walk at this many GO terms. Default 50 (bounds broad parents like `metabolic " +
+                    "process` to ~50ms per hit). 0 = unbounded; not recommended for typeahead.")
+            @QueryParam("geneCountMaxTerms") @DefaultValue("50") int geneCountMaxTerms
     ) {
         if ( query == null || query.getValue().isEmpty() ) {
             throw new BadRequestException( "Search query cannot be empty." );
@@ -499,13 +512,19 @@ public class AnnotationsWebService {
         if ( limit < 1 || limit > SEARCH_MAX_LIMIT ) {
             throw new BadRequestException( "The 'limit' parameter must be between 1 and " + SEARCH_MAX_LIMIT + " (got " + limit + ")." );
         }
+        if ( geneCountMaxTerms < 0 ) {
+            throw new BadRequestException( "geneCountMaxTerms must be >= 0." );
+        }
         AnnotationSearchRankingStrategy strategy = resolveRankingStrategy( rank );
         List<String> prefixes = parsePrefixes( prefixesParam );
         if ( upstream && ( upstreamUrl == null || upstreamUrl.trim().isEmpty() ) ) {
             throw new BadRequestException( "Upstream delegation requested but "
                     + "`gemma.upstream.annotationSearch.url` is unset on this server." );
         }
-        String cacheKey = buildSearchCacheKey( query.getValue(), strategy.getName(), limit, prefixes, upstream, exactLabel, category );
+        // Cache key includes includeGeneCount + geneCountMaxTerms so a "with counts" call doesn't
+        // hit a cached "without counts" payload.
+        String cacheKey = buildSearchCacheKey( query.getValue(), strategy.getName(), limit, prefixes, upstream, exactLabel, category )
+                + ( includeGeneCount ? "|gc=" + geneCountMaxTerms : "" );
         List<AnnotationSearchResultValueObject> cached = SEARCH_CACHE.get( cacheKey );
         if ( cached != null ) {
             log.debug( "annotation-search cache HIT key={} (size={})", cacheKey, SEARCH_CACHE.size() );
@@ -513,6 +532,9 @@ public class AnnotationsWebService {
         }
         try {
             List<AnnotationSearchResultValueObject> result = new ArrayList<>( this.getTerms( query, strategy, limit, prefixes, upstream, exactLabel, category, FIND_CHARACTERISTICS_TIMEOUT_MS ) );
+            if ( includeGeneCount && !result.isEmpty() ) {
+                result = attachGeneCounts( result, geneCountMaxTerms );
+            }
             // Cache only non-empty results. An empty hit list is almost always either (a) genuinely
             // no match, where re-running is cheap, or (b) a transient gap (ontologies still warming
             // after a restart, basecode Lucene index temporarily empty, etc.) — caching the empty
@@ -593,7 +615,7 @@ public class AnnotationsWebService {
     public ResponseDataObject<List<AnnotationSearchResultValueObject>> searchAnnotationsByPathQuery( // Params:
             @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE, description = SEARCH_QUERY_DESCRIPTION) @PathParam("query") @DefaultValue("") StringArrayArg query // Required
     ) {
-        return searchAnnotations( query, LuceneOrderRankingStrategy.NAME, SEARCH_DEFAULT_LIMIT, "", false, false, "" );
+        return searchAnnotations( query, LuceneOrderRankingStrategy.NAME, SEARCH_DEFAULT_LIMIT, "", false, false, "", false, 50 );
     }
 
     /**
@@ -990,7 +1012,7 @@ public class AnnotationsWebService {
             String matchedVia = match != null ? match.via.token : null;
             String matchedText = match != null ? match.text : null;
             vos.add( new AnnotationSearchResultValueObject( vo.getValue(), vo.getValueUri(), vo.getCategory(),
-                    vo.getCategoryUri(), count, definition, parents, matchedVia, matchedText ) );
+                    vo.getCategoryUri(), count, definition, parents, matchedVia, matchedText, null ) );
         }
         // Always merge gene hits in, regardless of category — the typeahead surface should
         // surface STAT5B whether the curator is in a Genotype factor, a Treatment factor, or a
@@ -1059,7 +1081,7 @@ public class AnnotationsWebService {
                         ? "http://purl.org/commons/record/ncbi_gene/" + g.getNcbiGeneId()
                         : null;
                 out.add( new AnnotationSearchResultValueObject( label, uri, "gene", null,
-                        0, null, null, "search:gene", label ) );
+                        0, null, null, "search:gene", label, null ) );
             }
         } catch ( Exception e ) {
             log.debug( "Gene resolution skipped for query '{}': {}", query, e.toString() );
@@ -1069,6 +1091,121 @@ public class AnnotationsWebService {
 
     /** Top-N hits to enrich inline with definition + parents on /annotations/search. */
     private static final int ENRICH_TOP_N = 25;
+
+    /** Canonical GO URI prefix; used to detect GO-shaped {@code valueUri}s in the response shape. */
+    private static final String GO_URI_PREFIX = "http://purl.obolibrary.org/obo/GO_";
+
+    /**
+     * Augment each hit whose valueUri is a GO term with a {@code geneCount} field —
+     * distinct genes annotated to that term, including the descendant terms walked under
+     * the supplied {@code maxTerms} BFS cap. Per-hit work runs on a bounded fixed-size
+     * pool so a 15-result typeahead pays ~50-100ms wall time rather than 15*50ms serial.
+     * Wraps the existing result list — non-GO hits pass through unchanged.
+     */
+    private List<AnnotationSearchResultValueObject> attachGeneCounts(
+            List<AnnotationSearchResultValueObject> results, int maxTerms ) {
+        if ( gene2GOAssociationService == null || results.isEmpty() ) {
+            return results;
+        }
+        // Identify the GO-URI hits we can count for.
+        List<Integer> goIdxs = new ArrayList<>();
+        for ( int i = 0; i < results.size(); i++ ) {
+            String u = results.get( i ).getValueUri();
+            if ( u != null && u.startsWith( GO_URI_PREFIX ) ) {
+                goIdxs.add( i );
+            }
+        }
+        if ( goIdxs.isEmpty() ) {
+            return results;
+        }
+        Map<String, Long> countByUri = new java.util.concurrent.ConcurrentHashMap<>();
+        int parallelism = Math.min( goIdxs.size(), 8 );
+        java.util.concurrent.ExecutorService pool =
+                java.util.concurrent.Executors.newFixedThreadPool( parallelism );
+        try {
+            List<java.util.concurrent.Future<?>> tasks = new ArrayList<>( goIdxs.size() );
+            for ( Integer idx : goIdxs ) {
+                String uri = results.get( idx ).getValueUri();
+                tasks.add( pool.submit( () -> {
+                    Set<String> uris = expandGoSubtree( uri, maxTerms );
+                    long c = gene2GOAssociationService.countByGOTermUris( uris, null );
+                    countByUri.put( uri, c );
+                } ) );
+            }
+            // Bound to the annotation-search outer timeout so a stuck GO subtree
+            // walk can't pin the response forever.
+            long deadline = System.currentTimeMillis() + FIND_CHARACTERISTICS_TIMEOUT_MS;
+            for ( java.util.concurrent.Future<?> f : tasks ) {
+                long left = deadline - System.currentTimeMillis();
+                if ( left <= 0 ) { f.cancel( true ); continue; }
+                try {
+                    f.get( left, java.util.concurrent.TimeUnit.MILLISECONDS );
+                } catch ( java.util.concurrent.TimeoutException e ) {
+                    f.cancel( true );
+                } catch ( InterruptedException ie ) {
+                    Thread.currentThread().interrupt();
+                    return results;
+                } catch ( java.util.concurrent.ExecutionException ee ) {
+                    log.debug( "gene-count task failed", ee.getCause() );
+                }
+            }
+        } finally {
+            pool.shutdownNow();
+        }
+        // Rebuild the list with the count attached (VO is @Value-immutable).
+        List<AnnotationSearchResultValueObject> out = new ArrayList<>( results.size() );
+        for ( AnnotationSearchResultValueObject r : results ) {
+            Long c = r.getValueUri() != null ? countByUri.get( r.getValueUri() ) : null;
+            if ( c == null ) {
+                out.add( r );
+            } else {
+                out.add( new AnnotationSearchResultValueObject(
+                        r.getValue(), r.getValueUri(), r.getCategory(), r.getCategoryUri(),
+                        r.getUsageCount(), r.getDefinition(), r.getParents(),
+                        r.getMatchedVia(), r.getMatchedText(), c ) );
+            }
+        }
+        return out;
+    }
+
+    /**
+     * BFS-bounded subtree expansion for a single GO URI. Matches the design of
+     * {@code GoTermsWebService.expandUris} — direct-children frontier walk, stop at
+     * {@code maxTerms} URIs. {@code maxTerms <= 0} means "exact term only" here
+     * (different default from GoTermsWebService where 0 means unbounded; this side
+     * keeps it bounded to protect the typeahead p95).
+     */
+    private Set<String> expandGoSubtree( String goUri, int maxTerms ) {
+        Set<String> uris = new LinkedHashSet<>();
+        uris.add( goUri );
+        if ( geneOntologyService == null || !geneOntologyService.isOntologyLoaded() ) {
+            return uris;
+        }
+        if ( maxTerms <= 1 ) {
+            return uris;
+        }
+        ubic.gemma.core.ontology.model.OntologyTerm term = geneOntologyService.getTerm( goUri );
+        if ( term == null ) {
+            return uris;
+        }
+        List<ubic.gemma.core.ontology.model.OntologyTerm> frontier = new ArrayList<>();
+        frontier.add( term );
+        while ( !frontier.isEmpty() && uris.size() < maxTerms ) {
+            List<ubic.gemma.core.ontology.model.OntologyTerm> next = new ArrayList<>();
+            for ( ubic.gemma.core.ontology.model.OntologyTerm f : frontier ) {
+                for ( ubic.gemma.core.ontology.model.OntologyTerm c : f.getChildren( true, false ) ) {
+                    if ( c.getUri() == null ) continue;
+                    if ( uris.add( c.getUri() ) ) {
+                        next.add( c );
+                        if ( uris.size() >= maxTerms ) break;
+                    }
+                }
+                if ( uris.size() >= maxTerms ) break;
+            }
+            frontier = next;
+        }
+        return uris;
+    }
 
     private static Set<String> collectTopUris( List<CharacteristicValueObject> ranked, int topN ) {
         Set<String> out = new LinkedHashSet<>();
@@ -1370,6 +1507,13 @@ public class AnnotationsWebService {
          * when {@link #matchedVia} is {@code preferred_label}. Null when {@link #matchedVia} is null.
          */
         @Nullable String matchedText;
+        /**
+         * Distinct genes annotated with this term (including the descendant terms walked under
+         * the request's {@code geneCountMaxTerms} cap). Populated only when the caller passed
+         * {@code includeGeneCount=true}; null otherwise. Counts include propagation through
+         * GO subClassOf descendants by default — set via {@code Gene2GOAssociationService.countByGOTermUris}.
+         */
+        @Nullable Long geneCount;
     }
 
     @Value
