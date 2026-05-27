@@ -19,10 +19,23 @@
 
 package ubic.gemma.model.blacklist;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorColumn;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Immutable;
+import org.springframework.lang.Nullable;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.description.DatabaseEntry;
-
-import org.springframework.lang.Nullable;
 
 /**
  * Represents a blacklisted entity that should not be loaded into Gemma.
@@ -30,23 +43,34 @@ import org.springframework.lang.Nullable;
  * @see BlacklistedPlatform
  * @see BlacklistedExperiment
  */
+@Entity
+@Table(name = "BLACKLIST")
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "class")
+@Immutable
+@Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
 public abstract class BlacklistedEntity extends AbstractDescribable {
 
     /**
      * A short name if this was previously a Gemma platform or dataset.
      */
     @Nullable
+    @Column(name = "SHORT_NAME", unique = true, columnDefinition = "VARCHAR(255)")
     private String shortName;
 
     /**
      * An external accession.
      */
     @Nullable
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinColumn(name = "ACCESSION_FK", unique = true, columnDefinition = "BIGINT")
     private DatabaseEntry externalAccession;
 
     /**
      * The reason the entity was blacklisted.
      */
+    @Lob
+    @Column(name = "REASON", columnDefinition = "text")
     private String reason;
 
     @Nullable

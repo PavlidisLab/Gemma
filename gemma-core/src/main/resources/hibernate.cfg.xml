@@ -22,7 +22,9 @@
         <!-- Gemma analysis -->
         <mapping resource="ubic/gemma/model/analysis/Analysis.hbm.xml"/>
         <mapping resource="ubic/gemma/model/analysis/AnalysisResultSet.hbm.xml"/>
-        <mapping resource="ubic/gemma/model/analysis/BlacklistedEntity.hbm.xml"/>
+        <mapping class="ubic.gemma.model.blacklist.BlacklistedEntity"/>
+        <mapping class="ubic.gemma.model.blacklist.BlacklistedExperiment"/>
+        <mapping class="ubic.gemma.model.blacklist.BlacklistedPlatform"/>
         <mapping resource="ubic/gemma/model/analysis/Investigation.hbm.xml"/>
         <mapping class="ubic.gemma.model.analysis.expression.ExpressionExperimentSet"/>
         <mapping class="ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionMatrix"/>
