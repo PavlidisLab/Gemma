@@ -1092,6 +1092,7 @@ public class AdminWebService {
             vo.languageLevel = o.getLanguageLevel() != null ? o.getLanguageLevel().name() : null;
             vo.searchEnabled = o.isSearchEnabled();
             vo.processImports = o.getProcessImports();
+            vo.slimmable = o instanceof ubic.gemma.core.ontology.providers.SlimmableOntologyService;
             if ( includeTermCount && Boolean.TRUE.equals( vo.loaded ) ) {
                 try {
                     vo.termCount = (long) o.getAllURIs().size();
@@ -2148,6 +2149,11 @@ public class AdminWebService {
         /** Populated only when the request specifies `includeTermCount=true` AND the ontology is loaded. -1 on query failure. */
         @Nullable
         public Long termCount;
+        /** True if the underlying bean implements {@code SlimmableOntologyService} — i.e.
+         *  it supports the {@code /admin/ontologies/{name}/rebuild-slim} endpoint. Drives
+         *  the admin UI's per-row "rebuild slim" action button. */
+        @Nullable
+        public Boolean slimmable;
         /** Set if inspection threw; the rest of the row will be partially populated. */
         @Nullable
         public String error;

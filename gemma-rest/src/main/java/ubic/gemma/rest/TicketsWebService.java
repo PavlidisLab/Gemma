@@ -309,6 +309,45 @@ public class TicketsWebService {
     }
 
     /**
+     * Global open-ticket roll-up for the admin dashboard's TicketsSection. Sums
+     * {@link TicketService#countOpenByType()} for the total, exposes the per-type
+     * breakdown for at-a-glance triage. Single DAO call; intended to fire on a
+     * dashboard refetch interval.
+     */
+    @GET
+    @Path("/summary")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Open-ticket roll-up across the corpus",
+            description = "Returns the total open ticket count and a per-{@link TicketType} breakdown. Cheap (single grouped count query); intended for the admin Systems Monitoring dashboard panel.",
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class))),
+                    @ApiResponse(responseCode = "401", description = "Not authenticated.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<OpenTicketSummaryResponse> getOpenTicketSummary() {
+        java.util.Map<TicketType, Long> byType = ticketService.countOpenByType();
+        long total = 0;
+        for ( Long v : byType.values() ) {
+            if ( v != null ) total += v;
+        }
+        OpenTicketSummaryResponse body = new OpenTicketSummaryResponse();
+        body.totalOpen = total;
+        body.byType = new java.util.EnumMap<>( TicketType.class );
+        // Ensure every enum value appears in the map even if count is zero — UI table
+        // doesn't have to handle "missing key" vs "zero" specially.
+        for ( TicketType t : TicketType.values() ) {
+            body.byType.put( t, byType.getOrDefault( t, 0L ) );
+        }
+        return respond( body );
+    }
+
+    public static class OpenTicketSummaryResponse {
+        public long totalOpen;
+        public java.util.Map<TicketType, Long> byType;
+    }
+
+    /**
      * Retrieve a single ticket, including its full event log.
      */
     @GET
