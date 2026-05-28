@@ -12,6 +12,7 @@ import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -25,6 +26,9 @@ public class SingleCellExpressionExperimentCreateSubSetsAndAggregateServiceTest 
 
     @Autowired
     private QuantitationTypeService quantitationTypeService;
+
+    @Autowired
+    private SingleCellExpressionExperimentService singleCellExpressionExperimentService;
 
     @Autowired
     private PersistentDummyObjectHelper testHelper;
@@ -48,8 +52,9 @@ public class SingleCellExpressionExperimentCreateSubSetsAndAggregateServiceTest 
     public void testRedoAggregate() {
         assertThat( ee.getQuantitationTypes() )
                 .hasSize( 1 );
-        assertThat( ee.getSingleCellExpressionDataVectors() )
-                .hasSize( 100 );
+        QuantitationType scQt = ee.getQuantitationTypes().iterator().next();
+        assertThat( singleCellExpressionExperimentService.getNumberOfSingleCellDataVectors( ee, scQt ) )
+                .isEqualTo( 100 );
 
         SingleCellExperimentSubSetsCreationConfig singleCellExperimentSubSetsCreationConfig = SingleCellExperimentSubSetsCreationConfig.builder().build();
         SingleCellAggregationConfig config = SingleCellAggregationConfig.builder().makePreferred( true ).build();

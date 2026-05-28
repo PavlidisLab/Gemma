@@ -185,7 +185,7 @@ public class ExperimentalDesignWriter {
             ExperimentalFactor ef = factors.get( i );
             buf.append( ExperimentalDesignWriter.EXPERIMENTAL_FACTOR_DESCRIPTION_LINE_INDICATOR );
             buf.append( factorColumnNames[i] ).append( " :" );
-            if ( ef.getCategory() != null ) {
+            if ( ef.getCategory() != null && ef.getCategory().getValue() != null ) {
                 buf.append( " Category=" ).append( ef.getCategory().getValue().replaceAll( "\\s", "_" ) );
             }
             buf.append( " Type=" );

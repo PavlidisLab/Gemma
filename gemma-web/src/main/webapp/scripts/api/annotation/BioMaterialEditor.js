@@ -35,8 +35,10 @@ Ext.extend( Gemma.BioMaterialEditor, Ext.Panel, {
     */
    firstCallback : function( data ) {
 
-      // second ajax call.
-      ExperimentalDesignController.getExperimentalFactors( this.expressionExperiment, function( factorData ) {
+      // second ajax call. Uses the sample-level filtered list so per-cell factors
+      // (e.g. cell type for single-cell experiments) don't render as columns full
+      // of "Unassigned" in the Sample details grid.
+      ExperimentalDesignController.getSampleLevelExperimentalFactors( this.expressionExperiment, function( factorData ) {
          config = {
             factors : factorData,
             bioMaterials : data // BM Value objects.
