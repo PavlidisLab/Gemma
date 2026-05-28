@@ -596,7 +596,16 @@ public class TicketsWebService {
             ticket = ticketService.transition( ticket, req.getState(), actor, req.getReason() );
         }
 
-        return respond( TicketValueObject.from( ticket, true ) );
+        // Project the response through the service so reporter + events lazy-load inside
+        // the service's @Transactional. Building from the handler-side `ticket` reference
+        // would raise LazyInitializationException — same bug class as the GET path
+        // (see TicketServiceImpl.loadValueObject + DetachedEntityRegression tests).
+        TicketValueObject vo = ticketService.loadValueObject( id, true );
+        if ( vo == null ) {
+            // Race: ticket deleted between the mutation and the read. Surface as 404.
+            throw new NotFoundException( "Ticket " + id + " disappeared after update." );
+        }
+        return respond( vo );
     }
 
     /**
