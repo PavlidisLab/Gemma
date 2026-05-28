@@ -26,9 +26,11 @@ import ubic.gemma.core.security.authentication.UserReadService;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketEventValueObject;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketMode;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketPriority;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketState;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetStatus;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketValueObject;
@@ -49,6 +51,7 @@ import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.NotFoundException;
+import jakarta.ws.rs.PATCH;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
@@ -459,18 +462,33 @@ public class TicketsWebService {
             if ( tr.getTargetType() == null || tr.getTargetId() == null ) {
                 throw new BadRequestException( "Each target requires targetType and targetId." );
             }
-            targets.add( TicketTarget.Factory.newInstance( tr.getTargetType(), tr.getTargetId() ) );
+            TicketTarget tt = TicketTarget.Factory.newInstance( tr.getTargetType(), tr.getTargetId() );
+            if ( tr.getStatus() != null ) {
+                tt.setStatus( tr.getStatus() );
+            }
+            targets.add( tt );
         }
         Ticket created = ticketService.openTicket( reporter, req.getType(), req.getTitle(), targets );
 
         // Optional follow-up mutations seeded from the create payload.
+        boolean metadataChanged = false;
         if ( req.getPriority() != null ) {
             created.setPriority( req.getPriority() );
+            metadataChanged = true;
         }
         if ( req.getDueDate() != null ) {
             created.setDueDate( req.getDueDate() );
+            metadataChanged = true;
         }
-        if ( req.getPriority() != null || req.getDueDate() != null ) {
+        if ( req.getBody() != null ) {
+            created.setBody( req.getBody() );
+            metadataChanged = true;
+        }
+        if ( req.getMode() != null ) {
+            created.setMode( req.getMode() );
+            metadataChanged = true;
+        }
+        if ( metadataChanged ) {
             // Persist non-state edits without spamming the event log.
             created.setUpdatedAt( new Date() );
             ticketService.update( created );
@@ -525,7 +543,7 @@ public class TicketsWebService {
             throw new BadRequestException( "No authenticated user resolved." );
         }
 
-        // Metadata first (priority, due date) — no events, but updatedAt bumps via update().
+        // Metadata first (priority, due date, title, body, mode) — no events, but updatedAt bumps via update().
         boolean metadataChanged = false;
         if ( req.getPriority() != null ) {
             ticket.setPriority( req.getPriority() );
@@ -533,6 +551,18 @@ public class TicketsWebService {
         }
         if ( req.isDueDateSet() ) {
             ticket.setDueDate( req.getDueDate() );
+            metadataChanged = true;
+        }
+        if ( req.getTitle() != null ) {
+            ticket.setTitle( req.getTitle() );
+            metadataChanged = true;
+        }
+        if ( req.isBodySet() ) {
+            ticket.setBody( req.getBody() );
+            metadataChanged = true;
+        }
+        if ( req.getMode() != null ) {
+            ticket.setMode( req.getMode() );
             metadataChanged = true;
         }
         if ( metadataChanged ) {
@@ -563,6 +593,28 @@ public class TicketsWebService {
         }
 
         return respond( TicketValueObject.from( ticket, true ) );
+    }
+
+    /**
+     * PATCH alias for {@link #updateTicket(Long, UpdateTicketRequest)}. Same semantics —
+     * Gemma's PUT has always behaved as a partial update (only fields explicitly set in
+     * the request body are touched), which is exactly what PATCH expresses semantically.
+     * The alias exists so callers (notably gemma-curation-ui) can use the verb that
+     * matches their intent without forcing every existing PUT consumer to switch.
+     */
+    @PATCH
+    @Path("/{id}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Update a ticket (PATCH alias for PUT)",
+            description = "Partial update; same fields and semantics as PUT /tickets/{id}. "
+                    + "Provided so PATCH-leaning callers can use the verb that matches their intent.")
+    public ResponseDataObject<TicketValueObject> patchTicket(
+            @PathParam("id") Long id,
+            UpdateTicketRequest req
+    ) {
+        return updateTicket( id, req );
     }
 
     /**
@@ -669,6 +721,12 @@ public class TicketsWebService {
         private Date dueDate;
         @Nullable
         private Long assigneeId;
+        /** Curator-facing instructions; optional, defaults to empty body. */
+        @Nullable
+        private String body;
+        /** Advance mode; optional, defaults to {@link TicketMode#MANUAL}. */
+        @Nullable
+        private TicketMode mode;
 
         public TicketType getType() { return type; }
         public void setType( TicketType type ) { this.type = type; }
@@ -690,17 +748,32 @@ public class TicketsWebService {
         @Nullable
         public Long getAssigneeId() { return assigneeId; }
         public void setAssigneeId( @Nullable Long assigneeId ) { this.assigneeId = assigneeId; }
+
+        @Nullable
+        public String getBody() { return body; }
+        public void setBody( @Nullable String body ) { this.body = body; }
+
+        @Nullable
+        public TicketMode getMode() { return mode; }
+        public void setMode( @Nullable TicketMode mode ) { this.mode = mode; }
     }
 
     public static class TicketTargetRequest {
         private TicketTargetType targetType;
         private Long targetId;
+        /** Initial status for the target; optional, defaults to {@link TicketTargetStatus#NOT_DONE}. */
+        @Nullable
+        private TicketTargetStatus status;
 
         public TicketTargetType getTargetType() { return targetType; }
         public void setTargetType( TicketTargetType targetType ) { this.targetType = targetType; }
 
         public Long getTargetId() { return targetId; }
         public void setTargetId( Long targetId ) { this.targetId = targetId; }
+
+        @Nullable
+        public TicketTargetStatus getStatus() { return status; }
+        public void setStatus( @Nullable TicketTargetStatus status ) { this.status = status; }
     }
 
     /**
@@ -725,6 +798,14 @@ public class TicketsWebService {
         @Nullable
         private Date dueDate;
         private boolean dueDateSet = false;
+
+        @Nullable
+        private String title;
+        @Nullable
+        private String body;
+        private boolean bodySet = false;
+        @Nullable
+        private TicketMode mode;
 
         @Nullable
         public TicketState getState() { return state; }
@@ -757,5 +838,21 @@ public class TicketsWebService {
             this.dueDateSet = true;
         }
         public boolean isDueDateSet() { return dueDateSet; }
+
+        @Nullable
+        public String getTitle() { return title; }
+        public void setTitle( @Nullable String title ) { this.title = title; }
+
+        @Nullable
+        public String getBody() { return body; }
+        public void setBody( @Nullable String body ) {
+            this.body = body;
+            this.bodySet = true;
+        }
+        public boolean isBodySet() { return bodySet; }
+
+        @Nullable
+        public TicketMode getMode() { return mode; }
+        public void setMode( @Nullable TicketMode mode ) { this.mode = mode; }
     }
 }

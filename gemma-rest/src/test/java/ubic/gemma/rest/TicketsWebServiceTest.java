@@ -25,9 +25,11 @@ import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketEventType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketEventValueObject;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketMode;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketPriority;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketState;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetStatus;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketValueObject;
@@ -473,6 +475,226 @@ public class TicketsWebServiceTest {
                 .isInstanceOf( NotFoundException.class );
     }
 
+    /* -------------- body / mode / status / PATCH endpoint extensions -------------- */
+
+    @Test
+    public void testCreateTicket_withBodyAndMode_persistsBoth() {
+        when( userManager.getCurrentUser() ).thenReturn( reporter );
+        when( ticketService.openTicket( eq( reporter ), eq( TicketType.CURATION ),
+                eq( "Curate batch" ), any() ) ).thenReturn( ticket );
+
+        TicketsWebService.CreateTicketRequest req = new TicketsWebService.CreateTicketRequest();
+        req.setType( TicketType.CURATION );
+        req.setTitle( "Curate batch" );
+        req.setBody( "Annotate time-course; baseline is Day 0." );
+        req.setMode( TicketMode.AUTO );
+        TicketsWebService.TicketTargetRequest tr = new TicketsWebService.TicketTargetRequest();
+        tr.setTargetType( TicketTargetType.EXPRESSION_EXPERIMENT );
+        tr.setTargetId( 99L );
+        req.setTargets( Collections.singletonList( tr ) );
+
+        Response resp = webService.createTicket( req );
+
+        assertThat( resp.getStatus() ).isEqualTo( Response.Status.CREATED.getStatusCode() );
+        // body + mode should land on the ticket; the impl calls update() to persist them.
+        assertThat( ticket.getBody() ).isEqualTo( "Annotate time-course; baseline is Day 0." );
+        assertThat( ticket.getMode() ).isEqualTo( TicketMode.AUTO );
+        verify( ticketService ).update( ticket );
+    }
+
+    @Test
+    public void testCreateTicket_withTargetStatus_seedsUNDERWAY() {
+        // Agents can file tickets with an already-UNDERWAY target (the runner started
+        // before the ticket was written). Verify the per-target status survives.
+        when( userManager.getCurrentUser() ).thenReturn( reporter );
+        java.util.concurrent.atomic.AtomicReference<java.util.Set<TicketTarget>> captured = new java.util.concurrent.atomic.AtomicReference<>();
+        when( ticketService.openTicket( eq( reporter ), eq( TicketType.PRELOAD ), eq( "Preload GSE" ),
+                any() ) ).thenAnswer( inv -> {
+            captured.set( inv.getArgument( 3 ) );
+            return ticket;
+        } );
+
+        TicketsWebService.CreateTicketRequest req = new TicketsWebService.CreateTicketRequest();
+        req.setType( TicketType.PRELOAD );
+        req.setTitle( "Preload GSE" );
+        TicketsWebService.TicketTargetRequest tr = new TicketsWebService.TicketTargetRequest();
+        tr.setTargetType( TicketTargetType.EXPRESSION_EXPERIMENT );
+        tr.setTargetId( 99L );
+        tr.setStatus( TicketTargetStatus.UNDERWAY );
+        req.setTargets( Collections.singletonList( tr ) );
+
+        webService.createTicket( req );
+
+        assertThat( captured.get() ).hasSize( 1 );
+        TicketTarget passed = captured.get().iterator().next();
+        assertThat( passed.getStatus() ).isEqualTo( TicketTargetStatus.UNDERWAY );
+    }
+
+    @Test
+    public void testCreateTicket_multiTargetMixedTypes_passesAllThrough() {
+        // CURATION ticket can target both an EE and a per-FactorValue follow-up
+        // simultaneously; multi-target with mixed target_type is the typical shape
+        // for FactorValueNeedsAttentionServiceImpl (see TicketTargetType.FACTOR_VALUE javadoc).
+        when( userManager.getCurrentUser() ).thenReturn( reporter );
+        java.util.concurrent.atomic.AtomicReference<java.util.Set<TicketTarget>> captured = new java.util.concurrent.atomic.AtomicReference<>();
+        when( ticketService.openTicket( any(), eq( TicketType.CURATION ), any(), any() ) )
+                .thenAnswer( inv -> {
+                    captured.set( inv.getArgument( 3 ) );
+                    return ticket;
+                } );
+
+        TicketsWebService.CreateTicketRequest req = new TicketsWebService.CreateTicketRequest();
+        req.setType( TicketType.CURATION );
+        req.setTitle( "EE + FV combo" );
+        TicketsWebService.TicketTargetRequest eeTr = new TicketsWebService.TicketTargetRequest();
+        eeTr.setTargetType( TicketTargetType.EXPRESSION_EXPERIMENT );
+        eeTr.setTargetId( 99L );
+        TicketsWebService.TicketTargetRequest fvTr = new TicketsWebService.TicketTargetRequest();
+        fvTr.setTargetType( TicketTargetType.FACTOR_VALUE );
+        fvTr.setTargetId( 555L );
+        req.setTargets( Arrays.asList( eeTr, fvTr ) );
+
+        webService.createTicket( req );
+
+        assertThat( captured.get() ).hasSize( 2 );
+        assertThat( captured.get() ).extracting( TicketTarget::getTargetType )
+                .containsExactlyInAnyOrder( TicketTargetType.EXPRESSION_EXPERIMENT, TicketTargetType.FACTOR_VALUE );
+    }
+
+    @Test
+    public void testCreateTicket_GEO_SCRAPE_WATERMARK_target() {
+        // Agent's per-batch ticket flow files against GeoScrapeWatermark rows.
+        when( userManager.getCurrentUser() ).thenReturn( reporter );
+        java.util.concurrent.atomic.AtomicReference<java.util.Set<TicketTarget>> captured = new java.util.concurrent.atomic.AtomicReference<>();
+        when( ticketService.openTicket( any(), eq( TicketType.PRELOAD ), any(), any() ) )
+                .thenAnswer( inv -> {
+                    captured.set( inv.getArgument( 3 ) );
+                    return ticket;
+                } );
+
+        TicketsWebService.CreateTicketRequest req = new TicketsWebService.CreateTicketRequest();
+        req.setType( TicketType.PRELOAD );
+        req.setTitle( "Scrape batch 2026-05-27" );
+        TicketsWebService.TicketTargetRequest tr = new TicketsWebService.TicketTargetRequest();
+        tr.setTargetType( TicketTargetType.GEO_SCRAPE_WATERMARK );
+        tr.setTargetId( 7L );
+        req.setTargets( Collections.singletonList( tr ) );
+
+        webService.createTicket( req );
+
+        assertThat( captured.get() ).hasSize( 1 );
+        assertThat( captured.get().iterator().next().getTargetType() )
+                .isEqualTo( TicketTargetType.GEO_SCRAPE_WATERMARK );
+    }
+
+    @Test
+    public void testUpdateTicket_setsBodyAndMode() {
+        when( userManager.getCurrentUser() ).thenReturn( reporter );
+        when( ticketService.load( 1L ) ).thenReturn( ticket );
+
+        TicketsWebService.UpdateTicketRequest req = new TicketsWebService.UpdateTicketRequest();
+        req.setBody( "Updated instructions" );
+        req.setMode( TicketMode.AUTO );
+
+        webService.updateTicket( 1L, req );
+
+        assertThat( ticket.getBody() ).isEqualTo( "Updated instructions" );
+        assertThat( ticket.getMode() ).isEqualTo( TicketMode.AUTO );
+        verify( ticketService ).update( ticket );
+    }
+
+    @Test
+    public void testUpdateTicket_clearBody_explicitNull() {
+        // Distinguishes "body absent from request" (no change) from "body present and null" (clear).
+        when( userManager.getCurrentUser() ).thenReturn( reporter );
+        when( ticketService.load( 1L ) ).thenReturn( ticket );
+        ticket.setBody( "old body" );
+
+        TicketsWebService.UpdateTicketRequest req = new TicketsWebService.UpdateTicketRequest();
+        req.setBody( null ); // explicit null → clear
+        assertThat( req.isBodySet() ).isTrue();
+
+        webService.updateTicket( 1L, req );
+
+        assertThat( ticket.getBody() ).isNull();
+        verify( ticketService ).update( ticket );
+    }
+
+    @Test
+    public void testUpdateTicket_bodyAbsent_doesNotClearExisting() {
+        when( userManager.getCurrentUser() ).thenReturn( reporter );
+        when( ticketService.load( 1L ) ).thenReturn( ticket );
+        ticket.setBody( "keep me" );
+
+        TicketsWebService.UpdateTicketRequest req = new TicketsWebService.UpdateTicketRequest();
+        // body not set; only flipping priority
+        req.setPriority( TicketPriority.URGENT );
+        assertThat( req.isBodySet() ).isFalse();
+
+        webService.updateTicket( 1L, req );
+
+        assertThat( ticket.getBody() ).isEqualTo( "keep me" );
+        assertThat( ticket.getPriority() ).isEqualTo( TicketPriority.URGENT );
+    }
+
+    @Test
+    public void testUpdateTicket_setsTitle() {
+        when( userManager.getCurrentUser() ).thenReturn( reporter );
+        when( ticketService.load( 1L ) ).thenReturn( ticket );
+
+        TicketsWebService.UpdateTicketRequest req = new TicketsWebService.UpdateTicketRequest();
+        req.setTitle( "Renamed ticket" );
+
+        webService.updateTicket( 1L, req );
+
+        assertThat( ticket.getTitle() ).isEqualTo( "Renamed ticket" );
+    }
+
+    @Test
+    public void testPatchTicket_delegatesToUpdateTicket() {
+        // PATCH is an alias that runs through updateTicket(); a body+mode patch should land
+        // on the entity identically to a PUT.
+        when( userManager.getCurrentUser() ).thenReturn( reporter );
+        when( ticketService.load( 1L ) ).thenReturn( ticket );
+
+        TicketsWebService.UpdateTicketRequest req = new TicketsWebService.UpdateTicketRequest();
+        req.setBody( "patched body" );
+        req.setMode( TicketMode.AUTO );
+
+        ResponseDataObject<TicketValueObject> resp = webService.patchTicket( 1L, req );
+
+        assertThat( resp ).isNotNull();
+        assertThat( ticket.getBody() ).isEqualTo( "patched body" );
+        assertThat( ticket.getMode() ).isEqualTo( TicketMode.AUTO );
+    }
+
+    @Test
+    public void testCancelToReopen_lifecycle() {
+        // Cancel → reopen → resolve. Verifies the multi-step transitions all flow through
+        // the service layer with the right state args.
+        when( userManager.getCurrentUser() ).thenReturn( reporter );
+        when( ticketService.load( 1L ) ).thenReturn( ticket );
+        when( ticketService.transition( eq( ticket ), any(), eq( reporter ), any() ) ).thenReturn( ticket );
+
+        TicketsWebService.UpdateTicketRequest cancel = new TicketsWebService.UpdateTicketRequest();
+        cancel.setState( TicketState.CANCELLED );
+        cancel.setReason( "duplicate" );
+        webService.updateTicket( 1L, cancel );
+
+        TicketsWebService.UpdateTicketRequest reopen = new TicketsWebService.UpdateTicketRequest();
+        reopen.setState( TicketState.OPEN );
+        reopen.setReason( "false alarm — not a dup" );
+        webService.updateTicket( 1L, reopen );
+
+        TicketsWebService.UpdateTicketRequest resolve = new TicketsWebService.UpdateTicketRequest();
+        resolve.setState( TicketState.RESOLVED );
+        webService.updateTicket( 1L, resolve );
+
+        verify( ticketService ).transition( ticket, TicketState.CANCELLED, reporter, "duplicate" );
+        verify( ticketService ).transition( ticket, TicketState.OPEN, reporter, "false alarm — not a dup" );
+        verify( ticketService ).transition( ticket, TicketState.RESOLVED, reporter, null );
+    }
+
     /**
      * Annotation-level auth guard: the write-side endpoints must carry
      * {@code @PreAuthorize("isAuthenticated()")}. At runtime Spring's method-
@@ -487,6 +709,9 @@ public class TicketsWebServiceTest {
                         TicketsWebService.CreateTicketRequest.class ) );
         assertPreAuthorizeIsAuthenticated(
                 TicketsWebService.class.getMethod( "updateTicket",
+                        Long.class, TicketsWebService.UpdateTicketRequest.class ) );
+        assertPreAuthorizeIsAuthenticated(
+                TicketsWebService.class.getMethod( "patchTicket",
                         Long.class, TicketsWebService.UpdateTicketRequest.class ) );
         assertPreAuthorizeIsAuthenticated(
                 TicketsWebService.class.getMethod( "deleteTicket",

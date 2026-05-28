@@ -49,6 +49,10 @@ public class TicketTarget extends AbstractIdentifiable {
     @Column(name = "TARGET_ID", nullable = false, columnDefinition = "BIGINT")
     private Long targetId;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "STATUS", nullable = false, columnDefinition = "VARCHAR(16)")
+    private TicketTargetStatus status = TicketTargetStatus.NOT_DONE;
+
     public Ticket getTicket() {
         return ticket;
     }
@@ -71,6 +75,14 @@ public class TicketTarget extends AbstractIdentifiable {
 
     public void setTargetId( Long targetId ) {
         this.targetId = targetId;
+    }
+
+    public TicketTargetStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus( TicketTargetStatus status ) {
+        this.status = status;
     }
 
     @Override

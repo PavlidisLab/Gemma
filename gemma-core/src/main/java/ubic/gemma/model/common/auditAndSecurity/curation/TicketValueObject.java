@@ -38,9 +38,21 @@ public class TicketValueObject implements Serializable {
 
     private Long id;
     private String title;
+    /**
+     * Curator-facing instructions text. May be empty for tickets filed by scripts that
+     * didn't set a body. Empty string (not null) on serialization to match the UI
+     * contract — see TicketValueObject TypeScript interface in gemma-curation-ui.
+     */
+    private String body = "";
     private TicketType type;
     private TicketState state;
     private TicketPriority priority;
+    /**
+     * How the ticket advances between actions. {@code MANUAL} (default) requires explicit
+     * curator action for each step; {@code AUTO} auto-schedules the next defined action
+     * when the current one finishes with all targets {@code DONE}.
+     */
+    private TicketMode mode = TicketMode.MANUAL;
 
     @Nullable
     private Date dueDate;
@@ -86,9 +98,11 @@ public class TicketValueObject implements Serializable {
         TicketValueObject vo = new TicketValueObject();
         vo.id = t.getId();
         vo.title = t.getTitle();
+        vo.body = t.getBody() != null ? t.getBody() : "";
         vo.type = t.getType();
         vo.state = t.getState();
         vo.priority = t.getPriority();
+        vo.mode = t.getMode() != null ? t.getMode() : TicketMode.MANUAL;
         vo.dueDate = t.getDueDate();
         if ( t.getReporter() != null ) {
             vo.reporterId = t.getReporter().getId();

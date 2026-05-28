@@ -25,6 +25,19 @@ public enum TicketType {
     REALIGNMENT_NEEDED,
     /** General quality-review request (geeq follow-up, suspect outliers, etc.). */
     QUALITY_REVIEW,
+    /**
+     * GEO deep-fetch / metadata pre-population work. Filed by the scrape pipeline
+     * or by a curator before manual annotation begins; targets are typically
+     * preboarded EE candidates whose sample-level metadata still needs to be
+     * populated from GEO eutils.
+     */
+    PRELOAD,
+    /**
+     * Manual curation of one or more EEs — annotate factor values, write factor
+     * descriptions, tag baseline relevance, etc. The default work-item type for
+     * curator-assigned tickets that don't fit a more specific category.
+     */
+    CURATION,
     /** Catch-all for tickets that don't fit a more specific category. */
     GENERIC
 }

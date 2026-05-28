@@ -106,6 +106,10 @@ public class Ticket extends AbstractAuditable {
     @Column(name = "EXTERNAL_ISSUE_SYNC_STATE", nullable = false, columnDefinition = "VARCHAR(16)")
     private ExternalIssueSyncState externalIssueSyncState = ExternalIssueSyncState.NONE;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "MODE", nullable = false, columnDefinition = "VARCHAR(16)")
+    private TicketMode mode = TicketMode.MANUAL;
+
     @OneToMany(mappedBy = "ticket", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<TicketTarget> targets = new HashSet<>();
 
@@ -153,6 +157,29 @@ public class Ticket extends AbstractAuditable {
 
     public void setTitle( String title ) {
         setName( title );
+    }
+
+    /**
+     * Curator-facing instructions text — what the reporter writes when filing the ticket,
+     * what the detail page renders as multi-line body and the dashboard clamps to 2 lines.
+     * Stored in the inherited {@code DESCRIPTION} column; this is a convenience alias
+     * parallel to {@link #getTitle()} / {@link #setTitle(String)}.
+     */
+    @Nullable
+    public String getBody() {
+        return getDescription();
+    }
+
+    public void setBody( @Nullable String body ) {
+        setDescription( body );
+    }
+
+    public TicketMode getMode() {
+        return mode;
+    }
+
+    public void setMode( TicketMode mode ) {
+        this.mode = mode;
     }
 
     public Contact getReporter() {
