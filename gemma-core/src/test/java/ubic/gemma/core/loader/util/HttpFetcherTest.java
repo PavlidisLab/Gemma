@@ -30,21 +30,38 @@ import java.io.IOException;
 import java.util.Collection;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author pavlidis
  */
-@Tag("slow")
 public class HttpFetcherTest {
 
     private static final Log log = LogFactory.getLog( HttpFetcherTest.class.getName() );
     private File f;
 
+    /**
+     * Regression guard for the Settings-retirement refactor (commit {@code f31cba192d}):
+     * {@link HttpFetcher#fetch(String)} no longer reads {@code gemma.download.path} from
+     * {@code Settings}; the caller must call {@link HttpFetcher#setLocalBasePath} first.
+     * This test runs WITHOUT network access — the precondition fires before any fetch
+     * attempt, so it stays in the fast default-run suite (no {@code @Tag("slow")}).
+     */
+    @Test
+    public void fetch_withoutSetLocalBasePath_throwsIllegalState() {
+        HttpFetcher fetcher = new HttpFetcher();
+        IllegalStateException ise = assertThrows( IllegalStateException.class,
+                () -> fetcher.fetch( "http://example.invalid/anything" ) );
+        assertTrue( ise.getMessage().contains( "localBasePath" ),
+                "exception message should explain the missing setter: " + ise.getMessage() );
+    }
+
     /*
      * Test method for 'ubic.gemma.core.loader.loaderutils.HttpFetcher.fetch(String)'
      */
     @Test
+    @Tag("slow")
     public void testFetch() {
         HttpFetcher hf = new HttpFetcher();
         hf.setLocalBasePath( System.getProperty( "java.io.tmpdir" ) );

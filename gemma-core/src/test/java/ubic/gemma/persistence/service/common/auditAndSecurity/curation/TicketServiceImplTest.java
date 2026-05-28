@@ -167,7 +167,11 @@ public class TicketServiceImplTest {
         assertEquals( eventsBefore + 1, result.getEvents().size() );
         TicketEvent latest = mostRecentEventOfType( result, TicketEventType.COMMENTED );
         assertNotNull( latest );
-        assertEquals( "{\"text\":\"hi\"}", latest.getPayload() );
+        // appendEvent JSON-encodes the payload so MySQL's JSON column accepts it; a
+        // pre-formed JSON string therefore gets re-encoded as a JSON string literal.
+        // No current caller passes pre-formed JSON; the contract is "free-form string in,
+        // JSON-string out". See TicketServiceImpl#appendEvent.
+        assertEquals( "\"{\\\"text\\\":\\\"hi\\\"}\"", latest.getPayload() );
         verify( ticketDao ).save( t );
     }
 
@@ -299,7 +303,9 @@ public class TicketServiceImplTest {
         assertEquals( eventsBefore + 1, result.getEvents().size() );
         TicketEvent latest = mostRecentEventOfType( result, expected );
         assertNotNull( latest, "Expected an event of type " + expected + " after " + from + "->" + to );
-        assertEquals( "because", latest.getPayload() );
+        // appendEvent JSON-encodes the payload string ("because" → "\"because\"") so MySQL's
+        // JSON column accepts it. See TicketServiceImpl#appendEvent.
+        assertEquals( "\"because\"", latest.getPayload() );
     }
 
     private static boolean containsEventOfType( Ticket t, TicketEventType type ) {

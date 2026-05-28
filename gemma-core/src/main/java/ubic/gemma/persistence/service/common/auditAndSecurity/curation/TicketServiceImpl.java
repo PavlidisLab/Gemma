@@ -11,6 +11,8 @@
  */
 package ubic.gemma.persistence.service.common.auditAndSecurity.curation;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
@@ -230,8 +232,29 @@ public class TicketServiceImpl extends AbstractService<Ticket> implements Ticket
         t.setUpdatedAt( new Date() );
     }
 
+    /** Module-private singleton; Jackson's ObjectMapper is thread-safe after configuration. */
+    private static final ObjectMapper PAYLOAD_MAPPER = new ObjectMapper();
+
+    /**
+     * Append a {@link TicketEvent}. The {@code payload} parameter is a free-form curator-supplied
+     * string (reason, comment, etc.); it gets JSON-string-encoded here so the MySQL {@code JSON}
+     * column ({@code TICKET_EVENT.PAYLOAD}) accepts it. Without this wrapping, a raw string like
+     * {@code "starting work"} fails MySQL's JSON validator at insert time. Surfaces a known
+     * limitation: a caller passing already-JSON-shaped text gets it double-encoded — for now no
+     * callers do that; if the need arises, add a {@code String json} variant that skips wrapping.
+     */
     private static void appendEvent( Ticket t, TicketEventType type, Contact actor, @Nullable String payload ) {
-        TicketEvent e = TicketEvent.Factory.newInstance( type, actor, payload );
+        String jsonPayload;
+        if ( payload == null ) {
+            jsonPayload = null;
+        } else {
+            try {
+                jsonPayload = PAYLOAD_MAPPER.writeValueAsString( payload );
+            } catch ( JsonProcessingException e ) {
+                throw new IllegalStateException( "Failed to JSON-encode ticket event payload", e );
+            }
+        }
+        TicketEvent e = TicketEvent.Factory.newInstance( type, actor, jsonPayload );
         e.setTicket( t );
         t.getEvents().add( e );
     }
