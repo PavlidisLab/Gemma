@@ -33,6 +33,8 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
@@ -118,6 +120,7 @@ public class BioMaterial extends AbstractDescribable implements SecuredChild<Exp
 
     @Nullable
     @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @Fetch(FetchMode.JOIN)
     @JoinColumn(name = "EXTERNAL_ACCESSION_FK", unique = true, columnDefinition = "BIGINT")
     private DatabaseEntry externalAccession;
 

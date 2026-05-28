@@ -30,6 +30,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 
@@ -66,6 +68,7 @@ public class AuditEvent extends AbstractIdentifiable {
     // we cannot use component mapping here because of the polymorphism of auditeventtypes see HHH1152
     @Nullable
     @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @Fetch(FetchMode.JOIN)
     @JoinColumn(name = "EVENT_TYPE_FK", columnDefinition = "BIGINT", unique = true)
     private AuditEventType eventType = null;
 

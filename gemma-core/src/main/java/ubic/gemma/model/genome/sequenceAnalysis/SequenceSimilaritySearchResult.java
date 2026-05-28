@@ -30,6 +30,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Immutable;
 import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -63,6 +65,7 @@ public abstract class SequenceSimilaritySearchResult extends AbstractIdentifiabl
     private ExternalDatabase searchedDatabase;
 
     @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @Fetch(FetchMode.JOIN)
     @JoinColumn(name = "TARGET_ALIGNED_REGION_FK", unique = true, columnDefinition = "BIGINT")
     private PhysicalLocation targetAlignedRegion;
 

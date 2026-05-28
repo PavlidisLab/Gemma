@@ -14,6 +14,7 @@ import lombok.Setter;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.persistence.hibernate.ByteArrayType;
 
 import org.springframework.lang.Nullable;
@@ -25,11 +26,6 @@ import java.util.Objects;
  * This is achieved by storing cell metadata such as IDs and cell types in a {@link SingleCellDimension} that is shared
  * among all vectors of a given {@link ubic.gemma.model.expression.experiment.ExpressionExperiment} and individual
  * non-zero cell expression in a sparse data structure similar to the rows of a CSR matrix.
- * <p>
- * Behavioural note: the hbm flagged {@code quantitationType} and {@code designElement} as {@code lazy="false"} (eager),
- * but JPA's {@link AssociationOverride} cannot change the fetch mode inherited from {@link DataVector}, so
- * {@code quantitationType} is now {@link FetchType#LAZY}. Hot loaders in the single-cell DAO already issue an explicit
- * {@code JOIN FETCH} when the QT is needed, so this should be a non-event in practice.
  *
  * @author poirigui
  */
@@ -42,14 +38,19 @@ import java.util.Objects;
         @AssociationOverride(name = "expressionExperiment",
                 joinColumns = @JoinColumn(name = "EXPRESSION_EXPERIMENT_FK", nullable = false, columnDefinition = "BIGINT"),
                 foreignKey = @ForeignKey(name = "SINGLE_CELL_EXPRESSION_DATA_VECTOR_EXPRESSION_EXPERIMENT_FKC")),
-        @AssociationOverride(name = "quantitationType",
-                joinColumns = @JoinColumn(name = "QUANTITATION_TYPE_FK", nullable = false, columnDefinition = "BIGINT"),
-                foreignKey = @ForeignKey(name = "SINGLE_CELL_EXPRESSION_DATA_VECTOR_QUANTITATION_TYPE_FKC")),
         @AssociationOverride(name = "designElement",
                 joinColumns = @JoinColumn(name = "DESIGN_ELEMENT_FK", nullable = false, columnDefinition = "BIGINT"),
                 foreignKey = @ForeignKey(name = "SINGLE_CELL_EXPRESSION_DATA_VECTOR_DESIGN_ELEMENT_FKC"))
 })
 public class SingleCellExpressionDataVector extends DesignElementDataVector {
+
+    // Single-cell hbm fetched QT eagerly (lazy="false"); declared here rather than on DataVector
+    // because bulk vectors keep it LAZY. @MappedSuperclass + @AssociationOverride cannot change
+    // fetch mode, so each leaf hierarchy declares the field with the fetch policy it needs.
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "QUANTITATION_TYPE_FK", nullable = false, columnDefinition = "BIGINT",
+            foreignKey = @ForeignKey(name = "SINGLE_CELL_EXPRESSION_DATA_VECTOR_QUANTITATION_TYPE_FKC"))
+    private QuantitationType quantitationType;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "SINGLE_CELL_DIMENSION_FK", nullable = false, columnDefinition = "BIGINT",

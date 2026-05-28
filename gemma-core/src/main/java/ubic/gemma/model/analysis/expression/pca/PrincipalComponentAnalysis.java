@@ -32,6 +32,8 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Immutable;
 import ubic.gemma.model.analysis.SingleExperimentAnalysis;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -51,6 +53,7 @@ public class PrincipalComponentAnalysis extends SingleExperimentAnalysis<Express
     private Integer maxNumProbesPerComponent;
 
     @ManyToOne(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.JOIN)
     @JoinColumn(name = "BIO_ASSAY_DIMENSION_FK", columnDefinition = "BIGINT")
     private BioAssayDimension bioAssayDimension;
 

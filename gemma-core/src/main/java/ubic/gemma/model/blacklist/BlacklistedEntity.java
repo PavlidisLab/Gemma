@@ -32,6 +32,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Immutable;
 import org.springframework.lang.Nullable;
 import ubic.gemma.model.common.AbstractDescribable;
@@ -63,6 +65,7 @@ public abstract class BlacklistedEntity extends AbstractDescribable {
      */
     @Nullable
     @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @Fetch(FetchMode.JOIN)
     @JoinColumn(name = "ACCESSION_FK", unique = true, columnDefinition = "BIGINT")
     private DatabaseEntry externalAccession;
 

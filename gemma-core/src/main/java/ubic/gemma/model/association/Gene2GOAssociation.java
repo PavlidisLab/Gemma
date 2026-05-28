@@ -29,6 +29,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Immutable;
 import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.description.Characteristic;
@@ -48,6 +50,7 @@ public class Gene2GOAssociation extends AbstractIdentifiable {
     private Gene gene;
 
     @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @Fetch(FetchMode.JOIN)
     @JoinColumn(name = "ONTOLOGY_ENTRY_FK", nullable = false, unique = true, columnDefinition = "BIGINT")
     private Characteristic ontologyEntry;
 

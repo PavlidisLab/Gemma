@@ -47,17 +47,21 @@ import static ubic.gemma.persistence.util.ByteArrayUtils.*;
 @MappedSuperclass
 public abstract class DataVector extends AbstractIdentifiable {
 
-    // Bulk-vector defaults (RawED + ProcessedED): expressionExperiment LAZY/not-null, quantitationType
-    // LAZY/nullable. SingleCellExpressionDataVector overrides not-null + foreign-key names via
-    // @AssociationOverride at the entity level; fetch=LAZY is preserved (@AssociationOverride cannot
-    // change fetch mode — single-cell loaders use explicit JOIN FETCH already).
+    // EE is LAZY everywhere (bulk hbm: lazy="proxy"; single-cell hbm: lazy="proxy"); foreign-key
+    // name + not-null override happens at the entity level via @AssociationOverride.
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "EXPRESSION_EXPERIMENT_FK", nullable = false, columnDefinition = "BIGINT")
     private ExpressionExperiment expressionExperiment;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "QUANTITATION_TYPE_FK", columnDefinition = "BIGINT")
-    private QuantitationType quantitationType;
+    /**
+     * Owning {@link QuantitationType}. Fetch mode varies by concrete subclass — bulk vectors keep
+     * the QT LAZY to avoid an N+1 on bulk loads, single-cell vectors fetch eagerly to match the
+     * original hbm. Declared as an abstract accessor here so each subclass can configure its own
+     * {@code @ManyToOne} fetch policy (which @MappedSuperclass + @AssociationOverride cannot do).
+     */
+    public abstract QuantitationType getQuantitationType();
+
+    public abstract void setQuantitationType( QuantitationType quantitationType );
 
     @Lob
     @Column(name = "DATA", nullable = false, columnDefinition = "LONGBLOB")
@@ -68,7 +72,7 @@ public abstract class DataVector extends AbstractIdentifiable {
      */
     @Transient
     public Buffer getDataAsBuffer() {
-        switch ( quantitationType.getRepresentation() ) {
+        switch ( getQuantitationType().getRepresentation() ) {
             case FLOAT:
                 return getDataAsFloatBuffer();
             case DOUBLE:
@@ -79,7 +83,7 @@ public abstract class DataVector extends AbstractIdentifiable {
                 return getDataAsLongBuffer();
             default:
                 throw new UnsupportedOperationException( "Cannot create a buffer for data stored in "
-                        + quantitationType.getRepresentation() + "." );
+                        + getQuantitationType().getRepresentation() + "." );
         }
     }
 
@@ -201,7 +205,7 @@ public abstract class DataVector extends AbstractIdentifiable {
 
     @Transient
     public Object[] getDataAsObjects() {
-        return byteArrayToObjects( data, quantitationType.getRepresentation().getJavaClass() );
+        return byteArrayToObjects( data, getQuantitationType().getRepresentation().getJavaClass() );
     }
 
     public void setDataAsObjects( Object[] data ) {
@@ -220,18 +224,18 @@ public abstract class DataVector extends AbstractIdentifiable {
     public int hashCode() {
         // also, we cannot hash the ID because it is assigned on creation
         // hashing the data is wasteful because subclasses will have a design element to distinguish distinct vectors
-        return Objects.hash( expressionExperiment, quantitationType );
+        return Objects.hash( expressionExperiment, getQuantitationType() );
     }
 
     private void ensureRepresentation( PrimitiveType primitiveType ) {
-        if ( quantitationType.getRepresentation() != primitiveType ) {
+        if ( getQuantitationType().getRepresentation() != primitiveType ) {
             throw new IllegalStateException( String.format( "This vector stores data of type %s, but %s was requested.",
-                    quantitationType.getRepresentation(), primitiveType ) );
+                    getQuantitationType().getRepresentation(), primitiveType ) );
         }
     }
 
     private void ensureRepresentation( Class<?> clazz ) {
-        if ( !clazz.equals( quantitationType.getRepresentation().getJavaClass() ) ) {
+        if ( !clazz.equals( getQuantitationType().getRepresentation().getJavaClass() ) ) {
             // try to find a primitive type that matches the requested class
             String requestedType = Arrays.stream( PrimitiveType.values() )
                     .filter( p -> clazz.equals( p.getJavaClass() ) )
@@ -239,7 +243,7 @@ public abstract class DataVector extends AbstractIdentifiable {
                     .findFirst()
                     .orElse( clazz.getName() );
             throw new IllegalStateException( String.format( "This vector stores data of type %s, but %s was requested.",
-                    quantitationType.getRepresentation(), requestedType ) );
+                    getQuantitationType().getRepresentation(), requestedType ) );
         }
     }
 }

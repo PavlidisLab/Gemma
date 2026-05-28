@@ -32,6 +32,8 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.search.engine.backend.types.Projectable;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
@@ -82,6 +84,7 @@ public class ArrayDesign extends AbstractAuditable implements Curatable, Secured
 
     /* The curation details are a single-row thing with only eagerly join-fetched many-to-one relationships, so it's no big deal */
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @Fetch(FetchMode.JOIN)
     @JoinColumn(name = "CURATION_DETAILS_FK", nullable = false, unique = true, columnDefinition = "BIGINT")
     private CurationDetails curationDetails = new CurationDetails();
 

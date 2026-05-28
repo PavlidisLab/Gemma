@@ -26,6 +26,8 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -76,8 +78,12 @@ public class ProcessedExpressionDataVector extends BulkExpressionDataVector {
      * @see ExpressionExperiment#getNumberOfCells()
      * @see BioAssay#getNumberOfCells()
      */
+    // hbm: lazy="false" fetch="join" — restore outer-join semantics so bulk-vector loads don't
+    // issue one follow-up SELECT against NUMBER_OF_CELLS per vector (the default Hibernate fetch
+    // for a mappedBy 1:1 is SECONDARY SELECT, not JOIN).
     @Nullable
     @OneToOne(fetch = FetchType.EAGER, mappedBy = "vector", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Fetch(FetchMode.JOIN)
     private ProcessedExpressionDataVectorNumberOfCells numberOfCellsObject;
 
     @Nullable

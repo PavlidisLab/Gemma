@@ -33,6 +33,8 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
@@ -103,6 +105,7 @@ public class BioSequence extends AbstractDescribable {
     // this must be eager because BioSequenceValueObject assumes it is readily available
     @Nullable
     @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @Fetch(FetchMode.JOIN)
     @JoinColumn(name = "SEQUENCE_DATABASE_ENTRY_FK", unique = true, columnDefinition = "BIGINT")
     private DatabaseEntry sequenceDatabaseEntry;
 

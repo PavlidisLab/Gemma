@@ -6,6 +6,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MappedSuperclass;
 import lombok.Getter;
 import lombok.Setter;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 
 import org.springframework.lang.Nullable;
 
@@ -28,6 +29,11 @@ public abstract class BulkExpressionDataVector extends DesignElementDataVector {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "BIO_ASSAY_DIMENSION_FK", nullable = false, columnDefinition = "BIGINT")
     private BioAssayDimension bioAssayDimension;
+
+    // Bulk hbm flipped QT to LAZY ("lazy=proxy") to dodge the same N+1 — hot DAOs JOIN FETCH it.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "QUANTITATION_TYPE_FK", columnDefinition = "BIGINT")
+    private QuantitationType quantitationType;
 
     /**
      * Obtain the number of cells that were used to compute each value in this data vector, or {@code null} if now

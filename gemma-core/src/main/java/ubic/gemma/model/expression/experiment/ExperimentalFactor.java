@@ -34,6 +34,8 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.search.engine.backend.types.Projectable;
 import org.hibernate.search.mapper.pojo.automaticindexing.ReindexOnUpdate;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
@@ -77,6 +79,7 @@ public class ExperimentalFactor extends AbstractDescribable implements SecuredCh
     private FactorType type;
     @Nullable
     @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @Fetch(FetchMode.JOIN)
     @JoinColumn(name = "CATEGORY_FK", unique = true, columnDefinition = "BIGINT")
     private Characteristic category;
     @ManyToOne(fetch = FetchType.LAZY)

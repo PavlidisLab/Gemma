@@ -27,6 +27,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Immutable;
 import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -44,6 +46,7 @@ import java.util.Objects;
 public class SampleCoexpressionMatrix extends AbstractIdentifiable {
 
     @ManyToOne(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.JOIN)
     @JoinColumn(name = "BIO_ASSAY_DIMENSION_FK", nullable = false, columnDefinition = "BIGINT")
     private BioAssayDimension bioAssayDimension;
     @Lob

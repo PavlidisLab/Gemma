@@ -31,6 +31,8 @@ import jakarta.persistence.OneToMany;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.search.engine.backend.types.Projectable;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
@@ -113,6 +115,7 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     private String batchConfound;
 
     @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @Fetch(FetchMode.JOIN)
     @JoinColumn(name = "CURATION_DETAILS_FK", columnDefinition = "BIGINT", unique = true)
     private CurationDetails curationDetails = new CurationDetails();
 

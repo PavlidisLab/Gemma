@@ -29,6 +29,8 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.SQLRestriction;
@@ -79,6 +81,7 @@ public class FactorValue extends AbstractIdentifiable implements SecuredChild<Ex
     // assumed readily available in FactorValueValueObject
     @Nullable
     @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @Fetch(FetchMode.JOIN)
     @JoinColumn(name = "MEASUREMENT_FK", columnDefinition = "BIGINT", unique = true)
     private Measurement measurement;
 
