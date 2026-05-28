@@ -13,6 +13,7 @@ package ubic.gemma.persistence.service.common.auditAndSecurity.curation;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,7 @@ import ubic.gemma.model.common.auditAndSecurity.curation.TicketState;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketValueObject;
 import ubic.gemma.persistence.service.AbstractService;
 import ubic.gemma.persistence.util.Cursor;
 import ubic.gemma.persistence.util.CursorPage;
@@ -84,10 +86,11 @@ public class TicketServiceImpl extends AbstractService<Ticket> implements Ticket
     public Ticket assign( Ticket ticket, Contact actor, @Nullable Contact assignee ) {
         Assert.notNull( ticket, "Ticket cannot be null." );
         Assert.notNull( actor, "Actor cannot be null." );
-        ticket.setAssignee( assignee );
-        bumpUpdated( ticket );
-        appendEvent( ticket, TicketEventType.ASSIGNED, actor, null );
-        return ticketDao.save( ticket );
+        Ticket attached = reattach( ticket );
+        attached.setAssignee( assignee );
+        bumpUpdated( attached );
+        appendEvent( attached, TicketEventType.ASSIGNED, actor, null );
+        return ticketDao.save( attached );
     }
 
     @Override
@@ -95,9 +98,10 @@ public class TicketServiceImpl extends AbstractService<Ticket> implements Ticket
     public Ticket addComment( Ticket ticket, Contact actor, @Nullable String payload ) {
         Assert.notNull( ticket, "Ticket cannot be null." );
         Assert.notNull( actor, "Actor cannot be null." );
-        bumpUpdated( ticket );
-        appendEvent( ticket, TicketEventType.COMMENTED, actor, payload );
-        return ticketDao.save( ticket );
+        Ticket attached = reattach( ticket );
+        bumpUpdated( attached );
+        appendEvent( attached, TicketEventType.COMMENTED, actor, payload );
+        return ticketDao.save( attached );
     }
 
     @Override
@@ -106,6 +110,7 @@ public class TicketServiceImpl extends AbstractService<Ticket> implements Ticket
         Assert.notNull( ticket, "Ticket cannot be null." );
         Assert.notNull( newState, "Target state cannot be null." );
         Assert.notNull( actor, "Actor cannot be null." );
+        ticket = reattach( ticket );
         TicketState old = ticket.getState();
         if ( old == newState ) {
             // no-op transition; don't pollute the event log
@@ -132,6 +137,27 @@ public class TicketServiceImpl extends AbstractService<Ticket> implements Ticket
         }
         appendEvent( ticket, eventType, actor, reason );
         return ticketDao.save( ticket );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public TicketValueObject loadValueObject( Long id, boolean includeEvents ) {
+        Ticket t = ticketDao.load( id );
+        if ( t == null ) return null;
+        // Force lazy init while the session is still open. Without this, the JAX-RS handler's
+        // VO projection runs after the @Transactional ends and raises LazyInitializationException
+        // ("no Session") on every lazy field — reporter (LAZY @ManyToOne), assignee, targets,
+        // events, plus each event's actor.
+        if ( t.getReporter() != null ) Hibernate.initialize( t.getReporter() );
+        if ( t.getAssignee() != null ) Hibernate.initialize( t.getAssignee() );
+        Hibernate.initialize( t.getTargets() );
+        if ( includeEvents ) {
+            Hibernate.initialize( t.getEvents() );
+            for ( TicketEvent e : t.getEvents() ) {
+                if ( e.getActor() != null ) Hibernate.initialize( e.getActor() );
+            }
+        }
+        return TicketValueObject.from( t, includeEvents );
     }
 
     @Override
@@ -230,6 +256,29 @@ public class TicketServiceImpl extends AbstractService<Ticket> implements Ticket
 
     private static void bumpUpdated( Ticket t ) {
         t.setUpdatedAt( new Date() );
+    }
+
+    /**
+     * Reload {@code ticket} by id so that lazy collections (notably {@code getEvents()})
+     * resolve through the CURRENT transaction's session. A caller that holds a Ticket
+     * loaded in an earlier transaction has a detached entity — touching its lazy
+     * collections raises {@code LazyInitializationException} ("no Session"). Every
+     * write-side service method (assign / addComment / transition) goes through here
+     * to keep that bug class out of the REST and CLI surfaces.
+     *
+     * <p>A {@code null} id means the entity is transient (e.g. inside a unit test, or
+     * inside {@link #openTicket} before the create), and is by definition already
+     * attached to this session — return it unchanged.</p>
+     */
+    private Ticket reattach( Ticket ticket ) {
+        if ( ticket.getId() == null ) {
+            return ticket;
+        }
+        Ticket attached = ticketDao.load( ticket.getId() );
+        if ( attached == null ) {
+            throw new IllegalStateException( "Ticket " + ticket.getId() + " disappeared between load and mutation." );
+        }
+        return attached;
     }
 
     /** Module-private singleton; Jackson's ObjectMapper is thread-safe after configuration. */

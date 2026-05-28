@@ -14,10 +14,13 @@ package ubic.gemma.persistence.service.common.auditAndSecurity.curation;
 import org.hibernate.SessionFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import ubic.gemma.core.util.test.BaseIntegrationTest5;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
@@ -29,6 +32,7 @@ import ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetStatus;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketValueObject;
 import ubic.gemma.persistence.service.common.auditAndSecurity.ContactDao;
 
 import javax.sql.DataSource;
@@ -325,6 +329,100 @@ public class TicketPersistenceIT extends BaseIntegrationTest5 {
             }
         }
         assertTrue( sawEE && sawFV, "both target types should round-trip" );
+    }
+
+    /**
+     * Regression coverage for the JAX-RS "detached entity / lazy-init" footgun surfaced
+     * by the 2026-05-27 frink smoke test:
+     *
+     * <ol>
+     *   <li>{@code GET /tickets/{id}} returned 500 with "Could not initialize proxy
+     *       [Contact#1] - no session" — the handler called {@code ticketService.load(id)}
+     *       then projected the VO outside the now-closed session; the lazy reporter
+     *       Contact failed to materialise.</li>
+     *   <li>{@code DELETE /tickets/{id}} returned 500 with "failed to lazily initialize
+     *       a collection of role: Ticket.events - could not initialize proxy - no
+     *       Session" — the handler loaded the ticket, then passed the detached entity
+     *       to {@code transition()}; the new transaction couldn't mutate
+     *       {@code ticket.getEvents()} because the collection proxy was bound to the
+     *       closed session.</li>
+     * </ol>
+     *
+     * <p>The main-test class is {@code @Transactional}, which keeps a single session open
+     * across the whole method and silently hides this bug — that's how the bug shipped to
+     * frink unnoticed. This nested class uses {@link TransactionTemplate} to force a
+     * commit + close BETWEEN persist and the test action, exactly mirroring the JAX-RS
+     * request boundary.</p>
+     */
+    @Nested
+    @DisplayName("Detached-entity / lazy-init regression (JAX-RS boundary simulation)")
+    class DetachedEntityRegression {
+
+        @Autowired
+        private PlatformTransactionManager txManager;
+
+        private Long persistTicketInOwnTransaction( TicketType type, String title ) {
+            TransactionTemplate tx = new TransactionTemplate( txManager );
+            return tx.execute( status -> {
+                TicketTarget target = TicketTarget.Factory.newInstance(
+                        TicketTargetType.EXPRESSION_EXPERIMENT, 1L );
+                Ticket created = ticketService.openTicket( reporter, type, title,
+                        Collections.singleton( target ) );
+                return created.getId();
+            } );
+        }
+
+        @Test
+        @DisplayName("loadValueObject(id, true): VO projection survives after the persist txn closes")
+        public void loadValueObject_afterDetach_works() {
+            Long id = persistTicketInOwnTransaction( TicketType.QUALITY_REVIEW, "vo-after-detach" );
+            // Persist txn has committed; any lazy proxies on a re-loaded Ticket would be
+            // bound to a session that no longer exists. The service-side loadValueObject
+            // must initialize them inside its own @Transactional.
+            TicketValueObject vo = ticketService.loadValueObject( id, true );
+            assertNotNull( vo );
+            assertNotNull( vo.getReporterId(), "reporter must be initialized" );
+            assertNotNull( vo.getReporterName(), "reporter name must be initialized" );
+            assertEquals( 1, vo.getTargets().size() );
+            assertEquals( 1, vo.getEvents().size(), "single OPENED event" );
+            assertEquals( TicketEventType.OPENED, vo.getEvents().get( 0 ).getType() );
+            assertNotNull( vo.getEvents().get( 0 ).getActorName(), "event actor must be initialized" );
+        }
+
+        @Test
+        @DisplayName("transition(detachedTicket): re-attaches inside the txn so events collection works")
+        public void transition_onDetachedTicket_works() {
+            Long id = persistTicketInOwnTransaction( TicketType.GENERIC, "transition-after-detach" );
+
+            // Reload OUTSIDE a transaction — simulates the JAX-RS handler holding a detached
+            // ticket reference between ticketService.load(id) and ticketService.transition(...).
+            TransactionTemplate tx = new TransactionTemplate( txManager );
+            Ticket detached = tx.execute( status -> ticketDao.load( id ) );
+            assertNotNull( detached );
+
+            // The fix: transition() reattaches by id at the top, so this no longer NPEs.
+            ticketService.transition( detached, TicketState.CANCELLED, reporter, "smoke-test-cleanup" );
+
+            TicketValueObject vo = ticketService.loadValueObject( id, true );
+            assertEquals( TicketState.CANCELLED, vo.getState() );
+            assertTrue( vo.getEvents().stream().anyMatch( e -> e.getType() == TicketEventType.CANCELLED ),
+                    "CANCELLED event should be on the log" );
+        }
+
+        @Test
+        @DisplayName("addComment(detachedTicket): re-attaches so comment event lands")
+        public void addComment_onDetachedTicket_works() {
+            Long id = persistTicketInOwnTransaction( TicketType.GENERIC, "comment-after-detach" );
+            TransactionTemplate tx = new TransactionTemplate( txManager );
+            Ticket detached = tx.execute( status -> ticketDao.load( id ) );
+
+            ticketService.addComment( detached, reporter, "Looks fine to me" );
+
+            TicketValueObject vo = ticketService.loadValueObject( id, true );
+            // The COMMENTED event payload is the JSON-encoded form of "Looks fine to me"
+            assertTrue( vo.getEvents().stream().anyMatch( e -> e.getType() == TicketEventType.COMMENTED ),
+                    "COMMENTED event should be on the log" );
+        }
     }
 
     @Test

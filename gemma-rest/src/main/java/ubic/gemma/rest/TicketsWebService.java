@@ -360,11 +360,15 @@ public class TicketsWebService {
     public ResponseDataObject<TicketValueObject> getTicket(
             @PathParam("id") Long id
     ) {
-        Ticket t = ticketService.load( id );
-        if ( t == null ) {
+        // Use the service-side VO projection so the lazy collections (reporter, events,
+        // each event's actor) initialize INSIDE the service's @Transactional rather than
+        // raising LazyInitializationException once the session closes. See
+        // TicketServiceImpl.loadValueObject + the regression IT.
+        TicketValueObject vo = ticketService.loadValueObject( id, true );
+        if ( vo == null ) {
             throw new NotFoundException( "No ticket with id " + id );
         }
-        return respond( TicketValueObject.from( t, true ) );
+        return respond( vo );
     }
 
     /**

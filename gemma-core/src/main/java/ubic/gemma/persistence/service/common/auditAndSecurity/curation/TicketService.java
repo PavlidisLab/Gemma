@@ -20,6 +20,7 @@ import ubic.gemma.model.common.auditAndSecurity.curation.TicketState;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketValueObject;
 import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.util.Cursor;
 import ubic.gemma.persistence.util.CursorPage;
@@ -74,6 +75,20 @@ public interface TicketService extends BaseService<Ticket> {
      * Bumps {@code updatedAt}.
      */
     Ticket transition( Ticket ticket, TicketState newState, Contact actor, @Nullable String reason );
+
+    /**
+     * Load a ticket and project it to a {@link TicketValueObject} inside the same
+     * transaction, force-initializing the {@code reporter} + {@code assignee} +
+     * {@code targets} (and {@code events} + each event's {@code actor} when
+     * {@code includeEvents=true}) so the projection doesn't raise
+     * {@code LazyInitializationException} once the transaction ends and the
+     * JAX-RS handler reads the returned VO.
+     *
+     * <p>Returns {@code null} when no ticket with that id exists; the REST
+     * surface turns that into a 404.</p>
+     */
+    @Nullable
+    TicketValueObject loadValueObject( Long id, boolean includeEvents );
 
     /** @see TicketDao#findOpenForTarget */
     List<Ticket> findOpenForTarget( TicketTargetType targetType, Long targetId );
