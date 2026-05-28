@@ -108,6 +108,15 @@ public class TicketsWebServiceTest {
         ev.setTicket( ticket );
         ev.setOccurredAt( new Date() );
         ticket.setEvents( new HashSet<>( Collections.singletonList( ev ) ) );
+
+        // Every REST handler that mutates a ticket (updateTicket / patchTicket /
+        // cancelTicket / cancel-to-reopen lifecycle) projects the response
+        // through loadValueObject — without this stub those handlers hit the
+        // `if (vo == null) throw NotFoundException("Ticket disappeared after
+        // update.")` branch and the assertion is masked by the 404. The lenient
+        // wrapper lets individual tests skip the stub when they don't care.
+        org.mockito.Mockito.lenient().when( ticketService.loadValueObject( eq( 1L ), anyBoolean() ) )
+                .thenAnswer( inv -> TicketValueObject.from( ticket, true ) );
     }
 
     @Test
@@ -280,8 +289,8 @@ public class TicketsWebServiceTest {
 
     @Test
     public void testGetTicket_includesEvents() {
-        when( ticketService.load( 1L ) ).thenReturn( ticket );
-
+        // loadValueObject(1L, true) is stubbed in @BeforeEach to return a VO built
+        // from the fixture ticket. REST.getTicket goes through that path only.
         ResponseDataObject<TicketValueObject> resp = webService.getTicket( 1L );
 
         assertThat( resp.getData() ).isNotNull();
@@ -293,7 +302,7 @@ public class TicketsWebServiceTest {
 
     @Test
     public void testGetTicket_notFound() {
-        when( ticketService.load( 999L ) ).thenReturn( null );
+        when( ticketService.loadValueObject( eq( 999L ), anyBoolean() ) ).thenReturn( null );
         assertThatThrownBy( () -> webService.getTicket( 999L ) )
                 .isInstanceOf( NotFoundException.class );
     }
