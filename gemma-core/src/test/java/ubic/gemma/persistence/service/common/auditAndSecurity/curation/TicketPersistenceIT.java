@@ -313,6 +313,35 @@ public class TicketPersistenceIT extends BaseIntegrationTest5 {
     }
 
     @Test
+    @DisplayName("Ticket.events is ordered by occurredAt after reload (List + @OrderBy)")
+    public void events_listOrderedByOccurredAt() {
+        TicketTarget target = TicketTarget.Factory.newInstance( TicketTargetType.EXPRESSION_EXPERIMENT, 77L );
+        Ticket created = ticketService.openTicket(
+                reporter, TicketType.CURATION, "ordering-test",
+                Collections.singleton( target ) );
+        Long id = created.getId();
+        // Drive several mutations so we have multiple events with distinct timestamps.
+        ticketService.transition( created, TicketState.IN_PROGRESS, reporter, "starting" );
+        ticketService.addComment( created, reporter, "noted" );
+        ticketService.transition( created, TicketState.RESOLVED, reporter, "done" );
+        flushAndClear();
+
+        Ticket reloaded = ticketDao.load( id );
+        java.util.List<ubic.gemma.model.common.auditAndSecurity.curation.TicketEvent> evs = reloaded.getEvents();
+        assertTrue( evs.size() >= 4, "expected at least 4 events" );
+        // @OrderBy("occurredAt") on the List materializes events in ascending time.
+        // assertSorted: each event's occurredAt >= the previous one's.
+        for ( int i = 1; i < evs.size(); i++ ) {
+            assertTrue( !evs.get( i ).getOccurredAt().before( evs.get( i - 1 ).getOccurredAt() ),
+                    "events should be sorted ascending by occurredAt; index " + i
+                            + " (" + evs.get( i ).getOccurredAt() + ") precedes index "
+                            + ( i - 1 ) + " (" + evs.get( i - 1 ).getOccurredAt() + ")" );
+        }
+        // First event in chronological order must be OPENED.
+        assertEquals( TicketEventType.OPENED, evs.get( 0 ).getType() );
+    }
+
+    @Test
     @DisplayName("updateMetadata writes TicketMetadataChangedEvent on the audit trail but no TicketEvent")
     public void updateMetadata_auditOnly_noTicketEvent() {
         TicketTarget target = TicketTarget.Factory.newInstance( TicketTargetType.EXPRESSION_EXPERIMENT, 42L );

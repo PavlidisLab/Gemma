@@ -114,7 +114,7 @@ public class DatasetsWebServiceTicketsCursorTest {
         TicketTarget tt1 = TicketTarget.Factory.newInstance( TicketTargetType.EXPRESSION_EXPERIMENT, 99L );
         tt1.setTicket( ticket1 );
         ticket1.setTargets( new HashSet<>( Collections.singletonList( tt1 ) ) );
-        ticket1.setEvents( new HashSet<>() );
+        ticket1.setEvents( new java.util.ArrayList<>() );
 
         ticket2 = Ticket.Factory.newInstance( TicketType.GENERIC, "Ticket B", reporter );
         ticket2.setId( 20L );
@@ -125,7 +125,7 @@ public class DatasetsWebServiceTicketsCursorTest {
         TicketTarget tt2 = TicketTarget.Factory.newInstance( TicketTargetType.EXPRESSION_EXPERIMENT, 99L );
         tt2.setTicket( ticket2 );
         ticket2.setTargets( new HashSet<>( Collections.singletonList( tt2 ) ) );
-        ticket2.setEvents( new HashSet<>() );
+        ticket2.setEvents( new java.util.ArrayList<>() );
 
         // Wire the TicketsWebService delegate that DatasetsWebService calls into.
         java.lang.reflect.Field f = DatasetsWebService.class.getDeclaredField( "ticketsWebService" );

@@ -107,7 +107,7 @@ public class TicketsWebServiceTest {
         TicketEvent ev = TicketEvent.Factory.newInstance( TicketEventType.OPENED, reporter, null );
         ev.setTicket( ticket );
         ev.setOccurredAt( new Date() );
-        ticket.setEvents( new HashSet<>( Collections.singletonList( ev ) ) );
+        ticket.setEvents( new java.util.ArrayList<>( Collections.singletonList( ev ) ) );
 
         // Every REST handler that mutates a ticket (updateTicket / patchTicket /
         // cancelTicket / cancel-to-reopen lifecycle) projects the response
@@ -283,7 +283,7 @@ public class TicketsWebServiceTest {
         t.setCreatedAt( updatedAt );
         t.setUpdatedAt( updatedAt );
         t.setTargets( new HashSet<>() );
-        t.setEvents( new HashSet<>() );
+        t.setEvents( new java.util.ArrayList<>() );
         return t;
     }
 

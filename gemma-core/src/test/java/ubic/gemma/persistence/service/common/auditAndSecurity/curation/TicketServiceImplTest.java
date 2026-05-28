@@ -34,7 +34,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.EnumMap;
 import java.util.Map;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -348,7 +347,7 @@ public class TicketServiceImplTest {
     }
 
     private static TicketEvent mostRecentEventOfType( Ticket t, TicketEventType type ) {
-        Set<TicketEvent> events = t.getEvents();
+        java.util.List<TicketEvent> events = t.getEvents();
         TicketEvent best = null;
         for ( TicketEvent e : events ) {
             if ( e.getType() == type ) {

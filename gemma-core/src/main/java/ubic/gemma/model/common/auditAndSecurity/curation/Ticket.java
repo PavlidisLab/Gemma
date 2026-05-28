@@ -30,8 +30,10 @@ import org.springframework.lang.Nullable;
 import ubic.gemma.model.common.auditAndSecurity.AbstractAuditable;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -113,9 +115,12 @@ public class Ticket extends AbstractAuditable {
     @OneToMany(mappedBy = "ticket", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<TicketTarget> targets = new HashSet<>();
 
+    // Mirrors AuditTrail.events shape (List + @OrderBy) so iteration order
+    // reflects the workflow timeline. JPA @OrderBy is silent on a Set
+    // (HashSet ignores SQL ORDER BY); using List makes it actually honoured.
     @OneToMany(mappedBy = "ticket", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("occurredAt")
-    private Set<TicketEvent> events = new HashSet<>();
+    private List<TicketEvent> events = new ArrayList<>();
 
     public TicketType getType() {
         return type;
@@ -240,11 +245,11 @@ public class Ticket extends AbstractAuditable {
         this.targets = targets;
     }
 
-    public Set<TicketEvent> getEvents() {
+    public List<TicketEvent> getEvents() {
         return events;
     }
 
-    public void setEvents( Set<TicketEvent> events ) {
+    public void setEvents( List<TicketEvent> events ) {
         this.events = events;
     }
 

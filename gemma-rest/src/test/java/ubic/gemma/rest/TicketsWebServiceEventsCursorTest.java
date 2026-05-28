@@ -97,7 +97,7 @@ public class TicketsWebServiceEventsCursorTest {
         ticket.setState( TicketState.OPEN );
         ticket.setCreatedAt( new Date() );
         ticket.setUpdatedAt( new Date() );
-        ticket.setEvents( new HashSet<>() );
+        ticket.setEvents( new java.util.ArrayList<>() );
 
         when( ticketService.load( 100L ) ).thenReturn( ticket );
 
