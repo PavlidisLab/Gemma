@@ -12,16 +12,22 @@
 package ubic.gemma.model.common.auditAndSecurity.curation;
 
 /**
- * Domain category of a {@link Ticket}. Mirrors the typical curator workflows
- * called out in {@code AUDIT_AS_WORKFLOW_RECCE.md}. New values can be added
- * without a schema migration (the column is {@code VARCHAR(64)}).
+ * Domain category of a {@link Ticket}. Mirrors the typical curator and
+ * agent-driven workflows called out in {@code AUDIT_AS_WORKFLOW_RECCE.md}.
+ * New values can be added without a schema migration (the column is
+ * {@code VARCHAR(64)}); the entries below are illustrative and meant to
+ * grow as new workflow categories surface.
  *
  * @author paul
  */
 public enum TicketType {
     /** Batch information is missing or ambiguous and the EE can't be analyzed until it's resolved. */
     BATCH_INFO_NEEDED,
-    /** A re-alignment to a new genome / annotation set is required. */
+    /**
+     * Sequencing data needs to be (re-)aligned — either first-time alignment of
+     * uploaded RNA-seq reads, or re-alignment of an existing dataset to a new
+     * genome / annotation set.
+     */
     REALIGNMENT_NEEDED,
     /** General quality-review request (geeq follow-up, suspect outliers, etc.). */
     QUALITY_REVIEW,
@@ -38,6 +44,13 @@ public enum TicketType {
      * curator-assigned tickets that don't fit a more specific category.
      */
     CURATION,
+    /**
+     * Agent-driven literature search — find publications relevant to a dataset
+     * (or a candidate set of publications for triage). Illustrative of the
+     * non-EE-curation work items the ticket framework supports; the agent
+     * opens, comments with what it found, and transitions to RESOLVED.
+     */
+    LITERATURE_SEARCH,
     /** Catch-all for tickets that don't fit a more specific category. */
     GENERIC
 }

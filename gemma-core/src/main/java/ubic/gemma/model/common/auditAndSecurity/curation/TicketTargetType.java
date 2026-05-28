@@ -36,5 +36,14 @@ public enum TicketTargetType {
      * a scrape completes with at least one match, so the curator queue
      * surfaces the new preboarded candidates as a single work item.
      */
-    GEO_SCRAPE_WATERMARK
+    GEO_SCRAPE_WATERMARK,
+    /**
+     * A {@link ubic.gemma.model.common.description.BibliographicReference}
+     * (PubMed-style publication). Used by agent-driven literature workflows
+     * — e.g. an agent files a {@link TicketType#LITERATURE_SEARCH} ticket
+     * with the candidate publication as one target and the originating
+     * {@link #EXPRESSION_EXPERIMENT} as a co-target so an EE-level "any
+     * open ticket?" lookup picks it up.
+     */
+    BIBLIOGRAPHIC_REFERENCE
 }
