@@ -22,7 +22,6 @@
 		<module>gemma-core</module>
 		<module>gemma-cli</module>
 		<module>gemma-rest</module>
-		<module>gemma-web</module>
 	</modules>
 	<packaging>pom</packaging>
 	<scm>
@@ -1571,7 +1570,6 @@
 							<sourcepath>
 								${project.basedir}/gemma-core/target/delombok
 								:${project.basedir}/gemma-cli/target/delombok
-								:${project.basedir}/gemma-web/target/delombok
 								:${project.basedir}/gemma-rest/target/delombok
 								:${project.basedir}/gemma-rest/target/generated-sources/antlr4
 							</sourcepath>
@@ -1588,7 +1586,6 @@
 								${project.basedir}/gemma-core/src/test/java
 								:${project.basedir}/gemma-core/target/generated-test-sources/spring-security-test
 								:${project.basedir}/gemma-cli/src/test/java
-								:${project.basedir}/gemma-web/src/test/java
 								:${project.basedir}/gemma-rest/src/test/java
 							</sourcepath>
 						</configuration>
@@ -1738,8 +1735,8 @@
 		<javadocSourcePaths>${delombok.output}</javadocSourcePaths>
 		<!-- SpotBugs / FindSecBugs pinned versions; see pluginManagement entry below.
 		     The exclude filter lives at ${project.parent.basedir}/spotbugs-exclude.xml;
-		     all direct children of this top-level pom (gemma-core, gemma-rest, gemma-cli,
-		     gemma-web) resolve project.parent.basedir to this repo root. -->
+		     all direct children of this top-level pom (gemma-core, gemma-rest, gemma-cli)
+		     resolve project.parent.basedir to this repo root. -->
 		<spotbugs.maven.plugin.version>4.9.3.0</spotbugs.maven.plugin.version>
 		<findsecbugs.plugin.version>1.13.0</findsecbugs.plugin.version>
 		<!-- Standalone ASM injected into the spotbugs-maven-plugin classpath so it can
