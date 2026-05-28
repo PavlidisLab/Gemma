@@ -184,6 +184,7 @@
         <mapping class="ubic.gemma.model.common.auditAndSecurity.eventType.UnsuitableForDifferentialExpressionAnalysisEvent"/>
         <mapping class="ubic.gemma.model.common.auditAndSecurity.eventType.VectorsReorderedEvent"/>
         <mapping class="ubic.gemma.model.common.auditAndSecurity.eventType.TicketAssignedEvent"/>
+        <mapping class="ubic.gemma.model.common.auditAndSecurity.eventType.TicketMetadataChangedEvent"/>
         <mapping class="ubic.gemma.model.common.auditAndSecurity.eventType.TicketOpenedEvent"/>
         <mapping class="ubic.gemma.model.common.auditAndSecurity.eventType.TicketStateChangedEvent"/>
         <mapping class="ubic.gemma.model.common.auditAndSecurity.eventType.VersionedEvent"/>

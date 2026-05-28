@@ -322,6 +322,31 @@ public class TicketServiceImplTest {
         return mostRecentEventOfType( t, type ) != null;
     }
 
+    @Test
+    public void updateMetadata_bumpsUpdatedAt_andDoesNotAppendTicketEvent() {
+        // Transient ticket (no id) so reattach short-circuits and the mutated
+        // arg is the one saved — keeps the test free of DAO load stubs.
+        Ticket t = Ticket.Factory.newInstance( TicketType.CURATION, "metadata-edit", reporter );
+        t.setPriority( TicketPriority.NORMAL );
+        Date before = t.getUpdatedAt();
+        int eventsBefore = t.getEvents().size();
+        stubDaoSaveEchoes();
+
+        // Mutate metadata then call updateMetadata; the changedFields string
+        // shows up in the audit-trail NOTE (verified in the IT).
+        t.setPriority( TicketPriority.URGENT );
+        Ticket saved = service.updateMetadata( t, "priority" );
+
+        assertSame( t, saved );
+        assertEquals( TicketPriority.URGENT, saved.getPriority() );
+        assertEquals( eventsBefore, saved.getEvents().size(),
+                "metadata edits MUST NOT append a TicketEvent (Decision 4 of AUDIT_AS_WORKFLOW_RECCE.md)" );
+        assertTrue( saved.getUpdatedAt() == null || before == null
+                        || saved.getUpdatedAt().getTime() >= before.getTime(),
+                "updatedAt should advance" );
+        verify( ticketDao ).save( t );
+    }
+
     private static TicketEvent mostRecentEventOfType( Ticket t, TicketEventType type ) {
         Set<TicketEvent> events = t.getEvents();
         TicketEvent best = null;

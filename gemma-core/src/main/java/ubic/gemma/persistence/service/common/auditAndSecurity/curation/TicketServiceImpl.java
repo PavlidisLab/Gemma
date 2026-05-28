@@ -32,6 +32,7 @@ import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketValueObject;
 import ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.TicketAssignedEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.TicketMetadataChangedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.TicketOpenedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.TicketStateChangedEvent;
 import ubic.gemma.persistence.service.AbstractService;
@@ -170,6 +171,29 @@ public class TicketServiceImpl extends AbstractService<Ticket> implements Ticket
         auditTrailService.addUpdateEvent( saved, TicketStateChangedEvent.class,
                 old + " -> " + newState + ( reason != null && !reason.isEmpty() ? ": " + reason : "" ) );
         return saved;
+    }
+
+    @Override
+    @Transactional
+    @Audited(value = TicketMetadataChangedEvent.class, messageSpel = "'changed: ' + #changedFields")
+    public Ticket updateMetadata( Ticket ticket, String changedFields ) {
+        Assert.notNull( ticket, "Ticket cannot be null." );
+        Assert.hasText( changedFields, "changedFields must be non-blank — caller computes the diff." );
+        Ticket attached = reattach( ticket );
+        // The caller already mutated the metadata fields on the ticket arg.
+        // If `attached` is a different instance from `ticket` (session miss),
+        // copy the mutated fields across. In the common REST flow ticket was
+        // loaded by ticketService.load(id) earlier in the same transaction, so
+        // attached == ticket and this is a no-op.
+        if ( attached != ticket ) {
+            attached.setPriority( ticket.getPriority() );
+            attached.setDueDate( ticket.getDueDate() );
+            attached.setTitle( ticket.getTitle() );
+            attached.setBody( ticket.getBody() );
+            attached.setMode( ticket.getMode() );
+        }
+        bumpUpdated( attached );
+        return ticketDao.save( attached );
     }
 
     @Override

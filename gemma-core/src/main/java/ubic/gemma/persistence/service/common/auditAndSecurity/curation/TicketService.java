@@ -77,6 +77,20 @@ public interface TicketService extends BaseService<Ticket> {
     Ticket transition( Ticket ticket, TicketState newState, Contact actor, @Nullable String reason );
 
     /**
+     * Persist metadata-only edits (priority, dueDate, title, body, mode, etc.)
+     * to a ticket. The caller mutates the {@link Ticket} arg in place, then
+     * passes a comma-separated list of changed field names so the audit
+     * trail row's NOTE column documents what changed.
+     *
+     * <p>Unlike {@link #transition}, {@link #assign}, {@link #addComment} —
+     * which append rows to BOTH log streams — metadata edits write to the
+     * governance {@code AuditTrail} stream ONLY (Decision 4 of
+     * {@code AUDIT_AS_WORKFLOW_RECCE.md}: "no TicketEvent log spam for
+     * fact-of-update edits"). Bumps {@code updatedAt}.
+     */
+    Ticket updateMetadata( Ticket ticket, String changedFields );
+
+    /**
      * Load a ticket and project it to a {@link TicketValueObject} inside the same
      * transaction, force-initializing the {@code reporter} + {@code assignee} +
      * {@code targets} (and {@code events} + each event's {@code actor} when

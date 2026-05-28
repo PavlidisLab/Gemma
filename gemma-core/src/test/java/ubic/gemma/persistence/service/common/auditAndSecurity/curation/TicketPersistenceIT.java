@@ -35,6 +35,7 @@ import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketValueObject;
 import ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.TicketAssignedEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.TicketMetadataChangedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.TicketOpenedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.TicketStateChangedEvent;
 import ubic.gemma.persistence.service.common.auditAndSecurity.ContactDao;
@@ -309,6 +310,44 @@ public class TicketPersistenceIT extends BaseIntegrationTest5 {
                 .anyMatch( e -> e.getEventType() instanceof TicketStateChangedEvent );
         assertTrue( sawTicketOpenedAudit, "TicketOpenedEvent should be in the audit trail" );
         assertTrue( sawTicketStateChangedAudit, "TicketStateChangedEvent should be in the audit trail" );
+    }
+
+    @Test
+    @DisplayName("updateMetadata writes TicketMetadataChangedEvent on the audit trail but no TicketEvent")
+    public void updateMetadata_auditOnly_noTicketEvent() {
+        TicketTarget target = TicketTarget.Factory.newInstance( TicketTargetType.EXPRESSION_EXPERIMENT, 42L );
+        Ticket created = ticketService.openTicket(
+                reporter, TicketType.CURATION, "metadata-edit-it",
+                Collections.singleton( target ) );
+        Long id = created.getId();
+        int eventsAfterOpen = created.getEvents().size();
+        flushAndClear();
+
+        Ticket toEdit = ticketDao.load( id );
+        toEdit.setPriority( TicketPriority.URGENT );
+        toEdit.setBody( "more detail about what to do here" );
+        ticketService.updateMetadata( toEdit, "priority, body" );
+        flushAndClear();
+
+        Ticket reloaded = ticketDao.load( id );
+        assertEquals( TicketPriority.URGENT, reloaded.getPriority() );
+        assertEquals( "more detail about what to do here", reloaded.getBody() );
+
+        // TicketEvent stream MUST NOT grow on metadata edits.
+        assertEquals( eventsAfterOpen, reloaded.getEvents().size(),
+                "metadata edits must not append a TicketEvent (Decision 4)" );
+
+        // Governance stream DOES grow: TicketMetadataChangedEvent with the
+        // changed-fields list in NOTE.
+        boolean sawMetadataAudit = reloaded.getAuditTrail().getEvents().stream()
+                .anyMatch( e -> e.getEventType() instanceof TicketMetadataChangedEvent );
+        assertTrue( sawMetadataAudit, "TicketMetadataChangedEvent should be in the audit trail" );
+        String note = reloaded.getAuditTrail().getEvents().stream()
+                .filter( e -> e.getEventType() instanceof TicketMetadataChangedEvent )
+                .map( e -> e.getNote() )
+                .findFirst().orElse( "" );
+        assertTrue( note.contains( "priority" ) && note.contains( "body" ),
+                "audit NOTE should list the fields that changed; was: " + note );
     }
 
     @Test

@@ -475,27 +475,27 @@ public class TicketsWebService {
         Ticket created = ticketService.openTicket( reporter, req.getType(), req.getTitle(), targets );
 
         // Optional follow-up mutations seeded from the create payload.
-        boolean metadataChanged = false;
+        List<String> changedFields = new ArrayList<>();
         if ( req.getPriority() != null ) {
             created.setPriority( req.getPriority() );
-            metadataChanged = true;
+            changedFields.add( "priority" );
         }
         if ( req.getDueDate() != null ) {
             created.setDueDate( req.getDueDate() );
-            metadataChanged = true;
+            changedFields.add( "dueDate" );
         }
         if ( req.getBody() != null ) {
             created.setBody( req.getBody() );
-            metadataChanged = true;
+            changedFields.add( "body" );
         }
         if ( req.getMode() != null ) {
             created.setMode( req.getMode() );
-            metadataChanged = true;
+            changedFields.add( "mode" );
         }
-        if ( metadataChanged ) {
-            // Persist non-state edits without spamming the event log.
-            created.setUpdatedAt( new Date() );
-            ticketService.update( created );
+        if ( !changedFields.isEmpty() ) {
+            // No TicketEvent for metadata edits, but the governance audit
+            // trail picks up the change via @Audited(TicketMetadataChangedEvent).
+            ticketService.updateMetadata( created, String.join( ", ", changedFields ) );
         }
         if ( req.getAssigneeId() != null ) {
             User assignee = userReadService.load( req.getAssigneeId() );
@@ -519,8 +519,10 @@ public class TicketsWebService {
      *       JSON value to clear); appends an ASSIGNED event.</li>
      *   <li>{@code comment} — append a COMMENTED event with the supplied
      *       free-form body.</li>
-     *   <li>{@code priority}, {@code dueDate} — metadata; no event log
-     *       entry (audit trail still captures the row mutation).</li>
+     *   <li>{@code priority}, {@code dueDate}, {@code title}, {@code body},
+     *       {@code mode} — metadata; no TicketEvent log entry, but a
+     *       {@code TicketMetadataChangedEvent} is appended to the governance
+     *       audit trail with the list of changed fields in NOTE.</li>
      * </ul>
      */
     @PUT
@@ -547,31 +549,32 @@ public class TicketsWebService {
             throw new BadRequestException( "No authenticated user resolved." );
         }
 
-        // Metadata first (priority, due date, title, body, mode) — no events, but updatedAt bumps via update().
-        boolean metadataChanged = false;
+        // Metadata first (priority, due date, title, body, mode) — no
+        // TicketEvent log spam, but TicketMetadataChangedEvent on the
+        // governance audit trail picks up the diff via updateMetadata().
+        List<String> changedFields = new ArrayList<>();
         if ( req.getPriority() != null ) {
             ticket.setPriority( req.getPriority() );
-            metadataChanged = true;
+            changedFields.add( "priority" );
         }
         if ( req.isDueDateSet() ) {
             ticket.setDueDate( req.getDueDate() );
-            metadataChanged = true;
+            changedFields.add( "dueDate" );
         }
         if ( req.getTitle() != null ) {
             ticket.setTitle( req.getTitle() );
-            metadataChanged = true;
+            changedFields.add( "title" );
         }
         if ( req.isBodySet() ) {
             ticket.setBody( req.getBody() );
-            metadataChanged = true;
+            changedFields.add( "body" );
         }
         if ( req.getMode() != null ) {
             ticket.setMode( req.getMode() );
-            metadataChanged = true;
+            changedFields.add( "mode" );
         }
-        if ( metadataChanged ) {
-            ticket.setUpdatedAt( new Date() );
-            ticketService.update( ticket );
+        if ( !changedFields.isEmpty() ) {
+            ticket = ticketService.updateMetadata( ticket, String.join( ", ", changedFields ) );
         }
 
         // Assignee

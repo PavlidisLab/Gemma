@@ -54,6 +54,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.never;
@@ -496,10 +497,11 @@ public class TicketsWebServiceTest {
         Response resp = webService.createTicket( req );
 
         assertThat( resp.getStatus() ).isEqualTo( Response.Status.CREATED.getStatusCode() );
-        // body + mode should land on the ticket; the impl calls update() to persist them.
+        // body + mode should land on the ticket; the impl calls updateMetadata() to persist them
+        // (which also writes a TicketMetadataChangedEvent on the governance audit trail).
         assertThat( ticket.getBody() ).isEqualTo( "Annotate time-course; baseline is Day 0." );
         assertThat( ticket.getMode() ).isEqualTo( TicketMode.AUTO );
-        verify( ticketService ).update( ticket );
+        verify( ticketService ).updateMetadata( eq( ticket ), anyString() );
     }
 
     @Test
@@ -600,7 +602,7 @@ public class TicketsWebServiceTest {
 
         assertThat( ticket.getBody() ).isEqualTo( "Updated instructions" );
         assertThat( ticket.getMode() ).isEqualTo( TicketMode.AUTO );
-        verify( ticketService ).update( ticket );
+        verify( ticketService ).updateMetadata( eq( ticket ), anyString() );
     }
 
     @Test
@@ -617,7 +619,7 @@ public class TicketsWebServiceTest {
         webService.updateTicket( 1L, req );
 
         assertThat( ticket.getBody() ).isNull();
-        verify( ticketService ).update( ticket );
+        verify( ticketService ).updateMetadata( eq( ticket ), anyString() );
     }
 
     @Test
