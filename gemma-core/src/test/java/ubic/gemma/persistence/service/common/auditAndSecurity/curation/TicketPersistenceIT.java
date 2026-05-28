@@ -33,6 +33,10 @@ import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetStatus;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketValueObject;
+import ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.TicketAssignedEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.TicketOpenedEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.TicketStateChangedEvent;
 import ubic.gemma.persistence.service.common.auditAndSecurity.ContactDao;
 
 import javax.sql.DataSource;
@@ -295,6 +299,16 @@ public class TicketPersistenceIT extends BaseIntegrationTest5 {
         boolean sawOpened = reloaded.getEvents().stream()
                 .anyMatch( e -> e.getType() == TicketEventType.OPENED );
         assertTrue( sawOpened, "OPENED event should be in the log" );
+
+        // Governance stream: the inherited AuditTrail should carry the
+        // companion typed audit rows in lockstep with the TicketEvent log.
+        assertNotNull( reloaded.getAuditTrail(), "auditTrail row must exist for an AbstractAuditable" );
+        boolean sawTicketOpenedAudit = reloaded.getAuditTrail().getEvents().stream()
+                .anyMatch( e -> e.getEventType() instanceof TicketOpenedEvent );
+        boolean sawTicketStateChangedAudit = reloaded.getAuditTrail().getEvents().stream()
+                .anyMatch( e -> e.getEventType() instanceof TicketStateChangedEvent );
+        assertTrue( sawTicketOpenedAudit, "TicketOpenedEvent should be in the audit trail" );
+        assertTrue( sawTicketStateChangedAudit, "TicketStateChangedEvent should be in the audit trail" );
     }
 
     @Test

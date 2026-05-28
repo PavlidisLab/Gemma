@@ -19,6 +19,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
+import ubic.gemma.core.security.audit.Audited;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketEvent;
@@ -29,7 +30,12 @@ import ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketValueObject;
+import ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.TicketAssignedEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.TicketOpenedEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.TicketStateChangedEvent;
 import ubic.gemma.persistence.service.AbstractService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.util.Cursor;
 import ubic.gemma.persistence.util.CursorPage;
 
@@ -40,13 +46,20 @@ import java.util.Map;
 
 
 /**
- * Phase B-1 implementation of {@link TicketService}. Each mutating method
- * appends a {@link TicketEvent} to the ticket; persistence is via the HBM
- * cascade on the {@code events} set (no external event bus, per the recce
- * doc's "first slice" constraint).
- *
- * <p>{@code @Audited} integration and the REST surface are explicitly
- * deferred to Phase B-2.</p>
+ * Implementation of {@link TicketService}. Each mutating method writes to
+ * BOTH log streams (Decision 6 of {@code AUDIT_AS_WORKFLOW_RECCE.md}):
+ * <ul>
+ *   <li>The domain-workflow {@link TicketEvent} stream — append-only, with
+ *       the ticket-shaped {@link TicketEventType} enum carrying the action.</li>
+ *   <li>The governance {@code AuditTrail} stream inherited from
+ *       {@link ubic.gemma.model.common.auditAndSecurity.AbstractAuditable},
+ *       populated via {@code @Audited}-annotated event types
+ *       ({@link TicketOpenedEvent}, {@link TicketAssignedEvent},
+ *       {@link CommentedEvent}, {@link TicketStateChangedEvent}).</li>
+ * </ul>
+ * For {@code openTicket} the {@code @Audited} aspect can't target the result
+ * (it inspects method args), so the {@link TicketOpenedEvent} row is written
+ * inline via {@link AuditTrailService} after the ticket is created.
  *
  * @author paul
  */
@@ -54,11 +67,13 @@ import java.util.Map;
 public class TicketServiceImpl extends AbstractService<Ticket> implements TicketService {
 
     private final TicketDao ticketDao;
+    private final AuditTrailService auditTrailService;
 
     @Autowired
-    public TicketServiceImpl( TicketDao ticketDao ) {
+    public TicketServiceImpl( TicketDao ticketDao, AuditTrailService auditTrailService ) {
         super( ticketDao );
         this.ticketDao = ticketDao;
+        this.auditTrailService = auditTrailService;
     }
 
     @Override
@@ -78,11 +93,19 @@ public class TicketServiceImpl extends AbstractService<Ticket> implements Ticket
             t.getTargets().add( tgt );
         }
         appendEvent( t, TicketEventType.OPENED, reporter, null );
-        return ticketDao.create( t );
+        Ticket created = ticketDao.create( t );
+        // @Audited targets the first Auditable method argument; openTicket
+        // has none (the Ticket is constructed inside), so write the
+        // companion AuditTrail row inline after persistence.
+        auditTrailService.addUpdateEvent( created, TicketOpenedEvent.class,
+                "Opened ticket '" + title + "' (type=" + type + ")" );
+        return created;
     }
 
     @Override
     @Transactional
+    @Audited(value = TicketAssignedEvent.class,
+            messageSpel = "'Assignee ' + (#assignee != null ? '-> ' + #assignee.getId() : 'cleared')")
     public Ticket assign( Ticket ticket, Contact actor, @Nullable Contact assignee ) {
         Assert.notNull( ticket, "Ticket cannot be null." );
         Assert.notNull( actor, "Actor cannot be null." );
@@ -95,6 +118,7 @@ public class TicketServiceImpl extends AbstractService<Ticket> implements Ticket
 
     @Override
     @Transactional
+    @Audited(value = CommentedEvent.class, message = "Ticket comment added")
     public Ticket addComment( Ticket ticket, Contact actor, @Nullable String payload ) {
         Assert.notNull( ticket, "Ticket cannot be null." );
         Assert.notNull( actor, "Actor cannot be null." );
@@ -110,14 +134,14 @@ public class TicketServiceImpl extends AbstractService<Ticket> implements Ticket
         Assert.notNull( ticket, "Ticket cannot be null." );
         Assert.notNull( newState, "Target state cannot be null." );
         Assert.notNull( actor, "Actor cannot be null." );
-        ticket = reattach( ticket );
-        TicketState old = ticket.getState();
+        Ticket attached = reattach( ticket );
+        TicketState old = attached.getState();
         if ( old == newState ) {
-            // no-op transition; don't pollute the event log
-            return ticket;
+            // no-op transition; don't pollute either log stream.
+            return attached;
         }
-        ticket.setState( newState );
-        bumpUpdated( ticket );
+        attached.setState( newState );
+        bumpUpdated( attached );
 
         TicketEventType eventType;
         switch ( newState ) {
@@ -135,8 +159,17 @@ public class TicketServiceImpl extends AbstractService<Ticket> implements Ticket
             default:
                 eventType = TicketEventType.STATE_CHANGED;
         }
-        appendEvent( ticket, eventType, actor, reason );
-        return ticketDao.save( ticket );
+        appendEvent( attached, eventType, actor, reason );
+        Ticket saved = ticketDao.save( attached );
+        // @AuditedConditional can't cleanly express "fired only on real
+        // transitions" because the predicate runs AFTER the method mutates
+        // the entity, and in the common test/REST flow the arg and the
+        // attached/result instances share session identity (so
+        // #result.state == #ticket.state at evaluation time). Inline emit
+        // covers exactly the real-transition branch.
+        auditTrailService.addUpdateEvent( saved, TicketStateChangedEvent.class,
+                old + " -> " + newState + ( reason != null && !reason.isEmpty() ? ": " + reason : "" ) );
+        return saved;
     }
 
     @Override

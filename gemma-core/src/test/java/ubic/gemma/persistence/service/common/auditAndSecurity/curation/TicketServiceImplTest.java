@@ -27,6 +27,8 @@ import ubic.gemma.model.common.auditAndSecurity.curation.TicketState;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
+import ubic.gemma.model.common.auditAndSecurity.eventType.TicketOpenedEvent;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 
 import java.util.Collections;
 import java.util.Date;
@@ -57,6 +59,9 @@ public class TicketServiceImplTest {
 
     @Mock
     private TicketDao ticketDao;
+
+    @Mock
+    private AuditTrailService auditTrailService;
 
     @InjectMocks
     private TicketServiceImpl service;
@@ -111,6 +116,11 @@ public class TicketServiceImplTest {
         ArgumentCaptor<Ticket> captor = ArgumentCaptor.forClass( Ticket.class );
         verify( ticketDao ).create( captor.capture() );
         assertSame( t, captor.getValue() );
+
+        // openTicket also writes a companion AuditTrail row (inline, because
+        // @Audited can't target a method with no Auditable arg).
+        verify( auditTrailService ).addUpdateEvent( eq( t ), eq( TicketOpenedEvent.class ),
+                org.mockito.ArgumentMatchers.contains( "missing batch info" ) );
     }
 
     @Test
