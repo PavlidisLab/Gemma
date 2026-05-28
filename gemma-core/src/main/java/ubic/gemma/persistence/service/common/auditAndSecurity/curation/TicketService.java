@@ -91,6 +91,33 @@ public interface TicketService extends BaseService<Ticket> {
     Ticket updateMetadata( Ticket ticket, String changedFields );
 
     /**
+     * Update the status of a single {@link
+     * ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget} on a
+     * multi-target ticket. Typical agent flow: open ticket with N targets all
+     * NOT_DONE, then call this method as each target completes (UNDERWAY ->
+     * DONE). No-op if the target is already at {@code newStatus} (neither
+     * stream is appended).
+     *
+     * <p>Appends a {@link
+     * ubic.gemma.model.common.auditAndSecurity.curation.TicketEventType#TARGET_STATUS_CHANGED}
+     * row on the domain-workflow stream and a {@code
+     * TicketTargetStatusChangedEvent} on the governance audit trail. Bumps
+     * {@code updatedAt} on the ticket.
+     *
+     * @param ticket       the ticket whose target is being updated.
+     * @param targetId     id of the {@code TicketTarget} row (NOT the
+     *                     {@code targetId} field, which is the FK to the
+     *                     external entity).
+     * @param newStatus    the desired status.
+     * @param actor        the contact performing the update (typically the
+     *                     agent user for automated flows).
+     * @throws IllegalArgumentException if no target with the given row id
+     *                                  exists on this ticket.
+     */
+    Ticket updateTargetStatus( Ticket ticket, Long targetId,
+            ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetStatus newStatus, Contact actor );
+
+    /**
      * Load a ticket and project it to a {@link TicketValueObject} inside the same
      * transaction, force-initializing the {@code reporter} + {@code assignee} +
      * {@code targets} (and {@code events} + each event's {@code actor} when

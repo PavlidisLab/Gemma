@@ -27,6 +27,7 @@ import ubic.gemma.model.common.auditAndSecurity.curation.TicketEventType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketPriority;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketState;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetStatus;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketValueObject;
@@ -35,6 +36,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.TicketAssignedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.TicketMetadataChangedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.TicketOpenedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.TicketStateChangedEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.TicketTargetStatusChangedEvent;
 import ubic.gemma.persistence.service.AbstractService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.util.Cursor;
@@ -194,6 +196,44 @@ public class TicketServiceImpl extends AbstractService<Ticket> implements Ticket
         }
         bumpUpdated( attached );
         return ticketDao.save( attached );
+    }
+
+    @Override
+    @Transactional
+    public Ticket updateTargetStatus( Ticket ticket, Long targetId, TicketTargetStatus newStatus, Contact actor ) {
+        Assert.notNull( ticket, "Ticket cannot be null." );
+        Assert.notNull( targetId, "targetId cannot be null." );
+        Assert.notNull( newStatus, "newStatus cannot be null." );
+        Assert.notNull( actor, "Actor cannot be null." );
+        Ticket attached = reattach( ticket );
+        TicketTarget tgt = null;
+        for ( TicketTarget t : attached.getTargets() ) {
+            if ( targetId.equals( t.getId() ) ) {
+                tgt = t;
+                break;
+            }
+        }
+        if ( tgt == null ) {
+            throw new IllegalArgumentException( "Ticket " + attached.getId()
+                    + " has no target with id " + targetId );
+        }
+        TicketTargetStatus old = tgt.getStatus();
+        if ( old == newStatus ) {
+            // no-op; don't pollute either log stream.
+            return attached;
+        }
+        tgt.setStatus( newStatus );
+        bumpUpdated( attached );
+
+        String summary = "target " + tgt.getTargetId()
+                + " (" + tgt.getTargetType() + "): "
+                + old + " -> " + newStatus;
+        appendEvent( attached, TicketEventType.TARGET_STATUS_CHANGED, actor, summary );
+        Ticket saved = ticketDao.save( attached );
+        // Same session-identity rationale as transition() — emit the
+        // companion AuditTrail row inline rather than via @AuditedConditional.
+        auditTrailService.addUpdateEvent( saved, TicketTargetStatusChangedEvent.class, summary );
+        return saved;
     }
 
     @Override

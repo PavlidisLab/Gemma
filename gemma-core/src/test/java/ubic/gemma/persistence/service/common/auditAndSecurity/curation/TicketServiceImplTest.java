@@ -25,6 +25,7 @@ import ubic.gemma.model.common.auditAndSecurity.curation.TicketEventType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketPriority;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketState;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetStatus;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.TicketOpenedEvent;
@@ -344,6 +345,70 @@ public class TicketServiceImplTest {
                         || saved.getUpdatedAt().getTime() >= before.getTime(),
                 "updatedAt should advance" );
         verify( ticketDao ).save( t );
+    }
+
+    @Test
+    public void updateTargetStatus_appendsTargetStatusChangedEvent_andBumpsUpdatedAt() {
+        // Multi-target ticket; agent marks one target DONE while the other stays NOT_DONE.
+        Ticket t = Ticket.Factory.newInstance( TicketType.LITERATURE_SEARCH, "target-status", reporter );
+        TicketTarget tgt1 = TicketTarget.Factory.newInstance( TicketTargetType.EXPRESSION_EXPERIMENT, 101L );
+        tgt1.setStatus( TicketTargetStatus.NOT_DONE );
+        // Simulate a persisted row id so updateTargetStatus can find it.
+        tgt1.setId( 501L );
+        TicketTarget tgt2 = TicketTarget.Factory.newInstance( TicketTargetType.EXPRESSION_EXPERIMENT, 102L );
+        tgt2.setStatus( TicketTargetStatus.NOT_DONE );
+        tgt2.setId( 502L );
+        t.getTargets().add( tgt1 );
+        t.getTargets().add( tgt2 );
+        int eventsBefore = t.getEvents().size();
+        stubDaoSaveEchoes();
+
+        Ticket result = service.updateTargetStatus( t, 501L, TicketTargetStatus.DONE, reporter );
+
+        assertSame( t, result );
+        assertEquals( TicketTargetStatus.DONE, tgt1.getStatus() );
+        assertEquals( TicketTargetStatus.NOT_DONE, tgt2.getStatus(), "untouched target retains status" );
+
+        // One TARGET_STATUS_CHANGED event appended.
+        assertEquals( eventsBefore + 1, result.getEvents().size() );
+        TicketEvent ev = mostRecentEventOfType( result, TicketEventType.TARGET_STATUS_CHANGED );
+        assertNotNull( ev );
+        assertSame( reporter, ev.getActor() );
+
+        // Companion governance audit row is emitted inline via the mock.
+        verify( auditTrailService ).addUpdateEvent(
+                eq( t ),
+                eq( ubic.gemma.model.common.auditAndSecurity.eventType.TicketTargetStatusChangedEvent.class ),
+                org.mockito.ArgumentMatchers.contains( "NOT_DONE -> DONE" ) );
+    }
+
+    @Test
+    public void updateTargetStatus_noOp_whenAlreadyAtRequestedStatus() {
+        Ticket t = Ticket.Factory.newInstance( TicketType.LITERATURE_SEARCH, "noop-target", reporter );
+        TicketTarget tgt = TicketTarget.Factory.newInstance( TicketTargetType.EXPRESSION_EXPERIMENT, 101L );
+        tgt.setStatus( TicketTargetStatus.DONE );
+        tgt.setId( 501L );
+        t.getTargets().add( tgt );
+        int eventsBefore = t.getEvents().size();
+
+        Ticket result = service.updateTargetStatus( t, 501L, TicketTargetStatus.DONE, reporter );
+
+        assertSame( t, result );
+        assertEquals( eventsBefore, result.getEvents().size(), "no-op MUST NOT append an event" );
+        org.mockito.Mockito.verifyNoInteractions( auditTrailService );
+    }
+
+    @Test
+    public void updateTargetStatus_unknownTargetId_throwsIAE() {
+        // Leave the ticket transient (id=null) so reattach short-circuits and
+        // returns the arg — the test exercises the "no matching target row" branch.
+        Ticket t = Ticket.Factory.newInstance( TicketType.LITERATURE_SEARCH, "missing-target", reporter );
+        TicketTarget tgt = TicketTarget.Factory.newInstance( TicketTargetType.EXPRESSION_EXPERIMENT, 101L );
+        tgt.setId( 501L );
+        t.getTargets().add( tgt );
+
+        assertThrows( IllegalArgumentException.class, () ->
+                service.updateTargetStatus( t, 9999L, TicketTargetStatus.DONE, reporter ) );
     }
 
     private static TicketEvent mostRecentEventOfType( Ticket t, TicketEventType type ) {

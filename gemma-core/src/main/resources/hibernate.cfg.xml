@@ -187,6 +187,7 @@
         <mapping class="ubic.gemma.model.common.auditAndSecurity.eventType.TicketMetadataChangedEvent"/>
         <mapping class="ubic.gemma.model.common.auditAndSecurity.eventType.TicketOpenedEvent"/>
         <mapping class="ubic.gemma.model.common.auditAndSecurity.eventType.TicketStateChangedEvent"/>
+        <mapping class="ubic.gemma.model.common.auditAndSecurity.eventType.TicketTargetStatusChangedEvent"/>
         <mapping class="ubic.gemma.model.common.auditAndSecurity.eventType.VersionedEvent"/>
         <mapping class="ubic.gemma.model.common.auditAndSecurity.eventType.WorkflowStateChangedEvent"/>
 

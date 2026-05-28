@@ -26,6 +26,13 @@ public enum TicketEventType {
     RESOLVED,
     CANCELLED,
     REOPENED,
+    /**
+     * One of the ticket's {@link TicketTarget}s changed status (NOT_DONE /
+     * UNDERWAY / DONE). Typical agent flow on a multi-target ticket emits
+     * one of these per target completion, alongside a
+     * {@code TicketTargetStatusChangedEvent} on the governance audit trail.
+     */
+    TARGET_STATUS_CHANGED,
     /** Deferred — see Decision 4 in the recce doc. Provisioned in the enum so the column never has to grow. */
     COMMENT_EDITED
 }

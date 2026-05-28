@@ -38,6 +38,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.TicketAssignedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.TicketMetadataChangedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.TicketOpenedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.TicketStateChangedEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.TicketTargetStatusChangedEvent;
 import ubic.gemma.persistence.service.common.auditAndSecurity.ContactDao;
 
 import javax.sql.DataSource;
@@ -310,6 +311,56 @@ public class TicketPersistenceIT extends BaseIntegrationTest5 {
                 .anyMatch( e -> e.getEventType() instanceof TicketStateChangedEvent );
         assertTrue( sawTicketOpenedAudit, "TicketOpenedEvent should be in the audit trail" );
         assertTrue( sawTicketStateChangedAudit, "TicketStateChangedEvent should be in the audit trail" );
+    }
+
+    @Test
+    @DisplayName("updateTargetStatus mutates one TicketTarget, appends TARGET_STATUS_CHANGED + audit row")
+    public void updateTargetStatus_marksOneTargetDone() {
+        TicketTarget tgtA = TicketTarget.Factory.newInstance( TicketTargetType.EXPRESSION_EXPERIMENT, 10L );
+        TicketTarget tgtB = TicketTarget.Factory.newInstance( TicketTargetType.EXPRESSION_EXPERIMENT, 11L );
+        Set<TicketTarget> targets = new HashSet<>();
+        targets.add( tgtA );
+        targets.add( tgtB );
+
+        Ticket created = ticketService.openTicket(
+                reporter, TicketType.LITERATURE_SEARCH, "agent-target-status",
+                targets );
+        Long ticketId = created.getId();
+        // Capture the row-id of tgtA so we can drive updateTargetStatus by it.
+        Long tgtARowId = created.getTargets().stream()
+                .filter( t -> t.getTargetId().equals( 10L ) )
+                .findFirst().orElseThrow().getId();
+        flushAndClear();
+
+        Ticket toEdit = ticketDao.load( ticketId );
+        ticketService.updateTargetStatus( toEdit, tgtARowId, TicketTargetStatus.DONE, reporter );
+        flushAndClear();
+
+        Ticket reloaded = ticketDao.load( ticketId );
+        // Per-target status independent: only tgtA flipped.
+        for ( TicketTarget t : reloaded.getTargets() ) {
+            if ( t.getTargetId().equals( 10L ) ) {
+                assertEquals( TicketTargetStatus.DONE, t.getStatus(), "tgtA should be DONE" );
+            } else {
+                assertEquals( TicketTargetStatus.NOT_DONE, t.getStatus(), "tgtB should be untouched" );
+            }
+        }
+
+        // Workflow stream: TARGET_STATUS_CHANGED is appended (alongside the OPENED).
+        boolean sawTargetEvent = reloaded.getEvents().stream()
+                .anyMatch( e -> e.getType() == TicketEventType.TARGET_STATUS_CHANGED );
+        assertTrue( sawTargetEvent, "TARGET_STATUS_CHANGED should be in the TicketEvent log" );
+
+        // Governance stream: TicketTargetStatusChangedEvent on the audit trail.
+        boolean sawTargetAudit = reloaded.getAuditTrail().getEvents().stream()
+                .anyMatch( e -> e.getEventType() instanceof TicketTargetStatusChangedEvent );
+        assertTrue( sawTargetAudit, "TicketTargetStatusChangedEvent should be in the audit trail" );
+        String note = reloaded.getAuditTrail().getEvents().stream()
+                .filter( e -> e.getEventType() instanceof TicketTargetStatusChangedEvent )
+                .map( e -> e.getNote() )
+                .findFirst().orElse( "" );
+        assertTrue( note.contains( "NOT_DONE -> DONE" ) && note.contains( "10" ),
+                "audit NOTE should describe the change; was: " + note );
     }
 
     @Test

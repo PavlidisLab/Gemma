@@ -634,6 +634,57 @@ public class TicketsWebService {
     }
 
     /**
+     * Update the status of a single {@link TicketTarget} on a multi-target
+     * ticket — the canonical agent-workflow move. The agent picks up an
+     * open ticket, marks each target {@link TicketTargetStatus#UNDERWAY}
+     * when it starts work on it, then {@link TicketTargetStatus#DONE} when
+     * it finishes. Appends a
+     * {@link TicketEventType#TARGET_STATUS_CHANGED} event and a
+     * {@code TicketTargetStatusChangedEvent} audit-trail row in lockstep.
+     * No-op when the target is already at {@code status}.
+     *
+     * <p>The {@code targetRowId} path param is the {@code TicketTarget}
+     * primary key (the row id), NOT the {@code targetId} field (which is
+     * the FK to the targeted entity like an EE).</p>
+     */
+    @PATCH
+    @Path("/{id}/targets/{targetRowId}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Update one target's status on a multi-target ticket",
+            description = "Sets status on the specified TicketTarget row. Idempotent on no-op; "
+                    + "writes a TARGET_STATUS_CHANGED event + audit row when status actually changes.")
+    public ResponseDataObject<TicketValueObject> updateTargetStatus(
+            @PathParam("id") Long id,
+            @PathParam("targetRowId") Long targetRowId,
+            UpdateTargetStatusRequest req
+    ) {
+        if ( req == null || req.getStatus() == null ) {
+            throw new BadRequestException( "Request body with `status` is required." );
+        }
+        Ticket ticket = ticketService.load( id );
+        if ( ticket == null ) {
+            throw new NotFoundException( "No ticket with id " + id );
+        }
+        User actor = userManager.getCurrentUser();
+        if ( actor == null ) {
+            throw new BadRequestException( "No authenticated user resolved." );
+        }
+        try {
+            ticketService.updateTargetStatus( ticket, targetRowId, req.getStatus(), actor );
+        } catch ( IllegalArgumentException e ) {
+            // updateTargetStatus throws IAE when the targetRowId isn't on this ticket.
+            throw new NotFoundException( e.getMessage() );
+        }
+        TicketValueObject vo = ticketService.loadValueObject( id, true );
+        if ( vo == null ) {
+            throw new NotFoundException( "Ticket " + id + " disappeared after target update." );
+        }
+        return respond( vo );
+    }
+
+    /**
      * Soft-close a ticket: transition to {@link TicketState#CANCELLED} and
      * append a CANCELLED event. The row itself is NOT hard-deleted — the
      * ticket and its event log remain queryable for audit (Decision 4 of
@@ -870,5 +921,18 @@ public class TicketsWebService {
         @Nullable
         public TicketMode getMode() { return mode; }
         public void setMode( @Nullable TicketMode mode ) { this.mode = mode; }
+    }
+
+    /**
+     * Body for {@link #updateTargetStatus(Long, Long, UpdateTargetStatusRequest)}.
+     * Single field, but kept as a DTO so the JSON shape can grow later
+     * (e.g. a per-target note) without a v2 endpoint.
+     */
+    public static class UpdateTargetStatusRequest {
+        @Schema(description = "Desired status for this target.", example = "DONE")
+        private TicketTargetStatus status;
+
+        public TicketTargetStatus getStatus() { return status; }
+        public void setStatus( TicketTargetStatus status ) { this.status = status; }
     }
 }

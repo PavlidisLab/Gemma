@@ -706,6 +706,42 @@ public class TicketsWebServiceTest {
         verify( ticketService ).transition( ticket, TicketState.RESOLVED, reporter, null );
     }
 
+    @Test
+    public void testUpdateTargetStatus_delegatesToService() {
+        when( userManager.getCurrentUser() ).thenReturn( reporter );
+        when( ticketService.load( 1L ) ).thenReturn( ticket );
+        when( ticketService.updateTargetStatus( eq( ticket ), eq( 501L ), eq( TicketTargetStatus.DONE ), eq( reporter ) ) )
+                .thenReturn( ticket );
+
+        TicketsWebService.UpdateTargetStatusRequest req = new TicketsWebService.UpdateTargetStatusRequest();
+        req.setStatus( TicketTargetStatus.DONE );
+        ResponseDataObject<TicketValueObject> resp = webService.updateTargetStatus( 1L, 501L, req );
+
+        assertThat( resp.getData() ).isNotNull();
+        verify( ticketService ).updateTargetStatus( ticket, 501L, TicketTargetStatus.DONE, reporter );
+    }
+
+    @Test
+    public void testUpdateTargetStatus_unknownTarget_returns404() {
+        when( userManager.getCurrentUser() ).thenReturn( reporter );
+        when( ticketService.load( 1L ) ).thenReturn( ticket );
+        when( ticketService.updateTargetStatus( any(), eq( 999L ), any(), any() ) )
+                .thenThrow( new IllegalArgumentException( "Ticket 1 has no target with id 999" ) );
+
+        TicketsWebService.UpdateTargetStatusRequest req = new TicketsWebService.UpdateTargetStatusRequest();
+        req.setStatus( TicketTargetStatus.DONE );
+        assertThatThrownBy( () -> webService.updateTargetStatus( 1L, 999L, req ) )
+                .isInstanceOf( NotFoundException.class );
+    }
+
+    @Test
+    public void testUpdateTargetStatus_missingBody_returns400() {
+        TicketsWebService.UpdateTargetStatusRequest req = new TicketsWebService.UpdateTargetStatusRequest();
+        // status left null
+        assertThatThrownBy( () -> webService.updateTargetStatus( 1L, 501L, req ) )
+                .isInstanceOf( BadRequestException.class );
+    }
+
     /**
      * Annotation-level auth guard: the write-side endpoints must carry
      * {@code @PreAuthorize("isAuthenticated()")}. At runtime Spring's method-
