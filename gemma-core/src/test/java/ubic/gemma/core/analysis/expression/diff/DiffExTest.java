@@ -22,6 +22,7 @@ package ubic.gemma.core.analysis.expression.diff;
 import org.assertj.core.api.Assertions;
 import org.junit.After;
 import org.junit.Assume;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -103,10 +104,19 @@ public class DiffExTest extends AbstractGeoServiceTest {
     /* fixtures */
     private ExpressionExperiment ee;
 
+
+    @Before
     @After
-    public void tearDown() {
-        if ( ee != null ) {
-            eeService.remove( ee );
+    public void removeTestData() {
+        for ( String shortName : new String[] { "GSE29006", "GSE35930" } ) {
+            try {
+                ExpressionExperiment existing = eeService.findByShortName( shortName );
+                if ( existing != null ) {
+                    eeService.remove( existing );
+                }
+            } catch ( Exception e ) {
+                log.warn( "Failed to remove " + shortName + " during test cleanup: " + e.getMessage() );
+            }
         }
     }
 

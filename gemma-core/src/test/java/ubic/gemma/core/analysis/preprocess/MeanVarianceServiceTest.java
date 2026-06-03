@@ -17,6 +17,7 @@ package ubic.gemma.core.analysis.preprocess;
 import org.hibernate.ObjectNotFoundException;
 import org.junit.After;
 import org.junit.Assume;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -81,10 +82,18 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
 
     private ExpressionExperiment ee;
 
+    @Before
     @After
-    public void after() {
-        if ( ee != null ) {
-            eeService.remove( ee );
+    public void removeTestData() {
+        for ( String shortName : new String[] { "GSE29006", "GSE2982" } ) {
+            try {
+                ExpressionExperiment existing = eeService.findByShortName( shortName );
+                if ( existing != null ) {
+                    eeService.remove( existing );
+                }
+            } catch ( Exception e ) {
+                log.warn( "Failed to remove " + shortName + " during test cleanup: " + e.getMessage() );
+            }
         }
     }
 

@@ -20,6 +20,7 @@
 package ubic.gemma.core.loader.expression;
 
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -89,13 +90,28 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
     private ExpressionExperiment ee;
     private ArrayDesign targetArrayDesign;
 
+
+    @Before
     @After
-    public void tearDown() {
-        if ( ee != null ) {
-            experimentService.remove( ee );
+    public void removeTestData() {
+        for ( String shortName : new String[] { "GSE37646", "GSE19166", "GSE29006" } ) {
+            try {
+                ExpressionExperiment existing = experimentService.findByShortName( shortName );
+                if ( existing != null ) {
+                    experimentService.remove( existing );
+                }
+            } catch ( Exception e ) {
+                log.warn( "Failed to remove " + shortName + " during test cleanup: " + e.getMessage() );
+            }
         }
-        if ( targetArrayDesign != null )
-            arrayDesignService.remove( targetArrayDesign );
+        if ( targetArrayDesign != null ) {
+            try {
+                arrayDesignService.remove( targetArrayDesign );
+            } catch ( Exception e ) {
+                log.warn( "Failed to remove target array design during test cleanup: " + e.getMessage() );
+            }
+            targetArrayDesign = null;
+        }
     }
 
     @Test
