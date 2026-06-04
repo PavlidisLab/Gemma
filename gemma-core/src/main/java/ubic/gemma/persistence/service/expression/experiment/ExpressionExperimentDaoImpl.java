@@ -2352,10 +2352,10 @@ public class ExpressionExperimentDaoImpl
                     subBm.setSourceBioMaterial( null );
                     session.delete( subBm );
                 }
-                for ( BioMaterial bm : samplesToRemove ) {
-                    log.debug( "Removing " + bm + "..." );
-                    session.delete( bm );
-                }
+            }
+            for ( BioMaterial bm : samplesToRemove ) {
+                log.debug( "Removing " + bm + "..." );
+                session.delete( bm );
             }
         }
     }
