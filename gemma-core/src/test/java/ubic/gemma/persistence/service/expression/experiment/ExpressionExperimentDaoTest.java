@@ -490,6 +490,36 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     }
 
     @Test
+    public void testRemoveExperimentDeletesBioMaterials() {
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+        ArrayDesign arrayDesign = new ArrayDesign();
+        arrayDesign.setPrimaryTaxon( taxon );
+        sessionFactory.getCurrentSession().persist( arrayDesign );
+        BioMaterial bm = new BioMaterial();
+        bm.setSourceTaxon( taxon );
+        sessionFactory.getCurrentSession().persist( bm );
+        BioAssay ba = new BioAssay();
+        ba.setArrayDesignUsed( arrayDesign );
+        ba.setSampleUsed( bm );
+        bm.getBioAssaysUsedIn().add( ba );
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.getBioAssays().add( ba );
+        sessionFactory.getCurrentSession().persist( ee );
+        sessionFactory.getCurrentSession().flush();
+        sessionFactory.getCurrentSession().clear();
+        Long bmId = bm.getId();
+        Long baId = ba.getId();
+        ee = expressionExperimentDao.load( ee.getId() );
+        assertNotNull( ee );
+        expressionExperimentDao.remove( ee );
+        sessionFactory.getCurrentSession().flush();
+        // the BioMaterial was attached only to this EE, so it must be deleted too
+        assertNull( sessionFactory.getCurrentSession().get( BioMaterial.class, bmId ) );
+        assertNull( sessionFactory.getCurrentSession().get( BioAssay.class, baId ) );
+    }
+
+    @Test
     public void testRemoveExperimentWithSharedBioMaterial() {
         Taxon taxon = new Taxon();
         sessionFactory.getCurrentSession().persist( taxon );
