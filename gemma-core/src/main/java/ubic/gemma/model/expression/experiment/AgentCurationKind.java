@@ -26,8 +26,6 @@ package ubic.gemma.model.expression.experiment;
  * {@link #getDbValue()} / {@link #fromDbValue(String)} helpers expose a
  * lowercase form for DTOs / external surfaces where lowercase
  * {@code "proposal"} / {@code "audit"} is preferred.</p>
- *
- * <p>See {@code handoffs/RECCE_AGENT_CURATION_UNIFICATION.md} §2 + §3.</p>
  */
 public enum AgentCurationKind {
     PROPOSAL,

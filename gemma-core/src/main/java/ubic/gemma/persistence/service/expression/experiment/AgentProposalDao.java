@@ -50,7 +50,7 @@ public interface AgentProposalDao extends BaseDao<AgentProposal> {
      * investigation, newest first. The {@code payloadJson} column is NOT
      * loaded; the projection emits {@code length(payloadJson)} as
      * {@code payloadSize} so the UI can decide whether to fetch the full
-     * row. See {@code handoffs/RECCE_AGENT_CURATION_UNIFICATION.md} §3.
+     * row.
      *
      * @param investigation target investigation. Required.
      * @param kindFilter    optional kind filter; {@code null} means "all

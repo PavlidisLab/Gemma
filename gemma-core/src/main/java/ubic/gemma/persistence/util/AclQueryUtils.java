@@ -79,8 +79,7 @@ public class AclQueryUtils {
             AOI_TYPE_PARAM = PARAM_PREFIX + "aoiType",
     // HQL-only: the resolved acl_class.id, used in place of the formula-backed
     // `aoi.type = :aoiType` so MySQL doesn't emit a correlated subquery per
-    // outer row. See the formAclRestrictionClause comment + the recce in
-    // handoffs/STATUS_PERF_DATASETS_COUNT_RECCE.md.
+    // outer row. See the formAclRestrictionClause comment.
             AOI_CLASS_ID_PARAM = PARAM_PREFIX + "aoiClassId";
     static final String USER_NAME_PARAM = PARAM_PREFIX + "userName";
 
@@ -186,8 +185,7 @@ public class AclQueryUtils {
         // aoi.type (a formula property that resolves to a correlated subquery on
         // acl_class) lets MySQL fold the AOI class lookup to a const. With
         // aoi.type the planner re-ran acl_class per outer row and the
-        // /datasets/count query never finished against prod cardinalities
-        // (handoffs/STATUS_PERF_DATASETS_COUNT_RECCE.md).
+        // /datasets/count query never finished against prod cardinalities.
         //language=HQL
         StringBuilder exists = new StringBuilder( 256 );
         exists.append( "exists (select 1 from AclObjectIdentity " ).append( AOI_ALIAS )
@@ -243,7 +241,7 @@ public class AclQueryUtils {
         //language=HQL
         // Filter on aoi.objectIdClass (indexed BIGINT) rather than aoi.type (formula
         // resolving to a correlated subquery on acl_class) — see the formAclRestrictionClause
-        // comment + handoffs/STATUS_PERF_DATASETS_COUNT_RECCE.md. The IN list here is the
+        // comment. The IN list here is the
         // post-fetch batch (usually ≤ 128 ids) so the formula form wasn't catastrophic, but
         // applying the same shape keeps the surface consistent.
         Long aoiClassId = resolveAclClassId( aoiType.getCanonicalName() );

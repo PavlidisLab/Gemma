@@ -32,7 +32,7 @@ import ubic.gemma.model.common.description.ExternalDatabase;
  * declarative aspect today (the aspect writes via
  * {@code addUpdateEventWithPayload} which sets {@code performedDate=now()}).
  *
- * <p>Phase C bucket 2g (handoffs/AUDIT_RESIDUAL_INVENTORY.md #9 + #10):
+ * <p>Phase C bucket 2g (audit-residual inventory #9 + #10):
  * migrates the imperative call to an {@code @Audited}-decorated method on
  * this helper bean. The legacy 5-arg form's explicit
  * {@code performedDate=lastUpdated} semantics shift to {@code now()} for

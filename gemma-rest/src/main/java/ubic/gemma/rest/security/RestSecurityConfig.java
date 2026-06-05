@@ -156,8 +156,7 @@ public class RestSecurityConfig {
      * `<s:http pattern="/**">` chain. Without an explicit order, FilterChainProxy uses
      * bean-registration order — which is not source-file order — and the XML `/**`
      * chain was winning for /rest/v2/login. The XML chain has CSRF enabled, so the
-     * SPA's POST /rest/v2/login was getting 403s. See
-     * `handoffs/HANDOFF_REST_CHAIN_ORDER_CSRF.md` (2026-05-24).
+     * SPA's POST /rest/v2/login was getting 403s before this @Order(1) was set.
      */
     @Bean
     @Order(1)

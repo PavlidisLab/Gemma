@@ -1,4 +1,4 @@
--- Step 1 of the AgentCuration unification (handoffs/RECCE_AGENT_CURATION_UNIFICATION.md §2+§3).
+-- Step 1 of the AgentCuration unification.
 --
 -- Adds a KIND discriminator on AGENT_PROPOSAL so the same table can carry both
 -- forward-looking agent proposals (default) and post-hoc agent audits. The

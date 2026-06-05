@@ -325,7 +325,6 @@ public class CurationWebService {
     // exist on CurationDraft via diff-derive in the local-api eval path —
     // the AgentProposal-side disposition is a complementary surface for the
     // post-evaluation phase, not a replacement. See
-    // handoffs/RECCE_AGENT_CURATION_UNIFICATION.md §4 +
     // handoffs/CURATION_TO_GEMMA_2_0_HANDOFF.md.
     // ------------------------------------------------------------------
 
@@ -372,8 +371,7 @@ public class CurationWebService {
 
     /**
      * Set the curator disposition on a {@code kind=PROPOSAL} row. Wire
-     * vocabulary: {@code accept}, {@code reject}, {@code edit}, {@code park}
-     * (see {@code handoffs/RECCE_AGENT_CURATION_UNIFICATION.md} §4.1).
+     * vocabulary: {@code accept}, {@code reject}, {@code edit}, {@code park}.
      * Stamps {@code lastUpdated}; does NOT change lifecycle status (use
      * finalize / reopen for that). 404 if id resolves to an audit row.
      * <p>
@@ -536,8 +534,7 @@ public class CurationWebService {
 
     /**
      * Shared helper: validate the disposition string against the allow-list.
-     * Wire vocabulary from {@code handoffs/RECCE_AGENT_CURATION_UNIFICATION.md}
-     * §4.1: proposal PATCH allows {@code accept}, {@code reject}, {@code edit},
+     * Wire vocabulary: proposal PATCH allows {@code accept}, {@code reject}, {@code edit},
      * {@code park}; audit PATCH additionally allows {@code accepted_with_edits}.
      * Returns the normalized lowercase string for storage, or {@code null} if
      * the body carries no disposition (audit PATCH only).

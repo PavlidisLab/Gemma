@@ -43,8 +43,7 @@ public interface PreprocessorHelperService {
      * {@code private void batchCorrect(ExpressionExperiment)} and was self-
      * invoked from {@code process()}) so the call passes through a Spring
      * proxy and the audit aspect can fire — bucket 2b of
-     * {@code AUDIT_PHASE_C_RECCE.md} / inventory #3 of
-     * {@code handoffs/AUDIT_RESIDUAL_INVENTORY.md}.
+     * {@code AUDIT_PHASE_C_RECCE.md} (inventory #3).
      *
      * @return the number of processed vectors that were replaced by the
      *         batch-corrected matrix, or {@code null} when the experiment

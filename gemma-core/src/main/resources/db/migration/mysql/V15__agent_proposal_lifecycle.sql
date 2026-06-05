@@ -1,4 +1,4 @@
--- Step 4 of the AgentCuration unification (handoffs/RECCE_AGENT_CURATION_UNIFICATION.md §4).
+-- Step 4 of the AgentCuration unification.
 --
 -- Adds the lifecycle + disposition columns the curation-UI's mutation
 -- endpoints (PATCH /curation-proposals/{id}, PATCH /audits/{id},
