@@ -4,6 +4,7 @@ import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
+import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -38,9 +39,11 @@ public interface SingleCellExpressionExperimentSubSetService {
      * <li>create corresponding {@link BioAssay}s for the sub-{@link BioMaterial}s</li>
      * <li>attach the {@link BioAssay}s to {@link ExpressionExperimentSubSet}</li>
      * </ul>
+     * <p>
+     * Samples (i.e. {@link BioAssay}s on the experiment) that are not present in {@code scd} are skipped
      *
      * @return a list of subsets representing subpopulations of cells
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    List<ExpressionExperimentSubSet> createSubSets( ExpressionExperiment ee, CellLevelCharacteristics clc, ExperimentalFactor factor, Map<Characteristic, FactorValue> cellTypeMapping, SingleCellExperimentSubSetsCreationConfig config );
+    List<ExpressionExperimentSubSet> createSubSets( ExpressionExperiment ee, SingleCellDimension scd, CellLevelCharacteristics clc, ExperimentalFactor factor, Map<Characteristic, FactorValue> cellTypeMapping, SingleCellExperimentSubSetsCreationConfig config );
 }

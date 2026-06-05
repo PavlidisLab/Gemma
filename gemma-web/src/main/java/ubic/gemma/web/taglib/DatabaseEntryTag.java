@@ -74,7 +74,7 @@ public class DatabaseEntryTag extends AbstractHtmlElementTag {
                     tagWriter.writeAttribute( "href", externalUri );
                     tagWriter.writeAttribute( "target", "_blank" );
                     tagWriter.writeAttribute( "rel", "noopener noreferrer" );
-                    writeDatabaseLogo( databaseEntry.getExternalDatabase().getName(), staticAssetResolver.resolveUrl( databaseLogo ), tagWriter );
+                    writeDatabaseLogo( databaseEntry.getExternalDatabase().getName(), databaseLogo, tagWriter );
                     tagWriter.endTag(); // </a>
                 } else {
                     if ( hasLabel ) {
@@ -95,7 +95,7 @@ public class DatabaseEntryTag extends AbstractHtmlElementTag {
                     }
                 }
             } else if ( databaseLogo != null ) {
-                writeDatabaseLogo( databaseEntry.getExternalDatabase().getName(), staticAssetResolver.resolveUrl( databaseLogo ), tagWriter );
+                writeDatabaseLogo( databaseEntry.getExternalDatabase().getName(), databaseLogo, tagWriter );
             } else {
                 if ( hasLabel ) {
                     tagWriter.appendValue( "(" );

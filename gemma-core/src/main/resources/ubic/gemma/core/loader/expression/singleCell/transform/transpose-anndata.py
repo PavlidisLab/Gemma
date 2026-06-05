@@ -3,6 +3,20 @@
 #
 
 import sys
+import resource
+
+def memory_limit(ratio):
+    with open('/proc/meminfo') as f:
+        for line in f:
+            if line.startswith('MemAvailable:'):
+                available_memory = int(line.split()[1]) * 1024
+                break
+        else:
+            raise RuntimeError('Could not determine available memory from /proc/meminfo')
+    limit = int(available_memory * ratio)
+    resource.setrlimit(resource.RLIMIT_AS, (limit, limit))
+
+memory_limit(.9)
 
 try:
     import anndata

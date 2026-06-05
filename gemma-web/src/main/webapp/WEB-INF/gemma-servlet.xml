@@ -357,6 +357,7 @@
         <dwr:remote javascript="ExperimentalDesignController">
             <dwr:include method="createDesignFromFile"/>
             <dwr:include method="getExperimentalFactors"/>
+            <dwr:include method="getSampleLevelExperimentalFactors"/>
             <dwr:include method="createExperimentalFactor"/>
             <dwr:include method="deleteExperimentalFactors"/>
             <dwr:include method="updateExperimentalFactors"/>

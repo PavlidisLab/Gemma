@@ -12,6 +12,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
+import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
@@ -85,6 +86,7 @@ public class SingleCellExpressionExperimentSubSetServiceTest extends BaseTest {
     public void test() {
         CellTypeAssignment cta = new CellTypeAssignment();
         ExpressionExperiment ee = new ExpressionExperiment();
+        SingleCellDimension scd = new SingleCellDimension();
         ExperimentalFactor cf = new ExperimentalFactor();
         cf.setType( FactorType.CATEGORICAL );
         ArrayDesign ad = new ArrayDesign();
@@ -101,6 +103,7 @@ public class SingleCellExpressionExperimentSubSetServiceTest extends BaseTest {
             ba.setSampleUsed( bm );
             bm.getBioAssaysUsedIn().add( ba );
             ee.getBioAssays().add( ba );
+            scd.getBioAssays().add( ba );
         }
         // create 10 cell types
         for ( int i = 0; i < 10; i++ ) {
@@ -114,6 +117,8 @@ public class SingleCellExpressionExperimentSubSetServiceTest extends BaseTest {
                 .thenReturn( Optional.of( cta ) );
         when( singleCellExpressionExperimentService.getCellTypeFactor( ee ) )
                 .thenReturn( Optional.of( cf ) );
+        when( singleCellExpressionExperimentService.getPreferredSingleCellDimensionWithoutCellIds( ee ) )
+                .thenReturn( Optional.of( scd ) );
         when( expressionExperimentSubSetService.create( any( ExpressionExperimentSubSet.class ) ) )
                 .thenAnswer( a -> a.getArgument( 0 ) );
         List<ExpressionExperimentSubSet> subsets = service.createSubSetsByCellType( ee, SingleCellExperimentSubSetsCreationConfig.builder().build() );
@@ -166,6 +171,7 @@ public class SingleCellExpressionExperimentSubSetServiceTest extends BaseTest {
     public void testCreateSubSetsWhenMissingFactorValue() {
         CellTypeAssignment cta = new CellTypeAssignment();
         ExpressionExperiment ee = new ExpressionExperiment();
+        SingleCellDimension scd = new SingleCellDimension();
         ExperimentalFactor cf = new ExperimentalFactor();
         cf.setType( FactorType.CATEGORICAL );
         ArrayDesign ad = new ArrayDesign();
@@ -179,6 +185,7 @@ public class SingleCellExpressionExperimentSubSetServiceTest extends BaseTest {
             ba.setSampleUsed( bm );
             bm.getBioAssaysUsedIn().add( ba );
             ee.getBioAssays().add( ba );
+            scd.getBioAssays().add( ba );
         }
         // create 10 cell types
         for ( int i = 0; i < 10; i++ ) {
@@ -194,6 +201,8 @@ public class SingleCellExpressionExperimentSubSetServiceTest extends BaseTest {
                 .thenReturn( Optional.of( cta ) );
         when( singleCellExpressionExperimentService.getCellTypeFactor( ee ) )
                 .thenReturn( Optional.of( cf ) );
+        when( singleCellExpressionExperimentService.getPreferredSingleCellDimensionWithoutCellIds( ee ) )
+                .thenReturn( Optional.of( scd ) );
         when( expressionExperimentSubSetService.create( any( ExpressionExperimentSubSet.class ) ) )
                 .thenAnswer( a -> a.getArgument( 0 ) );
         SingleCellExperimentSubSetsCreationConfig config = SingleCellExperimentSubSetsCreationConfig.builder().ignoreUnmatchedCharacteristics( true ).build();
@@ -237,6 +246,65 @@ public class SingleCellExpressionExperimentSubSetServiceTest extends BaseTest {
                                                     } );
                                         } );
                             } );
+                } );
+    }
+
+    @Test
+    public void testCreateSubSetsSkipsSamplesNotInSingleCellDimension() {
+        CellTypeAssignment cta = new CellTypeAssignment();
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ExperimentalFactor cf = new ExperimentalFactor();
+        cf.setType( FactorType.CATEGORICAL );
+        ArrayDesign ad = new ArrayDesign();
+        // create 4 samples; keep them in a list so SCD membership is deterministic
+        // (ee.getBioAssays() is a HashSet so its iteration order is not insertion order).
+        List<BioAssay> samples = new java.util.ArrayList<>( 4 );
+        for ( int i = 0; i < 4; i++ ) {
+            BioAssay ba = new BioAssay();
+            ba.setArrayDesignUsed( ad );
+            ba.setName( "ba" + i );
+            BioMaterial bm = new BioMaterial();
+            bm.setName( "bm" + i );
+            ba.setSampleUsed( bm );
+            bm.getBioAssaysUsedIn().add( ba );
+            ee.getBioAssays().add( ba );
+            samples.add( ba );
+        }
+        // create 3 cell types
+        for ( int i = 0; i < 3; i++ ) {
+            Characteristic ct = Characteristic.Factory.newInstance( Categories.CELL_TYPE, "ct" + i, null );
+            cta.getCellTypes().add( ct );
+            cf.getFactorValues().add( FactorValue.Factory.newInstance( cf, ct ) );
+        }
+        // SCD covers only ba0/ba1/ba2; ba3 contributed no cells and must be skipped.
+        SingleCellDimension scd = new SingleCellDimension();
+        scd.getBioAssays().addAll( samples.subList( 0, 3 ) );
+        BioAssay datalessSample = samples.get( 3 );
+        when( bioMaterialService.create( any( BioMaterial.class ) ) ).thenAnswer( a -> a.getArgument( 0 ) );
+        when( bioAssayService.create( any( BioAssay.class ) ) ).thenAnswer( a -> a.getArgument( 0 ) );
+        when( singleCellExpressionExperimentService.getPreferredCellTypeAssignment( ee ) )
+                .thenReturn( Optional.of( cta ) );
+        when( singleCellExpressionExperimentService.getCellTypeFactor( ee ) )
+                .thenReturn( Optional.of( cf ) );
+        when( singleCellExpressionExperimentService.getPreferredSingleCellDimensionWithoutCellIds( ee ) )
+                .thenReturn( Optional.of( scd ) );
+        when( expressionExperimentSubSetService.create( any( ExpressionExperimentSubSet.class ) ) )
+                .thenAnswer( a -> a.getArgument( 0 ) );
+
+        List<ExpressionExperimentSubSet> subsets = service.createSubSetsByCellType( ee, SingleCellExperimentSubSetsCreationConfig.builder().build() );
+
+        assertThat( subsets )
+                .hasSize( 3 )
+                .allSatisfy( subset -> {
+                    String cellTypeName = subset.getCharacteristics().iterator().next().getValue();
+                    assertThat( subset.getBioAssays() )
+                            .hasSize( 3 )
+                            .extracting( BioAssay::getName )
+                            .containsExactlyInAnyOrder(
+                                    "ba0 - " + cellTypeName,
+                                    "ba1 - " + cellTypeName,
+                                    "ba2 - " + cellTypeName )
+                            .doesNotContain( datalessSample.getName() + " - " + cellTypeName );
                 } );
     }
 }

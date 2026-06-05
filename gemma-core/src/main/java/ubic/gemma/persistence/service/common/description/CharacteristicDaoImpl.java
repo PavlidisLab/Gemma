@@ -87,6 +87,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
             new OwningEntity( BioMaterial.class, "BIO_MATERIAL", "BIO_MATERIAL_FK", true, null ),
             new OwningEntity( ExpressionExperiment.class, "INVESTIGATION", "INVESTIGATION_FK", true, "ExpressionExperiment" ),
             new OwningEntity( ExpressionExperimentSubSet.class, "INVESTIGATION", "INVESTIGATION_FK", true, "ExpressionExperimentSubSet" ),
+            new OwningEntity( PreboardedExperiment.class, "INVESTIGATION", "INVESTIGATION_FK", true, "PreboardedExperiment" ),
             new OwningEntity( ExperimentalDesign.class, "EXPERIMENTAL_DESIGN", "EXPERIMENTAL_DESIGN_FK", true, null ),
             new OwningEntity( ExperimentalFactor.class, "EXPERIMENTAL_FACTOR", "CATEGORY_FK", false, null ),
             // via ExperimentalFactor.annotations

@@ -494,7 +494,6 @@ Gingival	gingiva	http://purl.obolibrary.org/obo/UBERON_0001828	organism part	htt
 GIST Tumor	gastrointestinal stromal tumor	http://purl.obolibrary.org/obo/MONDO_0011719	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 Glioblastoma	glioblastoma	http://purl.obolibrary.org/obo/MONDO_0018177	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 glioblastoma cells	glioblastoma	http://purl.obolibrary.org/obo/MONDO_0018177	disease	http://www.ebi.ac.uk/efo/EFO_0000408
-Glioblastoma multiforme	glioblastoma multiforme	http://www.ebi.ac.uk/efo/EFO_0000519	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 Glioblastoma multiforme	glioblastoma	http://purl.obolibrary.org/obo/MONDO_0018177	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 glioma	malignant glioma	http://purl.obolibrary.org/obo/MONDO_0100342	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 gonadal white adipose tissue	gonadal fat pad	http://purl.obolibrary.org/obo/UBERON_0003428	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
@@ -840,7 +839,6 @@ mPFC	prefrontal cortex	http://purl.obolibrary.org/obo/UBERON_0000451	organism pa
 MTB-infected	tuberculosis	http://purl.obolibrary.org/obo/MONDO_0018076	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 Mucosa	mucosa	http://purl.obolibrary.org/obo/UBERON_0000344	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 mucosal	mucosa	http://purl.obolibrary.org/obo/UBERON_0000344	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
-Multiple Myeloma	multiple myeloma	http://www.ebi.ac.uk/efo/EFO_0001378	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 multiple myeloma	plasma cell myeloma	http://purl.obolibrary.org/obo/MONDO_0009693	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 multiple sclerosis	multiple sclerosis	http://purl.obolibrary.org/obo/MONDO_0005301	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 multisystem failure	multiple organ dysfunction syndrome	http://purl.obolibrary.org/obo/MONDO_0043726	disease	http://www.ebi.ac.uk/efo/EFO_0000408
@@ -899,7 +897,7 @@ neuropathologically normal frozen temporal cortex	temporal cortex	http://purl.ob
 neutrophil	neutrophil	http://purl.obolibrary.org/obo/CL_0000775	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 neutrophils	neutrophil	http://purl.obolibrary.org/obo/CL_0000775	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 Never-smoker lung adenocarcinoma patient	lung adenocarcinoma	http://purl.obolibrary.org/obo/MONDO_0005061	disease	http://www.ebi.ac.uk/efo/EFO_0000408
-newly diagnosed multiple myeloma	multiple myeloma	http://www.ebi.ac.uk/efo/EFO_0001378	disease	http://www.ebi.ac.uk/efo/EFO_0000408
+newly diagnosed multiple myeloma	plasma cell myeloma	http://purl.obolibrary.org/obo/MONDO_0009693	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 Nicotine	nicotine	http://purl.obolibrary.org/obo/CHEBI_18723	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
 NIH 3T3	NIH-3T3 cell	http://purl.obolibrary.org/obo/CLO_0008172	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 NIH3T3	NIH-3T3 cell	http://purl.obolibrary.org/obo/CLO_0008172	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
@@ -941,7 +939,7 @@ Nucleus accumbens core	core of nucleus accumbens	http://purl.obolibrary.org/obo/
 Nucleus Accumbens Shell	shell of nucleus accumbens	http://purl.obolibrary.org/obo/UBERON_0012171	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 Nucleus of the solitary tract	nucleus of solitary tract	http://purl.obolibrary.org/obo/UBERON_0009050	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 Nulliparous	nulliparous	http://purl.obolibrary.org/obo/PATO_0002368	phenotype	http://www.ebi.ac.uk/efo/EFO_0000651
-obese	obesity	http://www.ebi.ac.uk/efo/EFO_0001073	phenotype	http://www.ebi.ac.uk/efo/EFO_0000651
+obese	obesity disorder	http://purl.obolibrary.org/obo/MONDO_0011122	phenotype	http://www.ebi.ac.uk/efo/EFO_0000651
 occipital cortex	occipital cortex	http://purl.obolibrary.org/obo/UBERON_0016540	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 occipital lobe	occipital lobe	http://purl.obolibrary.org/obo/UBERON_0002021	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 Occipital Visual Cortex	visual cortex	http://purl.obolibrary.org/obo/UBERON_0000411	organism part	http://www.ebi.ac.uk/efo/EFO_0000635

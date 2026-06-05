@@ -330,6 +330,7 @@ public class CharacteristicDaoTest extends BaseDatabaseTest {
         assertThat( characteristicDao.getParentClasses() ).containsExactlyInAnyOrder(
                 ExpressionExperiment.class,
                 ExpressionExperimentSubSet.class,
+                PreboardedExperiment.class,
                 ExperimentalDesign.class,
                 ExperimentalFactor.class,
                 BibliographicReference.class,

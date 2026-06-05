@@ -145,7 +145,7 @@ public class QuantitationTypeParameterGuesser {
         QuantitationTypeParameterGuesser.scaleDescPatterns.get( ScaleType.LOG2 ).add( ".*log( )?2.*" );
         QuantitationTypeParameterGuesser.scaleDescPatterns.get( ScaleType.LOG10 ).add( ".*log( )?10.*" );
         QuantitationTypeParameterGuesser.scaleDescPatterns.get( ScaleType.LOGBASEUNKNOWN )
-                .add( ".*log( )?(?!(10|2)).*" );
+                .add( ".*(?<![a-z])log(?![a-z])(?!(10|2)).*" );
         QuantitationTypeParameterGuesser.scaleDescPatterns.get( ScaleType.LOG2 ).add( "log (base 2)" );
         QuantitationTypeParameterGuesser.scaleDescPatterns.get( ScaleType.LOG2 ).add( "(gc?)rma(\\W.*)?" );
         QuantitationTypeParameterGuesser.scaleDescPatterns.get( ScaleType.LOG2 ).add( ".*?\\brma\\b.*?" );

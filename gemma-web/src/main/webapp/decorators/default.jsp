@@ -4,7 +4,7 @@
 <html lang="en-CA">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width; initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <title><decorator:title /> | <fmt:message key="webapp.name" /></title>
 <meta name="author" content="Gemma admin (${appConfig["gemma.support.email"]})" />
 <link rel="shortcut icon" href="${pageContext.request.contextPath}/favicon.ico" />

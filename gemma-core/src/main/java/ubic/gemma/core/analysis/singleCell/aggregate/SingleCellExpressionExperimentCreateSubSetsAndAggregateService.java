@@ -4,6 +4,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
+import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
@@ -36,7 +37,7 @@ public interface SingleCellExpressionExperimentCreateSubSetsAndAggregateService 
     /**
      * Create subsets and aggregate by any cell-level characteristics.
      *
-     * @see SingleCellExpressionExperimentSubSetService#createSubSets(ExpressionExperiment, CellLevelCharacteristics, ExperimentalFactor, Map, SingleCellExperimentSubSetsCreationConfig)
+     * @see SingleCellExpressionExperimentSubSetService#createSubSets(ExpressionExperiment, SingleCellDimension, CellLevelCharacteristics, ExperimentalFactor, Map, SingleCellExperimentSubSetsCreationConfig)
      * @see SingleCellExpressionExperimentAggregateService#aggregateVectors(ExpressionExperiment, QuantitationType, List, CellLevelCharacteristics, ExperimentalFactor, Map, SingleCellAggregationConfig)
      */
     QuantitationType createSubSetsAndAggregate( ExpressionExperiment expressionExperiment, QuantitationType scQt,

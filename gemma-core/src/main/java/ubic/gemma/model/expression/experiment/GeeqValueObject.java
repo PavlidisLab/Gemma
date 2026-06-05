@@ -26,6 +26,9 @@ import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.persistence.service.expression.experiment.GeeqServiceImpl;
 
+import javax.annotation.Nullable;
+import java.util.Date;
+
 /**
  * Represents publicly available geeq information
  *
@@ -91,6 +94,14 @@ public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
     private byte corrMatIssues;
     private byte replicatesIssues;
     private boolean batchCorrected;
+
+    /**
+     * Timestamp of the last {@link ubic.gemma.model.common.auditAndSecurity.eventType.GeeqEvent} for the
+     * experiment, populated by callers that have access to the audit log. {@code null} when unknown or never
+     * recorded.
+     */
+    @Nullable
+    private Date lastComputed;
 
     /**
      * Required when using the class as a spring bean
@@ -239,6 +250,11 @@ public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
 
     public boolean isBatchCorrected() {
         return batchCorrected;
+    }
+
+    @Nullable
+    public Date getLastComputed() {
+        return lastComputed;
     }
 
     private void setPublicQualityScore( double detected, double manual, boolean override ) {

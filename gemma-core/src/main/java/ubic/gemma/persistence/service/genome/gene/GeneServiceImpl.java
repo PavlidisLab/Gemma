@@ -31,6 +31,7 @@ import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.util.concurrent.FutureUtils;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegreeValueObject;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.search.SearchResult;
@@ -47,6 +48,7 @@ import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 import ubic.gemma.persistence.service.AbstractService;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
+import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.genome.GeneDao;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.AnnotationAssociationService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
@@ -68,6 +70,8 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
 
     @Autowired
     private AnnotationAssociationService annotationAssociationService;
+    @Autowired
+    private CharacteristicService characteristicService;
     @Autowired
     private CoexpressionService coexpressionService;
     @Autowired
@@ -335,21 +339,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
 
         gvo.setHomologues( homologues );
 
-        if ( gvo.getNcbiId() != null ) {
-            SearchSettings s = SearchSettings.builder()
-                    .query( "http://purl.org/commons/record/ncbi_gene/" + gvo.getNcbiId() )
-                    .resultType( ExpressionExperiment.class )
-                    .build();
-            SearchService.SearchResultMap r;
-            try {
-                r = searchService.search( s );
-                List<SearchResult<ExpressionExperiment>> hits = r.getByResultObjectType( ExpressionExperiment.class );
-                gvo.setAssociatedExperimentCount( hits.size() );
-            } catch ( SearchException e ) {
-                log.error( "Failed to retrieve the associated EE count for " + s + ".", e );
-                gvo.setAssociatedExperimentCount( null );
-            }
-        }
+        populateAssociatedExperimentCount( Collections.singletonList( gvo ) );
 
         GeneCoexpressionNodeDegreeValueObject nodeDegree = coexpressionService.getNodeDegree( gene );
 
@@ -475,6 +465,47 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
         Collection<GeneValueObject> geneValueObjects = this.loadValueObjects( genes );
         log.debug( "Gene search: " + geneValueObjects.size() + " value objects returned." );
         return geneValueObjects;
+    }
+
+    /**
+     * Looks up all gene URIs in a single {@link CharacteristicService#findExperimentsByUris}
+     * call, then assigns the distinct-EE counts back to each VO. VOs without an NCBI ID are left at their
+     * current value (the default initializer of 0).
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public void populateAssociatedExperimentCount( @Nullable Collection<GeneValueObject> vos ) {
+        if ( vos == null || vos.isEmpty() ) {
+            return;
+        }
+        Map<String, List<GeneValueObject>> byUri = new HashMap<>();
+        for ( GeneValueObject vo : vos ) {
+            if ( vo != null && vo.getNcbiId() != null ) {
+                byUri.computeIfAbsent( Gene.NCBI_URI_PREFIX + vo.getNcbiId(), k -> new ArrayList<>() ).add( vo );
+            }
+        }
+        if ( byUri.isEmpty() ) {
+            return;
+        }
+        // we are duplicating code from AnnotationsWebService.getDistinctEeCountsByUri here. consider refactoring
+        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> hits =
+                characteristicService.findExperimentsByUris( byUri.keySet(), true, true, true, null, -1, false, false );
+        Map<String, Set<Long>> distinctEeIdsByUri = new HashMap<>();
+        for ( Map<String, Set<ExpressionExperiment>> perClass : hits.values() ) {
+            for ( Map.Entry<String, Set<ExpressionExperiment>> entry : perClass.entrySet() ) {
+                Set<Long> bucket = distinctEeIdsByUri.computeIfAbsent( entry.getKey(), k -> new HashSet<>() );
+                for ( ExpressionExperiment ee : entry.getValue() ) {
+                    bucket.add( ee.getId() );
+                }
+            }
+        }
+        for ( Map.Entry<String, List<GeneValueObject>> entry : byUri.entrySet() ) {
+            Set<Long> bucket = distinctEeIdsByUri.get( entry.getKey() );
+            int count = bucket != null ? bucket.size() : 0;
+            for ( GeneValueObject vo : entry.getValue() ) {
+                vo.setAssociatedExperimentCount( count );
+            }
+        }
     }
 
     @Override

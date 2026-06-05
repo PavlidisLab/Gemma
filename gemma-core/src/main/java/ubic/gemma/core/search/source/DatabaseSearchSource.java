@@ -53,8 +53,6 @@ import static ubic.gemma.core.search.lucene.LuceneQueryUtils.prepareDatabaseQuer
 @CommonsLog
 public class DatabaseSearchSource implements SearchSource, Ordered {
 
-    public static final String NCBI_GENE_ID_URI_PREFIX = "http://purl.org/commons/record/ncbi_gene/";
-
     /**
      * Score when a result is matched exactly by numerical ID.
      */
@@ -496,8 +494,8 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
         String searchString = prepareDatabaseQuery( settings, context.getIssueReporter() );
         if ( searchString != null ) {
             // then we can get the NCBI ID, maybe.
-            if ( searchString.startsWith( NCBI_GENE_ID_URI_PREFIX ) ) {
-                searchString = searchString.substring( NCBI_GENE_ID_URI_PREFIX.length() );
+            if ( searchString.startsWith( Gene.NCBI_URI_PREFIX ) ) {
+                searchString = searchString.substring( Gene.NCBI_URI_PREFIX.length() );
             }
 
             /*

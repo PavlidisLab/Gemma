@@ -20,6 +20,8 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayUtils;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.experiment.DesignPreflightReport;
+import ubic.gemma.model.expression.experiment.ExperimentalDesignValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
@@ -216,6 +218,87 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
     public Set<AnnotationValueObject> getAnnotations( DatasetArg<?> arg ) {
         ExpressionExperiment ee = this.getEntity( arg );
         return service.getAnnotations( ee );
+    }
+
+    /**
+     * @return the full structured experimental design (factors, factor values with statements, and biomaterial
+     *         to factor-value assignments).
+     */
+    public ExperimentalDesignValueObject getExperimentalDesign( DatasetArg<?> arg ) {
+        ExpressionExperiment ee = this.getEntity( arg );
+        ExperimentalDesignValueObject vo = service.getExperimentalDesignValueObject( ee );
+        if ( vo == null ) {
+            throw new NotFoundException( ee.getShortName() + " does not have an experimental design." );
+        }
+        return vo;
+    }
+
+    /**
+     * Run a dry-run preflight for the proposed design replacement.
+     */
+    public DesignPreflightReport previewDesignChange( DatasetArg<?> arg, ExperimentalDesignValueObject proposed ) {
+        if ( proposed == null ) {
+            throw new BadRequestException( "A proposed design must be supplied in the request body." );
+        }
+        ExpressionExperiment ee = this.getEntity( arg );
+        return service.previewDesignChange( ee, proposed );
+    }
+
+    /**
+     * Result of an applyDesignChange call. Exactly one of {@link #updated} or {@link #blockingReport} is non-null.
+     * {@code blockingReport} is set when the proposed payload is rejected (blockers or unauthorised cascade); the
+     * caller is expected to translate it to 400 / 409 as appropriate.
+     */
+    public static final class DesignChangeResult {
+        @Nullable
+        public final ExperimentalDesignValueObject updated;
+        @Nullable
+        public final DesignPreflightReport blockingReport;
+        public final boolean forceRequired;
+
+        private DesignChangeResult( @Nullable ExperimentalDesignValueObject updated,
+                @Nullable DesignPreflightReport blockingReport, boolean forceRequired ) {
+            this.updated = updated;
+            this.blockingReport = blockingReport;
+            this.forceRequired = forceRequired;
+        }
+
+        public static DesignChangeResult ok( ExperimentalDesignValueObject updated ) {
+            return new DesignChangeResult( updated, null, false );
+        }
+
+        public static DesignChangeResult blocked( DesignPreflightReport report ) {
+            return new DesignChangeResult( null, report, false );
+        }
+
+        public static DesignChangeResult forceRequired( DesignPreflightReport report ) {
+            return new DesignChangeResult( null, report, true );
+        }
+    }
+
+    /**
+     * Validate and apply a proposed design replacement.
+     * <p>
+     * When the preflight report carries blockers, returns {@link DesignChangeResult#blocked} without
+     * mutating state. When the preflight report has no blockers but predicts differential-expression analyses
+     * to be deleted and {@code force} is false, returns {@link DesignChangeResult#forceRequired} (the cascade
+     * needs explicit consent). Otherwise applies the change and returns {@link DesignChangeResult#ok} with the
+     * fresh design VO.
+     */
+    public DesignChangeResult applyDesignChange( DatasetArg<?> arg, ExperimentalDesignValueObject proposed, boolean force ) {
+        if ( proposed == null ) {
+            throw new BadRequestException( "A proposed design must be supplied in the request body." );
+        }
+        ExpressionExperiment ee = this.getEntity( arg );
+        DesignPreflightReport report = service.previewDesignChange( ee, proposed );
+        if ( !report.getBlockers().isEmpty() ) {
+            return DesignChangeResult.blocked( report );
+        }
+        if ( !report.getDifferentialExpressionAnalysesToDelete().isEmpty() && !force ) {
+            return DesignChangeResult.forceRequired( report );
+        }
+        ExperimentalDesignValueObject updated = service.applyDesignChange( ee, proposed );
+        return DesignChangeResult.ok( updated );
     }
 
     public List<ExpressionExperimentSubSet> getSubSets( DatasetArg<?> datasetArg ) {

@@ -5,7 +5,7 @@
 	<name>Gemma</name>
 	<groupId>gemma</groupId>
 	<artifactId>gemma</artifactId>
-	<version>1.32.6</version>
+	<version>1.32.7</version>
 	<inceptionYear>2005</inceptionYear>
 	<description>The Gemma Project for meta-analysis of genomics data</description>
 	<url>https://gemma.msl.ubc.ca</url>
@@ -553,6 +553,12 @@
 				<artifactId>maven-dependency-plugin</artifactId>
 				<executions>
 					<execution>
+						<!--
+						FIXME: this plugin interferes with the test JAR discoverability during the build when run during
+						       the initialize phase, we move it to the test phase because we only need it to substitute
+						       Mockito version when loading the JVM agent.
+						-->
+						<phase>process-test-classes</phase>
 						<goals>
 							<goal>properties</goal>
 						</goals>
@@ -572,6 +578,7 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>3.5.4</version>
 				<configuration>
+					<runOrder>alphabetical</runOrder>
 					<argLine>${testJvmOptions}</argLine>
 					<redirectTestOutputToFile>${redirectTestOutputToFile}</redirectTestOutputToFile>
 					<includes>
@@ -587,6 +594,7 @@
 				<artifactId>maven-failsafe-plugin</artifactId>
 				<version>3.5.4</version>
 				<configuration>
+					<runOrder>alphabetical</runOrder>
 					<argLine>${testJvmOptions}</argLine>
 					<redirectTestOutputToFile>${redirectTestOutputToFile}</redirectTestOutputToFile>
 					<includes>
@@ -609,6 +617,7 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-site-plugin</artifactId>
 				<configuration>
+					<chmod>false</chmod>
 					<relativizeSiteLinks>false</relativizeSiteLinks>
 				</configuration>
 			</plugin>

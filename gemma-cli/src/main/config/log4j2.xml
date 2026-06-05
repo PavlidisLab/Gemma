@@ -105,7 +105,6 @@
         <Logger name="org.hibernate.cache.ehcache.internal.strategy.AbstractReadWriteEhcacheAccessStrategy"
                 level="ERROR"/>
         <Logger name="org.hibernate.engine.loading.LoadContexts" level="ERROR"/>
-        <Logger name="org.hibernate.search.impl.SimpleIndexingProgressMonitor" level="INFO"/>
         <Logger name="org.hibernate.SQL" level="WARN"/>
         <Logger name="org.hibernate.stat" level="WARN"/>
 

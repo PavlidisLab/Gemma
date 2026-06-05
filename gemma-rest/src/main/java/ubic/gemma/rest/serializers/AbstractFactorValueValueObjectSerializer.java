@@ -63,10 +63,10 @@ public abstract class AbstractFactorValueValueObjectSerializer<T extends Abstrac
         jsonGenerator.writeArrayFieldStart( "statements" );
         visitStatements( factorValueId, svos, ( svo, assignedIds ) -> {
             if ( assignedIds.getObjectId() != null ) {
-                writeStatement( svo.getCategory(), svo.getCategoryUri(), assignedIds.getSubjectId(), svo.getSubject(), svo.getSubjectUri(), svo.getPredicate(), svo.getPredicateUri(), assignedIds.getObjectId(), svo.getObject(), svo.getObjectUri(), jsonGenerator );
+                writeStatement( svo.getId(), svo.getCategory(), svo.getCategoryUri(), assignedIds.getSubjectId(), svo.getSubject(), svo.getSubjectUri(), svo.getPredicate(), svo.getPredicateUri(), assignedIds.getObjectId(), svo.getObject(), svo.getObjectUri(), jsonGenerator );
             }
             if ( assignedIds.getSecondObjectId() != null ) {
-                writeStatement( svo.getCategory(), svo.getCategoryUri(), assignedIds.getSubjectId(), svo.getSubject(), svo.getSubjectUri(), svo.getSecondPredicate(), svo.getSecondPredicateUri(), assignedIds.getSecondObjectId(), svo.getSecondObject(), svo.getSecondObjectUri(), jsonGenerator );
+                writeStatement( svo.getId(), svo.getCategory(), svo.getCategoryUri(), assignedIds.getSubjectId(), svo.getSubject(), svo.getSubjectUri(), svo.getSecondPredicate(), svo.getSecondPredicateUri(), assignedIds.getSecondObjectId(), svo.getSecondObject(), svo.getSecondObjectUri(), jsonGenerator );
             }
         } );
         jsonGenerator.writeEndArray();
@@ -83,8 +83,9 @@ public abstract class AbstractFactorValueValueObjectSerializer<T extends Abstrac
         jsonGenerator.writeEndObject();
     }
 
-    private void writeStatement( String category, String categoryUri, String subjectId, String subject, String subjectUri, String predicate, String predicateUri, String objectId, String object, String objectUri, JsonGenerator jsonGenerator ) throws IOException {
+    private void writeStatement( Long id, String category, String categoryUri, String subjectId, String subject, String subjectUri, String predicate, String predicateUri, String objectId, String object, String objectUri, JsonGenerator jsonGenerator ) throws IOException {
         jsonGenerator.writeStartObject();
+        jsonGenerator.writeObjectField( "id", id );
         jsonGenerator.writeStringField( "category", category );
         jsonGenerator.writeStringField( "categoryUri", categoryUri );
         jsonGenerator.writeStringField( "subjectId", subjectId );

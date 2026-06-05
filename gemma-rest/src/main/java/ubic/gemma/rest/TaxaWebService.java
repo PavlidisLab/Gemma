@@ -29,9 +29,11 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.rest.util.FilteredAndPaginatedResponseDataObject;
 import ubic.gemma.rest.util.PaginatedResponseDataObject;
@@ -61,17 +63,19 @@ public class TaxaWebService {
     private final TaxonArgService taxonArgService;
     private final DatasetArgService datasetArgService;
     private final GeneArgService geneArgService;
+    private final GeneService geneService;
 
     /**
      * Constructor for service autowiring
      */
     @Autowired
-    public TaxaWebService( TaxonService taxonService, ExpressionExperimentService expressionExperimentService, TaxonArgService taxonArgService, DatasetArgService datasetArgService, GeneArgService geneArgService ) {
+    public TaxaWebService( TaxonService taxonService, ExpressionExperimentService expressionExperimentService, TaxonArgService taxonArgService, DatasetArgService datasetArgService, GeneArgService geneArgService, GeneService geneService ) {
         this.taxonService = taxonService;
         this.expressionExperimentService = expressionExperimentService;
         this.taxonArgService = taxonArgService;
         this.datasetArgService = datasetArgService;
         this.geneArgService = geneArgService;
+        this.geneService = geneService;
     }
 
     /**
@@ -138,7 +142,9 @@ public class TaxaWebService {
         if ( strand != null && !( strand.equals( "+" ) || strand.equals( "-" ) ) ) {
             throw new BadRequestException( "The 'strand' query parameter must be either '+', '-' or left unspecified." );
         }
-        return respond( taxonArgService.getGenesOnChromosome( taxonArg, chromosomeName, strand, start, size ) );
+        List<GeneValueObject> vos = taxonArgService.getGenesOnChromosome( taxonArg, chromosomeName, strand, start, size );
+        geneService.populateAssociatedExperimentCount( vos );
+        return respond( vos );
     }
 
     @GET
@@ -150,7 +156,9 @@ public class TaxaWebService {
             @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
             @QueryParam("limit") @DefaultValue("20") LimitArg limitArg
     ) {
-        return paginate( geneArgService.getGenesInTaxon( taxonArgService.getEntity( taxonArg ), offsetArg.getValue(), limitArg.getValue() ), new String[] { "id" } );
+        Slice<GeneValueObject> slice = geneArgService.getGenesInTaxon( taxonArgService.getEntity( taxonArg ), offsetArg.getValue(), limitArg.getValue() );
+        geneService.populateAssociatedExperimentCount( slice );
+        return paginate( slice, new String[] { "id" } );
     }
 
     /**
@@ -170,7 +178,9 @@ public class TaxaWebService {
             @PathParam("taxon") TaxonArg<?> taxonArg, // Required
             @PathParam("gene") GeneArrayArg geneArg // Required
     ) {
-        return respond( geneArgService.getGenesInTaxon( geneArg, taxonArgService.getEntity( taxonArg ) ) );
+        List<GeneValueObject> vos = geneArgService.getGenesInTaxon( geneArg, taxonArgService.getEntity( taxonArg ) );
+        geneService.populateAssociatedExperimentCount( vos );
+        return respond( vos );
     }
 
     /**

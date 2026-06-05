@@ -70,7 +70,6 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static ubic.gemma.core.search.lucene.LuceneQueryUtils.extractTerms;
-import static ubic.gemma.core.search.source.DatabaseSearchSource.NCBI_GENE_ID_URI_PREFIX;
 
 /**
  * This service is used for performing searches using free text or exact matches to items in the database.
@@ -460,7 +459,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
                 if ( g == null || g.getNcbiGeneId() == null ) {
                     continue;
                 }
-                results.addAll( ontologySearchSource.searchExpressionExperiment( settings.withQuery( NCBI_GENE_ID_URI_PREFIX + g.getNcbiGeneId() ), context ) );
+                results.addAll( ontologySearchSource.searchExpressionExperiment( settings.withQuery( Gene.NCBI_URI_PREFIX + g.getNcbiGeneId() ), context ) );
             }
         }
 
