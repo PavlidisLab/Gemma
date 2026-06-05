@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.core.util.BuildInfo;
@@ -162,7 +164,25 @@ public class RootWebService {
     private UserValueObject getUserVo( User user ) {
         // Convert to a VO and check for admin
         String group = userManager.findGroupsForUser( user.getUserName() ).stream().findFirst().orElse( null );
-        return new UserValueObject( user, group );
+        List<String> authorities = resolveAuthorities( user );
+        return new UserValueObject( user, group, authorities );
+    }
+
+    /**
+     * Resolve the user's Spring Security authorities (GROUP_ADMIN, GROUP_USER, …) as
+     * a sorted string list. The curation-UI gates admin surfaces on the presence of
+     * {@code GROUP_ADMIN} here; without this field the SPA had no signal to tell
+     * admin from non-admin and had to fall back to hide-when-anonymous gating.
+     * Routed through {@link UserManager#loadUserByUsername} so the lookup works the
+     * same on /users/me and on an admin-querying /users/{username} call — neither
+     * relies on the looked-up user being the current authentication principal.
+     */
+    private List<String> resolveAuthorities( User user ) {
+        UserDetails details = userManager.loadUserByUsername( user.getUserName() );
+        return details.getAuthorities().stream()
+                .map( GrantedAuthority::getAuthority )
+                .sorted()
+                .collect( Collectors.toList() );
     }
 
     @lombok.Value
@@ -203,12 +223,21 @@ public class RootWebService {
         boolean enabled;
         @Nullable
         String group;
+        /**
+         * Spring Security authorities granted to this user (e.g. {@code GROUP_ADMIN},
+         * {@code GROUP_USER}). Sorted alphabetically for stable wire output. The
+         * curation-UI checks {@code authorities.includes("GROUP_ADMIN")} to decide
+         * whether to render admin surfaces; prior to 2026-06-05 this was anonymous-only
+         * because the user payload carried no role signal at all.
+         */
+        List<String> authorities;
 
-        public UserValueObject( User user, @Nullable String group ) {
+        public UserValueObject( User user, @Nullable String group, List<String> authorities ) {
             userName = user.getUserName();
             email = user.getEmail();
             enabled = user.isEnabled();
             this.group = group;
+            this.authorities = authorities;
         }
     }
 }
