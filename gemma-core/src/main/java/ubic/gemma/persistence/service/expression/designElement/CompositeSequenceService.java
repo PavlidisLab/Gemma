@@ -158,4 +158,9 @@ public interface CompositeSequenceService
 
     @CheckReturnValue
     CompositeSequence thaw( CompositeSequence compositeSequence );
+
+    /**
+     * @see CompositeSequenceDao#getSequenceData(Collection)
+     */
+    Map<Long, CompositeSequenceDao.BioSequenceLite> getSequenceData( Collection<Long> compositeSequenceIds );
 }

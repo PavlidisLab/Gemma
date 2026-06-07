@@ -817,4 +817,34 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
         }
 
     }
+
+    @Override
+    public Map<Long, CompositeSequenceDao.BioSequenceLite> getSequenceData( Collection<Long> compositeSequenceIds ) {
+        if ( compositeSequenceIds == null || compositeSequenceIds.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+        // HQL projection across the LAZY biologicalCharacteristic edge in a single
+        // statement so a 22k-element platform page doesn't trigger per-row lazy
+        // fetches. INNER JOIN drops probes with no biological characteristic
+        // mapping; the caller treats absent-from-map IDs as "no sequence
+        // recorded." Probes whose biological characteristic exists but has
+        // sequence/length nulls land in the map with the nullable fields null.
+        //language=HQL
+        @SuppressWarnings("unchecked")
+        java.util.List<Object[]> rows = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select cs.id, bs.sequence, bs.length "
+                        + "from CompositeSequence cs "
+                        + "join cs.biologicalCharacteristic bs "
+                        + "where cs.id in :ids" )
+                .setParameterList( "ids", compositeSequenceIds )
+                .list();
+        Map<Long, CompositeSequenceDao.BioSequenceLite> out = new java.util.HashMap<>( rows.size() );
+        for ( Object[] row : rows ) {
+            Long id = ( Long ) row[0];
+            String seq = ( String ) row[1];
+            Long len = ( Long ) row[2];
+            out.put( id, new CompositeSequenceDao.BioSequenceLite( seq, len ) );
+        }
+        return out;
+    }
 }
