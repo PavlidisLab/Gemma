@@ -191,4 +191,10 @@ public class CompositeSequenceReadServiceImpl implements CompositeSequenceReadSe
         this.compositeSequenceDao.thaw( compositeSequence );
         return compositeSequence;
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<Long, CompositeSequenceDao.BioSequenceLite> getSequenceData( Collection<Long> compositeSequenceIds ) {
+        return this.compositeSequenceDao.getSequenceData( compositeSequenceIds );
+    }
 }

@@ -47,7 +47,7 @@ import java.util.Date;
  *       (legacy code emitted a {@code null} detail in that case).</li>
  * </ul>
  *
- * <p>Phase C bucket 2g — see {@code handoffs/AUDIT_RESIDUAL_INVENTORY.md} #9 + #10.
+ * <p>Phase C bucket 2g (audit-residual inventory #9 + #10).
  * The pre-migration 5-arg {@code addUpdateEvent} carried an explicit
  * {@code performedDate=lastUpdated}; under the aspect path the row's
  * {@code performedDate} is set by {@code AuditTrailServiceImpl} to

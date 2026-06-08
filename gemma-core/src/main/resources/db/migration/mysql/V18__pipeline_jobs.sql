@@ -5,8 +5,6 @@
 -- scheduler (Luigi or Nextflow). Scheduler-agnostic at the schema
 -- level: scheduler-specific bits live in SCHEDULER_KIND + opaque
 -- SCHEDULER_HANDLE on PIPELINE_JOB.
---
--- See handoffs/PIPELINE_JOBS_DRAFT_HANDOFF.md for the design.
 
 CREATE TABLE PIPELINE_JOB_BATCH (
     ID                BIGINT       NOT NULL AUTO_INCREMENT,

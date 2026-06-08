@@ -286,6 +286,11 @@ public class CompositeSequenceServiceImpl
     }
 
     @Override
+    public Map<Long, CompositeSequenceDao.BioSequenceLite> getSequenceData( Collection<Long> compositeSequenceIds ) {
+        return compositeSequenceReadService.getSequenceData( compositeSequenceIds );
+    }
+
+    @Override
     @Transactional
     public void remove( Collection<CompositeSequence> sequencesToDelete ) {
         // check the collection to make sure it contains no transitive entities (just check the id and make sure its

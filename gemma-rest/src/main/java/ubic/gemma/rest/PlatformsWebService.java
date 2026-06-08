@@ -306,7 +306,8 @@ public class PlatformsWebService {
             @PathParam("platform") PlatformArg<?> platformArg, // Required
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
-            @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg
+            @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg,
+            @Parameter(description = "Opt-in: populate `sequence` (raw probe sequence string) and `sequenceLength` on each element. Off by default to keep the listing response small — sequences are 25-300bp per probe and would inflate a 22k-element page by ~1 MB.") @QueryParam("withSequence") @DefaultValue("false") boolean withSequence
     ) {
         if ( cursorArg != null ) {
             // Mutual-exclusion: a non-null cursor selects cursor mode. The default offset=0 is
@@ -316,10 +317,10 @@ public class PlatformsWebService {
             // The path-derived arrayDesign.id filter is composed into the Filters inside
             // getElementsByCursor so the platform scope is enforced identically in both modes.
             CursorPage<CompositeSequenceValueObject> page = arrayDesignArgService.getElementsByCursor(
-                    platformArg, cursorArg.getValue(), limit.getValue() );
+                    platformArg, cursorArg.getValue(), limit.getValue(), withSequence );
             return paginateByCursor( page, new String[] { "id" } );
         }
-        return paginate( arrayDesignArgService.getElements( platformArg, limit.getValue(), offset.getValue() ), new String[] { "id" } );
+        return paginate( arrayDesignArgService.getElements( platformArg, limit.getValue(), offset.getValue(), withSequence ), new String[] { "id" } );
     }
 
     /**
@@ -356,7 +357,8 @@ public class PlatformsWebService {
             @PathParam("probes") CompositeSequenceArrayArg probesArg, // Required
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
-            @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg
+            @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg,
+            @Parameter(description = "Opt-in: populate `sequence` and `sequenceLength` on each element. Useful when looking up a small probe set explicitly — for a curator inspecting a single probe row, the sequence is a one-row fetch.") @QueryParam("withSequence") @DefaultValue("false") boolean withSequence
     ) {
         if ( cursorArg != null ) {
             // Mutual-exclusion: a non-null cursor selects cursor mode. The default offset=0 is
@@ -367,17 +369,18 @@ public class PlatformsWebService {
             // composed into the Filters inside getElementsByCursor (via CompositeSequenceArrayArg
             // .getPlatformFilter()) so the scope is enforced identically in both modes.
             CursorPage<CompositeSequenceValueObject> page = arrayDesignArgService.getElementsByCursor(
-                    platformArg, probesArg, cursorArg.getValue(), limit.getValue() );
+                    platformArg, probesArg, cursorArg.getValue(), limit.getValue(), withSequence );
             // Filters are computed inside getElementsByCursor; re-compute here purely for the
             // echoed `filter` field on the response wrapper (matches the offset variant).
             probesArg.setPlatform( arrayDesignArgService.getEntity( platformArg ) );
             Filters filters = Filters.by( probesArg.getPlatformFilter() );
             return new FilteredAndCursorPaginatedResponseDataObject<>( page, filters, new String[] { "id" } );
         }
+        // Use the Filtered* paginate overload so the response surface keeps the echoed `filter`
+        // field (matching the cursor-mode FilteredAndCursorPaginatedResponseDataObject).
         probesArg.setPlatform( arrayDesignArgService.getEntity( platformArg ) );
         Filters filters = Filters.by( probesArg.getPlatformFilter() );
-        return paginate( compositeSequenceService::loadValueObjects, filters, new String[] { "id" },
-                compositeSequenceService.getSort( "id", Sort.Direction.ASC, Sort.NullMode.LAST ), offset.getValue(), limit.getValue() );
+        return paginate( arrayDesignArgService.getElements( platformArg, probesArg, limit.getValue(), offset.getValue(), withSequence ), filters, new String[] { "id" } );
     }
 
     /**

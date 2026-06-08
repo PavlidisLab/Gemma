@@ -50,7 +50,6 @@ public class ExternalDatabaseServiceImpl extends AbstractService<ExternalDatabas
      * The audit row's {@code performedDate} is now {@code now()} rather
      * than the supplied {@code lastUpdated} — the original moment is
      * preserved in the JSON payload and on the entity.
-     * See {@code handoffs/AUDIT_RESIDUAL_INVENTORY.md} #9 + #10.
      */
     @Autowired
     private ExternalDatabaseReleaseAuditService releaseAuditService;

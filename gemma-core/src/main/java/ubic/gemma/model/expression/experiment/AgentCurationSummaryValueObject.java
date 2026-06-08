@@ -28,8 +28,6 @@ import java.util.Date;
  * it as a fetch-heavy-or-skip signal. May be {@code null} when the
  * projection's {@code length()} call could not be computed on the underlying
  * database.</p>
- *
- * <p>See {@code handoffs/RECCE_AGENT_CURATION_UNIFICATION.md} §3.</p>
  */
 @Getter
 @Setter

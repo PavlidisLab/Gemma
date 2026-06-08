@@ -166,4 +166,22 @@ public interface CompositeSequenceDao extends FilteringVoEnabledDao<CompositeSeq
     void thaw( Collection<CompositeSequence> compositeSequences );
 
     void thaw( CompositeSequence compositeSequence );
+
+    /**
+     * Lightweight (sequence, length) projection used to hydrate
+     * {@link CompositeSequenceValueObject#getSequence()} +
+     * {@link CompositeSequenceValueObject#getSequenceLength()} on opt-in
+     * platform-elements requests. {@code biologicalCharacteristic} is
+     * {@code LAZY} on {@link CompositeSequence}; this projection avoids
+     * triggering per-row lazy loads by walking the join in one HQL.
+     */
+    record BioSequenceLite(@Nullable String sequence, @Nullable Long length) {}
+
+    /**
+     * Batch-fetch the probe-sequence projection for the supplied composite-sequence
+     * ids. Composite sequences with no {@code biologicalCharacteristic} mapping (or
+     * with the mapping present but its {@code sequence} / {@code length} unset) are
+     * omitted from the returned map. Returns an empty map on an empty input.
+     */
+    Map<Long, BioSequenceLite> getSequenceData( Collection<Long> compositeSequenceIds );
 }

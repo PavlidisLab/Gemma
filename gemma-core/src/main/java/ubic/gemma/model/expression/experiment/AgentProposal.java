@@ -46,7 +46,7 @@ import java.util.Objects;
  * same {@code runId}'s payload (for the same {@code kind}) is a no-op that
  * returns the existing row. The unique constraint enforces it. The
  * {@code kind} discriminator distinguishes forward-looking proposals from
- * post-hoc audits — see {@code handoffs/RECCE_AGENT_CURATION_UNIFICATION.md}.</p>
+ * post-hoc audits.</p>
  *
  * <p>See {@code HANDOFF_PROPOSED_EXPERIMENT_WORKFLOW.md} §"The decided shape"
  * and {@code STATUS_CURATION_PROPOSALS.md} for the consolidation decision
@@ -94,7 +94,7 @@ public class AgentProposal extends AbstractIdentifiable {
      * Curator-chosen disposition (allow-list validated at the REST handler
      * boundary): {@code accept}, {@code accepted_with_edits}, {@code reject},
      * {@code edit}, {@code park}. Null until the curator dispositions the
-     * row. See {@code handoffs/RECCE_AGENT_CURATION_UNIFICATION.md} §4.1.
+     * row.
      */
     @Column(name = "DISPOSITION", columnDefinition = "VARCHAR(32)")
     private String disposition;
@@ -124,7 +124,6 @@ public class AgentProposal extends AbstractIdentifiable {
      *         (default) from a post-hoc audit. Never null; defaults to
      *         {@link AgentCurationKind#PROPOSAL} so existing call sites that
      *         predate the discriminator continue to write proposal rows.
-     *         See {@code handoffs/RECCE_AGENT_CURATION_UNIFICATION.md} §2.
      */
     public AgentCurationKind getKind() {
         return kind;

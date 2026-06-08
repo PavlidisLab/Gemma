@@ -31,6 +31,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -40,6 +41,9 @@ import ubic.gemma.rest.RootWebService.UserValueObject;
 import ubic.gemma.rest.security.BearerTokenAuthenticationFilter;
 import ubic.gemma.rest.security.TokenStore;
 import ubic.gemma.rest.util.ResponseDataObject;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static ubic.gemma.rest.util.Responders.respond;
 
@@ -168,7 +172,11 @@ public class AuthWebService {
 
     private UserValueObject toUserVo( User user ) {
         String group = userManager.findGroupsForUser( user.getUserName() ).stream().findFirst().orElse( null );
-        return new UserValueObject( user, group );
+        List<String> authorities = userManager.loadUserByUsername( user.getUserName() ).getAuthorities().stream()
+                .map( GrantedAuthority::getAuthority )
+                .sorted()
+                .collect( Collectors.toList() );
+        return new UserValueObject( user, group, authorities );
     }
 
     /**

@@ -42,8 +42,7 @@ import static org.mockito.Mockito.when;
 /**
  * Pure-Mockito unit tests for {@link CurationWebService}. Exercises the
  * {@code ?kind} / {@code ?shape} REST contract added in step 3 of the
- * AgentCuration unification (see
- * {@code handoffs/RECCE_AGENT_CURATION_UNIFICATION.md} §6).
+ * AgentCuration unification.
  */
 @ExtendWith(MockitoExtension.class)
 public class CurationWebServiceTest {

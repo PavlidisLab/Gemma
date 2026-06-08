@@ -61,9 +61,46 @@ public class PlatformArgService extends AbstractEntityArgService<ArrayDesign, Ar
      * @return a collection of design element VOs that the platform represented by this argument contains.
      */
     public Slice<CompositeSequenceValueObject> getElements( PlatformArg<?> arg, int limit, int offset ) {
+        return getElements( arg, limit, offset, false );
+    }
+
+    /**
+     * Variant that opt-in hydrates the probe-sequence projection (sequence + length)
+     * via a single batch HQL after the main page is fetched. Default {@code false}
+     * preserves the legacy default response size — sequences are 25-300bp per probe
+     * and would inflate a 22k-element listing by ~1 MB.
+     */
+    public Slice<CompositeSequenceValueObject> getElements( PlatformArg<?> arg, int limit, int offset, boolean withSequence ) {
         final ArrayDesign ad = this.getEntity( arg );
         Filters filters = Filters.by( csService.getFilter( "arrayDesign.id", Long.class, Filter.Operator.eq, ad.getId() ) );
-        return csService.loadValueObjects( filters, null, offset, limit );
+        Slice<CompositeSequenceValueObject> page = csService.loadValueObjects( filters, null, offset, limit );
+        if ( withSequence ) {
+            hydrateSequences( page );
+        }
+        return page;
+    }
+
+    /**
+     * Hydrate {@code sequence} + {@code sequenceLength} on each VO in {@code page}
+     * via one batch query. Probes with no biological characteristic are absent
+     * from the lookup map and left with null sequence fields (which then elide
+     * from the JSON via {@code @JsonInclude(NON_NULL)}). No-op on an empty page.
+     */
+    private void hydrateSequences( Iterable<CompositeSequenceValueObject> page ) {
+        java.util.List<Long> ids = new java.util.ArrayList<>();
+        for ( CompositeSequenceValueObject vo : page ) {
+            if ( vo.getId() != null ) ids.add( vo.getId() );
+        }
+        if ( ids.isEmpty() ) return;
+        java.util.Map<Long, ubic.gemma.persistence.service.expression.designElement.CompositeSequenceDao.BioSequenceLite> data =
+                csService.getSequenceData( ids );
+        for ( CompositeSequenceValueObject vo : page ) {
+            ubic.gemma.persistence.service.expression.designElement.CompositeSequenceDao.BioSequenceLite lite = data.get( vo.getId() );
+            if ( lite != null ) {
+                vo.setSequence( lite.sequence() );
+                vo.setSequenceLength( lite.length() );
+            }
+        }
     }
 
     /**
@@ -79,9 +116,18 @@ public class PlatformArgService extends AbstractEntityArgService<ArrayDesign, Ar
      * to be lifted in phase B once the index audit is complete).
      */
     public CursorPage<CompositeSequenceValueObject> getElementsByCursor( PlatformArg<?> arg, @Nullable Cursor cursor, int limit ) {
+        return getElementsByCursor( arg, cursor, limit, false );
+    }
+
+    /** Cursor-mode variant of {@link #getElements(PlatformArg, int, int, boolean)}. */
+    public CursorPage<CompositeSequenceValueObject> getElementsByCursor( PlatformArg<?> arg, @Nullable Cursor cursor, int limit, boolean withSequence ) {
         final ArrayDesign ad = this.getEntity( arg );
         Filters filters = Filters.by( csService.getFilter( "arrayDesign.id", Long.class, Filter.Operator.eq, ad.getId() ) );
-        return csService.loadValueObjectsByCursor( filters, csService.getSort( "id", Sort.Direction.ASC, Sort.NullMode.LAST ), cursor, limit );
+        CursorPage<CompositeSequenceValueObject> page = csService.loadValueObjectsByCursor( filters, csService.getSort( "id", Sort.Direction.ASC, Sort.NullMode.LAST ), cursor, limit );
+        if ( withSequence ) {
+            hydrateSequences( page );
+        }
+        return page;
     }
 
     /**
@@ -99,9 +145,33 @@ public class PlatformArgService extends AbstractEntityArgService<ArrayDesign, Ar
      * probe-set restriction, so we don't need to compose them separately here.
      */
     public CursorPage<CompositeSequenceValueObject> getElementsByCursor( PlatformArg<?> arg, CompositeSequenceArrayArg probesArg, @Nullable Cursor cursor, int limit ) {
+        return getElementsByCursor( arg, probesArg, cursor, limit, false );
+    }
+
+    /**
+     * Offset-mode variant of {@link #getElementsByCursor(PlatformArg, CompositeSequenceArrayArg, Cursor, int, boolean)}.
+     * Mirrors the inline call at the legacy {@code /{platform}/elements/{probes}} offset path
+     * so {@code withSequence} works there too, not just in cursor mode.
+     */
+    public Slice<CompositeSequenceValueObject> getElements( PlatformArg<?> arg, CompositeSequenceArrayArg probesArg, int limit, int offset, boolean withSequence ) {
         probesArg.setPlatform( this.getEntity( arg ) );
         Filters filters = Filters.by( probesArg.getPlatformFilter() );
-        return csService.loadValueObjectsByCursor( filters, csService.getSort( "id", Sort.Direction.ASC, Sort.NullMode.LAST ), cursor, limit );
+        Slice<CompositeSequenceValueObject> page = csService.loadValueObjects( filters, csService.getSort( "id", Sort.Direction.ASC, Sort.NullMode.LAST ), offset, limit );
+        if ( withSequence ) {
+            hydrateSequences( page );
+        }
+        return page;
+    }
+
+    /** Cursor-mode + probe-set variant of {@link #getElements(PlatformArg, int, int, boolean)}. */
+    public CursorPage<CompositeSequenceValueObject> getElementsByCursor( PlatformArg<?> arg, CompositeSequenceArrayArg probesArg, @Nullable Cursor cursor, int limit, boolean withSequence ) {
+        probesArg.setPlatform( this.getEntity( arg ) );
+        Filters filters = Filters.by( probesArg.getPlatformFilter() );
+        CursorPage<CompositeSequenceValueObject> page = csService.loadValueObjectsByCursor( filters, csService.getSort( "id", Sort.Direction.ASC, Sort.NullMode.LAST ), cursor, limit );
+        if ( withSequence ) {
+            hydrateSequences( page );
+        }
+        return page;
     }
 
     /**

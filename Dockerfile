@@ -29,7 +29,6 @@ COPY pom.xml ./
 COPY gemma-core/pom.xml      gemma-core/pom.xml
 COPY gemma-rest/pom.xml      gemma-rest/pom.xml
 COPY gemma-cli/pom.xml       gemma-cli/pom.xml
-COPY gemma-web/pom.xml       gemma-web/pom.xml
 
 # Stage the hdf5 jar (org.hdf5group:hdf5:1.12.3 is not on Maven Central or the
 # pavlab mirror; vendored in-repo at vendor/hdf5/ so CI and fresh dev clones

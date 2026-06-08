@@ -19,8 +19,10 @@
 package ubic.gemma.model.expression.designElement;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.lang.Nullable;
 import ubic.gemma.model.analysis.sequence.GeneMappingSummary;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
@@ -42,6 +44,26 @@ public class CompositeSequenceValueObject extends IdentifiableValueObject<Compos
     private ArrayDesignValueObject arrayDesign;
     @JsonIgnore
     private Collection<GeneMappingSummary> geneMappingSummaries;
+    /**
+     * Raw probe sequence from the associated {@code BioSequence.sequence}.
+     * Populated only when the caller opts in via {@code ?withSequence=true}
+     * on the platform-elements endpoint (otherwise null and elided from the
+     * wire by {@code @JsonInclude(NON_NULL)}). Kept out of the default
+     * response because sequences are 25-300bp per probe and would inflate
+     * a 22k-element platform listing by ~1 MB.
+     */
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String sequence;
+    /**
+     * Pre-computed length from {@code BioSequence.length}, exposed alongside
+     * {@code sequence}. Independent so a caller can request length without
+     * paying the full-string cost (future-proofing; for now both come together
+     * with {@code ?withSequence=true}).
+     */
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Long sequenceLength;
 
     /**
      * Required when using the class as a spring bean.

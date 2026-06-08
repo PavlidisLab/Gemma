@@ -99,11 +99,43 @@ public class PlatformsWebServiceTest extends BaseJerseyIntegrationTest5 {
                 PlatformArg.valueOf( this.arrayDesign.getId().toString() ),
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "20" ),
-                null /* cursor */ );
+                null /* cursor */,
+                false /* withSequence */ );
         assertThat( response )
                 .isInstanceOf( PaginatedResponseDataObject.class )
                 .hasFieldOrPropertyWithValue( "offset", 0 )
                 .hasFieldOrPropertyWithValue( "limit", 20 );
+    }
+
+    /**
+     * Verifies the {@code withSequence=true} opt-in populates {@code sequence}
+     * on every returned probe VO (the helper seeds 40-char ATCG strings via
+     * {@link PersistentDummyObjectHelper#getTestNonPersistentBioSequence}).
+     * Asserts only on {@code sequence}, not {@code sequenceLength}: the helper
+     * doesn't call {@code BioSequence.setLength()} on seeded probes so length
+     * is legitimately null in the fixture — both fields are nullable on the VO
+     * by design.
+     */
+    @Test
+    public void testPlatformElementsWithSequence() {
+        ArrayDesign adWithProbes = testHelper.getTestPersistentArrayDesign( 3, true, true );
+        try {
+            Object response = platformsWebService.getPlatformElements(
+                    PlatformArg.valueOf( adWithProbes.getId().toString() ),
+                    OffsetArg.valueOf( "0" ),
+                    LimitArg.valueOf( "20" ),
+                    null /* cursor */,
+                    true /* withSequence */ );
+            assertThat( response ).isInstanceOf( PaginatedResponseDataObject.class );
+            @SuppressWarnings("unchecked")
+            PaginatedResponseDataObject<ubic.gemma.model.expression.designElement.CompositeSequenceValueObject> page =
+                    ( PaginatedResponseDataObject<ubic.gemma.model.expression.designElement.CompositeSequenceValueObject> ) response;
+            assertThat( page.getData() ).hasSize( 3 )
+                    .allSatisfy( vo ->
+                            assertThat( vo.getSequence() ).isNotBlank().matches( "[ATCG]+" ) );
+        } finally {
+            arrayDesignService.remove( adWithProbes );
+        }
     }
 
     @Test

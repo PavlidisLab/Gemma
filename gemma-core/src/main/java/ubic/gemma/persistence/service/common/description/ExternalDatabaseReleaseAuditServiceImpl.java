@@ -46,8 +46,8 @@ import ubic.gemma.model.common.description.ExternalDatabase;
  * {@code OutlierFlaggingAuditServiceImpl} (which uses REQUIRES_NEW because
  * its caller runs with {@code Propagation.NEVER}).
  *
- * <p>Phase C bucket 2g — see {@code handoffs/AUDIT_RESIDUAL_INVENTORY.md}
- * #9 + #10. Replaces the legacy imperative 5-arg
+ * <p>Phase C bucket 2g (audit-residual inventory #9 + #10).
+ * Replaces the legacy imperative 5-arg
  * {@code auditTrailService.addUpdateEvent(ed, ReleaseDetailsUpdateEvent.class,
  * note, detail, lastUpdated)} calls.
  */
