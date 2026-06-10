@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Gemma Rest" type="#com.intellij.j2ee.web.tomcat.TomcatRunConfigurationFactory" factoryName="Local" APPLICATION_SERVER_NAME="Tomcat" ALTERNATIVE_JRE_ENABLED="false">
+  <configuration default="false" name="Gemma Rest" type="#com.intellij.j2ee.web.tomcat.TomcatRunConfigurationFactory" factoryName="Local" APPLICATION_SERVER_NAME="Tomcat 10.1.34" ALTERNATIVE_JRE_ENABLED="false">
     <option name="COMMON_VM_ARGUMENTS" value="-Dspring.profiles.active=dev -Dgemma.mail.username=dev -Dgemma.runas.password=dev-runas-pw -Dgemma.anonymousAuth.key=dev-anon-key -Dgemma.agent.password=dev-agent-pw" />
     <option name="UPDATING_POLICY" value="restart-server" />
     <deployment>
