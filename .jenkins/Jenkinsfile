@@ -23,6 +23,7 @@ pipeline {
     agent any
     tools {
         maven 'Maven 3.6.3'
+        jdk 'Java 25'
     }
     environment {
         GEMMA_CLI_WIKI_DEPLOY_TOKEN = credentials('confluence-wiki-token')
@@ -210,7 +211,7 @@ pipeline {
                 }
                 stage('SonarQube Analysis') {
                     tools {
-                        jdk 'Java 17'
+                        jdk 'Java 25'
                     }
                     when {
                         anyOf {
