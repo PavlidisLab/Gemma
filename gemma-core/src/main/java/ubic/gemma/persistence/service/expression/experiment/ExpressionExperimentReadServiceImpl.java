@@ -23,7 +23,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.ontology.model.OntologyTerm;
 import ubic.gemma.core.ontology.simple.OntologyTermSimple;
-import ubic.gemma.core.analysis.expression.diff.BaselineSelection;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchService;
@@ -799,11 +798,16 @@ public class ExpressionExperimentReadServiceImpl implements ExpressionExperiment
 
     /**
      * Filter factor value annotations to be included as experiment tags.
+     * <p>
+     * Baseline FVs are intentionally NOT excluded here: consumers (curation UI tag
+     * cloud, agent eval) need both sides of a factor to detect whether a category
+     * varies across the experiment. Dropping baselines made an all-male EE and a
+     * mixed M/F EE look identical at the API boundary. Consumers that want the
+     * non-baseline subset can filter client-side.
      */
     private boolean filterFactorValueAnnotation( Statement c ) {
         return filterAnnotation( c )
-                // ignore baseline conditions
-                && !BaselineSelection.isBaselineCondition( c ) && !hasCategory( c, Categories.BLOCK )
+                && !hasCategory( c, Categories.BLOCK )
                 // ignore timepoints
                 && !"http://www.ebi.ac.uk/efo/EFO_0000724".equals( c.getCategoryUri() )
                 // DE_include/exclude
@@ -813,13 +817,15 @@ public class ExpressionExperimentReadServiceImpl implements ExpressionExperiment
 
     /**
      * Filter sample annotations to be included as experiment tags.
+     * <p>
+     * Baseline BM characteristics are intentionally NOT excluded — see the note on
+     * {@link #filterFactorValueAnnotation}. Same uniformity-visibility argument.
      */
     private boolean filterBioMaterialAnnotation( Characteristic c ) {
         return filterAnnotation( c )
                 && !"MaterialType".equalsIgnoreCase( c.getCategory() )
                 && !"molecular entity".equalsIgnoreCase( c.getCategory() )
-                && !"LabelCompound".equalsIgnoreCase( c.getCategory() )
-                && !BaselineSelection.isBaselineCondition( c );
+                && !"LabelCompound".equalsIgnoreCase( c.getCategory() );
     }
 
     private boolean filterAnnotation( Characteristic characteristic ) {

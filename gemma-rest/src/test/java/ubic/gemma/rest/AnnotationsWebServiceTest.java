@@ -171,17 +171,14 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
     private CharacteristicService characteristicService;
 
     @BeforeEach
-    public void setUpMocks() throws Exception {
+    public void setUpMocks() {
         Taxon taxon = Taxon.Factory.newInstance();
         taxon.setId( 1L );
         when( taxonService.findByCommonName( "human" ) ).thenReturn( taxon );
-        // The /annotations/search endpoint memoises results in a static SEARCH_CACHE keyed by
-        // normalised query. Multiple tests in this class issue ?query=diabetes with different
-        // mocked usage-count payloads; without clearing the cache, the first run's result
-        // poisons all subsequent ones. Drop the static map between tests.
-        java.lang.reflect.Field f = AnnotationsWebService.class.getDeclaredField( "SEARCH_CACHE" );
-        f.setAccessible( true );
-        ( ( Map<?, ?> ) f.get( null ) ).clear();
+        // The /annotations/search endpoint memoises results in a Spring CacheManager bean named
+        // AnnotationsSearchResponseCache. This test context doesn't wire a CacheManager (the
+        // field on AnnotationsWebService is @Autowired(required = false)), so caching is
+        // implicitly disabled and there's nothing to clear between tests.
     }
 
     @AfterEach
@@ -912,11 +909,11 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
     }
 
     @Test
-    public void testSearchAnnotationsLimitOver50Returns400() throws SearchException, TimeoutException {
+    public void testSearchAnnotationsLimitOver100Returns400() throws SearchException, TimeoutException {
         // The validator fires before the ontology lookup — no need to mock anything.
         assertThat( target( "/annotations/search" )
                 .queryParam( "query", "diabetes" )
-                .queryParam( "limit", "51" )
+                .queryParam( "limit", "101" )
                 .request().get() )
                 .hasStatus( Response.Status.BAD_REQUEST );
         verify( ontologyService, never() ).findExperimentsCharacteristicTags( anyString(), anyInt(), anyBoolean(), anyLong(), any() );
@@ -934,18 +931,18 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
 
     @Test
     public void testSearchAnnotationsAttributesPreferredLabelMatch() throws SearchException, TimeoutException {
-        // Hit's preferred label contains the query token → matchedVia=preferred_label,
-        // matchedText=label. No synonyms wired on the term mock; the back-compute fast-paths
-        // on the preferred-label match.
+        // Hit's preferred label EQUALS the query (case- + whitespace-normalised) →
+        // matchedVia=preferred_label, matchedText=label. No synonyms wired on the term mock;
+        // the back-compute fast-paths on the preferred-label match.
         CharacteristicValueObject hit = new CharacteristicValueObject(
-                "diabetes mellitus", "http://example.com/diabetes", "disease", "http://example.com/disease" );
-        when( ontologyService.findExperimentsCharacteristicTags( eq( "diabetes" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+                "Diabetes mellitus", "http://example.com/diabetes", "disease", "http://example.com/disease" );
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "diabetes mellitus" ), anyInt(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( Collections.singletonList( hit ) );
         when( ontologyService.getDefinition( eq( "http://example.com/diabetes" ), anyLong(), any() ) )
                 .thenReturn( "a metabolic disease" );
         OntologyTerm term = mock( OntologyTerm.class );
         when( term.getUri() ).thenReturn( "http://example.com/diabetes" );
-        when( term.getLabel() ).thenReturn( "diabetes mellitus" );
+        when( term.getLabel() ).thenReturn( "Diabetes mellitus" );
         when( term.getAnnotations( anyString() ) ).thenReturn( Collections.emptyList() );
         when( ontologyService.getTerm( eq( "http://example.com/diabetes" ), anyLong(), any() ) ).thenReturn( term );
         when( ontologyService.getParents( anySet(), eq( true ), eq( true ), anyLong(), any() ) )
@@ -953,7 +950,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
                 .thenReturn( Collections.emptyMap() );
 
-        assertThat( target( "/annotations/search" ).queryParam( "query", "diabetes" ).request().get() )
+        assertThat( target( "/annotations/search" ).queryParam( "query", "diabetes mellitus" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .entity()
                 .extracting( "data", list( Map.class ) )
@@ -961,17 +958,48 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
                 .first()
                 .satisfies( a -> assertThat( a )
                         .containsEntry( "matchedVia", "preferred_label" )
-                        .containsEntry( "matchedText", "diabetes mellitus" ) );
+                        .containsEntry( "matchedText", "Diabetes mellitus" ) );
+    }
+
+    @Test
+    public void testSearchAnnotationsLeavesMatchAttributionNullForNonEqualLabel() throws SearchException, TimeoutException {
+        // Hit's preferred label only SHARES a token with the query (not equals) → matchedVia=null.
+        // Catches the regression where token-overlap matches were tagged preferred_label, making
+        // the attribution useless as a relevance signal.
+        CharacteristicValueObject hit = new CharacteristicValueObject(
+                "type b pancreatic cell", "http://example.com/CL_0000169", "cell type", "http://example.com/cell_type" );
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "type" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Collections.singletonList( hit ) );
+        when( ontologyService.getDefinition( anyString(), anyLong(), any() ) ).thenReturn( null );
+        OntologyTerm term = mock( OntologyTerm.class );
+        when( term.getUri() ).thenReturn( "http://example.com/CL_0000169" );
+        when( term.getLabel() ).thenReturn( "type b pancreatic cell" );
+        when( term.getAnnotations( anyString() ) ).thenReturn( Collections.emptyList() );
+        when( ontologyService.getTerm( anyString(), anyLong(), any() ) ).thenReturn( term );
+        when( ontologyService.getParents( anySet(), eq( true ), eq( true ), anyLong(), any() ) )
+                .thenReturn( Collections.emptySet() );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/annotations/search" ).queryParam( "query", "type" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 1 )
+                .first()
+                .satisfies( a -> assertThat( a )
+                        .containsEntry( "matchedVia", null )
+                        .containsEntry( "matchedText", null ) );
     }
 
     @Test
     public void testSearchAnnotationsAttributesSynonymMatch() throws SearchException, TimeoutException {
-        // Hit's preferred label ("hippocampus") does NOT contain the query token ("ammon"); the
-        // exact-synonym property does ("ammon's horn"). Back-compute must pick exact_synonym +
-        // surface the matching synonym text.
+        // Hit's preferred label ("hippocampus") does NOT equal the query ("ammon's horn"); the
+        // exact-synonym property does ("Ammon's horn", normalised). Back-compute must pick
+        // exact_synonym + surface the matching synonym text.
         CharacteristicValueObject hit = new CharacteristicValueObject(
                 "hippocampus", "http://example.com/UBERON_0002421", "organism part", "http://example.com/organism_part" );
-        when( ontologyService.findExperimentsCharacteristicTags( eq( "ammon" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "ammon's horn" ), anyInt(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( Collections.singletonList( hit ) );
         when( ontologyService.getDefinition( anyString(), anyLong(), any() ) )
                 .thenReturn( "the part of the brain that..." );
@@ -996,7 +1024,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
                 .thenReturn( Collections.emptyMap() );
 
-        assertThat( target( "/annotations/search" ).queryParam( "query", "ammon" ).request().get() )
+        assertThat( target( "/annotations/search" ).queryParam( "query", "ammon's horn" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .entity()
                 .extracting( "data", list( Map.class ) )
@@ -1026,7 +1054,9 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
                     String uri = a.getArgument( 0 );
                     OntologyTerm t = mock( OntologyTerm.class );
                     when( t.getUri() ).thenReturn( uri );
-                    when( t.getLabel() ).thenReturn( "term-x" );
+                    // Label EQUALS query — required for matchedVia=preferred_label under the
+                    // strict-equality rule; matchedVia is the test's signal of "enriched".
+                    when( t.getLabel() ).thenReturn( "diabetes" );
                     when( t.getAnnotations( anyString() ) ).thenReturn( Collections.emptyList() );
                     return t;
                 } );
@@ -1044,12 +1074,12 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
                 .extracting( "data", list( Map.class ) )
                 .hasSize( 30 )
                 .satisfies( hits -> {
-                    // Top-25: matchedVia populated.
+                    // Top-25: matchedVia populated (label equals query, picks preferred_label).
                     for ( int i = 0; i < 25; i++ ) {
                         Map<?, ?> hit = ( Map<?, ?> ) hits.get( i );
                         assertThat( hit.get( "matchedVia" ) )
                                 .as( "top-25 hit %d should carry matchedVia", i )
-                                .isNotNull();
+                                .isEqualTo( "preferred_label" );
                     }
                     // 25..29: nulls.
                     for ( int i = 25; i < 30; i++ ) {

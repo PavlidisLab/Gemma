@@ -467,7 +467,7 @@ public class AnnotationsWebService {
                     "weighted score.")
             @QueryParam("rank") @DefaultValue(LuceneOrderRankingStrategy.NAME) String rank,
             @Parameter(description = "Maximum number of hits to return. Defaults to 20 (typeahead UX). " +
-                    "Hard upper bound is 50; values outside [1, 50] yield HTTP 400. The truncation is " +
+                    "Hard upper bound is 100; values outside [1, 100] yield HTTP 400. The truncation is " +
                     "applied AFTER ranking, so reducing the limit also reduces top-N enrichment cost.")
             @QueryParam("limit") @DefaultValue(SEARCH_DEFAULT_LIMIT_STR) int limit,
             @Parameter(description = "Allow-list of URI namespace prefixes; the candidate set is " +
@@ -571,7 +571,7 @@ public class AnnotationsWebService {
     static final int SEARCH_DEFAULT_LIMIT = 20;
     private static final String SEARCH_DEFAULT_LIMIT_STR = "20";
     /** Upper bound for {@code ?limit=}; requests above this are 400. */
-    static final int SEARCH_MAX_LIMIT = 50;
+    static final int SEARCH_MAX_LIMIT = 100;
 
     private AnnotationSearchRankingStrategy resolveRankingStrategy( String name ) {
         String key = name != null ? name.trim().toLowerCase( Locale.ROOT ) : LuceneOrderRankingStrategy.NAME;
@@ -1229,7 +1229,6 @@ public class AnnotationsWebService {
             String originalQuery,
             long budgetMs ) throws TimeoutException {
         StopWatch local = StopWatch.createStarted();
-        List<String> queryTokens = tokeniseQuery( originalQuery );
         // Each URI's enrichment (definition + term + parents) is independent and read-only
         // against the ontology model. Running them in parallel collapses 3*N serial Jena
         // queries into ~3*N/parallelism wall time. For 15-URI typeahead this changed cold
@@ -1238,7 +1237,7 @@ public class AnnotationsWebService {
         int parallelism = Math.min( topUris.size(), 8 );
         if ( parallelism <= 1 ) {
             enrichOne( topUris.iterator().next(), defByUri, parentsByUri, matchByUri,
-                    queryTokens, Math.max( budgetMs - local.getTime(), 0 ) );
+                    originalQuery, Math.max( budgetMs - local.getTime(), 0 ) );
             return;
         }
         java.util.concurrent.ExecutorService pool = java.util.concurrent.Executors.newFixedThreadPool( parallelism );
@@ -1248,7 +1247,7 @@ public class AnnotationsWebService {
                 tasks.add( pool.submit( () -> {
                     long remaining = Math.max( budgetMs - local.getTime(), 0 );
                     if ( remaining <= 0 ) return;
-                    enrichOne( uri, defByUri, parentsByUri, matchByUri, queryTokens, remaining );
+                    enrichOne( uri, defByUri, parentsByUri, matchByUri, originalQuery, remaining );
                 } ) );
             }
             long deadline = System.currentTimeMillis() + budgetMs;
@@ -1288,7 +1287,7 @@ public class AnnotationsWebService {
             Map<String, String> defByUri,
             Map<String, List<OntologyTermSimpleValueObject>> parentsByUri,
             Map<String, MatchAttribution> matchByUri,
-            List<String> queryTokens,
+            String originalQuery,
             long remaining ) {
         if ( remaining <= 0 ) return;
         try {
@@ -1302,7 +1301,7 @@ public class AnnotationsWebService {
         try {
             OntologyTerm term = ontologyService.getTerm( uri, remaining, TimeUnit.MILLISECONDS );
             if ( term == null ) return;
-            MatchAttribution attribution = computeMatchAttribution( term, queryTokens );
+            MatchAttribution attribution = computeMatchAttribution( term, originalQuery );
             if ( attribution != null ) {
                 synchronized ( matchByUri ) { matchByUri.put( uri, attribution ); }
             }
@@ -1330,26 +1329,32 @@ public class AnnotationsWebService {
     private static final String IAO_ALT_LABEL = "http://purl.obolibrary.org/obo/IAO_0000118";
 
     /**
-     * Back-compute which Lucene field most likely produced the hit. We have no access to the
-     * Jena Text highlighter spans from the existing search call, so we replay the query tokens
-     * against the term's preferred label and indexed synonym annotations and pick the strongest
-     * matching field (preferred_label > exact > narrow > related > broad > generic > alt_label).
+     * Back-compute which Lucene field produced the hit by checking the term's preferred label
+     * and indexed synonyms for a normalised-equality match against the query (preferred_label >
+     * exact > narrow > related > broad > generic > alt_label).
      * <p>
-     * Returns {@code null} when the query and term have no token overlap (the hit must have come
-     * from a property we don't probe — fall through to the UI showing only the preferred label).
+     * Strict equality is intentional: a token-overlap rule tagged every Lucene hit whose label
+     * shared a single word with the query (e.g. {@code "disease"}) as {@code preferred_label},
+     * which made the attribution useless as a relevance signal for clients. {@code matchedVia}
+     * now means "this row's label/synonym IS the query", nothing fuzzier.
+     * <p>
+     * Returns {@code null} when nothing matches by equality — the hit came in via a Lucene
+     * field we don't probe (definition, obo_id) or via fuzzy ranking. Clients render that as
+     * "ranked-but-unattributed" rather than as a falsely strong match.
      */
     @Nullable
-    private static MatchAttribution computeMatchAttribution( OntologyTerm term, List<String> queryTokens ) {
-        if ( queryTokens.isEmpty() ) {
-            // No tokens to match — default to preferred_label so the UI doesn't render an empty hint.
-            return new MatchAttribution( MatchedVia.PREFERRED_LABEL, term.getLabel() );
+    private static MatchAttribution computeMatchAttribution( OntologyTerm term, String originalQuery ) {
+        String normalisedQuery = normaliseForEquality( originalQuery );
+        if ( normalisedQuery.isEmpty() ) {
+            return null;
         }
         String label = term.getLabel();
-        if ( label != null && labelContainsAnyToken( label, queryTokens ) ) {
+        if ( label != null && normaliseForEquality( label ).equals( normalisedQuery ) ) {
             return new MatchAttribution( MatchedVia.PREFERRED_LABEL, label );
         }
-        // Walk synonym fields in strength order; the first synonym whose value contains a query
-        // token wins. Most ontology terms expose only a handful of synonyms so this is cheap.
+        // Walk synonym fields in strength order; the first synonym whose normalised value equals
+        // the normalised query wins. Most ontology terms expose only a handful of synonyms so
+        // this is cheap.
         String[][] probes = {
                 { OBO_EXACT_SYNONYM, MatchedVia.EXACT_SYNONYM.token },
                 { OBO_NARROW_SYNONYM, MatchedVia.NARROW_SYNONYM.token },
@@ -1365,41 +1370,22 @@ public class AnnotationsWebService {
             }
             for ( AnnotationProperty ap : annots ) {
                 String text = ap.getContents();
-                if ( text != null && labelContainsAnyToken( text, queryTokens ) ) {
+                if ( text != null && normaliseForEquality( text ).equals( normalisedQuery ) ) {
                     return new MatchAttribution( MatchedVia.fromToken( probe[1] ), text );
                 }
             }
         }
-        // No synonym matched any query token — the hit might have come via a Lucene field we
-        // don't probe (e.g. obo_id, definition). Fall back to preferred_label with the term's
-        // label so the UI still has something to render.
-        return new MatchAttribution( MatchedVia.PREFERRED_LABEL, label );
+        return null;
     }
 
-    private static List<String> tokeniseQuery( @Nullable String q ) {
-        if ( q == null || q.isBlank() ) {
-            return Collections.emptyList();
-        }
-        String lc = q.toLowerCase( Locale.ROOT );
-        String[] parts = lc.split( "[^a-z0-9]+" );
-        List<String> out = new ArrayList<>( parts.length );
-        for ( String p : parts ) {
-            if ( p.length() >= 2 ) {  // skip 1-char filler tokens
-                out.add( p );
-            }
-        }
-        return out;
-    }
-
-    private static boolean labelContainsAnyToken( String label, List<String> tokens ) {
-        if ( label == null ) return false;
-        String lc = label.toLowerCase( Locale.ROOT );
-        for ( String t : tokens ) {
-            if ( lc.contains( t ) ) {
-                return true;
-            }
-        }
-        return false;
+    /**
+     * Lowercase + collapse runs of non-alphanumeric characters to a single space + trim. Used
+     * for {@code matchedVia} equality so that {@code "Down-Syndrome"} matches {@code
+     * "down syndrome"} but {@code "type b pancreatic cell"} does NOT match {@code "type 2"}.
+     */
+    private static String normaliseForEquality( @Nullable String s ) {
+        if ( s == null ) return "";
+        return s.toLowerCase( Locale.ROOT ).replaceAll( "[^a-z0-9]+", " " ).trim();
     }
 
     /**
