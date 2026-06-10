@@ -316,7 +316,23 @@ public class HibernateSearchSource implements FieldAwareSearchSource {
                             .fields( fields )
                             .matching( settings.getQuery() )
                             // tolerate Lucene-reserved characters; mirrors the pre-strip parseSafely behaviour.
-                            .defaultOperator( org.hibernate.search.engine.search.common.BooleanOperator.OR ) )
+                            .defaultOperator( org.hibernate.search.engine.search.common.BooleanOperator.OR )
+                            // Drop NOT: the simpleQueryString syntax treats a `-` immediately
+                            // before a term as "must not contain". Hyphens are common inside
+                            // valid query terms — drug names (5-FU), cell lines (HEK-293), EE
+                            // short names (alizadeh-lymphoma, west-breast) — so honouring the
+                            // prohibit operator here actively breaks more queries than it serves.
+                            // The other syntactic features (AND/OR/PHRASE/PRECEDENCE/PREFIX/FUZZY/
+                            // ESCAPE/NEAR/WHITESPACE) remain enabled.
+                            .flags( org.hibernate.search.engine.search.predicate.dsl.SimpleQueryFlag.AND,
+                                    org.hibernate.search.engine.search.predicate.dsl.SimpleQueryFlag.OR,
+                                    org.hibernate.search.engine.search.predicate.dsl.SimpleQueryFlag.PREFIX,
+                                    org.hibernate.search.engine.search.predicate.dsl.SimpleQueryFlag.PHRASE,
+                                    org.hibernate.search.engine.search.predicate.dsl.SimpleQueryFlag.PRECEDENCE,
+                                    org.hibernate.search.engine.search.predicate.dsl.SimpleQueryFlag.ESCAPE,
+                                    org.hibernate.search.engine.search.predicate.dsl.SimpleQueryFlag.WHITESPACE,
+                                    org.hibernate.search.engine.search.predicate.dsl.SimpleQueryFlag.FUZZY,
+                                    org.hibernate.search.engine.search.predicate.dsl.SimpleQueryFlag.NEAR ) )
                     .fetch( fetchSize );
 
             List<List<?>> rows = hits.hits();

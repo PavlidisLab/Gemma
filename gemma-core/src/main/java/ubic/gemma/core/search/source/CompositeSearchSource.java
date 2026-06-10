@@ -140,6 +140,7 @@ public class CompositeSearchSource implements SearchSource {
         long[] timeSpentBySource = new long[sources.size()];
         int[] foundItemsBySource = new int[sources.size()];
         int[] newItemsBySource = new int[sources.size()];
+        boolean shortCircuited = false;
         for ( int i = 0; i < sources.size(); i++ ) {
             long timeBefore = timer.getTime( TimeUnit.MILLISECONDS );
             SearchSource source = sources.get( i );
@@ -151,6 +152,17 @@ public class CompositeSearchSource implements SearchSource {
                 newItemsBySource[i] = results.size() - sizeBefore;
             }
             timeSpentBySource[i] = timer.getTime( TimeUnit.MILLISECONDS ) - timeBefore;
+            // Stop as soon as ANY source returns an exact-identifier hit (numeric id, short name,
+            // accession, NCBI id). DatabaseSearchSource is wired first via HIGHEST_PRECEDENCE so
+            // it gets first crack; once it pins a canonical entity by identifier, running the
+            // Lucene full-text leg and the ontology fan-out is wasted latency that also pollutes
+            // the result with lower-scored fuzzy matches. Earlier behaviour ran every source
+            // unconditionally, so a "GSE12345" / "alizadeh-lymphoma" lookup paid for a full
+            // Lucene fan-out even though the DB had already returned THE answer.
+            if ( results.stream().anyMatch( SearchResult::isExactIdentifierMatch ) ) {
+                shortCircuited = true;
+                break;
+            }
         }
         timer.stop();
         boolean shouldWarn;
@@ -170,8 +182,10 @@ public class CompositeSearchSource implements SearchSource {
                     .mapToObj( i -> String.format( "source: %s, found items: %d, found items (novel): %d, time spent: %d ms",
                             sources.get( i ).getClass().getSimpleName(), foundItemsBySource[i], newItemsBySource[i], timeSpentBySource[i] ) )
                     .collect( Collectors.joining( "; " ) );
-            String message = String.format( "Found %d %s results in %d ms (%s)", results.size(), clazz.getSimpleName(),
-                    timer.getTime( TimeUnit.MILLISECONDS ), breakdownBySource );
+            String message = String.format( "Found %d %s results in %d ms%s (%s)", results.size(), clazz.getSimpleName(),
+                    timer.getTime( TimeUnit.MILLISECONDS ),
+                    shortCircuited ? " [identifier-match short-circuit]" : "",
+                    breakdownBySource );
             if ( shouldWarn ) {
                 log.warn( message );
             } else {
