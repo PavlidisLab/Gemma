@@ -127,6 +127,8 @@ public class AdminWebServiceTest {
     private GeoScrapeService geoScrapeService;
     @Mock
     private ubic.gemma.core.search.indexer.IndexerService indexerService;
+    @Mock
+    private ubic.gemma.core.ontology.OntologyService ontologyFacade;
 
     private AdminWebService webService;
 
@@ -141,7 +143,7 @@ public class AdminWebServiceTest {
     public void setUp() {
         taxonArgService = new TaxonArgService( innerTaxonService, innerChromosomeService, innerGeneService );
         webService = new AdminWebService( cacheManager, sessionFactory, taskRunningService, sessionRegistry,
-                Collections.emptyList(), dataSource, userManager, agentProposalService, ticketService,
+                Collections.emptyList(), ontologyFacade, dataSource, userManager, agentProposalService, ticketService,
                 taxonArgService, blacklistedEntityService, externalDatabaseReadService, geoScrapeService,
                 indexerService );
     }

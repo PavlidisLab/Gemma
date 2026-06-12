@@ -549,6 +549,16 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     }
 
     @Override
+    public void clearCachesForOntology( ubic.gemma.core.ontology.providers.OntologyService serv ) {
+        // Mirrors the post-init invalidation in reinitializeAndReindexAllOntologies. Parents/children
+        // are always cleared because the model swap can change hierarchy. The search cache only matters
+        // when search is enabled, but the per-ontology cost of evicting an empty namespace is trivial,
+        // so clear unconditionally to keep callers' contract simple.
+        ontologyCache.clearParentsAndChildrenCachesByOntology( serv );
+        ontologyCache.clearSearchCacheByOntology( serv );
+    }
+
+    @Override
     public void reinitializeAndReindexAllOntologies() {
         for ( ubic.gemma.core.ontology.providers.OntologyService serv : this.ontologyServices ) {
             if ( serv.isOntologyLoaded() ) {

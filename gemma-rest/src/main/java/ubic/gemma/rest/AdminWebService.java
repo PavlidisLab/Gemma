@@ -237,10 +237,20 @@ public class AdminWebService {
      */
     private final ConcurrentMap<String, String> reindexStatus = new ConcurrentHashMap<>();
 
+    /**
+     * Facade used to evict the in-process search / parents / children caches after a per-ontology
+     * refresh. The provider-level {@code OntologyService} bean (per-ontology) reloads the Jena
+     * model + Lucene index but does not touch {@code OntologyCache}, so stale results were being
+     * served until a bounce — see {@link #refreshOntology(String, boolean)}.
+     */
+    private final ubic.gemma.core.ontology.OntologyService ontologyFacade;
+
     @Autowired
     public AdminWebService( CacheManager cacheManager, SessionFactory sessionFactory,
             TaskRunningService taskRunningService, SessionRegistry sessionRegistry,
-            List<OntologyService> ontologies, DataSource dataSource, UserManager userManager,
+            List<OntologyService> ontologies,
+            ubic.gemma.core.ontology.OntologyService ontologyFacade,
+            DataSource dataSource, UserManager userManager,
             AgentProposalService agentProposalService, TicketService ticketService,
             TaxonArgService taxonArgService,
             BlacklistedEntityService blacklistedEntityService,
@@ -252,6 +262,7 @@ public class AdminWebService {
         this.taskRunningService = taskRunningService;
         this.sessionRegistry = sessionRegistry;
         this.ontologies = ontologies;
+        this.ontologyFacade = ontologyFacade;
         this.dataSource = dataSource;
         this.userManager = userManager;
         this.agentProposalService = agentProposalService;
@@ -1043,6 +1054,30 @@ public class AdminWebService {
         // model rebuilt. forceIndexing defaults to false so we don't blow away a still-valid
         // Lucene index unless the caller explicitly asks.
         match.startInitializationThread( true, forceIndexing );
+        // Reloading the Jena model + Lucene index alone is not enough — OntologyCache retains
+        // findTerm / getParents / getChildren results keyed by (OntologyService, query, ...), and
+        // would otherwise serve stale results for terms added since the last bounce. Wait for the
+        // init thread on a daemon (so this endpoint still returns 202 immediately) and evict that
+        // ontology's cache entries once the new model is live. Mirrors OntologyServiceImpl's
+        // reinitializeAndReindexAllOntologies, which has done the same eviction since 2025.
+        final OntologyService refreshed = match;
+        Thread invalidator = new Thread( () -> {
+            try {
+                refreshed.waitForInitializationThread();
+            } catch ( InterruptedException e ) {
+                Thread.currentThread().interrupt();
+                return;
+            }
+            try {
+                ontologyFacade.clearCachesForOntology( refreshed );
+                log.info( "Hot-refresh of ontology=" + name + " completed; OntologyCache evicted." );
+            } catch ( RuntimeException e ) {
+                log.warn( "Failed to evict OntologyCache for ontology=" + name + " after refresh; "
+                        + "stale lookups may persist until next bounce.", e );
+            }
+        }, name + "_cache_evict" );
+        invalidator.setDaemon( true );
+        invalidator.start();
         return Response.accepted( respond( new OntologyRefreshResponse( name, "refreshing" ) ) ).build();
     }
 
