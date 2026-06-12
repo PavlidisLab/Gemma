@@ -1054,12 +1054,22 @@ public class AdminWebService {
         // model rebuilt. forceIndexing defaults to false so we don't blow away a still-valid
         // Lucene index unless the caller explicitly asks.
         match.startInitializationThread( true, forceIndexing );
-        // Reloading the Jena model + Lucene index alone is not enough — OntologyCache retains
-        // findTerm / getParents / getChildren results keyed by (OntologyService, query, ...), and
-        // would otherwise serve stale results for terms added since the last bounce. Wait for the
-        // init thread on a daemon (so this endpoint still returns 202 immediately) and evict that
-        // ontology's cache entries once the new model is live. Mirrors OntologyServiceImpl's
-        // reinitializeAndReindexAllOntologies, which has done the same eviction since 2025.
+        // Reloading the Jena model + Lucene index alone is not enough — three layers cache
+        // ontology-derived data and all of them must be invalidated for newly-added terms (e.g.
+        // a fresh TGEMO_00210) to surface to clients:
+        //
+        //   1. OntologyCache: findTerm / getParents / getChildren entries keyed by ontology
+        //      service. Mirrors OntologyServiceImpl.reinitializeAndReindexAllOntologies.
+        //   2. AnnotationsSearchResponseCache: the /annotations/search response payload, keyed
+        //      by (query, strategy, limit, prefixes, ...). Each cached hit carries baked-in
+        //      matchedVia / matchedText / definition / parents fields that were computed
+        //      against the prior model — a hit that resolved with matchedVia=null because the
+        //      term wasn't yet loaded stays null until this cache rotates (5min TTL) or is
+        //      flushed. No per-ontology key exists, so the safest move is to drop the whole
+        //      region. Refreshes are infrequent enough that the recomputation cost is fine.
+        //
+        // Wait for the init thread on a daemon (endpoint still returns 202 immediately) and
+        // evict in order: ontology-keyed caches first, then the response payload region.
         final OntologyService refreshed = match;
         Thread invalidator = new Thread( () -> {
             try {
@@ -1070,15 +1080,46 @@ public class AdminWebService {
             }
             try {
                 ontologyFacade.clearCachesForOntology( refreshed );
-                log.info( "Hot-refresh of ontology=" + name + " completed; OntologyCache evicted." );
+                int evictedRegions = clearOntologyDerivedResponseCaches();
+                log.info( "Hot-refresh of ontology=" + name + " completed; OntologyCache evicted; "
+                        + evictedRegions + " response-cache region(s) flushed." );
             } catch ( RuntimeException e ) {
-                log.warn( "Failed to evict OntologyCache for ontology=" + name + " after refresh; "
+                log.warn( "Failed to evict caches for ontology=" + name + " after refresh; "
                         + "stale lookups may persist until next bounce.", e );
             }
         }, name + "_cache_evict" );
         invalidator.setDaemon( true );
         invalidator.start();
         return Response.accepted( respond( new OntologyRefreshResponse( name, "refreshing" ) ) ).build();
+    }
+
+    /**
+     * Names of REST-level response caches whose entries are derived from ontology state and
+     * must therefore be flushed when any ontology reloads. Today only the annotation-search
+     * response payload qualifies — add new region names here if future endpoints introduce
+     * similarly-shaped per-query caches.
+     */
+    private static final String[] ONTOLOGY_DERIVED_RESPONSE_CACHE_REGIONS = {
+            "AnnotationsSearchResponseCache",
+    };
+
+    /**
+     * Flush the response-level caches that bake ontology-derived fields into per-query payloads.
+     * Returns the count of regions actually present and flushed (regions absent from the
+     * CacheManager are silently skipped, which is fine — the cache simply isn't registered yet
+     * on this build). Called from the refresh daemon after the ontology's lower-level
+     * OntologyCache has been evicted.
+     */
+    private int clearOntologyDerivedResponseCaches() {
+        int evicted = 0;
+        for ( String region : ONTOLOGY_DERIVED_RESPONSE_CACHE_REGIONS ) {
+            org.springframework.cache.Cache c = cacheManager.getCache( region );
+            if ( c != null ) {
+                c.clear();
+                evicted++;
+            }
+        }
+        return evicted;
     }
 
     /** Body shape for {@link #refreshOntology(String, boolean)} returns. */

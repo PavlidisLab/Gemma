@@ -1300,10 +1300,28 @@ public class AnnotationsWebService {
         }
         try {
             OntologyTerm term = ontologyService.getTerm( uri, remaining, TimeUnit.MILLISECONDS );
-            if ( term == null ) return;
+            if ( term == null ) {
+                // The Lucene/DB hit had this URI, but no loaded ontology service can resolve it
+                // back to a term — most often that means the owning ontology is still mid-init
+                // (just refreshed) or never loaded at all. matchedVia will land as null on the
+                // wire; clients can't distinguish "we never tried" from "we tried and gave up"
+                // without this log line. INFO so a sustained failure pattern is visible without
+                // turning on debug logging.
+                log.info( "annotation-search: getTerm({}) returned null for query='{}'; matchedVia will be null. "
+                        + "Likely cause: owning ontology not loaded or still initializing.",
+                        uri, originalQuery );
+                return;
+            }
             MatchAttribution attribution = computeMatchAttribution( term, originalQuery );
             if ( attribution != null ) {
                 synchronized ( matchByUri ) { matchByUri.put( uri, attribution ); }
+            } else if ( log.isDebugEnabled() ) {
+                // No label / synonym normalised-equal to the query — hit came in via a Lucene
+                // field we don't probe (definition, obo_id) or a fuzzy / token-overlap rank.
+                // The term itself loaded fine; log label so a debug session can see why strict
+                // equality didn't bite.
+                log.debug( "annotation-search: no match attribution for uri={} label='{}' query='{}'",
+                        uri, term.getLabel(), originalQuery );
             }
             Collection<OntologyTerm> parents = ontologyService.getParents( Collections.singleton( term ),
                     true, true, remaining, TimeUnit.MILLISECONDS );

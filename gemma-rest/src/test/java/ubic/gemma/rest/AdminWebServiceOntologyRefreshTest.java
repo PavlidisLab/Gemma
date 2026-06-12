@@ -235,6 +235,9 @@ class AdminWebServiceOntologyRefreshTest {
         // Give the daemon a moment to run waitForInitializationThread + clearCachesForOntology.
         // The mock's waitForInitializationThread returns immediately (no real thread), so this
         // should resolve well under the timeout — generous bound so a slow CI host doesn't flake.
+        // We don't stub the response-cache region here — the daemon's helper handles a null
+        // cache (e.g. region not registered on this build) gracefully, and the response-cache
+        // assertion lives in refreshFlushesAnnotationsSearchResponseCache.
         long deadline = System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos( 5 );
         while ( System.nanoTime() < deadline ) {
             try {
@@ -246,6 +249,34 @@ class AdminWebServiceOntologyRefreshTest {
         }
         verify( ontologyFacade ).clearCachesForOntology( chebi );
         verify( chebi ).waitForInitializationThread();
+    }
+
+    @Test
+    void refreshFlushesAnnotationsSearchResponseCache() throws InterruptedException {
+        // Pre-fix bug (the matchedVia=null after TGEMO upstream change report):
+        // AnnotationsWebService caches /annotations/search responses for 5 minutes keyed by
+        // (query, strategy, limit, ...). Each cached hit has baked-in matchedVia / matchedText
+        // computed against the prior ontology state. A hit that resolved with matchedVia=null
+        // because TGEMO_00210 wasn't loaded yet would stay null in the cached payload until
+        // the next bounce or manual DELETE /admin/caches/AnnotationsSearchResponseCache.
+        // Pin that the refresh daemon now flushes that region too.
+        org.springframework.cache.Cache responseCache = mock( org.springframework.cache.Cache.class );
+        when( cacheManager.getCache( "AnnotationsSearchResponseCache" ) ).thenReturn( responseCache );
+        when( chebi.getName() ).thenReturn( "CHEBI" );
+        when( chebi.isInitializationThreadAlive() ).thenReturn( false );
+
+        service.refreshOntology( "CHEBI", false );
+
+        long deadline = System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos( 5 );
+        while ( System.nanoTime() < deadline ) {
+            try {
+                verify( responseCache ).clear();
+                break;
+            } catch ( AssertionError notYet ) {
+                Thread.sleep( 20 );
+            }
+        }
+        verify( responseCache ).clear();
     }
 
     @Test
