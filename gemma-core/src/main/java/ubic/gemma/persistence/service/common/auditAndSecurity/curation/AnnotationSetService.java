@@ -1,0 +1,181 @@
+/*
+ * The Gemma project
+ *
+ * Copyright (c) 2026 University of British Columbia
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ */
+package ubic.gemma.persistence.service.common.auditAndSecurity.curation;
+
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import org.springframework.lang.Nullable;
+import ubic.gemma.model.analysis.Investigation;
+import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSet;
+import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetRole;
+import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetSource;
+import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetSummaryValueObject;
+import ubic.gemma.model.expression.experiment.AgentCurationKind;
+
+/**
+ * Service surface for {@link AnnotationSet} rows. Drives the
+ * {@code /datasets/{id}/annotation-sets} + {@code /annotation-sets/{id}}
+ * REST endpoints and the {@code /preboarded/{id}/annotation-sets}
+ * pre-load surface.
+ *
+ * <p>{@link #attach} is idempotent on
+ * {@code (investigation, role, runId)}: a retry with the same triple
+ * returns the existing row instead of creating a duplicate. The REST
+ * layer reports the existing row as 200 OK rather than 201 Created in
+ * that case.</p>
+ */
+public interface AnnotationSetService {
+
+    /**
+     * Attach (or return existing) an annotation set to the given
+     * investigation. The {@code runId} semantic depends on role and is
+     * the caller's responsibility:
+     * <ul>
+     *   <li>{@code PROPOSAL} &mdash; pass the agent runner's unique id.</li>
+     *   <li>{@code DRAFT} &mdash; pass {@code "draft-{createdBy}"} (or the
+     *       service derives it if blank; see
+     *       {@link #upsertDraft(Investigation, String, String, String, AnnotationSet)}).</li>
+     *   <li>{@code SNAPSHOT} &mdash; pass a generated UUID, or let the
+     *       service generate one when {@code runId} is null/blank.</li>
+     * </ul>
+     *
+     * @return the persisted row plus a flag noting whether it was created
+     *         (true) or returned as existing (false).
+     */
+    AttachedAnnotationSet attach( Investigation investigation,
+            AnnotationSetRole role,
+            AnnotationSetSource source,
+            @Nullable AgentCurationKind kind,
+            @Nullable String runId,
+            @Nullable String createdBy,
+            @Nullable String agentVersion,
+            @Nullable String model,
+            @Nullable Date ranAt,
+            @Nullable String payloadJson,
+            @Nullable AnnotationSet parent );
+
+    /**
+     * Convenience overload for the common DRAFT-upsert path used by the
+     * curation-UI: ensures one DRAFT per {@code (investigation, curator)}
+     * by deriving {@code runId} as {@code "draft-{createdBy}"}. If a row
+     * already exists, its {@code payloadJson} / {@code parkedElements} /
+     * {@code updatedAt} are updated in place; otherwise a new row is
+     * created.
+     *
+     * @param parent  optional {@code PROPOSAL} this draft was seeded from
+     *                (forms the lineage edge for diff-derived
+     *                dispositions).
+     */
+    AnnotationSet upsertDraft( Investigation investigation,
+            String createdBy,
+            String payloadJson,
+            @Nullable String parkedElements,
+            @Nullable AnnotationSet parent );
+
+    /**
+     * @return all sets attached to the given investigation matching the
+     *         role filter (or all roles if null), newest first.
+     */
+    List<AnnotationSet> findByInvestigation( Investigation investigation,
+            @Nullable AnnotationSetRole roleFilter );
+
+    /**
+     * Thin metadata projection.
+     */
+    List<AnnotationSetSummaryValueObject> findSummariesByInvestigation( Investigation investigation,
+            @Nullable AnnotationSetRole roleFilter );
+
+    @Nullable
+    AnnotationSet findLatestByInvestigation( Investigation investigation,
+            @Nullable AnnotationSetRole roleFilter );
+
+    @Nullable
+    AnnotationSet load( Long id );
+
+    @Nullable
+    AnnotationSet findByInvestigationAndRoleAndRunId( Investigation investigation,
+            AnnotationSetRole role, String runId );
+
+    long countByInvestigation( Investigation investigation,
+            @Nullable AnnotationSetRole roleFilter );
+
+    int rebindInvestigation( Investigation from, Investigation to );
+
+    List<AnnotationSetSummaryValueObject> listSummaries( @Nullable AnnotationSetRole roleFilter,
+            @Nullable AnnotationSetSource sourceFilter,
+            @Nullable String createdByFilter,
+            @Nullable List<Long> investigationIds, int offset, int limit );
+
+    long countSummaries( @Nullable AnnotationSetRole roleFilter,
+            @Nullable AnnotationSetSource sourceFilter,
+            @Nullable String createdByFilter,
+            @Nullable List<Long> investigationIds );
+
+    /**
+     * Stamp {@code finalizedAt} + {@code finalizedBy} on the row,
+     * marking a DRAFT as "done editing" or a SNAPSHOT as the polished
+     * canonical view. Idempotent: a row already finalized returns
+     * unchanged (no re-stamp).
+     */
+    @Nullable
+    AnnotationSet finalizeSet( Long id, @Nullable String finalizedBy );
+
+    /**
+     * Clear {@code finalizedAt} + {@code finalizedBy} on the row,
+     * reopening a finalized DRAFT or unblessing a polished SNAPSHOT.
+     * Idempotent: a row already not finalized returns unchanged.
+     */
+    @Nullable
+    AnnotationSet reopenSet( Long id );
+
+    /**
+     * Delete the row with the given id. Returns true if a row was
+     * removed, false if no such row existed. Cascades on parent edges
+     * are governed by {@code ON DELETE SET NULL}: descendants survive,
+     * their {@code parent} link is cleared.
+     */
+    boolean delete( Long id );
+
+    long countSince( @Nullable Date since, @Nullable AnnotationSetRole roleFilter );
+
+    Map<AnnotationSetRole, Long> countByRoleSince( @Nullable Date since );
+
+    long countDistinctRunIdsSince( @Nullable Date since,
+            @Nullable AnnotationSetRole roleFilter );
+
+    @Nullable
+    Date findLatestCreatedAt( @Nullable AnnotationSetRole roleFilter );
+
+    /**
+     * Return value of {@link #attach}. Carries the persisted row plus a
+     * flag noting whether it was created (true) or returned as existing
+     * (false). REST callers use it to choose 201 vs 200.
+     */
+    class AttachedAnnotationSet {
+        private final AnnotationSet annotationSet;
+        private final boolean created;
+
+        public AttachedAnnotationSet( AnnotationSet annotationSet, boolean created ) {
+            this.annotationSet = annotationSet;
+            this.created = created;
+        }
+
+        public AnnotationSet getAnnotationSet() {
+            return annotationSet;
+        }
+
+        public boolean isCreated() {
+            return created;
+        }
+    }
+}
