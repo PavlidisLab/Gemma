@@ -120,15 +120,21 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         }
 
         @Bean
-        public TaxonArgService taxonArgService( TaxonService taxonService ) {
-            return new TaxonArgService( taxonService, mock( ChromosomeService.class ), mock( GeneService.class ) );
+        public TaxonArgService taxonArgService( TaxonService taxonService, GeneService geneService ) {
+            return new TaxonArgService( taxonService, mock( ChromosomeService.class ), geneService );
+        }
+
+        @Bean
+        public GeneService geneService() {
+            return mock( GeneService.class );
         }
 
         @Bean
         public AnnotationsWebService annotationsWebService( OntologyService ontologyService, SearchService searchService,
                 CharacteristicService characteristicService, ExpressionExperimentService expressionExperimentService,
-                DatasetArgService datasetRestService, TaxonArgService taxonArgService ) {
-            return new AnnotationsWebService( ontologyService, searchService, characteristicService, expressionExperimentService, datasetRestService, taxonArgService );
+                DatasetArgService datasetRestService, TaxonArgService taxonArgService, GeneService geneService ) {
+            return new AnnotationsWebService( ontologyService, searchService, characteristicService,
+                    expressionExperimentService, datasetRestService, taxonArgService, geneService, null );
         }
 
         @Bean
@@ -170,6 +176,9 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
     @Autowired
     private CharacteristicService characteristicService;
 
+    @Autowired
+    private GeneService geneService;
+
     @BeforeEach
     public void setUpMocks() {
         Taxon taxon = Taxon.Factory.newInstance();
@@ -183,7 +192,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
 
     @AfterEach
     public void resetMocks() {
-        reset( searchService, taxonService, ontologyService, expressionExperimentService, characteristicService );
+        reset( searchService, taxonService, ontologyService, expressionExperimentService, characteristicService, geneService );
     }
 
     @Test
@@ -1068,6 +1077,93 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
                 .satisfies( a -> assertThat( a )
                         .containsEntry( "matchedVia", "label_prefix" )
                         .containsEntry( "matchedText", "alzheimer's disease" ) );
+    }
+
+    @Test
+    public void testSearchAnnotationsSurfacesGeneByOfficialName() throws SearchException, TimeoutException {
+        // Gemma 1.0 parity: typing "haptoglobin" (the gene's official name, NOT its symbol)
+        // surfaces the HP gene row. The previous symbol-only fan-out missed this case because
+        // the official symbol is "HP", not "haptoglobin". Regression filed in screenshots
+        // 2026-06-13.
+        ubic.gemma.model.genome.Gene hp = mock( ubic.gemma.model.genome.Gene.class );
+        when( hp.getId() ).thenReturn( 3240L );
+        when( hp.getOfficialSymbol() ).thenReturn( "HP" );
+        when( hp.getOfficialName() ).thenReturn( "haptoglobin" );
+        when( hp.getNcbiGeneId() ).thenReturn( 3240 );
+        when( geneService.findByOfficialSymbol( "haptoglobin" ) ).thenReturn( Collections.emptyList() );
+        when( geneService.findByOfficialName( "haptoglobin" ) ).thenReturn( Collections.singletonList( hp ) );
+        when( geneService.findByAlias( "haptoglobin" ) ).thenReturn( Collections.emptyList() );
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "haptoglobin" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Collections.emptyList() );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/annotations/search" ).queryParam( "query", "haptoglobin" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 1 )
+                .first()
+                .satisfies( a -> assertThat( a )
+                        .containsEntry( "category", "gene" )
+                        .containsEntry( "value", "HP haptoglobin" )
+                        .containsEntry( "valueUri", "http://purl.org/commons/record/ncbi_gene/3240" )
+                        .containsEntry( "matchedVia", "search:gene" ) );
+    }
+
+    @Test
+    public void testSearchAnnotationsSurfacesGeneByAlias() throws SearchException, TimeoutException {
+        // Alias fan-out: a curator typing "Trp53" finds TRP53. The mouse-style alias resolves
+        // to the human/mouse gene regardless of which spelling the curator used.
+        ubic.gemma.model.genome.Gene tp53 = mock( ubic.gemma.model.genome.Gene.class );
+        when( tp53.getId() ).thenReturn( 22059L );
+        when( tp53.getOfficialSymbol() ).thenReturn( "Trp53" );
+        when( tp53.getOfficialName() ).thenReturn( "transformation related protein 53" );
+        when( tp53.getNcbiGeneId() ).thenReturn( 22059 );
+        when( geneService.findByOfficialSymbol( "tp53" ) ).thenReturn( Collections.emptyList() );
+        when( geneService.findByOfficialName( "tp53" ) ).thenReturn( Collections.emptyList() );
+        when( geneService.findByAlias( "tp53" ) ).thenReturn( Collections.singletonList( tp53 ) );
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "tp53" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Collections.emptyList() );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/annotations/search" ).queryParam( "query", "tp53" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 1 )
+                .first()
+                .satisfies( a -> assertThat( a )
+                        .containsEntry( "category", "gene" )
+                        .containsEntry( "value", "Trp53 transformation related protein 53" )
+                        .containsEntry( "valueUri", "http://purl.org/commons/record/ncbi_gene/22059" )
+                        .containsEntry( "matchedVia", "search:gene" ) );
+    }
+
+    @Test
+    public void testSearchAnnotationsDedupesGenesAcrossProbes() throws SearchException, TimeoutException {
+        // A single gene matching by multiple probes (symbol AND alias, e.g.) must emit one row.
+        ubic.gemma.model.genome.Gene hp = mock( ubic.gemma.model.genome.Gene.class );
+        when( hp.getId() ).thenReturn( 3240L );
+        when( hp.getOfficialSymbol() ).thenReturn( "HP" );
+        when( hp.getOfficialName() ).thenReturn( "haptoglobin" );
+        when( hp.getNcbiGeneId() ).thenReturn( 3240 );
+        // Imagine a hypothetical query "HP" that matches both the symbol AND an alias on the
+        // same Gene row.
+        when( geneService.findByOfficialSymbol( "HP" ) ).thenReturn( Collections.singletonList( hp ) );
+        when( geneService.findByOfficialName( "HP" ) ).thenReturn( Collections.emptyList() );
+        when( geneService.findByAlias( "HP" ) ).thenReturn( Collections.singletonList( hp ) );
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "HP" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Collections.emptyList() );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/annotations/search" ).queryParam( "query", "HP" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 1 );
     }
 
     @Test

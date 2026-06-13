@@ -1056,42 +1056,83 @@ public class AnnotationsWebService {
     }
 
     /**
-     * Resolve gene matches for the query via {@link SearchService}, render each as a synthetic
-     * {@link AnnotationSearchResultValueObject} with category="gene" and valueUri=NCBI Gene URI.
-     * Returns empty on any search failure; gene resolution is best-effort and must never break
-     * the wider annotation-search response.
+     * Resolve gene matches for the query by fanning out across three exact-match probes on
+     * {@link ubic.gemma.persistence.service.genome.gene.GeneService}, rendering each match
+     * as a synthetic {@link AnnotationSearchResultValueObject} with {@code category="gene"}
+     * and {@code valueUri}=NCBI Gene URI.
+     *
+     * <p>Probes (in order, dedup-by-gene-id across):</p>
+     * <ol>
+     *   <li>{@link ubic.gemma.persistence.service.genome.gene.GeneService#findByOfficialSymbol(String)}
+     *       — strongest. Curator types {@code STAT5B} and gets the gene.</li>
+     *   <li>{@link ubic.gemma.persistence.service.genome.gene.GeneService#findByOfficialName(String)}
+     *       — Gemma 1.0 parity. Curator types {@code haptoglobin} (the official name) and
+     *       gets the {@code HP}/{@code Hp} gene rows back. Without this probe the gene fan-out
+     *       missed every full-word query whose symbol differs from the typed word.</li>
+     *   <li>{@link ubic.gemma.persistence.service.genome.gene.GeneService#findByAlias(String)}
+     *       — catches alias matches (e.g. {@code TRP53} → {@code Trp53}).</li>
+     * </ol>
+     *
+     * <p>Previously this went through {@code SearchService.search(Gene.class)}, which fans
+     * out across every SearchSource — including {@code GeneOntologySearchSource}, which for
+     * queries like {@code "metabolism"} or {@code "neuron"} walks the entire GO subtree
+     * (~30s wall on prod-tunneled DB). The three direct probes here are each a small
+     * indexed lookup; total wall-time is a few ms even on prod-tunneled DB.</p>
+     *
+     * <p>Returns empty on any search failure; gene resolution is best-effort and must
+     * never break the wider annotation-search response.</p>
      */
     private LinkedHashSet<AnnotationSearchResultValueObject> resolveGeneHits( String query, int limit ) {
         LinkedHashSet<AnnotationSearchResultValueObject> out = new LinkedHashSet<>();
-        // Previously this went through SearchService.search(Gene.class), which fans out across
-        // every SearchSource — including GeneOntologySearchSource, which for queries like
-        // "metabolism" or "neuron" walks the entire GO subtree (~30s wall on prod-tunneled DB).
-        // We only keep exact-symbol matches (score >= 1.0) downstream, so the GO walk is wasted
-        // work. Call GeneService.findByOfficialSymbol directly — same matches, no GO traversal,
-        // a couple of ms instead of tens of seconds.
         if ( geneService == null ) {
             return out;
         }
+        // Dedup at the gene-id level so a gene matching multiple probes (e.g. symbol AND
+        // alias) emits one VO. Insertion order = probe order, so symbol matches stay above
+        // name matches stay above alias matches.
+        LinkedHashSet<Long> seenGeneIds = new LinkedHashSet<>();
         try {
-            Collection<Gene> genes = geneService.findByOfficialSymbol( query );
-            if ( genes == null || genes.isEmpty() ) {
-                return out;
+            collectGeneHits( geneService.findByOfficialSymbol( query ), seenGeneIds, out, limit );
+            if ( out.size() < limit ) {
+                collectGeneHits( geneService.findByOfficialName( query ), seenGeneIds, out, limit );
             }
-            for ( Gene g : genes ) {
-                if ( out.size() >= limit ) break;
-                if ( g == null ) continue;
-                String label = g.getOfficialSymbol();
-                if ( label == null || label.isEmpty() ) continue;
-                String uri = g.getNcbiGeneId() != null
-                        ? "http://purl.org/commons/record/ncbi_gene/" + g.getNcbiGeneId()
-                        : null;
-                out.add( new AnnotationSearchResultValueObject( label, uri, "gene", null,
-                        0, null, null, "search:gene", label, null ) );
+            if ( out.size() < limit ) {
+                collectGeneHits( geneService.findByAlias( query ), seenGeneIds, out, limit );
             }
         } catch ( Exception e ) {
             log.debug( "Gene resolution skipped for query '{}': {}", query, e.toString() );
         }
         return out;
+    }
+
+    /**
+     * Helper: render each {@link Gene} in {@code source} as a search-result VO and add to
+     * {@code out}, deduplicating by gene id and respecting the overall {@code limit}.
+     * Skips genes with missing id or symbol — those can't be resolved back to a usable URI.
+     */
+    private static void collectGeneHits( @Nullable Collection<Gene> source, Set<Long> seenGeneIds,
+            LinkedHashSet<AnnotationSearchResultValueObject> out, int limit ) {
+        if ( source == null || source.isEmpty() ) return;
+        for ( Gene g : source ) {
+            if ( out.size() >= limit ) return;
+            if ( g == null ) continue;
+            Long id = g.getId();
+            if ( id != null && !seenGeneIds.add( id ) ) continue;
+            String symbol = g.getOfficialSymbol();
+            if ( symbol == null || symbol.isEmpty() ) continue;
+            String name = g.getOfficialName();
+            // Label includes the official name when known so a curator typing "haptoglobin"
+            // and seeing "HP" back doesn't have to guess; matches Gemma 1.0's "Hp haptoglobin"
+            // ergonomics without including [taxon] (would require a taxon fetch).
+            String label = ( name != null && !name.isEmpty() && !name.equalsIgnoreCase( symbol ) )
+                    ? symbol + " " + name
+                    : symbol;
+            String uri = g.getNcbiGeneId() != null
+                    ? "http://purl.org/commons/record/ncbi_gene/" + g.getNcbiGeneId()
+                    : null;
+            out.add( new AnnotationSearchResultValueObject( label, uri, "gene", null,
+                    0, null, null, "search:gene", label, null ) );
+        }
     }
 
     /** Top-N hits to enrich inline with definition + parents on /annotations/search. */
