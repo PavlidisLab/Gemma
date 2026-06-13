@@ -22,6 +22,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.PreboardedPromotedEven
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.PreboardedExperiment;
 import ubic.gemma.model.expression.experiment.WorkflowState;
+import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AnnotationSetService;
 
 import java.util.Date;
 import java.util.List;
@@ -30,8 +31,8 @@ import java.util.List;
  * Default {@link PreboardedExperimentService} implementation.
  *
  * <p>The promotion path is the substantive piece: it calls into
- * {@link AgentProposalService#rebindInvestigation} to point every
- * {@code AgentProposal} row at the loaded EE rather than the preboarded, then
+ * {@link AnnotationSetService#rebindInvestigation} to point every
+ * {@code AnnotationSet} row at the loaded EE rather than the preboarded, then
  * advances both rows' workflow state. Audit events are emitted declaratively
  * via {@link Audited @Audited}. The create path delegates to
  * {@link PreboardedAuditService} so the proxy-intercepted return triggers the
@@ -44,17 +45,17 @@ import java.util.List;
 public class PreboardedExperimentServiceImpl implements PreboardedExperimentService {
 
     private final SessionFactory sessionFactory;
-    private final AgentProposalService agentProposalService;
+    private final AnnotationSetService annotationSetService;
     private final ExpressionExperimentService expressionExperimentService;
     private final PreboardedAuditService preboardedAuditService;
 
     @Autowired
     public PreboardedExperimentServiceImpl( SessionFactory sessionFactory,
-            AgentProposalService agentProposalService,
+            AnnotationSetService annotationSetService,
             ExpressionExperimentService expressionExperimentService,
             PreboardedAuditService preboardedAuditService ) {
         this.sessionFactory = sessionFactory;
-        this.agentProposalService = agentProposalService;
+        this.annotationSetService = annotationSetService;
         this.expressionExperimentService = expressionExperimentService;
         this.preboardedAuditService = preboardedAuditService;
     }
@@ -144,7 +145,7 @@ public class PreboardedExperimentServiceImpl implements PreboardedExperimentServ
     @Transactional
     @Audited(value = PreboardedPromotedEvent.class,
             messageSpel = "'Preboarded#' + #preboarded.id + ' promoted to ExpressionExperiment#' + #ee.id"
-                    + " + ' (proposals_rebound=' + #result.proposalsRebound + ')'")
+                    + " + ' (annotation_sets_rebound=' + #result.annotationSetsRebound + ')'")
     public PromotionResult promote( ExpressionExperiment ee, PreboardedExperiment preboarded )
             throws PreboardedAlreadyPromotedException {
         Assert.notNull( preboarded, "preboarded must not be null." );
@@ -157,12 +158,12 @@ public class PreboardedExperimentServiceImpl implements PreboardedExperimentServ
             throw new PreboardedAlreadyPromotedException( preboarded.getId() );
         }
 
-        // Rebind AgentProposal rows from preboarded -> ee. The promote endpoint
-        // contract is "the historical AgentProposal rows accessible from the
-        // EE; the audit trail intact" — rebind is the new-row + FK rebind
-        // approach (see STATUS_PROPOSED_EXPERIMENT_WORKFLOW.md for the
-        // trade-off discussion).
-        int reboundCount = agentProposalService.rebindInvestigation( preboarded, ee );
+        // Rebind AnnotationSet rows from preboarded -> ee. The promote endpoint
+        // contract is "the historical annotation sets accessible from the EE;
+        // the audit trail intact" — rebind is the new-row + FK rebind approach
+        // (see STATUS_PROPOSED_EXPERIMENT_WORKFLOW.md for the trade-off
+        // discussion).
+        int reboundCount = annotationSetService.rebindInvestigation( preboarded, ee );
 
         // Advance the preboarded's workflow state to Loaded (terminal marker;
         // the preboarded row is retained as history, no curatable artifacts

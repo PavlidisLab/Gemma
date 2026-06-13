@@ -255,7 +255,7 @@ public class DatasetsWebService {
     @Autowired
     private AuditTrailService auditTrailService;
     @Autowired
-    private CurationWebService curationWebService;
+    private AnnotationSetsWebService annotationSetsWebService;
     @Autowired
     private SecurityService securityService;
     @Autowired
@@ -1634,72 +1634,74 @@ public class DatasetsWebService {
     }
 
     /*
-     * Per-dataset curation surface. The handler bodies live on CurationWebService — these wrappers exist
-     * because Jersey resolves /datasets/* against the class-level @Path("/datasets") and never falls
-     * through to CurationWebService's class-level @Path("/"), so the routes have to be declared on this
-     * resource class to be reachable.
+     * Per-dataset annotation-set surface. The handler bodies live on
+     * AnnotationSetsWebService — these wrappers exist because Jersey resolves
+     * /datasets/* against the class-level @Path("/datasets") and never falls
+     * through to AnnotationSetsWebService's class-level @Path("/"), so the
+     * routes have to be declared on this resource class to be reachable.
      */
 
     @POST
-    @Path("/{dataset}/curation-proposals")
+    @Path("/{dataset}/annotation-sets")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
-    @Operation(summary = "Attach an AgentProposal to a dataset (curation-UI surface).",
-            description = "Idempotent on `run_id`: a retry returns the existing row as 200 OK rather than 201 Created. "
-                    + "The body field `kind` selects PROPOSAL (default) or AUDIT.")
-    public Response submitDatasetCurationProposal(
+    @Operation(summary = "Attach an AnnotationSet to a dataset.",
+            description = "Idempotent on `(role, run_id)`: a retry returns the existing row as 200 OK "
+                    + "rather than 201 Created. Body's `role` selects PROPOSAL / DRAFT / SNAPSHOT.")
+    public Response submitDatasetAnnotationSet(
             @PathParam("dataset") DatasetArg<?> datasetArg,
-            @Nullable CurationWebService.CurationProposalRequest body
+            @Nullable AnnotationSetsWebService.AnnotationSetRequest body
     ) {
-        return curationWebService.submitCurationProposal( datasetArg, body );
+        return annotationSetsWebService.submitAnnotationSet( datasetArg, body );
     }
 
     @GET
-    @Path("/{dataset}/curation-proposals")
+    @Path("/{dataset}/annotation-sets")
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
-    @Operation(summary = "List AgentProposals attached to a dataset, newest first.",
-            description = "`?kind=` filters by discriminator (`proposal`/`audit`/`all`). "
-                    + "`?shape=` selects the response shape (`full` default; `meta` is the thin projection without payload_json).")
-    public Response listDatasetCurationProposals(
+    @Operation(summary = "List AnnotationSets attached to a dataset, newest first.",
+            description = "`?role=` filters by role (`proposal`/`draft`/`snapshot`/`all`). "
+                    + "`?source=` filters by source. `?createdBy=` filters by producer identity. "
+                    + "`?shape=full|meta` selects response shape.")
+    public Response listDatasetAnnotationSets(
             @PathParam("dataset") DatasetArg<?> datasetArg,
-            @Parameter(description = "Filter by discriminator: `proposal`, `audit`, or `all` (default).")
-            @QueryParam("kind") @Nullable String kind,
+            @Parameter(description = "Filter by role: `proposal`, `draft`, `snapshot`, or `all` (default).")
+            @QueryParam("role") @Nullable String role,
+            @Parameter(description = "Filter by source.")
+            @QueryParam("source") @Nullable String source,
+            @Parameter(description = "Filter by createdBy (username or agent run identifier).")
+            @QueryParam("createdBy") @Nullable String createdBy,
             @Parameter(description = "Response shape: `full` (default; carries payload_json) "
                     + "or `meta` (thin projection, payload_size only).")
             @QueryParam("shape") @Nullable String shape
     ) {
-        return curationWebService.listCurationProposals( datasetArg, kind, shape );
-    }
-
-    @POST
-    @Path("/{dataset}/audits")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
-    @Operation(summary = "Attach an AUDIT-kind AgentProposal to a dataset.",
-            description = "Thin alias for the curation-proposals POST with `kind` pre-bound to `audit`. "
-                    + "The body field `kind` (if present) is ignored — the path is the discriminator.")
-    public Response submitDatasetAudit(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
-            @Nullable CurationWebService.CurationProposalRequest body
-    ) {
-        return curationWebService.submitAudit( datasetArg, body );
+        return annotationSetsWebService.listAnnotationSets( datasetArg, role, source, createdBy, shape );
     }
 
     @GET
-    @Path("/{dataset}/audits")
+    @Path("/{dataset}/annotation-sets/draft")
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
-    @Operation(summary = "List AUDIT-kind AgentProposals attached to a dataset.")
-    public Response listDatasetAudits(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
-            @Parameter(description = "Response shape: `full` (default; carries payload_json) "
-                    + "or `meta` (thin projection, payload_size only).")
-            @QueryParam("shape") @DefaultValue("full") String shape
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Fetch the current curator's DRAFT for a dataset (404 if none).")
+    public Response getDatasetDraftAnnotationSet(
+            @PathParam("dataset") DatasetArg<?> datasetArg
     ) {
-        return curationWebService.listAudits( datasetArg, shape );
+        return annotationSetsWebService.getDraftForDataset( datasetArg );
+    }
+
+    @PUT
+    @Path("/{dataset}/annotation-sets/draft")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Upsert the current curator's DRAFT for a dataset.",
+            description = "One DRAFT per (dataset, curator); returns 201 on create, 200 on update.")
+    public Response upsertDatasetDraftAnnotationSet(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Nullable AnnotationSetsWebService.UpsertDraftRequest body
+    ) {
+        return annotationSetsWebService.upsertDraftForDataset( datasetArg, body );
     }
 
     @GET

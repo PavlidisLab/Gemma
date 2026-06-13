@@ -48,7 +48,7 @@ public class PreboardedExperimentServiceTest {
     @Mock
     private Session session;
     @Mock
-    private AgentProposalService agentProposalService;
+    private ubic.gemma.persistence.service.common.auditAndSecurity.curation.AnnotationSetService annotationSetService;
     @Mock
     private ExpressionExperimentService expressionExperimentService;
     @Mock
@@ -153,13 +153,13 @@ public class PreboardedExperimentServiceTest {
         ee.setId( 99L );
         ee.setWorkflowState( WorkflowState.Preboarded );
 
-        when( agentProposalService.rebindInvestigation( skel, ee ) ).thenReturn( 3 );
+        when( annotationSetService.rebindInvestigation( skel, ee ) ).thenReturn( 3 );
 
         PreboardedExperimentService.PromotionResult r = service.promote( ee, skel );
 
         assertThat( r.getPreboardedId() ).isEqualTo( 7L );
         assertThat( r.getEeId() ).isEqualTo( 99L );
-        assertThat( r.getProposalsRebound() ).isEqualTo( 3 );
+        assertThat( r.getAnnotationSetsRebound() ).isEqualTo( 3 );
         assertThat( skel.getWorkflowState() ).isEqualTo( WorkflowState.Loaded );
         assertThat( ee.getWorkflowState() ).isEqualTo( WorkflowState.Loaded );
         verify( session ).update( skel );
@@ -186,7 +186,7 @@ public class PreboardedExperimentServiceTest {
         ee.setId( 101L );
         ee.setWorkflowState( WorkflowState.Curate );
 
-        when( agentProposalService.rebindInvestigation( skel, ee ) ).thenReturn( 0 );
+        when( annotationSetService.rebindInvestigation( skel, ee ) ).thenReturn( 0 );
 
         service.promote( ee, skel );
         // EE state must not be regressed by promotion.

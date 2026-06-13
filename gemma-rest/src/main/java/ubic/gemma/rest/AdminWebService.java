@@ -91,7 +91,8 @@ import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.persistence.service.blacklist.BlacklistedEntityService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseReadService;
-import ubic.gemma.persistence.service.expression.experiment.AgentProposalService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AnnotationSetService;
+import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetRole;
 import ubic.gemma.model.genome.Taxon;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -164,7 +165,7 @@ public class AdminWebService {
     private final List<OntologyService> ontologies;
     private final DataSource dataSource;
     private final UserManager userManager;
-    private final AgentProposalService agentProposalService;
+    private final AnnotationSetService annotationSetService;
     private final TicketService ticketService;
     private final TaxonArgService taxonArgService;
     private final BlacklistedEntityService blacklistedEntityService;
@@ -251,7 +252,7 @@ public class AdminWebService {
             List<OntologyService> ontologies,
             ubic.gemma.core.ontology.OntologyService ontologyFacade,
             DataSource dataSource, UserManager userManager,
-            AgentProposalService agentProposalService, TicketService ticketService,
+            AnnotationSetService annotationSetService, TicketService ticketService,
             TaxonArgService taxonArgService,
             BlacklistedEntityService blacklistedEntityService,
             ExternalDatabaseReadService externalDatabaseReadService,
@@ -265,7 +266,7 @@ public class AdminWebService {
         this.ontologyFacade = ontologyFacade;
         this.dataSource = dataSource;
         this.userManager = userManager;
-        this.agentProposalService = agentProposalService;
+        this.annotationSetService = annotationSetService;
         this.ticketService = ticketService;
         this.taxonArgService = taxonArgService;
         this.blacklistedEntityService = blacklistedEntityService;
@@ -1559,21 +1560,21 @@ public class AdminWebService {
     /* ===== Curation lifecycle status ===== */
 
     /**
-     * Snapshot of the agent-proposal -&gt; ticket lifecycle: per-status
-     * {@link ubic.gemma.model.expression.experiment.AgentProposal} counts in
-     * the recent windows, open-ticket counts by {@link TicketType}, distinct
-     * agent run id count, and last-ranAt timestamp.
+     * Snapshot of the annotation-set -&gt; ticket lifecycle: per-role
+     * {@link ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSet}
+     * counts in the recent windows, open-ticket counts by {@link TicketType},
+     * distinct agent run id count, and latest-createdAt timestamp.
      * <p>
      * Backs the curation-UI "what's the Python agent doing right now"
      * indicator. Counts are computed with bounded aggregates against the
-     * AGENT_PROPOSAL and TICKET tables — no per-row fetch.
+     * ANNOTATION_SET and TICKET tables — no per-row fetch.
      */
     @GET
     @Path("/curation-status")
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasAuthority('GROUP_ADMIN')")
-    @Operation(summary = "Agent-proposal + ticket lifecycle snapshot",
-            description = "Per-status breakdown of AgentProposal rows (last 24h / 7d / by status) plus open-ticket counts by TicketType and the oldest open-ticket age. Read-only.",
+    @Operation(summary = "Annotation-set + ticket lifecycle snapshot",
+            description = "Per-role breakdown of AnnotationSet rows (last 24h / 7d / by role) plus open-ticket counts by TicketType and the oldest open-ticket age. Read-only.",
             security = {
                     @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
@@ -1590,13 +1591,17 @@ public class AdminWebService {
         CurationStatusResponse body = new CurationStatusResponse();
 
         ProposalsBlock proposals = new ProposalsBlock();
-        proposals.totalLast24h = agentProposalService.countSince( since24h );
-        proposals.totalLast7d = agentProposalService.countSince( since7d );
-        // byStatus: lifetime breakdown — the rolling-window status breakdown
-        // would multiply the round-trip count; the curation-UI only needs
-        // "how many are sitting in each bucket right now". TODO: revisit if
-        // a windowed view is useful once we have more agent-run history.
-        proposals.byStatus = agentProposalService.countByStatusSince( null );
+        proposals.totalLast24h = annotationSetService.countSince( since24h, null );
+        proposals.totalLast7d = annotationSetService.countSince( since7d, null );
+        // byRole: lifetime breakdown of annotation sets by role
+        // (PROPOSAL / DRAFT / SNAPSHOT).
+        Map<AnnotationSetRole, Long> byRole = annotationSetService.countByRoleSince( null );
+        Map<String, Long> byRoleWire = new LinkedHashMap<>( byRole.size() );
+        for ( Map.Entry<AnnotationSetRole, Long> e : byRole.entrySet() ) {
+            String key = e.getKey() != null ? e.getKey().getDbValue() : "null";
+            byRoleWire.put( key, e.getValue() );
+        }
+        proposals.byRole = byRoleWire;
         body.proposals = proposals;
 
         TicketsBlock tickets = new TicketsBlock();
@@ -1615,10 +1620,12 @@ public class AdminWebService {
         body.tickets = tickets;
 
         AgentRunsBlock runs = new AgentRunsBlock();
-        // Distinct runIds in the 7d window — bounded; lifetime distinct count
-        // would scan the full agent_proposal table on prod and isn't useful.
-        runs.distinctRunIds = agentProposalService.countDistinctRunIdsSince( since7d );
-        runs.lastRanAt = agentProposalService.findLatestRanAt();
+        // Distinct runIds in the 7d window across PROPOSAL rows (agent
+        // emissions). Bounded; lifetime distinct count would scan the full
+        // table on prod and isn't useful.
+        runs.distinctRunIds = annotationSetService.countDistinctRunIdsSince(
+                since7d, AnnotationSetRole.PROPOSAL );
+        runs.lastRanAt = annotationSetService.findLatestCreatedAt( AnnotationSetRole.PROPOSAL );
         body.agentRuns = runs;
 
         return respond( body );
@@ -2349,8 +2356,8 @@ public class AdminWebService {
     public static class ProposalsBlock {
         public long totalLast24h;
         public long totalLast7d;
-        /** Lifetime per-status counts (OPEN / FINALIZED / REOPENED / future values). */
-        public Map<String, Long> byStatus;
+        /** Lifetime per-role counts (proposal / draft / snapshot). */
+        public Map<String, Long> byRole;
     }
 
     public static class TicketsBlock {
@@ -2412,9 +2419,9 @@ public class AdminWebService {
     }
 
     public static class AgentRunsBlock {
-        /** Distinct {@code runId}s seen on AgentProposal rows in the last 7 days. */
+        /** Distinct {@code runId}s seen on AnnotationSet rows with role=PROPOSAL in the last 7 days. */
         public long distinctRunIds;
-        /** Most recent {@code ranAt} across the entire AgentProposal table; null if the table is empty. */
+        /** Most recent {@code createdAt} across PROPOSAL-role AnnotationSet rows; null if none. */
         @Nullable
         public Date lastRanAt;
     }

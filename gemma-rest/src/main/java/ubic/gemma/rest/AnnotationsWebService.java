@@ -1785,14 +1785,15 @@ public class AnnotationsWebService {
 
     /**
      * Request body for {@link #replaceDatasetAnnotations}: the full desired tag set plus an optional
-     * {@code agentProposalId} to attach to emitted audit events (linkage is parked until the
-     * {@code AgentProposal} entity ships — see {@code STATUS_PUT_DATASETS_DESIGN.md}).
+     * {@code annotationSetId} to attach to emitted audit events (linkage is parked until the
+     * source-AnnotationSet → emitted-event audit link lands — see
+     * {@code STATUS_PUT_DATASETS_DESIGN.md}).
      */
     public static class AnnotationsReplaceRequest {
         @Nullable
         private List<AnnotationDto> annotations;
         @Nullable
-        private Long agentProposalId;
+        private Long annotationSetId;
 
         @Nullable
         public List<AnnotationDto> getAnnotations() {
@@ -1804,12 +1805,12 @@ public class AnnotationsWebService {
         }
 
         @Nullable
-        public Long getAgentProposalId() {
-            return agentProposalId;
+        public Long getAnnotationSetId() {
+            return annotationSetId;
         }
 
-        public void setAgentProposalId( @Nullable Long agentProposalId ) {
-            this.agentProposalId = agentProposalId;
+        public void setAnnotationSetId( @Nullable Long annotationSetId ) {
+            this.annotationSetId = annotationSetId;
         }
     }
 
@@ -1864,9 +1865,9 @@ public class AnnotationsWebService {
     public Response addDatasetAnnotation(
             @PathParam("dataset") DatasetArg<?> datasetArg,
             @Nullable AnnotationDto body,
-            @Parameter(description = "Optional id of the AgentProposal this tag is being applied from; "
-                    + "linkage is parked until the AgentProposal entity ships.")
-            @QueryParam("agentProposalId") @Nullable Long agentProposalId
+            @Parameter(description = "Optional id of the AnnotationSet this tag is being applied from; "
+                    + "linkage is parked until the source-set → emitted-event audit link lands.")
+            @QueryParam("annotationSetId") @Nullable Long annotationSetId
     ) {
         if ( body == null ) {
             throw new BadRequestException( "A request body is required." );
@@ -1880,10 +1881,10 @@ public class AnnotationsWebService {
             // 409 Conflict for duplicate (category, value) — service throws IAE on dup.
             throw new ClientErrorException( e.getMessage(), Response.Status.CONFLICT, e );
         }
-        // agentProposalId is accepted-and-dropped; see STATUS_PUT_DATASETS_DESIGN.md.
-        if ( agentProposalId != null ) {
-            log.debug( "addDatasetAnnotation: received agentProposalId={} for ee={} (linkage parked)",
-                    agentProposalId, ee.getId() );
+        // annotationSetId is accepted-and-dropped; see STATUS_PUT_DATASETS_DESIGN.md.
+        if ( annotationSetId != null ) {
+            log.debug( "addDatasetAnnotation: received annotationSetId={} for ee={} (linkage parked)",
+                    annotationSetId, ee.getId() );
         }
         return Response.status( Response.Status.CREATED )
                 .entity( respond( new AnnotationValueObject( persisted, ExpressionExperiment.class ) ) )
@@ -1956,10 +1957,10 @@ public class AnnotationsWebService {
             }
             desired.add( annotationDtoToCharacteristic( dto ) );
         }
-        // agentProposalId accepted but currently dropped; see STATUS_PUT_DATASETS_DESIGN.md.
-        if ( body.getAgentProposalId() != null ) {
-            log.debug( "replaceDatasetAnnotations: received agentProposalId={} (linkage parked)",
-                    body.getAgentProposalId() );
+        // annotationSetId accepted but currently dropped; see STATUS_PUT_DATASETS_DESIGN.md.
+        if ( body.getAnnotationSetId() != null ) {
+            log.debug( "replaceDatasetAnnotations: received annotationSetId={} (linkage parked)",
+                    body.getAnnotationSetId() );
         }
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
 

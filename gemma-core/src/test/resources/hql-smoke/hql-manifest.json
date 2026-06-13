@@ -1,9 +1,9 @@
 {
   "extracted_at": "2026-05-25",
   "extractor_version": 1,
-  "total_callsites": 458,
-  "unique_queries": 439,
-  "skipped_dynamic": 216,
+  "total_callsites": 470,
+  "unique_queries": 450,
+  "skipped_dynamic": 218,
   "queries": [
     {
       "file": "gemma-core/src/main/java/ubic/gemma/core/analysis/preprocess/batcheffects/ExpressionExperimentBatchInformationServiceImpl.java",
@@ -11,6 +11,78 @@
       "hql": "select ee.id, ef from ExpressionExperiment ee join ee.experimentalDesign ed join ed.experimentalFactors ef left join fetch ef.category where ee in (:ees)",
       "params": [
         "ees"
+      ]
+    },
+    {
+      "file": "gemma-core/src/main/java/ubic/gemma/core/analysis/report/HomeStatsServiceImpl.java",
+      "line": 439,
+      "hql": "select count(distinct c.valueUri) from Characteristic c where c.valueUri like :prefix",
+      "params": [
+        "prefix"
+      ]
+    },
+    {
+      "file": "gemma-core/src/main/java/ubic/gemma/core/analysis/report/HomeStatsServiceImpl.java",
+      "line": 486,
+      "hql": "select ef.category.category, ef.category.categoryUri,        count(distinct fv.id), count(distinct ef.experimentalDesign.id) from ExperimentalFactor ef join ef.factorValues fv group by ef.category.category, ef.category.categoryUri order by count(distinct fv.id) desc",
+      "params": []
+    },
+    {
+      "file": "gemma-core/src/main/java/ubic/gemma/core/analysis/report/HomeStatsServiceImpl.java",
+      "line": 532,
+      "hql": "select ed.name, count(distinct ee.id) from ExpressionExperiment ee join ee.accession a join a.externalDatabase ed where ee.id in (:eeIds) group by ed.name",
+      "params": [
+        "eeIds"
+      ]
+    },
+    {
+      "file": "gemma-core/src/main/java/ubic/gemma/core/analysis/report/HomeStatsServiceImpl.java",
+      "line": 549,
+      "hql": "select count(distinct ee.id) from ExpressionExperiment ee where ee.accession is null and ee.id in (:eeIds)",
+      "params": [
+        "eeIds"
+      ]
+    },
+    {
+      "file": "gemma-core/src/main/java/ubic/gemma/core/analysis/report/HomeStatsServiceImpl.java",
+      "line": 587,
+      "hql": "select distinct a.accession from ExpressionExperiment ee join ee.accession a where ee.id in (:eeIds) and a.accession is not null",
+      "params": [
+        "eeIds"
+      ]
+    },
+    {
+      "file": "gemma-core/src/main/java/ubic/gemma/core/analysis/report/HomeStatsServiceImpl.java",
+      "line": 979,
+      "hql": "select sum(ba.numberOfCells) from ExpressionExperiment ee join ee.bioAssays ba where ba.numberOfCells is not null and exists (   select 1 from SingleCellDimensionExperiment scde   where scde.expressionExperiment = ee )",
+      "params": []
+    },
+    {
+      "file": "gemma-core/src/main/java/ubic/gemma/core/analysis/report/HomeStatsServiceImpl.java",
+      "line": 1006,
+      "hql": "select count(distinct coalesce(bm.sourceBioMaterial.id, bm.id)) from ExpressionExperiment ee join ee.bioAssays ba join ba.sampleUsed bm",
+      "params": []
+    },
+    {
+      "file": "gemma-core/src/main/java/ubic/gemma/core/analysis/report/HomeStatsServiceImpl.java",
+      "line": 1020,
+      "hql": "select count(distinct coalesce(bm.sourceBioMaterial.id, bm.id)) from ExpressionExperiment ee join ee.bioAssays ba join ba.sampleUsed bm where exists (   select 1 from SingleCellDimensionExperiment scde   where scde.expressionExperiment = ee )",
+      "params": []
+    },
+    {
+      "file": "gemma-core/src/main/java/ubic/gemma/core/analysis/report/HomeStatsServiceImpl.java",
+      "line": 1042,
+      "hql": "select count(distinct coalesce(bm.sourceBioMaterial.id, bm.id)) from ExpressionExperiment ee join ee.bioAssays ba join ba.sampleUsed bm join ba.arrayDesignUsed ad where ad.technologyType in (:techs)",
+      "params": [
+        "techs"
+      ]
+    },
+    {
+      "file": "gemma-core/src/main/java/ubic/gemma/core/analysis/report/HomeStatsServiceImpl.java",
+      "line": 1061,
+      "hql": "select count(distinct coalesce(bm.sourceBioMaterial.id, bm.id)) from ExpressionExperiment ee join ee.bioAssays ba join ba.sampleUsed bm join ba.arrayDesignUsed ad where ad.technologyType in (:techs) and not exists (   select 1 from SingleCellDimensionExperiment scde   where scde.expressionExperiment = ee )",
+      "params": [
+        "techs"
       ]
     },
     {
@@ -34,6 +106,14 @@
       "params": [
         "a",
         "j"
+      ]
+    },
+    {
+      "file": "gemma-core/src/main/java/ubic/gemma/core/ontology/providers/chebi/ChebiSeedResolver.java",
+      "line": 51,
+      "hql": "select distinct c.valueUri from Characteristic c where c.valueUri like :prefix",
+      "params": [
+        "prefix"
       ]
     },
     {
@@ -370,7 +450,15 @@
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/analysis/expression/diff/ExpressionAnalysisResultSetDaoImpl.java",
-      "line": 92,
+      "line": 89,
+      "hql": "select rs from ExpressionAnalysisResultSet rs left join fetch rs.analysis a left join fetch a.experimentAnalyzed where rs.id = :id",
+      "params": [
+        "id"
+      ]
+    },
+    {
+      "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/analysis/expression/diff/ExpressionAnalysisResultSetDaoImpl.java",
+      "line": 105,
       "hql": "select res from DifferentialExpressionAnalysisResult res where res.resultSet = :ears order by res.correctedPvalue asc nulls last",
       "params": [
         "ears"
@@ -378,7 +466,7 @@
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/analysis/expression/diff/ExpressionAnalysisResultSetDaoImpl.java",
-      "line": 150,
+      "line": 163,
       "hql": "select res from DifferentialExpressionAnalysisResult res where res.resultSet = :ears and res.correctedPvalue <= :threshold order by res.correctedPvalue",
       "params": [
         "ears",
@@ -387,7 +475,7 @@
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/analysis/expression/diff/ExpressionAnalysisResultSetDaoImpl.java",
-      "line": 175,
+      "line": 188,
       "hql": "select a from GeneDifferentialExpressionMetaAnalysis a  inner join a.resultSetsIncluded rs where rs.analysis=:an",
       "params": [
         "an"
@@ -395,7 +483,7 @@
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/analysis/expression/diff/ExpressionAnalysisResultSetDaoImpl.java",
-      "line": 404,
+      "line": 417,
       "hql": "select rs from ExpressionAnalysisResultSet rs left join fetch rs.analysis a left join fetch a.experimentAnalyzed left join fetch a.subsetFactorValue sfv left join fetch sfv.experimentalFactor left join fetch rs.baselineGroup bg left join fetch bg.experimentalFactor where rs.id in :ids",
       "params": [
         "ids"
@@ -403,7 +491,7 @@
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/analysis/expression/diff/ExpressionAnalysisResultSetDaoImpl.java",
-      "line": 415,
+      "line": 428,
       "hql": "select rs from ExpressionAnalysisResultSet rs left join fetch rs.experimentalFactors where rs.id in :ids",
       "params": [
         "ids"
@@ -411,7 +499,7 @@
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/analysis/expression/diff/ExpressionAnalysisResultSetDaoImpl.java",
-      "line": 450,
+      "line": 463,
       "hql": "select count(*) from ExpressionAnalysisResultSet ears join ears.results where ears = :ears",
       "params": [
         "ears"
@@ -419,7 +507,7 @@
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/analysis/expression/diff/ExpressionAnalysisResultSetDaoImpl.java",
-      "line": 459,
+      "line": 472,
       "hql": "select count(*) from ExpressionAnalysisResultSet ears join ears.results r where ears = :ears and r.correctedPvalue <= :threshold",
       "params": [
         "ears",
@@ -428,7 +516,7 @@
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/analysis/expression/diff/ExpressionAnalysisResultSetDaoImpl.java",
-      "line": 498,
+      "line": 511,
       "hql": "select rs.id, otherBg.id, otherBg.experimentalFactor.id from ExpressionAnalysisResultSet rs join rs.analysis a join a.resultSets otherRs join otherRs.baselineGroup otherBg where rs.id in :rsIds and otherRs.id not in :rsIds",
       "params": [
         "rsIds"
@@ -436,7 +524,7 @@
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/analysis/expression/diff/ExpressionAnalysisResultSetDaoImpl.java",
-      "line": 642,
+      "line": 655,
       "hql": "select rs.pvalueDistribution from ExpressionAnalysisResultSet rs where rs=:rs ",
       "params": [
         "rs"
@@ -444,7 +532,7 @@
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/analysis/expression/diff/ExpressionAnalysisResultSetDaoImpl.java",
-      "line": 822,
+      "line": 835,
       "hql": "select rs.id, ef from ExpressionAnalysisResultSet rs left join rs.experimentalFactors ef where rs.id in :rsIds",
       "params": [
         "rsIds"
@@ -452,7 +540,7 @@
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/analysis/expression/diff/ExpressionAnalysisResultSetDaoImpl.java",
-      "line": 842,
+      "line": 855,
       "hql": "select rs.id, fv from ExpressionAnalysisResultSet rs join rs.baselineGroup fv where rs.id in :rsIds",
       "params": [
         "rsIds"
@@ -582,19 +670,19 @@
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/association/Gene2GOAssociationDaoImpl.java",
-      "line": 156,
+      "line": 199,
       "hql": "select c.id from Gene2GOAssociation g2g join g2g.ontologyEntry c",
       "params": []
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/association/Gene2GOAssociationDaoImpl.java",
-      "line": 159,
+      "line": 202,
       "hql": "delete from Gene2GOAssociation",
       "params": []
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/association/Gene2GOAssociationDaoImpl.java",
-      "line": 164,
+      "line": 207,
       "hql": "delete from Characteristic where id in :cIds",
       "params": [
         "cIds"
@@ -775,20 +863,40 @@
       ]
     },
     {
-      "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/common/auditAndSecurity/curation/CurationDraftDaoImpl.java",
-      "line": 43,
-      "hql": "from CurationDraft d where d.investigation = :inv and d.curator = :curator",
+      "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/common/auditAndSecurity/curation/AnnotationSetDaoImpl.java",
+      "line": 54,
+      "hql": "from AnnotationSet a where a.investigation = :inv and a.role = :role and a.runId = :runId",
       "params": [
-        "curator",
-        "inv"
+        "inv",
+        "role",
+        "runId"
       ]
     },
     {
-      "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/common/auditAndSecurity/curation/CurationDraftDaoImpl.java",
-      "line": 75,
-      "hql": "from CurationDraft d where d.proposal.id = :pid order by d.lastEditedAt desc, d.id desc",
+      "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/common/auditAndSecurity/curation/AnnotationSetDaoImpl.java",
+      "line": 67,
+      "hql": "from AnnotationSet a where a.investigation = :inv and ( :role is null or a.role = :role ) order by a.createdAt desc, a.id desc",
       "params": [
-        "pid"
+        "inv",
+        "role"
+      ]
+    },
+    {
+      "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/common/auditAndSecurity/curation/AnnotationSetDaoImpl.java",
+      "line": 110,
+      "hql": "select count(a) from AnnotationSet a where a.investigation = :inv and ( :role is null or a.role = :role )",
+      "params": [
+        "inv",
+        "role"
+      ]
+    },
+    {
+      "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/common/auditAndSecurity/curation/AnnotationSetDaoImpl.java",
+      "line": 121,
+      "hql": "update AnnotationSet a set a.investigation = :to where a.investigation = :from",
+      "params": [
+        "from",
+        "to"
       ]
     },
     {
@@ -1166,7 +1274,7 @@
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/expression/arrayDesign/ArrayDesignDaoImpl.java",
-      "line": 806,
+      "line": 846,
       "hql": "select ad.id, e from ArrayDesign ad join ad.curationDetails s join s.lastTroubledEvent e where ad.id in :adIds",
       "params": [
         "adIds"
@@ -1174,7 +1282,7 @@
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/expression/arrayDesign/ArrayDesignDaoImpl.java",
-      "line": 813,
+      "line": 853,
       "hql": "select ad.id, e from ArrayDesign ad join ad.curationDetails s join s.lastNeedsAttentionEvent e where ad.id in :adIds",
       "params": [
         "adIds"
@@ -1182,7 +1290,7 @@
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/expression/arrayDesign/ArrayDesignDaoImpl.java",
-      "line": 820,
+      "line": 860,
       "hql": "select ad.id, e from ArrayDesign ad join ad.curationDetails s join s.lastNoteUpdateEvent e where ad.id in :adIds",
       "params": [
         "adIds"
@@ -1190,7 +1298,7 @@
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/expression/arrayDesign/ArrayDesignDaoImpl.java",
-      "line": 856,
+      "line": 896,
       "hql": "select ad.id from ExpressionExperiment as ee join ee.bioAssays b join b.arrayDesignUsed ad where ee.id = :eeId group by ad",
       "params": [
         "eeId"
@@ -1198,31 +1306,31 @@
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/expression/arrayDesign/ArrayDesignDaoImpl.java",
-      "line": 869,
+      "line": 909,
       "hql": "select count(distinct cs) from  CompositeSequence as cs join cs.arrayDesign as ar where cs.biologicalCharacteristic.sequence is not null",
       "params": []
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/expression/arrayDesign/ArrayDesignDaoImpl.java",
-      "line": 878,
+      "line": 918,
       "hql": "select count(distinct cs) from CompositeSequence as cs join cs.arrayDesign as ar  , BlatResult as blat where blat.querySequence=cs.biologicalCharacteristic",
       "params": []
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/expression/arrayDesign/ArrayDesignDaoImpl.java",
-      "line": 892,
+      "line": 932,
       "hql": "select count(distinct cs) from CompositeSequence as cs join cs.arrayDesign as ar , BioSequence2GeneProduct bs2gp, Gene gene join gene.products gp where bs2gp.bioSequence=cs.biologicalCharacteristic and bs2gp.geneProduct=gp and gp.dummy = false",
       "params": []
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/expression/arrayDesign/ArrayDesignDaoImpl.java",
-      "line": 908,
+      "line": 948,
       "hql": "select count(distinct gene) from  CompositeSequence as cs join cs.arrayDesign as ar , BioSequence2GeneProduct bs2gp, Gene gene join gene.products gp where bs2gp.bioSequence=cs.biologicalCharacteristic and  bs2gp.geneProduct=gp and gp.dummy = false",
       "params": []
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/expression/arrayDesign/ArrayDesignDaoImpl.java",
-      "line": 919,
+      "line": 959,
       "hql": "select count(distinct cs.biologicalCharacteristic) from  CompositeSequence as cs join cs.arrayDesign as ar  where ar = :ar and cs.biologicalCharacteristic.sequence IS NOT NULL",
       "params": [
         "ar"
@@ -1230,7 +1338,7 @@
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/expression/arrayDesign/ArrayDesignDaoImpl.java",
-      "line": 927,
+      "line": 967,
       "hql": "select count(distinct bs2gp) from  CompositeSequence as cs join cs.arrayDesign as ar  , BioSequence2GeneProduct as bs2gp where bs2gp.bioSequence=cs.biologicalCharacteristic and ar = :ar",
       "params": [
         "ar"
@@ -1238,7 +1346,7 @@
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/expression/arrayDesign/ArrayDesignDaoImpl.java",
-      "line": 936,
+      "line": 976,
       "hql": "select count(*) from  CompositeSequence as cs join cs.arrayDesign as ar where ar = :ad",
       "params": [
         "ad"
@@ -1246,7 +1354,7 @@
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/expression/arrayDesign/ArrayDesignDaoImpl.java",
-      "line": 944,
+      "line": 984,
       "hql": "select count(distinct cs) from CompositeSequence as cs join cs.arrayDesign as ar  where ar = :ar and cs.biologicalCharacteristic.sequence is not null",
       "params": [
         "ar"
@@ -1254,7 +1362,7 @@
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/expression/arrayDesign/ArrayDesignDaoImpl.java",
-      "line": 952,
+      "line": 992,
       "hql": "select count(distinct cs) from CompositeSequence as cs join cs.arrayDesign as ar  , BlatResult as blat where blat.querySequence=cs.biologicalCharacteristic and ar = :ar",
       "params": [
         "ar"
@@ -1262,7 +1370,7 @@
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/expression/arrayDesign/ArrayDesignDaoImpl.java",
-      "line": 966,
+      "line": 1006,
       "hql": "select count(distinct cs) from  CompositeSequence as cs join cs.arrayDesign as ar  , BioSequence2GeneProduct bs2gp, Gene gene join gene.products gp where bs2gp.bioSequence=cs.biologicalCharacteristic and bs2gp.geneProduct=gp and gp.dummy = false and ar = :ar",
       "params": [
         "ar"
@@ -1270,7 +1378,7 @@
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/expression/arrayDesign/ArrayDesignDaoImpl.java",
-      "line": 983,
+      "line": 1023,
       "hql": "select count(distinct cs) from  CompositeSequence as cs join cs.arrayDesign as ar  , BioSequence2GeneProduct bs2gp, Gene gene join gene.products gp where bs2gp.bioSequence=cs.biologicalCharacteristic and bs2gp.geneProduct=gp and gp.dummy = false and ar in :ar",
       "params": [
         "ar"
@@ -1278,7 +1386,7 @@
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/expression/arrayDesign/ArrayDesignDaoImpl.java",
-      "line": 1001,
+      "line": 1041,
       "hql": "select count(distinct gene) from CompositeSequence cs join cs.biologicalCharacteristic bs join bs.bioSequence2GeneProduct bs2gp join bs2gp.geneProduct gp join gp.gene gene where cs.arrayDesign = :ad and gp.dummy = false",
       "params": [
         "ad"
@@ -1286,7 +1394,7 @@
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/expression/arrayDesign/ArrayDesignDaoImpl.java",
-      "line": 1313,
+      "line": 1353,
       "hql": "select ad.id, e from ArrayDesign ad join ad.externalReferences e where ad.id in :ids",
       "params": [
         "ids"
@@ -1294,7 +1402,7 @@
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/expression/arrayDesign/ArrayDesignDaoImpl.java",
-      "line": 1413,
+      "line": 1453,
       "hql": "select bp.shortName, ea.accession from BlacklistedPlatform bp left join bp.externalAccession ea",
       "params": []
     },
@@ -1591,54 +1699,12 @@
       ]
     },
     {
-      "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/expression/experiment/AgentProposalDaoImpl.java",
-      "line": 46,
-      "hql": "from AgentProposal p where p.investigation = :inv and p.kind = :kind and p.runId = :runId",
+      "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/expression/designElement/CompositeSequenceDaoImpl.java",
+      "line": 835,
+      "hql": "select cs.id, bs.sequence, bs.length from CompositeSequence cs join cs.biologicalCharacteristic bs where cs.id in :ids",
       "params": [
-        "inv",
-        "kind",
-        "runId"
+        "ids"
       ]
-    },
-    {
-      "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/expression/experiment/AgentProposalDaoImpl.java",
-      "line": 58,
-      "hql": "from AgentProposal p where p.investigation = :inv order by p.ranAt desc, p.id desc",
-      "params": [
-        "inv"
-      ]
-    },
-    {
-      "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/expression/experiment/AgentProposalDaoImpl.java",
-      "line": 73,
-      "hql": "select new ubic.gemma.model.expression.experiment.AgentCurationSummaryValueObject( p.id, p.kind, p.runId, p.agentVersion, p.model, p.ranAt, p.investigation.id, cast(length(p.payloadJson) as long) ) from AgentProposal p where p.investigation = :inv and ( :kind is null or p.kind = :kind ) order by p.ranAt desc, p.id desc",
-      "params": [
-        "inv",
-        "kind"
-      ]
-    },
-    {
-      "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/expression/experiment/AgentProposalDaoImpl.java",
-      "line": 101,
-      "hql": "select count(p) from AgentProposal p where p.investigation = :inv",
-      "params": [
-        "inv"
-      ]
-    },
-    {
-      "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/expression/experiment/AgentProposalDaoImpl.java",
-      "line": 110,
-      "hql": "update AgentProposal p set p.investigation = :to where p.investigation = :from",
-      "params": [
-        "from",
-        "to"
-      ]
-    },
-    {
-      "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/expression/experiment/AgentProposalDaoImpl.java",
-      "line": 220,
-      "hql": "select max(p.ranAt) from AgentProposal p",
-      "params": []
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/expression/experiment/ExperimentalDesignDaoImpl.java",
@@ -2839,7 +2905,7 @@
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/expression/experiment/PreboardedExperimentServiceImpl.java",
-      "line": 117,
+      "line": 118,
       "hql": "from PreboardedExperiment s where s.accession = :acc order by s.id asc",
       "params": [
         "acc"
@@ -2886,6 +2952,12 @@
       "params": [
         "scd"
       ]
+    },
+    {
+      "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/expression/experiment/SingleCellDimensionExperimentDaoImpl.java",
+      "line": 146,
+      "hql": "select count(distinct e.expressionExperiment.id) from SingleCellDimensionExperiment e",
+      "params": []
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/expression/experiment/StatementDaoImpl.java",
@@ -3012,15 +3084,24 @@
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/genome/GeneDaoImpl.java",
-      "line": 173,
-      "hql": "from Gene g where lower(g.officialSymbol) like lower(:officialSymbol) order by g.officialSymbol",
+      "line": 179,
+      "hql": "from Gene g where g.officialSymbol like :officialSymbol order by g.officialSymbol",
       "params": [
         "officialSymbol"
       ]
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/genome/GeneDaoImpl.java",
-      "line": 220,
+      "line": 189,
+      "hql": "from Gene g where g.taxon = :taxon and g.officialSymbol like :officialSymbol order by g.officialSymbol",
+      "params": [
+        "officialSymbol",
+        "taxon"
+      ]
+    },
+    {
+      "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/genome/GeneDaoImpl.java",
+      "line": 239,
       "hql": "from Gene as gene where gene.physicalLocation = :location",
       "params": [
         "location"
@@ -3028,7 +3109,7 @@
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/genome/GeneDaoImpl.java",
-      "line": 353,
+      "line": 372,
       "hql": "select distinct g from Gene g left join fetch g.aliases left join fetch g.accessions acc join fetch g.taxon t left join fetch g.products gp left join fetch g.multifunctionality where g.id in (:gIds)",
       "params": [
         "gIds"
@@ -3036,7 +3117,7 @@
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/genome/GeneDaoImpl.java",
-      "line": 377,
+      "line": 396,
       "hql": "select g from Gene g join fetch g.taxon t where g.id in (:gIds)",
       "params": [
         "gIds"
@@ -3044,7 +3125,7 @@
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/genome/GeneDaoImpl.java",
-      "line": 399,
+      "line": 418,
       "hql": "select distinct g from Gene g  left join fetch g.taxon t left join fetch t.externalDatabase left join fetch g.aliases where g.id=:gid",
       "params": [
         "gid"
@@ -3052,7 +3133,7 @@
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/genome/GeneDaoImpl.java",
-      "line": 409,
+      "line": 428,
       "hql": "select distinct g from Gene g  left join fetch g.accessions acc left join fetch acc.externalDatabase where g.id=:gid",
       "params": [
         "gid"
@@ -3060,7 +3141,7 @@
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/genome/GeneDaoImpl.java",
-      "line": 416,
+      "line": 435,
       "hql": "select distinct g from Gene g  left join fetch g.products gp left join fetch gp.physicalLocation gppl left join fetch gppl.chromosome chr left join fetch chr.taxon where g.id=:gid",
       "params": [
         "gid"
@@ -3068,7 +3149,7 @@
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/genome/GeneDaoImpl.java",
-      "line": 426,
+      "line": 445,
       "hql": "select distinct g from Gene g  left join fetch g.products gp left join fetch gp.accessions gpacc left join fetch gpacc.externalDatabase where g.id=:gid",
       "params": [
         "gid"
@@ -3076,7 +3157,7 @@
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/genome/GeneDaoImpl.java",
-      "line": 445,
+      "line": 464,
       "hql": "select distinct g from Gene g left join fetch g.aliases left join fetch g.accessions acc where g.id=:gid",
       "params": [
         "gid"
@@ -3084,7 +3165,7 @@
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/genome/GeneDaoImpl.java",
-      "line": 467,
+      "line": 486,
       "hql": "select g from Gene g left join fetch g.taxon left join fetch g.products where g.id=:gid",
       "params": [
         "gid"
@@ -3092,7 +3173,7 @@
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/genome/GeneDaoImpl.java",
-      "line": 478,
+      "line": 497,
       "hql": "select g from Gene g left join fetch g.taxon where g.id=:gid",
       "params": [
         "gid"
@@ -3100,43 +3181,43 @@
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/genome/GeneDaoImpl.java",
-      "line": 487,
+      "line": 506,
       "hql": "delete from BioSequence2GeneProduct ba where ba.geneProduct in (select gp from GeneProduct gp where gp.gene is not null)",
       "params": []
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/genome/GeneDaoImpl.java",
-      "line": 490,
+      "line": 509,
       "hql": "delete from GeneSetMember gm where gm.gene is not null",
       "params": []
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/genome/GeneDaoImpl.java",
-      "line": 493,
+      "line": 512,
       "hql": "delete from Gene2GOAssociation g2g where g2g.gene is not null",
       "params": []
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/genome/GeneDaoImpl.java",
-      "line": 500,
+      "line": 519,
       "hql": "select gp.id from Gene g join g.products gp",
       "params": []
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/genome/GeneDaoImpl.java",
-      "line": 511,
+      "line": 530,
       "hql": "delete from GeneProduct gp where gp.gene is not null",
       "params": []
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/genome/GeneDaoImpl.java",
-      "line": 514,
+      "line": 533,
       "hql": "select ga.id from Gene g join g.aliases ga",
       "params": []
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/genome/GeneDaoImpl.java",
-      "line": 519,
+      "line": 538,
       "hql": "delete from GeneAlias ga where ga.id in :gaIds",
       "params": [
         "gaIds"
@@ -3144,19 +3225,19 @@
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/genome/GeneDaoImpl.java",
-      "line": 525,
+      "line": 544,
       "hql": "select pl.id from Gene g join g.physicalLocation pl",
       "params": []
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/genome/GeneDaoImpl.java",
-      "line": 528,
+      "line": 547,
       "hql": "delete from Gene",
       "params": []
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/genome/GeneDaoImpl.java",
-      "line": 533,
+      "line": 552,
       "hql": "delete from PhysicalLocation pl where pl.id in :plIds",
       "params": [
         "plIds"
@@ -3164,7 +3245,7 @@
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/genome/GeneDaoImpl.java",
-      "line": 548,
+      "line": 567,
       "hql": "delete from BioSequence2GeneProduct ba where ba.geneProduct in (select gp from GeneProduct gp where gp.gene = :g)",
       "params": [
         "g"
@@ -3172,7 +3253,7 @@
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/genome/GeneDaoImpl.java",
-      "line": 552,
+      "line": 571,
       "hql": "delete from GeneSetMember gm where gm.gene = :g",
       "params": [
         "g"
@@ -3180,7 +3261,7 @@
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/genome/GeneDaoImpl.java",
-      "line": 556,
+      "line": 575,
       "hql": "delete from Gene2GOAssociation g2g where g2g.gene = :g",
       "params": [
         "g"
@@ -3188,7 +3269,7 @@
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/genome/GeneDaoImpl.java",
-      "line": 561,
+      "line": 580,
       "hql": "delete from GeneProduct where gene = :g and dummy = true",
       "params": [
         "g"
@@ -3196,7 +3277,7 @@
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/genome/GeneDaoImpl.java",
-      "line": 766,
+      "line": 785,
       "hql": "select g.id, a.alias from Gene g join g.aliases a where g.id in :ids",
       "params": [
         "ids"
@@ -3204,7 +3285,7 @@
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/genome/GeneDaoImpl.java",
-      "line": 787,
+      "line": 806,
       "hql": "select g.id, a from Gene g join g.accessions a where g.id in :ids",
       "params": [
         "ids"
@@ -3212,7 +3293,7 @@
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/genome/GeneDaoImpl.java",
-      "line": 822,
+      "line": 841,
       "hql": "select g.id, g.multifunctionality.rank from Gene g where g.id in :ids",
       "params": [
         "ids"
@@ -3473,7 +3554,7 @@
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/util/AclQueryUtils.java",
-      "line": 252,
+      "line": 250,
       "hql": "select aoi.identifier, aoi, aoi.ownerSid from AclObjectIdentity aoi where aoi.identifier in :ids and aoi.objectIdClass = :aoiClassId",
       "params": [
         "aoiClassId",
@@ -3708,32 +3789,32 @@
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/analysis/expression/diff/ExpressionAnalysisResultSetDaoImpl.java",
-      "line": 192,
-      "reason": "non-literal argument"
-    },
-    {
-      "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/analysis/expression/diff/ExpressionAnalysisResultSetDaoImpl.java",
-      "line": 199,
-      "reason": "non-literal argument"
-    },
-    {
-      "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/analysis/expression/diff/ExpressionAnalysisResultSetDaoImpl.java",
       "line": 205,
       "reason": "non-literal argument"
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/analysis/expression/diff/ExpressionAnalysisResultSetDaoImpl.java",
-      "line": 209,
+      "line": 212,
       "reason": "non-literal argument"
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/analysis/expression/diff/ExpressionAnalysisResultSetDaoImpl.java",
-      "line": 265,
+      "line": 218,
       "reason": "non-literal argument"
     },
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/analysis/expression/diff/ExpressionAnalysisResultSetDaoImpl.java",
-      "line": 284,
+      "line": 222,
+      "reason": "non-literal argument"
+    },
+    {
+      "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/analysis/expression/diff/ExpressionAnalysisResultSetDaoImpl.java",
+      "line": 278,
+      "reason": "non-literal argument"
+    },
+    {
+      "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/analysis/expression/diff/ExpressionAnalysisResultSetDaoImpl.java",
+      "line": 297,
       "reason": "non-literal argument"
     },
     {
@@ -3749,6 +3830,11 @@
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/analysis/expression/diff/GeneDiffExMetaAnalysisDaoImpl.java",
       "line": 116,
+      "reason": "non-literal argument"
+    },
+    {
+      "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/association/Gene2GOAssociationDaoImpl.java",
+      "line": 174,
       "reason": "non-literal argument"
     },
     {
@@ -3774,11 +3860,6 @@
     {
       "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/common/auditAndSecurity/AuditEventDaoImpl.java",
       "line": 385,
-      "reason": "non-literal argument"
-    },
-    {
-      "file": "gemma-core/src/main/java/ubic/gemma/persistence/service/common/auditAndSecurity/PersonDaoImpl.java",
-      "line": 52,
       "reason": "non-literal argument"
     }
   ]

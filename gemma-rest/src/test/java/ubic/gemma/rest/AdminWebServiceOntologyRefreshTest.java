@@ -20,7 +20,7 @@ import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.persistence.service.blacklist.BlacklistedEntityService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseReadService;
-import ubic.gemma.persistence.service.expression.experiment.AgentProposalService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AnnotationSetService;
 import ubic.gemma.rest.util.args.TaxonArgService;
 
 import javax.sql.DataSource;
@@ -49,7 +49,7 @@ class AdminWebServiceOntologyRefreshTest {
     @Mock private SessionRegistry sessionRegistry;
     @Mock private DataSource dataSource;
     @Mock private UserManager userManager;
-    @Mock private AgentProposalService agentProposalService;
+    @Mock private AnnotationSetService annotationSetService;
     @Mock private TicketService ticketService;
     @Mock private TaxonArgService taxonArgService;
     @Mock private BlacklistedEntityService blacklistedEntityService;
@@ -68,7 +68,7 @@ class AdminWebServiceOntologyRefreshTest {
         // chebi.getName() and mondo.getName() are stubbed per-test via when() so we don't
         // hit Mockito's unused-stub strictness when a test only inspects one bean.
         service = new AdminWebService( cacheManager, sessionFactory, taskRunningService, sessionRegistry,
-                List.of( chebi, mondo ), ontologyFacade, dataSource, userManager, agentProposalService, ticketService,
+                List.of( chebi, mondo ), ontologyFacade, dataSource, userManager, annotationSetService, ticketService,
                 taxonArgService, blacklistedEntityService, externalDatabaseReadService, geoScrapeService,
                 indexerService );
     }
@@ -160,7 +160,7 @@ class AdminWebServiceOntologyRefreshTest {
 
         AdminWebService svc = new AdminWebService( cacheManager, sessionFactory, taskRunningService,
                 sessionRegistry, java.util.List.of( realChebi ), ontologyFacade, dataSource, userManager,
-                agentProposalService, ticketService, taxonArgService, blacklistedEntityService,
+                annotationSetService, ticketService, taxonArgService, blacklistedEntityService,
                 externalDatabaseReadService, geoScrapeService, indexerService );
 
         assertThatThrownBy( () -> svc.rebuildOntologySlim( "CHEBI" ) )
@@ -175,7 +175,7 @@ class AdminWebServiceOntologyRefreshTest {
 
         AdminWebService svc = new AdminWebService( cacheManager, sessionFactory, taskRunningService,
                 sessionRegistry, java.util.List.of( realChebi ), ontologyFacade, dataSource, userManager,
-                agentProposalService, ticketService, taxonArgService, blacklistedEntityService,
+                annotationSetService, ticketService, taxonArgService, blacklistedEntityService,
                 externalDatabaseReadService, geoScrapeService, indexerService );
 
         assertThatThrownBy( () -> svc.rebuildOntologySlim( "CHEBI" ) )
@@ -192,7 +192,7 @@ class AdminWebServiceOntologyRefreshTest {
 
         AdminWebService svc = new AdminWebService( cacheManager, sessionFactory, taskRunningService,
                 sessionRegistry, java.util.List.of( realChebi ), ontologyFacade, dataSource, userManager,
-                agentProposalService, ticketService, taxonArgService, blacklistedEntityService,
+                annotationSetService, ticketService, taxonArgService, blacklistedEntityService,
                 externalDatabaseReadService, geoScrapeService, indexerService );
 
         Response resp = svc.rebuildOntologySlim( "CHEBI" );
@@ -209,7 +209,7 @@ class AdminWebServiceOntologyRefreshTest {
 
         AdminWebService svc = new AdminWebService( cacheManager, sessionFactory, taskRunningService,
                 sessionRegistry, java.util.List.of( realChebi ), ontologyFacade, dataSource, userManager,
-                agentProposalService, ticketService, taxonArgService, blacklistedEntityService,
+                annotationSetService, ticketService, taxonArgService, blacklistedEntityService,
                 externalDatabaseReadService, geoScrapeService, indexerService );
 
         for ( String alias : new String[]{ "CHEBI", "chebi", "ChebiOntologyService" } ) {
@@ -282,7 +282,7 @@ class AdminWebServiceOntologyRefreshTest {
     @Test
     void refreshHandlesEmptyOntologyList() {
         AdminWebService emptyService = new AdminWebService( cacheManager, sessionFactory, taskRunningService,
-                sessionRegistry, Collections.emptyList(), ontologyFacade, dataSource, userManager, agentProposalService,
+                sessionRegistry, Collections.emptyList(), ontologyFacade, dataSource, userManager, annotationSetService,
                 ticketService, taxonArgService, blacklistedEntityService, externalDatabaseReadService,
                 geoScrapeService, indexerService );
 
