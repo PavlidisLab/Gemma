@@ -11,6 +11,7 @@
  */
 package ubic.gemma.rest.ranking;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
@@ -53,6 +54,7 @@ public class UsageWeightedRankingStrategy implements AnnotationSearchRankingStra
     private final double presenceFloor;
     private final int usageSaturation;
 
+    @Autowired
     public UsageWeightedRankingStrategy(
             @Value("${gemma.rest.annotationSearch.usage.rankWeight:0.5}") double rankWeight,
             @Value("${gemma.rest.annotationSearch.usage.usageWeight:0.5}") double usageWeight,
