@@ -845,25 +845,38 @@ public class AnnotationsWebService {
         }
         long tFindCharacteristics = timer.getTime() - phaseStart;
         int rawCount = rawHits.size();
-        // Order hits by relevance tier (exact label ≺ starts-with ≺ word-boundary-contains ≺
-        // substring ≺ other), with the prefixes parameter's order honoured as the next tier
-        // and URI ASC as the deterministic tiebreaker inside each tier. Without the tier sort,
-        // a typeahead query for "synaptic" returns "acetylcholine catabolic process in synaptic
-        // cleft" before "chemical synaptic transmission" because the URI sort ranks by GO-ID
-        // ascending. Honouring the prefixes order also lets a caller request
-        // `prefixes=GO_,EFO_` and get GO_ matches above EFO_ within the tier.
-        String relevanceQuery = String.join( " ", arg.getValue() ).trim().toLowerCase( Locale.ROOT );
+        // Order hits by relevance tier (exact label ≺ starts-with ≺ all-tokens-covered ≺
+        // word-boundary-contains ≺ substring ≺ other), with the prefixes parameter's order
+        // honoured as the next tier and URI ASC as the deterministic tiebreaker. Without the
+        // tier sort, a typeahead query for "synaptic" returns "acetylcholine catabolic process
+        // in synaptic cleft" before "chemical synaptic transmission" because the URI sort
+        // ranks by GO-ID ascending.
+        //
+        // The all-tokens-covered tier (tier 2) sits between startsWith and word-boundary so a
+        // multi-token query like "uzh-2 cell" promotes "uzh-2 cell line" (covers both content
+        // tokens) above "cell line sample study" (covers "cell" only). This is the demotion
+        // half of the fix in handoffs/ANNOTATIONS_SEARCH_OR_OVER_TOKENS_2026_06_12.md — a
+        // candidate-stage AND filter would have killed legitimate synonym-only matches like
+        // "ammon's horn" → "hippocampus" (label contains neither token), so we DEMOTE noise
+        // via tier rather than dropping it.
+        String joinedRelevanceQuery = String.join( " ", arg.getValue() ).trim();
+        String relevanceQuery = joinedRelevanceQuery.toLowerCase( Locale.ROOT );
+        List<String> queryContentTokens = contentTokens( joinedRelevanceQuery );
+        boolean multiToken = queryContentTokens.size() >= 2;
         java.util.function.ToIntFunction<CharacteristicValueObject> tierFn = h -> {
             String label = h.getValue();
-            if ( label == null ) return 5;
+            if ( label == null ) return 6;
             String l = label.toLowerCase( Locale.ROOT );
             if ( l.equals( relevanceQuery ) ) return 0;        // exact label
             if ( l.startsWith( relevanceQuery ) ) return 1;    // label starts with query
+            if ( multiToken && labelCoversAllTokens( normaliseForEquality( label ), queryContentTokens ) ) {
+                return 2;                                       // all query content tokens present
+            }
             // word-boundary contains: query appears at the start of any token in the label
             int idx = l.indexOf( relevanceQuery );
-            if ( idx > 0 && !Character.isLetterOrDigit( l.charAt( idx - 1 ) ) ) return 2;
-            if ( idx >= 0 ) return 3;                          // raw substring
-            return 4;                                          // URI / synonym match only
+            if ( idx > 0 && !Character.isLetterOrDigit( l.charAt( idx - 1 ) ) ) return 3;
+            if ( idx >= 0 ) return 4;                          // raw substring
+            return 5;                                          // URI / synonym / definition only
         };
         java.util.function.ToIntFunction<CharacteristicValueObject> prefixRankFn = h -> {
             if ( prefixes.isEmpty() ) return 0;
@@ -1347,18 +1360,32 @@ public class AnnotationsWebService {
     private static final String IAO_ALT_LABEL = "http://purl.obolibrary.org/obo/IAO_0000118";
 
     /**
-     * Back-compute which Lucene field produced the hit by checking the term's preferred label
-     * and indexed synonyms for a normalised-equality match against the query (preferred_label >
-     * exact > narrow > related > broad > generic > alt_label).
-     * <p>
-     * Strict equality is intentional: a token-overlap rule tagged every Lucene hit whose label
-     * shared a single word with the query (e.g. {@code "disease"}) as {@code preferred_label},
-     * which made the attribution useless as a relevance signal for clients. {@code matchedVia}
-     * now means "this row's label/synonym IS the query", nothing fuzzier.
-     * <p>
-     * Returns {@code null} when nothing matches by equality — the hit came in via a Lucene
-     * field we don't probe (definition, obo_id) or via fuzzy ranking. Clients render that as
-     * "ranked-but-unattributed" rather than as a falsely strong match.
+     * Back-compute which Lucene field produced the hit by walking attribution tiers from
+     * strongest to weakest:
+     *
+     * <ol>
+     *   <li>Strict equality against the preferred label →
+     *       {@link MatchedVia#PREFERRED_LABEL}.</li>
+     *   <li>Strict equality against a synonym (exact &gt; narrow &gt; related &gt; broad &gt;
+     *       generic &gt; alt_label).</li>
+     *   <li>{@link MatchedVia#LABEL_PREFIX} when the query is a prefix of the label or vice
+     *       versa (typeahead-friendly).</li>
+     *   <li>{@link MatchedVia#LABEL_TOKENS} when every content token in the query
+     *       (length-≥-2, stop-word-stripped) appears as a substring of the label.</li>
+     *   <li>{@link MatchedVia#SYNONYM_TOKENS} when label-token coverage fails but the same
+     *       check passes against any synonym.</li>
+     * </ol>
+     *
+     * <p>Reasoning: a hit deserves a <em>reason</em> for being a hit — a popular term that
+     * shares one stop-word with the query isn't a reason. The
+     * {@link #filterByTokenCoverage(java.util.List, String) token-coverage filter}
+     * applied upstream already rejected the worst false positives, so every retained hit
+     * has at least token coverage on its label or one of its synonyms; this method picks
+     * which level of attribution to surface.</p>
+     *
+     * <p>Returns {@code null} only when no tier matches — typically because the hit came
+     * via a Lucene field we don't probe (definition, obo_id), or in the rare case where
+     * the upstream filter was bypassed (single-content-token queries).</p>
      */
     @Nullable
     private static MatchAttribution computeMatchAttribution( OntologyTerm term, String originalQuery ) {
@@ -1367,12 +1394,12 @@ public class AnnotationsWebService {
             return null;
         }
         String label = term.getLabel();
-        if ( label != null && normaliseForEquality( label ).equals( normalisedQuery ) ) {
+        String normalisedLabel = label != null ? normaliseForEquality( label ) : "";
+        // Tier 1: exact equality on preferred label.
+        if ( !normalisedLabel.isEmpty() && normalisedLabel.equals( normalisedQuery ) ) {
             return new MatchAttribution( MatchedVia.PREFERRED_LABEL, label );
         }
-        // Walk synonym fields in strength order; the first synonym whose normalised value equals
-        // the normalised query wins. Most ontology terms expose only a handful of synonyms so
-        // this is cheap.
+        // Tier 2: exact equality on a synonym. Walk in strength order.
         String[][] probes = {
                 { OBO_EXACT_SYNONYM, MatchedVia.EXACT_SYNONYM.token },
                 { OBO_NARROW_SYNONYM, MatchedVia.NARROW_SYNONYM.token },
@@ -1393,7 +1420,95 @@ public class AnnotationsWebService {
                 }
             }
         }
+        // Tier 3: typeahead prefix match on the preferred label. Either direction counts —
+        // the user typed "alz" and got "alzheimer's disease", or typed "alzheimer's diseas"
+        // and the label is the prefix "alzheimer's disease". Both feel like the same kind
+        // of relevance signal to the curator.
+        if ( !normalisedLabel.isEmpty() &&
+                ( normalisedLabel.startsWith( normalisedQuery ) || normalisedQuery.startsWith( normalisedLabel ) ) ) {
+            return new MatchAttribution( MatchedVia.LABEL_PREFIX, label );
+        }
+        // Tier 4: every content token in the query appears as a substring of the preferred
+        // label. The upstream token-coverage filter already enforced this for multi-content-
+        // token queries, so we just need to re-confirm here and surface the attribution.
+        List<String> contentTokens = contentTokens( originalQuery );
+        if ( !contentTokens.isEmpty() && labelCoversAllTokens( normalisedLabel, contentTokens ) ) {
+            return new MatchAttribution( MatchedVia.LABEL_TOKENS, label );
+        }
+        // Tier 5: synonym-token coverage. Check every synonym property; first one that covers
+        // all content tokens wins. Surfaces the matching synonym text in matchedText so the
+        // client can show "matched on: <synonym>".
+        for ( String[] probe : probes ) {
+            Collection<AnnotationProperty> annots = term.getAnnotations( probe[0] );
+            if ( annots == null || annots.isEmpty() ) {
+                continue;
+            }
+            for ( AnnotationProperty ap : annots ) {
+                String text = ap.getContents();
+                if ( text == null ) continue;
+                String normalisedSyn = normaliseForEquality( text );
+                if ( !contentTokens.isEmpty() && labelCoversAllTokens( normalisedSyn, contentTokens ) ) {
+                    return new MatchAttribution( MatchedVia.SYNONYM_TOKENS, text );
+                }
+            }
+        }
         return null;
+    }
+
+    /**
+     * Conservative stop-word list. Tokens this short or this generic don't carry meaning
+     * for ontology lookup. Lucene's StandardAnalyzer already removes most; this set covers
+     * the cases where we tokenise client-side (the token-coverage filter) before the query
+     * has been through Lucene's analyzer.
+     */
+    private static final Set<String> SEARCH_STOP_WORDS = Set.of(
+            "a", "an", "and", "are", "as", "at", "be", "but", "by", "for", "if",
+            "in", "into", "is", "it", "of", "on", "or", "such", "that", "the",
+            "their", "then", "there", "these", "they", "this", "to", "was",
+            "will", "with"
+    );
+
+    /**
+     * Minimum length for a token to be considered "content". Single characters and
+     * digits-only short tokens drop out — they're either part numbers ({@code "2"} in
+     * {@code "uzh 2 cell"}) that survive Lucene's analyser but don't help filter
+     * candidates, or stop-words.
+     */
+    private static final int MIN_CONTENT_TOKEN_LENGTH = 2;
+
+    /**
+     * Tokenise an arbitrary user query into "content" tokens: lowercase, split on
+     * runs of non-alphanumeric characters, drop tokens shorter than
+     * {@link #MIN_CONTENT_TOKEN_LENGTH}, drop stop-words.
+     *
+     * <p>Returned in encounter order, deduplicated; empty list when the input is null /
+     * blank / all-stop-words. Callers should treat an empty list as "no token-coverage
+     * constraint applies — fall back to Lucene's order".</p>
+     */
+    static List<String> contentTokens( @Nullable String query ) {
+        if ( query == null ) return Collections.emptyList();
+        String lower = query.toLowerCase( Locale.ROOT );
+        String[] parts = lower.split( "[^a-z0-9]+" );
+        LinkedHashSet<String> seen = new LinkedHashSet<>();
+        for ( String p : parts ) {
+            if ( p.length() < MIN_CONTENT_TOKEN_LENGTH ) continue;
+            if ( SEARCH_STOP_WORDS.contains( p ) ) continue;
+            seen.add( p );
+        }
+        return new ArrayList<>( seen );
+    }
+
+    /**
+     * @return true iff every supplied content token appears as a substring of the
+     *         normalised label. Matches the substring semantic on purpose so {@code "cell"}
+     *         covers labels like {@code "cells"} and {@code "cellular"}.
+     */
+    private static boolean labelCoversAllTokens( String normalisedLabel, List<String> contentTokens ) {
+        if ( normalisedLabel == null || normalisedLabel.isEmpty() ) return false;
+        for ( String t : contentTokens ) {
+            if ( !normalisedLabel.contains( t ) ) return false;
+        }
+        return true;
     }
 
     /**
@@ -1411,12 +1526,35 @@ public class AnnotationsWebService {
      * lowercase-snake string in {@code token} for the {@code matchedVia} response field.
      */
     public enum MatchedVia {
+        /** Query normalises to the term's preferred label exactly. Strongest match. */
         PREFERRED_LABEL( "preferred_label" ),
+        /** Query normalises to one of the term's exact-OBO synonyms exactly. */
         EXACT_SYNONYM( "exact_synonym" ),
         NARROW_SYNONYM( "narrow_synonym" ),
         RELATED_SYNONYM( "related_synonym" ),
         BROAD_SYNONYM( "broad_synonym" ),
-        ALT_LABEL( "alt_label" );
+        ALT_LABEL( "alt_label" ),
+        /**
+         * Query is a prefix of the preferred label (or the label is a prefix of the query, when
+         * the query is the longer of the two). Weaker than {@link #PREFERRED_LABEL} but stronger
+         * than a bag-of-tokens overlap — survives typeahead "type while you search" usage.
+         */
+        LABEL_PREFIX( "label_prefix" ),
+        /**
+         * Every content token in the query (after lowercase + length-≥-2 + stop-word strip)
+         * appears as a substring of the preferred label. Catches multi-token queries that don't
+         * normalise-equal to anything (e.g. {@code "uzh-2 cell"} against the label
+         * {@code "uzh-2 cell line"}) but DO carry full token coverage. Distinguishes
+         * "all-tokens-present" from "stop-word matched alone" — the latter no longer survives
+         * the token-coverage filter at all.
+         */
+        LABEL_TOKENS( "label_tokens" ),
+        /**
+         * Same as {@link #LABEL_TOKENS} but the coverage check passed against a synonym
+         * (preferred-label coverage failed). Surfaces synonym-driven multi-token matches when
+         * the preferred label happens to lack one of the query tokens.
+         */
+        SYNONYM_TOKENS( "synonym_tokens" );
 
         final String token;
 

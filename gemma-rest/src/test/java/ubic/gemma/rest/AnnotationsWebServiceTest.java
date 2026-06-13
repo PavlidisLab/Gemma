@@ -962,13 +962,16 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
     }
 
     @Test
-    public void testSearchAnnotationsLeavesMatchAttributionNullForNonEqualLabel() throws SearchException, TimeoutException {
-        // Hit's preferred label only SHARES a token with the query (not equals) → matchedVia=null.
-        // Catches the regression where token-overlap matches were tagged preferred_label, making
-        // the attribution useless as a relevance signal.
+    public void testSearchAnnotationsAttributesLabelTokensForNonEqualPartialLabel() throws SearchException, TimeoutException {
+        // Query "pancreatic cell" is a multi-token query; the label "type b pancreatic cell"
+        // contains both content tokens as substrings but does not start with the query and is
+        // not equal to it. Under the new attribution taxonomy this surfaces as
+        // matchedVia=label_tokens — the relevant signal for the agents-side eval team that
+        // multi-token coverage is the reason for the match (previously surfaced as null,
+        // forcing them to guess).
         CharacteristicValueObject hit = new CharacteristicValueObject(
                 "type b pancreatic cell", "http://example.com/CL_0000169", "cell type", "http://example.com/cell_type" );
-        when( ontologyService.findExperimentsCharacteristicTags( eq( "type" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "pancreatic cell" ), anyInt(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( Collections.singletonList( hit ) );
         when( ontologyService.getDefinition( anyString(), anyLong(), any() ) ).thenReturn( null );
         OntologyTerm term = mock( OntologyTerm.class );
@@ -981,15 +984,90 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
                 .thenReturn( Collections.emptyMap() );
 
-        assertThat( target( "/annotations/search" ).queryParam( "query", "type" ).request().get() )
+        assertThat( target( "/annotations/search" ).queryParam( "query", "pancreatic cell" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .entity()
                 .extracting( "data", list( Map.class ) )
                 .hasSize( 1 )
                 .first()
                 .satisfies( a -> assertThat( a )
-                        .containsEntry( "matchedVia", null )
-                        .containsEntry( "matchedText", null ) );
+                        .containsEntry( "matchedVia", "label_tokens" )
+                        .containsEntry( "matchedText", "type b pancreatic cell" ) );
+    }
+
+    @Test
+    public void testSearchAnnotationsAttributesSynonymTokensWhenLabelLacksTokens() throws SearchException, TimeoutException {
+        // Query: "ammon horn" (multi-token). Label "hippocampus" contains neither content
+        // token, but a synonym "Ammon's horn" covers both. Under the new attribution taxonomy
+        // this surfaces as matchedVia=synonym_tokens — important for the agents-side eval
+        // team: the strict-equality synonym tier (exact_synonym) needs the query to NORMALISE
+        // equal to the synonym, which fails on token-level reorderings; synonym_tokens picks
+        // up the slack so the bind has a reason set.
+        CharacteristicValueObject hit = new CharacteristicValueObject(
+                "hippocampus", "http://example.com/UBERON_0002421", "organism part", "http://example.com/organism_part" );
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "ammon horn" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Collections.singletonList( hit ) );
+        when( ontologyService.getDefinition( anyString(), anyLong(), any() ) ).thenReturn( null );
+        OntologyTerm term = mock( OntologyTerm.class );
+        when( term.getUri() ).thenReturn( "http://example.com/UBERON_0002421" );
+        when( term.getLabel() ).thenReturn( "hippocampus" );
+        AnnotationProperty syn = mock( AnnotationProperty.class );
+        when( syn.getContents() ).thenReturn( "Ammon's horn" );
+        when( term.getAnnotations( "http://www.geneontology.org/formats/oboInOwl#hasExactSynonym" ) )
+                .thenReturn( Collections.singletonList( syn ) );
+        when( term.getAnnotations( anyString() ) ).thenAnswer( a -> {
+            String prop = a.getArgument( 0 );
+            if ( "http://www.geneontology.org/formats/oboInOwl#hasExactSynonym".equals( prop ) ) {
+                return Collections.singletonList( syn );
+            }
+            return Collections.emptyList();
+        } );
+        when( ontologyService.getTerm( anyString(), anyLong(), any() ) ).thenReturn( term );
+        when( ontologyService.getParents( anySet(), eq( true ), eq( true ), anyLong(), any() ) )
+                .thenReturn( Collections.emptySet() );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/annotations/search" ).queryParam( "query", "ammon horn" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 1 )
+                .first()
+                .satisfies( a -> assertThat( a )
+                        .containsEntry( "matchedVia", "synonym_tokens" )
+                        .containsEntry( "matchedText", "Ammon's horn" ) );
+    }
+
+    @Test
+    public void testSearchAnnotationsAttributesLabelPrefixForTypeahead() throws SearchException, TimeoutException {
+        // Typeahead: user typed "alzhei" and the label is "alzheimer's disease". This is
+        // matchedVia=label_prefix (not exact, not token-coverage; the partial prefix is the
+        // reason).
+        CharacteristicValueObject hit = new CharacteristicValueObject(
+                "alzheimer's disease", "http://example.com/DOID_10652", "disease", "http://example.com/disease" );
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "alzhei" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Collections.singletonList( hit ) );
+        when( ontologyService.getDefinition( anyString(), anyLong(), any() ) ).thenReturn( null );
+        OntologyTerm term = mock( OntologyTerm.class );
+        when( term.getUri() ).thenReturn( "http://example.com/DOID_10652" );
+        when( term.getLabel() ).thenReturn( "alzheimer's disease" );
+        when( term.getAnnotations( anyString() ) ).thenReturn( Collections.emptyList() );
+        when( ontologyService.getTerm( anyString(), anyLong(), any() ) ).thenReturn( term );
+        when( ontologyService.getParents( anySet(), eq( true ), eq( true ), anyLong(), any() ) )
+                .thenReturn( Collections.emptySet() );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/annotations/search" ).queryParam( "query", "alzhei" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 1 )
+                .first()
+                .satisfies( a -> assertThat( a )
+                        .containsEntry( "matchedVia", "label_prefix" )
+                        .containsEntry( "matchedText", "alzheimer's disease" ) );
     }
 
     @Test
