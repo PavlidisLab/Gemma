@@ -240,6 +240,10 @@ public interface ExpressionExperimentDao
 
     Map<Long, Collection<AuditEvent>> getAuditEvents( Collection<Long> ids );
 
+    Collection<BioAssay> getBioAssays( ExpressionExperiment ee, boolean includeSubSets );
+
+    Collection<BioMaterial> getSamplesUsed( ExpressionExperiment ee, boolean includeSubSets );
+
     Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment expressionExperiment );
 
     /**

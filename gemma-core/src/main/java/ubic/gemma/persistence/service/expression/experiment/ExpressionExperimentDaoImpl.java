@@ -1412,6 +1412,40 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public Collection<BioAssay> getBioAssays( ExpressionExperiment ee, boolean includeSubSets ) {
+        //noinspection unchecked
+        Set<BioAssay> results = new HashSet<>( ( List<BioAssay> ) getSessionFactory().getCurrentSession()
+                .createQuery( "select ba from ExpressionExperiment ee join ee.bioAssays ba where ee = :ee" )
+                .setParameter( "ee", ee )
+                .list() );
+        if ( includeSubSets ) {
+            //noinspection unchecked
+            results.addAll( ( List<BioAssay> ) getSessionFactory().getCurrentSession()
+                    .createQuery( "select ba from ExpressionExperimentSubSet eess join eess.bioAssays ba where eess.sourceExperiment = :ee" )
+                    .setParameter( "ee", ee )
+                    .list() );
+        }
+        return results;
+    }
+
+    @Override
+    public Collection<BioMaterial> getSamplesUsed( ExpressionExperiment ee, boolean includeSubSets ) {
+        //noinspection unchecked
+        Set<BioMaterial> results = new HashSet<>( ( List<BioMaterial> ) getSessionFactory().getCurrentSession()
+                .createQuery( "select bm from ExpressionExperiment ee join ee.bioAssays ba join ba.sampleUsed bm where ee = :ee" )
+                .setParameter( "ee", ee )
+                .list() );
+        if ( includeSubSets ) {
+            //noinspection unchecked
+            results.addAll( ( List<BioMaterial> ) getSessionFactory().getCurrentSession()
+                    .createQuery( "select bm from ExpressionExperimentSubSet eess join eess.bioAssays ba join ba.sampleUsed bm where eess.sourceExperiment = :ee" )
+                    .setParameter( "ee", ee )
+                    .list() );
+        }
+        return results;
+    }
+
+    @Override
     public Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment expressionExperiment ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
