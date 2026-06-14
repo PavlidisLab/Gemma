@@ -501,6 +501,13 @@ public class AnnotationsWebService {
                     "URIs (e.g. UBERON when category=organism part). The parameter keys the " +
                     "response cache so any future per-category divergence stays correct.")
             @QueryParam("category") @DefaultValue("") String category,
+            @Parameter(description = "Optional taxon hint to scope gene fan-out. Accepts the same " +
+                    "TaxonArg forms as elsewhere (common name `mouse`, scientific name `Mus musculus`, " +
+                    "NCBI taxonomy id `10090`, or numeric Gemma taxon id). When supplied, gene " +
+                    "matches are restricted to that taxon — typing `Il10` on a mouse dataset no " +
+                    "longer surfaces rat/human Il10 rows. When omitted (default), gene fan-out " +
+                    "returns all taxa as before. The ontology search side is unaffected.")
+            @QueryParam("taxon") @Nullable TaxonArg<?> taxonArg,
             @Parameter(description = "When true, populate `geneCount` on each hit with the distinct " +
                     "number of genes annotated to that GO term (including descendants walked under " +
                     "the `geneCountMaxTerms` cap). Adds a parallel fan-out at the response shape " +
@@ -526,9 +533,12 @@ public class AnnotationsWebService {
             throw new BadRequestException( "Upstream delegation requested but "
                     + "`gemma.upstream.annotationSearch.url` is unset on this server." );
         }
+        // Resolve the optional taxon hint up-front so a bad value 400s before we hit the cache or
+        // launch the ontology fan-out. Null taxon = no constraint (legacy behaviour).
+        Taxon taxon = taxonArg != null ? taxonArgService.getEntity( taxonArg ) : null;
         // Cache key includes includeGeneCount + geneCountMaxTerms so a "with counts" call doesn't
-        // hit a cached "without counts" payload.
-        String cacheKey = buildSearchCacheKey( query.getValue(), strategy.getName(), limit, prefixes, upstream, exactLabel, category )
+        // hit a cached "without counts" payload. Taxon affects gene fan-out, so it keys too.
+        String cacheKey = buildSearchCacheKey( query.getValue(), strategy.getName(), limit, prefixes, upstream, exactLabel, category, taxon )
                 + ( includeGeneCount ? "|gc=" + geneCountMaxTerms : "" );
         org.springframework.cache.Cache searchCache = searchResponseCache();
         if ( searchCache != null ) {
@@ -542,7 +552,7 @@ public class AnnotationsWebService {
             }
         }
         try {
-            List<AnnotationSearchResultValueObject> result = new ArrayList<>( this.getTerms( query, strategy, limit, prefixes, upstream, exactLabel, category, FIND_CHARACTERISTICS_TIMEOUT_MS ) );
+            List<AnnotationSearchResultValueObject> result = new ArrayList<>( this.getTerms( query, strategy, limit, prefixes, upstream, exactLabel, category, taxon, FIND_CHARACTERISTICS_TIMEOUT_MS ) );
             if ( includeGeneCount && !result.isEmpty() ) {
                 result = attachGeneCounts( result, geneCountMaxTerms );
             }
@@ -607,7 +617,7 @@ public class AnnotationsWebService {
     public ResponseDataObject<List<AnnotationSearchResultValueObject>> searchAnnotationsByPathQuery( // Params:
             @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE, description = SEARCH_QUERY_DESCRIPTION) @PathParam("query") @DefaultValue("") StringArrayArg query // Required
     ) {
-        return searchAnnotations( query, LuceneOrderRankingStrategy.NAME, SEARCH_DEFAULT_LIMIT, "", false, false, "", false, 50 );
+        return searchAnnotations( query, LuceneOrderRankingStrategy.NAME, SEARCH_DEFAULT_LIMIT, "", false, false, "", null, false, 50 );
     }
 
     /**
@@ -823,7 +833,7 @@ public class AnnotationsWebService {
      */
     private LinkedHashSet<AnnotationSearchResultValueObject> getTerms( StringArrayArg arg,
             AnnotationSearchRankingStrategy strategy, int limit, List<String> prefixes, boolean upstream,
-            boolean exactLabel, String category, long timeoutMs ) throws SearchException {
+            boolean exactLabel, String category, @Nullable Taxon taxon, long timeoutMs ) throws SearchException {
         StopWatch timer = StopWatch.createStarted();
         long phaseStart = timer.getTime();
         List<CharacteristicValueObject> rawHits = new ArrayList<>();
@@ -1021,25 +1031,41 @@ public class AnnotationsWebService {
         }
         // Always merge gene hits in, regardless of category — the typeahead surface should
         // surface STAT5B whether the curator is in a Genotype factor, a Treatment factor, or a
-        // generic characteristic picker. Category-aware ranking (e.g. boost UBERON URIs when
-        // category=organism part, boost gene rows when category=genotype) is a future ranking-
-        // strategy concern; for now the merge is unconditional and ranking is unchanged.
-        // The category param is still accepted (and keyed into the cache) so future per-category
-        // boosting can land without breaking on-wire callers.
+        // generic characteristic picker.
         //
-        // Cost: one extra Hibernate-Search gene query per call. Cache hits cover repeat calls
-        // within the 5-min window, so a 20-keystroke typeahead session pays it once per query.
+        // Dedup by URI: when the same NCBI Gene URI already appears in the ontology/characteristic
+        // results (e.g. a curator previously tagged an experiment with the gene under category
+        // "genotype" → it surfaces from the corpus with a label like "Il10 [mouse] interleukin 10"
+        // and a usage count), drop the synthetic gene-fanout row for that URI — the corpus row
+        // carries a richer label (with taxon tag) and the load-bearing usage signal. The synthetic
+        // gene row only adds value when the gene is NOT yet known to the corpus ("new" gene,
+        // useful for first-time genotype annotation).
+        //
+        // Cost: one extra GeneService probe per query (~ms). Cache hits cover repeat calls within
+        // the 5-min window.
         LinkedHashSet<AnnotationSearchResultValueObject> geneRows = new LinkedHashSet<>();
         for ( String q : arg.getValue() ) {
             if ( q == null ) continue;
             String trimmed = q.trim();
             if ( trimmed.isEmpty() ) continue;
-            geneRows.addAll( resolveGeneHits( trimmed, limit ) );
+            geneRows.addAll( resolveGeneHits( trimmed, taxon, limit ) );
         }
         if ( !geneRows.isEmpty() ) {
-            // Prepend so an exact-symbol match (STAT5B etc.) lands above ontology hits. Generic
-            // queries with no real gene match yield an empty geneRows and we return vos as-is.
-            LinkedHashSet<AnnotationSearchResultValueObject> merged = new LinkedHashSet<>( geneRows );
+            Set<String> vosUris = new HashSet<>();
+            for ( AnnotationSearchResultValueObject v : vos ) {
+                if ( v.getValueUri() != null ) {
+                    vosUris.add( v.getValueUri() );
+                }
+            }
+            LinkedHashSet<AnnotationSearchResultValueObject> merged = new LinkedHashSet<>();
+            for ( AnnotationSearchResultValueObject g : geneRows ) {
+                if ( g.getValueUri() == null || !vosUris.contains( g.getValueUri() ) ) {
+                    merged.add( g );
+                }
+            }
+            // Prepend deduped gene rows so an exact-symbol match for a brand-new gene (no
+            // corpus row yet) lands above ontology hits. Corpus rows already in vos keep
+            // their tier-sorted position.
             merged.addAll( vos );
             if ( merged.size() > limit ) {
                 LinkedHashSet<AnnotationSearchResultValueObject> trimmedSet = new LinkedHashSet<>();
@@ -1064,25 +1090,25 @@ public class AnnotationsWebService {
      * <p>Probes (in order, dedup-by-gene-id across):</p>
      * <ol>
      *   <li>{@link ubic.gemma.persistence.service.genome.gene.GeneService#findByOfficialSymbol(String)}
-     *       — strongest. Curator types {@code STAT5B} and gets the gene.</li>
+     *       (or the taxon-scoped overload when {@code taxon != null}) — strongest. Curator
+     *       types {@code STAT5B} and gets the gene.</li>
      *   <li>{@link ubic.gemma.persistence.service.genome.gene.GeneService#findByOfficialName(String)}
-     *       — Gemma 1.0 parity. Curator types {@code haptoglobin} (the official name) and
-     *       gets the {@code HP}/{@code Hp} gene rows back. Without this probe the gene fan-out
-     *       missed every full-word query whose symbol differs from the typed word.</li>
+     *       — Gemma 1.0 parity. Curator types {@code haptoglobin} and gets HP / Hp back.</li>
      *   <li>{@link ubic.gemma.persistence.service.genome.gene.GeneService#findByAlias(String)}
-     *       — catches alias matches (e.g. {@code TRP53} → {@code Trp53}).</li>
+     *       — alias matches (e.g. {@code TRP53} → {@code Trp53}).</li>
      * </ol>
      *
-     * <p>Previously this went through {@code SearchService.search(Gene.class)}, which fans
-     * out across every SearchSource — including {@code GeneOntologySearchSource}, which for
-     * queries like {@code "metabolism"} or {@code "neuron"} walks the entire GO subtree
-     * (~30s wall on prod-tunneled DB). The three direct probes here are each a small
-     * indexed lookup; total wall-time is a few ms even on prod-tunneled DB.</p>
+     * <p>When {@code taxon} is non-null, every probe's results are filtered to that taxon
+     * post-hoc (only {@code findByOfficialSymbol} has a taxon-scoped DAO variant; the other
+     * two filter the returned collection by {@code g.getTaxon().equals(taxon)}). This is
+     * the right knob for "curator is tagging a mouse experiment": typing {@code Il10} no
+     * longer surfaces rat or human Il10.</p>
      *
      * <p>Returns empty on any search failure; gene resolution is best-effort and must
      * never break the wider annotation-search response.</p>
      */
-    private LinkedHashSet<AnnotationSearchResultValueObject> resolveGeneHits( String query, int limit ) {
+    private LinkedHashSet<AnnotationSearchResultValueObject> resolveGeneHits( String query,
+            @Nullable Taxon taxon, int limit ) {
         LinkedHashSet<AnnotationSearchResultValueObject> out = new LinkedHashSet<>();
         if ( geneService == null ) {
             return out;
@@ -1092,12 +1118,19 @@ public class AnnotationsWebService {
         // name matches stay above alias matches.
         LinkedHashSet<Long> seenGeneIds = new LinkedHashSet<>();
         try {
-            collectGeneHits( geneService.findByOfficialSymbol( query ), seenGeneIds, out, limit );
+            Collection<Gene> symbolHits;
+            if ( taxon != null ) {
+                Gene single = geneService.findByOfficialSymbol( query, taxon );
+                symbolHits = single != null ? Collections.singletonList( single ) : Collections.emptyList();
+            } else {
+                symbolHits = geneService.findByOfficialSymbol( query );
+            }
+            collectGeneHits( symbolHits, taxon, seenGeneIds, out, limit );
             if ( out.size() < limit ) {
-                collectGeneHits( geneService.findByOfficialName( query ), seenGeneIds, out, limit );
+                collectGeneHits( geneService.findByOfficialName( query ), taxon, seenGeneIds, out, limit );
             }
             if ( out.size() < limit ) {
-                collectGeneHits( geneService.findByAlias( query ), seenGeneIds, out, limit );
+                collectGeneHits( geneService.findByAlias( query ), taxon, seenGeneIds, out, limit );
             }
         } catch ( Exception e ) {
             log.debug( "Gene resolution skipped for query '{}': {}", query, e.toString() );
@@ -1109,13 +1142,18 @@ public class AnnotationsWebService {
      * Helper: render each {@link Gene} in {@code source} as a search-result VO and add to
      * {@code out}, deduplicating by gene id and respecting the overall {@code limit}.
      * Skips genes with missing id or symbol — those can't be resolved back to a usable URI.
+     * When {@code taxonFilter} is non-null, drops genes whose taxon doesn't match.
      */
-    private static void collectGeneHits( @Nullable Collection<Gene> source, Set<Long> seenGeneIds,
+    private static void collectGeneHits( @Nullable Collection<Gene> source, @Nullable Taxon taxonFilter,
+            Set<Long> seenGeneIds,
             LinkedHashSet<AnnotationSearchResultValueObject> out, int limit ) {
         if ( source == null || source.isEmpty() ) return;
         for ( Gene g : source ) {
             if ( out.size() >= limit ) return;
             if ( g == null ) continue;
+            if ( taxonFilter != null && ( g.getTaxon() == null || !taxonFilter.equals( g.getTaxon() ) ) ) {
+                continue;
+            }
             Long id = g.getId();
             if ( id != null && !seenGeneIds.add( id ) ) continue;
             String symbol = g.getOfficialSymbol();
@@ -1820,7 +1858,7 @@ public class AnnotationsWebService {
      * matches (the underlying LIKE search and ontology lookup are case-insensitive); URI-shaped terms keep
      * their case because URIs are case-sensitive on the path/query portion.
      */
-    private static String buildSearchCacheKey( List<String> values, String rankName, int limit, List<String> prefixes, boolean upstream, boolean exactLabel, String category ) {
+    private static String buildSearchCacheKey( List<String> values, String rankName, int limit, List<String> prefixes, boolean upstream, boolean exactLabel, String category, @Nullable Taxon taxon ) {
         StringBuilder sb = new StringBuilder( values.size() * 16 );
         // Prefix the strategy name + limit + namespaces so swapping any of them invalidates the
         // cache without colliding with a different-query default-rank entry. STX separates the
@@ -1838,6 +1876,11 @@ public class AnnotationsWebService {
         // Category affects whether synthetic gene rows are merged in, so it must key the cache
         // (lowercased + trimmed to canonicalize EFO label casing).
         sb.append( category != null ? category.trim().toLowerCase( Locale.ROOT ) : "" );
+        // Taxon scopes the gene fan-out (mouse Il10 vs rat Il10 vs human Il10); a cached
+        // "all-taxa" entry must not satisfy a "taxon=mouse" call. Use taxon id when present;
+        // empty string = no constraint.
+        sb.append( '' );
+        sb.append( taxon != null && taxon.getId() != null ? "t" + taxon.getId() : "" );
         sb.append( '' );
         for ( int i = 0; i < values.size(); i++ ) {
             String v = values.get( i );

@@ -1142,6 +1142,50 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
     }
 
     @Test
+    public void testSearchAnnotationsDropsGeneFanoutWhenURIAlreadyInOntologyResults() throws SearchException, TimeoutException {
+        // The IL10 regression from screenshots 2026-06-14: when the corpus already carries a
+        // characteristic with the same NCBI Gene URI (a curator previously tagged an experiment
+        // with the gene under category "genotype" → label "Il10 [mouse] interleukin 10",
+        // usageCount > 0), the synthetic gene-fanout row would duplicate it with a bare label
+        // and zero usage. Fix: URI-dedup at merge time. Ontology row wins (richer label + usage).
+        CharacteristicValueObject ontologyHit = new CharacteristicValueObject(
+                "Il10 [mouse] interleukin 10",
+                "http://purl.org/commons/record/ncbi_gene/16153",
+                "genotype",
+                "http://www.ebi.ac.uk/efo/EFO_0000513" );
+        ubic.gemma.model.genome.Gene il10 = mock( ubic.gemma.model.genome.Gene.class );
+        when( il10.getId() ).thenReturn( 16153L );
+        when( il10.getOfficialSymbol() ).thenReturn( "Il10" );
+        when( il10.getOfficialName() ).thenReturn( "interleukin 10" );
+        when( il10.getNcbiGeneId() ).thenReturn( 16153 );
+        when( geneService.findByOfficialSymbol( "il10" ) ).thenReturn( Collections.singletonList( il10 ) );
+        when( geneService.findByOfficialName( "il10" ) ).thenReturn( Collections.emptyList() );
+        when( geneService.findByAlias( "il10" ) ).thenReturn( Collections.emptyList() );
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "il10" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Collections.singletonList( ontologyHit ) );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+        OntologyTerm term = mock( OntologyTerm.class );
+        when( term.getUri() ).thenReturn( "http://purl.org/commons/record/ncbi_gene/16153" );
+        when( term.getLabel() ).thenReturn( "Il10 [mouse] interleukin 10" );
+        when( term.getAnnotations( anyString() ) ).thenReturn( Collections.emptyList() );
+        when( ontologyService.getTerm( anyString(), anyLong(), any() ) ).thenReturn( term );
+        when( ontologyService.getParents( anySet(), eq( true ), eq( true ), anyLong(), any() ) )
+                .thenReturn( Collections.emptySet() );
+
+        assertThat( target( "/annotations/search" ).queryParam( "query", "il10" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 1 )
+                .first()
+                .satisfies( a -> assertThat( a )
+                        .containsEntry( "category", "genotype" )
+                        .containsEntry( "value", "Il10 [mouse] interleukin 10" )
+                        .containsEntry( "valueUri", "http://purl.org/commons/record/ncbi_gene/16153" ) );
+    }
+
+    @Test
     public void testSearchAnnotationsDedupesGenesAcrossProbes() throws SearchException, TimeoutException {
         // A single gene matching by multiple probes (symbol AND alias, e.g.) must emit one row.
         ubic.gemma.model.genome.Gene hp = mock( ubic.gemma.model.genome.Gene.class );
