@@ -33,7 +33,18 @@ public class BulkDataSlicerUtils {
      * @param vectorType the type of vector produced
      */
     public static <T extends BulkExpressionDataVector> Collection<T> slice( Collection<T> vectors, List<BioAssay> assays, Class<T> vectorType, boolean allowMissing ) {
-        return vectors.stream().map( createSlicer( assays, vectorType, allowMissing ) ).collect( Collectors.toList() );
+        return slice( vectors, assays, vectorType, allowMissing, new HashMap<>() );
+    }
+
+    /**
+     * Slice a collection of bulk data vectors, reusing the provided dimension cache.
+     *
+     * @param vectorType the type of vector produced
+     */
+    public static <T extends BulkExpressionDataVector> Collection<T> slice( Collection<T> vectors, List<BioAssay> assays, Class<T> vectorType, boolean allowMissing, Map<BioAssayDimension, BioAssayDimension> dimensionCache ) {
+        Map<BioAssayDimension, BioAssayMapping> bioAssayMappingCache = new HashMap<>();
+        Map<QuantitationType, byte[]> missingValueCache = new HashMap<>();
+        return vectors.stream().map( bulkDataVector -> slice( bulkDataVector, assays, dimensionCache, bioAssayMappingCache, vectorType, getDataVectorIgnoredProperties( vectorType ), allowMissing, missingValueCache ) ).collect( Collectors.toList() );
     }
 
     /**

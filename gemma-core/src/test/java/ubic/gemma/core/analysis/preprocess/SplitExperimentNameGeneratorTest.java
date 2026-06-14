@@ -10,7 +10,7 @@ import java.nio.charset.StandardCharsets;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.assertEquals;
-import static ubic.gemma.core.analysis.preprocess.SplitExperimentServiceImpl.generateNameForSplit;
+import static ubic.gemma.core.analysis.preprocess.SplitExperimentHelperService.generateNameForSplit;
 
 public class SplitExperimentNameGeneratorTest {
 
