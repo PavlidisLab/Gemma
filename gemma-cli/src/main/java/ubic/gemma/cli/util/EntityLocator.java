@@ -1,6 +1,7 @@
 package ubic.gemma.cli.util;
 
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -16,10 +17,12 @@ import java.util.Collection;
 import java.util.Map;
 
 /**
- * Locate various entities using identifiers supplied by the CLI.
+ * Locate various entities using identifiers.
  * @author poirigui
  */
 public interface EntityLocator {
+
+    <T extends Identifiable> T locateEntity( Class<T> clazz, String identifier, boolean useReferencesIfPossible );
 
     Taxon locateTaxon( String identifier );
 

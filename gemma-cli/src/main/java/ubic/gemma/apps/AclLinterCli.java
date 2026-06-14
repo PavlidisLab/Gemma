@@ -3,11 +3,12 @@ package ubic.gemma.apps;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.cli.util.AbstractAuthenticatedCLI;
+import ubic.gemma.cli.util.EntityLocator;
+import ubic.gemma.cli.util.EntityOptionsUtils;
 import ubic.gemma.cli.util.OptionsUtils;
 import ubic.gemma.core.security.authorization.acl.AclLinterConfig;
 import ubic.gemma.core.security.authorization.acl.AclLinterService;
@@ -68,9 +69,12 @@ public class AclLinterCli extends AbstractAuthenticatedCLI {
     @Autowired
     private AclLinterService aclLinterService;
 
+    @Autowired
+    private EntityLocator entityLocator;
+
     private Class<? extends Securable> clazz;
 
-    private Long identifier;
+    private String identifier;
 
     private boolean lintPermissions;
 
@@ -82,8 +86,8 @@ public class AclLinterCli extends AbstractAuthenticatedCLI {
     @Override
     protected void buildOptions( Options options ) {
         OptionsUtils.addEnumOption( options, "type", "type", "Type of securable entities to lint.", SecurableType.class );
-        options.addOption( Option.builder( "identifier" ).longOpt( "identifier" ).hasArg().type( Long.class )
-                .desc( "Identifier of the securable entity to lint. Requires the -type,--type option to be set." ).get() );
+        EntityOptionsUtils.addEntityOption( options, "identifier", "identifier",
+                "Identifier of the securable entity to lint. Requires the -type,--type option to be set." );
         options.addOption( "lintPermissions", "lint-permissions", false, "Lint permissions." );
         options.addOption( "applyFixes", "apply-fixes", false, "Apply fixes to ACLs" );
     }
@@ -92,7 +96,7 @@ public class AclLinterCli extends AbstractAuthenticatedCLI {
     protected void processOptions( CommandLine commandLine ) throws ParseException {
         SecurableType st = OptionsUtils.getEnumOptionValue( commandLine, "type" );
         this.clazz = st != null ? st.getClazz() : null;
-        this.identifier = getParsedOptionValue( commandLine, "identifier",
+        this.identifier = getOptionValue( commandLine, "identifier",
                 requires( toBeSet( "type" ) ) );
         this.lintPermissions = commandLine.hasOption( "lintPermissions" );
         this.applyFixes = commandLine.hasOption( "applyFixes" );
@@ -111,7 +115,9 @@ public class AclLinterCli extends AbstractAuthenticatedCLI {
                 .build();
         Collection<AclLinterService.LintResult> results;
         if ( identifier != null ) {
-            results = aclLinterService.lintAcls( clazz, identifier, config );
+            Securable entity = entityLocator.locateEntity( clazz, identifier, true );
+            assert entity.getId() != null;
+            results = aclLinterService.lintAcls( clazz, entity.getId(), config );
         } else if ( clazz != null ) {
             results = aclLinterService.lintAcls( clazz, config );
         } else {
