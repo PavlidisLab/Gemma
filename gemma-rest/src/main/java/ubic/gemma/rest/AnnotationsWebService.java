@@ -48,6 +48,7 @@ import ubic.gemma.model.common.search.SearchResult;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
@@ -1941,14 +1942,48 @@ public class AnnotationsWebService {
         private String category;
         @Nullable
         private String categoryUri;
+        /**
+         * Subject text. For a plain {@code Characteristic} this is "the value"; for a
+         * {@code Statement} it's the statement subject (the {@code Statement} entity aliases
+         * {@code setValue}/{@code getValue} to {@code setSubject}/{@code getSubject}). The
+         * wire field name stays {@code value} for backwards compatibility with the
+         * Characteristic-only era.
+         */
         @Nullable
         private String value;
         @Nullable
         private String valueUri;
         @Nullable
         private String evidenceCode;
+        /**
+         * Predicate label of the statement (e.g. {@code "has dose"}). When set together with
+         * any other Statement field (predicateUri, object, objectUri, secondPredicate*,
+         * secondObject*), the row is persisted as a {@link Statement} rather than a plain
+         * {@link Characteristic}. Null on plain tags.
+         */
+        @Nullable
+        private String predicate;
         @Nullable
         private String predicateUri;
+        /**
+         * Object label of the statement (e.g. {@code "10mg"}).
+         */
+        @Nullable
+        private String object;
+        @Nullable
+        private String objectUri;
+        /**
+         * Second predicate, for compound statements (e.g. {@code "treatment X has dose 10mg
+         * for 12 weeks"} — secondPredicate={@code "for"}, secondObject={@code "12 weeks"}).
+         */
+        @Nullable
+        private String secondPredicate;
+        @Nullable
+        private String secondPredicateUri;
+        @Nullable
+        private String secondObject;
+        @Nullable
+        private String secondObjectUri;
 
         @Nullable
         public String getCategory() {
@@ -1996,12 +2031,89 @@ public class AnnotationsWebService {
         }
 
         @Nullable
+        public String getPredicate() {
+            return predicate;
+        }
+
+        public void setPredicate( @Nullable String predicate ) {
+            this.predicate = predicate;
+        }
+
+        @Nullable
         public String getPredicateUri() {
             return predicateUri;
         }
 
         public void setPredicateUri( @Nullable String predicateUri ) {
             this.predicateUri = predicateUri;
+        }
+
+        @Nullable
+        public String getObject() {
+            return object;
+        }
+
+        public void setObject( @Nullable String object ) {
+            this.object = object;
+        }
+
+        @Nullable
+        public String getObjectUri() {
+            return objectUri;
+        }
+
+        public void setObjectUri( @Nullable String objectUri ) {
+            this.objectUri = objectUri;
+        }
+
+        @Nullable
+        public String getSecondPredicate() {
+            return secondPredicate;
+        }
+
+        public void setSecondPredicate( @Nullable String secondPredicate ) {
+            this.secondPredicate = secondPredicate;
+        }
+
+        @Nullable
+        public String getSecondPredicateUri() {
+            return secondPredicateUri;
+        }
+
+        public void setSecondPredicateUri( @Nullable String secondPredicateUri ) {
+            this.secondPredicateUri = secondPredicateUri;
+        }
+
+        @Nullable
+        public String getSecondObject() {
+            return secondObject;
+        }
+
+        public void setSecondObject( @Nullable String secondObject ) {
+            this.secondObject = secondObject;
+        }
+
+        @Nullable
+        public String getSecondObjectUri() {
+            return secondObjectUri;
+        }
+
+        public void setSecondObjectUri( @Nullable String secondObjectUri ) {
+            this.secondObjectUri = secondObjectUri;
+        }
+
+        /**
+         * @return true when ANY Statement-shaped field is set (predicate, object,
+         *         secondPredicate, secondObject, or their URIs). When true,
+         *         {@code annotationDtoToCharacteristic} constructs a
+         *         {@link Statement}; when false, the conversion produces a plain
+         *         {@link Characteristic}.
+         */
+        boolean hasStatementShape() {
+            return StringUtils.isNotBlank( predicate ) || StringUtils.isNotBlank( predicateUri )
+                    || StringUtils.isNotBlank( object ) || StringUtils.isNotBlank( objectUri )
+                    || StringUtils.isNotBlank( secondPredicate ) || StringUtils.isNotBlank( secondPredicateUri )
+                    || StringUtils.isNotBlank( secondObject ) || StringUtils.isNotBlank( secondObjectUri );
         }
     }
 
@@ -2264,9 +2376,17 @@ public class AnnotationsWebService {
     }
 
     /**
-     * Map an inbound {@link AnnotationDto} into a transient {@link Characteristic}, validating
-     * required fields and parsing the evidence code. Throws {@link BadRequestException} on bad
-     * input (mapped to HTTP 400 by the Jersey exception mapper).
+     * Map an inbound {@link AnnotationDto} into a transient {@link Characteristic} (or its
+     * {@link Statement} subclass when any predicate/object field is set), validating required
+     * fields and parsing the evidence code. Throws {@link BadRequestException} on bad input
+     * (mapped to HTTP 400 by the Jersey exception mapper).
+     *
+     * <p>The {@code Statement} path keeps the Characteristic shape's {@code category} +
+     * {@code value} ({@code value} is the statement subject — Statement aliases
+     * {@code setValue} → {@code setSubject}) and adds {@code predicate}/{@code object} plus
+     * the optional second pair. A Statement with no predicate/object fields would be
+     * indistinguishable from a Characteristic on the wire and is rejected as a hint to use
+     * the Characteristic shape instead.</p>
      */
     private static Characteristic annotationDtoToCharacteristic( AnnotationDto dto ) {
         if ( dto == null ) {
@@ -2278,11 +2398,44 @@ public class AnnotationsWebService {
         if ( StringUtils.isBlank( dto.getValue() ) ) {
             throw new BadRequestException( "Each annotation must have a non-blank 'value'." );
         }
-        Characteristic c = Characteristic.Factory.newInstance();
-        c.setCategory( dto.getCategory() );
-        c.setCategoryUri( dto.getCategoryUri() );
-        c.setValue( dto.getValue() );
-        c.setValueUri( dto.getValueUri() );
+        Characteristic c;
+        if ( dto.hasStatementShape() ) {
+            // Reject the "second-* set but no first-*" shape — second-pair semantics depend
+            // on the first pair being present. Predicate-only or object-only is allowed:
+            // common ontology patterns express bare relationships ("has_role X") without a
+            // dedicated object literal.
+            boolean secondPredicateSet = StringUtils.isNotBlank( dto.getSecondPredicate() )
+                    || StringUtils.isNotBlank( dto.getSecondPredicateUri() );
+            boolean secondObjectSet = StringUtils.isNotBlank( dto.getSecondObject() )
+                    || StringUtils.isNotBlank( dto.getSecondObjectUri() );
+            boolean firstPredicateSet = StringUtils.isNotBlank( dto.getPredicate() )
+                    || StringUtils.isNotBlank( dto.getPredicateUri() );
+            boolean firstObjectSet = StringUtils.isNotBlank( dto.getObject() )
+                    || StringUtils.isNotBlank( dto.getObjectUri() );
+            if ( ( secondPredicateSet || secondObjectSet ) && !( firstPredicateSet || firstObjectSet ) ) {
+                throw new BadRequestException( "secondPredicate/secondObject cannot be supplied without a first predicate/object." );
+            }
+            Statement s = Statement.Factory.newInstance();
+            s.setCategory( dto.getCategory() );
+            s.setCategoryUri( dto.getCategoryUri() );
+            s.setSubject( dto.getValue() );
+            s.setSubjectUri( dto.getValueUri() );
+            s.setPredicate( dto.getPredicate() );
+            s.setPredicateUri( dto.getPredicateUri() );
+            s.setObject( dto.getObject() );
+            s.setObjectUri( dto.getObjectUri() );
+            s.setSecondPredicate( dto.getSecondPredicate() );
+            s.setSecondPredicateUri( dto.getSecondPredicateUri() );
+            s.setSecondObject( dto.getSecondObject() );
+            s.setSecondObjectUri( dto.getSecondObjectUri() );
+            c = s;
+        } else {
+            c = Characteristic.Factory.newInstance();
+            c.setCategory( dto.getCategory() );
+            c.setCategoryUri( dto.getCategoryUri() );
+            c.setValue( dto.getValue() );
+            c.setValueUri( dto.getValueUri() );
+        }
         if ( StringUtils.isNotBlank( dto.getEvidenceCode() ) ) {
             try {
                 c.setEvidenceCode( GOEvidenceCode.valueOf( dto.getEvidenceCode().trim().toUpperCase( Locale.ROOT ) ) );
@@ -2294,8 +2447,35 @@ public class AnnotationsWebService {
         return c;
     }
 
+    /**
+     * Equality used for diffing/deduping annotations on an EE. Two rows are the same iff
+     * they share {@code (category, value)} AND — for Statement-shaped rows — the
+     * {@code (predicate, object, secondPredicate, secondObject)} tuples match.
+     *
+     * <p>Rationale: "fed with HFD" and "fed for 12 weeks" share (category="treatment",
+     * value="HFD") but the predicates make them distinct annotations. The pre-Statement
+     * rule collapsed them as duplicates; that's wrong for the Statement era. A
+     * Characteristic and a Statement that share (category, value) are also distinct —
+     * the Statement carries additional relational meaning the Characteristic doesn't.</p>
+     */
     private static boolean sameTag( Characteristic a, Characteristic b ) {
-        return CharacteristicUtils.equals( a.getCategory(), a.getCategoryUri(), b.getCategory(), b.getCategoryUri() )
-                && CharacteristicUtils.equals( a.getValue(), a.getValueUri(), b.getValue(), b.getValueUri() );
+        if ( !CharacteristicUtils.equals( a.getCategory(), a.getCategoryUri(), b.getCategory(), b.getCategoryUri() )
+                || !CharacteristicUtils.equals( a.getValue(), a.getValueUri(), b.getValue(), b.getValueUri() ) ) {
+            return false;
+        }
+        boolean aIsStatement = a instanceof Statement;
+        boolean bIsStatement = b instanceof Statement;
+        if ( aIsStatement != bIsStatement ) {
+            return false;
+        }
+        if ( !aIsStatement ) {
+            return true;
+        }
+        Statement sa = ( Statement ) a;
+        Statement sb = ( Statement ) b;
+        return CharacteristicUtils.equals( sa.getPredicate(), sa.getPredicateUri(), sb.getPredicate(), sb.getPredicateUri() )
+                && CharacteristicUtils.equals( sa.getObject(), sa.getObjectUri(), sb.getObject(), sb.getObjectUri() )
+                && CharacteristicUtils.equals( sa.getSecondPredicate(), sa.getSecondPredicateUri(), sb.getSecondPredicate(), sb.getSecondPredicateUri() )
+                && CharacteristicUtils.equals( sa.getSecondObject(), sa.getSecondObjectUri(), sb.getSecondObject(), sb.getSecondObjectUri() );
     }
 }

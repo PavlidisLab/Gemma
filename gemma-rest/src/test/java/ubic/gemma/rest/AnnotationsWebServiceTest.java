@@ -25,6 +25,7 @@ import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.search.SearchResult;
 import ubic.gemma.model.common.search.SearchSettings;
@@ -343,6 +344,93 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         ee.setId( 1L );
         when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
         String body = "{\"category\":\"organism part\",\"value\":\"liver\",\"evidenceCode\":\"BOGUS\"}";
+        assertThat( target( "/annotations/datasets/1/annotations" ).request().post( Entity.json( body ) ) )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        verify( expressionExperimentService, never() ).addAnnotation( any(), any() );
+    }
+
+    @Test
+    @WithMockUser(authorities = { "GROUP_CURATOR" })
+    public void testAddDatasetAnnotationCreatesStatementWhenPredicateOrObjectSet() {
+        // POST a compound annotation: "treatment HFD has_dose 30%". The conversion must
+        // construct a Statement (not a plain Characteristic) and populate predicate +
+        // object on it. Verifies the Gemma 2.0 EE Statement support — the underlying
+        // service.addAnnotation signature already accepts any Characteristic subclass.
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setId( 1L );
+        ee.setShortName( "GSE-test" );
+        ee.setCharacteristics( new LinkedHashSet<>() );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.addAnnotation( eq( ee ), any( Characteristic.class ) ) )
+                .thenAnswer( a -> {
+                    Characteristic vc = a.getArgument( 1, Characteristic.class );
+                    vc.setId( 99L );
+                    return vc;
+                } );
+        String body = "{"
+                + "\"category\":\"treatment\","
+                + "\"categoryUri\":\"http://www.ebi.ac.uk/efo/EFO_0000727\","
+                + "\"value\":\"high fat diet\","
+                + "\"valueUri\":\"http://purl.obolibrary.org/obo/EFO_0002091\","
+                + "\"predicate\":\"has_dose\","
+                + "\"predicateUri\":\"http://purl.obolibrary.org/obo/RO_0002211\","
+                + "\"object\":\"30%\","
+                + "\"objectUri\":\"http://example.com/dose/30pct\""
+                + "}";
+        assertThat( target( "/annotations/datasets/1/annotations" ).request().post( Entity.json( body ) ) )
+                .hasStatus( Response.Status.CREATED );
+        org.mockito.ArgumentCaptor<Characteristic> captor = org.mockito.ArgumentCaptor.forClass( Characteristic.class );
+        verify( expressionExperimentService ).addAnnotation( eq( ee ), captor.capture() );
+        Characteristic persisted = captor.getValue();
+        assertThat( persisted ).isInstanceOf( Statement.class );
+        Statement s = ( Statement ) persisted;
+        assertThat( s.getCategory() ).isEqualTo( "treatment" );
+        assertThat( s.getValue() ).isEqualTo( "high fat diet" );
+        assertThat( s.getPredicate() ).isEqualTo( "has_dose" );
+        assertThat( s.getPredicateUri() ).isEqualTo( "http://purl.obolibrary.org/obo/RO_0002211" );
+        assertThat( s.getObject() ).isEqualTo( "30%" );
+        assertThat( s.getObjectUri() ).isEqualTo( "http://example.com/dose/30pct" );
+        assertThat( s.getSecondPredicate() ).isNull();
+        assertThat( s.getSecondObject() ).isNull();
+    }
+
+    @Test
+    @WithMockUser(authorities = { "GROUP_CURATOR" })
+    public void testAddDatasetAnnotationCreatesCharacteristicWhenNoStatementFieldsSet() {
+        // Sanity: bodies without any predicate/object field still produce a plain
+        // Characteristic (not an empty-Statement subclass). The hasStatementShape() guard
+        // is what flips the conversion; this pins that the default path is unchanged.
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setId( 1L );
+        ee.setShortName( "GSE-test" );
+        ee.setCharacteristics( new LinkedHashSet<>() );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.addAnnotation( eq( ee ), any( Characteristic.class ) ) )
+                .thenAnswer( a -> a.getArgument( 1, Characteristic.class ) );
+        String body = "{\"category\":\"organism part\",\"value\":\"liver\","
+                + "\"valueUri\":\"http://purl.obolibrary.org/obo/UBERON_0002107\"}";
+        assertThat( target( "/annotations/datasets/1/annotations" ).request().post( Entity.json( body ) ) )
+                .hasStatus( Response.Status.CREATED );
+        org.mockito.ArgumentCaptor<Characteristic> captor = org.mockito.ArgumentCaptor.forClass( Characteristic.class );
+        verify( expressionExperimentService ).addAnnotation( eq( ee ), captor.capture() );
+        assertThat( captor.getValue() ).isNotInstanceOf( Statement.class );
+    }
+
+    @Test
+    @WithMockUser(authorities = { "GROUP_CURATOR" })
+    public void testAddDatasetAnnotationRejectsSecondPredicateWithoutFirst() {
+        // Compound second-pair semantics only make sense relative to a first pair; a body
+        // that supplies secondPredicate without ANY first predicate/object is malformed.
+        // Catches client bugs that conflate the two pairs.
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        String body = "{"
+                + "\"category\":\"treatment\","
+                + "\"value\":\"HFD\","
+                + "\"secondPredicate\":\"for\","
+                + "\"secondObject\":\"12 weeks\""
+                + "}";
         assertThat( target( "/annotations/datasets/1/annotations" ).request().post( Entity.json( body ) ) )
                 .hasStatus( Response.Status.BAD_REQUEST );
         verify( expressionExperimentService, never() ).addAnnotation( any(), any() );
