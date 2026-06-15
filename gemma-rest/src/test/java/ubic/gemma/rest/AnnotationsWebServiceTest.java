@@ -1542,4 +1542,74 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
                     assertThat( ( ( Map<?, ?> ) hits.get( 1 ) ).get( "valueUri" ) ).isEqualTo( "http://purl.obolibrary.org/obo/CL_0000001" );
                 } );
     }
+
+    @Test
+    public void testSearchAnnotationsPrefersCloOverEfoForBareCellLineQuery() throws SearchException, TimeoutException {
+        // Bare cell-line query (no trailing " cell"): EFO labels the line as the bare name
+        // ("a549"), CLO as "A549 cell". Without suffix-stripping, EFO wins at the exact-label
+        // tier and CLO sinks to startsWith. With the strip, both reach tier 0 and the cell-line
+        // tiebreaker promotes CLO ahead of EFO.
+        CharacteristicValueObject efo = new CharacteristicValueObject( "a549", "http://www.ebi.ac.uk/efo/EFO_0001086", "cell line", null );
+        CharacteristicValueObject clo = new CharacteristicValueObject( "A549 cell", "http://purl.obolibrary.org/obo/CLO_0001601", "cell line", null );
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "A549" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Arrays.asList( efo, clo ) );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/annotations/search" ).queryParam( "query", "A549" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 2 )
+                .satisfies( hits -> {
+                    assertThat( ( ( Map<?, ?> ) hits.get( 0 ) ).get( "valueUri" ) ).isEqualTo( "http://purl.obolibrary.org/obo/CLO_0001601" );
+                    assertThat( ( ( Map<?, ?> ) hits.get( 1 ) ).get( "valueUri" ) ).isEqualTo( "http://www.ebi.ac.uk/efo/EFO_0001086" );
+                } );
+    }
+
+    @Test
+    public void testSearchAnnotationsPrefersCloOverEfoForCellSuffixQuery() throws SearchException, TimeoutException {
+        // Regression: query already carries the " cell" suffix. CLO's "A549 cell" is the exact
+        // label match (tier 0); EFO's "a549" sinks to substring (tier 4). CLO must remain first.
+        CharacteristicValueObject efo = new CharacteristicValueObject( "a549", "http://www.ebi.ac.uk/efo/EFO_0001086", "cell line", null );
+        CharacteristicValueObject clo = new CharacteristicValueObject( "A549 cell", "http://purl.obolibrary.org/obo/CLO_0001601", "cell line", null );
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "A549 cell" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Arrays.asList( efo, clo ) );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/annotations/search" ).queryParam( "query", "A549 cell" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 2 )
+                .satisfies( hits -> {
+                    assertThat( ( ( Map<?, ?> ) hits.get( 0 ) ).get( "valueUri" ) ).isEqualTo( "http://purl.obolibrary.org/obo/CLO_0001601" );
+                    assertThat( ( ( Map<?, ?> ) hits.get( 1 ) ).get( "valueUri" ) ).isEqualTo( "http://www.ebi.ac.uk/efo/EFO_0001086" );
+                } );
+    }
+
+    @Test
+    public void testSearchAnnotationsCellLineTiebreakerDoesNotAffectNonCellLineQueries() throws SearchException, TimeoutException {
+        // Guard: the CLO-preference tiebreaker is gated on the " cell" suffix strip earning the
+        // match. A query that doesn't trigger the strip ("lung cancer", with hits whose labels
+        // don't end in " cell") must fall back to URI-ASC, not get a hidden CLO boost.
+        CharacteristicValueObject efo = new CharacteristicValueObject( "lung cancer", "http://www.ebi.ac.uk/efo/EFO_0001071", "disease", null );
+        CharacteristicValueObject mondo = new CharacteristicValueObject( "lung cancer", "http://purl.obolibrary.org/obo/MONDO_0008903", "disease", null );
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "lung cancer" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Arrays.asList( efo, mondo ) );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/annotations/search" ).queryParam( "query", "lung cancer" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 2 )
+                .satisfies( hits -> {
+                    // URI-ASC: "http://purl..." < "http://www...".
+                    assertThat( ( ( Map<?, ?> ) hits.get( 0 ) ).get( "valueUri" ) ).isEqualTo( "http://purl.obolibrary.org/obo/MONDO_0008903" );
+                    assertThat( ( ( Map<?, ?> ) hits.get( 1 ) ).get( "valueUri" ) ).isEqualTo( "http://www.ebi.ac.uk/efo/EFO_0001071" );
+                } );
+    }
 }

@@ -878,8 +878,13 @@ public class AnnotationsWebService {
             String label = h.getValue();
             if ( label == null ) return 6;
             String l = label.toLowerCase( Locale.ROOT );
-            if ( l.equals( relevanceQuery ) ) return 0;        // exact label
-            if ( l.startsWith( relevanceQuery ) ) return 1;    // label starts with query
+            // CLO labels cell-line terms as "<NAME> cell" (e.g. "A549 cell") rather than the
+            // bare "<NAME>"; treat that trailing " cell" / " cell line" as strippable so a
+            // bare-name query like "A549" reaches CLO at the exact-label tier instead of
+            // losing to EFO's bare "a549" by tier alone.
+            String ls = stripCellSuffix( l );
+            if ( l.equals( relevanceQuery ) || ls.equals( relevanceQuery ) ) return 0;       // exact label
+            if ( l.startsWith( relevanceQuery ) || ls.startsWith( relevanceQuery ) ) return 1; // label starts with query
             if ( multiToken && labelCoversAllTokens( normaliseForEquality( label ), queryContentTokens ) ) {
                 return 2;                                       // all query content tokens present
             }
@@ -898,9 +903,27 @@ public class AnnotationsWebService {
             }
             return prefixes.size();
         };
+        // Within the same tier, prefer the CLO term over EFO when the CLO label EARNED its
+        // tier through the " cell" suffix strip — that's the signal that CLO meant this term
+        // as a cell-line label and is the authoritative source. Without this, an EFO bare
+        // "a549" and a CLO "a549 cell" both land in tier 0 and the URI tiebreaker decides
+        // (accidentally CLO-first on host alphabetics, but not by design). Gate keeps this
+        // surgical: a non-cell-line query like "lung cancer" sees no behavioural change
+        // because no label is stripped.
+        java.util.function.ToIntFunction<CharacteristicValueObject> cellLinePreferenceFn = h -> {
+            String label = h.getValue();
+            String uri = h.getValueUri();
+            if ( label == null || uri == null ) return 1;
+            String l = label.toLowerCase( Locale.ROOT );
+            String ls = stripCellSuffix( l );
+            boolean strippedEarnedMatch = !ls.equals( l )
+                    && ( ls.equals( relevanceQuery ) || ls.startsWith( relevanceQuery ) );
+            return ( strippedEarnedMatch && uri.contains( "CLO_" ) ) ? 0 : 1;
+        };
         rawHits.sort( Comparator
                 .<CharacteristicValueObject>comparingInt( tierFn::applyAsInt )
                 .thenComparingInt( prefixRankFn::applyAsInt )
+                .thenComparingInt( cellLinePreferenceFn::applyAsInt )
                 .thenComparing( CharacteristicValueObject::getValueUri, Comparator.nullsLast( Comparator.naturalOrder() ) )
                 .thenComparing( CharacteristicValueObject::getValue, Comparator.nullsLast( Comparator.naturalOrder() ) ) );
         // Exact-label pushdown for resolver-style callers (cuts 5-10x candidate payload).
@@ -1599,6 +1622,23 @@ public class AnnotationsWebService {
     private static String normaliseForEquality( @Nullable String s ) {
         if ( s == null ) return "";
         return s.toLowerCase( Locale.ROOT ).replaceAll( "[^a-z0-9]+", " " ).trim();
+    }
+
+    /**
+     * CLO labels cell-line terms with a trailing {@code " cell"} or {@code " cell line"} (e.g.
+     * {@code "A549 cell"}, {@code "NCI-H358 cell"}) rather than the bare cell-line identifier.
+     * Strip the suffix so a bare-name query like {@code "A549"} reaches CLO at the exact-label
+     * ranking tier instead of losing to EFO's bare {@code "a549"} on tier alone.
+     *
+     * <p>Operates on the already-lowercased label. Returns the input unchanged when the
+     * suffix isn't present.</p>
+     */
+    private static final java.util.regex.Pattern CELL_SUFFIX =
+            java.util.regex.Pattern.compile( "\\s+cell(\\s+line)?$" );
+
+    static String stripCellSuffix( String labelLower ) {
+        if ( labelLower == null ) return "";
+        return CELL_SUFFIX.matcher( labelLower ).replaceFirst( "" );
     }
 
     /**
