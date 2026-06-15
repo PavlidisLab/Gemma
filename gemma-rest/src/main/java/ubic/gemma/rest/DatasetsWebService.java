@@ -111,6 +111,7 @@ import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
+import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.common.search.SearchResult;
@@ -3824,9 +3825,16 @@ public class DatasetsWebService {
     }
 
     /**
-     * Minimal write-shape for an annotation tag. {@code category} and {@code value} are required;
+     * Write-shape for an annotation tag. {@code category} and {@code value} are required;
      * {@code categoryUri} and {@code valueUri} are optional ontology pointers. This is the JSON shape
      * the curation-agents client sends; mapped to a {@code Characteristic} server-side.
+     * <p>
+     * When any of the eight optional {@code predicate*} / {@code object*} / {@code secondPredicate*} /
+     * {@code secondObject*} fields is non-null the row is materialised as a {@link Statement} instead
+     * of a plain {@link Characteristic}, with {@code value} / {@code valueUri} interpreted as the
+     * statement's subject (Statement aliases subject ↔ value internally). The wire field set mirrors
+     * what the read-side {@code AnnotationValueObject} exposes for Statement-backed annotations, so
+     * a round-trip GET → PUT preserves the statement shape.
      */
     public static class AnnotationTagInput {
         private String category;
@@ -3835,6 +3843,22 @@ public class DatasetsWebService {
         private String value;
         @Nullable
         private String valueUri;
+        @Nullable
+        private String predicate;
+        @Nullable
+        private String predicateUri;
+        @Nullable
+        private String object;
+        @Nullable
+        private String objectUri;
+        @Nullable
+        private String secondPredicate;
+        @Nullable
+        private String secondPredicateUri;
+        @Nullable
+        private String secondObject;
+        @Nullable
+        private String secondObjectUri;
 
         public String getCategory() {
             return category;
@@ -3868,6 +3892,85 @@ public class DatasetsWebService {
 
         public void setValueUri( @Nullable String valueUri ) {
             this.valueUri = valueUri;
+        }
+
+        @Nullable
+        public String getPredicate() {
+            return predicate;
+        }
+
+        public void setPredicate( @Nullable String predicate ) {
+            this.predicate = predicate;
+        }
+
+        @Nullable
+        public String getPredicateUri() {
+            return predicateUri;
+        }
+
+        public void setPredicateUri( @Nullable String predicateUri ) {
+            this.predicateUri = predicateUri;
+        }
+
+        @Nullable
+        public String getObject() {
+            return object;
+        }
+
+        public void setObject( @Nullable String object ) {
+            this.object = object;
+        }
+
+        @Nullable
+        public String getObjectUri() {
+            return objectUri;
+        }
+
+        public void setObjectUri( @Nullable String objectUri ) {
+            this.objectUri = objectUri;
+        }
+
+        @Nullable
+        public String getSecondPredicate() {
+            return secondPredicate;
+        }
+
+        public void setSecondPredicate( @Nullable String secondPredicate ) {
+            this.secondPredicate = secondPredicate;
+        }
+
+        @Nullable
+        public String getSecondPredicateUri() {
+            return secondPredicateUri;
+        }
+
+        public void setSecondPredicateUri( @Nullable String secondPredicateUri ) {
+            this.secondPredicateUri = secondPredicateUri;
+        }
+
+        @Nullable
+        public String getSecondObject() {
+            return secondObject;
+        }
+
+        public void setSecondObject( @Nullable String secondObject ) {
+            this.secondObject = secondObject;
+        }
+
+        @Nullable
+        public String getSecondObjectUri() {
+            return secondObjectUri;
+        }
+
+        public void setSecondObjectUri( @Nullable String secondObjectUri ) {
+            this.secondObjectUri = secondObjectUri;
+        }
+
+        boolean hasStatementFields() {
+            return predicate != null || predicateUri != null
+                    || object != null || objectUri != null
+                    || secondPredicate != null || secondPredicateUri != null
+                    || secondObject != null || secondObjectUri != null;
         }
     }
 
@@ -3910,11 +4013,34 @@ public class DatasetsWebService {
             if ( StringUtils.isBlank( tag.getValue() ) ) {
                 throw new BadRequestException( "Each annotation must have a non-blank 'value'." );
             }
-            Characteristic c = Characteristic.Factory.newInstance();
-            c.setCategory( tag.getCategory() );
-            c.setCategoryUri( tag.getCategoryUri() );
-            c.setValue( tag.getValue() );
-            c.setValueUri( tag.getValueUri() );
+            Characteristic c;
+            if ( tag.hasStatementFields() ) {
+                // Statement aliases subject ↔ value internally; the wire's value / valueUri become
+                // the statement's subject. Construct via the Statement factory so the row gets the
+                // "Statement" discriminator and the predicate / object pair survives the write.
+                Statement s = Statement.Factory.newInstance();
+                s.setCategory( tag.getCategory() );
+                s.setCategoryUri( tag.getCategoryUri() );
+                s.setSubject( tag.getValue() );
+                if ( tag.getValueUri() != null ) {
+                    s.setSubjectUri( tag.getValueUri() );
+                }
+                s.setPredicate( tag.getPredicate() );
+                s.setPredicateUri( tag.getPredicateUri() );
+                s.setObject( tag.getObject() );
+                s.setObjectUri( tag.getObjectUri() );
+                s.setSecondPredicate( tag.getSecondPredicate() );
+                s.setSecondPredicateUri( tag.getSecondPredicateUri() );
+                s.setSecondObject( tag.getSecondObject() );
+                s.setSecondObjectUri( tag.getSecondObjectUri() );
+                c = s;
+            } else {
+                c = Characteristic.Factory.newInstance();
+                c.setCategory( tag.getCategory() );
+                c.setCategoryUri( tag.getCategoryUri() );
+                c.setValue( tag.getValue() );
+                c.setValueUri( tag.getValueUri() );
+            }
             desired.add( c );
         }
         expressionExperimentService.updateAnnotations( ee, desired );

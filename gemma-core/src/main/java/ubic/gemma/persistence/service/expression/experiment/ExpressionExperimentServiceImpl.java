@@ -1947,11 +1947,35 @@ public class ExpressionExperimentServiceImpl
                 }
             }
             if ( !already ) {
-                Characteristic fresh = Characteristic.Factory.newInstance();
-                fresh.setCategory( d.getCategory() );
-                fresh.setCategoryUri( d.getCategoryUri() );
-                fresh.setValue( d.getValue() );
-                fresh.setValueUri( d.getValueUri() );
+                Characteristic fresh;
+                if ( d instanceof Statement ) {
+                    // Preserve the Statement discriminator + predicate / object pair on add. Plain
+                    // Characteristic.Factory.newInstance() would silently downgrade the row to a
+                    // non-Statement Characteristic and drop the S-P-O semantics.
+                    Statement ds = ( Statement ) d;
+                    Statement fs = Statement.Factory.newInstance();
+                    fs.setCategory( ds.getCategory() );
+                    fs.setCategoryUri( ds.getCategoryUri() );
+                    fs.setSubject( ds.getSubject() );
+                    if ( ds.getSubjectUri() != null ) {
+                        fs.setSubjectUri( ds.getSubjectUri() );
+                    }
+                    fs.setPredicate( ds.getPredicate() );
+                    fs.setPredicateUri( ds.getPredicateUri() );
+                    fs.setObject( ds.getObject() );
+                    fs.setObjectUri( ds.getObjectUri() );
+                    fs.setSecondPredicate( ds.getSecondPredicate() );
+                    fs.setSecondPredicateUri( ds.getSecondPredicateUri() );
+                    fs.setSecondObject( ds.getSecondObject() );
+                    fs.setSecondObjectUri( ds.getSecondObjectUri() );
+                    fresh = fs;
+                } else {
+                    fresh = Characteristic.Factory.newInstance();
+                    fresh.setCategory( d.getCategory() );
+                    fresh.setCategoryUri( d.getCategoryUri() );
+                    fresh.setValue( d.getValue() );
+                    fresh.setValueUri( d.getValueUri() );
+                }
                 fresh.setEvidenceCode( d.getEvidenceCode() != null ? d.getEvidenceCode() : GOEvidenceCode.IC );
                 toAdd.add( fresh );
             }
@@ -1986,8 +2010,22 @@ public class ExpressionExperimentServiceImpl
     }
 
     private static boolean sameTag( Characteristic a, Characteristic b ) {
-        return CharacteristicUtils.equals( a.getCategory(), a.getCategoryUri(), b.getCategory(), b.getCategoryUri() )
+        // Statement-vs-plain Characteristic with the same (category, value) are NOT the same row —
+        // the Statement carries S-P-O semantics the Characteristic lacks, so a wire-shape change
+        // (plain → Statement or vice versa) MUST round-trip as a drop+add, not as a no-op.
+        boolean aIsStatement = a instanceof Statement;
+        boolean bIsStatement = b instanceof Statement;
+        if ( aIsStatement != bIsStatement ) return false;
+        boolean baseEqual = CharacteristicUtils.equals( a.getCategory(), a.getCategoryUri(), b.getCategory(), b.getCategoryUri() )
                 && CharacteristicUtils.equals( a.getValue(), a.getValueUri(), b.getValue(), b.getValueUri() );
+        if ( !baseEqual ) return false;
+        if ( !aIsStatement ) return true;
+        Statement sa = ( Statement ) a;
+        Statement sb = ( Statement ) b;
+        return CharacteristicUtils.equals( sa.getPredicate(), sa.getPredicateUri(), sb.getPredicate(), sb.getPredicateUri() )
+                && CharacteristicUtils.equals( sa.getObject(), sa.getObjectUri(), sb.getObject(), sb.getObjectUri() )
+                && CharacteristicUtils.equals( sa.getSecondPredicate(), sa.getSecondPredicateUri(), sb.getSecondPredicate(), sb.getSecondPredicateUri() )
+                && CharacteristicUtils.equals( sa.getSecondObject(), sa.getSecondObjectUri(), sb.getSecondObject(), sb.getSecondObjectUri() );
     }
 
     /**

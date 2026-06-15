@@ -883,6 +883,97 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
     }
 
     @Test
+    @WithMockUser
+    public void testUpdateDatasetAnnotationsConstructsStatementWhenPredicateAndObjectPresent() {
+        // Statement-shaped tag write: value/valueUri are the subject; predicate / object pair makes
+        // the row a Statement (not a plain Characteristic). The captured collection must contain a
+        // Statement instance with subject + predicate + object populated, and the URIs must round
+        // through as-is (the wire shape mirrors AnnotationValueObject's read-side fields).
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.getAnnotations( ee ) ).thenReturn( Collections.emptySet() );
+        String body = "{\"annotations\":[{"
+                + "\"category\":\"genotype\","
+                + "\"categoryUri\":\"http://www.ebi.ac.uk/efo/EFO_0000513\","
+                + "\"value\":\"Abca4\","
+                + "\"valueUri\":\"http://purl.org/commons/record/ncbi_gene/11304\","
+                + "\"predicate\":\"has_genotype\","
+                + "\"predicateUri\":\"http://gemma.msl.ubc.ca/ont/TGEMO_00166\","
+                + "\"object\":\"Homozygous negative\","
+                + "\"objectUri\":\"http://purl.obolibrary.org/obo/TGEMO_00001\""
+                + "}]}";
+        assertThat( target( "/datasets/1/annotations" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+        ArgumentCaptor<Collection<ubic.gemma.model.common.description.Characteristic>> captor = ArgumentCaptor.forClass( Collection.class );
+        verify( expressionExperimentService ).updateAnnotations( eq( ee ), captor.capture() );
+        Collection<ubic.gemma.model.common.description.Characteristic> sent = captor.getValue();
+        assertThat( sent ).hasSize( 1 );
+        ubic.gemma.model.common.description.Characteristic c = sent.iterator().next();
+        assertThat( c ).isInstanceOf( Statement.class );
+        Statement s = ( Statement ) c;
+        assertThat( s.getCategory() ).isEqualTo( "genotype" );
+        assertThat( s.getCategoryUri() ).isEqualTo( "http://www.ebi.ac.uk/efo/EFO_0000513" );
+        assertThat( s.getSubject() ).isEqualTo( "Abca4" );
+        assertThat( s.getSubjectUri() ).isEqualTo( "http://purl.org/commons/record/ncbi_gene/11304" );
+        assertThat( s.getPredicate() ).isEqualTo( "has_genotype" );
+        assertThat( s.getPredicateUri() ).isEqualTo( "http://gemma.msl.ubc.ca/ont/TGEMO_00166" );
+        assertThat( s.getObject() ).isEqualTo( "Homozygous negative" );
+        assertThat( s.getObjectUri() ).isEqualTo( "http://purl.obolibrary.org/obo/TGEMO_00001" );
+        assertThat( s.getSecondPredicate() ).isNull();
+        assertThat( s.getSecondObject() ).isNull();
+    }
+
+    @Test
+    @WithMockUser
+    public void testUpdateDatasetAnnotationsConstructsStatementWithSecondPair() {
+        // Compound Statement: secondPredicate + secondObject (e.g. "HFD for 12 weeks" — predicate
+        // "delivered_at_dose" with object "30%", second predicate "for" with second object
+        // "12 weeks"). Verifies the second pair propagates through the wire and ends up on the
+        // Statement instance.
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.getAnnotations( ee ) ).thenReturn( Collections.emptySet() );
+        String body = "{\"annotations\":[{"
+                + "\"category\":\"treatment\",\"categoryUri\":\"http://www.ebi.ac.uk/efo/EFO_0000727\","
+                + "\"value\":\"high fat diet\",\"valueUri\":null,"
+                + "\"predicate\":\"delivered_at_dose\",\"object\":\"30%\","
+                + "\"secondPredicate\":\"for\",\"secondObject\":\"12 weeks\""
+                + "}]}";
+        assertThat( target( "/datasets/1/annotations" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+        ArgumentCaptor<Collection<ubic.gemma.model.common.description.Characteristic>> captor = ArgumentCaptor.forClass( Collection.class );
+        verify( expressionExperimentService ).updateAnnotations( eq( ee ), captor.capture() );
+        ubic.gemma.model.common.description.Characteristic c = captor.getValue().iterator().next();
+        assertThat( c ).isInstanceOf( Statement.class );
+        Statement s = ( Statement ) c;
+        assertThat( s.getPredicate() ).isEqualTo( "delivered_at_dose" );
+        assertThat( s.getObject() ).isEqualTo( "30%" );
+        assertThat( s.getSecondPredicate() ).isEqualTo( "for" );
+        assertThat( s.getSecondObject() ).isEqualTo( "12 weeks" );
+    }
+
+    @Test
+    @WithMockUser
+    public void testUpdateDatasetAnnotationsStaysPlainCharacteristicWhenNoStatementFields() {
+        // Regression: a plain-shape tag (no predicate / object / second pair) MUST stay a plain
+        // Characteristic and NOT be promoted to a Statement. Asserts the existing wire shape
+        // round-trips unchanged after the statement-aware widening.
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.getAnnotations( ee ) ).thenReturn( Collections.emptySet() );
+        String body = "{\"annotations\":[{\"category\":\"organism part\",\"value\":\"liver\","
+                + "\"valueUri\":\"http://purl.obolibrary.org/obo/UBERON_0002107\"}]}";
+        assertThat( target( "/datasets/1/annotations" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+        ArgumentCaptor<Collection<ubic.gemma.model.common.description.Characteristic>> captor = ArgumentCaptor.forClass( Collection.class );
+        verify( expressionExperimentService ).updateAnnotations( eq( ee ), captor.capture() );
+        ubic.gemma.model.common.description.Characteristic c = captor.getValue().iterator().next();
+        assertThat( c ).isNotInstanceOf( Statement.class );
+        assertThat( c.getValue() ).isEqualTo( "liver" );
+        assertThat( c.getValueUri() ).isEqualTo( "http://purl.obolibrary.org/obo/UBERON_0002107" );
+    }
+
+    @Test
     public void testGetDatasetsDifferentialAnalysisResultsExpressionForGene() {
         Gene brca1 = new Gene();
         when( geneArgService.getEntity( any() ) ).thenReturn( brca1 );
