@@ -21,10 +21,12 @@ package ubic.gemma.model.common.description;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.springframework.lang.Nullable;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.Statement;
 
 /**
  * @author luke
@@ -43,6 +45,39 @@ public class AnnotationValueObject extends IdentifiableValueObject<Characteristi
     @Schema(implementation = GOEvidenceCode.class)
     private String evidenceCode;
     private String objectClass;
+    /**
+     * Predicate label for {@link Statement}-backed annotations (e.g. {@code "has_dose"}).
+     * Null when the underlying row is a plain {@link Characteristic}. The
+     * {@code predicate*} / {@code object*} pair, together with the optional
+     * {@code secondPredicate*} / {@code secondObject*} pair, exposes the Statement
+     * relational shape to read-side consumers without breaking the Characteristic
+     * wire shape — the existing {@link #termName} / {@link #termUri} fields still carry
+     * the statement's subject (Statement aliases subject → value internally).
+     */
+    @Nullable
+    @Schema(description = "Predicate label of a Statement-backed annotation (e.g. \"has_dose\"). Null on plain Characteristic rows.")
+    private String predicate;
+    @Nullable
+    @Schema(description = "Predicate URI of a Statement-backed annotation. Null on plain Characteristic rows.")
+    private String predicateUri;
+    @Nullable
+    @Schema(description = "Object label of a Statement-backed annotation (e.g. \"30%\"). Null on plain Characteristic rows.")
+    private String object;
+    @Nullable
+    @Schema(description = "Object URI of a Statement-backed annotation. Null on plain Characteristic rows.")
+    private String objectUri;
+    @Nullable
+    @Schema(description = "Second predicate label for compound Statement annotations (e.g. \"for\" in \"HFD for 12 weeks\").")
+    private String secondPredicate;
+    @Nullable
+    @Schema(description = "Second predicate URI for compound Statement annotations.")
+    private String secondPredicateUri;
+    @Nullable
+    @Schema(description = "Second object label for compound Statement annotations (e.g. \"12 weeks\").")
+    private String secondObject;
+    @Nullable
+    @Schema(description = "Second object URI for compound Statement annotations.")
+    private String secondObjectUri;
     @GemmaWebOnly
     private String parentName;
     @GemmaWebOnly
@@ -79,6 +114,17 @@ public class AnnotationValueObject extends IdentifiableValueObject<Characteristi
         termUri = c.getValueUri();
         termName = c.getValue();
         evidenceCode = c.getEvidenceCode() != null ? c.getEvidenceCode().name() : null;
+        if ( c instanceof Statement ) {
+            Statement s = ( Statement ) c;
+            predicate = s.getPredicate();
+            predicateUri = s.getPredicateUri();
+            object = s.getObject();
+            objectUri = s.getObjectUri();
+            secondPredicate = s.getSecondPredicate();
+            secondPredicateUri = s.getSecondPredicateUri();
+            secondObject = s.getSecondObject();
+            secondObjectUri = s.getSecondObjectUri();
+        }
     }
 
     public AnnotationValueObject( Characteristic c, Class<?> objectClass ) {
