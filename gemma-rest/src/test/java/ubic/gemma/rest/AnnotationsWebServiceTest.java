@@ -1196,7 +1196,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
                         .containsEntry( "category", "gene" )
                         .containsEntry( "value", "HP haptoglobin" )
                         .containsEntry( "valueUri", "http://purl.org/commons/record/ncbi_gene/3240" )
-                        .containsEntry( "matchedVia", "search:gene" ) );
+                        .containsEntry( "matchedVia", "search:gene_name" ) );
     }
 
     @Test
@@ -1226,7 +1226,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
                         .containsEntry( "category", "gene" )
                         .containsEntry( "value", "Trp53 transformation related protein 53" )
                         .containsEntry( "valueUri", "http://purl.org/commons/record/ncbi_gene/22059" )
-                        .containsEntry( "matchedVia", "search:gene" ) );
+                        .containsEntry( "matchedVia", "search:gene_alias" ) );
     }
 
     @Test
@@ -1296,6 +1296,78 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
                 .entity()
                 .extracting( "data", list( Map.class ) )
                 .hasSize( 1 );
+    }
+
+    @Test
+    public void testSearchAnnotationsExactOntologyLabelOutranksGeneAliasCollision() throws SearchException, TimeoutException {
+        // The "age" regression: NCBI Renbp carries the historical alias "AGE", so the gene
+        // fan-out's findByAlias probe returned it. Before this fix the alias-matched gene was
+        // unconditionally prepended above the tier-sorted ontology hits, so a resolver-style
+        // caller inspecting the top hit saw value="Renbp renin binding protein" and concluded
+        // "no high-confidence hit for the bare label 'age'" — even though PATO:0000011 and
+        // EFO:0000246 both carry preferred_label="age". Alias-only hits must now land BELOW
+        // the tier-0 ontology rows.
+        CharacteristicValueObject pato = new CharacteristicValueObject(
+                "age", "http://purl.obolibrary.org/obo/PATO_0000011", null, null );
+        CharacteristicValueObject efo = new CharacteristicValueObject(
+                "age", "http://www.ebi.ac.uk/efo/EFO_0000246", null, null );
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "age" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Arrays.asList( pato, efo ) );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+        ubic.gemma.model.genome.Gene renbp = mock( ubic.gemma.model.genome.Gene.class );
+        when( renbp.getId() ).thenReturn( 19703L );
+        when( renbp.getOfficialSymbol() ).thenReturn( "Renbp" );
+        when( renbp.getOfficialName() ).thenReturn( "renin binding protein" );
+        when( renbp.getNcbiGeneId() ).thenReturn( 19703 );
+        when( geneService.findByOfficialSymbol( "age" ) ).thenReturn( Collections.emptyList() );
+        when( geneService.findByOfficialName( "age" ) ).thenReturn( Collections.emptyList() );
+        when( geneService.findByAlias( "age" ) ).thenReturn( Collections.singletonList( renbp ) );
+
+        assertThat( target( "/annotations/search" ).queryParam( "query", "age" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 3 )
+                .satisfies( hits -> {
+                    assertThat( ( ( Map<?, ?> ) hits.get( 0 ) ).get( "valueUri" ) ).isEqualTo( "http://purl.obolibrary.org/obo/PATO_0000011" );
+                    assertThat( ( ( Map<?, ?> ) hits.get( 1 ) ).get( "valueUri" ) ).isEqualTo( "http://www.ebi.ac.uk/efo/EFO_0000246" );
+                    assertThat( ( ( Map<?, ?> ) hits.get( 2 ) ).get( "valueUri" ) ).isEqualTo( "http://purl.org/commons/record/ncbi_gene/19703" );
+                    assertThat( ( ( Map<?, ?> ) hits.get( 2 ) ).get( "matchedVia" ) ).isEqualTo( "search:gene_alias" );
+                } );
+    }
+
+    @Test
+    public void testSearchAnnotationsSymbolMatchStillPrependsAboveOntologyHits() throws SearchException, TimeoutException {
+        // Regression guard: an exact-symbol gene hit MUST still lead the response so a curator
+        // typing a brand-new gene's symbol sees it ahead of any incidental ontology substring
+        // match. Only alias-only hits got demoted.
+        ubic.gemma.model.genome.Gene stat5b = mock( ubic.gemma.model.genome.Gene.class );
+        when( stat5b.getId() ).thenReturn( 6777L );
+        when( stat5b.getOfficialSymbol() ).thenReturn( "STAT5B" );
+        when( stat5b.getOfficialName() ).thenReturn( "signal transducer and activator of transcription 5B" );
+        when( stat5b.getNcbiGeneId() ).thenReturn( 6777 );
+        when( geneService.findByOfficialSymbol( "STAT5B" ) ).thenReturn( Collections.singletonList( stat5b ) );
+        when( geneService.findByOfficialName( "STAT5B" ) ).thenReturn( Collections.emptyList() );
+        when( geneService.findByAlias( "STAT5B" ) ).thenReturn( Collections.emptyList() );
+        // Incidental ontology hit so the test exercises the prepend ordering.
+        CharacteristicValueObject incidental = new CharacteristicValueObject(
+                "STAT5B related thing", "http://example.com/foo", null, null );
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "STAT5B" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Collections.singletonList( incidental ) );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/annotations/search" ).queryParam( "query", "STAT5B" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 2 )
+                .satisfies( hits -> {
+                    assertThat( ( ( Map<?, ?> ) hits.get( 0 ) ).get( "valueUri" ) ).isEqualTo( "http://purl.org/commons/record/ncbi_gene/6777" );
+                    assertThat( ( ( Map<?, ?> ) hits.get( 0 ) ).get( "matchedVia" ) ).isEqualTo( "search:gene_symbol" );
+                    assertThat( ( ( Map<?, ?> ) hits.get( 1 ) ).get( "valueUri" ) ).isEqualTo( "http://example.com/foo" );
+                } );
     }
 
     @Test

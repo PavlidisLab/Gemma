@@ -1081,16 +1081,28 @@ public class AnnotationsWebService {
                     vosUris.add( v.getValueUri() );
                 }
             }
-            LinkedHashSet<AnnotationSearchResultValueObject> merged = new LinkedHashSet<>();
+            // Partition gene fan-out hits by probe strength:
+            //   strong = symbol or name match — curator typed the gene's primary identifier,
+            //   weak   = alias-only — query collided with a synonym (e.g. "age" → Renbp via
+            //            the historical alias "AGE"); should never outrank an exact ontology
+            //            preferred_label hit.
+            // Strong gene rows still prepend so a brand-new gene with no corpus row yet
+            // leads the response. Weak (alias-only) gene rows are appended BELOW vos so
+            // tier-0 ontology hits ("age" → PATO:0000011, EFO:0000246) come first.
+            LinkedHashSet<AnnotationSearchResultValueObject> strong = new LinkedHashSet<>();
+            LinkedHashSet<AnnotationSearchResultValueObject> weak = new LinkedHashSet<>();
             for ( AnnotationSearchResultValueObject g : geneRows ) {
-                if ( g.getValueUri() == null || !vosUris.contains( g.getValueUri() ) ) {
-                    merged.add( g );
+                if ( g.getValueUri() != null && vosUris.contains( g.getValueUri() ) ) continue;
+                if ( GENE_MATCH_ALIAS.equals( g.getMatchedVia() ) ) {
+                    weak.add( g );
+                } else {
+                    strong.add( g );
                 }
             }
-            // Prepend deduped gene rows so an exact-symbol match for a brand-new gene (no
-            // corpus row yet) lands above ontology hits. Corpus rows already in vos keep
-            // their tier-sorted position.
+            LinkedHashSet<AnnotationSearchResultValueObject> merged = new LinkedHashSet<>();
+            merged.addAll( strong );
             merged.addAll( vos );
+            merged.addAll( weak );
             if ( merged.size() > limit ) {
                 LinkedHashSet<AnnotationSearchResultValueObject> trimmedSet = new LinkedHashSet<>();
                 int n = 0;
@@ -1149,12 +1161,12 @@ public class AnnotationsWebService {
             } else {
                 symbolHits = geneService.findByOfficialSymbol( query );
             }
-            collectGeneHits( symbolHits, taxon, seenGeneIds, out, limit );
+            collectGeneHits( symbolHits, taxon, seenGeneIds, out, limit, GENE_MATCH_SYMBOL );
             if ( out.size() < limit ) {
-                collectGeneHits( geneService.findByOfficialName( query ), taxon, seenGeneIds, out, limit );
+                collectGeneHits( geneService.findByOfficialName( query ), taxon, seenGeneIds, out, limit, GENE_MATCH_NAME );
             }
             if ( out.size() < limit ) {
-                collectGeneHits( geneService.findByAlias( query ), taxon, seenGeneIds, out, limit );
+                collectGeneHits( geneService.findByAlias( query ), taxon, seenGeneIds, out, limit, GENE_MATCH_ALIAS );
             }
         } catch ( Exception e ) {
             log.debug( "Gene resolution skipped for query '{}': {}", query, e.toString() );
@@ -1167,10 +1179,16 @@ public class AnnotationsWebService {
      * {@code out}, deduplicating by gene id and respecting the overall {@code limit}.
      * Skips genes with missing id or symbol — those can't be resolved back to a usable URI.
      * When {@code taxonFilter} is non-null, drops genes whose taxon doesn't match.
+     *
+     * <p>{@code matchedViaToken} is stamped on each emitted VO so the caller can distinguish
+     * how the gene was found ({@link #GENE_MATCH_SYMBOL}, {@link #GENE_MATCH_NAME},
+     * {@link #GENE_MATCH_ALIAS}). The merge step uses this to keep alias-only hits BELOW
+     * exact ontology preferred-label matches.</p>
      */
     private static void collectGeneHits( @Nullable Collection<Gene> source, @Nullable Taxon taxonFilter,
             Set<Long> seenGeneIds,
-            LinkedHashSet<AnnotationSearchResultValueObject> out, int limit ) {
+            LinkedHashSet<AnnotationSearchResultValueObject> out, int limit,
+            String matchedViaToken ) {
         if ( source == null || source.isEmpty() ) return;
         for ( Gene g : source ) {
             if ( out.size() >= limit ) return;
@@ -1193,9 +1211,22 @@ public class AnnotationsWebService {
                     ? "http://purl.org/commons/record/ncbi_gene/" + g.getNcbiGeneId()
                     : null;
             out.add( new AnnotationSearchResultValueObject( label, uri, "gene", null,
-                    0, null, null, "search:gene", label, null ) );
+                    0, null, null, matchedViaToken, label, null ) );
         }
     }
+
+    /** matchedVia token for genes matched via the official-symbol probe — strongest probe. */
+    static final String GENE_MATCH_SYMBOL = "search:gene_symbol";
+    /** matchedVia token for genes matched via the official-name probe — strong (Gemma 1.0 parity). */
+    static final String GENE_MATCH_NAME = "search:gene_name";
+    /**
+     * matchedVia token for genes matched ONLY via the alias probe. Weaker than symbol / name —
+     * the query collided with a synonym, not the gene's primary identifier (e.g.
+     * {@code "age"} hitting {@code Renbp} via the historical {@code "AGE"} alias). These rows
+     * are appended BELOW the tier-sorted ontology hits so an exact ontology
+     * {@code preferred_label} match always outranks a gene-alias collision.
+     */
+    static final String GENE_MATCH_ALIAS = "search:gene_alias";
 
     /** Top-N hits to enrich inline with definition + parents on /annotations/search. */
     private static final int ENRICH_TOP_N = 25;
