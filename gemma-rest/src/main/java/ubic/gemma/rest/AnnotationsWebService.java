@@ -436,7 +436,7 @@ public class AnnotationsWebService {
             return terms.stream()
                     .map( t -> new AnnotationSearchResultValueObject( t.getLabel(), t.getUri(), null, null,
                             t.getUri() != null ? countsByUri.getOrDefault( t.getUri(), 0 ) : null,
-                            null, null, null, null, null ) )
+                            null, null, null, null, null, null ) )
                     .collect( Collectors.toList() );
         } catch ( TimeoutException e ) {
             throw new ServiceUnavailableException( DateUtils.addSeconds( new Date(), 30 ), e );
@@ -1038,6 +1038,33 @@ public class AnnotationsWebService {
         long tTopCounts = timer.getTime() - phaseStart;
         phaseStart = timer.getTime();
 
+        // Prior-category breakdown for the top-N kept URIs: how often has this URI been tagged
+        // under each category by prior curators? One small grouped query against EE2C —
+        // cacheable + EE2C-synchronised so curator-driven tag changes invalidate cleanly. Gives
+        // resolvers a corpus-history signal to break ambiguous label hits (e.g. MEC-2 used 14×
+        // as cell line, 1× as protein → resolver picks cell line regardless of which label
+        // matched). Same URI set as topCounts so the IN-clause is tiny.
+        Map<String, Map<String, Integer>> priorCategoriesByUri = Collections.emptyMap();
+        if ( !ranked.isEmpty() ) {
+            Set<String> topUrisForPriorCat = ranked.stream()
+                    .map( CharacteristicValueObject::getValueUri )
+                    .filter( Objects::nonNull )
+                    .collect( Collectors.toSet() );
+            if ( !topUrisForPriorCat.isEmpty() ) {
+                Map<String, Map<String, Long>> raw = characteristicService.findEeCountsByUriGroupedByCategory( topUrisForPriorCat );
+                if ( raw != null && !raw.isEmpty() ) {
+                    priorCategoriesByUri = new HashMap<>( raw.size() );
+                    for ( Map.Entry<String, Map<String, Long>> e : raw.entrySet() ) {
+                        Map<String, Integer> inner = new HashMap<>( e.getValue().size() );
+                        e.getValue().forEach( ( k, v ) -> inner.put( k, v.intValue() ) );
+                        priorCategoriesByUri.put( e.getKey(), inner );
+                    }
+                }
+            }
+        }
+        long tPriorCategories = timer.getTime() - phaseStart;
+        phaseStart = timer.getTime();
+
         // Enrich the top-N ranked hits with definition + nearest is_a/part_of parents + match
         // attribution (matchedVia/matchedText). The rest carry null sentinels so the UI can
         // lazy-load via /annotations/term?uri=X. Lookups share the remaining ontology-search
@@ -1060,9 +1087,9 @@ public class AnnotationsWebService {
         long tEnrich = timer.getTime() - phaseStart;
         if ( timer.getTime() > 1000 ) {
             log.info( String.format(
-                    "annotation-search: query='%s' raw=%d top=%d total=%dms (find=%dms filter=%dms counts=%dms rank=%dms topCounts=%dms enrich=%dms)",
+                    "annotation-search: query='%s' raw=%d top=%d total=%dms (find=%dms filter=%dms counts=%dms rank=%dms topCounts=%dms priorCats=%dms enrich=%dms)",
                     arg.getValue(), rawCount, topUris.size(), timer.getTime(),
-                    tFindCharacteristics, tFilters, tCounts, tRank, tTopCounts, tEnrich ) );
+                    tFindCharacteristics, tFilters, tCounts, tRank, tTopCounts, tPriorCategories, tEnrich ) );
         }
 
         LinkedHashSet<AnnotationSearchResultValueObject> vos = new LinkedHashSet<>();
@@ -1075,8 +1102,9 @@ public class AnnotationsWebService {
             MatchAttribution match = isTop ? matchByUri.get( uri ) : null;
             String matchedVia = match != null ? match.via.token : null;
             String matchedText = match != null ? match.text : null;
+            Map<String, Integer> priorCategories = uri != null ? priorCategoriesByUri.get( uri ) : null;
             vos.add( new AnnotationSearchResultValueObject( vo.getValue(), vo.getValueUri(), vo.getCategory(),
-                    vo.getCategoryUri(), count, definition, parents, matchedVia, matchedText, null ) );
+                    vo.getCategoryUri(), count, definition, parents, matchedVia, matchedText, null, priorCategories ) );
         }
         // Always merge gene hits in, regardless of category — the typeahead surface should
         // surface STAT5B whether the curator is in a Genotype factor, a Treatment factor, or a
@@ -1236,7 +1264,7 @@ public class AnnotationsWebService {
                     ? "http://purl.org/commons/record/ncbi_gene/" + g.getNcbiGeneId()
                     : null;
             out.add( new AnnotationSearchResultValueObject( label, uri, "gene", null,
-                    0, null, null, matchedViaToken, label, null ) );
+                    0, null, null, matchedViaToken, label, null, null ) );
         }
     }
 
@@ -1326,7 +1354,7 @@ public class AnnotationsWebService {
                 out.add( new AnnotationSearchResultValueObject(
                         r.getValue(), r.getValueUri(), r.getCategory(), r.getCategoryUri(),
                         r.getUsageCount(), r.getDefinition(), r.getParents(),
-                        r.getMatchedVia(), r.getMatchedText(), c ) );
+                        r.getMatchedVia(), r.getMatchedText(), c, r.getPriorCategories() ) );
             }
         }
         return out;
@@ -1849,6 +1877,18 @@ public class AnnotationsWebService {
          * GO subClassOf descendants by default — set via {@code Gene2GOAssociationService.countByGOTermUris}.
          */
         @Nullable Long geneCount;
+        /**
+         * Distinct-experiment counts grouped by the category that prior curators applied when
+         * tagging this URI on an experiment — e.g.
+         * {@code {"cell line": 14, "protein": 1}}. Lets resolvers break ambiguous label hits
+         * by curated history: a URI tagged 14× as a cell line and 1× as a protein is almost
+         * certainly a cell line, regardless of which ontology label the query happened to
+         * match. Populated for the top-N kept hits only; null on synthetic gene-fanout rows
+         * and on responses where the lookup was skipped (e.g. /annotations/parents). An empty
+         * map means "the URI has been used in curation but never with a non-null category"
+         * (rare; carries no signal).
+         */
+        @Nullable Map<String, Integer> priorCategories;
     }
 
     @Value

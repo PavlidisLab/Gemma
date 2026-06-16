@@ -1338,6 +1338,37 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
     }
 
     @Test
+    public void testSearchAnnotationsPopulatesPriorCategoriesFromCorpusHistory() throws SearchException, TimeoutException {
+        // Resolver tiebreaker signal: a URI's prior-category breakdown should land on the wire
+        // so a downstream resolver can choose "cell line" when the URI has been tagged 14× as
+        // a cell line and 1× as a protein, regardless of which ontology label happened to match.
+        CharacteristicValueObject clo = new CharacteristicValueObject(
+                "mec-2 cell", "http://purl.obolibrary.org/obo/CLO_0037182", null, null );
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "MEC-2" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Collections.singletonList( clo ) );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+        Map<String, Map<String, Long>> priorByUri = new HashMap<>();
+        Map<String, Long> mec2Categories = new HashMap<>();
+        mec2Categories.put( "cell line", 14L );
+        mec2Categories.put( "protein", 1L );
+        priorByUri.put( "http://purl.obolibrary.org/obo/CLO_0037182", mec2Categories );
+        when( characteristicService.findEeCountsByUriGroupedByCategory( anySet() ) ).thenReturn( priorByUri );
+
+        assertThat( target( "/annotations/search" ).queryParam( "query", "MEC-2" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 1 )
+                .first()
+                .satisfies( a -> {
+                    @SuppressWarnings("unchecked")
+                    Map<String, Integer> priorCategories = ( Map<String, Integer> ) a.get( "priorCategories" );
+                    assertThat( priorCategories ).containsEntry( "cell line", 14 ).containsEntry( "protein", 1 );
+                } );
+    }
+
+    @Test
     public void testSearchAnnotationsHyphenInsensitiveMec2FindsCloCellLine() throws SearchException, TimeoutException {
         // The MEC2 / MEC-2 regression: bro 1's resolver hit /annotations/search?query=MEC2 and got
         // back EFO_0006285 ("mec2", a protein), missing CLO_0037182 ("mec-2 cell") entirely because
