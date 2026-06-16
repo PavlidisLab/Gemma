@@ -516,7 +516,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
         // tag changes invalidate cleanly.
         Query q = this.getSessionFactory().getCurrentSession()
                 .createNativeQuery( "select VALUE_URI as V, CATEGORY as C, count(distinct EXPRESSION_EXPERIMENT_FK) as N "
-                        + "from EE2C "
+                        + "from EXPRESSION_EXPERIMENT2CHARACTERISTIC "
                         + "where VALUE_URI in :uris and CATEGORY is not null "
                         + "group by VALUE_URI, CATEGORY" )
                 .addScalar( "V", StandardBasicTypes.STRING )
