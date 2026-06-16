@@ -1338,6 +1338,108 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
     }
 
     @Test
+    public void testSearchAnnotationsHyphenInsensitiveMec2FindsCloCellLine() throws SearchException, TimeoutException {
+        // The MEC2 / MEC-2 regression: bro 1's resolver hit /annotations/search?query=MEC2 and got
+        // back EFO_0006285 ("mec2", a protein), missing CLO_0037182 ("mec-2 cell") entirely because
+        // the CLO label has both a hyphen AND the " cell" suffix the query lacks. With the canonical-
+        // form tier match (lowercase + strip cell suffix + strip hyphens), both labels canonicalise
+        // to "mec2" so both reach tier 0; the CLO-preference tiebreaker then promotes CLO ahead of
+        // EFO because the strip-and-hyphen normalisation earned the match.
+        CharacteristicValueObject efo = new CharacteristicValueObject( "mec2", "http://www.ebi.ac.uk/efo/EFO_0006285", null, null );
+        CharacteristicValueObject clo = new CharacteristicValueObject( "mec-2 cell", "http://purl.obolibrary.org/obo/CLO_0037182", null, null );
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "MEC2" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Arrays.asList( efo, clo ) );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/annotations/search" ).queryParam( "query", "MEC2" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 2 )
+                .satisfies( hits -> {
+                    assertThat( ( ( Map<?, ?> ) hits.get( 0 ) ).get( "valueUri" ) ).isEqualTo( "http://purl.obolibrary.org/obo/CLO_0037182" );
+                    assertThat( ( ( Map<?, ?> ) hits.get( 1 ) ).get( "valueUri" ) ).isEqualTo( "http://www.ebi.ac.uk/efo/EFO_0006285" );
+                } );
+    }
+
+    @Test
+    public void testSearchAnnotationsHyphenInsensitiveMec2DashFindsEfoBareLabel() throws SearchException, TimeoutException {
+        // Reverse direction of the MEC2 case: query has the hyphen, EFO has the bare form. The
+        // ranker must still reach tier 0 on EFO so a resolver that received MEC-2 from a curator
+        // can see both candidates. CLO still leads (canonical-form match earned via strip);
+        // EFO follows.
+        CharacteristicValueObject efo = new CharacteristicValueObject( "mec2", "http://www.ebi.ac.uk/efo/EFO_0006285", null, null );
+        CharacteristicValueObject clo = new CharacteristicValueObject( "mec-2 cell", "http://purl.obolibrary.org/obo/CLO_0037182", null, null );
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "MEC-2" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Arrays.asList( efo, clo ) );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/annotations/search" ).queryParam( "query", "MEC-2" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 2 )
+                .satisfies( hits -> {
+                    assertThat( ( ( Map<?, ?> ) hits.get( 0 ) ).get( "valueUri" ) ).isEqualTo( "http://purl.obolibrary.org/obo/CLO_0037182" );
+                    assertThat( ( ( Map<?, ?> ) hits.get( 1 ) ).get( "valueUri" ) ).isEqualTo( "http://www.ebi.ac.uk/efo/EFO_0006285" );
+                } );
+    }
+
+    @Test
+    public void testSearchAnnotationsExactLabelFilterRespectsHyphenAndCellSuffixCanonicalForm() throws SearchException, TimeoutException {
+        // The resolver-style call: ?query=MEC2&exact_label=true&prefixes=CLO_,CL_. Before this
+        // fix the exact_label filter applied literal toLowerCase().equals(); "mec-2 cell" !=
+        // "mec2" so the filter dropped CLO_0037182 and the resolver got zero hits. The filter
+        // must apply the same canonical form the tier function uses.
+        CharacteristicValueObject clo = new CharacteristicValueObject( "mec-2 cell", "http://purl.obolibrary.org/obo/CLO_0037182", null, null );
+        CharacteristicValueObject efo = new CharacteristicValueObject( "mec2", "http://www.ebi.ac.uk/efo/EFO_0006285", null, null );
+        CharacteristicValueObject unrelated = new CharacteristicValueObject( "mec2-related thing", "http://example.com/x", null, null );
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "MEC2" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Arrays.asList( efo, clo, unrelated ) );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/annotations/search" )
+                .queryParam( "query", "MEC2" )
+                .queryParam( "exact_label", "true" )
+                .request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 2 )
+                .satisfies( hits -> {
+                    // CLO first (canonical-form strip earned the match); EFO follows; the
+                    // "mec2-related thing" row drops because its canonical form is
+                    // "mec2related thing", not "mec2".
+                    assertThat( ( ( Map<?, ?> ) hits.get( 0 ) ).get( "valueUri" ) ).isEqualTo( "http://purl.obolibrary.org/obo/CLO_0037182" );
+                    assertThat( ( ( Map<?, ?> ) hits.get( 1 ) ).get( "valueUri" ) ).isEqualTo( "http://www.ebi.ac.uk/efo/EFO_0006285" );
+                } );
+    }
+
+    @Test
+    public void testSearchAnnotationsCanonicaliseDoesNotRegressNonHyphenatedQueries() throws SearchException, TimeoutException {
+        // Guard: a non-identifier query like "diabetes" must rank the same as before. The
+        // canonical-form check passes through cleanly when no hyphens or cell suffix are
+        // involved on either side.
+        CharacteristicValueObject diabetes = new CharacteristicValueObject(
+                "diabetes mellitus", "http://www.ebi.ac.uk/efo/EFO_0000400", null, null );
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "diabetes" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Collections.singletonList( diabetes ) );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/annotations/search" ).queryParam( "query", "diabetes" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 1 )
+                .first()
+                .satisfies( a -> assertThat( a ).containsEntry( "valueUri", "http://www.ebi.ac.uk/efo/EFO_0000400" ) );
+    }
+
+    @Test
     public void testSearchAnnotationsSymbolMatchStillPrependsAboveOntologyHits() throws SearchException, TimeoutException {
         // Regression guard: an exact-symbol gene hit MUST still lead the response so a curator
         // typing a brand-new gene's symbol sees it ahead of any incidental ontology substring

@@ -872,6 +872,10 @@ public class AnnotationsWebService {
         // via tier rather than dropping it.
         String joinedRelevanceQuery = String.join( " ", arg.getValue() ).trim();
         String relevanceQuery = joinedRelevanceQuery.toLowerCase( Locale.ROOT );
+        // Canonical form of the query used for hyphen-and-cell-suffix-insensitive equality:
+        // MEC2 ↔ MEC-2 ↔ MEC-2 cell all canonicalise to "mec2". See javadoc on
+        // canonicaliseForExactMatch.
+        String relevanceQueryCanon = canonicaliseForExactMatch( relevanceQuery );
         List<String> queryContentTokens = contentTokens( joinedRelevanceQuery );
         boolean multiToken = queryContentTokens.size() >= 2;
         java.util.function.ToIntFunction<CharacteristicValueObject> tierFn = h -> {
@@ -883,8 +887,14 @@ public class AnnotationsWebService {
             // bare-name query like "A549" reaches CLO at the exact-label tier instead of
             // losing to EFO's bare "a549" by tier alone.
             String ls = stripCellSuffix( l );
-            if ( l.equals( relevanceQuery ) || ls.equals( relevanceQuery ) ) return 0;       // exact label
-            if ( l.startsWith( relevanceQuery ) || ls.startsWith( relevanceQuery ) ) return 1; // label starts with query
+            // Canonical form: also drops ASCII hyphens, so "mec-2 cell" / "mec2" / "MEC-2" all
+            // collapse to the same key. Catches identifier-shaped queries that vary in
+            // punctuation (MEC2 ↔ MEC-2 ↔ MEC-2 cell, NCI-H358 ↔ NCIH358, RPMI-8226 ↔ RPMI8226).
+            String lCanon = canonicaliseForExactMatch( l );
+            if ( l.equals( relevanceQuery ) || ls.equals( relevanceQuery )
+                    || lCanon.equals( relevanceQueryCanon ) ) return 0;                            // exact label
+            if ( l.startsWith( relevanceQuery ) || ls.startsWith( relevanceQuery )
+                    || lCanon.startsWith( relevanceQueryCanon ) ) return 1;                        // label starts with query
             if ( multiToken && labelCoversAllTokens( normaliseForEquality( label ), queryContentTokens ) ) {
                 return 2;                                       // all query content tokens present
             }
@@ -915,10 +925,15 @@ public class AnnotationsWebService {
             String uri = h.getValueUri();
             if ( label == null || uri == null ) return 1;
             String l = label.toLowerCase( Locale.ROOT );
-            String ls = stripCellSuffix( l );
-            boolean strippedEarnedMatch = !ls.equals( l )
-                    && ( ls.equals( relevanceQuery ) || ls.startsWith( relevanceQuery ) );
-            return ( strippedEarnedMatch && uri.contains( "CLO_" ) ) ? 0 : 1;
+            String lCanon = canonicaliseForExactMatch( l );
+            // Normalisation earned the match when EITHER side needed to be normalised AND the
+            // canonical forms equal-or-prefix-match. Covers both the cell-suffix-strip case
+            // (A549 ↔ "A549 cell") and the hyphen-strip case (MEC2 ↔ "MEC-2 cell"). Keeps
+            // the CLO-preference surgical: a query that matches a CLO label raw doesn't
+            // trigger the preference here (the URI tiebreaker decides on its own merits).
+            boolean normalisationOccurred = !lCanon.equals( l ) || !relevanceQueryCanon.equals( relevanceQuery );
+            boolean canonicalMatch = lCanon.equals( relevanceQueryCanon ) || lCanon.startsWith( relevanceQueryCanon );
+            return ( normalisationOccurred && canonicalMatch && uri.contains( "CLO_" ) ) ? 0 : 1;
         };
         rawHits.sort( Comparator
                 .<CharacteristicValueObject>comparingInt( tierFn::applyAsInt )
@@ -937,10 +952,20 @@ public class AnnotationsWebService {
                     .findFirst()
                     .orElse( "" );
             if ( !wantedLower.isEmpty() ) {
+                // Apply the same canonicalisation the ranker's tier function uses, so a
+                // resolver passing exact_label=true together with prefixes=CLO_,CL_ for
+                // "MEC2" still finds CLO_0037182 (label "MEC-2 cell"). Without this, the
+                // exact_label filter degrades to literal toLowerCase equality and drops
+                // every hit whose label varies from the query by " cell" / hyphens —
+                // exactly the cases the ranker just promoted to tier 0.
+                String wantedCanon = canonicaliseForExactMatch( wantedLower );
                 List<CharacteristicValueObject> exact = new ArrayList<>( rawHits.size() );
                 for ( CharacteristicValueObject h : rawHits ) {
                     String label = h.getValue();
-                    if ( label != null && label.trim().toLowerCase( Locale.ROOT ).equals( wantedLower ) ) {
+                    if ( label == null ) continue;
+                    String labelLower = label.trim().toLowerCase( Locale.ROOT );
+                    if ( labelLower.equals( wantedLower )
+                            || canonicaliseForExactMatch( labelLower ).equals( wantedCanon ) ) {
                         exact.add( h );
                     }
                 }
@@ -1670,6 +1695,31 @@ public class AnnotationsWebService {
     static String stripCellSuffix( String labelLower ) {
         if ( labelLower == null ) return "";
         return CELL_SUFFIX.matcher( labelLower ).replaceFirst( "" );
+    }
+
+    /**
+     * Canonical form used for tier-0 / tier-1 equality across the search ranker AND the
+     * {@code exact_label} filter: lowercase + strip the trailing {@code " cell"} /
+     * {@code " cell line"} suffix + strip ASCII hyphens. Brings identifier-shaped labels
+     * and queries into the same shape so the inevitable variations don't drop hits:
+     *
+     * <ul>
+     *   <li>Query {@code MEC2} vs CLO label {@code "MEC-2 cell"} →
+     *       both canonicalise to {@code "mec2"} → tier-0 match.</li>
+     *   <li>Query {@code MEC-2} vs EFO label {@code "mec2"} →
+     *       both canonicalise to {@code "mec2"} → tier-0 match.</li>
+     *   <li>Query {@code NCI-H358} vs hypothetical label {@code "NCIH358"} →
+     *       both canonicalise to {@code "ncih358"} → tier-0 match.</li>
+     * </ul>
+     *
+     * <p>Strictly subsumes raw equality: when neither side needs normalisation the canonical
+     * forms equal the raw forms, so existing matches are preserved. Multi-word labels with
+     * intra-word punctuation (apostrophes, slashes, etc.) are NOT normalised here — those
+     * are handled by the synonym / tokens tiers downstream.</p>
+     */
+    static String canonicaliseForExactMatch( @Nullable String s ) {
+        if ( s == null ) return "";
+        return stripCellSuffix( s.toLowerCase( Locale.ROOT ) ).replace( "-", "" );
     }
 
     /**
