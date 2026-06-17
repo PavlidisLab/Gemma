@@ -30,6 +30,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableBaseService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableBaseVoEnabledService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import javax.annotation.CheckReturnValue;
 import org.springframework.lang.Nullable;
@@ -122,4 +123,45 @@ public interface BioMaterialService extends SecurableBaseService<BioMaterial>, S
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void removeCharacteristics( BioMaterial bm, Collection<Characteristic> vc );
+
+    /**
+     * Idempotent set-replace for a biomaterial's direct characteristic set, the sample-level
+     * counterpart of {@link ExpressionExperimentService#updateAnnotations(ExpressionExperiment, Collection)}.
+     * <p>
+     * The {@code owner} experiment is the audit + ACL target: the {@link ubic.gemma.model.common.auditAndSecurity.eventType.ManualAnnotationEvent}
+     * is recorded on the experiment (not the sample) and {@code ACL_SECURABLE_EDIT} is checked against it,
+     * so all tag edits — experiment- or sample-level — surface on the experiment's history and share one
+     * permission gate. The diff is statement-aware (see {@link ubic.gemma.model.common.description.CharacteristicUtils#sameTag}).
+     *
+     * @param owner   the experiment that owns {@code bm} (audit + ACL target)
+     * @param bm      the biomaterial whose characteristics are replaced
+     * @param desired the full desired characteristic set (empty clears)
+     * @return the number of changes (adds + removes); zero means the set was already as desired
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    int updateAnnotations( ExpressionExperiment owner, BioMaterial bm, Collection<Characteristic> desired );
+
+    /**
+     * Per-tag add of a characteristic to a biomaterial, the sample-level counterpart of
+     * {@link ExpressionExperimentService#addAnnotation(ExpressionExperiment, Characteristic)}. Records a
+     * {@link ubic.gemma.model.common.auditAndSecurity.eventType.TagAddedEvent} on {@code owner} and rejects
+     * a duplicate (by statement-aware {@code sameTag}) with {@link IllegalArgumentException}.
+     *
+     * @param owner the experiment that owns {@code bm} (audit + ACL target)
+     * @return the persisted characteristic
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    Characteristic addAnnotation( ExpressionExperiment owner, BioMaterial bm, Characteristic vc );
+
+    /**
+     * Per-tag remove of a characteristic from a biomaterial by id, the sample-level counterpart of
+     * {@link ExpressionExperimentService#removeAnnotation(ExpressionExperiment, Long)}. Records a
+     * {@link ubic.gemma.model.common.auditAndSecurity.eventType.TagRemovedEvent} on {@code owner}; returns
+     * {@code null} when the id is not in {@code bm}'s characteristic set so the caller can surface a 404.
+     *
+     * @param owner the experiment that owns {@code bm} (audit + ACL target)
+     */
+    @Nullable
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    Characteristic removeAnnotation( ExpressionExperiment owner, BioMaterial bm, Long annotationId );
 }

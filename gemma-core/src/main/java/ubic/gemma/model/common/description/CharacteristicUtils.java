@@ -2,6 +2,7 @@ package ubic.gemma.model.common.description;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
+import ubic.gemma.model.expression.experiment.Statement;
 
 import org.springframework.lang.Nullable;
 import java.util.Objects;
@@ -88,6 +89,40 @@ public class CharacteristicUtils {
      */
     public static int hash( String value, String valueUri ) {
         return Objects.hash( StringUtils.lowerCase( valueUri != null ? valueUri : value ) );
+    }
+
+    /**
+     * Statement-aware equality for the "is this the same tag?" question driving the idempotent
+     * set-replace annotation writes (experiment- and biomaterial-level).
+     * <p>
+     * A {@link Statement} and a plain {@link Characteristic} with the same (category, value) are NOT
+     * the same tag — the Statement carries subject/predicate/object semantics the plain Characteristic
+     * lacks, so a wire-shape change (plain &harr; Statement) must round-trip as a drop+add, not a no-op.
+     * Two Statements additionally match on their predicate/object and second predicate/object pairs.
+     * Comparisons delegate to {@link #equals(String, String, String, String)} (case-insensitive,
+     * URI-aware). Used by both {@code ExpressionExperimentService.updateAnnotations} and
+     * {@code BioMaterialService.updateAnnotations} so the two diff implementations cannot drift.
+     */
+    public static boolean sameTag( Characteristic a, Characteristic b ) {
+        boolean aIsStatement = a instanceof Statement;
+        boolean bIsStatement = b instanceof Statement;
+        if ( aIsStatement != bIsStatement ) {
+            return false;
+        }
+        boolean baseEqual = equals( a.getCategory(), a.getCategoryUri(), b.getCategory(), b.getCategoryUri() )
+                && equals( a.getValue(), a.getValueUri(), b.getValue(), b.getValueUri() );
+        if ( !baseEqual ) {
+            return false;
+        }
+        if ( !aIsStatement ) {
+            return true;
+        }
+        Statement sa = ( Statement ) a;
+        Statement sb = ( Statement ) b;
+        return equals( sa.getPredicate(), sa.getPredicateUri(), sb.getPredicate(), sb.getPredicateUri() )
+                && equals( sa.getObject(), sa.getObjectUri(), sb.getObject(), sb.getObjectUri() )
+                && equals( sa.getSecondPredicate(), sa.getSecondPredicateUri(), sb.getSecondPredicate(), sb.getSecondPredicateUri() )
+                && equals( sa.getSecondObject(), sa.getSecondObjectUri(), sb.getSecondObject(), sb.getSecondObjectUri() );
     }
 
     /**

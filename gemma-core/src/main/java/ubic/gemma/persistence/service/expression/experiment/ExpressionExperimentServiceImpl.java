@@ -2009,25 +2009,6 @@ public class ExpressionExperimentServiceImpl
         return toAdd.size() + toRemove.size();
     }
 
-    private static boolean sameTag( Characteristic a, Characteristic b ) {
-        // Statement-vs-plain Characteristic with the same (category, value) are NOT the same row —
-        // the Statement carries S-P-O semantics the Characteristic lacks, so a wire-shape change
-        // (plain → Statement or vice versa) MUST round-trip as a drop+add, not as a no-op.
-        boolean aIsStatement = a instanceof Statement;
-        boolean bIsStatement = b instanceof Statement;
-        if ( aIsStatement != bIsStatement ) return false;
-        boolean baseEqual = CharacteristicUtils.equals( a.getCategory(), a.getCategoryUri(), b.getCategory(), b.getCategoryUri() )
-                && CharacteristicUtils.equals( a.getValue(), a.getValueUri(), b.getValue(), b.getValueUri() );
-        if ( !baseEqual ) return false;
-        if ( !aIsStatement ) return true;
-        Statement sa = ( Statement ) a;
-        Statement sb = ( Statement ) b;
-        return CharacteristicUtils.equals( sa.getPredicate(), sa.getPredicateUri(), sb.getPredicate(), sb.getPredicateUri() )
-                && CharacteristicUtils.equals( sa.getObject(), sa.getObjectUri(), sb.getObject(), sb.getObjectUri() )
-                && CharacteristicUtils.equals( sa.getSecondPredicate(), sa.getSecondPredicateUri(), sb.getSecondPredicate(), sb.getSecondPredicateUri() )
-                && CharacteristicUtils.equals( sa.getSecondObject(), sa.getSecondObjectUri(), sb.getSecondObject(), sb.getSecondObjectUri() );
-    }
-
     /**
      * Per-tag REST-write counterpart to {@link #addCharacteristic(ExpressionExperiment, Characteristic)}.
      * <p>
