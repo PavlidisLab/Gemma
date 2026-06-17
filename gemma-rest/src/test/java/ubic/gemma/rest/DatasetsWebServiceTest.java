@@ -341,6 +341,11 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         }
 
         @Bean
+        public ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService bioMaterialService() {
+            return mock( ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService.class );
+        }
+
+        @Bean
         public ubic.gemma.core.analysis.service.OutlierFlaggingService outlierFlaggingService() {
             return mock( ubic.gemma.core.analysis.service.OutlierFlaggingService.class );
         }
