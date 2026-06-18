@@ -979,6 +979,45 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
     }
 
     @Test
+    @WithMockUser
+    public void testUpdateDatasetAnnotationsCarriesSupportingEvidence() {
+        // A curated tag arriving with a supporting_evidence array (the agents-side FindingEvidence
+        // shape) must round-trip onto the persisted Characteristic as opaque JSON — Gemma stores it
+        // verbatim, it is not parsed or restructured.
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.getAnnotations( ee ) ).thenReturn( Collections.emptySet() );
+        String body = "{\"annotations\":[{\"category\":\"strain\",\"value\":\"C57BL/6J\","
+                + "\"supportingEvidence\":[{\"quote\":\"strain: C57BL/6J\",\"source\":\"characteristic\","
+                + "\"location\":\"strain (all 24 samples)\"}]}]}";
+        assertThat( target( "/datasets/1/annotations" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+        ArgumentCaptor<Collection<ubic.gemma.model.common.description.Characteristic>> captor = ArgumentCaptor.forClass( Collection.class );
+        verify( expressionExperimentService ).updateAnnotations( eq( ee ), captor.capture() );
+        ubic.gemma.model.common.description.Characteristic c = captor.getValue().iterator().next();
+        assertThat( c.getSupportingEvidence() )
+                .contains( "\"quote\":\"strain: C57BL/6J\"" )
+                .contains( "\"source\":\"characteristic\"" )
+                .contains( "\"location\":\"strain (all 24 samples)\"" );
+    }
+
+    @Test
+    @WithMockUser
+    public void testUpdateDatasetAnnotationsNoEvidenceLeavesSupportingEvidenceNull() {
+        // A tag with no supporting_evidence must NOT stamp an empty/blank value — it stays null so a
+        // set-replace update doesn't clobber evidence already on a matched tag.
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.getAnnotations( ee ) ).thenReturn( Collections.emptySet() );
+        String body = "{\"annotations\":[{\"category\":\"organism part\",\"value\":\"liver\"}]}";
+        assertThat( target( "/datasets/1/annotations" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+        ArgumentCaptor<Collection<ubic.gemma.model.common.description.Characteristic>> captor = ArgumentCaptor.forClass( Collection.class );
+        verify( expressionExperimentService ).updateAnnotations( eq( ee ), captor.capture() );
+        assertThat( captor.getValue().iterator().next().getSupportingEvidence() ).isNull();
+    }
+
+    @Test
     public void testGetDatasetsDifferentialAnalysisResultsExpressionForGene() {
         Gene brca1 = new Gene();
         when( geneArgService.getEntity( any() ) ).thenReturn( brca1 );

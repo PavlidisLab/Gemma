@@ -3862,6 +3862,14 @@ public class DatasetsWebService {
         private String secondObject;
         @Nullable
         private String secondObjectUri;
+        /**
+         * Verbatim provenance backing the tag — a JSON array of {@code {quote, source, location, ...}}
+         * items (the agents-side {@code FindingEvidence} shape). Stored opaquely and round-tripped on the
+         * read VO's {@code supportingEvidence}. Null/omitted leaves any existing evidence untouched on a
+         * set-replace update; non-null refreshes it on the matched tag.
+         */
+        @Nullable
+        private com.fasterxml.jackson.databind.JsonNode supportingEvidence;
 
         public String getCategory() {
             return category;
@@ -3969,6 +3977,15 @@ public class DatasetsWebService {
             this.secondObjectUri = secondObjectUri;
         }
 
+        @Nullable
+        public com.fasterxml.jackson.databind.JsonNode getSupportingEvidence() {
+            return supportingEvidence;
+        }
+
+        public void setSupportingEvidence( @Nullable com.fasterxml.jackson.databind.JsonNode supportingEvidence ) {
+            this.supportingEvidence = supportingEvidence;
+        }
+
         boolean hasStatementFields() {
             return predicate != null || predicateUri != null
                     || object != null || objectUri != null
@@ -4047,6 +4064,7 @@ public class DatasetsWebService {
             s.setSecondPredicateUri( tag.getSecondPredicateUri() );
             s.setSecondObject( tag.getSecondObject() );
             s.setSecondObjectUri( tag.getSecondObjectUri() );
+            s.setSupportingEvidence( serializeEvidence( tag.getSupportingEvidence() ) );
             return s;
         } else {
             Characteristic c = Characteristic.Factory.newInstance();
@@ -4054,8 +4072,22 @@ public class DatasetsWebService {
             c.setCategoryUri( tag.getCategoryUri() );
             c.setValue( tag.getValue() );
             c.setValueUri( tag.getValueUri() );
+            c.setSupportingEvidence( serializeEvidence( tag.getSupportingEvidence() ) );
             return c;
         }
+    }
+
+    /**
+     * Serialize the wire's supporting-evidence tree to the opaque JSON string Gemma stores. Null/empty
+     * (including a JSON {@code null}) maps to a stored {@code null}, so a tag arriving without evidence
+     * doesn't clobber any evidence already on a matched tag (see {@code updateAnnotations}).
+     */
+    @Nullable
+    private static String serializeEvidence( @Nullable com.fasterxml.jackson.databind.JsonNode evidence ) {
+        if ( evidence == null || evidence.isNull() || evidence.isEmpty() ) {
+            return null;
+        }
+        return evidence.toString();
     }
 
     /**
