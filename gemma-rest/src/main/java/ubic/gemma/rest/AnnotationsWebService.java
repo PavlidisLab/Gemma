@@ -436,7 +436,7 @@ public class AnnotationsWebService {
             return terms.stream()
                     .map( t -> new AnnotationSearchResultValueObject( t.getLabel(), t.getUri(), null, null,
                             t.getUri() != null ? countsByUri.getOrDefault( t.getUri(), 0 ) : null,
-                            null, null, null, null, null, null ) )
+                            null, null, null, null, null, null, null, null, null ) )
                     .collect( Collectors.toList() );
         } catch ( TimeoutException e ) {
             throw new ServiceUnavailableException( DateUtils.addSeconds( new Date(), 30 ), e );
@@ -1104,7 +1104,8 @@ public class AnnotationsWebService {
             String matchedText = match != null ? match.text : null;
             Map<String, Integer> priorCategories = uri != null ? priorCategoriesByUri.get( uri ) : null;
             vos.add( new AnnotationSearchResultValueObject( vo.getValue(), vo.getValueUri(), vo.getCategory(),
-                    vo.getCategoryUri(), count, definition, parents, matchedVia, matchedText, null, priorCategories ) );
+                    vo.getCategoryUri(), count, definition, parents, matchedVia, matchedText, null, priorCategories,
+                    null, null, null ) );
         }
         // Always merge gene hits in, regardless of category — the typeahead surface should
         // surface STAT5B whether the curator is in a Genotype factor, a Treatment factor, or a
@@ -1263,8 +1264,15 @@ public class AnnotationsWebService {
             String uri = g.getNcbiGeneId() != null
                     ? "http://purl.org/commons/record/ncbi_gene/" + g.getNcbiGeneId()
                     : null;
+            // Taxon is EAGER on Gene, so no extra fetch — surface it so curators can tell the species
+            // of a returned gene without resolving the NCBI URI externally.
+            Taxon taxon = g.getTaxon();
+            Long taxonId = taxon != null ? taxon.getId() : null;
+            String taxonCommonName = taxon != null ? taxon.getCommonName() : null;
+            String taxonScientificName = taxon != null ? taxon.getScientificName() : null;
             out.add( new AnnotationSearchResultValueObject( label, uri, "gene", null,
-                    0, null, null, matchedViaToken, label, null, null ) );
+                    0, null, null, matchedViaToken, label, null, null,
+                    taxonId, taxonCommonName, taxonScientificName ) );
         }
     }
 
@@ -1354,7 +1362,8 @@ public class AnnotationsWebService {
                 out.add( new AnnotationSearchResultValueObject(
                         r.getValue(), r.getValueUri(), r.getCategory(), r.getCategoryUri(),
                         r.getUsageCount(), r.getDefinition(), r.getParents(),
-                        r.getMatchedVia(), r.getMatchedText(), c, r.getPriorCategories() ) );
+                        r.getMatchedVia(), r.getMatchedText(), c, r.getPriorCategories(),
+                        r.getTaxonId(), r.getTaxonCommonName(), r.getTaxonScientificName() ) );
             }
         }
         return out;
@@ -1889,6 +1898,16 @@ public class AnnotationsWebService {
          * (rare; carries no signal).
          */
         @Nullable Map<String, Integer> priorCategories;
+        /**
+         * Taxon (species) of a gene hit — the gene's {@code Taxon.id}. Null on ontology-term hits
+         * (taxon is a gene-only attribute). Lets a curator tell which species a returned gene belongs
+         * to without resolving the NCBI Gene URI against an external database.
+         */
+        @Nullable Long taxonId;
+        /** Common name of a gene hit's taxon (e.g. "mouse"). Null on ontology-term hits. */
+        @Nullable String taxonCommonName;
+        /** Scientific name of a gene hit's taxon (e.g. "Mus musculus"), to disambiguate when the common name is ambiguous. Null on ontology-term hits. */
+        @Nullable String taxonScientificName;
     }
 
     @Value
