@@ -267,8 +267,8 @@ public class DifferentialExpressionAnalysisReadServiceImpl implements Differenti
                 Collection<ExpressionAnalysisResultSet> results = analysis.getResultSets();
 
                 DifferentialExpressionAnalysisValueObject avo = new DifferentialExpressionAnalysisValueObject( analysis );
-
-                BioAssaySet experimentAnalyzed = analysis.getExperimentAnalyzed();
+                
+                BioAssaySet experimentAnalyzed = ( BioAssaySet ) Hibernate.unproxy( analysis.getExperimentAnalyzed() );
 
                 avo.setExperimentAnalyzedId( experimentAnalyzed.getId() ); // might be a subset.
 
