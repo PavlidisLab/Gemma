@@ -146,6 +146,16 @@ public class Characteristic extends AbstractDescribable implements Comparable<Ch
     @Column(name = "MIGRATED_TO_STATEMENT", nullable = false, columnDefinition = "TINYINT")
     private boolean migratedToStatement;
 
+    /**
+     * Opaque JSON array of supporting-evidence items ({@code [{"quote":...,"source":...,"location":...}, ...]})
+     * backing a curated tag — the verbatim provenance the curation agents emit (the agents-side
+     * {@code FindingEvidence} shape). Stored as-is; Gemma does not parse or query it, so the agents repo
+     * owns the evidence schema. Null on tags with no recorded evidence.
+     */
+    @Nullable
+    @Column(name = "SUPPORTING_EVIDENCE", columnDefinition = "TEXT")
+    private String supportingEvidence;
+
 
     /**
      * No-arg constructor added to satisfy javabean contract
@@ -252,6 +262,15 @@ public class Characteristic extends AbstractDescribable implements Comparable<Ch
     @Deprecated
     public void setMigratedToStatement( boolean migratedToStatement ) {
         this.migratedToStatement = migratedToStatement;
+    }
+
+    @Nullable
+    public String getSupportingEvidence() {
+        return supportingEvidence;
+    }
+
+    public void setSupportingEvidence( @Nullable String supportingEvidence ) {
+        this.supportingEvidence = supportingEvidence;
     }
 
     @Override

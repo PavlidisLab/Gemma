@@ -252,21 +252,27 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
                 toRemove.add( c );
             }
         }
-        // anything in desired not already present -> add
+        // anything in desired not already present -> add; a matched-but-present tag arriving with new
+        // supporting evidence -> refresh the evidence in place (identity by sameTag is unchanged).
+        int evidenceUpdates = 0;
         for ( Characteristic d : desired ) {
-            boolean already = false;
+            Characteristic match = null;
             for ( Characteristic c : current ) {
                 if ( CharacteristicUtils.sameTag( c, d ) ) {
-                    already = true;
+                    match = c;
                     break;
                 }
             }
-            if ( !already ) {
+            if ( match == null ) {
                 toAdd.add( copyForAdd( d ) );
+            } else if ( d.getSupportingEvidence() != null
+                    && !Objects.equals( d.getSupportingEvidence(), match.getSupportingEvidence() ) ) {
+                match.setSupportingEvidence( d.getSupportingEvidence() );
+                evidenceUpdates++;
             }
         }
 
-        if ( toRemove.isEmpty() && toAdd.isEmpty() ) {
+        if ( toRemove.isEmpty() && toAdd.isEmpty() && evidenceUpdates == 0 ) {
             BioMaterialServiceImpl.log.debug( "updateAnnotations: no change for biomaterial " + bm.getId() );
             return 0;
         }
@@ -284,10 +290,10 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
         }
 
         BioMaterialServiceImpl.log.info( "updateAnnotations: biomaterial " + bm.getId() + " added=" + toAdd.size()
-                + " removed=" + toRemove.size() );
+                + " removed=" + toRemove.size() + " evidenceUpdates=" + evidenceUpdates );
         // Audit event written on the owning experiment by @AuditedConditional (the aspect targets the
         // first Auditable argument, i.e. owner); the SpEL guard keeps the no-change branch silent.
-        return toAdd.size() + toRemove.size();
+        return toAdd.size() + toRemove.size() + evidenceUpdates;
     }
 
     @Override
@@ -375,6 +381,7 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
             fresh.setValueUri( d.getValueUri() );
         }
         fresh.setEvidenceCode( d.getEvidenceCode() != null ? d.getEvidenceCode() : GOEvidenceCode.IC );
+        fresh.setSupportingEvidence( d.getSupportingEvidence() );
         return fresh;
     }
 

@@ -1937,16 +1937,18 @@ public class ExpressionExperimentServiceImpl
                 toRemove.add( c );
             }
         }
-        // anything in desired not already present -> add
+        // anything in desired not already present -> add; a matched-but-present tag that arrives with
+        // new supporting evidence -> refresh the evidence in place (identity by sameTag is unchanged).
+        int evidenceUpdates = 0;
         for ( Characteristic d : desired ) {
-            boolean already = false;
+            Characteristic match = null;
             for ( Characteristic c : current ) {
                 if ( sameTag( c, d ) ) {
-                    already = true;
+                    match = c;
                     break;
                 }
             }
-            if ( !already ) {
+            if ( match == null ) {
                 Characteristic fresh;
                 if ( d instanceof Statement ) {
                     // Preserve the Statement discriminator + predicate / object pair on add. Plain
@@ -1977,11 +1979,18 @@ public class ExpressionExperimentServiceImpl
                     fresh.setValueUri( d.getValueUri() );
                 }
                 fresh.setEvidenceCode( d.getEvidenceCode() != null ? d.getEvidenceCode() : GOEvidenceCode.IC );
+                fresh.setSupportingEvidence( d.getSupportingEvidence() );
                 toAdd.add( fresh );
+            } else if ( d.getSupportingEvidence() != null
+                    && !Objects.equals( d.getSupportingEvidence(), match.getSupportingEvidence() ) ) {
+                // Refresh provenance on an existing tag without disturbing its identity. A desired tag
+                // arriving without evidence (null) leaves any stored evidence intact.
+                match.setSupportingEvidence( d.getSupportingEvidence() );
+                evidenceUpdates++;
             }
         }
 
-        if ( toRemove.isEmpty() && toAdd.isEmpty() ) {
+        if ( toRemove.isEmpty() && toAdd.isEmpty() && evidenceUpdates == 0 ) {
             log.debug( "updateAnnotations: no change for " + ee.getShortName() + " (ID=" + ee.getId() + ")" );
             return 0;
         }
@@ -1999,14 +2008,14 @@ public class ExpressionExperimentServiceImpl
         }
 
         log.info( "updateAnnotations: " + ee.getShortName() + " (ID=" + ee.getId() + ") added=" + toAdd.size()
-                + " removed=" + toRemove.size() );
+                + " removed=" + toRemove.size() + " evidenceUpdates=" + evidenceUpdates );
         // Audit event written by @AuditedConditional via AuditedAspect; the
         // SpEL guard `#result > 0` keeps the no-change early-return branch
         // (return 0) from emitting a spurious row. Return value carries the
         // total change count so the note text matches the prior behaviour as
         // closely as possible (the added/removed breakdown is now in the log
         // line above; AUDIT_EVENT.NOTE records the aggregate).
-        return toAdd.size() + toRemove.size();
+        return toAdd.size() + toRemove.size() + evidenceUpdates;
     }
 
     /**

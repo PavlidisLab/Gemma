@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.common.description;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -90,6 +92,17 @@ public class AnnotationValueObject extends IdentifiableValueObject<Characteristi
     private String parentOfParentDescription;
     @GemmaWebOnly
     private String parentOfParentLink;
+    /**
+     * Verbatim provenance backing a curated tag — a JSON array of {@code {quote, source, location, ...}}
+     * items the curation agents emitted (the agents-side {@code FindingEvidence} shape). Gemma stores and
+     * serves it opaquely, so the agents repo owns the schema. Null when the tag has no recorded evidence
+     * (plain/legacy tags, and ontology-term hits that were never accepted from a proposal).
+     */
+    @Nullable
+    @Schema(description = "Verbatim provenance backing a curated tag — a JSON array of {quote, source, location} items the curation agents emitted. Null when the tag has no recorded evidence.")
+    private JsonNode supportingEvidence;
+
+    private static final ObjectMapper SUPPORTING_EVIDENCE_MAPPER = new ObjectMapper();
 
     public AnnotationValueObject() {
         super();
@@ -124,6 +137,24 @@ public class AnnotationValueObject extends IdentifiableValueObject<Characteristi
             secondPredicateUri = s.getSecondPredicateUri();
             secondObject = s.getSecondObject();
             secondObjectUri = s.getSecondObjectUri();
+        }
+        supportingEvidence = parseSupportingEvidence( c.getSupportingEvidence() );
+    }
+
+    /**
+     * Parse the opaque stored JSON into a tree for serialization. Writes always store a serialized
+     * {@code JsonNode}, so this round-trips cleanly; a null/blank or (defensively) unparseable value
+     * yields {@code null} rather than propagating a parse failure into the read response.
+     */
+    @Nullable
+    private static JsonNode parseSupportingEvidence( @Nullable String json ) {
+        if ( json == null || json.isEmpty() ) {
+            return null;
+        }
+        try {
+            return SUPPORTING_EVIDENCE_MAPPER.readTree( json );
+        } catch ( Exception e ) {
+            return null;
         }
     }
 
