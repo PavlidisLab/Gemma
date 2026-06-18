@@ -70,13 +70,13 @@
         <mapping class="ubic.gemma.model.common.auditAndSecurity.GroupAuthority"/>
         <mapping class="ubic.gemma.model.common.auditAndSecurity.JobInfo"/>
         <mapping class="ubic.gemma.model.common.auditAndSecurity.UserGroup"/>
+        <mapping class="ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSet"/>
         <mapping class="ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails"/>
-        <mapping class="ubic.gemma.model.common.auditAndSecurity.curation.CurationDraft"/>
         <mapping class="ubic.gemma.model.common.auditAndSecurity.curation.Ticket"/>
         <mapping class="ubic.gemma.model.common.auditAndSecurity.curation.TicketEvent"/>
         <mapping class="ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget"/>
         <mapping class="ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType"/>
-        <mapping class="ubic.gemma.model.common.auditAndSecurity.eventType.AgentProposalEvent"/>
+        <mapping class="ubic.gemma.model.common.auditAndSecurity.eventType.AnnotationSetEvent"/>
         <mapping class="ubic.gemma.model.common.auditAndSecurity.eventType.AggregatedSingleDataAddedEvent"/>
         <mapping class="ubic.gemma.model.common.auditAndSecurity.eventType.AlignmentBasedGeneMappingEvent"/>
         <mapping class="ubic.gemma.model.common.auditAndSecurity.eventType.AnalysisSuitabilityEvent"/>
@@ -223,7 +223,6 @@
         <mapping class="ubic.gemma.model.expression.biomaterial.Compound"/>
         <mapping class="ubic.gemma.model.expression.biomaterial.Treatment"/>
         <mapping class="ubic.gemma.model.expression.designElement.CompositeSequence"/>
-        <mapping class="ubic.gemma.model.expression.experiment.AgentProposal"/>
         <mapping class="ubic.gemma.model.expression.experiment.GeoScrapeWatermark"/>
         <mapping class="ubic.gemma.model.expression.experiment.ExperimentalDesign"/>
         <mapping class="ubic.gemma.model.expression.experiment.ExperimentalFactor"/>

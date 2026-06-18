@@ -137,6 +137,17 @@ public interface OntologyService {
     void reinitializeAndReindexAllOntologies();
 
     /**
+     * Drop every {@link OntologyCache} entry tied to the given ontology service.
+     * <p>
+     * Call this after a per-ontology refresh (e.g. {@code POST /admin/ontologies/{name}/refresh}) so that
+     * {@code findTerm}, {@code getParents}, and {@code getChildren} results computed against the previous
+     * model are not served to callers from cache. Reloading the Jena model + Lucene index alone is not
+     * sufficient — the in-process search/parents/children caches retain results keyed by
+     * {@code (OntologyService, query, ...)} and would otherwise serve stale lookups until the next bounce.
+     */
+    void clearCachesForOntology( ubic.gemma.core.ontology.providers.OntologyService serv );
+
+    /**
      * Check all system uses of ontology terms for the correct label and fix any mismatches based on the ontology OWL files.
      * <p>
      * This should be run periodically along with findObsoleteTerms.

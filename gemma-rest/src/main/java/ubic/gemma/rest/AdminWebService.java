@@ -91,7 +91,8 @@ import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.persistence.service.blacklist.BlacklistedEntityService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseReadService;
-import ubic.gemma.persistence.service.expression.experiment.AgentProposalService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AnnotationSetService;
+import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetRole;
 import ubic.gemma.model.genome.Taxon;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -164,7 +165,7 @@ public class AdminWebService {
     private final List<OntologyService> ontologies;
     private final DataSource dataSource;
     private final UserManager userManager;
-    private final AgentProposalService agentProposalService;
+    private final AnnotationSetService annotationSetService;
     private final TicketService ticketService;
     private final TaxonArgService taxonArgService;
     private final BlacklistedEntityService blacklistedEntityService;
@@ -237,11 +238,21 @@ public class AdminWebService {
      */
     private final ConcurrentMap<String, String> reindexStatus = new ConcurrentHashMap<>();
 
+    /**
+     * Facade used to evict the in-process search / parents / children caches after a per-ontology
+     * refresh. The provider-level {@code OntologyService} bean (per-ontology) reloads the Jena
+     * model + Lucene index but does not touch {@code OntologyCache}, so stale results were being
+     * served until a bounce — see {@link #refreshOntology(String, boolean)}.
+     */
+    private final ubic.gemma.core.ontology.OntologyService ontologyFacade;
+
     @Autowired
     public AdminWebService( CacheManager cacheManager, SessionFactory sessionFactory,
             TaskRunningService taskRunningService, SessionRegistry sessionRegistry,
-            List<OntologyService> ontologies, DataSource dataSource, UserManager userManager,
-            AgentProposalService agentProposalService, TicketService ticketService,
+            List<OntologyService> ontologies,
+            ubic.gemma.core.ontology.OntologyService ontologyFacade,
+            DataSource dataSource, UserManager userManager,
+            AnnotationSetService annotationSetService, TicketService ticketService,
             TaxonArgService taxonArgService,
             BlacklistedEntityService blacklistedEntityService,
             ExternalDatabaseReadService externalDatabaseReadService,
@@ -252,9 +263,10 @@ public class AdminWebService {
         this.taskRunningService = taskRunningService;
         this.sessionRegistry = sessionRegistry;
         this.ontologies = ontologies;
+        this.ontologyFacade = ontologyFacade;
         this.dataSource = dataSource;
         this.userManager = userManager;
-        this.agentProposalService = agentProposalService;
+        this.annotationSetService = annotationSetService;
         this.ticketService = ticketService;
         this.taxonArgService = taxonArgService;
         this.blacklistedEntityService = blacklistedEntityService;
@@ -1043,7 +1055,72 @@ public class AdminWebService {
         // model rebuilt. forceIndexing defaults to false so we don't blow away a still-valid
         // Lucene index unless the caller explicitly asks.
         match.startInitializationThread( true, forceIndexing );
+        // Reloading the Jena model + Lucene index alone is not enough — three layers cache
+        // ontology-derived data and all of them must be invalidated for newly-added terms (e.g.
+        // a fresh TGEMO_00210) to surface to clients:
+        //
+        //   1. OntologyCache: findTerm / getParents / getChildren entries keyed by ontology
+        //      service. Mirrors OntologyServiceImpl.reinitializeAndReindexAllOntologies.
+        //   2. AnnotationsSearchResponseCache: the /annotations/search response payload, keyed
+        //      by (query, strategy, limit, prefixes, ...). Each cached hit carries baked-in
+        //      matchedVia / matchedText / definition / parents fields that were computed
+        //      against the prior model — a hit that resolved with matchedVia=null because the
+        //      term wasn't yet loaded stays null until this cache rotates (5min TTL) or is
+        //      flushed. No per-ontology key exists, so the safest move is to drop the whole
+        //      region. Refreshes are infrequent enough that the recomputation cost is fine.
+        //
+        // Wait for the init thread on a daemon (endpoint still returns 202 immediately) and
+        // evict in order: ontology-keyed caches first, then the response payload region.
+        final OntologyService refreshed = match;
+        Thread invalidator = new Thread( () -> {
+            try {
+                refreshed.waitForInitializationThread();
+            } catch ( InterruptedException e ) {
+                Thread.currentThread().interrupt();
+                return;
+            }
+            try {
+                ontologyFacade.clearCachesForOntology( refreshed );
+                int evictedRegions = clearOntologyDerivedResponseCaches();
+                log.info( "Hot-refresh of ontology=" + name + " completed; OntologyCache evicted; "
+                        + evictedRegions + " response-cache region(s) flushed." );
+            } catch ( RuntimeException e ) {
+                log.warn( "Failed to evict caches for ontology=" + name + " after refresh; "
+                        + "stale lookups may persist until next bounce.", e );
+            }
+        }, name + "_cache_evict" );
+        invalidator.setDaemon( true );
+        invalidator.start();
         return Response.accepted( respond( new OntologyRefreshResponse( name, "refreshing" ) ) ).build();
+    }
+
+    /**
+     * Names of REST-level response caches whose entries are derived from ontology state and
+     * must therefore be flushed when any ontology reloads. Today only the annotation-search
+     * response payload qualifies — add new region names here if future endpoints introduce
+     * similarly-shaped per-query caches.
+     */
+    private static final String[] ONTOLOGY_DERIVED_RESPONSE_CACHE_REGIONS = {
+            "AnnotationsSearchResponseCache",
+    };
+
+    /**
+     * Flush the response-level caches that bake ontology-derived fields into per-query payloads.
+     * Returns the count of regions actually present and flushed (regions absent from the
+     * CacheManager are silently skipped, which is fine — the cache simply isn't registered yet
+     * on this build). Called from the refresh daemon after the ontology's lower-level
+     * OntologyCache has been evicted.
+     */
+    private int clearOntologyDerivedResponseCaches() {
+        int evicted = 0;
+        for ( String region : ONTOLOGY_DERIVED_RESPONSE_CACHE_REGIONS ) {
+            org.springframework.cache.Cache c = cacheManager.getCache( region );
+            if ( c != null ) {
+                c.clear();
+                evicted++;
+            }
+        }
+        return evicted;
     }
 
     /** Body shape for {@link #refreshOntology(String, boolean)} returns. */
@@ -1483,21 +1560,21 @@ public class AdminWebService {
     /* ===== Curation lifecycle status ===== */
 
     /**
-     * Snapshot of the agent-proposal -&gt; ticket lifecycle: per-status
-     * {@link ubic.gemma.model.expression.experiment.AgentProposal} counts in
-     * the recent windows, open-ticket counts by {@link TicketType}, distinct
-     * agent run id count, and last-ranAt timestamp.
+     * Snapshot of the annotation-set -&gt; ticket lifecycle: per-role
+     * {@link ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSet}
+     * counts in the recent windows, open-ticket counts by {@link TicketType},
+     * distinct agent run id count, and latest-createdAt timestamp.
      * <p>
      * Backs the curation-UI "what's the Python agent doing right now"
      * indicator. Counts are computed with bounded aggregates against the
-     * AGENT_PROPOSAL and TICKET tables — no per-row fetch.
+     * ANNOTATION_SET and TICKET tables — no per-row fetch.
      */
     @GET
     @Path("/curation-status")
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasAuthority('GROUP_ADMIN')")
-    @Operation(summary = "Agent-proposal + ticket lifecycle snapshot",
-            description = "Per-status breakdown of AgentProposal rows (last 24h / 7d / by status) plus open-ticket counts by TicketType and the oldest open-ticket age. Read-only.",
+    @Operation(summary = "Annotation-set + ticket lifecycle snapshot",
+            description = "Per-role breakdown of AnnotationSet rows (last 24h / 7d / by role) plus open-ticket counts by TicketType and the oldest open-ticket age. Read-only.",
             security = {
                     @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
@@ -1514,13 +1591,17 @@ public class AdminWebService {
         CurationStatusResponse body = new CurationStatusResponse();
 
         ProposalsBlock proposals = new ProposalsBlock();
-        proposals.totalLast24h = agentProposalService.countSince( since24h );
-        proposals.totalLast7d = agentProposalService.countSince( since7d );
-        // byStatus: lifetime breakdown — the rolling-window status breakdown
-        // would multiply the round-trip count; the curation-UI only needs
-        // "how many are sitting in each bucket right now". TODO: revisit if
-        // a windowed view is useful once we have more agent-run history.
-        proposals.byStatus = agentProposalService.countByStatusSince( null );
+        proposals.totalLast24h = annotationSetService.countSince( since24h, null );
+        proposals.totalLast7d = annotationSetService.countSince( since7d, null );
+        // byRole: lifetime breakdown of annotation sets by role
+        // (PROPOSAL / DRAFT / SNAPSHOT).
+        Map<AnnotationSetRole, Long> byRole = annotationSetService.countByRoleSince( null );
+        Map<String, Long> byRoleWire = new LinkedHashMap<>( byRole.size() );
+        for ( Map.Entry<AnnotationSetRole, Long> e : byRole.entrySet() ) {
+            String key = e.getKey() != null ? e.getKey().getDbValue() : "null";
+            byRoleWire.put( key, e.getValue() );
+        }
+        proposals.byRole = byRoleWire;
         body.proposals = proposals;
 
         TicketsBlock tickets = new TicketsBlock();
@@ -1539,10 +1620,12 @@ public class AdminWebService {
         body.tickets = tickets;
 
         AgentRunsBlock runs = new AgentRunsBlock();
-        // Distinct runIds in the 7d window — bounded; lifetime distinct count
-        // would scan the full agent_proposal table on prod and isn't useful.
-        runs.distinctRunIds = agentProposalService.countDistinctRunIdsSince( since7d );
-        runs.lastRanAt = agentProposalService.findLatestRanAt();
+        // Distinct runIds in the 7d window across PROPOSAL rows (agent
+        // emissions). Bounded; lifetime distinct count would scan the full
+        // table on prod and isn't useful.
+        runs.distinctRunIds = annotationSetService.countDistinctRunIdsSince(
+                since7d, AnnotationSetRole.PROPOSAL );
+        runs.lastRanAt = annotationSetService.findLatestCreatedAt( AnnotationSetRole.PROPOSAL );
         body.agentRuns = runs;
 
         return respond( body );
@@ -2273,8 +2356,8 @@ public class AdminWebService {
     public static class ProposalsBlock {
         public long totalLast24h;
         public long totalLast7d;
-        /** Lifetime per-status counts (OPEN / FINALIZED / REOPENED / future values). */
-        public Map<String, Long> byStatus;
+        /** Lifetime per-role counts (proposal / draft / snapshot). */
+        public Map<String, Long> byRole;
     }
 
     public static class TicketsBlock {
@@ -2336,9 +2419,9 @@ public class AdminWebService {
     }
 
     public static class AgentRunsBlock {
-        /** Distinct {@code runId}s seen on AgentProposal rows in the last 7 days. */
+        /** Distinct {@code runId}s seen on AnnotationSet rows with role=PROPOSAL in the last 7 days. */
         public long distinctRunIds;
-        /** Most recent {@code ranAt} across the entire AgentProposal table; null if the table is empty. */
+        /** Most recent {@code createdAt} across PROPOSAL-role AnnotationSet rows; null if none. */
         @Nullable
         public Date lastRanAt;
     }

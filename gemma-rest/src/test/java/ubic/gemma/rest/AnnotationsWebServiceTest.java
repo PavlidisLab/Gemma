@@ -25,6 +25,7 @@ import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.search.SearchResult;
 import ubic.gemma.model.common.search.SearchSettings;
@@ -120,15 +121,21 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         }
 
         @Bean
-        public TaxonArgService taxonArgService( TaxonService taxonService ) {
-            return new TaxonArgService( taxonService, mock( ChromosomeService.class ), mock( GeneService.class ) );
+        public TaxonArgService taxonArgService( TaxonService taxonService, GeneService geneService ) {
+            return new TaxonArgService( taxonService, mock( ChromosomeService.class ), geneService );
+        }
+
+        @Bean
+        public GeneService geneService() {
+            return mock( GeneService.class );
         }
 
         @Bean
         public AnnotationsWebService annotationsWebService( OntologyService ontologyService, SearchService searchService,
                 CharacteristicService characteristicService, ExpressionExperimentService expressionExperimentService,
-                DatasetArgService datasetRestService, TaxonArgService taxonArgService ) {
-            return new AnnotationsWebService( ontologyService, searchService, characteristicService, expressionExperimentService, datasetRestService, taxonArgService );
+                DatasetArgService datasetRestService, TaxonArgService taxonArgService, GeneService geneService ) {
+            return new AnnotationsWebService( ontologyService, searchService, characteristicService,
+                    expressionExperimentService, datasetRestService, taxonArgService, geneService, null );
         }
 
         @Bean
@@ -170,6 +177,9 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
     @Autowired
     private CharacteristicService characteristicService;
 
+    @Autowired
+    private GeneService geneService;
+
     @BeforeEach
     public void setUpMocks() {
         Taxon taxon = Taxon.Factory.newInstance();
@@ -183,7 +193,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
 
     @AfterEach
     public void resetMocks() {
-        reset( searchService, taxonService, ontologyService, expressionExperimentService, characteristicService );
+        reset( searchService, taxonService, ontologyService, expressionExperimentService, characteristicService, geneService );
     }
 
     @Test
@@ -334,6 +344,93 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         ee.setId( 1L );
         when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
         String body = "{\"category\":\"organism part\",\"value\":\"liver\",\"evidenceCode\":\"BOGUS\"}";
+        assertThat( target( "/annotations/datasets/1/annotations" ).request().post( Entity.json( body ) ) )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        verify( expressionExperimentService, never() ).addAnnotation( any(), any() );
+    }
+
+    @Test
+    @WithMockUser(authorities = { "GROUP_CURATOR" })
+    public void testAddDatasetAnnotationCreatesStatementWhenPredicateOrObjectSet() {
+        // POST a compound annotation: "treatment HFD has_dose 30%". The conversion must
+        // construct a Statement (not a plain Characteristic) and populate predicate +
+        // object on it. Verifies the Gemma 2.0 EE Statement support — the underlying
+        // service.addAnnotation signature already accepts any Characteristic subclass.
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setId( 1L );
+        ee.setShortName( "GSE-test" );
+        ee.setCharacteristics( new LinkedHashSet<>() );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.addAnnotation( eq( ee ), any( Characteristic.class ) ) )
+                .thenAnswer( a -> {
+                    Characteristic vc = a.getArgument( 1, Characteristic.class );
+                    vc.setId( 99L );
+                    return vc;
+                } );
+        String body = "{"
+                + "\"category\":\"treatment\","
+                + "\"categoryUri\":\"http://www.ebi.ac.uk/efo/EFO_0000727\","
+                + "\"value\":\"high fat diet\","
+                + "\"valueUri\":\"http://purl.obolibrary.org/obo/EFO_0002091\","
+                + "\"predicate\":\"has_dose\","
+                + "\"predicateUri\":\"http://purl.obolibrary.org/obo/RO_0002211\","
+                + "\"object\":\"30%\","
+                + "\"objectUri\":\"http://example.com/dose/30pct\""
+                + "}";
+        assertThat( target( "/annotations/datasets/1/annotations" ).request().post( Entity.json( body ) ) )
+                .hasStatus( Response.Status.CREATED );
+        org.mockito.ArgumentCaptor<Characteristic> captor = org.mockito.ArgumentCaptor.forClass( Characteristic.class );
+        verify( expressionExperimentService ).addAnnotation( eq( ee ), captor.capture() );
+        Characteristic persisted = captor.getValue();
+        assertThat( persisted ).isInstanceOf( Statement.class );
+        Statement s = ( Statement ) persisted;
+        assertThat( s.getCategory() ).isEqualTo( "treatment" );
+        assertThat( s.getValue() ).isEqualTo( "high fat diet" );
+        assertThat( s.getPredicate() ).isEqualTo( "has_dose" );
+        assertThat( s.getPredicateUri() ).isEqualTo( "http://purl.obolibrary.org/obo/RO_0002211" );
+        assertThat( s.getObject() ).isEqualTo( "30%" );
+        assertThat( s.getObjectUri() ).isEqualTo( "http://example.com/dose/30pct" );
+        assertThat( s.getSecondPredicate() ).isNull();
+        assertThat( s.getSecondObject() ).isNull();
+    }
+
+    @Test
+    @WithMockUser(authorities = { "GROUP_CURATOR" })
+    public void testAddDatasetAnnotationCreatesCharacteristicWhenNoStatementFieldsSet() {
+        // Sanity: bodies without any predicate/object field still produce a plain
+        // Characteristic (not an empty-Statement subclass). The hasStatementShape() guard
+        // is what flips the conversion; this pins that the default path is unchanged.
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setId( 1L );
+        ee.setShortName( "GSE-test" );
+        ee.setCharacteristics( new LinkedHashSet<>() );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.addAnnotation( eq( ee ), any( Characteristic.class ) ) )
+                .thenAnswer( a -> a.getArgument( 1, Characteristic.class ) );
+        String body = "{\"category\":\"organism part\",\"value\":\"liver\","
+                + "\"valueUri\":\"http://purl.obolibrary.org/obo/UBERON_0002107\"}";
+        assertThat( target( "/annotations/datasets/1/annotations" ).request().post( Entity.json( body ) ) )
+                .hasStatus( Response.Status.CREATED );
+        org.mockito.ArgumentCaptor<Characteristic> captor = org.mockito.ArgumentCaptor.forClass( Characteristic.class );
+        verify( expressionExperimentService ).addAnnotation( eq( ee ), captor.capture() );
+        assertThat( captor.getValue() ).isNotInstanceOf( Statement.class );
+    }
+
+    @Test
+    @WithMockUser(authorities = { "GROUP_CURATOR" })
+    public void testAddDatasetAnnotationRejectsSecondPredicateWithoutFirst() {
+        // Compound second-pair semantics only make sense relative to a first pair; a body
+        // that supplies secondPredicate without ANY first predicate/object is malformed.
+        // Catches client bugs that conflate the two pairs.
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        String body = "{"
+                + "\"category\":\"treatment\","
+                + "\"value\":\"HFD\","
+                + "\"secondPredicate\":\"for\","
+                + "\"secondObject\":\"12 weeks\""
+                + "}";
         assertThat( target( "/annotations/datasets/1/annotations" ).request().post( Entity.json( body ) ) )
                 .hasStatus( Response.Status.BAD_REQUEST );
         verify( expressionExperimentService, never() ).addAnnotation( any(), any() );
@@ -962,13 +1059,16 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
     }
 
     @Test
-    public void testSearchAnnotationsLeavesMatchAttributionNullForNonEqualLabel() throws SearchException, TimeoutException {
-        // Hit's preferred label only SHARES a token with the query (not equals) → matchedVia=null.
-        // Catches the regression where token-overlap matches were tagged preferred_label, making
-        // the attribution useless as a relevance signal.
+    public void testSearchAnnotationsAttributesLabelTokensForNonEqualPartialLabel() throws SearchException, TimeoutException {
+        // Query "pancreatic cell" is a multi-token query; the label "type b pancreatic cell"
+        // contains both content tokens as substrings but does not start with the query and is
+        // not equal to it. Under the new attribution taxonomy this surfaces as
+        // matchedVia=label_tokens — the relevant signal for the agents-side eval team that
+        // multi-token coverage is the reason for the match (previously surfaced as null,
+        // forcing them to guess).
         CharacteristicValueObject hit = new CharacteristicValueObject(
                 "type b pancreatic cell", "http://example.com/CL_0000169", "cell type", "http://example.com/cell_type" );
-        when( ontologyService.findExperimentsCharacteristicTags( eq( "type" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "pancreatic cell" ), anyInt(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( Collections.singletonList( hit ) );
         when( ontologyService.getDefinition( anyString(), anyLong(), any() ) ).thenReturn( null );
         OntologyTerm term = mock( OntologyTerm.class );
@@ -981,15 +1081,426 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
                 .thenReturn( Collections.emptyMap() );
 
-        assertThat( target( "/annotations/search" ).queryParam( "query", "type" ).request().get() )
+        assertThat( target( "/annotations/search" ).queryParam( "query", "pancreatic cell" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .entity()
                 .extracting( "data", list( Map.class ) )
                 .hasSize( 1 )
                 .first()
                 .satisfies( a -> assertThat( a )
-                        .containsEntry( "matchedVia", null )
-                        .containsEntry( "matchedText", null ) );
+                        .containsEntry( "matchedVia", "label_tokens" )
+                        .containsEntry( "matchedText", "type b pancreatic cell" ) );
+    }
+
+    @Test
+    public void testSearchAnnotationsAttributesSynonymTokensWhenLabelLacksTokens() throws SearchException, TimeoutException {
+        // Query: "ammon horn" (multi-token). Label "hippocampus" contains neither content
+        // token, but a synonym "Ammon's horn" covers both. Under the new attribution taxonomy
+        // this surfaces as matchedVia=synonym_tokens — important for the agents-side eval
+        // team: the strict-equality synonym tier (exact_synonym) needs the query to NORMALISE
+        // equal to the synonym, which fails on token-level reorderings; synonym_tokens picks
+        // up the slack so the bind has a reason set.
+        CharacteristicValueObject hit = new CharacteristicValueObject(
+                "hippocampus", "http://example.com/UBERON_0002421", "organism part", "http://example.com/organism_part" );
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "ammon horn" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Collections.singletonList( hit ) );
+        when( ontologyService.getDefinition( anyString(), anyLong(), any() ) ).thenReturn( null );
+        OntologyTerm term = mock( OntologyTerm.class );
+        when( term.getUri() ).thenReturn( "http://example.com/UBERON_0002421" );
+        when( term.getLabel() ).thenReturn( "hippocampus" );
+        AnnotationProperty syn = mock( AnnotationProperty.class );
+        when( syn.getContents() ).thenReturn( "Ammon's horn" );
+        when( term.getAnnotations( "http://www.geneontology.org/formats/oboInOwl#hasExactSynonym" ) )
+                .thenReturn( Collections.singletonList( syn ) );
+        when( term.getAnnotations( anyString() ) ).thenAnswer( a -> {
+            String prop = a.getArgument( 0 );
+            if ( "http://www.geneontology.org/formats/oboInOwl#hasExactSynonym".equals( prop ) ) {
+                return Collections.singletonList( syn );
+            }
+            return Collections.emptyList();
+        } );
+        when( ontologyService.getTerm( anyString(), anyLong(), any() ) ).thenReturn( term );
+        when( ontologyService.getParents( anySet(), eq( true ), eq( true ), anyLong(), any() ) )
+                .thenReturn( Collections.emptySet() );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/annotations/search" ).queryParam( "query", "ammon horn" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 1 )
+                .first()
+                .satisfies( a -> assertThat( a )
+                        .containsEntry( "matchedVia", "synonym_tokens" )
+                        .containsEntry( "matchedText", "Ammon's horn" ) );
+    }
+
+    @Test
+    public void testSearchAnnotationsAttributesLabelPrefixForTypeahead() throws SearchException, TimeoutException {
+        // Typeahead: user typed "alzhei" and the label is "alzheimer's disease". This is
+        // matchedVia=label_prefix (not exact, not token-coverage; the partial prefix is the
+        // reason).
+        CharacteristicValueObject hit = new CharacteristicValueObject(
+                "alzheimer's disease", "http://example.com/DOID_10652", "disease", "http://example.com/disease" );
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "alzhei" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Collections.singletonList( hit ) );
+        when( ontologyService.getDefinition( anyString(), anyLong(), any() ) ).thenReturn( null );
+        OntologyTerm term = mock( OntologyTerm.class );
+        when( term.getUri() ).thenReturn( "http://example.com/DOID_10652" );
+        when( term.getLabel() ).thenReturn( "alzheimer's disease" );
+        when( term.getAnnotations( anyString() ) ).thenReturn( Collections.emptyList() );
+        when( ontologyService.getTerm( anyString(), anyLong(), any() ) ).thenReturn( term );
+        when( ontologyService.getParents( anySet(), eq( true ), eq( true ), anyLong(), any() ) )
+                .thenReturn( Collections.emptySet() );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/annotations/search" ).queryParam( "query", "alzhei" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 1 )
+                .first()
+                .satisfies( a -> assertThat( a )
+                        .containsEntry( "matchedVia", "label_prefix" )
+                        .containsEntry( "matchedText", "alzheimer's disease" ) );
+    }
+
+    @Test
+    public void testSearchAnnotationsSurfacesGeneByOfficialName() throws SearchException, TimeoutException {
+        // Gemma 1.0 parity: typing "haptoglobin" (the gene's official name, NOT its symbol)
+        // surfaces the HP gene row. The previous symbol-only fan-out missed this case because
+        // the official symbol is "HP", not "haptoglobin". Regression filed in screenshots
+        // 2026-06-13.
+        ubic.gemma.model.genome.Gene hp = mock( ubic.gemma.model.genome.Gene.class );
+        when( hp.getId() ).thenReturn( 3240L );
+        when( hp.getOfficialSymbol() ).thenReturn( "HP" );
+        when( hp.getOfficialName() ).thenReturn( "haptoglobin" );
+        when( hp.getNcbiGeneId() ).thenReturn( 3240 );
+        when( geneService.findByOfficialSymbol( "haptoglobin" ) ).thenReturn( Collections.emptyList() );
+        when( geneService.findByOfficialName( "haptoglobin" ) ).thenReturn( Collections.singletonList( hp ) );
+        when( geneService.findByAlias( "haptoglobin" ) ).thenReturn( Collections.emptyList() );
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "haptoglobin" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Collections.emptyList() );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/annotations/search" ).queryParam( "query", "haptoglobin" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 1 )
+                .first()
+                .satisfies( a -> assertThat( a )
+                        .containsEntry( "category", "gene" )
+                        .containsEntry( "value", "HP haptoglobin" )
+                        .containsEntry( "valueUri", "http://purl.org/commons/record/ncbi_gene/3240" )
+                        .containsEntry( "matchedVia", "search:gene_name" ) );
+    }
+
+    @Test
+    public void testSearchAnnotationsSurfacesGeneByAlias() throws SearchException, TimeoutException {
+        // Alias fan-out: a curator typing "Trp53" finds TRP53. The mouse-style alias resolves
+        // to the human/mouse gene regardless of which spelling the curator used.
+        ubic.gemma.model.genome.Gene tp53 = mock( ubic.gemma.model.genome.Gene.class );
+        when( tp53.getId() ).thenReturn( 22059L );
+        when( tp53.getOfficialSymbol() ).thenReturn( "Trp53" );
+        when( tp53.getOfficialName() ).thenReturn( "transformation related protein 53" );
+        when( tp53.getNcbiGeneId() ).thenReturn( 22059 );
+        when( geneService.findByOfficialSymbol( "tp53" ) ).thenReturn( Collections.emptyList() );
+        when( geneService.findByOfficialName( "tp53" ) ).thenReturn( Collections.emptyList() );
+        when( geneService.findByAlias( "tp53" ) ).thenReturn( Collections.singletonList( tp53 ) );
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "tp53" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Collections.emptyList() );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/annotations/search" ).queryParam( "query", "tp53" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 1 )
+                .first()
+                .satisfies( a -> assertThat( a )
+                        .containsEntry( "category", "gene" )
+                        .containsEntry( "value", "Trp53 transformation related protein 53" )
+                        .containsEntry( "valueUri", "http://purl.org/commons/record/ncbi_gene/22059" )
+                        .containsEntry( "matchedVia", "search:gene_alias" ) );
+    }
+
+    @Test
+    public void testSearchAnnotationsDropsGeneFanoutWhenURIAlreadyInOntologyResults() throws SearchException, TimeoutException {
+        // The IL10 regression from screenshots 2026-06-14: when the corpus already carries a
+        // characteristic with the same NCBI Gene URI (a curator previously tagged an experiment
+        // with the gene under category "genotype" → label "Il10 [mouse] interleukin 10",
+        // usageCount > 0), the synthetic gene-fanout row would duplicate it with a bare label
+        // and zero usage. Fix: URI-dedup at merge time. Ontology row wins (richer label + usage).
+        CharacteristicValueObject ontologyHit = new CharacteristicValueObject(
+                "Il10 [mouse] interleukin 10",
+                "http://purl.org/commons/record/ncbi_gene/16153",
+                "genotype",
+                "http://www.ebi.ac.uk/efo/EFO_0000513" );
+        ubic.gemma.model.genome.Gene il10 = mock( ubic.gemma.model.genome.Gene.class );
+        when( il10.getId() ).thenReturn( 16153L );
+        when( il10.getOfficialSymbol() ).thenReturn( "Il10" );
+        when( il10.getOfficialName() ).thenReturn( "interleukin 10" );
+        when( il10.getNcbiGeneId() ).thenReturn( 16153 );
+        when( geneService.findByOfficialSymbol( "il10" ) ).thenReturn( Collections.singletonList( il10 ) );
+        when( geneService.findByOfficialName( "il10" ) ).thenReturn( Collections.emptyList() );
+        when( geneService.findByAlias( "il10" ) ).thenReturn( Collections.emptyList() );
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "il10" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Collections.singletonList( ontologyHit ) );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+        OntologyTerm term = mock( OntologyTerm.class );
+        when( term.getUri() ).thenReturn( "http://purl.org/commons/record/ncbi_gene/16153" );
+        when( term.getLabel() ).thenReturn( "Il10 [mouse] interleukin 10" );
+        when( term.getAnnotations( anyString() ) ).thenReturn( Collections.emptyList() );
+        when( ontologyService.getTerm( anyString(), anyLong(), any() ) ).thenReturn( term );
+        when( ontologyService.getParents( anySet(), eq( true ), eq( true ), anyLong(), any() ) )
+                .thenReturn( Collections.emptySet() );
+
+        assertThat( target( "/annotations/search" ).queryParam( "query", "il10" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 1 )
+                .first()
+                .satisfies( a -> assertThat( a )
+                        .containsEntry( "category", "genotype" )
+                        .containsEntry( "value", "Il10 [mouse] interleukin 10" )
+                        .containsEntry( "valueUri", "http://purl.org/commons/record/ncbi_gene/16153" ) );
+    }
+
+    @Test
+    public void testSearchAnnotationsDedupesGenesAcrossProbes() throws SearchException, TimeoutException {
+        // A single gene matching by multiple probes (symbol AND alias, e.g.) must emit one row.
+        ubic.gemma.model.genome.Gene hp = mock( ubic.gemma.model.genome.Gene.class );
+        when( hp.getId() ).thenReturn( 3240L );
+        when( hp.getOfficialSymbol() ).thenReturn( "HP" );
+        when( hp.getOfficialName() ).thenReturn( "haptoglobin" );
+        when( hp.getNcbiGeneId() ).thenReturn( 3240 );
+        // Imagine a hypothetical query "HP" that matches both the symbol AND an alias on the
+        // same Gene row.
+        when( geneService.findByOfficialSymbol( "HP" ) ).thenReturn( Collections.singletonList( hp ) );
+        when( geneService.findByOfficialName( "HP" ) ).thenReturn( Collections.emptyList() );
+        when( geneService.findByAlias( "HP" ) ).thenReturn( Collections.singletonList( hp ) );
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "HP" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Collections.emptyList() );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/annotations/search" ).queryParam( "query", "HP" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 1 );
+    }
+
+    @Test
+    public void testSearchAnnotationsExactOntologyLabelOutranksGeneAliasCollision() throws SearchException, TimeoutException {
+        // The "age" regression: NCBI Renbp carries the historical alias "AGE", so the gene
+        // fan-out's findByAlias probe returned it. Before this fix the alias-matched gene was
+        // unconditionally prepended above the tier-sorted ontology hits, so a resolver-style
+        // caller inspecting the top hit saw value="Renbp renin binding protein" and concluded
+        // "no high-confidence hit for the bare label 'age'" — even though PATO:0000011 and
+        // EFO:0000246 both carry preferred_label="age". Alias-only hits must now land BELOW
+        // the tier-0 ontology rows.
+        CharacteristicValueObject pato = new CharacteristicValueObject(
+                "age", "http://purl.obolibrary.org/obo/PATO_0000011", null, null );
+        CharacteristicValueObject efo = new CharacteristicValueObject(
+                "age", "http://www.ebi.ac.uk/efo/EFO_0000246", null, null );
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "age" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Arrays.asList( pato, efo ) );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+        ubic.gemma.model.genome.Gene renbp = mock( ubic.gemma.model.genome.Gene.class );
+        when( renbp.getId() ).thenReturn( 19703L );
+        when( renbp.getOfficialSymbol() ).thenReturn( "Renbp" );
+        when( renbp.getOfficialName() ).thenReturn( "renin binding protein" );
+        when( renbp.getNcbiGeneId() ).thenReturn( 19703 );
+        when( geneService.findByOfficialSymbol( "age" ) ).thenReturn( Collections.emptyList() );
+        when( geneService.findByOfficialName( "age" ) ).thenReturn( Collections.emptyList() );
+        when( geneService.findByAlias( "age" ) ).thenReturn( Collections.singletonList( renbp ) );
+
+        assertThat( target( "/annotations/search" ).queryParam( "query", "age" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 3 )
+                .satisfies( hits -> {
+                    assertThat( ( ( Map<?, ?> ) hits.get( 0 ) ).get( "valueUri" ) ).isEqualTo( "http://purl.obolibrary.org/obo/PATO_0000011" );
+                    assertThat( ( ( Map<?, ?> ) hits.get( 1 ) ).get( "valueUri" ) ).isEqualTo( "http://www.ebi.ac.uk/efo/EFO_0000246" );
+                    assertThat( ( ( Map<?, ?> ) hits.get( 2 ) ).get( "valueUri" ) ).isEqualTo( "http://purl.org/commons/record/ncbi_gene/19703" );
+                    assertThat( ( ( Map<?, ?> ) hits.get( 2 ) ).get( "matchedVia" ) ).isEqualTo( "search:gene_alias" );
+                } );
+    }
+
+    @Test
+    public void testSearchAnnotationsPopulatesPriorCategoriesFromCorpusHistory() throws SearchException, TimeoutException {
+        // Resolver tiebreaker signal: a URI's prior-category breakdown should land on the wire
+        // so a downstream resolver can choose "cell line" when the URI has been tagged 14× as
+        // a cell line and 1× as a protein, regardless of which ontology label happened to match.
+        CharacteristicValueObject clo = new CharacteristicValueObject(
+                "mec-2 cell", "http://purl.obolibrary.org/obo/CLO_0037182", null, null );
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "MEC-2" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Collections.singletonList( clo ) );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+        Map<String, Map<String, Long>> priorByUri = new HashMap<>();
+        Map<String, Long> mec2Categories = new HashMap<>();
+        mec2Categories.put( "cell line", 14L );
+        mec2Categories.put( "protein", 1L );
+        priorByUri.put( "http://purl.obolibrary.org/obo/CLO_0037182", mec2Categories );
+        when( characteristicService.findEeCountsByUriGroupedByCategory( anySet() ) ).thenReturn( priorByUri );
+
+        assertThat( target( "/annotations/search" ).queryParam( "query", "MEC-2" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 1 )
+                .first()
+                .satisfies( a -> {
+                    @SuppressWarnings("unchecked")
+                    Map<String, Integer> priorCategories = ( Map<String, Integer> ) a.get( "priorCategories" );
+                    assertThat( priorCategories ).containsEntry( "cell line", 14 ).containsEntry( "protein", 1 );
+                } );
+    }
+
+    @Test
+    public void testSearchAnnotationsHyphenInsensitiveMec2FindsCloCellLine() throws SearchException, TimeoutException {
+        // The MEC2 / MEC-2 regression: bro 1's resolver hit /annotations/search?query=MEC2 and got
+        // back EFO_0006285 ("mec2", a protein), missing CLO_0037182 ("mec-2 cell") entirely because
+        // the CLO label has both a hyphen AND the " cell" suffix the query lacks. With the canonical-
+        // form tier match (lowercase + strip cell suffix + strip hyphens), both labels canonicalise
+        // to "mec2" so both reach tier 0; the CLO-preference tiebreaker then promotes CLO ahead of
+        // EFO because the strip-and-hyphen normalisation earned the match.
+        CharacteristicValueObject efo = new CharacteristicValueObject( "mec2", "http://www.ebi.ac.uk/efo/EFO_0006285", null, null );
+        CharacteristicValueObject clo = new CharacteristicValueObject( "mec-2 cell", "http://purl.obolibrary.org/obo/CLO_0037182", null, null );
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "MEC2" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Arrays.asList( efo, clo ) );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/annotations/search" ).queryParam( "query", "MEC2" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 2 )
+                .satisfies( hits -> {
+                    assertThat( ( ( Map<?, ?> ) hits.get( 0 ) ).get( "valueUri" ) ).isEqualTo( "http://purl.obolibrary.org/obo/CLO_0037182" );
+                    assertThat( ( ( Map<?, ?> ) hits.get( 1 ) ).get( "valueUri" ) ).isEqualTo( "http://www.ebi.ac.uk/efo/EFO_0006285" );
+                } );
+    }
+
+    @Test
+    public void testSearchAnnotationsHyphenInsensitiveMec2DashFindsEfoBareLabel() throws SearchException, TimeoutException {
+        // Reverse direction of the MEC2 case: query has the hyphen, EFO has the bare form. The
+        // ranker must still reach tier 0 on EFO so a resolver that received MEC-2 from a curator
+        // can see both candidates. CLO still leads (canonical-form match earned via strip);
+        // EFO follows.
+        CharacteristicValueObject efo = new CharacteristicValueObject( "mec2", "http://www.ebi.ac.uk/efo/EFO_0006285", null, null );
+        CharacteristicValueObject clo = new CharacteristicValueObject( "mec-2 cell", "http://purl.obolibrary.org/obo/CLO_0037182", null, null );
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "MEC-2" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Arrays.asList( efo, clo ) );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/annotations/search" ).queryParam( "query", "MEC-2" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 2 )
+                .satisfies( hits -> {
+                    assertThat( ( ( Map<?, ?> ) hits.get( 0 ) ).get( "valueUri" ) ).isEqualTo( "http://purl.obolibrary.org/obo/CLO_0037182" );
+                    assertThat( ( ( Map<?, ?> ) hits.get( 1 ) ).get( "valueUri" ) ).isEqualTo( "http://www.ebi.ac.uk/efo/EFO_0006285" );
+                } );
+    }
+
+    @Test
+    public void testSearchAnnotationsExactLabelFilterRespectsHyphenAndCellSuffixCanonicalForm() throws SearchException, TimeoutException {
+        // The resolver-style call: ?query=MEC2&exact_label=true&prefixes=CLO_,CL_. Before this
+        // fix the exact_label filter applied literal toLowerCase().equals(); "mec-2 cell" !=
+        // "mec2" so the filter dropped CLO_0037182 and the resolver got zero hits. The filter
+        // must apply the same canonical form the tier function uses.
+        CharacteristicValueObject clo = new CharacteristicValueObject( "mec-2 cell", "http://purl.obolibrary.org/obo/CLO_0037182", null, null );
+        CharacteristicValueObject efo = new CharacteristicValueObject( "mec2", "http://www.ebi.ac.uk/efo/EFO_0006285", null, null );
+        CharacteristicValueObject unrelated = new CharacteristicValueObject( "mec2-related thing", "http://example.com/x", null, null );
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "MEC2" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Arrays.asList( efo, clo, unrelated ) );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/annotations/search" )
+                .queryParam( "query", "MEC2" )
+                .queryParam( "exact_label", "true" )
+                .request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 2 )
+                .satisfies( hits -> {
+                    // CLO first (canonical-form strip earned the match); EFO follows; the
+                    // "mec2-related thing" row drops because its canonical form is
+                    // "mec2related thing", not "mec2".
+                    assertThat( ( ( Map<?, ?> ) hits.get( 0 ) ).get( "valueUri" ) ).isEqualTo( "http://purl.obolibrary.org/obo/CLO_0037182" );
+                    assertThat( ( ( Map<?, ?> ) hits.get( 1 ) ).get( "valueUri" ) ).isEqualTo( "http://www.ebi.ac.uk/efo/EFO_0006285" );
+                } );
+    }
+
+    @Test
+    public void testSearchAnnotationsCanonicaliseDoesNotRegressNonHyphenatedQueries() throws SearchException, TimeoutException {
+        // Guard: a non-identifier query like "diabetes" must rank the same as before. The
+        // canonical-form check passes through cleanly when no hyphens or cell suffix are
+        // involved on either side.
+        CharacteristicValueObject diabetes = new CharacteristicValueObject(
+                "diabetes mellitus", "http://www.ebi.ac.uk/efo/EFO_0000400", null, null );
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "diabetes" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Collections.singletonList( diabetes ) );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/annotations/search" ).queryParam( "query", "diabetes" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 1 )
+                .first()
+                .satisfies( a -> assertThat( a ).containsEntry( "valueUri", "http://www.ebi.ac.uk/efo/EFO_0000400" ) );
+    }
+
+    @Test
+    public void testSearchAnnotationsSymbolMatchStillPrependsAboveOntologyHits() throws SearchException, TimeoutException {
+        // Regression guard: an exact-symbol gene hit MUST still lead the response so a curator
+        // typing a brand-new gene's symbol sees it ahead of any incidental ontology substring
+        // match. Only alias-only hits got demoted.
+        ubic.gemma.model.genome.Gene stat5b = mock( ubic.gemma.model.genome.Gene.class );
+        when( stat5b.getId() ).thenReturn( 6777L );
+        when( stat5b.getOfficialSymbol() ).thenReturn( "STAT5B" );
+        when( stat5b.getOfficialName() ).thenReturn( "signal transducer and activator of transcription 5B" );
+        when( stat5b.getNcbiGeneId() ).thenReturn( 6777 );
+        when( geneService.findByOfficialSymbol( "STAT5B" ) ).thenReturn( Collections.singletonList( stat5b ) );
+        when( geneService.findByOfficialName( "STAT5B" ) ).thenReturn( Collections.emptyList() );
+        when( geneService.findByAlias( "STAT5B" ) ).thenReturn( Collections.emptyList() );
+        // Incidental ontology hit so the test exercises the prepend ordering.
+        CharacteristicValueObject incidental = new CharacteristicValueObject(
+                "STAT5B related thing", "http://example.com/foo", null, null );
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "STAT5B" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Collections.singletonList( incidental ) );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/annotations/search" ).queryParam( "query", "STAT5B" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 2 )
+                .satisfies( hits -> {
+                    assertThat( ( ( Map<?, ?> ) hits.get( 0 ) ).get( "valueUri" ) ).isEqualTo( "http://purl.org/commons/record/ncbi_gene/6777" );
+                    assertThat( ( ( Map<?, ?> ) hits.get( 0 ) ).get( "matchedVia" ) ).isEqualTo( "search:gene_symbol" );
+                    assertThat( ( ( Map<?, ?> ) hits.get( 1 ) ).get( "valueUri" ) ).isEqualTo( "http://example.com/foo" );
+                } );
     }
 
     @Test
@@ -1234,6 +1745,76 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
                     // After CL_-only filter + URI-ASC canonical sort, top-2 of the CL set:
                     assertThat( ( ( Map<?, ?> ) hits.get( 0 ) ).get( "valueUri" ) ).isEqualTo( "http://purl.obolibrary.org/obo/CL_0000000" );
                     assertThat( ( ( Map<?, ?> ) hits.get( 1 ) ).get( "valueUri" ) ).isEqualTo( "http://purl.obolibrary.org/obo/CL_0000001" );
+                } );
+    }
+
+    @Test
+    public void testSearchAnnotationsPrefersCloOverEfoForBareCellLineQuery() throws SearchException, TimeoutException {
+        // Bare cell-line query (no trailing " cell"): EFO labels the line as the bare name
+        // ("a549"), CLO as "A549 cell". Without suffix-stripping, EFO wins at the exact-label
+        // tier and CLO sinks to startsWith. With the strip, both reach tier 0 and the cell-line
+        // tiebreaker promotes CLO ahead of EFO.
+        CharacteristicValueObject efo = new CharacteristicValueObject( "a549", "http://www.ebi.ac.uk/efo/EFO_0001086", "cell line", null );
+        CharacteristicValueObject clo = new CharacteristicValueObject( "A549 cell", "http://purl.obolibrary.org/obo/CLO_0001601", "cell line", null );
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "A549" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Arrays.asList( efo, clo ) );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/annotations/search" ).queryParam( "query", "A549" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 2 )
+                .satisfies( hits -> {
+                    assertThat( ( ( Map<?, ?> ) hits.get( 0 ) ).get( "valueUri" ) ).isEqualTo( "http://purl.obolibrary.org/obo/CLO_0001601" );
+                    assertThat( ( ( Map<?, ?> ) hits.get( 1 ) ).get( "valueUri" ) ).isEqualTo( "http://www.ebi.ac.uk/efo/EFO_0001086" );
+                } );
+    }
+
+    @Test
+    public void testSearchAnnotationsPrefersCloOverEfoForCellSuffixQuery() throws SearchException, TimeoutException {
+        // Regression: query already carries the " cell" suffix. CLO's "A549 cell" is the exact
+        // label match (tier 0); EFO's "a549" sinks to substring (tier 4). CLO must remain first.
+        CharacteristicValueObject efo = new CharacteristicValueObject( "a549", "http://www.ebi.ac.uk/efo/EFO_0001086", "cell line", null );
+        CharacteristicValueObject clo = new CharacteristicValueObject( "A549 cell", "http://purl.obolibrary.org/obo/CLO_0001601", "cell line", null );
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "A549 cell" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Arrays.asList( efo, clo ) );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/annotations/search" ).queryParam( "query", "A549 cell" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 2 )
+                .satisfies( hits -> {
+                    assertThat( ( ( Map<?, ?> ) hits.get( 0 ) ).get( "valueUri" ) ).isEqualTo( "http://purl.obolibrary.org/obo/CLO_0001601" );
+                    assertThat( ( ( Map<?, ?> ) hits.get( 1 ) ).get( "valueUri" ) ).isEqualTo( "http://www.ebi.ac.uk/efo/EFO_0001086" );
+                } );
+    }
+
+    @Test
+    public void testSearchAnnotationsCellLineTiebreakerDoesNotAffectNonCellLineQueries() throws SearchException, TimeoutException {
+        // Guard: the CLO-preference tiebreaker is gated on the " cell" suffix strip earning the
+        // match. A query that doesn't trigger the strip ("lung cancer", with hits whose labels
+        // don't end in " cell") must fall back to URI-ASC, not get a hidden CLO boost.
+        CharacteristicValueObject efo = new CharacteristicValueObject( "lung cancer", "http://www.ebi.ac.uk/efo/EFO_0001071", "disease", null );
+        CharacteristicValueObject mondo = new CharacteristicValueObject( "lung cancer", "http://purl.obolibrary.org/obo/MONDO_0008903", "disease", null );
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "lung cancer" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Arrays.asList( efo, mondo ) );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/annotations/search" ).queryParam( "query", "lung cancer" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 2 )
+                .satisfies( hits -> {
+                    // URI-ASC: "http://purl..." < "http://www...".
+                    assertThat( ( ( Map<?, ?> ) hits.get( 0 ) ).get( "valueUri" ) ).isEqualTo( "http://purl.obolibrary.org/obo/MONDO_0008903" );
+                    assertThat( ( ( Map<?, ?> ) hits.get( 1 ) ).get( "valueUri" ) ).isEqualTo( "http://www.ebi.ac.uk/efo/EFO_0001071" );
                 } );
     }
 }

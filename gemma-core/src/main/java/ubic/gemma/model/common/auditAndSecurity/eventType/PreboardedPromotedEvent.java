@@ -21,7 +21,7 @@ import jakarta.persistence.DiscriminatorValue;
  * {@code ExpressionExperiment}.
  *
  * <p>See {@code HANDOFF_PROPOSED_EXPERIMENT_WORKFLOW.md} §"Audit-event hooks".
- * The promotion implementation rebinds the AgentProposal rows' FK from
+ * The promotion implementation rebinds the AnnotationSet rows' FK from
  * the preboarded to the EE (new-row + FK rebind approach); this event is
  * appended to the EE's audit trail so the post-promotion history is
  * unified on the EE side.</p>

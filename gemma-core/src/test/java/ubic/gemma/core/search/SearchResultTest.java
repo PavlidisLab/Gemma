@@ -64,4 +64,28 @@ public class SearchResultTest {
         assertThrows( IllegalArgumentException.class, () -> sr.setResultObject( new FooBar( 2L ) ) );
     }
 
+    @Test
+    public void testExactIdentifierMatchDefaultsFalse() {
+        SearchResult<Identifiable> sr = SearchResult.from( FooBar.class, new FooBar( 1L ), 1.0, null, "test" );
+        assertThat( sr.isExactIdentifierMatch() ).isFalse();
+    }
+
+    @Test
+    public void testFromExactIdentifierTagsResult() {
+        SearchResult<Identifiable> sr = SearchResult.fromExactIdentifier( FooBar.class, new FooBar( 1L ), 1.0, null, "test" );
+        assertThat( sr.isExactIdentifierMatch() ).isTrue();
+    }
+
+    @Test
+    public void testExactIdentifierMatchPreservedAcrossWithMethods() {
+        SearchResult<Identifiable> sr = SearchResult.fromExactIdentifier( FooBar.class, new FooBar( 1L ), 1.0, null, "test" );
+        SearchResult<Identifiable> withHighlights = sr.withHighlights( Collections.singletonMap( "h", "v" ) );
+        assertThat( withHighlights.isExactIdentifierMatch() )
+                .as( "withHighlights must carry the flag forward; SearchResultSet uses it to merge sibling hits" )
+                .isTrue();
+        SearchResult<Identifiable> withObject = sr.withResultObject( new FooBar( 1L ) );
+        assertThat( withObject.isExactIdentifierMatch() )
+                .as( "withResultObject must carry the flag forward; SearchResultSet calls this when merging two hits for the same id" )
+                .isTrue();
+    }
 }

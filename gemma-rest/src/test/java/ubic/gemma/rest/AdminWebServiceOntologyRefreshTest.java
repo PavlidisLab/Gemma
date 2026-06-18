@@ -20,7 +20,7 @@ import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.persistence.service.blacklist.BlacklistedEntityService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseReadService;
-import ubic.gemma.persistence.service.expression.experiment.AgentProposalService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AnnotationSetService;
 import ubic.gemma.rest.util.args.TaxonArgService;
 
 import javax.sql.DataSource;
@@ -49,7 +49,7 @@ class AdminWebServiceOntologyRefreshTest {
     @Mock private SessionRegistry sessionRegistry;
     @Mock private DataSource dataSource;
     @Mock private UserManager userManager;
-    @Mock private AgentProposalService agentProposalService;
+    @Mock private AnnotationSetService annotationSetService;
     @Mock private TicketService ticketService;
     @Mock private TaxonArgService taxonArgService;
     @Mock private BlacklistedEntityService blacklistedEntityService;
@@ -59,6 +59,7 @@ class AdminWebServiceOntologyRefreshTest {
 
     @Mock private OntologyService chebi;
     @Mock private OntologyService mondo;
+    @Mock private ubic.gemma.core.ontology.OntologyService ontologyFacade;
 
     private AdminWebService service;
 
@@ -67,7 +68,7 @@ class AdminWebServiceOntologyRefreshTest {
         // chebi.getName() and mondo.getName() are stubbed per-test via when() so we don't
         // hit Mockito's unused-stub strictness when a test only inspects one bean.
         service = new AdminWebService( cacheManager, sessionFactory, taskRunningService, sessionRegistry,
-                List.of( chebi, mondo ), dataSource, userManager, agentProposalService, ticketService,
+                List.of( chebi, mondo ), ontologyFacade, dataSource, userManager, annotationSetService, ticketService,
                 taxonArgService, blacklistedEntityService, externalDatabaseReadService, geoScrapeService,
                 indexerService );
     }
@@ -158,8 +159,8 @@ class AdminWebServiceOntologyRefreshTest {
                 .thenThrow( new IllegalStateException( "CHEBI is not loaded yet." ) );
 
         AdminWebService svc = new AdminWebService( cacheManager, sessionFactory, taskRunningService,
-                sessionRegistry, java.util.List.of( realChebi ), dataSource, userManager,
-                agentProposalService, ticketService, taxonArgService, blacklistedEntityService,
+                sessionRegistry, java.util.List.of( realChebi ), ontologyFacade, dataSource, userManager,
+                annotationSetService, ticketService, taxonArgService, blacklistedEntityService,
                 externalDatabaseReadService, geoScrapeService, indexerService );
 
         assertThatThrownBy( () -> svc.rebuildOntologySlim( "CHEBI" ) )
@@ -173,8 +174,8 @@ class AdminWebServiceOntologyRefreshTest {
         when( realChebi.triggerSlimRebuildAsync() ).thenReturn( false );
 
         AdminWebService svc = new AdminWebService( cacheManager, sessionFactory, taskRunningService,
-                sessionRegistry, java.util.List.of( realChebi ), dataSource, userManager,
-                agentProposalService, ticketService, taxonArgService, blacklistedEntityService,
+                sessionRegistry, java.util.List.of( realChebi ), ontologyFacade, dataSource, userManager,
+                annotationSetService, ticketService, taxonArgService, blacklistedEntityService,
                 externalDatabaseReadService, geoScrapeService, indexerService );
 
         assertThatThrownBy( () -> svc.rebuildOntologySlim( "CHEBI" ) )
@@ -190,8 +191,8 @@ class AdminWebServiceOntologyRefreshTest {
         when( realChebi.triggerSlimRebuildAsync() ).thenReturn( true );
 
         AdminWebService svc = new AdminWebService( cacheManager, sessionFactory, taskRunningService,
-                sessionRegistry, java.util.List.of( realChebi ), dataSource, userManager,
-                agentProposalService, ticketService, taxonArgService, blacklistedEntityService,
+                sessionRegistry, java.util.List.of( realChebi ), ontologyFacade, dataSource, userManager,
+                annotationSetService, ticketService, taxonArgService, blacklistedEntityService,
                 externalDatabaseReadService, geoScrapeService, indexerService );
 
         Response resp = svc.rebuildOntologySlim( "CHEBI" );
@@ -207,8 +208,8 @@ class AdminWebServiceOntologyRefreshTest {
         when( realChebi.triggerSlimRebuildAsync() ).thenReturn( true );
 
         AdminWebService svc = new AdminWebService( cacheManager, sessionFactory, taskRunningService,
-                sessionRegistry, java.util.List.of( realChebi ), dataSource, userManager,
-                agentProposalService, ticketService, taxonArgService, blacklistedEntityService,
+                sessionRegistry, java.util.List.of( realChebi ), ontologyFacade, dataSource, userManager,
+                annotationSetService, ticketService, taxonArgService, blacklistedEntityService,
                 externalDatabaseReadService, geoScrapeService, indexerService );
 
         for ( String alias : new String[]{ "CHEBI", "chebi", "ChebiOntologyService" } ) {
@@ -217,9 +218,71 @@ class AdminWebServiceOntologyRefreshTest {
     }
 
     @Test
+    void refreshEvictsOntologyCacheOnceInitThreadCompletes() throws InterruptedException {
+        // Pre-fix bug: AdminWebService kicked startInitializationThread but never asked the facade
+        // to evict its findTerm / getParents / getChildren caches keyed by (ontologyService, ...).
+        // A term added to TGEMO upstream was reread into the Jena model but search lookups kept
+        // hitting the stale cache until a bounce. Pin that the evict now happens on a daemon
+        // gated by waitForInitializationThread, so callers still get a 202 immediately.
+        when( chebi.getName() ).thenReturn( "CHEBI" );
+        when( chebi.isInitializationThreadAlive() ).thenReturn( false );
+
+        Response resp = service.refreshOntology( "CHEBI", false );
+
+        assertThat( resp.getStatus() ).isEqualTo( 202 );
+        verify( chebi ).startInitializationThread( true, false );
+
+        // Give the daemon a moment to run waitForInitializationThread + clearCachesForOntology.
+        // The mock's waitForInitializationThread returns immediately (no real thread), so this
+        // should resolve well under the timeout — generous bound so a slow CI host doesn't flake.
+        // We don't stub the response-cache region here — the daemon's helper handles a null
+        // cache (e.g. region not registered on this build) gracefully, and the response-cache
+        // assertion lives in refreshFlushesAnnotationsSearchResponseCache.
+        long deadline = System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos( 5 );
+        while ( System.nanoTime() < deadline ) {
+            try {
+                verify( ontologyFacade ).clearCachesForOntology( chebi );
+                break;
+            } catch ( AssertionError notYet ) {
+                Thread.sleep( 20 );
+            }
+        }
+        verify( ontologyFacade ).clearCachesForOntology( chebi );
+        verify( chebi ).waitForInitializationThread();
+    }
+
+    @Test
+    void refreshFlushesAnnotationsSearchResponseCache() throws InterruptedException {
+        // Pre-fix bug (the matchedVia=null after TGEMO upstream change report):
+        // AnnotationsWebService caches /annotations/search responses for 5 minutes keyed by
+        // (query, strategy, limit, ...). Each cached hit has baked-in matchedVia / matchedText
+        // computed against the prior ontology state. A hit that resolved with matchedVia=null
+        // because TGEMO_00210 wasn't loaded yet would stay null in the cached payload until
+        // the next bounce or manual DELETE /admin/caches/AnnotationsSearchResponseCache.
+        // Pin that the refresh daemon now flushes that region too.
+        org.springframework.cache.Cache responseCache = mock( org.springframework.cache.Cache.class );
+        when( cacheManager.getCache( "AnnotationsSearchResponseCache" ) ).thenReturn( responseCache );
+        when( chebi.getName() ).thenReturn( "CHEBI" );
+        when( chebi.isInitializationThreadAlive() ).thenReturn( false );
+
+        service.refreshOntology( "CHEBI", false );
+
+        long deadline = System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos( 5 );
+        while ( System.nanoTime() < deadline ) {
+            try {
+                verify( responseCache ).clear();
+                break;
+            } catch ( AssertionError notYet ) {
+                Thread.sleep( 20 );
+            }
+        }
+        verify( responseCache ).clear();
+    }
+
+    @Test
     void refreshHandlesEmptyOntologyList() {
         AdminWebService emptyService = new AdminWebService( cacheManager, sessionFactory, taskRunningService,
-                sessionRegistry, Collections.emptyList(), dataSource, userManager, agentProposalService,
+                sessionRegistry, Collections.emptyList(), ontologyFacade, dataSource, userManager, annotationSetService,
                 ticketService, taxonArgService, blacklistedEntityService, externalDatabaseReadService,
                 geoScrapeService, indexerService );
 

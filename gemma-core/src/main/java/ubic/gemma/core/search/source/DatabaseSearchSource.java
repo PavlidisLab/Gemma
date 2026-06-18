@@ -118,8 +118,11 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
     @Override
     public Collection<SearchResult<ArrayDesign>> searchArrayDesign( SearchSettings settings, SearchContext context ) throws SearchException {
         StopWatch watch = StopWatch.createStarted();
-        String query = prepareDatabaseQuery( settings, context.getIssueReporter() );
-        if ( query == null ) {
+        // Identifier lookups (id, shortName) run against the raw query so reserved Lucene
+        // characters in canonical identifiers (e.g. a hyphenated platform shortName) don't get
+        // stripped by the QueryParser. See the same pattern in searchExpressionExperiment.
+        String rawQuery = StringUtils.trimToNull( settings.getQuery() );
+        if ( rawQuery == null ) {
             return Collections.emptySet();
         }
 
@@ -127,9 +130,9 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
 
         if ( canSearchById( settings, ArrayDesign.class ) ) {
             try {
-                ArrayDesign ad = arrayDesignService.load( Long.parseLong( query ) );
+                ArrayDesign ad = arrayDesignService.load( Long.parseLong( rawQuery ) );
                 if ( ad != null ) {
-                    results.add( SearchResult.from( ArrayDesign.class, ad, MATCH_BY_ID_SCORE, Collections.singletonMap( "id", ad.getId().toString() ), "ArrayDesignService.load" ) );
+                    results.add( SearchResult.fromExactIdentifier( ArrayDesign.class, ad, MATCH_BY_ID_SCORE, Collections.singletonMap( "id", ad.getId().toString() ), "ArrayDesignService.load" ) );
                 }
             } catch ( NumberFormatException e ) {
                 // ignore - not an ID
@@ -137,10 +140,19 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
         }
 
         if ( canContinue( results, settings, SearchSettings.SearchMode.EXACT ) ) {
-            ArrayDesign shortNameResult = arrayDesignService.findByShortName( query );
+            ArrayDesign shortNameResult = arrayDesignService.findByShortName( rawQuery );
             if ( shortNameResult != null ) {
-                results.add( SearchResult.from( ArrayDesign.class, shortNameResult, MATCH_BY_SHORT_NAME_SCORE, null, "ArrayDesignService.findByShortName" ) );
+                results.add( SearchResult.fromExactIdentifier( ArrayDesign.class, shortNameResult, MATCH_BY_SHORT_NAME_SCORE, null, "ArrayDesignService.findByShortName" ) );
             }
+        }
+
+        // Inexact / tokenized lookups use the Lucene-parsed form.
+        String query = prepareDatabaseQuery( settings, context.getIssueReporter() );
+        if ( query == null ) {
+            // Raw query reduced to nothing parseable (e.g. all stopwords); identifier path may
+            // still have produced a hit, so return whatever we have.
+            watch.stop();
+            return results;
         }
 
         if ( canContinue( results, settings, SearchSettings.SearchMode.EXACT ) ) {
@@ -181,7 +193,7 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
         watch.stop();
         if ( watch.getTime() > 1000 ) {
             log.warn( String.format( "Array Design DB search for %s with '%s' took %d ms found %d Ads",
-                    settings, query, watch.getTime(), results.size() ) );
+                    settings, rawQuery, watch.getTime(), results.size() ) );
         }
 
         return results;
@@ -189,8 +201,8 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
 
     @Override
     public Collection<SearchResult<ExpressionExperimentSet>> searchExperimentSet( SearchSettings settings, SearchContext context ) throws SearchException {
-        String query = prepareDatabaseQuery( settings, context.getIssueReporter() );
-        if ( query == null ) {
+        String rawQuery = StringUtils.trimToNull( settings.getQuery() );
+        if ( rawQuery == null ) {
             return Collections.emptySet();
         }
 
@@ -198,9 +210,9 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
 
         if ( canSearchById( settings, ExpressionExperimentSet.class ) ) {
             try {
-                ExpressionExperimentSet eeSet = this.experimentSetService.load( Long.parseLong( query ) );
+                ExpressionExperimentSet eeSet = this.experimentSetService.load( Long.parseLong( rawQuery ) );
                 if ( eeSet != null ) {
-                    results.addAll( toSearchResults( settings, ExpressionExperimentSet.class, Collections.singleton( eeSet ), MATCH_BY_ID_SCORE, "ExpressionExperimentSetService.load" ) );
+                    results.addAll( toSearchResults( settings, ExpressionExperimentSet.class, Collections.singleton( eeSet ), MATCH_BY_ID_SCORE, "ExpressionExperimentSetService.load", true ) );
                 }
             } catch ( NumberFormatException e ) {
                 // ignore
@@ -208,11 +220,12 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
         }
 
         if ( canContinue( results, settings, SearchSettings.SearchMode.EXACT ) ) {
-            results.addAll( toSearchResults( settings, ExpressionExperimentSet.class, experimentSetService.findByName( query ), MATCH_BY_NAME_SCORE, "ExpressionExperimentSetService.findByName" ) );
+            results.addAll( toSearchResults( settings, ExpressionExperimentSet.class, experimentSetService.findByAccession( rawQuery ), MATCH_BY_ACCESSION_SCORE, "ExpressionExperimentSetService.findByAccession", true ) );
         }
 
-        if ( canContinue( results, settings, SearchSettings.SearchMode.EXACT ) ) {
-            results.addAll( toSearchResults( settings, ExpressionExperimentSet.class, experimentSetService.findByAccession( query ), MATCH_BY_ACCESSION_SCORE, "ExpressionExperimentSetService.findByAccession" ) );
+        String query = prepareDatabaseQuery( settings, context.getIssueReporter() );
+        if ( query != null && canContinue( results, settings, SearchSettings.SearchMode.EXACT ) ) {
+            results.addAll( toSearchResults( settings, ExpressionExperimentSet.class, experimentSetService.findByName( query ), MATCH_BY_NAME_SCORE, "ExpressionExperimentSetService.findByName" ) );
         }
 
         if ( settings.getTaxonConstraint() != null ) {
@@ -237,7 +250,7 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
             try {
                 BioSequence bs = bioSequenceService.load( Long.parseLong( searchString ) );
                 if ( bs != null ) {
-                    results.addAll( toSearchResults( settings, BioSequence.class, Collections.singleton( bs ), MATCH_BY_ID_SCORE, "BioSequenceService.load" ) );
+                    results.addAll( toSearchResults( settings, BioSequence.class, Collections.singleton( bs ), MATCH_BY_ID_SCORE, "BioSequenceService.load", true ) );
                 }
             } catch ( NumberFormatException e ) {
                 // ignore
@@ -297,7 +310,7 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
             try {
                 CompositeSequence cs = compositeSequenceService.load( Long.parseLong( searchString ) );
                 if ( cs != null ) {
-                    results.addAll( toSearchResults( settings, CompositeSequence.class, Collections.singleton( cs ), MATCH_BY_ID_SCORE, "CompositeSequenceService.load" ) );
+                    results.addAll( toSearchResults( settings, CompositeSequence.class, Collections.singleton( cs ), MATCH_BY_ID_SCORE, "CompositeSequenceService.load", true ) );
                 }
             } catch ( NumberFormatException e ) {
                 // ignore
@@ -385,8 +398,14 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
     public Collection<SearchResult<ExpressionExperiment>> searchExpressionExperiment( SearchSettings settings, SearchContext context ) throws SearchException {
         StopWatch watch = StopWatch.createStarted();
 
-        String query = prepareDatabaseQuery( settings, context.getIssueReporter() );
-        if ( query == null ) {
+        // Identifier lookups (id, shortName, accession) MUST run against the raw user query, not
+        // the Lucene-parsed one — prepareDatabaseQuery routes through Lucene's QueryParser, which
+        // splits on reserved characters. A short name like "west-breast" becomes "+west -breast"
+        // and only "west" survives the parse, so findByShortName never sees the real key and the
+        // exact match silently misses. Run the canonical-identifier path first on the raw query,
+        // fall back to the parsed form only for the inexact name leg.
+        String rawQuery = StringUtils.trimToNull( settings.getQuery() );
+        if ( rawQuery == null ) {
             return Collections.emptySet();
         }
 
@@ -394,9 +413,9 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
 
         if ( canSearchById( settings, ExpressionExperiment.class ) ) {
             try {
-                ExpressionExperiment ee = expressionExperimentService.load( Long.parseLong( query ) );
+                ExpressionExperiment ee = expressionExperimentService.load( Long.parseLong( rawQuery ) );
                 if ( ee != null ) {
-                    results.add( SearchResult.from( ExpressionExperiment.class, ee, MATCH_BY_ID_SCORE, Collections.singletonMap( "id", ee.getId().toString() ), "ExpressionExperimentService.load" ) );
+                    results.add( SearchResult.fromExactIdentifier( ExpressionExperiment.class, ee, MATCH_BY_ID_SCORE, Collections.singletonMap( "id", ee.getId().toString() ), "ExpressionExperimentService.load" ) );
                 }
             } catch ( NumberFormatException e ) {
                 // ignore - not an ID
@@ -405,23 +424,26 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
 
         if ( canContinue( results, settings, SearchSettings.SearchMode.EXACT )
                 || SecurityUtil.isUserAdmin() ) {
-            ExpressionExperiment ee = expressionExperimentService.findByShortName( query );
+            ExpressionExperiment ee = expressionExperimentService.findByShortName( rawQuery );
             if ( ee != null ) {
-                results.add( SearchResult.from( ExpressionExperiment.class, ee, MATCH_BY_SHORT_NAME_SCORE, Collections.singletonMap( "shortName", ee.getShortName() ), "ExpressionExperimentService.findByShortName" ) );
+                results.add( SearchResult.fromExactIdentifier( ExpressionExperiment.class, ee, MATCH_BY_SHORT_NAME_SCORE, Collections.singletonMap( "shortName", ee.getShortName() ), "ExpressionExperimentService.findByShortName" ) );
             }
         }
 
         Collection<ExpressionExperiment> ees;
         if ( canContinue( results, settings, SearchSettings.SearchMode.EXACT )
                 || SecurityUtil.isUserAdmin() ) {
-            ees = expressionExperimentService.findByAccession( query );
+            ees = expressionExperimentService.findByAccession( rawQuery );
             for ( ExpressionExperiment e : ees ) {
                 assert e.getAccession() != null;
-                results.add( SearchResult.from( ExpressionExperiment.class, e, MATCH_BY_ACCESSION_SCORE, Collections.singletonMap( "accession.accession", e.getAccession().getAccession() ), "ExpressionExperimentService.findByAccession" ) );
+                results.add( SearchResult.fromExactIdentifier( ExpressionExperiment.class, e, MATCH_BY_ACCESSION_SCORE, Collections.singletonMap( "accession.accession", e.getAccession().getAccession() ), "ExpressionExperimentService.findByAccession" ) );
             }
         }
 
-        if ( canContinue( results, settings, SearchSettings.SearchMode.EXACT ) ) {
+        // Inexact name match uses the Lucene-parsed query so hyphens etc. behave as boolean
+        // operators (deliberate — names are tokenized in the index).
+        String query = prepareDatabaseQuery( settings, context.getIssueReporter() );
+        if ( query != null && canContinue( results, settings, SearchSettings.SearchMode.EXACT ) ) {
             ees = expressionExperimentService.findByName( query );
             for ( ExpressionExperiment ee : ees ) {
                 results.add( SearchResult.from( ExpressionExperiment.class, ee, MATCH_BY_NAME_SCORE, Collections.singletonMap( "name", ee.getName() ), "ExpressionExperimentService.findByName" ) );
@@ -437,7 +459,7 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
         watch.stop();
         if ( watch.getTime() > 1000 ) {
             log.warn( String.format( "DB Expression Experiment search for %s with '%s' took %d ms and found %d EEs",
-                    settings, query, watch.getTime(), results.size() ) );
+                    settings, rawQuery, watch.getTime(), results.size() ) );
         }
 
         return results;
@@ -462,11 +484,11 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
                 // not numeric
             }
             if ( result != null ) {
-                results.add( SearchResult.from( Gene.class, result, MATCH_BY_NCBI_ID_SCORE, null, "GeneService.findByNCBIId" ) );
+                results.add( SearchResult.fromExactIdentifier( Gene.class, result, MATCH_BY_NCBI_ID_SCORE, null, "GeneService.findByNCBIId" ) );
             } else {
                 result = geneService.findByAccession( searchString, null );
                 if ( result != null ) {
-                    results.add( SearchResult.from( Gene.class, result, MATCH_BY_ACCESSION_SCORE, null, "GeneService.findByAccession" ) );
+                    results.add( SearchResult.fromExactIdentifier( Gene.class, result, MATCH_BY_ACCESSION_SCORE, null, "GeneService.findByAccession" ) );
                 }
             }
         }
@@ -590,7 +612,7 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
                     new Task( "GeneService.findByEnsemblId", () -> {
                         Gene g = geneService.findByEnsemblId( es );
                         return g != null
-                                ? java.util.Collections.singleton( SearchResult.from( Gene.class, g,
+                                ? java.util.Collections.singleton( SearchResult.fromExactIdentifier( Gene.class, g,
                                         MATCH_BY_ACCESSION_SCORE, null, "GeneService.findByEnsemblId" ) )
                                 : java.util.Collections.emptyList();
                     } ),
@@ -711,9 +733,16 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
 
     private static <T extends Identifiable> Set<SearchResult<T>> toSearchResults( SearchSettings settings, Class<T> resultType, Collection<T> entities,
             double score, String source ) {
+        return toSearchResults( settings, resultType, entities, score, source, false );
+    }
+
+    private static <T extends Identifiable> Set<SearchResult<T>> toSearchResults( SearchSettings settings, Class<T> resultType, Collection<T> entities,
+            double score, String source, boolean exactIdentifier ) {
         return entities.stream()
                 .filter( Objects::nonNull )
-                .map( e -> SearchResult.from( resultType, e, score, null, source ) )
+                .map( e -> exactIdentifier
+                        ? SearchResult.fromExactIdentifier( resultType, e, score, null, source )
+                        : SearchResult.from( resultType, e, score, null, source ) )
                 .collect( Collectors.toCollection( () -> new SearchResultSet<>( settings ) ) );
     }
 }

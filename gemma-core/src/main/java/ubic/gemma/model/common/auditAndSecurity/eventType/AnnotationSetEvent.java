@@ -12,21 +12,20 @@
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 
-import jakarta.persistence.Entity;
 import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
 
 /**
- * Emitted when an {@code AgentProposal} row is appended to a
+ * Emitted when an {@code AnnotationSet} row is appended to a
  * {@code PreboardedExperiment} (or, for the private curation API, to a
  * loaded {@code ExpressionExperiment}).
  *
- * <p>See {@code HANDOFF_PROPOSED_EXPERIMENT_WORKFLOW.md} §"Audit-event hooks".
- * The handoff is explicit: the event does NOT inline the JSON payload; it
- * references the {@code AgentProposal} row by id (carried in the audit
- * row's {@code NOTE} until the structured {@code AUDIT_EVENT.PAYLOAD}
- * column lands).</p>
+ * <p>The event does NOT inline the JSON payload; it references the
+ * {@code AnnotationSet} row by id (carried in the audit row's
+ * {@code NOTE} until the structured {@code AUDIT_EVENT.PAYLOAD} column
+ * lands).</p>
  */
 @Entity
-@DiscriminatorValue("AgentProposalEvent")
-public class AgentProposalEvent extends AuditEventType {
+@DiscriminatorValue("AnnotationSetEvent")
+public class AnnotationSetEvent extends AuditEventType {
 }

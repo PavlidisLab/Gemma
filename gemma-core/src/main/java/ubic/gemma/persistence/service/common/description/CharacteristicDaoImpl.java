@@ -505,6 +505,39 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     }
 
     @Override
+    public Map<String, Map<String, Long>> findEeCountsByUriGroupedByCategory( Collection<String> uris ) {
+        if ( uris.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+        // EE2C-rooted aggregation: VALUE_URI is indexed (EE2C_VALUE_URI_VALUE) so the IN-clause
+        // is a range scan; GROUP BY (VALUE_URI, CATEGORY) tallies distinct experiments per (URI,
+        // category) pair. Same magnitude as the usageCount probe — typeahead-friendly for the
+        // top-N kept URIs. Cacheable + synchronised on the EE2C query space so curator-driven
+        // tag changes invalidate cleanly.
+        Query q = this.getSessionFactory().getCurrentSession()
+                .createNativeQuery( "select VALUE_URI as V, CATEGORY as C, count(distinct EXPRESSION_EXPERIMENT_FK) as N "
+                        + "from EXPRESSION_EXPERIMENT2CHARACTERISTIC "
+                        + "where VALUE_URI in :uris and CATEGORY is not null "
+                        + "group by VALUE_URI, CATEGORY" )
+                .addScalar( "V", StandardBasicTypes.STRING )
+                .addScalar( "C", StandardBasicTypes.STRING )
+                .addScalar( "N", StandardBasicTypes.LONG )
+                .addSynchronizedQuerySpace( EE2C_QUERY_SPACE )
+                .addSynchronizedEntityClass( ExpressionExperiment.class )
+                .addSynchronizedEntityClass( Characteristic.class )
+                .setCacheable( true );
+        Map<String, Map<String, Long>> out = new HashMap<>();
+        QueryUtils.<String, Object[]>streamByBatch( q, "uris", uris, 2048 )
+                .forEach( row -> {
+                    String uri = ( String ) row[0];
+                    String category = ( String ) row[1];
+                    Long count = ( Long ) row[2];
+                    out.computeIfAbsent( uri, k -> new HashMap<>() ).put( category, count );
+                } );
+        return out;
+    }
+
+    @Override
     public Map<String, Long> countByValueUriGroupedByNormalizedValue( Collection<String> uris, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents ) {
         if ( uris.isEmpty() ) {
             return Collections.emptyMap();

@@ -141,6 +141,20 @@ public interface CharacteristicDao
     Map<String, Long> countByValueUriGroupedByNormalizedValue( Collection<String> uris, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents );
 
     /**
+     * For each supplied value URI, return the distinct-experiment count grouped by the category
+     * the curator applied when tagging the URI on an experiment. E.g. a single URI
+     * {@code http://purl.obolibrary.org/obo/CLO_0037182} might map to
+     * {@code {"cell line" → 14, "cell type" → 1}} when prior curators have used it 14 times under
+     * category "cell line" and once under "cell type".
+     * <p>
+     * Sourced from the denormalised {@code EE2C} view, so the result reflects ACL-unrestricted
+     * corpus-wide curation history (matches the spirit of usage-count metadata: aggregate
+     * signal about the URI, not per-experiment information). Rows with a {@code null} category
+     * are dropped from the result — they don't carry actionable signal for resolvers.
+     */
+    Map<String, Map<String, Long>> findEeCountsByUriGroupedByCategory( Collection<String> uris );
+
+    /**
      * Find characteristics {@link Characteristic#getValue()} grouped by {@link Characteristic#getValueUri()}.
      * <p>
      * The results are grouped by value URIs, so free-text terms will not be returned. If you need a way to get both

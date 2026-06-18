@@ -111,6 +111,7 @@ import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
+import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.common.search.SearchResult;
@@ -140,6 +141,7 @@ import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysi
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
+import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentMetaFileType;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -255,7 +257,7 @@ public class DatasetsWebService {
     @Autowired
     private AuditTrailService auditTrailService;
     @Autowired
-    private CurationWebService curationWebService;
+    private AnnotationSetsWebService annotationSetsWebService;
     @Autowired
     private SecurityService securityService;
     @Autowired
@@ -272,6 +274,8 @@ public class DatasetsWebService {
     private UserManager userManager;
     @Autowired
     private BioAssayService bioAssayService;
+    @Autowired
+    private BioMaterialService bioMaterialService;
     @Autowired
     private OutlierFlaggingService outlierFlaggingService;
     @Autowired
@@ -1634,72 +1638,74 @@ public class DatasetsWebService {
     }
 
     /*
-     * Per-dataset curation surface. The handler bodies live on CurationWebService — these wrappers exist
-     * because Jersey resolves /datasets/* against the class-level @Path("/datasets") and never falls
-     * through to CurationWebService's class-level @Path("/"), so the routes have to be declared on this
-     * resource class to be reachable.
+     * Per-dataset annotation-set surface. The handler bodies live on
+     * AnnotationSetsWebService — these wrappers exist because Jersey resolves
+     * /datasets/* against the class-level @Path("/datasets") and never falls
+     * through to AnnotationSetsWebService's class-level @Path("/"), so the
+     * routes have to be declared on this resource class to be reachable.
      */
 
     @POST
-    @Path("/{dataset}/curation-proposals")
+    @Path("/{dataset}/annotation-sets")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
-    @Operation(summary = "Attach an AgentProposal to a dataset (curation-UI surface).",
-            description = "Idempotent on `run_id`: a retry returns the existing row as 200 OK rather than 201 Created. "
-                    + "The body field `kind` selects PROPOSAL (default) or AUDIT.")
-    public Response submitDatasetCurationProposal(
+    @Operation(summary = "Attach an AnnotationSet to a dataset.",
+            description = "Idempotent on `(role, run_id)`: a retry returns the existing row as 200 OK "
+                    + "rather than 201 Created. Body's `role` selects PROPOSAL / DRAFT / SNAPSHOT.")
+    public Response submitDatasetAnnotationSet(
             @PathParam("dataset") DatasetArg<?> datasetArg,
-            @Nullable CurationWebService.CurationProposalRequest body
+            @Nullable AnnotationSetsWebService.AnnotationSetRequest body
     ) {
-        return curationWebService.submitCurationProposal( datasetArg, body );
+        return annotationSetsWebService.submitAnnotationSet( datasetArg, body );
     }
 
     @GET
-    @Path("/{dataset}/curation-proposals")
+    @Path("/{dataset}/annotation-sets")
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
-    @Operation(summary = "List AgentProposals attached to a dataset, newest first.",
-            description = "`?kind=` filters by discriminator (`proposal`/`audit`/`all`). "
-                    + "`?shape=` selects the response shape (`full` default; `meta` is the thin projection without payload_json).")
-    public Response listDatasetCurationProposals(
+    @Operation(summary = "List AnnotationSets attached to a dataset, newest first.",
+            description = "`?role=` filters by role (`proposal`/`draft`/`snapshot`/`all`). "
+                    + "`?source=` filters by source. `?createdBy=` filters by producer identity. "
+                    + "`?shape=full|meta` selects response shape.")
+    public Response listDatasetAnnotationSets(
             @PathParam("dataset") DatasetArg<?> datasetArg,
-            @Parameter(description = "Filter by discriminator: `proposal`, `audit`, or `all` (default).")
-            @QueryParam("kind") @Nullable String kind,
+            @Parameter(description = "Filter by role: `proposal`, `draft`, `snapshot`, or `all` (default).")
+            @QueryParam("role") @Nullable String role,
+            @Parameter(description = "Filter by source.")
+            @QueryParam("source") @Nullable String source,
+            @Parameter(description = "Filter by createdBy (username or agent run identifier).")
+            @QueryParam("createdBy") @Nullable String createdBy,
             @Parameter(description = "Response shape: `full` (default; carries payload_json) "
                     + "or `meta` (thin projection, payload_size only).")
             @QueryParam("shape") @Nullable String shape
     ) {
-        return curationWebService.listCurationProposals( datasetArg, kind, shape );
-    }
-
-    @POST
-    @Path("/{dataset}/audits")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
-    @Operation(summary = "Attach an AUDIT-kind AgentProposal to a dataset.",
-            description = "Thin alias for the curation-proposals POST with `kind` pre-bound to `audit`. "
-                    + "The body field `kind` (if present) is ignored — the path is the discriminator.")
-    public Response submitDatasetAudit(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
-            @Nullable CurationWebService.CurationProposalRequest body
-    ) {
-        return curationWebService.submitAudit( datasetArg, body );
+        return annotationSetsWebService.listAnnotationSets( datasetArg, role, source, createdBy, shape );
     }
 
     @GET
-    @Path("/{dataset}/audits")
+    @Path("/{dataset}/annotation-sets/draft")
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
-    @Operation(summary = "List AUDIT-kind AgentProposals attached to a dataset.")
-    public Response listDatasetAudits(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
-            @Parameter(description = "Response shape: `full` (default; carries payload_json) "
-                    + "or `meta` (thin projection, payload_size only).")
-            @QueryParam("shape") @DefaultValue("full") String shape
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Fetch the current curator's DRAFT for a dataset (404 if none).")
+    public Response getDatasetDraftAnnotationSet(
+            @PathParam("dataset") DatasetArg<?> datasetArg
     ) {
-        return curationWebService.listAudits( datasetArg, shape );
+        return annotationSetsWebService.getDraftForDataset( datasetArg );
+    }
+
+    @PUT
+    @Path("/{dataset}/annotation-sets/draft")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Upsert the current curator's DRAFT for a dataset.",
+            description = "One DRAFT per (dataset, curator); returns 201 on create, 200 on update.")
+    public Response upsertDatasetDraftAnnotationSet(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Nullable AnnotationSetsWebService.UpsertDraftRequest body
+    ) {
+        return annotationSetsWebService.upsertDraftForDataset( datasetArg, body );
     }
 
     @GET
@@ -3822,9 +3828,16 @@ public class DatasetsWebService {
     }
 
     /**
-     * Minimal write-shape for an annotation tag. {@code category} and {@code value} are required;
+     * Write-shape for an annotation tag. {@code category} and {@code value} are required;
      * {@code categoryUri} and {@code valueUri} are optional ontology pointers. This is the JSON shape
      * the curation-agents client sends; mapped to a {@code Characteristic} server-side.
+     * <p>
+     * When any of the eight optional {@code predicate*} / {@code object*} / {@code secondPredicate*} /
+     * {@code secondObject*} fields is non-null the row is materialised as a {@link Statement} instead
+     * of a plain {@link Characteristic}, with {@code value} / {@code valueUri} interpreted as the
+     * statement's subject (Statement aliases subject ↔ value internally). The wire field set mirrors
+     * what the read-side {@code AnnotationValueObject} exposes for Statement-backed annotations, so
+     * a round-trip GET → PUT preserves the statement shape.
      */
     public static class AnnotationTagInput {
         private String category;
@@ -3833,6 +3846,22 @@ public class DatasetsWebService {
         private String value;
         @Nullable
         private String valueUri;
+        @Nullable
+        private String predicate;
+        @Nullable
+        private String predicateUri;
+        @Nullable
+        private String object;
+        @Nullable
+        private String objectUri;
+        @Nullable
+        private String secondPredicate;
+        @Nullable
+        private String secondPredicateUri;
+        @Nullable
+        private String secondObject;
+        @Nullable
+        private String secondObjectUri;
 
         public String getCategory() {
             return category;
@@ -3866,6 +3895,85 @@ public class DatasetsWebService {
 
         public void setValueUri( @Nullable String valueUri ) {
             this.valueUri = valueUri;
+        }
+
+        @Nullable
+        public String getPredicate() {
+            return predicate;
+        }
+
+        public void setPredicate( @Nullable String predicate ) {
+            this.predicate = predicate;
+        }
+
+        @Nullable
+        public String getPredicateUri() {
+            return predicateUri;
+        }
+
+        public void setPredicateUri( @Nullable String predicateUri ) {
+            this.predicateUri = predicateUri;
+        }
+
+        @Nullable
+        public String getObject() {
+            return object;
+        }
+
+        public void setObject( @Nullable String object ) {
+            this.object = object;
+        }
+
+        @Nullable
+        public String getObjectUri() {
+            return objectUri;
+        }
+
+        public void setObjectUri( @Nullable String objectUri ) {
+            this.objectUri = objectUri;
+        }
+
+        @Nullable
+        public String getSecondPredicate() {
+            return secondPredicate;
+        }
+
+        public void setSecondPredicate( @Nullable String secondPredicate ) {
+            this.secondPredicate = secondPredicate;
+        }
+
+        @Nullable
+        public String getSecondPredicateUri() {
+            return secondPredicateUri;
+        }
+
+        public void setSecondPredicateUri( @Nullable String secondPredicateUri ) {
+            this.secondPredicateUri = secondPredicateUri;
+        }
+
+        @Nullable
+        public String getSecondObject() {
+            return secondObject;
+        }
+
+        public void setSecondObject( @Nullable String secondObject ) {
+            this.secondObject = secondObject;
+        }
+
+        @Nullable
+        public String getSecondObjectUri() {
+            return secondObjectUri;
+        }
+
+        public void setSecondObjectUri( @Nullable String secondObjectUri ) {
+            this.secondObjectUri = secondObjectUri;
+        }
+
+        boolean hasStatementFields() {
+            return predicate != null || predicateUri != null
+                    || object != null || objectUri != null
+                    || secondPredicate != null || secondPredicateUri != null
+                    || secondObject != null || secondObjectUri != null;
         }
     }
 
@@ -3908,15 +4016,215 @@ public class DatasetsWebService {
             if ( StringUtils.isBlank( tag.getValue() ) ) {
                 throw new BadRequestException( "Each annotation must have a non-blank 'value'." );
             }
+            desired.add( tagToCharacteristic( tag ) );
+        }
+        expressionExperimentService.updateAnnotations( ee, desired );
+        return respond( expressionExperimentService.getAnnotations( ee ) );
+    }
+
+    /**
+     * Convert a wire {@link AnnotationTagInput} to a {@link Characteristic}, building a {@link Statement}
+     * (with the "Statement" discriminator and the predicate / object pair) when any statement field is set,
+     * else a plain {@link Characteristic}. Shared by the experiment- and sample-level annotation writes.
+     * <p>
+     * The wire's {@code value} / {@code valueUri} become the statement's subject — {@link Statement} aliases
+     * subject &harr; value internally.
+     */
+    private static Characteristic tagToCharacteristic( AnnotationTagInput tag ) {
+        if ( tag.hasStatementFields() ) {
+            Statement s = Statement.Factory.newInstance();
+            s.setCategory( tag.getCategory() );
+            s.setCategoryUri( tag.getCategoryUri() );
+            s.setSubject( tag.getValue() );
+            if ( tag.getValueUri() != null ) {
+                s.setSubjectUri( tag.getValueUri() );
+            }
+            s.setPredicate( tag.getPredicate() );
+            s.setPredicateUri( tag.getPredicateUri() );
+            s.setObject( tag.getObject() );
+            s.setObjectUri( tag.getObjectUri() );
+            s.setSecondPredicate( tag.getSecondPredicate() );
+            s.setSecondPredicateUri( tag.getSecondPredicateUri() );
+            s.setSecondObject( tag.getSecondObject() );
+            s.setSecondObjectUri( tag.getSecondObjectUri() );
+            return s;
+        } else {
             Characteristic c = Characteristic.Factory.newInstance();
             c.setCategory( tag.getCategory() );
             c.setCategoryUri( tag.getCategoryUri() );
             c.setValue( tag.getValue() );
             c.setValueUri( tag.getValueUri() );
-            desired.add( c );
+            return c;
         }
-        expressionExperimentService.updateAnnotations( ee, desired );
-        return respond( expressionExperimentService.getAnnotations( ee ) );
+    }
+
+    /**
+     * Resolve a {@code {bioAssayId}} path param to its sample (the {@link BioMaterial}), validating that the
+     * assay belongs to the path-derived dataset. Mirrors the addressing of the outlier endpoints — a "sample"
+     * is addressed by its BioAssay id; characteristics live on the underlying BioMaterial. Throws
+     * {@link NotFoundException} when the assay does not belong to the dataset so the caller cannot reach a
+     * foreign sample through a dataset it can edit.
+     */
+    private BioMaterial resolveSampleBioMaterial( ExpressionExperiment ee, Long bioAssayId ) {
+        ExpressionExperiment thawed = expressionExperimentService.thawBioAssays( ee );
+        for ( BioAssay ba : thawed.getBioAssays() ) {
+            if ( bioAssayId.equals( ba.getId() ) ) {
+                BioMaterial bm = ba.getSampleUsed();
+                return bioMaterialService.thaw( bm );
+            }
+        }
+        throw new NotFoundException( "BioAssay " + bioAssayId + " does not belong to dataset " + thawed.getShortName() + "." );
+    }
+
+    private static Set<AnnotationValueObject> sampleAnnotationVos( BioMaterial bm ) {
+        Set<AnnotationValueObject> vos = new HashSet<>();
+        for ( Characteristic c : bm.getCharacteristics() ) {
+            vos.add( new AnnotationValueObject( c, BioMaterial.class ) );
+        }
+        return vos;
+    }
+
+    @GET
+    @Path("/{dataset}/samples/{bioAssayId}/characteristics")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve the characteristics (tags) of a sample",
+            description = "Returns the direct characteristics held by the sample's biomaterial, including the full "
+                    + "Statement shape (predicate / object / second pair) for statement-backed tags. The sample is "
+                    + "addressed by its BioAssay id (as in the outlier endpoints); characteristics live on the "
+                    + "underlying biomaterial.",
+            security = { @SecurityRequirement(name = "basicAuth"), @SecurityRequirement(name = "cookieAuth") },
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "404", description = "The dataset or sample does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<Set<AnnotationValueObject>> getSampleCharacteristics(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @PathParam("bioAssayId") Long bioAssayId
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        BioMaterial bm = resolveSampleBioMaterial( ee, bioAssayId );
+        return respond( sampleAnnotationVos( bm ) );
+    }
+
+    @PUT
+    @Path("/{dataset}/samples/{bioAssayId}/characteristics")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Replace the characteristics (tags) of a sample",
+            description = "Idempotent set-replace for the direct characteristics of the sample's biomaterial. The "
+                    + "diff is computed by (category, categoryUri, value, valueUri) plus statement awareness; unchanged "
+                    + "tags keep their identity, drops are removed, new ones are added with an `IC` evidence code. The "
+                    + "sample is addressed by its BioAssay id. A single `ManualAnnotationEvent` is recorded on the "
+                    + "owning experiment (sample tag edits surface on the experiment's history). Requires "
+                    + "`ACL_SECURABLE_EDIT` on the dataset.",
+            security = { @SecurityRequirement(name = "basicAuth"), @SecurityRequirement(name = "cookieAuth") },
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "400", description = "The request body is missing or malformed.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "403", description = "The caller lacks edit permission on the dataset.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "404", description = "The dataset or sample does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<Set<AnnotationValueObject>> updateSampleCharacteristics(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @PathParam("bioAssayId") Long bioAssayId,
+            @Nullable AnnotationsUpdateRequest body
+    ) {
+        if ( body == null || body.getAnnotations() == null ) {
+            throw new BadRequestException( "A request body with an 'annotations' field is required (use an empty list to clear)." );
+        }
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        BioMaterial bm = resolveSampleBioMaterial( ee, bioAssayId );
+        List<Characteristic> desired = new ArrayList<>( body.getAnnotations().size() );
+        for ( AnnotationTagInput tag : body.getAnnotations() ) {
+            if ( tag == null ) {
+                throw new BadRequestException( "Annotation entries must not be null." );
+            }
+            if ( StringUtils.isBlank( tag.getCategory() ) ) {
+                throw new BadRequestException( "Each annotation must have a non-blank 'category'." );
+            }
+            if ( StringUtils.isBlank( tag.getValue() ) ) {
+                throw new BadRequestException( "Each annotation must have a non-blank 'value'." );
+            }
+            desired.add( tagToCharacteristic( tag ) );
+        }
+        bioMaterialService.updateAnnotations( ee, bm, desired );
+        return respond( sampleAnnotationVos( resolveSampleBioMaterial( ee, bioAssayId ) ) );
+    }
+
+    @POST
+    @Path("/{dataset}/samples/{bioAssayId}/characteristics")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Add a characteristic (tag) to a sample",
+            description = "Adds a single characteristic to the sample's biomaterial, accepting the full Statement "
+                    + "shape (predicate / object / second pair). A `TagAddedEvent` is recorded on the owning "
+                    + "experiment. Returns 409 if a tag with the same (category, value) already exists. Requires "
+                    + "`ACL_SECURABLE_EDIT` on the dataset.",
+            security = { @SecurityRequirement(name = "basicAuth"), @SecurityRequirement(name = "cookieAuth") },
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "400", description = "The request body is missing or malformed.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "403", description = "The caller lacks edit permission on the dataset.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "404", description = "The dataset or sample does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "409", description = "A tag with the same (category, value) already exists on the sample.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<AnnotationValueObject> addSampleCharacteristic(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @PathParam("bioAssayId") Long bioAssayId,
+            @Nullable AnnotationTagInput body
+    ) {
+        if ( body == null ) {
+            throw new BadRequestException( "A request body describing the tag is required." );
+        }
+        if ( StringUtils.isBlank( body.getCategory() ) ) {
+            throw new BadRequestException( "The annotation must have a non-blank 'category'." );
+        }
+        if ( StringUtils.isBlank( body.getValue() ) ) {
+            throw new BadRequestException( "The annotation must have a non-blank 'value'." );
+        }
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        BioMaterial bm = resolveSampleBioMaterial( ee, bioAssayId );
+        Characteristic created;
+        try {
+            created = bioMaterialService.addAnnotation( ee, bm, tagToCharacteristic( body ) );
+        } catch ( IllegalArgumentException e ) {
+            // 409 Conflict for duplicate (category, value) — service throws IAE on dup.
+            throw new ClientErrorException( e.getMessage(), Response.Status.CONFLICT, e );
+        }
+        return respond( new AnnotationValueObject( created, BioMaterial.class ) );
+    }
+
+    @DELETE
+    @Path("/{dataset}/samples/{bioAssayId}/characteristics/{characteristicId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Remove a characteristic (tag) from a sample",
+            description = "Removes the characteristic with the given id from the sample's biomaterial. A "
+                    + "`TagRemovedEvent` is recorded on the owning experiment. Returns 404 if the characteristic is "
+                    + "not present on the sample. Requires `ACL_SECURABLE_EDIT` on the dataset.",
+            security = { @SecurityRequirement(name = "basicAuth"), @SecurityRequirement(name = "cookieAuth") },
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "403", description = "The caller lacks edit permission on the dataset.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "404", description = "The dataset, sample, or characteristic does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<AnnotationValueObject> removeSampleCharacteristic(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @PathParam("bioAssayId") Long bioAssayId,
+            @PathParam("characteristicId") Long characteristicId
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        BioMaterial bm = resolveSampleBioMaterial( ee, bioAssayId );
+        Characteristic removed = bioMaterialService.removeAnnotation( ee, bm, characteristicId );
+        if ( removed == null ) {
+            throw new NotFoundException( "Characteristic " + characteristicId + " is not present on sample (bioAssay " + bioAssayId + ")." );
+        }
+        return respond( new AnnotationValueObject( removed, BioMaterial.class ) );
     }
 
     /**

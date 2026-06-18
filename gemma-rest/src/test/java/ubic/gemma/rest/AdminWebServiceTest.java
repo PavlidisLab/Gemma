@@ -58,7 +58,8 @@ import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.persistence.service.blacklist.BlacklistedEntityService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseReadService;
-import ubic.gemma.persistence.service.expression.experiment.AgentProposalService;
+import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetRole;
+import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AnnotationSetService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.args.TaxonArg;
@@ -110,7 +111,7 @@ public class AdminWebServiceTest {
     @Mock
     private UserManager userManager;
     @Mock
-    private AgentProposalService agentProposalService;
+    private AnnotationSetService annotationSetService;
     @Mock
     private TicketService ticketService;
     @Mock
@@ -127,6 +128,8 @@ public class AdminWebServiceTest {
     private GeoScrapeService geoScrapeService;
     @Mock
     private ubic.gemma.core.search.indexer.IndexerService indexerService;
+    @Mock
+    private ubic.gemma.core.ontology.OntologyService ontologyFacade;
 
     private AdminWebService webService;
 
@@ -141,7 +144,7 @@ public class AdminWebServiceTest {
     public void setUp() {
         taxonArgService = new TaxonArgService( innerTaxonService, innerChromosomeService, innerGeneService );
         webService = new AdminWebService( cacheManager, sessionFactory, taskRunningService, sessionRegistry,
-                Collections.emptyList(), dataSource, userManager, agentProposalService, ticketService,
+                Collections.emptyList(), ontologyFacade, dataSource, userManager, annotationSetService, ticketService,
                 taxonArgService, blacklistedEntityService, externalDatabaseReadService, geoScrapeService,
                 indexerService );
     }
@@ -396,23 +399,24 @@ public class AdminWebServiceTest {
     /* ===== /admin/curation-status ===== */
 
     @Test
-    public void getCurationStatusSnapshotComposesProposalAndTicketAggregates() {
-        // Proposals: 5 in last 24h, 42 in last 7d, lifetime status histogram, 3 distinct runs in 7d,
-        // most recent ranAt = +/- now.
+    public void getCurationStatusSnapshotComposesAnnotationSetAndTicketAggregates() {
         Date lastRan = new Date( 1_700_000_000_000L );
-        when( agentProposalService.countSince( org.mockito.ArgumentMatchers.any( Date.class ) ) )
+        when( annotationSetService.countSince( org.mockito.ArgumentMatchers.any( Date.class ),
+                org.mockito.ArgumentMatchers.isNull() ) )
                 .thenReturn( 5L )   // first call: 24h
                 .thenReturn( 42L ); // second call: 7d
-        Map<String, Long> byStatus = new LinkedHashMap<>();
-        byStatus.put( "OPEN", 18L );
-        byStatus.put( "FINALIZED", 1003L );
-        byStatus.put( "REOPENED", 7L );
-        when( agentProposalService.countByStatusSince( null ) ).thenReturn( byStatus );
-        when( agentProposalService.countDistinctRunIdsSince( org.mockito.ArgumentMatchers.any( Date.class ) ) )
+        Map<AnnotationSetRole, Long> byRole = new LinkedHashMap<>();
+        byRole.put( AnnotationSetRole.PROPOSAL, 18L );
+        byRole.put( AnnotationSetRole.DRAFT, 1003L );
+        byRole.put( AnnotationSetRole.SNAPSHOT, 7L );
+        when( annotationSetService.countByRoleSince( null ) ).thenReturn( byRole );
+        when( annotationSetService.countDistinctRunIdsSince(
+                org.mockito.ArgumentMatchers.any( Date.class ),
+                eq( AnnotationSetRole.PROPOSAL ) ) )
                 .thenReturn( 12L );
-        when( agentProposalService.findLatestRanAt() ).thenReturn( lastRan );
+        when( annotationSetService.findLatestCreatedAt( AnnotationSetRole.PROPOSAL ) )
+                .thenReturn( lastRan );
 
-        // Tickets: 14 BATCH_INFO_NEEDED + 27 QUALITY_REVIEW open, total 41 open, oldest 5d ago.
         Map<TicketType, Long> openByType = new LinkedHashMap<>();
         openByType.put( TicketType.BATCH_INFO_NEEDED, 14L );
         openByType.put( TicketType.QUALITY_REVIEW, 27L );
@@ -427,10 +431,10 @@ public class AdminWebServiceTest {
 
         assertThat( body.proposals.totalLast24h ).isEqualTo( 5L );
         assertThat( body.proposals.totalLast7d ).isEqualTo( 42L );
-        assertThat( body.proposals.byStatus )
-                .containsEntry( "OPEN", 18L )
-                .containsEntry( "FINALIZED", 1003L )
-                .containsEntry( "REOPENED", 7L );
+        assertThat( body.proposals.byRole )
+                .containsEntry( "proposal", 18L )
+                .containsEntry( "draft", 1003L )
+                .containsEntry( "snapshot", 7L );
 
         assertThat( body.tickets.openCount ).isEqualTo( 41L );
         assertThat( body.tickets.openCountByType )
@@ -444,11 +448,14 @@ public class AdminWebServiceTest {
 
     @Test
     public void getCurationStatusEmptyTablesReturnsZeroes() {
-        when( agentProposalService.countSince( org.mockito.ArgumentMatchers.any( Date.class ) ) ).thenReturn( 0L );
-        when( agentProposalService.countByStatusSince( null ) ).thenReturn( Collections.emptyMap() );
-        when( agentProposalService.countDistinctRunIdsSince( org.mockito.ArgumentMatchers.any( Date.class ) ) )
+        when( annotationSetService.countSince( org.mockito.ArgumentMatchers.any( Date.class ),
+                org.mockito.ArgumentMatchers.isNull() ) ).thenReturn( 0L );
+        when( annotationSetService.countByRoleSince( null ) ).thenReturn( Collections.emptyMap() );
+        when( annotationSetService.countDistinctRunIdsSince(
+                org.mockito.ArgumentMatchers.any( Date.class ),
+                eq( AnnotationSetRole.PROPOSAL ) ) )
                 .thenReturn( 0L );
-        when( agentProposalService.findLatestRanAt() ).thenReturn( null );
+        when( annotationSetService.findLatestCreatedAt( AnnotationSetRole.PROPOSAL ) ).thenReturn( null );
         when( ticketService.countOpenByType() ).thenReturn( Collections.emptyMap() );
         when( ticketService.countOpen() ).thenReturn( 0L );
         when( ticketService.findOldestOpenCreatedAt() ).thenReturn( null );
@@ -458,7 +465,7 @@ public class AdminWebServiceTest {
 
         assertThat( body.proposals.totalLast24h ).isZero();
         assertThat( body.proposals.totalLast7d ).isZero();
-        assertThat( body.proposals.byStatus ).isEmpty();
+        assertThat( body.proposals.byRole ).isEmpty();
         assertThat( body.tickets.openCount ).isZero();
         assertThat( body.tickets.openCountByType ).isEmpty();
         assertThat( body.tickets.oldestOpenAgeDays ).isNull();

@@ -24,10 +24,10 @@ import ubic.gemma.model.analysis.Investigation;
  * <p>Created by {@code POST /preboarded} when the curation-agents runner targets
  * a GEO (or other) accession that has not yet been imported into Gemma. The
  * preboarded carries enough identifying metadata to triage / re-run the agent
- * against it, and accumulates one or more {@code AgentProposal} rows over
+ * against it, and accumulates one or more {@code AnnotationSet} rows over
  * time. When the data lands as an {@code ExpressionExperiment}, the preboarded
  * is promoted via {@code POST /preboarded/{id}/promote} — the
- * implementation rebinds the {@code AgentProposal} FKs to the new EE row
+ * implementation rebinds the {@code AnnotationSet} FKs to the new EE row
  * (new-row + FK rebind approach; see {@code HANDOFF_PROPOSED_EXPERIMENT_WORKFLOW.md}
  * §"Open questions" item 1 and STATUS file for rationale).</p>
  *
@@ -51,7 +51,8 @@ public class PreboardedExperiment extends Investigation {
     /**
      * Free-form JSON payload of identifying metadata the agent harvested before
      * loading (title, summary, submitter, pubmed id, etc.). Stored as LONGTEXT
-     * — the structured proposal lives separately in {@code AgentProposal}.
+     * — the structured proposal lives separately as an {@code AnnotationSet}
+     * row.
      */
     @Lob
     @Column(name = "PREBOARDED_IDENTIFYING_METADATA", columnDefinition = "LONGTEXT")

@@ -71,7 +71,7 @@ public interface PreboardedExperimentService {
     /**
      * Promote the preboarded to a loaded {@link ExpressionExperiment}.
      *
-     * <p>The implementation rebinds every {@code AgentProposal} attached to
+     * <p>The implementation rebinds every {@code AnnotationSet} attached to
      * the preboarded so it points at the EE row instead (new-row + FK rebind
      * approach; see {@code STATUS_PROPOSED_EXPERIMENT_WORKFLOW.md} for the
      * trade-off discussion). The preboarded's workflow state is advanced to
@@ -99,12 +99,12 @@ public interface PreboardedExperimentService {
     class PromotionResult {
         private final Long preboardedId;
         private final Long eeId;
-        private final int proposalsRebound;
+        private final int annotationSetsRebound;
 
-        public PromotionResult( Long preboardedId, Long eeId, int proposalsRebound ) {
+        public PromotionResult( Long preboardedId, Long eeId, int annotationSetsRebound ) {
             this.preboardedId = preboardedId;
             this.eeId = eeId;
-            this.proposalsRebound = proposalsRebound;
+            this.annotationSetsRebound = annotationSetsRebound;
         }
 
         public Long getPreboardedId() {
@@ -115,8 +115,8 @@ public interface PreboardedExperimentService {
             return eeId;
         }
 
-        public int getProposalsRebound() {
-            return proposalsRebound;
+        public int getAnnotationSetsRebound() {
+            return annotationSetsRebound;
         }
     }
 

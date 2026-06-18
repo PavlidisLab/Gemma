@@ -1947,11 +1947,35 @@ public class ExpressionExperimentServiceImpl
                 }
             }
             if ( !already ) {
-                Characteristic fresh = Characteristic.Factory.newInstance();
-                fresh.setCategory( d.getCategory() );
-                fresh.setCategoryUri( d.getCategoryUri() );
-                fresh.setValue( d.getValue() );
-                fresh.setValueUri( d.getValueUri() );
+                Characteristic fresh;
+                if ( d instanceof Statement ) {
+                    // Preserve the Statement discriminator + predicate / object pair on add. Plain
+                    // Characteristic.Factory.newInstance() would silently downgrade the row to a
+                    // non-Statement Characteristic and drop the S-P-O semantics.
+                    Statement ds = ( Statement ) d;
+                    Statement fs = Statement.Factory.newInstance();
+                    fs.setCategory( ds.getCategory() );
+                    fs.setCategoryUri( ds.getCategoryUri() );
+                    fs.setSubject( ds.getSubject() );
+                    if ( ds.getSubjectUri() != null ) {
+                        fs.setSubjectUri( ds.getSubjectUri() );
+                    }
+                    fs.setPredicate( ds.getPredicate() );
+                    fs.setPredicateUri( ds.getPredicateUri() );
+                    fs.setObject( ds.getObject() );
+                    fs.setObjectUri( ds.getObjectUri() );
+                    fs.setSecondPredicate( ds.getSecondPredicate() );
+                    fs.setSecondPredicateUri( ds.getSecondPredicateUri() );
+                    fs.setSecondObject( ds.getSecondObject() );
+                    fs.setSecondObjectUri( ds.getSecondObjectUri() );
+                    fresh = fs;
+                } else {
+                    fresh = Characteristic.Factory.newInstance();
+                    fresh.setCategory( d.getCategory() );
+                    fresh.setCategoryUri( d.getCategoryUri() );
+                    fresh.setValue( d.getValue() );
+                    fresh.setValueUri( d.getValueUri() );
+                }
                 fresh.setEvidenceCode( d.getEvidenceCode() != null ? d.getEvidenceCode() : GOEvidenceCode.IC );
                 toAdd.add( fresh );
             }
@@ -1983,11 +2007,6 @@ public class ExpressionExperimentServiceImpl
         // closely as possible (the added/removed breakdown is now in the log
         // line above; AUDIT_EVENT.NOTE records the aggregate).
         return toAdd.size() + toRemove.size();
-    }
-
-    private static boolean sameTag( Characteristic a, Characteristic b ) {
-        return CharacteristicUtils.equals( a.getCategory(), a.getCategoryUri(), b.getCategory(), b.getCategoryUri() )
-                && CharacteristicUtils.equals( a.getValue(), a.getValueUri(), b.getValue(), b.getValueUri() );
     }
 
     /**

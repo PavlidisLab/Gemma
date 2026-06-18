@@ -210,12 +210,7 @@ public class GeneWebService {
         // Bcl3). Re-rank within each score by symbol-shape tier then edit-distance-to-query so
         // Trp53 surfaces for tp53. Mirrors the AnnotationsWebService.getTerms tierFn pattern.
         final String qLc = query.trim().toLowerCase( Locale.ROOT );
-        raw.sort( Comparator
-                .<SearchResult<?>>comparingDouble( sr -> -sr.getScore() )
-                .thenComparingInt( sr -> symbolTier( symbolOf( sr ), qLc ) )
-                .thenComparingInt( sr -> editDistanceOrMax( symbolOf( sr ), qLc ) )
-                .thenComparingInt( sr -> symbolOf( sr ) == null ? Integer.MAX_VALUE : symbolOf( sr ).length() )
-                .thenComparing( sr -> symbolOf( sr ), Comparator.nullsLast( String.CASE_INSENSITIVE_ORDER ) ) );
+        raw.sort( searchRankingComparator( qLc ) );
         List<GeneValueObject> vos = new ArrayList<>( raw.size() );
         // Endpoint-level taxon filter: SearchService aggregates from multiple sources and not all
         // honour SearchSettings.taxonConstraint (HibernateSearchSource and the GO source historically
@@ -281,6 +276,62 @@ public class GeneWebService {
     /** Levenshtein distance to the query, or {@link Integer#MAX_VALUE} when the symbol is null. */
     static int editDistanceOrMax( @Nullable String symLc, String qLc ) {
         return symLc == null ? Integer.MAX_VALUE : StringDistance.editDistance( symLc, qLc );
+    }
+
+    /**
+     * Cap on the {@link #editDistanceOrMax} signal used during ranking. Distances ≤ 2 carry real
+     * signal (single-typo / one-letter-variation territory, e.g. {@code tp53}↔{@code trp53} at
+     * distance 1). Distances ≥ 3 are essentially "no structural similarity" — any one such
+     * symbol is no closer to the query than another, and using raw Levenshtein at that depth
+     * rewards coincidental letter overlap (e.g. {@code cx43} vs {@code gja3} = 3 because the
+     * trailing {@code 3} accidentally matches — yet {@code gja3} is Cx46, not Cx43). Clamping
+     * collapses the tier-4 noise into a single bucket so downstream tiebreakers (popularity,
+     * symbol length, alphabetical) decide.
+     */
+    static final int EDIT_DISTANCE_CAP = 2;
+
+    /**
+     * {@link #editDistanceOrMax} clamped at {@link #EDIT_DISTANCE_CAP}. See the cap javadoc for
+     * why raw distance ≥ 3 is treated as noise.
+     */
+    static int editDistanceClamped( @Nullable String symLc, String qLc ) {
+        return Math.min( editDistanceOrMax( symLc, qLc ), EDIT_DISTANCE_CAP );
+    }
+
+    /**
+     * Popularity tiebreaker key. Returns the negated {@code associatedExperimentCount} from the
+     * underlying {@link GeneValueObject} so that a higher count sorts first under natural
+     * ascending order. Returns {@code 0} for {@link Gene}-only search results (the count isn't
+     * carried on the entity) or when the count is null — those compete on the downstream
+     * length / alphabetical steps instead.
+     *
+     * <p>This breaks the {@code Cx43} family of alias-collision cases: when two genes both carry
+     * an exact alias match for the query, the one with more corpus EE associations wins (Gja1
+     * with count 10 outranks Gja3 with count 0; Gja3 is Cx46 and only carries {@code Cx43} as a
+     * stale NCBI alias).</p>
+     */
+    static int popularityKey( SearchResult<?> sr ) {
+        Object o = sr.getResultObject();
+        if ( o instanceof GeneValueObject ) {
+            Integer c = ( ( GeneValueObject ) o ).getAssociatedExperimentCount();
+            return c != null ? -c : 0;
+        }
+        return 0;
+    }
+
+    /**
+     * Tiebreaker comparator applied within score bands on {@code /genes/search} results. See the
+     * comment block at the call site (in {@link #searchGenes}) for the motivating cases (tp53 →
+     * Trp53 alias band; Cx43 → Gja1 alias collision).
+     */
+    static Comparator<SearchResult<?>> searchRankingComparator( String qLc ) {
+        return Comparator
+                .<SearchResult<?>>comparingDouble( sr -> -sr.getScore() )
+                .thenComparingInt( sr -> symbolTier( symbolOf( sr ), qLc ) )
+                .thenComparingInt( sr -> editDistanceClamped( symbolOf( sr ), qLc ) )
+                .thenComparingInt( GeneWebService::popularityKey )
+                .thenComparingInt( sr -> symbolOf( sr ) == null ? Integer.MAX_VALUE : symbolOf( sr ).length() )
+                .thenComparing( sr -> symbolOf( sr ), Comparator.nullsLast( String.CASE_INSENSITIVE_ORDER ) );
     }
 
     @GET

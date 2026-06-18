@@ -108,6 +108,11 @@ public interface CharacteristicService extends BaseService<Characteristic>, Filt
     Map<String, Long> countByValueUri( Collection<String> uris, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents );
 
     /**
+     * @see CharacteristicDao#findEeCountsByUriGroupedByCategory(Collection)
+     */
+    Map<String, Map<String, Long>> findEeCountsByUriGroupedByCategory( Collection<String> uris );
+
+    /**
      * @see CharacteristicDao#findValueGroupedByValueUri(Collection, boolean, boolean, boolean, int)
      */
     Map<String, String> findValueGroupedByValueUri( @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, boolean includePredicates, boolean includeObjects, int maxResults );

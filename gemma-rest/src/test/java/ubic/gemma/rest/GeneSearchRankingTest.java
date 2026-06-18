@@ -12,6 +12,13 @@
 package ubic.gemma.rest;
 
 import org.junit.jupiter.api.Test;
+import ubic.gemma.model.common.search.SearchResult;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.gene.GeneValueObject;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -50,5 +57,75 @@ class GeneSearchRankingTest {
     @Test
     void editDistance_nullSymbol_sinksToBottom() {
         assertEquals( Integer.MAX_VALUE, GeneWebService.editDistanceOrMax( null, "tp53" ) );
+    }
+
+    @Test
+    void editDistanceClamped_collapsesDistantSymbolsIntoOneBucket() {
+        // The Cx43 alias collision: query has no structural similarity with either symbol, so
+        // raw Levenshtein at distance ≥ 3 is just coincidental letter overlap (Gja3's trailing
+        // "3" accidentally matches Cx43's). Clamping at 2 collapses these into the same bucket
+        // so downstream tiebreakers (popularity, length, alphabetical) decide.
+        assertEquals( 2, GeneWebService.editDistanceClamped( "gja1", "cx43" ) );
+        assertEquals( 2, GeneWebService.editDistanceClamped( "gja3", "cx43" ) );
+        // ...without losing the proven single-typo signal that pins Trp53 above Hipk2 for tp53.
+        assertEquals( 1, GeneWebService.editDistanceClamped( "trp53", "tp53" ) );
+        assertEquals( 2, GeneWebService.editDistanceClamped( "hipk2", "tp53" ) );
+    }
+
+    @Test
+    void rankingComparator_breaksCx43AliasCollisionByPopularityThenAlphabetical() {
+        // Both Gja1 and Gja3 carry "Cx43" as an alias in NCBI — Gja1 legitimately (it IS Cx43),
+        // Gja3 spuriously (Gja3 is Cx46; NCBI just lists "Cx43" on its alias row by mistake).
+        // The full-text Lucene leg returns both with the same score. The within-band tiebreaker
+        // must pick Gja1: edit-distance clamping equalises them, then popularity (10 EE
+        // associations vs 0) makes the call.
+        SearchResult<GeneValueObject> gja1 = mkGene( "Gja1", 14609L, 10 );
+        SearchResult<GeneValueObject> gja3 = mkGene( "Gja3", 14611L, 0 );
+        List<SearchResult<?>> raw = new ArrayList<>();
+        raw.add( gja3 ); // start with the wrong order to prove the comparator does the work
+        raw.add( gja1 );
+        raw.sort( GeneWebService.searchRankingComparator( "cx43" ) );
+        assertEquals( "Gja1", ( ( GeneValueObject ) raw.get( 0 ).getResultObject() ).getOfficialSymbol() );
+        assertEquals( "Gja3", ( ( GeneValueObject ) raw.get( 1 ).getResultObject() ).getOfficialSymbol() );
+    }
+
+    @Test
+    void rankingComparator_preservesTp53Trp53PromotionForTp53() {
+        // Regression for the proven tp53 → Trp53 pin (commit 546b58267d). The new edit-distance
+        // clamp + popularity steps must NOT regress this: Trp53 (distance 1, popularity high)
+        // still beats Hipk2 / Muc1 / Bcl3 (distance ≥ 3, low popularity) for "tp53".
+        SearchResult<GeneValueObject> trp53 = mkGene( "Trp53", 22059L, 50 );
+        SearchResult<GeneValueObject> hipk2 = mkGene( "Hipk2", 15258L, 5 );
+        SearchResult<GeneValueObject> bcl3 = mkGene( "Bcl3", 12051L, 5 );
+        List<SearchResult<?>> raw = new ArrayList<>();
+        raw.add( hipk2 );
+        raw.add( bcl3 );
+        raw.add( trp53 );
+        raw.sort( GeneWebService.searchRankingComparator( "tp53" ) );
+        assertEquals( "Trp53", ( ( GeneValueObject ) raw.get( 0 ).getResultObject() ).getOfficialSymbol() );
+    }
+
+    @Test
+    void rankingComparator_popularityBreaksAliasCollisionEvenWhenAlphabeticalWouldNotHelp() {
+        // Independent guard on the popularity step: the alphabetically-FIRST symbol is the
+        // SPURIOUS hit. Without popularity, alphabetical would pick the wrong gene. With
+        // popularity, the high-usage one wins regardless of letter order.
+        SearchResult<GeneValueObject> spurious = mkGene( "Aaa1", 999L, 0 );   // low usage
+        SearchResult<GeneValueObject> canonical = mkGene( "Zzz9", 1000L, 42 ); // high usage
+        List<SearchResult<?>> raw = new ArrayList<>();
+        raw.add( spurious );
+        raw.add( canonical );
+        raw.sort( GeneWebService.searchRankingComparator( "xx99" ) );
+        assertEquals( "Zzz9", ( ( GeneValueObject ) raw.get( 0 ).getResultObject() ).getOfficialSymbol() );
+    }
+
+    private static SearchResult<GeneValueObject> mkGene( String symbol, long id, int eeCount ) {
+        GeneValueObject vo = new GeneValueObject();
+        vo.setId( id );
+        vo.setOfficialSymbol( symbol );
+        vo.setAssociatedExperimentCount( eeCount );
+        // All test SearchResults share the same Lucene score so the within-band tiebreaker
+        // (the comparator under test) is what determines order.
+        return SearchResult.from( Gene.class, vo, 0.9, null, "test" );
     }
 }

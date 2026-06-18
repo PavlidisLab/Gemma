@@ -48,6 +48,7 @@ import ubic.gemma.model.common.search.SearchResult;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
@@ -435,7 +436,7 @@ public class AnnotationsWebService {
             return terms.stream()
                     .map( t -> new AnnotationSearchResultValueObject( t.getLabel(), t.getUri(), null, null,
                             t.getUri() != null ? countsByUri.getOrDefault( t.getUri(), 0 ) : null,
-                            null, null, null, null, null ) )
+                            null, null, null, null, null, null ) )
                     .collect( Collectors.toList() );
         } catch ( TimeoutException e ) {
             throw new ServiceUnavailableException( DateUtils.addSeconds( new Date(), 30 ), e );
@@ -501,6 +502,13 @@ public class AnnotationsWebService {
                     "URIs (e.g. UBERON when category=organism part). The parameter keys the " +
                     "response cache so any future per-category divergence stays correct.")
             @QueryParam("category") @DefaultValue("") String category,
+            @Parameter(description = "Optional taxon hint to scope gene fan-out. Accepts the same " +
+                    "TaxonArg forms as elsewhere (common name `mouse`, scientific name `Mus musculus`, " +
+                    "NCBI taxonomy id `10090`, or numeric Gemma taxon id). When supplied, gene " +
+                    "matches are restricted to that taxon — typing `Il10` on a mouse dataset no " +
+                    "longer surfaces rat/human Il10 rows. When omitted (default), gene fan-out " +
+                    "returns all taxa as before. The ontology search side is unaffected.")
+            @QueryParam("taxon") @Nullable TaxonArg<?> taxonArg,
             @Parameter(description = "When true, populate `geneCount` on each hit with the distinct " +
                     "number of genes annotated to that GO term (including descendants walked under " +
                     "the `geneCountMaxTerms` cap). Adds a parallel fan-out at the response shape " +
@@ -526,9 +534,12 @@ public class AnnotationsWebService {
             throw new BadRequestException( "Upstream delegation requested but "
                     + "`gemma.upstream.annotationSearch.url` is unset on this server." );
         }
+        // Resolve the optional taxon hint up-front so a bad value 400s before we hit the cache or
+        // launch the ontology fan-out. Null taxon = no constraint (legacy behaviour).
+        Taxon taxon = taxonArg != null ? taxonArgService.getEntity( taxonArg ) : null;
         // Cache key includes includeGeneCount + geneCountMaxTerms so a "with counts" call doesn't
-        // hit a cached "without counts" payload.
-        String cacheKey = buildSearchCacheKey( query.getValue(), strategy.getName(), limit, prefixes, upstream, exactLabel, category )
+        // hit a cached "without counts" payload. Taxon affects gene fan-out, so it keys too.
+        String cacheKey = buildSearchCacheKey( query.getValue(), strategy.getName(), limit, prefixes, upstream, exactLabel, category, taxon )
                 + ( includeGeneCount ? "|gc=" + geneCountMaxTerms : "" );
         org.springframework.cache.Cache searchCache = searchResponseCache();
         if ( searchCache != null ) {
@@ -542,7 +553,7 @@ public class AnnotationsWebService {
             }
         }
         try {
-            List<AnnotationSearchResultValueObject> result = new ArrayList<>( this.getTerms( query, strategy, limit, prefixes, upstream, exactLabel, category, FIND_CHARACTERISTICS_TIMEOUT_MS ) );
+            List<AnnotationSearchResultValueObject> result = new ArrayList<>( this.getTerms( query, strategy, limit, prefixes, upstream, exactLabel, category, taxon, FIND_CHARACTERISTICS_TIMEOUT_MS ) );
             if ( includeGeneCount && !result.isEmpty() ) {
                 result = attachGeneCounts( result, geneCountMaxTerms );
             }
@@ -607,7 +618,7 @@ public class AnnotationsWebService {
     public ResponseDataObject<List<AnnotationSearchResultValueObject>> searchAnnotationsByPathQuery( // Params:
             @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE, description = SEARCH_QUERY_DESCRIPTION) @PathParam("query") @DefaultValue("") StringArrayArg query // Required
     ) {
-        return searchAnnotations( query, LuceneOrderRankingStrategy.NAME, SEARCH_DEFAULT_LIMIT, "", false, false, "", false, 50 );
+        return searchAnnotations( query, LuceneOrderRankingStrategy.NAME, SEARCH_DEFAULT_LIMIT, "", false, false, "", null, false, 50 );
     }
 
     /**
@@ -823,7 +834,7 @@ public class AnnotationsWebService {
      */
     private LinkedHashSet<AnnotationSearchResultValueObject> getTerms( StringArrayArg arg,
             AnnotationSearchRankingStrategy strategy, int limit, List<String> prefixes, boolean upstream,
-            boolean exactLabel, String category, long timeoutMs ) throws SearchException {
+            boolean exactLabel, String category, @Nullable Taxon taxon, long timeoutMs ) throws SearchException {
         StopWatch timer = StopWatch.createStarted();
         long phaseStart = timer.getTime();
         List<CharacteristicValueObject> rawHits = new ArrayList<>();
@@ -845,25 +856,53 @@ public class AnnotationsWebService {
         }
         long tFindCharacteristics = timer.getTime() - phaseStart;
         int rawCount = rawHits.size();
-        // Order hits by relevance tier (exact label ≺ starts-with ≺ word-boundary-contains ≺
-        // substring ≺ other), with the prefixes parameter's order honoured as the next tier
-        // and URI ASC as the deterministic tiebreaker inside each tier. Without the tier sort,
-        // a typeahead query for "synaptic" returns "acetylcholine catabolic process in synaptic
-        // cleft" before "chemical synaptic transmission" because the URI sort ranks by GO-ID
-        // ascending. Honouring the prefixes order also lets a caller request
-        // `prefixes=GO_,EFO_` and get GO_ matches above EFO_ within the tier.
-        String relevanceQuery = String.join( " ", arg.getValue() ).trim().toLowerCase( Locale.ROOT );
+        // Order hits by relevance tier (exact label ≺ starts-with ≺ all-tokens-covered ≺
+        // word-boundary-contains ≺ substring ≺ other), with the prefixes parameter's order
+        // honoured as the next tier and URI ASC as the deterministic tiebreaker. Without the
+        // tier sort, a typeahead query for "synaptic" returns "acetylcholine catabolic process
+        // in synaptic cleft" before "chemical synaptic transmission" because the URI sort
+        // ranks by GO-ID ascending.
+        //
+        // The all-tokens-covered tier (tier 2) sits between startsWith and word-boundary so a
+        // multi-token query like "uzh-2 cell" promotes "uzh-2 cell line" (covers both content
+        // tokens) above "cell line sample study" (covers "cell" only). This is the demotion
+        // half of the fix in handoffs/ANNOTATIONS_SEARCH_OR_OVER_TOKENS_2026_06_12.md — a
+        // candidate-stage AND filter would have killed legitimate synonym-only matches like
+        // "ammon's horn" → "hippocampus" (label contains neither token), so we DEMOTE noise
+        // via tier rather than dropping it.
+        String joinedRelevanceQuery = String.join( " ", arg.getValue() ).trim();
+        String relevanceQuery = joinedRelevanceQuery.toLowerCase( Locale.ROOT );
+        // Canonical form of the query used for hyphen-and-cell-suffix-insensitive equality:
+        // MEC2 ↔ MEC-2 ↔ MEC-2 cell all canonicalise to "mec2". See javadoc on
+        // canonicaliseForExactMatch.
+        String relevanceQueryCanon = canonicaliseForExactMatch( relevanceQuery );
+        List<String> queryContentTokens = contentTokens( joinedRelevanceQuery );
+        boolean multiToken = queryContentTokens.size() >= 2;
         java.util.function.ToIntFunction<CharacteristicValueObject> tierFn = h -> {
             String label = h.getValue();
-            if ( label == null ) return 5;
+            if ( label == null ) return 6;
             String l = label.toLowerCase( Locale.ROOT );
-            if ( l.equals( relevanceQuery ) ) return 0;        // exact label
-            if ( l.startsWith( relevanceQuery ) ) return 1;    // label starts with query
+            // CLO labels cell-line terms as "<NAME> cell" (e.g. "A549 cell") rather than the
+            // bare "<NAME>"; treat that trailing " cell" / " cell line" as strippable so a
+            // bare-name query like "A549" reaches CLO at the exact-label tier instead of
+            // losing to EFO's bare "a549" by tier alone.
+            String ls = stripCellSuffix( l );
+            // Canonical form: also drops ASCII hyphens, so "mec-2 cell" / "mec2" / "MEC-2" all
+            // collapse to the same key. Catches identifier-shaped queries that vary in
+            // punctuation (MEC2 ↔ MEC-2 ↔ MEC-2 cell, NCI-H358 ↔ NCIH358, RPMI-8226 ↔ RPMI8226).
+            String lCanon = canonicaliseForExactMatch( l );
+            if ( l.equals( relevanceQuery ) || ls.equals( relevanceQuery )
+                    || lCanon.equals( relevanceQueryCanon ) ) return 0;                            // exact label
+            if ( l.startsWith( relevanceQuery ) || ls.startsWith( relevanceQuery )
+                    || lCanon.startsWith( relevanceQueryCanon ) ) return 1;                        // label starts with query
+            if ( multiToken && labelCoversAllTokens( normaliseForEquality( label ), queryContentTokens ) ) {
+                return 2;                                       // all query content tokens present
+            }
             // word-boundary contains: query appears at the start of any token in the label
             int idx = l.indexOf( relevanceQuery );
-            if ( idx > 0 && !Character.isLetterOrDigit( l.charAt( idx - 1 ) ) ) return 2;
-            if ( idx >= 0 ) return 3;                          // raw substring
-            return 4;                                          // URI / synonym match only
+            if ( idx > 0 && !Character.isLetterOrDigit( l.charAt( idx - 1 ) ) ) return 3;
+            if ( idx >= 0 ) return 4;                          // raw substring
+            return 5;                                          // URI / synonym / definition only
         };
         java.util.function.ToIntFunction<CharacteristicValueObject> prefixRankFn = h -> {
             if ( prefixes.isEmpty() ) return 0;
@@ -874,9 +913,32 @@ public class AnnotationsWebService {
             }
             return prefixes.size();
         };
+        // Within the same tier, prefer the CLO term over EFO when the CLO label EARNED its
+        // tier through the " cell" suffix strip — that's the signal that CLO meant this term
+        // as a cell-line label and is the authoritative source. Without this, an EFO bare
+        // "a549" and a CLO "a549 cell" both land in tier 0 and the URI tiebreaker decides
+        // (accidentally CLO-first on host alphabetics, but not by design). Gate keeps this
+        // surgical: a non-cell-line query like "lung cancer" sees no behavioural change
+        // because no label is stripped.
+        java.util.function.ToIntFunction<CharacteristicValueObject> cellLinePreferenceFn = h -> {
+            String label = h.getValue();
+            String uri = h.getValueUri();
+            if ( label == null || uri == null ) return 1;
+            String l = label.toLowerCase( Locale.ROOT );
+            String lCanon = canonicaliseForExactMatch( l );
+            // Normalisation earned the match when EITHER side needed to be normalised AND the
+            // canonical forms equal-or-prefix-match. Covers both the cell-suffix-strip case
+            // (A549 ↔ "A549 cell") and the hyphen-strip case (MEC2 ↔ "MEC-2 cell"). Keeps
+            // the CLO-preference surgical: a query that matches a CLO label raw doesn't
+            // trigger the preference here (the URI tiebreaker decides on its own merits).
+            boolean normalisationOccurred = !lCanon.equals( l ) || !relevanceQueryCanon.equals( relevanceQuery );
+            boolean canonicalMatch = lCanon.equals( relevanceQueryCanon ) || lCanon.startsWith( relevanceQueryCanon );
+            return ( normalisationOccurred && canonicalMatch && uri.contains( "CLO_" ) ) ? 0 : 1;
+        };
         rawHits.sort( Comparator
                 .<CharacteristicValueObject>comparingInt( tierFn::applyAsInt )
                 .thenComparingInt( prefixRankFn::applyAsInt )
+                .thenComparingInt( cellLinePreferenceFn::applyAsInt )
                 .thenComparing( CharacteristicValueObject::getValueUri, Comparator.nullsLast( Comparator.naturalOrder() ) )
                 .thenComparing( CharacteristicValueObject::getValue, Comparator.nullsLast( Comparator.naturalOrder() ) ) );
         // Exact-label pushdown for resolver-style callers (cuts 5-10x candidate payload).
@@ -890,10 +952,20 @@ public class AnnotationsWebService {
                     .findFirst()
                     .orElse( "" );
             if ( !wantedLower.isEmpty() ) {
+                // Apply the same canonicalisation the ranker's tier function uses, so a
+                // resolver passing exact_label=true together with prefixes=CLO_,CL_ for
+                // "MEC2" still finds CLO_0037182 (label "MEC-2 cell"). Without this, the
+                // exact_label filter degrades to literal toLowerCase equality and drops
+                // every hit whose label varies from the query by " cell" / hyphens —
+                // exactly the cases the ranker just promoted to tier 0.
+                String wantedCanon = canonicaliseForExactMatch( wantedLower );
                 List<CharacteristicValueObject> exact = new ArrayList<>( rawHits.size() );
                 for ( CharacteristicValueObject h : rawHits ) {
                     String label = h.getValue();
-                    if ( label != null && label.trim().toLowerCase( Locale.ROOT ).equals( wantedLower ) ) {
+                    if ( label == null ) continue;
+                    String labelLower = label.trim().toLowerCase( Locale.ROOT );
+                    if ( labelLower.equals( wantedLower )
+                            || canonicaliseForExactMatch( labelLower ).equals( wantedCanon ) ) {
                         exact.add( h );
                     }
                 }
@@ -966,6 +1038,33 @@ public class AnnotationsWebService {
         long tTopCounts = timer.getTime() - phaseStart;
         phaseStart = timer.getTime();
 
+        // Prior-category breakdown for the top-N kept URIs: how often has this URI been tagged
+        // under each category by prior curators? One small grouped query against EE2C —
+        // cacheable + EE2C-synchronised so curator-driven tag changes invalidate cleanly. Gives
+        // resolvers a corpus-history signal to break ambiguous label hits (e.g. MEC-2 used 14×
+        // as cell line, 1× as protein → resolver picks cell line regardless of which label
+        // matched). Same URI set as topCounts so the IN-clause is tiny.
+        Map<String, Map<String, Integer>> priorCategoriesByUri = Collections.emptyMap();
+        if ( !ranked.isEmpty() ) {
+            Set<String> topUrisForPriorCat = ranked.stream()
+                    .map( CharacteristicValueObject::getValueUri )
+                    .filter( Objects::nonNull )
+                    .collect( Collectors.toSet() );
+            if ( !topUrisForPriorCat.isEmpty() ) {
+                Map<String, Map<String, Long>> raw = characteristicService.findEeCountsByUriGroupedByCategory( topUrisForPriorCat );
+                if ( raw != null && !raw.isEmpty() ) {
+                    priorCategoriesByUri = new HashMap<>( raw.size() );
+                    for ( Map.Entry<String, Map<String, Long>> e : raw.entrySet() ) {
+                        Map<String, Integer> inner = new HashMap<>( e.getValue().size() );
+                        e.getValue().forEach( ( k, v ) -> inner.put( k, v.intValue() ) );
+                        priorCategoriesByUri.put( e.getKey(), inner );
+                    }
+                }
+            }
+        }
+        long tPriorCategories = timer.getTime() - phaseStart;
+        phaseStart = timer.getTime();
+
         // Enrich the top-N ranked hits with definition + nearest is_a/part_of parents + match
         // attribution (matchedVia/matchedText). The rest carry null sentinels so the UI can
         // lazy-load via /annotations/term?uri=X. Lookups share the remaining ontology-search
@@ -988,9 +1087,9 @@ public class AnnotationsWebService {
         long tEnrich = timer.getTime() - phaseStart;
         if ( timer.getTime() > 1000 ) {
             log.info( String.format(
-                    "annotation-search: query='%s' raw=%d top=%d total=%dms (find=%dms filter=%dms counts=%dms rank=%dms topCounts=%dms enrich=%dms)",
+                    "annotation-search: query='%s' raw=%d top=%d total=%dms (find=%dms filter=%dms counts=%dms rank=%dms topCounts=%dms priorCats=%dms enrich=%dms)",
                     arg.getValue(), rawCount, topUris.size(), timer.getTime(),
-                    tFindCharacteristics, tFilters, tCounts, tRank, tTopCounts, tEnrich ) );
+                    tFindCharacteristics, tFilters, tCounts, tRank, tTopCounts, tPriorCategories, tEnrich ) );
         }
 
         LinkedHashSet<AnnotationSearchResultValueObject> vos = new LinkedHashSet<>();
@@ -1003,31 +1102,60 @@ public class AnnotationsWebService {
             MatchAttribution match = isTop ? matchByUri.get( uri ) : null;
             String matchedVia = match != null ? match.via.token : null;
             String matchedText = match != null ? match.text : null;
+            Map<String, Integer> priorCategories = uri != null ? priorCategoriesByUri.get( uri ) : null;
             vos.add( new AnnotationSearchResultValueObject( vo.getValue(), vo.getValueUri(), vo.getCategory(),
-                    vo.getCategoryUri(), count, definition, parents, matchedVia, matchedText, null ) );
+                    vo.getCategoryUri(), count, definition, parents, matchedVia, matchedText, null, priorCategories ) );
         }
         // Always merge gene hits in, regardless of category — the typeahead surface should
         // surface STAT5B whether the curator is in a Genotype factor, a Treatment factor, or a
-        // generic characteristic picker. Category-aware ranking (e.g. boost UBERON URIs when
-        // category=organism part, boost gene rows when category=genotype) is a future ranking-
-        // strategy concern; for now the merge is unconditional and ranking is unchanged.
-        // The category param is still accepted (and keyed into the cache) so future per-category
-        // boosting can land without breaking on-wire callers.
+        // generic characteristic picker.
         //
-        // Cost: one extra Hibernate-Search gene query per call. Cache hits cover repeat calls
-        // within the 5-min window, so a 20-keystroke typeahead session pays it once per query.
+        // Dedup by URI: when the same NCBI Gene URI already appears in the ontology/characteristic
+        // results (e.g. a curator previously tagged an experiment with the gene under category
+        // "genotype" → it surfaces from the corpus with a label like "Il10 [mouse] interleukin 10"
+        // and a usage count), drop the synthetic gene-fanout row for that URI — the corpus row
+        // carries a richer label (with taxon tag) and the load-bearing usage signal. The synthetic
+        // gene row only adds value when the gene is NOT yet known to the corpus ("new" gene,
+        // useful for first-time genotype annotation).
+        //
+        // Cost: one extra GeneService probe per query (~ms). Cache hits cover repeat calls within
+        // the 5-min window.
         LinkedHashSet<AnnotationSearchResultValueObject> geneRows = new LinkedHashSet<>();
         for ( String q : arg.getValue() ) {
             if ( q == null ) continue;
             String trimmed = q.trim();
             if ( trimmed.isEmpty() ) continue;
-            geneRows.addAll( resolveGeneHits( trimmed, limit ) );
+            geneRows.addAll( resolveGeneHits( trimmed, taxon, limit ) );
         }
         if ( !geneRows.isEmpty() ) {
-            // Prepend so an exact-symbol match (STAT5B etc.) lands above ontology hits. Generic
-            // queries with no real gene match yield an empty geneRows and we return vos as-is.
-            LinkedHashSet<AnnotationSearchResultValueObject> merged = new LinkedHashSet<>( geneRows );
+            Set<String> vosUris = new HashSet<>();
+            for ( AnnotationSearchResultValueObject v : vos ) {
+                if ( v.getValueUri() != null ) {
+                    vosUris.add( v.getValueUri() );
+                }
+            }
+            // Partition gene fan-out hits by probe strength:
+            //   strong = symbol or name match — curator typed the gene's primary identifier,
+            //   weak   = alias-only — query collided with a synonym (e.g. "age" → Renbp via
+            //            the historical alias "AGE"); should never outrank an exact ontology
+            //            preferred_label hit.
+            // Strong gene rows still prepend so a brand-new gene with no corpus row yet
+            // leads the response. Weak (alias-only) gene rows are appended BELOW vos so
+            // tier-0 ontology hits ("age" → PATO:0000011, EFO:0000246) come first.
+            LinkedHashSet<AnnotationSearchResultValueObject> strong = new LinkedHashSet<>();
+            LinkedHashSet<AnnotationSearchResultValueObject> weak = new LinkedHashSet<>();
+            for ( AnnotationSearchResultValueObject g : geneRows ) {
+                if ( g.getValueUri() != null && vosUris.contains( g.getValueUri() ) ) continue;
+                if ( GENE_MATCH_ALIAS.equals( g.getMatchedVia() ) ) {
+                    weak.add( g );
+                } else {
+                    strong.add( g );
+                }
+            }
+            LinkedHashSet<AnnotationSearchResultValueObject> merged = new LinkedHashSet<>();
+            merged.addAll( strong );
             merged.addAll( vos );
+            merged.addAll( weak );
             if ( merged.size() > limit ) {
                 LinkedHashSet<AnnotationSearchResultValueObject> trimmedSet = new LinkedHashSet<>();
                 int n = 0;
@@ -1043,43 +1171,115 @@ public class AnnotationsWebService {
     }
 
     /**
-     * Resolve gene matches for the query via {@link SearchService}, render each as a synthetic
-     * {@link AnnotationSearchResultValueObject} with category="gene" and valueUri=NCBI Gene URI.
-     * Returns empty on any search failure; gene resolution is best-effort and must never break
-     * the wider annotation-search response.
+     * Resolve gene matches for the query by fanning out across three exact-match probes on
+     * {@link ubic.gemma.persistence.service.genome.gene.GeneService}, rendering each match
+     * as a synthetic {@link AnnotationSearchResultValueObject} with {@code category="gene"}
+     * and {@code valueUri}=NCBI Gene URI.
+     *
+     * <p>Probes (in order, dedup-by-gene-id across):</p>
+     * <ol>
+     *   <li>{@link ubic.gemma.persistence.service.genome.gene.GeneService#findByOfficialSymbol(String)}
+     *       (or the taxon-scoped overload when {@code taxon != null}) — strongest. Curator
+     *       types {@code STAT5B} and gets the gene.</li>
+     *   <li>{@link ubic.gemma.persistence.service.genome.gene.GeneService#findByOfficialName(String)}
+     *       — Gemma 1.0 parity. Curator types {@code haptoglobin} and gets HP / Hp back.</li>
+     *   <li>{@link ubic.gemma.persistence.service.genome.gene.GeneService#findByAlias(String)}
+     *       — alias matches (e.g. {@code TRP53} → {@code Trp53}).</li>
+     * </ol>
+     *
+     * <p>When {@code taxon} is non-null, every probe's results are filtered to that taxon
+     * post-hoc (only {@code findByOfficialSymbol} has a taxon-scoped DAO variant; the other
+     * two filter the returned collection by {@code g.getTaxon().equals(taxon)}). This is
+     * the right knob for "curator is tagging a mouse experiment": typing {@code Il10} no
+     * longer surfaces rat or human Il10.</p>
+     *
+     * <p>Returns empty on any search failure; gene resolution is best-effort and must
+     * never break the wider annotation-search response.</p>
      */
-    private LinkedHashSet<AnnotationSearchResultValueObject> resolveGeneHits( String query, int limit ) {
+    private LinkedHashSet<AnnotationSearchResultValueObject> resolveGeneHits( String query,
+            @Nullable Taxon taxon, int limit ) {
         LinkedHashSet<AnnotationSearchResultValueObject> out = new LinkedHashSet<>();
-        // Previously this went through SearchService.search(Gene.class), which fans out across
-        // every SearchSource — including GeneOntologySearchSource, which for queries like
-        // "metabolism" or "neuron" walks the entire GO subtree (~30s wall on prod-tunneled DB).
-        // We only keep exact-symbol matches (score >= 1.0) downstream, so the GO walk is wasted
-        // work. Call GeneService.findByOfficialSymbol directly — same matches, no GO traversal,
-        // a couple of ms instead of tens of seconds.
         if ( geneService == null ) {
             return out;
         }
+        // Dedup at the gene-id level so a gene matching multiple probes (e.g. symbol AND
+        // alias) emits one VO. Insertion order = probe order, so symbol matches stay above
+        // name matches stay above alias matches.
+        LinkedHashSet<Long> seenGeneIds = new LinkedHashSet<>();
         try {
-            Collection<Gene> genes = geneService.findByOfficialSymbol( query );
-            if ( genes == null || genes.isEmpty() ) {
-                return out;
+            Collection<Gene> symbolHits;
+            if ( taxon != null ) {
+                Gene single = geneService.findByOfficialSymbol( query, taxon );
+                symbolHits = single != null ? Collections.singletonList( single ) : Collections.emptyList();
+            } else {
+                symbolHits = geneService.findByOfficialSymbol( query );
             }
-            for ( Gene g : genes ) {
-                if ( out.size() >= limit ) break;
-                if ( g == null ) continue;
-                String label = g.getOfficialSymbol();
-                if ( label == null || label.isEmpty() ) continue;
-                String uri = g.getNcbiGeneId() != null
-                        ? "http://purl.org/commons/record/ncbi_gene/" + g.getNcbiGeneId()
-                        : null;
-                out.add( new AnnotationSearchResultValueObject( label, uri, "gene", null,
-                        0, null, null, "search:gene", label, null ) );
+            collectGeneHits( symbolHits, taxon, seenGeneIds, out, limit, GENE_MATCH_SYMBOL );
+            if ( out.size() < limit ) {
+                collectGeneHits( geneService.findByOfficialName( query ), taxon, seenGeneIds, out, limit, GENE_MATCH_NAME );
+            }
+            if ( out.size() < limit ) {
+                collectGeneHits( geneService.findByAlias( query ), taxon, seenGeneIds, out, limit, GENE_MATCH_ALIAS );
             }
         } catch ( Exception e ) {
             log.debug( "Gene resolution skipped for query '{}': {}", query, e.toString() );
         }
         return out;
     }
+
+    /**
+     * Helper: render each {@link Gene} in {@code source} as a search-result VO and add to
+     * {@code out}, deduplicating by gene id and respecting the overall {@code limit}.
+     * Skips genes with missing id or symbol — those can't be resolved back to a usable URI.
+     * When {@code taxonFilter} is non-null, drops genes whose taxon doesn't match.
+     *
+     * <p>{@code matchedViaToken} is stamped on each emitted VO so the caller can distinguish
+     * how the gene was found ({@link #GENE_MATCH_SYMBOL}, {@link #GENE_MATCH_NAME},
+     * {@link #GENE_MATCH_ALIAS}). The merge step uses this to keep alias-only hits BELOW
+     * exact ontology preferred-label matches.</p>
+     */
+    private static void collectGeneHits( @Nullable Collection<Gene> source, @Nullable Taxon taxonFilter,
+            Set<Long> seenGeneIds,
+            LinkedHashSet<AnnotationSearchResultValueObject> out, int limit,
+            String matchedViaToken ) {
+        if ( source == null || source.isEmpty() ) return;
+        for ( Gene g : source ) {
+            if ( out.size() >= limit ) return;
+            if ( g == null ) continue;
+            if ( taxonFilter != null && ( g.getTaxon() == null || !taxonFilter.equals( g.getTaxon() ) ) ) {
+                continue;
+            }
+            Long id = g.getId();
+            if ( id != null && !seenGeneIds.add( id ) ) continue;
+            String symbol = g.getOfficialSymbol();
+            if ( symbol == null || symbol.isEmpty() ) continue;
+            String name = g.getOfficialName();
+            // Label includes the official name when known so a curator typing "haptoglobin"
+            // and seeing "HP" back doesn't have to guess; matches Gemma 1.0's "Hp haptoglobin"
+            // ergonomics without including [taxon] (would require a taxon fetch).
+            String label = ( name != null && !name.isEmpty() && !name.equalsIgnoreCase( symbol ) )
+                    ? symbol + " " + name
+                    : symbol;
+            String uri = g.getNcbiGeneId() != null
+                    ? "http://purl.org/commons/record/ncbi_gene/" + g.getNcbiGeneId()
+                    : null;
+            out.add( new AnnotationSearchResultValueObject( label, uri, "gene", null,
+                    0, null, null, matchedViaToken, label, null, null ) );
+        }
+    }
+
+    /** matchedVia token for genes matched via the official-symbol probe — strongest probe. */
+    static final String GENE_MATCH_SYMBOL = "search:gene_symbol";
+    /** matchedVia token for genes matched via the official-name probe — strong (Gemma 1.0 parity). */
+    static final String GENE_MATCH_NAME = "search:gene_name";
+    /**
+     * matchedVia token for genes matched ONLY via the alias probe. Weaker than symbol / name —
+     * the query collided with a synonym, not the gene's primary identifier (e.g.
+     * {@code "age"} hitting {@code Renbp} via the historical {@code "AGE"} alias). These rows
+     * are appended BELOW the tier-sorted ontology hits so an exact ontology
+     * {@code preferred_label} match always outranks a gene-alias collision.
+     */
+    static final String GENE_MATCH_ALIAS = "search:gene_alias";
 
     /** Top-N hits to enrich inline with definition + parents on /annotations/search. */
     private static final int ENRICH_TOP_N = 25;
@@ -1154,7 +1354,7 @@ public class AnnotationsWebService {
                 out.add( new AnnotationSearchResultValueObject(
                         r.getValue(), r.getValueUri(), r.getCategory(), r.getCategoryUri(),
                         r.getUsageCount(), r.getDefinition(), r.getParents(),
-                        r.getMatchedVia(), r.getMatchedText(), c ) );
+                        r.getMatchedVia(), r.getMatchedText(), c, r.getPriorCategories() ) );
             }
         }
         return out;
@@ -1300,10 +1500,28 @@ public class AnnotationsWebService {
         }
         try {
             OntologyTerm term = ontologyService.getTerm( uri, remaining, TimeUnit.MILLISECONDS );
-            if ( term == null ) return;
+            if ( term == null ) {
+                // The Lucene/DB hit had this URI, but no loaded ontology service can resolve it
+                // back to a term — most often that means the owning ontology is still mid-init
+                // (just refreshed) or never loaded at all. matchedVia will land as null on the
+                // wire; clients can't distinguish "we never tried" from "we tried and gave up"
+                // without this log line. INFO so a sustained failure pattern is visible without
+                // turning on debug logging.
+                log.info( "annotation-search: getTerm({}) returned null for query='{}'; matchedVia will be null. "
+                        + "Likely cause: owning ontology not loaded or still initializing.",
+                        uri, originalQuery );
+                return;
+            }
             MatchAttribution attribution = computeMatchAttribution( term, originalQuery );
             if ( attribution != null ) {
                 synchronized ( matchByUri ) { matchByUri.put( uri, attribution ); }
+            } else if ( log.isDebugEnabled() ) {
+                // No label / synonym normalised-equal to the query — hit came in via a Lucene
+                // field we don't probe (definition, obo_id) or a fuzzy / token-overlap rank.
+                // The term itself loaded fine; log label so a debug session can see why strict
+                // equality didn't bite.
+                log.debug( "annotation-search: no match attribution for uri={} label='{}' query='{}'",
+                        uri, term.getLabel(), originalQuery );
             }
             Collection<OntologyTerm> parents = ontologyService.getParents( Collections.singleton( term ),
                     true, true, remaining, TimeUnit.MILLISECONDS );
@@ -1329,18 +1547,32 @@ public class AnnotationsWebService {
     private static final String IAO_ALT_LABEL = "http://purl.obolibrary.org/obo/IAO_0000118";
 
     /**
-     * Back-compute which Lucene field produced the hit by checking the term's preferred label
-     * and indexed synonyms for a normalised-equality match against the query (preferred_label >
-     * exact > narrow > related > broad > generic > alt_label).
-     * <p>
-     * Strict equality is intentional: a token-overlap rule tagged every Lucene hit whose label
-     * shared a single word with the query (e.g. {@code "disease"}) as {@code preferred_label},
-     * which made the attribution useless as a relevance signal for clients. {@code matchedVia}
-     * now means "this row's label/synonym IS the query", nothing fuzzier.
-     * <p>
-     * Returns {@code null} when nothing matches by equality — the hit came in via a Lucene
-     * field we don't probe (definition, obo_id) or via fuzzy ranking. Clients render that as
-     * "ranked-but-unattributed" rather than as a falsely strong match.
+     * Back-compute which Lucene field produced the hit by walking attribution tiers from
+     * strongest to weakest:
+     *
+     * <ol>
+     *   <li>Strict equality against the preferred label →
+     *       {@link MatchedVia#PREFERRED_LABEL}.</li>
+     *   <li>Strict equality against a synonym (exact &gt; narrow &gt; related &gt; broad &gt;
+     *       generic &gt; alt_label).</li>
+     *   <li>{@link MatchedVia#LABEL_PREFIX} when the query is a prefix of the label or vice
+     *       versa (typeahead-friendly).</li>
+     *   <li>{@link MatchedVia#LABEL_TOKENS} when every content token in the query
+     *       (length-≥-2, stop-word-stripped) appears as a substring of the label.</li>
+     *   <li>{@link MatchedVia#SYNONYM_TOKENS} when label-token coverage fails but the same
+     *       check passes against any synonym.</li>
+     * </ol>
+     *
+     * <p>Reasoning: a hit deserves a <em>reason</em> for being a hit — a popular term that
+     * shares one stop-word with the query isn't a reason. The
+     * {@link #filterByTokenCoverage(java.util.List, String) token-coverage filter}
+     * applied upstream already rejected the worst false positives, so every retained hit
+     * has at least token coverage on its label or one of its synonyms; this method picks
+     * which level of attribution to surface.</p>
+     *
+     * <p>Returns {@code null} only when no tier matches — typically because the hit came
+     * via a Lucene field we don't probe (definition, obo_id), or in the rare case where
+     * the upstream filter was bypassed (single-content-token queries).</p>
      */
     @Nullable
     private static MatchAttribution computeMatchAttribution( OntologyTerm term, String originalQuery ) {
@@ -1349,12 +1581,12 @@ public class AnnotationsWebService {
             return null;
         }
         String label = term.getLabel();
-        if ( label != null && normaliseForEquality( label ).equals( normalisedQuery ) ) {
+        String normalisedLabel = label != null ? normaliseForEquality( label ) : "";
+        // Tier 1: exact equality on preferred label.
+        if ( !normalisedLabel.isEmpty() && normalisedLabel.equals( normalisedQuery ) ) {
             return new MatchAttribution( MatchedVia.PREFERRED_LABEL, label );
         }
-        // Walk synonym fields in strength order; the first synonym whose normalised value equals
-        // the normalised query wins. Most ontology terms expose only a handful of synonyms so
-        // this is cheap.
+        // Tier 2: exact equality on a synonym. Walk in strength order.
         String[][] probes = {
                 { OBO_EXACT_SYNONYM, MatchedVia.EXACT_SYNONYM.token },
                 { OBO_NARROW_SYNONYM, MatchedVia.NARROW_SYNONYM.token },
@@ -1375,7 +1607,95 @@ public class AnnotationsWebService {
                 }
             }
         }
+        // Tier 3: typeahead prefix match on the preferred label. Either direction counts —
+        // the user typed "alz" and got "alzheimer's disease", or typed "alzheimer's diseas"
+        // and the label is the prefix "alzheimer's disease". Both feel like the same kind
+        // of relevance signal to the curator.
+        if ( !normalisedLabel.isEmpty() &&
+                ( normalisedLabel.startsWith( normalisedQuery ) || normalisedQuery.startsWith( normalisedLabel ) ) ) {
+            return new MatchAttribution( MatchedVia.LABEL_PREFIX, label );
+        }
+        // Tier 4: every content token in the query appears as a substring of the preferred
+        // label. The upstream token-coverage filter already enforced this for multi-content-
+        // token queries, so we just need to re-confirm here and surface the attribution.
+        List<String> contentTokens = contentTokens( originalQuery );
+        if ( !contentTokens.isEmpty() && labelCoversAllTokens( normalisedLabel, contentTokens ) ) {
+            return new MatchAttribution( MatchedVia.LABEL_TOKENS, label );
+        }
+        // Tier 5: synonym-token coverage. Check every synonym property; first one that covers
+        // all content tokens wins. Surfaces the matching synonym text in matchedText so the
+        // client can show "matched on: <synonym>".
+        for ( String[] probe : probes ) {
+            Collection<AnnotationProperty> annots = term.getAnnotations( probe[0] );
+            if ( annots == null || annots.isEmpty() ) {
+                continue;
+            }
+            for ( AnnotationProperty ap : annots ) {
+                String text = ap.getContents();
+                if ( text == null ) continue;
+                String normalisedSyn = normaliseForEquality( text );
+                if ( !contentTokens.isEmpty() && labelCoversAllTokens( normalisedSyn, contentTokens ) ) {
+                    return new MatchAttribution( MatchedVia.SYNONYM_TOKENS, text );
+                }
+            }
+        }
         return null;
+    }
+
+    /**
+     * Conservative stop-word list. Tokens this short or this generic don't carry meaning
+     * for ontology lookup. Lucene's StandardAnalyzer already removes most; this set covers
+     * the cases where we tokenise client-side (the token-coverage filter) before the query
+     * has been through Lucene's analyzer.
+     */
+    private static final Set<String> SEARCH_STOP_WORDS = Set.of(
+            "a", "an", "and", "are", "as", "at", "be", "but", "by", "for", "if",
+            "in", "into", "is", "it", "of", "on", "or", "such", "that", "the",
+            "their", "then", "there", "these", "they", "this", "to", "was",
+            "will", "with"
+    );
+
+    /**
+     * Minimum length for a token to be considered "content". Single characters and
+     * digits-only short tokens drop out — they're either part numbers ({@code "2"} in
+     * {@code "uzh 2 cell"}) that survive Lucene's analyser but don't help filter
+     * candidates, or stop-words.
+     */
+    private static final int MIN_CONTENT_TOKEN_LENGTH = 2;
+
+    /**
+     * Tokenise an arbitrary user query into "content" tokens: lowercase, split on
+     * runs of non-alphanumeric characters, drop tokens shorter than
+     * {@link #MIN_CONTENT_TOKEN_LENGTH}, drop stop-words.
+     *
+     * <p>Returned in encounter order, deduplicated; empty list when the input is null /
+     * blank / all-stop-words. Callers should treat an empty list as "no token-coverage
+     * constraint applies — fall back to Lucene's order".</p>
+     */
+    static List<String> contentTokens( @Nullable String query ) {
+        if ( query == null ) return Collections.emptyList();
+        String lower = query.toLowerCase( Locale.ROOT );
+        String[] parts = lower.split( "[^a-z0-9]+" );
+        LinkedHashSet<String> seen = new LinkedHashSet<>();
+        for ( String p : parts ) {
+            if ( p.length() < MIN_CONTENT_TOKEN_LENGTH ) continue;
+            if ( SEARCH_STOP_WORDS.contains( p ) ) continue;
+            seen.add( p );
+        }
+        return new ArrayList<>( seen );
+    }
+
+    /**
+     * @return true iff every supplied content token appears as a substring of the
+     *         normalised label. Matches the substring semantic on purpose so {@code "cell"}
+     *         covers labels like {@code "cells"} and {@code "cellular"}.
+     */
+    private static boolean labelCoversAllTokens( String normalisedLabel, List<String> contentTokens ) {
+        if ( normalisedLabel == null || normalisedLabel.isEmpty() ) return false;
+        for ( String t : contentTokens ) {
+            if ( !normalisedLabel.contains( t ) ) return false;
+        }
+        return true;
     }
 
     /**
@@ -1389,16 +1709,81 @@ public class AnnotationsWebService {
     }
 
     /**
+     * CLO labels cell-line terms with a trailing {@code " cell"} or {@code " cell line"} (e.g.
+     * {@code "A549 cell"}, {@code "NCI-H358 cell"}) rather than the bare cell-line identifier.
+     * Strip the suffix so a bare-name query like {@code "A549"} reaches CLO at the exact-label
+     * ranking tier instead of losing to EFO's bare {@code "a549"} on tier alone.
+     *
+     * <p>Operates on the already-lowercased label. Returns the input unchanged when the
+     * suffix isn't present.</p>
+     */
+    private static final java.util.regex.Pattern CELL_SUFFIX =
+            java.util.regex.Pattern.compile( "\\s+cell(\\s+line)?$" );
+
+    static String stripCellSuffix( String labelLower ) {
+        if ( labelLower == null ) return "";
+        return CELL_SUFFIX.matcher( labelLower ).replaceFirst( "" );
+    }
+
+    /**
+     * Canonical form used for tier-0 / tier-1 equality across the search ranker AND the
+     * {@code exact_label} filter: lowercase + strip the trailing {@code " cell"} /
+     * {@code " cell line"} suffix + strip ASCII hyphens. Brings identifier-shaped labels
+     * and queries into the same shape so the inevitable variations don't drop hits:
+     *
+     * <ul>
+     *   <li>Query {@code MEC2} vs CLO label {@code "MEC-2 cell"} →
+     *       both canonicalise to {@code "mec2"} → tier-0 match.</li>
+     *   <li>Query {@code MEC-2} vs EFO label {@code "mec2"} →
+     *       both canonicalise to {@code "mec2"} → tier-0 match.</li>
+     *   <li>Query {@code NCI-H358} vs hypothetical label {@code "NCIH358"} →
+     *       both canonicalise to {@code "ncih358"} → tier-0 match.</li>
+     * </ul>
+     *
+     * <p>Strictly subsumes raw equality: when neither side needs normalisation the canonical
+     * forms equal the raw forms, so existing matches are preserved. Multi-word labels with
+     * intra-word punctuation (apostrophes, slashes, etc.) are NOT normalised here — those
+     * are handled by the synonym / tokens tiers downstream.</p>
+     */
+    static String canonicaliseForExactMatch( @Nullable String s ) {
+        if ( s == null ) return "";
+        return stripCellSuffix( s.toLowerCase( Locale.ROOT ) ).replace( "-", "" );
+    }
+
+    /**
      * JSON-friendly enumeration of which Lucene field produced a hit. Serialised as the
      * lowercase-snake string in {@code token} for the {@code matchedVia} response field.
      */
     public enum MatchedVia {
+        /** Query normalises to the term's preferred label exactly. Strongest match. */
         PREFERRED_LABEL( "preferred_label" ),
+        /** Query normalises to one of the term's exact-OBO synonyms exactly. */
         EXACT_SYNONYM( "exact_synonym" ),
         NARROW_SYNONYM( "narrow_synonym" ),
         RELATED_SYNONYM( "related_synonym" ),
         BROAD_SYNONYM( "broad_synonym" ),
-        ALT_LABEL( "alt_label" );
+        ALT_LABEL( "alt_label" ),
+        /**
+         * Query is a prefix of the preferred label (or the label is a prefix of the query, when
+         * the query is the longer of the two). Weaker than {@link #PREFERRED_LABEL} but stronger
+         * than a bag-of-tokens overlap — survives typeahead "type while you search" usage.
+         */
+        LABEL_PREFIX( "label_prefix" ),
+        /**
+         * Every content token in the query (after lowercase + length-≥-2 + stop-word strip)
+         * appears as a substring of the preferred label. Catches multi-token queries that don't
+         * normalise-equal to anything (e.g. {@code "uzh-2 cell"} against the label
+         * {@code "uzh-2 cell line"}) but DO carry full token coverage. Distinguishes
+         * "all-tokens-present" from "stop-word matched alone" — the latter no longer survives
+         * the token-coverage filter at all.
+         */
+        LABEL_TOKENS( "label_tokens" ),
+        /**
+         * Same as {@link #LABEL_TOKENS} but the coverage check passed against a synonym
+         * (preferred-label coverage failed). Surfaces synonym-driven multi-token matches when
+         * the preferred label happens to lack one of the query tokens.
+         */
+        SYNONYM_TOKENS( "synonym_tokens" );
 
         final String token;
 
@@ -1492,6 +1877,18 @@ public class AnnotationsWebService {
          * GO subClassOf descendants by default — set via {@code Gene2GOAssociationService.countByGOTermUris}.
          */
         @Nullable Long geneCount;
+        /**
+         * Distinct-experiment counts grouped by the category that prior curators applied when
+         * tagging this URI on an experiment — e.g.
+         * {@code {"cell line": 14, "protein": 1}}. Lets resolvers break ambiguous label hits
+         * by curated history: a URI tagged 14× as a cell line and 1× as a protein is almost
+         * certainly a cell line, regardless of which ontology label the query happened to
+         * match. Populated for the top-N kept hits only; null on synthetic gene-fanout rows
+         * and on responses where the lookup was skipped (e.g. /annotations/parents). An empty
+         * map means "the URI has been used in curation but never with a non-null category"
+         * (rare; carries no signal).
+         */
+        @Nullable Map<String, Integer> priorCategories;
     }
 
     @Value
@@ -1623,7 +2020,7 @@ public class AnnotationsWebService {
      * matches (the underlying LIKE search and ontology lookup are case-insensitive); URI-shaped terms keep
      * their case because URIs are case-sensitive on the path/query portion.
      */
-    private static String buildSearchCacheKey( List<String> values, String rankName, int limit, List<String> prefixes, boolean upstream, boolean exactLabel, String category ) {
+    private static String buildSearchCacheKey( List<String> values, String rankName, int limit, List<String> prefixes, boolean upstream, boolean exactLabel, String category, @Nullable Taxon taxon ) {
         StringBuilder sb = new StringBuilder( values.size() * 16 );
         // Prefix the strategy name + limit + namespaces so swapping any of them invalidates the
         // cache without colliding with a different-query default-rank entry. STX separates the
@@ -1641,6 +2038,11 @@ public class AnnotationsWebService {
         // Category affects whether synthetic gene rows are merged in, so it must key the cache
         // (lowercased + trimmed to canonicalize EFO label casing).
         sb.append( category != null ? category.trim().toLowerCase( Locale.ROOT ) : "" );
+        // Taxon scopes the gene fan-out (mouse Il10 vs rat Il10 vs human Il10); a cached
+        // "all-taxa" entry must not satisfy a "taxon=mouse" call. Use taxon id when present;
+        // empty string = no constraint.
+        sb.append( '' );
+        sb.append( taxon != null && taxon.getId() != null ? "t" + taxon.getId() : "" );
         sb.append( '' );
         for ( int i = 0; i < values.size(); i++ ) {
             String v = values.get( i );
@@ -1701,14 +2103,48 @@ public class AnnotationsWebService {
         private String category;
         @Nullable
         private String categoryUri;
+        /**
+         * Subject text. For a plain {@code Characteristic} this is "the value"; for a
+         * {@code Statement} it's the statement subject (the {@code Statement} entity aliases
+         * {@code setValue}/{@code getValue} to {@code setSubject}/{@code getSubject}). The
+         * wire field name stays {@code value} for backwards compatibility with the
+         * Characteristic-only era.
+         */
         @Nullable
         private String value;
         @Nullable
         private String valueUri;
         @Nullable
         private String evidenceCode;
+        /**
+         * Predicate label of the statement (e.g. {@code "has dose"}). When set together with
+         * any other Statement field (predicateUri, object, objectUri, secondPredicate*,
+         * secondObject*), the row is persisted as a {@link Statement} rather than a plain
+         * {@link Characteristic}. Null on plain tags.
+         */
+        @Nullable
+        private String predicate;
         @Nullable
         private String predicateUri;
+        /**
+         * Object label of the statement (e.g. {@code "10mg"}).
+         */
+        @Nullable
+        private String object;
+        @Nullable
+        private String objectUri;
+        /**
+         * Second predicate, for compound statements (e.g. {@code "treatment X has dose 10mg
+         * for 12 weeks"} — secondPredicate={@code "for"}, secondObject={@code "12 weeks"}).
+         */
+        @Nullable
+        private String secondPredicate;
+        @Nullable
+        private String secondPredicateUri;
+        @Nullable
+        private String secondObject;
+        @Nullable
+        private String secondObjectUri;
 
         @Nullable
         public String getCategory() {
@@ -1756,6 +2192,15 @@ public class AnnotationsWebService {
         }
 
         @Nullable
+        public String getPredicate() {
+            return predicate;
+        }
+
+        public void setPredicate( @Nullable String predicate ) {
+            this.predicate = predicate;
+        }
+
+        @Nullable
         public String getPredicateUri() {
             return predicateUri;
         }
@@ -1763,18 +2208,87 @@ public class AnnotationsWebService {
         public void setPredicateUri( @Nullable String predicateUri ) {
             this.predicateUri = predicateUri;
         }
+
+        @Nullable
+        public String getObject() {
+            return object;
+        }
+
+        public void setObject( @Nullable String object ) {
+            this.object = object;
+        }
+
+        @Nullable
+        public String getObjectUri() {
+            return objectUri;
+        }
+
+        public void setObjectUri( @Nullable String objectUri ) {
+            this.objectUri = objectUri;
+        }
+
+        @Nullable
+        public String getSecondPredicate() {
+            return secondPredicate;
+        }
+
+        public void setSecondPredicate( @Nullable String secondPredicate ) {
+            this.secondPredicate = secondPredicate;
+        }
+
+        @Nullable
+        public String getSecondPredicateUri() {
+            return secondPredicateUri;
+        }
+
+        public void setSecondPredicateUri( @Nullable String secondPredicateUri ) {
+            this.secondPredicateUri = secondPredicateUri;
+        }
+
+        @Nullable
+        public String getSecondObject() {
+            return secondObject;
+        }
+
+        public void setSecondObject( @Nullable String secondObject ) {
+            this.secondObject = secondObject;
+        }
+
+        @Nullable
+        public String getSecondObjectUri() {
+            return secondObjectUri;
+        }
+
+        public void setSecondObjectUri( @Nullable String secondObjectUri ) {
+            this.secondObjectUri = secondObjectUri;
+        }
+
+        /**
+         * @return true when ANY Statement-shaped field is set (predicate, object,
+         *         secondPredicate, secondObject, or their URIs). When true,
+         *         {@code annotationDtoToCharacteristic} constructs a
+         *         {@link Statement}; when false, the conversion produces a plain
+         *         {@link Characteristic}.
+         */
+        boolean hasStatementShape() {
+            return StringUtils.isNotBlank( predicate ) || StringUtils.isNotBlank( predicateUri )
+                    || StringUtils.isNotBlank( object ) || StringUtils.isNotBlank( objectUri )
+                    || StringUtils.isNotBlank( secondPredicate ) || StringUtils.isNotBlank( secondPredicateUri )
+                    || StringUtils.isNotBlank( secondObject ) || StringUtils.isNotBlank( secondObjectUri );
+        }
     }
 
     /**
      * Request body for {@link #replaceDatasetAnnotations}: the full desired tag set plus an optional
-     * {@code agentProposalId} to attach to emitted audit events (linkage is parked until the
-     * {@code AgentProposal} entity ships — see {@code STATUS_PUT_DATASETS_DESIGN.md}).
+     * {@code annotationSetId} to attach to emitted audit events (linkage is parked until the
+     * source-AnnotationSet → emitted-event audit link lands — see
+     * {@code STATUS_PUT_DATASETS_DESIGN.md}).
      */
     public static class AnnotationsReplaceRequest {
         @Nullable
         private List<AnnotationDto> annotations;
         @Nullable
-        private Long agentProposalId;
+        private Long annotationSetId;
 
         @Nullable
         public List<AnnotationDto> getAnnotations() {
@@ -1786,12 +2300,12 @@ public class AnnotationsWebService {
         }
 
         @Nullable
-        public Long getAgentProposalId() {
-            return agentProposalId;
+        public Long getAnnotationSetId() {
+            return annotationSetId;
         }
 
-        public void setAgentProposalId( @Nullable Long agentProposalId ) {
-            this.agentProposalId = agentProposalId;
+        public void setAnnotationSetId( @Nullable Long annotationSetId ) {
+            this.annotationSetId = annotationSetId;
         }
     }
 
@@ -1846,9 +2360,9 @@ public class AnnotationsWebService {
     public Response addDatasetAnnotation(
             @PathParam("dataset") DatasetArg<?> datasetArg,
             @Nullable AnnotationDto body,
-            @Parameter(description = "Optional id of the AgentProposal this tag is being applied from; "
-                    + "linkage is parked until the AgentProposal entity ships.")
-            @QueryParam("agentProposalId") @Nullable Long agentProposalId
+            @Parameter(description = "Optional id of the AnnotationSet this tag is being applied from; "
+                    + "linkage is parked until the source-set → emitted-event audit link lands.")
+            @QueryParam("annotationSetId") @Nullable Long annotationSetId
     ) {
         if ( body == null ) {
             throw new BadRequestException( "A request body is required." );
@@ -1862,10 +2376,10 @@ public class AnnotationsWebService {
             // 409 Conflict for duplicate (category, value) — service throws IAE on dup.
             throw new ClientErrorException( e.getMessage(), Response.Status.CONFLICT, e );
         }
-        // agentProposalId is accepted-and-dropped; see STATUS_PUT_DATASETS_DESIGN.md.
-        if ( agentProposalId != null ) {
-            log.debug( "addDatasetAnnotation: received agentProposalId={} for ee={} (linkage parked)",
-                    agentProposalId, ee.getId() );
+        // annotationSetId is accepted-and-dropped; see STATUS_PUT_DATASETS_DESIGN.md.
+        if ( annotationSetId != null ) {
+            log.debug( "addDatasetAnnotation: received annotationSetId={} for ee={} (linkage parked)",
+                    annotationSetId, ee.getId() );
         }
         return Response.status( Response.Status.CREATED )
                 .entity( respond( new AnnotationValueObject( persisted, ExpressionExperiment.class ) ) )
@@ -1938,10 +2452,10 @@ public class AnnotationsWebService {
             }
             desired.add( annotationDtoToCharacteristic( dto ) );
         }
-        // agentProposalId accepted but currently dropped; see STATUS_PUT_DATASETS_DESIGN.md.
-        if ( body.getAgentProposalId() != null ) {
-            log.debug( "replaceDatasetAnnotations: received agentProposalId={} (linkage parked)",
-                    body.getAgentProposalId() );
+        // annotationSetId accepted but currently dropped; see STATUS_PUT_DATASETS_DESIGN.md.
+        if ( body.getAnnotationSetId() != null ) {
+            log.debug( "replaceDatasetAnnotations: received annotationSetId={} (linkage parked)",
+                    body.getAnnotationSetId() );
         }
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
 
@@ -2023,9 +2537,17 @@ public class AnnotationsWebService {
     }
 
     /**
-     * Map an inbound {@link AnnotationDto} into a transient {@link Characteristic}, validating
-     * required fields and parsing the evidence code. Throws {@link BadRequestException} on bad
-     * input (mapped to HTTP 400 by the Jersey exception mapper).
+     * Map an inbound {@link AnnotationDto} into a transient {@link Characteristic} (or its
+     * {@link Statement} subclass when any predicate/object field is set), validating required
+     * fields and parsing the evidence code. Throws {@link BadRequestException} on bad input
+     * (mapped to HTTP 400 by the Jersey exception mapper).
+     *
+     * <p>The {@code Statement} path keeps the Characteristic shape's {@code category} +
+     * {@code value} ({@code value} is the statement subject — Statement aliases
+     * {@code setValue} → {@code setSubject}) and adds {@code predicate}/{@code object} plus
+     * the optional second pair. A Statement with no predicate/object fields would be
+     * indistinguishable from a Characteristic on the wire and is rejected as a hint to use
+     * the Characteristic shape instead.</p>
      */
     private static Characteristic annotationDtoToCharacteristic( AnnotationDto dto ) {
         if ( dto == null ) {
@@ -2037,11 +2559,44 @@ public class AnnotationsWebService {
         if ( StringUtils.isBlank( dto.getValue() ) ) {
             throw new BadRequestException( "Each annotation must have a non-blank 'value'." );
         }
-        Characteristic c = Characteristic.Factory.newInstance();
-        c.setCategory( dto.getCategory() );
-        c.setCategoryUri( dto.getCategoryUri() );
-        c.setValue( dto.getValue() );
-        c.setValueUri( dto.getValueUri() );
+        Characteristic c;
+        if ( dto.hasStatementShape() ) {
+            // Reject the "second-* set but no first-*" shape — second-pair semantics depend
+            // on the first pair being present. Predicate-only or object-only is allowed:
+            // common ontology patterns express bare relationships ("has_role X") without a
+            // dedicated object literal.
+            boolean secondPredicateSet = StringUtils.isNotBlank( dto.getSecondPredicate() )
+                    || StringUtils.isNotBlank( dto.getSecondPredicateUri() );
+            boolean secondObjectSet = StringUtils.isNotBlank( dto.getSecondObject() )
+                    || StringUtils.isNotBlank( dto.getSecondObjectUri() );
+            boolean firstPredicateSet = StringUtils.isNotBlank( dto.getPredicate() )
+                    || StringUtils.isNotBlank( dto.getPredicateUri() );
+            boolean firstObjectSet = StringUtils.isNotBlank( dto.getObject() )
+                    || StringUtils.isNotBlank( dto.getObjectUri() );
+            if ( ( secondPredicateSet || secondObjectSet ) && !( firstPredicateSet || firstObjectSet ) ) {
+                throw new BadRequestException( "secondPredicate/secondObject cannot be supplied without a first predicate/object." );
+            }
+            Statement s = Statement.Factory.newInstance();
+            s.setCategory( dto.getCategory() );
+            s.setCategoryUri( dto.getCategoryUri() );
+            s.setSubject( dto.getValue() );
+            s.setSubjectUri( dto.getValueUri() );
+            s.setPredicate( dto.getPredicate() );
+            s.setPredicateUri( dto.getPredicateUri() );
+            s.setObject( dto.getObject() );
+            s.setObjectUri( dto.getObjectUri() );
+            s.setSecondPredicate( dto.getSecondPredicate() );
+            s.setSecondPredicateUri( dto.getSecondPredicateUri() );
+            s.setSecondObject( dto.getSecondObject() );
+            s.setSecondObjectUri( dto.getSecondObjectUri() );
+            c = s;
+        } else {
+            c = Characteristic.Factory.newInstance();
+            c.setCategory( dto.getCategory() );
+            c.setCategoryUri( dto.getCategoryUri() );
+            c.setValue( dto.getValue() );
+            c.setValueUri( dto.getValueUri() );
+        }
         if ( StringUtils.isNotBlank( dto.getEvidenceCode() ) ) {
             try {
                 c.setEvidenceCode( GOEvidenceCode.valueOf( dto.getEvidenceCode().trim().toUpperCase( Locale.ROOT ) ) );
@@ -2053,8 +2608,35 @@ public class AnnotationsWebService {
         return c;
     }
 
+    /**
+     * Equality used for diffing/deduping annotations on an EE. Two rows are the same iff
+     * they share {@code (category, value)} AND — for Statement-shaped rows — the
+     * {@code (predicate, object, secondPredicate, secondObject)} tuples match.
+     *
+     * <p>Rationale: "fed with HFD" and "fed for 12 weeks" share (category="treatment",
+     * value="HFD") but the predicates make them distinct annotations. The pre-Statement
+     * rule collapsed them as duplicates; that's wrong for the Statement era. A
+     * Characteristic and a Statement that share (category, value) are also distinct —
+     * the Statement carries additional relational meaning the Characteristic doesn't.</p>
+     */
     private static boolean sameTag( Characteristic a, Characteristic b ) {
-        return CharacteristicUtils.equals( a.getCategory(), a.getCategoryUri(), b.getCategory(), b.getCategoryUri() )
-                && CharacteristicUtils.equals( a.getValue(), a.getValueUri(), b.getValue(), b.getValueUri() );
+        if ( !CharacteristicUtils.equals( a.getCategory(), a.getCategoryUri(), b.getCategory(), b.getCategoryUri() )
+                || !CharacteristicUtils.equals( a.getValue(), a.getValueUri(), b.getValue(), b.getValueUri() ) ) {
+            return false;
+        }
+        boolean aIsStatement = a instanceof Statement;
+        boolean bIsStatement = b instanceof Statement;
+        if ( aIsStatement != bIsStatement ) {
+            return false;
+        }
+        if ( !aIsStatement ) {
+            return true;
+        }
+        Statement sa = ( Statement ) a;
+        Statement sb = ( Statement ) b;
+        return CharacteristicUtils.equals( sa.getPredicate(), sa.getPredicateUri(), sb.getPredicate(), sb.getPredicateUri() )
+                && CharacteristicUtils.equals( sa.getObject(), sa.getObjectUri(), sb.getObject(), sb.getObjectUri() )
+                && CharacteristicUtils.equals( sa.getSecondPredicate(), sa.getSecondPredicateUri(), sb.getSecondPredicate(), sb.getSecondPredicateUri() )
+                && CharacteristicUtils.equals( sa.getSecondObject(), sa.getSecondObjectUri(), sb.getSecondObject(), sb.getSecondObjectUri() );
     }
 }
