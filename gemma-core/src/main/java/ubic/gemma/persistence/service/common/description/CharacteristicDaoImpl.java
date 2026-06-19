@@ -147,17 +147,17 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
 
     @Override
     public Collection<Characteristic> findByParentClasses( @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, @Nullable String category, int maxResults ) {
-        Query q = this.getSessionFactory().getCurrentSession()
-                .createNativeQuery( "select {C.*} from CHARACTERISTIC as C "
+        Query<?> q = this.getSessionFactory().getCurrentSession()
+                .createNativeQuery( "select C.ID from CHARACTERISTIC as C "
                         + "where " + createOwningEntityConstraint( parentClasses, includeNoParents )
                         + ( category != null ? " and " + createCategoryConstraint( "C", "category", category ) : "" ) )
-                .addEntity( "C", Characteristic.class )
+                .addScalar( "ID", StandardBasicTypes.LONG )
                 .setMaxResults( maxResults > 0 ? maxResults : Integer.MAX_VALUE );
         if ( category != null ) {
             q.setParameter( "category", category );
         }
         //noinspection unchecked
-        return ( Collection<Characteristic> ) q.list();
+        return loadByIds( ( List<Long> ) q.list() );
     }
 
     @Override
@@ -171,26 +171,26 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
 
     @Override
     public Collection<Characteristic> findByCategoryLike( String query, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, int maxResults ) {
-        //noinspection unchecked
-        return ( Collection<Characteristic> ) this.getSessionFactory().getCurrentSession()
-                .createNativeQuery( "select {C.*} from CHARACTERISTIC as C where C.CATEGORY like :search"
+        Query<?> q = this.getSessionFactory().getCurrentSession()
+                .createNativeQuery( "select C.ID from CHARACTERISTIC as C where C.CATEGORY like :search"
                         + ( parentClasses != null || !includeNoParents ? " and " + createOwningEntityConstraint( parentClasses, includeNoParents ) : "" ) )
-                .addEntity( "C", Characteristic.class )
+                .addScalar( "ID", StandardBasicTypes.LONG )
                 .setParameter( "search", query )
-                .setMaxResults( maxResults > 0 ? maxResults : Integer.MAX_VALUE )
-                .list();
+                .setMaxResults( maxResults > 0 ? maxResults : Integer.MAX_VALUE );
+        //noinspection unchecked
+        return loadByIds( ( List<Long> ) q.list() );
     }
 
     @Override
     public Collection<Characteristic> findByCategoryUri( String uri, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, int maxResults ) {
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession()
-                .createNativeQuery( "select {C.*} from CHARACTERISTIC as C where C.CATEGORY_URI = :uri"
+        Query<?> q = this.getSessionFactory().getCurrentSession()
+                .createNativeQuery( "select C.ID from CHARACTERISTIC as C where C.CATEGORY_URI = :uri"
                         + ( parentClasses != null || !includeNoParents ? " and " + createOwningEntityConstraint( parentClasses, includeNoParents ) : "" ) )
-                .addEntity( "C", Characteristic.class )
+                .addScalar( "ID", StandardBasicTypes.LONG )
                 .setParameter( "uri", uri )
-                .setMaxResults( maxResults > 0 ? maxResults : Integer.MAX_VALUE )
-                .list();
+                .setMaxResults( maxResults > 0 ? maxResults : Integer.MAX_VALUE );
+        //noinspection unchecked
+        return loadByIds( ( List<Long> ) q.list() );
     }
 
     @Override
@@ -399,17 +399,18 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     public Collection<Characteristic> findByUri( String uri, @Nullable String category, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, int maxResults ) {
         if ( StringUtils.isBlank( uri ) )
             return new HashSet<>();
-        Query q = this.getSessionFactory().getCurrentSession()
-                .createNativeQuery( "select {C.*} from CHARACTERISTIC as C where C.VALUE_URI = :uri"
+        Query<?> q = this.getSessionFactory().getCurrentSession()
+                .createNativeQuery( "select C.ID from CHARACTERISTIC as C where C.VALUE_URI = :uri"
                         + ( category != null ? " and " + createCategoryConstraint( "C", "category", category ) : "" )
                         + ( parentClasses != null || !includeNoParents ? " and " + createOwningEntityConstraint( parentClasses, includeNoParents ) : "" ) )
-                .addEntity( "C", Characteristic.class )
+                .addScalar( "ID", StandardBasicTypes.LONG )
                 .setParameter( "uri", uri );
         if ( category != null ) {
             q.setParameter( "category", category );
         }
+        q.setMaxResults( maxResults > 0 ? maxResults : Integer.MAX_VALUE );
         //noinspection unchecked
-        return q.setMaxResults( maxResults > 0 ? maxResults : Integer.MAX_VALUE ).list();
+        return loadByIds( ( List<Long> ) q.list() );
     }
 
     @Override
@@ -645,18 +646,18 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
                 && !includeNoParents ) {
             return findByValueLikeViaEE2C( search, category, maxResults );
         }
-        Query q = this.getSessionFactory().getCurrentSession()
-                .createNativeQuery( "select {C.*} from CHARACTERISTIC as C where C.`VALUE` like :search"
+        Query<?> q = this.getSessionFactory().getCurrentSession()
+                .createNativeQuery( "select C.ID from CHARACTERISTIC as C where C.`VALUE` like :search"
                         + ( category != null ? " and " + createCategoryConstraint( "C", "category", category ) : "" )
                         + ( parentClasses != null || !includeNoParents ? " and " + createOwningEntityConstraint( parentClasses, includeNoParents ) : "" ) )
-                .addEntity( "C", Characteristic.class )
+                .addScalar( "ID", StandardBasicTypes.LONG )
                 .setParameter( "search", search );
         if ( category != null ) {
             q.setParameter( "category", category );
         }
+        q.setMaxResults( maxResults > 0 ? maxResults : Integer.MAX_VALUE );
         //noinspection unchecked
-        return q.setMaxResults( maxResults > 0 ? maxResults : Integer.MAX_VALUE )
-                .list();
+        return loadByIds( ( List<Long> ) q.list() );
     }
 
     /**
@@ -689,6 +690,28 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
                 .createQuery( "select c from Characteristic c where c.id in :ids" )
                 .setParameterList( "ids", ids )
                 .list();
+    }
+
+    /**
+     * Hydrate characteristics by ID through HQL.
+     * <p>
+     * The finders above filter rows in native SQL because their owning-entity constraints
+     * reference physical CHARACTERISTIC foreign-key columns (BIO_MATERIAL_FK, INVESTIGATION_FK,
+     * ...) that are not navigable properties on the Characteristic entity — see
+     * {@link #createOwningEntityConstraint}. Hydration, however, goes back through HQL rather
+     * than a native {@code {C.*}} + {@code addEntity} mapping: the latter mishandles the root
+     * {@code @DiscriminatorValue("null")} on MySQL (it throws "Unable to find column position by
+     * name: class"), whereas an HQL load resolves the discriminator consistently across
+     * dialects and returns {@link Statement} rows as their concrete subtype. This id-then-load
+     * split mirrors {@link #findByValueLikeViaEE2C} and {@link #getParents}.
+     */
+    private Collection<Characteristic> loadByIds( List<Long> ids ) {
+        if ( ids.isEmpty() ) {
+            return Collections.emptyList();
+        }
+        Query<Characteristic> query = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select c from Characteristic c where c.id in :ids", Characteristic.class );
+        return listByBatch( query, "ids", ids, MAX_PARAMETER_LIST_SIZE );
     }
 
     @Override
