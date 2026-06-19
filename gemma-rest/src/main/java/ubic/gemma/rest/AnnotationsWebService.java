@@ -37,6 +37,7 @@ import org.springframework.stereotype.Service;
 import ubic.gemma.core.ontology.model.AnnotationProperty;
 import ubic.gemma.core.ontology.model.OntologyTerm;
 import ubic.gemma.core.ontology.OntologyService;
+import ubic.gemma.core.ontology.OntologyUtils;
 import ubic.gemma.core.search.*;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.Identifiable;
@@ -840,10 +841,13 @@ public class AnnotationsWebService {
         List<CharacteristicValueObject> rawHits = new ArrayList<>();
         for ( String query : arg.getValue() ) {
             query = query.trim();
-            URI uri = parseTermUriQuery( query );
-            if ( uri != null ) {
+            // A full term URI (http://...) OR a recognized CURIE (e.g. EFO:0600015, GO:0008150)
+            // takes the exact-URI lookup path instead of a free-text search. expandTermQueryToUri
+            // returns the canonical URI for both shapes, or null for plain free text.
+            String termUri = expandTermQueryToUri( query );
+            if ( termUri != null ) {
                 rawHits.addAll( characteristicService.loadValueObjects( characteristicService
-                        .findByUri( StringUtils.strip( query ), null, null, true, -1 ) ) );
+                        .findByUri( termUri, null, null, true, -1 ) ) );
             } else if ( upstream ) {
                 // Delegate the ontology Lucene-index lookup; downstream pipeline runs locally
                 // against shared gemd. Failure here propagates as SearchException so the caller
@@ -2067,8 +2071,12 @@ public class AnnotationsWebService {
             String v = values.get( i );
             if ( v == null ) continue;
             String stripped = v.trim();
-            if ( parseTermUriQuery( stripped ) != null ) {
-                sb.append( stripped );
+            String termUri = expandTermQueryToUri( stripped );
+            if ( termUri != null ) {
+                // Full URIs and CURIEs both key on their canonical URI form so a CURIE and its
+                // equivalent full URI share a cache entry, and casing is preserved (URIs are
+                // case-sensitive on the path portion).
+                sb.append( termUri );
             } else {
                 sb.append( stripped.toLowerCase( Locale.ROOT ) );
             }
@@ -2089,6 +2097,37 @@ public class AnnotationsWebService {
             } catch ( IllegalArgumentException e ) {
                 return null;
             }
+        }
+        return null;
+    }
+
+    /**
+     * Resolve a query to its canonical ontology term URI, when the query is either a full term URI
+     * (e.g. {@code http://www.ebi.ac.uk/efo/EFO_0600015}) or a recognized CURIE / OBO ID
+     * (e.g. {@code EFO:0600015}, {@code GO:0008150}, {@code NCBITaxon:9606}).
+     * <p>
+     * CURIE detection is deliberately conservative so free text is never misclassified: the query
+     * must match the strict {@code {IDSPACE}:{LOCALID}} shape AND its prefix must be a known
+     * ontology ID space ({@link OntologyUtils#isKnownIdSpace}). A CURIE-shaped string with an
+     * unrecognized prefix (e.g. {@code foo:bar}) returns null and falls through to free-text
+     * search. Expansion reuses {@link OntologyUtils#termIdToUri}, which special-cases EFO's
+     * {@code www.ebi.ac.uk/efo/} base and the {@code NCBITaxon}/{@code HsapDv} casing while
+     * defaulting everything else to the OBO PURL base.
+     *
+     * @return the canonical URI string, or null if the query is neither a URI nor a known CURIE
+     */
+    @Nullable
+    static String expandTermQueryToUri( String query ) {
+        if ( query == null ) return null;
+        String stripped = StringUtils.strip( query );
+        URI uri = parseTermUriQuery( stripped );
+        if ( uri != null ) {
+            return stripped;
+        }
+        // Strict {IDSPACE}:{LOCALID} match with a recognized prefix only; arbitrary "word:word"
+        // free text is left for the free-text search path.
+        if ( OntologyUtils.isTermId( stripped, true ) ) {
+            return OntologyUtils.termIdToUri( stripped );
         }
         return null;
     }
