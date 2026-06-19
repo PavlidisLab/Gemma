@@ -732,7 +732,7 @@ public class ExpressionExperimentReadServiceImpl implements ExpressionExperiment
         };
         expressionExperimentDao.getFactorValueAnnotations( expressionExperiment ).stream()
                 .filter( this::filterFactorValueAnnotation )
-                .map( c -> new AnnotationValueObject( c.getCategoryUri(), c.getCategory(), c.getSubjectUri(), formatStatement( c, ignoredPredicates ), FactorValue.class ) )
+                .map( c -> factorValueAnnotationVo( c, ignoredPredicates ) )
                 .forEach( c -> addIfNovel( annotations, c, seenTerms ) );
 
         expressionExperimentDao.getBioMaterialAnnotations( expressionExperiment, false ).stream()
@@ -768,7 +768,7 @@ public class ExpressionExperimentReadServiceImpl implements ExpressionExperiment
         };
         expressionExperimentDao.getFactorValueAnnotations( ee ).stream()
                 .filter( this::filterFactorValueAnnotation )
-                .map( c -> new AnnotationValueObject( c.getCategoryUri(), c.getCategory(), c.getSubjectUri(), formatStatement( c, ignoredPredicates ), FactorValue.class ) )
+                .map( c -> factorValueAnnotationVo( c, ignoredPredicates ) )
                 .forEach( c -> addIfNovel( annotations, c, seenTerms ) );
 
         expressionExperimentDao.getBioMaterialAnnotations( ee ).stream()
@@ -777,6 +777,23 @@ public class ExpressionExperimentReadServiceImpl implements ExpressionExperiment
                 .forEach( c -> addIfNovel( annotations, c, seenTerms ) );
 
         return annotations;
+    }
+
+    /**
+     * Build the read VO for a factor-value statement.
+     * <p>
+     * Uses the {@link Characteristic}-based constructor so the VO carries the structured
+     * predicate/object pairs, {@code evidenceCode}, and {@code supportingEvidence} off the persisted
+     * {@link Statement} — the FV branch previously used the bare string constructor and dropped all of
+     * those. {@code termName} is then overridden with the synthesized FV display label (subject plus the
+     * non-ignored predicate/object pairs); {@code termUri} already resolves to the subject URI because a
+     * {@link Statement} aliases subject &harr; value, so the constructor's {@code getValueUri()} yields it.
+     * The {@code seenTerms} dedup key is the (unchanged) {@code termName}.
+     */
+    private static AnnotationValueObject factorValueAnnotationVo( Statement c, String[] ignoredPredicates ) {
+        AnnotationValueObject vo = new AnnotationValueObject( c, FactorValue.class );
+        vo.setTermName( formatStatement( c, ignoredPredicates ) );
+        return vo;
     }
 
     /**
