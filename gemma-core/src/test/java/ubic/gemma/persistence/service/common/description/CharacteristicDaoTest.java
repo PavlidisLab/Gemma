@@ -17,6 +17,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.security.access.vote.AuthenticatedVoter;
+import org.springframework.security.acls.domain.BasePermission;
+import org.springframework.security.acls.domain.GrantedAuthoritySid;
+import org.springframework.security.acls.domain.PrincipalSid;
+import org.springframework.security.acls.model.MutableAcl;
 import org.springframework.security.acls.model.MutableAclService;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -114,9 +118,6 @@ public class CharacteristicDaoTest extends BaseDatabaseTest5 {
     @Autowired
     private MutableAclService aclService;
 
-    @Autowired
-    private javax.sql.DataSource dataSource;
-
     /* fixtures */
     private Collection<Characteristic> characteristics;
 
@@ -208,16 +209,13 @@ public class CharacteristicDaoTest extends BaseDatabaseTest5 {
         sessionFactory.getCurrentSession().persist( ee );
         sessionFactory.getCurrentSession().flush();
 
-        // add ACLs and read permission to bob via raw JDBC: gsec's AclServiceImpl path is
-        // broken for writes in Phase 3 (the gsec Hibernate mappings for acl_object_identity /
-        // acl_entry are mutable="false" and writes flow through Spring's JdbcMutableAclService).
-        // Going through aclService.updateAcl(acl) here fails with TransientObjectException
-        // because the in-memory AclEntry never gets persisted via cascade. And going through
-        // acl.insertAce + aclService.updateAcl also fails the security check because gsec's
-        // AclPrincipalSid does not extend Spring's PrincipalSid, so AclAuthorizationStrategyImpl
-        // reports bob as not-the-owner of his own freshly-minted ACL. Insert the rows directly
-        // — same pattern as AclLinterServiceTest.
-        seedAclWithReadAce( ee, "bob", null );
+        // Grant bob READ through the real gsec write path. This used to be seeded via raw JDBC
+        // because the AclSid `sid` column was mapped read-only during the hbm.xml->JPA conversion,
+        // so createAcl could not mint bob's principal sid; with that column insertable again the
+        // createAcl + insertAce + updateAcl path works end to end.
+        MutableAcl acl = ( MutableAcl ) aclService.createAcl( new AclObjectIdentity( ExpressionExperiment.class, ee.getId() ) );
+        acl.insertAce( acl.getEntries().size(), BasePermission.READ, new PrincipalSid( "bob" ), true );
+        aclService.updateAcl( acl );
 
         int updated = tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
         assertThat( updated ).isEqualTo( 1 );
@@ -239,8 +237,11 @@ public class CharacteristicDaoTest extends BaseDatabaseTest5 {
         ee.setTaxon( taxon );
         ee.getCharacteristics().add( c );
         sessionFactory.getCurrentSession().persist( ee );
-        // add ACLs and read permission to everyone — see testFindExperimentsByUris above.
-        seedAclWithReadAce( ee, null, AuthenticatedVoter.IS_AUTHENTICATED_ANONYMOUSLY );
+        sessionFactory.getCurrentSession().flush();
+        // grant READ to anonymous through the real gsec write path — see testFindExperimentsByUris.
+        MutableAcl acl = ( MutableAcl ) aclService.createAcl( new AclObjectIdentity( ExpressionExperiment.class, ee.getId() ) );
+        acl.insertAce( acl.getEntries().size(), BasePermission.READ, new GrantedAuthoritySid( AuthenticatedVoter.IS_AUTHENTICATED_ANONYMOUSLY ), true );
+        aclService.updateAcl( acl );
         sessionFactory.getCurrentSession().flush();
 
         int updated = tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
@@ -445,55 +446,6 @@ public class CharacteristicDaoTest extends BaseDatabaseTest5 {
         sessionFactory.getCurrentSession().persist( c );
         assertThat( characteristicDao.findValueGroupedByValueUri( null, true, true, true, -1 ) )
                 .containsEntry( "test", "test" );
-    }
-
-    /**
-     * Seed an ACL with a single READ ACE for the given experiment, going around gsec's
-     * write-broken AclServiceImpl path. Exactly one of {@code principal} and {@code authority}
-     * should be non-null. See {@link #testFindExperimentsByUris()} for the why.
-     */
-    private void seedAclWithReadAce( ExpressionExperiment ee, @Nullable String principal, @Nullable String authority ) {
-        sessionFactory.getCurrentSession().flush();
-        org.springframework.jdbc.core.JdbcTemplate jt = new org.springframework.jdbc.core.JdbcTemplate( dataSource );
-        String className = ExpressionExperiment.class.getName();
-        // resolve / create acl_class row
-        List<Long> existingClass = jt.queryForList(
-                "select id from acl_class where class = ?", Long.class, className );
-        Long classId;
-        if ( existingClass.isEmpty() ) {
-            jt.update( "insert into acl_class (class) values (?)", className );
-            classId = jt.queryForObject(
-                    "select id from acl_class where class = ?", Long.class, className );
-        } else {
-            classId = existingClass.get( 0 );
-        }
-        // resolve / create acl_sid row
-        boolean isPrincipal = principal != null;
-        String sidName = isPrincipal ? principal : authority;
-        List<Long> existingSid = jt.queryForList(
-                "select id from acl_sid where principal = ? and sid = ?", Long.class,
-                isPrincipal, sidName );
-        Long sidId;
-        if ( existingSid.isEmpty() ) {
-            jt.update( "insert into acl_sid (principal, sid) values (?, ?)", isPrincipal, sidName );
-            sidId = jt.queryForObject(
-                    "select id from acl_sid where principal = ? and sid = ?", Long.class,
-                    isPrincipal, sidName );
-        } else {
-            sidId = existingSid.get( 0 );
-        }
-        // acl_object_identity: owner_sid is the same sid (any non-null FK satisfies the constraint;
-        // ownership is not under test here)
-        jt.update(
-                "insert into acl_object_identity (object_id_class, object_id_identity, parent_object, owner_sid, entries_inheriting) values (?, ?, NULL, ?, 0)",
-                classId, ee.getId(), sidId );
-        Long aoiId = jt.queryForObject(
-                "select id from acl_object_identity where object_id_class = ? and object_id_identity = ?",
-                Long.class, classId, ee.getId() );
-        // acl_entry: grant READ to the sid
-        jt.update(
-                "insert into acl_entry (acl_object_identity, ace_order, sid, mask, granting, audit_success, audit_failure) values (?, ?, ?, ?, ?, 0, 0)",
-                aoiId, 0, sidId, org.springframework.security.acls.domain.BasePermission.READ.getMask(), true );
     }
 
     private Characteristic createCharacteristic( @Nullable String valueUri, String value ) {

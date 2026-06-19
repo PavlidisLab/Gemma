@@ -39,7 +39,7 @@ public class AclGrantedAuthoritySid extends AclSid {
 
     private static final long serialVersionUID = 7755206462003052441L;
 
-    @Column(name = "sid", nullable = false, columnDefinition = "VARCHAR(255)", insertable = false, updatable = false)
+    @Column(name = "sid", nullable = false, columnDefinition = "VARCHAR(255)")
     private String grantedAuthority;
 
     public AclGrantedAuthoritySid( GrantedAuthority grantedAuthority ) {

@@ -21,6 +21,7 @@ package ubic.gemma.core.security.acl.domain;
 
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.Entity;
@@ -96,7 +97,12 @@ public class AclObjectIdentity implements ObjectIdentity {
     @JoinColumn(name = "parent_object", columnDefinition = "BIGINT")
     private AclObjectIdentity parentObject;
 
-    @OneToMany(fetch = FetchType.EAGER)
+    // The ACL owns its entries: insertAce/deleteAce mutate this collection and updateAcl merges
+    // the owning AclObjectIdentity, so the collection must cascade. Without it, a newly inserted
+    // AclEntry stays transient and the merge throws TransientObjectException. AclEntry is
+    // @Immutable, so the cascade only ever inserts or (via orphanRemoval) deletes ACE rows — never
+    // updates them — which matches ACE semantics (entries are added/revoked, not mutated).
+    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "acl_object_identity", columnDefinition = "BIGINT", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     @OrderBy("aceOrder")
     @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)

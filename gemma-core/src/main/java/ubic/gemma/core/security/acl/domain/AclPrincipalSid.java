@@ -40,7 +40,7 @@ public class AclPrincipalSid extends AclSid {
 
     private static final long serialVersionUID = -4679911678447417301L;
 
-    @Column(name = "sid", nullable = false, columnDefinition = "VARCHAR(255)", insertable = false, updatable = false)
+    @Column(name = "sid", nullable = false, columnDefinition = "VARCHAR(255)")
     private String principal;
 
     public AclPrincipalSid() {
