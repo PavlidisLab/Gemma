@@ -803,6 +803,12 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         when( term.getAnnotations( "http://www.geneontology.org/formats/oboInOwl#hasSynonym" ) )
                 .thenReturn( Collections.singletonList( generic ) );
         when( term.getAlternativeIds() ).thenReturn( Arrays.asList( "OMIM:125853", "DOID:9351" ) );
+        AnnotationProperty xrefMesh = mock( AnnotationProperty.class );
+        when( xrefMesh.getContents() ).thenReturn( "MESH:D003920" );
+        AnnotationProperty xrefUmls = mock( AnnotationProperty.class );
+        when( xrefUmls.getContents() ).thenReturn( "UMLS:C0011860" );
+        when( term.getAnnotations( "http://www.geneontology.org/formats/oboInOwl#hasDbXref" ) )
+                .thenReturn( Arrays.asList( xrefMesh, xrefUmls ) );
         when( ontologyService.getTerm( eq( "http://example.com/diabetes" ), anyLong(), any() ) ).thenReturn( term );
         when( ontologyService.getVersion( eq( "http://example.com/diabetes" ), anyLong(), any() ) ).thenReturn( "2024-05-29" );
         when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
@@ -824,6 +830,10 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
                 .entity()
                 .extracting( "data.alternativeIds", list( String.class ) )
                 .containsExactlyInAnyOrder( "OMIM:125853", "DOID:9351" );
+        assertThat( response )
+                .entity()
+                .extracting( "data.dbXrefs", list( String.class ) )
+                .containsExactlyInAnyOrder( "MESH:D003920", "UMLS:C0011860" );
     }
 
     @Test

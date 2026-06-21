@@ -34,6 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class OntologyTermImplSynonymTest {
 
     private static final String OBO_EXACT_SYNONYM = "http://www.geneontology.org/formats/oboInOwl#hasExactSynonym";
+    private static final String OBO_DB_XREF = "http://www.geneontology.org/formats/oboInOwl#hasDbXref";
 
     /**
      * Real Jena, real OWL parse — no mocks. Mirrors TGEMO_00210's shape exactly:
@@ -53,10 +54,15 @@ class OntologyTermImplSynonymTest {
             "  <owl:AnnotationProperty rdf:about=\"" + OBO_EXACT_SYNONYM + "\">\n" +
             "    <rdfs:label>has_exact_synonym</rdfs:label>\n" +
             "  </owl:AnnotationProperty>\n" +
+            "  <owl:AnnotationProperty rdf:about=\"" + OBO_DB_XREF + "\">\n" +
+            "    <rdfs:label>database_cross_reference</rdfs:label>\n" +
+            "  </owl:AnnotationProperty>\n" +
             "  <owl:Class rdf:about=\"http://gemma.msl.ubc.ca/ont/TGEMO_00210\">\n" +
             "    <rdfs:label xml:lang=\"en\">behavioural stress</rdfs:label>\n" +
             "    <oboInOwl:hasExactSynonym>behavioral stress</oboInOwl:hasExactSynonym>\n" +
             "    <oboInOwl:hasExactSynonym>psychological stress</oboInOwl:hasExactSynonym>\n" +
+            "    <oboInOwl:hasDbXref>MESH:D013315</oboInOwl:hasDbXref>\n" +
+            "    <oboInOwl:hasDbXref>UMLS:C0038443</oboInOwl:hasDbXref>\n" +
             "  </owl:Class>\n" +
             "</rdf:RDF>\n";
 
@@ -91,5 +97,18 @@ class OntologyTermImplSynonymTest {
                         + "endpoint can attribute matchedVia=exact_synonym for either spelling" )
                 .extracting( AnnotationProperty::getContents )
                 .containsExactlyInAnyOrder( "behavioral stress", "psychological stress" );
+    }
+
+    @Test
+    void getAnnotationsReturnsHasDbXrefValues() {
+        // /annotations/term surfaces class-level oboInOwl:hasDbXref values as the term's dbXrefs. They
+        // travel the same getAnnotations(uri) path as synonyms, which only returns a value when the
+        // predicate is declared as an owl:AnnotationProperty. This pins that hasDbXref clears that filter.
+        OntologyTerm term = loadTgemoTerm();
+        Collection<AnnotationProperty> xrefs = term.getAnnotations( OBO_DB_XREF );
+        assertThat( xrefs )
+                .as( "class-level hasDbXref cross-references must surface for the term's dbXrefs field" )
+                .extracting( AnnotationProperty::getContents )
+                .containsExactlyInAnyOrder( "MESH:D013315", "UMLS:C0038443" );
     }
 }

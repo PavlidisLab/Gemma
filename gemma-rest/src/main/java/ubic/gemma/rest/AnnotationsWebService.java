@@ -324,10 +324,11 @@ public class AnnotationsWebService {
             List<String> alternativeIds = term.getAlternativeIds() != null
                     ? new ArrayList<>( term.getAlternativeIds() )
                     : Collections.emptyList();
+            List<String> dbXrefs = collectDbXrefs( term );
             String ontologyVersion = term.getUri() != null
                     ? ontologyService.getVersion( term.getUri(), Math.max( 30000 - timer.getTime(), 0 ), TimeUnit.MILLISECONDS )
                     : null;
-            return respond( new OntologyTermValueObject( term.getUri(), term.getLabel(), definition, term.isObsolete(), usageCount, parentVos, synonyms, alternativeIds, ontologyVersion ) );
+            return respond( new OntologyTermValueObject( term.getUri(), term.getLabel(), definition, term.isObsolete(), usageCount, parentVos, synonyms, alternativeIds, dbXrefs, ontologyVersion ) );
         } catch ( TimeoutException e ) {
             throw new ServiceUnavailableException( DateUtils.addSeconds( new Date(), 30 ), e );
         }
@@ -1566,6 +1567,33 @@ public class AnnotationsWebService {
     private static final String OBO_GENERIC_SYNONYM = "http://www.geneontology.org/formats/oboInOwl#hasSynonym";
     private static final String IAO_ALT_LABEL = "http://purl.obolibrary.org/obo/IAO_0000118";
 
+    /** OBO database cross-reference predicate — pointers into MESH / OMIM / UMLS / ICD / SNOMED / etc. */
+    private static final String OBO_DB_XREF = "http://www.geneontology.org/formats/oboInOwl#hasDbXref";
+
+    /**
+     * Collect the class-level database cross-references ({@code oboInOwl#hasDbXref}) declared on an
+     * already-resolved term. Reuses the predicate-targeted {@code getAnnotations(uri)} lookup the synonym
+     * sweep uses, so it is a cheap in-memory read (no DB hit). De-duplicates and drops blanks.
+     */
+    private static List<String> collectDbXrefs( OntologyTerm term ) {
+        Collection<AnnotationProperty> annots = term.getAnnotations( OBO_DB_XREF );
+        if ( annots == null ) {
+            return Collections.emptyList();
+        }
+        List<String> out = new ArrayList<>();
+        Set<String> seen = new HashSet<>();
+        for ( AnnotationProperty ap : annots ) {
+            String text = ap.getContents();
+            if ( StringUtils.isBlank( text ) ) {
+                continue;
+            }
+            if ( seen.add( text ) ) {
+                out.add( text );
+            }
+        }
+        return out;
+    }
+
     /**
      * Collect every synonym declared on an already-resolved term, tagged with its scope. Walks the same
      * OBO/IAO predicate set {@link #computeMatchAttribution} probes; each {@code getAnnotations(uri)} call
@@ -1977,11 +2005,17 @@ public class AnnotationsWebService {
          */
         List<OntologyTermSynonymValueObject> synonyms;
         /**
-         * Alternative IDs / cross-references for this term (OBO {@code hasAlternativeId}) — typically
-         * merged-in obsolete identifiers. Empty when none. Lets a client recognise a term it knows by a
-         * retired identifier.
+         * Alternative IDs for this term (OBO {@code hasAlternativeId}) — merged-in obsolete identifiers.
+         * Often empty, since only terms that absorbed a retired ID carry one. Lets a client recognise a
+         * term it knows by a retired identifier. Distinct from {@link #dbXrefs}.
          */
         List<String> alternativeIds;
+        /**
+         * Database cross-references for this term (OBO {@code hasDbXref}) — pointers into other resources
+         * such as MESH, OMIM, UMLS, ICD, SNOMED, etc. (e.g. {@code "MESH:D003920"}, {@code "OMIM:222100"}).
+         * Empty when the term declares none. This is the OBO "xref" most consumers mean.
+         */
+        List<String> dbXrefs;
         /**
          * Version (release) of the ontology this term came from — {@code owl:versionInfo} (often a release
          * date), falling back to {@code owl:versionIRI}. Null when the owning ontology declares no version.
