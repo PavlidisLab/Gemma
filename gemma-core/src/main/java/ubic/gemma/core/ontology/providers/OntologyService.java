@@ -26,6 +26,14 @@ public interface OntologyService extends AutoCloseable {
     String getDescription();
 
     /**
+     * Obtain the version of this ontology if available — the value of {@code owl:versionInfo} (typically
+     * a release date or version string), falling back to {@code owl:versionIRI}. Returns {@code null}
+     * when neither is declared or the ontology is not loaded.
+     */
+    @Nullable
+    String getVersion();
+
+    /**
      * Check if this ontology will process imports.
      * <p>
      * If disabled, ontologies imported by this ontology will not be loaded.

@@ -320,7 +320,14 @@ public class AnnotationsWebService {
             } else {
                 parentVos = null;
             }
-            return respond( new OntologyTermValueObject( term.getUri(), term.getLabel(), definition, term.isObsolete(), usageCount, parentVos ) );
+            List<OntologyTermSynonymValueObject> synonyms = collectSynonyms( term );
+            List<String> alternativeIds = term.getAlternativeIds() != null
+                    ? new ArrayList<>( term.getAlternativeIds() )
+                    : Collections.emptyList();
+            String ontologyVersion = term.getUri() != null
+                    ? ontologyService.getVersion( term.getUri(), Math.max( 30000 - timer.getTime(), 0 ), TimeUnit.MILLISECONDS )
+                    : null;
+            return respond( new OntologyTermValueObject( term.getUri(), term.getLabel(), definition, term.isObsolete(), usageCount, parentVos, synonyms, alternativeIds, ontologyVersion ) );
         } catch ( TimeoutException e ) {
             throw new ServiceUnavailableException( DateUtils.addSeconds( new Date(), 30 ), e );
         }
@@ -1560,6 +1567,42 @@ public class AnnotationsWebService {
     private static final String IAO_ALT_LABEL = "http://purl.obolibrary.org/obo/IAO_0000118";
 
     /**
+     * Collect every synonym declared on an already-resolved term, tagged with its scope. Walks the same
+     * OBO/IAO predicate set {@link #computeMatchAttribution} probes; each {@code getAnnotations(uri)} call
+     * is a predicate-targeted lookup on the in-memory term, so the whole sweep is cheap (no DB hit). The
+     * unscoped generic {@code hasSynonym} collapses to {@code related_synonym}. De-duplicates on
+     * (type, text) so a string asserted under both a scoped and the generic predicate appears once.
+     */
+    private static List<OntologyTermSynonymValueObject> collectSynonyms( OntologyTerm term ) {
+        String[][] probes = {
+                { OBO_EXACT_SYNONYM, MatchedVia.EXACT_SYNONYM.token },
+                { OBO_NARROW_SYNONYM, MatchedVia.NARROW_SYNONYM.token },
+                { OBO_BROAD_SYNONYM, MatchedVia.BROAD_SYNONYM.token },
+                { OBO_RELATED_SYNONYM, MatchedVia.RELATED_SYNONYM.token },
+                { OBO_GENERIC_SYNONYM, MatchedVia.RELATED_SYNONYM.token },
+                { IAO_ALT_LABEL, MatchedVia.ALT_LABEL.token },
+        };
+        List<OntologyTermSynonymValueObject> out = new ArrayList<>();
+        Set<String> seen = new HashSet<>();
+        for ( String[] probe : probes ) {
+            Collection<AnnotationProperty> annots = term.getAnnotations( probe[0] );
+            if ( annots == null ) {
+                continue;
+            }
+            for ( AnnotationProperty ap : annots ) {
+                String text = ap.getContents();
+                if ( StringUtils.isBlank( text ) ) {
+                    continue;
+                }
+                if ( seen.add( probe[1] + ' ' + text ) ) {
+                    out.add( new OntologyTermSynonymValueObject( text, probe[1] ) );
+                }
+            }
+        }
+        return out;
+    }
+
+    /**
      * Back-compute which Lucene field produced the hit by walking attribution tiers from
      * strongest to weakest:
      *
@@ -1926,12 +1969,48 @@ public class AnnotationsWebService {
          * null only if the lookup was skipped (e.g. term has no URI).
          */
         @Nullable List<OntologyTermSimpleValueObject> parents;
+        /**
+         * Typed synonyms drawn from the OBO/IAO synonym predicates (exact / narrow / broad / related /
+         * alt_label). Empty when the term declares none. Cheap to populate — a single in-memory walk of
+         * the already-resolved term, the same probe set {@code /annotations/search} uses for match
+         * attribution.
+         */
+        List<OntologyTermSynonymValueObject> synonyms;
+        /**
+         * Alternative IDs / cross-references for this term (OBO {@code hasAlternativeId}) — typically
+         * merged-in obsolete identifiers. Empty when none. Lets a client recognise a term it knows by a
+         * retired identifier.
+         */
+        List<String> alternativeIds;
+        /**
+         * Version (release) of the ontology this term came from — {@code owl:versionInfo} (often a release
+         * date), falling back to {@code owl:versionIRI}. Null when the owning ontology declares no version.
+         * Surfaced so a client can tell which ontology release a term reflects, a recurring point of
+         * confusion when terms are added, merged, or obsoleted between releases.
+         */
+        @Nullable String ontologyVersion;
     }
 
     @Value
     public static class OntologyTermSimpleValueObject {
         String uri;
         String label;
+    }
+
+    /**
+     * A single synonym of an ontology term plus its scope.
+     */
+    @Value
+    public static class OntologyTermSynonymValueObject {
+        /** The synonym text. */
+        String value;
+        /**
+         * Synonym scope, mirroring the OBO/IAO predicates and the {@link MatchedVia} tokens:
+         * {@code exact_synonym}, {@code narrow_synonym}, {@code broad_synonym}, {@code related_synonym},
+         * {@code alt_label}. Generic {@code oboInOwl#hasSynonym} (no declared scope) is reported as
+         * {@code related_synonym}.
+         */
+        String type;
     }
 
     /**

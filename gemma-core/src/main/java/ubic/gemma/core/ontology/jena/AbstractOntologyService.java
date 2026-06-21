@@ -4,6 +4,7 @@ import org.apache.jena.ontology.*;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.NodeIterator;
 import org.apache.jena.rdf.model.Property;
+import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdfxml.xmlinput.ARPErrorNumbers;
 import org.apache.jena.rdfxml.xmlinput.ParseException;
@@ -14,6 +15,8 @@ import org.apache.jena.reasoner.rulesys.OWLMiniReasonerFactory;
 import org.apache.jena.reasoner.transitiveReasoner.TransitiveReasonerFactory;
 import org.apache.jena.util.iterator.ExtendedIterator;
 import org.apache.jena.vocabulary.DC_11;
+import org.apache.jena.vocabulary.OWL;
+import org.apache.jena.vocabulary.OWL2;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -204,6 +207,27 @@ public abstract class AbstractOntologyService implements OntologyService {
         return getState().map( state -> {
             NodeIterator it = state.model.listObjectsOfProperty( DC_11.description );
             return it.hasNext() ? it.next().asLiteral().getString() : null;
+        } ).orElse( null );
+    }
+
+    @Override
+    public String getVersion() {
+        return getState().map( state -> {
+            // Prefer a human-readable owl:versionInfo (OBO ontologies usually put a release date here).
+            NodeIterator it = state.model.listObjectsOfProperty( OWL.versionInfo );
+            if ( it.hasNext() ) {
+                RDFNode n = it.next();
+                if ( n.isLiteral() ) {
+                    return n.asLiteral().getString();
+                }
+            }
+            // Fall back to owl:versionIRI (e.g. .../releases/2024-05-29/doid.owl).
+            NodeIterator iri = state.model.listObjectsOfProperty( OWL2.versionIRI );
+            if ( iri.hasNext() ) {
+                RDFNode n = iri.next();
+                return n.isResource() ? n.asResource().getURI() : n.asLiteral().getString();
+            }
+            return null;
         } ).orElse( null );
     }
 

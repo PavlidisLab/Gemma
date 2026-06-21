@@ -790,6 +790,43 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
     }
 
     @Test
+    public void testGetAnnotationTermIncludesSynonymsAndAlternativeIds() throws TimeoutException {
+        OntologyTerm term = mock( OntologyTerm.class );
+        when( term.getUri() ).thenReturn( "http://example.com/diabetes" );
+        when( term.getLabel() ).thenReturn( "diabetes" );
+        AnnotationProperty exact = mock( AnnotationProperty.class );
+        when( exact.getContents() ).thenReturn( "diabetes mellitus" );
+        AnnotationProperty generic = mock( AnnotationProperty.class );
+        when( generic.getContents() ).thenReturn( "DM" );
+        when( term.getAnnotations( "http://www.geneontology.org/formats/oboInOwl#hasExactSynonym" ) )
+                .thenReturn( Collections.singletonList( exact ) );
+        when( term.getAnnotations( "http://www.geneontology.org/formats/oboInOwl#hasSynonym" ) )
+                .thenReturn( Collections.singletonList( generic ) );
+        when( term.getAlternativeIds() ).thenReturn( Arrays.asList( "OMIM:125853", "DOID:9351" ) );
+        when( ontologyService.getTerm( eq( "http://example.com/diabetes" ), anyLong(), any() ) ).thenReturn( term );
+        when( ontologyService.getVersion( eq( "http://example.com/diabetes" ), anyLong(), any() ) ).thenReturn( "2024-05-29" );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        Response response = target( "/annotations/term" ).queryParam( "uri", "http://example.com/diabetes" ).request().get();
+        assertThat( response ).hasStatus( Response.Status.OK );
+        assertThat( response )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.ontologyVersion", "2024-05-29" );
+        assertThat( response )
+                .entity()
+                .extracting( "data.synonyms", list( Map.class ) )
+                .satisfiesExactlyInAnyOrder(
+                        s -> assertThat( s ).containsEntry( "value", "diabetes mellitus" ).containsEntry( "type", "exact_synonym" ),
+                        // generic hasSynonym collapses to related_synonym
+                        s -> assertThat( s ).containsEntry( "value", "DM" ).containsEntry( "type", "related_synonym" ) );
+        assertThat( response )
+                .entity()
+                .extracting( "data.alternativeIds", list( String.class ) )
+                .containsExactlyInAnyOrder( "OMIM:125853", "DOID:9351" );
+    }
+
+    @Test
     public void testGetAnnotationTermReportsZeroWhenNoExperimentsMatch() throws TimeoutException {
         OntologyTerm term = mock( OntologyTerm.class );
         when( term.getUri() ).thenReturn( "http://example.com/orphan" );

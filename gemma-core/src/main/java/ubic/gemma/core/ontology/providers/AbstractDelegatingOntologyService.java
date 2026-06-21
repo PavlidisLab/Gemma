@@ -29,6 +29,11 @@ public class AbstractDelegatingOntologyService implements OntologyService {
     }
 
     @Override
+    public String getVersion() {
+        return delegate.getVersion();
+    }
+
+    @Override
     public boolean getProcessImports() {
         return delegate.getProcessImports();
     }

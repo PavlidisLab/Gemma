@@ -527,6 +527,20 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     }
 
     @Override
+    public String getVersion( String uri, long timeout, TimeUnit timeUnit ) throws TimeoutException {
+        // Resolve the owning ontology the same way getTerm does, then read its version. findFirst returns
+        // the first non-null result, so an ontology that owns the term but declares no version yields null
+        // and the scan continues — harmless, since only the term's owner can match the URI.
+        return findFirst( ontology -> {
+            OntologyTerm term = ontology.getTerm( uri );
+            if ( term == null || term.getLabel() == null ) {
+                return null;
+            }
+            return ontology.getVersion();
+        }, uri, timeUnit.toMillis( timeout ) );
+    }
+
+    @Override
     public Set<OntologyTerm> getTerms( Collection<String> uris, long timeout, TimeUnit timeUnit ) throws TimeoutException {
         Set<String> distinctUris = uris instanceof Set ? ( Set<String> ) uris : new HashSet<>( uris );
         List<OntologyTerm> results = combineInThreads( os -> distinctUris.stream().map( os::getTerm ).filter( Objects::nonNull ).collect( Collectors.toSet() ),

@@ -119,6 +119,16 @@ public interface OntologyService {
     OntologyTerm getTerm( String uri, long timeout, TimeUnit timeUnit ) throws TimeoutException;
 
     /**
+     * Obtain the version (release) of the ontology that owns the given term URI.
+     * <p>
+     * Resolves the owning ontology the same way {@link #getTerm(String, long, TimeUnit)} does and returns
+     * its {@code owl:versionInfo} (falling back to {@code owl:versionIRI}). Returns {@code null} when no
+     * ontology owns the URI or the owning ontology declares no version.
+     */
+    @Nullable
+    String getVersion( String uri, long timeout, TimeUnit timeUnit ) throws TimeoutException;
+
+    /**
      * Return all the terms matching the given URIs.
      * @throws TimeoutException if the timeout is exceeded
      */
