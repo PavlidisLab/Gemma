@@ -7,13 +7,17 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.gene.GeneAlias;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.rest.util.BaseJerseyIntegrationTest5;
 
 import jakarta.ws.rs.core.Response;
+import java.util.Map;
 import java.util.Random;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.InstanceOfAssertFactories.list;
 import static ubic.gemma.rest.util.Assertions.assertThat;
 
 public class GeneWebServiceTest extends BaseJerseyIntegrationTest5 {
@@ -27,6 +31,7 @@ public class GeneWebServiceTest extends BaseJerseyIntegrationTest5 {
     /* fixtures */
     private Taxon taxon;
     private Gene gene, gene2;
+    private String geneAlias;
 
     @BeforeEach
     public void createFixtures() {
@@ -42,6 +47,8 @@ public class GeneWebServiceTest extends BaseJerseyIntegrationTest5 {
         gene.setNcbiGeneId( random.nextInt() );
         gene.setEnsemblId( "ensembl_id_" + RandomStringUtils.insecure().nextAlphabetic( 10 ) );
         gene.setOfficialSymbol( "official_symbol_" + RandomStringUtils.insecure().nextAlphabetic( 10 ) );
+        geneAlias = "alias_" + RandomStringUtils.insecure().nextAlphabetic( 10 );
+        gene.getAliases().add( GeneAlias.Factory.newInstance( geneAlias ) );
         gene = geneService.create( gene );
     }
 
@@ -64,6 +71,18 @@ public class GeneWebServiceTest extends BaseJerseyIntegrationTest5 {
     public void testGenesByIds() {
         assertThat( target( "/genes/" + gene.getOfficialSymbol() ).request().get() )
                 .hasStatus( Response.Status.OK );
+    }
+
+    @Test
+    public void testGenesByIdsIncludesAliases() {
+        // Aliases are a LAZY collection; the endpoint batch-loads them via populateAliases so the VO
+        // carries them. Pins that the alias persisted on the fixture surfaces on the wire.
+        assertThat( target( "/genes/" + gene.getOfficialSymbol() ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .singleElement()
+                .satisfies( m -> assertThat( m.get( "aliases" ) ).asInstanceOf( list( String.class ) ).containsExactly( geneAlias ) );
     }
 
     @Test

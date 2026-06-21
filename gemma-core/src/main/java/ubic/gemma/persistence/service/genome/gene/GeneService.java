@@ -169,6 +169,14 @@ public interface GeneService extends AdminEditableBaseService<Gene>, FilteringVo
     void populateAssociatedExperimentCount( @Nullable Collection<GeneValueObject> vos );
 
     /**
+     * Populate {@link GeneValueObject#getAliases()} for each VO in the given collection. Aliases are a LAZY
+     * collection on {@link Gene}, so VOs built from un-thawed entities (e.g. search hits, paginated loads)
+     * come back with no aliases; this fills them in. The lookup is batched into a single query keyed by gene
+     * ID, so callers should assemble a full page or list of VOs and call this once rather than per-VO.
+     */
+    void populateAliases( @Nullable Collection<GeneValueObject> vos );
+
+    /**
      * Returns a detailVO for a geneDd This method may be unnecessary now that we have put all the logic into the
      * GeneService
      *

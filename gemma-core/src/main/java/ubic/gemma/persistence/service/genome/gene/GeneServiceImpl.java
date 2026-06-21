@@ -404,6 +404,33 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public void populateAliases( @Nullable Collection<GeneValueObject> vos ) {
+        if ( vos == null || vos.isEmpty() ) {
+            return;
+        }
+        Map<Long, List<GeneValueObject>> byId = new HashMap<>();
+        for ( GeneValueObject vo : vos ) {
+            if ( vo != null && vo.getId() != null ) {
+                byId.computeIfAbsent( vo.getId(), k -> new ArrayList<>() ).add( vo );
+            }
+        }
+        if ( byId.isEmpty() ) {
+            return;
+        }
+        Map<Long, Set<String>> aliasesByGeneId = geneDao.getAliasesByGeneId( byId.keySet() );
+        for ( Map.Entry<Long, List<GeneValueObject>> entry : byId.entrySet() ) {
+            Set<String> aliases = aliasesByGeneId.get( entry.getKey() );
+            if ( aliases == null || aliases.isEmpty() ) {
+                continue;
+            }
+            for ( GeneValueObject vo : entry.getValue() ) {
+                vo.setAliases( new TreeSet<>( aliases ) );
+            }
+        }
+    }
+
+    @Override
     @Transactional
     public int removeAll() {
         return geneDao.removeAll();

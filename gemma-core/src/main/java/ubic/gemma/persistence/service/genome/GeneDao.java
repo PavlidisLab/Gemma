@@ -31,6 +31,7 @@ import org.springframework.lang.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @see Gene
@@ -166,6 +167,12 @@ public interface GeneDao extends FilteringVoEnabledDao<Gene, GeneValueObject> {
     Gene thaw( Gene gene );
 
     Gene thawAliases( Gene gene );
+
+    /**
+     * Batch-load the aliases for a set of genes by ID without thawing the entities. Returns a map from gene
+     * ID to its (sorted) alias symbols; genes that have no aliases are simply absent from the map.
+     */
+    Map<Long, Set<String>> getAliasesByGeneId( Collection<Long> ids );
 
     Collection<Gene> thawLite( Collection<Gene> genes );
 

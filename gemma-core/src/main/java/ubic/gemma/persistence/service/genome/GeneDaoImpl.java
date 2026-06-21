@@ -709,6 +709,26 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     }
 
     @Override
+    public Map<Long, Set<String>> getAliasesByGeneId( Collection<Long> ids ) {
+        Map<Long, Set<String>> result = new HashMap<>();
+        if ( ids == null || ids.isEmpty() ) {
+            return result;
+        }
+        //noinspection unchecked
+        List<Object[]> rows = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select g.id, a.alias from Gene g join g.aliases a where g.id in :ids" )
+                .setParameterList( "ids", ids )
+                .list();
+        for ( Object[] row : rows ) {
+            String alias = ( String ) row[1];
+            if ( alias != null ) {
+                result.computeIfAbsent( ( Long ) row[0], k -> new TreeSet<>() ).add( alias );
+            }
+        }
+        return result;
+    }
+
+    @Override
     protected Query getFilteringCountQuery( @Nullable Filters filters ) {
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
         String queryString = "select count(gene) from Gene as gene " // gene

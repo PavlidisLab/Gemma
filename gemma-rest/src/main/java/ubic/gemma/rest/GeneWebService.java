@@ -233,6 +233,9 @@ public class GeneWebService {
             }
             vos.add( vo );
         }
+        // Search hits are built from un-thawed entities, so the aliases (a LAZY collection) come back
+        // empty on the VO. Batch-load them in one query keyed by gene ID.
+        geneService.populateAliases( vos );
         return respond( vos );
     }
 
@@ -346,6 +349,7 @@ public class GeneWebService {
         filters.and( geneArgService.getFilters( genes ) );
         Slice<GeneValueObject> slice = geneService.loadValueObjects( filters, geneArgService.getSort( sort ), 0, -1 );
         geneService.populateAssociatedExperimentCount( slice );
+        geneService.populateAliases( slice );
         return respond( slice );
     }
 
