@@ -225,6 +225,11 @@ public class HibernateConfig {
         // explicitly so a future ES-backend artifact on classpath doesn't silently flip the
         // default.
         props.setProperty( "hibernate.search.backend.type", "lucene" );
+        // Pin the Lucene index codec version. Unset, HS 7 logs HSEARCH000075 at boot and
+        // falls back to LATEST (the Lucene version it ships, currently 9.11.1). Pinning to
+        // LATEST silences the warning while keeping the same behaviour; revisit on a Lucene
+        // bump if we ever need a frozen on-disk codec for index back-compat.
+        props.setProperty( "hibernate.search.backend.lucene_version", "LATEST" );
         // Local filesystem directory storage (vs. heap / NIO mmap variants).
         props.setProperty( "hibernate.search.backend.directory.type", "local-filesystem" );
         // Index root directory (HS 7 successor to HS 5's hibernate.search.default.indexBase).

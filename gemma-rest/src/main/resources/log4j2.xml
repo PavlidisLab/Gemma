@@ -46,7 +46,17 @@
         <Logger name="org.hibernate" level="WARN"/>
         <Logger name="org.hibernate.cache.ReadWriteCache" level="ERROR"/>
         <Logger name="org.hibernate.engine.loading.LoadContexts" level="ERROR"/>
+        <!-- HHH000511: MySQL57InnoDBDialect reports version 5.7, below HB6's 8.0 floor.
+             Prod still runs MySQL 5.7, so the dialect can't be bumped until the prod
+             upgrade lands. Mute the deprecation chatter on the Dialect logger until then. -->
+        <Logger name="org.hibernate.dialect.Dialect" level="ERROR"/>
         <Logger name="org.springframework" level="WARN"/>
+        <!-- taskExecutorThreadContextInheritPostProcessor is a BeanPostProcessor whose mere
+             registration forces the dataSource + ACL/method-security chain to instantiate
+             before all BPPs are wired. That early order is deliberate (see ComponentScanConfig
+             and GemmaAclConfiguration), so the "not eligible for all BeanPostProcessors"
+             checker warnings are expected noise, not a defect. -->
+        <Logger name="org.springframework.context.support.PostProcessorRegistrationDelegate$BeanPostProcessorChecker" level="ERROR"/>
         <Logger name="org.springframework.beans.GenericTypeAwarePropertyDescriptor" level="FATAL"/>
         <Logger name="org.springframework.security.access.event.LoggerListener" level="INFO"/>
         <Logger name="org.springframework.security.authentication.event.LoggerListener" level="ERROR"/>
