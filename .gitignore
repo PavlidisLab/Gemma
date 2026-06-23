@@ -1,6 +1,7 @@
 .venv/
 .claude/
 scripts/__pycache__/
+handoffs/
 
 # CVS/git global ignores
 RCS
