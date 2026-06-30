@@ -87,7 +87,20 @@ public class FactorValue extends AbstractIdentifiable implements SecuredChild<Ex
 
     // assumed readily available in FactorValueValueObject
     // remove the where clause when old-style characteristics have been removed (see https://github.com/PavlidisLab/Gemma/issues/929 for details)
+    //
+    // @Fetch(SUBSELECT) is deliberate. This is a Set<Statement>, and Statement is a SINGLE_TABLE subclass of
+    // Characteristic (@DiscriminatorValue("Statement")). Hibernate 6 renders the subclass discriminator of a
+    // *join-fetched* subclass collection as a derived table:
+    //   left join (select * from CHARACTERISTIC t where t.class='Statement') c on fv.ID=c.FACTOR_VALUE_FK
+    // On MySQL 5.7 that derived table can stop being merged once several such prepared statements coexist on a
+    // pooled connection (Hibernate + HikariCP cachePrepStmts) and be materialized in full (~178k Statement rows)
+    // on execute -- reproduced at ~3.5s in a combined fetch. SUBSELECT keeps the collection eager but loads it in
+    // its own statement so it never lands inside a larger combined fetch (e.g. initializing
+    // ExperimentalDesign.experimentalFactors for /datasets/{id}/design). NB: the dominant /design first-contact
+    // cost was the ExperimentalFactor.annotations join, not this -- see ExperimentalFactor#annotations -- but
+    // keeping these statements out of combined fetches removes the materialization hazard as well.
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @Fetch(FetchMode.SUBSELECT)
     @JoinColumn(name = "FACTOR_VALUE_FK", columnDefinition = "BIGINT",
             foreignKey = @jakarta.persistence.ForeignKey(name = "CHARACTERISTIC_FACTOR_VALUE_FKC"))
     @SQLRestriction("class = 'Statement'")

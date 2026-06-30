@@ -89,7 +89,19 @@ public class ExperimentalFactor extends AbstractDescribable implements SecuredCh
     @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<FactorValue> factorValues = new HashSet<>();
     @Deprecated
-    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    // LAZY is deliberate and performance-critical. This collection joins on CHARACTERISTIC.EXPERIMENTAL_FACTOR_FK,
+    // whose index is degenerate: every one of the ~11.8M CHARACTERISTIC rows has a NULL EXPERIMENTAL_FACTOR_FK
+    // (zero non-null), so its cardinality is 1 and the optimizer estimates ~11.8M rows for any access to it.
+    // Loading it eagerly is pathological on MySQL 5.7: as a FetchMode.JOIN it both forms a Cartesian product
+    // with the sibling eager factorValues collection AND drives an oversized internal temp table; as a
+    // FetchMode.SUBSELECT it becomes "... where EXPERIMENTAL_FACTOR_FK in (<subquery>)", which the optimizer
+    // satisfies with a full scan of CHARACTERISTIC. Either way it turned initializing
+    // ExperimentalDesign.experimentalFactors (for /datasets/{id}/design) into a ~15s first-contact scan, flat
+    // regardless of dataset size. annotations is deprecated and effectively always empty, so it must not be
+    // eagerly loaded at all. The few callers that read it (SplitExperimentServiceImpl, EeWriteServiceImpl) do
+    // so inside a session; a lazy load there is a single-value "EXPERIMENTAL_FACTOR_FK = ?" lookup, which the
+    // index resolves to zero rows immediately (only the IN-subquery form full-scans).
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "EXPERIMENTAL_FACTOR_FK", columnDefinition = "BIGINT", foreignKey = @ForeignKey(name = "CHARACTERISTIC_EXPERIMENTAL_FACTOR_FKC"))
     @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<Characteristic> annotations = new HashSet<>();
