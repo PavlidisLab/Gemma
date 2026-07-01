@@ -110,6 +110,17 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
     @JsonIgnore
     private Double score; // This is for genes in gene sets might have a rank or a score associated with them.
 
+    /**
+     * How this gene matched the search query (e.g. {@code exact_symbol}, {@code alias},
+     * {@code prefix}), when the VO originates from a search. Populated by
+     * {@code GeneWebService.searchGenes}; {@code null} outside a search context. Lets a client
+     * distinguish a safe alias hit from a low-trust prefix look-alike. See {@code SearchMatchType}.
+     */
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Schema(description = "How this gene matched the search query (exact_symbol, alias, prefix, official_name, official_name_prefix, exact_identifier); present only on search results.")
+    private String matchType;
+
     // those are serialized manually for the REST API
     @Nullable
     @JsonIgnore
