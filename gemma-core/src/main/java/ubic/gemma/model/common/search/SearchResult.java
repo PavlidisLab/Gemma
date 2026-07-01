@@ -133,6 +133,16 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
      */
     private boolean exactIdentifierMatch;
 
+    /**
+     * How this result matched the query (exact symbol, alias, prefix look-alike, …), or
+     * {@code null} when the producing source did not classify it. Unlike {@link #score}, this
+     * distinguishes an inexact prefix hit from an alias hit even when their scores coincide.
+     * Non-final and defaults to {@code null}, like {@link #exactIdentifierMatch}, so it does not
+     * affect the constructors or {@code equals}/{@code hashCode} (which key on type + id only).
+     */
+    @Nullable
+    private SearchMatchType matchKind;
+
     @Override
     public int compareTo( SearchResult<?> o ) {
         return COMPARATOR.compare( this, o );
@@ -186,6 +196,7 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
     public <S extends Identifiable> SearchResult<S> withResultObject( @Nullable S resultObject ) {
         SearchResult<S> searchResult = new SearchResult<>( resultType, resultId, score, highlights, source );
         searchResult.setExactIdentifierMatch( this.exactIdentifierMatch );
+        searchResult.setMatchKind( this.matchKind );
         if ( resultObject != null ) {
             searchResult.setResultObject( resultObject );
         }
@@ -198,6 +209,7 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
     public SearchResult<T> withHighlights( Map<String, String> highlights ) {
         SearchResult<T> searchResult = new SearchResult<>( resultType, resultId, score, highlights, source );
         searchResult.setExactIdentifierMatch( this.exactIdentifierMatch );
+        searchResult.setMatchKind( this.matchKind );
         if ( resultObject != null ) {
             searchResult.setResultObject( resultObject );
         }

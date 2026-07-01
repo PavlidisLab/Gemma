@@ -33,6 +33,7 @@ import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.search.SearchTimeoutException;
 import ubic.gemma.core.search.ParseSearchException;
 import ubic.gemma.core.util.math.StringDistance;
+import ubic.gemma.model.common.search.SearchMatchType;
 import ubic.gemma.model.common.search.SearchResult;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject;
@@ -231,6 +232,11 @@ public class GeneWebService {
                     && ( vo.getTaxon() == null || !wantTaxonId.equals( vo.getTaxon().getId() ) ) ) {
                 continue;
             }
+            // Surface how the hit matched so callers can distinguish a safe alias/symbol hit from
+            // a low-trust prefix look-alike (ANKA -> Ankar) without re-deriving it from the symbol.
+            if ( sr.getMatchKind() != null ) {
+                vo.setMatchType( sr.getMatchKind().getWireName() );
+            }
             vos.add( vo );
         }
         // Search hits are built from un-thawed entities, so the aliases (a LAZY collection) come back
@@ -260,6 +266,36 @@ public class GeneWebService {
             s = ( ( Gene ) o ).getOfficialSymbol();
         }
         return s != null ? s.toLowerCase( Locale.ROOT ) : null;
+    }
+
+    /**
+     * Trust ordering by the authoritative match kind, applied within a score band before the
+     * symbol-shape tier: trusted hits (exact symbol / alias / official name / canonical id) rank
+     * first (0), unclassified full-text hits next (1), and low-trust inexact prefix look-alikes
+     * last (2). This is the option-2 demotion: a bare prefix of a longer symbol ({@code ANKA} →
+     * {@code Ankar}) must never outrank a real alias/symbol hit sharing its score — which it would
+     * under {@link #symbolTier} alone, since a prefix scores tier 1 (startsWith) while a genuine
+     * alias hit scores tier 4 (no symbol overlap). We demote rather than drop, because a prefix
+     * hit is still useful for typeahead and the caller can gate on {@code matchType}. Falls back to
+     * "unclassified" (1) when the producing source did not set a kind.
+     */
+    static int matchTrust( SearchResult<?> sr ) {
+        SearchMatchType kind = sr.getMatchKind();
+        if ( kind == null ) {
+            return 1;
+        }
+        switch ( kind ) {
+            case EXACT_IDENTIFIER:
+            case EXACT_SYMBOL:
+            case ALIAS:
+            case OFFICIAL_NAME:
+                return 0;
+            case SYMBOL_PREFIX:
+            case OFFICIAL_NAME_PREFIX:
+                return 2;
+            default:
+                return 1;
+        }
     }
 
     /**
@@ -330,6 +366,7 @@ public class GeneWebService {
     static Comparator<SearchResult<?>> searchRankingComparator( String qLc ) {
         return Comparator
                 .<SearchResult<?>>comparingDouble( sr -> -sr.getScore() )
+                .thenComparingInt( GeneWebService::matchTrust )
                 .thenComparingInt( sr -> symbolTier( symbolOf( sr ), qLc ) )
                 .thenComparingInt( sr -> editDistanceClamped( symbolOf( sr ), qLc ) )
                 .thenComparingInt( GeneWebService::popularityKey )

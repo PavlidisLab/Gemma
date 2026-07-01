@@ -12,6 +12,7 @@
 package ubic.gemma.rest;
 
 import org.junit.jupiter.api.Test;
+import ubic.gemma.model.common.search.SearchMatchType;
 import ubic.gemma.model.common.search.SearchResult;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneValueObject;
@@ -117,6 +118,71 @@ class GeneSearchRankingTest {
         raw.add( canonical );
         raw.sort( GeneWebService.searchRankingComparator( "xx99" ) );
         assertEquals( "Zzz9", ( ( GeneValueObject ) raw.get( 0 ).getResultObject() ).getOfficialSymbol() );
+    }
+
+    @Test
+    void searchMatchType_wireTokensMatchClientVocabulary() {
+        // The curation-UI / agent clients gate on these snake_case tokens; pin them so a rename
+        // can't silently break the contract (GENE_SEARCH_INEXACT_FUZZY_MATCH handoff, option 1).
+        assertEquals( "exact_symbol", SearchMatchType.EXACT_SYMBOL.getWireName() );
+        assertEquals( "alias", SearchMatchType.ALIAS.getWireName() );
+        assertEquals( "prefix", SearchMatchType.SYMBOL_PREFIX.getWireName() );
+        assertEquals( "official_name", SearchMatchType.OFFICIAL_NAME.getWireName() );
+        assertEquals( "official_name_prefix", SearchMatchType.OFFICIAL_NAME_PREFIX.getWireName() );
+        assertEquals( "exact_identifier", SearchMatchType.EXACT_IDENTIFIER.getWireName() );
+    }
+
+    @Test
+    void matchTrust_ordersTrustedKindsAbovePrefixLookAlikes() {
+        assertEquals( 0, GeneWebService.matchTrust( mkKind( SearchMatchType.EXACT_SYMBOL ) ) );
+        assertEquals( 0, GeneWebService.matchTrust( mkKind( SearchMatchType.ALIAS ) ) );
+        assertEquals( 0, GeneWebService.matchTrust( mkKind( SearchMatchType.OFFICIAL_NAME ) ) );
+        assertEquals( 0, GeneWebService.matchTrust( mkKind( SearchMatchType.EXACT_IDENTIFIER ) ) );
+        assertEquals( 2, GeneWebService.matchTrust( mkKind( SearchMatchType.SYMBOL_PREFIX ) ) );
+        assertEquals( 2, GeneWebService.matchTrust( mkKind( SearchMatchType.OFFICIAL_NAME_PREFIX ) ) );
+        assertEquals( 1, GeneWebService.matchTrust( mkKind( null ) ) ); // unclassified full-text
+    }
+
+    @Test
+    void rankingComparator_demotesPrefixLookAlikeBelowAliasHit_ankaCase() {
+        // The ANKA -> Ankar case generalised: a bare prefix hit shares the 0.9 band with a genuine
+        // alias hit. symbolTier alone LIFTS the prefix (startsWith=1) above the alias (no-overlap=4);
+        // matchTrust must override that so the trusted alias wins. We demote, not drop — a lone
+        // prefix hit is still returned (labelled prefix) for the caller to reject.
+        SearchResult<GeneValueObject> prefix = mkGeneWithKind( "Ankar", 1L, 0, SearchMatchType.SYMBOL_PREFIX );
+        SearchResult<GeneValueObject> alias = mkGeneWithKind( "Xyz1", 2L, 0, SearchMatchType.ALIAS );
+        List<SearchResult<?>> raw = new ArrayList<>();
+        raw.add( prefix ); // wrong order first, to prove the comparator does the work
+        raw.add( alias );
+        raw.sort( GeneWebService.searchRankingComparator( "anka" ) );
+        assertEquals( "Xyz1", ( ( GeneValueObject ) raw.get( 0 ).getResultObject() ).getOfficialSymbol(),
+                "a trusted alias hit must outrank a prefix look-alike in the same score band" );
+        assertEquals( "Ankar", ( ( GeneValueObject ) raw.get( 1 ).getResultObject() ).getOfficialSymbol() );
+    }
+
+    @Test
+    void rankingComparator_sameTrustCollisionStillDecidedByPopularity() {
+        // Guard that matchTrust does NOT disturb the proven within-kind tiebreakers: when both hits
+        // are ALIAS (trust 0, tie), the Cx43 popularity step must still pick Gja1 over Gja3.
+        SearchResult<GeneValueObject> gja1 = mkGeneWithKind( "Gja1", 14609L, 10, SearchMatchType.ALIAS );
+        SearchResult<GeneValueObject> gja3 = mkGeneWithKind( "Gja3", 14611L, 0, SearchMatchType.ALIAS );
+        List<SearchResult<?>> raw = new ArrayList<>();
+        raw.add( gja3 );
+        raw.add( gja1 );
+        raw.sort( GeneWebService.searchRankingComparator( "cx43" ) );
+        assertEquals( "Gja1", ( ( GeneValueObject ) raw.get( 0 ).getResultObject() ).getOfficialSymbol() );
+    }
+
+    private static SearchResult<GeneValueObject> mkGeneWithKind( String symbol, long id, int eeCount, SearchMatchType kind ) {
+        SearchResult<GeneValueObject> sr = mkGene( symbol, id, eeCount );
+        sr.setMatchKind( kind );
+        return sr;
+    }
+
+    private static SearchResult<GeneValueObject> mkKind( @org.springframework.lang.Nullable SearchMatchType kind ) {
+        SearchResult<GeneValueObject> sr = mkGene( "Sym", 1L, 0 );
+        sr.setMatchKind( kind );
+        return sr;
     }
 
     private static SearchResult<GeneValueObject> mkGene( String symbol, long id, int eeCount ) {

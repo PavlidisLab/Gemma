@@ -273,6 +273,17 @@ public class SearchWebService {
         @Schema(hidden = true)
         String source;
 
+        /**
+         * How the result matched the query (e.g. {@code exact_symbol}, {@code alias},
+         * {@code prefix}), or {@code null} when the producing source did not classify it.
+         * Lets a client distinguish a safe alias hit from a low-trust prefix look-alike even
+         * when their scores coincide. See {@code SearchMatchType}.
+         */
+        @Nullable
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        @Schema(description = "How the result matched the query (exact_symbol, alias, prefix, official_name, official_name_prefix, exact_identifier); omitted if unclassified.")
+        String matchType;
+
         @Schema(oneOf = {
                 ArrayDesignValueObject.class,
                 BibliographicReferenceValueObject.class,
@@ -304,6 +315,7 @@ public class SearchWebService {
             this.score = searchResult.getScore();
             this.highlights = searchResult.getHighlights();
             this.source = searchResult.getSource().toString();
+            this.matchType = searchResult.getMatchKind() != null ? searchResult.getMatchKind().getWireName() : null;
         }
     }
 

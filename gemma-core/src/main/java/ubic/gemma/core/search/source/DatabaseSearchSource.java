@@ -13,6 +13,7 @@ import ubic.gemma.core.security.util.SecurityUtil;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.blacklist.BlacklistedEntity;
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.search.SearchMatchType;
 import ubic.gemma.model.common.search.SearchResult;
 import ubic.gemma.model.common.search.SearchResultSet;
 import ubic.gemma.model.common.search.SearchSettings;
@@ -535,7 +536,7 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
                         ? p -> geneService.findByOfficialSymbolInexact( p, taxonConstraint )
                         : p -> geneService.findByOfficialSymbolInexact( p );
         if ( exactString.length() <= 1 ) {
-            results.addAll( toSearchResults( settings, Gene.class, geneService.findByOfficialSymbol( exactString ), MATCH_BY_OFFICIAL_SYMBOL_SCORE, "GeneService.findByOfficialSymbol" ) );
+            results.addAll( toSearchResults( settings, Gene.class, geneService.findByOfficialSymbol( exactString ), MATCH_BY_OFFICIAL_SYMBOL_SCORE, "GeneService.findByOfficialSymbol", SearchMatchType.EXACT_SYMBOL ) );
             symbolStep = "findByOfficialSymbol";
         } else if ( exactString.length() <= 5 ) {
             // Run BOTH the exact-symbol query (score 1.0) AND the LIKE-prefix inexact query
@@ -546,15 +547,15 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
             // match first. The exact query is a unique-index point lookup on OFFICIAL_SYMBOL
             // (sub-ms even on the prod-tunneled DB) so the added cost is negligible.
             results.addAll( toSearchResults( settings, Gene.class, geneService.findByOfficialSymbol( exactString ),
-                    MATCH_BY_OFFICIAL_SYMBOL_SCORE, "GeneService.findByOfficialSymbol" ) );
-            results.addAll( toSearchResults( settings, Gene.class, inexact.apply( inexactPattern ), MATCH_BY_OFFICIAL_SYMBOL_INEXACT_SCORE, "GeneService.findByOfficialSymbolInexact" ) );
+                    MATCH_BY_OFFICIAL_SYMBOL_SCORE, "GeneService.findByOfficialSymbol", SearchMatchType.EXACT_SYMBOL ) );
+            results.addAll( toSearchResults( settings, Gene.class, inexact.apply( inexactPattern ), MATCH_BY_OFFICIAL_SYMBOL_INEXACT_SCORE, "GeneService.findByOfficialSymbolInexact", SearchMatchType.SYMBOL_PREFIX ) );
             symbolStep = "findByOfficialSymbol+Inexact" + ( taxonConstraint != null ? "(taxon)" : "" );
         } else {
             if ( isWildcard( settings ) ) {
-                results.addAll( toSearchResults( settings, Gene.class, inexact.apply( inexactString ), MATCH_BY_OFFICIAL_SYMBOL_INEXACT_SCORE, "GeneService.findByOfficialSymbolInexact" ) );
+                results.addAll( toSearchResults( settings, Gene.class, inexact.apply( inexactString ), MATCH_BY_OFFICIAL_SYMBOL_INEXACT_SCORE, "GeneService.findByOfficialSymbolInexact", SearchMatchType.SYMBOL_PREFIX ) );
                 symbolStep = "findByOfficialSymbolInexact" + ( taxonConstraint != null ? "(taxon)" : "" );
             } else {
-                results.addAll( toSearchResults( settings, Gene.class, geneService.findByOfficialSymbol( exactString ), MATCH_BY_OFFICIAL_SYMBOL_SCORE, "GeneService.findByOfficialSymbol" ) );
+                results.addAll( toSearchResults( settings, Gene.class, geneService.findByOfficialSymbol( exactString ), MATCH_BY_OFFICIAL_SYMBOL_SCORE, "GeneService.findByOfficialSymbol", SearchMatchType.EXACT_SYMBOL ) );
                 symbolStep = "findByOfficialSymbol";
             }
         }
@@ -568,14 +569,14 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
             t0 = System.currentTimeMillis();
             Collection<Gene> r = geneService.findByOfficialName( StringUtils.strip( settings.getQuery() ) );
             if ( !r.isEmpty() ) {
-                results.addAll( toSearchResults( settings, Gene.class, r, MATCH_BY_OFFICIAL_NAME_SCORE, "GeneService.findByOfficialName" ) );
+                results.addAll( toSearchResults( settings, Gene.class, r, MATCH_BY_OFFICIAL_NAME_SCORE, "GeneService.findByOfficialName", SearchMatchType.OFFICIAL_NAME ) );
                 nameStep = "findByOfficialName";
             } else {
                 if ( isWildcard( settings ) ) {
-                    results.addAll( toSearchResults( settings, Gene.class, geneService.findByOfficialNameInexact( inexactString ), MATCH_BY_OFFICIAL_NAME_INEXACT_SCORE, "GeneService.findByOfficialNameInexact" ) );
+                    results.addAll( toSearchResults( settings, Gene.class, geneService.findByOfficialNameInexact( inexactString ), MATCH_BY_OFFICIAL_NAME_INEXACT_SCORE, "GeneService.findByOfficialNameInexact", SearchMatchType.OFFICIAL_NAME_PREFIX ) );
                     nameStep = "findByOfficialName+Inexact";
                 } else {
-                    results.addAll( toSearchResults( settings, Gene.class, geneService.findByOfficialName( exactString ), MATCH_BY_OFFICIAL_NAME_SCORE, "GeneService.findByOfficialName" ) );
+                    results.addAll( toSearchResults( settings, Gene.class, geneService.findByOfficialName( exactString ), MATCH_BY_OFFICIAL_NAME_SCORE, "GeneService.findByOfficialName", SearchMatchType.OFFICIAL_NAME ) );
                     nameStep = "findByOfficialName+exact";
                 }
             }
@@ -608,13 +609,16 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
             java.util.List<Task> tasks = java.util.Arrays.asList(
                     new Task( "GeneService.findByAlias",
                             () -> toSearchResults( settings, Gene.class, geneService.findByAlias( es ),
-                                    MATCH_BY_ALIAS_SCORE, "GeneService.findByAlias" ) ),
+                                    MATCH_BY_ALIAS_SCORE, "GeneService.findByAlias", SearchMatchType.ALIAS ) ),
                     new Task( "GeneService.findByEnsemblId", () -> {
                         Gene g = geneService.findByEnsemblId( es );
-                        return g != null
-                                ? java.util.Collections.singleton( SearchResult.fromExactIdentifier( Gene.class, g,
-                                        MATCH_BY_ACCESSION_SCORE, null, "GeneService.findByEnsemblId" ) )
-                                : java.util.Collections.emptyList();
+                        if ( g == null ) {
+                            return java.util.Collections.emptyList();
+                        }
+                        SearchResult<Gene> sr = SearchResult.fromExactIdentifier( Gene.class, g,
+                                MATCH_BY_ACCESSION_SCORE, null, "GeneService.findByEnsemblId" );
+                        sr.setMatchKind( SearchMatchType.EXACT_IDENTIFIER );
+                        return java.util.Collections.singleton( sr );
                     } ),
                     new Task( "GeneProductService.getGenesByName",
                             () -> toSearchResults( settings, Gene.class, geneProductService.getGenesByName( es ),
@@ -734,6 +738,20 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
     private static <T extends Identifiable> Set<SearchResult<T>> toSearchResults( SearchSettings settings, Class<T> resultType, Collection<T> entities,
             double score, String source ) {
         return toSearchResults( settings, resultType, entities, score, source, false );
+    }
+
+    /**
+     * Same as {@link #toSearchResults(SearchSettings, Class, Collection, double, String)} but tags
+     * each result with how it matched. The kind is set after collection because it is not part of
+     * result identity ({@code equals}/{@code hashCode} key on type + id).
+     */
+    private static <T extends Identifiable> Set<SearchResult<T>> toSearchResults( SearchSettings settings, Class<T> resultType, Collection<T> entities,
+            double score, String source, SearchMatchType matchKind ) {
+        Set<SearchResult<T>> results = toSearchResults( settings, resultType, entities, score, source, false );
+        for ( SearchResult<T> r : results ) {
+            r.setMatchKind( matchKind );
+        }
+        return results;
     }
 
     private static <T extends Identifiable> Set<SearchResult<T>> toSearchResults( SearchSettings settings, Class<T> resultType, Collection<T> entities,
