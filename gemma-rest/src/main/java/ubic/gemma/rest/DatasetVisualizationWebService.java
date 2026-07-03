@@ -22,6 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.rest.annotations.GZIP;
 import ubic.gemma.rest.util.MalformedArgException;
@@ -30,6 +31,8 @@ import ubic.gemma.rest.util.ResponseErrorObject;
 import ubic.gemma.rest.util.Responders;
 import ubic.gemma.rest.util.args.DatasetArg;
 import ubic.gemma.rest.util.args.DatasetArgService;
+import ubic.gemma.rest.util.args.QuantitationTypeArg;
+import ubic.gemma.rest.util.args.QuantitationTypeArgService;
 
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
@@ -78,6 +81,9 @@ public class DatasetVisualizationWebService {
     private DatasetArgService datasetArgService;
 
     @Autowired
+    private QuantitationTypeArgService quantitationTypeArgService;
+
+    @Autowired
     private HeatmapDataService heatmapDataService;
 
     public DatasetVisualizationWebService() {
@@ -97,6 +103,9 @@ public class DatasetVisualizationWebService {
      * @param encoding     {@code "json"} (default) or {@code "base64f32"}.
      * @param subSetId     optional {@link ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet} id;
      *                     when present, the response is restricted to the subset's sample columns.
+     * @param quantitationTypeArg optional quantitation-type selector (id or name). When omitted the processed QT is
+     *                     used (current behaviour). A non-processed QT is served from its raw vectors and supports
+     *                     only the {@code genes} / {@code probes} selection modes.
      */
     @GET
     @GZIP
@@ -110,6 +119,10 @@ public class DatasetVisualizationWebService {
                     + "(5) default fallback: a random sample of ?sampleSize=n probes (default 20, max 200). "
                     + "Optionally restrict the sample columns to a single ?subSet=N — useful for cell-type-resolved views on "
                     + "single-cell data and for client-driven paging. "
+                    + "By default the matrix comes from the dataset's processed data; pass ?quantitationType=id-or-name to "
+                    + "source it from a different QT instead. A non-processed QT is served from its raw vectors and supports "
+                    + "only the genes / probes selection modes (resultSet, pcaComponent and the random-sample fallback return 400); "
+                    + "non-numeric-double representations such as integer read-counts are coerced to double. "
                     + "NO ordering decisions are made server-side; the client sorts, groups, palettes, and renders.",
             responses = {
                     @ApiResponse(responseCode = "200", useReturnTypeSchema = true,
@@ -129,7 +142,9 @@ public class DatasetVisualizationWebService {
             @QueryParam("sampleSize") @Nullable Integer sampleSize,
             @QueryParam("encoding") @DefaultValue("json") String encoding,
             @Parameter(description = "Restrict the heatmap to a single subset's samples — useful for cell-type-resolved views on single-cell data. When omitted, the full matrix is returned.")
-            @QueryParam("subSet") @Nullable Long subSetId ) {
+            @QueryParam("subSet") @Nullable Long subSetId,
+            @Parameter(description = "Quantitation-type selector (id or name). When omitted, the dataset's processed QT is used. A non-processed QT is served from its raw vectors and supports only the genes / probes selection modes.")
+            @QueryParam("quantitationType") @Nullable QuantitationTypeArg<?> quantitationTypeArg ) {
         if ( !"json".equalsIgnoreCase( encoding ) && !"base64f32".equalsIgnoreCase( encoding ) ) {
             throw new MalformedArgException( "encoding must be one of: json, base64f32" );
         }
@@ -149,6 +164,10 @@ public class DatasetVisualizationWebService {
 
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
 
+        QuantitationType quantitationType = quantitationTypeArg != null
+                ? quantitationTypeArgService.getEntity( quantitationTypeArg, ee )
+                : null;
+
         HeatmapDataValueObject payload;
         try {
             payload = heatmapDataService.buildHeatmapData(
@@ -161,7 +180,8 @@ public class DatasetVisualizationWebService {
                     effectivePcaCount,
                     effectiveSampleSize,
                     encoding.toLowerCase(),
-                    subSetId );
+                    subSetId,
+                    quantitationType );
         } catch ( IllegalArgumentException e ) {
             throw new MalformedArgException( e.getMessage(), e );
         }

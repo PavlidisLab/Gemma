@@ -16,12 +16,22 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
+import ubic.gemma.core.analysis.preprocess.convert.RepresentationConversionUtils;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.model.analysis.expression.pca.ProbeLoading;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionValueObject;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
@@ -32,6 +42,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
+import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetService;
@@ -48,6 +59,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -65,6 +77,9 @@ public class HeatmapDataService {
 
     @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
+
+    @Autowired
+    private RawExpressionDataVectorService rawExpressionDataVectorService;
 
     @Autowired
     private CompositeSequenceService compositeSequenceService;
@@ -99,6 +114,13 @@ public class HeatmapDataService {
      * @param subSetId     optional {@link ExpressionExperimentSubSet} id; when non-null, the response
      *                     is restricted to that subset's sample columns. The subset must belong to
      *                     {@code ee}; otherwise {@link IllegalArgumentException} is raised.
+     * @param quantitationType optional {@link QuantitationType} to source the matrix from. When {@code null} or when
+     *                     it resolves to the dataset's processed QT, the processed-data path is used (all selection
+     *                     modes). For any other (non-processed) QT the raw vectors for that QT are served instead;
+     *                     only the {@code geneIds}/{@code probeIds} selection modes are supported in that case
+     *                     ({@code resultSetId}/{@code pcaComponent} and the random-sample fallback raise
+     *                     {@link IllegalArgumentException}). Non-{@code DOUBLE} representations (e.g. integer
+     *                     read-counts) are coerced to double.
      */
     @Transactional(readOnly = true)
     public HeatmapDataValueObject buildHeatmapData(
@@ -111,7 +133,8 @@ public class HeatmapDataService {
             int pcaCount,
             int sampleSize,
             String encoding,
-            @Nullable Long subSetId ) {
+            @Nullable Long subSetId,
+            @Nullable QuantitationType quantitationType ) {
         // Resolve the subset (ACL-gated) up front and verify it belongs to this EE; null when no
         // subset was requested.
         ExpressionExperimentSubSet subSet = null;
@@ -135,7 +158,7 @@ public class HeatmapDataService {
         }
 
         Collection<DoubleVectorValueObject> vectors = resolveVectors(
-                ee, geneIds, probeIds, resultSetId, threshold, pcaComponent, pcaCount, sampleSize );
+                ee, geneIds, probeIds, resultSetId, threshold, pcaComponent, pcaCount, sampleSize, quantitationType );
 
         HeatmapDataValueObject out = new HeatmapDataValueObject();
         out.setDatasetId( ee.getId() );
@@ -251,7 +274,13 @@ public class HeatmapDataService {
             double threshold,
             @Nullable Integer pcaComponent,
             int pcaCount,
-            int sampleSize ) {
+            int sampleSize,
+            @Nullable QuantitationType quantitationType ) {
+        // A non-processed QT is served straight from its raw vectors; the processed cache path
+        // (and its diffex / PCA / random selection modes) doesn't apply to it.
+        if ( quantitationType != null && !isProcessedQuantitationType( ee, quantitationType ) ) {
+            return resolveRawVectors( ee, quantitationType, geneIds, probeIds, resultSetId, pcaComponent );
+        }
         if ( geneIds != null && !geneIds.isEmpty() ) {
             return processedExpressionDataVectorService.getProcessedDataArrays( ee, geneIds );
         }
@@ -270,6 +299,128 @@ public class HeatmapDataService {
             return topLoaded == null ? Collections.emptyList() : topLoaded.values();
         }
         return processedExpressionDataVectorService.getRandomProcessedDataArrays( ee, sampleSize );
+    }
+
+    /**
+     * True when {@code qt} is the QT backing the dataset's processed data (so the processed cache path can serve it).
+     */
+    private boolean isProcessedQuantitationType( ExpressionExperiment ee, QuantitationType qt ) {
+        return expressionExperimentService.getProcessedQuantitationType( ee )
+                .map( pq -> Objects.equals( pq.getId(), qt.getId() ) )
+                .orElse( false );
+    }
+
+    /**
+     * Resolve vectors for a non-processed QT from its raw vectors. Only the gene / probe selection modes are
+     * supported: diffex ({@code resultSetId}) and PCA ({@code pcaComponent}) are derived from the processed-data
+     * analyses, and the random-sample fallback would require loading the whole raw matrix, so both raise
+     * {@link IllegalArgumentException} (surfaced as a 400 by the caller).
+     */
+    private Collection<DoubleVectorValueObject> resolveRawVectors(
+            ExpressionExperiment ee,
+            QuantitationType qt,
+            @Nullable Collection<Long> geneIds,
+            @Nullable Collection<Long> probeIds,
+            @Nullable Long resultSetId,
+            @Nullable Integer pcaComponent ) {
+        if ( resultSetId != null || pcaComponent != null ) {
+            throw new IllegalArgumentException( "The resultSet and pcaComponent selection modes are derived from "
+                    + "processed-data analyses and cannot be combined with a non-processed quantitationType; "
+                    + "select rows with genes or probes instead." );
+        }
+
+        Collection<CompositeSequence> probes;
+        if ( geneIds != null && !geneIds.isEmpty() ) {
+            Collection<Gene> genes = geneService.loadThawedLiter( geneIds );
+            if ( genes.isEmpty() ) {
+                return Collections.emptyList();
+            }
+            Map<Gene, Collection<CompositeSequence>> byGene = compositeSequenceService.findByGenes( genes, true );
+            probes = new HashSet<>();
+            for ( Collection<CompositeSequence> css : byGene.values() ) {
+                probes.addAll( css );
+            }
+        } else if ( probeIds != null && !probeIds.isEmpty() ) {
+            probes = compositeSequenceService.load( probeIds );
+        } else {
+            throw new IllegalArgumentException( "A non-processed quantitationType requires an explicit gene or probe "
+                    + "selection; the random-sample fallback is only available for the processed quantitation type." );
+        }
+        if ( probes.isEmpty() ) {
+            return Collections.emptyList();
+        }
+
+        Collection<RawExpressionDataVector> rawVectors = rawExpressionDataVectorService.find( probes, qt );
+        if ( rawVectors.isEmpty() ) {
+            return Collections.emptyList();
+        }
+
+        // Coerce non-double representations (e.g. integer read-counts) so the heatmap can render them as doubles.
+        if ( qt.getRepresentation() != PrimitiveType.DOUBLE ) {
+            try {
+                rawVectors = RepresentationConversionUtils.convertVectors( rawVectors, PrimitiveType.DOUBLE, RawExpressionDataVector.class );
+            } catch ( QuantitationTypeConversionException e ) {
+                throw new IllegalArgumentException( "Quantitation type " + qt.getName() + " cannot be rendered as a "
+                        + "heatmap: its " + qt.getRepresentation() + " values cannot be converted to numbers.", e );
+            }
+        }
+
+        return toDoubleVectors( qt, rawVectors );
+    }
+
+    /**
+     * Adapt raw vectors (already DOUBLE-represented) into the {@link DoubleVectorValueObject} shape the downstream
+     * matrix / row / column builders consume. Only the fields those builders read are populated: the shared column
+     * axis (bioassays, in dimension order), the design element, the gene refs and the QT — the outlier NaN masking
+     * mirrors the processed path.
+     */
+    private Collection<DoubleVectorValueObject> toDoubleVectors( QuantitationType qt, Collection<RawExpressionDataVector> vectors ) {
+        // Batch gene mapping for the design elements so each row carries its gene refs.
+        Set<CompositeSequence> css = new HashSet<>();
+        for ( RawExpressionDataVector v : vectors ) {
+            css.add( v.getDesignElement() );
+        }
+        Map<CompositeSequence, Collection<Gene>> csToGenes = compositeSequenceService.getGenes( css, true );
+
+        // All raw vectors of one QT share a BioAssayDimension; build the column axis VO once from the first.
+        BioAssayDimension bad = vectors.iterator().next().getBioAssayDimension();
+        BioAssayDimensionValueObject badVo = new BioAssayDimensionValueObject( bad.getId() );
+        List<BioAssayValueObject> bavos = new ArrayList<>( bad.getBioAssays().size() );
+        for ( BioAssay ba : bad.getBioAssays() ) {
+            BioAssayValueObject bavo = new BioAssayValueObject( ba.getId() );
+            bavo.setName( ba.getName() );
+            bavo.setOutlier( ba.getIsOutlier() );
+            bavos.add( bavo );
+        }
+        badVo.addBioAssays( bavos );
+
+        QuantitationTypeValueObject qtVo = new QuantitationTypeValueObject( qt );
+
+        List<DoubleVectorValueObject> out = new ArrayList<>( vectors.size() );
+        for ( RawExpressionDataVector v : vectors ) {
+            DoubleVectorValueObject dv = new DoubleVectorValueObject();
+            dv.setId( v.getId() );
+            CompositeSequence cs = v.getDesignElement();
+            CompositeSequenceValueObject csvo = new CompositeSequenceValueObject( cs.getId() );
+            csvo.setName( cs.getName() );
+            dv.setDesignElement( csvo );
+            dv.setBioAssayDimension( badVo );
+            dv.setQuantitationType( qtVo );
+            double[] data = v.getDataAsDoubles();
+            // Mask outlier assays to NaN, matching the processed DoubleVectorValueObject construction path.
+            for ( int j = 0; j < bavos.size() && j < data.length; j++ ) {
+                if ( bavos.get( j ).isOutlier() ) {
+                    data[j] = Double.NaN;
+                }
+            }
+            dv.setData( data );
+            Collection<Gene> genes = csToGenes.get( cs );
+            if ( genes != null && !genes.isEmpty() ) {
+                dv.setGenes( genes.stream().map( Gene::getId ).collect( Collectors.toList() ) );
+            }
+            out.add( dv );
+        }
+        return out;
     }
 
     // ---- row metadata --------------------------------------------------------------------
