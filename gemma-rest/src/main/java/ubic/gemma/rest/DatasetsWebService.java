@@ -401,12 +401,19 @@ public class DatasetsWebService {
      * filtered to {@link ExpressionExperiment} and projects each hit to a thin
      * {@link DatasetSearchHitValueObject}. Intended for the curation-UI browser import dialog
      * (see {@code GEMMA_UI_ENDPOINT_GAP.md} §3i).
+     *
+     * @deprecated redundant with {@code GET /datasets?query=...} (the paginated catalogue runs the
+     * same search), which every known client uses instead — no caller of this endpoint was found
+     * across gemma-ui, gemma-curation-agents, or gemma.R. Scheduled for removal in the 2.10 release.
      */
+    @Deprecated
     @GET
     @Path("/search")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Typeahead search for datasets by short name, accession, or title",
-            description = "Returns a thin list of dataset hits ranked by search score. Suited for autocomplete UIs; for paginated browse-style search use `GET /datasets?query=...`.",
+            deprecated = true,
+            description = "Deprecated: use `GET /datasets?query=...` instead (same search, paginated); scheduled for removal in 2.10. "
+                    + "Returns a thin list of dataset hits ranked by search score.",
             responses = {
                     @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "The query parameter is missing or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
@@ -1096,7 +1103,7 @@ public class DatasetsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the samples of a dataset",
             description = "Legacy mode (no `cursor` parameter): returns the full unpaginated assay list in the existing shape. "
-                    + "Cursor mode (recommended for deep listings — single-cell datasets can have tens of thousands of assays): "
+                    + "Cursor mode (available for consistency; a dataset's assay list stays small — single-cell size is in cells, not assays): "
                     + "pass an opaque `cursor` token from a previous response's `nextCursor` / `prevCursor` field along with a `limit`. "
                     + "In cursor mode the result is always sorted by ascending `id` (cursor mode forces a single-component id sort pending the indexed-column audit in phase B); "
                     + "the path-derived `expressionExperiment.id = ?` constraint is preserved; `totalElements` is `null` by default (no count query per request). "
@@ -6124,8 +6131,9 @@ public class DatasetsWebService {
      * parallel to step 1k ({@code /datasets/{dataset}/samples}). The legacy mode (no
      * {@code cursor}) is preserved byte-for-byte: an unpaginated
      * {@link ResponseDataObject}{@code <List<BioAssayValueObject>>} with the full subset
-     * sample list. Cursor mode is recommended for deep listings — single-cell subsets can
-     * have many thousands of assays — and always sorts by ascending {@code id}; the
+     * sample list. Cursor mode is available for consistency with the other listings; a
+     * subset's assay list itself stays small (single-cell size is in cells, not assays).
+     * Cursor mode always sorts by ascending {@code id}; the
      * path-derived {@code subSet.id = ?} constraint is preserved across modes;
      * {@code totalElements} is {@code null} by default (no count query per request).
      */
@@ -6134,7 +6142,7 @@ public class DatasetsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Obtain the samples of a specific subset of a dataset",
             description = "Legacy mode (no `cursor` parameter): returns the full unpaginated assay list in the existing shape. "
-                    + "Cursor mode (recommended for deep listings — single-cell subsets can have many thousands of assays): "
+                    + "Cursor mode (available for consistency; a subset's assay list stays small — single-cell size is in cells, not assays): "
                     + "pass an opaque `cursor` token from a previous response's `nextCursor` / `prevCursor` field along with a `limit`. "
                     + "In cursor mode the result is always sorted by ascending `id` (cursor mode forces a single-component id sort pending the indexed-column audit in phase B); "
                     + "the path-derived `subSet.id = ?` constraint is preserved; `totalElements` is `null` by default (no count query per request).",
