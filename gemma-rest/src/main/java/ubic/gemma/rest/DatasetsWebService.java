@@ -1105,8 +1105,8 @@ public class DatasetsWebService {
             responses = {
                     @ApiResponse(responseCode = "200",
                             content = @Content(schema = @Schema(oneOf = {
-                                    ResponseDataObject.class,
-                                    CursorPaginatedResponseDataObject.class
+                                    ResponseDataObjectListBioAssayValueObject.class,
+                                    CursorPaginatedResponseDataObjectBioAssayValueObject.class
                             }))),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
@@ -6622,6 +6622,29 @@ public class DatasetsWebService {
 
         public ResponseDataObjectSingleCellDimensionValueObject( SingleCellDimensionValueObject payload ) {
             super( payload );
+        }
+    }
+
+    /**
+     * Legacy-mode response shape for {@link #getDatasetSamples}. Exists solely to bind the {@code data}
+     * type argument so the OpenAPI generator emits the full {@link BioAssayValueObject} structure; a raw
+     * {@code ResponseDataObject.class} reference in the {@code oneOf} erases it to an untyped object.
+     */
+    public static class ResponseDataObjectListBioAssayValueObject extends ResponseDataObject<List<BioAssayValueObject>> {
+
+        public ResponseDataObjectListBioAssayValueObject( List<BioAssayValueObject> payload ) {
+            super( payload );
+        }
+    }
+
+    /**
+     * Cursor-mode response shape for {@link #getDatasetSamples}. Binds the element type so the generated
+     * schema documents both the {@link BioAssayValueObject} {@code data} array and the cursor envelope.
+     */
+    public static class CursorPaginatedResponseDataObjectBioAssayValueObject extends CursorPaginatedResponseDataObject<BioAssayValueObject> {
+
+        public CursorPaginatedResponseDataObjectBioAssayValueObject( CursorPage<BioAssayValueObject> payload, String[] groupBy ) {
+            super( payload, groupBy );
         }
     }
 }
