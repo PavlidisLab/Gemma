@@ -147,7 +147,7 @@ If something is slow, fix it. Re-engineer if necessary — caching to hide bad c
   - The first `Auditable` argument is the target. SpEL has access to parameters by name (the `-parameters` compile flag is on project-wide), `#result`, `#exception`.
   - Aspects do NOT fire on private or self-invoked methods. To migrate such a callsite, hoist into a co-bean (`*HelperServiceImpl` precedent) and call through the bean.
   - In AOP-less test contexts (`*ServiceTest` wiring the impl directly with no proxy), `verify(auditTrailService).addUpdateEvent(...)` lines become stale after migration — drop them; aspect coverage lives in `AuditedAspectTest`.
-  - Plan in `AUDIT_ADVICE_RETIREMENT_PLAN.md` (repo root).
+  - Plan in `docs/AUDIT_ADVICE_RETIREMENT_PLAN.md`.
 - **No `Co-Authored-By: Claude`** in commit messages on this repo. Overrides global default.
 - **Don't use the phrase "load-bearing"** in commit messages, comments, or memory notes — it has become a crutch. Pick a specific word.
 
@@ -164,10 +164,13 @@ If something is slow, fix it. Re-engineer if necessary — caching to hide bad c
 
 ## Reference docs
 
-- `AUDIT_SYSTEM_AUDIT.md` — full audit-system architecture + migration phases.
-- `AUDIT_PHASE_C_RECCE.md` — bucket-by-bucket migration inventory.
-- `AUDIT_ADVICE_RETIREMENT_PLAN.md` — terminal step for Phase C.
-- `HIBERNATE6_CASCADE_AUDIT.md` — HB6 upgrade cascade audit.
+Working design docs / recces / audits live under `docs/` (see `docs/INDEX.md`); only `README.md`
+and this file stay at the repo root.
+
+- `docs/AUDIT_SYSTEM_AUDIT.md` — full audit-system architecture + migration phases.
+- `docs/AUDIT_PHASE_C_RECCE.md` — bucket-by-bucket migration inventory.
+- `docs/AUDIT_ADVICE_RETIREMENT_PLAN.md` — terminal step for Phase C.
+- `docs/HIBERNATE6_CASCADE_AUDIT.md` — HB6 upgrade cascade audit.
 
 ## Branch context
 
