@@ -2102,6 +2102,104 @@ public class DatasetsWebService {
         return respond( new RenameDatasetResponse( ee.getId(), ee.getShortName() ) );
     }
 
+    @PATCH
+    @Path("/{dataset}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Update the name and/or description of a dataset",
+            description = "Partial update of the curator-editable basics of an ExpressionExperiment: `name` "
+                    + "(the human-readable title) and `description`. A field omitted or null is left "
+                    + "unchanged; a provided `name` must be non-blank. The `short_name` (identity) has its own "
+                    + "admin-only route (`PUT /{dataset}/short-name`). Requires `ACL_SECURABLE_EDIT` on the "
+                    + "dataset. Closes the name/description half of the retired gemma-web `updateBasics`.",
+            security = { @SecurityRequirement(name = "basicAuth"), @SecurityRequirement(name = "cookieAuth") },
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "400", description = "Neither name nor description supplied, or a blank name.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "403", description = "The caller lacks edit permission on the dataset.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<DatasetBasicsResponse> updateDatasetBasics(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Nullable DatasetBasicsUpdateRequest body
+    ) {
+        if ( body == null || ( body.getName() == null && body.getDescription() == null ) ) {
+            throw new BadRequestException( "A request body with a 'name' and/or 'description' is required." );
+        }
+        String name = body.getName() != null ? body.getName().trim() : null;
+        if ( name != null && name.isEmpty() ) {
+            throw new BadRequestException( "name must not be blank." );
+        }
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        boolean changed = expressionExperimentService.updateNameAndDescription( ee, name, body.getDescription() );
+        if ( changed ) {
+            //noinspection deprecation
+            auditTrailService.addUpdateEvent( ee, "Updated dataset basics ("
+                    + ( name != null ? "name" : "" )
+                    + ( name != null && body.getDescription() != null ? " + " : "" )
+                    + ( body.getDescription() != null ? "description" : "" ) + ")" );
+        }
+        return respond( new DatasetBasicsResponse( ee.getId(), ee.getName(), ee.getDescription() ) );
+    }
+
+    /**
+     * Request body for {@link #updateDatasetBasics}. Both fields optional; a null field is left unchanged.
+     */
+    public static class DatasetBasicsUpdateRequest {
+        @Nullable
+        private String name;
+        @Nullable
+        private String description;
+
+        @Nullable
+        public String getName() {
+            return name;
+        }
+
+        public void setName( @Nullable String name ) {
+            this.name = name;
+        }
+
+        @Nullable
+        public String getDescription() {
+            return description;
+        }
+
+        public void setDescription( @Nullable String description ) {
+            this.description = description;
+        }
+    }
+
+    /**
+     * Response body for {@link #updateDatasetBasics} — the persisted name and description after the update.
+     */
+    public static class DatasetBasicsResponse {
+        @com.fasterxml.jackson.annotation.JsonProperty("experiment_id")
+        private final Long experimentId;
+        private final String name;
+        private final String description;
+
+        public DatasetBasicsResponse( Long experimentId, String name, String description ) {
+            this.experimentId = experimentId;
+            this.name = name;
+            this.description = description;
+        }
+
+        public Long getExperimentId() {
+            return experimentId;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+    }
+
     /**
      * Ticket-layer back-end for the legacy {@code troubled} / {@code needsAttention} flips.
      * Opens a ticket of {@code openType} (when {@code on=true} and no matching open ticket exists),

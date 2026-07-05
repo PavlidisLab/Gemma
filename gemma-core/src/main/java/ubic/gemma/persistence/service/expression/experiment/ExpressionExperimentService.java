@@ -1198,6 +1198,21 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
             Collection<BibliographicReference> otherRelevantPublications );
 
     /**
+     * Update the curator-editable "basics" of {@code ee}: its {@code name} (title) and/or
+     * {@code description}. A {@code null} argument leaves that field untouched (partial update); a non-null
+     * argument replaces it. Closes the name/description half of the retired gemma-web {@code updateBasics}
+     * (short_name has its own path; publications moved to {@link #updatePublications}).
+     *
+     * @param ee          the experiment.
+     * @param name        the new name, or {@code null} to leave it unchanged. Must not be blank if provided.
+     * @param description the new description, or {@code null} to leave it unchanged.
+     * @return {@code true} if any field actually changed (so the caller writes an audit event only on a real
+     *         change), {@code false} if the supplied values already matched.
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    boolean updateNameAndDescription( ExpressionExperiment ee, @Nullable String name, @Nullable String description );
+
+    /**
      * Add a single experiment-level tag to {@code ee} as part of the per-tag REST write flow.
      * <p>
      * Distinct from {@link #addCharacteristic(ExpressionExperiment, Characteristic)} in two ways:

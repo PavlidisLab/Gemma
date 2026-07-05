@@ -2053,6 +2053,30 @@ public class ExpressionExperimentServiceImpl
                 + " otherRelevant=" + desiredOther.size() );
     }
 
+    @Override
+    @Transactional
+    public boolean updateNameAndDescription( ExpressionExperiment ee, @Nullable String name, @Nullable String description ) {
+        Assert.isTrue( name != null || description != null, "Provide a name and/or a description to update." );
+        Assert.isTrue( name == null || StringUtils.isNotBlank( name ), "The name must not be blank when provided." );
+
+        ee = ensureInSession( ee );
+
+        boolean changed = false;
+        if ( name != null && !name.equals( ee.getName() ) ) {
+            ee.setName( name );
+            changed = true;
+        }
+        if ( description != null && !description.equals( ee.getDescription() ) ) {
+            ee.setDescription( description );
+            changed = true;
+        }
+        if ( changed ) {
+            update( ee );
+            log.info( "updateNameAndDescription: " + ee.getShortName() + " (ID=" + ee.getId() + ")" );
+        }
+        return changed;
+    }
+
     /**
      * Per-tag REST-write counterpart to {@link #addCharacteristic(ExpressionExperiment, Characteristic)}.
      * <p>

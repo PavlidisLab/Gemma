@@ -3102,6 +3102,53 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         verify( expressionExperimentService, never() ).updatePublications( any(), any(), any() );
     }
 
+    @Test
+    @WithMockUser
+    public void testUpdateDatasetBasics() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.updateNameAndDescription( eq( ee ), eq( "New title" ), eq( "New description" ) ) )
+                .thenReturn( true );
+        String body = "{\"name\":\"New title\",\"description\":\"New description\"}";
+        assertThat( target( "/datasets/1" ).request().method( "PATCH", Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
+        verify( expressionExperimentService ).updateNameAndDescription( ee, "New title", "New description" );
+        verify( auditTrailService ).addUpdateEvent( eq( ee ), anyString() );
+    }
+
+    @Test
+    @WithMockUser
+    public void testUpdateDatasetBasicsDescriptionOnly() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.updateNameAndDescription( eq( ee ), isNull(), eq( "Only desc" ) ) )
+                .thenReturn( true );
+        assertThat( target( "/datasets/1" ).request().method( "PATCH", Entity.json( "{\"description\":\"Only desc\"}" ) ) )
+                .hasStatus( Response.Status.OK );
+        verify( expressionExperimentService ).updateNameAndDescription( ee, null, "Only desc" );
+    }
+
+    @Test
+    @WithMockUser
+    public void testUpdateDatasetBasicsRejectsEmptyBody() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        assertThat( target( "/datasets/1" ).request().method( "PATCH", Entity.json( "{}" ) ) )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        verify( expressionExperimentService, never() ).updateNameAndDescription( any(), any(), any() );
+    }
+
+    @Test
+    @WithMockUser
+    public void testUpdateDatasetBasicsRejectsBlankName() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        assertThat( target( "/datasets/1" ).request().method( "PATCH", Entity.json( "{\"name\":\"   \"}" ) ) )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        verify( expressionExperimentService, never() ).updateNameAndDescription( any(), any(), any() );
+    }
+
     private static class DummyLockedPath implements LockedPath {
 
         private final Path path;
