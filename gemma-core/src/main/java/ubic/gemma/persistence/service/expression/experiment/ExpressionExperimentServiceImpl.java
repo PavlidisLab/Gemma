@@ -2019,6 +2019,41 @@ public class ExpressionExperimentServiceImpl
     }
 
     /**
+     * Replace an EE's primary + other-relevant publications. See the interface javadoc.
+     * <p>
+     * Set-replace: the other-relevant set is cleared and repopulated from {@code otherRelevantPublications}
+     * (skipping any entry that equals the incoming primary, so the primary never doubles as an other-relevant
+     * row), and the primary is set to {@code primaryPublication} (or cleared when null). Persisted through the
+     * inherited {@code update(ee)}, which carries the audit event — matching the legacy
+     * {@code setPrimaryPublication(...) + update(ee)} flow the gemma-web controller and the CLI used.
+     */
+    @Override
+    @Transactional
+    public void updatePublications( ExpressionExperiment ee, BibliographicReference primaryPublication,
+            Collection<BibliographicReference> otherRelevantPublications ) {
+        Assert.notNull( otherRelevantPublications, "The other-relevant-publication set must not be null (use an empty collection to clear)." );
+
+        ee = ensureInSession( ee );
+
+        ee.setPrimaryPublication( primaryPublication );
+
+        Set<BibliographicReference> desiredOther = new HashSet<>();
+        for ( BibliographicReference ref : otherRelevantPublications ) {
+            if ( primaryPublication != null && Objects.equals( ref.getId(), primaryPublication.getId() ) ) {
+                continue;
+            }
+            desiredOther.add( ref );
+        }
+        ee.getOtherRelevantPublications().clear();
+        ee.getOtherRelevantPublications().addAll( desiredOther );
+
+        update( ee );
+        log.info( "updatePublications: " + ee.getShortName() + " (ID=" + ee.getId() + ") primary="
+                + ( primaryPublication != null ? primaryPublication.getId() : "none" )
+                + " otherRelevant=" + desiredOther.size() );
+    }
+
+    /**
      * Per-tag REST-write counterpart to {@link #addCharacteristic(ExpressionExperiment, Characteristic)}.
      * <p>
      * Emits one {@link TagAddedEvent} per call via the {@code @Audited} aspect; rejects duplicates by

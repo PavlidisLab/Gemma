@@ -1178,6 +1178,26 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     int updateAnnotations( ExpressionExperiment ee, Collection<Characteristic> desired );
 
     /**
+     * Replace the publications associated with {@code ee}: set (or clear) its primary publication and
+     * replace its other-relevant-publication set in one shot (idempotent set semantics).
+     * <p>
+     * Mirrors the retired gemma-web {@code ExpressionExperimentController.updatePubMed} /
+     * {@code removePrimaryPublication} pair and the {@code pubmedAssociateToExperiments} CLI, which both
+     * open-coded {@code setPrimaryPublication(...)} + {@code update(ee)}. The caller resolves PubMed ids
+     * to persistent references first (see
+     * {@link ubic.gemma.persistence.service.common.description.BibliographicReferenceService#findOrCreateByPubMedId(String)}).
+     *
+     * @param ee                          the experiment whose publications are being replaced.
+     * @param primaryPublication          the desired primary publication, or {@code null} to clear it.
+     * @param otherRelevantPublications   the desired other-relevant-publication set (may be empty). Any
+     *                                    reference equal to {@code primaryPublication} is ignored so the
+     *                                    primary is not duplicated into the other-relevant set.
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void updatePublications( ExpressionExperiment ee, @Nullable BibliographicReference primaryPublication,
+            Collection<BibliographicReference> otherRelevantPublications );
+
+    /**
      * Add a single experiment-level tag to {@code ee} as part of the per-tag REST write flow.
      * <p>
      * Distinct from {@link #addCharacteristic(ExpressionExperiment, Characteristic)} in two ways:

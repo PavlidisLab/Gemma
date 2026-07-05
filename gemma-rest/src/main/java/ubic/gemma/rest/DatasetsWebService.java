@@ -108,6 +108,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.SampleCorrelationAnalysisEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
+import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
@@ -136,6 +137,7 @@ import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketService;
+import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
@@ -286,6 +288,8 @@ public class DatasetsWebService {
     private FactorValueNeedsAttentionService factorValueNeedsAttentionService;
     @Autowired
     private ExpressionDataDeleterService expressionDataDeleterService;
+    @Autowired
+    private BibliographicReferenceService bibliographicReferenceService;
 
     @Context
     private UriInfo uriInfo;
@@ -1447,6 +1451,102 @@ public class DatasetsWebService {
         List<BibliographicReferenceValueObject> out = datasetArgService.getPublications( datasetArg );
         return respond( out );
 
+    }
+
+    @PUT
+    @Path("/{dataset}/publications")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Replace the publications associated with a dataset",
+            description = "Idempotent set-replace for the dataset's primary and other-relevant publications, "
+                    + "each addressed by PubMed id. `primaryPublication` sets the primary publication, or "
+                    + "clears it when null/omitted; `otherRelevantPublications` replaces the other-relevant "
+                    + "set (an empty list clears it). PubMed ids not already held by Gemma are fetched from "
+                    + "PubMed and persisted on demand; an id with no retrievable PubMed record yields a 400. "
+                    + "A PubMed id given both as the primary and in the other-relevant list is kept only as "
+                    + "the primary. Returns the dataset's full publication list, same shape as the GET. "
+                    + "Requires `ACL_SECURABLE_EDIT` on the dataset. Replaces the retired gemma-web "
+                    + "`updatePubMed` / `removePrimaryPublication` controller methods.",
+            security = { @SecurityRequirement(name = "basicAuth"), @SecurityRequirement(name = "cookieAuth") },
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "400", description = "The request body is missing or malformed, or a PubMed id could not be resolved.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "403", description = "The caller lacks edit permission on the dataset.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<List<BibliographicReferenceValueObject>> updateDatasetPublications(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Nullable PublicationsUpdateRequest body
+    ) {
+        if ( body == null || body.getOtherRelevantPublications() == null ) {
+            throw new BadRequestException( "A request body with an 'otherRelevantPublications' list is required (use an empty list, and a null 'primaryPublication', to clear all publications)." );
+        }
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+
+        BibliographicReference primary = resolvePublication( body.getPrimaryPublication() );
+
+        List<BibliographicReference> other = new ArrayList<>();
+        for ( String pmid : body.getOtherRelevantPublications() ) {
+            BibliographicReference ref = resolvePublication( pmid );
+            if ( ref == null ) {
+                throw new BadRequestException( "Each entry in 'otherRelevantPublications' must be a non-blank PubMed id." );
+            }
+            other.add( ref );
+        }
+
+        expressionExperimentService.updatePublications( ee, primary, other );
+        return respond( datasetArgService.getPublications( datasetArg ) );
+    }
+
+    /**
+     * Resolve a wire PubMed id to a persistent {@link BibliographicReference}, fetching from PubMed when
+     * necessary. A blank / null id resolves to {@code null} (i.e. "no publication"). A well-formed id
+     * with no retrievable PubMed record is surfaced as a {@code 400} rather than a {@code 500}.
+     */
+    @Nullable
+    private BibliographicReference resolvePublication( @Nullable String pubMedId ) {
+        if ( StringUtils.isBlank( pubMedId ) ) {
+            return null;
+        }
+        try {
+            return bibliographicReferenceService.findOrCreateByPubMedId( pubMedId.trim() );
+        } catch ( IllegalStateException | IllegalArgumentException e ) {
+            throw new BadRequestException( "Could not resolve PubMed id '" + pubMedId + "': " + e.getMessage() );
+        }
+    }
+
+    /**
+     * Request body for {@link #updateDatasetPublications}. Publications are addressed by PubMed id;
+     * {@code primaryPublication} may be null (clears the primary), {@code otherRelevantPublications} may
+     * be an empty list (clears the other-relevant set). Symmetric with the {@link #getDatasetAllPublications}
+     * read, except the read returns full {@link BibliographicReferenceValueObject}s (the PubMed id is on
+     * each VO's {@code pubAccession}).
+     */
+    public static class PublicationsUpdateRequest {
+        @Nullable
+        private String primaryPublication;
+        @Nullable
+        private List<String> otherRelevantPublications;
+
+        @Nullable
+        public String getPrimaryPublication() {
+            return primaryPublication;
+        }
+
+        public void setPrimaryPublication( @Nullable String primaryPublication ) {
+            this.primaryPublication = primaryPublication;
+        }
+
+        @Nullable
+        public List<String> getOtherRelevantPublications() {
+            return otherRelevantPublications;
+        }
+
+        public void setOtherRelevantPublications( @Nullable List<String> otherRelevantPublications ) {
+            this.otherRelevantPublications = otherRelevantPublications;
+        }
     }
 
     @GET

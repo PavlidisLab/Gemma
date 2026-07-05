@@ -369,10 +369,18 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         public ubic.gemma.core.analysis.service.ExpressionDataDeleterService expressionDataDeleterService() {
             return mock( ubic.gemma.core.analysis.service.ExpressionDataDeleterService.class );
         }
+
+        @Bean
+        public ubic.gemma.persistence.service.common.description.BibliographicReferenceService bibliographicReferenceService() {
+            return mock( ubic.gemma.persistence.service.common.description.BibliographicReferenceService.class );
+        }
     }
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
+
+    @Autowired
+    private ubic.gemma.persistence.service.common.description.BibliographicReferenceService bibliographicReferenceService;
 
     @Autowired
     private QuantitationTypeService quantitationTypeService;
@@ -2987,6 +2995,81 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
                 .entity()
                 .hasFieldOrProperty( "data" );
+    }
+
+    @Test
+    @WithMockUser
+    public void testUpdateDatasetPublications() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.loadWithPrimaryPublicationAndOtherRelevantPublications( 1L ) ).thenReturn( ee );
+        BibliographicReference prim = new BibliographicReference();
+        prim.setId( 10L );
+        BibliographicReference other = new BibliographicReference();
+        other.setId( 20L );
+        when( bibliographicReferenceService.findOrCreateByPubMedId( "111" ) ).thenReturn( prim );
+        when( bibliographicReferenceService.findOrCreateByPubMedId( "222" ) ).thenReturn( other );
+
+        String body = "{\"primaryPublication\":\"111\",\"otherRelevantPublications\":[\"222\"]}";
+        assertThat( target( "/datasets/1/publications" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
+
+        verify( bibliographicReferenceService ).findOrCreateByPubMedId( "111" );
+        verify( bibliographicReferenceService ).findOrCreateByPubMedId( "222" );
+        ArgumentCaptor<Collection<BibliographicReference>> captor = ArgumentCaptor.forClass( Collection.class );
+        verify( expressionExperimentService ).updatePublications( eq( ee ), eq( prim ), captor.capture() );
+        assertThat( captor.getValue() ).containsExactly( other );
+    }
+
+    @Test
+    @WithMockUser
+    public void testUpdateDatasetPublicationsClearAll() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.loadWithPrimaryPublicationAndOtherRelevantPublications( 1L ) ).thenReturn( ee );
+
+        String body = "{\"primaryPublication\":null,\"otherRelevantPublications\":[]}";
+        assertThat( target( "/datasets/1/publications" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+
+        verify( expressionExperimentService ).updatePublications( eq( ee ), isNull(), argThat( Collection::isEmpty ) );
+        verifyNoInteractions( bibliographicReferenceService );
+    }
+
+    @Test
+    @WithMockUser
+    public void testUpdateDatasetPublicationsMissingOtherList() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        // empty object -- otherRelevantPublications is null, which is rejected to avoid silently wiping publications
+        assertThat( target( "/datasets/1/publications" ).request().put( Entity.json( "{}" ) ) )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        verify( expressionExperimentService, never() ).updatePublications( any(), any(), any() );
+    }
+
+    @Test
+    @WithMockUser
+    public void testUpdateDatasetPublicationsRejectsBlankPubMedId() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        String body = "{\"otherRelevantPublications\":[\"  \"]}";
+        assertThat( target( "/datasets/1/publications" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        verify( expressionExperimentService, never() ).updatePublications( any(), any(), any() );
+    }
+
+    @Test
+    @WithMockUser
+    public void testUpdateDatasetPublicationsUnresolvablePubMedIdIsBadRequest() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( bibliographicReferenceService.findOrCreateByPubMedId( "999" ) )
+                .thenThrow( new IllegalStateException( "No PubMed record found for id=999." ) );
+        String body = "{\"primaryPublication\":\"999\",\"otherRelevantPublications\":[]}";
+        assertThat( target( "/datasets/1/publications" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        verify( expressionExperimentService, never() ).updatePublications( any(), any(), any() );
     }
 
     private static class DummyLockedPath implements LockedPath {

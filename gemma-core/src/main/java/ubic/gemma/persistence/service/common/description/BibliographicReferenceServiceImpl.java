@@ -115,6 +115,30 @@ public class BibliographicReferenceServiceImpl
     }
 
     @Override
+    @Transactional
+    public BibliographicReference findOrCreateByPubMedId( String pubMedId ) {
+        if ( StringUtils.isBlank( pubMedId ) ) {
+            throw new IllegalArgumentException( "Must provide a PubMed ID." );
+        }
+        BibliographicReference existing = bibliographicReferenceReadService.findByExternalId( pubMedId, ExternalDatabases.PUBMED );
+        if ( existing != null ) {
+            return existing;
+        }
+        BibliographicReference fresh;
+        try {
+            fresh = this.pubMedXmlFetcher.retrieve( pubMedId );
+        } catch ( IOException e ) {
+            throw new IllegalStateException( "Unable to retrieve record from PubMed for id=" + pubMedId, e );
+        }
+        if ( fresh == null || fresh.getPublicationDate() == null ) {
+            throw new IllegalStateException( "No PubMed record found for id=" + pubMedId + "." );
+        }
+        // retrieve() populates the pubAccession with a transient PubMed ExternalDatabase; findOrCreate
+        // resolves that XDB before delegating to the DAO (see findOrCreate above).
+        return findOrCreate( fresh );
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public BibliographicReferenceValueObject loadValueObject( BibliographicReference entity ) {
         return this.loadMultipleValueObjectsFromObjects( Collections.singleton( entity ) ).iterator().next();

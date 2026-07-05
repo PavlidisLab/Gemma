@@ -60,6 +60,21 @@ public interface BibliographicReferenceService
     @Secured({ "GROUP_USER" })
     BibliographicReference findOrCreate( BibliographicReference BibliographicReference );
 
+    /**
+     * Resolve a PubMed id to a persistent {@link BibliographicReference}, fetching it from PubMed and
+     * persisting it when it is not already in the system.
+     * <p>
+     * Encapsulates the find-or-fetch dance that {@code UpdatePubMedCli} and the retired gemma-web
+     * {@code ExpressionExperimentController.updatePubMed} both open-coded: look up by external id first,
+     * otherwise retrieve the record over the wire and {@link #findOrCreate(BibliographicReference)} it.
+     *
+     * @param pubMedId a PubMed id (must be non-blank).
+     * @return the persistent reference for {@code pubMedId}.
+     * @throws IllegalStateException if no record can be retrieved from PubMed for {@code pubMedId}.
+     */
+    @Secured({ "GROUP_USER" })
+    BibliographicReference findOrCreateByPubMedId( String pubMedId );
+
     @Override
     @Secured({ "GROUP_USER" })
     BibliographicReference create( BibliographicReference bibliographicReference );
