@@ -473,7 +473,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
 
     @AfterEach
     public void resetMocks() {
-        reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService, taxonArgService, geneArgService, searchService, auditEventService, auditTrailService, securityService, geeqService, taskRunningService, differentialExpressionAnalysisService, userManager, ticketService, sampleCoexpressionAnalysisService, svdService, processedExpressionDataVectorService, expressionExperimentReportService, arrayDesignService );
+        reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService, taxonArgService, geneArgService, searchService, auditEventService, auditTrailService, securityService, geeqService, taskRunningService, differentialExpressionAnalysisService, userManager, ticketService, sampleCoexpressionAnalysisService, svdService, processedExpressionDataVectorService, expressionExperimentReportService, arrayDesignService, bibliographicReferenceService );
     }
 
     @Test
@@ -3010,7 +3010,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         when( bibliographicReferenceService.findOrCreateByPubMedId( "111" ) ).thenReturn( prim );
         when( bibliographicReferenceService.findOrCreateByPubMedId( "222" ) ).thenReturn( other );
 
-        String body = "{\"primaryPublication\":\"111\",\"otherRelevantPublications\":[\"222\"]}";
+        String body = "{\"primaryPublication\":{\"pubMedId\":\"111\"},\"otherRelevantPublications\":[{\"pubMedId\":\"222\"}]}";
         assertThat( target( "/datasets/1/publications" ).request().put( Entity.json( body ) ) )
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
@@ -3020,6 +3020,36 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         ArgumentCaptor<Collection<BibliographicReference>> captor = ArgumentCaptor.forClass( Collection.class );
         verify( expressionExperimentService ).updatePublications( eq( ee ), eq( prim ), captor.capture() );
         assertThat( captor.getValue() ).containsExactly( other );
+    }
+
+    @Test
+    @WithMockUser
+    public void testUpdateDatasetPublicationsByDoi() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.loadWithPrimaryPublicationAndOtherRelevantPublications( 1L ) ).thenReturn( ee );
+        BibliographicReference preprint = new BibliographicReference();
+        preprint.setId( 30L );
+        when( bibliographicReferenceService.findOrCreateByDoi( "10.1101/2025.01.02.634567" ) ).thenReturn( preprint );
+
+        String body = "{\"primaryPublication\":{\"doi\":\"10.1101/2025.01.02.634567\"},\"otherRelevantPublications\":[]}";
+        assertThat( target( "/datasets/1/publications" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+
+        verify( bibliographicReferenceService ).findOrCreateByDoi( "10.1101/2025.01.02.634567" );
+        verify( expressionExperimentService ).updatePublications( eq( ee ), eq( preprint ), argThat( Collection::isEmpty ) );
+    }
+
+    @Test
+    @WithMockUser
+    public void testUpdateDatasetPublicationsRejectsBothPubMedIdAndDoi() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        String body = "{\"primaryPublication\":{\"pubMedId\":\"111\",\"doi\":\"10.1101/x\"},\"otherRelevantPublications\":[]}";
+        assertThat( target( "/datasets/1/publications" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        verify( expressionExperimentService, never() ).updatePublications( any(), any(), any() );
+        verifyNoInteractions( bibliographicReferenceService );
     }
 
     @Test
@@ -3053,7 +3083,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
     public void testUpdateDatasetPublicationsRejectsBlankPubMedId() {
         ee.setId( 1L );
         when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
-        String body = "{\"otherRelevantPublications\":[\"  \"]}";
+        String body = "{\"otherRelevantPublications\":[{\"pubMedId\":\"  \"}]}";
         assertThat( target( "/datasets/1/publications" ).request().put( Entity.json( body ) ) )
                 .hasStatus( Response.Status.BAD_REQUEST );
         verify( expressionExperimentService, never() ).updatePublications( any(), any(), any() );
@@ -3066,7 +3096,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
         when( bibliographicReferenceService.findOrCreateByPubMedId( "999" ) )
                 .thenThrow( new IllegalStateException( "No PubMed record found for id=999." ) );
-        String body = "{\"primaryPublication\":\"999\",\"otherRelevantPublications\":[]}";
+        String body = "{\"primaryPublication\":{\"pubMedId\":\"999\"},\"otherRelevantPublications\":[]}";
         assertThat( target( "/datasets/1/publications" ).request().put( Entity.json( body ) ) )
                 .hasStatus( Response.Status.BAD_REQUEST );
         verify( expressionExperimentService, never() ).updatePublications( any(), any(), any() );

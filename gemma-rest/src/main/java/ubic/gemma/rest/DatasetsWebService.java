@@ -1458,15 +1458,20 @@ public class DatasetsWebService {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Replace the publications associated with a dataset",
-            description = "Idempotent set-replace for the dataset's primary and other-relevant publications, "
-                    + "each addressed by PubMed id. `primaryPublication` sets the primary publication, or "
-                    + "clears it when null/omitted; `otherRelevantPublications` replaces the other-relevant "
-                    + "set (an empty list clears it). PubMed ids not already held by Gemma are fetched from "
-                    + "PubMed and persisted on demand; an id with no retrievable PubMed record yields a 400. "
-                    + "A PubMed id given both as the primary and in the other-relevant list is kept only as "
+            description = "Idempotent set-replace for the dataset's primary and other-relevant publications. "
+                    + "Each publication is a typed identifier object carrying exactly one of `pubMedId` or "
+                    + "`doi`, e.g. `{\"pubMedId\":\"22438826\"}` or `{\"doi\":\"10.1101/2025.01.02.634567\"}`. "
+                    + "`primaryPublication` sets the primary publication, or clears it when null/omitted; "
+                    + "`otherRelevantPublications` replaces the other-relevant set (an empty list clears it, "
+                    + "and the field is required so a partial body can't silently wipe publications). "
+                    + "Identifiers not already held by Gemma are fetched and persisted on demand: PubMed ids "
+                    + "from PubMed; DOIs via PubMed-by-DOI then CrossRef (which covers bioRxiv / medRxiv "
+                    + "preprints PubMed doesn't index). An identifier that resolves nowhere yields a 400. "
+                    + "A publication given both as the primary and in the other-relevant list is kept only as "
                     + "the primary. Returns the dataset's full publication list, same shape as the GET. "
                     + "Requires `ACL_SECURABLE_EDIT` on the dataset. Replaces the retired gemma-web "
-                    + "`updatePubMed` / `removePrimaryPublication` controller methods.",
+                    + "`updatePubMed` / `removePrimaryPublication` controller methods, and the workaround of "
+                    + "noting a preprint in a curation comment.",
             security = { @SecurityRequirement(name = "basicAuth"), @SecurityRequirement(name = "cookieAuth") },
             responses = {
                     @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
@@ -1488,10 +1493,10 @@ public class DatasetsWebService {
         BibliographicReference primary = resolvePublication( body.getPrimaryPublication() );
 
         List<BibliographicReference> other = new ArrayList<>();
-        for ( String pmid : body.getOtherRelevantPublications() ) {
-            BibliographicReference ref = resolvePublication( pmid );
+        for ( PublicationIdentifier id : body.getOtherRelevantPublications() ) {
+            BibliographicReference ref = resolvePublication( id );
             if ( ref == null ) {
-                throw new BadRequestException( "Each entry in 'otherRelevantPublications' must be a non-blank PubMed id." );
+                throw new BadRequestException( "Each entry in 'otherRelevantPublications' must carry a non-blank 'pubMedId' or 'doi'." );
             }
             other.add( ref );
         }
@@ -1501,51 +1506,95 @@ public class DatasetsWebService {
     }
 
     /**
-     * Resolve a wire PubMed id to a persistent {@link BibliographicReference}, fetching from PubMed when
-     * necessary. A blank / null id resolves to {@code null} (i.e. "no publication"). A well-formed id
-     * with no retrievable PubMed record is surfaced as a {@code 400} rather than a {@code 500}.
+     * Resolve a wire {@link PublicationIdentifier} to a persistent {@link BibliographicReference}, fetching
+     * from PubMed or CrossRef when necessary. A null / empty identifier resolves to {@code null} (i.e. "no
+     * publication"). An identifier that names both a PubMed id and a DOI, or one whose id can't be resolved,
+     * is surfaced as a {@code 400} rather than a {@code 500}.
      */
     @Nullable
-    private BibliographicReference resolvePublication( @Nullable String pubMedId ) {
-        if ( StringUtils.isBlank( pubMedId ) ) {
+    private BibliographicReference resolvePublication( @Nullable PublicationIdentifier id ) {
+        if ( id == null ) {
+            return null;
+        }
+        boolean hasPubMed = StringUtils.isNotBlank( id.getPubMedId() );
+        boolean hasDoi = StringUtils.isNotBlank( id.getDoi() );
+        if ( hasPubMed && hasDoi ) {
+            throw new BadRequestException( "A publication identifier must carry exactly one of 'pubMedId' or 'doi', not both." );
+        }
+        if ( !hasPubMed && !hasDoi ) {
             return null;
         }
         try {
-            return bibliographicReferenceService.findOrCreateByPubMedId( pubMedId.trim() );
+            return hasPubMed
+                    ? bibliographicReferenceService.findOrCreateByPubMedId( id.getPubMedId().trim() )
+                    : bibliographicReferenceService.findOrCreateByDoi( id.getDoi().trim() );
         } catch ( IllegalStateException | IllegalArgumentException e ) {
-            throw new BadRequestException( "Could not resolve PubMed id '" + pubMedId + "': " + e.getMessage() );
+            throw new BadRequestException( "Could not resolve publication "
+                    + ( hasPubMed ? "PubMed id '" + id.getPubMedId() + "'" : "DOI '" + id.getDoi() + "'" )
+                    + ": " + e.getMessage() );
         }
     }
 
     /**
-     * Request body for {@link #updateDatasetPublications}. Publications are addressed by PubMed id;
-     * {@code primaryPublication} may be null (clears the primary), {@code otherRelevantPublications} may
-     * be an empty list (clears the other-relevant set). Symmetric with the {@link #getDatasetAllPublications}
-     * read, except the read returns full {@link BibliographicReferenceValueObject}s (the PubMed id is on
-     * each VO's {@code pubAccession}).
+     * Request body for {@link #updateDatasetPublications}. Publications are addressed by
+     * {@link PublicationIdentifier} (PubMed id or DOI); {@code primaryPublication} may be null (clears the
+     * primary), {@code otherRelevantPublications} may be an empty list (clears the other-relevant set).
+     * Symmetric with the {@link #getDatasetAllPublications} read, which returns full
+     * {@link BibliographicReferenceValueObject}s (the identifier is on each VO's {@code pubAccession}).
      */
     public static class PublicationsUpdateRequest {
         @Nullable
-        private String primaryPublication;
+        private PublicationIdentifier primaryPublication;
         @Nullable
-        private List<String> otherRelevantPublications;
+        private List<PublicationIdentifier> otherRelevantPublications;
 
         @Nullable
-        public String getPrimaryPublication() {
+        public PublicationIdentifier getPrimaryPublication() {
             return primaryPublication;
         }
 
-        public void setPrimaryPublication( @Nullable String primaryPublication ) {
+        public void setPrimaryPublication( @Nullable PublicationIdentifier primaryPublication ) {
             this.primaryPublication = primaryPublication;
         }
 
         @Nullable
-        public List<String> getOtherRelevantPublications() {
+        public List<PublicationIdentifier> getOtherRelevantPublications() {
             return otherRelevantPublications;
         }
 
-        public void setOtherRelevantPublications( @Nullable List<String> otherRelevantPublications ) {
+        public void setOtherRelevantPublications( @Nullable List<PublicationIdentifier> otherRelevantPublications ) {
             this.otherRelevantPublications = otherRelevantPublications;
+        }
+    }
+
+    /**
+     * A single publication on the {@link #updateDatasetPublications} wire, carrying exactly one of
+     * {@code pubMedId} or {@code doi}. DOIs may be given bare ({@code 10.x/…}), as a {@code doi.org} URL, or
+     * {@code doi:}-prefixed; a DOI not indexed by PubMed is resolved via CrossRef (covers bioRxiv / medRxiv
+     * preprints). Manual metadata entry (title/authors) is intentionally not accepted here yet.
+     */
+    public static class PublicationIdentifier {
+        @Nullable
+        private String pubMedId;
+        @Nullable
+        private String doi;
+
+        @Nullable
+        public String getPubMedId() {
+            return pubMedId;
+        }
+
+        public void setPubMedId( @Nullable String pubMedId ) {
+            this.pubMedId = pubMedId;
+        }
+
+        @Nullable
+        public String getDoi() {
+            return doi;
+        }
+
+        public void setDoi( @Nullable String doi ) {
+            this.doi = doi;
         }
     }
 

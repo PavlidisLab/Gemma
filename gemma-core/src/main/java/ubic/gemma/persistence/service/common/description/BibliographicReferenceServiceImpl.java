@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.core.loader.crossref.CrossRefFetcher;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -80,6 +81,8 @@ public class BibliographicReferenceServiceImpl
 
     private PubMedSearch pubMedXmlFetcher;
 
+    private CrossRefFetcher crossRefFetcher;
+
     @Autowired
     public BibliographicReferenceServiceImpl( BibliographicReferenceDao bibliographicReferenceDao ) {
         super( bibliographicReferenceDao );
@@ -89,6 +92,7 @@ public class BibliographicReferenceServiceImpl
     @Override
     public void afterPropertiesSet() throws Exception {
         this.pubMedXmlFetcher = new PubMedSearch( ncbiApiKey );
+        this.crossRefFetcher = new CrossRefFetcher();
     }
 
     /**
@@ -136,6 +140,60 @@ public class BibliographicReferenceServiceImpl
         // retrieve() populates the pubAccession with a transient PubMed ExternalDatabase; findOrCreate
         // resolves that XDB before delegating to the DAO (see findOrCreate above).
         return findOrCreate( fresh );
+    }
+
+    @Override
+    @Transactional
+    public BibliographicReference findOrCreateByDoi( String doi ) {
+        if ( StringUtils.isBlank( doi ) ) {
+            throw new IllegalArgumentException( "Must provide a DOI." );
+        }
+        String normalized = normalizeDoi( doi );
+
+        // (1) already stored under the DOI namespace?
+        BibliographicReference existing = bibliographicReferenceReadService.findByExternalId( normalized, ExternalDatabases.DOI );
+        if ( existing != null ) {
+            return existing;
+        }
+
+        // (2) PubMed-by-DOI — covers DOIs NCBI indexes; yields the richer PubMed record (keyed by PMID).
+        try {
+            Collection<BibliographicReference> fromPubMed = pubMedXmlFetcher.searchAndRetrieveByDoi( normalized );
+            if ( fromPubMed != null && !fromPubMed.isEmpty() ) {
+                return findOrCreate( fromPubMed.iterator().next() );
+            }
+        } catch ( IOException e ) {
+            log.warn( "PubMed-by-DOI lookup failed for " + normalized + ", falling back to CrossRef.", e );
+        }
+
+        // (3) CrossRef — covers the rest, notably bioRxiv / medRxiv preprints.
+        BibliographicReference fromCrossRef;
+        try {
+            fromCrossRef = crossRefFetcher.retrieveByDoi( normalized );
+        } catch ( IOException e ) {
+            throw new IllegalStateException( "Unable to retrieve record from CrossRef for DOI=" + normalized, e );
+        }
+        if ( fromCrossRef == null ) {
+            throw new IllegalStateException( "No PubMed or CrossRef record found for DOI=" + normalized + "." );
+        }
+        return findOrCreate( fromCrossRef );
+    }
+
+    /**
+     * Reduce a DOI in any common form ({@code https://doi.org/…}, {@code http://dx.doi.org/…},
+     * {@code doi:…}) to its bare, lower-cased form. Mirrors the stripping in
+     * {@link PubMedSearch#searchAndRetrieveByDoi(String)} so the same DOI resolves and stores identically
+     * whichever way a curator pastes it.
+     */
+    static String normalizeDoi( String doi ) {
+        String d = doi.trim();
+        for ( String prefix : new String[] { "https://doi.org/", "http://doi.org/", "https://dx.doi.org/", "http://dx.doi.org/", "doi:" } ) {
+            if ( StringUtils.startsWithIgnoreCase( d, prefix ) ) {
+                d = d.substring( prefix.length() );
+                break;
+            }
+        }
+        return d.toLowerCase();
     }
 
     @Override

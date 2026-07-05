@@ -75,6 +75,23 @@ public interface BibliographicReferenceService
     @Secured({ "GROUP_USER" })
     BibliographicReference findOrCreateByPubMedId( String pubMedId );
 
+    /**
+     * Resolve a DOI to a persistent {@link BibliographicReference}, fetching it when necessary.
+     * <p>
+     * Resolution order: (1) an existing DOI-keyed reference already in Gemma; (2) PubMed-by-DOI
+     * (covers DOIs NCBI indexes — yields the richer PubMed record); (3) CrossRef by DOI (covers the
+     * rest, notably bioRxiv / medRxiv preprints PubMed does not carry). This is what lets a preprint be
+     * attached to an experiment instead of being noted in a free-text comment.
+     *
+     * @param doi a DOI in any common form ({@code 10.x/…}, {@code https://doi.org/…}, {@code doi:…});
+     *            normalized internally.
+     * @return the persistent reference for {@code doi}.
+     * @throws IllegalStateException if the DOI resolves via neither PubMed nor CrossRef. (Manual entry
+     *                               of such a reference is intentionally not supported here yet.)
+     */
+    @Secured({ "GROUP_USER" })
+    BibliographicReference findOrCreateByDoi( String doi );
+
     @Override
     @Secured({ "GROUP_USER" })
     BibliographicReference create( BibliographicReference bibliographicReference );
