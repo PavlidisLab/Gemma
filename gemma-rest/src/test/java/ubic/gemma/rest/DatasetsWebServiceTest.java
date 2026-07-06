@@ -3200,10 +3200,129 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
     public void testCommitCurationRejectsUnsupportedSection() {
         ee.setId( 1L );
         when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
-        String body = "{\"design\":{\"factors\":{\"items\":[]}}}";
+        // `design` is supported now; `tags` is not yet.
+        String body = "{\"tags\":{\"items\":[]}}";
         assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) )
                 .hasStatus( Response.Status.BAD_REQUEST );
         verify( expressionExperimentService, never() ).commitCuration( any(), any(), anyBoolean() );
+    }
+
+    /** Build a minimal current design VO with the given existing factor ids (no FVs, no assignments). */
+    private ubic.gemma.model.expression.experiment.ExperimentalDesignValueObject currentDesign( Long... factorIds ) {
+        ubic.gemma.model.expression.experiment.ExperimentalDesignValueObject d =
+                new ubic.gemma.model.expression.experiment.ExperimentalDesignValueObject();
+        d.setId( 3L );
+        List<ubic.gemma.model.expression.experiment.ExperimentalDesignValueObject.ExperimentalFactorEntry> factors = new ArrayList<>();
+        for ( Long id : factorIds ) {
+            ubic.gemma.model.expression.experiment.ExperimentalDesignValueObject.ExperimentalFactorEntry f =
+                    new ubic.gemma.model.expression.experiment.ExperimentalDesignValueObject.ExperimentalFactorEntry();
+            f.setId( id );
+            f.setName( "factor" + id );
+            factors.add( f );
+        }
+        d.setExperimentalFactors( factors );
+        return d;
+    }
+
+    @Test
+    @WithMockUser
+    public void testCommitCurationDesignCreatesFactor() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.getExperimentalDesignValueObject( ee ) ).thenReturn( currentDesign( 5L ) );
+        when( expressionExperimentService.thawBioAssays( ee ) ).thenReturn( ee );
+        when( expressionExperimentService.previewDesignChange( eq( ee ), any() ) )
+                .thenReturn( new ubic.gemma.model.expression.experiment.DesignPreflightReport() );
+        ubic.gemma.persistence.service.expression.experiment.CurationCommitResult res =
+                new ubic.gemma.persistence.service.expression.experiment.CurationCommitResult();
+        res.setDesignCreated( 1 );
+        res.setDesignIdMap( java.util.Map.of( "f1", 7L ) );
+        when( expressionExperimentService.commitCuration( eq( ee ), any(), eq( false ) ) ).thenReturn( res );
+
+        String body = "{\"design\":{\"factors\":{\"items\":[{\"clientRef\":\"f1\",\"name\":\"genotype\","
+                + "\"category\":{\"label\":\"genotype\"},\"factorValues\":{\"items\":[{\"clientRef\":\"fv1\","
+                + "\"freeTextLabel\":\"WT\"}]}}]}}}";
+        assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+
+        ArgumentCaptor<ubic.gemma.persistence.service.expression.experiment.CurationCommitRequest> cap =
+                ArgumentCaptor.forClass( ubic.gemma.persistence.service.expression.experiment.CurationCommitRequest.class );
+        verify( expressionExperimentService ).commitCuration( eq( ee ), cap.capture(), eq( false ) );
+        ubic.gemma.persistence.service.expression.experiment.CurationCommitRequest req = cap.getValue();
+        assertThat( req.isDesignPresent() ).isTrue();
+        // The new factor (id null) plus the carried-forward existing factor 5.
+        List<ubic.gemma.model.expression.experiment.ExperimentalDesignValueObject.ExperimentalFactorEntry> factors =
+                req.getProposedDesign().getExperimentalFactors();
+        assertThat( factors ).hasSize( 2 );
+        assertThat( factors ).anyMatch( f -> f.getId() == null && "genotype".equals( f.getName() ) );
+        assertThat( factors ).anyMatch( f -> Long.valueOf( 5L ).equals( f.getId() ) );
+        assertThat( req.getDesignPlan().getNewFactorClientRefs() ).containsExactly( "f1" );
+    }
+
+    @Test
+    @WithMockUser
+    public void testCommitCurationDesignDeletesByDeletedIds() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.getExperimentalDesignValueObject( ee ) ).thenReturn( currentDesign( 5L, 6L ) );
+        when( expressionExperimentService.thawBioAssays( ee ) ).thenReturn( ee );
+        when( expressionExperimentService.previewDesignChange( eq( ee ), any() ) )
+                .thenReturn( new ubic.gemma.model.expression.experiment.DesignPreflightReport() );
+        when( expressionExperimentService.commitCuration( eq( ee ), any(), eq( false ) ) )
+                .thenReturn( new ubic.gemma.persistence.service.expression.experiment.CurationCommitResult() );
+
+        String body = "{\"design\":{\"factors\":{\"items\":[],\"deletedIds\":[6]}}}";
+        assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+
+        ArgumentCaptor<ubic.gemma.persistence.service.expression.experiment.CurationCommitRequest> cap =
+                ArgumentCaptor.forClass( ubic.gemma.persistence.service.expression.experiment.CurationCommitRequest.class );
+        verify( expressionExperimentService ).commitCuration( eq( ee ), cap.capture(), eq( false ) );
+        List<ubic.gemma.model.expression.experiment.ExperimentalDesignValueObject.ExperimentalFactorEntry> factors =
+                cap.getValue().getProposedDesign().getExperimentalFactors();
+        // Deleted factor 6 is omitted (deleted by absence); untouched factor 5 is carried forward.
+        assertThat( factors ).hasSize( 1 );
+        assertThat( factors.get( 0 ).getId() ).isEqualTo( 5L );
+    }
+
+    @Test
+    @WithMockUser
+    public void testCommitCurationDesignForceGateIs409() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.getExperimentalDesignValueObject( ee ) ).thenReturn( currentDesign( 5L ) );
+        when( expressionExperimentService.thawBioAssays( ee ) ).thenReturn( ee );
+        ubic.gemma.model.expression.experiment.DesignPreflightReport report =
+                new ubic.gemma.model.expression.experiment.DesignPreflightReport();
+        report.getDifferentialExpressionAnalysesToDelete()
+                .add( new ubic.gemma.model.expression.experiment.DesignPreflightReport.AnalysisRef( 1L, "dea", null ) );
+        when( expressionExperimentService.previewDesignChange( eq( ee ), any() ) ).thenReturn( report );
+
+        String body = "{\"design\":{\"factors\":{\"items\":[{\"gemmaId\":5,\"name\":\"f\",\"category\":{\"label\":\"g\"}}]}}}";
+        // No ?force and non-admin → 409, and nothing is committed.
+        assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.CONFLICT );
+        verify( expressionExperimentService, never() ).commitCuration( any(), any(), anyBoolean() );
+    }
+
+    @Test
+    @WithMockUser
+    public void testPreflightCurationDesignIsDryRun() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.getExperimentalDesignValueObject( ee ) ).thenReturn( currentDesign( 5L ) );
+        when( expressionExperimentService.thawBioAssays( ee ) ).thenReturn( ee );
+        when( expressionExperimentService.previewDesignChange( eq( ee ), any() ) )
+                .thenReturn( new ubic.gemma.model.expression.experiment.DesignPreflightReport() );
+        when( expressionExperimentService.commitCuration( eq( ee ), any(), eq( true ) ) )
+                .thenReturn( new ubic.gemma.persistence.service.expression.experiment.CurationCommitResult() );
+
+        String body = "{\"design\":{\"factors\":{\"items\":[{\"gemmaId\":5,\"name\":\"f\",\"category\":{\"label\":\"g\"}}]}}}";
+        assertThat( target( "/datasets/1/curation/preflight" ).request().post( Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+        // Dry run: the service is invoked with dryRun=true and no real commit path runs.
+        verify( expressionExperimentService ).commitCuration( eq( ee ), any(), eq( true ) );
+        verify( expressionExperimentService, never() ).commitCuration( any(), any(), eq( false ) );
     }
 
     @Test

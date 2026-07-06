@@ -19,6 +19,8 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.ConfigAttribute;
@@ -126,6 +128,15 @@ public class ExpressionExperimentServiceImpl
     private ubic.gemma.persistence.service.common.description.CharacteristicService characteristicService;
     @Autowired
     private ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService auditTrailService;
+    /**
+     * Self-reference through the Spring proxy. Used by {@link #commitCuration} to invoke
+     * {@link #applyDesignChange} so its {@code @AuditedConditional} aspect still fires — a same-class
+     * {@code this.applyDesignChange(...)} would join the transaction but bypass the proxy (and thus the audit).
+     * {@code @Lazy} avoids a circular-init failure on the self-injection.
+     */
+    @Autowired
+    @Lazy
+    private ExpressionExperimentService self;
 
     @Autowired
     public ExpressionExperimentServiceImpl( ExpressionExperimentDao expressionExperimentDao ) {
@@ -1148,6 +1159,10 @@ public class ExpressionExperimentServiceImpl
                     //noinspection deprecation
                     existing.setValue( pv.getValue() );
                 }
+                // Baseline flag: null = "no change" (same round-trip-safe convention as `value`).
+                if ( pv.getBaseline() != null ) {
+                    existing.setIsBaseline( pv.getBaseline() );
+                }
             }
         }
     }
@@ -1191,6 +1206,9 @@ public class ExpressionExperimentServiceImpl
         if ( pv.getValue() != null ) {
             //noinspection deprecation
             fv.setValue( pv.getValue() );
+        }
+        if ( pv.getBaseline() != null ) {
+            fv.setIsBaseline( pv.getBaseline() );
         }
         if ( pv.getStatements() != null ) {
             for ( StatementValueObject ps : pv.getStatements() ) {
@@ -2179,12 +2197,203 @@ public class ExpressionExperimentServiceImpl
             anyChange = anyChange || ( created > 0 || deleted > 0 );
         }
 
+        // ── design (factors → factor-values → statements) ──
+        // The web layer already mapped CAB's declared-delete DesignCommit onto a COMPLETE
+        // ExperimentalDesignValueObject (carry-forward untouched + delta) and gated blockers (400) / force (409),
+        // so here we just apply through the shipped replace-by-absence path. Two passes handle sample assignments
+        // to brand-new factor values, whose ids don't exist until the first pass creates them.
+        if ( request.isDesignPresent() && request.getProposedDesign() != null ) {
+            ExperimentalDesignValueObject edvo1 = request.getProposedDesign();
+            if ( dryRun ) {
+                DesignPreflightReport.Summary s = previewDesignChange( ee, edvo1 ).getSummary();
+                result.setDesignCreated( s.getFactorsToCreate() + s.getFactorValuesToCreate() );
+                result.setDesignDeleted( s.getFactorsToDelete() + s.getFactorValuesToDelete() );
+                result.setDesignUpdated( s.getBiomaterialsWithChangedAssignments() );
+                anyChange = anyChange || result.getDesignCreated() > 0 || result.getDesignDeleted() > 0
+                        || result.getDesignUpdated() > 0;
+            } else {
+                // Pass 1 — through the proxy so the DesignChangeEvent audit aspect fires.
+                DesignApplyOutcome outcome1 = self.applyDesignChange( ee, edvo1 );
+                DesignPreflightReport.Summary s1 = outcome1.getPreflightAtApply().getSummary();
+                int created = s1.getFactorsToCreate() + s1.getFactorValuesToCreate();
+                int deleted = s1.getFactorsToDelete() + s1.getFactorValuesToDelete();
+                int updated = s1.getBiomaterialsWithChangedAssignments();
+
+                List<Long> auditIds = new ArrayList<>();
+                collectDesignChangeEventId( ee, outcome1, auditIds );
+
+                Map<String, Long> idMap = new LinkedHashMap<>();
+                DesignCommitPlan plan = request.getDesignPlan();
+                if ( plan != null ) {
+                    correlateNewDesignIds( outcome1.getDesign(), plan, idMap );
+                    if ( !plan.getPendingAssignments().isEmpty() ) {
+                        ExperimentalDesignValueObject edvo2 = buildAssignmentPass( outcome1.getDesign(), plan, idMap );
+                        if ( edvo2 != null ) {
+                            DesignApplyOutcome outcome2 = self.applyDesignChange( ee, edvo2 );
+                            updated += outcome2.getPreflightAtApply().getSummary().getBiomaterialsWithChangedAssignments();
+                            collectDesignChangeEventId( ee, outcome2, auditIds );
+                        }
+                    }
+                }
+                result.setDesignCreated( created );
+                result.setDesignDeleted( deleted );
+                result.setDesignUpdated( updated );
+                result.setDesignIdMap( idMap );
+                result.setDesignAuditEventIds( auditIds );
+                anyChange = anyChange || outcome1.isApplied();
+            }
+        }
+
+        // ── split advice (stopgap: recorded in the free-text curation note; no structured home yet) ──
+        if ( request.getSplitOnFactorId() != null || request.getSplitRationale() != null ) {
+            if ( !dryRun ) {
+                applySplitAdviceNote( ee, request.getSplitOnFactorId(), request.getSplitRationale() );
+            }
+            anyChange = true;
+        }
+
         if ( !dryRun && anyChange ) {
             update( ee );
             log.info( "commitCuration: " + ee.getShortName() + " (ID=" + ee.getId() + ") applied" );
         }
         result.setNewLastUpdated( ee.getCurationDetails() != null ? ee.getCurationDetails().getLastUpdated() : null );
         return result;
+    }
+
+    /**
+     * Resolve each new design entity's {@code clientRef} to the id it was assigned, reading the rebuilt design
+     * after apply. Correlation is order-based: the rebuilt design sorts factors/values by ascending id and ids are
+     * monotonic in creation order, so the k-th newly-created entity (id absent from the pre-commit id sets) matches
+     * the k-th recorded clientRef — deterministic even when two new values share a label.
+     */
+    private void correlateNewDesignIds( ExperimentalDesignValueObject rebuilt, DesignCommitPlan plan, Map<String, Long> idMap ) {
+        if ( rebuilt == null || rebuilt.getExperimentalFactors() == null ) {
+            return;
+        }
+        Set<Long> preFactorIds = plan.getPreExistingFactorIds() != null ? plan.getPreExistingFactorIds() : Collections.emptySet();
+        Set<Long> preFvIds = plan.getPreExistingFactorValueIds() != null ? plan.getPreExistingFactorValueIds() : Collections.emptySet();
+
+        List<ExperimentalDesignValueObject.ExperimentalFactorEntry> factors = new ArrayList<>( rebuilt.getExperimentalFactors() );
+        factors.sort( Comparator.comparingLong( f -> f.getId() == null ? Long.MAX_VALUE : f.getId() ) );
+
+        // New factors, in id order, ↔ recorded new-factor clientRefs, in emission order.
+        List<String> factorRefs = plan.getNewFactorClientRefs();
+        Map<Long, String> newFactorIdToRef = new HashMap<>();
+        int fi = 0;
+        for ( ExperimentalDesignValueObject.ExperimentalFactorEntry f : factors ) {
+            if ( f.getId() != null && !preFactorIds.contains( f.getId() ) && fi < factorRefs.size() ) {
+                String ref = factorRefs.get( fi++ );
+                idMap.put( ref, f.getId() );
+                newFactorIdToRef.put( f.getId(), ref );
+            }
+        }
+
+        // New factor values, per parent factor, in id order ↔ recorded clientRefs in emission order.
+        for ( ExperimentalDesignValueObject.ExperimentalFactorEntry f : factors ) {
+            if ( f.getId() == null ) {
+                continue;
+            }
+            String parentKey;
+            if ( preFactorIds.contains( f.getId() ) ) {
+                parentKey = DesignCommitPlan.existingFactorKey( f.getId() );
+            } else if ( newFactorIdToRef.containsKey( f.getId() ) ) {
+                parentKey = DesignCommitPlan.newFactorKey( newFactorIdToRef.get( f.getId() ) );
+            } else {
+                continue;
+            }
+            List<String> fvRefs = plan.getNewFactorValueClientRefsByParentKey().get( parentKey );
+            if ( fvRefs == null || fvRefs.isEmpty() || f.getValues() == null ) {
+                continue;
+            }
+            List<FactorValueBasicValueObject> values = new ArrayList<>( f.getValues() );
+            values.sort( Comparator.comparingLong( v -> v.getId() == null ? Long.MAX_VALUE : v.getId() ) );
+            int vi = 0;
+            for ( FactorValueBasicValueObject v : values ) {
+                if ( v.getId() != null && !preFvIds.contains( v.getId() ) && vi < fvRefs.size() ) {
+                    idMap.put( fvRefs.get( vi++ ), v.getId() );
+                }
+            }
+        }
+    }
+
+    /**
+     * Build the second-pass design: the rebuilt design (all real ids, existing assignments) with each deferred
+     * new-factor-value assignment added to its biomaterials. Returns {@code null} when nothing needs wiring (so the
+     * caller skips a redundant apply). Because it re-submits the whole design, the replace-by-absence path keeps
+     * every untouched entity.
+     */
+    @Nullable
+    private ExperimentalDesignValueObject buildAssignmentPass( ExperimentalDesignValueObject rebuilt, DesignCommitPlan plan, Map<String, Long> idMap ) {
+        Map<Long, ExperimentalDesignValueObject.BioMaterialFactorValueAssignment> byBm = new LinkedHashMap<>();
+        if ( rebuilt.getBioMaterialAssignments() != null ) {
+            for ( ExperimentalDesignValueObject.BioMaterialFactorValueAssignment a : rebuilt.getBioMaterialAssignments() ) {
+                byBm.put( a.getBioMaterialId(), a );
+            }
+        }
+        boolean any = false;
+        for ( DesignCommitPlan.PendingAssignment pa : plan.getPendingAssignments() ) {
+            Long fvId = idMap.get( pa.getFactorValueClientRef() );
+            if ( fvId == null ) {
+                continue;
+            }
+            for ( Long bmId : pa.getBioMaterialIds() ) {
+                ExperimentalDesignValueObject.BioMaterialFactorValueAssignment a = byBm.get( bmId );
+                if ( a == null ) {
+                    continue;
+                }
+                if ( a.getFactorValueIds() == null ) {
+                    a.setFactorValueIds( new ArrayList<>() );
+                }
+                if ( !a.getFactorValueIds().contains( fvId ) ) {
+                    a.getFactorValueIds().add( fvId );
+                    any = true;
+                }
+            }
+        }
+        return any ? rebuilt : null;
+    }
+
+    /**
+     * Best-effort capture of the {@code DesignChangeEvent} id emitted by a proxied {@link #applyDesignChange}.
+     * The audit row is written by the aspect only when the apply changed something; an unresolved id is skipped
+     * (auditEventIds is advisory).
+     */
+    private void collectDesignChangeEventId( ExpressionExperiment ee, DesignApplyOutcome outcome, List<Long> auditIds ) {
+        if ( !outcome.isApplied() ) {
+            return;
+        }
+        AuditEvent ev = auditEventService.getLastEvent( ee, DesignChangeEvent.class );
+        if ( ev != null && ev.getId() != null && !auditIds.contains( ev.getId() ) ) {
+            auditIds.add( ev.getId() );
+        }
+    }
+
+    /**
+     * Stopgap home for the curator's split advice: a single delimited line in the free-text curation note, upserted
+     * so a re-commit replaces rather than stacks. There is no structured persistence for split decisions yet.
+     * {@code factorId == -1} is the "do not split" sentinel.
+     */
+    private void applySplitAdviceNote( ExpressionExperiment ee, @Nullable Long factorId, @Nullable String rationale ) {
+        final String marker = "[split-advice]";
+        CurationDetails cd = ee.getCurationDetails();
+        String existing = cd != null ? cd.getCurationNote() : null;
+        StringBuilder line = new StringBuilder( marker ).append( ' ' );
+        if ( factorId != null && factorId == -1L ) {
+            line.append( "do not split" );
+        } else if ( factorId != null ) {
+            line.append( "split on factor " ).append( factorId );
+        } else {
+            line.append( "(no factor specified)" );
+        }
+        if ( StringUtils.isNotBlank( rationale ) ) {
+            line.append( " — " ).append( rationale.trim() );
+        }
+        String cleaned = existing == null ? "" : Arrays.stream( existing.split( "\n" ) )
+                .filter( l -> !l.startsWith( marker ) )
+                .collect( Collectors.joining( "\n" ) );
+        String updated = cleaned.isEmpty() ? line.toString() : cleaned + "\n" + line;
+        // The CurationNoteUpdateEvent hook copies the note onto CurationDetails — mirrors updateDatasetCurationDetails.
+        auditTrailService.addUpdateEvent( ee, CurationNoteUpdateEvent.class, updated );
     }
 
     /**

@@ -73,6 +73,15 @@ public abstract class AbstractFactorValueValueObject extends IdentifiableValueOb
     private List<StatementValueObject> statements;
 
     /**
+     * Whether this factor value is a "forced" baseline condition. Mirrors {@link FactorValue#getIsBaseline()};
+     * {@code null} when unset. Ignored for continuous factors. Exposed on the wire as {@code isBaseline} so the
+     * design read/write round-trip (e.g. the composite curation commit) can carry the baseline flag.
+     */
+    @JsonProperty("isBaseline")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Boolean baseline;
+
+    /**
      * Human-readable summary of the factor value.
      */
     private String summary;
@@ -111,6 +120,8 @@ public abstract class AbstractFactorValueValueObject extends IdentifiableValueOb
                 .sorted()
                 .map( StatementValueObject::new )
                 .collect( Collectors.toList() );
+
+        this.baseline = fv.getIsBaseline();
 
         this.summary = FactorValueUtils.getSummaryString( fv );
     }

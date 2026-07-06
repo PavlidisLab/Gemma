@@ -148,6 +148,8 @@ import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressio
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentMetaFileType;
 import ubic.gemma.persistence.service.expression.experiment.CurationCommitRequest;
 import ubic.gemma.persistence.service.expression.experiment.CurationCommitResult;
+import ubic.gemma.persistence.service.expression.experiment.DesignCommitPlan;
+import ubic.gemma.model.common.measurement.MeasurementValueObject;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.GeeqService;
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
@@ -2214,9 +2216,13 @@ public class DatasetsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Commit a curation draft to a dataset (all-or-none)",
             description = "Applies a whole curation draft (CurationDocument) in one transaction — either every "
-                    + "supported section applies or, on any failure, nothing does. Phase 1 supports the `basics` "
-                    + "(name/description/shortName) and `publications` sections; `design`, `tags`, "
-                    + "`sampleCharacteristics`, and `curationDetails` return 400 until their phases ship. "
+                    + "supported section applies or, on any failure, nothing does. Supported sections: `basics` "
+                    + "(name/description/shortName), `publications`, and `design` (factors → factor-values → "
+                    + "statements, per-sample assignments, baseline flags, and curator split advice); `tags`, "
+                    + "`sampleCharacteristics`, and `curationDetails` return 400 until their phases ship. New design "
+                    + "entities carry a `clientRef` (echoed as `clientRef → newGemmaId` in the report `idMap`); "
+                    + "deletions are declared via each section's `deletedIds`. A design change that would delete "
+                    + "differential-expression analyses requires `?force=true` (admin) or returns 409. "
                     + "Optimistic concurrency: `baseline.lastModified` (the dataset `lastUpdated` the draft was "
                     + "built against) is checked; a stale baseline returns 409. Requires `ACL_SECURABLE_EDIT`; a "
                     + "shortName change additionally requires admin. Returns a CurationCommitReport.",
@@ -2233,9 +2239,10 @@ public class DatasetsWebService {
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<CurationCommitReport> commitCuration(
             @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Consent (admin only) to deleting differential-expression analyses that a design-section change would invalidate. Ignored unless the design section triggers such a cascade.") @QueryParam("force") @DefaultValue("false") Boolean force,
             @Nullable CurationDocument body
     ) {
-        return respond( doCommitCuration( datasetArg, body, false ) );
+        return respond( doCommitCuration( datasetArg, body, false, force ) );
     }
 
     @POST
@@ -2259,22 +2266,22 @@ public class DatasetsWebService {
             @PathParam("dataset") DatasetArg<?> datasetArg,
             @Nullable CurationDocument body
     ) {
-        return respond( doCommitCuration( datasetArg, body, true ) );
+        // A dry run never writes, so the differential-expression cascade never fires — force is irrelevant here.
+        return respond( doCommitCuration( datasetArg, body, true, false ) );
     }
 
-    private CurationCommitReport doCommitCuration( DatasetArg<?> datasetArg, @Nullable CurationDocument body, boolean dryRun ) {
+    private CurationCommitReport doCommitCuration( DatasetArg<?> datasetArg, @Nullable CurationDocument body, boolean dryRun, boolean force ) {
         if ( body == null ) {
             throw new BadRequestException( "A CurationDocument request body is required." );
         }
         // Reject not-yet-supported sections rather than silently ignoring them.
         List<String> unsupported = new ArrayList<>();
-        if ( body.getDesign() != null ) unsupported.add( "design" );
         if ( body.getTags() != null ) unsupported.add( "tags" );
         if ( body.getSampleCharacteristics() != null ) unsupported.add( "sampleCharacteristics" );
         if ( body.getCurationDetails() != null ) unsupported.add( "curationDetails" );
         if ( !unsupported.isEmpty() ) {
             throw new BadRequestException( "Section(s) not yet supported by this endpoint: " + String.join( ", ", unsupported )
-                    + ". Phase 1 supports 'basics' and 'publications' only." );
+                    + ". Supported sections: 'basics', 'publications', 'design'." );
         }
 
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
@@ -2312,6 +2319,37 @@ public class DatasetsWebService {
                 other.add( ref );
             }
             request.setOtherRelevantPublications( other );
+        }
+
+        if ( body.getDesign() != null ) {
+            DesignCommit dc = body.getDesign();
+            // Map CAB's declared-delete DesignCommit onto a COMPLETE ExperimentalDesignValueObject (carry-forward
+            // untouched entities + delta) so the shipped replace-by-absence apply yields CAB's semantics; the plan
+            // carries the clientRef ledgers + deferred new-FV assignments the service needs after apply. Resolving
+            // the current design + GSM→biomaterial index here (before the tx) mirrors how publications resolve above.
+            ExperimentalDesignValueObject current = datasetArgService.getExperimentalDesign( datasetArg );
+            Map<String, Long> gsmToBmId = buildGsmToBioMaterialIdIndex( ee );
+            DesignCommitPlan plan = new DesignCommitPlan();
+            ExperimentalDesignValueObject proposed = mapDesignCommit( dc, current, gsmToBmId, plan );
+            request.setDesignPresent( true );
+            request.setProposedDesign( proposed );
+            request.setDesignPlan( plan );
+            request.setSplitOnFactorId( dc.getShouldSplitOnFactorId() );
+            request.setSplitRationale( dc.getShouldSplitRationale() );
+
+            // Gate on the same preflight the standalone PUT /design uses: blockers → 400; a change that would delete
+            // differential-expression analyses → 409 unless force (admin). A dry run predicts, so it never 409s.
+            DesignPreflightReport report = datasetArgService.previewDesignChange( datasetArg, proposed );
+            if ( !report.getBlockers().isEmpty() ) {
+                throw new BadRequestException( "The proposed design has validation blockers: " + summarizeDesignBlockers( report ) );
+            }
+            if ( !dryRun && !report.getDifferentialExpressionAnalysesToDelete().isEmpty()
+                    && !( force && SecurityUtil.isUserAdmin() ) ) {
+                throw new jakarta.ws.rs.ClientErrorException( "This design change would delete "
+                        + report.getDifferentialExpressionAnalysesToDelete().size()
+                        + " differential-expression analysis/analyses; retry with ?force=true (admin only) to consent.",
+                        jakarta.ws.rs.core.Response.Status.CONFLICT );
+            }
         }
 
         CurationCommitResult result;
@@ -2364,7 +2402,7 @@ public class DatasetsWebService {
         @Nullable
         private CurationPublications publications;
         @Nullable
-        private com.fasterxml.jackson.databind.JsonNode design;
+        private DesignCommit design;
         @Nullable
         private com.fasterxml.jackson.databind.JsonNode tags;
         @Nullable
@@ -2382,8 +2420,8 @@ public class DatasetsWebService {
         public CurationPublications getPublications() { return publications; }
         public void setPublications( @Nullable CurationPublications publications ) { this.publications = publications; }
         @Nullable
-        public com.fasterxml.jackson.databind.JsonNode getDesign() { return design; }
-        public void setDesign( @Nullable com.fasterxml.jackson.databind.JsonNode design ) { this.design = nonEmpty( design ); }
+        public DesignCommit getDesign() { return design; }
+        public void setDesign( @Nullable DesignCommit design ) { this.design = design; }
         @Nullable
         public com.fasterxml.jackson.databind.JsonNode getTags() { return tags; }
         public void setTags( @Nullable com.fasterxml.jackson.databind.JsonNode tags ) { this.tags = nonEmpty( tags ); }
@@ -2441,6 +2479,391 @@ public class DatasetsWebService {
         public void setOtherRelevant( @Nullable List<PublicationIdentifier> otherRelevant ) { this.otherRelevant = otherRelevant; }
     }
 
+    // ── Design section DTOs (mirror CAB's curation_commit.py: DesignCommit / FactorCommit / … ) ──
+    // Every committable entity carries an EntityRef: exactly one of gemmaId (existing, matched by id) or clientRef
+    // (new, created server-side and echoed clientRef → newGemmaId in the report idMap). Every collection is a
+    // {items, deletedIds} Section: absence never deletes — only ids in deletedIds are removed. The mapper
+    // (mapDesignCommit) validates the gemmaId-XOR-clientRef rule and translates this onto an ExperimentalDesignVO.
+
+    /** Identity half of every committable design entity: exactly one of {@code gemmaId} or {@code clientRef}. */
+    @Data
+    public static class EntityRef {
+        @Nullable
+        private Long gemmaId;
+        @Nullable
+        private String clientRef;
+    }
+
+    /** An ontology term reference — a human label plus an optional ontology URI. (Named to avoid clashing with the core {@code OntologyTerm}.) */
+    @Data
+    public static class OntologyTermRef {
+        @Nullable
+        private String label;
+        @Nullable
+        private String uri;
+    }
+
+    /** A per-factor-value numeric measurement (continuous factors). */
+    @Data
+    public static class Measurement {
+        @Nullable
+        private String value;
+        @Nullable
+        private String unit;
+        @Nullable
+        private String type;
+        @Nullable
+        private String representation;
+    }
+
+    /** A committable collection: authoritative {@code items} plus explicit {@code deletedIds} (the only way to remove). */
+    @Data
+    public static class Section<T> {
+        private List<T> items = new ArrayList<>();
+        private List<Long> deletedIds = new ArrayList<>();
+    }
+
+    /** The experimental-design section (CAB {@code DesignCommit}). */
+    @Data
+    public static class DesignCommit {
+        private Section<FactorCommit> factors = new Section<>();
+        /** Curator split advice (factor id, or {@code -1} for "do not split"); recorded in the curation note. */
+        @Nullable
+        private Long shouldSplitOnFactorId;
+        @Nullable
+        private String shouldSplitRationale;
+    }
+
+    /** One experimental factor. */
+    @Data
+    @EqualsAndHashCode(callSuper = true)
+    public static class FactorCommit extends EntityRef {
+        @Nullable
+        private String name;
+        @Nullable
+        private OntologyTermRef category;
+        @Nullable
+        private String description;
+        /** {@code "categorical"} | {@code "continuous"}. */
+        @Nullable
+        private String type;
+        private Section<FactorValueCommit> factorValues = new Section<>();
+    }
+
+    /** One factor value, with the samples it applies to (by GSM short name) and its statements. */
+    @Data
+    @EqualsAndHashCode(callSuper = true)
+    public static class FactorValueCommit extends EntityRef {
+        @Nullable
+        private String freeTextLabel;
+        /** {@code null} = leave the baseline flag unchanged. */
+        @com.fasterxml.jackson.annotation.JsonProperty("isBaseline")
+        @Nullable
+        private Boolean baseline;
+        @Nullable
+        private Measurement measurement;
+        private List<String> biomaterialShortNames = new ArrayList<>();
+        private Section<StatementCommit> statements = new Section<>();
+    }
+
+    /** One statement (subject / predicate / object triple with an optional category). */
+    @Data
+    @EqualsAndHashCode(callSuper = true)
+    public static class StatementCommit extends EntityRef {
+        @Nullable
+        private OntologyTermRef category;
+        @Nullable
+        private OntologyTermRef subject;
+        @Nullable
+        private OntologyTermRef predicate;
+        @Nullable
+        private OntologyTermRef object;
+    }
+
+    // ── Design mapping (wire DesignCommit → complete ExperimentalDesignValueObject + DesignCommitPlan) ──
+
+    /**
+     * Translate CAB's declared-delete {@link DesignCommit} into a COMPLETE {@link ExperimentalDesignValueObject}
+     * (carry-forward every untouched entity + apply the delta) so the shipped replace-by-absence design apply yields
+     * CAB's semantics without forking it. Records the clientRef ledgers and the deferred new-factor-value sample
+     * assignments into {@code plan} for the service's post-apply correlation and second pass.
+     */
+    private ExperimentalDesignValueObject mapDesignCommit( DesignCommit dc, ExperimentalDesignValueObject current,
+            Map<String, Long> gsmToBmId, DesignCommitPlan plan ) {
+        Map<Long, ExperimentalDesignValueObject.ExperimentalFactorEntry> curFactors = new LinkedHashMap<>();
+        Set<Long> preFvIds = new HashSet<>();
+        for ( ExperimentalDesignValueObject.ExperimentalFactorEntry f : nullSafe( current.getExperimentalFactors() ) ) {
+            if ( f.getId() != null ) {
+                curFactors.put( f.getId(), f );
+            }
+            for ( FactorValueBasicValueObject v : nullSafe( f.getValues() ) ) {
+                if ( v.getId() != null ) {
+                    preFvIds.add( v.getId() );
+                }
+            }
+        }
+        plan.setPreExistingFactorIds( new HashSet<>( curFactors.keySet() ) );
+        plan.setPreExistingFactorValueIds( preFvIds );
+
+        // The complete desired bm → fv-id map: start from current (carry-forward), then per-FV set-replace below.
+        Map<Long, Set<Long>> bmToFvIds = new LinkedHashMap<>();
+        Map<Long, String> bmNames = new HashMap<>();
+        for ( ExperimentalDesignValueObject.BioMaterialFactorValueAssignment a : nullSafe( current.getBioMaterialAssignments() ) ) {
+            bmToFvIds.put( a.getBioMaterialId(), new LinkedHashSet<>( nullSafe( a.getFactorValueIds() ) ) );
+            bmNames.put( a.getBioMaterialId(), a.getBioMaterialName() );
+        }
+
+        Section<FactorCommit> fs = dc.getFactors() != null ? dc.getFactors() : new Section<>();
+        Set<Long> factorDeleted = new HashSet<>( nullSafe( fs.getDeletedIds() ) );
+        Set<Long> mentionedFactorIds = new HashSet<>();
+        List<ExperimentalDesignValueObject.ExperimentalFactorEntry> outFactors = new ArrayList<>();
+
+        for ( FactorCommit fc : nullSafe( fs.getItems() ) ) {
+            String parentKey;
+            ExperimentalDesignValueObject.ExperimentalFactorEntry curFactor = null;
+            ExperimentalDesignValueObject.ExperimentalFactorEntry out = new ExperimentalDesignValueObject.ExperimentalFactorEntry();
+            if ( isExisting( fc, "design.factors item" ) ) {
+                curFactor = curFactors.get( fc.getGemmaId() );
+                if ( curFactor == null ) {
+                    throw new BadRequestException( "design.factors references unknown factor id " + fc.getGemmaId() + "." );
+                }
+                mentionedFactorIds.add( fc.getGemmaId() );
+                out.setId( fc.getGemmaId() );
+                parentKey = DesignCommitPlan.existingFactorKey( fc.getGemmaId() );
+            } else {
+                out.setId( null );
+                plan.getNewFactorClientRefs().add( fc.getClientRef() );
+                parentKey = DesignCommitPlan.newFactorKey( fc.getClientRef() );
+            }
+            out.setName( fc.getName() );
+            out.setDescription( fc.getDescription() );
+            out.setType( fc.getType() );
+            out.setCategory( ontologyToCharacteristic( fc.getCategory() ) );
+            out.setValues( mapFactorValues( fc, curFactor, parentKey, gsmToBmId, plan, bmToFvIds ) );
+            outFactors.add( out );
+        }
+
+        // Carry forward untouched current factors verbatim (id + all FVs); their assignments already live in bmToFvIds.
+        for ( ExperimentalDesignValueObject.ExperimentalFactorEntry cur : nullSafe( current.getExperimentalFactors() ) ) {
+            if ( cur.getId() != null && !mentionedFactorIds.contains( cur.getId() ) && !factorDeleted.contains( cur.getId() ) ) {
+                outFactors.add( cur );
+            }
+        }
+
+        // Scrub any assignment that points at a factor value no longer present (deleted factor or deleted FV).
+        Set<Long> survivingFvIds = new HashSet<>();
+        for ( ExperimentalDesignValueObject.ExperimentalFactorEntry f : outFactors ) {
+            for ( FactorValueBasicValueObject v : nullSafe( f.getValues() ) ) {
+                if ( v.getId() != null ) {
+                    survivingFvIds.add( v.getId() );
+                }
+            }
+        }
+        for ( Set<Long> set : bmToFvIds.values() ) {
+            set.retainAll( survivingFvIds );
+        }
+
+        ExperimentalDesignValueObject out = new ExperimentalDesignValueObject();
+        out.setId( current.getId() );
+        out.setExperimentalFactors( outFactors );
+        out.setBioMaterialAssignments( buildAssignmentList( bmToFvIds, bmNames ) );
+        return out;
+    }
+
+    private List<FactorValueBasicValueObject> mapFactorValues( FactorCommit fc,
+            @Nullable ExperimentalDesignValueObject.ExperimentalFactorEntry curFactor, String parentKey,
+            Map<String, Long> gsmToBmId, DesignCommitPlan plan, Map<Long, Set<Long>> bmToFvIds ) {
+        Map<Long, FactorValueBasicValueObject> curFvs = new LinkedHashMap<>();
+        if ( curFactor != null ) {
+            for ( FactorValueBasicValueObject v : nullSafe( curFactor.getValues() ) ) {
+                if ( v.getId() != null ) {
+                    curFvs.put( v.getId(), v );
+                }
+            }
+        }
+        Section<FactorValueCommit> fvs = fc.getFactorValues() != null ? fc.getFactorValues() : new Section<>();
+        Set<Long> fvDeleted = new HashSet<>( nullSafe( fvs.getDeletedIds() ) );
+        Set<Long> mentionedFvIds = new HashSet<>();
+        List<String> fvClientRefs = new ArrayList<>();
+        List<FactorValueBasicValueObject> outValues = new ArrayList<>();
+
+        for ( FactorValueCommit fvc : nullSafe( fvs.getItems() ) ) {
+            Set<Long> bmIds = resolveBioMaterials( fvc.getBiomaterialShortNames(), gsmToBmId );
+            FactorValueBasicValueObject out = new FactorValueBasicValueObject();
+            if ( isExisting( fvc, "factor value" ) ) {
+                if ( !curFvs.containsKey( fvc.getGemmaId() ) ) {
+                    throw new BadRequestException( "design.factors references unknown factor value id " + fvc.getGemmaId() + "." );
+                }
+                mentionedFvIds.add( fvc.getGemmaId() );
+                out.setId( fvc.getGemmaId() );
+                // Set-replace this factor value's sample membership: drop it everywhere, then add to the desired bms.
+                for ( Set<Long> set : bmToFvIds.values() ) {
+                    set.remove( fvc.getGemmaId() );
+                }
+                for ( Long bmId : bmIds ) {
+                    bmToFvIds.computeIfAbsent( bmId, k -> new LinkedHashSet<>() ).add( fvc.getGemmaId() );
+                }
+            } else {
+                out.setId( null );
+                fvClientRefs.add( fvc.getClientRef() );
+                // The id doesn't exist yet — defer the assignment to the service's second pass.
+                if ( !bmIds.isEmpty() ) {
+                    plan.getPendingAssignments().add( new DesignCommitPlan.PendingAssignment( fvc.getClientRef(), bmIds ) );
+                }
+            }
+            //noinspection deprecation
+            out.setValue( fvc.getFreeTextLabel() );
+            out.setBaseline( fvc.getBaseline() );
+            out.setMeasurementObject( mapMeasurement( fvc.getMeasurement() ) );
+            out.setStatements( mapStatements( fvc, curFvs.get( fvc.getGemmaId() ) ) );
+            outValues.add( out );
+        }
+
+        // Carry forward untouched current factor values (declared-delete: only ids in deletedIds are removed).
+        for ( FactorValueBasicValueObject v : nullSafe( curFactor != null ? curFactor.getValues() : null ) ) {
+            if ( v.getId() != null && !mentionedFvIds.contains( v.getId() ) && !fvDeleted.contains( v.getId() ) ) {
+                outValues.add( v );
+            }
+        }
+        if ( !fvClientRefs.isEmpty() ) {
+            plan.getNewFactorValueClientRefsByParentKey().put( parentKey, fvClientRefs );
+        }
+        return outValues;
+    }
+
+    private List<StatementValueObject> mapStatements( FactorValueCommit fvc, @Nullable FactorValueBasicValueObject curFv ) {
+        Section<StatementCommit> ss = fvc.getStatements() != null ? fvc.getStatements() : new Section<>();
+        Set<Long> stmtDeleted = new HashSet<>( nullSafe( ss.getDeletedIds() ) );
+        Set<Long> mentioned = new HashSet<>();
+        List<StatementValueObject> out = new ArrayList<>();
+        for ( StatementCommit sc : nullSafe( ss.getItems() ) ) {
+            StatementValueObject svo = new StatementValueObject();
+            if ( isExisting( sc, "statement" ) ) {
+                svo.setId( sc.getGemmaId() );
+                mentioned.add( sc.getGemmaId() );
+            }
+            if ( sc.getCategory() != null ) {
+                svo.setCategory( sc.getCategory().getLabel() );
+                svo.setCategoryUri( sc.getCategory().getUri() );
+            }
+            if ( sc.getSubject() != null ) {
+                svo.setSubject( sc.getSubject().getLabel() );
+                svo.setSubjectUri( sc.getSubject().getUri() );
+            }
+            if ( sc.getPredicate() != null ) {
+                svo.setPredicate( sc.getPredicate().getLabel() );
+                svo.setPredicateUri( sc.getPredicate().getUri() );
+            }
+            if ( sc.getObject() != null ) {
+                svo.setObject( sc.getObject().getLabel() );
+                svo.setObjectUri( sc.getObject().getUri() );
+            }
+            out.add( svo );
+        }
+        // Carry forward untouched current statements — the design apply replaces statements wholesale on a kept FV,
+        // so an un-echoed statement would otherwise be deleted; re-emitting it (by id) preserves it.
+        if ( curFv != null ) {
+            for ( StatementValueObject s : nullSafe( curFv.getStatements() ) ) {
+                if ( s.getId() != null && !mentioned.contains( s.getId() ) && !stmtDeleted.contains( s.getId() ) ) {
+                    out.add( s );
+                }
+            }
+        }
+        return out;
+    }
+
+    /** Validate the gemmaId-XOR-clientRef rule; {@code true} = existing entity (has gemmaId), {@code false} = new. */
+    private static boolean isExisting( EntityRef ref, String what ) {
+        boolean hasId = ref.getGemmaId() != null;
+        boolean hasRef = StringUtils.isNotBlank( ref.getClientRef() );
+        if ( hasId == hasRef ) {
+            throw new BadRequestException( "Each " + what + " needs exactly one of gemmaId (existing) or clientRef (new)." );
+        }
+        return hasId;
+    }
+
+    /** Resolve a list of GSM short names to biomaterial ids for this dataset; an unknown short name is a 400. */
+    private static Set<Long> resolveBioMaterials( @Nullable List<String> shortNames, Map<String, Long> gsmToBmId ) {
+        Set<Long> ids = new LinkedHashSet<>();
+        for ( String sn : nullSafe( shortNames ) ) {
+            if ( StringUtils.isBlank( sn ) ) {
+                continue;
+            }
+            Long bmId = gsmToBmId.get( sn.trim() );
+            if ( bmId == null ) {
+                throw new BadRequestException( "design references unknown sample short name '" + sn + "' for this dataset." );
+            }
+            ids.add( bmId );
+        }
+        return ids;
+    }
+
+    /** GSM accession → biomaterial id for one dataset (no findByAccession exists; index the bioassays). */
+    private Map<String, Long> buildGsmToBioMaterialIdIndex( ExpressionExperiment ee ) {
+        ExpressionExperiment thawed = expressionExperimentService.thawBioAssays( ee );
+        Map<String, Long> index = new HashMap<>();
+        for ( BioAssay ba : thawed.getBioAssays() ) {
+            BioMaterial bm = ba.getSampleUsed();
+            if ( bm == null || bm.getId() == null ) {
+                continue;
+            }
+            if ( ba.getAccession() != null && ba.getAccession().getAccession() != null ) {
+                index.putIfAbsent( ba.getAccession().getAccession(), bm.getId() );
+            }
+            if ( ba.getShortName() != null ) {
+                index.putIfAbsent( ba.getShortName(), bm.getId() );
+            }
+        }
+        return index;
+    }
+
+    @Nullable
+    private static CharacteristicValueObject ontologyToCharacteristic( @Nullable OntologyTermRef t ) {
+        if ( t == null || StringUtils.isBlank( t.getLabel() ) ) {
+            return null;
+        }
+        CharacteristicValueObject c = new CharacteristicValueObject();
+        c.setCategory( t.getLabel() );
+        c.setCategoryUri( t.getUri() );
+        c.setValue( t.getLabel() );
+        c.setValueUri( t.getUri() );
+        return c;
+    }
+
+    @Nullable
+    private static MeasurementValueObject mapMeasurement( @Nullable Measurement m ) {
+        if ( m == null || StringUtils.isBlank( m.getValue() ) ) {
+            return null;
+        }
+        MeasurementValueObject mo = new MeasurementValueObject();
+        mo.setValue( m.getValue() );
+        mo.setUnit( m.getUnit() );
+        mo.setType( m.getType() );
+        mo.setRepresentation( m.getRepresentation() );
+        return mo;
+    }
+
+    private static List<ExperimentalDesignValueObject.BioMaterialFactorValueAssignment> buildAssignmentList(
+            Map<Long, Set<Long>> bmToFvIds, Map<Long, String> bmNames ) {
+        List<ExperimentalDesignValueObject.BioMaterialFactorValueAssignment> out = new ArrayList<>();
+        for ( Map.Entry<Long, Set<Long>> e : bmToFvIds.entrySet() ) {
+            List<Long> fvIds = new ArrayList<>( e.getValue() );
+            Collections.sort( fvIds );
+            out.add( new ExperimentalDesignValueObject.BioMaterialFactorValueAssignment( e.getKey(), bmNames.get( e.getKey() ), fvIds ) );
+        }
+        return out;
+    }
+
+    private static String summarizeDesignBlockers( DesignPreflightReport report ) {
+        return report.getBlockers().stream()
+                .map( b -> b.getType() + ( b.getMessage() != null ? " (" + b.getMessage() + ")" : "" ) )
+                .collect( Collectors.joining( "; " ) );
+    }
+
+    private static <X> List<X> nullSafe( @Nullable List<X> l ) {
+        return l != null ? l : Collections.emptyList();
+    }
+
     /** The server's reply — mirrors CAB's {@code CurationCommitReport}. */
     public static class CurationCommitReport {
         private final boolean applied;
@@ -2449,11 +2872,12 @@ public class DatasetsWebService {
         private final List<Long> auditEventIds;
         private final String error;
 
-        private CurationCommitReport( boolean applied, Map<String, CurationSectionChange> changes ) {
+        private CurationCommitReport( boolean applied, Map<String, CurationSectionChange> changes,
+                Map<String, Long> idMap, List<Long> auditEventIds ) {
             this.applied = applied;
-            this.idMap = Collections.emptyMap();       // phase 1 creates no clientRef entities
+            this.idMap = idMap;
             this.changes = changes;
-            this.auditEventIds = Collections.emptyList();
+            this.auditEventIds = auditEventIds;
             this.error = "";
         }
 
@@ -2468,7 +2892,14 @@ public class DatasetsWebService {
                 changes.put( "publications", new CurationSectionChange(
                         r.getPublicationsCreated(), 0, r.getPublicationsDeleted(), r.getPublicationsUnchanged() ) );
             }
-            return new CurationCommitReport( applied, changes );
+            if ( req.isDesignPresent() ) {
+                changes.put( "design", new CurationSectionChange(
+                        r.getDesignCreated(), r.getDesignUpdated(), r.getDesignDeleted(), r.getDesignUnchanged() ) );
+            }
+            // Only the design section creates clientRef entities / emits DesignChangeEvents today.
+            Map<String, Long> idMap = r.getDesignIdMap() != null ? r.getDesignIdMap() : Collections.emptyMap();
+            List<Long> auditEventIds = r.getDesignAuditEventIds() != null ? r.getDesignAuditEventIds() : Collections.emptyList();
+            return new CurationCommitReport( applied, changes, idMap, auditEventIds );
         }
 
         public boolean isApplied() { return applied; }

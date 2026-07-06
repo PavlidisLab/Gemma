@@ -18,6 +18,7 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.expression.experiment.ExperimentalDesignValueObject;
 
 import javax.annotation.Nullable;
 import java.util.Collections;
@@ -59,6 +60,22 @@ public class CurationCommitRequest {
     @Nullable
     private BibliographicReference primaryPublication;
     private List<BibliographicReference> otherRelevantPublications = Collections.emptyList();
+
+    // ── design (factors → factor-values → statements) ──
+    // The web layer maps CAB's declared-delete DesignCommit onto a COMPLETE ExperimentalDesignValueObject
+    // (carry-forward untouched entities + delta) so the existing replace-by-absence apply path yields CAB's
+    // semantics; {@code designPlan} carries the clientRef ledgers + deferred new-FV assignments the service
+    // needs to correlate clientRef → new id and wire assignments to freshly-created factor values.
+    private boolean designPresent;
+    @Nullable
+    private ExperimentalDesignValueObject proposedDesign;
+    @Nullable
+    private DesignCommitPlan designPlan;
+    /** Curator "split this experiment along factor X" advice — stored in the curation note (no structured home yet). */
+    @Nullable
+    private Long splitOnFactorId;
+    @Nullable
+    private String splitRationale;
 
     @Nullable
     public Date getExpectedLastUpdated() {
@@ -135,5 +152,49 @@ public class CurationCommitRequest {
 
     public void setOtherRelevantPublications( List<BibliographicReference> otherRelevantPublications ) {
         this.otherRelevantPublications = otherRelevantPublications;
+    }
+
+    public boolean isDesignPresent() {
+        return designPresent;
+    }
+
+    public void setDesignPresent( boolean designPresent ) {
+        this.designPresent = designPresent;
+    }
+
+    @Nullable
+    public ExperimentalDesignValueObject getProposedDesign() {
+        return proposedDesign;
+    }
+
+    public void setProposedDesign( @Nullable ExperimentalDesignValueObject proposedDesign ) {
+        this.proposedDesign = proposedDesign;
+    }
+
+    @Nullable
+    public DesignCommitPlan getDesignPlan() {
+        return designPlan;
+    }
+
+    public void setDesignPlan( @Nullable DesignCommitPlan designPlan ) {
+        this.designPlan = designPlan;
+    }
+
+    @Nullable
+    public Long getSplitOnFactorId() {
+        return splitOnFactorId;
+    }
+
+    public void setSplitOnFactorId( @Nullable Long splitOnFactorId ) {
+        this.splitOnFactorId = splitOnFactorId;
+    }
+
+    @Nullable
+    public String getSplitRationale() {
+        return splitRationale;
+    }
+
+    public void setSplitRationale( @Nullable String splitRationale ) {
+        this.splitRationale = splitRationale;
     }
 }
