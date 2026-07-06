@@ -3285,6 +3285,79 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         assertThat( factors.get( 0 ).getId() ).isEqualTo( 5L );
     }
 
+    /** Current design with factor 5 → FV 10, and biomaterial 100 assigned to FV 10. */
+    private ubic.gemma.model.expression.experiment.ExperimentalDesignValueObject currentDesignWithAssignment() {
+        ubic.gemma.model.expression.experiment.ExperimentalDesignValueObject d =
+                new ubic.gemma.model.expression.experiment.ExperimentalDesignValueObject();
+        d.setId( 3L );
+        ubic.gemma.model.expression.experiment.ExperimentalDesignValueObject.ExperimentalFactorEntry f5 =
+                new ubic.gemma.model.expression.experiment.ExperimentalDesignValueObject.ExperimentalFactorEntry();
+        f5.setId( 5L );
+        f5.setName( "factor5" );
+        f5.setValues( new ArrayList<>( List.of( new ubic.gemma.model.expression.experiment.FactorValueBasicValueObject( 10L ) ) ) );
+        d.setExperimentalFactors( new ArrayList<>( List.of( f5 ) ) );
+        d.setBioMaterialAssignments( new ArrayList<>( List.of(
+                new ubic.gemma.model.expression.experiment.ExperimentalDesignValueObject.BioMaterialFactorValueAssignment(
+                        100L, "bm", new ArrayList<>( List.of( 10L ) ) ) ) ) );
+        return d;
+    }
+
+    @Test
+    @WithMockUser
+    public void testCommitCurationDesignNullSamplesLeavesAssignmentUntouched() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.getExperimentalDesignValueObject( ee ) ).thenReturn( currentDesignWithAssignment() );
+        when( expressionExperimentService.thawBioAssays( ee ) ).thenReturn( ee );
+        when( expressionExperimentService.previewDesignChange( eq( ee ), any() ) )
+                .thenReturn( new ubic.gemma.model.expression.experiment.DesignPreflightReport() );
+        when( expressionExperimentService.commitCuration( eq( ee ), any(), eq( false ) ) )
+                .thenReturn( new ubic.gemma.persistence.service.expression.experiment.CurationCommitResult() );
+
+        // Edit FV 10's label but OMIT biomaterialShortNames (null → leave assignments untouched).
+        String body = "{\"design\":{\"factors\":{\"items\":[{\"gemmaId\":5,\"name\":\"factor5\","
+                + "\"factorValues\":{\"items\":[{\"gemmaId\":10,\"freeTextLabel\":\"newlabel\"}]}}]}}}";
+        assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+
+        ArgumentCaptor<ubic.gemma.persistence.service.expression.experiment.CurationCommitRequest> cap =
+                ArgumentCaptor.forClass( ubic.gemma.persistence.service.expression.experiment.CurationCommitRequest.class );
+        verify( expressionExperimentService ).commitCuration( eq( ee ), cap.capture(), eq( false ) );
+        ubic.gemma.model.expression.experiment.ExperimentalDesignValueObject.BioMaterialFactorValueAssignment a =
+                cap.getValue().getProposedDesign().getBioMaterialAssignments().stream()
+                        .filter( x -> Long.valueOf( 100L ).equals( x.getBioMaterialId() ) )
+                        .findFirst().orElseThrow( () -> new AssertionError( "assignment missing" ) );
+        assertThat( a.getFactorValueIds() ).as( "null samples must not unassign" ).contains( 10L );
+    }
+
+    @Test
+    @WithMockUser
+    public void testCommitCurationDesignEmptySamplesClearsAssignment() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.getExperimentalDesignValueObject( ee ) ).thenReturn( currentDesignWithAssignment() );
+        when( expressionExperimentService.thawBioAssays( ee ) ).thenReturn( ee );
+        when( expressionExperimentService.previewDesignChange( eq( ee ), any() ) )
+                .thenReturn( new ubic.gemma.model.expression.experiment.DesignPreflightReport() );
+        when( expressionExperimentService.commitCuration( eq( ee ), any(), eq( false ) ) )
+                .thenReturn( new ubic.gemma.persistence.service.expression.experiment.CurationCommitResult() );
+
+        // Explicit empty biomaterialShortNames → clear FV 10's assignments.
+        String body = "{\"design\":{\"factors\":{\"items\":[{\"gemmaId\":5,\"name\":\"factor5\","
+                + "\"factorValues\":{\"items\":[{\"gemmaId\":10,\"freeTextLabel\":\"x\",\"biomaterialShortNames\":[]}]}}]}}}";
+        assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+
+        ArgumentCaptor<ubic.gemma.persistence.service.expression.experiment.CurationCommitRequest> cap =
+                ArgumentCaptor.forClass( ubic.gemma.persistence.service.expression.experiment.CurationCommitRequest.class );
+        verify( expressionExperimentService ).commitCuration( eq( ee ), cap.capture(), eq( false ) );
+        ubic.gemma.model.expression.experiment.ExperimentalDesignValueObject.BioMaterialFactorValueAssignment a =
+                cap.getValue().getProposedDesign().getBioMaterialAssignments().stream()
+                        .filter( x -> Long.valueOf( 100L ).equals( x.getBioMaterialId() ) )
+                        .findFirst().orElseThrow( () -> new AssertionError( "assignment missing" ) );
+        assertThat( a.getFactorValueIds() ).as( "empty list clears assignment" ).doesNotContain( 10L );
+    }
+
     @Test
     @WithMockUser
     public void testCommitCurationDesignForceGateIs409() {

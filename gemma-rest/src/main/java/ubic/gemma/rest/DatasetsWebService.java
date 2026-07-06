@@ -2604,7 +2604,9 @@ public class DatasetsWebService {
         private Boolean baseline;
         @Nullable
         private Measurement measurement;
-        private List<String> biomaterialShortNames = new ArrayList<>();
+        /** {@code null} (or omitted) = leave sample assignments untouched; a list ({@code []} = clear) = set-replace. */
+        @Nullable
+        private List<String> biomaterialShortNames;
         private Section<StatementCommit> statements = new Section<>();
     }
 
@@ -2764,7 +2766,10 @@ public class DatasetsWebService {
         List<FactorValueBasicValueObject> outValues = new ArrayList<>();
 
         for ( FactorValueCommit fvc : nullSafe( fvs.getItems() ) ) {
-            Set<Long> bmIds = resolveBioMaterials( fvc.getBiomaterialShortNames(), gsmToBmId );
+            // null biomaterialShortNames = leave this FV's sample assignments untouched; a (possibly empty) list =
+            // authoritative set-replace ([] clears). Same null-means-unchanged convention as isBaseline.
+            boolean assignmentsGiven = fvc.getBiomaterialShortNames() != null;
+            Set<Long> bmIds = assignmentsGiven ? resolveBioMaterials( fvc.getBiomaterialShortNames(), gsmToBmId ) : Collections.emptySet();
             FactorValueBasicValueObject out = new FactorValueBasicValueObject();
             if ( isExisting( fvc, "factor value" ) ) {
                 if ( !curFvs.containsKey( fvc.getGemmaId() ) ) {
@@ -2772,18 +2777,21 @@ public class DatasetsWebService {
                 }
                 mentionedFvIds.add( fvc.getGemmaId() );
                 out.setId( fvc.getGemmaId() );
-                // Set-replace this factor value's sample membership: drop it everywhere, then add to the desired bms.
-                for ( Set<Long> set : bmToFvIds.values() ) {
-                    set.remove( fvc.getGemmaId() );
+                if ( assignmentsGiven ) {
+                    // Drop this factor value everywhere, then add it to exactly the listed samples (empty = clear).
+                    for ( Set<Long> set : bmToFvIds.values() ) {
+                        set.remove( fvc.getGemmaId() );
+                    }
+                    for ( Long bmId : bmIds ) {
+                        bmToFvIds.computeIfAbsent( bmId, k -> new LinkedHashSet<>() ).add( fvc.getGemmaId() );
+                    }
                 }
-                for ( Long bmId : bmIds ) {
-                    bmToFvIds.computeIfAbsent( bmId, k -> new LinkedHashSet<>() ).add( fvc.getGemmaId() );
-                }
+                // else: leave the current memberships carried forward in bmToFvIds untouched.
             } else {
                 out.setId( null );
                 fvClientRefs.add( fvc.getClientRef() );
                 // The id doesn't exist yet — defer the assignment to the service's second pass.
-                if ( !bmIds.isEmpty() ) {
+                if ( assignmentsGiven && !bmIds.isEmpty() ) {
                     plan.getPendingAssignments().add( new DesignCommitPlan.PendingAssignment( fvc.getClientRef(), bmIds ) );
                 }
             }

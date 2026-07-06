@@ -2209,6 +2209,8 @@ public class ExpressionExperimentServiceImpl
                 result.setDesignCreated( s.getFactorsToCreate() + s.getFactorValuesToCreate() );
                 result.setDesignDeleted( s.getFactorsToDelete() + s.getFactorValuesToDelete() );
                 result.setDesignUpdated( s.getBiomaterialsWithChangedAssignments() );
+                // Symmetry with basics/publications: a clean no-op keep reports unchanged=1, not all-zero.
+                result.setDesignUnchanged( result.getDesignCreated() + result.getDesignDeleted() + result.getDesignUpdated() == 0 ? 1 : 0 );
                 anyChange = anyChange || result.getDesignCreated() > 0 || result.getDesignDeleted() > 0
                         || result.getDesignUpdated() > 0;
             } else {
@@ -2238,6 +2240,7 @@ public class ExpressionExperimentServiceImpl
                 result.setDesignCreated( created );
                 result.setDesignDeleted( deleted );
                 result.setDesignUpdated( updated );
+                result.setDesignUnchanged( created + deleted + updated == 0 ? 1 : 0 );
                 result.setDesignIdMap( idMap );
                 result.setDesignAuditEventIds( auditIds );
                 anyChange = anyChange || outcome1.isApplied();

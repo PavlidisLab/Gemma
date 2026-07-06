@@ -188,6 +188,43 @@ public class DatasetsCurationCommitRestTest extends BaseJerseyIntegrationTest5 {
         }
     }
 
+    @Test
+    public void testExistingFvWithNullSamplesKeepsAssignments() {
+        ExperimentalDesignValueObject before = expressionExperimentService.getExperimentalDesignValueObject( ee );
+        Long fvId = null, factorId = null;
+        for ( ExperimentalDesignValueObject.ExperimentalFactorEntry f : before.getExperimentalFactors() ) {
+            for ( FactorValueBasicValueObject v : f.getValues() ) {
+                if ( countAssigned( before, v.getId() ) > 0 ) {
+                    fvId = v.getId();
+                    factorId = f.getId();
+                    break;
+                }
+            }
+            if ( fvId != null ) {
+                break;
+            }
+        }
+        assertThat( fvId ).as( "seeded design has an assigned factor value" ).isNotNull();
+        long assignedBefore = countAssigned( before, fvId );
+
+        // Re-send the factor + FV by id, change the FV label, OMIT biomaterialShortNames (null → leave samples).
+        String body = "{\"design\":{\"factors\":{\"items\":[{\"gemmaId\":" + factorId + ","
+                + "\"factorValues\":{\"items\":[{\"gemmaId\":" + fvId + ",\"freeTextLabel\":\"relabeled\"}]}}]}}}";
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request().put( Entity.json( body ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( Response.Status.OK.getStatusCode() );
+        }
+
+        ExperimentalDesignValueObject after = expressionExperimentService.getExperimentalDesignValueObject(
+                expressionExperimentService.load( ee.getId() ) );
+        assertThat( countAssigned( after, fvId ) ).as( "null samples left assignments untouched" ).isEqualTo( assignedBefore );
+    }
+
+    private static long countAssigned( ExperimentalDesignValueObject d, Long fvId ) {
+        return d.getBioMaterialAssignments().stream()
+                .filter( a -> a.getFactorValueIds().contains( fvId ) )
+                .count();
+    }
+
     private AnnotationValueObject findAnnotation( String termName ) {
         Set<AnnotationValueObject> annotations = expressionExperimentService.getAnnotations( expressionExperimentService.load( ee.getId() ) );
         return annotations.stream().filter( a -> termName.equals( a.getTermName() ) ).findFirst().orElse( null );
