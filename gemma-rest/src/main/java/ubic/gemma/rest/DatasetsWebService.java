@@ -146,6 +146,8 @@ import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentMetaFileType;
+import ubic.gemma.persistence.service.expression.experiment.CurationCommitRequest;
+import ubic.gemma.persistence.service.expression.experiment.CurationCommitResult;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.GeeqService;
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
@@ -2198,6 +2200,301 @@ public class DatasetsWebService {
         public String getDescription() {
             return description;
         }
+    }
+
+    // ─────────────────────────── Composite curation commit ───────────────────────────
+    // All-or-none commit of a curator's whole draft. Phase 1 applies the basics + publications
+    // sections (see CurationCommitRequest); design / tags / sampleCharacteristics / curationDetails
+    // are accepted on the wire but rejected with 400 until their phases land, so a caller can't
+    // believe an unsupported section was applied. Envelope source of truth: CAB's curation_commit.py.
+
+    @PUT
+    @Path("/{dataset}/curation")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Commit a curation draft to a dataset (all-or-none)",
+            description = "Applies a whole curation draft (CurationDocument) in one transaction — either every "
+                    + "supported section applies or, on any failure, nothing does. Phase 1 supports the `basics` "
+                    + "(name/description/shortName) and `publications` sections; `design`, `tags`, "
+                    + "`sampleCharacteristics`, and `curationDetails` return 400 until their phases ship. "
+                    + "Optimistic concurrency: `baseline.lastModified` (the dataset `lastUpdated` the draft was "
+                    + "built against) is checked; a stale baseline returns 409. Requires `ACL_SECURABLE_EDIT`; a "
+                    + "shortName change additionally requires admin. Returns a CurationCommitReport.",
+            security = { @SecurityRequirement(name = "basicAuth"), @SecurityRequirement(name = "cookieAuth") },
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "400", description = "Malformed body, or an unsupported section was supplied.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "403", description = "Missing edit (or admin, for shortName) permission.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "409", description = "The dataset moved since the draft's baseline.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<CurationCommitReport> commitCuration(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Nullable CurationDocument body
+    ) {
+        return respond( doCommitCuration( datasetArg, body, false ) );
+    }
+
+    @POST
+    @Path("/{dataset}/curation/preflight")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Preflight (dry-run) a curation draft",
+            description = "Same body and validation as the commit, but writes nothing: returns the "
+                    + "CurationCommitReport with `applied=false` and the per-section change counts, so the UI "
+                    + "can preview the diff before committing.",
+            security = { @SecurityRequirement(name = "basicAuth"), @SecurityRequirement(name = "cookieAuth") },
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "400", description = "Malformed body, or an unsupported section was supplied.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "409", description = "The dataset moved since the draft's baseline.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<CurationCommitReport> preflightCuration(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Nullable CurationDocument body
+    ) {
+        return respond( doCommitCuration( datasetArg, body, true ) );
+    }
+
+    private CurationCommitReport doCommitCuration( DatasetArg<?> datasetArg, @Nullable CurationDocument body, boolean dryRun ) {
+        if ( body == null ) {
+            throw new BadRequestException( "A CurationDocument request body is required." );
+        }
+        // Reject not-yet-supported sections rather than silently ignoring them.
+        List<String> unsupported = new ArrayList<>();
+        if ( body.getDesign() != null ) unsupported.add( "design" );
+        if ( body.getTags() != null ) unsupported.add( "tags" );
+        if ( body.getSampleCharacteristics() != null ) unsupported.add( "sampleCharacteristics" );
+        if ( body.getCurationDetails() != null ) unsupported.add( "curationDetails" );
+        if ( !unsupported.isEmpty() ) {
+            throw new BadRequestException( "Section(s) not yet supported by this endpoint: " + String.join( ", ", unsupported )
+                    + ". Phase 1 supports 'basics' and 'publications' only." );
+        }
+
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+
+        CurationCommitRequest request = new CurationCommitRequest();
+        request.setExpectedLastUpdated( parseBaselineToken( body.getBaseline() != null ? body.getBaseline().getLastModified() : null ) );
+
+        if ( body.getBasics() != null ) {
+            CurationBasics b = body.getBasics();
+            String name = b.getName() != null ? b.getName().trim() : null;
+            if ( name != null && name.isEmpty() ) {
+                throw new BadRequestException( "basics.name must not be blank." );
+            }
+            request.setBasicsPresent( true );
+            request.setName( name );
+            request.setDescription( b.getDescription() );
+            request.setShortName( b.getShortName() );
+            request.setShortNameChangeAllowed( SecurityUtil.isUserAdmin() );
+        }
+
+        if ( body.getPublications() != null ) {
+            CurationPublications pubs = body.getPublications();
+            if ( pubs.getOtherRelevant() == null ) {
+                throw new BadRequestException( "publications.otherRelevant is required (use an empty list to clear)." );
+            }
+            request.setPublicationsPresent( true );
+            // Resolve identifiers -> references BEFORE the commit transaction (PubMed/CrossRef fetch is slow).
+            request.setPrimaryPublication( resolvePublication( pubs.getPrimary() ) );
+            List<BibliographicReference> other = new ArrayList<>();
+            for ( PublicationIdentifier id : pubs.getOtherRelevant() ) {
+                BibliographicReference ref = resolvePublication( id );
+                if ( ref == null ) {
+                    throw new BadRequestException( "Each publications.otherRelevant entry needs a non-blank 'pubMedId' or 'doi'." );
+                }
+                other.add( ref );
+            }
+            request.setOtherRelevantPublications( other );
+        }
+
+        CurationCommitResult result;
+        try {
+            result = expressionExperimentService.commitCuration( ee, request, dryRun );
+        } catch ( org.springframework.dao.OptimisticLockingFailureException e ) {
+            throw new jakarta.ws.rs.ClientErrorException( e.getMessage(), jakarta.ws.rs.core.Response.Status.CONFLICT );
+        } catch ( org.springframework.security.access.AccessDeniedException e ) {
+            throw new jakarta.ws.rs.ForbiddenException( e.getMessage() );
+        } catch ( IllegalArgumentException e ) {
+            // e.g. shortName already in use
+            throw new jakarta.ws.rs.ClientErrorException( e.getMessage(), jakarta.ws.rs.core.Response.Status.CONFLICT );
+        }
+        return CurationCommitReport.from( result, request, !dryRun );
+    }
+
+    /**
+     * Parse the baseline concurrency token (the dataset {@code lastUpdated} the draft was built against).
+     * Accepts epoch milliseconds or an ISO-8601 instant; blank/unparseable yields {@code null} (the check is
+     * then skipped rather than failing the commit — lenient while clients settle on the format).
+     */
+    @Nullable
+    private static java.util.Date parseBaselineToken( @Nullable String token ) {
+        if ( StringUtils.isBlank( token ) ) {
+            return null;
+        }
+        String t = token.trim();
+        try {
+            return new java.util.Date( Long.parseLong( t ) );
+        } catch ( NumberFormatException ignored ) {
+            // fall through to ISO parsing
+        }
+        try {
+            return java.util.Date.from( java.time.Instant.parse( t ) );
+        } catch ( java.time.format.DateTimeParseException ignored ) {
+            return null;
+        }
+    }
+
+    /**
+     * The whole desired curation state for one dataset (CAB's {@code CurationDocument}). Any section left
+     * null is untouched. Phase 1 applies {@code basics} and {@code publications}; the rest are kept on the
+     * wire (as raw nodes) so a caller sees a 400 rather than a silent drop when they send an unsupported one.
+     */
+    public static class CurationDocument {
+        @Nullable
+        private CurationBaseline baseline;
+        @Nullable
+        private CurationBasics basics;
+        @Nullable
+        private CurationPublications publications;
+        @Nullable
+        private com.fasterxml.jackson.databind.JsonNode design;
+        @Nullable
+        private com.fasterxml.jackson.databind.JsonNode tags;
+        @Nullable
+        private com.fasterxml.jackson.databind.JsonNode sampleCharacteristics;
+        @Nullable
+        private com.fasterxml.jackson.databind.JsonNode curationDetails;
+
+        @Nullable
+        public CurationBaseline getBaseline() { return baseline; }
+        public void setBaseline( @Nullable CurationBaseline baseline ) { this.baseline = baseline; }
+        @Nullable
+        public CurationBasics getBasics() { return basics; }
+        public void setBasics( @Nullable CurationBasics basics ) { this.basics = basics; }
+        @Nullable
+        public CurationPublications getPublications() { return publications; }
+        public void setPublications( @Nullable CurationPublications publications ) { this.publications = publications; }
+        @Nullable
+        public com.fasterxml.jackson.databind.JsonNode getDesign() { return design; }
+        public void setDesign( @Nullable com.fasterxml.jackson.databind.JsonNode design ) { this.design = nonEmpty( design ); }
+        @Nullable
+        public com.fasterxml.jackson.databind.JsonNode getTags() { return tags; }
+        public void setTags( @Nullable com.fasterxml.jackson.databind.JsonNode tags ) { this.tags = nonEmpty( tags ); }
+        @Nullable
+        public com.fasterxml.jackson.databind.JsonNode getSampleCharacteristics() { return sampleCharacteristics; }
+        public void setSampleCharacteristics( @Nullable com.fasterxml.jackson.databind.JsonNode n ) { this.sampleCharacteristics = nonEmpty( n ); }
+        @Nullable
+        public com.fasterxml.jackson.databind.JsonNode getCurationDetails() { return curationDetails; }
+        public void setCurationDetails( @Nullable com.fasterxml.jackson.databind.JsonNode n ) { this.curationDetails = nonEmpty( n ); }
+
+        // Treat an explicit null / empty object as "section absent" so an empty {} doesn't trip the 400.
+        @Nullable
+        private static com.fasterxml.jackson.databind.JsonNode nonEmpty( @Nullable com.fasterxml.jackson.databind.JsonNode n ) {
+            return ( n == null || n.isNull() || n.isEmpty() ) ? null : n;
+        }
+    }
+
+    public static class CurationBaseline {
+        @Nullable
+        private String lastModified;
+        @Nullable
+        public String getLastModified() { return lastModified; }
+        public void setLastModified( @Nullable String lastModified ) { this.lastModified = lastModified; }
+    }
+
+    public static class CurationBasics {
+        @Nullable
+        private String name;
+        @Nullable
+        private String description;
+        @Nullable
+        private String shortName;
+        @Nullable
+        public String getName() { return name; }
+        public void setName( @Nullable String name ) { this.name = name; }
+        @Nullable
+        public String getDescription() { return description; }
+        public void setDescription( @Nullable String description ) { this.description = description; }
+        @Nullable
+        public String getShortName() { return shortName; }
+        public void setShortName( @Nullable String shortName ) { this.shortName = shortName; }
+    }
+
+    /** Publications section — same identifier shape and set-replace semantics as {@code PUT /publications}. */
+    public static class CurationPublications {
+        @Nullable
+        private PublicationIdentifier primary;
+        @Nullable
+        private List<PublicationIdentifier> otherRelevant;
+        @Nullable
+        public PublicationIdentifier getPrimary() { return primary; }
+        public void setPrimary( @Nullable PublicationIdentifier primary ) { this.primary = primary; }
+        @Nullable
+        public List<PublicationIdentifier> getOtherRelevant() { return otherRelevant; }
+        public void setOtherRelevant( @Nullable List<PublicationIdentifier> otherRelevant ) { this.otherRelevant = otherRelevant; }
+    }
+
+    /** The server's reply — mirrors CAB's {@code CurationCommitReport}. */
+    public static class CurationCommitReport {
+        private final boolean applied;
+        private final Map<String, Long> idMap;
+        private final Map<String, CurationSectionChange> changes;
+        private final List<Long> auditEventIds;
+        private final String error;
+
+        private CurationCommitReport( boolean applied, Map<String, CurationSectionChange> changes ) {
+            this.applied = applied;
+            this.idMap = Collections.emptyMap();       // phase 1 creates no clientRef entities
+            this.changes = changes;
+            this.auditEventIds = Collections.emptyList();
+            this.error = "";
+        }
+
+        static CurationCommitReport from( CurationCommitResult r, CurationCommitRequest req, boolean applied ) {
+            Map<String, CurationSectionChange> changes = new LinkedHashMap<>();
+            if ( req.isBasicsPresent() ) {
+                changes.put( "basics", r.isBasicsChanged()
+                        ? new CurationSectionChange( 0, 1, 0, 0 )
+                        : new CurationSectionChange( 0, 0, 0, 1 ) );
+            }
+            if ( req.isPublicationsPresent() ) {
+                changes.put( "publications", new CurationSectionChange(
+                        r.getPublicationsCreated(), 0, r.getPublicationsDeleted(), r.getPublicationsUnchanged() ) );
+            }
+            return new CurationCommitReport( applied, changes );
+        }
+
+        public boolean isApplied() { return applied; }
+        public Map<String, Long> getIdMap() { return idMap; }
+        public Map<String, CurationSectionChange> getChanges() { return changes; }
+        public List<Long> getAuditEventIds() { return auditEventIds; }
+        public String getError() { return error; }
+    }
+
+    public static class CurationSectionChange {
+        private final int created;
+        private final int updated;
+        private final int deleted;
+        private final int unchanged;
+
+        CurationSectionChange( int created, int updated, int deleted, int unchanged ) {
+            this.created = created;
+            this.updated = updated;
+            this.deleted = deleted;
+            this.unchanged = unchanged;
+        }
+
+        public int getCreated() { return created; }
+        public int getUpdated() { return updated; }
+        public int getDeleted() { return deleted; }
+        public int getUnchanged() { return unchanged; }
     }
 
     /**

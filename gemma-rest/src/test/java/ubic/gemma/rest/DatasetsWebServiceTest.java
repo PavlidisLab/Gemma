@@ -3149,6 +3149,88 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         verify( expressionExperimentService, never() ).updateNameAndDescription( any(), any(), any() );
     }
 
+    @Test
+    @WithMockUser
+    public void testCommitCurationPublications() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        BibliographicReference ref = new BibliographicReference();
+        ref.setId( 10L );
+        when( bibliographicReferenceService.findOrCreateByPubMedId( "111" ) ).thenReturn( ref );
+        ubic.gemma.persistence.service.expression.experiment.CurationCommitResult res =
+                new ubic.gemma.persistence.service.expression.experiment.CurationCommitResult();
+        res.setPublicationsCreated( 1 );
+        when( expressionExperimentService.commitCuration( eq( ee ), any( ubic.gemma.persistence.service.expression.experiment.CurationCommitRequest.class ), eq( false ) ) )
+                .thenReturn( res );
+
+        String body = "{\"publications\":{\"primary\":{\"pubMedId\":\"111\"},\"otherRelevant\":[]}}";
+        assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
+
+        ArgumentCaptor<ubic.gemma.persistence.service.expression.experiment.CurationCommitRequest> cap =
+                ArgumentCaptor.forClass( ubic.gemma.persistence.service.expression.experiment.CurationCommitRequest.class );
+        verify( expressionExperimentService ).commitCuration( eq( ee ), cap.capture(), eq( false ) );
+        assertThat( cap.getValue().isPublicationsPresent() ).isTrue();
+        assertThat( cap.getValue().getPrimaryPublication() ).isEqualTo( ref );
+    }
+
+    @Test
+    @WithMockUser
+    public void testCommitCurationBasics() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        ubic.gemma.persistence.service.expression.experiment.CurationCommitResult res =
+                new ubic.gemma.persistence.service.expression.experiment.CurationCommitResult();
+        res.setBasicsChanged( true );
+        when( expressionExperimentService.commitCuration( eq( ee ), any(), eq( false ) ) ).thenReturn( res );
+
+        String body = "{\"basics\":{\"name\":\"New name\",\"description\":\"d\"}}";
+        assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+        ArgumentCaptor<ubic.gemma.persistence.service.expression.experiment.CurationCommitRequest> cap =
+                ArgumentCaptor.forClass( ubic.gemma.persistence.service.expression.experiment.CurationCommitRequest.class );
+        verify( expressionExperimentService ).commitCuration( eq( ee ), cap.capture(), eq( false ) );
+        assertThat( cap.getValue().isBasicsPresent() ).isTrue();
+        assertThat( cap.getValue().getName() ).isEqualTo( "New name" );
+    }
+
+    @Test
+    @WithMockUser
+    public void testCommitCurationRejectsUnsupportedSection() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        String body = "{\"design\":{\"factors\":{\"items\":[]}}}";
+        assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        verify( expressionExperimentService, never() ).commitCuration( any(), any(), anyBoolean() );
+    }
+
+    @Test
+    @WithMockUser
+    public void testPreflightCurationIsDryRun() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.commitCuration( eq( ee ), any(), eq( true ) ) )
+                .thenReturn( new ubic.gemma.persistence.service.expression.experiment.CurationCommitResult() );
+        String body = "{\"basics\":{\"name\":\"x\"}}";
+        assertThat( target( "/datasets/1/curation/preflight" ).request().post( Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+        verify( expressionExperimentService ).commitCuration( eq( ee ), any(), eq( true ) );
+    }
+
+    @Test
+    @WithMockUser
+    public void testCommitCurationStaleBaselineIs409() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.commitCuration( eq( ee ), any(), eq( false ) ) )
+                .thenThrow( new org.springframework.dao.OptimisticLockingFailureException( "moved" ) );
+        String body = "{\"basics\":{\"name\":\"x\"},\"baseline\":{\"lastModified\":\"123\"}}";
+        assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.CONFLICT );
+    }
+
     private static class DummyLockedPath implements LockedPath {
 
         private final Path path;

@@ -19,6 +19,8 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.ConfigAttribute;
 import org.springframework.security.access.SecurityConfig;
 import org.springframework.stereotype.Service;
@@ -2075,6 +2077,114 @@ public class ExpressionExperimentServiceImpl
             log.info( "updateNameAndDescription: " + ee.getShortName() + " (ID=" + ee.getId() + ")" );
         }
         return changed;
+    }
+
+    @Override
+    @Transactional
+    public CurationCommitResult commitCuration( ExpressionExperiment ee, CurationCommitRequest request, boolean dryRun ) {
+        ee = ensureInSession( ee );
+
+        // Optimistic concurrency: reject if the dataset moved since the draft's baseline.
+        Date expected = request.getExpectedLastUpdated();
+        if ( expected != null && ee.getCurationDetails() != null && ee.getCurationDetails().getLastUpdated() != null ) {
+            Date current = ee.getCurationDetails().getLastUpdated();
+            if ( current.getTime() != expected.getTime() ) {
+                throw new OptimisticLockingFailureException( "Dataset " + ee.getShortName()
+                        + " changed since the draft baseline (expected lastUpdated " + expected + ", found " + current + ")." );
+            }
+        }
+
+        CurationCommitResult result = new CurationCommitResult();
+        boolean anyChange = false;
+
+        // ── basics ──
+        if ( request.isBasicsPresent() ) {
+            boolean basicsChanged = false;
+            if ( request.getShortName() != null ) {
+                String sn = request.getShortName().trim();
+                if ( !sn.equals( ee.getShortName() ) ) {
+                    if ( !request.isShortNameChangeAllowed() ) {
+                        throw new AccessDeniedException( "Changing the short name requires administrator rights." );
+                    }
+                    if ( existsByShortName( sn ) ) {
+                        throw new IllegalArgumentException( "short_name '" + sn + "' is already in use." );
+                    }
+                    if ( !dryRun ) {
+                        ee.setShortName( sn );
+                    }
+                    basicsChanged = true;
+                }
+            }
+            if ( request.getName() != null && !request.getName().equals( ee.getName() ) ) {
+                if ( !dryRun ) {
+                    ee.setName( request.getName() );
+                }
+                basicsChanged = true;
+            }
+            if ( request.getDescription() != null && !request.getDescription().equals( ee.getDescription() ) ) {
+                if ( !dryRun ) {
+                    ee.setDescription( request.getDescription() );
+                }
+                basicsChanged = true;
+            }
+            result.setBasicsChanged( basicsChanged );
+            anyChange = anyChange || basicsChanged;
+        }
+
+        // ── publications (set-replace, diffed by id) ──
+        if ( request.isPublicationsPresent() ) {
+            BibliographicReference primary = request.getPrimaryPublication();
+            List<BibliographicReference> desiredOther = new ArrayList<>();
+            for ( BibliographicReference ref : request.getOtherRelevantPublications() ) {
+                if ( primary != null && Objects.equals( ref.getId(), primary.getId() ) ) {
+                    continue;
+                }
+                desiredOther.add( ref );
+            }
+            Set<Long> currentIds = new HashSet<>();
+            if ( ee.getPrimaryPublication() != null ) {
+                currentIds.add( ee.getPrimaryPublication().getId() );
+            }
+            for ( BibliographicReference r : ee.getOtherRelevantPublications() ) {
+                currentIds.add( r.getId() );
+            }
+            Set<Long> desiredIds = new HashSet<>();
+            if ( primary != null ) {
+                desiredIds.add( primary.getId() );
+            }
+            for ( BibliographicReference r : desiredOther ) {
+                desiredIds.add( r.getId() );
+            }
+            int created = 0, deleted = 0, unchanged = 0;
+            for ( Long id : desiredIds ) {
+                if ( currentIds.contains( id ) ) {
+                    unchanged++;
+                } else {
+                    created++;
+                }
+            }
+            for ( Long id : currentIds ) {
+                if ( !desiredIds.contains( id ) ) {
+                    deleted++;
+                }
+            }
+            result.setPublicationsCreated( created );
+            result.setPublicationsDeleted( deleted );
+            result.setPublicationsUnchanged( unchanged );
+            if ( !dryRun && ( created > 0 || deleted > 0 ) ) {
+                ee.setPrimaryPublication( primary );
+                ee.getOtherRelevantPublications().clear();
+                ee.getOtherRelevantPublications().addAll( desiredOther );
+            }
+            anyChange = anyChange || ( created > 0 || deleted > 0 );
+        }
+
+        if ( !dryRun && anyChange ) {
+            update( ee );
+            log.info( "commitCuration: " + ee.getShortName() + " (ID=" + ee.getId() + ") applied" );
+        }
+        result.setNewLastUpdated( ee.getCurationDetails() != null ? ee.getCurationDetails().getLastUpdated() : null );
+        return result;
     }
 
     /**

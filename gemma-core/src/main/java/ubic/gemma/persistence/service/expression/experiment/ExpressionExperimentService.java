@@ -1213,6 +1213,24 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     boolean updateNameAndDescription( ExpressionExperiment ee, @Nullable String name, @Nullable String description );
 
     /**
+     * Apply an all-or-none curation commit to {@code ee}, reconciling the sections carried in
+     * {@code request} in a single transaction (phase 1: basics + publications). This is the transactional
+     * core of the composite {@code PUT /datasets/{id}/curation} endpoint — either every section applies or,
+     * on any failure, nothing does.
+     * <p>
+     * When {@code dryRun} is {@code true} the change tally is computed without writing anything (backs
+     * {@code /curation/preflight}). Optimistic concurrency is enforced against
+     * {@link CurationCommitRequest#getExpectedLastUpdated()}: a stale baseline throws
+     * {@link org.springframework.dao.OptimisticLockingFailureException} (the web layer maps it to 409).
+     * A short-name change without {@link CurationCommitRequest#isShortNameChangeAllowed()} throws
+     * {@link org.springframework.security.access.AccessDeniedException}, rolling the whole commit back.
+     *
+     * @return per-section change counts (identical whether applied or dry-run).
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    CurationCommitResult commitCuration( ExpressionExperiment ee, CurationCommitRequest request, boolean dryRun );
+
+    /**
      * Add a single experiment-level tag to {@code ee} as part of the per-tag REST write flow.
      * <p>
      * Distinct from {@link #addCharacteristic(ExpressionExperiment, Characteristic)} in two ways:
