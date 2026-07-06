@@ -43,6 +43,39 @@
                     </execution>
                 </executions>
             </plugin>
+            <!--
+              Logging fix: prettytime-nlp is an uber-jar that bundles a shaded SLF4J 1.x
+              org.slf4j.LoggerFactory. In the flat appassembler classpath it shadows
+              slf4j-api 2.x, so SLF4J binds to a NOP logger and ALL CLI log output
+              (commons-logging -> jcl-over-slf4j -> SLF4J) is silently dropped. A Maven
+              <exclusion> can't help — the class is packaged inside prettytime-nlp itself.
+              The launcher prepends contrib/* to the classpath (endorsedDir=contrib above),
+              so seeding slf4j-api there makes the 2.x LoggerFactory win. Declared AFTER
+              appassembler so it runs after 'assemble' in the package phase.
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>seed-slf4j-api-into-contrib</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.slf4j</groupId>
+                                    <artifactId>slf4j-api</artifactId>
+                                    <version>${slf4j.version}</version>
+                                    <outputDirectory>${project.build.directory}/appassembler/contrib</outputDirectory>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
     <dependencies>
