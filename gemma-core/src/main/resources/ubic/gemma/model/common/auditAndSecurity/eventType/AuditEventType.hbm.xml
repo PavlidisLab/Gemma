@@ -51,7 +51,9 @@
                       name="ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent">
                 <subclass abstract="false" discriminator-value="RankComputationEvent"
                           name="ubic.gemma.model.common.auditAndSecurity.eventType.RankComputationEvent"/>
-
+                <!-- ported from Gemma 2.0 for shared-audit-trail read compatibility -->
+                <subclass abstract="false" discriminator-value="VectorsReorderedEvent"
+                          name="ubic.gemma.model.common.auditAndSecurity.eventType.VectorsReorderedEvent"/>
             </subclass>
             <subclass abstract="false" discriminator-value="BioMaterialMappingUpdate"
                       name="ubic.gemma.model.common.auditAndSecurity.eventType.BioMaterialMappingUpdate"/>
@@ -114,6 +116,9 @@
                           name="ubic.gemma.model.common.auditAndSecurity.eventType.SingleCellDataAddedEvent"/>
                 <subclass abstract="false" discriminator-value="RawDataAddedEvent"
                           name="ubic.gemma.model.common.auditAndSecurity.eventType.RawDataAddedEvent"/>
+                <!-- ported from Gemma 2.0 for shared-audit-trail read compatibility -->
+                <subclass abstract="false" discriminator-value="AggregatedSingleDataAddedEvent"
+                          name="ubic.gemma.model.common.auditAndSecurity.eventType.AggregatedSingleDataAddedEvent"/>
             </subclass>
             <subclass abstract="false" discriminator-value="DataRemovedEvent"
                       name="ubic.gemma.model.common.auditAndSecurity.eventType.DataRemovedEvent">
@@ -135,6 +140,14 @@
                       name="ubic.gemma.model.common.auditAndSecurity.eventType.MeanVarianceUpdateEvent"/>
             <subclass abstract="false" discriminator-value="SampleCorrelationAnalysisEvent"
                       name="ubic.gemma.model.common.auditAndSecurity.eventType.SampleCorrelationAnalysisEvent"/>
+
+            <!-- ported from Gemma 2.0 for shared-audit-trail read compatibility -->
+            <subclass abstract="false" discriminator-value="DatasetShortNameChangedEvent"
+                      name="ubic.gemma.model.common.auditAndSecurity.eventType.DatasetShortNameChangedEvent"/>
+            <subclass abstract="false" discriminator-value="PipelineRunEvent"
+                      name="ubic.gemma.model.common.auditAndSecurity.eventType.PipelineRunEvent"/>
+            <subclass abstract="false" discriminator-value="FailedPipelineRunEvent"
+                      name="ubic.gemma.model.common.auditAndSecurity.eventType.FailedPipelineRunEvent"/>
 
             <!-- single-cell events -->
             <subclass abstract="true" name="ubic.gemma.model.common.auditAndSecurity.eventType.CellTypeAssignmentEvent">
@@ -205,6 +218,11 @@
                       name="ubic.gemma.model.common.auditAndSecurity.eventType.AutomatedAnnotationEvent"/>
             <subclass abstract="false" discriminator-value="ManualAnnotationEvent"
                       name="ubic.gemma.model.common.auditAndSecurity.eventType.ManualAnnotationEvent"/>
+            <!-- ported from Gemma 2.0 for shared-audit-trail read compatibility -->
+            <subclass abstract="false" discriminator-value="TagAddedEvent"
+                      name="ubic.gemma.model.common.auditAndSecurity.eventType.TagAddedEvent"/>
+            <subclass abstract="false" discriminator-value="TagRemovedEvent"
+                      name="ubic.gemma.model.common.auditAndSecurity.eventType.TagRemovedEvent"/>
         </subclass>
         <subclass abstract="false" discriminator-value="PermissionChangeEvent"
                   name="ubic.gemma.model.common.auditAndSecurity.eventType.PermissionChangeEvent">
@@ -214,7 +232,11 @@
                       name="ubic.gemma.model.common.auditAndSecurity.eventType.MakePublicEvent"/>
         </subclass>
         <subclass abstract="false" discriminator-value="ExperimentalDesignUpdatedEvent"
-                  name="ubic.gemma.model.common.auditAndSecurity.eventType.ExperimentalDesignUpdatedEvent"/>
+                  name="ubic.gemma.model.common.auditAndSecurity.eventType.ExperimentalDesignUpdatedEvent">
+            <!-- ported from Gemma 2.0 for shared-audit-trail read compatibility -->
+            <subclass abstract="false" discriminator-value="DesignChangeEvent"
+                      name="ubic.gemma.model.common.auditAndSecurity.eventType.DesignChangeEvent"/>
+        </subclass>
         <subclass abstract="false" discriminator-value="GeeqEvent"
                   name="ubic.gemma.model.common.auditAndSecurity.eventType.GeeqEvent">
         </subclass>
@@ -237,6 +259,38 @@
             <subclass abstract="false" discriminator-value="ReleaseDetailsUpdateEvent"
                       name="ubic.gemma.model.common.auditAndSecurity.eventType.ReleaseDetailsUpdateEvent"/>
         </subclass>
+
+        <!-- ================================================================================= -->
+        <!-- Ported from Gemma 2.0 for shared-audit-trail read compatibility: the 1.x line and  -->
+        <!-- 2.0 share one audit trail, so 1.x must resolve these discriminators (2.0 writes    -->
+        <!-- them) without a WrongClassException. 1.x never writes them; they carry no data.    -->
+        <!-- ================================================================================= -->
+        <subclass abstract="false" discriminator-value="AnnotationSetEvent"
+                  name="ubic.gemma.model.common.auditAndSecurity.eventType.AnnotationSetEvent"/>
+        <subclass abstract="false" discriminator-value="DatasetPublishedEvent"
+                  name="ubic.gemma.model.common.auditAndSecurity.eventType.DatasetPublishedEvent"/>
+        <subclass abstract="false" discriminator-value="PreboardedCreatedEvent"
+                  name="ubic.gemma.model.common.auditAndSecurity.eventType.PreboardedCreatedEvent"/>
+        <subclass abstract="false" discriminator-value="PreboardedPromotedEvent"
+                  name="ubic.gemma.model.common.auditAndSecurity.eventType.PreboardedPromotedEvent"/>
+        <subclass abstract="false" discriminator-value="PipelineBatchCancelledEvent"
+                  name="ubic.gemma.model.common.auditAndSecurity.eventType.PipelineBatchCancelledEvent"/>
+        <subclass abstract="false" discriminator-value="PipelineBatchClosedEvent"
+                  name="ubic.gemma.model.common.auditAndSecurity.eventType.PipelineBatchClosedEvent"/>
+        <subclass abstract="false" discriminator-value="PipelineBatchSubmittedEvent"
+                  name="ubic.gemma.model.common.auditAndSecurity.eventType.PipelineBatchSubmittedEvent"/>
+        <subclass abstract="false" discriminator-value="TicketOpenedEvent"
+                  name="ubic.gemma.model.common.auditAndSecurity.eventType.TicketOpenedEvent"/>
+        <subclass abstract="false" discriminator-value="TicketAssignedEvent"
+                  name="ubic.gemma.model.common.auditAndSecurity.eventType.TicketAssignedEvent"/>
+        <subclass abstract="false" discriminator-value="TicketStateChangedEvent"
+                  name="ubic.gemma.model.common.auditAndSecurity.eventType.TicketStateChangedEvent"/>
+        <subclass abstract="false" discriminator-value="TicketMetadataChangedEvent"
+                  name="ubic.gemma.model.common.auditAndSecurity.eventType.TicketMetadataChangedEvent"/>
+        <subclass abstract="false" discriminator-value="TicketTargetStatusChangedEvent"
+                  name="ubic.gemma.model.common.auditAndSecurity.eventType.TicketTargetStatusChangedEvent"/>
+        <subclass abstract="false" discriminator-value="WorkflowStateChangedEvent"
+                  name="ubic.gemma.model.common.auditAndSecurity.eventType.WorkflowStateChangedEvent"/>
 
     </class>
 </hibernate-mapping>
