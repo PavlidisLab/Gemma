@@ -18,6 +18,7 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
+import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
@@ -137,6 +138,13 @@ public class ExpressionExperimentServiceImpl
     @Autowired
     @Lazy
     private ExpressionExperimentService self;
+    /**
+     * Used inside {@link #commitCuration} to flush after tag/sample-characteristic adds (so the cascaded inserts
+     * assign their ids in time to echo {@code clientRef → newId}) and to bump the curation {@code lastUpdated}
+     * concurrency token on any change.
+     */
+    @Autowired
+    private SessionFactory sessionFactory;
 
     @Autowired
     public ExpressionExperimentServiceImpl( ExpressionExperimentDao expressionExperimentDao ) {
@@ -2262,10 +2270,20 @@ public class ExpressionExperimentServiceImpl
                         deleted++;
                     }
                 }
-                for ( CurationCommitRequest.TagAdd add : request.getTagsToAdd() ) {
-                    Characteristic c = self.addAnnotation( ee, add.getCharacteristic() );
-                    idMap.put( add.getClientRef(), c.getId() );
+                List<CurationCommitRequest.TagAdd> adds = request.getTagsToAdd();
+                for ( CurationCommitRequest.TagAdd add : adds ) {
+                    self.addAnnotation( ee, add.getCharacteristic() );
                     created++;
+                }
+                if ( created > 0 ) {
+                    // addAnnotation persists via merge, so the passed-in characteristic stays transient — resolve each
+                    // new id by content (the same sameTag equality addAnnotation uses to reject duplicates, so the
+                    // match is unambiguous) from a fresh read after the flush.
+                    sessionFactory.getCurrentSession().flush();
+                    Collection<Characteristic> persisted = load( ee.getId() ).getCharacteristics();
+                    for ( CurationCommitRequest.TagAdd add : adds ) {
+                        idMap.put( add.getClientRef(), matchCharacteristicId( persisted, add.getCharacteristic() ) );
+                    }
                 }
             }
             result.setTagsCreated( created );
@@ -2304,15 +2322,25 @@ public class ExpressionExperimentServiceImpl
                         deleted++;
                     }
                 }
-                for ( CurationCommitRequest.SampleCharacteristicAdd add : request.getSampleCharsToAdd() ) {
+                List<CurationCommitRequest.SampleCharacteristicAdd> adds = request.getSampleCharsToAdd();
+                for ( CurationCommitRequest.SampleCharacteristicAdd add : adds ) {
                     BioMaterial bm = bmById.get( add.getBioMaterialId() );
                     if ( bm == null ) {
                         throw new IllegalArgumentException( "sampleCharacteristics references biomaterial "
                                 + add.getBioMaterialId() + " which is not part of " + ee.getShortName() + "." );
                     }
-                    Characteristic c = bioMaterialService.addAnnotation( ee, bm, add.getCharacteristic() );
-                    idMap.put( add.getClientRef(), c.getId() );
+                    bioMaterialService.addAnnotation( ee, bm, add.getCharacteristic() );
                     created++;
+                }
+                if ( created > 0 ) {
+                    // Same merge-persist caveat as tags — resolve the new id by content from a fresh read of the sample.
+                    sessionFactory.getCurrentSession().flush();
+                    Map<Long, Collection<Characteristic>> freshByBm = new HashMap<>();
+                    for ( CurationCommitRequest.SampleCharacteristicAdd add : adds ) {
+                        Collection<Characteristic> persisted = freshByBm.computeIfAbsent( add.getBioMaterialId(),
+                                bmId -> bioMaterialService.thaw( bioMaterialService.load( bmId ) ).getCharacteristics() );
+                        idMap.put( add.getClientRef(), matchCharacteristicId( persisted, add.getCharacteristic() ) );
+                    }
                 }
             }
             result.setSampleCharsCreated( created );
@@ -2346,6 +2374,14 @@ public class ExpressionExperimentServiceImpl
 
         if ( !dryRun && anyChange ) {
             update( ee );
+            // Advance the curation lastUpdated concurrency token on every change. Sections that emit an audit event
+            // (design/tags/sampleCharacteristics/curationNote) already bump it via the curatable audit hook, but a
+            // basics- or publications-only change emits none — so bump it here (set + merge, same as that hook) so a
+            // stale baseline is always detectable on the next commit.
+            if ( ee.getCurationDetails() != null ) {
+                ee.getCurationDetails().setLastUpdated( new Date() );
+                ee.setCurationDetails( ( CurationDetails ) sessionFactory.getCurrentSession().merge( ee.getCurationDetails() ) );
+            }
             log.info( "commitCuration: " + ee.getShortName() + " (ID=" + ee.getId() + ") applied" );
         }
         result.setNewLastUpdated( ee.getCurationDetails() != null ? ee.getCurationDetails().getLastUpdated() : null );
@@ -2489,6 +2525,22 @@ public class ExpressionExperimentServiceImpl
         String updated = cleaned.isEmpty() ? line.toString() : cleaned + "\n" + line;
         // The CurationNoteUpdateEvent hook copies the note onto CurationDetails — mirrors updateDatasetCurationDetails.
         auditTrailService.addUpdateEvent( ee, CurationNoteUpdateEvent.class, updated );
+    }
+
+    /**
+     * Resolve the id of a just-added characteristic by content-matching it against a fresh (persisted) collection,
+     * using the same {@code sameTag} equality {@code addAnnotation} uses to reject duplicates — so within one owner
+     * the match is unambiguous. Needed because tag / sample-characteristic adds persist via merge, leaving the
+     * passed-in characteristic transient (no id) so it can't be echoed directly.
+     */
+    @Nullable
+    private static Long matchCharacteristicId( Collection<Characteristic> persisted, Characteristic target ) {
+        for ( Characteristic c : persisted ) {
+            if ( c.getId() != null && sameTag( c, target ) ) {
+                return c.getId();
+            }
+        }
+        return null;
     }
 
     /**

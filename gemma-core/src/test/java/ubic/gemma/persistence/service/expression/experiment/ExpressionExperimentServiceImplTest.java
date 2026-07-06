@@ -93,6 +93,11 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
         }
 
         @Bean
+        public org.hibernate.SessionFactory sessionFactory() {
+            return mock( org.hibernate.SessionFactory.class );
+        }
+
+        @Bean
         public ExpressionExperimentService expressionExperimentService( ExpressionExperimentDao expressionExperimentDao ) {
             return new ExpressionExperimentServiceImpl( expressionExperimentDao );
         }

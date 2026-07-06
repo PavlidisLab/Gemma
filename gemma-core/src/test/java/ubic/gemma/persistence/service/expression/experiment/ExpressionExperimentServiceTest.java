@@ -54,6 +54,11 @@ public class ExpressionExperimentServiceTest extends BaseTest5 {
         }
 
         @Bean
+        public org.hibernate.SessionFactory sessionFactory() {
+            return mock( org.hibernate.SessionFactory.class );
+        }
+
+        @Bean
         public ExpressionExperimentReadService expressionExperimentReadService() {
             return mock( ExpressionExperimentReadService.class );
         }

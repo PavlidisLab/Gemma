@@ -136,12 +136,15 @@ public class DatasetsCurationCommitRestTest extends BaseJerseyIntegrationTest5 {
         String add = "{\"tags\":{\"items\":[{\"clientRef\":\"T1\","
                 + "\"category\":{\"label\":\"disease\",\"uri\":\"http://purl.obolibrary.org/obo/DOID_4\"},"
                 + "\"value\":{\"label\":\"glioma\",\"uri\":\"http://purl.obolibrary.org/obo/DOID_0060108\"}}]}}";
+        String addJson;
         try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request().put( Entity.json( add ) ) ) {
             assertThat( r.getStatus() ).isEqualTo( Response.Status.OK.getStatusCode() );
-            assertThat( r.readEntity( String.class ) ).contains( "T1" );
+            addJson = r.readEntity( String.class );
         }
         AnnotationValueObject glioma = findAnnotation( "glioma" );
         assertThat( glioma ).as( "tag was persisted" ).isNotNull();
+        // idMap echoes the real new id, not null.
+        assertThat( addJson ).contains( "\"T1\":" + glioma.getId() );
 
         // Delete it by its (now-known) id via deletedIds.
         String del = "{\"tags\":{\"items\":[],\"deletedIds\":[" + glioma.getId() + "]}}";
@@ -161,7 +164,8 @@ public class DatasetsCurationCommitRestTest extends BaseJerseyIntegrationTest5 {
                 + "\"category\":{\"label\":\"genotype\"},\"value\":{\"label\":\"WT\"}}]}}";
         try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request().put( Entity.json( body ) ) ) {
             assertThat( r.getStatus() ).isEqualTo( Response.Status.OK.getStatusCode() );
-            assertThat( r.readEntity( String.class ) ).contains( "S1" );
+            // idMap echoes the real new id, not null.
+            assertThat( r.readEntity( String.class ) ).contains( "S1" ).doesNotContain( "\"S1\":null" );
         }
         // Read the sample's characteristics back over HTTP.
         try ( Response r = target( "/datasets/" + ee.getId() + "/samples/" + ba.getId() + "/characteristics" ).request().get() ) {
@@ -217,6 +221,19 @@ public class DatasetsCurationCommitRestTest extends BaseJerseyIntegrationTest5 {
         ExperimentalDesignValueObject after = expressionExperimentService.getExperimentalDesignValueObject(
                 expressionExperimentService.load( ee.getId() ) );
         assertThat( countAssigned( after, fvId ) ).as( "null samples left assignments untouched" ).isEqualTo( assignedBefore );
+    }
+
+    @Test
+    public void testCommitAdvancesLastUpdated() {
+        // Floor to the current second so the DB's timestamp precision can't cause a false failure.
+        java.util.Date startOfSecond = new java.util.Date( ( System.currentTimeMillis() / 1000L ) * 1000L );
+        // A basics-only change emits no section audit event — historically it left lastUpdated stuck at the seed time.
+        String body = "{\"basics\":{\"description\":\"advance the concurrency token " + ee.getId() + "\"}}";
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request().put( Entity.json( body ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( Response.Status.OK.getStatusCode() );
+        }
+        java.util.Date lastUpdated = expressionExperimentService.load( ee.getId() ).getCurationDetails().getLastUpdated();
+        assertThat( lastUpdated ).as( "commit advanced the lastUpdated token to ~now" ).isAfterOrEqualTo( startOfSecond );
     }
 
     private static long countAssigned( ExperimentalDesignValueObject d, Long fvId ) {
