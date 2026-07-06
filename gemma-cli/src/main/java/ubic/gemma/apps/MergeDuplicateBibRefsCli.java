@@ -92,6 +92,13 @@ public class MergeDuplicateBibRefsCli extends AbstractAuthenticatedCLI {
     protected void processOptions( CommandLine commandLine ) {
         this.pubMedIds = commandLine.getOptionValue( "pmids" ).split( "," );
         this.commit = commandLine.hasOption( "commit" );
+        if ( this.commit ) {
+            // -commit repoints experiments and deletes bibrefs — both GROUP_ADMIN-only.
+            // Require authentication up front so an unauthenticated (anonymous) run fails
+            // fast with a clear message instead of silently no-opping when the secured
+            // writes are denied. Dry runs may still be executed anonymously.
+            setRequireLogin();
+        }
     }
 
     @Override
