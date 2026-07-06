@@ -76,6 +76,24 @@ public class BibliographicReferenceServiceTest extends BaseSpringContextTest5 {
         assertNotNull( testBibRef );
     }
 
+    /**
+     * Prod has duplicate BibliographicReference rows for the same PubMed accession; the external-id
+     * lookups must return one (the lowest-id) rather than throwing {@code NonUniqueResultException} (which
+     * surfaced as a 500 on {@code PUT /datasets/{id}/publications}), and {@code find} must too so
+     * {@code findOrCreate} doesn't add yet another duplicate.
+     */
+    @Test
+    public final void testFindByExternalIdToleratesDuplicates() {
+        String accession = de.getAccession();
+        BibliographicReference dupRef = BibliographicReference.Factory.newInstance();
+        dupRef.setPubAccession( DatabaseEntry.Factory.newInstance( accession, de.getExternalDatabase() ) );
+        bibliographicReferenceService.create( dupRef );
+
+        assertNotNull( bibliographicReferenceService.findByExternalId( accession, ExternalDatabases.PUBMED ) );
+        assertNotNull( bibliographicReferenceService.findByExternalId( de ) );
+        assertNotNull( bibliographicReferenceService.find( testBibRef ) );
+    }
+
     @Test
     public void testGetRelatedExperiments() {
         assertThat( bibliographicReferenceService.getRelatedExperiments( Collections.singleton( testBibRef ) ) )

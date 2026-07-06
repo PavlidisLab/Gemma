@@ -61,19 +61,49 @@ public class BibliographicReferenceDaoImpl
 
     @Override
     public BibliographicReference findByExternalId( final String id, final String databaseName ) {
-        return ( BibliographicReference ) this.getSessionFactory().getCurrentSession().createQuery(
+        //noinspection unchecked
+        List<BibliographicReference> matches = this.getSessionFactory().getCurrentSession().createQuery(
                         "from BibliographicReference b "
-                                + "where b.pubAccession.accession=:id AND b.pubAccession.externalDatabase.name=:databaseName" )
+                                + "where b.pubAccession.accession=:id AND b.pubAccession.externalDatabase.name=:databaseName "
+                                + "order by b.id" )
                 .setParameter( "id", id )
                 .setParameter( "databaseName", databaseName )
-                .uniqueResult();
+                .setMaxResults( 2 )
+                .list();
+        return firstOfPossibleDuplicates( matches, databaseName + ":" + id );
     }
 
     @Override
     public BibliographicReference findByExternalId( final DatabaseEntry externalId ) {
-        return ( BibliographicReference ) this.getSessionFactory().getCurrentSession()
-                .createQuery( "from BibliographicReference b where b.pubAccession=:externalId" )
-                .setParameter( "externalId", externalId ).uniqueResult();
+        //noinspection unchecked
+        List<BibliographicReference> matches = this.getSessionFactory().getCurrentSession()
+                .createQuery( "from BibliographicReference b where b.pubAccession=:externalId order by b.id" )
+                .setParameter( "externalId", externalId )
+                .setMaxResults( 2 )
+                .list();
+        return firstOfPossibleDuplicates( matches, String.valueOf( externalId.getAccession() ) );
+    }
+
+    /**
+     * Collapse a possibly-duplicated external-id lookup to a single, deterministic result. Duplicate
+     * {@link BibliographicReference} rows for the same accession exist in prod (a known data issue); a naive
+     * {@code uniqueResult()} throws {@link org.hibernate.NonUniqueResultException} on them, which surfaced as
+     * a 500 on {@code PUT /datasets/{id}/publications}. Return the lowest-id (oldest, canonical) match and
+     * warn so the duplicates get cleaned up, rather than failing the caller.
+     *
+     * @param matches up to two matches (query capped at {@code setMaxResults(2)} — enough to detect a dup).
+     * @param key     accession key for the warning message.
+     * @return the lowest-id match, or {@code null} when there is none.
+     */
+    private BibliographicReference firstOfPossibleDuplicates( List<BibliographicReference> matches, String key ) {
+        if ( matches.isEmpty() ) {
+            return null;
+        }
+        if ( matches.size() > 1 ) {
+            log.warn( "Multiple BibliographicReferences share external id '" + key + "'; returning the lowest-id one (id="
+                    + matches.get( 0 ).getId() + "). The bibref table needs de-duplication for this accession." );
+        }
+        return matches.get( 0 );
     }
 
     @Override
@@ -203,10 +233,17 @@ public class BibliographicReferenceDaoImpl
         if ( bibliographicReference.getPubAccession() == null ) {
             throw new NullPointerException( "PubAccession cannot be null" );
         }
-        return ( BibliographicReference ) this.getSessionFactory().getCurrentSession()
-                .createQuery( "from BibliographicReference b where b.pubAccession.accession = :acc" )
-                .setParameter( "acc", bibliographicReference.getPubAccession().getAccession() )
-                .uniqueResult();
+        // Tolerate pre-existing duplicate rows (return the lowest-id match) rather than throwing. Beyond
+        // not 500-ing reads, this is what keeps findOrCreate from ADDING another duplicate: an accession
+        // that already has 2-3 rows still resolves to an existing one here, so create() is not reached.
+        String accession = bibliographicReference.getPubAccession().getAccession();
+        //noinspection unchecked
+        List<BibliographicReference> matches = this.getSessionFactory().getCurrentSession()
+                .createQuery( "from BibliographicReference b where b.pubAccession.accession = :acc order by b.id" )
+                .setParameter( "acc", accession )
+                .setMaxResults( 2 )
+                .list();
+        return firstOfPossibleDuplicates( matches, accession );
     }
 
     @Override
