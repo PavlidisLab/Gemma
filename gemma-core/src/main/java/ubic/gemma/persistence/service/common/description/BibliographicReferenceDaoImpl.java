@@ -74,6 +74,18 @@ public class BibliographicReferenceDaoImpl
     }
 
     @Override
+    public List<BibliographicReference> findAllByExternalId( final String id, final String databaseName ) {
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession().createQuery(
+                        "from BibliographicReference b "
+                                + "where b.pubAccession.accession=:id AND b.pubAccession.externalDatabase.name=:databaseName "
+                                + "order by b.id" )
+                .setParameter( "id", id )
+                .setParameter( "databaseName", databaseName )
+                .list();
+    }
+
+    @Override
     public BibliographicReference findByExternalId( final DatabaseEntry externalId ) {
         //noinspection unchecked
         List<BibliographicReference> matches = this.getSessionFactory().getCurrentSession()

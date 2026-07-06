@@ -74,6 +74,13 @@ public interface BibliographicReferenceReadService {
     BibliographicReference findByExternalId( String id, String databaseName );
 
     /**
+     * Retrieve ALL references sharing an identifier (accession + database name), ordered by id ascending.
+     * Usually at most one, but prod has duplicate rows for some accessions; this exposes the whole set for
+     * de-duplication.
+     */
+    List<BibliographicReference> findAllByExternalId( String id, String databaseName );
+
+    /**
      * Get a reference VO by the unqualified external id. Searches for pubmed by default.
      */
     @Nullable

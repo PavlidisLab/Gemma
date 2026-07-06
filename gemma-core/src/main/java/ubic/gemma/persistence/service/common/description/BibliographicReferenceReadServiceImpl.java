@@ -93,6 +93,12 @@ public class BibliographicReferenceReadServiceImpl implements BibliographicRefer
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<BibliographicReference> findAllByExternalId( String id, String databaseName ) {
+        return this.bibliographicReferenceDao.findAllByExternalId( id, databaseName );
+    }
+
+    @Override
     @Nullable
     @Transactional(readOnly = true)
     public BibliographicReferenceValueObject findVOByExternalId( final String id ) {
