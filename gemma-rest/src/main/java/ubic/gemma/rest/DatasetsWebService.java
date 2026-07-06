@@ -989,8 +989,8 @@ public class DatasetsWebService {
             responses = {
                     @ApiResponse(responseCode = "200",
                             content = @Content(schema = @Schema(oneOf = {
-                                    FilteredAndInferredAndPaginatedResponseDataObject.class,
-                                    FilteredAndInferredAndCursorPaginatedResponseDataObject.class
+                                    FilteredAndInferredAndPaginatedResponseDataObjectExpressionExperimentValueObject.class,
+                                    FilteredAndInferredAndCursorPaginatedResponseDataObjectExpressionExperimentValueObject.class
                             }))),
             })
     public Object getDatasetsByIds( // Params:
@@ -1037,8 +1037,8 @@ public class DatasetsWebService {
             responses = {
                     @ApiResponse(responseCode = "200",
                             content = @Content(schema = @Schema(oneOf = {
-                                    FilteredAndInferredAndPaginatedResponseDataObject.class,
-                                    FilteredAndInferredAndCursorPaginatedResponseDataObject.class
+                                    FilteredAndInferredAndPaginatedResponseDataObjectExpressionExperimentValueObject.class,
+                                    FilteredAndInferredAndCursorPaginatedResponseDataObjectExpressionExperimentValueObject.class
                             }))),
             })
     public Object getBlacklistedDatasets(
@@ -1458,8 +1458,8 @@ public class DatasetsWebService {
             responses = {
                     @ApiResponse(responseCode = "200",
                             content = @Content(schema = @Schema(oneOf = {
-                                    ResponseDataObject.class,
-                                    CursorPaginatedResponseDataObject.class
+                                    ResponseDataObjectListTicketValueObject.class,
+                                    CursorPaginatedResponseDataObjectTicketValueObject.class
                             }))),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
@@ -1535,8 +1535,10 @@ public class DatasetsWebService {
             responses = {
                     @ApiResponse(responseCode = "200",
                             content = @Content(schema = @Schema(oneOf = {
-                                    ResponseDataObject.class,
-                                    CursorPaginatedResponseDataObject.class
+                                    ResponseDataObjectListAuditEventValueObject.class,
+                                    ResponseDataObjectListCompactAuditEventValueObject.class,
+                                    CursorPaginatedResponseDataObjectAuditEventValueObject.class,
+                                    CursorPaginatedResponseDataObjectCompactAuditEventValueObject.class
                             }))),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
@@ -5602,8 +5604,8 @@ public class DatasetsWebService {
             responses = {
                     @ApiResponse(responseCode = "200",
                             content = @Content(schema = @Schema(oneOf = {
-                                    PaginatedResponseDataObject.class,
-                                    CursorPaginatedResponseDataObject.class
+                                    QueriedAndFilteredAndInferredAndPaginatedResponseDataObjectExperimentExpressionLevelsValueObject.class,
+                                    QueriedAndFilteredAndInferredAndCursorPaginatedResponseDataObjectExperimentExpressionLevelsValueObject.class
                             }))),
             })
     public Object getDatasetsExpressionLevelsForGene(
@@ -5634,8 +5636,8 @@ public class DatasetsWebService {
             responses = {
                     @ApiResponse(responseCode = "200",
                             content = @Content(schema = @Schema(oneOf = {
-                                    PaginatedResponseDataObject.class,
-                                    CursorPaginatedResponseDataObject.class
+                                    QueriedAndFilteredAndInferredAndPaginatedResponseDataObjectExperimentExpressionLevelsValueObject.class,
+                                    QueriedAndFilteredAndInferredAndCursorPaginatedResponseDataObjectExperimentExpressionLevelsValueObject.class
                             }))),
             })
     public Object getDatasetsExpressionLevelsForGeneInTaxon(
@@ -6141,8 +6143,8 @@ public class DatasetsWebService {
             responses = {
                     @ApiResponse(responseCode = "200",
                             content = @Content(schema = @Schema(oneOf = {
-                                    ResponseDataObject.class,
-                                    CursorPaginatedResponseDataObject.class
+                                    ResponseDataObjectListBioAssayValueObject.class,
+                                    CursorPaginatedResponseDataObjectBioAssayValueObject.class
                             }))),
                     @ApiResponse(responseCode = "404", description = "The dataset or subset does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
@@ -6645,6 +6647,90 @@ public class DatasetsWebService {
 
         public CursorPaginatedResponseDataObjectBioAssayValueObject( CursorPage<BioAssayValueObject> payload, String[] groupBy ) {
             super( payload, groupBy );
+        }
+    }
+
+    // --- OpenAPI doc-only wrappers: bind the data type argument for the oneOf response schemas of the
+    // --- cursor-paginated dataset endpoints. Raw generic references (e.g. ResponseDataObject.class) erase
+    // --- the data element type in the generated spec; these concrete subclasses restore it.
+
+    /** Legacy shape for {@link #getDatasetsByIds} / {@link #getBlacklistedDatasets}. */
+    public static class FilteredAndInferredAndPaginatedResponseDataObjectExpressionExperimentValueObject extends FilteredAndInferredAndPaginatedResponseDataObject<ExpressionExperimentValueObject> {
+
+        public FilteredAndInferredAndPaginatedResponseDataObjectExpressionExperimentValueObject( Slice<ExpressionExperimentValueObject> payload, @Nullable Filters filters, @Nullable String[] groupBy, Collection<OntologyTerm> inferredTerms ) {
+            super( payload, filters, groupBy, inferredTerms );
+        }
+    }
+
+    /** Cursor shape for {@link #getDatasetsByIds} / {@link #getBlacklistedDatasets}. */
+    public static class FilteredAndInferredAndCursorPaginatedResponseDataObjectExpressionExperimentValueObject extends FilteredAndInferredAndCursorPaginatedResponseDataObject<ExpressionExperimentValueObject> {
+
+        public FilteredAndInferredAndCursorPaginatedResponseDataObjectExpressionExperimentValueObject( CursorPage<ExpressionExperimentValueObject> payload, @Nullable Filters filters, @Nullable String[] groupBy, Collection<OntologyTerm> inferredTerms ) {
+            super( payload, filters, groupBy, inferredTerms );
+        }
+    }
+
+    /** Legacy shape for {@link #getDatasetTickets}. */
+    public static class ResponseDataObjectListTicketValueObject extends ResponseDataObject<List<TicketValueObject>> {
+
+        public ResponseDataObjectListTicketValueObject( List<TicketValueObject> payload ) {
+            super( payload );
+        }
+    }
+
+    /** Cursor shape for {@link #getDatasetTickets}. */
+    public static class CursorPaginatedResponseDataObjectTicketValueObject extends CursorPaginatedResponseDataObject<TicketValueObject> {
+
+        public CursorPaginatedResponseDataObjectTicketValueObject( CursorPage<TicketValueObject> payload, String[] groupBy ) {
+            super( payload, groupBy );
+        }
+    }
+
+    /** Legacy full-fidelity shape for {@link #getDatasetAuditEvents} (compact=false). */
+    public static class ResponseDataObjectListAuditEventValueObject extends ResponseDataObject<List<AuditEventValueObject>> {
+
+        public ResponseDataObjectListAuditEventValueObject( List<AuditEventValueObject> payload ) {
+            super( payload );
+        }
+    }
+
+    /** Cursor full-fidelity shape for {@link #getDatasetAuditEvents} (compact=false). */
+    public static class CursorPaginatedResponseDataObjectAuditEventValueObject extends CursorPaginatedResponseDataObject<AuditEventValueObject> {
+
+        public CursorPaginatedResponseDataObjectAuditEventValueObject( CursorPage<AuditEventValueObject> payload, String[] groupBy ) {
+            super( payload, groupBy );
+        }
+    }
+
+    /** Legacy collapsed shape for {@link #getDatasetAuditEvents} (compact=true). */
+    public static class ResponseDataObjectListCompactAuditEventValueObject extends ResponseDataObject<List<CompactAuditEventValueObject>> {
+
+        public ResponseDataObjectListCompactAuditEventValueObject( List<CompactAuditEventValueObject> payload ) {
+            super( payload );
+        }
+    }
+
+    /** Cursor collapsed shape for {@link #getDatasetAuditEvents} (compact=true). */
+    public static class CursorPaginatedResponseDataObjectCompactAuditEventValueObject extends CursorPaginatedResponseDataObject<CompactAuditEventValueObject> {
+
+        public CursorPaginatedResponseDataObjectCompactAuditEventValueObject( CursorPage<CompactAuditEventValueObject> payload, String[] groupBy ) {
+            super( payload, groupBy );
+        }
+    }
+
+    /** Legacy shape for {@link #getDatasetsExpressionLevelsForGene} / {@link #getDatasetsExpressionLevelsForGeneInTaxon}. */
+    public static class QueriedAndFilteredAndInferredAndPaginatedResponseDataObjectExperimentExpressionLevelsValueObject extends QueriedAndFilteredAndInferredAndPaginatedResponseDataObject<ExperimentExpressionLevelsValueObject> {
+
+        public QueriedAndFilteredAndInferredAndPaginatedResponseDataObjectExperimentExpressionLevelsValueObject( Slice<ExperimentExpressionLevelsValueObject> payload, @Nullable String query, @Nullable Filters filters, String[] groupBy, Collection<OntologyTerm> inferredTerms ) {
+            super( payload, query, filters, groupBy, inferredTerms );
+        }
+    }
+
+    /** Cursor shape for {@link #getDatasetsExpressionLevelsForGene} / {@link #getDatasetsExpressionLevelsForGeneInTaxon}. */
+    public static class QueriedAndFilteredAndInferredAndCursorPaginatedResponseDataObjectExperimentExpressionLevelsValueObject extends QueriedAndFilteredAndInferredAndCursorPaginatedResponseDataObject<ExperimentExpressionLevelsValueObject> {
+
+        public QueriedAndFilteredAndInferredAndCursorPaginatedResponseDataObjectExperimentExpressionLevelsValueObject( CursorPage<ExperimentExpressionLevelsValueObject> payload, @Nullable String query, @Nullable Filters filters, @Nullable String[] groupBy, Collection<OntologyTerm> inferredTerms ) {
+            super( payload, query, filters, groupBy, inferredTerms );
         }
     }
 }
