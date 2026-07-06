@@ -8,12 +8,15 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.test.PersistentDummyObjectHelper;
+import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExperimentalDesignValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValueBasicValueObject;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.rest.util.BaseJerseyIntegrationTest5;
+
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -124,5 +127,69 @@ public class DatasetsCurationCommitRestTest extends BaseJerseyIntegrationTest5 {
         assertThat( expressionExperimentService.getExperimentalDesignValueObject( reloaded ).getExperimentalFactors() )
                 .noneMatch( f -> "ghost".equals( f.getName() ) )
                 .hasSize( (int) factorCountBefore );
+    }
+
+    @Test
+    public void testCommitTagsAddThenDeleteById() {
+        // Add an experiment-level tag by clientRef. URIs are required for it to survive the getAnnotations
+        // read filter (which deliberately drops free-text tags).
+        String add = "{\"tags\":{\"items\":[{\"clientRef\":\"T1\","
+                + "\"category\":{\"label\":\"disease\",\"uri\":\"http://purl.obolibrary.org/obo/DOID_4\"},"
+                + "\"value\":{\"label\":\"glioma\",\"uri\":\"http://purl.obolibrary.org/obo/DOID_0060108\"}}]}}";
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request().put( Entity.json( add ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( Response.Status.OK.getStatusCode() );
+            assertThat( r.readEntity( String.class ) ).contains( "T1" );
+        }
+        AnnotationValueObject glioma = findAnnotation( "glioma" );
+        assertThat( glioma ).as( "tag was persisted" ).isNotNull();
+
+        // Delete it by its (now-known) id via deletedIds.
+        String del = "{\"tags\":{\"items\":[],\"deletedIds\":[" + glioma.getId() + "]}}";
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request().put( Entity.json( del ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( Response.Status.OK.getStatusCode() );
+        }
+        assertThat( findAnnotation( "glioma" ) ).as( "tag was removed by deletedIds" ).isNull();
+    }
+
+    @Test
+    public void testCommitSampleCharacteristic() {
+        ExpressionExperiment thawed = expressionExperimentService.thawBioAssays( ee );
+        BioAssay ba = thawed.getBioAssays().iterator().next();
+        String gsm = ba.getAccession().getAccession();
+
+        String body = "{\"sampleCharacteristics\":{\"items\":[{\"clientRef\":\"S1\",\"bioassayShortName\":\"" + gsm + "\","
+                + "\"category\":{\"label\":\"genotype\"},\"value\":{\"label\":\"WT\"}}]}}";
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request().put( Entity.json( body ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( Response.Status.OK.getStatusCode() );
+            assertThat( r.readEntity( String.class ) ).contains( "S1" );
+        }
+        // Read the sample's characteristics back over HTTP.
+        try ( Response r = target( "/datasets/" + ee.getId() + "/samples/" + ba.getId() + "/characteristics" ).request().get() ) {
+            assertThat( r.getStatus() ).isEqualTo( Response.Status.OK.getStatusCode() );
+            assertThat( r.readEntity( String.class ) ).contains( "WT" );
+        }
+    }
+
+    @Test
+    public void testCommitCurationNote() {
+        String body = "{\"curationDetails\":{\"curationNote\":\"integration note\"}}";
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request().put( Entity.json( body ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( Response.Status.OK.getStatusCode() );
+        }
+        ExpressionExperiment reloaded = expressionExperimentService.load( ee.getId() );
+        assertThat( reloaded.getCurationDetails().getCurationNote() ).isEqualTo( "integration note" );
+    }
+
+    @Test
+    public void testCurationDetailsTroubledIsRejected() {
+        String body = "{\"curationDetails\":{\"troubled\":true}}";
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request().put( Entity.json( body ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( Response.Status.BAD_REQUEST.getStatusCode() );
+        }
+    }
+
+    private AnnotationValueObject findAnnotation( String termName ) {
+        Set<AnnotationValueObject> annotations = expressionExperimentService.getAnnotations( expressionExperimentService.load( ee.getId() ) );
+        return annotations.stream().filter( a -> termName.equals( a.getTermName() ) ).findFirst().orElse( null );
     }
 }

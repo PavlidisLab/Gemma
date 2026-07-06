@@ -18,9 +18,11 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.ExperimentalDesignValueObject;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -76,6 +78,67 @@ public class CurationCommitRequest {
     private Long splitOnFactorId;
     @Nullable
     private String splitRationale;
+
+    // ── experiment-level tags (id-based: add clientRef items, remove deletedIds, keep gemmaId items) ──
+    private boolean tagsPresent;
+    private List<TagAdd> tagsToAdd = new ArrayList<>();
+    private List<Long> tagsToDelete = new ArrayList<>();
+    private int tagsUnchanged;
+
+    // ── per-sample characteristics (same id-based shape, resolved to a biomaterial by GSM short name) ──
+    private boolean sampleCharsPresent;
+    private List<SampleCharacteristicAdd> sampleCharsToAdd = new ArrayList<>();
+    private List<Long> sampleCharsToDelete = new ArrayList<>();
+    private int sampleCharsUnchanged;
+
+    // ── curationDetails (only the free-text note commits here; troubled/needsAttention route through tickets) ──
+    private boolean curationDetailsPresent;
+    @Nullable
+    private String curationDetailsNote;
+
+    /** A tag to create, paired with the document {@code clientRef} so the report can echo its new id. */
+    public static class TagAdd {
+        private final String clientRef;
+        private final Characteristic characteristic;
+
+        public TagAdd( String clientRef, Characteristic characteristic ) {
+            this.clientRef = clientRef;
+            this.characteristic = characteristic;
+        }
+
+        public String getClientRef() {
+            return clientRef;
+        }
+
+        public Characteristic getCharacteristic() {
+            return characteristic;
+        }
+    }
+
+    /** A per-sample characteristic to create: {@code clientRef}, the resolved biomaterial id, and the tag. */
+    public static class SampleCharacteristicAdd {
+        private final String clientRef;
+        private final Long bioMaterialId;
+        private final Characteristic characteristic;
+
+        public SampleCharacteristicAdd( String clientRef, Long bioMaterialId, Characteristic characteristic ) {
+            this.clientRef = clientRef;
+            this.bioMaterialId = bioMaterialId;
+            this.characteristic = characteristic;
+        }
+
+        public String getClientRef() {
+            return clientRef;
+        }
+
+        public Long getBioMaterialId() {
+            return bioMaterialId;
+        }
+
+        public Characteristic getCharacteristic() {
+            return characteristic;
+        }
+    }
 
     @Nullable
     public Date getExpectedLastUpdated() {
@@ -196,5 +259,86 @@ public class CurationCommitRequest {
 
     public void setSplitRationale( @Nullable String splitRationale ) {
         this.splitRationale = splitRationale;
+    }
+
+    public boolean isTagsPresent() {
+        return tagsPresent;
+    }
+
+    public void setTagsPresent( boolean tagsPresent ) {
+        this.tagsPresent = tagsPresent;
+    }
+
+    public List<TagAdd> getTagsToAdd() {
+        return tagsToAdd;
+    }
+
+    public void setTagsToAdd( List<TagAdd> tagsToAdd ) {
+        this.tagsToAdd = tagsToAdd;
+    }
+
+    public List<Long> getTagsToDelete() {
+        return tagsToDelete;
+    }
+
+    public void setTagsToDelete( List<Long> tagsToDelete ) {
+        this.tagsToDelete = tagsToDelete;
+    }
+
+    public int getTagsUnchanged() {
+        return tagsUnchanged;
+    }
+
+    public void setTagsUnchanged( int tagsUnchanged ) {
+        this.tagsUnchanged = tagsUnchanged;
+    }
+
+    public boolean isSampleCharsPresent() {
+        return sampleCharsPresent;
+    }
+
+    public void setSampleCharsPresent( boolean sampleCharsPresent ) {
+        this.sampleCharsPresent = sampleCharsPresent;
+    }
+
+    public List<SampleCharacteristicAdd> getSampleCharsToAdd() {
+        return sampleCharsToAdd;
+    }
+
+    public void setSampleCharsToAdd( List<SampleCharacteristicAdd> sampleCharsToAdd ) {
+        this.sampleCharsToAdd = sampleCharsToAdd;
+    }
+
+    public List<Long> getSampleCharsToDelete() {
+        return sampleCharsToDelete;
+    }
+
+    public void setSampleCharsToDelete( List<Long> sampleCharsToDelete ) {
+        this.sampleCharsToDelete = sampleCharsToDelete;
+    }
+
+    public int getSampleCharsUnchanged() {
+        return sampleCharsUnchanged;
+    }
+
+    public void setSampleCharsUnchanged( int sampleCharsUnchanged ) {
+        this.sampleCharsUnchanged = sampleCharsUnchanged;
+    }
+
+    public boolean isCurationDetailsPresent() {
+        return curationDetailsPresent;
+    }
+
+    public void setCurationDetailsPresent( boolean curationDetailsPresent ) {
+        this.curationDetailsPresent = curationDetailsPresent;
+    }
+
+    @Nullable
+    public String getCurationDetailsNote() {
+        return curationDetailsNote;
+    }
+
+    public void setCurationDetailsNote( @Nullable String curationDetailsNote ) {
+        this.curationDetailsNote = curationDetailsNote;
     }
 }

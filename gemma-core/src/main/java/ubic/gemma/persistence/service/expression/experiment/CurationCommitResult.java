@@ -42,6 +42,18 @@ public class CurationCommitResult {
     private Map<String, Long> designIdMap = Collections.emptyMap();
     /** The {@code DesignChangeEvent} audit-row ids emitted by the design apply (one per applied pass). */
     private List<Long> designAuditEventIds = Collections.emptyList();
+    // ── tags ──
+    private int tagsCreated;
+    private int tagsDeleted;
+    private int tagsUnchanged;
+    private Map<String, Long> tagsIdMap = Collections.emptyMap();
+    // ── sample characteristics ──
+    private int sampleCharsCreated;
+    private int sampleCharsDeleted;
+    private int sampleCharsUnchanged;
+    private Map<String, Long> sampleCharsIdMap = Collections.emptyMap();
+    // ── curationDetails ──
+    private boolean curationNoteChanged;
     /** The dataset's {@code lastUpdated} after the commit — the client's baseline for the next draft. */
     private Date newLastUpdated;
 
@@ -123,6 +135,78 @@ public class CurationCommitResult {
 
     public void setDesignAuditEventIds( List<Long> designAuditEventIds ) {
         this.designAuditEventIds = designAuditEventIds;
+    }
+
+    public int getTagsCreated() {
+        return tagsCreated;
+    }
+
+    public void setTagsCreated( int tagsCreated ) {
+        this.tagsCreated = tagsCreated;
+    }
+
+    public int getTagsDeleted() {
+        return tagsDeleted;
+    }
+
+    public void setTagsDeleted( int tagsDeleted ) {
+        this.tagsDeleted = tagsDeleted;
+    }
+
+    public int getTagsUnchanged() {
+        return tagsUnchanged;
+    }
+
+    public void setTagsUnchanged( int tagsUnchanged ) {
+        this.tagsUnchanged = tagsUnchanged;
+    }
+
+    public Map<String, Long> getTagsIdMap() {
+        return tagsIdMap;
+    }
+
+    public void setTagsIdMap( Map<String, Long> tagsIdMap ) {
+        this.tagsIdMap = tagsIdMap;
+    }
+
+    public int getSampleCharsCreated() {
+        return sampleCharsCreated;
+    }
+
+    public void setSampleCharsCreated( int sampleCharsCreated ) {
+        this.sampleCharsCreated = sampleCharsCreated;
+    }
+
+    public int getSampleCharsDeleted() {
+        return sampleCharsDeleted;
+    }
+
+    public void setSampleCharsDeleted( int sampleCharsDeleted ) {
+        this.sampleCharsDeleted = sampleCharsDeleted;
+    }
+
+    public int getSampleCharsUnchanged() {
+        return sampleCharsUnchanged;
+    }
+
+    public void setSampleCharsUnchanged( int sampleCharsUnchanged ) {
+        this.sampleCharsUnchanged = sampleCharsUnchanged;
+    }
+
+    public Map<String, Long> getSampleCharsIdMap() {
+        return sampleCharsIdMap;
+    }
+
+    public void setSampleCharsIdMap( Map<String, Long> sampleCharsIdMap ) {
+        this.sampleCharsIdMap = sampleCharsIdMap;
+    }
+
+    public boolean isCurationNoteChanged() {
+        return curationNoteChanged;
+    }
+
+    public void setCurationNoteChanged( boolean curationNoteChanged ) {
+        this.curationNoteChanged = curationNoteChanged;
     }
 
     public Date getNewLastUpdated() {

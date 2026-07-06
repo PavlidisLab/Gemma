@@ -3197,11 +3197,11 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
 
     @Test
     @WithMockUser
-    public void testCommitCurationRejectsUnsupportedSection() {
+    public void testCommitCurationRejectsUnknownSection() {
         ee.setId( 1L );
         when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
-        // `design` is supported now; `tags` is not yet.
-        String body = "{\"tags\":{\"items\":[]}}";
+        // All six sections are supported now; the strict document root rejects an unknown field.
+        String body = "{\"bogusSection\":{\"items\":[]}}";
         assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) )
                 .hasStatus( Response.Status.BAD_REQUEST );
         verify( expressionExperimentService, never() ).commitCuration( any(), any(), anyBoolean() );
@@ -3323,6 +3323,103 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         // Dry run: the service is invoked with dryRun=true and no real commit path runs.
         verify( expressionExperimentService ).commitCuration( eq( ee ), any(), eq( true ) );
         verify( expressionExperimentService, never() ).commitCuration( any(), any(), eq( false ) );
+    }
+
+    @Test
+    @WithMockUser
+    public void testCommitCurationTags() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.commitCuration( eq( ee ), any(), eq( false ) ) )
+                .thenReturn( new ubic.gemma.persistence.service.expression.experiment.CurationCommitResult() );
+
+        String body = "{\"tags\":{\"items\":[{\"clientRef\":\"t1\",\"category\":{\"label\":\"disease\"},"
+                + "\"value\":{\"label\":\"glioma\"}},{\"gemmaId\":42}],\"deletedIds\":[7]}}";
+        assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+
+        ArgumentCaptor<ubic.gemma.persistence.service.expression.experiment.CurationCommitRequest> cap =
+                ArgumentCaptor.forClass( ubic.gemma.persistence.service.expression.experiment.CurationCommitRequest.class );
+        verify( expressionExperimentService ).commitCuration( eq( ee ), cap.capture(), eq( false ) );
+        ubic.gemma.persistence.service.expression.experiment.CurationCommitRequest req = cap.getValue();
+        assertThat( req.isTagsPresent() ).isTrue();
+        assertThat( req.getTagsToAdd() ).hasSize( 1 );
+        assertThat( req.getTagsToAdd().get( 0 ).getClientRef() ).isEqualTo( "t1" );
+        assertThat( req.getTagsToAdd().get( 0 ).getCharacteristic().getValue() ).isEqualTo( "glioma" );
+        assertThat( req.getTagsToDelete() ).containsExactly( 7L );
+        assertThat( req.getTagsUnchanged() ).isEqualTo( 1 ); // the gemmaId item
+    }
+
+    @Test
+    @WithMockUser
+    public void testCommitCurationSampleCharacteristics() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        // one sample with a resolvable short name → biomaterial id 100
+        ubic.gemma.model.expression.biomaterial.BioMaterial bm = ubic.gemma.model.expression.biomaterial.BioMaterial.Factory.newInstance();
+        bm.setId( 100L );
+        BioAssay ba = BioAssay.Factory.newInstance();
+        ba.setShortName( "GSM1" );
+        ba.setSampleUsed( bm );
+        ee.getBioAssays().add( ba );
+        when( expressionExperimentService.thawBioAssays( ee ) ).thenReturn( ee );
+        when( expressionExperimentService.commitCuration( eq( ee ), any(), eq( false ) ) )
+                .thenReturn( new ubic.gemma.persistence.service.expression.experiment.CurationCommitResult() );
+
+        String body = "{\"sampleCharacteristics\":{\"items\":[{\"clientRef\":\"s1\",\"bioassayShortName\":\"GSM1\","
+                + "\"category\":{\"label\":\"genotype\"},\"value\":{\"label\":\"WT\"}}],\"deletedIds\":[9]}}";
+        assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+
+        ArgumentCaptor<ubic.gemma.persistence.service.expression.experiment.CurationCommitRequest> cap =
+                ArgumentCaptor.forClass( ubic.gemma.persistence.service.expression.experiment.CurationCommitRequest.class );
+        verify( expressionExperimentService ).commitCuration( eq( ee ), cap.capture(), eq( false ) );
+        ubic.gemma.persistence.service.expression.experiment.CurationCommitRequest req = cap.getValue();
+        assertThat( req.isSampleCharsPresent() ).isTrue();
+        assertThat( req.getSampleCharsToAdd() ).hasSize( 1 );
+        assertThat( req.getSampleCharsToAdd().get( 0 ).getBioMaterialId() ).isEqualTo( 100L );
+        assertThat( req.getSampleCharsToDelete() ).containsExactly( 9L );
+    }
+
+    @Test
+    @WithMockUser
+    public void testCommitCurationSampleCharacteristicsUnknownSampleIs400() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.thawBioAssays( ee ) ).thenReturn( ee ); // no bioassays → nothing resolves
+        String body = "{\"sampleCharacteristics\":{\"items\":[{\"clientRef\":\"s1\",\"bioassayShortName\":\"GSM_MISSING\","
+                + "\"value\":{\"label\":\"WT\"}}]}}";
+        assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        verify( expressionExperimentService, never() ).commitCuration( any(), any(), anyBoolean() );
+    }
+
+    @Test
+    @WithMockUser
+    public void testCommitCurationDetailsNote() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.commitCuration( eq( ee ), any(), eq( false ) ) )
+                .thenReturn( new ubic.gemma.persistence.service.expression.experiment.CurationCommitResult() );
+        String body = "{\"curationDetails\":{\"curationNote\":\"reviewed 2026\"}}";
+        assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+        ArgumentCaptor<ubic.gemma.persistence.service.expression.experiment.CurationCommitRequest> cap =
+                ArgumentCaptor.forClass( ubic.gemma.persistence.service.expression.experiment.CurationCommitRequest.class );
+        verify( expressionExperimentService ).commitCuration( eq( ee ), cap.capture(), eq( false ) );
+        assertThat( cap.getValue().isCurationDetailsPresent() ).isTrue();
+        assertThat( cap.getValue().getCurationDetailsNote() ).isEqualTo( "reviewed 2026" );
+    }
+
+    @Test
+    @WithMockUser
+    public void testCommitCurationDetailsFlagsAre400() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        String body = "{\"curationDetails\":{\"troubled\":true}}";
+        assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        verify( expressionExperimentService, never() ).commitCuration( any(), any(), anyBoolean() );
     }
 
     @Test

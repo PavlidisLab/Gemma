@@ -2244,6 +2244,95 @@ public class ExpressionExperimentServiceImpl
             }
         }
 
+        // ── experiment-level tags (id-based: remove deletedIds, add clientRef items; gemmaId items are kept) ──
+        // addAnnotation returns the persisted tag with its id, so clientRef → id is direct (no correlation pass).
+        // Through the proxy (self) so the @Audited TagAdded/TagRemoved events fire.
+        if ( request.isTagsPresent() ) {
+            Map<String, Long> idMap = new LinkedHashMap<>();
+            int created = 0, deleted = 0;
+            if ( dryRun ) {
+                created = request.getTagsToAdd().size();
+                deleted = request.getTagsToDelete().size();
+            } else {
+                for ( Long id : request.getTagsToDelete() ) {
+                    if ( self.removeAnnotation( ee, id ) != null ) {
+                        deleted++;
+                    }
+                }
+                for ( CurationCommitRequest.TagAdd add : request.getTagsToAdd() ) {
+                    Characteristic c = self.addAnnotation( ee, add.getCharacteristic() );
+                    idMap.put( add.getClientRef(), c.getId() );
+                    created++;
+                }
+            }
+            result.setTagsCreated( created );
+            result.setTagsDeleted( deleted );
+            result.setTagsUnchanged( request.getTagsUnchanged() );
+            result.setTagsIdMap( idMap );
+            anyChange = anyChange || created > 0 || deleted > 0;
+        }
+
+        // ── per-sample characteristics (id-based, resolved to a biomaterial thawed from the experiment) ──
+        if ( request.isSampleCharsPresent() ) {
+            Map<String, Long> idMap = new LinkedHashMap<>();
+            int created = 0, deleted = 0;
+            if ( dryRun ) {
+                created = request.getSampleCharsToAdd().size();
+                deleted = request.getSampleCharsToDelete().size();
+            } else {
+                ExpressionExperiment thawed = thawBioAssays( ee );
+                Map<Long, BioMaterial> bmById = new HashMap<>();
+                Map<Long, BioMaterial> charIdToBm = new HashMap<>();
+                for ( BioAssay ba : thawed.getBioAssays() ) {
+                    BioMaterial bm = ba.getSampleUsed();
+                    if ( bm == null || bm.getId() == null ) {
+                        continue;
+                    }
+                    bmById.putIfAbsent( bm.getId(), bm );
+                    for ( Characteristic c : bm.getCharacteristics() ) {
+                        if ( c.getId() != null ) {
+                            charIdToBm.put( c.getId(), bm );
+                        }
+                    }
+                }
+                for ( Long id : request.getSampleCharsToDelete() ) {
+                    BioMaterial bm = charIdToBm.get( id );
+                    if ( bm != null && bioMaterialService.removeAnnotation( ee, bm, id ) != null ) {
+                        deleted++;
+                    }
+                }
+                for ( CurationCommitRequest.SampleCharacteristicAdd add : request.getSampleCharsToAdd() ) {
+                    BioMaterial bm = bmById.get( add.getBioMaterialId() );
+                    if ( bm == null ) {
+                        throw new IllegalArgumentException( "sampleCharacteristics references biomaterial "
+                                + add.getBioMaterialId() + " which is not part of " + ee.getShortName() + "." );
+                    }
+                    Characteristic c = bioMaterialService.addAnnotation( ee, bm, add.getCharacteristic() );
+                    idMap.put( add.getClientRef(), c.getId() );
+                    created++;
+                }
+            }
+            result.setSampleCharsCreated( created );
+            result.setSampleCharsDeleted( deleted );
+            result.setSampleCharsUnchanged( request.getSampleCharsUnchanged() );
+            result.setSampleCharsIdMap( idMap );
+            anyChange = anyChange || created > 0 || deleted > 0;
+        }
+
+        // ── curationDetails: only the free-text note commits here (troubled/needsAttention go through tickets) ──
+        if ( request.isCurationDetailsPresent() && request.getCurationDetailsNote() != null ) {
+            String desired = request.getCurationDetailsNote();
+            String current = ee.getCurationDetails() != null ? ee.getCurationDetails().getCurationNote() : null;
+            if ( !desired.equals( current ) ) {
+                if ( !dryRun ) {
+                    // The CurationNoteUpdateEvent hook copies the note onto CurationDetails.
+                    auditTrailService.addUpdateEvent( ee, CurationNoteUpdateEvent.class, desired );
+                }
+                result.setCurationNoteChanged( true );
+                anyChange = true;
+            }
+        }
+
         // ── split advice (stopgap: recorded in the free-text curation note; no structured home yet) ──
         if ( request.getSplitOnFactorId() != null || request.getSplitRationale() != null ) {
             if ( !dryRun ) {

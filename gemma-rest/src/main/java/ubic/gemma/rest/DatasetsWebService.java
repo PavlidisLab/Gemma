@@ -2216,11 +2216,12 @@ public class DatasetsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Commit a curation draft to a dataset (all-or-none)",
             description = "Applies a whole curation draft (CurationDocument) in one transaction — either every "
-                    + "supported section applies or, on any failure, nothing does. Supported sections: `basics` "
-                    + "(name/description/shortName), `publications`, and `design` (factors → factor-values → "
-                    + "statements, per-sample assignments, baseline flags, and curator split advice); `tags`, "
-                    + "`sampleCharacteristics`, and `curationDetails` return 400 until their phases ship. New design "
-                    + "entities carry a `clientRef` (echoed as `clientRef → newGemmaId` in the report `idMap`); "
+                    + "supported section applies or, on any failure, nothing does. Sections: `basics` "
+                    + "(name/description/shortName), `publications`, `design` (factors → factor-values → statements, "
+                    + "per-sample assignments, baseline flags, split advice), `tags` (experiment-level), "
+                    + "`sampleCharacteristics` (per-sample), and `curationDetails` (curationNote only — troubled / "
+                    + "needsAttention 400 here and go through the ticket endpoints). New entities carry a `clientRef` "
+                    + "(echoed as `clientRef → newGemmaId` in the report `idMap`); "
                     + "deletions are declared via each section's `deletedIds`. A design change that would delete "
                     + "differential-expression analyses requires `?force=true` (admin) or returns 409. "
                     + "Optimistic concurrency: `baseline.lastModified` (the dataset `lastUpdated` the draft was "
@@ -2273,15 +2274,6 @@ public class DatasetsWebService {
     private CurationCommitReport doCommitCuration( DatasetArg<?> datasetArg, @Nullable CurationDocument body, boolean dryRun, boolean force ) {
         if ( body == null ) {
             throw new BadRequestException( "A CurationDocument request body is required." );
-        }
-        // Reject not-yet-supported sections rather than silently ignoring them.
-        List<String> unsupported = new ArrayList<>();
-        if ( body.getTags() != null ) unsupported.add( "tags" );
-        if ( body.getSampleCharacteristics() != null ) unsupported.add( "sampleCharacteristics" );
-        if ( body.getCurationDetails() != null ) unsupported.add( "curationDetails" );
-        if ( !unsupported.isEmpty() ) {
-            throw new BadRequestException( "Section(s) not yet supported by this endpoint: " + String.join( ", ", unsupported )
-                    + ". Supported sections: 'basics', 'publications', 'design'." );
         }
 
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
@@ -2352,6 +2344,62 @@ public class DatasetsWebService {
             }
         }
 
+        if ( body.getTags() != null ) {
+            Section<TagCommit> ts = body.getTags();
+            request.setTagsPresent( true );
+            List<CurationCommitRequest.TagAdd> adds = new ArrayList<>();
+            int unchanged = 0;
+            for ( TagCommit tc : nullSafe( ts.getItems() ) ) {
+                if ( isExisting( tc, "tags item" ) ) {
+                    unchanged++; // gemmaId item = keep (absence never deletes; deletions are declared)
+                } else {
+                    adds.add( new CurationCommitRequest.TagAdd( tc.getClientRef(), tagCommitToCharacteristic( tc ) ) );
+                }
+            }
+            request.setTagsToAdd( adds );
+            request.setTagsToDelete( new ArrayList<>( nullSafe( ts.getDeletedIds() ) ) );
+            request.setTagsUnchanged( unchanged );
+        }
+
+        if ( body.getSampleCharacteristics() != null ) {
+            Section<SampleCharacteristicCommit> scs = body.getSampleCharacteristics();
+            request.setSampleCharsPresent( true );
+            Map<String, Long> gsmToBmId = buildGsmToBioMaterialIdIndex( ee );
+            List<CurationCommitRequest.SampleCharacteristicAdd> adds = new ArrayList<>();
+            int unchanged = 0;
+            for ( SampleCharacteristicCommit sc : nullSafe( scs.getItems() ) ) {
+                if ( isExisting( sc, "sampleCharacteristics item" ) ) {
+                    unchanged++;
+                } else {
+                    if ( StringUtils.isBlank( sc.getBioassayShortName() ) ) {
+                        throw new BadRequestException( "Each new sampleCharacteristics item needs a 'bioassayShortName'." );
+                    }
+                    Long bmId = gsmToBmId.get( sc.getBioassayShortName().trim() );
+                    if ( bmId == null ) {
+                        throw new BadRequestException( "sampleCharacteristics references unknown sample short name '"
+                                + sc.getBioassayShortName() + "' for this dataset." );
+                    }
+                    adds.add( new CurationCommitRequest.SampleCharacteristicAdd( sc.getClientRef(), bmId,
+                            sampleCharacteristicToCharacteristic( sc ) ) );
+                }
+            }
+            request.setSampleCharsToAdd( adds );
+            request.setSampleCharsToDelete( new ArrayList<>( nullSafe( scs.getDeletedIds() ) ) );
+            request.setSampleCharsUnchanged( unchanged );
+        }
+
+        if ( body.getCurationDetails() != null ) {
+            CurationDetailsCommit cd = body.getCurationDetails();
+            // troubled / needsAttention are ticket-backed on the read side and can't join this transaction cleanly.
+            if ( cd.getTroubled() != null || cd.getNeedsAttention() != null ) {
+                throw new BadRequestException( "curationDetails.troubled / needsAttention are not settable through the "
+                        + "composite commit (they route through the ticket layer — use the /datasets/{id}/tickets endpoints). "
+                        + "Only curationNote commits here." );
+            }
+            request.setCurationDetailsPresent( true );
+            request.setCurationDetailsNote( cd.getCurationNote() );
+        }
+
         CurationCommitResult result;
         try {
             result = expressionExperimentService.commitCuration( ee, request, dryRun );
@@ -2404,11 +2452,11 @@ public class DatasetsWebService {
         @Nullable
         private DesignCommit design;
         @Nullable
-        private com.fasterxml.jackson.databind.JsonNode tags;
+        private Section<TagCommit> tags;
         @Nullable
-        private com.fasterxml.jackson.databind.JsonNode sampleCharacteristics;
+        private Section<SampleCharacteristicCommit> sampleCharacteristics;
         @Nullable
-        private com.fasterxml.jackson.databind.JsonNode curationDetails;
+        private CurationDetailsCommit curationDetails;
 
         @Nullable
         public CurationBaseline getBaseline() { return baseline; }
@@ -2423,20 +2471,14 @@ public class DatasetsWebService {
         public DesignCommit getDesign() { return design; }
         public void setDesign( @Nullable DesignCommit design ) { this.design = design; }
         @Nullable
-        public com.fasterxml.jackson.databind.JsonNode getTags() { return tags; }
-        public void setTags( @Nullable com.fasterxml.jackson.databind.JsonNode tags ) { this.tags = nonEmpty( tags ); }
+        public Section<TagCommit> getTags() { return tags; }
+        public void setTags( @Nullable Section<TagCommit> tags ) { this.tags = tags; }
         @Nullable
-        public com.fasterxml.jackson.databind.JsonNode getSampleCharacteristics() { return sampleCharacteristics; }
-        public void setSampleCharacteristics( @Nullable com.fasterxml.jackson.databind.JsonNode n ) { this.sampleCharacteristics = nonEmpty( n ); }
+        public Section<SampleCharacteristicCommit> getSampleCharacteristics() { return sampleCharacteristics; }
+        public void setSampleCharacteristics( @Nullable Section<SampleCharacteristicCommit> n ) { this.sampleCharacteristics = n; }
         @Nullable
-        public com.fasterxml.jackson.databind.JsonNode getCurationDetails() { return curationDetails; }
-        public void setCurationDetails( @Nullable com.fasterxml.jackson.databind.JsonNode n ) { this.curationDetails = nonEmpty( n ); }
-
-        // Treat an explicit null / empty object as "section absent" so an empty {} doesn't trip the 400.
-        @Nullable
-        private static com.fasterxml.jackson.databind.JsonNode nonEmpty( @Nullable com.fasterxml.jackson.databind.JsonNode n ) {
-            return ( n == null || n.isNull() || n.isEmpty() ) ? null : n;
-        }
+        public CurationDetailsCommit getCurationDetails() { return curationDetails; }
+        public void setCurationDetails( @Nullable CurationDetailsCommit n ) { this.curationDetails = n; }
     }
 
     public static class CurationBaseline {
@@ -2578,6 +2620,40 @@ public class DatasetsWebService {
         private OntologyTermRef predicate;
         @Nullable
         private OntologyTermRef object;
+    }
+
+    /** One experiment-level tag (CAB {@code TagCommit}); a statement-shaped tag rides its {@code statements}. */
+    @Data
+    @EqualsAndHashCode(callSuper = true)
+    public static class TagCommit extends EntityRef {
+        @Nullable
+        private OntologyTermRef category;
+        @Nullable
+        private OntologyTermRef value;
+        private Section<StatementCommit> statements = new Section<>();
+    }
+
+    /** One per-sample characteristic (CAB {@code SampleCharacteristicCommit}); the sample is a GSM short name. */
+    @Data
+    @EqualsAndHashCode(callSuper = true)
+    public static class SampleCharacteristicCommit extends EntityRef {
+        @Nullable
+        private String bioassayShortName;
+        @Nullable
+        private OntologyTermRef category;
+        @Nullable
+        private OntologyTermRef value;
+    }
+
+    /** curationDetails section. Only {@code curationNote} commits here; the flags go through the ticket layer. */
+    @Data
+    public static class CurationDetailsCommit {
+        @Nullable
+        private Boolean troubled;
+        @Nullable
+        private Boolean needsAttention;
+        @Nullable
+        private String curationNote;
     }
 
     // ── Design mapping (wire DesignCommit → complete ExperimentalDesignValueObject + DesignCommitPlan) ──
@@ -2843,6 +2919,63 @@ public class DatasetsWebService {
         return mo;
     }
 
+    /**
+     * Build a {@link Characteristic} for a new experiment-level tag. A statement-shaped tag (one riding on
+     * {@code statements}) becomes a single {@link Statement}; otherwise a plain category/value characteristic.
+     */
+    private static Characteristic tagCommitToCharacteristic( TagCommit tc ) {
+        List<StatementCommit> statements = tc.getStatements() != null ? nullSafe( tc.getStatements().getItems() ) : Collections.emptyList();
+        if ( !statements.isEmpty() ) {
+            StatementCommit sc = statements.get( 0 );
+            if ( sc.getSubject() == null || StringUtils.isBlank( sc.getSubject().getLabel() ) ) {
+                throw new BadRequestException( "A statement tag needs a 'subject'." );
+            }
+            Statement s = Statement.Factory.newInstance();
+            OntologyTermRef cat = sc.getCategory() != null ? sc.getCategory() : tc.getCategory();
+            if ( cat != null ) {
+                s.setCategory( cat.getLabel() );
+                s.setCategoryUri( cat.getUri() );
+            }
+            s.setSubject( sc.getSubject().getLabel() );
+            s.setSubjectUri( sc.getSubject().getUri() );
+            if ( sc.getPredicate() != null ) {
+                s.setPredicate( sc.getPredicate().getLabel() );
+                s.setPredicateUri( sc.getPredicate().getUri() );
+            }
+            if ( sc.getObject() != null ) {
+                s.setObject( sc.getObject().getLabel() );
+                s.setObjectUri( sc.getObject().getUri() );
+            }
+            return s;
+        }
+        if ( tc.getValue() == null || StringUtils.isBlank( tc.getValue().getLabel() ) ) {
+            throw new BadRequestException( "Each new tag needs a 'value' (or a 'statements' entry)." );
+        }
+        Characteristic c = Characteristic.Factory.newInstance();
+        if ( tc.getCategory() != null ) {
+            c.setCategory( tc.getCategory().getLabel() );
+            c.setCategoryUri( tc.getCategory().getUri() );
+        }
+        c.setValue( tc.getValue().getLabel() );
+        c.setValueUri( tc.getValue().getUri() );
+        return c;
+    }
+
+    /** Build a plain category/value {@link Characteristic} for a new per-sample characteristic. */
+    private static Characteristic sampleCharacteristicToCharacteristic( SampleCharacteristicCommit sc ) {
+        if ( sc.getValue() == null || StringUtils.isBlank( sc.getValue().getLabel() ) ) {
+            throw new BadRequestException( "Each new sampleCharacteristics item needs a 'value'." );
+        }
+        Characteristic c = Characteristic.Factory.newInstance();
+        if ( sc.getCategory() != null ) {
+            c.setCategory( sc.getCategory().getLabel() );
+            c.setCategoryUri( sc.getCategory().getUri() );
+        }
+        c.setValue( sc.getValue().getLabel() );
+        c.setValueUri( sc.getValue().getUri() );
+        return c;
+    }
+
     private static List<ExperimentalDesignValueObject.BioMaterialFactorValueAssignment> buildAssignmentList(
             Map<Long, Set<Long>> bmToFvIds, Map<Long, String> bmNames ) {
         List<ExperimentalDesignValueObject.BioMaterialFactorValueAssignment> out = new ArrayList<>();
@@ -2896,8 +3029,24 @@ public class DatasetsWebService {
                 changes.put( "design", new CurationSectionChange(
                         r.getDesignCreated(), r.getDesignUpdated(), r.getDesignDeleted(), r.getDesignUnchanged() ) );
             }
-            // Only the design section creates clientRef entities / emits DesignChangeEvents today.
-            Map<String, Long> idMap = r.getDesignIdMap() != null ? r.getDesignIdMap() : Collections.emptyMap();
+            if ( req.isTagsPresent() ) {
+                changes.put( "tags", new CurationSectionChange(
+                        r.getTagsCreated(), 0, r.getTagsDeleted(), r.getTagsUnchanged() ) );
+            }
+            if ( req.isSampleCharsPresent() ) {
+                changes.put( "sampleCharacteristics", new CurationSectionChange(
+                        r.getSampleCharsCreated(), 0, r.getSampleCharsDeleted(), r.getSampleCharsUnchanged() ) );
+            }
+            if ( req.isCurationDetailsPresent() ) {
+                changes.put( "curationDetails", r.isCurationNoteChanged()
+                        ? new CurationSectionChange( 0, 1, 0, 0 )
+                        : new CurationSectionChange( 0, 0, 0, 1 ) );
+            }
+            // Merge every section's clientRef → newId map. auditEventIds carries the design events (advisory).
+            Map<String, Long> idMap = new LinkedHashMap<>();
+            if ( r.getDesignIdMap() != null ) idMap.putAll( r.getDesignIdMap() );
+            if ( r.getTagsIdMap() != null ) idMap.putAll( r.getTagsIdMap() );
+            if ( r.getSampleCharsIdMap() != null ) idMap.putAll( r.getSampleCharsIdMap() );
             List<Long> auditEventIds = r.getDesignAuditEventIds() != null ? r.getDesignAuditEventIds() : Collections.emptyList();
             return new CurationCommitReport( applied, changes, idMap, auditEventIds );
         }
