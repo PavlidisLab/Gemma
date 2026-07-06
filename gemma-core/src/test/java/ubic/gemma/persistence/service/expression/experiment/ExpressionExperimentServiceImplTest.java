@@ -658,6 +658,77 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
                 .hasMessageContaining( "Cannot apply proposed design" );
     }
 
+    // ============================================================================================
+    // commitCuration() design helpers: order-based clientRef→id correlation + second-pass assignment
+    // ============================================================================================
+
+    @Test
+    public void testCorrelateNewDesignIdsMapsNewFactorsAndValues() {
+        ExpressionExperimentServiceImpl impl = new ExpressionExperimentServiceImpl( eeDao );
+        // Rebuilt design: existing factor 5 (existing FV 10) + new factor 7 (new FV 20).
+        ExperimentalDesignValueObject rebuilt = new ExperimentalDesignValueObject();
+        ExperimentalDesignValueObject.ExperimentalFactorEntry f5 = new ExperimentalDesignValueObject.ExperimentalFactorEntry();
+        f5.setId( 5L );
+        f5.setValues( new ArrayList<>( List.of( new FactorValueBasicValueObject( 10L ) ) ) );
+        ExperimentalDesignValueObject.ExperimentalFactorEntry f7 = new ExperimentalDesignValueObject.ExperimentalFactorEntry();
+        f7.setId( 7L );
+        f7.setValues( new ArrayList<>( List.of( new FactorValueBasicValueObject( 20L ) ) ) );
+        rebuilt.setExperimentalFactors( new ArrayList<>( List.of( f5, f7 ) ) );
+
+        DesignCommitPlan plan = new DesignCommitPlan();
+        plan.setPreExistingFactorIds( new HashSet<>( List.of( 5L ) ) );
+        plan.setPreExistingFactorValueIds( new HashSet<>( List.of( 10L ) ) );
+        plan.setNewFactorClientRefs( new ArrayList<>( List.of( "f1" ) ) );
+        java.util.Map<String, List<String>> byParent = new java.util.HashMap<>();
+        byParent.put( DesignCommitPlan.newFactorKey( "f1" ), new ArrayList<>( List.of( "fv1" ) ) );
+        plan.setNewFactorValueClientRefsByParentKey( byParent );
+
+        java.util.Map<String, Long> idMap = new java.util.LinkedHashMap<>();
+        impl.correlateNewDesignIds( rebuilt, plan, idMap );
+        assertThat( idMap ).containsEntry( "f1", 7L ).containsEntry( "fv1", 20L ).hasSize( 2 );
+    }
+
+    @Test
+    public void testCorrelateNewFactorValueUnderExistingFactor() {
+        ExpressionExperimentServiceImpl impl = new ExpressionExperimentServiceImpl( eeDao );
+        ExperimentalDesignValueObject rebuilt = new ExperimentalDesignValueObject();
+        ExperimentalDesignValueObject.ExperimentalFactorEntry f5 = new ExperimentalDesignValueObject.ExperimentalFactorEntry();
+        f5.setId( 5L );
+        // existing FV 10 + new FV 21 (higher id) under the same existing factor
+        f5.setValues( new ArrayList<>( List.of( new FactorValueBasicValueObject( 10L ), new FactorValueBasicValueObject( 21L ) ) ) );
+        rebuilt.setExperimentalFactors( new ArrayList<>( List.of( f5 ) ) );
+
+        DesignCommitPlan plan = new DesignCommitPlan();
+        plan.setPreExistingFactorIds( new HashSet<>( List.of( 5L ) ) );
+        plan.setPreExistingFactorValueIds( new HashSet<>( List.of( 10L ) ) );
+        java.util.Map<String, List<String>> byParent = new java.util.HashMap<>();
+        byParent.put( DesignCommitPlan.existingFactorKey( 5L ), new ArrayList<>( List.of( "fvX" ) ) );
+        plan.setNewFactorValueClientRefsByParentKey( byParent );
+
+        java.util.Map<String, Long> idMap = new java.util.LinkedHashMap<>();
+        impl.correlateNewDesignIds( rebuilt, plan, idMap );
+        assertThat( idMap ).containsEntry( "fvX", 21L ).hasSize( 1 );
+    }
+
+    @Test
+    public void testBuildAssignmentPassWiresNewFvToBiomaterial() {
+        ExpressionExperimentServiceImpl impl = new ExpressionExperimentServiceImpl( eeDao );
+        ExperimentalDesignValueObject rebuilt = new ExperimentalDesignValueObject();
+        rebuilt.setBioMaterialAssignments( new ArrayList<>( List.of(
+                new ExperimentalDesignValueObject.BioMaterialFactorValueAssignment( 100L, "bm", new ArrayList<>() ) ) ) );
+
+        DesignCommitPlan plan = new DesignCommitPlan();
+        plan.getPendingAssignments().add( new DesignCommitPlan.PendingAssignment( "fv1", new HashSet<>( List.of( 100L ) ) ) );
+        java.util.Map<String, Long> idMap = new java.util.LinkedHashMap<>();
+        idMap.put( "fv1", 20L );
+
+        ExperimentalDesignValueObject edvo2 = impl.buildAssignmentPass( rebuilt, plan, idMap );
+        assertThat( edvo2 ).isNotNull();
+        assertThat( edvo2.getBioMaterialAssignments().get( 0 ).getFactorValueIds() ).containsExactly( 20L );
+        // Nothing pending → null (caller skips the redundant second apply).
+        assertThat( impl.buildAssignmentPass( rebuilt, new DesignCommitPlan(), idMap ) ).isNull();
+    }
+
     // TODO: pre-existing failure from PR #1657 (hotfix-1.32.7); previewDesignChange isn't
     // detecting the stale-anchor subset case under this fixture shape.
     @org.junit.jupiter.api.Disabled("Pre-existing failure from PR #1657")

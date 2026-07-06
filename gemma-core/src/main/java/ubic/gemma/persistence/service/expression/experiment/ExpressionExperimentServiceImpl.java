@@ -2265,8 +2265,10 @@ public class ExpressionExperimentServiceImpl
      * after apply. Correlation is order-based: the rebuilt design sorts factors/values by ascending id and ids are
      * monotonic in creation order, so the k-th newly-created entity (id absent from the pre-commit id sets) matches
      * the k-th recorded clientRef — deterministic even when two new values share a label.
+     * <p>
+     * Package-private so the order-based correlation can be unit-tested directly.
      */
-    private void correlateNewDesignIds( ExperimentalDesignValueObject rebuilt, DesignCommitPlan plan, Map<String, Long> idMap ) {
+    void correlateNewDesignIds( ExperimentalDesignValueObject rebuilt, DesignCommitPlan plan, Map<String, Long> idMap ) {
         if ( rebuilt == null || rebuilt.getExperimentalFactors() == null ) {
             return;
         }
@@ -2322,8 +2324,9 @@ public class ExpressionExperimentServiceImpl
      * caller skips a redundant apply). Because it re-submits the whole design, the replace-by-absence path keeps
      * every untouched entity.
      */
+    // package-private for direct unit testing
     @Nullable
-    private ExperimentalDesignValueObject buildAssignmentPass( ExperimentalDesignValueObject rebuilt, DesignCommitPlan plan, Map<String, Long> idMap ) {
+    ExperimentalDesignValueObject buildAssignmentPass( ExperimentalDesignValueObject rebuilt, DesignCommitPlan plan, Map<String, Long> idMap ) {
         Map<Long, ExperimentalDesignValueObject.BioMaterialFactorValueAssignment> byBm = new LinkedHashMap<>();
         if ( rebuilt.getBioMaterialAssignments() != null ) {
             for ( ExperimentalDesignValueObject.BioMaterialFactorValueAssignment a : rebuilt.getBioMaterialAssignments() ) {
