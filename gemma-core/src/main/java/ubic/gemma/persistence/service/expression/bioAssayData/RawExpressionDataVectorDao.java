@@ -25,4 +25,15 @@ public interface RawExpressionDataVectorDao extends DesignElementDataVectorDao<R
     Collection<RawExpressionDataVector> find( Collection<CompositeSequence> designElements,
             QuantitationType quantitationType );
 
+    /**
+     * Fetch up to {@code limit} raw vectors for the given quantitation type, chosen uniformly at random.
+     * <p>
+     * Mirrors {@code ProcessedExpressionDataVectorDao#getRandomProcessedVectors}: a cheap id-only scan is
+     * shuffled in Java and only the picked vectors are fetched (with the design-element / array-design /
+     * bioAssayDimension / quantitationType join fetches), avoiding an {@code ORDER BY RAND()} sort and a
+     * whole-matrix load. Unlike the processed variant there is no {@code rankByMean} preference — raw
+     * vectors carry no rank, so the sample is uniform.
+     */
+    Collection<RawExpressionDataVector> getRandomRawVectors( QuantitationType quantitationType, int limit );
+
 }

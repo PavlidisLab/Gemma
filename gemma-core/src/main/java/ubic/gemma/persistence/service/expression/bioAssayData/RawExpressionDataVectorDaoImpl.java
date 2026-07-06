@@ -18,8 +18,11 @@ import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.persistence.util.BusinessKey;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 
 import static ubic.gemma.persistence.util.QueryUtils.optimizeIdentifiableParameterList;
 
@@ -69,6 +72,36 @@ public class RawExpressionDataVectorDaoImpl extends AbstractDesignElementDataVec
                                 + "where dev.designElement in (:des) and dev.quantitationType = :qt" )
                 .setParameterList( "des", optimizeIdentifiableParameterList( designElements ) )
                 .setParameter( "qt", quantitationType )
+                .list();
+    }
+
+    @Override
+    public Collection<RawExpressionDataVector> getRandomRawVectors( QuantitationType quantitationType, int limit ) {
+        if ( limit <= 0 ) {
+            return new HashSet<>();
+        }
+        // (1) cheap id-only scan, (2) shuffle in Java + pick N, (3) fetch only the chosen vectors by id with
+        // the same join fetches as find(...). Mirrors ProcessedExpressionDataVectorDaoImpl.sampleVectorsByRank
+        // so we avoid an ORDER BY RAND() sort and a whole-matrix load. See HQL_SQL_AUDIT P2.
+        //noinspection unchecked
+        List<Long> ids = this.getSessionFactory().getCurrentSession().createQuery(
+                        "select dev.id from RawExpressionDataVector dev where dev.quantitationType = :qt" )
+                .setParameter( "qt", quantitationType )
+                .list();
+        if ( ids.isEmpty() ) {
+            return new ArrayList<>();
+        }
+        Collections.shuffle( ids );
+        List<Long> picked = ids.size() > limit ? ids.subList( 0, limit ) : ids;
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession().createQuery(
+                        "select dev from RawExpressionDataVector dev "
+                                + "join fetch dev.designElement cs "
+                                + "join fetch cs.arrayDesign "
+                                + "join fetch dev.bioAssayDimension "
+                                + "join fetch dev.quantitationType "
+                                + "where dev.id in (:ids)" )
+                .setParameterList( "ids", picked )
                 .list();
     }
 

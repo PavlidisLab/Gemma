@@ -105,7 +105,8 @@ public class DatasetVisualizationWebService {
      *                     when present, the response is restricted to the subset's sample columns.
      * @param quantitationTypeArg optional quantitation-type selector (id or name). When omitted the processed QT is
      *                     used (current behaviour). A non-processed QT is served from its raw vectors and supports
-     *                     only the {@code genes} / {@code probes} selection modes.
+     *                     the {@code genes} / {@code probes} selection modes and the random-sample fallback
+     *                     ({@code sampleSize}); {@code resultSet} / {@code pcaComponent} are rejected.
      */
     @GET
     @GZIP
@@ -121,7 +122,7 @@ public class DatasetVisualizationWebService {
                     + "single-cell data and for client-driven paging. "
                     + "By default the matrix comes from the dataset's processed data; pass ?quantitationType=id-or-name to "
                     + "source it from a different QT instead. A non-processed QT is served from its raw vectors and supports "
-                    + "only the genes / probes selection modes (resultSet, pcaComponent and the random-sample fallback return 400); "
+                    + "the genes / probes selection modes and the random-sample fallback (resultSet and pcaComponent return 400); "
                     + "non-numeric-double representations such as integer read-counts are coerced to double. "
                     + "NO ordering decisions are made server-side; the client sorts, groups, palettes, and renders.",
             responses = {
@@ -143,7 +144,7 @@ public class DatasetVisualizationWebService {
             @QueryParam("encoding") @DefaultValue("json") String encoding,
             @Parameter(description = "Restrict the heatmap to a single subset's samples — useful for cell-type-resolved views on single-cell data. When omitted, the full matrix is returned.")
             @QueryParam("subSet") @Nullable Long subSetId,
-            @Parameter(description = "Quantitation-type selector (id or name). When omitted, the dataset's processed QT is used. A non-processed QT is served from its raw vectors and supports only the genes / probes selection modes.")
+            @Parameter(description = "Quantitation-type selector (id or name). When omitted, the dataset's processed QT is used. A non-processed QT is served from its raw vectors and supports the genes / probes selection modes and the random-sample fallback; resultSet and pcaComponent are rejected.")
             @QueryParam("quantitationType") @Nullable QuantitationTypeArg<?> quantitationTypeArg ) {
         if ( !"json".equalsIgnoreCase( encoding ) && !"base64f32".equalsIgnoreCase( encoding ) ) {
             throw new MalformedArgException( "encoding must be one of: json, base64f32" );

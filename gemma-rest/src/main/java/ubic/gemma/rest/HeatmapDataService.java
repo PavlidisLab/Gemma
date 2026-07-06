@@ -117,10 +117,10 @@ public class HeatmapDataService {
      * @param quantitationType optional {@link QuantitationType} to source the matrix from. When {@code null} or when
      *                     it resolves to the dataset's processed QT, the processed-data path is used (all selection
      *                     modes). For any other (non-processed) QT the raw vectors for that QT are served instead;
-     *                     only the {@code geneIds}/{@code probeIds} selection modes are supported in that case
-     *                     ({@code resultSetId}/{@code pcaComponent} and the random-sample fallback raise
-     *                     {@link IllegalArgumentException}). Non-{@code DOUBLE} representations (e.g. integer
-     *                     read-counts) are coerced to double.
+     *                     the {@code geneIds}/{@code probeIds} selection modes and the random-sample fallback
+     *                     ({@code sampleSize}) are supported in that case, while {@code resultSetId}/{@code pcaComponent}
+     *                     raise {@link IllegalArgumentException} (no raw-vector equivalent). Non-{@code DOUBLE}
+     *                     representations (e.g. integer read-counts) are coerced to double.
      */
     @Transactional(readOnly = true)
     public HeatmapDataValueObject buildHeatmapData(
@@ -279,7 +279,7 @@ public class HeatmapDataService {
         // A non-processed QT is served straight from its raw vectors; the processed cache path
         // (and its diffex / PCA / random selection modes) doesn't apply to it.
         if ( quantitationType != null && !isProcessedQuantitationType( ee, quantitationType ) ) {
-            return resolveRawVectors( ee, quantitationType, geneIds, probeIds, resultSetId, pcaComponent );
+            return resolveRawVectors( ee, quantitationType, geneIds, probeIds, resultSetId, pcaComponent, sampleSize );
         }
         if ( geneIds != null && !geneIds.isEmpty() ) {
             return processedExpressionDataVectorService.getProcessedDataArrays( ee, geneIds );
@@ -311,10 +311,11 @@ public class HeatmapDataService {
     }
 
     /**
-     * Resolve vectors for a non-processed QT from its raw vectors. Only the gene / probe selection modes are
-     * supported: diffex ({@code resultSetId}) and PCA ({@code pcaComponent}) are derived from the processed-data
-     * analyses, and the random-sample fallback would require loading the whole raw matrix, so both raise
-     * {@link IllegalArgumentException} (surfaced as a 400 by the caller).
+     * Resolve vectors for a non-processed QT from its raw vectors. The gene / probe selection modes and the
+     * random-sample fallback ({@code sampleSize}) are supported. Diffex ({@code resultSetId}) and PCA
+     * ({@code pcaComponent}) are derived from the processed-data analyses and have no raw-vector equivalent, so
+     * they raise {@link IllegalArgumentException} (surfaced as a 400 by the caller). The random sample is drawn
+     * DB-side ({@link RawExpressionDataVectorService#getRandomRawVectors}) so it does not load the whole matrix.
      */
     private Collection<DoubleVectorValueObject> resolveRawVectors(
             ExpressionExperiment ee,
@@ -322,35 +323,38 @@ public class HeatmapDataService {
             @Nullable Collection<Long> geneIds,
             @Nullable Collection<Long> probeIds,
             @Nullable Long resultSetId,
-            @Nullable Integer pcaComponent ) {
+            @Nullable Integer pcaComponent,
+            int sampleSize ) {
         if ( resultSetId != null || pcaComponent != null ) {
             throw new IllegalArgumentException( "The resultSet and pcaComponent selection modes are derived from "
                     + "processed-data analyses and cannot be combined with a non-processed quantitationType; "
-                    + "select rows with genes or probes instead." );
+                    + "select rows with genes or probes instead, or omit both for a random sample." );
         }
 
-        Collection<CompositeSequence> probes;
-        if ( geneIds != null && !geneIds.isEmpty() ) {
-            Collection<Gene> genes = geneService.loadThawedLiter( geneIds );
-            if ( genes.isEmpty() ) {
+        Collection<RawExpressionDataVector> rawVectors;
+        if ( ( geneIds != null && !geneIds.isEmpty() ) || ( probeIds != null && !probeIds.isEmpty() ) ) {
+            Collection<CompositeSequence> probes;
+            if ( geneIds != null && !geneIds.isEmpty() ) {
+                Collection<Gene> genes = geneService.loadThawedLiter( geneIds );
+                if ( genes.isEmpty() ) {
+                    return Collections.emptyList();
+                }
+                Map<Gene, Collection<CompositeSequence>> byGene = compositeSequenceService.findByGenes( genes, true );
+                probes = new HashSet<>();
+                for ( Collection<CompositeSequence> css : byGene.values() ) {
+                    probes.addAll( css );
+                }
+            } else {
+                probes = compositeSequenceService.load( probeIds );
+            }
+            if ( probes.isEmpty() ) {
                 return Collections.emptyList();
             }
-            Map<Gene, Collection<CompositeSequence>> byGene = compositeSequenceService.findByGenes( genes, true );
-            probes = new HashSet<>();
-            for ( Collection<CompositeSequence> css : byGene.values() ) {
-                probes.addAll( css );
-            }
-        } else if ( probeIds != null && !probeIds.isEmpty() ) {
-            probes = compositeSequenceService.load( probeIds );
+            rawVectors = rawExpressionDataVectorService.find( probes, qt );
         } else {
-            throw new IllegalArgumentException( "A non-processed quantitationType requires an explicit gene or probe "
-                    + "selection; the random-sample fallback is only available for the processed quantitation type." );
+            // Random-sample fallback: DB-side random pick over this QT's raw vectors (no whole-matrix load).
+            rawVectors = rawExpressionDataVectorService.getRandomRawVectors( qt, sampleSize );
         }
-        if ( probes.isEmpty() ) {
-            return Collections.emptyList();
-        }
-
-        Collection<RawExpressionDataVector> rawVectors = rawExpressionDataVectorService.find( probes, qt );
         if ( rawVectors.isEmpty() ) {
             return Collections.emptyList();
         }
