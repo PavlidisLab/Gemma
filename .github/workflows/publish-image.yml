@@ -29,6 +29,7 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: pavlidislab/gemma-rest
+  CLI_IMAGE_NAME: pavlidislab/gemma-cli
 
 jobs:
   build:
@@ -68,37 +69,65 @@ jobs:
           short_sha="${GITHUB_SHA::7}"
           primary="${REGISTRY}/${IMAGE_NAME}:${slug}-${short_sha}"
           tags="${primary}"$'\n'"${REGISTRY}/${IMAGE_NAME}:${slug}-latest"
+          # CLI image mirrors the same tag scheme under a separate repo.
+          cli_primary="${REGISTRY}/${CLI_IMAGE_NAME}:${slug}-${short_sha}"
+          cli_tags="${cli_primary}"$'\n'"${REGISTRY}/${CLI_IMAGE_NAME}:${slug}-latest"
           if [ "${branch}" = "phase2-acl-migrate" ]; then
             tags="${tags}"$'\n'"${REGISTRY}/${IMAGE_NAME}:2.0.0-alpha"
             tags="${tags}"$'\n'"${REGISTRY}/${IMAGE_NAME}:latest"
+            cli_tags="${cli_tags}"$'\n'"${REGISTRY}/${CLI_IMAGE_NAME}:2.0.0-alpha"
+            cli_tags="${cli_tags}"$'\n'"${REGISTRY}/${CLI_IMAGE_NAME}:latest"
           fi
           {
             echo "primary_tag=${primary}"
+            echo "cli_primary_tag=${cli_primary}"
             echo "tags<<EOF"
             echo "${tags}"
             echo "EOF"
+            echo "cli_tags<<EOF"
+            echo "${cli_tags}"
+            echo "EOF"
           } >> "$GITHUB_OUTPUT"
 
-      - name: Build and push
+      - name: Build and push (gemma-rest WAR image)
         id: build
         uses: docker/build-push-action@v6
         with:
           context: .
           file: Dockerfile
+          # Explicit target so adding later Dockerfile stages (e.g. `cli`)
+          # can't silently hijack the default (last-stage) build.
+          target: runtime
           push: true
           tags: ${{ steps.tags.outputs.tags }}
           # GHA registry layer cache: cheap incremental rebuilds, source of
           # truth lives in the registry rather than the runner's local disk.
+          # mode=max caches the shared `build` stage too, so the CLI step below
+          # reuses the whole Maven compile instead of rebuilding it.
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
           cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
           provenance: false
 
+      - name: Build and push (gemma-cli image)
+        id: build_cli
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          target: cli
+          push: true
+          tags: ${{ steps.tags.outputs.cli_tags }}
+          # Reuse the WAR job's buildcache: the `build` stage is shared, so this
+          # only adds the tiny `cli` runtime layer on top.
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
+          provenance: false
+
       - name: Summary
         run: |
-          echo "### Image published" >> "$GITHUB_STEP_SUMMARY"
+          echo "### Images published" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Primary tag: \`${{ steps.tags.outputs.primary_tag }}\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Digest: \`${{ steps.build.outputs.digest }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- REST image: \`${{ steps.tags.outputs.primary_tag }}\` (digest \`${{ steps.build.outputs.digest }}\`)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- CLI image:  \`${{ steps.tags.outputs.cli_primary_tag }}\` (digest \`${{ steps.build_cli.outputs.digest }}\`)" >> "$GITHUB_STEP_SUMMARY"
 
   deploy-frink:
     name: deploy to frink (phase2-acl-migrate)

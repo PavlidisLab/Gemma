@@ -66,11 +66,12 @@ COPY gemma-cli/src    gemma-cli/src
 # RUN above may be cached and not re-run, leaving the cache mount empty).
 RUN --mount=type=cache,target=/root/.m2/repository \
     cp -rn /opt/local-mvn-repo/* /root/.m2/repository/ 2>/dev/null || true && \
-    mvn -B -ntp -P gemma-rest-war clean package -pl gemma-rest -am -DskipTests \
+    mvn -B -ntp -P gemma-rest-war clean package -pl gemma-rest,gemma-cli -am -DskipTests \
         -Dmaven.gitcommitid.skip=true
 
-# Sanity: WAR must exist before we move to the runtime stage.
-RUN ls -lh /build/gemma-rest/target/gemma-rest.war
+# Sanity: WAR + CLI launcher must exist before we move to the runtime stages.
+RUN ls -lh /build/gemma-rest/target/gemma-rest.war \
+ && ls -lh /build/gemma-cli/target/appassembler/bin/gemma-cli
 
 # ---------------------------------------------------------------------------
 # Stage 2: runtime
@@ -166,3 +167,34 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=180s --retries=3 \
   CMD curl -fsS "http://localhost:8080/rest/v2/datasets?limit=1" || exit 1
 
 # tomcat:10.1-jdk21-temurin's default CMD is `catalina.sh run`; inherit it.
+
+# ---------------------------------------------------------------------------
+# Stage 3: gemma-cli (JDK 25 runtime for the command-line tools)
+# ---------------------------------------------------------------------------
+# The CLI is Java 25 bytecode, so it needs a JDK/JRE 25 to run. This stage
+# bundles the self-contained appassembler distribution (bin/ launcher + flat
+# lib/ of ~200 dependency jars + etc/ config) produced by the build stage.
+#
+# NOTE: this is NOT the default build target — the runtime (WAR) stage above is
+# last so an untargeted `docker build` still yields the gemma-rest image. The
+# publish-image workflow builds this stage explicitly with `target: cli`.
+#
+# Run:
+#   docker run --rm \
+#     -v "$HOME/Gemma.properties":/home/gemma/Gemma.properties:ro \
+#     ghcr.io/pavlidislab/gemma-cli:2.0.0-alpha <command> [args...]
+# (Config is read from $HOME/Gemma.properties; GEMMA_* env vars also work and
+#  take precedence — see CONTAINER_CONFIG.md.)
+FROM eclipse-temurin:25-jre AS cli
+
+COPY --from=build /build/gemma-cli/target/appassembler /opt/gemma-cli
+
+# Non-root user with a writable HOME so $HOME/Gemma.properties resolves and the
+# CLI can write caches/logs under a mounted appdata dir.
+RUN groupadd --system gemma \
+ && useradd  --system --gid gemma --home /home/gemma --create-home gemma
+USER gemma:gemma
+ENV HOME=/home/gemma
+WORKDIR /home/gemma
+
+ENTRYPOINT ["/opt/gemma-cli/bin/gemma-cli"]
