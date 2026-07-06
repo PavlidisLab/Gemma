@@ -15,8 +15,10 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import ubic.gemma.core.context.EnvironmentProfiles;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -25,8 +27,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * (startup). The two triggers use different Spring mechanisms on purpose:
  * <p>
  * <b>Startup pass</b> rides on {@link ContextRefreshedEvent} so it fires in every
- * context — REST, CLI, dev, scheduler — regardless of whether
- * {@code @EnableScheduling} is active. {@code SchedulerConfig} is profile-gated to
+ * server context — REST, dev, scheduler — regardless of whether
+ * {@code @EnableScheduling} is active (it is skipped under the
+ * {@link ubic.gemma.core.context.EnvironmentProfiles#CLI} profile, which has no
+ * homepage to warm). {@code SchedulerConfig} is profile-gated to
  * {@link ubic.gemma.core.context.EnvironmentProfiles#SCHEDULER}, so a {@code @Scheduled}
  * method would never fire on a local-dev container. The lifecycle event always fires.
  * It runs the refresh in a background thread so Spring startup isn't blocked by the
@@ -50,6 +54,9 @@ public class HomeStatsRefresher {
     @Autowired
     private HomeStatsService homeStatsService;
 
+    @Autowired
+    private Environment environment;
+
     /** Guard against re-entry — multiple {@code ContextRefreshedEvent}s fire over a
      *  context's lifetime (each child context, refresh-by-actuator, etc.). Only the
      *  first matters for the startup pass. */
@@ -68,6 +75,15 @@ public class HomeStatsRefresher {
      */
     @EventListener(ContextRefreshedEvent.class)
     public void refreshOnStartup() {
+        // HomeStats warms the web homepage cache — there is no homepage to serve in a
+        // CLI invocation, so skip it there. This also avoids a startup race: the
+        // background compute runs ACL-filtered queries, which can beat
+        // AclClassIdInitializer setting AclQueryUtils.sessionFactory and throw
+        // "AclQueryUtils.sessionFactory not set". Web/scheduler contexts still refresh.
+        if ( environment.acceptsProfiles( EnvironmentProfiles.CLI ) ) {
+            log.debug( "HomeStats: skipping startup refresh under the CLI profile." );
+            return;
+        }
         if ( !startupRefreshArmed.compareAndSet( true, false ) ) {
             return;
         }
