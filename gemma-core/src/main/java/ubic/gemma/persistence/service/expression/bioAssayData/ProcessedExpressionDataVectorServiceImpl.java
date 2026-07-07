@@ -318,6 +318,12 @@ public class ProcessedExpressionDataVectorServiceImpl
 
     @Override
     @Transactional(readOnly = true)
+    public Collection<ProcessedExpressionDataVector> find( Collection<CompositeSequence> designElements, QuantitationType quantitationType ) {
+        return this.processedExpressionDataVectorDao.find( designElements, quantitationType );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Collection<ProcessedExpressionDataVector> getProcessedDataVectors(
             ExpressionExperiment expressionExperiment ) {
         return this.processedExpressionDataVectorDao.getProcessedVectors( expressionExperiment );

@@ -197,6 +197,16 @@ public interface ProcessedExpressionDataVectorService
             Collection<ExpressionExperiment> expressionExperiments, Collection<CompositeSequence> compositeSequences );
 
     /**
+     * Retrieve the processed vectors for a set of design elements within a given (processed) quantitation type.
+     * Unlike {@code getProcessedDataArraysByProbe(...)} these are raw entities whose data has NOT had read-time
+     * outlier masking applied, so the caller can recover un-masked values for those probes.
+     *
+     * @see ProcessedExpressionDataVectorDao#find(Collection, QuantitationType)
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATA_VECTOR_COLLECTION_READ" })
+    Collection<ProcessedExpressionDataVector> find( Collection<CompositeSequence> designElements, QuantitationType quantitationType );
+
+    /**
      * @see ProcessedExpressionDataVectorDao#getProcessedVectors(ExpressionExperiment)
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })

@@ -107,6 +107,11 @@ public class DatasetVisualizationWebService {
      *                     used (current behaviour). A non-processed QT is served from its raw vectors and supports
      *                     the {@code genes} / {@code probes} selection modes and the random-sample fallback
      *                     ({@code sampleSize}); {@code resultSet} / {@code pcaComponent} are rejected.
+     * @param maskOutliers when {@code true} (default) values for assays flagged as outliers are masked to {@code NaN};
+     *                     when {@code false} their stored expression values are returned instead. Always effective for a
+     *                     non-processed {@code quantitationType} (raw vectors). For the processed QT it returns whatever
+     *                     is on disk: processed data is currently masked at creation time, so the flag is usually a
+     *                     no-op there today.
      */
     @GET
     @GZIP
@@ -124,6 +129,10 @@ public class DatasetVisualizationWebService {
                     + "source it from a different QT instead. A non-processed QT is served from its raw vectors and supports "
                     + "the genes / probes selection modes and the random-sample fallback (resultSet and pcaComponent return 400); "
                     + "non-numeric-double representations such as integer read-counts are coerced to double. "
+                    + "By default the values of assays flagged as outliers are masked to NaN; pass ?maskOutliers=false "
+                    + "to receive their stored expression values instead. This is always effective for a non-processed "
+                    + "quantitationType (raw vectors); for the processed QT it returns whatever is on disk, which is "
+                    + "currently masked at creation time, so the flag is usually a no-op there today. "
                     + "NO ordering decisions are made server-side; the client sorts, groups, palettes, and renders.",
             responses = {
                     @ApiResponse(responseCode = "200", useReturnTypeSchema = true,
@@ -145,7 +154,9 @@ public class DatasetVisualizationWebService {
             @Parameter(description = "Restrict the heatmap to a single subset's samples — useful for cell-type-resolved views on single-cell data. When omitted, the full matrix is returned.")
             @QueryParam("subSet") @Nullable Long subSetId,
             @Parameter(description = "Quantitation-type selector (id or name). When omitted, the dataset's processed QT is used. A non-processed QT is served from its raw vectors and supports the genes / probes selection modes and the random-sample fallback; resultSet and pcaComponent are rejected.")
-            @QueryParam("quantitationType") @Nullable QuantitationTypeArg<?> quantitationTypeArg ) {
+            @QueryParam("quantitationType") @Nullable QuantitationTypeArg<?> quantitationTypeArg,
+            @Parameter(description = "When true (default), values for assays flagged as outliers are masked to NaN. Pass false to receive their stored expression values instead. Always effective for a non-processed quantitationType (raw vectors); for the processed QT it returns whatever is on disk, which is currently masked at creation, so the flag is usually a no-op there today.")
+            @QueryParam("maskOutliers") @DefaultValue("true") boolean maskOutliers ) {
         if ( !"json".equalsIgnoreCase( encoding ) && !"base64f32".equalsIgnoreCase( encoding ) ) {
             throw new MalformedArgException( "encoding must be one of: json, base64f32" );
         }
@@ -182,7 +193,8 @@ public class DatasetVisualizationWebService {
                     effectiveSampleSize,
                     encoding.toLowerCase(),
                     subSetId,
-                    quantitationType );
+                    quantitationType,
+                    maskOutliers );
         } catch ( IllegalArgumentException e ) {
             throw new MalformedArgException( e.getMessage(), e );
         }

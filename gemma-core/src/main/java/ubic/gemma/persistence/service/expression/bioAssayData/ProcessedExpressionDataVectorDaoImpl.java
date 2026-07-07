@@ -23,6 +23,7 @@ import org.hibernate.query.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
@@ -93,6 +94,26 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
                 .setFirstResult( offset )
                 // HB6 rejects setMaxResults(<0); pagination contract treats <=0 as "no limit".
                 .setMaxResults( limit > 0 ? limit : Integer.MAX_VALUE )
+                .list();
+    }
+
+    @Override
+    public Collection<ProcessedExpressionDataVector> find( Collection<CompositeSequence> designElements, QuantitationType quantitationType ) {
+        if ( designElements == null || designElements.isEmpty() ) {
+            return new HashSet<>();
+        }
+        // Mirror getProcessedVectors(ee): join fetch designElement + arrayDesign + bioAssayDimension +
+        // quantitationType so the downstream consumers don't fall back to per-row lazy initialization.
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession().createQuery(
+                        "select dedv from ProcessedExpressionDataVector dedv "
+                                + "join fetch dedv.designElement cs "
+                                + "join fetch cs.arrayDesign "
+                                + "join fetch dedv.bioAssayDimension "
+                                + "join fetch dedv.quantitationType "
+                                + "where dedv.designElement in (:des) and dedv.quantitationType = :qt" )
+                .setParameterList( "des", optimizeIdentifiableParameterList( designElements ) )
+                .setParameter( "qt", quantitationType )
                 .list();
     }
 

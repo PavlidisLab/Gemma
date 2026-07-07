@@ -33,6 +33,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionValueObject;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -266,7 +267,7 @@ public class DatasetVisualizationWebServiceTest {
         when( geneService.loadThawedLiter( any( Collection.class ) ) ).thenReturn( Collections.singletonList( brca1 ) );
 
         HeatmapDataValueObject payload = heatmapDataService.buildHeatmapData(
-                ee, Arrays.asList( 672L ), null, null, 0.01, null, 20, 20, "json", null, null );
+                ee, Arrays.asList( 672L ), null, null, 0.01, null, 20, 20, "json", null, null, true );
 
         assertThat( payload.getDatasetId() ).isEqualTo( 12345L );
         assertThat( payload.getDatasetShortName() ).isEqualTo( "GSE6789" );
@@ -332,7 +333,7 @@ public class DatasetVisualizationWebServiceTest {
                 .thenReturn( vectors );
 
         HeatmapDataValueObject payload = heatmapDataService.buildHeatmapData(
-                ee, null, Arrays.asList( 101L, 102L ), null, 0.01, null, 20, 20, "json", null, null );
+                ee, null, Arrays.asList( 101L, 102L ), null, 0.01, null, 20, 20, "json", null, null, true );
 
         assertThat( payload.getMatrix().getRowsCount() ).isEqualTo( 2 );
         assertThat( payload.getMatrix().getColsCount() ).isEqualTo( 4 );
@@ -346,7 +347,7 @@ public class DatasetVisualizationWebServiceTest {
                         buildVector( probe1, new double[] { 1.0, 2.0, 3.0, 4.0 }, Collections.emptyList(), null ) ) );
 
         HeatmapDataValueObject payload = heatmapDataService.buildHeatmapData(
-                ee, null, null, null, 0.01, null, 20, 20, "json", null, null );
+                ee, null, null, null, 0.01, null, 20, 20, "json", null, null, true );
 
         assertThat( payload.getMatrix().getRowsCount() ).isEqualTo( 1 );
     }
@@ -359,7 +360,7 @@ public class DatasetVisualizationWebServiceTest {
                         buildVector( probe1, row, Collections.emptyList(), null ) ) );
 
         HeatmapDataValueObject payload = heatmapDataService.buildHeatmapData(
-                ee, null, null, null, 0.01, null, 20, 20, "base64f32", null, null );
+                ee, null, null, null, 0.01, null, 20, 20, "base64f32", null, null, true );
 
         assertThat( payload.getMatrix().getEncoding() ).isEqualTo( "base64f32" );
         assertThat( payload.getMatrix().getValues() ).isInstanceOf( String.class );
@@ -384,7 +385,7 @@ public class DatasetVisualizationWebServiceTest {
         when( geneService.loadThawedLiter( any( Collection.class ) ) ).thenReturn( Collections.singletonList( brca1 ) );
 
         HeatmapDataValueObject payload = heatmapDataService.buildHeatmapData(
-                ee, Arrays.asList( 672L ), null, null, 0.01, null, 20, 20, "json", null, null );
+                ee, Arrays.asList( 672L ), null, null, 0.01, null, 20, 20, "json", null, null, true );
 
         assertThat( payload.getFactors() ).hasSize( 2 );
         for ( HeatmapDataValueObject.FactorEntry fe : payload.getFactors() ) {
@@ -427,7 +428,7 @@ public class DatasetVisualizationWebServiceTest {
                 .thenReturn( vectors );
 
         HeatmapDataValueObject payload = heatmapDataService.buildHeatmapData(
-                ee, Arrays.asList( 672L ), null, null, 0.01, null, 20, 20, "json", 555L, null );
+                ee, Arrays.asList( 672L ), null, null, 0.01, null, 20, 20, "json", 555L, null, true );
 
         // Column axis shrank to 2 entries — the BAs that belong to the subset.
         assertThat( payload.getMatrix().getColsCount() ).isEqualTo( 2 );
@@ -454,7 +455,7 @@ public class DatasetVisualizationWebServiceTest {
 
         try {
             heatmapDataService.buildHeatmapData(
-                    ee, null, null, null, 0.01, null, 20, 20, "json", 777L, null );
+                    ee, null, null, null, 0.01, null, 20, 20, "json", 777L, null, true );
             assertThat( false ).as( "expected IllegalArgumentException" ).isTrue();
         } catch ( IllegalArgumentException expected ) {
             assertThat( expected.getMessage() ).contains( "does not belong to dataset" );
@@ -482,6 +483,16 @@ public class DatasetVisualizationWebServiceTest {
         return v;
     }
 
+    private ProcessedExpressionDataVector processedVector( CompositeSequence probe, QuantitationType qt, double[] data ) {
+        ProcessedExpressionDataVector v = ProcessedExpressionDataVector.Factory.newInstance();
+        v.setId( 800000L + probe.getId() );
+        v.setDesignElement( probe );
+        v.setBioAssayDimension( bad );
+        v.setQuantitationType( qt );
+        v.setDataAsDoubles( data );
+        return v;
+    }
+
     @Test
     public void testHeatmapNonProcessedQt_servesFromRawVectors() {
         QuantitationType countsQt = rawCountsQt( 5555L );
@@ -496,7 +507,7 @@ public class DatasetVisualizationWebServiceTest {
                 .thenReturn( Collections.singletonMap( probe1, Collections.singletonList( brca1 ) ) );
 
         HeatmapDataValueObject payload = heatmapDataService.buildHeatmapData(
-                ee, null, Arrays.asList( 101L, 102L ), null, 0.01, null, 20, 20, "json", null, countsQt );
+                ee, null, Arrays.asList( 101L, 102L ), null, 0.01, null, 20, 20, "json", null, countsQt, true );
 
         assertThat( payload.getMatrix().getRowsCount() ).isEqualTo( 2 );
         assertThat( payload.getMatrix().getColsCount() ).isEqualTo( 4 );
@@ -515,7 +526,7 @@ public class DatasetVisualizationWebServiceTest {
         when( expressionExperimentService.getProcessedQuantitationType( ee ) ).thenReturn( Optional.empty() );
         try {
             heatmapDataService.buildHeatmapData(
-                    ee, null, null, 42L, 0.01, null, 20, 20, "json", null, countsQt );
+                    ee, null, null, 42L, 0.01, null, 20, 20, "json", null, countsQt, true );
             assertThat( false ).as( "expected IllegalArgumentException" ).isTrue();
         } catch ( IllegalArgumentException expected ) {
             assertThat( expected.getMessage() ).contains( "resultSet" );
@@ -523,15 +534,100 @@ public class DatasetVisualizationWebServiceTest {
     }
 
     @Test
-    public void testHeatmapNonProcessedQt_rejectsRandomFallback() {
+    public void testHeatmapNonProcessedQt_servesRandomFallbackFromRawVectors() {
+        // A non-processed QT with no gene/probe selection falls back to a DB-side random sample of its raw vectors
+        // (see commit "allow sampleSize for alternate qt heatmap-data outputs").
         QuantitationType countsQt = rawCountsQt( 5555L );
         when( expressionExperimentService.getProcessedQuantitationType( ee ) ).thenReturn( Optional.empty() );
-        try {
-            heatmapDataService.buildHeatmapData(
-                    ee, null, null, null, 0.01, null, 20, 20, "json", null, countsQt );
-            assertThat( false ).as( "expected IllegalArgumentException" ).isTrue();
-        } catch ( IllegalArgumentException expected ) {
-            assertThat( expected.getMessage() ).contains( "requires an explicit gene or probe" );
-        }
+        when( rawExpressionDataVectorService.getRandomRawVectors( any( QuantitationType.class ), eq( 20 ) ) )
+                .thenReturn( Collections.singletonList(
+                        rawVector( probe1, countsQt, new double[] { 10.0, 20.0, 30.0, 40.0 } ) ) );
+        when( compositeSequenceService.getGenes( any( Collection.class ), eq( true ) ) )
+                .thenReturn( Collections.emptyMap() );
+
+        HeatmapDataValueObject payload = heatmapDataService.buildHeatmapData(
+                ee, null, null, null, 0.01, null, 20, 20, "json", null, countsQt, true );
+
+        assertThat( payload.getMatrix().getRowsCount() ).isEqualTo( 1 );
+        assertThat( payload.getMatrix().getColsCount() ).isEqualTo( 4 );
+        assertThat( payload.getQuantitationType().getName() ).isEqualTo( "Counts" );
+    }
+
+    @Test
+    public void testHeatmapNonProcessedQt_maskOutliersFalse_returnsStoredOutlierValues() {
+        // Flag sample i=2 (column index 2) as an outlier on the shared dimension.
+        bioAssays.get( 2 ).setIsOutlier( true );
+
+        QuantitationType countsQt = rawCountsQt( 5555L );
+        when( expressionExperimentService.getProcessedQuantitationType( ee ) ).thenReturn( Optional.empty() );
+        when( compositeSequenceService.load( any( Collection.class ) ) ).thenReturn( Arrays.asList( probe1 ) );
+        when( rawExpressionDataVectorService.find( any( Collection.class ), any( QuantitationType.class ) ) )
+                .thenReturn( Collections.singletonList(
+                        rawVector( probe1, countsQt, new double[] { 10.0, 20.0, 30.0, 40.0 } ) ) );
+        when( compositeSequenceService.getGenes( any( Collection.class ), eq( true ) ) )
+                .thenReturn( Collections.emptyMap() );
+
+        // maskOutliers = false → the stored value 30.0 at the outlier column is preserved.
+        HeatmapDataValueObject unmasked = heatmapDataService.buildHeatmapData(
+                ee, null, Arrays.asList( 101L ), null, 0.01, null, 20, 20, "json", null, countsQt, false );
+        double[][] unmaskedMat = ( double[][] ) unmasked.getMatrix().getValues();
+        assertThat( unmaskedMat[0] ).containsExactly( 10.0, 20.0, 30.0, 40.0 );
+
+        // maskOutliers = true → the outlier column is NaN, the rest untouched.
+        HeatmapDataValueObject masked = heatmapDataService.buildHeatmapData(
+                ee, null, Arrays.asList( 101L ), null, 0.01, null, 20, 20, "json", null, countsQt, true );
+        double[][] maskedMat = ( double[][] ) masked.getMatrix().getValues();
+        assertThat( maskedMat[0][0] ).isEqualTo( 10.0 );
+        assertThat( maskedMat[0][2] ).isNaN();
+        assertThat( maskedMat[0][3] ).isEqualTo( 40.0 );
+    }
+
+    @Test
+    public void testHeatmapProcessedQt_maskOutliersFalse_restoresFromStoredEntityWhenValuePresent() {
+        // Processed path with maskOutliers=false re-fetches the stored entity and restores outlier columns from it.
+        // NOTE: today's processed-data creation masks outliers on disk, so in production find(...) returns a NaN at the
+        // outlier column and this path is a no-op. This test exercises the restoration LOGIC for the scenario where the
+        // stored value survives (processing changed to not mask on disk, or a post-flag reprocess that failed): the
+        // mocked entity carries the real value 2.0, which must land in the output.
+        bioAssays.get( 1 ).setIsOutlier( true );
+
+        // The processed cache serves the vector masked at the outlier column (read-time masking).
+        when( processedExpressionDataVectorService.getProcessedDataArraysByProbe( any( ExpressionExperiment.class ), any( Collection.class ) ) )
+                .thenReturn( Collections.singletonList(
+                        buildVector( probe1, new double[] { 1.0, Double.NaN, 3.0, 4.0 }, Collections.emptyList(), null ) ) );
+        when( compositeSequenceService.load( any( Collection.class ) ) ).thenReturn( Arrays.asList( probe1 ) );
+
+        QuantitationType processedQt = rawCountsQt( 4242L );
+        when( expressionExperimentService.getProcessedQuantitationType( ee ) ).thenReturn( Optional.of( processedQt ) );
+        when( processedExpressionDataVectorService.find( any( Collection.class ), any( QuantitationType.class ) ) )
+                .thenReturn( Collections.singletonList(
+                        processedVector( probe1, processedQt, new double[] { 1.0, 2.0, 3.0, 4.0 } ) ) );
+
+        HeatmapDataValueObject unmasked = heatmapDataService.buildHeatmapData(
+                ee, null, Arrays.asList( 101L ), null, 0.01, null, 20, 20, "json", null, null, false );
+        double[][] mat = ( double[][] ) unmasked.getMatrix().getValues();
+        assertThat( mat[0] ).containsExactly( 1.0, 2.0, 3.0, 4.0 );
+    }
+
+    @Test
+    public void testHeatmapProcessedQt_maskOutliersFalse_noOpWhenStoredValueMasked() {
+        // Mirrors today's production reality: the stored entity is ALSO NaN at the outlier column, so restoration
+        // leaves it NaN (restores NaN over NaN).
+        bioAssays.get( 1 ).setIsOutlier( true );
+        when( processedExpressionDataVectorService.getProcessedDataArraysByProbe( any( ExpressionExperiment.class ), any( Collection.class ) ) )
+                .thenReturn( Collections.singletonList(
+                        buildVector( probe1, new double[] { 1.0, Double.NaN, 3.0, 4.0 }, Collections.emptyList(), null ) ) );
+        when( compositeSequenceService.load( any( Collection.class ) ) ).thenReturn( Arrays.asList( probe1 ) );
+
+        QuantitationType processedQt = rawCountsQt( 4242L );
+        when( expressionExperimentService.getProcessedQuantitationType( ee ) ).thenReturn( Optional.of( processedQt ) );
+        when( processedExpressionDataVectorService.find( any( Collection.class ), any( QuantitationType.class ) ) )
+                .thenReturn( Collections.singletonList(
+                        processedVector( probe1, processedQt, new double[] { 1.0, Double.NaN, 3.0, 4.0 } ) ) );
+
+        HeatmapDataValueObject payload = heatmapDataService.buildHeatmapData(
+                ee, null, Arrays.asList( 101L ), null, 0.01, null, 20, 20, "json", null, null, false );
+        double[][] mat = ( double[][] ) payload.getMatrix().getValues();
+        assertThat( mat[0][1] ).isNaN();
     }
 }
