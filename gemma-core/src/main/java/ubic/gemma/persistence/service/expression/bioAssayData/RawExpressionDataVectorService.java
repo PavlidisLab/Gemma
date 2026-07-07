@@ -37,4 +37,12 @@ public interface RawExpressionDataVectorService extends BulkExpressionDataVector
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATA_VECTOR_COLLECTION_READ" })
     Collection<RawExpressionDataVector> find( Collection<CompositeSequence> designElements, QuantitationType quantitationType );
 
+    /**
+     * Fetch up to {@code limit} raw vectors for the given quantitation type, chosen uniformly at random.
+     *
+     * @see RawExpressionDataVectorDao#getRandomRawVectors(QuantitationType, int)
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATA_VECTOR_COLLECTION_READ" })
+    Collection<RawExpressionDataVector> getRandomRawVectors( QuantitationType quantitationType, int limit );
+
 }
