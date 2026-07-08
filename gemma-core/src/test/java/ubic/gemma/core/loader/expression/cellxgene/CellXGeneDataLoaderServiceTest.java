@@ -41,13 +41,13 @@ public class CellXGeneDataLoaderServiceTest extends BaseIntegrationTest {
         platform = arrayDesignService.create( platform );
 
         ExpressionExperiment ee = cellXGeneDataLoaderService.fetchAndLoad( "f406a653-c079-4bf9-aab6-85846c27571d",
-                "412352dd-a919-4d8e-9f74-e210627328b5", null, platform, "Clarence-2024",
+                "e6ef2a07-1b8e-49a8-a771-15b81971eac7", null, platform, "Clarence-2024",
                 false, false, false,false );
 
         assertThat( ee.getAccession() ).isNotNull()
                 .satisfies( accession -> {
                     assertThat( accession.getAccession() )
-                            .isEqualTo( "412352dd-a919-4d8e-9f74-e210627328b5" );
+                            .isEqualTo( "e6ef2a07-1b8e-49a8-a771-15b81971eac7" );
                     assertThat( accession.getUri() )
                             .isEqualTo( "https://cellxgene.cziscience.com/collections/f406a653-c079-4bf9-aab6-85846c27571d" );
                     assertThat( accession.getExternalDatabase().getName() )
