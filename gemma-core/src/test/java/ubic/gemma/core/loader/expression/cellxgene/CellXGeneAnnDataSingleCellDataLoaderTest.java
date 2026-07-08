@@ -15,10 +15,19 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class CellXGeneAnnDataSingleCellDataLoaderTest {
 
     /**
-     * Trimmed fixture derived from the CELLxGENE version of GSE124952 (dataset
-     * d3be7423-d664-4913-89a9-a506cae4c28f), which contains a "pooled" donor
-     * alongside the individual SRR donors. See make_cellxgene_pooled_fixture.py
-     * next to the fixture for how it was produced.
+     * Trimmed fixture derived from the CELLxGENE "HypoMap" atlas (a unified
+     * single-cell atlas of the murine hypothalamus), which contains a "pooled"
+     * donor alongside the individual SRR donors. See
+     * make_cellxgene_pooled_fixture.py next to the fixture for how it was
+     * produced.
+     * <p>
+     * This test originally downloaded dataset d3be7423-d664-4913-89a9-a506cae4c28f
+     * live from CELLxGENE, but that dataset id was removed from the index when
+     * the atlas was re-published. As of this writing HypoMap lives under:
+     * <ul>
+     *     <li>collection id: d86517f0-fa7e-4266-b82e-a521350d6d36</li>
+     *     <li>dataset id: 87b802cc-73ca-422a-8cc7-6d6d38449b3f</li>
+     * </ul>
      */
     @Test
     public void testKeepPooledSample() throws IOException {
