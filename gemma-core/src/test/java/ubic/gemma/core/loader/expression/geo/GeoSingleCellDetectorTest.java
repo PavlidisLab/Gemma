@@ -905,14 +905,17 @@ public class GeoSingleCellDetectorTest extends BaseTest {
     public void testDownloadSingleCellDataInCellXGeneWithoutACollectionId() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE207848" );
         assertThat( detector.hasSingleCellDataInCellXGene( series ) ).isTrue();
+        // The CELLxGENE dataset id is resolved from the GEO series (CELLxGENE links its collections back to the GEO
+        // accession), so derive the expected symlink target from it rather than hard-coding an id that CELLxGENE
+        // rotates whenever the dataset is re-published.
+        String datasetId = detector.getDatasetMetadataFromCellXGene( series ).getId();
         assertThat( detector.downloadSingleCellDataInCellXGene( series ) )
                 .isSymbolicLink()
                 .hasFileName( "GSE207848.h5ad" )
                 .satisfies( path -> {
                     Path finalDest = Files.readSymbolicLink( path );
-                    assertThat( finalDest ).hasFileName( "03390dd0-fe16-4cef-b430-ab451e85c448.h5ad" );
+                    assertThat( finalDest ).hasFileName( datasetId + ".h5ad" );
                 } );
-        detector.getDatasetMetadataFromCellXGene( series );
     }
 
     @Test
