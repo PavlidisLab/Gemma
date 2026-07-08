@@ -65,7 +65,7 @@ public class SingleCellDataDeleterCli extends ExpressionExperimentVectorsManipul
     protected void buildExperimentVectorsOptions( Options options ) {
         options.addOption( DELETE_CELL_TYPE_ASSIGNMENT, "delete-cell-type-assignment", true, "Delete a cell type assignment." );
         options.addOption( DELETE_ALL_CELL_TYPE_ASSIGNMENT, "delete-all-cell-type-assignments", false, "Delete all cell type assignments." );
-        options.addOption( DELETE_CELL_LEVEL_CHARACTERISTICS, "delete-cell-level-characteristics", true, "Delete cell-level characteristics" );
+        options.addOption( DELETE_CELL_LEVEL_CHARACTERISTICS, "delete-cell-level-characteristics", true, "Delete a cell-level characteristics identified by its ID or name" );
         options.addOption( DELETE_ALL_CELL_LEVEL_CHARACTERISTICS, "delete-all-cell-level-characteristics", false, "Delete all cell-level characteristics" );
     }
 
