@@ -678,6 +678,63 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
     }
 
     @Test
+    public void testSearchAnnotationsBatchResolvesEachLabelIndependently() throws SearchException, TimeoutException {
+        CharacteristicValueObject diabetes = new CharacteristicValueObject( "diabetes", "http://example.com/diabetes", "disease", "http://example.com/disease" );
+        CharacteristicValueObject liver = new CharacteristicValueObject( "liver", "http://example.com/liver", "organism part", "http://example.com/part" );
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "diabetes" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Collections.singletonList( diabetes ) );
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "liver" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Collections.singletonList( liver ) );
+
+        String body = "{\"queries\":[{\"query\":\"diabetes\",\"category\":\"disease\"},"
+                + "{\"query\":\"liver\",\"category\":\"organism part\"}],\"includeGenes\":false}";
+        assertThat( target( "/annotations/search/batch" ).request().post( Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 2 )
+                .satisfies( entries -> {
+                    // Each item resolves to its own list — NOT unioned — and echoes its query for correlation.
+                    assertThat( entries.get( 0 ) )
+                            .containsEntry( "query", "diabetes" )
+                            .containsEntry( "error", null );
+                    assertThat( ( List<?> ) entries.get( 0 ).get( "results" ) ).hasSize( 1 );
+                    assertThat( entries.get( 1 ) )
+                            .containsEntry( "query", "liver" );
+                    assertThat( ( List<?> ) entries.get( 1 ).get( "results" ) ).hasSize( 1 );
+                } );
+        // includeGenes=false → the gene fan-out is skipped for every item.
+        verify( geneService, never() ).findByOfficialSymbol( anyString() );
+    }
+
+    @Test
+    public void testSearchAnnotationsBatchEmptyReturns400() {
+        assertThat( target( "/annotations/search/batch" ).request().post( Entity.json( "{\"queries\":[]}" ) ) )
+                .hasStatus( Response.Status.BAD_REQUEST );
+    }
+
+    @Test
+    public void testSearchAnnotationsIncludeGenesFalseSkipsGeneFanout() throws SearchException, TimeoutException {
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "stat5b" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Collections.emptyList() );
+
+        // Default (includeGenes=true): the three gene probes fire.
+        assertThat( target( "/annotations/search" ).queryParam( "query", "stat5b" ).request().get() )
+                .hasStatus( Response.Status.OK );
+        verify( geneService, atLeastOnce() ).findByOfficialSymbol( "stat5b" );
+
+        // includeGenes=false: none of the gene probes fire.
+        reset( geneService );
+        assertThat( target( "/annotations/search" ).queryParam( "query", "stat5b" )
+                .queryParam( "includeGenes", "false" ).request().get() )
+                .hasStatus( Response.Status.OK );
+        verify( geneService, never() ).findByOfficialSymbol( anyString() );
+        verify( geneService, never() ).findByOfficialName( anyString() );
+        verify( geneService, never() ).findByAlias( anyString() );
+    }
+
+    @Test
     public void testGetAnnotationCategories() {
         OntologyTerm cellType = mock( OntologyTerm.class );
         when( cellType.getUri() ).thenReturn( "http://example.com/cellType" );

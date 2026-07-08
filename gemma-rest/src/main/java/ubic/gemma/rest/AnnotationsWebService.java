@@ -39,6 +39,7 @@ import ubic.gemma.core.ontology.model.OntologyTerm;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.ontology.OntologyUtils;
 import ubic.gemma.core.search.*;
+import ubic.gemma.core.security.concurrent.DelegatingSecurityContextExecutorService;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.AnnotationValueObject;
@@ -526,7 +527,13 @@ public class AnnotationsWebService {
             @Parameter(description = "When `includeGeneCount=true`, cap the per-hit BFS descendant " +
                     "walk at this many GO terms. Default 50 (bounds broad parents like `metabolic " +
                     "process` to ~50ms per hit). 0 = unbounded; not recommended for typeahead.")
-            @QueryParam("geneCountMaxTerms") @DefaultValue("50") int geneCountMaxTerms
+            @QueryParam("geneCountMaxTerms") @DefaultValue("50") int geneCountMaxTerms,
+            @Parameter(description = "When `true` (default), merge synthetic gene rows (symbol / name / "
+                    + "alias matches) into the results — the STAT5B-finds-the-gene behaviour. Each query "
+                    + "token fires three sequential GeneService probes, the dominant slice of the per-call "
+                    + "latency floor. Resolver-style callers working a non-gene position (organism part, "
+                    + "disease, …) pass `false` to skip the fan-out entirely and cut that floor.")
+            @QueryParam("includeGenes") @DefaultValue("true") boolean includeGenes
     ) {
         if ( query == null || query.getValue().isEmpty() ) {
             throw new BadRequestException( "Search query cannot be empty." );
@@ -546,10 +553,39 @@ public class AnnotationsWebService {
         // Resolve the optional taxon hint up-front so a bad value 400s before we hit the cache or
         // launch the ontology fan-out. Null taxon = no constraint (legacy behaviour).
         Taxon taxon = taxonArg != null ? taxonArgService.getEntity( taxonArg ) : null;
+        try {
+            return respond( searchOne( query.getValue(), strategy, limit, prefixes, upstream,
+                    exactLabel, category, taxon, includeGenes, includeGeneCount, geneCountMaxTerms ) );
+        } catch ( SearchTimeoutException e ) {
+            throw new ServiceUnavailableException( e.getMessage(), DateUtils.addSeconds( new Date(), 30 ), e.getCause() );
+        } catch ( ParseSearchException e ) {
+            throw new BadRequestException( "Invalid search query: " + e.getQuery(), e );
+        } catch ( SearchException e ) {
+            throw new InternalServerErrorException( e );
+        }
+    }
+
+    /**
+     * Shared core behind both {@code GET /annotations/search} and {@code POST /annotations/search/batch}:
+     * response-cache lookup, {@link #getTerms} find/rank/enrich, optional gene-count enrichment, and
+     * cache population. Kept separate so the batch endpoint reuses the SAME per-query cache (repeat
+     * labels across a batch, or a later single GET for the same label, hit the warm entry) and the same
+     * timeout / caching semantics without duplicating logic.
+     *
+     * @param queryValues the literal query token(s) — NOT comma-split (the batch passes a single label
+     *                    verbatim, so a label containing a comma like "CD4-positive, alpha-beta T cell"
+     *                    stays one query rather than being unioned across two).
+     */
+    private List<AnnotationSearchResultValueObject> searchOne( List<String> queryValues,
+            AnnotationSearchRankingStrategy strategy, int limit, List<String> prefixes, boolean upstream,
+            boolean exactLabel, String category, @Nullable Taxon taxon, boolean includeGenes,
+            boolean includeGeneCount, int geneCountMaxTerms ) throws SearchException {
         // Cache key includes includeGeneCount + geneCountMaxTerms so a "with counts" call doesn't
-        // hit a cached "without counts" payload. Taxon affects gene fan-out, so it keys too.
-        String cacheKey = buildSearchCacheKey( query.getValue(), strategy.getName(), limit, prefixes, upstream, exactLabel, category, taxon )
-                + ( includeGeneCount ? "|gc=" + geneCountMaxTerms : "" );
+        // hit a cached "without counts" payload. Taxon affects gene fan-out, so it keys too; and
+        // includeGenes=false is a different response shape, so it gets its own "|ng" suffix.
+        String cacheKey = buildSearchCacheKey( queryValues, strategy.getName(), limit, prefixes, upstream, exactLabel, category, taxon )
+                + ( includeGeneCount ? "|gc=" + geneCountMaxTerms : "" )
+                + ( includeGenes ? "" : "|ng" );
         org.springframework.cache.Cache searchCache = searchResponseCache();
         if ( searchCache != null ) {
             org.springframework.cache.Cache.ValueWrapper hit = searchCache.get( cacheKey );
@@ -558,33 +594,25 @@ public class AnnotationsWebService {
                 List<AnnotationSearchResultValueObject> cached =
                         (List<AnnotationSearchResultValueObject>) hit.get();
                 log.debug( "annotation-search cache HIT key={}", cacheKey );
-                return respond( new ArrayList<>( cached ) );
+                return new ArrayList<>( cached );
             }
         }
-        try {
-            List<AnnotationSearchResultValueObject> result = new ArrayList<>( this.getTerms( query, strategy, limit, prefixes, upstream, exactLabel, category, taxon, FIND_CHARACTERISTICS_TIMEOUT_MS ) );
-            if ( includeGeneCount && !result.isEmpty() ) {
-                result = attachGeneCounts( result, geneCountMaxTerms );
-            }
-            // Cache only non-empty results. An empty hit list is almost always either (a) genuinely
-            // no match, where re-running is cheap, or (b) a transient gap (ontologies still warming
-            // after a restart, basecode Lucene index temporarily empty, etc.) — caching the empty
-            // would pin the typeahead at "no results" until either an explicit cache flush or a
-            // restart. Both classes lose nothing by recomputing.
-            if ( !result.isEmpty() && searchCache != null ) {
-                searchCache.put( cacheKey, Collections.unmodifiableList( new ArrayList<>( result ) ) );
-                log.debug( "annotation-search cache MISS key={} stored {} hits", cacheKey, result.size() );
-            } else if ( result.isEmpty() ) {
-                log.debug( "annotation-search cache MISS key={} empty result — not cached", cacheKey );
-            }
-            return respond( result );
-        } catch ( SearchTimeoutException e ) {
-            throw new ServiceUnavailableException( e.getMessage(), DateUtils.addSeconds( new Date(), 30 ), e.getCause() );
-        } catch ( ParseSearchException e ) {
-            throw new BadRequestException( "Invalid search query: " + e.getQuery(), e );
-        } catch ( SearchException e ) {
-            throw new InternalServerErrorException( e );
+        List<AnnotationSearchResultValueObject> result = new ArrayList<>( this.getTerms( queryValues, strategy, limit, prefixes, upstream, exactLabel, category, taxon, includeGenes, FIND_CHARACTERISTICS_TIMEOUT_MS ) );
+        if ( includeGeneCount && !result.isEmpty() ) {
+            result = attachGeneCounts( result, geneCountMaxTerms );
         }
+        // Cache only non-empty results. An empty hit list is almost always either (a) genuinely
+        // no match, where re-running is cheap, or (b) a transient gap (ontologies still warming
+        // after a restart, basecode Lucene index temporarily empty, etc.) — caching the empty
+        // would pin the typeahead at "no results" until either an explicit cache flush or a
+        // restart. Both classes lose nothing by recomputing.
+        if ( !result.isEmpty() && searchCache != null ) {
+            searchCache.put( cacheKey, Collections.unmodifiableList( new ArrayList<>( result ) ) );
+            log.debug( "annotation-search cache MISS key={} stored {} hits", cacheKey, result.size() );
+        } else if ( result.isEmpty() ) {
+            log.debug( "annotation-search cache MISS key={} empty result — not cached", cacheKey );
+        }
+        return result;
     }
 
     /** Default number of hits returned by {@code /annotations/search}; sized for typeahead UX. */
@@ -604,6 +632,129 @@ public class AnnotationsWebService {
                     + ( rankingStrategies != null ? rankingStrategies.keySet() : Collections.emptySet() ) + "." );
         }
         return s;
+    }
+
+    /** Upper bound on the number of queries a single {@code /search/batch} request may carry. */
+    static final int SEARCH_BATCH_MAX_ITEMS = 200;
+    /** Per-request worker cap for the batch fan-out; mirrors {@link #enrichTopHits}'s bound to keep Jena/DB read pressure sane. */
+    static final int SEARCH_BATCH_PARALLELISM = 8;
+
+    @POST
+    @Path("/search/batch")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Batch search for annotation tags",
+            description = "Resolve many labels in ONE request. Each item is searched independently (NOT "
+                    + "unioned into a single result set the way a comma-delimited ?query= is) and returns its "
+                    + "own ordered result list, so a curation resolver can collapse the dozens of round-trips a "
+                    + "proposal pass would otherwise fire into a single call. Per-item work runs in parallel "
+                    + "server-side (bounded to " + SEARCH_BATCH_PARALLELISM + " workers) and reuses the SAME "
+                    + "response cache as GET /annotations/search, so repeated labels — within the batch or across "
+                    + "later calls — are free. The shared knobs (rank, limit, prefixes, exactLabel, taxon, "
+                    + "includeGenes, includeGeneCount, geneCountMaxTerms) apply to every item; only category is "
+                    + "per-item. A per-item failure is reported in that item's `error` field and does NOT fail the "
+                    + "batch. At most " + SEARCH_BATCH_MAX_ITEMS + " items per request.",
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "400", description = "The batch is empty / oversized, or a shared parameter is invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "503", description = FIND_CHARACTERISTICS_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+            })
+    public ResponseDataObject<List<AnnotationSearchBatchResultValueObject>> searchAnnotationsBatch( @Nullable AnnotationSearchBatchRequest body ) {
+        if ( body == null || body.getQueries() == null || body.getQueries().isEmpty() ) {
+            throw new BadRequestException( "A non-empty 'queries' array is required." );
+        }
+        if ( body.getQueries().size() > SEARCH_BATCH_MAX_ITEMS ) {
+            throw new BadRequestException( "The batch may carry at most " + SEARCH_BATCH_MAX_ITEMS
+                    + " queries (got " + body.getQueries().size() + ")." );
+        }
+        int limit = body.getLimit() != null ? body.getLimit() : SEARCH_DEFAULT_LIMIT;
+        if ( limit < 1 || limit > SEARCH_MAX_LIMIT ) {
+            throw new BadRequestException( "The 'limit' parameter must be between 1 and " + SEARCH_MAX_LIMIT + " (got " + limit + ")." );
+        }
+        int geneCountMaxTerms = body.getGeneCountMaxTerms() != null ? body.getGeneCountMaxTerms() : 50;
+        if ( geneCountMaxTerms < 0 ) {
+            throw new BadRequestException( "geneCountMaxTerms must be >= 0." );
+        }
+        // Resolve the shared knobs once — a bad rank / taxon 400s the whole batch up-front rather than
+        // failing every item identically.
+        AnnotationSearchRankingStrategy strategy = resolveRankingStrategy( body.getRank() );
+        List<String> prefixes = parsePrefixes( body.getPrefixes() != null ? body.getPrefixes() : "" );
+        boolean exactLabel = Boolean.TRUE.equals( body.getExactLabel() );
+        boolean includeGenes = body.getIncludeGenes() == null || body.getIncludeGenes(); // default true
+        boolean includeGeneCount = Boolean.TRUE.equals( body.getIncludeGeneCount() );
+        Taxon taxon = body.getTaxon() != null && !body.getTaxon().trim().isEmpty()
+                ? taxonArgService.getEntity( TaxonArg.valueOf( body.getTaxon().trim() ) )
+                : null;
+
+        List<AnnotationSearchBatchRequest.Item> items = body.getQueries();
+        // Pre-sized, index-addressed so parallel workers write disjoint slots (no shared-collection sync).
+        List<AnnotationSearchBatchResultValueObject> out = new ArrayList<>( Collections.nCopies( items.size(), null ) );
+        int parallelism = Math.min( items.size(), SEARCH_BATCH_PARALLELISM );
+        // DelegatingSecurityContextExecutorService propagates the caller's SecurityContext onto the
+        // worker threads — without it the ACL-filtered usage-count leg would silently run anonymous and
+        // a curator would get public-only counts. Adopt-first: this is the repo's own wrapper.
+        java.util.concurrent.ExecutorService pool = new DelegatingSecurityContextExecutorService(
+                java.util.concurrent.Executors.newFixedThreadPool( parallelism ) );
+        try {
+            List<java.util.concurrent.Future<?>> tasks = new ArrayList<>( items.size() );
+            for ( int i = 0; i < items.size(); i++ ) {
+                final int idx = i;
+                final AnnotationSearchBatchRequest.Item item = items.get( i );
+                tasks.add( pool.submit( () -> out.set( idx, runBatchItem( item, strategy, limit, prefixes,
+                        exactLabel, taxon, includeGenes, includeGeneCount, geneCountMaxTerms ) ) ) );
+            }
+            for ( java.util.concurrent.Future<?> f : tasks ) {
+                try {
+                    f.get();
+                } catch ( InterruptedException ie ) {
+                    Thread.currentThread().interrupt();
+                    break;
+                } catch ( java.util.concurrent.ExecutionException ee ) {
+                    // runBatchItem swallows its own failures into an error entry, so reaching here means
+                    // an unexpected fault; log and leave the slot null (backfilled below).
+                    log.warn( "batch annotation-search task failed unexpectedly", ee.getCause() );
+                }
+            }
+        } finally {
+            pool.shutdownNow();
+        }
+        // Backfill any slot a worker never wrote (interrupt / unexpected fault) so the response array
+        // stays 1:1 with the request array.
+        for ( int i = 0; i < items.size(); i++ ) {
+            if ( out.get( i ) == null ) {
+                AnnotationSearchBatchRequest.Item item = items.get( i );
+                out.set( i, new AnnotationSearchBatchResultValueObject(
+                        item != null ? item.getQuery() : null,
+                        item != null ? item.getCategory() : null,
+                        Collections.emptyList(), "search did not complete" ) );
+            }
+        }
+        return respond( out );
+    }
+
+    /**
+     * Resolve a single batch item through the shared {@link #searchOne} core, converting any failure into
+     * an {@code error} entry so one bad label never sinks the whole batch. Runs on a worker thread with the
+     * caller's SecurityContext propagated (see {@link #searchAnnotationsBatch}).
+     */
+    private AnnotationSearchBatchResultValueObject runBatchItem( @Nullable AnnotationSearchBatchRequest.Item item,
+            AnnotationSearchRankingStrategy strategy, int limit, List<String> prefixes, boolean exactLabel,
+            @Nullable Taxon taxon, boolean includeGenes, boolean includeGeneCount, int geneCountMaxTerms ) {
+        String q = item != null ? item.getQuery() : null;
+        String category = item != null && item.getCategory() != null ? item.getCategory() : "";
+        if ( q == null || q.trim().isEmpty() ) {
+            return new AnnotationSearchBatchResultValueObject( q, category, Collections.emptyList(), "query is empty" );
+        }
+        try {
+            // Single literal label — NOT wrapped in StringArrayArg, so an embedded comma stays one query.
+            List<AnnotationSearchResultValueObject> results = searchOne( Collections.singletonList( q ),
+                    strategy, limit, prefixes, false, exactLabel, category, taxon, includeGenes,
+                    includeGeneCount, geneCountMaxTerms );
+            return new AnnotationSearchBatchResultValueObject( q, category, results, null );
+        } catch ( SearchException | RuntimeException e ) {
+            log.debug( "batch annotation-search item '{}' failed: {}", q, e.toString() );
+            return new AnnotationSearchBatchResultValueObject( q, category, Collections.emptyList(), e.getMessage() );
+        }
     }
 
     // Bespoke /search/cache/evict was removed once SEARCH_CACHE moved into the Spring
@@ -627,7 +778,7 @@ public class AnnotationsWebService {
     public ResponseDataObject<List<AnnotationSearchResultValueObject>> searchAnnotationsByPathQuery( // Params:
             @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE, description = SEARCH_QUERY_DESCRIPTION) @PathParam("query") @DefaultValue("") StringArrayArg query // Required
     ) {
-        return searchAnnotations( query, LuceneOrderRankingStrategy.NAME, SEARCH_DEFAULT_LIMIT, "", false, false, "", null, false, 50 );
+        return searchAnnotations( query, LuceneOrderRankingStrategy.NAME, SEARCH_DEFAULT_LIMIT, "", false, false, "", null, false, 50, true );
     }
 
     /**
@@ -841,13 +992,13 @@ public class AnnotationsWebService {
      * @param arg the array arg containing all the strings to search for.
      * @return a collection of characteristics matching the input query.
      */
-    private LinkedHashSet<AnnotationSearchResultValueObject> getTerms( StringArrayArg arg,
+    private LinkedHashSet<AnnotationSearchResultValueObject> getTerms( List<String> queryValues,
             AnnotationSearchRankingStrategy strategy, int limit, List<String> prefixes, boolean upstream,
-            boolean exactLabel, String category, @Nullable Taxon taxon, long timeoutMs ) throws SearchException {
+            boolean exactLabel, String category, @Nullable Taxon taxon, boolean includeGenes, long timeoutMs ) throws SearchException {
         StopWatch timer = StopWatch.createStarted();
         long phaseStart = timer.getTime();
         List<CharacteristicValueObject> rawHits = new ArrayList<>();
-        for ( String query : arg.getValue() ) {
+        for ( String query : queryValues ) {
             query = query.trim();
             // A full term URI (http://...) OR a recognized CURIE (e.g. EFO:0600015, GO:0008150)
             // takes the exact-URI lookup path instead of a free-text search. expandTermQueryToUri
@@ -882,7 +1033,7 @@ public class AnnotationsWebService {
         // candidate-stage AND filter would have killed legitimate synonym-only matches like
         // "ammon's horn" → "hippocampus" (label contains neither token), so we DEMOTE noise
         // via tier rather than dropping it.
-        String joinedRelevanceQuery = String.join( " ", arg.getValue() ).trim();
+        String joinedRelevanceQuery = String.join( " ", queryValues ).trim();
         String relevanceQuery = joinedRelevanceQuery.toLowerCase( Locale.ROOT );
         // Canonical form of the query used for hyphen-and-cell-suffix-insensitive equality:
         // MEC2 ↔ MEC-2 ↔ MEC-2 cell all canonicalise to "mec2". See javadoc on
@@ -958,7 +1109,7 @@ public class AnnotationsWebService {
         // that callers do client-side today. Applies AFTER the canonical sort so the kept
         // subset is also deterministic. Empty result is a valid outcome.
         if ( exactLabel ) {
-            String wantedLower = arg.getValue().stream()
+            String wantedLower = queryValues.stream()
                     .map( s -> s != null ? s.trim().toLowerCase( Locale.ROOT ) : "" )
                     .filter( s -> !s.isEmpty() )
                     .findFirst()
@@ -1025,7 +1176,7 @@ public class AnnotationsWebService {
         // Apply the requested ranking strategy. The joined query text drives token-coverage; for
         // multi-term StringArrayArg inputs (typically comma-joined keywords), pass them space-joined
         // so the tokeniser sees the union.
-        String joinedQuery = String.join( " ", arg.getValue() );
+        String joinedQuery = String.join( " ", queryValues );
         List<CharacteristicValueObject> ranked = strategy.rank( joinedQuery, rawHits, countsByUri );
 
         // Truncate to the requested limit BEFORE enrichment, so per-URI definition + parents
@@ -1100,7 +1251,7 @@ public class AnnotationsWebService {
         if ( timer.getTime() > 1000 ) {
             log.info( String.format(
                     "annotation-search: query='%s' raw=%d top=%d total=%dms (find=%dms filter=%dms counts=%dms rank=%dms topCounts=%dms priorCats=%dms enrich=%dms)",
-                    arg.getValue(), rawCount, topUris.size(), timer.getTime(),
+                    queryValues, rawCount, topUris.size(), timer.getTime(),
                     tFindCharacteristics, tFilters, tCounts, tRank, tTopCounts, tPriorCategories, tEnrich ) );
         }
 
@@ -1133,8 +1284,13 @@ public class AnnotationsWebService {
         //
         // Cost: one extra GeneService probe per query (~ms). Cache hits cover repeat calls within
         // the 5-min window.
+        // The gene fan-out fires three sequential GeneService probes (symbol / name / alias) per
+        // query token on EVERY call — the dominant slice of the per-request floor. Callers that
+        // know they are resolving a non-gene label (e.g. a curation resolver working an
+        // organism-part or disease position) pass includeGenes=false to skip it entirely.
+        if ( includeGenes ) {
         LinkedHashSet<AnnotationSearchResultValueObject> geneRows = new LinkedHashSet<>();
-        for ( String q : arg.getValue() ) {
+        for ( String q : queryValues ) {
             if ( q == null ) continue;
             String trimmed = q.trim();
             if ( trimmed.isEmpty() ) continue;
@@ -1179,6 +1335,7 @@ public class AnnotationsWebService {
                 return trimmedSet;
             }
             return merged;
+        }
         }
         return vos;
     }
@@ -2269,6 +2426,183 @@ public class AnnotationsWebService {
      * a single tag carried as a (category, value) pair with optional ontology URIs
      * and evidence code.
      */
+    /**
+     * Request body for {@link #searchAnnotationsBatch}. {@code queries} is the list of labels to resolve,
+     * each independently; every other field is a shared knob applied to all items (mirroring the GET
+     * {@code /annotations/search} query parameters). Nulls fall back to the same defaults as the GET.
+     */
+    public static class AnnotationSearchBatchRequest {
+        @Nullable
+        private List<Item> queries;
+        @Nullable
+        private String rank;
+        @Nullable
+        private Integer limit;
+        @Nullable
+        private String prefixes;
+        @Nullable
+        private Boolean exactLabel;
+        @Nullable
+        private Boolean includeGenes;
+        @Nullable
+        private Boolean includeGeneCount;
+        @Nullable
+        private Integer geneCountMaxTerms;
+        @Nullable
+        private String taxon;
+
+        /** One batch item: a literal label plus its optional per-item category hint. */
+        public static class Item {
+            @Nullable
+            private String query;
+            @Nullable
+            private String category;
+
+            @Nullable
+            public String getQuery() {
+                return query;
+            }
+
+            public void setQuery( @Nullable String query ) {
+                this.query = query;
+            }
+
+            @Nullable
+            public String getCategory() {
+                return category;
+            }
+
+            public void setCategory( @Nullable String category ) {
+                this.category = category;
+            }
+        }
+
+        @Nullable
+        public List<Item> getQueries() {
+            return queries;
+        }
+
+        public void setQueries( @Nullable List<Item> queries ) {
+            this.queries = queries;
+        }
+
+        @Nullable
+        public String getRank() {
+            return rank;
+        }
+
+        public void setRank( @Nullable String rank ) {
+            this.rank = rank;
+        }
+
+        @Nullable
+        public Integer getLimit() {
+            return limit;
+        }
+
+        public void setLimit( @Nullable Integer limit ) {
+            this.limit = limit;
+        }
+
+        @Nullable
+        public String getPrefixes() {
+            return prefixes;
+        }
+
+        public void setPrefixes( @Nullable String prefixes ) {
+            this.prefixes = prefixes;
+        }
+
+        @Nullable
+        public Boolean getExactLabel() {
+            return exactLabel;
+        }
+
+        public void setExactLabel( @Nullable Boolean exactLabel ) {
+            this.exactLabel = exactLabel;
+        }
+
+        @Nullable
+        public Boolean getIncludeGenes() {
+            return includeGenes;
+        }
+
+        public void setIncludeGenes( @Nullable Boolean includeGenes ) {
+            this.includeGenes = includeGenes;
+        }
+
+        @Nullable
+        public Boolean getIncludeGeneCount() {
+            return includeGeneCount;
+        }
+
+        public void setIncludeGeneCount( @Nullable Boolean includeGeneCount ) {
+            this.includeGeneCount = includeGeneCount;
+        }
+
+        @Nullable
+        public Integer getGeneCountMaxTerms() {
+            return geneCountMaxTerms;
+        }
+
+        public void setGeneCountMaxTerms( @Nullable Integer geneCountMaxTerms ) {
+            this.geneCountMaxTerms = geneCountMaxTerms;
+        }
+
+        @Nullable
+        public String getTaxon() {
+            return taxon;
+        }
+
+        public void setTaxon( @Nullable String taxon ) {
+            this.taxon = taxon;
+        }
+    }
+
+    /**
+     * One entry in a {@link #searchAnnotationsBatch} response — echoes the item's {@code query} and
+     * {@code category} so the client can correlate without relying on positional order, carries the
+     * ordered {@code results} (same shape as a single {@code /annotations/search}), and sets
+     * {@code error} to a non-null message when that single item failed (the rest of the batch is
+     * unaffected).
+     */
+    public static class AnnotationSearchBatchResultValueObject {
+        @Nullable
+        private final String query;
+        @Nullable
+        private final String category;
+        private final List<AnnotationSearchResultValueObject> results;
+        @Nullable
+        private final String error;
+
+        public AnnotationSearchBatchResultValueObject( @Nullable String query, @Nullable String category,
+                List<AnnotationSearchResultValueObject> results, @Nullable String error ) {
+            this.query = query;
+            this.category = category;
+            this.results = results;
+            this.error = error;
+        }
+
+        @Nullable
+        public String getQuery() {
+            return query;
+        }
+
+        @Nullable
+        public String getCategory() {
+            return category;
+        }
+
+        public List<AnnotationSearchResultValueObject> getResults() {
+            return results;
+        }
+
+        @Nullable
+        public String getError() {
+            return error;
+        }
+    }
+
     public static class AnnotationDto {
         @Nullable
         private String category;
