@@ -112,6 +112,7 @@ public class SingleCellDataDeleterCli extends ExpressionExperimentVectorsManipul
                 addSuccessObject( ee, qt, "Deleted cell type assignment: " + cta + "." );
                 break;
             case DELETE_ALL_CELL_LEVEL_CHARACTERISTICS:
+                ee = eeService.thawLite( ee );
                 removed = singleCellExpressionExperimentService.removeAllCellLevelCharacteristics( ee, qt );
                 addSuccessObject( ee, qt, "Deleted " + removed + " cell-level characteristics." );
                 break;
