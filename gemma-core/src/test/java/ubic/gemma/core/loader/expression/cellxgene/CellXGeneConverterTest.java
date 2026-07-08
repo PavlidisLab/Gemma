@@ -88,7 +88,7 @@ public class CellXGeneConverterTest extends BaseTest {
         platform.setPrimaryTaxon( human );
         CollectionMetadata cm = fetcher.fetchCollectionMetadata( "f406a653-c079-4bf9-aab6-85846c27571d" );
         DatasetMetadata dm = fetcher.fetchDatasetMetadata( "e6ef2a07-1b8e-49a8-a771-15b81971eac7" );
-        Path dataPath = fetcher.downloadDatasetAsset( "e6ef2a07-1b8e-49a8-a771-15b81971eac7", "e470eb54-b3ce-4b30-b5e1-24d388479353", FileType.H5AD );
+        Path dataPath = fetcher.downloadDatasetAsset( "e6ef2a07-1b8e-49a8-a771-15b81971eac7", "dfc3b939-8c18-4fce-81f8-2adebb91d3db", FileType.H5AD );
         AnnDataSingleCellDataLoader dataLoader = new CellXGeneAnnDataSingleCellDataConfigurer( dataPath, singleCellDataTransformationFactory )
                 .configureLoader( SingleCellDataLoaderConfig.builder()
                         // this will skip the transpose and sort by sample steps
@@ -167,7 +167,7 @@ public class CellXGeneConverterTest extends BaseTest {
         platform.getCompositeSequences().addAll( designElements );
         CollectionMetadata cm = fetcher.fetchCollectionMetadata( "f406a653-c079-4bf9-aab6-85846c27571d" );
         DatasetMetadata dm = fetcher.fetchDatasetMetadata( "e6ef2a07-1b8e-49a8-a771-15b81971eac7" );
-        Path dataPath = fetcher.downloadDatasetAsset( "e6ef2a07-1b8e-49a8-a771-15b81971eac7", "e470eb54-b3ce-4b30-b5e1-24d388479353", FileType.H5AD );
+        Path dataPath = fetcher.downloadDatasetAsset( "e6ef2a07-1b8e-49a8-a771-15b81971eac7", "dfc3b939-8c18-4fce-81f8-2adebb91d3db", FileType.H5AD );
         AnnDataSingleCellDataLoader dataLoader = new CellXGeneAnnDataSingleCellDataConfigurer( dataPath, singleCellDataTransformationFactory )
                 .configureLoader( SingleCellDataLoaderConfig.builder().build() );
         dataLoader.setDesignElementToGeneMapper( new SimpleDesignElementMapper( designElements ) );
