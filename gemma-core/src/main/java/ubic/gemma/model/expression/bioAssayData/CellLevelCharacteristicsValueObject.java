@@ -32,6 +32,7 @@ public class CellLevelCharacteristicsValueObject extends IdentifiableValueObject
     private Integer numberOfAssignedCells;
 
     public CellLevelCharacteristicsValueObject( CellLevelCharacteristics cellLevelCharacteristics, boolean excludeCharacteristicIds ) {
+        super( cellLevelCharacteristics );
         this.characteristics = cellLevelCharacteristics.getCharacteristics()
                 .stream().map( CharacteristicValueObject::new )
                 .collect( Collectors.toSet() );
