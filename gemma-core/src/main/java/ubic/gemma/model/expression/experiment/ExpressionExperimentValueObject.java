@@ -14,9 +14,12 @@ import ubic.gemma.core.loader.util.ExternalDatabaseUtils;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
+import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
+import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
+import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.util.ModelUtils;
 import ubic.gemma.persistence.util.SecurityUtils;
@@ -63,6 +66,22 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
      */
     @Nullable
     private String externalDatabaseUri;
+
+    /**
+     * PubMed ID of the primary publication, when it is indexed by PubMed. Mutually exclusive with
+     * {@link #doi}: the primary publication carries a single accession, so a PubMed-indexed paper
+     * populates this and a preprint (bioRxiv/arXiv/CrossRef DOI) populates {@link #doi}.
+     */
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String pubmedId;
+    /**
+     * DOI of the primary publication, when it is a preprint or otherwise identified by a DOI rather
+     * than a PubMed ID. See {@link #pubmedId}.
+     */
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String doi;
 
     @JsonProperty("numberOfArrayDesigns")
     private Long arrayDesignCount;
@@ -160,6 +179,25 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
             this.externalLabel = ExternalDatabaseUtils.getLabel( ee.getAccession() );
             this.externalDatabase = ee.getAccession().getExternalDatabase().getName();
             this.externalDatabaseUri = ExternalDatabaseUtils.getUri( ee.getAccession().getExternalDatabase() );
+        }
+
+        // primary-publication identifier: the pubAccession carries either a PubMed ID or a preprint
+        // DOI, discriminated by its external database. Guarded like accession so an uninitialized
+        // (lazy) primaryPublication is never forced.
+        BibliographicReference primaryPublication = ee.getPrimaryPublication();
+        if ( primaryPublication != null && ModelUtils.isInitialized( primaryPublication ) ) {
+            DatabaseEntry pubAccession = primaryPublication.getPubAccession();
+            if ( pubAccession != null && ModelUtils.isInitialized( pubAccession )
+                    && pubAccession.getExternalDatabase() != null ) {
+                String pubDb = pubAccession.getExternalDatabase().getName();
+                if ( ExternalDatabases.PUBMED.equals( pubDb ) ) {
+                    this.pubmedId = pubAccession.getAccession();
+                } else if ( ExternalDatabases.DOI.equals( pubDb )
+                        || ExternalDatabases.BIORXIV.equals( pubDb )
+                        || ExternalDatabases.ARXIV.equals( pubDb ) ) {
+                    this.doi = pubAccession.getAccession();
+                }
+            }
         }
 
         // EE

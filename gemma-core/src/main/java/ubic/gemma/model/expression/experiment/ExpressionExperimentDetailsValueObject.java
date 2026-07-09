@@ -120,8 +120,6 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     private Collection<ExpressionExperimentValueObject> otherParts = new HashSet<>();
 
     private CitationValueObject primaryCitation;
-    @Nullable
-    private Integer pubmedId;
     /**
      * Identifier in a second database, if available. For example, if the data are in GEO and in ArrayExpress,
      * this might be a link to the ArrayExpress version.

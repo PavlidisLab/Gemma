@@ -4244,7 +4244,12 @@ public class ExpressionExperimentDaoImpl
                 + "left join fetch ee.accession acc "
                 + "left join fetch ee.experimentalDesign as EDES "
                 + "left join fetch ee.curationDetails as s " /* needed for trouble status */
-                + "left join fetch ee.geeq as geeq", filters, sort, groupByIfNecessary( sort, ONE_TO_MANY_ALIASES ) );
+                + "left join fetch ee.geeq as geeq "
+                // primary-publication identifier for the VO's pubmedId/doi; all to-one, no row
+                // multiplication, same shape as the accession join above.
+                + "left join fetch ee.primaryPublication as pp "
+                + "left join fetch pp.pubAccession as ppa "
+                + "left join fetch ppa.externalDatabase", filters, sort, groupByIfNecessary( sort, ONE_TO_MANY_ALIASES ) );
     }
 
     @Override
@@ -4254,6 +4259,8 @@ public class ExpressionExperimentDaoImpl
         Hibernate.initialize( ee.getCurationDetails() );
         Hibernate.initialize( ee.getGeeq() );
         Hibernate.initialize( ee.getCharacteristics() );
+        // EAGER pubAccession + externalDatabase come along once the bibref proxy is initialized.
+        Hibernate.initialize( ee.getPrimaryPublication() );
     }
 
     @Override

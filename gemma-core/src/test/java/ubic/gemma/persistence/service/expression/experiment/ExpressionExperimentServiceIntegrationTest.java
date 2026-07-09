@@ -30,8 +30,10 @@ import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
+import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -41,6 +43,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.blacklist.BlacklistedEntityService;
+import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
@@ -83,6 +86,8 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
     private BioMaterialService bioMaterialService;
     @Autowired
     private SecurityService securityService;
+    @Autowired
+    private BibliographicReferenceService bibliographicReferenceService;
 
     /**
      * A collection of {@link ExpressionExperiment} that will be removed at the end of the test.
@@ -329,6 +334,56 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
         Collection<ExpressionExperimentValueObject> list = expressionExperimentService.loadValueObjectsByIds( ids );
         assertNotNull( list );
         assertThat( list ).hasSize( 1 ).extracting( "id" ).contains( id );
+    }
+
+    /**
+     * A PubMed-indexed primary publication surfaces on the dataset VO as {@code pubmedId} (and never
+     * {@code doi}), across both the filtered-list path (which join-fetches the publication) and the
+     * by-ids-with-relations path (which initializes it post-fetch). Guards the getFilteringQuery
+     * join-fetch and the initializeCachedFilteringResult wiring against removal.
+     */
+    @Test
+    public void testLoadValueObjectsExposesPrimaryPublicationPubmedId() {
+        ExpressionExperiment ee = createExpressionExperiment();
+        String pmid = RandomStringUtils.insecure().nextNumeric( 8 );
+        ee.setPrimaryPublication( getTestPersistentBibliographicReference( pmid ) );
+        expressionExperimentService.update( ee );
+
+        ExpressionExperimentValueObject viaFilter = loadSingleVoByFilter( ee.getId() );
+        assertThat( viaFilter.getPubmedId() ).isEqualTo( pmid );
+        assertThat( viaFilter.getDoi() ).isNull();
+
+        ExpressionExperimentValueObject viaRelations = expressionExperimentService
+                .loadValueObjectsByIdsWithRelationsAndCache( Collections.singletonList( ee.getId() ) )
+                .iterator().next();
+        assertThat( viaRelations.getPubmedId() ).isEqualTo( pmid );
+        assertThat( viaRelations.getDoi() ).isNull();
+    }
+
+    /**
+     * A preprint primary publication (bioRxiv/DOI-namespace pubAccession, no PubMed ID) surfaces on
+     * the dataset VO as {@code doi} rather than {@code pubmedId}.
+     */
+    @Test
+    public void testLoadValueObjectsExposesPrimaryPublicationDoi() {
+        ExpressionExperiment ee = createExpressionExperiment();
+        String doi = "10.1101/" + RandomStringUtils.insecure().nextNumeric( 10 );
+        BibliographicReference preprint = BibliographicReference.Factory.newInstance();
+        preprint.setPubAccession( getTestPersistentDatabaseEntry( doi, ExternalDatabases.BIORXIV ) );
+        ee.setPrimaryPublication( bibliographicReferenceService.findOrCreate( preprint ) );
+        expressionExperimentService.update( ee );
+
+        ExpressionExperimentValueObject viaFilter = loadSingleVoByFilter( ee.getId() );
+        assertThat( viaFilter.getDoi() ).isEqualTo( doi );
+        assertThat( viaFilter.getPubmedId() ).isNull();
+    }
+
+    private ExpressionExperimentValueObject loadSingleVoByFilter( Long id ) {
+        Filter of = expressionExperimentService.getFilter( "id", Filter.Operator.eq, id.toString() );
+        return expressionExperimentService.loadValueObjects( Filters.by( of ), null, 0, 0 ).stream()
+                .filter( vo -> id.equals( vo.getId() ) )
+                .findFirst()
+                .orElseThrow( () -> new AssertionError( "VO for EE " + id + " was not loaded" ) );
     }
 
     @Test
