@@ -9,6 +9,10 @@ public class DatasetMetadata {
     String id;
     String collectionId;
     String name;
+    /**
+     * Publication timestamp (seconds since the epoch), or {@code null} if not provided.
+     */
+    Double publishedAt;
     int cellCount;
     List<OntologyTerm> organism;
     List<OntologyTerm> cellType;

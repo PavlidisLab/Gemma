@@ -657,7 +657,12 @@
 					<links>
 						<link>https://gemma.msl.ubc.ca/resources/baseCode/apidocs/</link>
 						<link>https://dst.lbl.gov/ACSSoftware/colt/api/</link>
-						<link>https://docs.jboss.org/hibernate/orm/4.2/javadocs/</link>
+						<!--
+						 Changed to docs.hibernate.org: the old
+						 docs.jboss.org host  now returns HTTP 503 for every
+						 version, which broke the javadocs
+						-->
+						<link>https://docs.hibernate.org/orm/4.2/javadocs/</link>
 					</links>
 					<additionalJOptions>
 						<additionalJOption>-J-Xmx2g</additionalJOption>
@@ -843,7 +848,13 @@
 					<links>
 						<link>https://gemma.msl.ubc.ca/resources/baseCode/apidocs/</link>
 						<link>https://dst.lbl.gov/ACSSoftware/colt/api/</link>
-						<link>https://docs.jboss.org/hibernate/orm/4.2/javadocs/</link>
+						<!--
+						 Hibernate ORM 4.2 javadocs. Use docs.hibernate.org: the old
+						 docs.jboss.org host was retired and now returns HTTP 503 for every
+						 version, which broke attach-javadocs since javadoc treats an
+						 unreachable -link as a fatal error.
+						-->
+						<link>https://docs.hibernate.org/orm/4.2/javadocs/</link>
 					</links>
 					<additionalJOptions>
 						<additionalJOption>-J-Xmx2g</additionalJOption>

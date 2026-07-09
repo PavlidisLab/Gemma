@@ -87,8 +87,8 @@ public class CellXGeneConverterTest extends BaseTest {
         ArrayDesign platform = new ArrayDesign();
         platform.setPrimaryTaxon( human );
         CollectionMetadata cm = fetcher.fetchCollectionMetadata( "f406a653-c079-4bf9-aab6-85846c27571d" );
-        DatasetMetadata dm = fetcher.fetchDatasetMetadata( "412352dd-a919-4d8e-9f74-e210627328b5" );
-        Path dataPath = fetcher.downloadDatasetAsset( "412352dd-a919-4d8e-9f74-e210627328b5", "e470eb54-b3ce-4b30-b5e1-24d388479353", FileType.H5AD );
+        DatasetMetadata dm = fetcher.fetchDatasetMetadata( "e6ef2a07-1b8e-49a8-a771-15b81971eac7" );
+        Path dataPath = fetcher.downloadDatasetAsset( "e6ef2a07-1b8e-49a8-a771-15b81971eac7", "dfc3b939-8c18-4fce-81f8-2adebb91d3db", FileType.H5AD );
         AnnDataSingleCellDataLoader dataLoader = new CellXGeneAnnDataSingleCellDataConfigurer( dataPath, singleCellDataTransformationFactory )
                 .configureLoader( SingleCellDataLoaderConfig.builder()
                         // this will skip the transpose and sort by sample steps
@@ -96,7 +96,7 @@ public class CellXGeneConverterTest extends BaseTest {
                         .build() );
         ExpressionExperiment ee = cellxgeneConverter.convert( cm, dm, platform, Collections.emptySet(), "Clarence-2025", dataLoader, false );
         assertThat( ee.getAccession() ).isNotNull().satisfies( accession -> {
-            assertThat( accession.getAccession() ).isEqualTo( "412352dd-a919-4d8e-9f74-e210627328b5" );
+            assertThat( accession.getAccession() ).isEqualTo( "e6ef2a07-1b8e-49a8-a771-15b81971eac7" );
             assertThat( accession.getUri() ).isEqualTo( "https://cellxgene.cziscience.com/collections/f406a653-c079-4bf9-aab6-85846c27571d" );
             assertThat( accession.getExternalDatabase().getName() ).isEqualTo( "CELLxGENE" );
         } );
@@ -166,8 +166,8 @@ public class CellXGeneConverterTest extends BaseTest {
                 CompositeSequence.Factory.newInstance( "ENSG00000215206", platform ) );
         platform.getCompositeSequences().addAll( designElements );
         CollectionMetadata cm = fetcher.fetchCollectionMetadata( "f406a653-c079-4bf9-aab6-85846c27571d" );
-        DatasetMetadata dm = fetcher.fetchDatasetMetadata( "412352dd-a919-4d8e-9f74-e210627328b5" );
-        Path dataPath = fetcher.downloadDatasetAsset( "412352dd-a919-4d8e-9f74-e210627328b5", "e470eb54-b3ce-4b30-b5e1-24d388479353", FileType.H5AD );
+        DatasetMetadata dm = fetcher.fetchDatasetMetadata( "e6ef2a07-1b8e-49a8-a771-15b81971eac7" );
+        Path dataPath = fetcher.downloadDatasetAsset( "e6ef2a07-1b8e-49a8-a771-15b81971eac7", "dfc3b939-8c18-4fce-81f8-2adebb91d3db", FileType.H5AD );
         AnnDataSingleCellDataLoader dataLoader = new CellXGeneAnnDataSingleCellDataConfigurer( dataPath, singleCellDataTransformationFactory )
                 .configureLoader( SingleCellDataLoaderConfig.builder().build() );
         dataLoader.setDesignElementToGeneMapper( new SimpleDesignElementMapper( designElements ) );
