@@ -58,15 +58,16 @@ public abstract class AbstractMexSingleCellDataLoaderConfigurer implements Singl
                     throw new IllegalStateException( m2 + " You can set ignoreSamplesLackingData to ignore this error." );
                 }
             }
-            Path b = sampleDir.resolve( "barcodes.tsv.gz" );
-            Path f = sampleDir.resolve( "features.tsv.gz" );
-            Path m = sampleDir.resolve( "matrix.mtx.gz" );
-            if ( Files.exists( b ) && Files.exists( f ) && Files.exists( m ) ) {
+            Path mexDir = resolveMexDir( sampleDir );
+            if ( mexDir != null ) {
+                if ( !mexDir.equals( sampleDir ) ) {
+                    log.info( sampleName + ": found MEX files under the " + sampleDir.relativize( mexDir ) + " subdirectory of " + sampleDir + "." );
+                }
                 usedSampleNames.add( sampleName );
-                usedSampleDirs.add( sampleDir );
-                barcodeFiles.add( b );
-                genesFiles.add( f );
-                matrixFiles.add( m );
+                usedSampleDirs.add( mexDir );
+                barcodeFiles.add( mexDir.resolve( "barcodes.tsv.gz" ) );
+                genesFiles.add( mexDir.resolve( "features.tsv.gz" ) );
+                matrixFiles.add( mexDir.resolve( "matrix.mtx.gz" ) );
             } else {
                 String m2 = "Expected MEX files are missing in " + sampleDir + ".";
                 if ( config.isIgnoreSamplesLackingData() ) {
@@ -120,6 +121,46 @@ public abstract class AbstractMexSingleCellDataLoaderConfigurer implements Singl
     protected abstract List<String> getSampleNames();
 
     protected abstract List<Path> getSampleDirs();
+
+    /**
+     * Subdirectories, relative to a sample directory, where the MEX triplet may live.
+     * <p>
+     * The first entry is the sample directory itself, which is the layout Gemma produces when it downloads MEX
+     * files from GEO (and thus the layout the automatic processing pipeline relies on). The remaining entries
+     * cover raw 10x Cell Ranger output, where the triplet is nested under {@code outs/filtered_feature_bc_matrix}
+     * (or the raw / un-wrapped variants). Candidates are probed in order, so the pre-existing flat layout always
+     * wins and filtered output is preferred over raw.
+     */
+    private static final String[] MEX_SUBDIRECTORIES = {
+            "",
+            "outs/filtered_feature_bc_matrix",
+            "filtered_feature_bc_matrix",
+            "outs/raw_feature_bc_matrix",
+            "raw_feature_bc_matrix"
+    };
+
+    /**
+     * Locate the directory that actually holds the MEX triplet ({@code barcodes.tsv.gz}, {@code features.tsv.gz}
+     * and {@code matrix.mtx.gz}) for a sample.
+     * <p>
+     * The triplet has historically been expected directly under {@code sampleDir}, which holds for MEX data that
+     * Gemma lays out itself. Raw 10x Cell Ranger output instead nests the triplet under
+     * {@code outs/filtered_feature_bc_matrix}, so the known Cell Ranger conventions are probed as a fallback.
+     *
+     * @return the directory containing the triplet, or {@code null} if none of the candidates has all three files
+     */
+    @Nullable
+    private Path resolveMexDir( Path sampleDir ) {
+        for ( String subdirectory : MEX_SUBDIRECTORIES ) {
+            Path candidate = subdirectory.isEmpty() ? sampleDir : sampleDir.resolve( subdirectory );
+            if ( Files.exists( candidate.resolve( "barcodes.tsv.gz" ) )
+                    && Files.exists( candidate.resolve( "features.tsv.gz" ) )
+                    && Files.exists( candidate.resolve( "matrix.mtx.gz" ) ) ) {
+                return candidate;
+            }
+        }
+        return null;
+    }
 
     private boolean detectUnfiltered10xData( List<String> sampleNames, List<Path> sampleDirs ) {
         for ( int i = 0; i < sampleNames.size(); i++ ) {
