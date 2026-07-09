@@ -882,21 +882,25 @@ public class GeoSingleCellDetectorTest extends BaseTest {
 
     @Test
     public void testDownloadSingleCellDataInCellXGene() throws IOException, NoSingleCellDataFoundException {
+        String collectionId = "31937775-0602-4e52-a799-b6acdd2bac2e";
         GeoSeries series = readSeriesFromGeo( "GSE207848" );
-        assertThat( detector.hasSingleCellDataInCellXGene( series, "31937775-0602-4e52-a799-b6acdd2bac2e" ) ).isTrue();
-        assertThat( detector.downloadSingleCellDataInCellXGene( series, "31937775-0602-4e52-a799-b6acdd2bac2e" ) )
+        assertThat( detector.hasSingleCellDataInCellXGene( series, collectionId ) ).isTrue();
+        // Resolve the current dataset id from the collection rather than hard-coding one that CELLxGENE rotates
+        // whenever the dataset is re-published.
+        String datasetId = detector.getDatasetMetadataFromCellXGene( series, collectionId ).getId();
+        assertThat( detector.downloadSingleCellDataInCellXGene( series, collectionId ) )
                 .isSymbolicLink()
                 .hasFileName( "GSE207848.h5ad" )
                 .satisfies( path -> {
                     Path finalDest = Files.readSymbolicLink( path );
-                    assertThat( finalDest ).hasFileName( "03390dd0-fe16-4cef-b430-ab451e85c448.h5ad" );
+                    assertThat( finalDest ).hasFileName( datasetId + ".h5ad" );
                 } );
-        assertThat( detector.downloadSingleCellDataInCellXGene( series, "31937775-0602-4e52-a799-b6acdd2bac2e", "03390dd0-fe16-4cef-b430-ab451e85c448" ) )
+        assertThat( detector.downloadSingleCellDataInCellXGene( series, collectionId, datasetId ) )
                 .isSymbolicLink()
                 .hasFileName( "GSE207848.h5ad" )
                 .satisfies( path -> {
                     Path finalDest = Files.readSymbolicLink( path );
-                    assertThat( finalDest ).hasFileName( "03390dd0-fe16-4cef-b430-ab451e85c448.h5ad" );
+                    assertThat( finalDest ).hasFileName( datasetId + ".h5ad" );
                 } );
     }
 
