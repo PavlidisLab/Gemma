@@ -153,7 +153,9 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
                             + this.pubmedIdFilename );
                 }
                 try {
-                    ref = finder.locatePrimaryReference( experiment );
+                    // with -force, re-resolve from GEO's current !Series_pubmed_id even when a
+                    // primary is already set, so a link GEO has since re-pointed gets refreshed
+                    ref = finder.locatePrimaryReference( experiment, isForce() );
                 } catch ( IOException e ) {
                     addErrorObject( experiment, "Failed to locate primary publication.", e );
                     return;

@@ -30,7 +30,9 @@ import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.StringReader;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -73,5 +75,36 @@ public class ExpressionExperimentBibRefFinderTest {
         ee.setAccession( de );
         BibliographicReference bibref = finder.locatePrimaryReference( ee );
         assertNull( bibref );
+    }
+
+    private static int parse( String soft ) throws IOException {
+        return ExpressionExperimentBibRefFinder.parseSeriesPubMedId( new BufferedReader( new StringReader( soft ) ), "GSE99114" );
+    }
+
+    @Test
+    public void testParseSeriesPubMedIdFromSoft() throws IOException {
+        // the acc.cgi ...&targ=self&form=text view: !Series_pubmed_id is the authoritative link
+        String soft = "^SERIES = GSE99114\n"
+                + "!Series_title = A dataset\n"
+                + "!Series_pubmed_id = 38064339\n"
+                + "!Series_summary = something\n";
+        assertEquals( 38064339, parse( soft ) );
+    }
+
+    @Test
+    public void testParseSeriesPubMedIdReturnsFirstWhenMultiple() throws IOException {
+        // multi-paper series: the first is taken as primary (curator confirms), the rest logged
+        String soft = "^SERIES = GSE99114\n"
+                + "!Series_pubmed_id = 38064339\n"
+                + "!Series_pubmed_id = 30255127\n";
+        assertEquals( 38064339, parse( soft ) );
+    }
+
+    @Test
+    public void testParseSeriesPubMedIdAbsent() throws IOException {
+        // a series with no linked paper (or a bad accession's error page) yields -1
+        String soft = "^SERIES = GSE99114\n"
+                + "!Series_title = A dataset with no publication\n";
+        assertEquals( -1, parse( soft ) );
     }
 }
