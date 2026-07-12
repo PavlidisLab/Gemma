@@ -1,13 +1,34 @@
 //file:noinspection GrUnresolvedAccess
 
-def buildHash
-def gemmaVersion
-def baseCodeVersion
-def dataDir
-def deployRef
-def deployServer
-def cliRef
-def cliWikiPageSuffix
+// Gemma CI pipeline — 2.0 container model.
+//
+// Division of labour with GitHub Actions:
+//   - .github/workflows/publish-image.yml builds + pushes the gemma-rest and
+//     gemma-cli Docker images to GHCR on EVERY branch push (tag
+//     <branch-slug>-<sha7>, plus :2.0.0-alpha/:latest on phase2-acl-migrate).
+//     Jenkins does NOT build images.
+//   - Jenkins runs the test matrix inside a maven:3.9-eclipse-temurin-25
+//     container (so the agent needs no host JDK/Maven) and — because it sits on
+//     the UBC network, unlike GHA runners — triggers the frink container deploy.
+//     It no longer publishes Maven artifacts, deploys a WAR, deploys the Maven
+//     site, or rsyncs the CLI; the app + CLI ship as Docker images now.
+//
+// Agent prerequisites (Manage Jenkins), one-time setup:
+//   - Docker Pipeline plugin (enables the `docker { image ... }` agent) and a
+//     working `docker` CLI on every agent that can pull public GHCR images.
+//   - Image `maven:3.9-eclipse-temurin-25` pullable from the agent.
+//   - Integration tests reach the gemdtest MySQL via `--network host`, so the
+//     same host MySQL the old pipeline used (lock 'database/gemdtest') stays.
+//   - SSH Agent plugin + an `frink-deploy-key` credential: a private key whose
+//     public half is in paul@frink:~/.ssh/authorized_keys behind the
+//     command="~/Gemma2.0/bin/update.sh" forced-command restriction (see the
+//     header of .github/workflows/publish-image.yml for the exact setup), and
+//     frink's host key pinned in the agent's ~/.ssh/known_hosts.
+//   - No JDK/Maven *tool installation* is required any more.
+
+// GHCR repo GHA publishes the REST image to; used to poll for the image before
+// telling frink to pull it.
+def imageRepo = 'pavlidislab/gemma-rest'
 
 void setBuildStatus(String context, String message, String state) {
     step([
@@ -20,140 +41,78 @@ void setBuildStatus(String context, String message, String state) {
 }
 
 pipeline {
-    agent any
-    tools {
-        maven 'Maven 3.6.3'
-    }
-    environment {
-        GEMMA_CLI_WIKI_DEPLOY_TOKEN = credentials('confluence-wiki-token')
-    }
+    // Per-stage agents: build/test run inside a Maven container; the frink
+    // deploy runs on the host (it only needs docker + ssh).
+    agent none
     parameters {
-        string(name: 'DATA_DIR', defaultValue: '/space/gemmaData', description: 'Directory where production data is stored.')
-        string(name: 'STAGING_DATA_DIR', defaultValue: '/space/staginggemmaData', description: 'Directory where staging data is stored.')
-        string(name: 'DEV_DATA_DIR', defaultValue: '/space/sandboxgemmaData', description: 'Directory where development data is stored.')
-        string(name: 'MAVEN_SITES_DIR', defaultValue: '/space/web/maven-sites', description: 'Directory where Maven sites are deployed.')
-        string(name: 'CLI_DIR_PREFIX', defaultValue: '/space/opt/gemma-cli', description: 'Prefix for Gemma CLI deployment directory.')
-        string(name: 'DEPLOY_DIR_PREFIX', defaultValue: '/var/local/tomcat', description: 'Prefix for Gemma Web deployment directories.')
-        // either hotfix or release, we only have one staging server & CLI symlink
-        choice(name: 'STAGING_BRANCH', choices: ['hotfix', 'release'], description: 'Branch deployed to the staging server and CLI symlink.')
-        // whether or not to force integration tests
-        booleanParam(name: 'FORCE_INTEGRATION_TESTS', defaultValue: false, description: 'Force integration tests to be performed regardless of the branch being built.')
-        booleanParam(name: 'FORCE_SLOW_TESTS', defaultValue: false, description: 'Force slow tests to be performed regardless of the branch being built.')
-        booleanParam(name: 'FORCE_DEPLOY', defaultValue: false, description: 'Force deployment to be performed regardless of the branch being built.')
-        booleanParam(name: 'FORCE_SONARQUBE', defaultValue: false, description: 'Force SonarQube analysis to be performed regardless of the branch being built.')
+        booleanParam(name: 'FORCE_INTEGRATION_TESTS', defaultValue: false, description: 'Force integration tests regardless of the branch being built.')
+        booleanParam(name: 'FORCE_SLOW_TESTS', defaultValue: false, description: 'Force slow tests regardless of the branch being built.')
+        booleanParam(name: 'FORCE_SONARQUBE', defaultValue: false, description: 'Force SonarQube analysis regardless of the branch being built.')
+        booleanParam(name: 'FORCE_DEPLOY', defaultValue: false, description: 'Force artifact publish + frink deploy regardless of the branch being built.')
     }
     stages {
-        stage('Checkout scm') {
-            steps {
-                checkout scm
-                script {
-                    gemmaVersion = sh script: 'mvn help:evaluate -Dexpression=project.version -q -DforceStdout', returnStdout: true
-                    baseCodeVersion = sh script: 'mvn help:evaluate -Dartifact=baseCode:baseCode -Dexpression=project.version -q -DforceStdout', returnStdout: true
-                    buildHash = env.GIT_COMMIT
-                    def productionBuild = env.BRANCH_NAME == 'master'
-                    def supportBuild = env.BRANCH_NAME.startsWith('support-')
-                    def stagingBuild = env.BRANCH_NAME =~ '^' + params.STAGING_BRANCH + '-.*'
-                    if (productionBuild) {
-                        if (gemmaVersion.endsWith('-SNAPSHOT')) {
-                            error("A production build must not have a -SNAPSHOT suffix.")
+        // All Maven work shares one container + one workspace so the reactor is
+        // compiled once and reused across the nested stages. Kept sequential on
+        // purpose: gemdtest is single-tenant, so parallel Maven runs would
+        // corrupt each other's schema.
+        stage('Build & test') {
+            agent {
+                docker {
+                    image 'maven:3.9-eclipse-temurin-25'
+                    // --network host: integration tests reach the gemdtest MySQL
+                    //   running on the Jenkins host.
+                    // -v $HOME/.m2: cache downloaded dependencies across builds.
+                    //   NOTE (sysop): the Docker Pipeline plugin runs the
+                    //   container as the Jenkins uid, so $HOME/.m2 must be
+                    //   writable by that uid. If you hit permission errors,
+                    //   switch to a named docker volume or a workspace-local repo
+                    //   (-Dmaven.repo.local=.m2).
+                    args '-v $HOME/.m2:/root/.m2 --network host'
+                }
+            }
+            stages {
+                stage('Build') {
+                    steps {
+                        setBuildStatus "Build", "Build #${env.BUILD_NUMBER} has started...", 'PENDING'
+                        // org.hdf5group:hdf5 is not published on Maven Central or
+                        // the pavlab mirror — it's vendored in-repo. Install it
+                        // into the container's local repo before anything
+                        // resolves it (the Dockerfile and GHA image build do the
+                        // same). install-file is idempotent.
+                        sh 'mvn -B org.apache.maven.plugins:maven-install-plugin:3.1.4:install-file -Dfile=vendor/hdf5/hdf5-1.12.3.jar -DpomFile=vendor/hdf5/hdf5-1.12.3.pom'
+                        sh 'mvn -B compile'
+                    }
+                    post {
+                        success {
+                            setBuildStatus "Build", "Build #${env.BUILD_NUMBER} succeeded.", 'SUCCESS'
                         }
-                        dataDir = params.DATA_DIR
-                        deployServer = 'moe'
-                        deployRef = 'gemma'
-                        cliRef = 'production'
-                        cliWikiPageSuffix = ' (generated)'
-                    } else if (supportBuild) {
-                        if (gemmaVersion.endsWith('-SNAPSHOT')) {
-                            error("A support build must not have a -SNAPSHOT suffix.")
+                        unsuccessful {
+                            setBuildStatus "Build", "Build #${env.BUILD_NUMBER} failed.", 'FAILURE'
                         }
-                    } else if (stagingBuild) {
-                        if (!gemmaVersion.endsWith("-SNAPSHOT")) {
-                            error("A staging build must have a -SNAPSHOT suffix.")
-                        }
-                        dataDir = params.STAGING_DATA_DIR
-                        deployServer = 'chalmers'
-                        deployRef = 'gemma-staging'
-                        cliRef = 'staging'
-                        cliWikiPageSuffix = ' (staging)'
-                    } else {
-                        if (!gemmaVersion.endsWith("-SNAPSHOT")) {
-                            error("A development build must have a -SNAPSHOT suffix.")
-                        }
-                        dataDir = params.DEV_DATA_DIR
-                        deployServer = 'chalmers'
-                        deployRef = 'gemma'
-                        cliRef = gemmaVersion
-                        cliWikiPageSuffix = ' (development)'
                     }
                 }
-                sh 'mvn -B clean'
-            }
-        }
-        stage('Build') {
-            steps {
-                setBuildStatus "Build", "Build #${env.BUILD_NUMBER} has started...", 'PENDING'
-                sh 'mvn -B compile'
-            }
-            post {
-                success {
-                    setBuildStatus "Build", "Build #${env.BUILD_NUMBER} succeeded.", 'SUCCESS'
+                stage('Run quick unit tests') {
+                    // Runs on every branch, matching the old pipeline.
+                    steps {
+                        setBuildStatus "Tests", "Tests for build #${env.BUILD_NUMBER} have started...", 'PENDING'
+                        sh 'mvn -B test --fail-at-end -DexcludedGroups=SlowTest'
+                    }
+                    post {
+                        always {
+                            junit testResults: '**/target/surefire-reports/*.xml'
+                        }
+                        success {
+                            setBuildStatus "Tests", "Tests for build #${env.BUILD_NUMBER} have passed.", 'SUCCESS'
+                        }
+                        unsuccessful {
+                            setBuildStatus "Tests", "Tests for build #${env.BUILD_NUMBER} failed.", 'FAILURE'
+                        }
+                    }
                 }
-                unsuccessful {
-                    setBuildStatus "Build", "Build #${env.BUILD_NUMBER} failed.", 'FAILURE'
-                }
-            }
-        }
-        stage('Run quick unit tests') {
-            steps {
-                setBuildStatus "Tests", "Tests for build #${env.BUILD_NUMBER} have started...", 'PENDING'
-                sh 'mvn -B test --fail-at-end -DexcludedGroups=SlowTest'
-            }
-            post {
-                always {
-                    junit testResults: '**/target/surefire-reports/*.xml'
-                }
-                success {
-                    setBuildStatus "Tests", "Tests for build #${env.BUILD_NUMBER} have passed.", 'SUCCESS'
-                }
-                unsuccessful {
-                    setBuildStatus "Tests", "Tests for build #${env.BUILD_NUMBER} failed.", 'FAILURE'
-                }
-            }
-        }
-        stage('Package') {
-            steps {
-                setBuildStatus "Package", "Package for build #${env.BUILD_NUMBER} have started...", 'PENDING'
-                sh 'mvn -B package -DskipTests'
-            }
-            post {
-                success {
-                    archiveArtifacts artifacts: '**/target/*.jar, **/target/*.war', fingerprint: true
-                    setBuildStatus "Package", "Package for build #${env.BUILD_NUMBER} have passed.", 'SUCCESS'
-                }
-                unsuccessful {
-                    setBuildStatus "Package", "Package for build #${env.BUILD_NUMBER} failed.", 'FAILURE'
-                }
-            }
-        }
-        stage('Run integration tests and perform deployment in parallel') {
-            when {
-                anyOf {
-                    branch 'master'
-                    branch 'support-*'
-                    branch 'hotfix-*'
-                    branch 'release-*'
-                    branch 'development'
-                    expression { params.FORCE_INTEGRATION_TESTS }
-                    expression { params.FORCE_SLOW_TESTS }
-                    expression { params.FORCE_SONARQUBE }
-                    expression { params.FORCE_DEPLOY }
-                }
-            }
-            parallel {
                 stage('Run slow unit tests') {
                     when {
                         anyOf {
-                            // we can safely ignore integration tests on the master branch, those were run in hotfix/release
+                            // master's heavy tests already ran in hotfix/release
                             branch 'support-*'
                             branch 'hotfix-*'
                             branch 'release-*'
@@ -182,7 +141,6 @@ pipeline {
                 stage('Run integration tests') {
                     when {
                         anyOf {
-                            // we can safely ignore integration tests on the master branch, those were run in hotfix/release
                             branch 'support-*'
                             branch 'hotfix-*'
                             branch 'release-*'
@@ -209,9 +167,10 @@ pipeline {
                     }
                 }
                 stage('SonarQube Analysis') {
-                    tools {
-                        jdk 'Java 17'
-                    }
+                    // Runs in the JDK 25 container like everything else now — no
+                    // separate JDK 17 tool. If the SonarQube server's scanner
+                    // rejects JDK 25, run the scanner against pre-built classes
+                    // on a supported JDK instead.
                     when {
                         anyOf {
                             branch 'master'
@@ -242,72 +201,52 @@ pipeline {
                         }
                     }
                 }
-                stage('Deploy artifacts') {
-                    when {
-                        anyOf {
-                            branch 'master'
-                            branch 'hotfix-*'
-                            branch 'release-*'
-                            branch 'development'
-                            expression { params.FORCE_DEPLOY }
+            }
+        }
+        stage('Deploy to frink') {
+            // Runs on the host (docker + ssh only; no Maven). Only phase2-acl-migrate
+            // gets the :2.0.0-alpha tag that frink's update.sh pulls.
+            agent any
+            when {
+                anyOf {
+                    branch 'phase2-acl-migrate'
+                    expression { params.FORCE_DEPLOY }
+                }
+            }
+            steps {
+                script {
+                    // GHA and Jenkins both fire on push. Wait for GHA to finish
+                    // pushing THIS commit's image before telling frink to pull,
+                    // otherwise frink pulls the previous image. The commit-unique
+                    // <branch-slug>-<sha7> tag is our "GHA is done" signal; on
+                    // phase2-acl-migrate the same GHA run pushes :2.0.0-alpha in
+                    // the same step, so once the sha tag exists, so does the tag
+                    // update.sh pulls.
+                    def slug = env.BRANCH_NAME.replaceAll('/', '-')
+                    def sha7 = env.GIT_COMMIT.take(7)
+                    def tag = "${slug}-${sha7}"
+                    setBuildStatus "Deploy", "Deploy #${env.BUILD_NUMBER} waiting for image ${tag}...", 'PENDING'
+                    // Poll up to ~20 min. docker manifest inspect handles GHCR
+                    // auth for public images anonymously.
+                    timeout(time: 20, unit: 'MINUTES') {
+                        waitUntil(initialRecurrencePeriod: 20000) {
+                            def rc = sh(script: "docker manifest inspect ghcr.io/${imageRepo}:${tag} >/dev/null 2>&1", returnStatus: true)
+                            return rc == 0
                         }
                     }
-                    steps {
-                        sh 'mvn -B deploy -DskipTests -DskipJavadoc -DskipWebpack'
+                    // Forced-command key: whatever we send, frink runs
+                    // ~/Gemma2.0/bin/update.sh (pull + bounce the container).
+                    sshagent(['frink-deploy-key']) {
+                        sh 'ssh -p 22000 -o BatchMode=yes -o StrictHostKeyChecking=yes paul@frink.msl.ubc.ca "~/Gemma2.0/bin/update.sh"'
                     }
                 }
-                stage('Deploy Maven website') {
-                    when {
-                        anyOf {
-                            branch 'master'
-                            branch 'hotfix-*'
-                            branch 'release-*'
-                            branch 'development'
-                            expression { params.FORCE_DEPLOY }
-                        }
-                    }
-                    steps {
-                        sh 'mvn -B site-deploy -DskipWebpack'
-                        script {
-                            // maven site-deploy changes permission on the parent site directory (pavlab-starter-parent),
-                            // but the Gemma site directory is not a subdirectory of it.
-                            // This is replicating what the plugin is doing https://maven.apache.org/plugins/maven-site-plugin/deploy-mojo.html 
-                            sh "chmod -Rf g+w,a+rX ${params.MAVEN_SITES_DIR}/gemma/gemma-${gemmaVersion} || true"
-                            if (dataDir != null) {
-                                sh "ln -Tsf ${params.MAVEN_SITES_DIR}/gemma/gemma-${gemmaVersion} ${dataDir}/gemma-devsite"
-                                sh "ln -Tsf ${params.MAVEN_SITES_DIR}/baseCode/baseCode-${baseCodeVersion} ${dataDir}/baseCode-site"
-                            }
-                        }
-                    }
+            }
+            post {
+                success {
+                    setBuildStatus "Deploy", "Deploy #${env.BUILD_NUMBER} to frink succeeded.", 'SUCCESS'
                 }
-                stage('Deploy Gemma Web') {
-                    when {
-                        anyOf {
-                            branch 'master'
-                            // we only support one staging server
-                            branch params.STAGING_BRANCH + '-*'
-                            branch 'development'
-                            expression { params.FORCE_DEPLOY }
-                        }
-                    }
-                    steps {
-                        sh "env GEMMA_WEB_DEPLOY_SERVER=${deployServer} GEMMA_WEB_PREFIX=${params.DEPLOY_DIR_PREFIX} ./gemma-web/deploy.sh ${deployRef}"
-                    }
-                }
-                stage('Deploy Gemma CLI') {
-                    when {
-                        anyOf {
-                            branch 'master'
-                            branch params.STAGING_BRANCH + '-*'
-                            // never deploy the development CLI, it's too risky
-                            // branch 'development'
-                            expression { params.FORCE_DEPLOY }
-                        }
-                    }
-                    steps {
-                        sh "env GEMMA_CLI_PREFIX=${params.CLI_DIR_PREFIX} ./gemma-cli/deploy.sh ${cliRef}"
-                        sh "env GEMMA_CLI_WIKI_PAGE_SUFFIX='${cliWikiPageSuffix}' ./gemma-cli/deploy-wiki.sh 'pavlab-wiki:Global/gemma/Gemma Landing Page/Gemma Curation/List of Gemma CLI Tools${cliWikiPageSuffix}'"
-                    }
+                unsuccessful {
+                    setBuildStatus "Deploy", "Deploy #${env.BUILD_NUMBER} to frink failed.", 'FAILURE'
                 }
             }
         }
