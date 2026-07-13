@@ -94,6 +94,37 @@ class PipelineJobBatchServiceMockIT extends BaseSpringContextTest5 {
                 .isEqualTo( PipelineJobBatch.BatchState.CLOSED );
     }
 
+    @Test
+    void progressTicksAreSnapshotOnly_onlyMilestonesPersistAsRows() {
+        Contact submitter = getTestPersistentContact();
+        ExpressionExperiment ee = getTestPersistentBasicExpressionExperiment();
+        control.setScenario( ee.getId(), progressHeavy() );
+
+        PipelineJobBatch batch = pipelineJobBatchService.submit(
+                "test-pipeline", java.util.Collections.singletonList( ee ), submitter, null, "write-policy IT" );
+        Long jobId = batch.getJobs().iterator().next().getId();
+
+        control.advance( 1000 );
+
+        // Delegated write policy (§3.1): the two progress ticks update the snapshot only;
+        // just the stage + completed milestones become durable rows.
+        List<PipelineJobEvent> events = pipelineJobBatchService.findEvents( jobId, null, 100 );
+        assertThat( events ).extracting( PipelineJobEvent::getKind )
+                .containsExactlyInAnyOrder( "stage", "completed" )
+                .doesNotContain( "progress" );
+    }
+
+    private static Scenario progressHeavy() {
+        Scenario s = new Scenario();
+        s.outcome = Scenario.Outcome.SUCCEED;
+        s.transport = Scenario.Transport.PUSH;
+        s.stages.add( stage( 0, "stage", "{\"stage\":\"align\"}" ) );
+        s.stages.add( stage( 100, "progress", "{\"pct\":33}" ) );
+        s.stages.add( stage( 200, "progress", "{\"pct\":66}" ) );
+        s.stages.add( stage( 300, "completed", "{}" ) );
+        return s;
+    }
+
     private static Scenario success() {
         Scenario s = new Scenario();
         s.outcome = Scenario.Outcome.SUCCEED;
