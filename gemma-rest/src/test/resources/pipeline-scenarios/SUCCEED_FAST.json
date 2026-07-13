@@ -1,0 +1,10 @@
+{
+  "outcome": "SUCCEED",
+  "transport": "PUSH",
+  "stages": [
+    { "afterMs": 0,    "kind": "stage",     "payloadJson": "{\"stage\":\"start\"}" },
+    { "afterMs": 1000, "kind": "progress",  "payloadJson": "{\"pct\":50}" },
+    { "afterMs": 2000, "kind": "completed", "payloadJson": "{}" }
+  ],
+  "logLines": ["starting", "done"]
+}

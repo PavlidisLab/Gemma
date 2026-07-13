@@ -1,0 +1,10 @@
+{
+  "outcome": "FAIL",
+  "failureClass": "PERMANENT",
+  "transport": "PUSH",
+  "stages": [
+    { "afterMs": 0,    "kind": "stage", "payloadJson": "{\"stage\":\"validate\"}" },
+    { "afterMs": 1000, "kind": "error", "payloadJson": "{\"failureClass\":\"PERMANENT\",\"message\":\"malformed input: no raw data\"}" }
+  ],
+  "logLines": ["validating", "ERROR: unsupported chemistry"]
+}
