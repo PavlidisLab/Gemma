@@ -1,0 +1,8 @@
+{
+  "outcome": "STALL",
+  "transport": "POLL",
+  "stages": [
+    { "afterMs": 0, "kind": "stage", "payloadJson": "{\"stage\":\"running\"}" }
+  ],
+  "logLines": []
+}

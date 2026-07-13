@@ -1,0 +1,22 @@
+{
+  "failEveryNth": 3,
+  "fail": {
+    "outcome": "FAIL",
+    "failureClass": "TRANSIENT",
+    "transport": "PUSH",
+    "stages": [
+      { "afterMs": 0,    "kind": "stage", "payloadJson": "{\"stage\":\"align\"}" },
+      { "afterMs": 1000, "kind": "error", "payloadJson": "{\"failureClass\":\"TRANSIENT\",\"message\":\"synthetic SRA throttle\"}" }
+    ],
+    "logLines": ["aligning", "ERROR: SRA rate limited"]
+  },
+  "succeed": {
+    "outcome": "SUCCEED",
+    "transport": "PUSH",
+    "stages": [
+      { "afterMs": 0,    "kind": "stage",     "payloadJson": "{\"stage\":\"align\"}" },
+      { "afterMs": 1000, "kind": "completed", "payloadJson": "{}" }
+    ],
+    "logLines": ["aligning", "done"]
+  }
+}
