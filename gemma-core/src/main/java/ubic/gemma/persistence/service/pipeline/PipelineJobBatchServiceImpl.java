@@ -48,6 +48,14 @@ public class PipelineJobBatchServiceImpl implements PipelineJobBatchService {
     private static final EnumSet<JobState> ACTIVE_STATES = EnumSet.of(
             JobState.PENDING, JobState.QUEUED, JobState.RUNNING, JobState.CANCELLING );
 
+    /**
+     * Event kinds that reflect ephemeral live operational state (progress %, reconciler
+     * heartbeats). Under the delegated model (§3.1) the orchestrator owns this, so Gemma
+     * records it only in the overwrite-in-place snapshot columns, never as an append-only
+     * {@code PIPELINE_JOB_EVENT} row. Everything not listed here is a durable milestone.
+     */
+    private static final java.util.Set<String> SNAPSHOT_ONLY_KINDS = java.util.Set.of( "progress", "heartbeat" );
+
     @Autowired
     private PipelineJobBatchDao batchDao;
 
@@ -168,27 +176,37 @@ public class PipelineJobBatchServiceImpl implements PipelineJobBatchService {
         if ( job == null ) {
             throw new IllegalArgumentException( "no job " + jobId );
         }
+        Date now = new Date();
         PipelineJobEvent event = new PipelineJobEvent();
         event.setJob( job );
-        event.setOccurredAt( new Date() );
+        event.setOccurredAt( now );
         event.setKind( kind );
         event.setPayloadJson( payloadJson );
-        event = eventDao.create( event );
-        job.setLastEventAt( event.getOccurredAt() );
+        // Delegated model (§3.1): high-churn kinds mirror live operational state the
+        // runtime already owns — they update the overwrite-in-place snapshot but are NOT
+        // persisted as rows. Everything else (stage, completed, error, killed, unknown) is
+        // a durable milestone/terminal fact and gets a row. Returned event is transient
+        // (null id) for snapshot-only kinds — the caller still gets the recorded shape back.
+        if ( !SNAPSHOT_ONLY_KINDS.contains( kind ) ) {
+            event = eventDao.create( event );
+        }
+        // Overwrite-in-place snapshot — always, for every kind (keeps the UI's live view
+        // current and bumps LAST_EVENT_AT so the reconciler won't immediately re-poll).
+        job.setLastEventAt( now );
         job.setLastEventKind( kind );
         if ( "progress".equals( kind ) || "stage".equals( kind ) ) {
             job.setLastProgressJson( payloadJson );
             if ( job.getState() == JobState.QUEUED ) {
                 job.setState( JobState.RUNNING );
-                job.setStartedAt( event.getOccurredAt() );
+                job.setStartedAt( now );
             }
         }
         if ( "completed".equals( kind ) ) {
-            terminate( job, JobState.DONE, event.getOccurredAt(), null );
+            terminate( job, JobState.DONE, now, null );
         } else if ( "error".equals( kind ) ) {
-            terminate( job, JobState.FAILED, event.getOccurredAt(), payloadJson );
+            terminate( job, JobState.FAILED, now, payloadJson );
         } else if ( "killed".equals( kind ) ) {
-            terminate( job, JobState.CANCELLED, event.getOccurredAt(), null );
+            terminate( job, JobState.CANCELLED, now, null );
         }
         jobDao.update( job );
         maybeCloseBatch( job.getBatch() );
