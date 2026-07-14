@@ -9,10 +9,15 @@ schedulers, the monitoring/control surface, and the curator UI are
 **not**. Read §Implementation status for what exists and its real entry
 points, then §Remaining work for the ordered task list.
 
-**Resolve this first (it gates slices 2+):** *where does live job state
+**RESOLVED 2026-07-13 (Ogan): delegated / Nextflow-native (Option A).** The
+gating question below is settled — live state delegates to Nextflow, Gemma keeps
+the thin durable envelope. Gemma-internal tasks (2, 3) proceed now; the
+infra-facing commitments still need the cluster owner at task 7 (see §7 task 0).
+
+**The (now-resolved) question that gated slices 2+:** *where does live job state
 live — mirrored row-by-row in Gemma's MySQL, or delegated to the
 orchestrator (Nextflow) with Gemma keeping only a thin durable envelope?*
-The recommended answer is the **delegated / Nextflow-native** model
+The chosen answer is the **delegated / Nextflow-native** model
 (§3.1, §4.2 Option A): `nextflow run -with-weblog` pushes events into the
 callback Gemma *already built*, `-resume` **is** the mop-up, logs proxy
 from the workdir, and Gemma persists only batch + per-EE submission +
@@ -906,13 +911,25 @@ tasks 2+; task 1 is buildable immediately in parallel because it defines
 the proxy interface both real runtimes implement. Each task names what to
 build, which existing code to extend, and its acceptance signal.
 
-- [ ] **0. GATING DECISION — pick the runtime / state-location model**
-  (§3.1, §4.2, §8 D1). Confirm delegated/Nextflow-native (recommended) vs
-  MySQL-only. *No code. Acceptance: Paul + cluster owner sign off; §3.2
-  and §3.5 storage shape chosen.*
+- [x] **0. GATING DECISION — pick the runtime / state-location model**
+  (§3.1, §4.2, §8 D1). **DECIDED 2026-07-13 (Ogan): delegated / Nextflow-native
+  (Option A).** Live state delegates to Nextflow; Gemma keeps the thin durable
+  envelope. Tasks 2–3 are Gemma-internal and proceed now with no external
+  sign-off; the infra-facing commitments (Nextflow `-with-weblog` reaching Gemma
+  from compute nodes, a shared resumable workdir, per-pipeline concurrency caps)
+  still need the cluster owner's confirmation when the real `NextflowSlurmScheduler`
+  lands (task 7). Correction: §3.2 does NOT shrink to a bare counter — the
+  attempt-chain (immutable per-attempt rows) is retained (task 3 decision below);
+  the delegated model offloads the *compute-level rerun* to `-resume`, not the
+  attempt record. §3.5 logs become pure proxy.
 
-- [ ] **1. Scripted mock + deterministic clock + `_mock` REST + scenario
-  fixtures** (§3.6). Extend/replace `MockPipelineScheduler` into
+- [x] **1. Scripted mock + deterministic clock + `_mock` REST + scenario
+  fixtures** (§3.6). **LANDED 2026-07-13.** `ScriptedMockScheduler` +
+  `MockSchedulerControl` + `Scenario`/`BatchScenario` (gemma-core),
+  `AdminPipelineMockWebService` + 5 fixtures (gemma-rest); `MockPipelineScheduler`
+  deleted. Verified: 8 unit + 13 gemma-rest fast tests + 2 gemdtest ITs
+  (`PipelineJobBatchServiceMockIT` PARTIAL_BATCH, `JobReconcilerMockIT` STALL) all
+  green. Original task spec below. Extend/replace `MockPipelineScheduler` into
   `ScriptedMockScheduler` (scenario registry keyed by experiment id;
   `SUCCEED | FAIL | STALL`, `failureClass`, scripted `stages`, `logLines`,
   `POLL | PUSH` transport, attempt-aware). Add dev-only REST behind
@@ -927,7 +944,11 @@ build, which existing code to extend, and its acceptance signal.
   a scenario, submit a real batch, and watch real endpoints emit real
   shapes.*
 
-- [ ] **2. Thin envelope + proxy monitoring** (§3.1). Stop persisting
+- [x] **2. Thin envelope + proxy monitoring** (§3.1). **LANDED 2026-07-13.**
+  `recordEvent` now persists only milestone/terminal rows; `progress`/`heartbeat`
+  are snapshot-only (`SNAPSHOT_ONLY_KINDS`). Verified by a write-policy IT
+  (`stage → progress → progress → completed` yields 2 rows, no progress). Original
+  spec below. Stop persisting
   every progress tick: keep the `PIPELINE_JOB` overwrite snapshot
   (`LAST_PROGRESS_JSON`/`LAST_EVENT_AT`/`LAST_EVENT_KIND`) + only
   milestone/terminal rows in `PIPELINE_JOB_EVENT`. Make Gemma's monitoring
@@ -937,11 +958,19 @@ build, which existing code to extend, and its acceptance signal.
   per job (milestones only), snapshot still current; `JobReconciler`
   churn drops.*
 
-- [ ] **3. Attempt/retry model + mop-up surface** (§3.2). Add
-  `ATTEMPT`/`RETRY_OF_FK`/`SUPERSEDED_BY_FK`/`FAILURE_CLASS` to
-  `PIPELINE_JOB` (Flyway **V23** + h2 sister) *or*, under the delegated
-  model, a per-EE retry-count + terminal outcome on the envelope +
-  runtime `-resume`. Add `PipelineJobBatchService.retryFailed(batchId,
+- [x] **3. Attempt/retry model + mop-up surface** (§3.2). **LANDED 2026-07-13
+  (attempt-chain, per the task-3 decision — not the counter).** Added
+  `ATTEMPT`/`RETRY_OF_FK`/`SUPERSEDED_BY_FK`/`FAILURE_CLASS`/`PARAMS_JSON` to
+  `PIPELINE_JOB` (mysql **V23** + h2 **V24**) + `FailureClass` enum + `BatchRollup`
+  VO (snake_case) + `RetrySpec`; `retryFailed`/`retryJob` mint attempt N+1 via
+  `jobDao.create` (never through the `batch.jobs` Set — hashCode pitfall) and set
+  `supersededBy`; `computeRollup` over current attempts; `recordEvent` parses
+  `failureClass` from the `error` payload; `maybeCloseBatch` now keeps a batch OPEN
+  while a current attempt is FAILED. REST: `GET …/rollup`, `POST …/retry-failed`,
+  `POST …/jobs/{jobId}/retry`. Verified: `PipelineJobRetryMockIT` (fail→retry→green,
+  chain preserved, idempotent) + `BatchRollupTest` + REST IT. Original spec below.
+  Add `ATTEMPT`/`RETRY_OF_FK`/`SUPERSEDED_BY_FK`/`FAILURE_CLASS` to
+  `PIPELINE_JOB` (Flyway **V23** + h2 sister). Add `PipelineJobBatchService.retryFailed(batchId,
   RetrySpec)` + `retryJob(jobId, RetrySpec)` (mint attempt N+1, copy
   params + override, set `SUPERSEDED_BY_FK`, dispatch; **refuse if a
   non-terminal successor exists**). Add `BatchRollup` VO +
@@ -951,7 +980,17 @@ build, which existing code to extend, and its acceptance signal.
   `rollup.needsAttention` → `retryFailed` → advance → assert all DONE;
   double-retry is rejected (idempotent).*
 
-- [ ] **4. Batch hold + `maxConcurrent` + dispatcher throttle** (§3.4 #1).
+- [x] **4. Batch hold + `maxConcurrent` + dispatcher throttle** (§3.4 #1).
+  **LANDED 2026-07-13.** `MAX_CONCURRENT`/`HELD` on `PIPELINE_JOB_BATCH` (mysql
+  **V24** + h2 **V25**); `submit` overload throttles at dispatch (budget =
+  `maxConcurrent − in-flight`, where in-flight = QUEUED/RUNNING/CANCELLING, NOT
+  PENDING); `dispatchPending(batchId)`/`()` + `@Scheduled PipelineJobDispatcher`
+  (profile `scheduler`) top up; `holdBatch`/`resumeBatch`/`updateBatch`; REST
+  `POST …/hold`·`/resume`, `PATCH …/batches/{id}`, `SubmitBatchRequest.maxConcurrent`.
+  **Deviation from the spec below:** hold gates *dispatch* only — the reconciler still
+  reconciles in-flight jobs of a held batch (hold ≠ ignore running work); the reconciler
+  got a `supersededBy`-skip guard instead. Verified by `PipelineJobThrottleMockIT`
+  (never >cap in flight; hold blocks, resume restarts) + REST routes. Original spec below.
   Add `MAX_CONCURRENT INT NULL` + `HELD BOOLEAN NOT NULL DEFAULT FALSE` to
   `PIPELINE_JOB_BATCH`; dispatcher submits `PENDING` up to the budget,
   skips held batches. `PipelineJobBatchService.holdBatch/resumeBatch`;
@@ -960,21 +999,36 @@ build, which existing code to extend, and its acceptance signal.
   *Acceptance: a 500-EE batch with `maxConcurrent=10` never has >10
   RUNNING; `hold` stops new submissions, `resume` restarts.*
 
-- [ ] **5. Log + artifact proxy endpoints** (§3.5). New optional SPI
+- [x] **5. Log + artifact proxy endpoints** (§3.5). **LANDED 2026-07-14.** First
+  (additive-default) `PipelineScheduler` SPI change: `supportsLog`/`readLog →
+  LogChunk{text,next_offset,eof}` + `supportsArtifacts`/`readArtifact → Artifact`.
+  Service `readJobLog`/`readJobArtifact` proxy through the scheduler (null → 404,
+  never persisted); REST `GET …/jobs/{jobId}/log?offset=&limit=` (JSON) +
+  `…/artifacts/{name}` (raw stream). Mock serves `Scenario.logLines` (finally
+  consumed) + a canned artifact. **Deferred:** per-pipeline filename whitelist +
+  large-file streaming → task 7 (real workdir); here the REST layer does a
+  path-traversal guard (400 on `/`,`\`,`..`) and artifacts are `byte[]`. Verified by
+  unit + `PipelineJobLogMockIT` (incremental tail + artifact) + REST routes.
+  Original spec below. New optional SPI
   `readLog(handle, offset, limit) → LogChunk{bytes,nextOffset,eof}` +
   `readArtifact(handle, name)`. `GET …/jobs/{jobId}/log?offset=&limit=`
   and `…/artifacts/{name}` (whitelist per pipeline). Mock serves scripted
-  lines; Nextflow/Slurm read the workdir file. *Acceptance: incremental
-  tail advances via `offset`; `web_summary.html` streams from the workdir
-  (kills the `scp lisa:…` loop).*
+  lines; Nextflow/Slurm read the workdir file.
 
-- [ ] **6. Capabilities endpoint + per-job suspend stub** (§3.4 #2).
+- [x] **6. Capabilities endpoint + per-job suspend stub** (§3.4 #2).
+  **LANDED 2026-07-14.** SPI `supportsSuspend`/`suspend`/`resume` (additive
+  defaults: false/throw); `PipelineCapabilities` VO (snake_case);
+  `GET /admin/pipeline/capabilities` (kind + `supports_suspend`/`_log`/`_artifacts`);
+  `POST …/jobs/{jobId}/suspend`·`/resume` → **409** via a `capabilities().supportsSuspend`
+  guard (all schedulers report false today, so it always 409s — the intended stub). No
+  `SUSPENDED` job state added (deferred until a Slurm scheduler that supports it lands).
+  Verified: unit (mock `supportsSuspend`=false, `suspend` throws), IT (`capabilities()`
+  reflects the mock: log/artifacts true, suspend false), REST (capabilities shape + 409).
+  Original spec below.
   `GET /admin/pipeline/capabilities` (active kind + `supportsSuspend`/
   `supportsLog`/`supportsArtifacts`). Default `suspend/resume/
   supportsSuspend` on `PipelineScheduler` throwing/false; REST returns
-  **409** when `!supportsSuspend`. *Acceptance: UI hides the suspend
-  button off the capabilities response; calling suspend on Nextflow →
-  409.*
+  **409** when `!supportsSuspend`.
 
 - [ ] **7. Real `NextflowSlurmScheduler` — sc-annotation first** (§4.4).
   Implement the stub against `sc-annotation-pipeline` (already
@@ -993,11 +1047,19 @@ build, which existing code to extend, and its acceptance signal.
   Gemma scheduled job that drains the sheet into the queue. *Acceptance:
   10-GSE replay panel — count matrices diff-clean vs Luigi.*
 
-- [ ] **9. PipelineJob → Ticket edge** (§1.2 #1). Policy-gated auto-open
+- [x] **9. PipelineJob → Ticket edge** (§1.2 #1). **LANDED 2026-07-14.** New
+  `TicketType.PIPELINE_FAILED` (enum-only, no migration); `recordEvent`'s error
+  branch calls `maybeOpenTicketOnFailure` — for PERMANENT/UNKNOWN (skip TRANSIENT,
+  gated on `gemma.pipeline.autoTicket.enabled` default true) it opens (or, via
+  `findOpenForTarget` dedup, appends to) a `PIPELINE_FAILED` ticket targeting the EE
+  with the failure detail in a COMMENTED event; reporter = `batch.submittedBy`;
+  best-effort (try/catch so a ticket glitch never fails the terminal event). Mirrors
+  `GeoScrapeServiceImpl`. Verified by `PipelineJobTicketMockIT` (permanent→one ticket
+  +detail, deduped across batches; transient→none). **Deferred:** per-pipeline policy
+  granularity + auto-retry on TRANSIENT (D8 manual-first) + ticket→retry / close-on-
+  success round-trip (§1.2 #4). Original spec below. Policy-gated auto-open
   of a `Ticket` targeting the EE on `FAILED`/attention-needed
-  (auto-ticket PERMANENT, auto-retry TRANSIENT). *Acceptance: a PERMANENT
-  failure opens a ticket with the failure detail in the first
-  `TICKET_EVENT`.*
+  (auto-ticket PERMANENT, auto-retry TRANSIENT).
 
 - [ ] **10. WorkflowGroup entity + `/groups` CRUD** (§2.3), Flyway V23+.
   Per `WORKFLOW_GROUPS_RECCE.md` §3–§4; VO snake-case via `@JsonProperty`.
@@ -1005,10 +1067,25 @@ build, which existing code to extend, and its acceptance signal.
   `POST /groups`, `GET /datasets/{id}/groups`, and "dispatch" mints a
   `PIPELINE_JOB_BATCH` from the group's current EE members.*
 
-- [ ] **11. CurationDetails retirement** (Tickets D1). Flip
+- [x] **11. CurationDetails retirement** (Tickets D1). **LANDED 2026-07-14 as the
+  ticket-derived-CACHE variant** (Ogan's call — the "flip every read-path to a ticket
+  lookup" reading was a lossy multi-week migration: the `TROUBLED`/`NEEDS_ATTENTION`
+  columns back the core `/datasets` filter+sort surface, and a "has open ticket" *sort*
+  isn't cheaply expressible). Instead: tickets stay source of truth (writes already went
+  there → columns were frozen/stale), and `CurationFlagCache` recomputes the target
+  Curatable's `troubled`/`needsAttention` from its open tickets on every
+  `TicketServiceImpl.openTicket`/`transition` (cycle-free: the caller passes the queried
+  open tickets in; write via the EE/AD DAO for L2 coherence). All existing reads/filters/
+  sorts keep working unchanged; the columns are now truthful. Shared type-mapping with the
+  `CurationDetailsService` shim (+ `PIPELINE_FAILED` → needs-attention, composing task 9).
+  Verified: `CurationFlagCacheMockIT` (open QUALITY_REVIEW → troubled+needsAttention +
+  `loadTroubledIds` sees it; resolve → clears; BATCH_INFO → needsAttention-only; pipeline
+  PERMANENT failure → needs-attention via the auto-ticket). **Deferred:** one-time prod
+  backfill of the frozen columns (reset-then-apply at a maintenance window) + the "pure"
+  column drop / repointing the ~18 point-readers (unnecessary now the cache is truthful).
+  Original spec below. Flip
   `needsAttention`/`troubled` read-paths to "is there an OPEN ticket
-  targeting this EE?". *Acceptance: read-paths no longer consult
-  `CurationDetails` for attention state.*
+  targeting this EE?".
 
 - [ ] **12. (Deferred) live-updates + long tail.** SSE
   `GET …/batches/{id}/stream` (only if poll lags); Redis live-tail (§4.2
@@ -1025,7 +1102,7 @@ is reversible and marked where it needs a human before committing infra.
 
 | # | Decision | Recommended default | Needs sign-off? |
 |---|---|---|---|
-| **D1** | Runtime / job-state location (§3.1, §4.2) | **Delegated / Nextflow-native (Option A)**: `-with-weblog` → existing callback, `-resume` = mop-up, workdir log proxy, thin MySQL envelope with the churn table trimmed. Zero new infra. | Yes — Paul + cluster owner (but A is low-commitment to start). |
+| **D1** | Runtime / job-state location (§3.1, §4.2) | **DECIDED 2026-07-13 (Ogan): Delegated / Nextflow-native (Option A)**: `-with-weblog` → existing callback, `-resume` = mop-up, workdir log proxy, thin MySQL envelope with the churn table trimmed. Zero new infra. | ✅ decided; infra pieces (weblog path, workdir, caps) still need the cluster owner at task 7. |
 | **D2** | `maxConcurrent` / aggregate submission cap (§3.4) | **Per-pipeline-kind cap** (rnaseq needs more than sc-annotation's `queueSize=25`), plus a global ceiling. | Yes — cluster admin sets the numbers. |
 | **D3** | Pipeline output handoff: push vs pull | **Pull** where practical (Gemma fetches completed outputs, ingests via its own loaders — cleaner for credentials); keep sc-annotation's `GEMMA_UPLOAD` push path working as the fallback. | Soft — revisit per pipeline. |
 | **D4** | Provenance stamp on `PIPELINE_JOB` | **Yes** — record pipeline git SHA + container digest in `PARAMS_JSON` (global repro convention). | No — just do it. |
