@@ -13,6 +13,7 @@ package ubic.gemma.persistence.service.pipeline;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +25,10 @@ import ubic.gemma.core.pipeline.PipelineSchedulerException;
 import ubic.gemma.core.pipeline.SchedulerHandle;
 import ubic.gemma.core.pipeline.SubmitRequest;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
+import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedPipelineRunEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.PipelineBatchCancelledEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.PipelineBatchClosedEvent;
@@ -37,6 +42,7 @@ import ubic.gemma.model.pipeline.PipelineJob;
 import ubic.gemma.model.pipeline.PipelineJobBatch;
 import ubic.gemma.model.pipeline.PipelineJobEvent;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketService;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -93,6 +99,16 @@ public class PipelineJobBatchServiceImpl implements PipelineJobBatchService {
      */
     @Autowired(required = false)
     private PipelineScheduler scheduler;
+
+    @Autowired
+    private TicketService ticketService;
+
+    /**
+     * Auto-open a Ticket on a PERMANENT/UNKNOWN job failure (§1.2 #1). Global toggle; per-pipeline
+     * policy is a later refinement. TRANSIENT failures never file a ticket (they're retry-eligible).
+     */
+    @Value("${gemma.pipeline.autoTicket.enabled:true}")
+    private boolean autoTicketEnabled;
 
     @Override
     @Transactional
@@ -246,6 +262,7 @@ public class PipelineJobBatchServiceImpl implements PipelineJobBatchService {
         } else if ( "error".equals( kind ) ) {
             job.setFailureClass( parseFailureClass( payloadJson ) );
             terminate( job, JobState.FAILED, now, payloadJson );
+            maybeOpenTicketOnFailure( job );
         } else if ( "killed".equals( kind ) ) {
             terminate( job, JobState.CANCELLED, now, null );
         }
@@ -692,6 +709,50 @@ public class PipelineJobBatchServiceImpl implements PipelineJobBatchService {
                 job.getBatch() != null && job.getBatch().getId() != null ? job.getBatch().getId() : 0L,
                 job.getId() != null ? job.getId() : 0L,
                 target.name() );
+    }
+
+    /**
+     * PipelineJob → Ticket edge (§1.2 #1): on a job failure that needs human judgement
+     * (PERMANENT/UNKNOWN — TRANSIENT is retry-eligible), open (or append to) a {@code PIPELINE_FAILED}
+     * ticket targeting the EE, with the failure detail in the event log. Reporter is the batch's
+     * submitter. Best-effort — a ticket glitch must never fail the job's terminal event.
+     */
+    private void maybeOpenTicketOnFailure( PipelineJob job ) {
+        if ( !autoTicketEnabled || job.getFailureClass() == FailureClass.TRANSIENT ) {
+            return;
+        }
+        ExpressionExperiment ee = job.getExperiment();
+        PipelineJobBatch batch = job.getBatch();
+        if ( ee == null || batch == null || batch.getSubmittedBy() == null ) {
+            return;
+        }
+        try {
+            Contact reporter = batch.getSubmittedBy();
+            FailureClass fc = job.getFailureClass() != null ? job.getFailureClass() : FailureClass.UNKNOWN;
+            String detail = String.format( "Pipeline '%s' failed (attempt %d, %s): %s",
+                    batch.getPipeline(), job.getAttempt(), fc,
+                    job.getErrorMessage() != null ? job.getErrorMessage() : "(no detail)" );
+            // Dedup: append to an existing open PIPELINE_FAILED ticket for this EE rather than spam.
+            Ticket existing = null;
+            for ( Ticket t : ticketService.findOpenForTarget( TicketTargetType.EXPRESSION_EXPERIMENT, ee.getId() ) ) {
+                if ( t.getType() == TicketType.PIPELINE_FAILED ) {
+                    existing = t;
+                    break;
+                }
+            }
+            if ( existing != null ) {
+                ticketService.addComment( existing, reporter, detail );
+            } else {
+                String label = ee.getShortName() != null ? ee.getShortName() : ( "EE " + ee.getId() );
+                Ticket ticket = ticketService.openTicket( reporter, TicketType.PIPELINE_FAILED,
+                        "Pipeline '" + batch.getPipeline() + "' failed on " + label,
+                        Collections.singleton( TicketTarget.Factory.newInstance(
+                                TicketTargetType.EXPRESSION_EXPERIMENT, ee.getId() ) ) );
+                ticketService.addComment( ticket, reporter, detail );
+            }
+        } catch ( RuntimeException e ) {
+            log.warn( "failed to open pipeline-failure ticket for job {}: {}", job.getId(), e.getMessage(), e );
+        }
     }
 
     private void maybeCloseBatch( PipelineJobBatch batch ) {
