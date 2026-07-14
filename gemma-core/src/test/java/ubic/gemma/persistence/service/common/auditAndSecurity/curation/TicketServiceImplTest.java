@@ -80,6 +80,9 @@ public class TicketServiceImplTest {
     @Mock
     private AuditTrailService auditTrailService;
 
+    @Mock
+    private CurationFlagCache curationFlagCache;
+
     @InjectMocks
     private TicketServiceImpl service;
 

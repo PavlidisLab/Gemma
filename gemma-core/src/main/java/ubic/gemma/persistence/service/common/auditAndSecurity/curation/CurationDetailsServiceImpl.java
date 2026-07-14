@@ -25,7 +25,6 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.util.Date;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
@@ -44,17 +43,12 @@ import java.util.Set;
 public class CurationDetailsServiceImpl implements CurationDetailsService {
 
     /**
-     * Ticket types that historically would have caused
-     * {@code curationDetails.needsAttention=true}. Kept as an EnumSet so the
-     * lookup is constant-time.
+     * Ticket-type → flag mapping is defined once in {@link CurationFlagCache} (the ticket-derived
+     * cache uses the same definition, so the shim read-path and the cached column agree).
      */
-    private static final Set<TicketType> NEEDS_ATTENTION_TYPES = EnumSet.of(
-            TicketType.GENERIC,
-            TicketType.BATCH_INFO_NEEDED,
-            TicketType.QUALITY_REVIEW );
+    private static final Set<TicketType> NEEDS_ATTENTION_TYPES = CurationFlagCache.NEEDS_ATTENTION_TYPES;
 
-    private static final Set<TicketType> TROUBLED_TYPES = EnumSet.of(
-            TicketType.QUALITY_REVIEW );
+    private static final Set<TicketType> TROUBLED_TYPES = CurationFlagCache.TROUBLED_TYPES;
 
     private final TicketService ticketService;
 
