@@ -52,7 +52,7 @@ class PipelineJobBatchServiceMockIT extends BaseSpringContextTest5 {
     }
 
     @Test
-    void partialBatch_advance_leavesTransientFailuresAndClosesBatch() {
+    void partialBatch_advance_leavesTransientFailuresAndKeepsBatchOpen() {
         Contact submitter = getTestPersistentContact();
         List<ExpressionExperiment> ees = new ArrayList<>();
         List<Long> expectedFailEeIds = new ArrayList<>();
@@ -89,9 +89,10 @@ class PipelineJobBatchServiceMockIT extends BaseSpringContextTest5 {
         assertThat( failed ).isEqualTo( N / FAIL_EVERY_NTH );
         assertThat( done ).isEqualTo( N - N / FAIL_EVERY_NTH );
 
-        // Every job reached a terminal state, so the batch auto-closes.
+        // §3.2 disposition: failures keep the batch OPEN (needs mop-up), NOT auto-closed —
+        // even though every job reached a terminal state.
         assertThat( pipelineJobBatchService.get( batch.getId() ).getState() )
-                .isEqualTo( PipelineJobBatch.BatchState.CLOSED );
+                .isEqualTo( PipelineJobBatch.BatchState.OPEN );
     }
 
     @Test
