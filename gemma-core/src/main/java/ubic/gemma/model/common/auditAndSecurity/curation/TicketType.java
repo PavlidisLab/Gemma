@@ -76,6 +76,13 @@ public enum TicketType {
      * dataset here rather than only in the store (Paul, 2026-08-29).
      */
     AUDIT,
+    /**
+     * A compute pipeline job failed in a way that needs curator judgement (a PERMANENT or UNKNOWN
+     * failure class — TRANSIENT failures are auto-retry-eligible and don't file a ticket). Opened by
+     * the PipelineJob → Ticket edge (§1.2 #1) targeting the failed EE, with the failure detail in the
+     * event log.
+     */
+    PIPELINE_FAILED,
     /** Catch-all for tickets that don't fit a more specific category. */
     GENERIC,
     /**
