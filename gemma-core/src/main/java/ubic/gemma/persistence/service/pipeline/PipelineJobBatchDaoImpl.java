@@ -43,4 +43,16 @@ public class PipelineJobBatchDaoImpl extends AbstractDao<PipelineJobBatch> imple
         // HB6 rejects setMaxResults(<0); treat <=0 as no limit.
         return q.setMaxResults( limit > 0 ? limit : Integer.MAX_VALUE ).list();
     }
+
+    @Override
+    public List<PipelineJobBatch> findDispatchable() {
+        String hql = "select distinct b from PipelineJobBatch b join b.jobs j"
+                + " where b.state = :open and b.held = false"
+                + " and j.state = :pending and j.supersededBy is null";
+        //noinspection unchecked
+        Query<PipelineJobBatch> q = this.getSessionFactory().getCurrentSession().createQuery( hql );
+        q.setParameter( "open", PipelineJobBatch.BatchState.OPEN );
+        q.setParameter( "pending", ubic.gemma.model.pipeline.JobState.PENDING );
+        return q.list();
+    }
 }

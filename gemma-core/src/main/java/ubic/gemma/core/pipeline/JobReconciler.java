@@ -69,6 +69,10 @@ public class JobReconciler {
     }
 
     private void reconcile( PipelineJob job ) {
+        if ( job.getSupersededBy() != null ) {
+            // A retry has replaced this attempt (task 3) — it's history; don't poll it.
+            return;
+        }
         if ( job.getSchedulerKind() == null || job.getSchedulerHandle() == null ) {
             // PENDING that never made it to the scheduler. Service can't reconcile
             // these; they need a dispatcher pass instead. Skip for now.
