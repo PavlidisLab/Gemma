@@ -161,4 +161,16 @@ public interface PipelineJobBatchService {
      */
     @Nullable
     ubic.gemma.core.pipeline.Artifact readJobArtifact( Long jobId, String name );
+
+    /** What the active scheduler can do (§3.4 #2). Kind is null / all-false when no scheduler is wired. */
+    ubic.gemma.core.pipeline.PipelineCapabilities capabilities();
+
+    /**
+     * Suspend a running job via the active scheduler. Requires {@code capabilities().supportsSuspend}
+     * — throws {@link UnsupportedOperationException} otherwise (the REST layer maps that to 409).
+     */
+    void suspendJob( Long jobId );
+
+    /** Resume a previously suspended job. Same capability requirement as {@link #suspendJob}. */
+    void resumeJob( Long jobId );
 }

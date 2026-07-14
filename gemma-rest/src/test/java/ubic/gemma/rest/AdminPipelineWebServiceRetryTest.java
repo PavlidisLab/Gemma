@@ -29,6 +29,7 @@ import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.core.pipeline.Artifact;
 import ubic.gemma.core.pipeline.LogChunk;
+import ubic.gemma.core.pipeline.PipelineCapabilities;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.pipeline.BatchRollup;
@@ -53,6 +54,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -201,6 +203,29 @@ public class AdminPipelineWebServiceRetryTest extends BaseJerseyTest5 {
                 .method( "PATCH", Entity.json( "{\"maxConcurrent\":4,\"note\":\"cap it\"}" ) ) )
                 .hasStatus( Response.Status.OK );
         verify( pipelineJobBatchService ).updateBatch( eq( 5L ), eq( 4 ), any() );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void capabilities_returnsShape() {
+        when( pipelineJobBatchService.capabilities() )
+                .thenReturn( new PipelineCapabilities( "mock", false, true, true ) );
+        assertThat( target( "/admin/pipeline/capabilities" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.kind", "mock" )
+                .hasFieldOrPropertyWithValue( "data.supports_log", true )
+                .hasFieldOrPropertyWithValue( "data.supports_suspend", false );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void suspendJob_409WhenSchedulerCannotSuspend() {
+        when( pipelineJobBatchService.capabilities() )
+                .thenReturn( new PipelineCapabilities( "mock", false, true, true ) );  // supportsSuspend=false
+        assertThat( target( "/admin/pipeline/batches/5/jobs/9/suspend" ).request().post( Entity.json( "" ) ) )
+                .hasStatus( Response.Status.CONFLICT );
+        verify( pipelineJobBatchService, never() ).suspendJob( any() );
     }
 
     @Test

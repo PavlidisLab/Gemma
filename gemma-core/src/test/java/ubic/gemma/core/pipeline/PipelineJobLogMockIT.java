@@ -70,6 +70,15 @@ class PipelineJobLogMockIT extends BaseSpringContextTest5 {
         assertThat( artifact.getContentType() ).isEqualTo( "text/html" );
     }
 
+    @Test
+    void capabilities_reflectTheMockScheduler() {
+        PipelineCapabilities caps = pipelineJobBatchService.capabilities();
+        assertThat( caps.getKind() ).isEqualTo( "mock" );
+        assertThat( caps.isSupportsLog() ).isTrue();
+        assertThat( caps.isSupportsArtifacts() ).isTrue();
+        assertThat( caps.isSupportsSuspend() ).isFalse();  // §3.4 #2 — stub until Slurm
+    }
+
     private static Scenario withLog() {
         Scenario s = new Scenario();
         s.outcome = Scenario.Outcome.SUCCEED;

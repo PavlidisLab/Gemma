@@ -14,6 +14,7 @@ package ubic.gemma.rest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.ClientErrorException;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.PATCH;
@@ -32,6 +33,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.pipeline.Artifact;
 import ubic.gemma.core.pipeline.LogChunk;
+import ubic.gemma.core.pipeline.PipelineCapabilities;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.pipeline.BatchRollup;
@@ -257,6 +259,46 @@ public class AdminPipelineWebService {
             req = new UpdateBatchRequest();
         }
         return respond( pipelineJobBatchService.updateBatch( batchId, req.maxConcurrent, req.note ) );
+    }
+
+    @GET
+    @Path("/capabilities")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "What the active scheduler can do (suspend/log/artifacts) — the UI feature-gates off this")
+    public ResponseDataObject<PipelineCapabilities> capabilities() {
+        return respond( pipelineJobBatchService.capabilities() );
+    }
+
+    @POST
+    @Path("/batches/{batchId}/jobs/{jobId}/suspend")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Suspend a running job (409 if the active scheduler can't suspend)")
+    public ResponseDataObject<PipelineJobBatch> suspendJob( @PathParam("batchId") Long batchId,
+            @PathParam("jobId") Long jobId ) {
+        requireSuspendSupport();
+        pipelineJobBatchService.suspendJob( jobId );
+        return respond( pipelineJobBatchService.get( batchId ) );
+    }
+
+    @POST
+    @Path("/batches/{batchId}/jobs/{jobId}/resume")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Resume a suspended job (409 if the active scheduler can't suspend)")
+    public ResponseDataObject<PipelineJobBatch> resumeJob( @PathParam("batchId") Long batchId,
+            @PathParam("jobId") Long jobId ) {
+        requireSuspendSupport();
+        pipelineJobBatchService.resumeJob( jobId );
+        return respond( pipelineJobBatchService.get( batchId ) );
+    }
+
+    private void requireSuspendSupport() {
+        if ( !pipelineJobBatchService.capabilities().isSupportsSuspend() ) {
+            throw new ClientErrorException( "active scheduler does not support suspend/resume",
+                    Response.Status.CONFLICT );
+        }
     }
 
     @GET

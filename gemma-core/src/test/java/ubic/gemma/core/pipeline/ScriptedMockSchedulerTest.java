@@ -159,6 +159,14 @@ class ScriptedMockSchedulerTest {
     }
 
     @Test
+    void suspend_isUnsupportedByTheMock() {
+        assertThat( scheduler.supportsSuspend() ).isFalse();
+        scheduler.setScenario( 9L, push( Scenario.Outcome.SUCCEED, stage( 0, "completed", "{}" ) ) );
+        SchedulerHandle h = scheduler.submit( req( 900L, 9L ) );
+        assertThatThrownBy( () -> scheduler.suspend( h ) ).isInstanceOf( UnsupportedOperationException.class );
+    }
+
+    @Test
     void afterPropertiesSet_throwsUnderProductionProfile() {
         Environment prod = mock( Environment.class );
         when( prod.acceptsProfiles( any( Profiles.class ) ) ).thenReturn( true );

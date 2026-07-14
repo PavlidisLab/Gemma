@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.pipeline.Artifact;
 import ubic.gemma.core.pipeline.LogChunk;
+import ubic.gemma.core.pipeline.PipelineCapabilities;
 import ubic.gemma.core.pipeline.PipelineScheduler;
 import ubic.gemma.core.pipeline.PipelineSchedulerException;
 import ubic.gemma.core.pipeline.SchedulerHandle;
@@ -500,6 +501,51 @@ public class PipelineJobBatchServiceImpl implements PipelineJobBatchService {
                     new SchedulerHandle( job.getSchedulerKind(), job.getSchedulerHandle() ), name );
         } catch ( PipelineSchedulerException e ) {
             throw new RuntimeException( "failed to read artifact '" + name + "' for job " + jobId + ": " + e.getMessage(), e );
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PipelineCapabilities capabilities() {
+        if ( scheduler == null ) {
+            return new PipelineCapabilities( null, false, false, false );
+        }
+        return new PipelineCapabilities( scheduler.kind().wireValue(),
+                scheduler.supportsSuspend(), scheduler.supportsLog(), scheduler.supportsArtifacts() );
+    }
+
+    @Override
+    @Transactional
+    public void suspendJob( Long jobId ) {
+        suspendOrResume( jobId, true );
+    }
+
+    @Override
+    @Transactional
+    public void resumeJob( Long jobId ) {
+        suspendOrResume( jobId, false );
+    }
+
+    private void suspendOrResume( Long jobId, boolean suspend ) {
+        if ( scheduler == null || !scheduler.supportsSuspend() ) {
+            throw new UnsupportedOperationException( "active scheduler does not support suspend/resume" );
+        }
+        PipelineJob job = jobDao.load( jobId );
+        if ( job == null ) {
+            throw new IllegalArgumentException( "no job " + jobId );
+        }
+        if ( job.getSchedulerKind() == null || job.getSchedulerHandle() == null ) {
+            throw new IllegalStateException( "job " + jobId + " has not been dispatched" );
+        }
+        SchedulerHandle handle = new SchedulerHandle( job.getSchedulerKind(), job.getSchedulerHandle() );
+        try {
+            if ( suspend ) {
+                scheduler.suspend( handle );
+            } else {
+                scheduler.resume( handle );
+            }
+        } catch ( PipelineSchedulerException e ) {
+            throw new RuntimeException( "suspend/resume failed for job " + jobId + ": " + e.getMessage(), e );
         }
     }
 

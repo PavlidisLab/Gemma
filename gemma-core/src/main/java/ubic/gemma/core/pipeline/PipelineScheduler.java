@@ -105,4 +105,32 @@ public interface PipelineScheduler {
     default Artifact readArtifact( SchedulerHandle handle, String name ) throws PipelineSchedulerException {
         throw new UnsupportedOperationException( "readArtifact not supported by scheduler " + kind() );
     }
+
+    /**
+     * Whether this scheduler can suspend/resume a running job (§3.4 #2). Slurm can
+     * ({@code scontrol suspend}); Nextflow cannot suspend a process mid-flight. Surfaced in the
+     * capabilities response so the UI hides the button when unavailable.
+     */
+    default boolean supportsSuspend() {
+        return false;
+    }
+
+    /**
+     * Suspend a running job. Optional — only schedulers reporting {@link #supportsSuspend()} true
+     * implement it.
+     *
+     * @throws UnsupportedOperationException if {@link #supportsSuspend()} is false
+     */
+    default void suspend( SchedulerHandle handle ) throws PipelineSchedulerException {
+        throw new UnsupportedOperationException( "suspend not supported by scheduler " + kind() );
+    }
+
+    /**
+     * Resume a previously suspended job.
+     *
+     * @throws UnsupportedOperationException if {@link #supportsSuspend()} is false
+     */
+    default void resume( SchedulerHandle handle ) throws PipelineSchedulerException {
+        throw new UnsupportedOperationException( "resume not supported by scheduler " + kind() );
+    }
 }
