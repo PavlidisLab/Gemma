@@ -27,11 +27,16 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.PipelineBatchClosedEve
 import ubic.gemma.model.common.auditAndSecurity.eventType.PipelineBatchSubmittedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.PipelineRunEvent;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.pipeline.BatchRollup;
+import ubic.gemma.model.pipeline.FailureClass;
 import ubic.gemma.model.pipeline.JobState;
 import ubic.gemma.model.pipeline.PipelineJob;
 import ubic.gemma.model.pipeline.PipelineJobBatch;
 import ubic.gemma.model.pipeline.PipelineJobEvent;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -55,6 +60,8 @@ public class PipelineJobBatchServiceImpl implements PipelineJobBatchService {
      * {@code PIPELINE_JOB_EVENT} row. Everything not listed here is a durable milestone.
      */
     private static final java.util.Set<String> SNAPSHOT_ONLY_KINDS = java.util.Set.of( "progress", "heartbeat" );
+
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @Autowired
     private PipelineJobBatchDao batchDao;
@@ -204,6 +211,7 @@ public class PipelineJobBatchServiceImpl implements PipelineJobBatchService {
         if ( "completed".equals( kind ) ) {
             terminate( job, JobState.DONE, now, null );
         } else if ( "error".equals( kind ) ) {
+            job.setFailureClass( parseFailureClass( payloadJson ) );
             terminate( job, JobState.FAILED, now, payloadJson );
         } else if ( "killed".equals( kind ) ) {
             terminate( job, JobState.CANCELLED, now, null );
@@ -239,11 +247,172 @@ public class PipelineJobBatchServiceImpl implements PipelineJobBatchService {
         return result;
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public BatchRollup computeRollup( Long batchId ) {
+        PipelineJobBatch batch = batchDao.load( batchId );
+        if ( batch == null ) {
+            throw new IllegalArgumentException( "no batch " + batchId );
+        }
+        BatchRollup r = new BatchRollup();
+        int failedCurrent = 0;
+        boolean allTerminal = true;
+        for ( PipelineJob job : currentAttempts( batchId ) ) {
+            r.total++;
+            if ( !job.getState().isTerminal() ) {
+                allTerminal = false;
+            }
+            switch ( job.getState() ) {
+                case PENDING: r.pending++; break;
+                case QUEUED: r.queued++; break;
+                case RUNNING: r.running++; break;
+                case DONE: r.done++; break;
+                case CANCELLED: r.cancelled++; break;
+                case FAILED:
+                    r.failed++;
+                    failedCurrent++;
+                    if ( job.getFailureClass() == FailureClass.TRANSIENT ) {
+                        r.failedRetryable++;
+                    } else {
+                        r.failedPermanent++;
+                    }
+                    break;
+                case CANCELLING: break; // active; contributes to total + allTerminal=false only
+            }
+        }
+        r.needsAttention = batch.getState() == PipelineJobBatch.BatchState.OPEN && failedCurrent > 0;
+        r.terminal = r.total > 0 && allTerminal;
+        return r;
+    }
+
+    @Override
+    @Transactional
+    public BatchRollup retryFailed( Long batchId, RetrySpec spec ) {
+        if ( scheduler == null ) {
+            throw new IllegalStateException( "no PipelineScheduler bean configured; activate a scheduler-* Spring profile" );
+        }
+        if ( spec == null ) {
+            spec = new RetrySpec();
+        }
+        PipelineJobBatch batch = batchDao.load( batchId );
+        if ( batch == null ) {
+            throw new IllegalArgumentException( "no batch " + batchId );
+        }
+        int minted = 0;
+        for ( PipelineJob job : currentAttempts( batchId ) ) {
+            if ( job.getState() != JobState.FAILED ) {
+                continue;
+            }
+            if ( spec.onlyRetryable && job.getFailureClass() != FailureClass.TRANSIENT ) {
+                continue;
+            }
+            if ( spec.jobIds != null && !spec.jobIds.contains( job.getId() ) ) {
+                continue;
+            }
+            mintRetry( job, spec.paramsOverrideJson );
+            minted++;
+        }
+        if ( minted > 0 ) {
+            reopenIfClosed( batch );
+        }
+        log.info( "retryFailed(batch {}): minted {} retries", batchId, minted );
+        return computeRollup( batchId );
+    }
+
+    @Override
+    @Transactional
+    public BatchRollup retryJob( Long jobId, RetrySpec spec ) {
+        if ( scheduler == null ) {
+            throw new IllegalStateException( "no PipelineScheduler bean configured; activate a scheduler-* Spring profile" );
+        }
+        if ( spec == null ) {
+            spec = new RetrySpec();
+        }
+        PipelineJob job = jobDao.load( jobId );
+        if ( job == null ) {
+            throw new IllegalArgumentException( "no job " + jobId );
+        }
+        Long batchId = job.getBatch().getId();
+        // Idempotency: only the current attempt is retryable; a job that's already superseded
+        // means a retry is in flight (or done) — no-op.
+        if ( job.getSupersededBy() != null ) {
+            log.info( "retryJob({}): already superseded by job {}; no-op", jobId, job.getSupersededBy().getId() );
+            return computeRollup( batchId );
+        }
+        if ( !job.getState().isTerminal() ) {
+            throw new IllegalArgumentException( "job " + jobId + " is not terminal (" + job.getState() + "); nothing to retry" );
+        }
+        mintRetry( job, spec.paramsOverrideJson );
+        reopenIfClosed( job.getBatch() );
+        return computeRollup( batchId );
+    }
+
     // -----------------------------------------------------------------------
     // internals
     // -----------------------------------------------------------------------
 
+    /** Current attempts of a batch: the rows not yet superseded by a retry. */
+    private List<PipelineJob> currentAttempts( Long batchId ) {
+        List<PipelineJob> current = new ArrayList<>();
+        for ( PipelineJob job : jobDao.findByBatch( batchId ) ) {
+            if ( job.getSupersededBy() == null ) {
+                current.add( job );
+            }
+        }
+        return current;
+    }
+
+    /**
+     * Mint attempt N+1 for the same (batch, experiment), link it to its predecessor, and dispatch.
+     * The old job is left terminal/immutable — only its {@code supersededBy} pointer is set.
+     */
+    private PipelineJob mintRetry( PipelineJob old, @Nullable String paramsOverrideJson ) {
+        PipelineJobBatch batch = old.getBatch();
+        String params = paramsOverrideJson != null ? paramsOverrideJson : old.getParamsJson();
+        PipelineJob attempt = new PipelineJob();
+        attempt.setBatch( batch );
+        attempt.setExperiment( old.getExperiment() );
+        attempt.setState( JobState.PENDING );
+        attempt.setAttempt( old.getAttempt() + 1 );
+        attempt.setRetryOf( old );
+        attempt.setParamsJson( params );
+        // Persist directly — NOT via batch.getJobs().add(): the (batch,ee) business-key equals
+        // would collide the transient new attempt with the frozen predecessor in the Set.
+        attempt = jobDao.create( attempt );
+        old.setSupersededBy( attempt );
+        jobDao.update( old );
+        dispatchOne( attempt, batch.getPipeline(), params );
+        return attempt;
+    }
+
+    private void reopenIfClosed( PipelineJobBatch batch ) {
+        if ( batch.getState() == PipelineJobBatch.BatchState.CLOSED ) {
+            batch.setState( PipelineJobBatch.BatchState.OPEN );
+            batch.setClosedAt( null );
+            batchDao.update( batch );
+        }
+    }
+
+    /** Pipeline-reported failure class from the {@code error} payload; UNKNOWN if absent/unparseable (D9). */
+    private static FailureClass parseFailureClass( @Nullable String payloadJson ) {
+        if ( payloadJson == null || payloadJson.isBlank() ) {
+            return FailureClass.UNKNOWN;
+        }
+        try {
+            JsonNode node = OBJECT_MAPPER.readTree( payloadJson );
+            JsonNode fc = node.get( "failureClass" );
+            if ( fc != null && fc.isTextual() ) {
+                return FailureClass.valueOf( fc.asText().trim().toUpperCase( java.util.Locale.ROOT ) );
+            }
+        } catch ( Exception e ) {
+            log.debug( "could not parse failureClass from error payload: {}", e.getMessage() );
+        }
+        return FailureClass.UNKNOWN;
+    }
+
     private void dispatchOne( PipelineJob job, String pipeline, @Nullable String paramsJson ) {
+        // Record the params this attempt runs with (per-attempt provenance).
+        job.setParamsJson( paramsJson );
         try {
             SchedulerHandle handle = scheduler.submit( new SubmitRequest(
                     job.getId(), pipeline, job.getExperiment().getId(), paramsJson ) );
@@ -319,16 +488,28 @@ public class PipelineJobBatchServiceImpl implements PipelineJobBatchService {
         if ( batch == null || batch.getState() != PipelineJobBatch.BatchState.OPEN ) {
             return;
         }
-        List<PipelineJob> stillActive = jobDao.findByBatchAndStates( batch, ACTIVE_STATES );
-        if ( !stillActive.isEmpty() ) {
+        boolean anyActive = false, anyFailed = false;
+        int current = 0;
+        for ( PipelineJob job : currentAttempts( batch.getId() ) ) {
+            current++;
+            if ( ACTIVE_STATES.contains( job.getState() ) ) {
+                anyActive = true;
+            }
+            if ( job.getState() == JobState.FAILED ) {
+                anyFailed = true;
+            }
+        }
+        // Don't close if work is still in flight, or if a FAILED current attempt is awaiting
+        // mop-up: §3.2 — a batch is not "done" just because every job reached a terminal state;
+        // failures keep it OPEN (needs-attention) until retried or the curator closes it.
+        if ( anyActive || anyFailed ) {
             return;
         }
-        // All children terminal. Close the batch + emit milestone event.
         batch.setState( PipelineJobBatch.BatchState.CLOSED );
         batch.setClosedAt( new Date() );
         batchDao.update( batch );
         auditTrailService.addUpdateEvent( batch, PipelineBatchClosedEvent.class,
-                "All " + batch.getJobs().size() + " jobs reached terminal state" );
+                "All " + current + " current attempts terminal without failures" );
     }
 
     private String buildBatchName( String pipeline, int n ) {

@@ -14,6 +14,7 @@ package ubic.gemma.persistence.service.pipeline;
 import org.springframework.lang.Nullable;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.pipeline.BatchRollup;
 import ubic.gemma.model.pipeline.PipelineJob;
 import ubic.gemma.model.pipeline.PipelineJobBatch;
 import ubic.gemma.model.pipeline.PipelineJobEvent;
@@ -86,4 +87,28 @@ public interface PipelineJobBatchService {
      * calls {@code scheduler.poll(handle)} for each.
      */
     List<PipelineJob> findStaleJobs( int staleMinutes, int limit );
+
+    /**
+     * Derived disposition of a batch computed over its current attempts (§3.2). Cheap; safe to
+     * poll for the UI's "this batch isn't finished" badge. Never mutates state.
+     */
+    BatchRollup computeRollup( Long batchId );
+
+    /**
+     * Mop-up: mint a new attempt (attempt N+1) for each eligible failed current attempt in the
+     * batch and dispatch it. The failed jobs are left immutable — the retry supersedes them.
+     * Re-opens a {@code CLOSED} batch. Idempotent: a job that already has a non-terminal successor
+     * is skipped (guards double-clicks / concurrent curators). Returns the fresh rollup.
+     *
+     * @param batchId the batch
+     * @param spec    which failures to retry + optional params override ({@code new RetrySpec()} =
+     *                all transient failures)
+     */
+    BatchRollup retryFailed( Long batchId, RetrySpec spec );
+
+    /**
+     * Retry a single terminal current attempt (FAILED, CANCELLED, or DONE-for-reprocess). Mints
+     * attempt N+1 and dispatches it. Idempotent on a live successor. Returns the batch rollup.
+     */
+    BatchRollup retryJob( Long jobId, RetrySpec spec );
 }

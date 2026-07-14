@@ -107,6 +107,43 @@ public class PipelineJob extends AbstractIdentifiable {
     @Column(name = "ERROR_MESSAGE", columnDefinition = "text")
     private String errorMessage;
 
+    // -----------------------------------------------------------------------
+    // Attempt chain (§3.2): a retry mints a NEW PipelineJob for the same
+    // (batch, experiment); the failed job is immutable history. The current
+    // attempt for a (batch, ee) is the row with supersededBy == null.
+    // -----------------------------------------------------------------------
+
+    /** 1-based attempt number for this (batch, experiment); denormalized for display + sort. */
+    @Column(name = "ATTEMPT", nullable = false, columnDefinition = "INT")
+    private int attempt = 1;
+
+    /** The previous attempt this one retries (null on the first attempt). Walk back for the chain. */
+    @Nullable
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "RETRY_OF_FK", columnDefinition = "BIGINT")
+    private PipelineJob retryOf;
+
+    /**
+     * The retry that replaced this attempt (null while this is the current attempt). Monotonic —
+     * set once, never cleared — so {@code supersededBy == null} is an O(1) is-current check.
+     */
+    @Nullable
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "SUPERSEDED_BY_FK", columnDefinition = "BIGINT")
+    private PipelineJob supersededBy;
+
+    /** Failure classification (set on FAILED); drives auto-retry eligibility. */
+    @Nullable
+    @Enumerated(EnumType.STRING)
+    @Column(name = "FAILURE_CLASS", columnDefinition = "VARCHAR(16)")
+    private FailureClass failureClass;
+
+    /** Params this attempt was dispatched with — per-attempt provenance ("bumped mem", swapped accession). */
+    @Lob
+    @Nullable
+    @Column(name = "PARAMS_JSON", columnDefinition = "longtext")
+    private String paramsJson;
+
     @OneToMany(mappedBy = "job", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("occurredAt")
     private Set<PipelineJobEvent> events = new HashSet<>();

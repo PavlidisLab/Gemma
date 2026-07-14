@@ -30,11 +30,13 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.pipeline.BatchRollup;
 import ubic.gemma.model.pipeline.PipelineJobBatch;
 import ubic.gemma.model.pipeline.PipelineJobEvent;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.pipeline.PipelineJobBatchService;
+import ubic.gemma.persistence.service.pipeline.RetrySpec;
 import ubic.gemma.rest.util.ResponseDataObject;
 
 import static ubic.gemma.rest.util.Responders.respond;
@@ -187,6 +189,36 @@ public class AdminPipelineWebService {
         // batchId is a path-readability hint only; the service operates on jobId.
         pipelineJobBatchService.cancelJob( jobId );
         return respond( true );
+    }
+
+    @GET
+    @Path("/batches/{batchId}/rollup")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Derived disposition of the batch over its current attempts")
+    public ResponseDataObject<BatchRollup> batchRollup( @PathParam("batchId") Long batchId ) {
+        return respond( pipelineJobBatchService.computeRollup( batchId ) );
+    }
+
+    @POST
+    @Path("/batches/{batchId}/retry-failed")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Mop-up: retry the batch's failed current attempts; returns the fresh rollup")
+    public ResponseDataObject<BatchRollup> retryFailed( @PathParam("batchId") Long batchId,
+            RetrySpec spec ) {
+        return respond( pipelineJobBatchService.retryFailed( batchId, spec != null ? spec : new RetrySpec() ) );
+    }
+
+    @POST
+    @Path("/batches/{batchId}/jobs/{jobId}/retry")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Retry a single terminal job (mints a new attempt); returns the batch rollup")
+    public ResponseDataObject<BatchRollup> retryJob( @PathParam("batchId") Long batchId,
+            @PathParam("jobId") Long jobId, RetrySpec spec ) {
+        // batchId is a path-readability hint only; the service operates on jobId.
+        return respond( pipelineJobBatchService.retryJob( jobId, spec != null ? spec : new RetrySpec() ) );
     }
 
     // -----------------------------------------------------------------------
