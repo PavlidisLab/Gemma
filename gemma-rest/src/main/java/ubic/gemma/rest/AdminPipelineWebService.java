@@ -23,12 +23,15 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import ubic.gemma.core.pipeline.Artifact;
+import ubic.gemma.core.pipeline.LogChunk;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.pipeline.BatchRollup;
@@ -254,6 +257,46 @@ public class AdminPipelineWebService {
             req = new UpdateBatchRequest();
         }
         return respond( pipelineJobBatchService.updateBatch( batchId, req.maxConcurrent, req.note ) );
+    }
+
+    @GET
+    @Path("/batches/{batchId}/jobs/{jobId}/log")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Incremental job log slice proxied from the scheduler (tail -f via the offset cursor)")
+    public ResponseDataObject<LogChunk> jobLog( @PathParam("batchId") Long batchId,
+            @PathParam("jobId") Long jobId,
+            @QueryParam("offset") Long offset,
+            @QueryParam("limit") Integer limit ) {
+        LogChunk chunk = pipelineJobBatchService.readJobLog( jobId,
+                offset != null ? offset : 0L, limit != null ? limit : 64 * 1024 );
+        if ( chunk == null ) {
+            throw new NotFoundException( "no log available for job " + jobId );
+        }
+        return respond( chunk );
+    }
+
+    @GET
+    @Path("/batches/{batchId}/jobs/{jobId}/artifacts/{name}")
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Stream a whitelisted output file from the job workdir (e.g. web_summary.html)")
+    public Response jobArtifact( @PathParam("batchId") Long batchId,
+            @PathParam("jobId") Long jobId,
+            @PathParam("name") String name ) {
+        // Path-traversal guard: artifact names are plain filenames, never paths.
+        if ( name == null || name.isBlank()
+                || name.contains( "/" ) || name.contains( "\\" ) || name.contains( ".." ) ) {
+            throw new BadRequestException( "invalid artifact name" );
+        }
+        Artifact artifact = pipelineJobBatchService.readJobArtifact( jobId, name );
+        if ( artifact == null ) {
+            throw new NotFoundException( "no artifact '" + name + "' for job " + jobId );
+        }
+        return Response.ok( artifact.getContent() )
+                .type( artifact.getContentType() != null ? artifact.getContentType() : MediaType.APPLICATION_OCTET_STREAM )
+                .header( "Content-Disposition", "inline; filename=\"" + artifact.getName() + "\"" )
+                .build();
     }
 
     // -----------------------------------------------------------------------

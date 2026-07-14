@@ -145,4 +145,20 @@ public interface PipelineJobBatchService {
      * If the concurrency cap is raised (or cleared), immediately tops up. Returns the batch.
      */
     PipelineJobBatch updateBatch( Long batchId, @Nullable Integer maxConcurrent, @Nullable String note );
+
+    /**
+     * Proxy an incremental slice of a job's log from the active scheduler (§3.5). Returns {@code null}
+     * if the job doesn't exist, hasn't been dispatched, or the scheduler can't serve logs — never
+     * persisted. The caller (REST) maps {@code null} to 404.
+     */
+    @Nullable
+    ubic.gemma.core.pipeline.LogChunk readJobLog( Long jobId, long offset, int limit );
+
+    /**
+     * Proxy a whitelisted output artifact from the job's workdir via the active scheduler (§3.5).
+     * Returns {@code null} if the job/handle/scheduler can't serve it. The caller must reject unsafe
+     * artifact names before calling.
+     */
+    @Nullable
+    ubic.gemma.core.pipeline.Artifact readJobArtifact( Long jobId, String name );
 }

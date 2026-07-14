@@ -16,6 +16,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.core.pipeline.Artifact;
+import ubic.gemma.core.pipeline.LogChunk;
 import ubic.gemma.core.pipeline.PipelineScheduler;
 import ubic.gemma.core.pipeline.PipelineSchedulerException;
 import ubic.gemma.core.pipeline.SchedulerHandle;
@@ -465,6 +467,40 @@ public class PipelineJobBatchServiceImpl implements PipelineJobBatchService {
             dispatchPending( batchId );
         }
         return batchDao.load( batchId );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public LogChunk readJobLog( Long jobId, long offset, int limit ) {
+        PipelineJob job = jobDao.load( jobId );
+        if ( job == null || scheduler == null
+                || job.getSchedulerKind() == null || job.getSchedulerHandle() == null
+                || !scheduler.supportsLog() ) {
+            return null;
+        }
+        try {
+            return scheduler.readLog(
+                    new SchedulerHandle( job.getSchedulerKind(), job.getSchedulerHandle() ), offset, limit );
+        } catch ( PipelineSchedulerException e ) {
+            throw new RuntimeException( "failed to read log for job " + jobId + ": " + e.getMessage(), e );
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Artifact readJobArtifact( Long jobId, String name ) {
+        PipelineJob job = jobDao.load( jobId );
+        if ( job == null || scheduler == null
+                || job.getSchedulerKind() == null || job.getSchedulerHandle() == null
+                || !scheduler.supportsArtifacts() ) {
+            return null;
+        }
+        try {
+            return scheduler.readArtifact(
+                    new SchedulerHandle( job.getSchedulerKind(), job.getSchedulerHandle() ), name );
+        } catch ( PipelineSchedulerException e ) {
+            throw new RuntimeException( "failed to read artifact '" + name + "' for job " + jobId + ": " + e.getMessage(), e );
+        }
     }
 
     // -----------------------------------------------------------------------
