@@ -71,11 +71,14 @@ public class TicketServiceImpl extends AbstractService<Ticket> implements Ticket
 
     private final TicketDao ticketDao;
     private final AuditTrailService auditTrailService;
+    private final CurationFlagCache curationFlagCache;
 
     @Autowired
-    public TicketServiceImpl( TicketDao ticketDao, AuditTrailService auditTrailService ) {
+    public TicketServiceImpl( TicketDao ticketDao, AuditTrailService auditTrailService,
+            CurationFlagCache curationFlagCache ) {
         super( ticketDao );
         this.ticketDao = ticketDao;
+        this.curationFlagCache = curationFlagCache;
         this.auditTrailService = auditTrailService;
     }
 
@@ -102,6 +105,7 @@ public class TicketServiceImpl extends AbstractService<Ticket> implements Ticket
         // companion AuditTrail row inline after persistence.
         auditTrailService.addUpdateEvent( created, TicketOpenedEvent.class,
                 "Opened ticket '" + title + "' (type=" + type + ")" );
+        refreshCurationCache( created );
         return created;
     }
 
@@ -172,6 +176,7 @@ public class TicketServiceImpl extends AbstractService<Ticket> implements Ticket
         // covers exactly the real-transition branch.
         auditTrailService.addUpdateEvent( saved, TicketStateChangedEvent.class,
                 old + " -> " + newState + ( reason != null && !reason.isEmpty() ? ": " + reason : "" ) );
+        refreshCurationCache( saved );
         return saved;
     }
 
@@ -353,6 +358,22 @@ public class TicketServiceImpl extends AbstractService<Ticket> implements Ticket
 
     private static void bumpUpdated( Ticket t ) {
         t.setUpdatedAt( new Date() );
+    }
+
+    /**
+     * Refresh the ticket-derived {@code CurationDetails} cache for each Curatable target of a
+     * just-opened / just-transitioned ticket (task 11). Queries the target's open tickets here (so
+     * {@link CurationFlagCache} needs no reference back to this service — no bean cycle) and lets the
+     * cache project them onto the {@code troubled}/{@code needsAttention} columns.
+     */
+    private void refreshCurationCache( Ticket ticket ) {
+        for ( TicketTarget tgt : ticket.getTargets() ) {
+            TicketTargetType type = tgt.getTargetType();
+            if ( type == TicketTargetType.EXPRESSION_EXPERIMENT || type == TicketTargetType.ARRAY_DESIGN ) {
+                curationFlagCache.apply( type, tgt.getTargetId(),
+                        ticketDao.findOpenForTarget( type, tgt.getTargetId() ) );
+            }
+        }
     }
 
     /**
