@@ -69,4 +69,40 @@ public interface PipelineScheduler {
      * pending the next push event or poll confirming {@code CANCELLED}.
      */
     void cancel( SchedulerHandle handle ) throws PipelineSchedulerException;
+
+    // -----------------------------------------------------------------------
+    // Optional capabilities (§3.5). Default = unsupported; only schedulers that
+    // can serve logs / output files from the runtime workdir override these.
+    // The service proxies through them; nothing is persisted in Gemma.
+    // -----------------------------------------------------------------------
+
+    /** Whether this scheduler can serve job logs via {@link #readLog}. */
+    default boolean supportsLog() {
+        return false;
+    }
+
+    /**
+     * Read an incremental slice of a job's log — the bytes {@code [offset, offset+limit)} decoded as
+     * text, plus the cursor to continue from. Enables {@code tail -f} without re-fetching (§3.5).
+     *
+     * @throws UnsupportedOperationException if {@link #supportsLog()} is false
+     */
+    default LogChunk readLog( SchedulerHandle handle, long offset, int limit ) throws PipelineSchedulerException {
+        throw new UnsupportedOperationException( "readLog not supported by scheduler " + kind() );
+    }
+
+    /** Whether this scheduler can serve output artifacts via {@link #readArtifact}. */
+    default boolean supportsArtifacts() {
+        return false;
+    }
+
+    /**
+     * Stream a whitelisted output file from the job's workdir (e.g. {@code web_summary.html}). The
+     * caller is responsible for rejecting unsafe / non-whitelisted names before calling.
+     *
+     * @throws UnsupportedOperationException if {@link #supportsArtifacts()} is false
+     */
+    default Artifact readArtifact( SchedulerHandle handle, String name ) throws PipelineSchedulerException {
+        throw new UnsupportedOperationException( "readArtifact not supported by scheduler " + kind() );
+    }
 }

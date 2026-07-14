@@ -128,6 +128,37 @@ class ScriptedMockSchedulerTest {
     }
 
     @Test
+    void readLog_servesScenarioLinesWithAdvancingCursor() {
+        Scenario s = push( Scenario.Outcome.SUCCEED, stage( 0, "completed", "{}" ) );
+        s.logLines.add( "line one" );
+        s.logLines.add( "line two" );
+        scheduler.setScenario( 7L, s );
+        SchedulerHandle h = scheduler.submit( req( 700L, 7L ) );
+
+        assertThat( scheduler.supportsLog() ).isTrue();
+        LogChunk chunk = scheduler.readLog( h, 0, 64 * 1024 );
+        assertThat( chunk.getText() ).contains( "line one" ).contains( "line two" );
+        assertThat( chunk.isEof() ).isTrue();
+        assertThat( chunk.getNextOffset() ).isGreaterThan( 0 );
+
+        // A read from the end is empty + eof.
+        LogChunk tail = scheduler.readLog( h, chunk.getNextOffset(), 64 * 1024 );
+        assertThat( tail.getText() ).isEmpty();
+        assertThat( tail.isEof() ).isTrue();
+    }
+
+    @Test
+    void readArtifact_servesCannedPayload() {
+        scheduler.setScenario( 8L, push( Scenario.Outcome.SUCCEED, stage( 0, "completed", "{}" ) ) );
+        SchedulerHandle h = scheduler.submit( req( 800L, 8L ) );
+        assertThat( scheduler.supportsArtifacts() ).isTrue();
+        Artifact a = scheduler.readArtifact( h, "web_summary.html" );
+        assertThat( a.getContent() ).isNotEmpty();
+        assertThat( a.getContentType() ).isEqualTo( "text/html" );
+        assertThat( a.getName() ).isEqualTo( "web_summary.html" );
+    }
+
+    @Test
     void afterPropertiesSet_throwsUnderProductionProfile() {
         Environment prod = mock( Environment.class );
         when( prod.acceptsProfiles( any( Profiles.class ) ) ).thenReturn( true );

@@ -27,6 +27,8 @@ import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
+import ubic.gemma.core.pipeline.Artifact;
+import ubic.gemma.core.pipeline.LogChunk;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.pipeline.BatchRollup;
@@ -39,6 +41,7 @@ import ubic.gemma.rest.util.BaseJerseyTest5;
 import ubic.gemma.rest.util.JacksonConfig;
 
 import jakarta.ws.rs.client.Entity;
+import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.util.List;
 import java.util.concurrent.Future;
@@ -46,6 +49,8 @@ import java.util.concurrent.Future;
 import static org.apache.commons.lang3.concurrent.ConcurrentUtils.constantFuture;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
@@ -196,6 +201,45 @@ public class AdminPipelineWebServiceRetryTest extends BaseJerseyTest5 {
                 .method( "PATCH", Entity.json( "{\"maxConcurrent\":4,\"note\":\"cap it\"}" ) ) )
                 .hasStatus( Response.Status.OK );
         verify( pipelineJobBatchService ).updateBatch( eq( 5L ), eq( 4 ), any() );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void jobLog_returnsChunk() {
+        when( pipelineJobBatchService.readJobLog( eq( 9L ), anyLong(), anyInt() ) )
+                .thenReturn( new LogChunk( "hello log", 9L, true ) );
+        assertThat( target( "/admin/pipeline/batches/5/jobs/9/log" ).queryParam( "offset", 0 ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.text", "hello log" )
+                .hasFieldOrPropertyWithValue( "data.eof", true );
+        verify( pipelineJobBatchService ).readJobLog( eq( 9L ), anyLong(), anyInt() );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void jobLog_nullIs404() {
+        when( pipelineJobBatchService.readJobLog( eq( 9L ), anyLong(), anyInt() ) ).thenReturn( null );
+        assertThat( target( "/admin/pipeline/batches/5/jobs/9/log" ).request().get() )
+                .hasStatus( Response.Status.NOT_FOUND );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void jobArtifact_streamsWithContentType() {
+        when( pipelineJobBatchService.readJobArtifact( 9L, "web_summary.html" ) )
+                .thenReturn( new Artifact( "web_summary.html", "text/html", "<html/>".getBytes() ) );
+        assertThat( target( "/admin/pipeline/batches/5/jobs/9/artifacts/web_summary.html" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.TEXT_HTML_TYPE );
+        verify( pipelineJobBatchService ).readJobArtifact( 9L, "web_summary.html" );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void jobArtifact_pathTraversalIs400() {
+        assertThat( target( "/admin/pipeline/batches/5/jobs/9/artifacts/x..y" ).request().get() )
+                .hasStatus( Response.Status.BAD_REQUEST );
     }
 
     @Test

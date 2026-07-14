@@ -26,6 +26,7 @@ import ubic.gemma.model.pipeline.JobState;
 import ubic.gemma.model.pipeline.SchedulerKind;
 import ubic.gemma.persistence.service.pipeline.PipelineJobBatchService;
 
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -166,6 +167,35 @@ public class ScriptedMockScheduler implements PipelineScheduler, MockSchedulerCo
         }
         j.cancelRequested = true;
         log.info( "ScriptedMockScheduler.cancel handle={}", handle.getId() );
+    }
+
+    @Override
+    public boolean supportsLog() {
+        return true;
+    }
+
+    @Override
+    public LogChunk readLog( SchedulerHandle handle, long offset, int limit ) {
+        MockJob j = jobs.get( handle.getId() );
+        String full = j != null ? String.join( "\n", effectiveScenario( j ).logLines ) : "";
+        byte[] bytes = full.getBytes( StandardCharsets.UTF_8 );
+        int from = ( int ) Math.min( Math.max( offset, 0 ), bytes.length );
+        int to = ( int ) Math.min( ( long ) from + Math.max( limit, 0 ), bytes.length );
+        String slice = new String( bytes, from, to - from, StandardCharsets.UTF_8 );
+        return new LogChunk( slice, to, to >= bytes.length );
+    }
+
+    @Override
+    public boolean supportsArtifacts() {
+        return true;
+    }
+
+    @Override
+    public Artifact readArtifact( SchedulerHandle handle, String name ) {
+        // The mock has no real workdir; serve a small canned payload so the proxy path is exercised.
+        String contentType = name.endsWith( ".html" ) ? "text/html" : "application/octet-stream";
+        byte[] content = ( "mock artifact: " + name + "\n" ).getBytes( StandardCharsets.UTF_8 );
+        return new Artifact( name, contentType, content );
     }
 
     // -----------------------------------------------------------------------
