@@ -93,6 +93,18 @@ public class PipelineJobBatch extends AbstractAuditable {
     @Column(name = "CLOSED_AT", columnDefinition = "DATETIME(3)")
     private Date closedAt;
 
+    /**
+     * Max jobs from this batch in flight (QUEUED/RUNNING) at once; the dispatcher tops up as jobs
+     * finish. {@code null} = unlimited (dispatch every job immediately). §3.4 #1.
+     */
+    @Nullable
+    @Column(name = "MAX_CONCURRENT", columnDefinition = "INT")
+    private Integer maxConcurrent;
+
+    /** When true, the dispatcher skips this batch — no new jobs are launched; in-flight jobs continue. */
+    @Column(name = "HELD", nullable = false, columnDefinition = "BOOLEAN")
+    private boolean held = false;
+
     // free-form curator note lives on AbstractDescribable.description (inherited)
     // human-readable title (e.g. "RNA-seq batch of 100 EEs 2026-05-24") lives on .name
 

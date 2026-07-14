@@ -54,6 +54,14 @@ public class PipelineJobBatchServiceImpl implements PipelineJobBatchService {
             JobState.PENDING, JobState.QUEUED, JobState.RUNNING, JobState.CANCELLING );
 
     /**
+     * Dispatched-but-not-terminal states — what counts against a batch's {@code maxConcurrent}
+     * budget (§3.4 #1). Deliberately excludes {@code PENDING}: a pending job is created but not yet
+     * launched (awaiting budget), so counting it would deadlock the throttle.
+     */
+    private static final EnumSet<JobState> IN_FLIGHT_STATES = EnumSet.of(
+            JobState.QUEUED, JobState.RUNNING, JobState.CANCELLING );
+
+    /**
      * Event kinds that reflect ephemeral live operational state (progress %, reconciler
      * heartbeats). Under the delegated model (§3.1) the orchestrator owns this, so Gemma
      * records it only in the overwrite-in-place snapshot columns, never as an append-only
@@ -87,6 +95,14 @@ public class PipelineJobBatchServiceImpl implements PipelineJobBatchService {
     @Transactional
     public PipelineJobBatch submit( String pipeline, Collection<ExpressionExperiment> experiments,
             Contact submittedBy, @Nullable String paramsJson, @Nullable String note ) {
+        return submit( pipeline, experiments, submittedBy, paramsJson, note, null );
+    }
+
+    @Override
+    @Transactional
+    public PipelineJobBatch submit( String pipeline, Collection<ExpressionExperiment> experiments,
+            Contact submittedBy, @Nullable String paramsJson, @Nullable String note,
+            @Nullable Integer maxConcurrent ) {
         if ( experiments.isEmpty() ) {
             throw new IllegalArgumentException( "submit requires at least one experiment" );
         }
@@ -96,6 +112,9 @@ public class PipelineJobBatchServiceImpl implements PipelineJobBatchService {
         if ( scheduler == null ) {
             throw new IllegalStateException( "no PipelineScheduler bean configured; activate a scheduler-* Spring profile" );
         }
+        if ( maxConcurrent != null && maxConcurrent < 1 ) {
+            throw new IllegalArgumentException( "maxConcurrent must be >= 1 (or null for unlimited)" );
+        }
         PipelineJobBatch batch = new PipelineJobBatch();
         batch.setName( buildBatchName( pipeline, experiments.size() ) );
         batch.setDescription( note );
@@ -103,25 +122,36 @@ public class PipelineJobBatchServiceImpl implements PipelineJobBatchService {
         batch.setSubmittedBy( submittedBy );
         batch.setSubmittedAt( new Date() );
         batch.setParamsJson( paramsJson );
+        batch.setMaxConcurrent( maxConcurrent );
         batch.setState( PipelineJobBatch.BatchState.OPEN );
-        // Create children before persisting the batch so the cascade picks them up.
+        // Create children before persisting the batch so the cascade picks them up. Set per-job
+        // params now so throttled-out PENDING jobs carry their params when the dispatcher launches
+        // them later.
         for ( ExpressionExperiment ee : experiments ) {
             PipelineJob job = new PipelineJob();
             job.setBatch( batch );
             job.setExperiment( ee );
             job.setState( JobState.PENDING );
+            job.setParamsJson( paramsJson );
             batch.getJobs().add( job );
         }
         batch = batchDao.save( batch );
-        // Dispatch each child. The scheduler is opaque; we just need its handle.
+        // Dispatch up to the concurrency budget; the rest stay PENDING for the dispatcher to top up.
+        int budget = maxConcurrent != null ? maxConcurrent : Integer.MAX_VALUE;
+        int dispatched = 0;
         for ( PipelineJob job : batch.getJobs() ) {
+            if ( dispatched >= budget ) {
+                break;
+            }
             dispatchOne( job, pipeline, paramsJson );
+            dispatched++;
         }
         // Typed AuditEvent on the batch's own trail (the @Audited annotation
         // can't fire on submit() because the auditable doesn't exist as an
         // argument — it's the return value).
         auditTrailService.addUpdateEvent( batch, PipelineBatchSubmittedEvent.class,
-                "Submitted " + experiments.size() + " jobs to pipeline '" + pipeline + "'" );
+                "Submitted " + experiments.size() + " jobs to pipeline '" + pipeline + "'"
+                        + ( maxConcurrent != null ? " (maxConcurrent=" + maxConcurrent + ")" : "" ) );
         return batch;
     }
 
@@ -347,9 +377,107 @@ public class PipelineJobBatchServiceImpl implements PipelineJobBatchService {
         return computeRollup( batchId );
     }
 
+    @Override
+    @Transactional
+    public int dispatchPending( Long batchId ) {
+        if ( scheduler == null ) {
+            throw new IllegalStateException( "no PipelineScheduler bean configured; activate a scheduler-* Spring profile" );
+        }
+        PipelineJobBatch batch = batchDao.load( batchId );
+        if ( batch == null ) {
+            throw new IllegalArgumentException( "no batch " + batchId );
+        }
+        if ( batch.getState() != PipelineJobBatch.BatchState.OPEN || batch.isHeld() ) {
+            return 0;
+        }
+        List<PipelineJob> current = currentAttempts( batchId );
+        int inFlight = 0;
+        List<PipelineJob> pending = new ArrayList<>();
+        for ( PipelineJob job : current ) {
+            if ( IN_FLIGHT_STATES.contains( job.getState() ) ) {
+                inFlight++;
+            } else if ( job.getState() == JobState.PENDING ) {
+                pending.add( job );
+            }
+        }
+        int budget = batch.getMaxConcurrent() != null
+                ? Math.max( 0, batch.getMaxConcurrent() - inFlight )
+                : Integer.MAX_VALUE;
+        int dispatched = 0;
+        for ( PipelineJob job : pending ) {
+            if ( dispatched >= budget ) {
+                break;
+            }
+            dispatchOne( job, batch.getPipeline(), job.getParamsJson() );
+            dispatched++;
+        }
+        if ( dispatched > 0 ) {
+            log.debug( "dispatchPending(batch {}): dispatched {} (inFlight was {}, cap {})",
+                    batchId, dispatched, inFlight, batch.getMaxConcurrent() );
+        }
+        return dispatched;
+    }
+
+    @Override
+    @Transactional
+    public int dispatchPending() {
+        int total = 0;
+        for ( PipelineJobBatch batch : batchDao.findDispatchable() ) {
+            total += dispatchPending( batch.getId() );
+        }
+        return total;
+    }
+
+    @Override
+    @Transactional
+    public void holdBatch( Long batchId ) {
+        PipelineJobBatch batch = requireBatch( batchId );
+        batch.setHeld( true );
+        batchDao.update( batch );
+    }
+
+    @Override
+    @Transactional
+    public void resumeBatch( Long batchId ) {
+        PipelineJobBatch batch = requireBatch( batchId );
+        batch.setHeld( false );
+        batchDao.update( batch );
+        dispatchPending( batchId );
+    }
+
+    @Override
+    @Transactional
+    public PipelineJobBatch updateBatch( Long batchId, @Nullable Integer maxConcurrent, @Nullable String note ) {
+        if ( maxConcurrent != null && maxConcurrent < 1 ) {
+            throw new IllegalArgumentException( "maxConcurrent must be >= 1 (or null to leave unchanged)" );
+        }
+        PipelineJobBatch batch = requireBatch( batchId );
+        boolean capChanged = false;
+        if ( maxConcurrent != null ) {
+            capChanged = !maxConcurrent.equals( batch.getMaxConcurrent() );
+            batch.setMaxConcurrent( maxConcurrent );
+        }
+        if ( note != null ) {
+            batch.setDescription( note );
+        }
+        batchDao.update( batch );
+        if ( capChanged ) {
+            dispatchPending( batchId );
+        }
+        return batchDao.load( batchId );
+    }
+
     // -----------------------------------------------------------------------
     // internals
     // -----------------------------------------------------------------------
+
+    private PipelineJobBatch requireBatch( Long batchId ) {
+        PipelineJobBatch batch = batchDao.load( batchId );
+        if ( batch == null ) {
+            throw new IllegalArgumentException( "no batch " + batchId );
+        }
+        return batch;
+    }
 
     /** Current attempts of a batch: the rows not yet superseded by a retry. */
     private List<PipelineJob> currentAttempts( Long batchId ) {

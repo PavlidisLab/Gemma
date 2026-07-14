@@ -27,7 +27,10 @@ import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
+import ubic.gemma.model.common.auditAndSecurity.User;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.pipeline.BatchRollup;
+import ubic.gemma.model.pipeline.PipelineJobBatch;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.pipeline.PipelineJobBatchService;
 import ubic.gemma.persistence.service.pipeline.RetrySpec;
@@ -37,10 +40,12 @@ import ubic.gemma.rest.util.JacksonConfig;
 
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.core.Response;
+import java.util.List;
 import java.util.concurrent.Future;
 
 import static org.apache.commons.lang3.concurrent.ConcurrentUtils.constantFuture;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
@@ -112,9 +117,15 @@ public class AdminPipelineWebServiceRetryTest extends BaseJerseyTest5 {
     @Autowired
     private PipelineJobBatchService pipelineJobBatchService;
 
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
+
+    @Autowired
+    private UserManager userManager;
+
     @AfterEach
     public void resetMocks() {
-        reset( pipelineJobBatchService );
+        reset( pipelineJobBatchService, expressionExperimentService, userManager );
     }
 
     private static BatchRollup rollup( int total, int failed ) {
@@ -157,5 +168,46 @@ public class AdminPipelineWebServiceRetryTest extends BaseJerseyTest5 {
                 .post( Entity.json( "{\"onlyRetryable\":false}" ) ) )
                 .hasStatus( Response.Status.OK );
         verify( pipelineJobBatchService ).retryJob( eq( 7L ), any( RetrySpec.class ) );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void hold_delegatesToService() {
+        when( pipelineJobBatchService.get( 5L ) ).thenReturn( new PipelineJobBatch() );
+        assertThat( target( "/admin/pipeline/batches/5/hold" ).request().post( Entity.json( "" ) ) )
+                .hasStatus( Response.Status.OK );
+        verify( pipelineJobBatchService ).holdBatch( 5L );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void resume_delegatesToService() {
+        when( pipelineJobBatchService.get( 5L ) ).thenReturn( new PipelineJobBatch() );
+        assertThat( target( "/admin/pipeline/batches/5/resume" ).request().post( Entity.json( "" ) ) )
+                .hasStatus( Response.Status.OK );
+        verify( pipelineJobBatchService ).resumeBatch( 5L );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void patch_setsMaxConcurrent() {
+        when( pipelineJobBatchService.updateBatch( eq( 5L ), eq( 4 ), any() ) ).thenReturn( new PipelineJobBatch() );
+        assertThat( target( "/admin/pipeline/batches/5" ).request()
+                .method( "PATCH", Entity.json( "{\"maxConcurrent\":4,\"note\":\"cap it\"}" ) ) )
+                .hasStatus( Response.Status.OK );
+        verify( pipelineJobBatchService ).updateBatch( eq( 5L ), eq( 4 ), any() );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void submit_passesMaxConcurrentThrough() {
+        when( userManager.getCurrentUser() ).thenReturn( mock( User.class ) );
+        when( expressionExperimentService.load( anyCollection() ) ).thenReturn( List.of( mock( ExpressionExperiment.class ) ) );
+        when( pipelineJobBatchService.submit( eq( "test-pipeline" ), any(), any(), any(), any(), eq( 4 ) ) )
+                .thenReturn( new PipelineJobBatch() );
+        assertThat( target( "/admin/pipeline/batches" ).request()
+                .post( Entity.json( "{\"pipeline\":\"test-pipeline\",\"experimentIds\":[1],\"maxConcurrent\":4}" ) ) )
+                .hasStatus( Response.Status.OK );
+        verify( pipelineJobBatchService ).submit( eq( "test-pipeline" ), any(), any(), any(), any(), eq( 4 ) );
     }
 }

@@ -46,6 +46,16 @@ public interface PipelineJobBatchService {
     PipelineJobBatch submit( String pipeline, Collection<ExpressionExperiment> experiments,
             Contact submittedBy, @Nullable String paramsJson, @Nullable String note );
 
+    /**
+     * As {@link #submit(String, Collection, Contact, String, String)} but caps how many jobs are
+     * dispatched at once. With {@code maxConcurrent} set, only that many jobs go to the scheduler up
+     * front; the rest stay {@code PENDING} and the dispatcher tops up as jobs finish (§3.4 #1).
+     * {@code maxConcurrent == null} dispatches every job immediately (the un-throttled behaviour).
+     */
+    PipelineJobBatch submit( String pipeline, Collection<ExpressionExperiment> experiments,
+            Contact submittedBy, @Nullable String paramsJson, @Nullable String note,
+            @Nullable Integer maxConcurrent );
+
     PipelineJobBatch get( Long batchId );
 
     List<PipelineJobBatch> findByOwner( Long contactId, @Nullable PipelineJobBatch.BatchState state, int limit );
@@ -111,4 +121,28 @@ public interface PipelineJobBatchService {
      * attempt N+1 and dispatches it. Idempotent on a live successor. Returns the batch rollup.
      */
     BatchRollup retryJob( Long jobId, RetrySpec spec );
+
+    /**
+     * Dispatch {@code PENDING} jobs of one batch up to its {@code maxConcurrent} budget. No-op if the
+     * batch is not {@code OPEN} or is {@code held}. Returns how many were dispatched.
+     */
+    int dispatchPending( Long batchId );
+
+    /**
+     * Top-up pass across all dispatchable batches (called by the scheduled dispatcher). Returns the
+     * total dispatched.
+     */
+    int dispatchPending();
+
+    /** Pause dispatch for a batch — no new jobs launched; in-flight jobs continue (§3.4 #1). */
+    void holdBatch( Long batchId );
+
+    /** Clear the hold and immediately top up within the concurrency budget. */
+    void resumeBatch( Long batchId );
+
+    /**
+     * Update a batch's dispatch config. Either argument may be {@code null} to leave it unchanged.
+     * If the concurrency cap is raised (or cleared), immediately tops up. Returns the batch.
+     */
+    PipelineJobBatch updateBatch( Long batchId, @Nullable Integer maxConcurrent, @Nullable String note );
 }

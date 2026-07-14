@@ -28,4 +28,10 @@ public interface PipelineJobBatchDao extends BaseDao<PipelineJobBatch> {
      * @param limit     max rows; {@code <= 0} treated as no limit
      */
     List<PipelineJobBatch> findByOwner( Long contactId, @Nullable PipelineJobBatch.BatchState state, int limit );
+
+    /**
+     * Batches the dispatcher should top up: {@code OPEN}, not {@code held}, and with at least one
+     * {@code PENDING} current attempt awaiting a dispatch budget (§3.4 #1).
+     */
+    List<PipelineJobBatch> findDispatchable();
 }

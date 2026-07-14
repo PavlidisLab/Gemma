@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.NotFoundException;
+import jakarta.ws.rs.PATCH;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
@@ -120,7 +121,8 @@ public class AdminPipelineWebService {
         if ( ees.isEmpty() ) {
             throw new BadRequestException( "no resolvable experiments in experimentIds" );
         }
-        PipelineJobBatch batch = pipelineJobBatchService.submit( req.pipeline, ees, curator, req.paramsJson, req.note );
+        PipelineJobBatch batch = pipelineJobBatchService.submit( req.pipeline, ees, curator,
+                req.paramsJson, req.note, req.maxConcurrent );
         return respond( batch );
     }
 
@@ -221,6 +223,39 @@ public class AdminPipelineWebService {
         return respond( pipelineJobBatchService.retryJob( jobId, spec != null ? spec : new RetrySpec() ) );
     }
 
+    @POST
+    @Path("/batches/{batchId}/hold")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Pause dispatch for the batch (in-flight jobs keep running)")
+    public ResponseDataObject<PipelineJobBatch> holdBatch( @PathParam("batchId") Long batchId ) {
+        pipelineJobBatchService.holdBatch( batchId );
+        return respond( pipelineJobBatchService.get( batchId ) );
+    }
+
+    @POST
+    @Path("/batches/{batchId}/resume")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Clear the hold and top up within the concurrency budget")
+    public ResponseDataObject<PipelineJobBatch> resumeBatch( @PathParam("batchId") Long batchId ) {
+        pipelineJobBatchService.resumeBatch( batchId );
+        return respond( pipelineJobBatchService.get( batchId ) );
+    }
+
+    @PATCH
+    @Path("/batches/{batchId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Update a batch's dispatch config (maxConcurrent, note)")
+    public ResponseDataObject<PipelineJobBatch> updateBatch( @PathParam("batchId") Long batchId,
+            UpdateBatchRequest req ) {
+        if ( req == null ) {
+            req = new UpdateBatchRequest();
+        }
+        return respond( pipelineJobBatchService.updateBatch( batchId, req.maxConcurrent, req.note ) );
+    }
+
     // -----------------------------------------------------------------------
     // request body
     // -----------------------------------------------------------------------
@@ -229,6 +264,12 @@ public class AdminPipelineWebService {
         public String pipeline;
         public List<Long> experimentIds = new ArrayList<>();
         public String paramsJson;
+        public String note;
+        public Integer maxConcurrent;
+    }
+
+    public static class UpdateBatchRequest {
+        public Integer maxConcurrent;
         public String note;
     }
 }
