@@ -18,6 +18,7 @@
  */
 package ubic.gemma.core.loader.expression.geo.service;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -81,6 +82,9 @@ public class GeoBrowserServiceTest extends BaseSpringContextTest5 {
     }
 
     @Test
+    @Disabled("NCBI is blocking the GEO browse endpoint (302 -> misuse.ncbi.nlm.nih.gov, reason=Sec), which the CSV "
+            + "parser mis-reads as data and fails with an NPE. Re-enable once GEO browse access is restored / "
+            + "requests are authenticated with an NCBI API key.")
     @Tag("slow")
     @NetworkAvailable(url = "https://www.ncbi.nlm.nih.gov/geo/browse/")
     public final void testGetRecentRecords() throws Exception {

@@ -915,21 +915,25 @@ public class GeoSingleCellDetectorTest extends BaseTest5 {
     @Tag("integration")
     @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     public void testDownloadSingleCellDataInCellXGene() throws IOException, NoSingleCellDataFoundException {
+        String collectionId = "31937775-0602-4e52-a799-b6acdd2bac2e";
         GeoSeries series = readSeriesFromGeo( "GSE207848" );
-        assertThat( detector.hasSingleCellDataInCellXGene( series, "31937775-0602-4e52-a799-b6acdd2bac2e" ) ).isTrue();
-        assertThat( detector.downloadSingleCellDataInCellXGene( series, "31937775-0602-4e52-a799-b6acdd2bac2e" ) )
+        assertThat( detector.hasSingleCellDataInCellXGene( series, collectionId ) ).isTrue();
+        // Resolve the current dataset id from the collection rather than hard-coding one that CELLxGENE rotates
+        // whenever the dataset is re-published.
+        String datasetId = detector.getDatasetMetadataFromCellXGene( series, collectionId ).getId();
+        assertThat( detector.downloadSingleCellDataInCellXGene( series, collectionId ) )
                 .isSymbolicLink()
                 .hasFileName( "GSE207848.h5ad" )
                 .satisfies( path -> {
                     Path finalDest = Files.readSymbolicLink( path );
-                    assertThat( finalDest ).hasFileName( "03390dd0-fe16-4cef-b430-ab451e85c448.h5ad" );
+                    assertThat( finalDest ).hasFileName( datasetId + ".h5ad" );
                 } );
-        assertThat( detector.downloadSingleCellDataInCellXGene( series, "31937775-0602-4e52-a799-b6acdd2bac2e", "03390dd0-fe16-4cef-b430-ab451e85c448" ) )
+        assertThat( detector.downloadSingleCellDataInCellXGene( series, collectionId, datasetId ) )
                 .isSymbolicLink()
                 .hasFileName( "GSE207848.h5ad" )
                 .satisfies( path -> {
                     Path finalDest = Files.readSymbolicLink( path );
-                    assertThat( finalDest ).hasFileName( "03390dd0-fe16-4cef-b430-ab451e85c448.h5ad" );
+                    assertThat( finalDest ).hasFileName( datasetId + ".h5ad" );
                 } );
     }
 
@@ -940,14 +944,17 @@ public class GeoSingleCellDetectorTest extends BaseTest5 {
     public void testDownloadSingleCellDataInCellXGeneWithoutACollectionId() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE207848" );
         assertThat( detector.hasSingleCellDataInCellXGene( series ) ).isTrue();
+        // The CELLxGENE dataset id is resolved from the GEO series (CELLxGENE links its collections back to the GEO
+        // accession), so derive the expected symlink target from it rather than hard-coding an id that CELLxGENE
+        // rotates whenever the dataset is re-published.
+        String datasetId = detector.getDatasetMetadataFromCellXGene( series ).getId();
         assertThat( detector.downloadSingleCellDataInCellXGene( series ) )
                 .isSymbolicLink()
                 .hasFileName( "GSE207848.h5ad" )
                 .satisfies( path -> {
                     Path finalDest = Files.readSymbolicLink( path );
-                    assertThat( finalDest ).hasFileName( "03390dd0-fe16-4cef-b430-ab451e85c448.h5ad" );
+                    assertThat( finalDest ).hasFileName( datasetId + ".h5ad" );
                 } );
-        detector.getDatasetMetadataFromCellXGene( series );
     }
 
     @Test
