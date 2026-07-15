@@ -12,28 +12,29 @@ Ground rules for adding features and tests in this repo. Project-specific; suppl
   (Older corretto-21 paths in earlier commits / sub-agent briefs are stale — use temurin-25 going forward.)
 - **`mvn verify` canonical invocation** (full IT pass against MySQL gemdtest):
   ```bash
-  mvn -pl gemma-core verify \
-      -Dgemma.testdb.password=$(security find-generic-password -s mysql-root -w) \
-      -Dgemma.hibernate.hbm2ddl.auto=create
+  mvn -pl gemma-core verify -Dgemma.hibernate.hbm2ddl.auto=create
   ```
+  The gemdtest password defaults to `1234` (`default.properties`), which matches the `testdb` service in `docker-compose.yml` — no override needed. Pass `-Dgemma.testdb.password=…` only if your local MySQL's `gemmatest` account uses a different password (it's a throwaway local-dev credential, not a secret).
 - **gemdtest auto-reset (default path)** — `CreateDatabasePopulator` runs at test context startup (default `gemma.testdb.initialize=true`) and drops+recreates `gemdtest` before Flyway + Hibernate rebuild it. This requires the test user (`gemmatest`) to hold the server-level CREATE privilege on top of the database-scoped grant; one-time fix:
   ```sql
   -- Run once as root; lets `gemmatest` recreate gemdtest after the populator drops it
   GRANT CREATE ON *.* TO 'gemmatest'@'localhost';
   FLUSH PRIVILEGES;
   ```
-  Without this grant, `mvn verify` fails on the CREATE DATABASE step inside the populator and you have to drop/recreate manually via root (the legacy procedure below).
+  Without this grant, `mvn verify` fails on the CREATE DATABASE step inside the populator and you have to drop/recreate manually (the procedure below).
 - **Pre-Spring schema reset via `-Dtestdb.reset` (Flyway plugin)** — opt-in profile `testdb-reset` (parent `pom.xml`) binds `flyway-maven-plugin:clean` to `pre-integration-test`, so the schema is dropped BEFORE Spring boots. Use this when you want to clear the slate before the in-JVM populator runs (e.g. investigating wedged Flyway history rows or a broken Hibernate snapshot the populator can't get past). Requires `gemmatest` to hold `DROP ON gemdtest.*` (already covered by the standard `GRANT ALL PRIVILEGES ON gemdtest.*` grant). Activation is gated on the `testdb.reset` system property so default `mvn verify` is unaffected:
   ```bash
   mvn -pl gemma-core verify -Dtestdb.reset \
-      -Dgemma.testdb.password=$(security find-generic-password -s mysql-root -w) \
+      -Dgemma.testdb.password=1234 \
       -Dgemma.hibernate.hbm2ddl.auto=create
   ```
-- **Manual schema reset (last-ditch fallback)** — if neither the populator nor the Flyway plugin can run (e.g. test-user grants missing, or the DB is wedged in a state Flyway can't reconcile), drop+recreate `gemdtest` from a root session. The sandbox blocks credentialed destructive DB ops, so the user runs it via `!` in the prompt:
+  (`1234` is the `docker-compose.yml` testdb password. Unlike the canonical run above, the Flyway plugin has no password default in the pom, so this leg must pass it explicitly.)
+- **Manual schema reset (last-ditch fallback)** — if neither the populator nor the Flyway plugin can run (e.g. the DB is wedged in a state Flyway can't reconcile), drop+recreate `gemdtest` as `gemmatest`, which can DROP/CREATE the database given the `CREATE ON *.*` + `GRANT ALL ON gemdtest.*` grants above. The sandbox blocks credentialed destructive DB ops, so the user runs it via `!` in the prompt:
   ```bash
-  mysql -h 127.0.0.1 -uroot -p$(security find-generic-password -s mysql-root -w) \
+  mysql -h 127.0.0.1 -P 3307 -ugemmatest -p1234 \
       -e 'DROP DATABASE IF EXISTS gemdtest; CREATE DATABASE gemdtest;'
   ```
+  (`-P 3307` / `-p1234` are the `docker-compose.yml` testdb coordinates. The container's root password is random — `MYSQL_RANDOM_ROOT_PASSWORD=yes` — so if the `gemmatest` grants themselves are missing, fix them through the container instead: `docker compose exec testdb mysql -uroot -p"$(docker compose logs testdb | grep 'GENERATED ROOT PASSWORD')"`, or just recreate the container.)
 - **Compile-clean is the bar for sub-agents.** `mvn -pl gemma-core compile test-compile -q` must pass after any sub-agent edit. Full `mvn verify` is reserved for orchestrator-led runs; it needs gemdtest creds and serializes against other parallel runs.
 
 ## Parallel work (multi-agent renovations)

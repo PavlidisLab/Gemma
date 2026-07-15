@@ -35,6 +35,6 @@ public class BaseCodeConfigurerTest {
         bcc.setPropertySources( ps );
         bcc.postProcessBeanFactory( mock() );
         // as of 1.32, this no-longer works
-        assertEquals( "http://purl.obolibrary.org/obo/chebi.owl", Configuration.getString( "url.chebiOntology" ) );
+        assertEquals( "http://purl.obolibrary.org/obo/chebi/chebi_lite.owl", Configuration.getString( "url.chebiOntology" ) );
     }
 }

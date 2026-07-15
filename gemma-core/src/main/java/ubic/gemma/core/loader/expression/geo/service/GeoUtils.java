@@ -9,7 +9,6 @@ public class GeoUtils {
 
     private static final String GEO_QUERY_URL = "https://www.ncbi.nlm.nih.gov/geo/query";
     private static final String GEO_DOWNLOAD_URL = "https://www.ncbi.nlm.nih.gov/geo/download";
-    private static final String GEO_BROWSE_URL = "https://www.ncbi.nlm.nih.gov/geo/browse/";
     private static final String GEO_FTP_VIA_HTTPS_BASE_URL = "https://ftp.ncbi.nlm.nih.gov/geo";
     private static final String GEO_FTP_BASE_URL = "ftp://ftp.ncbi.nlm.nih.gov/geo";
 
@@ -116,39 +115,6 @@ public class GeoUtils {
             return baseUrl + "/series/" + formShortenedFtpDirName( geoAccession ) + "/" + geoAccession + "/" + formatDir + "/" + geoAccession + "_family" + ext;
         } else {
             throw new UnsupportedOperationException( "Unsupported source for GEO data: " + source + "." );
-        }
-    }
-
-    public static URL getUrlForBrowsing( GeoRecordType recordType, int start, int pageSize, GeoFormat format ) {
-        String recordTypeS;
-        switch ( recordType ) {
-            case SERIES:
-                recordTypeS = "series";
-                break;
-            case SAMPLE:
-                recordTypeS = "samples";
-                break;
-            case PLATFORM:
-                recordTypeS = "platforms";
-                break;
-            default:
-                throw new UnsupportedOperationException( "Unsupported record type for browsing: " + recordType + "." );
-        }
-        String formatS;
-        switch ( format ) {
-            case TSV:
-                formatS = "tsv";
-                break;
-            case CSV:
-                formatS = "csv";
-                break;
-            default:
-                throw new UnsupportedOperationException( "Unsupported format for browsing: " + format + "." );
-        }
-        try {
-            return new URL( GEO_BROWSE_URL + "?view=" + recordTypeS + "&zsort=date&mode=" + formatS + "&page=" + start + "&display=" + pageSize );
-        } catch ( MalformedURLException e ) {
-            throw new RuntimeException( e );
         }
     }
 

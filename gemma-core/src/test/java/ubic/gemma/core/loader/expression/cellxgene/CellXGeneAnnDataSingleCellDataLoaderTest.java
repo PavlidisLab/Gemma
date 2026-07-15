@@ -1,19 +1,7 @@
 package ubic.gemma.core.loader.expression.cellxgene;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-import org.springframework.test.context.ContextConfiguration;
-import ubic.gemma.core.config.SettingsConfig;
-import ubic.gemma.core.context.TestComponent;
-import ubic.gemma.core.loader.expression.cellxgene.model.DatasetAsset;
-import ubic.gemma.core.loader.expression.cellxgene.model.DatasetMetadata;
-import ubic.gemma.core.util.SimpleRetryPolicy;
-import ubic.gemma.core.util.test.BaseTest5;
-import ubic.gemma.core.util.test.NetworkAvailable;
-import ubic.gemma.core.util.test.NetworkAvailableExtension;
+import org.springframework.core.io.ClassPathResource;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 
@@ -24,33 +12,26 @@ import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@ContextConfiguration
-@ExtendWith(NetworkAvailableExtension.class)
-public class CellXGeneAnnDataSingleCellDataLoaderTest extends BaseTest5 {
+public class CellXGeneAnnDataSingleCellDataLoaderTest {
 
-    @Configuration
-    @TestComponent
-    @Import(SettingsConfig.class)
-    static class CC {
-
-    }
-
-    @Value("${cellxgene.local.singleCellData.basepath}")
-    private Path cellXGeneDownloadPath;
-
+    /**
+     * Trimmed fixture derived from the CELLxGENE "HypoMap" atlas (a unified
+     * single-cell atlas of the murine hypothalamus), which contains a "pooled"
+     * donor alongside the individual SRR donors. See
+     * make_cellxgene_pooled_fixture.py next to the fixture for how it was
+     * produced.
+     * <p>
+     * This test originally downloaded dataset d3be7423-d664-4913-89a9-a506cae4c28f
+     * live from CELLxGENE, but that dataset id was removed from the index when
+     * the atlas was re-published. As of this writing HypoMap lives under:
+     * <ul>
+     *     <li>collection id: d86517f0-fa7e-4266-b82e-a521350d6d36</li>
+     *     <li>dataset id: 87b802cc-73ca-422a-8cc7-6d6d38449b3f</li>
+     * </ul>
+     */
     @Test
-    @NetworkAvailable
     public void testKeepPooledSample() throws IOException {
-        CellXGeneFetcher fetcher = new CellXGeneFetcher( new SimpleRetryPolicy( 3, 1000, 1.5 ), cellXGeneDownloadPath );
-
-        DatasetMetadata dm = fetcher.fetchDatasetMetadata( "d3be7423-d664-4913-89a9-a506cae4c28f" );
-        String assetId = dm.getDatasetAssets().stream()
-                .filter( CellXGeneUtils::isAnnData )
-                .map( DatasetAsset::getId )
-                .findFirst()
-                .orElseThrow( () -> new RuntimeException( "Could not find a H5AD asset for CELLxGENE dataset d3be7423-d664-4913-89a9-a506cae4c28f." ) );
-
-        Path dataPath = fetcher.downloadDatasetAsset( dm.getId(), assetId, FileType.H5AD );
+        Path dataPath = new ClassPathResource( "/data/loader/expression/singleCell/cellxgene-pooled-sample.h5ad" ).getFile().toPath();
 
         try ( CellXGeneAnnDataSingleCellDataLoader loader = new CellXGeneAnnDataSingleCellDataLoader( dataPath, true, false ) ) {
             assertThat( loader.getSampleNames() ).containsExactly(
