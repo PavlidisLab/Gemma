@@ -56,16 +56,6 @@ public class GeoBrowserTest {
 
     @Test
     @Tag("slow")
-    @NetworkAvailable(url = "https://www.ncbi.nlm.nih.gov/geo/browse/")
-    public void testGetRecentGeoRecords() throws Exception {
-        Collection<GeoRecord> res = b.getRecentGeoRecords( GeoRecordType.SERIES, 10, 10 );
-        assertThat( res )
-                .isNotEmpty()
-                .hasSizeLessThanOrEqualTo( 10 );
-    }
-
-    @Test
-    @Tag("slow")
     public void testGetDetailedGeoRecord() throws IOException {
         b.getGeoRecord( GeoRecordType.SERIES, "GSE1", GeoRetrieveConfig.DETAILED );
         b.getGeoRecord( GeoRecordType.SERIES, "GSE999", GeoRetrieveConfig.DETAILED );

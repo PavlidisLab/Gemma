@@ -348,18 +348,33 @@ public class UserManagerImpl implements UserManager, UserDetailsPasswordService 
         if ( u == null ) {
             throw new IllegalArgumentException( String.format( "Unknown user with username %s.", userDetails.getUsername() ) );
         }
-        Set<UserGroup> newGroups = new HashSet<>();
+        // Resolve and validate the desired groups up-front so we fail before mutating anything.
+        Set<UserGroup> desiredGroups = new HashSet<>();
+        Set<String> desiredNames = new HashSet<>();
         for ( String groupName : groups ) {
             UserGroup group = userService.findGroupByName( groupName );
             if ( group == null ) {
                 throw new IllegalArgumentException( String.format( "Unknown group with name %s.", groupName ) );
             }
-            newGroups.add( group );
+            desiredGroups.add( group );
+            desiredNames.add( groupName );
         }
-        u.getGroups().clear();
-        u.getGroups().addAll( newGroups );
-        System.out.println( newGroups );
-        userService.update( u );
+
+        // Reconcile against the user's current memberships by mutating the owning side of the
+        // association (UserGroup.groupMembers) through the service. Assigning to User.getGroups()
+        // does not persist: it is the inverse side (mappedBy = "groupMembers").
+        Set<String> currentNames = new HashSet<>();
+        for ( UserGroup current : new HashSet<>( u.getGroups() ) ) {
+            currentNames.add( current.getName() );
+            if ( !desiredNames.contains( current.getName() ) ) {
+                userService.removeUserFromGroup( u, current );
+            }
+        }
+        for ( UserGroup desired : desiredGroups ) {
+            if ( !currentNames.contains( desired.getName() ) ) {
+                userService.addUserToGroup( desired, u );
+            }
+        }
     }
 
     @Override

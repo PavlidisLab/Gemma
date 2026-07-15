@@ -54,17 +54,6 @@ public interface GeoBrowser {
     Collection<GeoRecord> getAllGeoRecords( GeoRecordType recordType, @Nullable Collection<String> allowedTaxa, int maxRecords ) throws IOException;
 
     /**
-     * Retrieve recent GEO records from <a href="https://www.ncbi.nlm.nih.gov/geo/browse/">GEO browser</a>.
-     * <p>
-     * The retrieved information is pretty minimal. Use {@link #searchGeoRecords(GeoRecordType, String, GeoSearchField, Collection, Collection, Collection)}
-     * for detailed records.
-     * @param  start    start page
-     * @param  pageSize page size
-     * @return a slice of GEO records
-     */
-    Slice<GeoRecord> getRecentGeoRecords( GeoRecordType recordType, int start, int pageSize ) throws IOException;
-
-    /**
      * Search and retrieve GEO records.
      * @see #searchGeoRecords(GeoRecordType, String, GeoSearchField, Collection, Collection, Collection)
      * @see #retrieveGeoRecords(GeoQuery, int, int, GeoRetrieveConfig)
@@ -76,7 +65,7 @@ public interface GeoBrowser {
     /**
      * Search GEO records.
      * <p>
-     * Provides more details than {@link #getRecentGeoRecords(GeoRecordType, int, int)}. Performs an E-utilities query
+     * Performs an E-utilities query
      * of the GEO database with the given search terms (search terms can be omitted). Returns at most pageSize records.
      * <p>
      * Note that the search is reversed in time. You get the most recent records first.

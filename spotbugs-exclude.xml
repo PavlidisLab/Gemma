@@ -137,15 +137,14 @@
 
     <!--
         OBJECT_DESERIALIZATION: every ObjectInputStream.readObject() call in
-        these 5 classes installs an ObjectInputFilter via the canonical
+        these classes installs an ObjectInputFilter via the canonical
         allow-list (`ubic.gemma.**;java.util.**;java.lang.**;...;!*`) BEFORE
         readObject() — see the GEO_DESERIALIZATION_FILTER / REPORT_DESERIALIZATION_FILTER /
         GENE2CS_DESERIALIZATION_FILTER constants in each class. SpotBugs flags
         any readObject() regardless of filter; this is a true false positive
-        once the filter is in place. The 5 sites:
+        once the filter is in place. The 4 sites:
           - ArrayDesignReportServiceImpl x2
           - WhatsNewServiceImpl
-          - GeoBrowserServiceImpl
           - TableMaintenanceUtilImpl
     -->
     <Match>
@@ -154,10 +153,6 @@
     </Match>
     <Match>
         <Class name="ubic.gemma.core.analysis.report.WhatsNewServiceImpl"/>
-        <Bug pattern="OBJECT_DESERIALIZATION"/>
-    </Match>
-    <Match>
-        <Class name="ubic.gemma.core.loader.expression.geo.service.GeoBrowserServiceImpl"/>
         <Bug pattern="OBJECT_DESERIALIZATION"/>
     </Match>
     <Match>
