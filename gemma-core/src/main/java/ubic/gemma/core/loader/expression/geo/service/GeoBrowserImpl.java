@@ -62,7 +62,6 @@ import java.util.zip.GZIPInputStream;
 
 import static java.util.Objects.requireNonNull;
 import static ubic.gemma.core.loader.entrez.EntrezUtils.quoteTerm;
-import static ubic.gemma.core.loader.expression.geo.service.GeoUtils.getUrlForBrowsing;
 import static ubic.gemma.core.util.XMLUtils.*;
 
 @Slf4j
@@ -165,88 +164,6 @@ public class GeoBrowserImpl implements GeoBrowser {
         }
 
         return retrieveAllGeoRecords( query, GeoRetrieveConfig.DEFAULT );
-    }
-
-    @Override
-    public Slice<GeoRecord> getRecentGeoRecords( GeoRecordType recordType, int start, int pageSize ) throws IOException {
-        Assert.isTrue( recordType == GeoRecordType.SERIES, "Only series are supported" );
-        Assert.isTrue( start >= 0, "The starting must be zero or greater." );
-        Assert.isTrue( pageSize > 0, "The page size must be one or greater." );
-
-        // mode=tsv : tells GEO to give us tab delimited file -- PP changed to csv
-        // because of garbled tabbed lines returned
-        // from GEO.
-        URL url = getUrlForBrowsing( GeoRecordType.SERIES, start, pageSize, GeoFormat.CSV );
-
-        List<GeoRecord> records = new ArrayList<>();
-        try ( BufferedReader br = new BufferedReader( new InputStreamReader( url.openStream(), StandardCharsets.UTF_8 ) ) ) {
-
-            // We are getting a tab delimited file.
-
-            // Read columns headers.
-            String headerLine = br.readLine();
-            String[] headers = StringUtil.csvSplit( headerLine );
-
-            // Map column names to their indices (handy later).
-            Map<String, Integer> columnNameToIndex = new HashMap<>();
-            for ( int i = 0; i < headers.length; i++ ) {
-                columnNameToIndex.put( headers[i], i );
-            }
-
-            // Read the rest of the file.
-            String line;
-            while ( ( line = br.readLine() ) != null ) {
-                String[] fields = StringUtil.csvSplit( line );
-
-                GeoRecord geoRecord = new GeoRecord();
-                geoRecord.setGeoAccession( fields[columnNameToIndex.get( "Accession" )] );
-                geoRecord.setTitle( StringUtils.strip( fields[columnNameToIndex.get( "Title" )]
-                        .replaceAll( GeoBrowserImpl.FLANKING_QUOTES_REGEX, "" ) ) );
-
-                String sampleCountS = fields[columnNameToIndex.get( "Sample Count" )];
-                if ( StringUtils.isNotBlank( sampleCountS ) ) {
-                    try {
-                        geoRecord.setNumSamples( Integer.parseInt( sampleCountS ) );
-                    } catch ( NumberFormatException e ) {
-                        throw new RuntimeException( "Could not parse sample count: " + sampleCountS );
-                    }
-                } else {
-                    GeoBrowserImpl.log.warn( "No sample count for " + geoRecord.getGeoAccession() );
-                }
-                geoRecord.setContactName(
-                        fields[columnNameToIndex.get( "Contact" )].replaceAll( GeoBrowserImpl.FLANKING_QUOTES_REGEX, "" ) );
-
-                List<String> taxons = Arrays.stream( fields[columnNameToIndex.get( "Taxonomy" )]
-                                .replaceAll( GeoBrowserImpl.FLANKING_QUOTES_REGEX, "" )
-                                .split( ";" ) )
-                        .map( String::trim )
-                        .collect( Collectors.toList() );
-                if ( geoRecord.getOrganisms() == null ) {
-                    geoRecord.setOrganisms( taxons );
-                } else {
-                    geoRecord.getOrganisms().addAll( taxons );
-                }
-
-                try {
-                    Date date = DateUtils.parseDate( fields[columnNameToIndex.get( "Release Date" )]
-                            .replaceAll( GeoBrowserImpl.FLANKING_QUOTES_REGEX, "" ), GEO_LOCALE, GEO_DATE_FORMATS );
-                    geoRecord.setReleaseDate( date );
-                } catch ( ParseException e ) {
-                    log.error( String.format( "Failed to parse date for %s", geoRecord.getGeoAccession() ) );
-                }
-
-                geoRecord.setSeriesType( fields[columnNameToIndex.get( "Series Type" )] );
-
-                records.add( geoRecord );
-            }
-
-        }
-
-        if ( records.isEmpty() ) {
-            GeoBrowserImpl.log.warn( "No records obtained" );
-        }
-
-        return new Slice<>( records, Sort.by( null, "releaseDate", Sort.Direction.DESC, Sort.NullMode.DEFAULT ), start, pageSize, null );
     }
 
     @Override
