@@ -19,6 +19,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.HeaderParam;
 import jakarta.ws.rs.NotAuthorizedException;
 import jakarta.ws.rs.POST;
@@ -26,15 +27,20 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import ubic.gemma.core.pipeline.NextflowWeblogTranslator;
+import ubic.gemma.core.pipeline.NextflowWeblogTranslator.TranslatedEvent;
 import ubic.gemma.model.pipeline.PipelineJobEvent;
 import ubic.gemma.model.pipeline.PipelineJobEventValueObject;
 import ubic.gemma.persistence.service.pipeline.PipelineJobBatchService;
 import ubic.gemma.rest.util.ResponseDataObject;
+
+import java.util.Optional;
 
 import static ubic.gemma.rest.util.Responders.respond;
 
@@ -69,6 +75,9 @@ public class InternalPipelineWebService {
     @Value("${gemma.pipeline.callback.token:}")
     private String expectedToken;
 
+    /** Stateless; a vanilla-mapper translator is fine (no configured (de)serializers needed). */
+    private final NextflowWeblogTranslator weblogTranslator = new NextflowWeblogTranslator();
+
     @POST
     @Path("/jobs/{jobId}/events")
     @Produces(MediaType.APPLICATION_JSON)
@@ -88,6 +97,35 @@ public class InternalPipelineWebService {
         // from() reads only scalars and the owning job's id, which is available on the proxy
         // without initializing it, so this is safe on the detached entity recordEvent returns
         return respond( PipelineJobEventValueObject.from( event ) );
+    }
+
+    @POST
+    @Path("/jobs/{jobId}/weblog")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Ingest a raw Nextflow -with-weblog message, translate it, and record any resulting event")
+    public Response postWeblog(
+            @PathParam("jobId") Long jobId,
+            @HeaderParam("Authorization") String authHeader,
+            String body ) {
+        verifyToken( authHeader );
+        if ( body == null || body.isBlank() ) {
+            throw new BadRequestException( "empty weblog body" );
+        }
+        Optional<TranslatedEvent> translated;
+        try {
+            translated = weblogTranslator.translate( body );
+        } catch ( IllegalArgumentException e ) {
+            throw new BadRequestException( e.getMessage() );
+        }
+        // Most weblog messages (started, process_submitted, bare error, unknown) map to nothing —
+        // Nextflow's weblog client only needs a 2xx, so acknowledge with 204 and record nothing.
+        if ( translated.isEmpty() ) {
+            return Response.noContent().build();
+        }
+        TranslatedEvent ev = translated.get();
+        PipelineJobEvent event = pipelineJobBatchService.recordEvent( jobId, ev.getKind(), ev.getPayloadJson() );
+        return Response.ok( respond( event ) ).build();
     }
 
     private void verifyToken( String authHeader ) {

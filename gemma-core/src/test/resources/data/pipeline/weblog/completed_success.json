@@ -1,0 +1,175 @@
+{
+  "metadata": {
+    "parameters": {},
+    "workflow": {
+      "runName": "tiny_bassi",
+      "scriptId": "df8df78d2a027b2e2efb40a1c1a8578e",
+      "scriptFile": "/tmp/claude-30067/-home-omancarci-git-repos-Gemma-acl/bcce98a2-f2ee-4460-accc-c906ddcf0994/scratchpad/ok.nf",
+      "scriptName": "ok.nf",
+      "repository": null,
+      "commitId": null,
+      "revision": null,
+      "start": {
+        "offset": {
+          "totalSeconds": -25200,
+          "id": "-07:00",
+          "rules": {
+            "fixedOffset": true,
+            "transitionRules": [],
+            "transitions": []
+          }
+        },
+        "dayOfMonth": 16,
+        "dayOfWeek": "THURSDAY",
+        "dayOfYear": 197,
+        "hour": 13,
+        "minute": 5,
+        "month": "JULY",
+        "monthValue": 7,
+        "nano": 690021000,
+        "second": 34,
+        "year": 2026
+      },
+      "complete": {
+        "offset": {
+          "totalSeconds": -25200,
+          "id": "-07:00",
+          "rules": {
+            "fixedOffset": true,
+            "transitionRules": [],
+            "transitions": []
+          }
+        },
+        "dayOfMonth": 16,
+        "dayOfWeek": "THURSDAY",
+        "dayOfYear": 197,
+        "hour": 13,
+        "minute": 5,
+        "month": "JULY",
+        "monthValue": 7,
+        "nano": 216107000,
+        "second": 36,
+        "year": 2026
+      },
+      "duration": 1526,
+      "container": {},
+      "commandLine": "nextflow run ok.nf -with-weblog 'http://127.0.0.1:8002'",
+      "nextflow": {
+        "version": "24.10.3",
+        "build": 5933,
+        "timestamp": "2024-12-16T15:34:00Z",
+        "enable": {
+          "dsl": 2
+        }
+      },
+      "success": true,
+      "projectDir": "/tmp/claude-30067/-home-omancarci-git-repos-Gemma-acl/bcce98a2-f2ee-4460-accc-c906ddcf0994/scratchpad",
+      "projectName": "ok.nf",
+      "launchDir": "/tmp/claude-30067/-home-omancarci-git-repos-Gemma-acl/bcce98a2-f2ee-4460-accc-c906ddcf0994/scratchpad",
+      "outputDir": "/tmp/claude-30067/-home-omancarci-git-repos-Gemma-acl/bcce98a2-f2ee-4460-accc-c906ddcf0994/scratchpad/results",
+      "workDir": "/tmp/claude-30067/-home-omancarci-git-repos-Gemma-acl/bcce98a2-f2ee-4460-accc-c906ddcf0994/scratchpad/work",
+      "homeDir": "/home/omancarci",
+      "userName": "omancarci",
+      "exitStatus": 0,
+      "errorMessage": null,
+      "errorReport": null,
+      "profile": "standard",
+      "sessionId": "8c7ad369-aaa0-4421-98e1-969d35c1b350",
+      "resume": false,
+      "stubRun": false,
+      "preview": false,
+      "containerEngine": null,
+      "wave": {
+        "enabled": false
+      },
+      "fusion": {
+        "enabled": false,
+        "version": null
+      },
+      "configFiles": [],
+      "stats": {
+        "changeTimestamp": 1784232336121,
+        "succeededCount": 2,
+        "cachedCount": 0,
+        "failedCount": 0,
+        "ignoredCount": 0,
+        "pendingCount": 0,
+        "submittedCount": 0,
+        "runningCount": 0,
+        "retriesCount": 0,
+        "abortedCount": 0,
+        "loadCpus": 0,
+        "loadMemory": 0,
+        "peakRunning": 1,
+        "peakCpus": 1,
+        "peakMemory": 0,
+        "cachedCountFmt": "0",
+        "cachedDuration": 0,
+        "cachedPct": 0.0,
+        "computeTimeFmt": "(a few seconds)",
+        "failedCountFmt": "0",
+        "failedDuration": 0,
+        "failedPct": 0.0,
+        "ignoredCountFmt": "0",
+        "ignoredPct": 0.0,
+        "loadMemoryFmt": "0",
+        "peakMemoryFmt": "0",
+        "processes": [
+          {
+            "index": 1,
+            "name": "SAY",
+            "hash": "92/383af1",
+            "taskName": "SAY (alpha)",
+            "pending": 0,
+            "submitted": 0,
+            "running": 0,
+            "succeeded": 2,
+            "cached": 0,
+            "failed": 0,
+            "aborted": 0,
+            "stored": 0,
+            "ignored": 0,
+            "retries": 0,
+            "terminated": true,
+            "errored": false,
+            "loadCpus": 0,
+            "loadMemory": 0,
+            "peakRunning": 1,
+            "peakCpus": 1,
+            "peakMemory": 0,
+            "completedCount": 2,
+            "totalCount": 2
+          }
+        ],
+        "progressLength": 1,
+        "succeedCount": 2,
+        "succeedCountFmt": "2",
+        "succeedDuration": 7,
+        "succeedPct": 100.0
+      },
+      "manifest": {
+        "author": null,
+        "contributors": [],
+        "defaultBranch": null,
+        "description": null,
+        "docsUrl": null,
+        "doi": null,
+        "gitmodules": null,
+        "homePage": null,
+        "icon": null,
+        "license": null,
+        "mainScript": "main.nf",
+        "name": null,
+        "nextflowVersion": null,
+        "organization": null,
+        "recurseSubmodules": false,
+        "version": null
+      },
+      "failOnIgnore": false
+    }
+  },
+  "runId": "8c7ad369-aaa0-4421-98e1-969d35c1b350",
+  "event": "completed",
+  "runName": "tiny_bassi",
+  "utcTime": "2026-07-16T20:05:36Z"
+}
