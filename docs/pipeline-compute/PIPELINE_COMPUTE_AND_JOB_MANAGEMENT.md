@@ -46,7 +46,7 @@ Legend: ✅ shipped · 🟡 partial (skeleton exists, gaps noted) · ⬜ not sta
 | Component | State | Concrete entry points (verbatim anchors) |
 |---|---|---|
 | **Ticket layer** (Spine 1) | ✅ | `TICKET` / `TICKET_TARGET` / `TICKET_EVENT` tables (`V3__ticket_layer.sql`, `V19__ticket_mode_and_target_status.sql`); `TicketService`, `TicketDao*`, `TicketsWebService`; events `TicketOpenedEvent`, `TicketStateChangedEvent`, `TicketAssignedEvent`, `TicketMetadataChangedEvent`, `TicketTargetStatusChangedEvent` |
-| **PipelineJob model** (Spine 2) | ✅ | `PIPELINE_JOB_BATCH` / `PIPELINE_JOB` / `PIPELINE_JOB_EVENT` (`V18__pipeline_jobs.sql`); `model/pipeline/*`, `persistence/service/pipeline/*` |
+| **PipelineJob model** (Spine 2) | ✅ | `PIPELINE_JOB_BATCH` / `PIPELINE_JOB` / `PIPELINE_JOB_EVENT` (mysql `V18__pipeline_jobs.sql` + h2 sister `V23_1__pipeline_jobs.sql`); `model/pipeline/*`, `persistence/service/pipeline/*` |
 | **Scheduler SPI** | 🟡 | `PipelineScheduler {kind, submit, poll, cancel}` + `SubmitRequest(gemmaJobId,…)`, `SchedulerHandle`, `JobSnapshot` in `core/pipeline/*`. No `suspend/resume`, no `readLog`, no `readArtifact`. |
 | **Schedulers (impls)** | 🟡 | `MockPipelineScheduler` (15 s synthetic, poll-only, always succeeds). `NextflowSlurmScheduler` / `LuigiScheduler` = **stubs that throw**. |
 | **Reconciler** | ✅ | `JobReconciler` `@Scheduled` poll of stale non-terminal jobs via the `(state, last_event_at)` index. |

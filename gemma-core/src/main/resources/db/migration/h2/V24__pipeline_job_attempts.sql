@@ -1,14 +1,16 @@
 -- See db/migration/mysql/V23__pipeline_job_attempts.sql for the canonical description.
 -- The version number differs because the H2 + MySQL migration streams are keyed
--- independently. H2 supports the same ADD COLUMN / ADD CONSTRAINT / ON DELETE SET NULL
--- syntax, so this mirrors the MySQL migration column-for-column.
+-- independently. Unlike MySQL, H2 does NOT accept repeated `ADD COLUMN a, ADD COLUMN b`
+-- clauses in one ALTER TABLE; it uses the parenthesized bulk form `ADD ( col ..., col ... )`.
 
 ALTER TABLE PIPELINE_JOB
-    ADD COLUMN ATTEMPT          INT         NOT NULL DEFAULT 1,
-    ADD COLUMN RETRY_OF_FK      BIGINT      NULL,
-    ADD COLUMN SUPERSEDED_BY_FK BIGINT      NULL,
-    ADD COLUMN FAILURE_CLASS    VARCHAR(16) NULL,
-    ADD COLUMN PARAMS_JSON      CLOB        NULL;
+    ADD (
+        ATTEMPT          INT         NOT NULL DEFAULT 1,
+        RETRY_OF_FK      BIGINT      NULL,
+        SUPERSEDED_BY_FK BIGINT      NULL,
+        FAILURE_CLASS    VARCHAR(16) NULL,
+        PARAMS_JSON      CLOB        NULL
+    );
 
 ALTER TABLE PIPELINE_JOB
     ADD CONSTRAINT CK_PIPELINE_JOB_FAILURE_CLASS
