@@ -1,0 +1,175 @@
+{
+  "metadata": {
+    "parameters": {},
+    "workflow": {
+      "runName": "voluminous_mandelbrot",
+      "scriptId": "165ff462906264d85b45132a1657ad41",
+      "scriptFile": "/tmp/claude-30067/-home-omancarci-git-repos-Gemma-acl/bcce98a2-f2ee-4460-accc-c906ddcf0994/scratchpad/fail.nf",
+      "scriptName": "fail.nf",
+      "repository": null,
+      "commitId": null,
+      "revision": null,
+      "start": {
+        "offset": {
+          "totalSeconds": -25200,
+          "id": "-07:00",
+          "rules": {
+            "fixedOffset": true,
+            "transitionRules": [],
+            "transitions": []
+          }
+        },
+        "dayOfMonth": 15,
+        "dayOfWeek": "WEDNESDAY",
+        "dayOfYear": 196,
+        "hour": 23,
+        "minute": 26,
+        "month": "JULY",
+        "monthValue": 7,
+        "nano": 848791000,
+        "second": 35,
+        "year": 2026
+      },
+      "complete": {
+        "offset": {
+          "totalSeconds": -25200,
+          "id": "-07:00",
+          "rules": {
+            "fixedOffset": true,
+            "transitionRules": [],
+            "transitions": []
+          }
+        },
+        "dayOfMonth": 15,
+        "dayOfWeek": "WEDNESDAY",
+        "dayOfYear": 196,
+        "hour": 23,
+        "minute": 26,
+        "month": "JULY",
+        "monthValue": 7,
+        "nano": 272870000,
+        "second": 37,
+        "year": 2026
+      },
+      "duration": 1424,
+      "container": {},
+      "commandLine": "nextflow run fail.nf -with-weblog 'http://127.0.0.1:8001'",
+      "nextflow": {
+        "version": "24.10.3",
+        "build": 5933,
+        "timestamp": "2024-12-16T15:34:00Z",
+        "enable": {
+          "dsl": 2
+        }
+      },
+      "success": false,
+      "projectDir": "/tmp/claude-30067/-home-omancarci-git-repos-Gemma-acl/bcce98a2-f2ee-4460-accc-c906ddcf0994/scratchpad",
+      "projectName": "fail.nf",
+      "launchDir": "/tmp/claude-30067/-home-omancarci-git-repos-Gemma-acl/bcce98a2-f2ee-4460-accc-c906ddcf0994/scratchpad",
+      "outputDir": "/tmp/claude-30067/-home-omancarci-git-repos-Gemma-acl/bcce98a2-f2ee-4460-accc-c906ddcf0994/scratchpad/results",
+      "workDir": "/tmp/claude-30067/-home-omancarci-git-repos-Gemma-acl/bcce98a2-f2ee-4460-accc-c906ddcf0994/scratchpad/work",
+      "homeDir": "/home/omancarci",
+      "userName": "omancarci",
+      "exitStatus": 3,
+      "errorMessage": "processing beta\nboom on beta",
+      "errorReport": "Error executing process > 'RUN (beta)'\n\nCaused by:\n  Process `RUN (beta)` terminated with an error exit status (3)\n\n\nCommand executed:\n\n  echo \"processing beta\"\n  if [ \"beta\" = \"beta\" ]; then echo \"boom on beta\" >&2; exit 3; fi\n  echo done\n\nCommand exit status:\n  3\n\nCommand output:\n  processing beta\n\nCommand error:\n  processing beta\n  boom on beta\n\nWork dir:\n  /tmp/claude-30067/-home-omancarci-git-repos-Gemma-acl/bcce98a2-f2ee-4460-accc-c906ddcf0994/scratchpad/work/b0/cef4eeef18e622b33a754a74814a90\n\nTip: you can try to figure out what's wrong by changing to the process work dir and showing the script file named `.command.sh`",
+      "profile": "standard",
+      "sessionId": "2d825b65-34ee-4671-9415-b0d06ab5d459",
+      "resume": false,
+      "stubRun": false,
+      "preview": false,
+      "containerEngine": null,
+      "wave": {
+        "enabled": false
+      },
+      "fusion": {
+        "enabled": false,
+        "version": null
+      },
+      "configFiles": [],
+      "stats": {
+        "changeTimestamp": 1784183197241,
+        "succeededCount": 0,
+        "cachedCount": 0,
+        "failedCount": 1,
+        "ignoredCount": 0,
+        "pendingCount": 0,
+        "submittedCount": 2,
+        "runningCount": 0,
+        "retriesCount": 0,
+        "abortedCount": 0,
+        "loadCpus": 0,
+        "loadMemory": 0,
+        "peakRunning": 1,
+        "peakCpus": 1,
+        "peakMemory": 0,
+        "cachedCountFmt": "0",
+        "cachedDuration": 0,
+        "cachedPct": 0.0,
+        "computeTimeFmt": "(a few seconds)",
+        "failedCountFmt": "1",
+        "failedDuration": 30,
+        "failedPct": 100.0,
+        "ignoredCountFmt": "0",
+        "ignoredPct": 0.0,
+        "loadMemoryFmt": "0",
+        "peakMemoryFmt": "0",
+        "processes": [
+          {
+            "index": 1,
+            "name": "RUN",
+            "hash": "b0/cef4ee",
+            "taskName": "RUN (beta)",
+            "pending": 0,
+            "submitted": 2,
+            "running": 0,
+            "succeeded": 0,
+            "cached": 0,
+            "failed": 1,
+            "aborted": 0,
+            "stored": 0,
+            "ignored": 0,
+            "retries": 0,
+            "terminated": false,
+            "errored": true,
+            "loadCpus": 0,
+            "loadMemory": 0,
+            "peakRunning": 1,
+            "peakCpus": 1,
+            "peakMemory": 0,
+            "completedCount": 1,
+            "totalCount": 3
+          }
+        ],
+        "progressLength": 1,
+        "succeedCount": 0,
+        "succeedCountFmt": "0",
+        "succeedDuration": 0,
+        "succeedPct": 0.0
+      },
+      "manifest": {
+        "author": null,
+        "contributors": [],
+        "defaultBranch": null,
+        "description": null,
+        "docsUrl": null,
+        "doi": null,
+        "gitmodules": null,
+        "homePage": null,
+        "icon": null,
+        "license": null,
+        "mainScript": "main.nf",
+        "name": null,
+        "nextflowVersion": null,
+        "organization": null,
+        "recurseSubmodules": false,
+        "version": null
+      },
+      "failOnIgnore": false
+    }
+  },
+  "runId": "2d825b65-34ee-4671-9415-b0d06ab5d459",
+  "event": "completed",
+  "runName": "voluminous_mandelbrot",
+  "utcTime": "2026-07-16T06:26:37Z"
+}
