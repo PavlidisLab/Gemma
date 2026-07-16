@@ -1080,9 +1080,14 @@ build, which existing code to extend, and its acceptance signal.
   `CurationDetailsService` shim (+ `PIPELINE_FAILED` → needs-attention, composing task 9).
   Verified: `CurationFlagCacheMockIT` (open QUALITY_REVIEW → troubled+needsAttention +
   `loadTroubledIds` sees it; resolve → clears; BATCH_INFO → needsAttention-only; pipeline
-  PERMANENT failure → needs-attention via the auto-ticket). **Deferred:** one-time prod
-  backfill of the frozen columns (reset-then-apply at a maintenance window) + the "pure"
-  column drop / repointing the ~18 point-readers (unnecessary now the cache is truthful).
+  PERMANENT failure → needs-attention via the auto-ticket). **Prod backfill BUILT** (2026-07-15):
+  `LegacyCurationFlagMigrator` + `migrateCurationFlagsToTickets` CLI **forward-migrate** the frozen
+  legacy flags into tickets (troubled → QUALITY_REVIEW, needsAttention-only → GENERIC; date from the
+  `lastTroubled/NeedsAttentionEvent` pointer with a null-safe fallback; provenance in the title +
+  a structured comment; idempotent) — it **never clears** a legacy flag (they're real signal, not
+  stale), preserving the corpus. Run once at deploy. Verified by `LegacyCurationFlagMigratorIT`.
+  **Deferred:** ArrayDesign flag migration (AD columns keep working untouched); the "pure" column
+  drop / repointing the ~18 point-readers (unnecessary now the cache is truthful).
   Original spec below. Flip
   `needsAttention`/`troubled` read-paths to "is there an OPEN ticket
   targeting this EE?".
