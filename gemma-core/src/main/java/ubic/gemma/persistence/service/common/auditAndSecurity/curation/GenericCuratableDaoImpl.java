@@ -26,6 +26,11 @@ public class GenericCuratableDaoImpl implements GenericCuratableDao {
     }
 
     @Override
+    public List<Long> loadNeedsAttentionIds() {
+        throw new UnsupportedOperationException( "Cannot load needs-attention IDs for an unknown entity." );
+    }
+
+    @Override
     public void updateCurationDetailsFromAuditEvent( Curatable auditable, AuditEvent auditEvent ) {
         if ( auditable instanceof ArrayDesign ) {
             arrayDesignDao.updateCurationDetailsFromAuditEvent( ( ArrayDesign ) auditable, auditEvent );

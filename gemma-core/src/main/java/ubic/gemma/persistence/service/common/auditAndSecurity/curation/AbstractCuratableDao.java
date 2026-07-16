@@ -52,6 +52,15 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
     }
 
     @Override
+    public List<Long> loadNeedsAttentionIds() {
+        //noinspection unchecked
+        return getSessionFactory().getCurrentSession()
+                .createQuery( "select c.id from " + getElementClass().getSimpleName() + " c "
+                        + "join c.curationDetails cd where cd.needsAttention = true" )
+                .list();
+    }
+
+    @Override
     public void updateCurationDetailsFromAuditEvent( C curatable, AuditEvent auditEvent ) {
         Assert.notNull( curatable.getId(), "Cannot update curation details for a transient entity." );
 

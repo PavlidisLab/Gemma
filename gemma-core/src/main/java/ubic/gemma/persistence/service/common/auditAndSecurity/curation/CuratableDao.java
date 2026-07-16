@@ -19,6 +19,12 @@ public interface CuratableDao<C extends Curatable> {
     List<Long> loadTroubledIds();
 
     /**
+     * Load IDs of entities whose {@code curationDetails.needsAttention} flag is set. Mirror of
+     * {@link #loadTroubledIds()} — used by the one-time legacy-flag → ticket migration (task 11).
+     */
+    List<Long> loadNeedsAttentionIds();
+
+    /**
      * Update the curation details of a given curatable entity.
      * <p>
      * This method should only be called from {@link AuditTrailService}, as the passed event has to already exist in the
