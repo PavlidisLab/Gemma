@@ -76,7 +76,7 @@ class NextflowSlurmSchedulerTest {
         eeService = mock( ExpressionExperimentService.class );
         ssh = new FakeSsh();
         scheduler = new NextflowSlurmScheduler( eeService, ssh,
-                "/pipe/sc-annotation", workDirBase.toString(), "conda", "http://gemma:8080/" );
+                "/pipe/sc-annotation", workDirBase.toString(), "conda", "nextflow", "http://gemma:8080/" );
         ExpressionExperiment ee = mock( ExpressionExperiment.class );
         when( ee.getShortName() ).thenReturn( "GSE124952" );
         when( eeService.load( 55L ) ).thenReturn( ee );

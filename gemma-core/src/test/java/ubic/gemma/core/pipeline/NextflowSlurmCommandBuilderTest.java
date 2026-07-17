@@ -39,7 +39,8 @@ class NextflowSlurmCommandBuilderTest {
                 "http://gemma/rest/v2/internal/pipeline/jobs/7/weblog",
                 "/space/gemmaData/pipeline/7" );
         assertThat( s ).startsWith( "#!/bin/bash\nset -euo pipefail\n" );
-        assertThat( s ).contains( "nextflow run /pipe/sc-annotation/main.nf" );
+        assertThat( s ).contains( "nextflow run /pipe/sc-annotation/main.nf" );  // default executable
+        assertThat( s ).doesNotContain( "\n\n" );
         assertThat( s ).contains( "-profile conda" );
         assertThat( s ).contains( "-params-file /pipe/sc-annotation/params.hs.json" );
         assertThat( s ).contains( "--input /space/gemmaData/pipeline/7/samplesheet.csv" );
@@ -47,6 +48,16 @@ class NextflowSlurmCommandBuilderTest {
         assertThat( s ).contains( "-with-weblog http://gemma/rest/v2/internal/pipeline/jobs/7/weblog" );
         assertThat( s ).contains( "-resume" );
         assertThat( s ).contains( "-work-dir /space/gemmaData/pipeline/7" );
+    }
+
+    @Test
+    void launchScript_usesConfiguredNextflowExecutable() {
+        // Where nextflow isn't on the non-login PATH (e.g. scratchy), the wrapper must call it by
+        // absolute path — driven by gemma.pipeline.nextflow.executable.
+        String s = new NextflowSlurmCommandBuilder( "/space/opt/bin/nextflow" )
+                .launchScript( "/pipe", "conda", "params.hs.json", "/w/samplesheet.csv", "http://g/weblog", "/w" );
+        assertThat( s ).contains( "/space/opt/bin/nextflow run /pipe/main.nf" );
+        assertThat( s ).doesNotContain( "\nnextflow run" );
     }
 
     @Test
