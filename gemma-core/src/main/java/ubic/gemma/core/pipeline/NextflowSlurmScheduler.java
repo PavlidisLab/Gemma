@@ -133,17 +133,19 @@ public class NextflowSlurmScheduler implements PipelineScheduler {
     @Override
     @Nullable
     public JobSnapshot poll( SchedulerHandle handle ) throws PipelineSchedulerException {
-        // squeue first (live); fall back to sacct (accounting) once the job has left the queue.
+        // squeue first (live); fall back to `scontrol show job` once the job has left the queue
+        // (accounting/sacct is disabled on our cluster; scontrol needs no accounting but forgets the
+        // job after MinJobAge ~300s — beyond that the terminal state comes from the weblog push).
         SshCommandRunner.CommandResult sq = ssh.run( commands.squeueCommand( handle.getId() ) );
         JobState state = commands.parseSqueueState( sq.getStdout() );
         String raw = sq.getStdout().trim();
         if ( state == null ) {
-            SshCommandRunner.CommandResult sa = ssh.run( commands.sacctCommand( handle.getId() ) );
-            state = commands.parseSacctState( sa.getStdout() );
-            raw = sa.getStdout().trim();
+            SshCommandRunner.CommandResult sc = ssh.run( commands.scontrolShowJobCommand( handle.getId() ) );
+            state = commands.parseScontrolState( sc.getStdout() );
+            raw = sc.getStdout().trim();
         }
         if ( state == null ) {
-            // Neither squeue nor sacct knows this job — SPI contract: null ⇒ terminal-unknown.
+            // Neither squeue nor scontrol knows this job — SPI contract: null ⇒ terminal-unknown.
             log.warn( "poll: Slurm has no record of head job {}", handle.getId() );
             return null;
         }

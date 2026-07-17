@@ -64,7 +64,7 @@ class NextflowSlurmCommandBuilderTest {
     void slurmCommands_areWellFormed() {
         assertThat( b.sbatchCommand( "/x/launch.sh" ) ).containsExactly( "sbatch", "--parsable", "/x/launch.sh" );
         assertThat( b.squeueCommand( "42" ) ).containsExactly( "squeue", "-j", "42", "-h", "-o", "%T" );
-        assertThat( b.sacctCommand( "42" ) ).containsExactly( "sacct", "-j", "42", "-n", "-X", "-o", "State" );
+        assertThat( b.scontrolShowJobCommand( "42" ) ).containsExactly( "scontrol", "show", "job", "42" );
         assertThat( b.scancelCommand( "42" ) ).containsExactly( "scancel", "42" );
     }
 
@@ -91,12 +91,15 @@ class NextflowSlurmCommandBuilderTest {
     }
 
     @Test
-    void sacctState_handlesSuffixesAndVariants() {
-        assertThat( b.parseSacctState( "COMPLETED\n" ) ).isEqualTo( JobState.DONE );
-        assertThat( b.parseSacctState( "FAILED\n" ) ).isEqualTo( JobState.FAILED );
-        assertThat( b.parseSacctState( "CANCELLED+\n" ) ).isEqualTo( JobState.CANCELLED );
-        assertThat( b.parseSacctState( "CANCELLED by 1001\n" ) ).isEqualTo( JobState.CANCELLED );
-        assertThat( b.parseSacctState( "" ) ).isNull();
+    void scontrolState_extractsJobStateToken() {
+        // Realistic `scontrol show job` output — one line of many key=value tokens.
+        String running = "JobId=42 JobName=gemma UserId=x(1) JobState=RUNNING Reason=None Dependency=(null)";
+        assertThat( b.parseScontrolState( running ) ).isEqualTo( JobState.RUNNING );
+        assertThat( b.parseScontrolState( "JobId=42 JobState=COMPLETED Reason=None" ) ).isEqualTo( JobState.DONE );
+        assertThat( b.parseScontrolState( "JobId=42 JobState=CANCELLED Reason=None" ) ).isEqualTo( JobState.CANCELLED );
+        // Job purged / "Invalid job id specified" → no JobState token → null.
+        assertThat( b.parseScontrolState( "slurm_load_jobs error: Invalid job id specified" ) ).isNull();
+        assertThat( b.parseScontrolState( "" ) ).isNull();
     }
 
     @Test
