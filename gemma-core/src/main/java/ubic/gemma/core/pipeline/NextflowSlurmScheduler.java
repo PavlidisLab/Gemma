@@ -65,7 +65,7 @@ public class NextflowSlurmScheduler implements PipelineScheduler {
     private final String checkoutDir;
     private final String workDirBase;
     private final String profile;
-    private final String gemmaBaseUrl;
+    private final String weblogBaseUrl;
 
     @Autowired
     public NextflowSlurmScheduler(
@@ -75,14 +75,17 @@ public class NextflowSlurmScheduler implements PipelineScheduler {
             @Value("${gemma.pipeline.nextflow.workDirBase:${gemma.appdata.home}/pipeline}") String workDirBase,
             @Value("${gemma.pipeline.nextflow.profile:conda}") String profile,
             @Value("${gemma.pipeline.nextflow.executable:nextflow}") String nextflowExecutable,
-            @Value("${gemma.hosturl:}") String gemmaBaseUrl ) {
+            // Base URL the compute-node weblog POSTs back to. Defaults to gemma.hosturl, but is a
+            // SEPARATE knob because the cluster may reach Gemma at a different address than clients do
+            // — e.g. an SSH tunnel endpoint on the submit node when a firewall blocks the direct port.
+            @Value("${gemma.pipeline.nextflow.weblogBaseUrl:${gemma.hosturl:}}") String weblogBaseUrl ) {
         this.expressionExperimentService = expressionExperimentService;
         this.ssh = ssh;
         this.commands = new NextflowSlurmCommandBuilder( nextflowExecutable );
         this.checkoutDir = checkoutDir;
         this.workDirBase = workDirBase;
         this.profile = profile;
-        this.gemmaBaseUrl = gemmaBaseUrl;
+        this.weblogBaseUrl = weblogBaseUrl;
     }
 
     @Override
@@ -198,7 +201,7 @@ public class NextflowSlurmScheduler implements PipelineScheduler {
     }
 
     private String weblogUrl( Long jobId ) {
-        String base = gemmaBaseUrl.endsWith( "/" ) ? gemmaBaseUrl.substring( 0, gemmaBaseUrl.length() - 1 ) : gemmaBaseUrl;
+        String base = weblogBaseUrl.endsWith( "/" ) ? weblogBaseUrl.substring( 0, weblogBaseUrl.length() - 1 ) : weblogBaseUrl;
         return base + "/rest/v2/internal/pipeline/jobs/" + jobId + "/weblog";
     }
 }
