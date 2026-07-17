@@ -67,7 +67,7 @@ the Gemma-app `GEMMA_UPLOAD` credential is separate, see O1.)*
 - [~] **Submit the nextflow head job** — `sbatch` present (`/usr/bin/sbatch`); the *partition/QOS for many small long-lived head jobs* is still O4.
 - [~] **Submit Slurm task jobs** — same (`-C thrd64 …`); depends on O4.
 - [x] **Cancel jobs** — `scancel` present (`/usr/bin/scancel`).
-- [x] **Query Slurm** — `squeue`/`sacct` present (`/usr/bin/`).
+- [x] **Query Slurm** — `squeue`/`scontrol` present; poll uses `squeue` then `scontrol show job` (**not `sacct` — accounting is disabled**, `AccountingStorageType=(null)`, so `sacct` returns nothing).
 - [x] **Read** the pipeline checkout — `/space/grp/Pipelines/sc-annotation-pipeline` readable, with `main.nf` + `params.hs.json` + `params.mm.json` (O5).
 - [x] **Read/write** the work-dir — `/space/gemmaData` is `tomcat:pavlab` mode `775`; the account is in **`pavlab`**, so it can create/write `/space/gemmaData/pipeline/*` (dir doesn't exist yet — the scheduler creates it).
 - [~] **Execute `nextflow`** — at `/space/opt/bin/nextflow` (v24.10.3, matches fixtures), java 11 present, BUT **not on `PATH` in a non-login SSH shell**. *Handled:* the nextflow executable is now configurable — `gemma.pipeline.nextflow.executable` (default `nextflow`); set it to `/space/opt/bin/nextflow` in `Gemma.properties` for scratchy. (Ogan is also fixing the `PATH`.)
@@ -139,7 +139,7 @@ off the mount (later), and the end-to-end cluster run.
 - **live status** *(BUILT)*: Nextflow `-with-weblog <gemma>/internal/pipeline/jobs/{id}/weblog` → `InternalPipelineWebService.postWeblog` → `NextflowWeblogTranslator` → `recordEvent`. One run = one job ⇒ events map directly, no study-tag routing (R11).
 - **concurrency**: batch `maxConcurrent` (O8 default) bounds concurrent runs = concurrent head jobs; Slurm queues the tasks within each run.
 - **cancel**: `scancel <slurmHeadJobId>` over SSH (R13).
-- **poll** (reconciler fallback): `squeue`/`sacct -j <slurmHeadJobId>` / read `trace.txt` over SSH (or off the mount, R10).
+- **poll** (reconciler fallback): `squeue` then **`scontrol show job <slurmHeadJobId>`** over SSH. *NOT `sacct`* — Slurm **accounting is disabled** on the cluster (`AccountingStorageType=(null)`; verified 2026-07-16), so `sacct` always returns empty. `scontrol` needs no accounting but forgets a job after `MinJobAge` (300 s); beyond that the terminal state comes from the weblog push (primary), with the work-dir `trace.txt`/`.nextflow.log` on the mount as a possible deep fallback later.
 - **results**: unchanged — `GEMMA_UPLOAD` → `gemma-cli`.
 - Testable pre-cluster: command assembly, per-EE samplesheet writer, and the weblog→`recordEvent` translation are unit-testable against the `ScriptedMock`; only the final end-to-end run needs the node.
 
@@ -162,6 +162,7 @@ off the mount (later), and the end-to-end cluster run.
 - *2026-07-16 — `NextflowSlurmScheduler` BUILT: `submit`/`poll`/`cancel` via `sbatch --parsable`/`squeue`+`sacct`/`scancel`, one run per EE, samplesheet+wrapper written to the `/space` mount, `-with-weblog … /weblog`. Pure `NextflowSlurmCommandBuilder` + `SshCommandRunner` seam (only impure edge). 18 unit tests green; existing pipeline mock ITs unaffected. Remaining: O8 default wiring, log/artifact off mount, end-to-end run.*
 - *2026-07-16 — O8 BUILT: `PipelineDefaults` (sc-annotation=25) + `submit` stamps the pipeline default when no explicit cap; unknown pipelines unchanged (unlimited). `PipelineDefaultsTest` + 2 mock-IT cases green.*
 - *2026-07-16 — Cluster verification (read-only, `omancarci@scratchy`): SSH pubkey ✓, sbatch/squeue/sacct/scancel present ✓, `/space/gemmaData` group-writable via `pavlab` ✓, O5 checkout + params files confirmed at `/space/grp/Pipelines/sc-annotation-pipeline`, nextflow at `/space/opt/bin/nextflow` (24.10.3) but not on non-login `PATH` (wrapper needs abs path — follow-up). `pavlab-sa` group / `tomcat` owner = O1 account candidates. No jobs submitted.*
+- *2026-07-16 — Smoke test Step A (real `sbatch` of a trivial `sleep` job): `sbatch --parsable`→id, `squeue -o %T` PENDING→RUNNING, ran on a compute node & completed, `scancel` OK. **Finding:** Slurm **accounting is disabled** (`AccountingStorageType=(null)`) so `sacct` is always empty → swapped the poll fallback from `sacct` to `scontrol show job` (works without accounting; JobState token; MinJobAge 300 s window). Code + tests updated (builder `scontrolShowJobCommand`/`parseScontrolState`; scheduler poll ladder). 19 tests green.*
 
 ---
 

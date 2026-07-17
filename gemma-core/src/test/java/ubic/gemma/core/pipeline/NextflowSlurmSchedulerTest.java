@@ -150,9 +150,9 @@ class NextflowSlurmSchedulerTest {
     }
 
     @Test
-    void poll_fallsBackToSacctWhenSqueueEmpty() throws Exception {
+    void poll_fallsBackToScontrolWhenSqueueEmpty() throws Exception {
         ssh.on( "squeue", 0, "", "" );        // gone from the queue
-        ssh.on( "sacct", 0, "COMPLETED\n", "" );
+        ssh.on( "scontrol", 0, "JobId=42 JobState=COMPLETED Reason=None", "" );
         JobSnapshot snap = scheduler.poll( new SchedulerHandle( SchedulerKind.NEXTFLOW, "42" ) );
         assertThat( snap ).isNotNull();
         assertThat( snap.getState() ).isEqualTo( JobState.DONE );
@@ -161,7 +161,7 @@ class NextflowSlurmSchedulerTest {
     @Test
     void poll_unknownToBothReturnsNull() throws Exception {
         ssh.on( "squeue", 0, "", "" );
-        ssh.on( "sacct", 0, "", "" );
+        ssh.on( "scontrol", 1, "", "slurm_load_jobs error: Invalid job id specified" );
         assertThat( scheduler.poll( new SchedulerHandle( SchedulerKind.NEXTFLOW, "42" ) ) ).isNull();
     }
 

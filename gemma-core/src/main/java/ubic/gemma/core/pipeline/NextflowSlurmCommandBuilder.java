@@ -16,6 +16,8 @@ import ubic.gemma.model.pipeline.JobState;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Pure command/artifact assembly + Slurm-output parsing for {@link NextflowSlurmScheduler} (R11/R13).
@@ -32,6 +34,9 @@ public class NextflowSlurmCommandBuilder {
 
     /** nf-core samplesheet header (assets/schema_input.json): {@code sample,study_name,study_path}. */
     private static final String SAMPLESHEET_HEADER = "sample,study_name,study_path";
+
+    /** Extracts {@code JobState=<STATE>} from {@code scontrol show job} output. */
+    private static final Pattern JOB_STATE = Pattern.compile( "JobState=([A-Z_]+)" );
 
     /**
      * The {@code nextflow} executable to invoke in the wrapper. Configurable because it is often NOT on
@@ -100,10 +105,15 @@ public class NextflowSlurmCommandBuilder {
         return List.of( "squeue", "-j", headJobId, "-h", "-o", "%T" );
     }
 
-    /** {@code sacct -j <id> -n -X -o State} — accounting fallback once a job has left {@code squeue}. */
-    public List<String> sacctCommand( String headJobId ) {
+    /**
+     * {@code scontrol show job <id>} — fallback once a job has left {@code squeue}. Preferred over
+     * {@code sacct} because it does NOT need Slurm accounting (which is disabled on our cluster:
+     * {@code AccountingStorageType=(null)}). Covers active + recently-terminal jobs, up to
+     * {@code MinJobAge} (300 s) after completion, after which Slurm forgets the job entirely.
+     */
+    public List<String> scontrolShowJobCommand( String headJobId ) {
         require( headJobId, "headJobId" );
-        return List.of( "sacct", "-j", headJobId, "-n", "-X", "-o", "State" );
+        return List.of( "scontrol", "show", "job", headJobId );
     }
 
     public List<String> scancelCommand( String headJobId ) {
@@ -141,13 +151,18 @@ public class NextflowSlurmCommandBuilder {
         return mapSlurmState( firstToken( squeueStdout ) );
     }
 
-    /** State from {@code sacct -o State}. Blank means Slurm has no record (purged) → {@code null}. */
+    /**
+     * State from {@code scontrol show job} output — extracts the {@code JobState=<STATE>} token. Blank
+     * output / no such token (job purged after {@code MinJobAge}, or an "Invalid job id" error) →
+     * {@code null}, i.e. Slurm no longer knows the job.
+     */
     @Nullable
-    public JobState parseSacctState( @Nullable String sacctStdout ) {
-        if ( sacctStdout == null || sacctStdout.isBlank() ) {
+    public JobState parseScontrolState( @Nullable String scontrolStdout ) {
+        if ( scontrolStdout == null || scontrolStdout.isBlank() ) {
             return null;
         }
-        return mapSlurmState( firstToken( sacctStdout ) );
+        Matcher m = JOB_STATE.matcher( scontrolStdout );
+        return m.find() ? mapSlurmState( m.group( 1 ) ) : null;
     }
 
     /**
