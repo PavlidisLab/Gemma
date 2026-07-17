@@ -72,7 +72,7 @@ public class NextflowSlurmScheduler implements PipelineScheduler {
             ExpressionExperimentService expressionExperimentService,
             SshCommandRunner ssh,
             @Value("${gemma.pipeline.nextflow.checkoutDir:}") String checkoutDir,
-            @Value("${gemma.pipeline.nextflow.workDirBase:/space/gemmaData/pipeline}") String workDirBase,
+            @Value("${gemma.pipeline.nextflow.workDirBase:${gemma.appdata.home}/pipeline}") String workDirBase,
             @Value("${gemma.pipeline.nextflow.profile:conda}") String profile,
             @Value("${gemma.pipeline.nextflow.executable:nextflow}") String nextflowExecutable,
             @Value("${gemma.hosturl:}") String gemmaBaseUrl ) {
