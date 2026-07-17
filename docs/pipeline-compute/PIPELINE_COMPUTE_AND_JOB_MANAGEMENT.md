@@ -47,18 +47,18 @@ Legend: ✅ shipped · 🟡 partial (skeleton exists, gaps noted) · ⬜ not sta
 |---|---|---|
 | **Ticket layer** (Spine 1) | ✅ | `TICKET` / `TICKET_TARGET` / `TICKET_EVENT` tables (`V3__ticket_layer.sql`, `V19__ticket_mode_and_target_status.sql`); `TicketService`, `TicketDao*`, `TicketsWebService`; events `TicketOpenedEvent`, `TicketStateChangedEvent`, `TicketAssignedEvent`, `TicketMetadataChangedEvent`, `TicketTargetStatusChangedEvent` |
 | **PipelineJob model** (Spine 2) | ✅ | `PIPELINE_JOB_BATCH` / `PIPELINE_JOB` / `PIPELINE_JOB_EVENT` (mysql `V18__pipeline_jobs.sql` + h2 sister `V23_1__pipeline_jobs.sql`); `model/pipeline/*`, `persistence/service/pipeline/*` |
-| **Scheduler SPI** | 🟡 | `PipelineScheduler {kind, submit, poll, cancel}` + `SubmitRequest(gemmaJobId,…)`, `SchedulerHandle`, `JobSnapshot` in `core/pipeline/*`. No `suspend/resume`, no `readLog`, no `readArtifact`. |
-| **Schedulers (impls)** | 🟡 | `MockPipelineScheduler` (15 s synthetic, poll-only, always succeeds). `NextflowSlurmScheduler` / `LuigiScheduler` = **stubs that throw**. |
+| **Scheduler SPI** | ✅ | `PipelineScheduler {kind, submit, poll, cancel}` + `SubmitRequest(gemmaJobId,…)`, `SchedulerHandle`, `JobSnapshot`, and the additive optional caps `supportsLog`/`readLog`, `supportsArtifacts`/`readArtifact`, `supportsSuspend`/`suspend`/`resume` (tasks 5, 6). |
+| **Schedulers (impls)** | 🟡 | `ScriptedMockScheduler` (deterministic virtual clock, PUSH/POLL, failure-capable, profile `scheduler-mock`; task 1). `NextflowSlurmScheduler` **built** — `submit`/`poll`/`cancel` (sbatch head job + squeue/sacct/scancel + weblog ingest), unit-tested; remaining = O8 default wiring + end-to-end run (task 7). `LuigiScheduler` = stub that throws. |
 | **Reconciler** | ✅ | `JobReconciler` `@Scheduled` poll of stale non-terminal jobs via the `(state, last_event_at)` index. |
-| **Batch service** | 🟡 | `PipelineJobBatchService {submit, get, findByOwner, cancelBatch, cancelJob, recordEvent, findEvents, findStaleJobs}`. No `retryFailed`, `retryJob`, `hold/resume`, `suspendJob`, `rollup`, `readLog`. |
-| **REST — admin** | 🟡 | `AdminPipelineWebService` at `/admin/pipeline` (submit/list/get/cancel + job events). Missing: retry, hold/resume, suspend, log, artifacts, rollup, capabilities, stream. |
-| **REST — push callback** | ✅ | `InternalPipelineWebService` at `POST /internal/pipeline/jobs/{jobId}/events` (bearer), keyed by Gemma's `jobId` via `SubmitRequest.gemmaJobId`. |
+| **Batch service** | ✅ | `PipelineJobBatchService` — base ops + `retryFailed`/`retryJob`/`computeRollup` (task 3), `holdBatch`/`resumeBatch`/`updateBatch`/`dispatchPending` (task 4), `readJobLog`/`readJobArtifact` (task 5), `capabilities`/`suspendJob`/`resumeJob` (task 6). |
+| **REST — admin** | ✅ | `AdminPipelineWebService` at `/admin/pipeline` — submit/list/get/cancel + events, retry-failed/retry, hold/resume, `PATCH` maxConcurrent, log, artifacts, rollup, capabilities, suspend/resume (409 stub). SSE stream deferred (task 12). |
+| **REST — push callback** | ✅ | `InternalPipelineWebService`: `POST /internal/pipeline/jobs/{jobId}/events` (Gemma-native `{kind,payloadJson}`) **and** `POST …/jobs/{jobId}/weblog` (raw Nextflow `-with-weblog` → `NextflowWeblogTranslator` → `recordEvent`; task 7/O3). Bearer-token auth; keyed by Gemma's `jobId`. |
 | **CLI reporter** | ✅ | `PipelineJobReporter`. |
-| **Attempt/retry chain** | ⬜ | Not modelled. Needs `ATTEMPT`/`RETRY_OF_FK`/`SUPERSEDED_BY_FK`/`FAILURE_CLASS` (§3.2) or delegated-model equivalent. |
-| **Mop-up / control surface** | ⬜ | No retry, batch-hold/`maxConcurrent`, suspend, log/artifact proxy, capabilities, SSE. |
-| **Scripted mock + `_mock` REST** | ⬜ | `MockPipelineScheduler` is a smoke toy; no scripted scenarios, no deterministic clock, no push. |
+| **Attempt/retry chain** | ✅ | `ATTEMPT`/`RETRY_OF_FK`/`SUPERSEDED_BY_FK`/`FAILURE_CLASS`/`PARAMS_JSON` on `PIPELINE_JOB` (mysql V23 + h2 V24); `FailureClass`, `BatchRollup`, `RetrySpec`; attempt-chain (not counter) via `retryFailed`/`retryJob` (task 3). |
+| **Mop-up / control surface** | ✅ | retry-failed/retry, batch hold/`maxConcurrent`/dispatcher throttle, log/artifact proxy, capabilities, suspend stub (tasks 3–6). SSE deferred (task 12). |
+| **Scripted mock + `_mock` REST** | ✅ | `ScriptedMockScheduler` — deterministic, virtual clock, PUSH/POLL, `succeedOnAttempt`; `MockSchedulerControl` + `/admin/pipeline/_mock` (advance clock, set scenario, emit) drive it over HTTP (task 1). |
 | **WorkflowGroup** (Spine 3) | ⬜ | Not built. Design in `WORKFLOW_GROUPS_RECCE.md`; lands as Flyway V23+. |
-| **Real Nextflow dispatch** | ⬜ | `sc-annotation-pipeline` runs Nextflow-on-Slurm today via a **Jenkins button**; rnaseq is still **Luigi** (Google-Sheet-driven, `luigid` at `localhost:8082`). |
+| **Real Nextflow dispatch** | 🟡 | Design **resolved** (see `NEXTFLOW_DISPATCH_RESOLUTIONS.md`, R1–R13): SSH-to-submit-node, one run per EE, `sbatch` the head process, `/space/gemmaData` mount, per-pipeline `maxConcurrent`. **O3 built**: `-with-weblog` → translator → `recordEvent`. Remaining: `NextflowSlurmScheduler.submit/poll/cancel` + end-to-end run (retires the Jenkins button). rnaseq still **Luigi** (task 8). |
 | **Curator UI (Pipelines tab / bulk view)** | ⬜ | In gemma-curation-ui ("UIB"); replaces the RNA-seq + Single-Cell Tracker Google Sheets. |
 | **Prior task-dispatch foundation** | ✅ (reuse) | `TaskRunningService` + `TasksWebService` + `@POST /datasets/{ee}/tasks/{preprocess,diagnostics,batchInfo,differential}` (202 + `Location:`). The pattern PipelineJob extends. |
 
@@ -1031,13 +1031,33 @@ build, which existing code to extend, and its acceptance signal.
   **409** when `!supportsSuspend`.
 
 - [ ] **7. Real `NextflowSlurmScheduler` — sc-annotation first** (§4.4).
-  Implement the stub against `sc-annotation-pipeline` (already
-  Nextflow-on-Slurm). Wire `nextflow run … -with-weblog <gemma>/internal/
-  pipeline/jobs/{id}/events` (push into the existing callback) and
-  `-with-report`/`-with-trace`; write a samplesheet CSV at submit;
-  poll fallback via `squeue --json` + `trace.txt`. Retires the Jenkins
-  button. *Acceptance: a curator-dispatched sc-annotation run reports live
-  events into Gemma and lands terminal.*
+  **IN PROGRESS.** Design fully resolved in
+  [`NEXTFLOW_DISPATCH_RESOLUTIONS.md`](./NEXTFLOW_DISPATCH_RESOLUTIONS.md)
+  (R1–R13, O1–O9): SSH-to-submit-node dispatch (container has no Slurm/munge);
+  **one `nextflow run` per EE** (fits the per-job SPI, trivial correlation);
+  `sbatch --parsable` the nextflow head process **as a Slurm job**, handle =
+  head-job id (`scancel`/`squeue`/`sacct`); `/space/gemmaData` bind-mounted;
+  per-pipeline default `maxConcurrent` (sc-annotation = 25); pipeline checkout
+  path a config property (local copy for dev).
+  **O3 BUILT (2026-07-16):** `NextflowWeblogTranslator` (gemma-core) +
+  `POST /internal/pipeline/jobs/{id}/weblog` ingest translate `-with-weblog`
+  messages → `recordEvent` (payload shape pinned vs. real Nextflow 24.10.3;
+  terminal from `completed.metadata.workflow.success`; per-task FAILED is
+  `progress`, not job failure). Tested against captured fixtures (10 unit +
+  5 Jersey cases).
+  **`NextflowSlurmScheduler` BUILT (2026-07-16):** `submit`/`poll`/`cancel` —
+  `sbatch --parsable` a wrapper (head-job id = handle), `squeue`+`sacct` poll,
+  `scancel`; one run per EE; samplesheet+wrapper written to the `/space` mount;
+  `-with-weblog … /weblog`. Pure `NextflowSlurmCommandBuilder` + `SshCommandRunner`
+  seam (only impure edge); 18 unit tests, existing mock ITs unaffected.
+  **Remaining:** per-pipeline `maxConcurrent` default wiring (O8), `readLog`/
+  `readArtifact` off the mount (later) + end-to-end run. Cluster/Rachel
+  items: canonical checkout path (O5, point at the cached `PREPARE_CACHE`
+  version), a partition/QOS for long-lived head jobs (O4). *(O9 reference-sharing
+  resolved 2026-07-16 with Rachel — a cached `PREPARE_CACHE` means per-EE runs
+  don't redo census+scVI.)* Retires the Jenkins button. *Acceptance: a
+  curator-dispatched sc-annotation run reports live events into Gemma and lands
+  terminal.*
 
 - [ ] **8. rnaseq-pipeline Luigi → Nextflow port** (§4.3) — the long pole,
   after the SPI is proved on sc-annotation. Port `PrepareReference` +
