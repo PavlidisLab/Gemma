@@ -48,7 +48,7 @@ Legend: ✅ shipped · 🟡 partial (skeleton exists, gaps noted) · ⬜ not sta
 | **Ticket layer** (Spine 1) | ✅ | `TICKET` / `TICKET_TARGET` / `TICKET_EVENT` tables (`V3__ticket_layer.sql`, `V19__ticket_mode_and_target_status.sql`); `TicketService`, `TicketDao*`, `TicketsWebService`; events `TicketOpenedEvent`, `TicketStateChangedEvent`, `TicketAssignedEvent`, `TicketMetadataChangedEvent`, `TicketTargetStatusChangedEvent` |
 | **PipelineJob model** (Spine 2) | ✅ | `PIPELINE_JOB_BATCH` / `PIPELINE_JOB` / `PIPELINE_JOB_EVENT` (mysql `V18__pipeline_jobs.sql` + h2 sister `V23_1__pipeline_jobs.sql`); `model/pipeline/*`, `persistence/service/pipeline/*` |
 | **Scheduler SPI** | ✅ | `PipelineScheduler {kind, submit, poll, cancel}` + `SubmitRequest(gemmaJobId,…)`, `SchedulerHandle`, `JobSnapshot`, and the additive optional caps `supportsLog`/`readLog`, `supportsArtifacts`/`readArtifact`, `supportsSuspend`/`suspend`/`resume` (tasks 5, 6). |
-| **Schedulers (impls)** | 🟡 | `ScriptedMockScheduler` (deterministic virtual clock, PUSH/POLL, failure-capable, profile `scheduler-mock`; task 1). `NextflowSlurmScheduler` **built** — `submit`/`poll`/`cancel` (sbatch head job + squeue/sacct/scancel + weblog ingest), unit-tested; remaining = O8 default wiring + end-to-end run (task 7). `LuigiScheduler` = stub that throws. |
+| **Schedulers (impls)** | 🟡 | `ScriptedMockScheduler` (deterministic virtual clock, PUSH/POLL, failure-capable, profile `scheduler-mock`; task 1). `NextflowSlurmScheduler` **built** — `submit`/`poll`/`cancel` (sbatch head job + squeue/sacct/scancel + weblog ingest), unit-tested; per-pipeline `maxConcurrent` default wired (O8). Remaining = end-to-end run (task 7). `LuigiScheduler` = stub that throws. |
 | **Reconciler** | ✅ | `JobReconciler` `@Scheduled` poll of stale non-terminal jobs via the `(state, last_event_at)` index. |
 | **Batch service** | ✅ | `PipelineJobBatchService` — base ops + `retryFailed`/`retryJob`/`computeRollup` (task 3), `holdBatch`/`resumeBatch`/`updateBatch`/`dispatchPending` (task 4), `readJobLog`/`readJobArtifact` (task 5), `capabilities`/`suspendJob`/`resumeJob` (task 6). |
 | **REST — admin** | ✅ | `AdminPipelineWebService` at `/admin/pipeline` — submit/list/get/cancel + events, retry-failed/retry, hold/resume, `PATCH` maxConcurrent, log, artifacts, rollup, capabilities, suspend/resume (409 stub). SSE stream deferred (task 12). |
@@ -1050,8 +1050,10 @@ build, which existing code to extend, and its acceptance signal.
   `scancel`; one run per EE; samplesheet+wrapper written to the `/space` mount;
   `-with-weblog … /weblog`. Pure `NextflowSlurmCommandBuilder` + `SshCommandRunner`
   seam (only impure edge); 18 unit tests, existing mock ITs unaffected.
-  **Remaining:** per-pipeline `maxConcurrent` default wiring (O8), `readLog`/
-  `readArtifact` off the mount (later) + end-to-end run. Cluster/Rachel
+  Per-pipeline `maxConcurrent` default also BUILT (O8: `PipelineDefaults`,
+  sc-annotation=25, stamped at submit).
+  **Remaining:** `readLog`/`readArtifact` off the mount (later) + end-to-end
+  run. Cluster/Rachel
   items: canonical checkout path (O5, point at the cached `PREPARE_CACHE`
   version), a partition/QOS for long-lived head jobs (O4). *(O9 reference-sharing
   resolved 2026-07-16 with Rachel — a cached `PREPARE_CACHE` means per-EE runs

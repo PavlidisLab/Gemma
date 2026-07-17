@@ -103,6 +103,9 @@ public class PipelineJobBatchServiceImpl implements PipelineJobBatchService {
     @Autowired
     private TicketService ticketService;
 
+    @Autowired
+    private PipelineDefaults pipelineDefaults;
+
     /**
      * Auto-open a Ticket on a PERMANENT/UNKNOWN job failure (§1.2 #1). Global toggle; per-pipeline
      * policy is a later refinement. TRANSIENT failures never file a ticket (they're retry-eligible).
@@ -130,6 +133,11 @@ public class PipelineJobBatchServiceImpl implements PipelineJobBatchService {
         }
         if ( scheduler == null ) {
             throw new IllegalStateException( "no PipelineScheduler bean configured; activate a scheduler-* Spring profile" );
+        }
+        // No explicit cap → apply the pipeline's default (O8/D2), so a batch never launches
+        // unbounded. Unknown pipelines have no default (null ⇒ unlimited, unchanged).
+        if ( maxConcurrent == null ) {
+            maxConcurrent = pipelineDefaults.maxConcurrentFor( pipeline );
         }
         if ( maxConcurrent != null && maxConcurrent < 1 ) {
             throw new IllegalArgumentException( "maxConcurrent must be >= 1 (or null for unlimited)" );
