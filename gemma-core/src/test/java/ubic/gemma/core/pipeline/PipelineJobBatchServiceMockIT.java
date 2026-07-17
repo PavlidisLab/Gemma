@@ -21,6 +21,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.pipeline.PipelineJob;
 import ubic.gemma.model.pipeline.PipelineJobBatch;
 import ubic.gemma.model.pipeline.PipelineJobEvent;
+import ubic.gemma.persistence.service.pipeline.PipelineDefaults;
 import ubic.gemma.persistence.service.pipeline.PipelineJobBatchService;
 
 import java.util.ArrayList;
@@ -113,6 +114,33 @@ class PipelineJobBatchServiceMockIT extends BaseSpringContextTest5 {
         assertThat( events ).extracting( PipelineJobEvent::getKind )
                 .containsExactlyInAnyOrder( "stage", "completed" )
                 .doesNotContain( "progress" );
+    }
+
+    @Test
+    void scAnnotationSubmit_withoutCap_getsPipelineDefault() {
+        // O8: a batch for sc-annotation submitted without an explicit cap picks up the per-pipeline
+        // default (25), so it never launches unbounded.
+        Contact submitter = getTestPersistentContact();
+        ExpressionExperiment ee = getTestPersistentBasicExpressionExperiment();
+        control.setScenario( ee.getId(), success() );
+
+        PipelineJobBatch batch = pipelineJobBatchService.submit(
+                PipelineDefaults.SC_ANNOTATION, java.util.Collections.singletonList( ee ), submitter, null, "O8 default" );
+
+        assertThat( pipelineJobBatchService.get( batch.getId() ).getMaxConcurrent() ).isEqualTo( 25 );
+    }
+
+    @Test
+    void otherPipelineSubmit_withoutCap_staysUnlimited() {
+        // Pipelines with no configured default keep the pre-existing behaviour (null ⇒ unlimited).
+        Contact submitter = getTestPersistentContact();
+        ExpressionExperiment ee = getTestPersistentBasicExpressionExperiment();
+        control.setScenario( ee.getId(), success() );
+
+        PipelineJobBatch batch = pipelineJobBatchService.submit(
+                "test-pipeline", java.util.Collections.singletonList( ee ), submitter, null, "no default" );
+
+        assertThat( pipelineJobBatchService.get( batch.getId() ).getMaxConcurrent() ).isNull();
     }
 
     private static Scenario progressHeavy() {
