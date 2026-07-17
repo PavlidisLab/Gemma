@@ -34,6 +34,23 @@ public class NextflowSlurmCommandBuilder {
     private static final String SAMPLESHEET_HEADER = "sample,study_name,study_path";
 
     /**
+     * The {@code nextflow} executable to invoke in the wrapper. Configurable because it is often NOT on
+     * a non-login shell's {@code PATH} on the cluster (e.g. scratchy has it at
+     * {@code /space/opt/bin/nextflow}), so the sbatch'd wrapper must call it by an explicit path.
+     */
+    private final String nextflowExecutable;
+
+    /** Default: {@code nextflow} (assumes it's on PATH). Set an absolute path where it isn't. */
+    public NextflowSlurmCommandBuilder() {
+        this( "nextflow" );
+    }
+
+    public NextflowSlurmCommandBuilder( String nextflowExecutable ) {
+        this.nextflowExecutable = ( nextflowExecutable == null || nextflowExecutable.isBlank() )
+                ? "nextflow" : nextflowExecutable;
+    }
+
+    /**
      * One-study samplesheet for a Gemma-dispatched EE that downloads from GEO: {@code sample} and
      * {@code study_name} are the study accession, {@code study_path} empty (R11 — one run per EE).
      */
@@ -59,7 +76,7 @@ public class NextflowSlurmCommandBuilder {
         String params = checkoutDir + "/" + paramsFile;
         return "#!/bin/bash\n"
                 + "set -euo pipefail\n"
-                + "nextflow run " + main
+                + nextflowExecutable + " run " + main
                 + " -profile " + profile
                 + " -params-file " + params
                 + " --input " + samplesheetPath

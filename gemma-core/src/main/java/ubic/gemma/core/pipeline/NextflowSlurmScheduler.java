@@ -59,7 +59,7 @@ public class NextflowSlurmScheduler implements PipelineScheduler {
 
     private final ExpressionExperimentService expressionExperimentService;
     private final SshCommandRunner ssh;
-    private final NextflowSlurmCommandBuilder commands = new NextflowSlurmCommandBuilder();
+    private final NextflowSlurmCommandBuilder commands;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private final String checkoutDir;
@@ -74,9 +74,11 @@ public class NextflowSlurmScheduler implements PipelineScheduler {
             @Value("${gemma.pipeline.nextflow.checkoutDir:}") String checkoutDir,
             @Value("${gemma.pipeline.nextflow.workDirBase:/space/gemmaData/pipeline}") String workDirBase,
             @Value("${gemma.pipeline.nextflow.profile:conda}") String profile,
+            @Value("${gemma.pipeline.nextflow.executable:nextflow}") String nextflowExecutable,
             @Value("${gemma.hosturl:}") String gemmaBaseUrl ) {
         this.expressionExperimentService = expressionExperimentService;
         this.ssh = ssh;
+        this.commands = new NextflowSlurmCommandBuilder( nextflowExecutable );
         this.checkoutDir = checkoutDir;
         this.workDirBase = workDirBase;
         this.profile = profile;
