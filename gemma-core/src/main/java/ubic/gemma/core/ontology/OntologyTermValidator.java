@@ -19,6 +19,7 @@ package ubic.gemma.core.ontology;
 
 import ubic.gemma.model.common.description.Characteristic;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -41,11 +42,25 @@ public interface OntologyTermValidator {
 
     /**
      * Validate every URI-bearing slot of a characteristic, rewriting accepted case/whitespace near-matches to
-     * their canonical labels in place.
+     * their canonical labels in place, discarding the record of which labels were rewritten.
      *
      * @param c the characteristic (possibly a {@link ubic.gemma.model.expression.experiment.Statement}) to
      *          validate; may be mutated to canonicalize near-match labels.
      * @return the violations found, in slot order; empty when every slot is grounded.
      */
-    List<TermViolation> validateAndCanonicalize( Characteristic c );
+    default List<TermViolation> validateAndCanonicalize( Characteristic c ) {
+        return validateAndCanonicalize( c, new ArrayList<>() );
+    }
+
+    /**
+     * As {@link #validateAndCanonicalize(Characteristic)}, but also records every label rewrite it applied
+     * (accepted near-match or blank-label fill-in) into {@code canonicalizations} so the caller can echo the
+     * correction back to its client — the report obligation the hard-reject contract promises.
+     *
+     * @param c                the characteristic to validate; may be mutated to canonicalize near-match labels.
+     * @param canonicalizations sink for the label rewrites applied, in slot order; entries are added for every
+     *                          slot whose stored label ended up different from the submitted one.
+     * @return the violations found, in slot order; empty when every slot is grounded.
+     */
+    List<TermViolation> validateAndCanonicalize( Characteristic c, List<TermCanonicalization> canonicalizations );
 }

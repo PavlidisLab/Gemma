@@ -36,6 +36,8 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Default {@link OntologyTermValidator}: resolves each slot's URI against Gemma's loaded ontologies
@@ -53,6 +55,13 @@ public class OntologyTermValidatorImpl implements OntologyTermValidator {
      */
     private static final String[] NON_ONTOLOGY_URI_PREFIXES = { Gene.NCBI_URI_PREFIX };
 
+    /**
+     * A Gemma-owned ontology id (currently just TGEMO) captured from anywhere in a URI, so a term written on a
+     * foreign base can be normalized onto {@link OntologyUtils#BASE_GEMMA_ONTOLOGY_URI}. Extend the alternation
+     * if another Gemma-owned vocabulary starts showing up on the wrong base.
+     */
+    private static final Pattern GEMMA_ONTOLOGY_ID = Pattern.compile( "(TGEMO_\\d+)" );
+
     private final OntologyService ontologyService;
     private final OlsTermResolver olsTermResolver;
 
@@ -66,21 +75,21 @@ public class OntologyTermValidatorImpl implements OntologyTermValidator {
     }
 
     @Override
-    public List<TermViolation> validateAndCanonicalize( Characteristic c ) {
+    public List<TermViolation> validateAndCanonicalize( Characteristic c, List<TermCanonicalization> canonicalizations ) {
         List<TermViolation> violations = new ArrayList<>();
-        validateSlot( "category", c.getCategory(), c.getCategoryUri(), c::setCategory, violations );
-        validateSlot( "value", c.getValue(), c.getValueUri(), c::setValue, violations );
+        validateSlot( "category", c.getCategory(), c.getCategoryUri(), c::setCategory, c::setCategoryUri, violations, canonicalizations );
+        validateSlot( "value", c.getValue(), c.getValueUri(), c::setValue, c::setValueUri, violations, canonicalizations );
         if ( c instanceof Statement ) {
             Statement s = ( Statement ) c;
-            validateSlot( "predicate", s.getPredicate(), s.getPredicateUri(), s::setPredicate, violations );
-            validateSlot( "object", s.getObject(), s.getObjectUri(), s::setObject, violations );
-            validateSlot( "secondPredicate", s.getSecondPredicate(), s.getSecondPredicateUri(), s::setSecondPredicate, violations );
-            validateSlot( "secondObject", s.getSecondObject(), s.getSecondObjectUri(), s::setSecondObject, violations );
+            validateSlot( "predicate", s.getPredicate(), s.getPredicateUri(), s::setPredicate, s::setPredicateUri, violations, canonicalizations );
+            validateSlot( "object", s.getObject(), s.getObjectUri(), s::setObject, s::setObjectUri, violations, canonicalizations );
+            validateSlot( "secondPredicate", s.getSecondPredicate(), s.getSecondPredicateUri(), s::setSecondPredicate, s::setSecondPredicateUri, violations, canonicalizations );
+            validateSlot( "secondObject", s.getSecondObject(), s.getSecondObjectUri(), s::setSecondObject, s::setSecondObjectUri, violations, canonicalizations );
         }
         return violations;
     }
 
-    private void validateSlot( String slot, @Nullable String label, @Nullable String uri, Consumer<String> canonicalLabelSetter, List<TermViolation> violations ) {
+    private void validateSlot( String slot, @Nullable String label, @Nullable String uri, Consumer<String> canonicalLabelSetter, Consumer<String> canonicalUriSetter, List<TermViolation> violations, List<TermCanonicalization> canonicalizations ) {
         if ( StringUtils.isBlank( uri ) ) {
             return; // free text — nothing to ground
         }
@@ -90,25 +99,59 @@ public class OntologyTermValidatorImpl implements OntologyTermValidator {
             }
         }
 
+        // Normalize a known Gemma-ontology term (TGEMO) that arrived on a foreign base back to the Gemma base
+        // BEFORE resolution, so a real term written as e.g. purl.obolibrary.org/obo/TGEMO_00166 grounds instead
+        // of being mis-reported as fabricated. A fabricated id still won't resolve under the canonical base.
+        String submittedUri = uri;
+        String canonicalUri = canonicalizeGemmaOntologyUri( uri );
+        boolean uriRewritten = !canonicalUri.equals( uri );
+        if ( uriRewritten ) {
+            canonicalUriSetter.accept( canonicalUri );
+            uri = canonicalUri;
+        }
+
         String resolvedLabel = resolveLabel( uri, slot, label, violations );
         if ( resolvedLabel == null ) {
             return; // resolveLabel already recorded URI_UNRESOLVED / UNVERIFIED, or nothing to compare
         }
 
+        boolean labelRewritten;
         if ( StringUtils.isBlank( label ) ) {
             // a URI with no label supplied — fill in the canonical one rather than reject
             canonicalLabelSetter.accept( resolvedLabel );
-            return;
-        }
-        if ( label.equals( resolvedLabel ) ) {
-            return; // exact match
-        }
-        if ( normalize( label ).equals( normalize( resolvedLabel ) ) ) {
+            labelRewritten = true;
+        } else if ( label.equals( resolvedLabel ) ) {
+            labelRewritten = false; // exact match
+        } else if ( normalize( label ).equals( normalize( resolvedLabel ) ) ) {
             // case / whitespace difference only — accept, but store the canonical form
             canonicalLabelSetter.accept( resolvedLabel );
+            labelRewritten = true;
+        } else {
+            violations.add( new TermViolation( slot, label, uri, resolvedLabel, TermViolation.Reason.LABEL_MISMATCH ) );
             return;
         }
-        violations.add( new TermViolation( slot, label, uri, resolvedLabel, TermViolation.Reason.LABEL_MISMATCH ) );
+
+        if ( uriRewritten || labelRewritten ) {
+            canonicalizations.add( new TermCanonicalization( slot, label, resolvedLabel, submittedUri, canonicalUri ) );
+        }
+    }
+
+    /**
+     * Rewrite a URI carrying a Gemma-owned ontology id ({@code TGEMO_<n>}) onto Gemma's canonical ontology base
+     * regardless of the base it arrived on (the OBO PURL base, or a double-mangled
+     * {@code .../obo/http_//gemma…/TGEMO_…} form) — the server-side mirror of the curation-UI's {@code curieToUrl}.
+     * A stopgap until every writer emits the canonical base; returns the URI unchanged when it carries no such id
+     * or is already canonical.
+     */
+    private static String canonicalizeGemmaOntologyUri( String uri ) {
+        Matcher m = GEMMA_ONTOLOGY_ID.matcher( uri );
+        if ( m.find() ) {
+            String canonical = OntologyUtils.BASE_GEMMA_ONTOLOGY_URI + m.group( 1 );
+            if ( !canonical.equals( uri ) ) {
+                return canonical;
+            }
+        }
+        return uri;
     }
 
     /**

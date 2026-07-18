@@ -28,6 +28,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.model.genome.Gene;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -86,6 +87,95 @@ public class OntologyTermValidatorImplTest {
         Characteristic c = characteristic( null, null, "Homo  sapiens ", "http://x/t" );
         assertTrue( validator.validateAndCanonicalize( c ).isEmpty() );
         assertEquals( "Homo sapiens", c.getValue() );
+    }
+
+    @Test
+    public void testCaseNearMatchRecordedAsCanonicalization() throws Exception {
+        localResolves( "http://x/asthma", "asthma" );
+        Characteristic c = characteristic( null, null, "Asthma", "http://x/asthma" );
+        List<TermCanonicalization> canons = new ArrayList<>();
+        assertTrue( validator.validateAndCanonicalize( c, canons ).isEmpty() );
+        assertEquals( 1, canons.size() );
+        assertEquals( "value", canons.get( 0 ).getSlot() );
+        assertEquals( "Asthma", canons.get( 0 ).getSubmittedLabel() );
+        assertEquals( "asthma", canons.get( 0 ).getCanonicalLabel() );
+    }
+
+    @Test
+    public void testBlankFillRecordedAsCanonicalization() throws Exception {
+        localResolves( "http://x/asthma", "asthma" );
+        Characteristic c = characteristic( null, null, null, "http://x/asthma" );
+        List<TermCanonicalization> canons = new ArrayList<>();
+        assertTrue( validator.validateAndCanonicalize( c, canons ).isEmpty() );
+        assertEquals( 1, canons.size() );
+        assertEquals( "value", canons.get( 0 ).getSlot() );
+        assertNull( canons.get( 0 ).getSubmittedLabel() );
+        assertEquals( "asthma", canons.get( 0 ).getCanonicalLabel() );
+    }
+
+    @Test
+    public void testExactMatchRecordsNoCanonicalization() throws Exception {
+        localResolves( "http://x/asthma", "asthma" );
+        Characteristic c = characteristic( null, null, "asthma", "http://x/asthma" );
+        List<TermCanonicalization> canons = new ArrayList<>();
+        assertTrue( validator.validateAndCanonicalize( c, canons ).isEmpty() );
+        assertTrue( canons.isEmpty() );
+    }
+
+    @Test
+    public void testWrongBaseTgemoNormalizedResolvesAndCanonicalizesUri() throws Exception {
+        // real TGEMO id sent on the OBO PURL base — must ground under the Gemma base, not report as fabricated
+        String canonicalUri = "http://gemma.msl.ubc.ca/ont/TGEMO_00166";
+        localResolves( canonicalUri, "delivered at dose" );
+        Characteristic c = characteristic( null, null, "delivered at dose", "http://purl.obolibrary.org/obo/TGEMO_00166" );
+        List<TermCanonicalization> canons = new ArrayList<>();
+        assertTrue( validator.validateAndCanonicalize( c, canons ).isEmpty() );
+        assertEquals( canonicalUri, c.getValueUri() ); // URI rewritten in place
+        assertEquals( 1, canons.size() );
+        assertEquals( "http://purl.obolibrary.org/obo/TGEMO_00166", canons.get( 0 ).getSubmittedUri() );
+        assertEquals( canonicalUri, canons.get( 0 ).getCanonicalUri() );
+        assertEquals( "delivered at dose", canons.get( 0 ).getCanonicalLabel() );
+    }
+
+    @Test
+    public void testDoubleMangledTgemoNormalized() throws Exception {
+        String canonicalUri = "http://gemma.msl.ubc.ca/ont/TGEMO_00166";
+        localResolves( canonicalUri, "delivered at dose" );
+        Characteristic c = characteristic( null, null, "delivered at dose",
+                "http://purl.obolibrary.org/obo/http_//gemma.msl.ubc.ca/ont/TGEMO_00166" );
+        assertTrue( validator.validateAndCanonicalize( c ).isEmpty() );
+        assertEquals( canonicalUri, c.getValueUri() );
+    }
+
+    @Test
+    public void testCanonicalTgemoUriUnchanged() throws Exception {
+        String canonicalUri = "http://gemma.msl.ubc.ca/ont/TGEMO_00166";
+        localResolves( canonicalUri, "delivered at dose" );
+        Characteristic c = characteristic( null, null, "delivered at dose", canonicalUri );
+        List<TermCanonicalization> canons = new ArrayList<>();
+        assertTrue( validator.validateAndCanonicalize( c, canons ).isEmpty() );
+        assertEquals( canonicalUri, c.getValueUri() );
+        assertTrue( canons.isEmpty() ); // already canonical + exact label → nothing rewritten
+    }
+
+    @Test
+    public void testFabricatedTgemoStillRejectedAfterNormalization() throws Exception {
+        // normalization rescues real ids, not invented ones: TGEMO_99999 resolves nowhere even on the Gemma base
+        when( ontologyService.getTerm( anyString(), anyLong(), any() ) ).thenReturn( null );
+        when( olsTermResolver.resolve( anyString() ) ).thenReturn( null );
+        Characteristic c = characteristic( null, null, "made up", "http://purl.obolibrary.org/obo/TGEMO_99999" );
+        List<TermViolation> v = validator.validateAndCanonicalize( c );
+        assertEquals( 1, v.size() );
+        assertEquals( TermViolation.Reason.URI_UNRESOLVED, v.get( 0 ).getReason() );
+    }
+
+    @Test
+    public void testMismatchRecordsNoCanonicalization() throws Exception {
+        localResolves( "http://x/00166", "delivered at dose" );
+        Characteristic c = characteristic( null, null, "has_genotype", "http://x/00166" );
+        List<TermCanonicalization> canons = new ArrayList<>();
+        assertEquals( 1, validator.validateAndCanonicalize( c, canons ).size() );
+        assertTrue( canons.isEmpty() ); // a rejected slot is not a canonicalization
     }
 
     @Test

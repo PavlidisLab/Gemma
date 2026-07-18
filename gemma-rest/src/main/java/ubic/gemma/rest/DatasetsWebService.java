@@ -74,6 +74,7 @@ import ubic.gemma.core.analysis.service.ExpressionExperimentDataFileType;
 import ubic.gemma.core.loader.expression.singleCell.metadata.CellLevelCharacteristicsWriter;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.ontology.OntologyTermValidator;
+import ubic.gemma.core.ontology.TermCanonicalization;
 import ubic.gemma.core.ontology.TermViolation;
 import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.model.analysis.CellTypeAssignmentValueObject;
@@ -2299,6 +2300,9 @@ public class DatasetsWebService {
         // Accumulate ontology-term grounding failures across every new/changed annotation in the document and
         // reject the whole commit at once (below) — the last checkpoint before a hallucinated term is persisted.
         List<OntologyTermValidationException.Located> termViolations = new ArrayList<>();
+        // Accepted near-match / blank-fill label rewrites the validator applied to persisted annotations (tags +
+        // sampleCharacteristics), echoed back in the report so the UI can silently update its chip labels.
+        List<Canonicalization> canonicalizations = new ArrayList<>();
 
         if ( body.getBasics() != null ) {
             CurationBasics b = body.getBasics();
@@ -2380,7 +2384,7 @@ public class DatasetsWebService {
                     unchanged++; // gemmaId item = keep (absence never deletes; deletions are declared)
                 } else {
                     Characteristic ch = tagCommitToCharacteristic( tc );
-                    collectTermViolations( ch, "tags[" + refOrIndex( tc.getClientRef(), idx ) + "]", termViolations );
+                    collectTermViolations( ch, "tags[" + refOrIndex( tc.getClientRef(), idx ) + "]", tc.getClientRef(), termViolations, canonicalizations );
                     adds.add( new CurationCommitRequest.TagAdd( tc.getClientRef(), ch ) );
                 }
                 idx++;
@@ -2410,7 +2414,7 @@ public class DatasetsWebService {
                                 + sc.getBioassayShortName() + "' for this dataset." );
                     }
                     Characteristic ch = sampleCharacteristicToCharacteristic( sc );
-                    collectTermViolations( ch, "sampleCharacteristics[" + refOrIndex( sc.getClientRef(), idx ) + "]", termViolations );
+                    collectTermViolations( ch, "sampleCharacteristics[" + refOrIndex( sc.getClientRef(), idx ) + "]", sc.getClientRef(), termViolations, canonicalizations );
                     adds.add( new CurationCommitRequest.SampleCharacteristicAdd( sc.getClientRef(), bmId, ch ) );
                 }
                 idx++;
@@ -2449,7 +2453,7 @@ public class DatasetsWebService {
             // e.g. shortName already in use
             throw new jakarta.ws.rs.ClientErrorException( e.getMessage(), jakarta.ws.rs.core.Response.Status.CONFLICT );
         }
-        return CurationCommitReport.from( result, request, !dryRun );
+        return CurationCommitReport.from( result, request, !dryRun, canonicalizations );
     }
 
     /**
@@ -3012,13 +3016,24 @@ public class DatasetsWebService {
      * prefixing each with the item's request-body {@code location} (e.g. {@code tags[clientRef=t7]}). An
      * unverified term (OLS unreachable) is dropped rather than blocking when fail-open is configured.
      */
-    private void collectTermViolations( Characteristic c, String location, List<OntologyTermValidationException.Located> sink ) {
-        for ( TermViolation v : ontologyTermValidator.validateAndCanonicalize( c ) ) {
+    private void collectTermViolations( Characteristic c, String location, @Nullable String clientRef,
+            List<OntologyTermValidationException.Located> sink, @Nullable List<Canonicalization> canonSink ) {
+        List<TermCanonicalization> canons = new ArrayList<>();
+        for ( TermViolation v : ontologyTermValidator.validateAndCanonicalize( c, canons ) ) {
             if ( v.getReason() == TermViolation.Reason.UNVERIFIED_OLS_UNAVAILABLE && !ontologyValidationOlsFailClosed ) {
                 log.warn( "Allowing unverified term at " + location + "." + v.getSlot() + " (OLS unavailable, fail-open)." );
                 continue;
             }
             sink.add( new OntologyTermValidationException.Located( location + "." + v.getSlot(), v ) );
+        }
+        // Echo the accepted near-match / blank-fill rewrites back so the client can update its display. Only the
+        // callers whose Characteristic is carried into the commit request pass a canonSink; the design gate
+        // validates a throwaway Statement (rejection-only — the rewrite is never persisted) and passes null.
+        if ( canonSink != null ) {
+            for ( TermCanonicalization tc : canons ) {
+                canonSink.add( new Canonicalization( location + "." + tc.getSlot(), clientRef,
+                        tc.getSubmittedLabel(), tc.getCanonicalLabel(), tc.getSubmittedUri(), tc.getCanonicalUri() ) );
+            }
         }
     }
 
@@ -3044,7 +3059,7 @@ public class DatasetsWebService {
                 Characteristic cat = Characteristic.Factory.newInstance();
                 cat.setCategory( fc.getCategory().getLabel() );
                 cat.setCategoryUri( fc.getCategory().getUri() );
-                collectTermViolations( cat, floc, sink );
+                collectTermViolations( cat, floc, fc.getClientRef(), sink, null );
             }
             int vi = 0;
             for ( FactorValueCommit fvc : nullSafe( fc.getFactorValues() != null ? fc.getFactorValues().getItems() : null ) ) {
@@ -3068,7 +3083,7 @@ public class DatasetsWebService {
                         s.setObject( sc.getObject().getLabel() );
                         s.setObjectUri( sc.getObject().getUri() );
                     }
-                    collectTermViolations( s, vloc + ".statements[" + refOrIndex( sc.getClientRef(), si ) + "]", sink );
+                    collectTermViolations( s, vloc + ".statements[" + refOrIndex( sc.getClientRef(), si ) + "]", sc.getClientRef(), sink, null );
                     si++;
                 }
                 vi++;
@@ -3119,18 +3134,21 @@ public class DatasetsWebService {
         private final Map<String, Long> idMap;
         private final Map<String, CurationSectionChange> changes;
         private final List<Long> auditEventIds;
+        private final List<Canonicalization> canonicalizations;
         private final String error;
 
         private CurationCommitReport( boolean applied, Map<String, CurationSectionChange> changes,
-                Map<String, Long> idMap, List<Long> auditEventIds ) {
+                Map<String, Long> idMap, List<Long> auditEventIds, List<Canonicalization> canonicalizations ) {
             this.applied = applied;
             this.idMap = idMap;
             this.changes = changes;
             this.auditEventIds = auditEventIds;
+            this.canonicalizations = canonicalizations;
             this.error = "";
         }
 
-        static CurationCommitReport from( CurationCommitResult r, CurationCommitRequest req, boolean applied ) {
+        static CurationCommitReport from( CurationCommitResult r, CurationCommitRequest req, boolean applied,
+                List<Canonicalization> canonicalizations ) {
             Map<String, CurationSectionChange> changes = new LinkedHashMap<>();
             if ( req.isBasicsPresent() ) {
                 changes.put( "basics", r.isBasicsChanged()
@@ -3164,13 +3182,14 @@ public class DatasetsWebService {
             if ( r.getTagsIdMap() != null ) idMap.putAll( r.getTagsIdMap() );
             if ( r.getSampleCharsIdMap() != null ) idMap.putAll( r.getSampleCharsIdMap() );
             List<Long> auditEventIds = r.getDesignAuditEventIds() != null ? r.getDesignAuditEventIds() : Collections.emptyList();
-            return new CurationCommitReport( applied, changes, idMap, auditEventIds );
+            return new CurationCommitReport( applied, changes, idMap, auditEventIds, canonicalizations );
         }
 
         public boolean isApplied() { return applied; }
         public Map<String, Long> getIdMap() { return idMap; }
         public Map<String, CurationSectionChange> getChanges() { return changes; }
         public List<Long> getAuditEventIds() { return auditEventIds; }
+        public List<Canonicalization> getCanonicalizations() { return canonicalizations; }
         public String getError() { return error; }
     }
 
@@ -3191,6 +3210,51 @@ public class DatasetsWebService {
         public int getUpdated() { return updated; }
         public int getDeleted() { return deleted; }
         public int getUnchanged() { return unchanged; }
+    }
+
+    /**
+     * One accepted rewrite the grounding gate applied to a persisted annotation — a case/whitespace-only
+     * near-match canonicalized to the term's label, a blank label filled in from its URI, and/or a known
+     * Gemma-ontology term (e.g. {@code TGEMO_*}) whose URI was normalized onto the canonical Gemma base. Not a
+     * rejection — the slot passed — but the stored value differs from what was submitted, so the client can
+     * silently update the chip to {@code canonicalLabel} (and knows its {@code submittedUri} was off-base — a
+     * signal for tracking down which writer emitted the wrong base). A field pair being equal means that
+     * dimension was unchanged. Only tags + sampleCharacteristics are reported (the design-section gate is
+     * rejection-only and never persists its rewrite).
+     */
+    public static class Canonicalization {
+        private final String location;
+        @Nullable
+        private final String clientRef;
+        @Nullable
+        private final String submittedLabel;
+        private final String canonicalLabel;
+        private final String submittedUri;
+        private final String canonicalUri;
+
+        Canonicalization( String location, @Nullable String clientRef, @Nullable String submittedLabel, String canonicalLabel, String submittedUri, String canonicalUri ) {
+            this.location = location;
+            this.clientRef = clientRef;
+            this.submittedLabel = submittedLabel;
+            this.canonicalLabel = canonicalLabel;
+            this.submittedUri = submittedUri;
+            this.canonicalUri = canonicalUri;
+        }
+
+        /** Request-body path to the rewritten slot, e.g. {@code tags[clientRef=t7].value}. */
+        public String getLocation() { return location; }
+        /** The item's {@code clientRef}, so the client can map the rewrite back to its chip without parsing. */
+        @Nullable
+        public String getClientRef() { return clientRef; }
+        /** The label as submitted; {@code null} when a URI arrived with no label and one was filled in. */
+        @Nullable
+        public String getSubmittedLabel() { return submittedLabel; }
+        /** The canonical label now stored — display this (equals {@code submittedLabel} when only the URI changed). */
+        public String getCanonicalLabel() { return canonicalLabel; }
+        /** The URI as submitted (off-base when it differs from {@code canonicalUri}). */
+        public String getSubmittedUri() { return submittedUri; }
+        /** The URI now stored (equals {@code submittedUri} when only the label changed). */
+        public String getCanonicalUri() { return canonicalUri; }
     }
 
     /**
