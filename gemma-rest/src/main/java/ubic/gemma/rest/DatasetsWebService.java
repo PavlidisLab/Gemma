@@ -73,6 +73,8 @@ import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.analysis.service.ExpressionExperimentDataFileType;
 import ubic.gemma.core.loader.expression.singleCell.metadata.CellLevelCharacteristicsWriter;
 import ubic.gemma.core.ontology.OntologyService;
+import ubic.gemma.core.ontology.OntologyTermValidator;
+import ubic.gemma.core.ontology.TermViolation;
 import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.model.analysis.CellTypeAssignmentValueObject;
 import ubic.gemma.model.analysis.expression.diff.*;
@@ -294,6 +296,17 @@ public class DatasetsWebService {
     private ExpressionDataDeleterService expressionDataDeleterService;
     @Autowired
     private BibliographicReferenceService bibliographicReferenceService;
+    @Autowired
+    private OntologyTermValidator ontologyTermValidator;
+
+    /**
+     * When {@code true} (default), a term URI that resolves nowhere (Gemma nor OLS) because OLS could not be
+     * reached is treated as a blocking validation failure. When {@code false}, such unverified terms are
+     * allowed through (a transient OLS outage does not block curators), while genuine mismatches and
+     * fabricated URIs are still rejected.
+     */
+    @org.springframework.beans.factory.annotation.Value("${gemma.ontology.validation.olsFailClosed}")
+    private boolean ontologyValidationOlsFailClosed;
 
     @Context
     private UriInfo uriInfo;
@@ -2283,6 +2296,10 @@ public class DatasetsWebService {
         CurationCommitRequest request = new CurationCommitRequest();
         request.setExpectedLastUpdated( parseBaselineToken( body.getBaseline() != null ? body.getBaseline().getLastModified() : null ) );
 
+        // Accumulate ontology-term grounding failures across every new/changed annotation in the document and
+        // reject the whole commit at once (below) — the last checkpoint before a hallucinated term is persisted.
+        List<OntologyTermValidationException.Located> termViolations = new ArrayList<>();
+
         if ( body.getBasics() != null ) {
             CurationBasics b = body.getBasics();
             String name = b.getName() != null ? b.getName().trim() : null;
@@ -2351,12 +2368,16 @@ public class DatasetsWebService {
             request.setTagsPresent( true );
             List<CurationCommitRequest.TagAdd> adds = new ArrayList<>();
             int unchanged = 0;
+            int idx = 0;
             for ( TagCommit tc : nullSafe( ts.getItems() ) ) {
                 if ( isExisting( tc, "tags item" ) ) {
                     unchanged++; // gemmaId item = keep (absence never deletes; deletions are declared)
                 } else {
-                    adds.add( new CurationCommitRequest.TagAdd( tc.getClientRef(), tagCommitToCharacteristic( tc ) ) );
+                    Characteristic ch = tagCommitToCharacteristic( tc );
+                    collectTermViolations( ch, "tags[" + refOrIndex( tc.getClientRef(), idx ) + "]", termViolations );
+                    adds.add( new CurationCommitRequest.TagAdd( tc.getClientRef(), ch ) );
                 }
+                idx++;
             }
             request.setTagsToAdd( adds );
             request.setTagsToDelete( new ArrayList<>( nullSafe( ts.getDeletedIds() ) ) );
@@ -2369,6 +2390,7 @@ public class DatasetsWebService {
             Map<String, Long> gsmToBmId = buildGsmToBioMaterialIdIndex( ee );
             List<CurationCommitRequest.SampleCharacteristicAdd> adds = new ArrayList<>();
             int unchanged = 0;
+            int idx = 0;
             for ( SampleCharacteristicCommit sc : nullSafe( scs.getItems() ) ) {
                 if ( isExisting( sc, "sampleCharacteristics item" ) ) {
                     unchanged++;
@@ -2381,9 +2403,11 @@ public class DatasetsWebService {
                         throw new BadRequestException( "sampleCharacteristics references unknown sample short name '"
                                 + sc.getBioassayShortName() + "' for this dataset." );
                     }
-                    adds.add( new CurationCommitRequest.SampleCharacteristicAdd( sc.getClientRef(), bmId,
-                            sampleCharacteristicToCharacteristic( sc ) ) );
+                    Characteristic ch = sampleCharacteristicToCharacteristic( sc );
+                    collectTermViolations( ch, "sampleCharacteristics[" + refOrIndex( sc.getClientRef(), idx ) + "]", termViolations );
+                    adds.add( new CurationCommitRequest.SampleCharacteristicAdd( sc.getClientRef(), bmId, ch ) );
                 }
+                idx++;
             }
             request.setSampleCharsToAdd( adds );
             request.setSampleCharsToDelete( new ArrayList<>( nullSafe( scs.getDeletedIds() ) ) );
@@ -2400,6 +2424,12 @@ public class DatasetsWebService {
             }
             request.setCurationDetailsPresent( true );
             request.setCurationDetailsNote( cd.getCurationNote() );
+        }
+
+        // Every new/changed annotation has now been ground-checked; reject the whole commit if any term failed
+        // (applies equally to preflight, so a client catches these on the dry run).
+        if ( !termViolations.isEmpty() ) {
+            throw new OntologyTermValidationException( termViolations );
         }
 
         CurationCommitResult result;
@@ -2969,6 +2999,26 @@ public class DatasetsWebService {
         c.setValue( tc.getValue().getLabel() );
         c.setValueUri( tc.getValue().getUri() );
         return c;
+    }
+
+    /**
+     * Validate a newly-built characteristic's ontology terms and append any grounding failures to the sink,
+     * prefixing each with the item's request-body {@code location} (e.g. {@code tags[clientRef=t7]}). An
+     * unverified term (OLS unreachable) is dropped rather than blocking when fail-open is configured.
+     */
+    private void collectTermViolations( Characteristic c, String location, List<OntologyTermValidationException.Located> sink ) {
+        for ( TermViolation v : ontologyTermValidator.validateAndCanonicalize( c ) ) {
+            if ( v.getReason() == TermViolation.Reason.UNVERIFIED_OLS_UNAVAILABLE && !ontologyValidationOlsFailClosed ) {
+                log.warn( "Allowing unverified term at " + location + "." + v.getSlot() + " (OLS unavailable, fail-open)." );
+                continue;
+            }
+            sink.add( new OntologyTermValidationException.Located( location + "." + v.getSlot(), v ) );
+        }
+    }
+
+    /** A stable location fragment for an item: its clientRef when present, else its zero-based index. */
+    private static String refOrIndex( @Nullable String clientRef, int index ) {
+        return StringUtils.isNotBlank( clientRef ) ? "clientRef=" + clientRef : String.valueOf( index );
     }
 
     /** Build a plain category/value {@link Characteristic} for a new per-sample characteristic. */
