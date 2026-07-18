@@ -1505,18 +1505,34 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
             log.warn( ee + " does not have an experimental design, returning null for the cell type factor." );
             return Optional.empty();
         }
-        Set<ExperimentalFactor> candidates = ee.getExperimentalDesign().getExperimentalFactors().stream()
-                .filter( ef -> ef.getCategory() != null )
-                .filter( ef -> CharacteristicUtils.hasCategory( ef.getCategory(), Categories.CELL_TYPE ) )
-                .collect( Collectors.toSet() );
+        List<ExperimentalFactor> candidates = getCellTypeFactors( ee );
         if ( candidates.isEmpty() ) {
             return Optional.empty();
         } else if ( candidates.size() > 1 ) {
             log.warn( "There is more than one cell type factor in " + ee + "." );
             return Optional.empty();
         } else {
-            return Optional.of( candidates.iterator().next() );
+            return Optional.of( candidates.get( 0 ) );
         }
+    }
+
+    /**
+     * Collect every factor in {@code ee}'s design categorized as {@link Categories#CELL_TYPE}.
+     * <p>
+     * Unlike {@link #getCellTypeFactor(ExpressionExperiment)}, this does not collapse to empty when
+     * more than one is present — it is the enumeration used to converge a design that has
+     * accidentally accumulated several cell type factors (see {@link #createCellTypeFactor}). Ordered
+     * by id (nulls last) so retention / removal decisions are deterministic.
+     */
+    private List<ExperimentalFactor> getCellTypeFactors( ExpressionExperiment ee ) {
+        if ( ee.getExperimentalDesign() == null ) {
+            return Collections.emptyList();
+        }
+        return ee.getExperimentalDesign().getExperimentalFactors().stream()
+                .filter( ef -> ef.getCategory() != null )
+                .filter( ef -> CharacteristicUtils.hasCategory( ef.getCategory(), Categories.CELL_TYPE ) )
+                .sorted( Comparator.comparing( ExperimentalFactor::getId, Comparator.nullsLast( Comparator.naturalOrder() ) ) )
+                .collect( Collectors.toList() );
     }
 
     @Override
@@ -1536,17 +1552,59 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         Assert.notNull( ee.getExperimentalDesign(), ee + " does not have an experimental design, cannot re-create the cell type factor." );
         // FIXME: this does not include a preferred CTA from non-preferred single-cell vectors
         Assert.isTrue( ctl.isPreferred(), "Can only create a cell type factor from a preferred CTA." );
-        ExperimentalFactor currentCellTypeFactor = getCellTypeFactor( ee ).orElse( null );
-        if ( currentCellTypeFactor != null && !ignoreCompatibleFactor && isCellTypeAssignmentCompatibleWithCellTypeFactor( ctl, currentCellTypeFactor ) ) {
-            log.info( "The current cell type factor " + currentCellTypeFactor + " is compatible with " + ctl + ", no need to recreate it." );
-            return currentCellTypeFactor;
+        // Enumerate ALL cell type factors, not just the single one getCellTypeFactor() would surface
+        // (it returns empty when more than one exists). A design that has accumulated several is
+        // converged back to one here rather than having yet another appended.
+        List<ExperimentalFactor> existingCellTypeFactors = getCellTypeFactors( ee );
+
+        // A factor already compatible with the assignment can be reused as-is — it keeps its
+        // sample-factorvalue associations and any dependent analyses. Only consider reuse when we
+        // haven't been told to ignore compatibility.
+        ExperimentalFactor compatibleFactor = null;
+        if ( !ignoreCompatibleFactor ) {
+            for ( ExperimentalFactor ef : existingCellTypeFactors ) {
+                if ( isCellTypeAssignmentCompatibleWithCellTypeFactor( ctl, ef ) ) {
+                    compatibleFactor = ef;
+                    break;
+                }
+            }
         }
-        if ( currentCellTypeFactor != null && removeExistingIfNecessary ) {
-            log.info( "There is already a cell type factor for " + ee + ", but it is not compatible with " + ctl + ", it will be re-created." );
-            removeCellTypeFactor( ee, currentCellTypeFactor );
-        } else if ( currentCellTypeFactor != null ) {
-            log.warn( "There is already a cell type factor for " + ee + ", but it is not compatible with " + ctl + ", and deleteExistingIfNecessary is false, so not recreating it." );
-            return null;
+
+        // Fast path unchanged from the single-factor era: a lone, compatible factor — nothing to do.
+        if ( compatibleFactor != null && existingCellTypeFactors.size() == 1 ) {
+            log.info( "The current cell type factor " + compatibleFactor + " is compatible with " + ctl + ", no need to recreate it." );
+            return compatibleFactor;
+        }
+
+        // Anything destructive is gated on removeExistingIfNecessary, matching the flag's contract
+        // (callers pass false when they must not clobber the existing design).
+        if ( !existingCellTypeFactors.isEmpty() ) {
+            if ( !removeExistingIfNecessary ) {
+                log.warn( "There " + ( existingCellTypeFactors.size() == 1 ? "is already a cell type factor" : "are already " + existingCellTypeFactors.size() + " cell type factors" )
+                        + " for " + ee + " incompatible with " + ctl + ", and removeExistingIfNecessary is false, so not recreating it." );
+                return null;
+            }
+            if ( compatibleFactor != null ) {
+                // Retain the compatible factor, drop the others so the design converges to one.
+                for ( ExperimentalFactor ef : existingCellTypeFactors ) {
+                    if ( !ef.equals( compatibleFactor ) ) {
+                        removeCellTypeFactor( ee, ef );
+                    }
+                }
+                log.info( "Kept compatible cell type factor " + compatibleFactor + " for " + ee + " and removed "
+                        + ( existingCellTypeFactors.size() - 1 ) + " other cell type factor(s)." );
+                return compatibleFactor;
+            }
+            // No compatible factor: remove every existing one, then create a fresh single one below.
+            if ( existingCellTypeFactors.size() > 1 ) {
+                log.warn( "There are " + existingCellTypeFactors.size() + " cell type factors for " + ee
+                        + "; all will be removed and replaced with a single one derived from " + ctl + "." );
+            } else {
+                log.info( "There is already a cell type factor for " + ee + ", but it is not compatible with " + ctl + ", it will be re-created." );
+            }
+            for ( ExperimentalFactor ef : existingCellTypeFactors ) {
+                removeCellTypeFactor( ee, ef );
+            }
         }
         // create a new cell type factor
         ExperimentalFactor cellTypeFactor = ExperimentalFactor.Factory.newInstance( "cell type", FactorType.CATEGORICAL, Categories.CELL_TYPE );
