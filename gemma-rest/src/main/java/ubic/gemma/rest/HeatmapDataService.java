@@ -265,11 +265,33 @@ public class HeatmapDataService {
         if ( freshEe == null ) {
             freshEe = ee;
         }
-        out.setColumns( buildColumnMetas( bioAssays, freshEe ) );
+
+        // Resolve the entity BioAssays that actually back the heatmap column axis. For an
+        // aggregated dataset (e.g. single-cell pseudobulk) the vector dimension's assays are NOT
+        // freshEe.getBioAssays() — they are per-cell-type sub-assays whose sourceBioMaterial chain
+        // carries the sample's factor values. Walking getAllFactorValues() on THOSE assays (which
+        // follows the source chain) is what surfaces the assignments, matching
+        // GET /datasets/{id}/samples?useProcessedQuantitationType=true. For a regular bulk dataset
+        // the QT's dimension assays ARE freshEe.getBioAssays(), so behaviour is unchanged.
+        QuantitationType columnQt = quantitationType != null
+                ? quantitationType
+                : expressionExperimentService.getProcessedQuantitationType( ee ).orElse( null );
+        Collection<BioAssay> columnAssays = Collections.emptyList();
+        if ( columnQt != null ) {
+            columnAssays = expressionExperimentService.getBioAssayDimensionsWithAssays( ee, columnQt ).stream()
+                    .map( BioAssayDimension::getBioAssays )
+                    .flatMap( Collection::stream )
+                    .collect( Collectors.toList() );
+        }
+        if ( columnAssays.isEmpty() ) {
+            columnAssays = freshEe.getBioAssays();
+        }
+
+        out.setColumns( buildColumnMetas( bioAssays, columnAssays ) );
 
         // Factors[] — full ExperimentalFactorValueObject (with statements via FactorValueValueObject) +
         // measurements map for continuous factors.
-        out.setFactors( buildFactorEntries( freshEe, bioAssays ) );
+        out.setFactors( buildFactorEntries( freshEe, bioAssays, columnAssays ) );
 
         return out;
     }
@@ -586,11 +608,13 @@ public class HeatmapDataService {
 
     private List<HeatmapDataValueObject.ColumnMeta> buildColumnMetas(
             List<BioAssayValueObject> bioAssays,
-            ExpressionExperiment ee ) {
+            Collection<BioAssay> sourceAssays ) {
 
-        // Build BioAssay-id -> BioMaterial map by walking the EE's bioassays.
+        // Build BioAssay-id -> BioMaterial map from the assays backing the column axis (the QT
+        // dimension's assays — for an aggregated dataset these are the pseudobulk sub-assays, not
+        // the EE's top-level bioassays).
         Map<Long, BioMaterial> baIdToBm = new HashMap<>();
-        for ( ubic.gemma.model.expression.bioAssay.BioAssay ba : ee.getBioAssays() ) {
+        for ( BioAssay ba : sourceAssays ) {
             if ( ba.getId() != null ) {
                 baIdToBm.put( ba.getId(), ba.getSampleUsed() );
             }
@@ -631,16 +655,17 @@ public class HeatmapDataService {
     // ---- factor catalogue ----------------------------------------------------------------
 
     private List<HeatmapDataValueObject.FactorEntry> buildFactorEntries(
-            ExpressionExperiment ee, List<BioAssayValueObject> bioAssays ) {
+            ExpressionExperiment ee, List<BioAssayValueObject> bioAssays, Collection<BioAssay> sourceAssays ) {
         ExperimentalDesign ed = ee.getExperimentalDesign();
         if ( ed == null || ed.getExperimentalFactors() == null || ed.getExperimentalFactors().isEmpty() ) {
             return Collections.emptyList();
         }
         // Map bioMaterial id -> bioAssay ids in the heatmap column axis (a BM may back multiple BAs).
         Map<Long, List<Long>> bmIdToBaIds = new HashMap<>();
-        // Re-walk the EE to get the BioMaterial reference for each BA so we can index measurements.
+        // Walk the column-axis assays to get the BioMaterial reference for each BA so we can index
+        // measurements (the QT dimension's assays — pseudobulk sub-assays for an aggregated dataset).
         Map<Long, Long> baIdToBmId = new HashMap<>();
-        for ( ubic.gemma.model.expression.bioAssay.BioAssay ba : ee.getBioAssays() ) {
+        for ( BioAssay ba : sourceAssays ) {
             if ( ba.getId() == null || ba.getSampleUsed() == null ) continue;
             baIdToBmId.put( ba.getId(), ba.getSampleUsed().getId() );
         }
@@ -654,7 +679,7 @@ public class HeatmapDataService {
         // its source-BM chain once, via getAllFactorValues). Replaces the per-FV × per-BA scan
         // that was ~O(numContinuousFVs × numBioAssays) source-chain probes per request.
         Map<Long, Set<Long>> fvIdToBmIds = new HashMap<>();
-        for ( ubic.gemma.model.expression.bioAssay.BioAssay ba : ee.getBioAssays() ) {
+        for ( BioAssay ba : sourceAssays ) {
             BioMaterial bm = ba.getSampleUsed();
             if ( bm == null || bm.getId() == null ) continue;
             for ( FactorValue fv : bm.getAllFactorValues() ) {
