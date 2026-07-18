@@ -37,6 +37,10 @@ import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.ontology.OntologyTermValidator;
 import ubic.gemma.core.ontology.TermViolation;
+import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.expression.experiment.ExperimentalDesignValueObject;
+import ubic.gemma.model.expression.experiment.DesignPreflightReport;
+import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.util.BuildInfo;
@@ -503,6 +507,35 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
                     .hasPathWithValue( "$.error.errors[0].locationType", "BODY" );
         }
         // nothing was persisted
+        verify( expressionExperimentService, never() ).commitCuration( any(), any(), anyBoolean() );
+    }
+
+    /** A design-section factor-value statement with an ungrounded term is rejected, located in the design tree. */
+    @Test
+    public void testCommitRejectsUngroundedDesignStatementTerm() {
+        when( expressionExperimentService.thawBioAssays( any() ) ).thenReturn( ee );
+        when( expressionExperimentService.getExperimentalDesignValueObject( any() ) ).thenReturn( new ExperimentalDesignValueObject() );
+        when( expressionExperimentService.previewDesignChange( any(), any() ) ).thenReturn( new DesignPreflightReport() );
+        // only the statement (a Statement entity) fails; the factor category passes
+        when( ontologyTermValidator.validateAndCanonicalize( any() ) ).thenAnswer( inv -> {
+            Characteristic c = inv.getArgument( 0 );
+            return ( c instanceof Statement )
+                    ? Collections.singletonList( new TermViolation( "object", "Heterozygous", "http://purl.obolibrary.org/obo/TGEMO_00003", null, TermViolation.Reason.URI_UNRESOLVED ) )
+                    : Collections.emptyList();
+        } );
+
+        String body = "{\"design\":{\"factors\":{\"items\":[{"
+                + "\"clientRef\":\"F1\",\"name\":\"genotype\",\"category\":{\"label\":\"genotype\"},"
+                + "\"factorValues\":{\"items\":[{\"clientRef\":\"FV1\",\"statements\":{\"items\":[{"
+                + "\"clientRef\":\"S1\",\"subject\":{\"label\":\"Utrn\",\"uri\":\"http://x/subj\"},"
+                + "\"object\":{\"label\":\"Heterozygous\",\"uri\":\"http://purl.obolibrary.org/obo/TGEMO_00003\"}"
+                + "}]}}]}}]}}}";
+        try ( Response r = target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( 400 );
+            assertThat( r.readEntity( String.class ) ).asInstanceOf( json() )
+                    .hasPathWithValue( "$.error.errors[0].reason", "URI_UNRESOLVED" )
+                    .hasPathWithValue( "$.error.errors[0].location", "design.factors[clientRef=F1].factorValues[clientRef=FV1].statements[clientRef=S1].object" );
+        }
         verify( expressionExperimentService, never() ).commitCuration( any(), any(), anyBoolean() );
     }
 

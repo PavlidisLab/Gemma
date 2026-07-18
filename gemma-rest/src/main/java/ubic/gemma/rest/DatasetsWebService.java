@@ -2348,6 +2348,12 @@ public class DatasetsWebService {
             request.setSplitOnFactorId( dc.getShouldSplitOnFactorId() );
             request.setSplitRationale( dc.getShouldSplitRationale() );
 
+            // Ground-check the ontology terms on the asserted factors / factor-value statements (same gate as
+            // tags + sampleCharacteristics). Only items present in the commit are checked; pure carry-forward
+            // entities aren't. Rejection only here — the near-match canonicalization the tag path applies would
+            // need to be threaded into mapStatements' VO build, which is out of scope for this gate.
+            collectDesignTermViolations( dc, termViolations );
+
             // Gate on the same preflight the standalone PUT /design uses: blockers → 400; a change that would delete
             // differential-expression analyses → 409 unless force (admin). A dry run predicts, so it never 409s.
             DesignPreflightReport report = datasetArgService.previewDesignChange( datasetArg, proposed );
@@ -3019,6 +3025,56 @@ public class DatasetsWebService {
     /** A stable location fragment for an item: its clientRef when present, else its zero-based index. */
     private static String refOrIndex( @Nullable String clientRef, int index ) {
         return StringUtils.isNotBlank( clientRef ) ? "clientRef=" + clientRef : String.valueOf( index );
+    }
+
+    /**
+     * Ground-check the ontology terms carried by a design commit: each factor's category and each asserted
+     * factor-value statement's subject/predicate/object/category. Throwaway entities are built purely to reuse
+     * {@link #collectTermViolations}; only items present in the commit are walked (carry-forward statements
+     * re-emitted from the current design are not).
+     */
+    private void collectDesignTermViolations( DesignCommit dc, List<OntologyTermValidationException.Located> sink ) {
+        if ( dc.getFactors() == null ) {
+            return;
+        }
+        int fi = 0;
+        for ( FactorCommit fc : nullSafe( dc.getFactors().getItems() ) ) {
+            String floc = "design.factors[" + refOrIndex( fc.getClientRef(), fi ) + "]";
+            if ( fc.getCategory() != null && StringUtils.isNotBlank( fc.getCategory().getUri() ) ) {
+                Characteristic cat = Characteristic.Factory.newInstance();
+                cat.setCategory( fc.getCategory().getLabel() );
+                cat.setCategoryUri( fc.getCategory().getUri() );
+                collectTermViolations( cat, floc, sink );
+            }
+            int vi = 0;
+            for ( FactorValueCommit fvc : nullSafe( fc.getFactorValues() != null ? fc.getFactorValues().getItems() : null ) ) {
+                String vloc = floc + ".factorValues[" + refOrIndex( fvc.getClientRef(), vi ) + "]";
+                int si = 0;
+                for ( StatementCommit sc : nullSafe( fvc.getStatements() != null ? fvc.getStatements().getItems() : null ) ) {
+                    Statement s = Statement.Factory.newInstance();
+                    if ( sc.getCategory() != null ) {
+                        s.setCategory( sc.getCategory().getLabel() );
+                        s.setCategoryUri( sc.getCategory().getUri() );
+                    }
+                    if ( sc.getSubject() != null ) {
+                        s.setSubject( sc.getSubject().getLabel() );
+                        s.setSubjectUri( sc.getSubject().getUri() );
+                    }
+                    if ( sc.getPredicate() != null ) {
+                        s.setPredicate( sc.getPredicate().getLabel() );
+                        s.setPredicateUri( sc.getPredicate().getUri() );
+                    }
+                    if ( sc.getObject() != null ) {
+                        s.setObject( sc.getObject().getLabel() );
+                        s.setObjectUri( sc.getObject().getUri() );
+                    }
+                    collectTermViolations( s, vloc + ".statements[" + refOrIndex( sc.getClientRef(), si ) + "]", sink );
+                    si++;
+                }
+                vi++;
+            }
+            fi++;
+        }
     }
 
     /** Build a plain category/value {@link Characteristic} for a new per-sample characteristic. */
