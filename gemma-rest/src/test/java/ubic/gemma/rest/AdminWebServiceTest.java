@@ -703,6 +703,40 @@ public class AdminWebServiceTest {
         verify( userManager, never() ).softDeleteUser( anyString(), anyString() );
     }
 
+    @Test
+    public void resetUserPassword_returnsTempPassword_andCallsManager() {
+        when( userManager.findByUserName( "alice" ) ).thenReturn( gemmaUser( "alice", true, null ) );
+
+        ResponseDataObject<AdminWebService.ResetPasswordResponse> resp = webService.resetUserPassword( "alice" );
+
+        AdminWebService.ResetPasswordResponse body = resp.getData();
+        assertThat( body.temporaryPassword ).isNotNull();
+        assertThat( body.temporaryPassword ).hasSize( 16 );
+        assertThat( body.temporaryPassword ).matches( "[A-Za-z0-9]+" );
+
+        // The generated temp password is what gets handed to the service for encoding.
+        verify( userManager ).adminChangePassword( "alice", body.temporaryPassword );
+    }
+
+    @Test
+    public void resetUserPassword_returns404_whenUserNotFound() {
+        when( userManager.findByUserName( "ghost" ) ).thenReturn( null );
+
+        assertThatThrownBy( () -> webService.resetUserPassword( "ghost" ) )
+                .isInstanceOf( NotFoundException.class );
+        verify( userManager, never() ).adminChangePassword( anyString(), anyString() );
+    }
+
+    @Test
+    public void resetUserPassword_returns409_whenUserSoftDeleted() {
+        when( userManager.findByUserName( "bob" ) ).thenReturn( gemmaUser( "bob", false, new Date() ) );
+
+        assertThatThrownBy( () -> webService.resetUserPassword( "bob" ) )
+                .isInstanceOf( ClientErrorException.class )
+                .matches( ex -> ( ( ClientErrorException ) ex ).getResponse().getStatus() == 409 );
+        verify( userManager, never() ).adminChangePassword( anyString(), anyString() );
+    }
+
     /* ===== /admin/tasks/import-geo ===== */
 
     @Test

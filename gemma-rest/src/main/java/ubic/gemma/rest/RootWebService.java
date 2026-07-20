@@ -118,6 +118,46 @@ public class RootWebService {
     // is now the canonical /me handler; this class still serves /users/me.)
 
     /**
+     * Self-service password change for the authenticated user. Requires the current
+     * password to be presented so a hijacked session or leaked token can't silently
+     * rotate the credential. Routes through {@link UserManager#changePassword}, which
+     * verifies the current password against the stored hash, enforces a minimum length,
+     * and re-encodes the new password.
+     */
+    @PUT
+    @Path("/users/me/password")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Change the authenticated user's own password",
+            description = "Requires the current password and a new password (minimum 8 characters). "
+                    + "Returns 204 on success, 400 if the current password is wrong or the new password is too short.",
+            security = {
+                    @io.swagger.v3.oas.annotations.security.SecurityRequirement(name = "basicAuth"),
+                    @io.swagger.v3.oas.annotations.security.SecurityRequirement(name = "cookieAuth")
+            },
+            responses = {
+                    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204",
+                            description = "Password changed."),
+                    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400",
+                            description = "Missing fields, wrong current password, or new password too short.") })
+    public Response changeMyPassword( ChangePasswordRequest req ) {
+        if ( req == null || req.currentPassword == null || req.currentPassword.isEmpty()
+                || req.newPassword == null || req.newPassword.isEmpty() ) {
+            throw new BadRequestException( "currentPassword and newPassword are required" );
+        }
+        try {
+            userManager.changePassword( req.currentPassword, req.newPassword );
+        } catch ( org.springframework.security.authentication.BadCredentialsException e ) {
+            // Don't distinguish "wrong current password" beyond a generic 400 message.
+            throw new BadRequestException( "The current password is incorrect." );
+        } catch ( IllegalArgumentException e ) {
+            throw new BadRequestException( e.getMessage() );
+        }
+        return Response.noContent().build();
+    }
+
+    /**
      * Top-level alias for {@code GET /datasets/categories}: the curation-UI calls {@code GET /categories} for the
      * recently-used annotation-category picker. Implemented as a 302 redirect so query params (filter, limit,
      * etc.) pass through unchanged.
@@ -210,6 +250,32 @@ public class RootWebService {
         @Deprecated
         public URI getDocs() {
             return documentationUrl;
+        }
+    }
+
+    /**
+     * Request body for {@link #changeMyPassword}. Both fields are required.
+     */
+    public static class ChangePasswordRequest {
+        /** The user's current password, re-verified before the change is applied. */
+        public String currentPassword;
+        /** The desired new password (minimum 8 characters). */
+        public String newPassword;
+
+        public String getCurrentPassword() {
+            return currentPassword;
+        }
+
+        public void setCurrentPassword( String currentPassword ) {
+            this.currentPassword = currentPassword;
+        }
+
+        public String getNewPassword() {
+            return newPassword;
+        }
+
+        public void setNewPassword( String newPassword ) {
+            this.newPassword = newPassword;
         }
     }
 

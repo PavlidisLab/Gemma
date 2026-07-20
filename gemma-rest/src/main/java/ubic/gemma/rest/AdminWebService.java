@@ -1813,6 +1813,49 @@ public class AdminWebService {
     }
 
     /**
+     * Administrative password reset — set a user's password to a fresh server-generated
+     * one-time temporary password. Does not require the user's current password (this is
+     * the recovery path for a locked-out or forgetful user). The plaintext temp password
+     * is returned once; pass it to the user out-of-band. The user should then change it via
+     * the self-service {@code PUT /users/me/password} flow. Leaves the account enabled;
+     * distinct from the email-confirmation reset flow.
+     */
+    @POST
+    @Path("/users/{username}/password")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Reset a user's password to a temporary password",
+            description = "Generates a 16-character secure-random temp password, sets it (encoded) as the user's password, and returns the plaintext once. The password appears in the response exactly once — store it elsewhere before navigating away. 404 if the username doesn't exist; 409 if the user is soft-deleted.",
+            security = {
+                    @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
+            },
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class))),
+                    @ApiResponse(responseCode = "404", description = "No user with that username",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "409", description = "User is soft-deleted",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
+            })
+    public ResponseDataObject<ResetPasswordResponse> resetUserPassword( @PathParam("username") String username ) {
+        User u = userManager.findByUserName( username );
+        if ( u == null ) {
+            throw new NotFoundException( "No user with name=" + username );
+        }
+        if ( u.getDeletedAt() != null ) {
+            throw new ClientErrorException( "user '" + username + "' is soft-deleted; restore it before resetting the password",
+                    Response.Status.CONFLICT );
+        }
+        String tempPassword = RandomStringUtils.secureStrong().nextAlphanumeric( 16 );
+        userManager.adminChangePassword( username, tempPassword );
+        ResetPasswordResponse body = new ResetPasswordResponse();
+        body.temporaryPassword = tempPassword;
+        body.warning = "Pass this temporary password to the user out-of-band. It is not stored anywhere recoverable; the user should change it via /users/me/password.";
+        return respond( body );
+    }
+
+    /**
      * Soft delete — marks the account as deleted, disables it, and preserves
      * the row so dependent references (ACL sids, audit-event authorship FKs)
      * don't dangle. Hard delete is intentionally not exposed via REST.
@@ -2276,6 +2319,12 @@ public class AdminWebService {
         public Boolean enabled;
         @Nullable
         public Boolean isAdmin;
+    }
+
+    public static class ResetPasswordResponse {
+        /** Server-generated 16-char temp password. Shown exactly once — copy it before navigating away. */
+        public String temporaryPassword;
+        public String warning;
     }
 
     public static class OntologiesResponse {
