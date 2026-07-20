@@ -1933,7 +1933,8 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
     @Test
     @WithMockUser(authorities = "GROUP_ADMIN")
     public void testUpdateDatasetPermissionsMakesPublic() {
-        when( securityService.isPublic( ee ) ).thenReturn( true );
+        // Private before the flip (guard reads false), public after (response VO reads true).
+        when( securityService.isPublic( ee ) ).thenReturn( false, true );
         when( securityService.isShared( ee ) ).thenReturn( false );
 
         DatasetsWebService.PermissionsUpdateRequest body = new DatasetsWebService.PermissionsUpdateRequest();
@@ -1948,14 +1949,35 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
 
         verify( securityService ).makePublic( ee );
         verify( securityService, never() ).makePrivate( ee );
-        verify( securityService ).isPublic( ee );
-        verify( securityService ).isShared( ee );
+        // The public transition is recorded so we can date when the dataset became crawlable.
+        verify( auditTrailService ).addUpdateEvent( eq( ee ),
+                eq( ubic.gemma.model.common.auditAndSecurity.eventType.MakePublicEvent.class ), anyString() );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testUpdateDatasetPermissionsMakePublicOnAlreadyPublicRecordsNoEvent() {
+        // Already public: guard reads true, no flip, no event -- keeps the audit trail honest.
+        when( securityService.isPublic( ee ) ).thenReturn( true );
+        when( securityService.isShared( ee ) ).thenReturn( false );
+
+        DatasetsWebService.PermissionsUpdateRequest body = new DatasetsWebService.PermissionsUpdateRequest();
+        body.setIsPublic( true );
+
+        assertThat( target( "/datasets/1/permissions" ).request().put( jakarta.ws.rs.client.Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.isPublic", true );
+
+        verify( securityService, never() ).makePublic( ee );
+        verifyNoInteractions( auditTrailService );
     }
 
     @Test
     @WithMockUser(authorities = "GROUP_ADMIN")
     public void testUpdateDatasetPermissionsMakesPrivate() {
-        when( securityService.isPublic( ee ) ).thenReturn( false );
+        // Public before the flip (guard reads true), private after (response VO reads false).
+        when( securityService.isPublic( ee ) ).thenReturn( true, false );
         when( securityService.isShared( ee ) ).thenReturn( true );
 
         DatasetsWebService.PermissionsUpdateRequest body = new DatasetsWebService.PermissionsUpdateRequest();
@@ -1969,6 +1991,8 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
 
         verify( securityService ).makePrivate( ee );
         verify( securityService, never() ).makePublic( ee );
+        verify( auditTrailService ).addUpdateEvent( eq( ee ),
+                eq( ubic.gemma.model.common.auditAndSecurity.eventType.MakePrivateEvent.class ), anyString() );
     }
 
     @Test
@@ -1988,6 +2012,71 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
 
         verify( securityService, never() ).makePublic( any( ubic.gemma.core.security.model.Securable.class ) );
         verify( securityService, never() ).makePrivate( any( ubic.gemma.core.security.model.Securable.class ) );
+        verifyNoInteractions( auditTrailService );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testMakeDatasetPublicRecordsMakePublicEvent() {
+        // Private before the flip (guard reads false), public after (response VO reads true).
+        when( securityService.isPublic( ee ) ).thenReturn( false, true );
+        when( securityService.isShared( ee ) ).thenReturn( false );
+
+        assertThat( target( "/datasets/1/makePublic" ).request().post( null ) )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.isPublic", true );
+
+        verify( securityService ).makePublic( ee );
+        verify( auditTrailService ).addUpdateEvent( eq( ee ),
+                eq( ubic.gemma.model.common.auditAndSecurity.eventType.MakePublicEvent.class ), anyString() );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testMakeDatasetPublicOnAlreadyPublicIsNoOpNoEvent() {
+        when( securityService.isPublic( ee ) ).thenReturn( true );
+        when( securityService.isShared( ee ) ).thenReturn( false );
+
+        assertThat( target( "/datasets/1/makePublic" ).request().post( null ) )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.isPublic", true );
+
+        verify( securityService, never() ).makePublic( ee );
+        verifyNoInteractions( auditTrailService );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testMakeDatasetPrivateRecordsMakePrivateEvent() {
+        // Public before the flip (guard reads true), private after (response VO reads false).
+        when( securityService.isPublic( ee ) ).thenReturn( true, false );
+        when( securityService.isShared( ee ) ).thenReturn( false );
+
+        assertThat( target( "/datasets/1/makePrivate" ).request().post( null ) )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.isPublic", false );
+
+        verify( securityService ).makePrivate( ee );
+        verify( auditTrailService ).addUpdateEvent( eq( ee ),
+                eq( ubic.gemma.model.common.auditAndSecurity.eventType.MakePrivateEvent.class ), anyString() );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testMakeDatasetPrivateOnAlreadyPrivateIsNoOpNoEvent() {
+        when( securityService.isPublic( ee ) ).thenReturn( false );
+        when( securityService.isShared( ee ) ).thenReturn( false );
+
+        assertThat( target( "/datasets/1/makePrivate" ).request().post( null ) )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.isPublic", false );
+
+        verify( securityService, never() ).makePrivate( ee );
+        verifyNoInteractions( auditTrailService );
     }
 
     @Test

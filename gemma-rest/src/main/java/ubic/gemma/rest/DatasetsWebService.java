@@ -3361,9 +3361,19 @@ public class DatasetsWebService {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         if ( body.getIsPublic() != null ) {
             if ( body.getIsPublic() ) {
-                securityService.makePublic( ee );
+                if ( !securityService.isPublic( ee ) ) {
+                    securityService.makePublic( ee );
+                    auditTrailService.addUpdateEvent( ee,
+                            ubic.gemma.model.common.auditAndSecurity.eventType.MakePublicEvent.class,
+                            "Made public via REST (PUT permissions)" );
+                }
             } else {
-                securityService.makePrivate( ee );
+                if ( securityService.isPublic( ee ) ) {
+                    securityService.makePrivate( ee );
+                    auditTrailService.addUpdateEvent( ee,
+                            ubic.gemma.model.common.auditAndSecurity.eventType.MakePrivateEvent.class,
+                            "Made private via REST (PUT permissions)" );
+                }
             }
         }
         return respond( new DatasetPermissionsValueObject( securityService.isPublic( ee ), securityService.isShared( ee ) ) );
@@ -3419,6 +3429,9 @@ public class DatasetsWebService {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         if ( !securityService.isPublic( ee ) ) {
             securityService.makePublic( ee );
+            auditTrailService.addUpdateEvent( ee,
+                    ubic.gemma.model.common.auditAndSecurity.eventType.MakePublicEvent.class,
+                    "Made public via REST (POST makePublic)" );
         }
         return respond( new DatasetPermissionsValueObject( securityService.isPublic( ee ), securityService.isShared( ee ) ) );
     }
@@ -3444,6 +3457,9 @@ public class DatasetsWebService {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         if ( securityService.isPublic( ee ) ) {
             securityService.makePrivate( ee );
+            auditTrailService.addUpdateEvent( ee,
+                    ubic.gemma.model.common.auditAndSecurity.eventType.MakePrivateEvent.class,
+                    "Made private via REST (POST makePrivate)" );
         }
         return respond( new DatasetPermissionsValueObject( securityService.isPublic( ee ), securityService.isShared( ee ) ) );
     }
