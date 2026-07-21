@@ -436,8 +436,10 @@ public class GeneSearchServiceImpl implements GeneSearchService {
         try {
             return securityService.isOwnedByCurrentUser( gs );
         } catch ( RuntimeException e ) {
+            // TEMPORARY DIAGNOSTIC: logged at ERROR so it reaches the errors log and Slack while we track down which
+            // gene set has a malformed ACL on staging. Downgrade to warn (or remove) once the data issue is resolved.
             GeneSearchServiceImpl.log
-                    .warn( "Failed to determine ownership of GeneSet with id=" + gs.getId() + "; treating it as not owned.", e );
+                    .error( "Failed to determine ownership of GeneSet with id=" + gs.getId() + "; treating it as not owned.", e );
             return false;
         }
     }
