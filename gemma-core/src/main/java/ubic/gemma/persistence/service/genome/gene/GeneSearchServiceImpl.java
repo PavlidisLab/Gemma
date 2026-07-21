@@ -250,7 +250,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
                 if ( gs == null ) {
                     continue;
                 }
-                isSetOwnedByUser.put( gs.getId(), securityService.isOwnedByCurrentUser( gs ) );
+                isSetOwnedByUser.put( gs.getId(), this.isOwnedByCurrentUserSafe( gs ) );
 
                 taxon = geneSetService.getTaxon( gs );
                 GeneSetValueObject gsVo;
@@ -414,13 +414,32 @@ public class GeneSearchServiceImpl implements GeneSearchService {
                 Set<Long> geneSetTaxaIds = geneSetService.getTaxa( gs ).stream()
                         .map( Taxon::getId )
                         .collect( Collectors.toSet() );
-                isSetOwnedByUser.put( gs.getId(), securityService.isOwnedByCurrentUser( gs ) );
+                isSetOwnedByUser.put( gs.getId(), this.isOwnedByCurrentUserSafe( gs ) );
                 if ( geneSetTaxaIds.contains( taxonId ) ) {
                     taxonCheckedSets.add( sr );
                 }
             }
         }
         return taxonCheckedSets;
+    }
+
+    /**
+     * Determine whether a gene set is owned by the current user, degrading to {@code false} if the check fails.
+     * <p>
+     * This flag is only used to highlight user-owned sets in the search results, so a failure to check a single gene
+     * set must not fail the whole gene search. {@link SecurityService#isOwnedByCurrentUser} loads the gene set's ACL in
+     * its own transaction; if that raises an exception the transaction can be left marked rollback-only, which then
+     * surfaces as an {@code UnexpectedRollbackException} on commit (observed when logged-in users search for genes on
+     * the experiment page).
+     */
+    private boolean isOwnedByCurrentUserSafe( GeneSet gs ) {
+        try {
+            return securityService.isOwnedByCurrentUser( gs );
+        } catch ( RuntimeException e ) {
+            GeneSearchServiceImpl.log
+                    .warn( "Failed to determine ownership of GeneSet with id=" + gs.getId() + "; treating it as not owned.", e );
+            return false;
+        }
     }
 
     private List<SearchResult<Gene>> retainGenesOfThisTaxon( Long taxonId, List<SearchResult<Gene>> geneSearchResults ) {
