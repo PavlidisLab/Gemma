@@ -18,7 +18,6 @@
  */
 package ubic.gemma.persistence.service.genome.gene;
 
-import gemma.gsec.SecurityService;
 import gemma.gsec.util.SecurityUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -61,7 +60,6 @@ public class GeneSearchServiceImpl implements GeneSearchService {
     private static final int MAX_GO_GROUP_SIZE = 200;
 
     private SearchService searchService;
-    private SecurityService securityService;
     private TaxonService taxonService;
     private GeneSetSearch geneSetSearch;
     private GeneSetService geneSetService;
@@ -73,12 +71,11 @@ public class GeneSearchServiceImpl implements GeneSearchService {
     }
 
     @Autowired
-    public GeneSearchServiceImpl( SearchService searchService, SecurityService securityService,
+    public GeneSearchServiceImpl( SearchService searchService,
             TaxonService taxonService, GeneSetSearch geneSetSearch, GeneSetService geneSetService,
             GeneService geneService, GeneOntologyService geneOntologyService,
             GeneSetValueObjectHelper geneSetValueObjectHelper ) {
         this.searchService = searchService;
-        this.securityService = securityService;
         this.taxonService = taxonService;
         this.geneSetSearch = geneSetSearch;
         this.geneSetService = geneSetService;
@@ -202,8 +199,6 @@ public class GeneSearchServiceImpl implements GeneSearchService {
         Collection<SearchResultDisplayObject> genes = new ArrayList<>();
         Collection<SearchResultDisplayObject> geneSets;
 
-        Map<Long, Boolean> isSetOwnedByUser = new HashMap<>();
-
         if ( taxon != null ) { // filter search results by taxon
 
             List<SearchResult<Gene>> taxonCheckedGenes = this.retainGenesOfThisTaxon( taxonId, geneSearchResults );
@@ -214,7 +209,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
             }
 
             List<SearchResult<GeneSet>> taxonCheckedSets = this
-                    .retainGeneSetsOfThisTaxon( taxonId, geneSetSearchResults, isSetOwnedByUser );
+                    .retainGeneSetsOfThisTaxon( taxonId, geneSetSearchResults );
 
             // convert result object to a value object
             List<SearchResult<DatabaseBackedGeneSetValueObject>> dbsgvo = taxonCheckedSets.stream()
@@ -250,7 +245,6 @@ public class GeneSearchServiceImpl implements GeneSearchService {
                 if ( gs == null ) {
                     continue;
                 }
-                isSetOwnedByUser.put( gs.getId(), this.isOwnedByCurrentUserSafe( gs ) );
 
                 taxon = geneSetService.getTaxon( gs );
                 GeneSetValueObject gsVo;
@@ -269,10 +263,6 @@ public class GeneSearchServiceImpl implements GeneSearchService {
             }
             taxon = null;
         }
-
-        // if a geneSet is owned by the user, mark it as such (used for giving it a special background colour in
-        // search results)
-        this.setUserOwnedForGeneSets( geneSets, isSetOwnedByUser );
 
         if ( exactGeneSymbolMatch ) {
             // get summary results
@@ -393,20 +383,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
         return queryToGenes;
     }
 
-    private void setUserOwnedForGeneSets( Collection<SearchResultDisplayObject> geneSets,
-            Map<Long, Boolean> isSetOwnedByUser ) {
-        if ( SecurityUtil.isUserLoggedIn() ) {
-            for ( SearchResultDisplayObject srDo : geneSets ) {
-                Long id = ( srDo.getResultValueObject() instanceof DatabaseBackedGeneSetValueObject ) ?
-                        ( ( GeneSetValueObject ) srDo.getResultValueObject() ).getId() :
-                        Long.valueOf( -1 );
-                srDo.setUserOwned( isSetOwnedByUser.get( id ) );
-            }
-        }
-    }
-
-    private List<SearchResult<GeneSet>> retainGeneSetsOfThisTaxon( Long taxonId, List<SearchResult<GeneSet>> geneSetSearchResults,
-            Map<Long, Boolean> isSetOwnedByUser ) {
+    private List<SearchResult<GeneSet>> retainGeneSetsOfThisTaxon( Long taxonId, List<SearchResult<GeneSet>> geneSetSearchResults ) {
         List<SearchResult<GeneSet>> taxonCheckedSets = new ArrayList<>();
         for ( SearchResult<GeneSet> sr : geneSetSearchResults ) {
             GeneSet gs = sr.getResultObject();
@@ -414,34 +391,12 @@ public class GeneSearchServiceImpl implements GeneSearchService {
                 Set<Long> geneSetTaxaIds = geneSetService.getTaxa( gs ).stream()
                         .map( Taxon::getId )
                         .collect( Collectors.toSet() );
-                isSetOwnedByUser.put( gs.getId(), this.isOwnedByCurrentUserSafe( gs ) );
                 if ( geneSetTaxaIds.contains( taxonId ) ) {
                     taxonCheckedSets.add( sr );
                 }
             }
         }
         return taxonCheckedSets;
-    }
-
-    /**
-     * Determine whether a gene set is owned by the current user, degrading to {@code false} if the check fails.
-     * <p>
-     * This flag is only used to highlight user-owned sets in the search results, so a failure to check a single gene
-     * set must not fail the whole gene search. {@link SecurityService#isOwnedByCurrentUser} loads the gene set's ACL in
-     * its own transaction; if that raises an exception the transaction can be left marked rollback-only, which then
-     * surfaces as an {@code UnexpectedRollbackException} on commit (observed when logged-in users search for genes on
-     * the experiment page).
-     */
-    private boolean isOwnedByCurrentUserSafe( GeneSet gs ) {
-        try {
-            return securityService.isOwnedByCurrentUser( gs );
-        } catch ( RuntimeException e ) {
-            // TEMPORARY DIAGNOSTIC: logged at ERROR so it reaches the errors log and Slack while we track down which
-            // gene set has a malformed ACL on staging. Downgrade to warn (or remove) once the data issue is resolved.
-            GeneSearchServiceImpl.log
-                    .error( "Failed to determine ownership of GeneSet with id=" + gs.getId() + "; treating it as not owned.", e );
-            return false;
-        }
     }
 
     private List<SearchResult<Gene>> retainGenesOfThisTaxon( Long taxonId, List<SearchResult<Gene>> geneSearchResults ) {
