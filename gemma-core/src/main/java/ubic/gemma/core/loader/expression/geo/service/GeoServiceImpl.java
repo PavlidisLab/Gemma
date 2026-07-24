@@ -32,7 +32,13 @@ import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.core.loader.expression.geo.*;
+import ubic.gemma.core.loader.expression.geo.fetcher2.GeoFetcher;
 import ubic.gemma.core.loader.expression.geo.model.*;
+import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
+import ubic.gemma.core.util.SimpleRetryPolicy;
+import ubic.gemma.core.util.locking.FileLockManager;
+
+import java.nio.file.Path;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -104,16 +110,37 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
     @Autowired
     private GeoUpdateAuditService geoUpdateAuditService;
 
+    @Autowired
+    private FTPClientFactory ftpClientFactory;
+    @Autowired
+    private FileLockManager fileLockManager;
+
     @Value("${geo.minimumSamplesToLoad}")
     private int minimumSampleCountToLoad;
     @Value("${entrez.efetch.apikey}")
     private String ncbiApiKey;
+    @Value("${geo.local.datafile.basepath}")
+    private Path geoSeriesDownloadPath;
 
     private GeoDomainObjectGenerator geoDomainObjectGenerator = new GeoDomainObjectGenerator();
 
     @Override
     public void afterPropertiesSet() throws Exception {
         geoDomainObjectGenerator.setNcbiApiKey( ncbiApiKey );
+        geoDomainObjectGenerator.setSeriesFamilySoftFetcher( buildSeriesFamilySoftFetcher() );
+    }
+
+    /**
+     * Build the resilient series-family SOFT downloader (FTP → HTTPS → GEO on-demand generator).
+     * NCBI has been deprecating anonymous FTP, so the legacy FTP-only fetcher fails on files that
+     * are still served over HTTPS. Mirrors the wiring in {@code ExpressionExperimentGeoServiceImpl}:
+     * same retry policy, download path, and shared FTP-client / file-lock infrastructure.
+     */
+    private GeoFetcher buildSeriesFamilySoftFetcher() {
+        GeoFetcher fetcher = new GeoFetcher( new SimpleRetryPolicy( 5, 500, 1.5 ), geoSeriesDownloadPath );
+        fetcher.setFtpClientFactory( ftpClientFactory );
+        fetcher.setFileLockManager( fileLockManager );
+        return fetcher;
     }
 
     @Override
