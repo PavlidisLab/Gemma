@@ -15,7 +15,9 @@ import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.job.SubmittedTask;
 import ubic.gemma.core.job.TaskCommand;
+import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.job.TaskRunningService;
+import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.tasks.analysis.expression.PreprocessTaskCommand;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
@@ -171,6 +173,83 @@ public class TasksWebServiceTest extends BaseJerseyTest5 {
                 .hasStatus( Response.Status.OK )
                 .entity()
                 .hasFieldOrPropertyWithValue( "data.status", "unknown" );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testFailedTaskReportsNetworkErrorFromBuriedIOException() throws Exception {
+        // mirrors the real GEO FTP failure: RuntimeException -> ExecutionException -> SocketException
+        java.net.SocketException socket = new java.net.SocketException( "Connection reset" );
+        RuntimeException wrapped = new RuntimeException( new java.util.concurrent.ExecutionException( socket ) );
+        SubmittedTask task = failedTaskWithException( wrapped );
+
+        assertThat( target( "/tasks/abc-123" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.status", "failed" )
+                .hasFieldOrPropertyWithValue( "data.error.code", "NETWORK_ERROR" )
+                .hasFieldOrPropertyWithValue( "data.error.exceptionType", "RuntimeException" );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testFailedTaskReportsAlreadyExistsWithExistingExperimentId() throws Exception {
+        ExpressionExperiment existing = ExpressionExperiment.Factory.newInstance();
+        existing.setId( 99L );
+        AlreadyExistsInSystemException ex = new AlreadyExistsInSystemException(
+                "There is already an expression experiment that matches GSE123", Collections.singletonList( existing ) );
+        SubmittedTask task = failedTaskWithException( ex );
+
+        assertThat( target( "/tasks/abc-123" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.error.code", "ALREADY_EXISTS" )
+                .hasFieldOrPropertyWithValue( "data.error.existingExperimentId", 99 );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testFailedTaskClassifiesSuperSeriesGateFromMessage() throws Exception {
+        IllegalStateException ex = new IllegalStateException(
+                "SuperSeries detected, set 'allowSuperSeriesImport' to 'true' to allow this dataset to load" );
+        SubmittedTask task = failedTaskWithException( ex );
+
+        assertThat( target( "/tasks/abc-123" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.error.code", "SUPERSERIES_NOT_ALLOWED" );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testFailedTaskWithoutCapturedExceptionStillReportsGenericError() throws Exception {
+        SubmittedTask task = mock( SubmittedTask.class );
+        when( task.getTaskId() ).thenReturn( "abc-123" );
+        when( task.getStatus() ).thenReturn( SubmittedTask.Status.FAILED );
+        when( task.getLastProgressUpdates() ).thenReturn( "downloading" );
+        when( task.getProgressUpdates() ).thenReturn( null );
+        when( task.getResult() ).thenReturn( new TaskResult( null ) );
+        when( taskRunningService.getSubmittedTask( "abc-123" ) ).thenReturn( task );
+
+        assertThat( target( "/tasks/abc-123" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.error.code", "TASK_FAILED" );
+    }
+
+    /**
+     * Wire a FAILED task whose result carries {@code ex} (as {@code ExecutingTask} would), registered under
+     * {@code abc-123}.
+     */
+    private SubmittedTask failedTaskWithException( Exception ex ) throws Exception {
+        SubmittedTask task = mock( SubmittedTask.class );
+        when( task.getTaskId() ).thenReturn( "abc-123" );
+        when( task.getStatus() ).thenReturn( SubmittedTask.Status.FAILED );
+        when( task.getLastProgressUpdates() ).thenReturn( "" );
+        when( task.getProgressUpdates() ).thenReturn( null );
+        when( task.getResult() ).thenReturn( new TaskResult( ex ) );
+        when( taskRunningService.getSubmittedTask( "abc-123" ) ).thenReturn( task );
+        return task;
     }
 
     @Test

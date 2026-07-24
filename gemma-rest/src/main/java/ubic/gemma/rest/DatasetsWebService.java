@@ -4208,7 +4208,10 @@ public class DatasetsWebService {
     @Operation(summary = "Import a dataset from GEO (or ArrayExpress) by accession",
             description = "Submits an async load task and returns 202 with a `Location` header pointing at "
                     + "`/tasks/{taskId}`. Body must include `accession`. Optional flags map to the corresponding "
-                    + "fields on `ExpressionExperimentLoadTaskCommand`.",
+                    + "fields on `ExpressionExperimentLoadTaskCommand`. The load runs in the background, so its "
+                    + "outcome (including any failure) is reported by polling `/tasks/{taskId}`: a failed load "
+                    + "carries a structured `error` (`code` + `message`, e.g. `NETWORK_ERROR`, `ALREADY_EXISTS`, "
+                    + "`INVALID_ACCESSION`, `BLACKLISTED`, `SUPERSERIES_NOT_ALLOWED`).",
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
             responses = {
