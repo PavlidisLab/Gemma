@@ -50,12 +50,16 @@ public interface OntologyService {
      *
      * @param searchQuery           search query
      * @param useNeuroCartaOntology use neurocarta ontology
+     * @param forceGeneOntology     always consult the Gene Ontology, even when other ontologies already
+     *                              returned hits. GO is otherwise a fallback (searched only when nothing
+     *                              else matched); set this when the caller explicitly wants GO terms
+     *                              (e.g. an annotation search filtered to the {@code GO_} URI prefix).
      * @return characteristic vos
      * @throws ubic.gemma.core.search.SearchTimeoutException if the search times out
      */
     @Deprecated
     Collection<CharacteristicValueObject> findExperimentsCharacteristicTags( String searchQuery, int maxResults,
-            boolean useNeuroCartaOntology, long timeout, TimeUnit timeUnit ) throws SearchException;
+            boolean useNeuroCartaOntology, boolean forceGeneOntology, long timeout, TimeUnit timeUnit ) throws SearchException;
 
     /**
      * Given a search string will look through the loaded ontologies for terms that match the search term. If the query

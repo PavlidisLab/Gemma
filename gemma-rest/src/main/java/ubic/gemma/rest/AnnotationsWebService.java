@@ -998,6 +998,11 @@ public class AnnotationsWebService {
         StopWatch timer = StopWatch.createStarted();
         long phaseStart = timer.getTime();
         List<CharacteristicValueObject> rawHits = new ArrayList<>();
+        // GO is a fallback in the ontology search (consulted only when other ontologies find nothing).
+        // When the caller filters to the GO_ URI prefix they explicitly want GO terms, so force GO to
+        // be consulted even if another ontology also matched — otherwise the post-filter yields nothing.
+        boolean forceGeneOntology = prefixes != null && prefixes.stream()
+                .anyMatch( p -> p != null && ( StringUtils.startsWithIgnoreCase( p.trim(), "GO_" ) || p.trim().equalsIgnoreCase( "GO" ) ) );
         for ( String query : queryValues ) {
             query = query.trim();
             // A full term URI (http://...) OR a recognized CURIE (e.g. EFO:0600015, GO:0008150)
@@ -1014,7 +1019,7 @@ public class AnnotationsWebService {
                 // falling back to local — the curator explicitly asked for staging's index.
                 rawHits.addAll( fetchUpstreamHits( query, Math.max( timeoutMs - timer.getTime(), 0 ) ) );
             } else {
-                rawHits.addAll( ontologyService.findExperimentsCharacteristicTags( query, 1000, false, Math.max( timeoutMs - timer.getTime(), 0 ), TimeUnit.MILLISECONDS ) );
+                rawHits.addAll( ontologyService.findExperimentsCharacteristicTags( query, 1000, false, forceGeneOntology, Math.max( timeoutMs - timer.getTime(), 0 ), TimeUnit.MILLISECONDS ) );
             }
         }
         long tFindCharacteristics = timer.getTime() - phaseStart;

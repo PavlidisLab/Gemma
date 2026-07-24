@@ -214,7 +214,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
      */
     @Override
     public Collection<CharacteristicValueObject> findExperimentsCharacteristicTags( String searchQuery, int maxResults,
-            boolean useNeuroCartaOntology, long timeout, TimeUnit timeUnit ) throws SearchException {
+            boolean useNeuroCartaOntology, boolean forceGeneOntology, long timeout, TimeUnit timeUnit ) throws SearchException {
 
         if ( searchQuery.trim().length() < 3 ) {
             return new HashSet<>();
@@ -243,7 +243,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
         // search the ontology for the given searchTerm, but if already found in the database dont add it again
         Collection<CharacteristicValueObject> characteristicsFromOntology = this
-                .findCharacteristicsFromOntology( searchQuery, maxResults, useNeuroCartaOntology,
+                .findCharacteristicsFromOntology( searchQuery, maxResults, useNeuroCartaOntology, forceGeneOntology,
                         characteristicFromDatabaseWithValueUri, timeUnit.toMillis( timeout ) );
 
         // order to show the the term: 1-exactMatch, 2-startWith, 3-substring and 4- no rule
@@ -904,7 +904,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
      * given a collection of characteristics add them to the correct List
      */
     private Collection<CharacteristicValueObject> findCharacteristicsFromOntology( String searchQuery, int maxResults,
-            boolean useNeuroCartaOntology,
+            boolean useNeuroCartaOntology, boolean forceGeneOntology,
             Map<String, CharacteristicValueObject> characteristicFromDatabaseWithValueUri, long timeoutMs ) throws SearchException {
 
         // in neurocarta we don't need to search all Ontologies
@@ -940,10 +940,9 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         // adds it explicitly. Consult GO only when the other ontologies came up empty: it is the
         // largest, slowest index and the fallback of last resort, and searching it on every query
         // holds the request's read-only DB connection long enough to starve the pool under load.
-        // NOTE: this means a query that matches a non-GO ontology no longer also returns GO terms;
-        // an explicit GO-only search (e.g. the Visualize picker's prefixes=GO_) should force GO by
-        // threading that request down to here (follow-up) rather than relying on this fallback.
-        if ( fromOntologies.isEmpty() && !useNeuroCartaOntology && geneOntologyService.isOntologyLoaded() ) {
+        // A caller that explicitly wants GO (e.g. the Visualize picker filtering to the GO_ prefix)
+        // passes forceGeneOntology=true to consult GO regardless of what the other ontologies returned.
+        if ( ( fromOntologies.isEmpty() || forceGeneOntology ) && !useNeuroCartaOntology && geneOntologyService.isOntologyLoaded() ) {
             try {
                 Collection<OntologySearchResult<OntologyTerm>> goTerms = ontologyCache.findTerm( geneOntologyService, searchQuery, maxResults );
                 List<CharacteristicValueObject> combined = new ArrayList<>( fromOntologies );

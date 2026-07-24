@@ -653,7 +653,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
     @Test
     public void testSearchAnnotationsPopulatesUsageCount() throws SearchException, TimeoutException {
         CharacteristicValueObject hit = new CharacteristicValueObject( "diabetes", "http://example.com/diabetes", "disease", "http://example.com/disease" );
-        when( ontologyService.findExperimentsCharacteristicTags( eq( "diabetes" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "diabetes" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( Collections.singletonList( hit ) );
 
         ExpressionExperiment ee1 = ExpressionExperiment.Factory.newInstance();
@@ -681,9 +681,9 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
     public void testSearchAnnotationsBatchResolvesEachLabelIndependently() throws SearchException, TimeoutException {
         CharacteristicValueObject diabetes = new CharacteristicValueObject( "diabetes", "http://example.com/diabetes", "disease", "http://example.com/disease" );
         CharacteristicValueObject liver = new CharacteristicValueObject( "liver", "http://example.com/liver", "organism part", "http://example.com/part" );
-        when( ontologyService.findExperimentsCharacteristicTags( eq( "diabetes" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "diabetes" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( Collections.singletonList( diabetes ) );
-        when( ontologyService.findExperimentsCharacteristicTags( eq( "liver" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "liver" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( Collections.singletonList( liver ) );
 
         String body = "{\"queries\":[{\"query\":\"diabetes\",\"category\":\"disease\"},"
@@ -716,7 +716,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
 
     @Test
     public void testSearchAnnotationsIncludeGenesFalseSkipsGeneFanout() throws SearchException, TimeoutException {
-        when( ontologyService.findExperimentsCharacteristicTags( eq( "stat5b" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "stat5b" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( Collections.emptyList() );
 
         // Default (includeGenes=true): the three gene probes fire.
@@ -976,7 +976,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
             // shuffle (t10 sorts before t2 lex-wise) and break position-based assertions.
             raw.add( new CharacteristicValueObject( "term-" + i, String.format( "http://example.com/t%03d", i ), "disease", "http://example.com/disease" ) );
         }
-        when( ontologyService.findExperimentsCharacteristicTags( eq( "diabetes" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "diabetes" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( raw );
         // Definition lookup: per-URI canned response keyed by URI.
         when( ontologyService.getDefinition( anyString(), anyLong(), any() ) )
@@ -1072,7 +1072,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
             // shuffle (t10 sorts before t2 lex-wise) and break position-based assertions.
             raw.add( new CharacteristicValueObject( "term-" + i, String.format( "http://example.com/t%03d", i ), "disease", "http://example.com/disease" ) );
         }
-        when( ontologyService.findExperimentsCharacteristicTags( eq( "diabetes" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "diabetes" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( raw );
         when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
                 .thenReturn( Collections.emptyMap() );
@@ -1094,7 +1094,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
             // shuffle (t10 sorts before t2 lex-wise) and break position-based assertions.
             raw.add( new CharacteristicValueObject( "term-" + i, String.format( "http://example.com/t%03d", i ), "disease", "http://example.com/disease" ) );
         }
-        when( ontologyService.findExperimentsCharacteristicTags( eq( "diabetes" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "diabetes" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( raw );
         when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
                 .thenReturn( Collections.emptyMap() );
@@ -1117,7 +1117,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
                 .queryParam( "limit", "101" )
                 .request().get() )
                 .hasStatus( Response.Status.BAD_REQUEST );
-        verify( ontologyService, never() ).findExperimentsCharacteristicTags( anyString(), anyInt(), anyBoolean(), anyLong(), any() );
+        verify( ontologyService, never() ).findExperimentsCharacteristicTags( anyString(), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() );
     }
 
     @Test
@@ -1127,7 +1127,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
                 .queryParam( "limit", "0" )
                 .request().get() )
                 .hasStatus( Response.Status.BAD_REQUEST );
-        verify( ontologyService, never() ).findExperimentsCharacteristicTags( anyString(), anyInt(), anyBoolean(), anyLong(), any() );
+        verify( ontologyService, never() ).findExperimentsCharacteristicTags( anyString(), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() );
     }
 
     @Test
@@ -1137,7 +1137,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         // the back-compute fast-paths on the preferred-label match.
         CharacteristicValueObject hit = new CharacteristicValueObject(
                 "Diabetes mellitus", "http://example.com/diabetes", "disease", "http://example.com/disease" );
-        when( ontologyService.findExperimentsCharacteristicTags( eq( "diabetes mellitus" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "diabetes mellitus" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( Collections.singletonList( hit ) );
         when( ontologyService.getDefinition( eq( "http://example.com/diabetes" ), anyLong(), any() ) )
                 .thenReturn( "a metabolic disease" );
@@ -1172,7 +1172,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         // forcing them to guess).
         CharacteristicValueObject hit = new CharacteristicValueObject(
                 "type b pancreatic cell", "http://example.com/CL_0000169", "cell type", "http://example.com/cell_type" );
-        when( ontologyService.findExperimentsCharacteristicTags( eq( "pancreatic cell" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "pancreatic cell" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( Collections.singletonList( hit ) );
         when( ontologyService.getDefinition( anyString(), anyLong(), any() ) ).thenReturn( null );
         OntologyTerm term = mock( OntologyTerm.class );
@@ -1206,7 +1206,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         // up the slack so the bind has a reason set.
         CharacteristicValueObject hit = new CharacteristicValueObject(
                 "hippocampus", "http://example.com/UBERON_0002421", "organism part", "http://example.com/organism_part" );
-        when( ontologyService.findExperimentsCharacteristicTags( eq( "ammon horn" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "ammon horn" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( Collections.singletonList( hit ) );
         when( ontologyService.getDefinition( anyString(), anyLong(), any() ) ).thenReturn( null );
         OntologyTerm term = mock( OntologyTerm.class );
@@ -1247,7 +1247,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         // reason).
         CharacteristicValueObject hit = new CharacteristicValueObject(
                 "alzheimer's disease", "http://example.com/DOID_10652", "disease", "http://example.com/disease" );
-        when( ontologyService.findExperimentsCharacteristicTags( eq( "alzhei" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "alzhei" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( Collections.singletonList( hit ) );
         when( ontologyService.getDefinition( anyString(), anyLong(), any() ) ).thenReturn( null );
         OntologyTerm term = mock( OntologyTerm.class );
@@ -1285,7 +1285,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         when( geneService.findByOfficialSymbol( "haptoglobin" ) ).thenReturn( Collections.emptyList() );
         when( geneService.findByOfficialName( "haptoglobin" ) ).thenReturn( Collections.singletonList( hp ) );
         when( geneService.findByAlias( "haptoglobin" ) ).thenReturn( Collections.emptyList() );
-        when( ontologyService.findExperimentsCharacteristicTags( eq( "haptoglobin" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "haptoglobin" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( Collections.emptyList() );
         when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
                 .thenReturn( Collections.emptyMap() );
@@ -1315,7 +1315,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         when( geneService.findByOfficialSymbol( "tp53" ) ).thenReturn( Collections.emptyList() );
         when( geneService.findByOfficialName( "tp53" ) ).thenReturn( Collections.emptyList() );
         when( geneService.findByAlias( "tp53" ) ).thenReturn( Collections.singletonList( tp53 ) );
-        when( ontologyService.findExperimentsCharacteristicTags( eq( "tp53" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "tp53" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( Collections.emptyList() );
         when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
                 .thenReturn( Collections.emptyMap() );
@@ -1353,7 +1353,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         when( geneService.findByOfficialSymbol( "il10" ) ).thenReturn( Collections.singletonList( il10 ) );
         when( geneService.findByOfficialName( "il10" ) ).thenReturn( Collections.emptyList() );
         when( geneService.findByAlias( "il10" ) ).thenReturn( Collections.emptyList() );
-        when( ontologyService.findExperimentsCharacteristicTags( eq( "il10" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "il10" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( Collections.singletonList( ontologyHit ) );
         when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
                 .thenReturn( Collections.emptyMap() );
@@ -1390,7 +1390,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         when( geneService.findByOfficialSymbol( "HP" ) ).thenReturn( Collections.singletonList( hp ) );
         when( geneService.findByOfficialName( "HP" ) ).thenReturn( Collections.emptyList() );
         when( geneService.findByAlias( "HP" ) ).thenReturn( Collections.singletonList( hp ) );
-        when( ontologyService.findExperimentsCharacteristicTags( eq( "HP" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "HP" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( Collections.emptyList() );
         when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
                 .thenReturn( Collections.emptyMap() );
@@ -1415,7 +1415,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
                 "age", "http://purl.obolibrary.org/obo/PATO_0000011", null, null );
         CharacteristicValueObject efo = new CharacteristicValueObject(
                 "age", "http://www.ebi.ac.uk/efo/EFO_0000246", null, null );
-        when( ontologyService.findExperimentsCharacteristicTags( eq( "age" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "age" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( Arrays.asList( pato, efo ) );
         when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
                 .thenReturn( Collections.emptyMap() );
@@ -1448,7 +1448,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         // a cell line and 1× as a protein, regardless of which ontology label happened to match.
         CharacteristicValueObject clo = new CharacteristicValueObject(
                 "mec-2 cell", "http://purl.obolibrary.org/obo/CLO_0037182", null, null );
-        when( ontologyService.findExperimentsCharacteristicTags( eq( "MEC-2" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "MEC-2" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( Collections.singletonList( clo ) );
         when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
                 .thenReturn( Collections.emptyMap() );
@@ -1482,7 +1482,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         // EFO because the strip-and-hyphen normalisation earned the match.
         CharacteristicValueObject efo = new CharacteristicValueObject( "mec2", "http://www.ebi.ac.uk/efo/EFO_0006285", null, null );
         CharacteristicValueObject clo = new CharacteristicValueObject( "mec-2 cell", "http://purl.obolibrary.org/obo/CLO_0037182", null, null );
-        when( ontologyService.findExperimentsCharacteristicTags( eq( "MEC2" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "MEC2" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( Arrays.asList( efo, clo ) );
         when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
                 .thenReturn( Collections.emptyMap() );
@@ -1506,7 +1506,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         // EFO follows.
         CharacteristicValueObject efo = new CharacteristicValueObject( "mec2", "http://www.ebi.ac.uk/efo/EFO_0006285", null, null );
         CharacteristicValueObject clo = new CharacteristicValueObject( "mec-2 cell", "http://purl.obolibrary.org/obo/CLO_0037182", null, null );
-        when( ontologyService.findExperimentsCharacteristicTags( eq( "MEC-2" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "MEC-2" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( Arrays.asList( efo, clo ) );
         when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
                 .thenReturn( Collections.emptyMap() );
@@ -1531,7 +1531,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         CharacteristicValueObject clo = new CharacteristicValueObject( "mec-2 cell", "http://purl.obolibrary.org/obo/CLO_0037182", null, null );
         CharacteristicValueObject efo = new CharacteristicValueObject( "mec2", "http://www.ebi.ac.uk/efo/EFO_0006285", null, null );
         CharacteristicValueObject unrelated = new CharacteristicValueObject( "mec2-related thing", "http://example.com/x", null, null );
-        when( ontologyService.findExperimentsCharacteristicTags( eq( "MEC2" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "MEC2" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( Arrays.asList( efo, clo, unrelated ) );
         when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
                 .thenReturn( Collections.emptyMap() );
@@ -1560,7 +1560,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         // involved on either side.
         CharacteristicValueObject diabetes = new CharacteristicValueObject(
                 "diabetes mellitus", "http://www.ebi.ac.uk/efo/EFO_0000400", null, null );
-        when( ontologyService.findExperimentsCharacteristicTags( eq( "diabetes" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "diabetes" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( Collections.singletonList( diabetes ) );
         when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
                 .thenReturn( Collections.emptyMap() );
@@ -1590,7 +1590,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         // Incidental ontology hit so the test exercises the prepend ordering.
         CharacteristicValueObject incidental = new CharacteristicValueObject(
                 "STAT5B related thing", "http://example.com/foo", null, null );
-        when( ontologyService.findExperimentsCharacteristicTags( eq( "STAT5B" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "STAT5B" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( Collections.singletonList( incidental ) );
         when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
                 .thenReturn( Collections.emptyMap() );
@@ -1614,7 +1614,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         // exact_synonym + surface the matching synonym text.
         CharacteristicValueObject hit = new CharacteristicValueObject(
                 "hippocampus", "http://example.com/UBERON_0002421", "organism part", "http://example.com/organism_part" );
-        when( ontologyService.findExperimentsCharacteristicTags( eq( "ammon's horn" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "ammon's horn" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( Collections.singletonList( hit ) );
         when( ontologyService.getDefinition( anyString(), anyLong(), any() ) )
                 .thenReturn( "the part of the brain that..." );
@@ -1661,7 +1661,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
             // shuffle (t10 sorts before t2 lex-wise) and break position-based assertions.
             raw.add( new CharacteristicValueObject( "term-" + i, String.format( "http://example.com/t%03d", i ), "disease", "http://example.com/disease" ) );
         }
-        when( ontologyService.findExperimentsCharacteristicTags( eq( "diabetes" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "diabetes" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( raw );
         when( ontologyService.getDefinition( anyString(), anyLong(), any() ) ).thenReturn( null );
         when( ontologyService.getTerm( anyString(), anyLong(), any() ) )
@@ -1715,13 +1715,13 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
                 .queryParam( "rank", "no-such-strategy" )
                 .request().get() )
                 .hasStatus( Response.Status.BAD_REQUEST );
-        verify( ontologyService, never() ).findExperimentsCharacteristicTags( anyString(), anyInt(), anyBoolean(), anyLong(), any() );
+        verify( ontologyService, never() ).findExperimentsCharacteristicTags( anyString(), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() );
     }
 
     @Test
     public void testSearchAnnotationsCollapsesDuplicateEeIdsAcrossClasses() throws SearchException, TimeoutException {
         CharacteristicValueObject hit = new CharacteristicValueObject( "diabetes", "http://example.com/diabetes", "disease", "http://example.com/disease" );
-        when( ontologyService.findExperimentsCharacteristicTags( eq( "diabetes" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "diabetes" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( Collections.singletonList( hit ) );
 
         ExpressionExperiment ee1 = ExpressionExperiment.Factory.newInstance();
@@ -1754,7 +1754,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         CharacteristicValueObject zeta = new CharacteristicValueObject( "zeta term", "http://example.com/zeta", "cat", null );
         CharacteristicValueObject alpha = new CharacteristicValueObject( "alpha term", "http://example.com/alpha", "cat", null );
         CharacteristicValueObject mike = new CharacteristicValueObject( "mike term", "http://example.com/mike", "cat", null );
-        when( ontologyService.findExperimentsCharacteristicTags( eq( "stable" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "stable" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( Arrays.asList( zeta, mike, alpha ) );
         when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
                 .thenReturn( Collections.emptyMap() );
@@ -1783,7 +1783,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         mixed.add( new CharacteristicValueObject( "EFO_1", "http://www.ebi.ac.uk/efo/EFO_0000001", "disease", null ) );
         mixed.add( new CharacteristicValueObject( "MP_3", "http://purl.obolibrary.org/obo/MP_0000003", "phenotype", null ) );
         mixed.add( new CharacteristicValueObject( "CL_2", "http://purl.obolibrary.org/obo/CL_0000002", "cell", null ) );
-        when( ontologyService.findExperimentsCharacteristicTags( eq( "myeloid" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "myeloid" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( mixed );
         when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
                 .thenReturn( Collections.emptyMap() );
@@ -1816,7 +1816,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
                 .hasStatus( Response.Status.BAD_REQUEST );
         // ontologyService must NOT be called when upstream=true and url is unset; the 400 should
         // fire before any work.
-        verify( ontologyService, never() ).findExperimentsCharacteristicTags( anyString(), anyInt(), anyBoolean(), anyLong(), any() );
+        verify( ontologyService, never() ).findExperimentsCharacteristicTags( anyString(), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() );
     }
 
     @Test
@@ -1831,7 +1831,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         for ( int i = 0; i < 5; i++ ) {
             mixed.add( new CharacteristicValueObject( "CL_" + i, "http://purl.obolibrary.org/obo/CL_000000" + i, "cell", null ) );
         }
-        when( ontologyService.findExperimentsCharacteristicTags( eq( "scoped" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "scoped" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( mixed );
         when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
                 .thenReturn( Collections.emptyMap() );
@@ -1860,7 +1860,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         // tiebreaker promotes CLO ahead of EFO.
         CharacteristicValueObject efo = new CharacteristicValueObject( "a549", "http://www.ebi.ac.uk/efo/EFO_0001086", "cell line", null );
         CharacteristicValueObject clo = new CharacteristicValueObject( "A549 cell", "http://purl.obolibrary.org/obo/CLO_0001601", "cell line", null );
-        when( ontologyService.findExperimentsCharacteristicTags( eq( "A549" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "A549" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( Arrays.asList( efo, clo ) );
         when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
                 .thenReturn( Collections.emptyMap() );
@@ -1882,7 +1882,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         // label match (tier 0); EFO's "a549" sinks to substring (tier 4). CLO must remain first.
         CharacteristicValueObject efo = new CharacteristicValueObject( "a549", "http://www.ebi.ac.uk/efo/EFO_0001086", "cell line", null );
         CharacteristicValueObject clo = new CharacteristicValueObject( "A549 cell", "http://purl.obolibrary.org/obo/CLO_0001601", "cell line", null );
-        when( ontologyService.findExperimentsCharacteristicTags( eq( "A549 cell" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "A549 cell" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( Arrays.asList( efo, clo ) );
         when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
                 .thenReturn( Collections.emptyMap() );
@@ -1905,7 +1905,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         // don't end in " cell") must fall back to URI-ASC, not get a hidden CLO boost.
         CharacteristicValueObject efo = new CharacteristicValueObject( "lung cancer", "http://www.ebi.ac.uk/efo/EFO_0001071", "disease", null );
         CharacteristicValueObject mondo = new CharacteristicValueObject( "lung cancer", "http://purl.obolibrary.org/obo/MONDO_0008903", "disease", null );
-        when( ontologyService.findExperimentsCharacteristicTags( eq( "lung cancer" ), anyInt(), anyBoolean(), anyLong(), any() ) )
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "lung cancer" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( Arrays.asList( efo, mondo ) );
         when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
                 .thenReturn( Collections.emptyMap() );
