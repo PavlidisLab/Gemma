@@ -107,7 +107,19 @@ public class OlsTermResolverImpl implements OlsTermResolver {
      */
     @Nullable
     private OlsTerm query( String iri ) throws OlsUnavailableException {
-        String url = baseUrl + "/api/terms?iri=" + URLEncoder.encode( iri, StandardCharsets.UTF_8 );
+        // OLS4 serves owl:Class terms and (object / annotation / data) properties from separate collections. A
+        // Statement predicate — has_genotype (GENO_0000222), the RO_* relations, etc. — is a property, so a
+        // terms-only lookup falsely reports it as ungrounded. Try terms first (the common slot), then properties.
+        OlsTerm asTerm = queryCollection( iri, "terms" );
+        if ( asTerm != null ) {
+            return asTerm;
+        }
+        return queryCollection( iri, "properties" );
+    }
+
+    @Nullable
+    private OlsTerm queryCollection( String iri, String collection ) throws OlsUnavailableException {
+        String url = baseUrl + "/api/" + collection + "?iri=" + URLEncoder.encode( iri, StandardCharsets.UTF_8 );
         HttpURLConnection conn = null;
         try {
             conn = ( HttpURLConnection ) new URL( url ).openConnection();
@@ -127,7 +139,7 @@ public class OlsTermResolverImpl implements OlsTermResolver {
             try ( InputStream is = conn.getInputStream() ) {
                 root = objectMapper.readTree( is );
             }
-            return parseTerm( root, iri );
+            return parseEntity( root, iri, collection );
         } catch ( IOException e ) {
             throw new OlsUnavailableException( "Failed to reach OLS for IRI " + iri, e );
         } finally {
@@ -138,28 +150,38 @@ public class OlsTermResolverImpl implements OlsTermResolver {
     }
 
     /**
-     * Extract the resolved term from an OLS {@code /api/terms} response. When OLS returns the same IRI from
-     * several ontologies, the term flagged {@code is_defining_ontology} is preferred; otherwise the first is
-     * taken (labels agree across ontologies for a shared IRI). Package-visible for fixture-based testing.
-     *
-     * @return an {@link OlsTerm} with the resolved label, or {@code null} when the response carries no
-     *         labelled term for the IRI.
+     * Extract the resolved term from an OLS {@code /api/terms} response. Kept for backward compatibility and
+     * existing tests; delegates to {@link #parseEntity}.
      */
     @Nullable
     static OlsTerm parseTerm( JsonNode root, String iri ) {
-        JsonNode terms = root.path( "_embedded" ).path( "terms" );
-        if ( !terms.isArray() || terms.isEmpty() ) {
+        return parseEntity( root, iri, "terms" );
+    }
+
+    /**
+     * Extract the resolved entity from an OLS {@code /api/{collection}} response ({@code collection} is
+     * {@code terms} or {@code properties}). When OLS returns the same IRI from several ontologies, the entity
+     * flagged {@code is_defining_ontology} is preferred; otherwise the first is taken (labels agree across
+     * ontologies for a shared IRI). Package-visible for fixture-based testing.
+     *
+     * @return an {@link OlsTerm} with the resolved label, or {@code null} when the response carries no labelled
+     *         entity for the IRI.
+     */
+    @Nullable
+    static OlsTerm parseEntity( JsonNode root, String iri, String collection ) {
+        JsonNode entities = root.path( "_embedded" ).path( collection );
+        if ( !entities.isArray() || entities.isEmpty() ) {
             return null;
         }
         JsonNode chosen = null;
-        for ( JsonNode term : terms ) {
-            if ( term.path( "is_defining_ontology" ).asBoolean( false ) ) {
-                chosen = term;
+        for ( JsonNode entity : entities ) {
+            if ( entity.path( "is_defining_ontology" ).asBoolean( false ) ) {
+                chosen = entity;
                 break;
             }
         }
         if ( chosen == null ) {
-            chosen = terms.get( 0 );
+            chosen = entities.get( 0 );
         }
         JsonNode labelNode = chosen.path( "label" );
         if ( labelNode.isMissingNode() || labelNode.isNull() ) {

@@ -20,6 +20,7 @@ package ubic.gemma.rest.util;
 import ubic.gemma.core.ontology.TermViolation;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Thrown when one or more submitted ontology terms fail grounding validation on a write. Carries every
@@ -56,8 +57,21 @@ public class OntologyTermValidationException extends RuntimeException {
     private final List<Located> violations;
 
     public OntologyTermValidationException( List<Located> violations ) {
-        super( violations.size() + " ontology term(s) failed grounding validation." );
+        super( buildMessage( violations ) );
         this.violations = violations;
+    }
+
+    /**
+     * Summarize every failing slot into the exception message so a log line (which carries only the message, not
+     * the structured {@link #violations}) names what failed and where — e.g. {@code tags[clientRef=t7].predicate:
+     * predicate URI … resolves in neither Gemma nor OLS …}. The 400 response body is built separately from
+     * {@link #getViolations()} by the exception mapper, so it is unaffected by this text.
+     */
+    private static String buildMessage( List<Located> violations ) {
+        String detail = violations.stream()
+                .map( l -> l.getLocation() + ": " + l.getViolation() )
+                .collect( Collectors.joining( "; " ) );
+        return violations.size() + " ontology term(s) failed grounding validation: [" + detail + "]";
     }
 
     public List<Located> getViolations() {

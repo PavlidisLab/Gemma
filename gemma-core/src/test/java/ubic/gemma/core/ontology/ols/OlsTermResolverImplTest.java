@@ -81,6 +81,20 @@ public class OlsTermResolverImplTest {
     }
 
     @Test
+    public void testParsePropertiesCollectionForPredicate() throws IOException {
+        // A Statement predicate (object property) is served by OLS from the "properties" collection, not "terms".
+        String json = "{\"_embedded\":{\"properties\":["
+                + "{\"iri\":\"http://purl.obolibrary.org/obo/GENO_0000222\",\"label\":\"has_genotype\",\"is_defining_ontology\":true}"
+                + "]}}";
+        JsonNode root = objectMapper.readTree( json );
+        OlsTerm term = OlsTermResolverImpl.parseEntity( root, "http://purl.obolibrary.org/obo/GENO_0000222", "properties" );
+        assertNotNull( term );
+        assertEquals( "has_genotype", term.getLabel() );
+        // and a terms-collection parse of the same envelope finds nothing (the old code path)
+        assertNull( OlsTermResolverImpl.parseEntity( root, "http://purl.obolibrary.org/obo/GENO_0000222", "terms" ) );
+    }
+
+    @Test
     public void testNotFoundFactory() {
         OlsTerm nf = OlsTerm.notFound( "http://x/1" );
         assertFalse( nf.isFound() );
