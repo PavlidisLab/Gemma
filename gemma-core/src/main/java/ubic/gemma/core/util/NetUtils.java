@@ -12,6 +12,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.SocketException;
+import java.time.Duration;
 
 /**
  * Network / transfer-rate helpers.
@@ -62,8 +63,16 @@ public class NetUtils {
     public static FTPClient connect( int mode, String host, String loginName, String password ) throws SocketException,
         IOException {
         FTPClient f = new FTPClient();
+        // Bound the connect/control/data phases so a dropped or refused connection (NCBI aggressively resets
+        // anonymous FTP under load) fails fast instead of hanging indefinitely on a read. Values mirror the pooled
+        // FTPClientFactoryImpl, but with a more generous data timeout since the SOFT payloads are large.
+        f.setConnectTimeout( ( int ) Duration.ofSeconds( 60 ).toMillis() );
+        f.setDefaultTimeout( ( int ) Duration.ofSeconds( 60 ).toMillis() );
+        f.setDataTimeout( Duration.ofSeconds( 300 ) );
         f.enterLocalPassiveMode();
-        f.setBufferSize( 32 * 2 ^ 20 );
+        // 32 MiB transfer buffer. NB: the previous '32 * 2 ^ 20' used Java's XOR operator (^), yielding an
+        // 84-byte buffer, not 32 MiB — a real throughput bug on large downloads.
+        f.setBufferSize( 32 * 1024 * 1024 );
         boolean success = false;
         f.connect( host );
         int reply = f.getReplyCode();
