@@ -107,7 +107,11 @@ public class SearchWebService {
             @QueryParam("platform") PlatformArg<?> platformArg,
             @Parameter(array = @ArraySchema(schema = @Schema(name = RESULT_TYPES_SCHEMA_NAME, hidden = true))) @QueryParam("resultTypes") List<String> resultTypes,
             @Parameter(description = "Maximum number of search results to return; capped at " + MAX_SEARCH_RESULTS + " unless `resultObject` is excluded.", schema = @Schema(type = "integer", minimum = "1", maximum = "" + MAX_SEARCH_RESULTS)) @QueryParam("limit") LimitArg limit,
-            @Parameter(description = "List of fields to exclude from the payload. Only `resultObject` is supported.") @QueryParam("exclude") ExcludeArg<SearchResult<?>> excludeArg
+            @Parameter(description = "List of fields to exclude from the payload. Only `resultObject` is supported.") @QueryParam("exclude") ExcludeArg<SearchResult<?>> excludeArg,
+            @Parameter(description = "Expand a gene search through Gene Ontology terms (GO term → annotated genes). "
+                    + "Off by default: a gene search hits only the gene services (symbol/name/alias). GO→gene is a "
+                    + "function search, not a gene search, and scanning GO on every query is slow — opt in explicitly.")
+            @QueryParam("useGeneOntology") @DefaultValue("false") boolean useGeneOntology
     ) {
         if ( query == null ) {
             throw new BadRequestException( "A query must be supplied." );
@@ -144,6 +148,10 @@ public class SearchWebService {
                 .resultTypes( resultTypesCls )
                 .maxResults( maxResults )
                 .fillResults( fillResults )
+                // Gene search hits only the gene services by default; GO→gene expansion is opt-in
+                // (it is a function search, and scanning GO on every gene query was a ~25s hot spot
+                // that pinned a DB connection and starved the pool).
+                .useGeneOntology( useGeneOntology )
                 .build();
 
         List<SearchResult<?>> searchResults;
