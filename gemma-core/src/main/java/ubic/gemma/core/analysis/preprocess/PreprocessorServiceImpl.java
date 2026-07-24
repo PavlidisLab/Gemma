@@ -73,6 +73,12 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     public void process( ExpressionExperiment ee, boolean ignoreQuantitationMismatch, boolean ignoreDiagnosticsFailure ) throws PreprocessingException {
         StopWatch timer = new StopWatch();
         timer.start();
+        if ( expressionExperimentService.getRawDataVectorCount( ee ) == 0 ) {
+            log.warn( ee.getShortName() + " has no raw expression data vectors; skipping post-processing. "
+                    + "This is expected for datasets whose data is not in the GEO SOFT/series matrix "
+                    + "(e.g. RNA-seq, where data is reanalyzed from raw sequence later)." );
+            return;
+        }
         removeInvalidatedData( ee ); // clear out old files
         processForMissingValues( ee ); // only relevant for two-channel arrays
         processVectorCreate( ee, ignoreQuantitationMismatch ); // key step
