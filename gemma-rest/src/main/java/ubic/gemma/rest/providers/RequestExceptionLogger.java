@@ -9,6 +9,7 @@ import org.glassfish.jersey.server.monitoring.RequestEvent;
 import org.glassfish.jersey.server.monitoring.RequestEventListener;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
+import ubic.gemma.rest.util.OntologyTermValidationException;
 
 import jakarta.ws.rs.ClientErrorException;
 import jakarta.ws.rs.ServiceUnavailableException;
@@ -48,9 +49,14 @@ public class RequestExceptionLogger implements ApplicationEventListener {
                 // Jersey wraps in MappableException; walk the cause chain to find the
                 // actual type so the branches match.
                 Throwable authMatch = findCause( ex, AccessDeniedException.class, AuthenticationException.class );
+                // Exceptions that map to a 4xx but are wrapped by Jersey (MappableException) so a top-level
+                // instanceof won't see them. OntologyTermValidationException is a validation 400 whose (enriched)
+                // message names every failing term — log it at WARN without a stack, not as a server fault.
+                Throwable clientMatch = findCause( ex, OntologyTermValidationException.class );
                 if ( authMatch != null ) {
                     log.debug( "{} ({}: {})", m, authMatch.getClass().getSimpleName(), authMatch.getMessage() );
-                } else if ( ex instanceof ClientErrorException
+                } else if ( clientMatch != null
+                        || ex instanceof ClientErrorException
                         // these should be treated as 400 errors, but they do not inherit from BadRequestException
                         || ex instanceof ParamException
                         // these are happening when the client closes the connection before the server can respond, in
@@ -58,7 +64,8 @@ public class RequestExceptionLogger implements ApplicationEventListener {
                         // have the class definition
                         || "org.apache.catalina.connector.ClientAbortException".equals( ex.getClass().getName() )
                         || ex instanceof ServiceUnavailableException ) {
-                    log.warn( "{} ({}: {})", m, ex.getClass().getSimpleName(), ex.getMessage() );
+                    Throwable c = clientMatch != null ? clientMatch : ex;
+                    log.warn( "{} ({}: {})", m, c.getClass().getSimpleName(), c.getMessage() );
                 } else {
                     log.error( m, ex );
                 }

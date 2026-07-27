@@ -45,8 +45,12 @@ public class TasksWebService {
     @Operation(summary = "Retrieve the status of a submitted pipeline task",
             description = "Returns a snapshot of the named task's current state (`queued`, `running`, `completed`, "
                     + "`failed`, `cancelling`, `unknown`), its submission/start/finish timestamps, the experiment "
-                    + "it operates on, and the most recent progress message. The task store is in-memory and is "
-                    + "evicted roughly 10 minutes after completion, after which this endpoint returns 404.",
+                    + "it operates on, and the most recent progress message. When the task has `failed`, an `error` "
+                    + "object carries a machine-readable `code` (e.g. `ALREADY_EXISTS`, `INVALID_ACCESSION`, "
+                    + "`NETWORK_ERROR`, `BLACKLISTED`, `SUPERSERIES_NOT_ALLOWED`), a human-readable `message`, and — "
+                    + "for `ALREADY_EXISTS` — the `existingExperimentId`. This is how the outcome of an async GEO "
+                    + "import (`POST /datasets/import`) is reported. The task store is in-memory and is evicted "
+                    + "roughly 10 minutes after completion, after which this endpoint returns 404.",
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
             responses = {

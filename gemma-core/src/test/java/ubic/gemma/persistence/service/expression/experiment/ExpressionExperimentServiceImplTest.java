@@ -663,6 +663,96 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
                 .hasMessageContaining( "Cannot apply proposed design" );
     }
 
+    /**
+     * Setting only a factor value's baseline flag is a real change: it must NOT be short-circuited as a no-op, must
+     * be written to the entity, and must be reflected in the rebuilt design returned by the apply. Regression guard
+     * for the round-trip gap where isNoOpDesignApply ignored in-place kept-FV edits (baseline PUT accepted but the
+     * flag never came back).
+     */
+    @Test
+    public void testApplyBaselineOnlyChangeIsAppliedAndReflected() {
+        buildFixture();
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        proposalFv( proposal, 100L ).setBaseline( true );
+
+        DesignApplyOutcome outcome = svc.applyDesignChange( fixture, proposal );
+
+        assertThat( outcome.isApplied() ).isTrue();
+        // entity mutated (the persist half of the round-trip)
+        assertThat( controlFv.getIsBaseline() ).isTrue();
+        // read half: constructing the design VO from the mutated entity surfaces the flag (the symptom was
+        // "PUT accepts isBaseline but it doesn't come back"). getExperimentalDesignValueObject delegates to a
+        // read service that is mocked in this AOP-less context, so we exercise the VO construction directly.
+        assertThat( designFv( new ExperimentalDesignValueObject(
+                fixture.getExperimentalDesign(), fixture.getBioAssays() ), 100L ).getBaseline() ).isTrue();
+    }
+
+    /**
+     * Designating a baseline clears any stale baseline on a sibling factor value, so at most one baseline survives
+     * per factor even when the client leaves the previous baseline's flag untouched (null = no change).
+     */
+    @Test
+    public void testApplyDesignatingBaselineClearsSibling() {
+        buildFixture();
+        controlFv.setIsBaseline( true ); // pre-existing baseline on FV 100
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        proposalFv( proposal, 100L ).setBaseline( null ); // client leaves the old baseline untouched
+        proposalFv( proposal, 101L ).setBaseline( true ); // and designates a new one
+
+        DesignApplyOutcome outcome = svc.applyDesignChange( fixture, proposal );
+
+        assertThat( outcome.isApplied() ).isTrue();
+        assertThat( treatedFv.getIsBaseline() ).isTrue();
+        assertThat( controlFv.getIsBaseline() ).isFalse();
+    }
+
+    /**
+     * Editing only a kept factor value's statement (no structural add/delete) is a real change: it must not be
+     * short-circuited as a no-op, and the edit must reach the entity. Guards the statement half of the kept-FV
+     * no-op gap.
+     */
+    @Test
+    public void testApplyStatementOnlyEditIsAppliedAndReflected() {
+        buildFixture();
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        // change the subject of FV 100's single statement
+        proposalFv( proposal, 100L ).getStatements().get( 0 ).setSubject( "control-edited" );
+
+        DesignApplyOutcome outcome = svc.applyDesignChange( fixture, proposal );
+
+        assertThat( outcome.isApplied() ).isTrue();
+        assertThat( controlFv.getCharacteristics() )
+                .anySatisfy( s -> assertThat( s.getSubject() ).isEqualTo( "control-edited" ) );
+    }
+
+    /** A factor cannot designate more than one baseline; previewDesignChange flags it and apply rejects it. */
+    @Test
+    public void testMultipleBaselinesInFactorIsBlocked() {
+        buildFixture();
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        proposalFv( proposal, 100L ).setBaseline( true );
+        proposalFv( proposal, 101L ).setBaseline( true );
+
+        DesignPreflightReport report = svc.previewDesignChange( fixture, proposal );
+        assertThat( report.getBlockers() )
+                .anySatisfy( b -> assertThat( b.getType() ).isEqualTo( "MULTIPLE_BASELINES" ) );
+
+        assertThatThrownBy( () -> svc.applyDesignChange( fixture, proposal ) )
+                .isInstanceOf( IllegalArgumentException.class );
+    }
+
+    private static FactorValueBasicValueObject proposalFv( ExperimentalDesignValueObject vo, long fvId ) {
+        return designFv( vo, fvId );
+    }
+
+    private static FactorValueBasicValueObject designFv( ExperimentalDesignValueObject vo, long fvId ) {
+        return vo.getExperimentalFactors().stream()
+                .flatMap( f -> f.getValues().stream() )
+                .filter( v -> v.getId() != null && v.getId() == fvId )
+                .findFirst()
+                .orElseThrow( () -> new AssertionError( "no factor value " + fvId + " in design VO" ) );
+    }
+
     // ============================================================================================
     // commitCuration() design helpers: order-based clientRef→id correlation + second-pass assignment
     // ============================================================================================

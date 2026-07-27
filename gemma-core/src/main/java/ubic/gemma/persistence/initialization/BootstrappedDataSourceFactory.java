@@ -73,7 +73,11 @@ public class BootstrappedDataSourceFactory implements FactoryBean<DataSource>, D
         if ( indexOfPath == indexOfProtocol + 2 ) {
             return jdbcUrl;
         }
+        // Keep a '/' between the authority and the query. Without it,
+        // "jdbc:mysql://host/db?q" would collapse to "jdbc:mysql://host?q", which
+        // MySQL Connector/J cannot parse — it silently falls back to localhost. When
+        // there is no query, dropping the path leaves a bare authority, which is fine.
         return jdbcUrl.substring( 0, indexOfPath )
-                + ( ( indexOfQuery > 0 ) ? jdbcUrl.substring( indexOfQuery ) : "" );
+                + ( ( indexOfQuery > 0 ) ? "/" + jdbcUrl.substring( indexOfQuery ) : "" );
     }
 }

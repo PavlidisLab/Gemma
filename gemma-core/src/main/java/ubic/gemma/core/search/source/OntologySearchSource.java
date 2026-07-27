@@ -93,9 +93,14 @@ public class OntologySearchSource implements SearchSource {
     private static final double EXACT_MATCH_SCORE = -1.0;
 
     /**
-     * Amount of time to dedicate to searching and inferring terms.
+     * Amount of time to dedicate to searching and inferring terms. Bounded and tunable: because the
+     * search runs in a read-only transaction, this is also the ceiling on how long one request can
+     * hold its pooled DB connection during the ontology leg. The old 30s constant let a single slow
+     * search pin a connection for 3× the Hikari acquire timeout, cascading into pool exhaustion under
+     * load; default is now 10s (matching the pool's connectionTimeout).
      */
-    private static final long ONTOLOGY_SEARCH_AND_INFERENCE_TIMEOUT_MILLIS = 30000L;
+    @org.springframework.beans.factory.annotation.Value("${gemma.search.ontology.timeoutMs:10000}")
+    private long ontologySearchAndInferenceTimeoutMillis;
 
     @Autowired
     private OntologyService ontologyService;
@@ -122,7 +127,7 @@ public class OntologySearchSource implements SearchSource {
         log.debug( "Starting EE search for " + settings );
         Set<Set<String>> subclauses = extractTermsDnf( settings, true, context.getIssueReporter() );
         for ( Set<String> subclause : subclauses ) {
-            Collection<SearchResult<ExpressionExperiment>> classResults = this.searchExpressionExperiments( settings, context, subclause, Math.max( ONTOLOGY_SEARCH_AND_INFERENCE_TIMEOUT_MILLIS - watch.getTime(), 0 ) );
+            Collection<SearchResult<ExpressionExperiment>> classResults = this.searchExpressionExperiments( settings, context, subclause, Math.max( ontologySearchAndInferenceTimeoutMillis - watch.getTime(), 0 ) );
             if ( !classResults.isEmpty() ) {
                 log.debug( String.format( "Found %d EEs matching %s", classResults.size(), String.join( " AND ", subclause ) ) );
             }

@@ -24,6 +24,7 @@ import org.apache.commons.logging.LogFactory;
 import ubic.gemma.core.loader.expression.geo.fetcher.DatasetFetcher;
 import ubic.gemma.core.loader.expression.geo.fetcher.PlatformFetcher;
 import ubic.gemma.core.loader.expression.geo.fetcher.SeriesFetcher;
+import ubic.gemma.core.loader.expression.geo.fetcher2.GeoFetcher;
 import ubic.gemma.core.loader.expression.geo.model.*;
 import ubic.gemma.core.loader.util.fetcher.Fetcher;
 import ubic.gemma.core.loader.util.sdo.SourceDomainObjectGenerator;
@@ -51,6 +52,15 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
     private final Fetcher datasetFetcher;
     private final Fetcher seriesFetcher;
     private final Fetcher platformFetcher;
+
+    /**
+     * Resilient series-family SOFT downloader: tries FTP, falls back to HTTPS, then to GEO's
+     * on-demand generator. When set (production path, wired by {@code GeoServiceImpl}) it is used
+     * in preference to the legacy FTP-only {@link #seriesFetcher}; left null in bare test setups,
+     * which then fall back to {@link #seriesFetcher}.
+     */
+    @Nullable
+    private GeoFetcher seriesFamilySoftFetcher;
 
     private String ncbiApiKey;
     private boolean processPlatformsOnly;
@@ -187,6 +197,33 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
         this.ncbiApiKey = ncbiApiKey;
     }
 
+    /**
+     * Wire the resilient (FTP → HTTPS → GEO-generate) series-family SOFT downloader. NCBI has been
+     * deprecating anonymous FTP, so relying on the legacy FTP-only fetcher alone fails on files that
+     * are still served fine over HTTPS.
+     */
+    public void setSeriesFamilySoftFetcher( GeoFetcher seriesFamilySoftFetcher ) {
+        this.seriesFamilySoftFetcher = seriesFamilySoftFetcher;
+    }
+
+    /**
+     * Download the series-family SOFT file, preferring the resilient fetcher when wired and falling
+     * back to the legacy FTP-only {@link #seriesFetcher} otherwise. Returns {@code null} only on the
+     * legacy path (e.g. a cancelled fetch); the resilient path throws once all fallbacks are exhausted.
+     */
+    @Nullable
+    private File fetchSeriesFamilySoftFile( String seriesAccession ) {
+        if ( seriesFamilySoftFetcher != null ) {
+            try {
+                return seriesFamilySoftFetcher.fetchSeriesFamilySoftFile( seriesAccession ).toFile();
+            } catch ( IOException e ) {
+                throw new RuntimeException( "Failed to fetch the SOFT file for " + seriesAccession, e );
+            }
+        }
+        Collection<File> fullSeries = seriesFetcher.fetch( seriesAccession );
+        return fullSeries != null ? fullSeries.iterator().next() : null;
+    }
+
     public void setDoSampleMatching( boolean doSampleMatching ) {
         this.doSampleMatching = doSampleMatching;
     }
@@ -305,12 +342,11 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
      */
     private GeoSeries processSeries( String seriesAccession, GeoFamilyParser parser ) {
 
-        Collection<File> fullSeries = seriesFetcher.fetch( seriesAccession );
-        if ( fullSeries == null ) {
+        File seriesFile = fetchSeriesFamilySoftFile( seriesAccession );
+        if ( seriesFile == null ) {
             GeoDomainObjectGenerator.log.warn( "No series file found for " + seriesAccession );
             return null;
         }
-        File seriesFile = ( fullSeries.iterator() ).next();
         String seriesPath = seriesFile.getPath();
 
         parser.setProcessPlatformsOnly( this.processPlatformsOnly );
@@ -357,14 +393,11 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
     }
 
     private Collection<GeoPlatform> processSeriesPlatforms( String seriesAccession, GeoFamilyParser parser ) {
-        Collection<File> fullSeries = seriesFetcher.fetch( seriesAccession );
-        if ( fullSeries == null ) {
+        File seriesFile = fetchSeriesFamilySoftFile( seriesAccession );
+        if ( seriesFile == null ) {
             throw new RuntimeException( "No series file found for " + seriesAccession );
         }
-        File seriesFile = ( fullSeries.iterator() ).next();
-        String seriesPath;
-
-        seriesPath = seriesFile.getPath();
+        String seriesPath = seriesFile.getPath();
 
         parser.setProcessPlatformsOnly( this.processPlatformsOnly );
         try {

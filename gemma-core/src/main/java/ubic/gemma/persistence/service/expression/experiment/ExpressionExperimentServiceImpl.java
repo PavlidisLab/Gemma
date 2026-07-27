@@ -611,6 +611,18 @@ public class ExpressionExperimentServiceImpl
                             summary.setFactorValuesToCreate( summary.getFactorValuesToCreate() + 1 );
                         }
                     }
+                    // At most one baseline per factor: reject a payload that marks more than one FV as baseline.
+                    long baselineCount = pf.getValues().stream()
+                            .filter( bpv -> Boolean.TRUE.equals( bpv.getBaseline() ) )
+                            .count();
+                    if ( baselineCount > 1 ) {
+                        DesignPreflightReport.Blocker bb = new DesignPreflightReport.Blocker(
+                                "MULTIPLE_BASELINES",
+                                "Factor " + ( pf.getId() != null ? pf.getId() : "\"" + pf.getName() + "\"" )
+                                        + " designates " + baselineCount + " factor values as baseline; at most one is allowed." );
+                        bb.setFactorId( pf.getId() );
+                        report.getBlockers().add( bb );
+                    }
                 }
             }
         }
@@ -1054,6 +1066,14 @@ public class ExpressionExperimentServiceImpl
                 || s.getDifferentialExpressionAnalysesToDelete() > 0 ) {
             return false;
         }
+        // The summary counters above track only structural add/delete of factors, factor values, and biomaterial
+        // assignments. An in-place edit to a KEPT factor value (its baseline flag, deprecated value, or statement
+        // set) leaves every counter at zero, so without this check such a PUT would be mistaken for a no-op and
+        // silently dropped — the mutation in applyFactorValueChanges / updateFactorValueStatements would never be
+        // reached.
+        if ( hasKeptFactorValueEdits( ee, proposed ) ) {
+            return false;
+        }
         ExperimentalDesign ed = ee.getExperimentalDesign();
         if ( ed == null ) {
             // current design is null; proposal that introduces any non-null metadata is not a no-op
@@ -1067,6 +1087,65 @@ public class ExpressionExperimentServiceImpl
                 && Objects.equals( ed.getReplicateDescription(), proposed.getReplicateDescription() )
                 && Objects.equals( ed.getQualityControlDescription(), proposed.getQualityControlDescription() )
                 && Objects.equals( ed.getNormalizationDescription(), proposed.getNormalizationDescription() );
+    }
+
+    /**
+     * Whether {@code proposed} carries an in-place edit to an existing (kept) factor value that the structural
+     * preflight summary does not count: a baseline-flag change or a deprecated-{@code value} change. Both honour the
+     * {@code null = "no change"} convention used by {@link #applyFactorValueChanges}. Used by
+     * {@link #isNoOpDesignApply} so such edits are not short-circuited away.
+     */
+    private boolean hasKeptFactorValueEdits( ExpressionExperiment ee, ExperimentalDesignValueObject proposed ) {
+        ExperimentalDesign ed = ee.getExperimentalDesign();
+        if ( ed == null || proposed.getExperimentalFactors() == null ) {
+            return false;
+        }
+        Map<Long, FactorValue> currentFvsById = new HashMap<>();
+        for ( ExperimentalFactor ef : ed.getExperimentalFactors() ) {
+            for ( FactorValue fv : ef.getFactorValues() ) {
+                currentFvsById.put( fv.getId(), fv );
+            }
+        }
+        for ( ExperimentalDesignValueObject.ExperimentalFactorEntry pf : proposed.getExperimentalFactors() ) {
+            if ( pf.getValues() == null ) continue;
+            for ( FactorValueBasicValueObject pv : pf.getValues() ) {
+                if ( pv.getId() == null ) continue; // creations are already counted in the summary
+                FactorValue cur = currentFvsById.get( pv.getId() );
+                if ( cur == null ) continue; // unknown id — a blocker, surfaced by previewDesignChange
+                if ( pv.getBaseline() != null && !Objects.equals( pv.getBaseline(), cur.getIsBaseline() ) ) {
+                    return true;
+                }
+                //noinspection deprecation
+                if ( pv.getValue() != null && !Objects.equals( pv.getValue(), cur.getValue() ) ) {
+                    return true;
+                }
+                // Statements are replaced wholesale by updateFactorValueStatements when the payload provides them
+                // (null = "no change"). Compare by content so an add / remove / edit registers, while a pure
+                // round-trip that echoes the same statements stays a no-op.
+                if ( pv.getStatements() != null && statementsChanged( cur, pv.getStatements() ) ) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Whether the proposed statement set differs in content from what the factor value currently carries. Compares
+     * a multiset of {@link #statementContentKey content keys} so ordering and database ids are irrelevant — only
+     * add / remove / field edits count. Echoing the current statements verbatim (the common baseline-edit
+     * round-trip) yields equal multisets and is therefore not a change.
+     */
+    private static boolean statementsChanged( FactorValue cur, List<StatementValueObject> proposed ) {
+        Map<String, Integer> currentKeys = new HashMap<>();
+        for ( Statement s : cur.getCharacteristics() ) {
+            currentKeys.merge( statementContentKey( s ), 1, Integer::sum );
+        }
+        Map<String, Integer> proposedKeys = new HashMap<>();
+        for ( StatementValueObject ps : proposed ) {
+            proposedKeys.merge( statementContentKey( ps ), 1, Integer::sum );
+        }
+        return !currentKeys.equals( proposedKeys );
     }
 
     private Set<Long> computeAffectedFactorIds( Map<Long, ExperimentalFactor> currentFactorsById,
@@ -1152,11 +1231,15 @@ public class ExpressionExperimentServiceImpl
             ExperimentalDesignValueObject.ExperimentalFactorEntry pf,
             Map<Long, FactorValue> currentFvsById ) {
         if ( pf.getValues() == null ) return;
+        FactorValue designatedBaseline = null;
+        boolean baselineDesignated = false;
         for ( FactorValueBasicValueObject pv : pf.getValues() ) {
+            FactorValue target;
             if ( pv.getId() == null ) {
                 FactorValue created = createFactorValue( ef, pv );
                 ef.getFactorValues().add( created );
                 currentFvsById.put( created.getId(), created );
+                target = created;
             } else {
                 FactorValue existing = currentFvsById.get( pv.getId() );
                 if ( existing == null ) continue; // preflight should have caught this
@@ -1170,6 +1253,21 @@ public class ExpressionExperimentServiceImpl
                 // Baseline flag: null = "no change" (same round-trip-safe convention as `value`).
                 if ( pv.getBaseline() != null ) {
                     existing.setIsBaseline( pv.getBaseline() );
+                }
+                target = existing;
+            }
+            if ( Boolean.TRUE.equals( pv.getBaseline() ) ) {
+                baselineDesignated = true;
+                designatedBaseline = target;
+            }
+        }
+        // At most one baseline per factor. When the payload designates one, clear the flag on every sibling so a
+        // stale baseline the client left untouched cannot coexist. previewDesignChange blocks a payload that
+        // designates more than one, so designatedBaseline is unambiguous here.
+        if ( baselineDesignated ) {
+            for ( FactorValue fv : ef.getFactorValues() ) {
+                if ( fv != designatedBaseline && Boolean.TRUE.equals( fv.getIsBaseline() ) ) {
+                    fv.setIsBaseline( false );
                 }
             }
         }

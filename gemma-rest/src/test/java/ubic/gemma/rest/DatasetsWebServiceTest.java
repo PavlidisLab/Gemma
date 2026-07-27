@@ -35,6 +35,12 @@ import ubic.gemma.core.analysis.service.ExpressionExperimentDataFileType;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.core.ontology.OntologyService;
+import ubic.gemma.core.ontology.OntologyTermValidator;
+import ubic.gemma.core.ontology.TermViolation;
+import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.expression.experiment.ExperimentalDesignValueObject;
+import ubic.gemma.model.expression.experiment.DesignPreflightReport;
+import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.util.BuildInfo;
@@ -91,6 +97,7 @@ import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.concurrent.ConcurrentUtils.constantFuture;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.InstanceOfAssertFactories.list;
+import static ubic.gemma.rest.util.JsonAssert.json;
 import static org.mockito.Mockito.*;
 import static ubic.gemma.rest.DatasetsWebService.TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE;
 import static ubic.gemma.rest.util.Assertions.assertThat;
@@ -107,7 +114,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
 
         @Bean
         public static TestPropertyPlaceholderConfigurer placeholderConfigurer() {
-            return new TestPropertyPlaceholderConfigurer( "gemma.hosturl=http://localhost:8080" );
+            return new TestPropertyPlaceholderConfigurer( "gemma.hosturl=http://localhost:8080", "gemma.ontology.validation.olsFailClosed=true" );
         }
 
         @Bean
@@ -218,6 +225,11 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
 
         @Bean
         public OntologyService ontologyService() {
+            return mock();
+        }
+
+        @Bean
+        public ubic.gemma.core.ontology.OntologyTermValidator ontologyTermValidator() {
             return mock();
         }
 
@@ -451,6 +463,9 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
     @Autowired
     private SVDService svdService;
 
+    @Autowired
+    private OntologyTermValidator ontologyTermValidator;
+
     private ExpressionExperiment ee;
 
     @BeforeEach
@@ -473,7 +488,68 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
 
     @AfterEach
     public void resetMocks() {
-        reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService, taxonArgService, geneArgService, searchService, auditEventService, auditTrailService, securityService, geeqService, taskRunningService, differentialExpressionAnalysisService, userManager, ticketService, sampleCoexpressionAnalysisService, svdService, processedExpressionDataVectorService, expressionExperimentReportService, arrayDesignService, bibliographicReferenceService );
+        reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService, taxonArgService, geneArgService, searchService, auditEventService, auditTrailService, securityService, geeqService, taskRunningService, differentialExpressionAnalysisService, userManager, ticketService, sampleCoexpressionAnalysisService, svdService, processedExpressionDataVectorService, expressionExperimentReportService, arrayDesignService, bibliographicReferenceService, ontologyTermValidator );
+    }
+
+    private static final String HALLUCINATED_TAG_BODY = "{\"tags\":{\"items\":[{\"clientRef\":\"t7\","
+            + "\"value\":{\"label\":\"has_genotype\",\"uri\":\"http://purl.obolibrary.org/obo/TGEMO_00166\"}}]}}";
+
+    /** A tag whose label doesn't match its URI is rejected with a structured, per-slot 400. */
+    @Test
+    public void testCommitRejectsUngroundedTerm() {
+        when( ontologyTermValidator.validateAndCanonicalize( any() ) ).thenReturn( Collections.singletonList(
+                new TermViolation( "value", "has_genotype", "http://purl.obolibrary.org/obo/TGEMO_00166", "delivered at dose", TermViolation.Reason.LABEL_MISMATCH ) ) );
+        try ( Response r = target( "/datasets/1/curation" ).request().put( Entity.json( HALLUCINATED_TAG_BODY ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( 400 );
+            assertThat( r.readEntity( String.class ) ).asInstanceOf( json() )
+                    .hasPathWithValue( "$.error.errors[0].reason", "LABEL_MISMATCH" )
+                    .hasPathWithValue( "$.error.errors[0].location", "tags[clientRef=t7].value" )
+                    .hasPathWithValue( "$.error.errors[0].locationType", "BODY" );
+        }
+        // nothing was persisted
+        verify( expressionExperimentService, never() ).commitCuration( any(), any(), anyBoolean() );
+    }
+
+    /** A design-section factor-value statement with an ungrounded term is rejected, located in the design tree. */
+    @Test
+    public void testCommitRejectsUngroundedDesignStatementTerm() {
+        when( expressionExperimentService.thawBioAssays( any() ) ).thenReturn( ee );
+        when( expressionExperimentService.getExperimentalDesignValueObject( any() ) ).thenReturn( new ExperimentalDesignValueObject() );
+        when( expressionExperimentService.previewDesignChange( any(), any() ) ).thenReturn( new DesignPreflightReport() );
+        // only the statement (a Statement entity) fails; the factor category passes
+        when( ontologyTermValidator.validateAndCanonicalize( any() ) ).thenAnswer( inv -> {
+            Characteristic c = inv.getArgument( 0 );
+            return ( c instanceof Statement )
+                    ? Collections.singletonList( new TermViolation( "object", "Heterozygous", "http://purl.obolibrary.org/obo/TGEMO_00003", null, TermViolation.Reason.URI_UNRESOLVED ) )
+                    : Collections.emptyList();
+        } );
+
+        String body = "{\"design\":{\"factors\":{\"items\":[{"
+                + "\"clientRef\":\"F1\",\"name\":\"genotype\",\"category\":{\"label\":\"genotype\"},"
+                + "\"factorValues\":{\"items\":[{\"clientRef\":\"FV1\",\"statements\":{\"items\":[{"
+                + "\"clientRef\":\"S1\",\"subject\":{\"label\":\"Utrn\",\"uri\":\"http://x/subj\"},"
+                + "\"object\":{\"label\":\"Heterozygous\",\"uri\":\"http://purl.obolibrary.org/obo/TGEMO_00003\"}"
+                + "}]}}]}}]}}}";
+        try ( Response r = target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( 400 );
+            assertThat( r.readEntity( String.class ) ).asInstanceOf( json() )
+                    .hasPathWithValue( "$.error.errors[0].reason", "URI_UNRESOLVED" )
+                    .hasPathWithValue( "$.error.errors[0].location", "design.factors[clientRef=F1].factorValues[clientRef=FV1].statements[clientRef=S1].object" );
+        }
+        verify( expressionExperimentService, never() ).commitCuration( any(), any(), anyBoolean() );
+    }
+
+    /** Preflight enforces the same gate, so a client catches the failure on the dry run. */
+    @Test
+    public void testPreflightRejectsUngroundedTerm() {
+        when( ontologyTermValidator.validateAndCanonicalize( any() ) ).thenReturn( Collections.singletonList(
+                new TermViolation( "value", "has_genotype", "http://purl.obolibrary.org/obo/TGEMO_00166", "delivered at dose", TermViolation.Reason.LABEL_MISMATCH ) ) );
+        try ( Response r = target( "/datasets/1/curation/preflight" ).request().post( Entity.json( HALLUCINATED_TAG_BODY ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( 400 );
+            assertThat( r.readEntity( String.class ) ).asInstanceOf( json() )
+                    .hasPathWithValue( "$.error.errors[0].reason", "LABEL_MISMATCH" );
+        }
+        verify( expressionExperimentService, never() ).commitCuration( any(), any(), anyBoolean() );
     }
 
     @Test
@@ -1857,7 +1933,8 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
     @Test
     @WithMockUser(authorities = "GROUP_ADMIN")
     public void testUpdateDatasetPermissionsMakesPublic() {
-        when( securityService.isPublic( ee ) ).thenReturn( true );
+        // Private before the flip (guard reads false), public after (response VO reads true).
+        when( securityService.isPublic( ee ) ).thenReturn( false, true );
         when( securityService.isShared( ee ) ).thenReturn( false );
 
         DatasetsWebService.PermissionsUpdateRequest body = new DatasetsWebService.PermissionsUpdateRequest();
@@ -1872,14 +1949,35 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
 
         verify( securityService ).makePublic( ee );
         verify( securityService, never() ).makePrivate( ee );
-        verify( securityService ).isPublic( ee );
-        verify( securityService ).isShared( ee );
+        // The public transition is recorded so we can date when the dataset became crawlable.
+        verify( auditTrailService ).addUpdateEvent( eq( ee ),
+                eq( ubic.gemma.model.common.auditAndSecurity.eventType.MakePublicEvent.class ), anyString() );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testUpdateDatasetPermissionsMakePublicOnAlreadyPublicRecordsNoEvent() {
+        // Already public: guard reads true, no flip, no event -- keeps the audit trail honest.
+        when( securityService.isPublic( ee ) ).thenReturn( true );
+        when( securityService.isShared( ee ) ).thenReturn( false );
+
+        DatasetsWebService.PermissionsUpdateRequest body = new DatasetsWebService.PermissionsUpdateRequest();
+        body.setIsPublic( true );
+
+        assertThat( target( "/datasets/1/permissions" ).request().put( jakarta.ws.rs.client.Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.isPublic", true );
+
+        verify( securityService, never() ).makePublic( ee );
+        verifyNoInteractions( auditTrailService );
     }
 
     @Test
     @WithMockUser(authorities = "GROUP_ADMIN")
     public void testUpdateDatasetPermissionsMakesPrivate() {
-        when( securityService.isPublic( ee ) ).thenReturn( false );
+        // Public before the flip (guard reads true), private after (response VO reads false).
+        when( securityService.isPublic( ee ) ).thenReturn( true, false );
         when( securityService.isShared( ee ) ).thenReturn( true );
 
         DatasetsWebService.PermissionsUpdateRequest body = new DatasetsWebService.PermissionsUpdateRequest();
@@ -1893,6 +1991,8 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
 
         verify( securityService ).makePrivate( ee );
         verify( securityService, never() ).makePublic( ee );
+        verify( auditTrailService ).addUpdateEvent( eq( ee ),
+                eq( ubic.gemma.model.common.auditAndSecurity.eventType.MakePrivateEvent.class ), anyString() );
     }
 
     @Test
@@ -1912,6 +2012,71 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
 
         verify( securityService, never() ).makePublic( any( ubic.gemma.core.security.model.Securable.class ) );
         verify( securityService, never() ).makePrivate( any( ubic.gemma.core.security.model.Securable.class ) );
+        verifyNoInteractions( auditTrailService );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testMakeDatasetPublicRecordsMakePublicEvent() {
+        // Private before the flip (guard reads false), public after (response VO reads true).
+        when( securityService.isPublic( ee ) ).thenReturn( false, true );
+        when( securityService.isShared( ee ) ).thenReturn( false );
+
+        assertThat( target( "/datasets/1/makePublic" ).request().post( null ) )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.isPublic", true );
+
+        verify( securityService ).makePublic( ee );
+        verify( auditTrailService ).addUpdateEvent( eq( ee ),
+                eq( ubic.gemma.model.common.auditAndSecurity.eventType.MakePublicEvent.class ), anyString() );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testMakeDatasetPublicOnAlreadyPublicIsNoOpNoEvent() {
+        when( securityService.isPublic( ee ) ).thenReturn( true );
+        when( securityService.isShared( ee ) ).thenReturn( false );
+
+        assertThat( target( "/datasets/1/makePublic" ).request().post( null ) )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.isPublic", true );
+
+        verify( securityService, never() ).makePublic( ee );
+        verifyNoInteractions( auditTrailService );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testMakeDatasetPrivateRecordsMakePrivateEvent() {
+        // Public before the flip (guard reads true), private after (response VO reads false).
+        when( securityService.isPublic( ee ) ).thenReturn( true, false );
+        when( securityService.isShared( ee ) ).thenReturn( false );
+
+        assertThat( target( "/datasets/1/makePrivate" ).request().post( null ) )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.isPublic", false );
+
+        verify( securityService ).makePrivate( ee );
+        verify( auditTrailService ).addUpdateEvent( eq( ee ),
+                eq( ubic.gemma.model.common.auditAndSecurity.eventType.MakePrivateEvent.class ), anyString() );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testMakeDatasetPrivateOnAlreadyPrivateIsNoOpNoEvent() {
+        when( securityService.isPublic( ee ) ).thenReturn( false );
+        when( securityService.isShared( ee ) ).thenReturn( false );
+
+        assertThat( target( "/datasets/1/makePrivate" ).request().post( null ) )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.isPublic", false );
+
+        verify( securityService, never() ).makePrivate( ee );
+        verifyNoInteractions( auditTrailService );
     }
 
     @Test

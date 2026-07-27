@@ -214,7 +214,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
      */
     @Override
     public Collection<CharacteristicValueObject> findExperimentsCharacteristicTags( String searchQuery, int maxResults,
-            boolean useNeuroCartaOntology, long timeout, TimeUnit timeUnit ) throws SearchException {
+            boolean useNeuroCartaOntology, boolean forceGeneOntology, long timeout, TimeUnit timeUnit ) throws SearchException {
 
         if ( searchQuery.trim().length() < 3 ) {
             return new HashSet<>();
@@ -243,7 +243,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
         // search the ontology for the given searchTerm, but if already found in the database dont add it again
         Collection<CharacteristicValueObject> characteristicsFromOntology = this
-                .findCharacteristicsFromOntology( searchQuery, maxResults, useNeuroCartaOntology,
+                .findCharacteristicsFromOntology( searchQuery, maxResults, useNeuroCartaOntology, forceGeneOntology,
                         characteristicFromDatabaseWithValueUri, timeUnit.toMillis( timeout ) );
 
         // order to show the the term: 1-exactMatch, 2-startWith, 3-substring and 4- no rule
@@ -305,7 +305,11 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
         results = searchInThreads( ontology -> ontologyCache.findTerm( ontology, search, maxResults ), search, 5000 );
 
-        if ( geneOntologyService.isOntologyLoaded() ) {
+        // GO is by far the largest index and the slowest to search, and it is the fallback of last
+        // resort for term search — only consult it when the other ontologies came up empty. Running
+        // it on every query lengthens the search (and, because the whole search runs in a read-only
+        // transaction, the DB connection it holds) enough to starve the pool under load.
+        if ( results.isEmpty() && geneOntologyService.isOntologyLoaded() ) {
             try {
                 results.addAll( ontologyCache.findTerm( geneOntologyService, search, maxResults ) );
             } catch ( OntologySearchException e ) {
@@ -355,9 +359,13 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             return CharacteristicValueObject.characteristic2CharacteristicVO( this.termsToCharacteristics( results2 ) );
         }, queryString, Math.max( timeUnit.toMillis( timeout ) - watch.getTime(), 0 ) ) );
 
-        // get GO terms, if we don't already have a lot of possibilities. (might have to adjust this)
+        // Only consult GO when the other ontologies came up empty — implementing the long-standing
+        // intent of the (previously unenforced) "if we don't already have a lot of possibilities"
+        // note. GO is the largest, slowest index and the fallback of last resort; searching it on
+        // every query holds the request's DB connection far longer than needed and is a primary
+        // driver of connection-pool exhaustion under load.
         StopWatch findGoTerms = StopWatch.createStarted();
-        if ( geneOntologyService.isOntologyLoaded() ) {
+        if ( ontologySearchResults.isEmpty() && geneOntologyService.isOntologyLoaded() ) {
             try {
                 ontologySearchResults.addAll( CharacteristicValueObject.characteristic2CharacteristicVO(
                         this.termsToCharacteristics( ontologyCache.findTerm( geneOntologyService, queryString, maxResults ) ) ) );
@@ -896,7 +904,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
      * given a collection of characteristics add them to the correct List
      */
     private Collection<CharacteristicValueObject> findCharacteristicsFromOntology( String searchQuery, int maxResults,
-            boolean useNeuroCartaOntology,
+            boolean useNeuroCartaOntology, boolean forceGeneOntology,
             Map<String, CharacteristicValueObject> characteristicFromDatabaseWithValueUri, long timeoutMs ) throws SearchException {
 
         // in neurocarta we don't need to search all Ontologies
@@ -929,10 +937,12 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
         // GeneOntologyServiceImpl isn't part of the autowired ontologyServices list (it's a
         // delegating-bean wrapper around basecode's GO service); the sibling findTerms() method
-        // adds it explicitly. Mirror that so /annotations/search?prefixes=GO_ actually returns
-        // GO terms — without this, the Visualize tab's GO-term picker returns 0 hits for any
-        // query because findExperimentsCharacteristicTags never asked GO.
-        if ( !useNeuroCartaOntology && geneOntologyService.isOntologyLoaded() ) {
+        // adds it explicitly. Consult GO only when the other ontologies came up empty: it is the
+        // largest, slowest index and the fallback of last resort, and searching it on every query
+        // holds the request's read-only DB connection long enough to starve the pool under load.
+        // A caller that explicitly wants GO (e.g. the Visualize picker filtering to the GO_ prefix)
+        // passes forceGeneOntology=true to consult GO regardless of what the other ontologies returned.
+        if ( ( fromOntologies.isEmpty() || forceGeneOntology ) && !useNeuroCartaOntology && geneOntologyService.isOntologyLoaded() ) {
             try {
                 Collection<OntologySearchResult<OntologyTerm>> goTerms = ontologyCache.findTerm( geneOntologyService, searchQuery, maxResults );
                 List<CharacteristicValueObject> combined = new ArrayList<>( fromOntologies );

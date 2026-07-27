@@ -13,13 +13,16 @@ package ubic.gemma.core.analysis.report;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.context.EnvironmentProfiles;
+import ubic.gemma.core.ontology.providers.OntologyService;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -57,6 +60,21 @@ public class HomeStatsRefresher {
     @Autowired
     private Environment environment;
 
+    /** Enabled ontology provider services, so the startup pass can wait for their background
+     *  init threads to finish before computing the first snapshot. Optional: some contexts wire
+     *  no ontologies at all, in which case the wait is skipped. */
+    @Autowired(required = false)
+    private List<OntologyService> ontologyServices;
+
+    /**
+     * Upper bound on how long the startup pass waits for background ontology initialization before
+     * computing the first snapshot. Bounded so a disabled or stuck ontology can't stall the snapshot
+     * indefinitely — on timeout we compute anyway (ontology-derived buckets degrade to the catch-alls
+     * exactly as before, and the daily cron re-corrects them). Default 15 minutes.
+     */
+    @Value("${gemma.homeStats.ontologyWarmup.timeout:900000}")
+    private long ontologyWarmupTimeoutMs;
+
     /** Guard against re-entry — multiple {@code ContextRefreshedEvent}s fire over a
      *  context's lifetime (each child context, refresh-by-actuator, etc.). Only the
      *  first matters for the startup pass. */
@@ -90,6 +108,7 @@ public class HomeStatsRefresher {
         log.info( "HomeStats: startup refresh — recomputing in background" );
         Thread t = new Thread( () -> {
             try {
+                awaitOntologyWarmup();
                 homeStatsService.refresh();
             } catch ( Exception e ) {
                 log.error( "HomeStats: startup refresh failed", e );
@@ -97,6 +116,60 @@ public class HomeStatsRefresher {
         }, "HomeStats-startup-refresh" );
         t.setDaemon( true );
         t.start();
+    }
+
+    /**
+     * Block until every enabled ontology has finished its background initialization thread, or until
+     * {@code gemma.homeStats.ontologyWarmup.timeout} elapses. HomeStats' treatment / drug buckets
+     * expand CHEBI / OBI / PR subtrees via {@code OntologyService}; running the first snapshot before
+     * those are loaded leaves the buckets undercounted (the "parent ... not loaded in OntologyService"
+     * warnings) until the next daily refresh. Waiting here makes the startup snapshot correct. This
+     * runs on the daemon startup thread, so Spring startup itself is never blocked.
+     */
+    private void awaitOntologyWarmup() {
+        if ( ontologyServices == null || ontologyServices.isEmpty() ) {
+            return;
+        }
+        long loading = countLoadingOntologies();
+        if ( loading == 0 ) {
+            return; // everything already warm — compute immediately
+        }
+        log.info( "HomeStats: waiting up to " + ( ontologyWarmupTimeoutMs / 1000 )
+                + "s for " + loading + " ontology service(s) to finish loading before the startup snapshot" );
+        long t0 = System.currentTimeMillis();
+        long deadline = t0 + ontologyWarmupTimeoutMs;
+        while ( System.currentTimeMillis() < deadline && countLoadingOntologies() > 0 ) {
+            try {
+                Thread.sleep( 2000 );
+            } catch ( InterruptedException e ) {
+                Thread.currentThread().interrupt();
+                return;
+            }
+        }
+        long waited = ( System.currentTimeMillis() - t0 ) / 1000;
+        long stillLoading = countLoadingOntologies();
+        if ( stillLoading > 0 ) {
+            log.warn( "HomeStats: proceeding with startup snapshot after " + waited + "s — " + stillLoading
+                    + " ontology service(s) still loading; ontology-derived buckets may be undercounted "
+                    + "until the daily refresh" );
+        } else {
+            log.info( "HomeStats: ontology services warmed in " + waited + "s; computing startup snapshot" );
+        }
+    }
+
+    /** Count enabled ontology services whose background initialization thread is still running. */
+    private long countLoadingOntologies() {
+        long n = 0;
+        for ( OntologyService o : ontologyServices ) {
+            try {
+                if ( o.isEnabled() && o.isInitializationThreadAlive() ) {
+                    n++;
+                }
+            } catch ( RuntimeException ignored ) {
+                // a bean that throws from isEnabled()/isInitializationThreadAlive() can't be waited on
+            }
+        }
+        return n;
     }
 
     /**

@@ -73,6 +73,9 @@ import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.analysis.service.ExpressionExperimentDataFileType;
 import ubic.gemma.core.loader.expression.singleCell.metadata.CellLevelCharacteristicsWriter;
 import ubic.gemma.core.ontology.OntologyService;
+import ubic.gemma.core.ontology.OntologyTermValidator;
+import ubic.gemma.core.ontology.TermCanonicalization;
+import ubic.gemma.core.ontology.TermViolation;
 import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.model.analysis.CellTypeAssignmentValueObject;
 import ubic.gemma.model.analysis.expression.diff.*;
@@ -294,6 +297,17 @@ public class DatasetsWebService {
     private ExpressionDataDeleterService expressionDataDeleterService;
     @Autowired
     private BibliographicReferenceService bibliographicReferenceService;
+    @Autowired
+    private OntologyTermValidator ontologyTermValidator;
+
+    /**
+     * When {@code true} (default), a term URI that resolves nowhere (Gemma nor OLS) because OLS could not be
+     * reached is treated as a blocking validation failure. When {@code false}, such unverified terms are
+     * allowed through (a transient OLS outage does not block curators), while genuine mismatches and
+     * fabricated URIs are still rejected.
+     */
+    @org.springframework.beans.factory.annotation.Value("${gemma.ontology.validation.olsFailClosed}")
+    private boolean ontologyValidationOlsFailClosed;
 
     @Context
     private UriInfo uriInfo;
@@ -2283,6 +2297,13 @@ public class DatasetsWebService {
         CurationCommitRequest request = new CurationCommitRequest();
         request.setExpectedLastUpdated( parseBaselineToken( body.getBaseline() != null ? body.getBaseline().getLastModified() : null ) );
 
+        // Accumulate ontology-term grounding failures across every new/changed annotation in the document and
+        // reject the whole commit at once (below) — the last checkpoint before a hallucinated term is persisted.
+        List<OntologyTermValidationException.Located> termViolations = new ArrayList<>();
+        // Accepted near-match / blank-fill label rewrites the validator applied to persisted annotations (tags +
+        // sampleCharacteristics), echoed back in the report so the UI can silently update its chip labels.
+        List<Canonicalization> canonicalizations = new ArrayList<>();
+
         if ( body.getBasics() != null ) {
             CurationBasics b = body.getBasics();
             String name = b.getName() != null ? b.getName().trim() : null;
@@ -2331,6 +2352,12 @@ public class DatasetsWebService {
             request.setSplitOnFactorId( dc.getShouldSplitOnFactorId() );
             request.setSplitRationale( dc.getShouldSplitRationale() );
 
+            // Ground-check the ontology terms on the asserted factors / factor-value statements (same gate as
+            // tags + sampleCharacteristics). Only items present in the commit are checked; pure carry-forward
+            // entities aren't. Rejection only here — the near-match canonicalization the tag path applies would
+            // need to be threaded into mapStatements' VO build, which is out of scope for this gate.
+            collectDesignTermViolations( dc, termViolations );
+
             // Gate on the same preflight the standalone PUT /design uses: blockers → 400; a change that would delete
             // differential-expression analyses → 409 unless force (admin). A dry run predicts, so it never 409s.
             DesignPreflightReport report = datasetArgService.previewDesignChange( datasetArg, proposed );
@@ -2351,12 +2378,16 @@ public class DatasetsWebService {
             request.setTagsPresent( true );
             List<CurationCommitRequest.TagAdd> adds = new ArrayList<>();
             int unchanged = 0;
+            int idx = 0;
             for ( TagCommit tc : nullSafe( ts.getItems() ) ) {
                 if ( isExisting( tc, "tags item" ) ) {
                     unchanged++; // gemmaId item = keep (absence never deletes; deletions are declared)
                 } else {
-                    adds.add( new CurationCommitRequest.TagAdd( tc.getClientRef(), tagCommitToCharacteristic( tc ) ) );
+                    Characteristic ch = tagCommitToCharacteristic( tc );
+                    collectTermViolations( ch, "tags[" + refOrIndex( tc.getClientRef(), idx ) + "]", tc.getClientRef(), termViolations, canonicalizations );
+                    adds.add( new CurationCommitRequest.TagAdd( tc.getClientRef(), ch ) );
                 }
+                idx++;
             }
             request.setTagsToAdd( adds );
             request.setTagsToDelete( new ArrayList<>( nullSafe( ts.getDeletedIds() ) ) );
@@ -2369,6 +2400,7 @@ public class DatasetsWebService {
             Map<String, Long> gsmToBmId = buildGsmToBioMaterialIdIndex( ee );
             List<CurationCommitRequest.SampleCharacteristicAdd> adds = new ArrayList<>();
             int unchanged = 0;
+            int idx = 0;
             for ( SampleCharacteristicCommit sc : nullSafe( scs.getItems() ) ) {
                 if ( isExisting( sc, "sampleCharacteristics item" ) ) {
                     unchanged++;
@@ -2381,9 +2413,11 @@ public class DatasetsWebService {
                         throw new BadRequestException( "sampleCharacteristics references unknown sample short name '"
                                 + sc.getBioassayShortName() + "' for this dataset." );
                     }
-                    adds.add( new CurationCommitRequest.SampleCharacteristicAdd( sc.getClientRef(), bmId,
-                            sampleCharacteristicToCharacteristic( sc ) ) );
+                    Characteristic ch = sampleCharacteristicToCharacteristic( sc );
+                    collectTermViolations( ch, "sampleCharacteristics[" + refOrIndex( sc.getClientRef(), idx ) + "]", sc.getClientRef(), termViolations, canonicalizations );
+                    adds.add( new CurationCommitRequest.SampleCharacteristicAdd( sc.getClientRef(), bmId, ch ) );
                 }
+                idx++;
             }
             request.setSampleCharsToAdd( adds );
             request.setSampleCharsToDelete( new ArrayList<>( nullSafe( scs.getDeletedIds() ) ) );
@@ -2402,6 +2436,12 @@ public class DatasetsWebService {
             request.setCurationDetailsNote( cd.getCurationNote() );
         }
 
+        // Every new/changed annotation has now been ground-checked; reject the whole commit if any term failed
+        // (applies equally to preflight, so a client catches these on the dry run).
+        if ( !termViolations.isEmpty() ) {
+            throw new OntologyTermValidationException( termViolations );
+        }
+
         CurationCommitResult result;
         try {
             result = expressionExperimentService.commitCuration( ee, request, dryRun );
@@ -2413,7 +2453,7 @@ public class DatasetsWebService {
             // e.g. shortName already in use
             throw new jakarta.ws.rs.ClientErrorException( e.getMessage(), jakarta.ws.rs.core.Response.Status.CONFLICT );
         }
-        return CurationCommitReport.from( result, request, !dryRun );
+        return CurationCommitReport.from( result, request, !dryRun, canonicalizations );
     }
 
     /**
@@ -2971,6 +3011,87 @@ public class DatasetsWebService {
         return c;
     }
 
+    /**
+     * Validate a newly-built characteristic's ontology terms and append any grounding failures to the sink,
+     * prefixing each with the item's request-body {@code location} (e.g. {@code tags[clientRef=t7]}). An
+     * unverified term (OLS unreachable) is dropped rather than blocking when fail-open is configured.
+     */
+    private void collectTermViolations( Characteristic c, String location, @Nullable String clientRef,
+            List<OntologyTermValidationException.Located> sink, @Nullable List<Canonicalization> canonSink ) {
+        List<TermCanonicalization> canons = new ArrayList<>();
+        for ( TermViolation v : ontologyTermValidator.validateAndCanonicalize( c, canons ) ) {
+            if ( v.getReason() == TermViolation.Reason.UNVERIFIED_OLS_UNAVAILABLE && !ontologyValidationOlsFailClosed ) {
+                log.warn( "Allowing unverified term at " + location + "." + v.getSlot() + " (OLS unavailable, fail-open)." );
+                continue;
+            }
+            sink.add( new OntologyTermValidationException.Located( location + "." + v.getSlot(), v ) );
+        }
+        // Echo the accepted near-match / blank-fill rewrites back so the client can update its display. Only the
+        // callers whose Characteristic is carried into the commit request pass a canonSink; the design gate
+        // validates a throwaway Statement (rejection-only — the rewrite is never persisted) and passes null.
+        if ( canonSink != null ) {
+            for ( TermCanonicalization tc : canons ) {
+                canonSink.add( new Canonicalization( location + "." + tc.getSlot(), clientRef,
+                        tc.getSubmittedLabel(), tc.getCanonicalLabel(), tc.getSubmittedUri(), tc.getCanonicalUri() ) );
+            }
+        }
+    }
+
+    /** A stable location fragment for an item: its clientRef when present, else its zero-based index. */
+    private static String refOrIndex( @Nullable String clientRef, int index ) {
+        return StringUtils.isNotBlank( clientRef ) ? "clientRef=" + clientRef : String.valueOf( index );
+    }
+
+    /**
+     * Ground-check the ontology terms carried by a design commit: each factor's category and each asserted
+     * factor-value statement's subject/predicate/object/category. Throwaway entities are built purely to reuse
+     * {@link #collectTermViolations}; only items present in the commit are walked (carry-forward statements
+     * re-emitted from the current design are not).
+     */
+    private void collectDesignTermViolations( DesignCommit dc, List<OntologyTermValidationException.Located> sink ) {
+        if ( dc.getFactors() == null ) {
+            return;
+        }
+        int fi = 0;
+        for ( FactorCommit fc : nullSafe( dc.getFactors().getItems() ) ) {
+            String floc = "design.factors[" + refOrIndex( fc.getClientRef(), fi ) + "]";
+            if ( fc.getCategory() != null && StringUtils.isNotBlank( fc.getCategory().getUri() ) ) {
+                Characteristic cat = Characteristic.Factory.newInstance();
+                cat.setCategory( fc.getCategory().getLabel() );
+                cat.setCategoryUri( fc.getCategory().getUri() );
+                collectTermViolations( cat, floc, fc.getClientRef(), sink, null );
+            }
+            int vi = 0;
+            for ( FactorValueCommit fvc : nullSafe( fc.getFactorValues() != null ? fc.getFactorValues().getItems() : null ) ) {
+                String vloc = floc + ".factorValues[" + refOrIndex( fvc.getClientRef(), vi ) + "]";
+                int si = 0;
+                for ( StatementCommit sc : nullSafe( fvc.getStatements() != null ? fvc.getStatements().getItems() : null ) ) {
+                    Statement s = Statement.Factory.newInstance();
+                    if ( sc.getCategory() != null ) {
+                        s.setCategory( sc.getCategory().getLabel() );
+                        s.setCategoryUri( sc.getCategory().getUri() );
+                    }
+                    if ( sc.getSubject() != null ) {
+                        s.setSubject( sc.getSubject().getLabel() );
+                        s.setSubjectUri( sc.getSubject().getUri() );
+                    }
+                    if ( sc.getPredicate() != null ) {
+                        s.setPredicate( sc.getPredicate().getLabel() );
+                        s.setPredicateUri( sc.getPredicate().getUri() );
+                    }
+                    if ( sc.getObject() != null ) {
+                        s.setObject( sc.getObject().getLabel() );
+                        s.setObjectUri( sc.getObject().getUri() );
+                    }
+                    collectTermViolations( s, vloc + ".statements[" + refOrIndex( sc.getClientRef(), si ) + "]", sc.getClientRef(), sink, null );
+                    si++;
+                }
+                vi++;
+            }
+            fi++;
+        }
+    }
+
     /** Build a plain category/value {@link Characteristic} for a new per-sample characteristic. */
     private static Characteristic sampleCharacteristicToCharacteristic( SampleCharacteristicCommit sc ) {
         if ( sc.getValue() == null || StringUtils.isBlank( sc.getValue().getLabel() ) ) {
@@ -3013,18 +3134,21 @@ public class DatasetsWebService {
         private final Map<String, Long> idMap;
         private final Map<String, CurationSectionChange> changes;
         private final List<Long> auditEventIds;
+        private final List<Canonicalization> canonicalizations;
         private final String error;
 
         private CurationCommitReport( boolean applied, Map<String, CurationSectionChange> changes,
-                Map<String, Long> idMap, List<Long> auditEventIds ) {
+                Map<String, Long> idMap, List<Long> auditEventIds, List<Canonicalization> canonicalizations ) {
             this.applied = applied;
             this.idMap = idMap;
             this.changes = changes;
             this.auditEventIds = auditEventIds;
+            this.canonicalizations = canonicalizations;
             this.error = "";
         }
 
-        static CurationCommitReport from( CurationCommitResult r, CurationCommitRequest req, boolean applied ) {
+        static CurationCommitReport from( CurationCommitResult r, CurationCommitRequest req, boolean applied,
+                List<Canonicalization> canonicalizations ) {
             Map<String, CurationSectionChange> changes = new LinkedHashMap<>();
             if ( req.isBasicsPresent() ) {
                 changes.put( "basics", r.isBasicsChanged()
@@ -3058,13 +3182,14 @@ public class DatasetsWebService {
             if ( r.getTagsIdMap() != null ) idMap.putAll( r.getTagsIdMap() );
             if ( r.getSampleCharsIdMap() != null ) idMap.putAll( r.getSampleCharsIdMap() );
             List<Long> auditEventIds = r.getDesignAuditEventIds() != null ? r.getDesignAuditEventIds() : Collections.emptyList();
-            return new CurationCommitReport( applied, changes, idMap, auditEventIds );
+            return new CurationCommitReport( applied, changes, idMap, auditEventIds, canonicalizations );
         }
 
         public boolean isApplied() { return applied; }
         public Map<String, Long> getIdMap() { return idMap; }
         public Map<String, CurationSectionChange> getChanges() { return changes; }
         public List<Long> getAuditEventIds() { return auditEventIds; }
+        public List<Canonicalization> getCanonicalizations() { return canonicalizations; }
         public String getError() { return error; }
     }
 
@@ -3085,6 +3210,51 @@ public class DatasetsWebService {
         public int getUpdated() { return updated; }
         public int getDeleted() { return deleted; }
         public int getUnchanged() { return unchanged; }
+    }
+
+    /**
+     * One accepted rewrite the grounding gate applied to a persisted annotation — a case/whitespace-only
+     * near-match canonicalized to the term's label, a blank label filled in from its URI, and/or a known
+     * Gemma-ontology term (e.g. {@code TGEMO_*}) whose URI was normalized onto the canonical Gemma base. Not a
+     * rejection — the slot passed — but the stored value differs from what was submitted, so the client can
+     * silently update the chip to {@code canonicalLabel} (and knows its {@code submittedUri} was off-base — a
+     * signal for tracking down which writer emitted the wrong base). A field pair being equal means that
+     * dimension was unchanged. Only tags + sampleCharacteristics are reported (the design-section gate is
+     * rejection-only and never persists its rewrite).
+     */
+    public static class Canonicalization {
+        private final String location;
+        @Nullable
+        private final String clientRef;
+        @Nullable
+        private final String submittedLabel;
+        private final String canonicalLabel;
+        private final String submittedUri;
+        private final String canonicalUri;
+
+        Canonicalization( String location, @Nullable String clientRef, @Nullable String submittedLabel, String canonicalLabel, String submittedUri, String canonicalUri ) {
+            this.location = location;
+            this.clientRef = clientRef;
+            this.submittedLabel = submittedLabel;
+            this.canonicalLabel = canonicalLabel;
+            this.submittedUri = submittedUri;
+            this.canonicalUri = canonicalUri;
+        }
+
+        /** Request-body path to the rewritten slot, e.g. {@code tags[clientRef=t7].value}. */
+        public String getLocation() { return location; }
+        /** The item's {@code clientRef}, so the client can map the rewrite back to its chip without parsing. */
+        @Nullable
+        public String getClientRef() { return clientRef; }
+        /** The label as submitted; {@code null} when a URI arrived with no label and one was filled in. */
+        @Nullable
+        public String getSubmittedLabel() { return submittedLabel; }
+        /** The canonical label now stored — display this (equals {@code submittedLabel} when only the URI changed). */
+        public String getCanonicalLabel() { return canonicalLabel; }
+        /** The URI as submitted (off-base when it differs from {@code canonicalUri}). */
+        public String getSubmittedUri() { return submittedUri; }
+        /** The URI now stored (equals {@code submittedUri} when only the label changed). */
+        public String getCanonicalUri() { return canonicalUri; }
     }
 
     /**
@@ -3191,9 +3361,19 @@ public class DatasetsWebService {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         if ( body.getIsPublic() != null ) {
             if ( body.getIsPublic() ) {
-                securityService.makePublic( ee );
+                if ( !securityService.isPublic( ee ) ) {
+                    securityService.makePublic( ee );
+                    auditTrailService.addUpdateEvent( ee,
+                            ubic.gemma.model.common.auditAndSecurity.eventType.MakePublicEvent.class,
+                            "Made public via REST (PUT permissions)" );
+                }
             } else {
-                securityService.makePrivate( ee );
+                if ( securityService.isPublic( ee ) ) {
+                    securityService.makePrivate( ee );
+                    auditTrailService.addUpdateEvent( ee,
+                            ubic.gemma.model.common.auditAndSecurity.eventType.MakePrivateEvent.class,
+                            "Made private via REST (PUT permissions)" );
+                }
             }
         }
         return respond( new DatasetPermissionsValueObject( securityService.isPublic( ee ), securityService.isShared( ee ) ) );
@@ -3249,6 +3429,9 @@ public class DatasetsWebService {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         if ( !securityService.isPublic( ee ) ) {
             securityService.makePublic( ee );
+            auditTrailService.addUpdateEvent( ee,
+                    ubic.gemma.model.common.auditAndSecurity.eventType.MakePublicEvent.class,
+                    "Made public via REST (POST makePublic)" );
         }
         return respond( new DatasetPermissionsValueObject( securityService.isPublic( ee ), securityService.isShared( ee ) ) );
     }
@@ -3274,6 +3457,9 @@ public class DatasetsWebService {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         if ( securityService.isPublic( ee ) ) {
             securityService.makePrivate( ee );
+            auditTrailService.addUpdateEvent( ee,
+                    ubic.gemma.model.common.auditAndSecurity.eventType.MakePrivateEvent.class,
+                    "Made private via REST (POST makePrivate)" );
         }
         return respond( new DatasetPermissionsValueObject( securityService.isPublic( ee ), securityService.isShared( ee ) ) );
     }
@@ -3926,6 +4112,8 @@ public class DatasetsWebService {
         private Boolean allowArrayExpressDesign;
         @Nullable
         private Boolean isArrayExpress;
+        @Nullable
+        private Boolean suppressPostProcessing;
 
         @Nullable
         public String getAccession() {
@@ -4007,6 +4195,15 @@ public class DatasetsWebService {
         public void setIsArrayExpress( @Nullable Boolean isArrayExpress ) {
             this.isArrayExpress = isArrayExpress;
         }
+
+        @Nullable
+        public Boolean getSuppressPostProcessing() {
+            return suppressPostProcessing;
+        }
+
+        public void setSuppressPostProcessing( @Nullable Boolean suppressPostProcessing ) {
+            this.suppressPostProcessing = suppressPostProcessing;
+        }
     }
 
     /**
@@ -4022,7 +4219,12 @@ public class DatasetsWebService {
     @Operation(summary = "Import a dataset from GEO (or ArrayExpress) by accession",
             description = "Submits an async load task and returns 202 with a `Location` header pointing at "
                     + "`/tasks/{taskId}`. Body must include `accession`. Optional flags map to the corresponding "
-                    + "fields on `ExpressionExperimentLoadTaskCommand`.",
+                    + "fields on `ExpressionExperimentLoadTaskCommand`, including `suppressPostProcessing` "
+                    + "(skip processed-vector creation and diagnostics, mirroring the CLI `-nopost` flag; the "
+                    + "usual case for RNA-seq loads reanalyzed from raw sequence later). The load runs in the background, so its "
+                    + "outcome (including any failure) is reported by polling `/tasks/{taskId}`: a failed load "
+                    + "carries a structured `error` (`code` + `message`, e.g. `NETWORK_ERROR`, `ALREADY_EXISTS`, "
+                    + "`INVALID_ACCESSION`, `BLACKLISTED`, `SUPERSERIES_NOT_ALLOWED`).",
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
             responses = {
@@ -4058,6 +4260,9 @@ public class DatasetsWebService {
         }
         if ( body.getIsArrayExpress() != null ) {
             cmd.setArrayExpress( body.getIsArrayExpress() );
+        }
+        if ( body.getSuppressPostProcessing() != null ) {
+            cmd.setSuppressPostProcessing( body.getSuppressPostProcessing() );
         }
         return acceptedTaskResponse( taskRunningService.submitTaskCommand( cmd ) );
     }
