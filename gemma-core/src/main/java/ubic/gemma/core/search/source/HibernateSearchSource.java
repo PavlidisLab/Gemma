@@ -36,6 +36,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneSet;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -463,13 +464,50 @@ public class HibernateSearchSource implements FieldAwareSearchSource {
         List<ObjectIdentity> aclIdentities = results.stream()
                 .map( r -> new AclObjectIdentity( resultType, r.getResultId() ) )
                 .collect( Collectors.toList() );
-        Set<Long> filteredIds = aclService.readAclsById( aclIdentities ).values().stream()
+        Set<Long> filteredIds = readAclsLeniently( aclIdentities ).stream()
                 .filter( acl -> aclGrantsRead( acl, sids ) )
                 .map( acl -> ( Long ) acl.getObjectIdentity().getIdentifier() )
                 .collect( Collectors.toSet() );
         return results.stream()
                 .filter( s -> filteredIds.contains( s.getResultId() ) )
                 .collect( Collectors.toList() );
+    }
+
+    /**
+     * Batch-read ACLs for a set of hits, tolerating identities that have no ACL row.
+     * <p>
+     * {@link AclService#readAclsById(List)} is all-or-nothing: Spring's
+     * {@link org.springframework.security.acls.jdbc.JdbcAclService} throws
+     * {@link NotFoundException} the moment ANY requested identity is missing an ACL, which
+     * aborts the entire search page with a 500. For a search post-filter a missing ACL is
+     * the same as "deny" — we simply drop that hit, exactly as {@link #aclGrantsRead} does
+     * for the "ACL present but no matching ACE" case. So when the fast batch throws, degrade
+     * to per-identity reads and skip the identities that have no ACL. The slow per-identity
+     * path only runs when the batch actually hits a gap; the hot path keeps the single
+     * batched query.
+     * <p>
+     * A gap is a data anomaly, e.g. an entity indexed before its ACL was created, or an ACL
+     * schema drifted out of sync with the search index. Observed 2026-07-24 on a dev instance
+     * pointed at the production DB: EE 92540 ({@code GSE307917.1}) was present in the Lucene
+     * index and the legacy uppercase ACL tables but absent from the Spring-standard lowercase
+     * {@code acl_object_identity} the migrated {@link AclService} reads, so every search
+     * returning it 500ed.
+     */
+    // package-private for HibernateSearchSourceAclTest.
+    Collection<Acl> readAclsLeniently( List<ObjectIdentity> aclIdentities ) {
+        try {
+            return aclService.readAclsById( aclIdentities ).values();
+        } catch ( NotFoundException e ) {
+            List<Acl> found = new ArrayList<>( aclIdentities.size() );
+            for ( ObjectIdentity oi : aclIdentities ) {
+                try {
+                    found.add( aclService.readAclById( oi ) );
+                } catch ( NotFoundException ignored ) {
+                    // no ACL for this identity — treat as not visible and drop the hit.
+                }
+            }
+            return found;
+        }
     }
 
     /**
