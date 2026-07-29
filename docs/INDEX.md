@@ -1,7 +1,7 @@
 # docs/ index
 
 Working design docs, recces, audits, plans, and session notes for Gemma, sorted into subfolders (2026-07-05 cleanup). `README.md` and `CLAUDE.md` stay at the repo root.
-Total: 144 docs.
+Total: 145 docs.
 
 
 ## Pipeline / compute / job-management (Nextflow) — `docs/pipeline-compute/` (1)
@@ -12,10 +12,11 @@ Total: 144 docs.
 
   <sub>archived sources (`pipeline-compute/archive/`): EXTERNAL_PIPELINE_HANDOFF_RECCE.md, PIPELINES_AND_SCHEDULER_RECCE.md, PIPELINE_COMPUTE_TEST_AND_CONTROL_RECCE.md, WORKFLOW_AND_COMPUTE_ARCHITECTURE.md</sub>
 
-## Recces — `docs/recce/` (32)
+## Recces — `docs/recce/` (33)
 
 - [`ACTUATOR_RECCE.md`](recce/ACTUATOR_RECCE.md) — Actuator-style observability endpoints — Phase 3 recce
 - [`AGENT_WRITEBACK_RECCE.md`](recce/AGENT_WRITEBACK_RECCE.md) — Agent writeback — Gemma-side reconnaissance
+- [`API_KEY_AUTH_RECCE.md`](recce/API_KEY_AUTH_RECCE.md) — API-key admission + layered auth (TLS/TOTP/keys) for `/rest/v2` once off the VPN
 - [`AUDIT_AS_WORKFLOW_RECCE.md`](recce/AUDIT_AS_WORKFLOW_RECCE.md) — Audit-system as workflow / ticket tracker — Phase 3 recce
 - [`AUDIT_MIGRATION_PHASE_C_RECCE.md`](recce/AUDIT_MIGRATION_PHASE_C_RECCE.md) — Audit migration Phase C — scoping recce
 - [`AUDIT_PHASE_C_RECCE.md`](recce/AUDIT_PHASE_C_RECCE.md) — AUDIT_PHASE_C_RECCE.md
