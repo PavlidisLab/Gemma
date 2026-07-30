@@ -120,6 +120,52 @@ public interface CharacteristicDao
     Characteristic findBestByUri( String uri );
 
     /**
+     * One representative, ACL-visible usage of a term (keyed by its value URI), for showing a search hit in
+     * the context it has actually been applied (e.g. a curator picking a rare term sees "wild type" under
+     * the "genotype" factor of some accessible dataset). Unlike {@link #countByCategory}, this exposes a
+     * specific dataset + statement, so it MUST be ACL-restricted — sourced from the denormalised {@code EE2C}
+     * view with the same ACL clause the usage-frequency queries use, so a private dataset never leaks.
+     */
+    class UsageExample {
+        @Nullable
+        public final Class<? extends Identifiable> level;
+        @Nullable
+        public final String category, categoryUri, value, valueUri;
+        @Nullable
+        public final String predicate, predicateUri, object, objectUri;
+        @Nullable
+        public final String secondPredicate, secondPredicateUri, secondObject, secondObjectUri;
+        public final long sourceExperimentId;
+
+        public UsageExample( @Nullable Class<? extends Identifiable> level, @Nullable String category, @Nullable String categoryUri,
+                @Nullable String value, @Nullable String valueUri, @Nullable String predicate, @Nullable String predicateUri,
+                @Nullable String object, @Nullable String objectUri, @Nullable String secondPredicate, @Nullable String secondPredicateUri,
+                @Nullable String secondObject, @Nullable String secondObjectUri, long sourceExperimentId ) {
+            this.level = level;
+            this.category = category;
+            this.categoryUri = categoryUri;
+            this.value = value;
+            this.valueUri = valueUri;
+            this.predicate = predicate;
+            this.predicateUri = predicateUri;
+            this.object = object;
+            this.objectUri = objectUri;
+            this.secondPredicate = secondPredicate;
+            this.secondPredicateUri = secondPredicateUri;
+            this.secondObject = secondObject;
+            this.secondObjectUri = secondObjectUri;
+            this.sourceExperimentId = sourceExperimentId;
+        }
+    }
+
+    /**
+     * For each supplied value URI, return one representative ACL-visible {@link UsageExample}, or omit the URI
+     * when no accessible usage exists. Batched (one query for the whole set), sourced from {@code EE2C} keyed
+     * on the indexed {@code VALUE_URI} column.
+     */
+    Map<String, UsageExample> findRepresentativeUsageByValueUris( Collection<String> valueUris );
+
+    /**
      * Find characteristics by URI.
      * <p>
      * The mapping key is the normalized value of the characteristics as per {@link CharacteristicUtils#getNormalizedValue(Characteristic)}.

@@ -98,6 +98,12 @@ public class CharacteristicReadServiceImpl implements CharacteristicReadService 
 
     @Override
     @Transactional(readOnly = true)
+    public Map<String, CharacteristicDao.UsageExample> findRepresentativeUsageByValueUris( Collection<String> valueUris ) {
+        return this.characteristicDao.findRepresentativeUsageByValueUris( valueUris );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Collection<Characteristic> findByValueStartingWith( String search, @Nullable String category, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, int maxResults ) {
         return this.characteristicDao.findByValueLike( escapeLike( search ) + '%', category, parentClasses, includeNoParents, maxResults );
     }

@@ -414,6 +414,73 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     }
 
     @Override
+    public Map<String, CharacteristicDao.UsageExample> findRepresentativeUsageByValueUris( Collection<String> valueUris ) {
+        if ( valueUris == null || valueUris.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+        // ACL-restricted: exposes a specific dataset + statement, so it goes through the same EE2C ACL clause
+        // as the usage-frequency queries. Matches on VALUE_URI (the term as a tag value / statement subject).
+        String aclWhere = EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "T.EXPRESSION_EXPERIMENT_FK", "T.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" );
+        Query query = getSessionFactory().getCurrentSession().createNativeQuery(
+                        // VALUE / PREDICATE / OBJECT (and the SECOND_ variants) are reserved words — backtick
+                        // them like LEVEL so both MySQL and H2 (MODE=MYSQL) parse the projection.
+                        "select T.`LEVEL`, T.CATEGORY, T.CATEGORY_URI, T.`VALUE`, T.VALUE_URI, "
+                                + "T.`PREDICATE`, T.PREDICATE_URI, T.`OBJECT`, T.OBJECT_URI, "
+                                + "T.`SECOND_PREDICATE`, T.SECOND_PREDICATE_URI, T.`SECOND_OBJECT`, T.SECOND_OBJECT_URI, "
+                                + "T.EXPRESSION_EXPERIMENT_FK "
+                                + "from EXPRESSION_EXPERIMENT2CHARACTERISTIC T "
+                                + "where T.VALUE_URI in (:uris)" + aclWhere
+                                // deterministic representative pick: lowest accessible experiment id per URI
+                                + " order by T.EXPRESSION_EXPERIMENT_FK" )
+                .addScalar( "LEVEL", StandardBasicTypes.CLASS )
+                .addScalar( "CATEGORY", StandardBasicTypes.STRING )
+                .addScalar( "CATEGORY_URI", StandardBasicTypes.STRING )
+                .addScalar( "VALUE", StandardBasicTypes.STRING )
+                .addScalar( "VALUE_URI", StandardBasicTypes.STRING )
+                .addScalar( "PREDICATE", StandardBasicTypes.STRING )
+                .addScalar( "PREDICATE_URI", StandardBasicTypes.STRING )
+                .addScalar( "OBJECT", StandardBasicTypes.STRING )
+                .addScalar( "OBJECT_URI", StandardBasicTypes.STRING )
+                .addScalar( "SECOND_PREDICATE", StandardBasicTypes.STRING )
+                .addScalar( "SECOND_PREDICATE_URI", StandardBasicTypes.STRING )
+                .addScalar( "SECOND_OBJECT", StandardBasicTypes.STRING )
+                .addScalar( "SECOND_OBJECT_URI", StandardBasicTypes.STRING )
+                .addScalar( "EXPRESSION_EXPERIMENT_FK", StandardBasicTypes.LONG )
+                .addSynchronizedQuerySpace( EE2C_QUERY_SPACE )
+                .addSynchronizedEntityClass( ExpressionExperiment.class )
+                .addSynchronizedEntityClass( Characteristic.class );
+        EE2CAclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
+        query.setCacheable( true );
+
+        List<Object[]> rows;
+        if ( valueUris.size() > MAX_PARAMETER_LIST_SIZE ) {
+            rows = listByBatch( query, "uris", valueUris, 2048, -1 );
+        } else {
+            //noinspection unchecked
+            rows = query.setParameterList( "uris", optimizeParameterList( valueUris ) ).list();
+        }
+
+        // First accessible row per VALUE_URI wins (rows are ordered by experiment id). Case-insensitive key
+        // match mirrors findExperimentsByUrisInternal so a URI cased differently in the request still lands.
+        TreeSet<String> urisIgnoreCase = new TreeSet<>( String.CASE_INSENSITIVE_ORDER );
+        urisIgnoreCase.addAll( valueUris );
+        Map<String, CharacteristicDao.UsageExample> result = new HashMap<>();
+        for ( Object[] r : rows ) {
+            String valueUri = ( String ) r[4];
+            if ( valueUri == null || !urisIgnoreCase.contains( valueUri ) || result.containsKey( valueUri ) ) {
+                continue;
+            }
+            //noinspection unchecked
+            result.put( valueUri, new CharacteristicDao.UsageExample(
+                    ( Class<? extends Identifiable> ) r[0], ( String ) r[1], ( String ) r[2], ( String ) r[3], valueUri,
+                    ( String ) r[5], ( String ) r[6], ( String ) r[7], ( String ) r[8],
+                    ( String ) r[9], ( String ) r[10], ( String ) r[11], ( String ) r[12],
+                    r[13] != null ? ( Long ) r[13] : 0L ) );
+        }
+        return result;
+    }
+
+    @Override
     public Characteristic findBestByUri( String uri ) {
         return ( Characteristic ) getSessionFactory().getCurrentSession()
                 .createQuery( "select c from Characteristic c "

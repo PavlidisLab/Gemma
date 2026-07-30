@@ -87,6 +87,13 @@ public interface CharacteristicReadService {
     Characteristic findBestByUri( String uri );
 
     /**
+     * For each value URI, return one representative ACL-visible usage, or omit URIs with no accessible usage.
+     *
+     * @see CharacteristicDao#findRepresentativeUsageByValueUris(Collection)
+     */
+    Map<String, CharacteristicDao.UsageExample> findRepresentativeUsageByValueUris( Collection<String> valueUris );
+
+    /**
      * Returns a collection of characteristics that have a value starting with the given string.
      */
     Collection<Characteristic> findByValueStartingWith( String search, @Nullable String category, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, int maxResults );

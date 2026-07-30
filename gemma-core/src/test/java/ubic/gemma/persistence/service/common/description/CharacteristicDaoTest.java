@@ -284,6 +284,35 @@ public class CharacteristicDaoTest extends BaseDatabaseTest5 {
     }
 
     @Test
+    @WithMockUser(username = "bob")
+    public void testFindRepresentativeUsageByValueUris() {
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+        ExpressionExperiment ee = new ExpressionExperiment();
+        Characteristic c = createCharacteristic( "http://example.com", "example" );
+        ee.setTaxon( taxon );
+        ee.getCharacteristics().add( c );
+        sessionFactory.getCurrentSession().persist( ee );
+        sessionFactory.getCurrentSession().flush();
+
+        MutableAcl acl = ( MutableAcl ) aclService.createAcl( new AclObjectIdentity( ExpressionExperiment.class, ee.getId() ) );
+        acl.insertAce( acl.getEntries().size(), BasePermission.READ, new PrincipalSid( "bob" ), true );
+        aclService.updateAcl( acl );
+
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
+        sessionFactory.getCurrentSession().flush();
+
+        Map<String, CharacteristicDao.UsageExample> byUri =
+                characteristicDao.findRepresentativeUsageByValueUris( Collections.singleton( "http://example.com" ) );
+        assertThat( byUri ).containsKey( "http://example.com" );
+        CharacteristicDao.UsageExample ex = byUri.get( "http://example.com" );
+        assertThat( ex.value ).isEqualTo( "example" );
+        assertThat( ex.valueUri ).isEqualTo( "http://example.com" );
+        assertThat( ex.level ).isEqualTo( ExpressionExperiment.class );
+        assertThat( ex.sourceExperimentId ).isEqualTo( ee.getId() );
+    }
+
+    @Test
     public void testDiscriminator() {
         Characteristic c = createCharacteristic( "test", "test" );
         sessionFactory.getCurrentSession().persist( c );

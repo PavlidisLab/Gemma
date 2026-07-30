@@ -91,6 +91,11 @@ public class CharacteristicServiceImpl extends AbstractFilteringVoEnabledService
     }
 
     @Override
+    public Map<String, CharacteristicDao.UsageExample> findRepresentativeUsageByValueUris( Collection<String> valueUris ) {
+        return readService.findRepresentativeUsageByValueUris( valueUris );
+    }
+
+    @Override
     public Collection<Characteristic> findByValueStartingWith( String search, @Nullable String category, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, int maxResults ) {
         return readService.findByValueStartingWith( search, category, parentClasses, includeNoParents, maxResults );
     }

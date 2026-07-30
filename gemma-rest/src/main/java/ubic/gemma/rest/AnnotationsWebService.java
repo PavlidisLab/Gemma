@@ -53,6 +53,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.common.description.CharacteristicDao;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSearchService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -446,7 +447,7 @@ public class AnnotationsWebService {
             return terms.stream()
                     .map( t -> new AnnotationSearchResultValueObject( t.getLabel(), t.getUri(), null, null,
                             t.getUri() != null ? countsByUri.getOrDefault( t.getUri(), 0 ) : null,
-                            null, null, null, null, null, null, null, null, null ) )
+                            null, null, null, null, null, null, null, null, null, null ) )
                     .collect( Collectors.toList() );
         } catch ( TimeoutException e ) {
             throw new ServiceUnavailableException( DateUtils.addSeconds( new Date(), 30 ), e );
@@ -533,7 +534,14 @@ public class AnnotationsWebService {
                     + "token fires three sequential GeneService probes, the dominant slice of the per-call "
                     + "latency floor. Resolver-style callers working a non-gene position (organism part, "
                     + "disease, …) pass `false` to skip the fan-out entirely and cut that floor.")
-            @QueryParam("includeGenes") @DefaultValue("true") boolean includeGenes
+            @QueryParam("includeGenes") @DefaultValue("true") boolean includeGenes,
+            @Parameter(description = "When `true`, attach to each hit one representative ACL-visible example of "
+                    + "how the term has actually been used in the corpus (owning factor value + factor, and the "
+                    + "statement triple when present, plus the source dataset id) — for showing a rare/unfamiliar "
+                    + "term in context in a picker. One batched, ACL-filtered lookup for the result page; default "
+                    + "false so the common typeahead path pays nothing. Gate rendering client-side (e.g. only for "
+                    + "low `usageCount`).")
+            @QueryParam("includeExampleUsage") @DefaultValue("false") boolean includeExampleUsage
     ) {
         if ( query == null || query.getValue().isEmpty() ) {
             throw new BadRequestException( "Search query cannot be empty." );
@@ -555,7 +563,7 @@ public class AnnotationsWebService {
         Taxon taxon = taxonArg != null ? taxonArgService.getEntity( taxonArg ) : null;
         try {
             return respond( searchOne( query.getValue(), strategy, limit, prefixes, upstream,
-                    exactLabel, category, taxon, includeGenes, includeGeneCount, geneCountMaxTerms ) );
+                    exactLabel, category, taxon, includeGenes, includeGeneCount, geneCountMaxTerms, includeExampleUsage ) );
         } catch ( SearchTimeoutException e ) {
             throw new ServiceUnavailableException( e.getMessage(), DateUtils.addSeconds( new Date(), 30 ), e.getCause() );
         } catch ( ParseSearchException e ) {
@@ -579,13 +587,15 @@ public class AnnotationsWebService {
     private List<AnnotationSearchResultValueObject> searchOne( List<String> queryValues,
             AnnotationSearchRankingStrategy strategy, int limit, List<String> prefixes, boolean upstream,
             boolean exactLabel, String category, @Nullable Taxon taxon, boolean includeGenes,
-            boolean includeGeneCount, int geneCountMaxTerms ) throws SearchException {
+            boolean includeGeneCount, int geneCountMaxTerms, boolean includeExampleUsage ) throws SearchException {
         // Cache key includes includeGeneCount + geneCountMaxTerms so a "with counts" call doesn't
         // hit a cached "without counts" payload. Taxon affects gene fan-out, so it keys too; and
         // includeGenes=false is a different response shape, so it gets its own "|ng" suffix.
+        // includeExampleUsage adds a field, so it keys too ("|eu").
         String cacheKey = buildSearchCacheKey( queryValues, strategy.getName(), limit, prefixes, upstream, exactLabel, category, taxon )
                 + ( includeGeneCount ? "|gc=" + geneCountMaxTerms : "" )
-                + ( includeGenes ? "" : "|ng" );
+                + ( includeGenes ? "" : "|ng" )
+                + ( includeExampleUsage ? "|eu" : "" );
         org.springframework.cache.Cache searchCache = searchResponseCache();
         if ( searchCache != null ) {
             org.springframework.cache.Cache.ValueWrapper hit = searchCache.get( cacheKey );
@@ -600,6 +610,9 @@ public class AnnotationsWebService {
         List<AnnotationSearchResultValueObject> result = new ArrayList<>( this.getTerms( queryValues, strategy, limit, prefixes, upstream, exactLabel, category, taxon, includeGenes, FIND_CHARACTERISTICS_TIMEOUT_MS ) );
         if ( includeGeneCount && !result.isEmpty() ) {
             result = attachGeneCounts( result, geneCountMaxTerms );
+        }
+        if ( includeExampleUsage && !result.isEmpty() ) {
+            attachExampleUsage( result );
         }
         // Cache only non-empty results. An empty hit list is almost always either (a) genuinely
         // no match, where re-running is cheap, or (b) a transient gap (ontologies still warming
@@ -749,7 +762,7 @@ public class AnnotationsWebService {
             // Single literal label — NOT wrapped in StringArrayArg, so an embedded comma stays one query.
             List<AnnotationSearchResultValueObject> results = searchOne( Collections.singletonList( q ),
                     strategy, limit, prefixes, false, exactLabel, category, taxon, includeGenes,
-                    includeGeneCount, geneCountMaxTerms );
+                    includeGeneCount, geneCountMaxTerms, false );
             return new AnnotationSearchBatchResultValueObject( q, category, results, null );
         } catch ( SearchException | RuntimeException e ) {
             log.debug( "batch annotation-search item '{}' failed: {}", q, e.toString() );
@@ -778,7 +791,7 @@ public class AnnotationsWebService {
     public ResponseDataObject<List<AnnotationSearchResultValueObject>> searchAnnotationsByPathQuery( // Params:
             @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE, description = SEARCH_QUERY_DESCRIPTION) @PathParam("query") @DefaultValue("") StringArrayArg query // Required
     ) {
-        return searchAnnotations( query, LuceneOrderRankingStrategy.NAME, SEARCH_DEFAULT_LIMIT, "", false, false, "", null, false, 50, true );
+        return searchAnnotations( query, LuceneOrderRankingStrategy.NAME, SEARCH_DEFAULT_LIMIT, "", false, false, "", null, false, 50, true, false );
     }
 
     /**
@@ -1273,7 +1286,7 @@ public class AnnotationsWebService {
             Map<String, Integer> priorCategories = uri != null ? priorCategoriesByUri.get( uri ) : null;
             vos.add( new AnnotationSearchResultValueObject( vo.getValue(), vo.getValueUri(), vo.getCategory(),
                     vo.getCategoryUri(), count, definition, parents, matchedVia, matchedText, null, priorCategories,
-                    null, null, null ) );
+                    null, null, null, null ) );
         }
         // Always merge gene hits in, regardless of category — the typeahead surface should
         // surface STAT5B whether the curator is in a Genotype factor, a Treatment factor, or a
@@ -1446,7 +1459,7 @@ public class AnnotationsWebService {
             String taxonScientificName = taxon != null ? taxon.getScientificName() : null;
             out.add( new AnnotationSearchResultValueObject( label, uri, "gene", null,
                     0, null, null, matchedViaToken, label, null, null,
-                    taxonId, taxonCommonName, taxonScientificName ) );
+                    taxonId, taxonCommonName, taxonScientificName, null ) );
         }
     }
 
@@ -1537,10 +1550,76 @@ public class AnnotationsWebService {
                         r.getValue(), r.getValueUri(), r.getCategory(), r.getCategoryUri(),
                         r.getUsageCount(), r.getDefinition(), r.getParents(),
                         r.getMatchedVia(), r.getMatchedText(), c, r.getPriorCategories(),
-                        r.getTaxonId(), r.getTaxonCommonName(), r.getTaxonScientificName() ) );
+                        r.getTaxonId(), r.getTaxonCommonName(), r.getTaxonScientificName(), r.getExampleUsage() ) );
             }
         }
         return out;
+    }
+
+    /**
+     * Attach one representative, ACL-visible usage example to each hit whose {@code valueUri} has an
+     * accessible prior usage. ONE batched EE2C lookup for the whole result page (bounded by {@code limit});
+     * synthetic gene rows and terms with no accessible usage pass through with a null {@code exampleUsage}.
+     * Rebuilds the affected entries because the VO is {@code @Value}-immutable. Best-effort: a lookup failure
+     * leaves the hits un-enriched rather than failing the search.
+     */
+    private void attachExampleUsage( List<AnnotationSearchResultValueObject> results ) {
+        if ( characteristicService == null ) {
+            return;
+        }
+        Set<String> uris = new LinkedHashSet<>();
+        for ( AnnotationSearchResultValueObject r : results ) {
+            // Skip synthetic gene rows (category "gene") — they aren't corpus annotations.
+            if ( r.getValueUri() != null && !"gene".equals( r.getCategory() ) ) {
+                uris.add( r.getValueUri() );
+            }
+        }
+        if ( uris.isEmpty() ) {
+            return;
+        }
+        Map<String, CharacteristicDao.UsageExample> byUri;
+        try {
+            byUri = characteristicService.findRepresentativeUsageByValueUris( uris );
+        } catch ( RuntimeException e ) {
+            log.warn( "example-usage enrichment failed; returning hits without it", e );
+            return;
+        }
+        for ( int i = 0; i < results.size(); i++ ) {
+            AnnotationSearchResultValueObject r = results.get( i );
+            CharacteristicDao.UsageExample ex = r.getValueUri() != null ? byUri.get( r.getValueUri() ) : null;
+            if ( ex == null ) {
+                continue;
+            }
+            results.set( i, new AnnotationSearchResultValueObject(
+                    r.getValue(), r.getValueUri(), r.getCategory(), r.getCategoryUri(),
+                    r.getUsageCount(), r.getDefinition(), r.getParents(),
+                    r.getMatchedVia(), r.getMatchedText(), r.getGeneCount(), r.getPriorCategories(),
+                    r.getTaxonId(), r.getTaxonCommonName(), r.getTaxonScientificName(),
+                    toExampleUsageVo( ex ) ) );
+        }
+    }
+
+    private static ExampleUsageValueObject toExampleUsageVo( CharacteristicDao.UsageExample ex ) {
+        return new ExampleUsageValueObject(
+                levelLabel( ex.level ),
+                ex.value,        // parentName — the owning value (e.g. "wild type")
+                ex.category,     // parentOfParentName — the owning category / factor (e.g. "genotype")
+                ex.categoryUri,
+                ex.predicate, ex.predicateUri, ex.object, ex.objectUri,
+                ex.secondPredicate, ex.secondPredicateUri, ex.secondObject, ex.secondObjectUri,
+                ex.sourceExperimentId > 0 ? ex.sourceExperimentId : null );
+    }
+
+    /** Map the EE2C {@code LEVEL} class to the wire label the picker renders. */
+    @Nullable
+    private static String levelLabel( @Nullable Class<?> level ) {
+        if ( level == null ) {
+            return null;
+        }
+        if ( ExpressionExperiment.class.isAssignableFrom( level ) ) {
+            return "ExperimentTag";
+        }
+        return level.getSimpleName(); // FactorValue, BioMaterial, ExperimentalFactor, ExperimentalDesign
     }
 
     /**
@@ -2145,6 +2224,39 @@ public class AnnotationsWebService {
         @Nullable String taxonCommonName;
         /** Scientific name of a gene hit's taxon (e.g. "Mus musculus"), to disambiguate when the common name is ambiguous. Null on ontology-term hits. */
         @Nullable String taxonScientificName;
+        /**
+         * One representative, ACL-visible example of how this term has actually been used in the corpus —
+         * so a curator picking an unfamiliar/rare term can see it in context (e.g. "wild type" under the
+         * "genotype" factor of an accessible dataset). Populated only when the caller passes
+         * {@code includeExampleUsage=true}; null when the flag is off, on synthetic gene rows, or when the
+         * term has no accessible usage. Gate rendering client-side (e.g. only for low {@code usageCount}).
+         */
+        @Nullable ExampleUsageValueObject exampleUsage;
+    }
+
+    /**
+     * A single representative usage of a searched term, for showing a hit in context. Field names mirror
+     * {@code ANNOTATION_PARENT_CONTEXT}: {@code parentName} is the owning value (e.g. the factor value),
+     * {@code parentOfParentName} is the owning category (e.g. the factor), and the statement triple
+     * (predicate/object/second*) is carried when the usage is statement-backed. {@code level} is one of
+     * {@code ExperimentTag} / {@code FactorValue} / {@code BioMaterial}; {@code sourceExperimentId} is the
+     * accessible dataset the example came from.
+     */
+    @Value
+    public static class ExampleUsageValueObject {
+        @Nullable String level;
+        @Nullable String parentName;
+        @Nullable String parentOfParentName;
+        @Nullable String parentOfParentUri;
+        @Nullable String predicate;
+        @Nullable String predicateUri;
+        @Nullable String object;
+        @Nullable String objectUri;
+        @Nullable String secondPredicate;
+        @Nullable String secondPredicateUri;
+        @Nullable String secondObject;
+        @Nullable String secondObjectUri;
+        @Nullable Long sourceExperimentId;
     }
 
     @Value

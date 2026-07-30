@@ -83,6 +83,14 @@ public interface CharacteristicService extends BaseService<Characteristic>, Filt
     Characteristic findBestByUri( String uri );
 
     /**
+     * For each value URI, return one representative ACL-visible usage (or omit it when none is accessible), so
+     * a search hit can be shown in the context it has actually been applied.
+     *
+     * @see CharacteristicDao#findRepresentativeUsageByValueUris(Collection)
+     */
+    Map<String, CharacteristicDao.UsageExample> findRepresentativeUsageByValueUris( Collection<String> valueUris );
+
+    /**
      * Returns a collection of characteristics that have a value starting with the given string.
      * <p>
      * The value is usually a human-readable form of the termURI. SQL {@code LIKE} patterns are escaped. Use
