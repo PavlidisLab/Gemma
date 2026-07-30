@@ -886,6 +886,41 @@ public class ExpressionExperimentDaoImpl
                 .list();
     }
 
+    @Override
+    public List<Object[]> getFactorValueAnnotationsWithParents( ExpressionExperiment ee ) {
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession()
+                // same ef -> fv -> c chain as getFactorValueAnnotations, just keeping fv and ef in the projection
+                .createQuery( "select c, fv, ef from ExpressionExperiment e "
+                        + "join e.experimentalDesign ed join ed.experimentalFactors ef join ef.factorValues fv "
+                        + "join fv.characteristics c where e = :ee " )
+                .setParameter( "ee", ee )
+                .setCacheable( true )
+                .setCacheRegion( ANNOTATIONS_CACHE_REGION )
+                .list();
+    }
+
+    @Override
+    public List<Object[]> getFactorValueAnnotationsWithParents( ExpressionExperimentSubSet subset ) {
+        // Mirror of the ExpressionExperiment variant for the subset annotation path. Not covered by a dedicated
+        // fixture test (no subset+factor-value+statement fixture exists); it is the same projection widening over the
+        // already-working getFactorValueAnnotations(subset) joins, so the ExpressionExperiment variant's green test
+        // stands in for the query shape.
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select c, fv, ef from ExpressionExperimentSubSet subset "
+                        + "join subset.bioAssays ba join ba.sampleUsed bm "
+                        + "join bm.factorValues fv "
+                        + "join fv.experimentalFactor ef "
+                        + "join fv.characteristics c "
+                        + "where subset = :subset "
+                        + "group by c, fv, ef" )
+                .setParameter( "subset", subset )
+                .setCacheable( true )
+                .setCacheRegion( ANNOTATIONS_CACHE_REGION )
+                .list();
+    }
+
     private List<Characteristic> getAnnotationsByLevel( ExpressionExperiment expressionExperiment, Class<? extends Identifiable> level ) {
         //noinspection unchecked
         List<Object[]> result = getSessionFactory().getCurrentSession()

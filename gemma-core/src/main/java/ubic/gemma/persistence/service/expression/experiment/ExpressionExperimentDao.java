@@ -517,6 +517,21 @@ public interface ExpressionExperimentDao
     List<Statement> getFactorValueAnnotations( ExpressionExperimentSubSet ee );
 
     /**
+     * Obtain factor value-level annotations together with the owning factor value and experimental factor, so the read
+     * VO can carry the term's parent context ({@code parentName} = the factor value, {@code parentOfParentName} = the
+     * factor) without a second query. Each row is {@code [Statement, FactorValue, ExperimentalFactor]}. The
+     * factor-value → statement and factor → factor-value joins the projection widens are already traversed by
+     * {@link #getFactorValueAnnotations(ExpressionExperiment)}; this only stops discarding the parents.
+     */
+    List<Object[]> getFactorValueAnnotationsWithParents( ExpressionExperiment ee );
+
+    /**
+     * Subset variant of {@link #getFactorValueAnnotationsWithParents(ExpressionExperiment)}. Each row is
+     * {@code [Statement, FactorValue, ExperimentalFactor]}.
+     */
+    List<Object[]> getFactorValueAnnotationsWithParents( ExpressionExperimentSubSet subset );
+
+    /**
      * Special indicator for free-text terms.
      * <p>
      * Free-text terms or categories have a null URI and a non-empty label.

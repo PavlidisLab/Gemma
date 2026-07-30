@@ -715,6 +715,9 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest5 {
         expressionExperimentDao.getBioMaterialAnnotations( ee, false );
         expressionExperimentDao.getExperimentalDesignAnnotations( ee, false );
         expressionExperimentDao.getFactorValueAnnotations( ee );
+        // widened-projection variants that carry the factor value + factor as parent context; exercises the
+        // "select c, fv, ef" projection and the subset "group by c, fv, ef" so the HQL/SQL is validated here.
+        expressionExperimentDao.getFactorValueAnnotationsWithParents( ee );
     }
 
     @Test

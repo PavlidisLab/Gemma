@@ -53,6 +53,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueOb
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.FactorValueUtils;
 import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -730,10 +731,13 @@ public class ExpressionExperimentReadServiceImpl implements ExpressionExperiment
                 "http://gemma.msl.ubc.ca/ont/TGEMO_00167", // dose
                 "http://gemma.msl.ubc.ca/ont/TGEMO_00168"  // development stage
         };
-        expressionExperimentDao.getFactorValueAnnotations( expressionExperiment ).stream()
-                .filter( this::filterFactorValueAnnotation )
-                .map( c -> factorValueAnnotationVo( c, ignoredPredicates ) )
-                .forEach( c -> addIfNovel( annotations, c, seenTerms ) );
+        for ( Object[] row : expressionExperimentDao.getFactorValueAnnotationsWithParents( expressionExperiment ) ) {
+            Statement c = ( Statement ) row[0];
+            if ( !filterFactorValueAnnotation( c ) ) {
+                continue;
+            }
+            addIfNovel( annotations, factorValueAnnotationVo( c, ignoredPredicates, ( FactorValue ) row[1], ( ExperimentalFactor ) row[2] ), seenTerms );
+        }
 
         expressionExperimentDao.getBioMaterialAnnotations( expressionExperiment, false ).stream()
                 .filter( this::filterBioMaterialAnnotation )
@@ -766,10 +770,13 @@ public class ExpressionExperimentReadServiceImpl implements ExpressionExperiment
                 "http://gemma.msl.ubc.ca/ont/TGEMO_00167", // dose
                 "http://gemma.msl.ubc.ca/ont/TGEMO_00168"  // development stage
         };
-        expressionExperimentDao.getFactorValueAnnotations( ee ).stream()
-                .filter( this::filterFactorValueAnnotation )
-                .map( c -> factorValueAnnotationVo( c, ignoredPredicates ) )
-                .forEach( c -> addIfNovel( annotations, c, seenTerms ) );
+        for ( Object[] row : expressionExperimentDao.getFactorValueAnnotationsWithParents( ee ) ) {
+            Statement c = ( Statement ) row[0];
+            if ( !filterFactorValueAnnotation( c ) ) {
+                continue;
+            }
+            addIfNovel( annotations, factorValueAnnotationVo( c, ignoredPredicates, ( FactorValue ) row[1], ( ExperimentalFactor ) row[2] ), seenTerms );
+        }
 
         expressionExperimentDao.getBioMaterialAnnotations( ee ).stream()
                 .filter( this::filterBioMaterialAnnotation )
@@ -789,10 +796,20 @@ public class ExpressionExperimentReadServiceImpl implements ExpressionExperiment
      * non-ignored predicate/object pairs); {@code termUri} already resolves to the subject URI because a
      * {@link Statement} aliases subject &harr; value, so the constructor's {@code getValueUri()} yields it.
      * The {@code seenTerms} dedup key is the (unchanged) {@code termName}.
+     * <p>
+     * {@code parentName} is set to the owning factor value's summary and {@code parentOfParentName} to the experimental
+     * factor's name, so a client can show the term in the context of its factor value and factor (e.g. "wild type" under
+     * the "genotype" factor). Both come from the same widened query that produced the statement — no extra fetch. The
+     * parent links are left for the client to build; only the display names are populated here. Because the results are
+     * de-duplicated by {@code termName}, a term appearing under more than one factor value keeps the first parent seen.
      */
-    private static AnnotationValueObject factorValueAnnotationVo( Statement c, String[] ignoredPredicates ) {
+    private static AnnotationValueObject factorValueAnnotationVo( Statement c, String[] ignoredPredicates, FactorValue fv, @Nullable ExperimentalFactor ef ) {
         AnnotationValueObject vo = new AnnotationValueObject( c, FactorValue.class );
         vo.setTermName( formatStatement( c, ignoredPredicates ) );
+        vo.setParentName( FactorValueUtils.getSummaryString( fv ) );
+        if ( ef != null ) {
+            vo.setParentOfParentName( ef.getName() );
+        }
         return vo;
     }
 
