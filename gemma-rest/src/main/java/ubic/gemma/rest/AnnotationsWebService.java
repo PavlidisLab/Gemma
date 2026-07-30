@@ -48,6 +48,7 @@ import ubic.gemma.model.common.description.CharacteristicUtils;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.search.SearchResult;
 import ubic.gemma.model.common.search.SearchSettings;
+import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.expression.experiment.Statement;
@@ -1610,7 +1611,14 @@ public class AnnotationsWebService {
                 ex.sourceExperimentId > 0 ? ex.sourceExperimentId : null );
     }
 
-    /** Map the EE2C {@code LEVEL} class to the wire label the picker renders. */
+    /**
+     * Map the EE2C {@code LEVEL} class to the wire label the picker renders. EE2C only ever stores three
+     * owning levels — {@link ExpressionExperiment} (experiment tag), {@link ExperimentalDesign}, and
+     * {@link BioMaterial} — because it rolls factor-value annotations up under the experimental design (see
+     * {@code getExperimentalDesignAnnotations}, which returns the factor-value annotations). So an
+     * {@code ExperimentalDesign} level IS a factor-value usage; report it as {@code FactorValue} to match the
+     * documented {@code ExperimentTag | FactorValue | BioMaterial} enum.
+     */
     @Nullable
     private static String levelLabel( @Nullable Class<?> level ) {
         if ( level == null ) {
@@ -1619,7 +1627,10 @@ public class AnnotationsWebService {
         if ( ExpressionExperiment.class.isAssignableFrom( level ) ) {
             return "ExperimentTag";
         }
-        return level.getSimpleName(); // FactorValue, BioMaterial, ExperimentalFactor, ExperimentalDesign
+        if ( ExperimentalDesign.class.isAssignableFrom( level ) ) {
+            return "FactorValue";
+        }
+        return level.getSimpleName(); // BioMaterial
     }
 
     /**
