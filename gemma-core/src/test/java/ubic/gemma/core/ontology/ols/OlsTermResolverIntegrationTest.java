@@ -46,8 +46,15 @@ public class OlsTermResolverIntegrationTest {
     @Test
     @NetworkAvailable(url = OLS_BASE)
     public void testResolveRealTerm() throws OlsUnavailableException {
-        // EFO_0000270 = asthma; a stable, widely-mirrored term
-        OlsTerm term = newResolver().resolve( "http://purl.obolibrary.org/obo/EFO_0000270" );
+        // MONDO_0004979 = asthma; non-obsolete and carried by five ontologies (mondo defines it, efo/covoc/oba
+        // import it), so it is stable in both identity and label.
+        //
+        // This used to be http://purl.obolibrary.org/obo/EFO_0000270, which failed on two counts. That IRI does
+        // not exist -- native EFO identifiers live under http://www.ebi.ac.uk/efo/, not the OBO PURL prefix, so
+        // OLS answered 200 with totalElements: 0. And the term behind the correct IRI has been obsoleted in favour
+        // of this MONDO term: EFO, the defining ontology, labels it "obsolete_asthma" and sets term_replaced_by to
+        // MONDO_0004979. Picking a live OBO PURL term avoids both traps.
+        OlsTerm term = newResolver().resolve( "http://purl.obolibrary.org/obo/MONDO_0004979" );
         assertNotNull( term );
         assertTrue( term.isFound() );
         assertEquals( "asthma", term.getLabel().toLowerCase() );
