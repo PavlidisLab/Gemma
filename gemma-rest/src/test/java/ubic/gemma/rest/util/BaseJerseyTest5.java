@@ -62,7 +62,10 @@ public abstract class BaseJerseyTest5 extends JerseyTest implements ApplicationC
     @Override
     protected final Application configure() {
         application = new ResourceConfig()
-                .packages( "io.swagger.v3.jaxrs2.integration.resources", "ubic.gemma.rest" )
+                // mirrors jersey.config.server.provider.packages in web.xml; Swagger's
+                // integration resources are deliberately absent — OpenApiWebService serves
+                // /openapi.{json,yaml} from the `openApi` bean instead
+                .packages( "ubic.gemma.rest" )
                 .registerClasses( GZipEncoder.class )
                 // use a generic context for now, it will be replaced when this bean is fully initialized in setApplicationContext()
                 .property( "contextConfig", new GenericWebApplicationContext() )

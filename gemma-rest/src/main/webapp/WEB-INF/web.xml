@@ -208,19 +208,29 @@
 
     <!--
         Jersey servlet. Init params copied verbatim from gemma-web/web.xml:176–198
-        so the REST surface area is identical. Package-scan covers
-        ubic.gemma.rest (the @Path resources) and the Swagger jaxrs2 integration.
-        The two Jersey providers (GZipEncoder + Spring RequestContextFilter) are
-        registered by classname. OpenAPI config is anchored to the gemma-rest
-        context id and points at the openapi-configuration.yaml bundled in
-        gemma-rest's classes.
+        so the REST surface area is identical. Package-scan covers ubic.gemma.rest
+        (the @Path resources). The two Jersey providers (GZipEncoder + Spring
+        RequestContextFilter) are registered by classname. OpenAPI config is
+        anchored to the gemma-rest context id and points at the
+        openapi-configuration.yaml bundled in gemma-rest's classes.
+
+        io.swagger.v3.jaxrs2.integration.resources was REMOVED from the package
+        scan: its OpenApiResource served /openapi.{json,yaml} from Swagger's own
+        OpenApiContext rather than from the `openApi` Spring bean, so the served
+        document could permanently lose everything OpenApiFactory applies after
+        reading (the servers list from gemma.hosturl, FilterArg/SortArg examples,
+        placeholder resolution) whenever a request raced the factory's async
+        build. ubic.gemma.rest.OpenApiWebService now serves both extensions off
+        the bean's Future. Note that dropping the package also un-shadows
+        GET /rest/v2/ for `Accept: application/yaml` clients, which used to reach
+        Swagger's AcceptHeaderOpenApiResource instead of RootWebService.
     -->
     <servlet>
         <servlet-name>gemma-rest</servlet-name>
         <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
         <init-param>
             <param-name>jersey.config.server.provider.packages</param-name>
-            <param-value>io.swagger.v3.jaxrs2.integration.resources,ubic.gemma.rest</param-value>
+            <param-value>ubic.gemma.rest</param-value>
         </init-param>
         <init-param>
             <param-name>jersey.config.server.provider.classnames</param-name>
