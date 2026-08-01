@@ -85,6 +85,15 @@ FROM tomcat:10.1-jdk25-temurin AS runtime
 # get in the way of deploying our WAR as ROOT.
 RUN rm -rf "$CATALINA_HOME/webapps/"* "$CATALINA_HOME/webapps.dist"
 
+# curl is required by the HEALTHCHECK below but is NOT present in the
+# tomcat:10.1-jdk25-temurin base image. Without it every probe fails with
+# "curl: not found" and the container is stuck reporting (unhealthy) even
+# though the app is fine. Install it in its own early layer (rarely changes,
+# stays cached). Kept minimal with --no-install-recommends.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends curl \
+ && rm -rf /var/lib/apt/lists/*
+
 # Deploy gemma-rest at the ROOT context.
 #
 # Trade-off:
