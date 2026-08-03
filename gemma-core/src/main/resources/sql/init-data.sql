@@ -93,6 +93,8 @@ call add_external_database('go', NULL, NULL, 'https://ftp.ncbi.nih.gov/gene/DATA
 call add_external_database('multifunctionality', NULL, NULL, NULL, 'OTHER');
 call add_external_database('gene2cs', NULL, NULL, NULL, 'OTHER');
 call add_external_database('CELLxGENE', NULL, NULL, NULL, 'EXPRESSION');
+call add_external_database('Cellosaurus', 'Cellosaurus - knowledge resource on cell lines; used for cell-line name resolution (backup for the Cell Line Ontology).', 'https://www.cellosaurus.org/', 'https://ftp.expasy.org/databases/cellosaurus/', 'ONTOLOGY');
+call add_external_database('MGI', 'Mouse Genome Informatics - mouse strains, alleles and genotypes; used for strain and genotype resolution.', 'https://www.informatics.jax.org/', 'https://www.informatics.jax.org/downloads/reports/', 'ONTOLOGY');
 
 drop procedure add_external_database;
 
