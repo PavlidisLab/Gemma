@@ -199,6 +199,16 @@ public class OntologyConfig {
     }
 
     @Bean
+    public FactoryBean<CellosaurusOntologyService> cellosaurusOntologyService() {
+        return createOntologyFactory( CellosaurusOntologyService.class, CellosaurusOntologyService.URI_PREFIX + "CVCL_" );
+    }
+
+    @Bean
+    public FactoryBean<MgiStrainOntologyService> mgiStrainOntologyService() {
+        return createOntologyFactory( MgiStrainOntologyService.class, MgiStrainOntologyService.URI_PREFIX + "MGI:" );
+    }
+
+    @Bean
     public FactoryBean<UberonOntologyService> uberonOntologyServiceOntologyService() {
         return createOntologyFactory( UberonOntologyService.class, "http://purl.obolibrary.org/obo/UBERON_" );
     }
