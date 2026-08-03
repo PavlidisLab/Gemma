@@ -2,34 +2,58 @@ package ubic.gemma.core.config;
 
 import org.junit.jupiter.api.Test;
 
-import java.util.Properties;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Guards that the Cellosaurus/MGI load flags live in {@code default.properties} (not
- * {@code basecode.properties}), so they honour the standard {@code -Dgemma.load.*} / {@code GEMMA_LOAD_*}
- * override convention rather than the legacy {@code -Dbasecode.load.*} one.
- * <p>
- * {@link SettingsConfig#filterSystemProperties} only passes through a {@code gemma.<key>} system property
- * when {@code <key>} is declared in {@code default.properties}/{@code project.properties}.
+ * Guards the config path the Cellosaurus/MGI providers actually use: {@link Configuration}, which reads
+ * defaults from {@code basecode.properties} and honours system-property overrides via the {@code basecode.}
+ * prefix or the bare key — NOT the {@code gemma.} prefix used by {@code SettingsConfig}. The provider
+ * ctors read {@code Configuration.getBoolean("load.<name>")} / {@code getString("url.<name>")}, so these
+ * keys must live in {@code basecode.properties} and enable via {@code -Dload.<name>} / {@code -Dbasecode.load.<name>}.
  */
 class LexicalOntologyConfigOverrideTest {
 
     @Test
-    void gemmaPrefixedSystemPropertyEnablesLexicalOntologies() throws Exception {
-        Properties sys = new Properties();
-        sys.setProperty( "gemma.load.cellosaurus", "true" );
-        sys.setProperty( "gemma.load.mgiStrain", "true" );
-        sys.setProperty( "gemma.url.cellosaurus", "file:///tmp/override.obo" );
+    void defaultsAreReadableAndDisabled() {
+        assertFalse( Boolean.TRUE.equals( Configuration.getBoolean( "load.cellosaurus" ) ) );
+        assertFalse( Boolean.TRUE.equals( Configuration.getBoolean( "load.mgiStrain" ) ) );
+        // the URL default must resolve (was the regression: moving it out of basecode.properties null'd it)
+        assertNotNull( Configuration.getString( "url.cellosaurus" ), "url.cellosaurus must be in basecode.properties" );
+        assertNotNull( Configuration.getString( "url.mgiStrain" ), "url.mgiStrain must be in basecode.properties" );
+    }
 
-        Properties resolved = SettingsConfig.filterSystemProperties( sys );
+    @Test
+    void bareSystemPropertyEnables() {
+        try {
+            System.setProperty( "load.cellosaurus", "true" );
+            assertTrue( Configuration.getBoolean( "load.cellosaurus" ), "-Dload.cellosaurus=true must enable" );
+        } finally {
+            System.clearProperty( "load.cellosaurus" );
+        }
+    }
 
-        assertEquals( "true", resolved.getProperty( "load.cellosaurus" ),
-                "-Dgemma.load.cellosaurus must resolve to load.cellosaurus (key must be in default.properties)" );
-        assertEquals( "true", resolved.getProperty( "load.mgiStrain" ),
-                "-Dgemma.load.mgiStrain must resolve to load.mgiStrain" );
-        assertEquals( "file:///tmp/override.obo", resolved.getProperty( "url.cellosaurus" ),
-                "-Dgemma.url.cellosaurus must be overridable too" );
+    @Test
+    void basecodePrefixedSystemPropertyEnables() {
+        try {
+            System.setProperty( "basecode.load.mgiStrain", "true" );
+            assertTrue( Configuration.getBoolean( "load.mgiStrain" ), "-Dbasecode.load.mgiStrain=true must enable" );
+        } finally {
+            System.clearProperty( "basecode.load.mgiStrain" );
+        }
+    }
+
+    @Test
+    void gemmaPrefixDoesNotReachConfiguration() {
+        // documents the trap: the gemma. prefix is for SettingsConfig/@Value, not the Configuration facade
+        try {
+            System.setProperty( "gemma.load.cellosaurus", "true" );
+            assertFalse( Boolean.TRUE.equals( Configuration.getBoolean( "load.cellosaurus" ) ),
+                    "-Dgemma.load.cellosaurus must NOT enable (wrong facade)" );
+        } finally {
+            System.clearProperty( "gemma.load.cellosaurus" );
+        }
     }
 }
