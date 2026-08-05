@@ -4177,9 +4177,28 @@ public class ExpressionExperimentDaoImpl
     }
 
     private int removeAllSingleCellDataVectors( ExpressionExperiment ee, boolean keepDimensions ) {
-        Set<QuantitationType> qtsToRemove = ee.getSingleCellExpressionDataVectors().stream()
-                .map( SingleCellExpressionDataVector::getQuantitationType )
-                .collect( Collectors.toSet() );
+        // Only walk the vector collection when it is ALREADY loaded, otherwise resolve the distinct QTs
+        // with a projection query. Streaming ee.getSingleCellExpressionDataVectors() unconditionally
+        // forced the lazy collection to initialize, which selects every vector's DATA + DATA_INDICES
+        // blob together with its eager join graph: 25,050 rows spanning 333,570 cells each for
+        // GSE277430, which exhausted a 30 GB heap. The OutOfMemoryError then aborted mid-resultset and
+        // left the connection's protocol stream desynced, so the failure surfaced as an unrelated
+        // ArrayIndexOutOfBoundsException raised while rolling back — with the real cause replaced by
+        // "Application exception overridden by rollback exception". Forcing initialization here also
+        // made the Hibernate.isInitialized() check below unconditionally true, defeating it. This is
+        // the same two-branch shape removeAllRawDataVectors already uses.
+        Collection<QuantitationType> qtsToRemove;
+        if ( Hibernate.isInitialized( ee.getSingleCellExpressionDataVectors() ) ) {
+            qtsToRemove = ee.getSingleCellExpressionDataVectors().stream()
+                    .map( SingleCellExpressionDataVector::getQuantitationType )
+                    .collect( Collectors.toSet() );
+        } else {
+            //noinspection unchecked
+            qtsToRemove = getSessionFactory().getCurrentSession()
+                    .createQuery( "select v.quantitationType from SingleCellExpressionDataVector v where v.expressionExperiment = :ee group by v.quantitationType" )
+                    .setParameter( "ee", ee )
+                    .list();
+        }
         // PERF_PROBE_REPORT_ROUND4 B1: capture the dimensions BEFORE we wipe the link table —
         // removeUnusedSingleCellDimensions below needs to know which SCDs were attached, and once
         // the link rows are gone getSingleCellDimensions(ee) returns empty.
