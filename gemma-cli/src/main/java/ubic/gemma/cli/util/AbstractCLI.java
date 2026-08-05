@@ -24,7 +24,6 @@ import org.apache.commons.io.output.CloseShieldOutputStream;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.ocpsoft.prettytime.shade.edu.emory.mathcs.backport.java.util.Collections;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.util.Assert;
@@ -39,6 +38,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadFactory;
@@ -143,7 +143,6 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
 
     @Override
     public List<String> getCommandAliases() {
-        //noinspection unchecked
         return Collections.emptyList();
     }
 
