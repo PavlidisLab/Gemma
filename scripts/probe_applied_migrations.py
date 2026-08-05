@@ -225,6 +225,12 @@ class Migration:
     # existed here — is present.
     drop_only: bool = False
     corroborated_by: Check | None = None
+    # Alternative corroboration for a drop-only migration: strings that, if
+    # present in V1__prod_baseline.sql, prove the dropped object existed on this
+    # database's lineage. The baseline is a mysqldump of prod taken before these
+    # migrations, so it is a second, earlier snapshot the live schema can't give
+    # us — if the object is in the dump and gone now, something dropped it.
+    baseline_evidence: tuple[str, ...] = ()
 
 
 MIGRATIONS: tuple[Migration, ...] = (
@@ -236,10 +242,12 @@ MIGRATIONS: tuple[Migration, ...] = (
     Migration("V4", "drop_duplicate_indexes",
               (no_idx("BIO_ASSAY_DIMENSIONS2BIO_ASSAYS", "BIO_ASSAY_DIMENSION_BIO_ASSAYS_FKC"),
                no_idx("RELEVANT_PUBLICATIONS", "INVESTIGATION_OTHER_RELEVANT_PUBLICATIONS_FKC")),
-              caveat="drop-only migration, and nothing else in the schema records that these "
-                     "indexes ever existed here. A Hibernate-built database satisfies it "
-                     "without ever having run it; only the prod lineage can",
-              drop_only=True),
+              caveat="drop-only migration: the live schema cannot tell whether these indexes "
+                     "were dropped or never existed. Resolved against V1__prod_baseline.sql — "
+                     "if the dump has them and the database does not, they were dropped",
+              drop_only=True,
+              baseline_evidence=("BIO_ASSAY_DIMENSION_BIO_ASSAYS_FKC",
+                                 "INVESTIGATION_OTHER_RELEVANT_PUBLICATIONS_FKC")),
     Migration("V5", "raw_vector_ee_qt_index",
               (idx("RAW_EXPRESSION_DATA_VECTOR", "experimentRawVectorByQt"),)),
     Migration("V6", "experimental_factor_baseline_relevance",
@@ -395,7 +403,13 @@ def load_schema(creds: Credentials, args: argparse.Namespace,
 APPLIED, MISSING, PARTIAL, INDETERMINATE = "APPLIED", "MISSING", "PARTIAL", "INDETERMINATE"
 
 
-def verdict(migration: Migration, schema: Schema) -> tuple[str, list[str]]:
+def vnum(version: str) -> int:
+    """'V23' -> 23. Fractional versions ('V23_1') sort by their integer part."""
+    return int(version[1:].split("_")[0])
+
+
+def verdict(migration: Migration, schema: Schema,
+            baseline: str | None = None) -> tuple[str, list[str]]:
     held = [c for c in migration.checks if schema.holds(c)]
     failed = [c for c in migration.checks if not schema.holds(c)]
     if failed and held:
@@ -405,20 +419,50 @@ def verdict(migration: Migration, schema: Schema) -> tuple[str, list[str]]:
         return state, [c.describe() for c in failed]
     # Every check holds. For a drop-only migration that is not evidence of
     # application unless something proves the dropped object was ever here.
-    if migration.drop_only:
-        corroborated = (migration.corroborated_by is not None
-                        and schema.holds(migration.corroborated_by))
-        if not corroborated:
-            return INDETERMINATE, []
+    if migration.drop_only and not corroborates(migration, schema, baseline):
+        return INDETERMINATE, []
     return APPLIED, []
 
 
+def corroborates(migration: Migration, schema: Schema, baseline: str | None) -> bool:
+    """Is there independent evidence that this drop-only migration really ran?"""
+    if migration.corroborated_by is not None and schema.holds(migration.corroborated_by):
+        return True
+    if baseline and migration.baseline_evidence:
+        return all(marker in baseline for marker in migration.baseline_evidence)
+    return False
+
+
+DEFAULT_BASELINE = "gemma-core/src/main/resources/db/migration/mysql/V1__prod_baseline.sql"
+
+
+def load_baseline(explicit: str | None) -> str | None:
+    """Read V1__prod_baseline.sql, the pre-migration snapshot of prod."""
+    if explicit == "":
+        return None
+    path = explicit
+    if path is None:
+        repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        path = os.path.join(repo_root, DEFAULT_BASELINE)
+        if not os.path.exists(path):
+            return None
+    try:
+        with open(os.path.expanduser(path), encoding="utf-8", errors="replace") as fh:
+            return fh.read()
+    except OSError as exc:
+        raise SystemExit(f"cannot read baseline {path}: {exc}")
+
+
 def render(results: list[tuple[Migration, str, list[str]]], creds: Credentials,
-           args: argparse.Namespace) -> str:
+           args: argparse.Namespace, used_baseline: bool = False) -> str:
     lines = [
         f"# Applied-migration probe — {args.host or 'localhost'}/{args.database}",
         "",
         f"Credential source: {creds.source}",
+        "",
+        "Drop-only migrations cross-checked against V1__prod_baseline.sql."
+        if used_baseline else
+        "No baseline dump consulted — drop-only migrations cannot be resolved.",
         "",
         "Reconstructed from schema fingerprints; this database has no "
         "`flyway_schema_history` to consult.",
@@ -456,22 +500,53 @@ def render(results: list[tuple[Migration, str, list[str]]], creds: Credentials,
             lines.append(f"  - `{m.version}` — {m.caveat}")
     if applied:
         highest = applied[-1]
+        highest_n = vnum(highest.version)
+        # A baseline is only meaningful over a CONTIGUOUS run of applied
+        # migrations. Anything known-missing below the high-water mark is a hole
+        # that a baseline would paper over permanently: Flyway marks every
+        # version <= baseline as applied and never revisits it.
+        holes = [m for m, v, _ in results
+                 if v in (MISSING, PARTIAL) and vnum(m.version) < highest_n]
         lines += [
             "",
             "## Implication for the Flyway cutover",
             "",
-            f"Highest cleanly-applied migration: **{highest.version}** "
+            f"Highest applied migration: **{highest.version}** "
             f"(`{highest.version}__{highest.name}`).",
             "",
             "docs/design/FLYWAY_PROD_FOLLOWUP.md currently specifies "
             "`baselineVersion(\"1\")`. That is only correct for a database that has "
             "received nothing since V1__prod_baseline. With the migrations above "
             "already present, a baseline at 1 would make Flyway attempt to re-apply "
-            "each of them on first migrate, and they will fail — a duplicate column "
-            "or duplicate table error, mid-cutover. Set the baseline to the highest "
-            "migration this host actually has, and hand-reconcile anything PARTIAL "
-            "first.",
+            "each of them on first migrate and fail on a duplicate column or table, "
+            "mid-cutover.",
         ]
+        if holes:
+            hole_list = ", ".join(f"`{m.version}__{m.name}`" for m in holes)
+            safe = min(vnum(m.version) for m in holes) - 1
+            lines += [
+                "",
+                f"**This host cannot simply be baselined at {highest.version}.** The "
+                f"applied set is not a contiguous prefix — {hole_list} "
+                f"{'is' if len(holes) == 1 else 'are'} missing *below* the high-water "
+                "mark. Baselining above a hole marks it applied and Flyway will never "
+                "run it, so the gap becomes permanent and silent.",
+                "",
+                "Two ways out, in order of preference:",
+                "",
+                f"1. Apply the missing migration{'' if len(holes) == 1 else 's'} by hand "
+                f"first, making the chain contiguous, then baseline at {highest.version}.",
+                f"2. Baseline at V{safe} — the last version before the first hole — and let "
+                f"Flyway apply everything above it. Only viable if the already-applied "
+                f"migrations above V{safe} are individually re-runnable, which most are "
+                f"not: a second ADD COLUMN or CREATE TABLE errors out.",
+            ]
+        else:
+            lines += [
+                "",
+                f"The applied set is a contiguous prefix, so `baselineVersion(\"{highest_n}\")` "
+                "is safe here. Reconcile anything PARTIAL first.",
+            ]
     return "\n".join(lines) + "\n"
 
 
@@ -486,7 +561,13 @@ def main() -> int:
     p.add_argument("--login-path", default=None,
                    help="mysql_config_editor login-path name (~/.mylogin.cnf)")
     p.add_argument("--out", default=None, help="write the markdown report here instead of stdout")
+    p.add_argument("--baseline", default=None,
+                   help="V1__prod_baseline.sql, used as an earlier snapshot to resolve "
+                        "drop-only migrations (default: the copy in this repo; "
+                        "--baseline '' to skip)")
     args = p.parse_args()
+
+    baseline = load_baseline(args.baseline)
 
     creds = resolve_credentials(args)
 
@@ -506,8 +587,8 @@ def main() -> int:
         if option_file and os.path.exists(option_file):
             os.unlink(option_file)
 
-    results = [(m, *verdict(m, schema)) for m in MIGRATIONS]
-    report = render(results, creds, args)
+    results = [(m, *verdict(m, schema, baseline)) for m in MIGRATIONS]
+    report = render(results, creds, args, baseline is not None)
 
     if args.out:
         with open(args.out, "w") as fh:
