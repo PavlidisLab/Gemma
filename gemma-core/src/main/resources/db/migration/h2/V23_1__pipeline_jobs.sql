@@ -1,8 +1,10 @@
 -- H2 mirror of mysql/V18__pipeline_jobs.sql — creates the base pipeline schema
 -- (PIPELINE_JOB_BATCH / PIPELINE_JOB / PIPELINE_JOB_EVENT). The MySQL stream created
--- these in V18; the H2 stream never got a sister migration, so V24 (attempt/retry
--- columns) and V25 (batch throttle) altered a table that did not exist here. This fills
--- that gap. Version 23.1 slots it ahead of V24, the first migration to touch the table.
+-- these in V18; the H2 stream never got a sister migration, so V25 (attempt/retry
+-- columns) and V26 (batch throttle) altered a table that did not exist here. This fills
+-- that gap. Version 23.1 slots it ahead of V25, the first migration to touch the table.
+-- (The fractional version is needed because V23 and V24 are both taken — V23 by
+-- tag_supporting_evidence, V24 by scde_cascade_on_parent_delete from fix/scde-reverse-compat.)
 --
 -- Type choices follow the V5__ticket_layer.sql idioms: BIGINT identity PK, DATETIME(3)
 -- for timestamps, and CLOB for the LONGTEXT/TEXT JSON-ish columns (H2's JSON support
