@@ -26,6 +26,20 @@ import java.util.Objects;
  * <p>
  * Today every {@code (EE, QT)} maps to exactly one {@code SingleCellDimension}; the schema enforces
  * that via a unique constraint on {@code (EXPRESSION_EXPERIMENT_FK, QUANTITATION_TYPE_FK)}.
+ * <p>
+ * <b>Cross-version compatibility.</b> This branch shares its database with the deployed production
+ * Gemma, which has no mapping for this table. All three foreign keys are therefore declared
+ * {@code ON DELETE CASCADE} at the schema level (MySQL migration V23 / H2 V24) so that the older
+ * code can delete an {@link ExpressionExperiment}, a {@link QuantitationType} or a
+ * {@link SingleCellDimension} without tripping over link rows it cannot see. JPA's
+ * {@link ForeignKey} annotation cannot express a delete rule, so the cascade lives only in the
+ * migrations — do not regenerate these constraints from the annotations alone, and keep the
+ * {@code ON DELETE CASCADE} if this mapping is ever ported to a different DDL source.
+ * <p>
+ * The cascade is a safety net, not the primary teardown path: callers still clear rows explicitly
+ * via {@code SingleCellDimensionExperimentDao.removeByEE}, {@code removeByEEAndQt} and
+ * {@code removeBySingleCellDimension}. Because this is a cache derived from
+ * {@code SINGLE_CELL_EXPRESSION_DATA_VECTOR}, a cascaded row is never a loss of source data.
  */
 @Entity
 @Table(name = "SINGLE_CELL_DIMENSION_EXPERIMENT")
