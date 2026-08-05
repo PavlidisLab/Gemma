@@ -79,6 +79,21 @@
         </plugins>
     </build>
     <dependencies>
+        <!--
+          MUST stay first. prettytime-nlp bundles a shaded SLF4J 1.x org.slf4j.LoggerFactory
+          (see the appassembler note above). Maven orders the classpath as direct dependencies
+          in declaration order, then transitives, so without this entry prettytime-nlp precedes
+          slf4j-api (a transitive of gemma-core) and the 1.x LoggerFactory wins: it looks for
+          org.slf4j.impl.StaticLoggerBinder, doesn't find it (the binding is log4j-slf4j2-impl),
+          and installs a NOP logger. Every log.info/log.error in Gemma is then discarded —
+          including the CLI's own failure stack traces. The contrib/ seeding below only fixes
+          the packaged launcher; declaring slf4j-api first fixes IDE runs and exec:java too.
+        -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
         <dependency>
             <groupId>gemma</groupId>
             <artifactId>gemma-core</artifactId>

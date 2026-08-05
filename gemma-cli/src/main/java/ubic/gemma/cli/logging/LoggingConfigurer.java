@@ -47,7 +47,7 @@ public interface LoggingConfigurer {
      */
     default void configureLogger( String loggerName, String newLevel ) throws IllegalArgumentException {
         int l = ArrayUtils.indexOf( NAMED_LEVELS, newLevel );
-        Assert.isTrue( l != -1 , "expected true");
+        Assert.isTrue( l != -1, "Level must be one of: " + String.join( ", ", NAMED_LEVELS ) + "." );
         configureLogger( loggerName, l );
     }
 
