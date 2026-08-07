@@ -20,6 +20,7 @@ is a consequence of that arrangement, in one direction or the other.
 | 5 | phase2 deletion does not remove the experiment's ACL from either ACL store | phase2 deletes | **Open** — 115 rows cleaned by hand for GSE277430 |
 | 6 | 1.32.x cannot maintain phase2's canonical ACL tables; the two stores drift on create, delete and permission change | both | **Open, structural** |
 | 7 | `TICKET_TARGET.TARGET_ID` references experiments with no FK → 1.32.x deletes leave dangling ticket targets | 1.32.x deletes | **Open** (not triggered by GSE277430 — it had no ticket) |
+| 8 | phase2 finds single-cell dimensions via the `SINGLE_CELL_DIMENSION_EXPERIMENT` cache, which 1.32.x does not maintain → 17 experiments cannot be deleted on phase2 (fails loudly on the bio-assay FK) | phase2 deletes | **Open** — see §4.1 |
 
 Deleting experiment *data* can be made reliable with #1 and #5. ACL consistency across the two
 versions cannot be fixed by deletion changes alone — see §6.
@@ -133,7 +134,77 @@ Measured drift after ~2.5 months:
 | phase2 ACL identities for experiments that no longer exist | **44** |
 | Max identity id — legacy vs phase2 | 6,932,038 vs 6,811,525 |
 
+**The drift is active, not a fixed backlog.** Re-measured 2026-08-05, after deleting GSE306819 and
+cleaning its ACLs by hand: legacy orphans **0**, canonical orphans **46**. Two new orphans appeared in
+~14 hours, and neither is ours (zero canonical identities remain for object 89293). The direction
+identifies the source: a phase2 deletion leaks *both* stores, so a deletion that cleaned legacy but
+not canonical can only have come from 1.32.x. Any reconciliation must therefore handle the continuous
+case, not just sweep a known backlog.
+
 ---
+
+### 4.1 Single-cell components — orphan audit (2026-08-05)
+
+Prompted by the concern that single-cell components hang off an experiment more loosely than the rest.
+They do — but the weak edge is backstopped, and nothing is orphaned today.
+
+**Everything below a dimension is FK-enforced `RESTRICT`**, so it cannot be orphaned; the dimension
+delete would fail first:
+
+| Child | → parent | Rule |
+|---|---|---|
+| `SINGLE_CELL_EXPRESSION_DATA_VECTOR.SINGLE_CELL_DIMENSION_FK` | `SINGLE_CELL_DIMENSION` | RESTRICT |
+| `CELL_LEVEL_CHARACTERISTICS.SINGLE_CELL_DIMENSION_FK` | `SINGLE_CELL_DIMENSION` | RESTRICT |
+| `CHARACTERISTIC.CELL_LEVEL_CHARACTERISTICS_FK` | `CELL_LEVEL_CHARACTERISTICS` | RESTRICT |
+| `BIO_ASSAYS2SINGLE_CELL_DIMENSIONS.SINGLE_CELL_DIMENSIONS_FK` | `SINGLE_CELL_DIMENSION` | RESTRICT |
+| `BIO_ASSAYS2SINGLE_CELL_DIMENSIONS.BIO_ASSAYS_FK` | `BIO_ASSAY` | RESTRICT |
+| `ANALYSIS.SINGLE_CELL_DIMENSION_FK` | `SINGLE_CELL_DIMENSION` | RESTRICT |
+| `SINGLE_CELL_DIMENSION_EXPERIMENT.{EE,QT,SCD}_FK` | resp. | RESTRICT |
+
+`CellTypeAssignment` and `GenericCellLevelCharacteristics` share the `CELL_LEVEL_CHARACTERISTICS`
+table, and cell-type `Characteristic` rows hang off it by FK, so both are covered by the above.
+
+**The genuinely weak edge is dimension → experiment: `SINGLE_CELL_DIMENSION` has no FK to
+`INVESTIGATION` at all.** A dimension is reachable from its experiment only through the vectors or
+through the `SINGLE_CELL_DIMENSION_EXPERIMENT` link table. Measured database-wide:
+
+| | |
+|---|---|
+| `SINGLE_CELL_DIMENSION` rows | 543 |
+| … with no link row | **17** |
+| … with no vectors | 0 |
+| … orphaned (no link row, no vectors, no analysis) | **0** |
+| … with no bio-assay links | 0 |
+
+So no dimension has ever been orphaned, and none can be silently orphaned in future: every dimension
+holds bio-assay links, and `BIO_ASSAYS2SINGLE_CELL_DIMENSIONS.BIO_ASSAYS_FK` is `RESTRICT`. A surviving
+dimension therefore blocks the deletion of its experiment's `BIO_ASSAY` rows, converting a would-be
+silent orphan into a hard, visible failure. (This is exactly what the H2 fixture for
+`removeWithUninitializedSingleCellDataVectors` hit before the link row was recorded:
+`BIO_ASSAYS_SC_FKC … FOREIGN KEY(BIO_ASSAYS_FK) REFERENCES BIO_ASSAY`.)
+
+**But the two branches discover dimensions differently, and phase2's source is less reliable:**
+
+- `hotfix-1.32.8` — `getSingleCellDimensions(ee)` derives them from the vectors:
+  `select scedv.singleCellDimension from SingleCellExpressionDataVector scedv … group by …`.
+  Always correct, never misses one.
+- `phase2` (`ExpressionExperimentDaoImpl:2872`, marked *PERF_PROBE_REPORT_ROUND4 B1: dimension lookup
+  via link table (was: scan SCEDV)*) — reads `SingleCellDimensionExperiment`. Fast, but only as
+  complete as the cache.
+
+The cache is maintained by the phase2 DAO. **Production 1.32.x loads single-cell data without knowing
+the link table exists**, so anything it loads is missing from it — the same reverse-compatibility shape
+as the ACL stores. Consequence: **17 live experiments currently cannot be deleted by phase2.** Their
+dimension is invisible to `getSingleCellDimensions(ee)`, so it is never scheduled for removal, and
+`super.remove(ee)` then trips the bio-assay FK and rolls back:
+
+`GSE317144` (91993), `GSE305400` (92041), `GSE325586` (92315), `GSE306263` (92325), `GSE308748`
+(92641), `GSE311334` (92642), `GSE314609` (92644), `GSE289589` (92645), `GSE316011` (92647),
+`GSE222430` (92648), `GSE315059` (92651), `GSE279550` (92652), `GSE313257` (92653), `GSE300690`
+(92655), `GSE291600` (92777), `GSE299894` (92778), `GSE292137.1` (92828)
+
+The same gap affects any other phase2 feature backed by that table (home-page single-cell counts,
+`findDimensionByEEAndQt`), not just deletion.
 
 ## 5. Remediation — Gemma 2.0 (`phase2-acl-migrate`)
 
@@ -171,7 +242,12 @@ Measured drift after ~2.5 months:
    that initializes `ExpressionExperiment.singleCellExpressionDataVectors`; the delete path was one
    caller, not the only one. Worth auditing whether that collection should be mapped at all, or only
    reachable through paged/streamed DAO methods.
-5. **Set a JDBC fetch size** or otherwise stop Connector/J buffering unbounded result sets. Today
+5. **Make dimension discovery fall back to the vectors** (§4.1). `getSingleCellDimensions(ee)` trusts
+   the `SINGLE_CELL_DIMENSION_EXPERIMENT` cache, which production does not maintain, so 17 experiments
+   are currently undeletable on phase2. Fall back to (or union with) 1.32.x's vector-derived query when
+   the link table yields nothing — keeping the fast path for the common case. Backfilling the missing
+   link rows fixes today's 17 but not tomorrow's, since production keeps loading single-cell data.
+6. **Set a JDBC fetch size** or otherwise stop Connector/J buffering unbounded result sets. Today
    `useCursorFetch=true` is set but no fetch size is, so no cursor is used and the entire result set is
    materialized client-side. This is what turned an expensive query into a heap exhaustion.
 
@@ -201,7 +277,9 @@ Measured drift after ~2.5 months:
 
 ## 7. Runbook — cleaning ACL leftovers after a phase2 deletion
 
-Needed until §5 item 1 lands. Replace `:ee_id` and `:oi_id`; every FK here is `RESTRICT`, so order
+Exercised twice: GSE277430 / EE 88007 / identity 6292626 (115 rows, 2026-08-04) and GSE306819 /
+EE 89293 / identity 6324568 (342 rows: 2 entries + 168 children + 1 identity per store, 2026-08-05).
+In both cases the data side was clean and only the ACL rows survived. Needed until §5 item 1 lands. Replace `:ee_id` and `:oi_id`; every FK here is `RESTRICT`, so order
 matters. Requires a write-capable account (`gemd-ro` cannot do this).
 
 ```sql
