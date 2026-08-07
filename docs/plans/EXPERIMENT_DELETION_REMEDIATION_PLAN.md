@@ -21,6 +21,7 @@ is a consequence of that arrangement, in one direction or the other.
 | 6 | 1.32.x cannot maintain phase2's canonical ACL tables; the two stores drift on create, delete and permission change | both | **Open, structural** |
 | 7 | `TICKET_TARGET.TARGET_ID` references experiments with no FK → 1.32.x deletes leave dangling ticket targets | 1.32.x deletes | **Open** (not triggered by GSE277430 — it had no ticket) |
 | 8 | phase2 finds single-cell dimensions via the `SINGLE_CELL_DIMENSION_EXPERIMENT` cache, which 1.32.x does not maintain → 17 experiments cannot be deleted on phase2 (fails loudly on the bio-assay FK) | phase2 deletes | **Open** — see §4.1 |
+| 9 | `lintAcls` reported parent-ACL repairs it never wrote: `AclObjectIdentity` is `@Immutable`, so Hibernate discarded the update while the linter recorded `fixed = true` | phase2 repair tooling | **Fixed** — `cc5b51511c`, verified against the real wiring; see §4.2 |
 
 Deleting experiment *data* can be made reliable with #1 and #5. ACL consistency across the two
 versions cannot be fixed by deletion changes alone — see §6.
@@ -206,6 +207,47 @@ dimension is invisible to `getSingleCellDimensions(ee)`, so it is never schedule
 The same gap affects any other phase2 feature backed by that table (home-page single-cell counts,
 `findDimensionByEEAndQt`), not just deletion.
 
+### 4.2 The repair tool silently did nothing (2026-08-06)
+
+Deleting GSE273690 (EE 88200) failed with `AccessDeniedException` before touching any data.
+`ExpressionExperimentWriteServiceImpl.remove` passes its own `isEditableByCurrentUser(ee)` check, then
+at line 322 loops `expressionExperimentSubSetService.remove(subset)` — an ACL-secured call per subset.
+phase2 found **no ACL at all** for the experiment's 16 subsets and denied.
+
+This is defect #6 escalating from "orphan rows" to "operations blocked". The missing objects are
+exactly those created after the 2026-05-18 snapshot: for EE 88200 the 48 BioMaterials, 48 BioAssays
+and the ExperimentalDesign are present, while the 16 subsets, both analyses, 24 of 32 FactorValues and
+1 of 4 ExperimentalFactors are absent. Aggregated or preprocessed datasets are the risk class;
+**56 experiments** currently have at least one subset lacking a canonical ACL. Missing *analysis*
+ACLs (1,470 of them, across 897 experiments) do **not** block deletion — analyses are removed by
+experiment-scoped `removeForExperiment(ee)` calls, so authorization is on the experiment.
+
+The sanctioned repair tool then made it worse in a subtler way. `lintAcls -type DATASET_SUBSET
+--apply-fixes` created the 687 missing identities (through `JdbcMutableAclService`, raw JDBC — those
+landed) and reported 548 parent assignments, **none of which were written**. The parent fixes mutated
+the Hibernate entity, and `AclObjectIdentity` is `@Immutable`, so the update was discarded with no
+exception; the linter recorded `fixed = true` before any flush. The result was worse than failing:
+identities existed with `entries_inheriting = 1`, no parent and no ACEs, which still denies.
+
+Fixed in `cc5b51511c` by routing the four child-parent fixes through
+`aclService.readAclById` + `setParent` + `updateAcl`, the sequence `BaseAclAdvice` already uses. Two
+sibling sites (`lintSecuredNotChildWithParent`) had been converted earlier with a javadoc describing
+this exact trap; the child-parent ones were missed. Verified on the second run: all 16 of GSE273690's
+subsets now carry `parent_object = 6297990`, none NULL.
+
+Three things this exposed that are worth remembering:
+
+- **hotfix-1.32.8 is not affected.** It builds against gsec 0.0.22, whose `AclObjectIdentity.hbm.xml`
+  has no `mutable="false"`, so the same linter code persists there. The defect arrived with the
+  canonical-schema migration.
+- **The test suite could not have caught it.** Every enabled `AclLinterServiceTest` case runs
+  `applyFixes(false)`, and the one that applies fixes asserts nothing. `AclDaoImplParentPersistenceTest`
+  targets precisely this invariant and is `@Disabled` ("aclService bean missing from testContext.xml").
+- **ACL tests validate a stack production no longer uses.** `BaseDatabaseTest5` wires
+  `AclServiceImpl`/`AclDaoImpl`, which `GemmaAclConfiguration` describes as "no longer wired in";
+  runtime uses `GsecAclServiceAdapter` → `JdbcMutableAclService`. A passing ACL test therefore says
+  little about deployed behaviour, and a regression test for #9 needs the test context rewired first.
+
 ## 5. Remediation — Gemma 2.0 (`phase2-acl-migrate`)
 
 **Done.**
@@ -274,6 +316,23 @@ The same gap affects any other phase2 feature backed by that table (home-page si
    between the two stores before phase2's authorization view of prod is trusted.
 
 ---
+
+### 6.1 Before deleting an aggregated or preprocessed experiment
+
+If the experiment has subsets, phase2 must be able to authorize each one or the deletion is denied
+before any data is touched (§4.2). Check first:
+
+```sql
+SELECT COUNT(*) AS subsets_without_canonical_acl FROM INVESTIGATION s
+ WHERE s.SOURCE_EXPERIMENT_FK = :ee_id AND s.class = 'ExpressionExperimentSubSet'
+   AND NOT EXISTS ( SELECT 1 FROM acl_object_identity oi JOIN acl_class c ON c.id = oi.object_id_class
+                     WHERE oi.object_id_identity = s.ID AND c.class LIKE '%ExpressionExperimentSubSet' );
+```
+
+Non-zero means run `lintAcls -type DATASET_SUBSET --apply-fixes` first (requires `cc5b51511c`; without
+it the run reports success and writes nothing). That is class-wide, not per-experiment — the
+`-identifier` option needs one id per invocation. Subsets whose parent experiment itself has no
+canonical ACL cannot be repaired this way; they need `lintAcls -type DATASET --apply-fixes` first.
 
 ## 7. Runbook — cleaning ACL leftovers after a phase2 deletion
 
