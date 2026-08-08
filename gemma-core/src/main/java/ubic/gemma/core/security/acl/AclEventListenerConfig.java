@@ -40,8 +40,8 @@ import org.springframework.context.annotation.Lazy;
  * either updates the parent reference or returns — so the second invocation is a cheap re-read
  * rather than a duplicate create. Once we've verified the listener fully covers the advice's
  * responsibilities, the AOP wiring in {@code applicationContext-security.xml} can be removed.
- */
-/**
+ *
+ * <h3>Why {@code @Lazy(false)}</h3>
  * {@code @Lazy(false)} is required, not decorative. This configuration exists purely for the side
  * effect in {@link #afterPropertiesSet()}; no other bean injects it. In CLI contexts
  * {@link ubic.gemma.core.context.LazyInitByDefaultPostProcessor} marks every non-infrastructure
