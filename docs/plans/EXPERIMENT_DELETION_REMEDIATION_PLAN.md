@@ -17,11 +17,13 @@ is a consequence of that arrangement, in one direction or the other.
 | 2 | `removeAllSingleCellDataVectors` loaded every SC vector + blob to collect QTs → OOM | phase2 deletes | **Fixed** — `c4f1357ba6` |
 | 3 | prettytime-nlp's shaded SLF4J 1.x shadowed `slf4j-api` 2.x → NOP logger, all Gemma logging and stack traces discarded | diagnosis | **Fixed** — `d855244de7` |
 | 4 | Retry advice catches `OutOfMemoryError` and retries on a desynced connection | phase2 | **Open** |
-| 5 | phase2 deletion does not remove the experiment's ACL from either ACL store | phase2 deletes | **Open** — 115 rows cleaned by hand for GSE277430 |
+| 5 | phase2 deletion does not remove the experiment's ACL from either ACL store | phase2 deletes | **Root cause found and fixed** — `AclEventListenerConfig` was never instantiated in CLI contexts; see §4.3. 115/342/281 rows cleaned by hand for GSE277430 / GSE306819 / GSE273690 |
 | 6 | 1.32.x cannot maintain phase2's canonical ACL tables; the two stores drift on create, delete and permission change | both | **Open, structural** |
 | 7 | `TICKET_TARGET.TARGET_ID` references experiments with no FK → 1.32.x deletes leave dangling ticket targets | 1.32.x deletes | **Open** (not triggered by GSE277430 — it had no ticket) |
 | 8 | phase2 finds single-cell dimensions via the `SINGLE_CELL_DIMENSION_EXPERIMENT` cache, which 1.32.x does not maintain → 17 experiments cannot be deleted on phase2 (fails loudly on the bio-assay FK) | phase2 deletes | **Open** — see §4.1 |
 | 9 | `lintAcls` reported parent-ACL repairs it never wrote: `AclObjectIdentity` is `@Immutable`, so Hibernate discarded the update while the linter recorded `fixed = true` | phase2 repair tooling | **Fixed** — `cc5b51511c`, verified against the real wiring; see §4.2 |
+| 10 | CLI-created experiments got **no ACL at all** — the same unregistered listener also drives `POST_INSERT`. 76 experiments affected (IDs 92410–93196), invisible to every ACL-secured service including the website | phase2 creates | **Fixed** — see §4.3. Backfill still required |
+| 11 | `AuditTrailEventListenerConfig` is dead in CLI contexts for the identical reason; its `AuditAdvice` create/delete advices were deleted in the same cutover, so CLI work emitted no CREATE/DELETE audit events | phase2 | **Fixed** — see §4.3. Backfill not possible |
 
 Deleting experiment *data* can be made reliable with #1 and #5. ACL consistency across the two
 versions cannot be fixed by deletion changes alone — see §6.
@@ -248,6 +250,76 @@ Three things this exposed that are worth remembering:
   runtime uses `GsecAclServiceAdapter` → `JdbcMutableAclService`. A passing ACL test therefore says
   little about deployed behaviour, and a regression test for #9 needs the test context rewired first.
 
+### 4.3 Root cause of the ACL leakage: lazy-by-default killed the listener (2026-08-08)
+
+Defect #5 was never a deletion bug. The deletion path is correct: `AbstractDao.remove` →
+`session.remove(ee)` → Hibernate `PostDeleteEvent` → `AclEventListener.onPostDelete` →
+`BaseAclAdvice.deleteAcl` → `aclService.deleteAcl(oi, true)`. **The listener was simply never
+registered.**
+
+`AclEventListenerConfig` is a `@Configuration implements InitializingBean` that exists only for the
+side effect in `afterPropertiesSet()`. Nothing injects it. And
+`ubic.gemma.core.context.LazyInitByDefaultPostProcessor` — registered in
+`CliComponentScanConfig`, at `HIGHEST_PRECEDENCE` — walks every bean definition and calls
+`setLazyInit(true)` on anything that is not `ROLE_INFRASTRUCTURE`, not already lazy, and not
+annotated `@Lazy`. So the bean was defined, never instantiated, and the listener never registered.
+No error, no warning; the capability was just absent.
+
+Probe evidence from a real CLI boot (`SpringContextUtils` after `context.refresh()`):
+
+```
+### PROBE aclEventListenerConfig       containsDef=true containsSingleton=false lazy=true defIndex=220/575
+### PROBE auditTrailEventListenerConfig containsDef=true containsSingleton=false lazy=true defIndex=254/575
+### PROBE forcing getBean(aclEventListenerConfig)...
+### PROBE AclEventListenerConfig.afterPropertiesSet ENTERED, sessionFactory=org.hibernate.internal.SessionFactoryImpl@38308f2c
+INFO Registered AclEventListener on Hibernate POST_INSERT and POST_DELETE.
+```
+
+Forcing `getBean` registered the listener immediately — the wiring was always sound.
+
+**Scope is CLI-only.** `LazyInitByDefaultPostProcessor` is registered in `CliComponentScanConfig`
+(gemma-cli) and nowhere else — not in gemma-core's `ComponentScanConfig`, not in gemma-web. The
+webapp instantiates both configs eagerly and behaves correctly. Since loading, splitting and
+deletion are all CLI-driven, that is the worst possible half to lose.
+
+**Window.** Commit `21e4fc412e` (2026-05-18), *"AclEventListener cutover: disable AOP advice;
+listener carries full sweep"*, switched off the advice that had been maintaining ACLs and handed
+the job to the listener. ACL maintenance stopped that day and stayed stopped until 2026-08-08.
+
+**Both directions were lost**, because the listener handles `POST_INSERT` and `POST_DELETE`:
+
+| | Effect |
+|---|---|
+| Delete | ACL tree left behind → the orphan rows cleaned by hand in §7 |
+| Insert | No ACL ever created → 76 experiments, IDs 92410–93196 (contiguous, nothing older) |
+
+The insert side is the more serious of the two. An experiment with no `acl_object_identity` row
+fails `hasPermission` — `readAclById` throws `NotFoundException` and the evaluator answers `false` —
+for *every* user, admin included. Combined with `AFTER_ACL_READ_QUIET`, which converts a failed
+check into a silent `null`, such an experiment is indistinguishable from one that does not exist.
+This is why `viewChangelog -e GSE315736` reported "Could not locate any experiment" for EE 92838,
+which is present in `INVESTIGATION` and fully populated. The locator falls through short name →
+accession → name, and on a split family the accession leg then throws `NonUniqueResultException`
+from `findOneByAccession`'s `uniqueResult()`.
+
+`AuditTrailEventListenerConfig` (`ubic.gemma.persistence.audit`) is the only other class with this
+shape, and it was dead for the same reason. Its own comment records that
+`AuditAdvice.doCreateAdvice` / `doDeleteAdvice` were deleted in the same C-2 cutover to avoid
+double emission — so CLI-run work emitted no CREATE or DELETE audit events at all. Unlike ACLs,
+these cannot be reconstructed.
+
+**Fix.** `@Lazy(false)` on both configurations. The post-processor skips any definition annotated
+`@Lazy` whatever its value, so the annotation both keeps the bean eager and opts it out of the
+sweep. This is the escape hatch the post-processor was designed with, already covered by
+`LazyInitByDefaultPostProcessorTest.Bean5`.
+
+`SideEffectConfigurationEagerTest` (new) scans `ubic.gemma.core` + `ubic.gemma.persistence` for any
+`@Configuration implements InitializingBean` lacking `@Lazy(false)` and fails with a message
+pointing at this trap. Verified to fail when the annotation is removed from either config.
+
+**Still outstanding:** the 76 experiments need their ACLs backfilled with `lintAcls`. Until then
+they remain invisible in both the CLI and the website.
+
 ## 5. Remediation — Gemma 2.0 (`phase2-acl-migrate`)
 
 **Done.**
@@ -395,6 +467,16 @@ SELECT COUNT(*) FROM acl_object_identity oi JOIN acl_class c ON c.id = oi.object
 SELECT COUNT(*) FROM ACLOBJECTIDENTITY o
  WHERE o.OBJECT_CLASS LIKE '%ExpressionExperiment'
    AND NOT EXISTS ( SELECT 1 FROM INVESTIGATION i WHERE i.ID = o.OBJECT_ID );
+
+-- experiments with NO ACL at all (drift on create, §4.3). Was 76 on 2026-08-08;
+-- must reach 0 after the lintAcls backfill. These are invisible to CLI and website alike.
+SELECT i.ID, i.SHORT_NAME
+  FROM INVESTIGATION i
+  JOIN acl_class c ON c.class = 'ubic.gemma.model.expression.experiment.ExpressionExperiment'
+  LEFT JOIN acl_object_identity oi
+         ON oi.object_id_identity = i.ID AND oi.object_id_class = c.id
+ WHERE i.class = 'ExpressionExperiment' AND oi.id IS NULL
+ ORDER BY i.ID;
 
 -- is V23 applied? RESTRICT means no
 SELECT k.CONSTRAINT_NAME, r.DELETE_RULE FROM information_schema.KEY_COLUMN_USAGE k
