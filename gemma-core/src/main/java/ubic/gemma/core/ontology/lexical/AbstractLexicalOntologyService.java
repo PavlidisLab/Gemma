@@ -313,6 +313,11 @@ public abstract class AbstractLexicalOntologyService implements OntologyService 
     // Metadata / configuration
     // ---------------------------------------------------------------------
 
+    @Override
+    public String getIdentifier() {
+        return cacheName;
+    }
+
     @Nullable
     @Override
     public String getName() {

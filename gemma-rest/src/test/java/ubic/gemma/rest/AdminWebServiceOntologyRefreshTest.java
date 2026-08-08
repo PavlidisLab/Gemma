@@ -32,7 +32,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 /**
@@ -82,7 +81,9 @@ class AdminWebServiceOntologyRefreshTest {
 
         assertThat( resp.getStatus() ).isEqualTo( 202 );
         verify( chebi ).startInitializationThread( true, false );
-        verifyNoInteractions( mondo );
+        // name resolution reads every bean's identifier, so mondo is touched — what matters is
+        // that it isn't refreshed.
+        verify( mondo, org.mockito.Mockito.never() ).startInitializationThread( anyBoolean(), anyBoolean() );
     }
 
     @Test
@@ -93,6 +94,24 @@ class AdminWebServiceOntologyRefreshTest {
         service.refreshOntology( "CHEBI", true );
 
         verify( chebi ).startInitializationThread( true, true );
+    }
+
+    @Test
+    void refreshResolvesAnOntologyWithNoTitleByIdentifierOrAbbreviation() {
+        // The reason this endpoint existed but couldn't reach half the ontologies: getName() reads
+        // dc:title, which CLO / TGEMO / CHEBI don't declare, so they were unreachable by name.
+        ubic.gemma.core.ontology.providers.CellLineOntologyService clo =
+                mock( ubic.gemma.core.ontology.providers.CellLineOntologyService.class );
+        when( clo.getIdentifier() ).thenReturn( "cellLineOntology" );
+        AdminWebService svc = new AdminWebService( cacheManager, sessionFactory, taskRunningService,
+                sessionRegistry, List.of( clo ), ontologyFacade, dataSource, userManager, annotationSetService,
+                ticketService, taxonArgService, blacklistedEntityService, externalDatabaseReadService,
+                geoScrapeService, indexerService );
+
+        for ( String alias : new String[]{ "CLO", "clo", "cellLineOntology", "CellLineOntologyService" } ) {
+            assertThat( svc.refreshOntology( alias, false ).getStatus() ).isEqualTo( 202 );
+        }
+        verify( clo, org.mockito.Mockito.times( 4 ) ).startInitializationThread( true, false );
     }
 
     @Test

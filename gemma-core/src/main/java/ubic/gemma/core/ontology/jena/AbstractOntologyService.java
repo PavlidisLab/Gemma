@@ -101,6 +101,13 @@ public abstract class AbstractOntologyService implements OntologyService {
         this.cacheName = cacheName;
     }
 
+    @Override
+    public String getIdentifier() {
+        // the cache name is already a stable, space-free per-ontology token (e.g. "cellLineOntology");
+        // only the ad-hoc GenericOntologyService constructor leaves it null, hence the fallback.
+        return cacheName != null ? cacheName : org.apache.commons.lang3.StringUtils.deleteWhitespace( ontologyName );
+    }
+
     protected String getOntologyName() {
         return ontologyName;
     }

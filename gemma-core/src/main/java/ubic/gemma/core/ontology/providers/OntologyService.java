@@ -14,6 +14,19 @@ import java.util.Set;
 public interface OntologyService extends AutoCloseable {
 
     /**
+     * Obtain a stable identifier for this ontology, suitable for a URL path segment, a CLI argument or
+     * a configuration key.
+     * <p>
+     * Unlike {@link #getName()}, which reads {@code dc:title} out of the loaded model, this is always
+     * available: it does not require the ontology to be loaded, it is never {@code null}, and it never
+     * contains whitespace. It is normally the ontology's cache name (e.g. {@code cellLineOntology}).
+     * <p>
+     * Use {@link OntologyServiceResolver} to match user-supplied text against this and the ontology's
+     * other accepted spellings (well-known abbreviation, class name, {@code dc:title}).
+     */
+    String getIdentifier();
+
+    /**
      * Obtain the name of this ontology if available.
      */
     @Nullable

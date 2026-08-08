@@ -60,6 +60,7 @@ import ubic.gemma.core.loader.expression.geo.service.GeoBrowserImpl;
 import ubic.gemma.core.loader.expression.geo.service.GeoRecordType;
 import ubic.gemma.core.loader.expression.geo.service.GeoRetrieveConfig;
 import ubic.gemma.core.ontology.providers.OntologyService;
+import ubic.gemma.core.ontology.providers.OntologyServiceResolver;
 import ubic.gemma.core.tasks.analysis.expression.ExpressionExperimentLoadTaskCommand;
 import ubic.gemma.core.tasks.maintenance.GeoScrapeTaskCommand;
 import ubic.gemma.core.tasks.maintenance.MultifunctionalityTaskCommand;
@@ -133,6 +134,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 import static ubic.gemma.rest.util.Responders.respond;
 
@@ -967,7 +969,7 @@ public class AdminWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasAuthority('GROUP_ADMIN')")
     @Operation(summary = "Loaded-ontology status snapshot",
-            description = "Enumerates every OntologyService bean and reports enabled / loaded / initialization-thread state, inference mode, language level, search-enabled flag, and process-imports flag. Term counts are not included by default (`getAllURIs()` traverses the in-memory model); pass `?includeTermCount=true` to include them. If a bean throws while being inspected the error message is captured in the row's `error` field and inspection of the remaining ontologies continues.",
+            description = "Enumerates every OntologyService bean and reports its stable `identifier` (the handle to pass to the refresh / rebuild-slim endpoints), the full set of `acceptedNames` those endpoints match on, and enabled / loaded / initialization-thread state, inference mode, language level, search-enabled flag, and process-imports flag. Term counts are not included by default (`getAllURIs()` traverses the in-memory model); pass `?includeTermCount=true` to include them. If a bean throws while being inspected the error message is captured in the row's `error` field and inspection of the remaining ontologies continues.",
             security = {
                     @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
@@ -987,8 +989,9 @@ public class AdminWebService {
             if ( Boolean.TRUE.equals( vo.loaded ) ) loaded++;
             if ( Boolean.TRUE.equals( vo.initializing ) ) initializing++;
         }
-        rows.sort( Comparator.comparing( (OntologyStatusValueObject v) -> v.name,
-                Comparator.nullsLast( Comparator.naturalOrder() ) ) );
+        // sort on identifier, not dc:title — the title is null for the ontologies that don't declare one
+        rows.sort( Comparator.comparing( (OntologyStatusValueObject v) -> v.identifier,
+                Comparator.nullsLast( String.CASE_INSENSITIVE_ORDER ) ) );
         OntologiesResponse body = new OntologiesResponse();
         body.count = rows.size();
         body.enabledCount = enabled;
@@ -1005,8 +1008,11 @@ public class AdminWebService {
      * caller polls {@link #getOntologies(boolean)} to watch the {@code initializing} flag
      * flip back to false.
      *
-     * <p>Matches the ontology by {@code OntologyService.getName()} (case-sensitive). 404 if
-     * no bean matches, 409 if a refresh is already in flight on that bean.
+     * <p>Matches the ontology through {@link OntologyServiceResolver}, which accepts the well-known
+     * abbreviation (CLO, HPO, TGEMO, …), the {@link OntologyService#getIdentifier() identifier}, the
+     * implementing class name, or the {@code dc:title}, ignoring case and punctuation. Every ontology
+     * is therefore refreshable, including the ones whose {@code dc:title} is absent or contains spaces.
+     * 404 if no bean matches, 409 if a refresh is already in flight on that bean.
      *
      * <p>For the slim-CHEBI path the refresh re-runs the {@code loadModel} override, which
      * checks the seed-hash sidecar and re-extracts the slim if the corpus has drifted.
@@ -1016,7 +1022,7 @@ public class AdminWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasAuthority('GROUP_ADMIN')")
     @Operation(summary = "Refresh a single ontology in-process",
-            description = "Kicks off an asynchronous re-initialization of the named ontology. The currently-loaded model keeps serving reads until the new model is built and atomically swapped in. Use the per-ontology load-status endpoint to watch progress. 404 if no bean matches the given name; 409 if a refresh on that ontology is already running.",
+            description = "Kicks off an asynchronous re-initialization of the named ontology. The name may be the ontology's well-known abbreviation (`CLO`, `HPO`, `TGEMO`, ...), its identifier (`cellLineOntology`), its class name, or its `dc:title`; matching ignores case and punctuation, and every accepted spelling is listed as `acceptedNames` by `GET /admin/ontologies`. The currently-loaded model keeps serving reads until the new model is built and atomically swapped in. Use the per-ontology load-status endpoint to watch progress. 404 if no bean matches the given name; 409 if a refresh on that ontology is already running.",
             security = {
                     @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
@@ -1032,25 +1038,15 @@ public class AdminWebService {
     public Response refreshOntology(
             @PathParam("name") String name,
             @QueryParam("forceIndexing") @DefaultValue("false") boolean forceIndexing ) {
-        OntologyService match = null;
-        for ( OntologyService o : ontologies ) {
-            try {
-                if ( name.equals( o.getName() ) ) {
-                    match = o;
-                    break;
-                }
-            } catch ( RuntimeException ignored ) {
-                // skip beans that throw from getName() — they wouldn't be refreshable anyway
-            }
-        }
-        if ( match == null ) {
-            throw new NotFoundException( "No ontology found with name=" + name );
-        }
+        OntologyService match = OntologyServiceResolver.resolve( ontologies, name )
+                .orElseThrow( () -> new NotFoundException( "No ontology found with name=" + name
+                        + ". Accepted names are listed as `acceptedNames` by GET /admin/ontologies." ) );
         if ( match.isInitializationThreadAlive() ) {
             throw new ClientErrorException(
                     "Refresh already in progress for ontology=" + name, Response.Status.CONFLICT );
         }
-        log.info( "Hot-refresh requested for ontology=" + name + " (forceIndexing=" + forceIndexing + ")" );
+        log.info( "Hot-refresh requested for ontology=" + OntologyServiceResolver.getPreferredName( match )
+                + " (requested as '" + name + "', forceIndexing=" + forceIndexing + ")" );
         // forceLoad=true is the whole point — we want the cached source re-validated and the
         // model rebuilt. forceIndexing defaults to false so we don't blow away a still-valid
         // Lucene index unless the caller explicitly asks.
@@ -1154,7 +1150,7 @@ public class AdminWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasAuthority('GROUP_ADMIN')")
     @Operation(summary = "Rebuild the slim-cache for an ontology",
-            description = "Currently only CHEBI is supported (other ontologies return 404). Kicks off the slim extraction asynchronously and returns 202. The service must already be loaded. 409 if a rebuild is already in flight.",
+            description = "Currently only CHEBI and MONDO are supported (other ontologies return 404). Accepts the same name spellings as the refresh endpoint. Kicks off the slim extraction asynchronously and returns 202. The service must already be loaded. 409 if a rebuild is already in flight.",
             security = {
                     @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
@@ -1170,29 +1166,16 @@ public class AdminWebService {
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public Response rebuildOntologySlim( @PathParam("name") String name ) {
-        // Resolve the path argument to a SlimmableOntologyService. Match strategy:
-        // case-insensitive against the bean's simple class name (e.g. "ChebiOntologyService")
-        // and a short form (e.g. "CHEBI"). OntologyService.getName() can't be used — it
-        // returns the OWL's dc:title which several ontologies don't ship. getCacheName()
-        // is protected on AbstractOntologyService so we don't probe it.
-        ubic.gemma.core.ontology.providers.SlimmableOntologyService slimmable = null;
-        for ( OntologyService o : ontologies ) {
-            if ( !( o instanceof ubic.gemma.core.ontology.providers.SlimmableOntologyService ) ) {
-                continue;
-            }
-            // Use the deepest non-synthetic class so Spring CGLIB / Mockito proxy
-            // subclasses don't break the simpleName match.
-            Class<?> c = o.getClass();
-            while ( c != null && c.getSimpleName().contains( "$" ) ) {
-                c = c.getSuperclass();
-            }
-            String className = c == null ? "" : c.getSimpleName();
-            String shortName = className.replaceFirst( "OntologyService$", "" ); // CHEBI / Mondo / etc.
-            if ( name.equalsIgnoreCase( className ) || name.equalsIgnoreCase( shortName ) ) {
-                slimmable = ( ubic.gemma.core.ontology.providers.SlimmableOntologyService ) o;
-                break;
-            }
-        }
+        // Resolve the path argument the same way the refresh endpoint does (abbreviation / identifier /
+        // class name / dc:title), then require the bean to actually support slimming. Restricting the
+        // candidate list up front keeps a non-slimmable ontology whose name happens to match from
+        // stealing the resolution.
+        List<OntologyService> slimmables = ontologies.stream()
+                .filter( o -> o instanceof ubic.gemma.core.ontology.providers.SlimmableOntologyService )
+                .collect( Collectors.toList() );
+        ubic.gemma.core.ontology.providers.SlimmableOntologyService slimmable =
+                ( ubic.gemma.core.ontology.providers.SlimmableOntologyService ) OntologyServiceResolver
+                        .resolve( slimmables, name ).orElse( null );
         if ( slimmable == null ) {
             throw new NotFoundException( "No slimmable ontology found matching name=" + name
                     + " (try CHEBI or MONDO)." );
@@ -1214,6 +1197,10 @@ public class AdminWebService {
     private OntologyStatusValueObject inspect( OntologyService o, boolean includeTermCount ) {
         OntologyStatusValueObject vo = new OntologyStatusValueObject();
         vo.className = o.getClass().getSimpleName();
+        // identifier + acceptedNames never depend on the model being loaded, so they are populated
+        // outside the try: a bean that fails inspection is still refreshable by name.
+        vo.identifier = OntologyServiceResolver.getPreferredName( o );
+        vo.acceptedNames = new ArrayList<>( OntologyServiceResolver.getNames( o ) );
         try {
             vo.name = o.getName();
             vo.description = o.getDescription();
@@ -2338,6 +2325,16 @@ public class AdminWebService {
     public static class OntologyStatusValueObject {
         /** Java simple class name (always available, even if inspection fails). */
         public String className;
+        /**
+         * Stable, space-free handle for this ontology — its well-known abbreviation when it has one
+         * (CLO, HPO, TGEMO, …), otherwise its cache name. Always available, even before the ontology
+         * is loaded, and always usable as the {@code {name}} path argument of the refresh and
+         * rebuild-slim endpoints. This is what a client should display and send back.
+         */
+        public String identifier;
+        /** Every spelling the refresh / rebuild-slim endpoints accept for this ontology. */
+        public List<String> acceptedNames;
+        /** The ontology's {@code dc:title}; null when it doesn't declare one or isn't loaded yet. */
         @Nullable
         public String name;
         @Nullable

@@ -19,6 +19,11 @@ public class AbstractDelegatingOntologyService implements OntologyService {
     }
 
     @Override
+    public String getIdentifier() {
+        return delegate.getIdentifier();
+    }
+
+    @Override
     public String getName() {
         return delegate.getName();
     }
