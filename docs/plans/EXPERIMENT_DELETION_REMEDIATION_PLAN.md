@@ -17,12 +17,12 @@ is a consequence of that arrangement, in one direction or the other.
 | 2 | `removeAllSingleCellDataVectors` loaded every SC vector + blob to collect QTs → OOM | phase2 deletes | **Fixed** — `c4f1357ba6` |
 | 3 | prettytime-nlp's shaded SLF4J 1.x shadowed `slf4j-api` 2.x → NOP logger, all Gemma logging and stack traces discarded | diagnosis | **Fixed** — `d855244de7` |
 | 4 | Retry advice catches `OutOfMemoryError` and retries on a desynced connection | phase2 | **Open** |
-| 5 | phase2 deletion does not remove the experiment's ACL from either ACL store | phase2 deletes | **Root cause found and fixed** — `AclEventListenerConfig` was never instantiated in CLI contexts; see §4.3. 115/342/281 rows cleaned by hand for GSE277430 / GSE306819 / GSE273690 |
+| 5 | phase2 deletion does not remove the experiment's ACL from either ACL store | phase2 deletes | **Fixed** — `AclEventListenerConfig` was never instantiated in CLI contexts; see §4.3. 115/342/281 rows cleaned by hand for GSE277430 / GSE306819 / GSE273690 |
 | 6 | 1.32.x cannot maintain phase2's canonical ACL tables; the two stores drift on create, delete and permission change | both | **Open, structural** |
 | 7 | `TICKET_TARGET.TARGET_ID` references experiments with no FK → 1.32.x deletes leave dangling ticket targets | 1.32.x deletes | **Open** (not triggered by GSE277430 — it had no ticket) |
 | 8 | phase2 finds single-cell dimensions via the `SINGLE_CELL_DIMENSION_EXPERIMENT` cache, which 1.32.x does not maintain → 17 experiments cannot be deleted on phase2 (fails loudly on the bio-assay FK) | phase2 deletes | **Open** — see §4.1 |
 | 9 | `lintAcls` reported parent-ACL repairs it never wrote: `AclObjectIdentity` is `@Immutable`, so Hibernate discarded the update while the linter recorded `fixed = true` | phase2 repair tooling | **Fixed** — `cc5b51511c`, verified against the real wiring; see §4.2 |
-| 10 | CLI-created experiments got **no ACL at all** — the same unregistered listener also drives `POST_INSERT`. 76 experiments affected (IDs 92410–93196), invisible to every ACL-secured service including the website | phase2 creates | **Fixed** — see §4.3. Backfill still required |
+| 10 | CLI-created experiments got **no ACL at all** — the same unregistered listener also drives `POST_INSERT`. 76 experiments affected (IDs 92410–93196), invisible to every ACL-secured service including the website | phase2 creates | **Fixed and backfilled** — see §4.3, §4.4 |
 | 11 | `AuditTrailEventListenerConfig` is dead in CLI contexts for the identical reason; its `AuditAdvice` create/delete advices were deleted in the same cutover, so CLI work emitted no CREATE/DELETE audit events | phase2 | **Fixed** — see §4.3. Backfill not possible |
 
 Deleting experiment *data* can be made reliable with #1 and #5. ACL consistency across the two
@@ -317,8 +317,48 @@ sweep. This is the escape hatch the post-processor was designed with, already co
 `@Configuration implements InitializingBean` lacking `@Lazy(false)` and fails with a message
 pointing at this trap. Verified to fail when the annotation is removed from either config.
 
-**Still outstanding:** the 76 experiments need their ACLs backfilled with `lintAcls`. Until then
-they remain invisible in both the CLI and the website.
+### 4.4 Backfill completed (2026-08-08)
+
+Repaired with one command, after the listener fix was verified live:
+
+```bash
+lintAcls -type DATASET -lintPermissions --apply-fixes
+```
+
+`-lintPermissions` is **required** and is easy to miss — it is the only check in `AclLinterCli`
+that is not hardcoded `true` in the builder. Without it the run creates ACL identities with no
+ACEs at all, which does not restore access (`DefaultPermissionGrantingStrategy` throws
+`NotFoundException` when no ACE matches and there is no parent, so `hasPermission` stays false)
+while making the identity check report clean. That is strictly worse than the original state: same
+invisibility, no signal. Identity creation runs before the permission pass in the same invocation,
+so one run does both.
+
+271 objects, no warnings: 46 dangling identities deleted, 75 identities created, 150 ACEs added
+(the 76th, EE 92838, was done first as a single-dataset trial).
+
+Post-conditions, all verified read-only:
+
+| Check | Result |
+|---|---|
+| Experiments lacking an ACL identity | 0 |
+| Dangling EE-class ACL identities | 0 |
+| Orphaned `acl_entry` rows | 0 |
+| Backfilled identities (`acl_object_identity.id >= 6812213`) | 76, spanning EE 92410–93196 |
+| Of those, granted anonymous READ | 0 — none made public |
+| Of those, missing `GROUP_ADMIN`/`GROUP_AGENT` base ACE | 0 |
+
+Functional confirmation: `viewChangelog -e GSE315736` resolves to EE 92838 again, exercising the
+`@PostAuthorize` path that had been returning a silent null.
+
+Two cosmetic divergences from an ACL built by `BaseAclAdvice`, neither worth repairing:
+
+- `owner_sid` is whoever ran the linter rather than the original loader. `GROUP_ADMIN` →
+  ADMINISTRATION carries the same access, and these were all CLI loads under admin accounts.
+- `entries_inheriting` is left at Spring's default `1` instead of `0`. Inert while
+  `parent_object` is NULL, but it would start inheriting silently if a parent were ever attached.
+
+**Not recoverable:** the CREATE/DELETE audit events missing for the same window. They were never
+written, and unlike ACLs nothing can reconstruct them from current state.
 
 ## 5. Remediation — Gemma 2.0 (`phase2-acl-migrate`)
 
