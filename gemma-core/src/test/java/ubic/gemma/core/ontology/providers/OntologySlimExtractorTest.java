@@ -139,6 +139,39 @@ class OntologySlimExtractorTest {
                 "rdfs:label preserved by STAR + Jena round trip" );
     }
 
+    /**
+     * The slim must carry the names a term is SEARCHED by, not just its preferred label.
+     *
+     * <p>Regression for the 2026-08-09 CHEBI outage: every CHEBI term was reachable by its
+     * preferred label and by no other name, so {@code acetylsalicylic acid} resolved and
+     * {@code aspirin} — a synonym — found nothing, as did every drug abbreviation. The immediate
+     * cause was the source file, but a module extractor that drops annotation assertions would
+     * reintroduce it silently the moment the slim became the serving path, and the failure looks
+     * like a ranking problem rather than a missing-data one.
+     */
+    @Test
+    void slimCarriesSynonymsNotJustPreferredLabels( @TempDir Path tempDir ) throws Exception {
+        File source = copyFixture( tempDir, "chebi-mini.test.owl.xml" );
+        File slim = tempDir.resolve( "slim.owl" ).toFile();
+
+        new OntologySlimExtractor().extract( source, List.of( SORAFENIB ), slim );
+
+        OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
+        OWLOntology extracted = manager.loadOntologyFromOntologyDocument( slim );
+        OWLClass sorafenib = manager.getOWLDataFactory().getOWLClass( IRI.create( SORAFENIB ) );
+
+        Set<String> annotationValues = extracted.getAnnotationAssertionAxioms( sorafenib.getIRI() ).stream()
+                .map( ax -> ax.getValue().asLiteral().isPresent()
+                        ? ax.getValue().asLiteral().get().getLiteral()
+                        : ax.getValue().toString() )
+                .collect( Collectors.toSet() );
+
+        assertTrue( annotationValues.contains( "sorafenib" ),
+                "preferred label retained; got " + annotationValues );
+        assertTrue( annotationValues.contains( "Nexavar" ),
+                "hasExactSynonym retained — searching the brand name must find the compound; got " + annotationValues );
+    }
+
     @Test
     void seedOfBothChemicalsPullsBothRoleSubtrees( @TempDir Path tempDir ) throws Exception {
         File source = copyFixture( tempDir, "chebi-mini.test.owl.xml" );
