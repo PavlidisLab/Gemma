@@ -85,6 +85,13 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
     private ArrayDesignPersister arrayDesignPersister;
     @Autowired
     private EeWriteService eeWriteService;
+
+    /**
+     * Builds the schema-v1 upstream-metadata document. Constructed rather than injected, matching
+     * GeoScrapeServiceImpl: the mapper needs no shared configuration and the builder is stateless.
+     */
+    private final GeoSourceMetadataBuilder sourceMetadataBuilder =
+            new GeoSourceMetadataBuilder( new com.fasterxml.jackson.databind.ObjectMapper() );
     @Autowired
     private ArrayDesignService arrayDesignService;
     @Autowired
@@ -312,17 +319,60 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
         GeoServiceImpl.log.debug( "Converted " + seriesAccession );
         assert eeWriteService != null;
 
+        // One harvest timestamp for the whole import, so sibling experiments from a split series agree
+        // on when Gemma read the source. This is our clock; GEO's own dates ride separately.
+        Date harvestedAt = new Date();
+        // A series that converts to more than one experiment has been split, so each one holds only a
+        // subset of the series' samples.
+        boolean split = result.size() > 1;
+
         Collection<ExpressionExperiment> persistedResult = new HashSet<>();
         for ( ExpressionExperiment ee : result ) {
             c = expressionExperimentPrePersistService.prepare( ee, c );
             ee = eeWriteService.create( ee, c );
             persistedResult.add( ee );
             GeoServiceImpl.log.debug( "Persisted " + seriesAccession );
-
+            this.storeSourceMetadata( ee, series, split, harvestedAt );
         }
         this.updateReports( persistedResult );
 
         return persistedResult;
+    }
+
+    /**
+     * Store the verbatim upstream metadata document on a freshly persisted experiment.
+     * <p>
+     * This runs AFTER {@code create} because {@code experimentId} is part of the document and does not
+     * exist until the row is saved. The sample list is narrowed to this experiment's own GSM
+     * accessions: when a series is split, siblings share accession, title, summary and overall design,
+     * so serializing the series wholesale would give each one the other's samples with nothing in the
+     * document revealing it.
+     * <p>
+     * Never fails the import. The payload is a rebuildable cache of what GEO said; losing it costs a
+     * re-harvest, whereas failing here would cost the entire ingest.
+     */
+    private void storeSourceMetadata( ExpressionExperiment ee, GeoSeries series, boolean split, Date harvestedAt ) {
+        try {
+            Set<String> sampleAccessions = new HashSet<>();
+            for ( BioAssay ba : ee.getBioAssays() ) {
+                if ( ba.getAccession() != null && ba.getAccession().getAccession() != null ) {
+                    sampleAccessions.add( ba.getAccession().getAccession() );
+                }
+            }
+            GeoSourceMetadataBuilder.ExperimentIdentity identity = new GeoSourceMetadataBuilder.ExperimentIdentity(
+                    ee.getShortName(), ee.getId(), split,
+                    sampleAccessions.isEmpty() ? null : sampleAccessions );
+            String document = sourceMetadataBuilder.build( series, identity, harvestedAt );
+            if ( document == null ) {
+                return;
+            }
+            ee.setSourceMetadata( document );
+            ee.setSourceMetadataSchemaVersion( GeoSourceMetadataBuilder.SCHEMA_VERSION );
+            expressionExperimentService.update( ee );
+        } catch ( Exception e ) {
+            GeoServiceImpl.log.warn( "Failed to store source metadata for " + ee.getShortName()
+                    + "; the import is unaffected and the document can be rebuilt from GEO.", e );
+        }
     }
 
     @Override

@@ -174,12 +174,31 @@ public class PreboardedExperimentServiceImpl implements PreboardedExperimentServ
         preboarded.setWorkflowStateEnteredAt( now );
         sessionFactory.getCurrentSession().update( preboarded );
 
+        boolean eeDirty = false;
         if ( ee.getWorkflowState() == null
                 || ee.getWorkflowState() == WorkflowState.Discovery
                 || ee.getWorkflowState() == WorkflowState.Candidate
                 || ee.getWorkflowState() == WorkflowState.Preboarded ) {
             ee.setWorkflowState( WorkflowState.Loaded );
             ee.setWorkflowStateEnteredAt( now );
+            eeDirty = true;
+        }
+
+        // Carry the preboarded's upstream-metadata payload forward; promotion used to drop it, so
+        // whatever the scrape harvested was lost the moment the data landed.
+        //
+        // Never over the top of one the experiment already has. The import writes the schema-v1
+        // document built from the parsed series — per-sample titles, the submitter's own
+        // characteristic columns — whereas a preboarded carries only the smaller scrape-path payload
+        // (schema version null). Overwriting would trade the richer document for the poorer one, and
+        // silently, since both land in the same column.
+        if ( ee.getSourceMetadata() == null && preboarded.getSourceMetadata() != null ) {
+            ee.setSourceMetadata( preboarded.getSourceMetadata() );
+            ee.setSourceMetadataSchemaVersion( preboarded.getSourceMetadataSchemaVersion() );
+            eeDirty = true;
+        }
+
+        if ( eeDirty ) {
             sessionFactory.getCurrentSession().update( ee );
         }
 
