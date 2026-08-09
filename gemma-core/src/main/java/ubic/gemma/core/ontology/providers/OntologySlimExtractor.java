@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.Objects;
@@ -79,8 +80,27 @@ public class OntologySlimExtractor {
      */
     public ExtractResult extract( File source, Collection<String> seedUris, File slimOut )
             throws IOException, OWLOntologyCreationException, OWLOntologyStorageException {
+        return extract( source, seedUris, Collections.emptySet(), slimOut );
+    }
+
+    /**
+     * As {@link #extract(File, Collection, File)}, but additionally seeds every class that bears
+     * one of {@code roleUris} (or a descendant of one) via {@code RO:0000087 has_role}.
+     *
+     * <p>The corpus seed answers "terms we HAVE annotated". This answers "terms we plausibly WILL
+     * annotate": seeding CHEBI's {@code drug} role pulls in the whole pharmacopoeia, including
+     * compounds nobody has curated yet. Without it a curator searching for a drug new to the corpus
+     * finds nothing, because a slim built only from usage can only ever return what was already
+     * used — the search is unable to help you annotate anything for the first time.
+     *
+     * @param roleUris role classes whose bearers should be pulled in; empty for corpus-only
+     */
+    public ExtractResult extract( File source, Collection<String> seedUris,
+            Collection<String> roleUris, File slimOut )
+            throws IOException, OWLOntologyCreationException, OWLOntologyStorageException {
         Objects.requireNonNull( source, "source" );
         Objects.requireNonNull( seedUris, "seedUris" );
+        Objects.requireNonNull( roleUris, "roleUris" );
         Objects.requireNonNull( slimOut, "slimOut" );
         if ( !source.isFile() ) {
             throw new IOException( "Source OWL does not exist: " + source );
@@ -116,6 +136,12 @@ public class OntologySlimExtractor {
         }
 
         int directSeedCount = signature.size();
+        int roleBearerCount = 0;
+        if ( !roleUris.isEmpty() ) {
+            roleBearerCount = addRoleBearers( signature, fullOntology, df, roleUris );
+            log.info( "Added {} classes bearing one of {} roles (or their descendants).",
+                    roleBearerCount, roleUris.size() );
+        }
         expandSeedSignature( signature, fullOntology );
         log.info( "Expanded {} seed classes to {} via subClassOf + has_role closure.",
                 directSeedCount, signature.size() );
@@ -147,6 +173,67 @@ public class OntologySlimExtractor {
                 System.currentTimeMillis() - writeStart );
 
         return new ExtractResult( coveredSeeds, missingSeedCount, axiomCount, classCount );
+    }
+
+    /**
+     * Add every class that bears one of {@code roleUris}, or any descendant of one, through
+     * {@code has_role}.
+     *
+     * <p>Two passes over the source: close the role hierarchy downwards (so seeding {@code drug}
+     * also catches {@code antineoplastic agent}, {@code analgesic}, …), then scan class axioms for
+     * {@code has_role someValuesFrom R} with {@code R} in that closure. The scan is linear in the
+     * ontology's axiom count and runs once per slim build, which is offline.
+     *
+     * @return the number of classes added to {@code signature}
+     */
+    private int addRoleBearers( Set<OWLEntity> signature, OWLOntology source, OWLDataFactory df,
+            Collection<String> roleUris ) {
+        // 1. descendants of the requested roles
+        Set<OWLClass> roleClosure = new HashSet<>();
+        Deque<OWLClass> work = new ArrayDeque<>();
+        for ( String uri : roleUris ) {
+            OWLClass r = df.getOWLClass( IRI.create( uri ) );
+            if ( source.containsClassInSignature( r.getIRI(), Imports.INCLUDED ) ) {
+                work.add( r );
+            } else {
+                log.warn( "Role {} is not declared in the source ontology; no bearers will be seeded for it.", uri );
+            }
+        }
+        while ( !work.isEmpty() ) {
+            OWLClass r = work.pop();
+            if ( !roleClosure.add( r ) ) {
+                continue;
+            }
+            for ( OWLSubClassOfAxiom ax : source.getSubClassAxiomsForSuperClass( r ) ) {
+                OWLClassExpression sub = ax.getSubClass();
+                if ( !sub.isAnonymous() ) {
+                    work.add( sub.asOWLClass() );
+                }
+            }
+        }
+        // 2. classes asserting has_role onto anything in that closure
+        int added = 0;
+        for ( OWLClass cls : source.getClassesInSignature( Imports.INCLUDED ) ) {
+            if ( signature.contains( cls ) ) {
+                continue;
+            }
+            for ( OWLSubClassOfAxiom ax : source.getSubClassAxiomsForSubClass( cls ) ) {
+                OWLClassExpression sup = ax.getSuperClass();
+                if ( sup.isAnonymous()
+                        && sup.getClassExpressionType() == ClassExpressionType.OBJECT_SOME_VALUES_FROM ) {
+                    OWLObjectSomeValuesFrom svf = ( OWLObjectSomeValuesFrom ) sup;
+                    if ( !svf.getProperty().isAnonymous()
+                            && svf.getProperty().asOWLObjectProperty().getIRI().toString().equals( HAS_ROLE_IRI )
+                            && !svf.getFiller().isAnonymous()
+                            && roleClosure.contains( svf.getFiller().asOWLClass() ) ) {
+                        signature.add( cls );
+                        added++;
+                        break;
+                    }
+                }
+            }
+        }
+        return added;
     }
 
     /**

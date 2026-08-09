@@ -36,6 +36,7 @@ import java.io.InputStream;
 import java.time.Duration;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.Collections;
 
 import static java.util.Objects.requireNonNull;
 
@@ -71,6 +72,17 @@ public class ChebiOntologyService extends UrlOntologyService implements Slimmabl
      * narrow this so unchanged source + unchanged corpus stays fresh indefinitely.
      */
     private static final Duration DEFAULT_SLIM_MAX_AGE = Duration.ofDays( 7 );
+
+    /**
+     * CHEBI's {@code drug} role. Seeding the slim with everything bearing this role (and its
+     * descendants -- analgesic, antineoplastic agent, ...) means the picker can offer a compound
+     * nobody has curated yet. A slim seeded only from corpus usage can only return what was
+     * already used, so it cannot help a curator annotate anything for the first time.
+     */
+    static final String DRUG_ROLE_URI = "http://purl.obolibrary.org/obo/CHEBI_23888";
+
+    /** Roles whose bearers are pulled into the slim on top of the corpus seeds. */
+    static final Set<String> SLIM_SEED_ROLES = Collections.singleton( DRUG_ROLE_URI );
 
     private static final String SLIM_FILE_NAME = "chebiOntology-slim.owl";
     private static final String SLIM_META_NAME = "chebiOntology-slim.meta.json";
@@ -265,6 +277,20 @@ public class ChebiOntologyService extends UrlOntologyService implements Slimmabl
             log.warn( "Slim freshness: meta sidecar unreadable at {} — will rebuild.", meta, e );
             return false;
         }
+        // Checked BEFORE the seed hash: widening the seed policy does not move the hash (role
+        // bearers are derived inside the extractor and never enter the resolver's seed set), so
+        // without this an old corpus-only slim stays "fresh" indefinitely after the policy change.
+        if ( cached.schemaVersion != OntologySlimMeta.SCHEMA_VERSION ) {
+            log.info( "Slim freshness: meta schema {} != current {}; will rebuild.",
+                    cached.schemaVersion, OntologySlimMeta.SCHEMA_VERSION );
+            return false;
+        }
+        String expectedPolicy = OntologySlimMeta.seedPolicyWithRoles( SLIM_SEED_ROLES );
+        if ( !expectedPolicy.equals( cached.seedPolicy ) ) {
+            log.info( "Slim freshness: built under seed policy '{}' but '{}' is configured; will rebuild.",
+                    cached.seedPolicy, expectedPolicy );
+            return false;
+        }
         String currentHash = OntologySlimMeta.hashSeeds( currentSeeds );
         if ( !currentHash.equals( cached.seedHash ) ) {
             log.info( "Slim freshness: corpus seed set drift ({} seeds in meta, {} now); "
@@ -302,14 +328,15 @@ public class ChebiOntologyService extends UrlOntologyService implements Slimmabl
         long start = System.currentTimeMillis();
         OntologySlimExtractor.ExtractResult result;
         try {
-            result = slimExtractor.extract( source, seeds, slimOut );
+            result = slimExtractor.extract( source, seeds, SLIM_SEED_ROLES, slimOut );
         } catch ( Exception e ) {
             throw new IOException( "OntologySlimExtractor failed on " + source, e );
         }
         long elapsedMs = System.currentTimeMillis() - start;
 
         OntologySlimMeta meta = OntologySlimMeta.create(
-                getOntologyUrl(), seeds, slimOut.length(),
+                getOntologyUrl(), OntologySlimMeta.seedPolicyWithRoles( SLIM_SEED_ROLES ),
+                seeds, slimOut.length(),
                 result.getClassCount(), result.getAxiomCount() );
         meta.writeTo( metaOut );
 

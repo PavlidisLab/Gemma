@@ -34,6 +34,27 @@ public final class OntologySlimMeta {
     private static final ObjectMapper MAPPER = new ObjectMapper()
             .enable( SerializationFeature.INDENT_OUTPUT );
 
+    /**
+     * Bumped when the meaning of a field changes or the slim is built a materially different way.
+     * A reader seeing an unknown or absent version treats the slim as stale rather than guessing,
+     * so an old cache is rebuilt instead of being misread.
+     */
+    public static final int SCHEMA_VERSION = 2;
+
+    @JsonProperty("schema_version")
+    public int schemaVersion;
+
+    /**
+     * Which seeding rule produced this slim, e.g. {@code corpus} or {@code corpus+role:CHEBI_23888}.
+     *
+     * <p>Freshness cannot be decided by {@link #seedHash} alone. The hash covers the seed URIs the
+     * resolver handed over; seeds the EXTRACTOR derives (role bearers) never enter it, so widening
+     * the policy leaves the hash identical and a narrower slim looks perfectly fresh forever. This
+     * field is what makes a policy change visible.
+     */
+    @JsonProperty("seed_policy")
+    public String seedPolicy;
+
     @JsonProperty("source_url")
     public String sourceUrl;
 
@@ -58,7 +79,27 @@ public final class OntologySlimMeta {
 
     public static OntologySlimMeta create( String sourceUrl, Collection<String> seeds,
                                            long slimSizeBytes, long classCount, int axiomCount ) {
+        return create( sourceUrl, SEED_POLICY_CORPUS, seeds, slimSizeBytes, classCount, axiomCount );
+    }
+
+    /** Seeded only from CHEBI URIs already used in the corpus. */
+    public static final String SEED_POLICY_CORPUS = "corpus";
+
+    /** Seeded from corpus usage PLUS every bearer of the given role(s); see the extractor. */
+    public static String seedPolicyWithRoles( Collection<String> roleUris ) {
+        if ( roleUris == null || roleUris.isEmpty() ) {
+            return SEED_POLICY_CORPUS;
+        }
+        return SEED_POLICY_CORPUS + "+role:" + roleUris.stream().sorted()
+                .map( u -> u.substring( u.lastIndexOf( '/' ) + 1 ) )
+                .collect( java.util.stream.Collectors.joining( "," ) );
+    }
+
+    public static OntologySlimMeta create( String sourceUrl, String seedPolicy, Collection<String> seeds,
+                                           long slimSizeBytes, long classCount, int axiomCount ) {
         OntologySlimMeta meta = new OntologySlimMeta();
+        meta.schemaVersion = SCHEMA_VERSION;
+        meta.seedPolicy = seedPolicy;
         meta.sourceUrl = sourceUrl;
         meta.generatedAt = Instant.now().toString();
         meta.seedCount = seeds.size();

@@ -27,6 +27,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -170,6 +171,55 @@ class OntologySlimExtractorTest {
                 "preferred label retained; got " + annotationValues );
         assertTrue( annotationValues.contains( "Nexavar" ),
                 "hasExactSynonym retained — searching the brand name must find the compound; got " + annotationValues );
+    }
+
+    /**
+     * Seeding a role pulls in its bearers even when nothing in the corpus uses them.
+     *
+     * <p>A slim seeded only from corpus usage can return only what was already annotated, so it
+     * cannot help a curator annotate a compound for the first time — the case that matters most in
+     * a picker. Seeding CHEBI's {@code drug} role fixes that. Here water is the only corpus seed;
+     * sorafenib must arrive purely because it bears {@code kinase inhibitor}, which is-a
+     * {@code drug}.
+     */
+    @Test
+    void seedingARolePullsInBearersThatAreNotCorpusSeeds( @TempDir Path tempDir ) throws Exception {
+        File source = copyFixture( tempDir, "chebi-mini.test.owl.xml" );
+        File slim = tempDir.resolve( "slim.owl" ).toFile();
+
+        new OntologySlimExtractor().extract( source, List.of( WATER ), List.of( DRUG ), slim );
+
+        Set<String> classUris = classUrisOf( slim );
+        assertTrue( classUris.contains( SORAFENIB ),
+                "sorafenib bears kinase inhibitor, which is-a drug, so the drug role must reach it; got " + classUris );
+        assertTrue( classUris.contains( WATER ), "the corpus seed itself is still present" );
+        // The closure descends the role hierarchy but must not escape it: estradiol bears hormone,
+        // which is a sibling role under `role`, NOT a drug. Seeding `drug` that dragged in every
+        // role bearer would defeat the point of a slim.
+        assertFalse( classUris.contains( ESTRADIOL ),
+                "estradiol bears hormone, which is not under drug, so it must NOT be pulled in; got " + classUris );
+    }
+
+    /** Without a role seed, the same call keeps today's corpus-only behaviour. */
+    @Test
+    void withoutARoleSeedOnlyTheCorpusSeedsArrive( @TempDir Path tempDir ) throws Exception {
+        File source = copyFixture( tempDir, "chebi-mini.test.owl.xml" );
+        File slim = tempDir.resolve( "slim.owl" ).toFile();
+
+        new OntologySlimExtractor().extract( source, List.of( WATER ), slim );
+
+        Set<String> classUris = classUrisOf( slim );
+        assertTrue( classUris.contains( WATER ) );
+        assertFalse( classUris.contains( SORAFENIB ),
+                "no role seed means no pharmacopoeia; got " + classUris );
+    }
+
+    private static Set<String> classUrisOf( File slim ) throws Exception {
+        OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
+        OWLOntology extracted = manager.loadOntologyFromOntologyDocument( slim );
+        return extracted.getClassesInSignature( Imports.INCLUDED ).stream()
+                .map( c -> c.getIRI().toString() )
+                .collect( Collectors.toSet() );
     }
 
     @Test
