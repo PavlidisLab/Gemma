@@ -37,7 +37,17 @@ public class PreboardedExperiment extends Investigation {
     private String source;
     /**
      * Free-form JSON payload of identifying metadata the agent harvested before
-     * loading (title, summary, submitter, pubmed id, etc.). Stored as LONGTEXT.
+     * loading (title, summary, submitter, pubmed id, etc.).
+     * <p>
+     * <b>Not persisted on this branch.</b> phase2 renames the backing column from
+     * {@code PREBOARDED_IDENTIFYING_METADATA} to {@code SOURCE_METADATA}, and because
+     * {@code INVESTIGATION} is single-table inheritance, mapping it here would put the
+     * old name into the SQL for every polymorphic {@code Investigation} query and break
+     * this build against the shared database the moment that migration runs. Nothing in
+     * 1.32.x reads the value, so it is left unmapped and the two can deploy in either
+     * order. See the comment in {@code Investigation.hbm.xml}; the accessors are kept
+     * only so existing call sites still compile, and they will always read {@code null}
+     * on a reloaded instance.
      */
     private String identifyingMetadata;
 

@@ -83,6 +83,15 @@ public class PreboardedExperimentMappingTest extends BaseDatabaseTest {
         PreboardedExperiment rt = ( PreboardedExperiment ) reloaded;
         assertThat( rt.getAccession() ).isEqualTo( "GSE12345" );
         assertThat( rt.getSource() ).isEqualTo( "GEO" );
-        assertThat( rt.getIdentifyingMetadata() ).isEqualTo( "{\"title\":\"test\",\"pubmed\":\"1\"}" );
+        // identifyingMetadata is deliberately unmapped on this branch, so it must NOT
+        // survive the round trip. Mapping it would name PREBOARDED_IDENTIFYING_METADATA
+        // in every polymorphic Investigation query, and phase2 renames that column to
+        // SOURCE_METADATA in the database both versions share — this build would then
+        // fail on an unknown column regardless of whether any preboarded row exists.
+        // If this assertion starts failing, someone re-added the mapping: read the
+        // comment in Investigation.hbm.xml before "fixing" it.
+        assertThat( rt.getIdentifyingMetadata() )
+                .as( "identifyingMetadata must not be persisted; the column is renamed by phase2" )
+                .isNull();
     }
 }
