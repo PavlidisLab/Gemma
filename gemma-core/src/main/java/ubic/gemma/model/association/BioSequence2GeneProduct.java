@@ -46,7 +46,7 @@ import ubic.gemma.model.genome.sequenceAnalysis.ThreePrimeDistanceMethod;
 @Entity
 @Table(name = "BIO_SEQUENCE2_GENE_PRODUCT")
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@DiscriminatorColumn(name = "class", discriminatorType = DiscriminatorType.STRING)
+@DiscriminatorColumn(name = "class", discriminatorType = DiscriminatorType.STRING, length = 255)
 @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public abstract class BioSequence2GeneProduct extends AbstractIdentifiable {
 

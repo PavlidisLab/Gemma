@@ -40,7 +40,7 @@ import java.util.Objects;
 @Entity
 @Table(name = "BIB_REF_ANNOTATION")
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@DiscriminatorColumn(name = "class")
+@DiscriminatorColumn(name = "class", length = 255)
 @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public abstract class BibRefAnnotation extends AbstractIdentifiable {
 

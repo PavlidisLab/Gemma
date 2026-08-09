@@ -33,7 +33,7 @@ import java.util.Objects;
 @Entity
 @Table(name = "AUDIT_EVENT_TYPE")
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@DiscriminatorColumn(name = "class")
+@DiscriminatorColumn(name = "class", length = 255)
 @Immutable
 @Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
 public abstract class AuditEventType extends AbstractIdentifiable {

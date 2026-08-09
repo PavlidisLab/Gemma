@@ -64,7 +64,7 @@ import static org.apache.commons.lang3.StringUtils.stripToNull;
 @Entity
 @Table(name = "CHARACTERISTIC")
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@DiscriminatorColumn(name = "class", discriminatorType = DiscriminatorType.STRING)
+@DiscriminatorColumn(name = "class", discriminatorType = DiscriminatorType.STRING, length = 255)
 // Hbm had `<class discriminator-value="null"><discriminator not-null="false"/>` — i.e., the
 // root Characteristic rows persist with SQL NULL in the `class` column, and Statement rows
 // persist with "Statement". JPA's @DiscriminatorValue("null") is the special token Hibernate

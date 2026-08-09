@@ -54,7 +54,7 @@ import ubic.gemma.model.common.Identifiable;
                 @Index(name = "ANALYSIS_RESULT_SET_NUMBER_OF_GENES_TESTED", columnList = "NUMBER_OF_GENES_TESTED")
         })
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@DiscriminatorColumn(name = "class", discriminatorType = DiscriminatorType.STRING)
+@DiscriminatorColumn(name = "class", discriminatorType = DiscriminatorType.STRING, length = 255)
 @Immutable
 @Access(AccessType.FIELD)
 public abstract class AnalysisResultSet<R extends AnalysisResult> implements Identifiable {

@@ -63,7 +63,7 @@ import java.util.Set;
         @Index(name = "INVESTIGATION_PREBOARDED_ACCESSION", columnList = "PREBOARDED_ACCESSION")
 })
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@DiscriminatorColumn(name = "class")
+@DiscriminatorColumn(name = "class", length = 255)
 @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public abstract class Investigation extends AbstractAuditable implements Securable {
 

@@ -46,7 +46,7 @@ import org.springframework.lang.Nullable;
         @Index(name = "ANALYSIS_NUMBER_OF_ELEMENTS_ANALYZED", columnList = "NUMBER_OF_ELEMENTS_ANALYZED")
 })
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@DiscriminatorColumn(name = "class")
+@DiscriminatorColumn(name = "class", length = 255)
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public abstract class Analysis extends AbstractDescribable {
 
