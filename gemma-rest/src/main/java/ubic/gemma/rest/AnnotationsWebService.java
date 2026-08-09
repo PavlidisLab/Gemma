@@ -1201,57 +1201,11 @@ public class AnnotationsWebService {
                 .thenComparingInt( cellLinePreferenceFn::applyAsInt )
                 .thenComparing( CharacteristicValueObject::getValueUri, Comparator.nullsLast( Comparator.naturalOrder() ) )
                 .thenComparing( CharacteristicValueObject::getValue, Comparator.nullsLast( Comparator.naturalOrder() ) ) );
-        // Exact-label pushdown for resolver-style callers (cuts 5-10x candidate payload).
-        // Case-insensitive equality against the trimmed query — mirrors the trim+lowercase
-        // that callers do client-side today. Applies AFTER the canonical sort so the kept
-        // subset is also deterministic. Empty result is a valid outcome.
-        if ( exactLabel ) {
-            String wantedLower = queryValues.stream()
-                    .map( s -> s != null ? s.trim().toLowerCase( Locale.ROOT ) : "" )
-                    .filter( s -> !s.isEmpty() )
-                    .findFirst()
-                    .orElse( "" );
-            if ( !wantedLower.isEmpty() ) {
-                // Apply the same canonicalisation the ranker's tier function uses, so a
-                // resolver passing exact_label=true together with prefixes=CLO_,CL_ for
-                // "MEC2" still finds CLO_0037182 (label "MEC-2 cell"). Without this, the
-                // exact_label filter degrades to literal toLowerCase equality and drops
-                // every hit whose label varies from the query by " cell" / hyphens —
-                // exactly the cases the ranker just promoted to tier 0.
-                String wantedCanon = canonicaliseForExactMatch( wantedLower );
-                List<CharacteristicValueObject> exact = new ArrayList<>( rawHits.size() );
-                for ( CharacteristicValueObject h : rawHits ) {
-                    String label = h.getValue();
-                    if ( label == null ) continue;
-                    String labelLower = label.trim().toLowerCase( Locale.ROOT );
-                    if ( labelLower.equals( wantedLower )
-                            || canonicaliseForExactMatch( labelLower ).equals( wantedCanon ) ) {
-                        exact.add( h );
-                    }
-                }
-                rawHits = exact;
-            }
-        }
-        // Allow-list pushdown: when callers know which ontology namespaces are relevant (e.g.
-        // proposer agents passing `prefixes=CL_,EFO_`), filter BEFORE ranking + truncation so
-        // the kept top-N is determined by ranking among the allowed set, not by which items the
-        // strategy's truncate happened to keep. URI substring match (`.contains`) since the
-        // canonical namespace prefix lives after `/obo/` in OBO-style URIs.
-        if ( !prefixes.isEmpty() ) {
-            List<CharacteristicValueObject> kept = new ArrayList<>( rawHits.size() );
-            for ( CharacteristicValueObject h : rawHits ) {
-                String hitUri = h.getValueUri();
-                if ( hitUri == null ) continue;
-                for ( String p : prefixes ) {
-                    if ( hitUri.contains( p ) ) {
-                        kept.add( h );
-                        break;
-                    }
-                }
-            }
-            rawHits = kept;
-        }
-
+        // Runs BEFORE the exact_label and prefixes filters on purpose. Those narrow the
+        // POSITIVE list; this produces the VERDICT, and the two answer different questions.
+        // With this after exact_label, a caller passing both got an empty data array and no
+        // negativeEvidence at all -- the exact ambiguity the block exists to remove, and
+        // silent, since asking for the signal and receiving nothing looks like no signal.
         // ---- Category preference + near-match suppression -------------------------------------
         //
         // Both need to know WHY each candidate matched, and both have to act before ranking and
@@ -1272,7 +1226,7 @@ public class AnnotationsWebService {
         List<String> preferredPrefixes = prefixes.isEmpty()
                 ? resolveCategoryPreferredPrefixes( category )
                 : Collections.emptyList();
-        if ( ( suppress || !preferredPrefixes.isEmpty() ) && !rawHits.isEmpty() ) {
+        if ( suppress || !preferredPrefixes.isEmpty() ) {
             if ( rawHits.size() > CANDIDATE_ATTRIBUTION_CAP ) {
                 // Never silently. A capped run can only under-promote / under-suppress (the tail
                 // is left exactly as the relevance tiers ordered it), but the operator should be
@@ -1281,8 +1235,10 @@ public class AnnotationsWebService {
                                 + "category promotion and near-match suppression consider the top {} only",
                         rawHits.size(), joinedRelevanceQuery, CANDIDATE_ATTRIBUTION_CAP, CANDIDATE_ATTRIBUTION_CAP );
             }
-            Map<String, MatchAttribution> candidateMatches = attributeCandidates( rawHits, joinedRelevanceQuery,
-                    CANDIDATE_ATTRIBUTION_CAP, Math.max( timeoutMs - timer.getTime(), 0 ) );
+            Map<String, MatchAttribution> candidateMatches = rawHits.isEmpty()
+                    ? Collections.emptyMap()
+                    : attributeCandidates( rawHits, joinedRelevanceQuery,
+                            CANDIDATE_ATTRIBUTION_CAP, Math.max( timeoutMs - timer.getTime(), 0 ) );
             // A hit is "solid" when it names the query: attribution says equality against the
             // preferred label or a declared synonym. The label fallback keeps the check working
             // when the owning ontology is not loaded and no term could be resolved — the hit's own
@@ -1343,6 +1299,57 @@ public class AnnotationsWebService {
                 rawHits.sort( Comparator.<CharacteristicValueObject>comparingInt( categoryRankFn::applyAsInt ) );
             }
         }
+        // Exact-label pushdown for resolver-style callers (cuts 5-10x candidate payload).
+        // Case-insensitive equality against the trimmed query — mirrors the trim+lowercase
+        // that callers do client-side today. Applies AFTER the canonical sort so the kept
+        // subset is also deterministic. Empty result is a valid outcome.
+        if ( exactLabel ) {
+            String wantedLower = queryValues.stream()
+                    .map( s -> s != null ? s.trim().toLowerCase( Locale.ROOT ) : "" )
+                    .filter( s -> !s.isEmpty() )
+                    .findFirst()
+                    .orElse( "" );
+            if ( !wantedLower.isEmpty() ) {
+                // Apply the same canonicalisation the ranker's tier function uses, so a
+                // resolver passing exact_label=true together with prefixes=CLO_,CL_ for
+                // "MEC2" still finds CLO_0037182 (label "MEC-2 cell"). Without this, the
+                // exact_label filter degrades to literal toLowerCase equality and drops
+                // every hit whose label varies from the query by " cell" / hyphens —
+                // exactly the cases the ranker just promoted to tier 0.
+                String wantedCanon = canonicaliseForExactMatch( wantedLower );
+                List<CharacteristicValueObject> exact = new ArrayList<>( rawHits.size() );
+                for ( CharacteristicValueObject h : rawHits ) {
+                    String label = h.getValue();
+                    if ( label == null ) continue;
+                    String labelLower = label.trim().toLowerCase( Locale.ROOT );
+                    if ( labelLower.equals( wantedLower )
+                            || canonicaliseForExactMatch( labelLower ).equals( wantedCanon ) ) {
+                        exact.add( h );
+                    }
+                }
+                rawHits = exact;
+            }
+        }
+        // Allow-list pushdown: when callers know which ontology namespaces are relevant (e.g.
+        // proposer agents passing `prefixes=CL_,EFO_`), filter BEFORE ranking + truncation so
+        // the kept top-N is determined by ranking among the allowed set, not by which items the
+        // strategy's truncate happened to keep. URI substring match (`.contains`) since the
+        // canonical namespace prefix lives after `/obo/` in OBO-style URIs.
+        if ( !prefixes.isEmpty() ) {
+            List<CharacteristicValueObject> kept = new ArrayList<>( rawHits.size() );
+            for ( CharacteristicValueObject h : rawHits ) {
+                String hitUri = h.getValueUri();
+                if ( hitUri == null ) continue;
+                for ( String p : prefixes ) {
+                    if ( hitUri.contains( p ) ) {
+                        kept.add( h );
+                        break;
+                    }
+                }
+            }
+            rawHits = kept;
+        }
+
         long tFilters = timer.getTime() - phaseStart - tFindCharacteristics;
         phaseStart = timer.getTime();
         // Only fetch usage counts up-front when the ranking strategy actually consumes them.

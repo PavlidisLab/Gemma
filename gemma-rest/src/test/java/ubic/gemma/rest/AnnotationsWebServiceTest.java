@@ -718,6 +718,33 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
     }
 
     /**
+     * {@code exact_label} filters the POSITIVE list; {@code negativeEvidence} reports the VERDICT.
+     * Passing both must still yield the verdict — the agents send {@code exact_label=true} on every
+     * call, so an interaction that swallows the signal means they never receive it at all, while
+     * appearing to have asked for it.
+     */
+    @Test
+    public void testExactLabelDoesNotSuppressNegativeEvidence() throws SearchException, TimeoutException {
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "MK-8722" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Collections.singletonList(
+                        new CharacteristicValueObject( "mk-8353", "http://purl.obolibrary.org/obo/CHEBI_167664", "treatment", null ) ) );
+
+        assertThat( target( "/annotations/search" )
+                .queryParam( "query", "MK-8722" )
+                .queryParam( "suppress_near_matches", "true" )
+                .queryParam( "exact_label", "true" )
+                .queryParam( "includeGenes", "false" )
+                .request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .satisfies( body -> {
+                    assertThat( body ).extracting( "data", list( Map.class ) ).isEmpty();
+                    assertThat( body ).extracting( "negativeEvidence", map( String.class, Object.class ) )
+                            .containsEntry( "solidMatch", false );
+                } );
+    }
+
+    /**
      * The confident negative must not be claimed when identity matching never ran — a descriptive
      * query keeps its near-matches, so absence of a match there says nothing.
      */
