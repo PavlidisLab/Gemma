@@ -13,6 +13,8 @@ package ubic.gemma.rest;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.Consumes;
@@ -51,6 +53,7 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.curation.Annotatio
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.rest.util.ResponseDataObject;
+import ubic.gemma.rest.util.ResponseErrorObject;
 import ubic.gemma.rest.util.Responders;
 import ubic.gemma.rest.util.args.DatasetArg;
 import ubic.gemma.rest.util.args.DatasetArgService;
@@ -338,8 +341,13 @@ public class AnnotationSetsWebService {
      */
     @DELETE
     @Path("/annotation-sets/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN')")
-    @Operation(summary = "Delete an annotation set by id")
+    @Operation(summary = "Delete an annotation set by id",
+            responses = {
+                    @ApiResponse(responseCode = "204", description = "Annotation set deleted."),
+                    @ApiResponse(responseCode = "404", description = "No annotation set with that id.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response deleteAnnotationSet(
             @PathParam("id") Long id
     ) {

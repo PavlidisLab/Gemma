@@ -497,7 +497,10 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
     /** A tag whose label doesn't match its URI is rejected with a structured, per-slot 400. */
     @Test
     public void testCommitRejectsUngroundedTerm() {
-        when( ontologyTermValidator.validateAndCanonicalize( any() ) ).thenReturn( Collections.singletonList(
+        // Two-arg form: the commit path calls validateAndCanonicalize(c, canonSink). Stubbing the
+        // one-arg default instead leaves the real call unstubbed, so the mock returns no
+        // violations, the reject gate never fires, and the request runs on to commitCuration.
+        when( ontologyTermValidator.validateAndCanonicalize( any(), any() ) ).thenReturn( Collections.singletonList(
                 new TermViolation( "value", "has_genotype", "http://purl.obolibrary.org/obo/TGEMO_00166", "delivered at dose", TermViolation.Reason.LABEL_MISMATCH ) ) );
         try ( Response r = target( "/datasets/1/curation" ).request().put( Entity.json( HALLUCINATED_TAG_BODY ) ) ) {
             assertThat( r.getStatus() ).isEqualTo( 400 );
@@ -517,7 +520,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         when( expressionExperimentService.getExperimentalDesignValueObject( any() ) ).thenReturn( new ExperimentalDesignValueObject() );
         when( expressionExperimentService.previewDesignChange( any(), any() ) ).thenReturn( new DesignPreflightReport() );
         // only the statement (a Statement entity) fails; the factor category passes
-        when( ontologyTermValidator.validateAndCanonicalize( any() ) ).thenAnswer( inv -> {
+        when( ontologyTermValidator.validateAndCanonicalize( any(), any() ) ).thenAnswer( inv -> {
             Characteristic c = inv.getArgument( 0 );
             return ( c instanceof Statement )
                     ? Collections.singletonList( new TermViolation( "object", "Heterozygous", "http://purl.obolibrary.org/obo/TGEMO_00003", null, TermViolation.Reason.URI_UNRESOLVED ) )
@@ -542,7 +545,10 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
     /** Preflight enforces the same gate, so a client catches the failure on the dry run. */
     @Test
     public void testPreflightRejectsUngroundedTerm() {
-        when( ontologyTermValidator.validateAndCanonicalize( any() ) ).thenReturn( Collections.singletonList(
+        // Two-arg form: the commit path calls validateAndCanonicalize(c, canonSink). Stubbing the
+        // one-arg default instead leaves the real call unstubbed, so the mock returns no
+        // violations, the reject gate never fires, and the request runs on to commitCuration.
+        when( ontologyTermValidator.validateAndCanonicalize( any(), any() ) ).thenReturn( Collections.singletonList(
                 new TermViolation( "value", "has_genotype", "http://purl.obolibrary.org/obo/TGEMO_00166", "delivered at dose", TermViolation.Reason.LABEL_MISMATCH ) ) );
         try ( Response r = target( "/datasets/1/curation/preflight" ).request().post( Entity.json( HALLUCINATED_TAG_BODY ) ) ) {
             assertThat( r.getStatus() ).isEqualTo( 400 );

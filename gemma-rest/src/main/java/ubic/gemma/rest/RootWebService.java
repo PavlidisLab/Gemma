@@ -140,7 +140,10 @@ public class RootWebService {
                     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204",
                             description = "Password changed."),
                     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400",
-                            description = "Missing fields, wrong current password, or new password too short.") })
+                            description = "Missing fields, wrong current password, or new password too short.",
+                            content = @io.swagger.v3.oas.annotations.media.Content(
+                                    schema = @io.swagger.v3.oas.annotations.media.Schema(
+                                            implementation = ubic.gemma.rest.util.ResponseErrorObject.class ) ) ) })
     public Response changeMyPassword( ChangePasswordRequest req ) {
         if ( req == null || req.currentPassword == null || req.currentPassword.isEmpty()
                 || req.newPassword == null || req.newPassword.isEmpty() ) {
