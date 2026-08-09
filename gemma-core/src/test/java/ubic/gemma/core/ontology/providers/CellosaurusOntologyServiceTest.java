@@ -86,6 +86,18 @@ class CellosaurusOntologyServiceTest {
         assertTrue( containsUri( s.findTerm( "HEK293T", 10 ), HEK ) );
     }
 
+    /**
+     * The search fan-out ranks hits from supplementary sources below every conventional-ontology hit; the
+     * lexical index's exact-name boost would otherwise displace ontology terms, since the two sets of scores
+     * come from different indices and are not on a common scale.
+     */
+    @Test
+    void isSupplementaryRatherThanAPeerOfTheConventionalOntologies() {
+        assertTrue( new CellosaurusOntologyService().isSupplementary() );
+        assertTrue( new MgiStrainOntologyService().isSupplementary() );
+        assertFalse( new ChebiOntologyService().isSupplementary() );
+    }
+
     private static boolean containsUri( Collection<OntologySearchResult<OntologyTerm>> results, String uri ) {
         return results.stream().anyMatch( r -> uri.equals( r.getResult().getUri() ) );
     }

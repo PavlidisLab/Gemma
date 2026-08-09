@@ -16,7 +16,10 @@ import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.ontology.providers.ChebiOntologyService;
 import ubic.gemma.core.ontology.providers.ExperimentalFactorOntologyService;
 import ubic.gemma.core.ontology.providers.ObiService;
+import ubic.gemma.core.ontology.model.OntologyTerm;
+import ubic.gemma.core.ontology.providers.CellosaurusOntologyService;
 import ubic.gemma.core.ontology.search.OntologySearchException;
+import ubic.gemma.core.ontology.search.OntologySearchResult;
 import ubic.gemma.core.ontology.simple.OntologyTermSimple;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
@@ -34,8 +37,10 @@ import ubic.gemma.persistence.service.common.description.CharacteristicReadServi
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -105,6 +110,11 @@ public class OntologyServiceTest extends BaseTest5 {
         }
 
         @Bean
+        public CellosaurusOntologyService cellosaurusOntologyService() {
+            return mock( CellosaurusOntologyService.class );
+        }
+
+        @Bean
         @Qualifier("ontologyTaskExecutor")
         public TaskExecutor ontologyTaskExecutor() {
             return mock();
@@ -126,6 +136,12 @@ public class OntologyServiceTest extends BaseTest5 {
     private ObiService obiService;
 
     @Autowired
+    private CellosaurusOntologyService cellosaurusOntologyService;
+
+    @Autowired
+    private GeneOntologyService geneOntologyService;
+
+    @Autowired
     private SearchService searchService;
 
     @Autowired
@@ -136,7 +152,80 @@ public class OntologyServiceTest extends BaseTest5 {
 
     @AfterEach
     public void tearDown() {
-        reset( chebiOntologyService, obiService, searchService );
+        reset( chebiOntologyService, obiService, cellosaurusOntologyService, searchService );
+    }
+
+    /**
+     * A supplementary source scores against its own Lucene index and applies a large exact-name boost, so its
+     * raw score dwarfs a conventional ontology's. Ranking must not be decided by that number: every
+     * conventional hit comes first, and the supplementary hit is appended below.
+     */
+    @Test
+    public void testSupplementarySourceRanksBelowConventionalOntologies() throws Exception {
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( chebiOntologyService.findTerm( "HeLa", 100 ) ).thenReturn( Collections.singletonList(
+                new OntologySearchResult<>( new OntologyTermSimple( "http://purl.obolibrary.org/obo/CLO_0003684", "HeLa cell" ), 1.5 ) ) );
+
+        when( cellosaurusOntologyService.isSupplementary() ).thenReturn( true );
+        when( cellosaurusOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( cellosaurusOntologyService.findTerm( "HeLa", 100 ) ).thenReturn( Collections.singletonList(
+                new OntologySearchResult<>( new OntologyTermSimple( "https://www.cellosaurus.org/CVCL_0030", "HeLa" ), 137.0 ) ) );
+
+        List<OntologySearchResult<OntologyTerm>> results =
+                new ArrayList<>( ontologyService.findTerms( "HeLa", 100, 5000, TimeUnit.MILLISECONDS ) );
+
+        assertEquals( 2, results.size() );
+        assertEquals( "http://purl.obolibrary.org/obo/CLO_0003684", results.get( 0 ).getResult().getUri() );
+        assertEquals( "https://www.cellosaurus.org/CVCL_0030", results.get( 1 ).getResult().getUri() );
+    }
+
+    /**
+     * The gap-fill case: when no conventional ontology matches, the supplementary hit is still returned and is
+     * still first. Ranking below must not degrade into suppression.
+     */
+    @Test
+    public void testSupplementarySourceStillSurfacesWhenOntologiesFindNothing() throws Exception {
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( chebiOntologyService.findTerm( "KOLF2.1J", 100 ) ).thenReturn( Collections.emptyList() );
+
+        when( cellosaurusOntologyService.isSupplementary() ).thenReturn( true );
+        when( cellosaurusOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( cellosaurusOntologyService.findTerm( "KOLF2.1J", 100 ) ).thenReturn( Collections.singletonList(
+                new OntologySearchResult<>( new OntologyTermSimple( "https://www.cellosaurus.org/CVCL_B5P3", "KOLF2.1J" ), 137.0 ) ) );
+
+        List<OntologySearchResult<OntologyTerm>> results =
+                new ArrayList<>( ontologyService.findTerms( "KOLF2.1J", 100, 5000, TimeUnit.MILLISECONDS ) );
+
+        assertEquals( 1, results.size() );
+        assertEquals( "https://www.cellosaurus.org/CVCL_B5P3", results.get( 0 ).getResult().getUri() );
+    }
+
+    /**
+     * GO is consulted only when the other ontologies come up empty. That test must read the conventional
+     * ontologies alone — otherwise enabling a supplementary catalogue would quietly switch the GO fallback off
+     * for every query the catalogue happens to match.
+     */
+    @Test
+    public void testSupplementaryHitDoesNotSuppressTheGeneOntologyFallback() throws Exception {
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( chebiOntologyService.findTerm( "pregnancy", 100 ) ).thenReturn( Collections.emptyList() );
+
+        when( cellosaurusOntologyService.isSupplementary() ).thenReturn( true );
+        when( cellosaurusOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( cellosaurusOntologyService.findTerm( "pregnancy", 100 ) ).thenReturn( Collections.singletonList(
+                new OntologySearchResult<>( new OntologyTermSimple( "https://www.cellosaurus.org/CVCL_9999", "pregnancy" ), 137.0 ) ) );
+
+        when( geneOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( geneOntologyService.findTerm( "pregnancy", 100 ) ).thenReturn( Collections.singletonList(
+                new OntologySearchResult<>( new OntologyTermSimple( "http://purl.obolibrary.org/obo/GO_0007565", "female pregnancy" ), 2.0 ) ) );
+
+        List<OntologySearchResult<OntologyTerm>> results =
+                new ArrayList<>( ontologyService.findTerms( "pregnancy", 100, 5000, TimeUnit.MILLISECONDS ) );
+
+        verify( geneOntologyService ).findTerm( "pregnancy", 100 );
+        assertEquals( 2, results.size() );
+        assertEquals( "http://purl.obolibrary.org/obo/GO_0007565", results.get( 0 ).getResult().getUri() );
+        assertEquals( "https://www.cellosaurus.org/CVCL_9999", results.get( 1 ).getResult().getUri() );
     }
 
     @Test

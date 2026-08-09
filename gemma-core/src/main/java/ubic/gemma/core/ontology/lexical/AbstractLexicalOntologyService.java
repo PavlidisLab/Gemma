@@ -396,6 +396,16 @@ public abstract class AbstractLexicalOntologyService implements OntologyService 
         this.searchEnabled = searchEnabled;
     }
 
+    /**
+     * Flat lexical catalogues are supplementary: they back-fill names the conventional ontologies lack, and
+     * their {@link LexicalOntologyIndex} exact-name boost is not on the same scale as a Jena index's raw
+     * scores, so their hits rank below every conventional-ontology hit rather than merging with them.
+     */
+    @Override
+    public boolean isSupplementary() {
+        return true;
+    }
+
     @Override
     public Set<String> getExcludedWordsFromStemming() {
         return excludedWordsFromStemming;

@@ -303,12 +303,24 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             }
         }
 
-        results = searchInThreads( ontology -> ontologyCache.findTerm( ontology, search, maxResults ), search, 5000 );
+        // Supplementary sources (the flat lexical catalogues) are searched apart from the conventional
+        // ontologies because their scores are not comparable: every source scores against its own Lucene
+        // index, and the lexical index applies a large exact-name boost, so merging by score would let a
+        // catalogue hit outrank every ontology term. They are appended below instead of merged.
+        List<ubic.gemma.core.ontology.providers.OntologyService> peerServices = new ArrayList<>( ontologyServices.size() );
+        List<ubic.gemma.core.ontology.providers.OntologyService> supplementaryServices = new ArrayList<>();
+        for ( ubic.gemma.core.ontology.providers.OntologyService service : ontologyServices ) {
+            ( service.isSupplementary() ? supplementaryServices : peerServices ).add( service );
+        }
+
+        results = searchInThreads( ontology -> ontologyCache.findTerm( ontology, search, maxResults ), peerServices, search, 5000 );
 
         // GO is by far the largest index and the slowest to search, and it is the fallback of last
         // resort for term search — only consult it when the other ontologies came up empty. Running
         // it on every query lengthens the search (and, because the whole search runs in a read-only
         // transaction, the DB connection it holds) enough to starve the pool under load.
+        // Note this tests the conventional ontologies alone: a supplementary catalogue hit must not
+        // suppress the GO fallback, or enabling Cellosaurus would quietly switch GO search off.
         if ( results.isEmpty() && geneOntologyService.isOntologyLoaded() ) {
             try {
                 results.addAll( ontologyCache.findTerm( geneOntologyService, search, maxResults ) );
@@ -317,10 +329,21 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             }
         }
 
-        return results.stream()
+        Collection<OntologySearchResult<OntologyTerm>> supplementaryResults = supplementaryServices.isEmpty()
+                ? Collections.emptyList()
+                : searchInThreads( ontology -> ontologyCache.findTerm( ontology, search, maxResults ), supplementaryServices, search, 5000 );
+
+        LinkedHashSet<OntologySearchResult<OntologyTerm>> ranked = results.stream()
                 .sorted( Comparator.comparingDouble( osr -> -osr.getScore() ) )
                 .limit( maxResults )
                 .collect( Collectors.toCollection( LinkedHashSet::new ) );
+        // equality is on the term, so a URI already contributed by a conventional ontology is not re-added
+        supplementaryResults.stream()
+                .sorted( Comparator.comparingDouble( osr -> -osr.getScore() ) )
+                .filter( osr -> !ranked.contains( osr ) )
+                .limit( Math.max( maxResults - ranked.size(), 0 ) )
+                .forEach( ranked::add );
+        return ranked;
     }
 
     @Override

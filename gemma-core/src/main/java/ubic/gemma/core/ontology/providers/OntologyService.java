@@ -167,6 +167,23 @@ public interface OntologyService extends AutoCloseable {
     void setSearchEnabled( boolean searchEnabled );
 
     /**
+     * Check if this source supplements the conventional ontologies rather than standing beside them as a peer.
+     * <p>
+     * A supplementary source exists to fill coverage gaps — Cellosaurus for cell lines CLO does not list, MGI
+     * for mouse strains missing from EFO/TGEMO. Its hits are still returned, but they are ranked below every
+     * conventional-ontology hit instead of being merged with them by score. Score-merging is not an option
+     * across these sources: each one scores against its own Lucene index, so the numbers are not on a common
+     * scale, and a flat catalogue that applies an exact-name boost would otherwise displace ontology terms
+     * wholesale. Ranking below is also what keeps a gap-fill useful — when the ontologies return nothing, the
+     * supplementary hit is still first.
+     * <p>
+     * Sources are peers by default.
+     */
+    default boolean isSupplementary() {
+        return false;
+    }
+
+    /**
      * Obtain the words that should be excluded from stemming.
      * <p>
      * By default, all words are subject to stemming. The exact implementation of stemming depends on the actual search
