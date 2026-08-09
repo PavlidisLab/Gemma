@@ -1,0 +1,39 @@
+-- Verbatim source metadata for an investigation, as a JSON blob.
+--
+-- Gemma keeps only a converted subset of a GEO record: GeoFamilyParser parses the whole
+-- SOFT family file, and GeoConverterImpl writes the parts that map onto the relational
+-- model (title, summaries, characteristics, protocols, factors) and drops the rest —
+-- sample dataProcessing / hybProtocol / scanProtocol / supplementaryFiles / status /
+-- submissionDate are parsed and never persisted, and characteristic text over 255
+-- characters is truncated to 200. The only full copy is the GSE*.soft.gz on disk, which
+-- is a filesystem cache, not queryable. This column gives the record a home in the
+-- database, mirroring what the curation agents already keep offline.
+--
+-- Generalizes the existing PREBOARDED_IDENTIFYING_METADATA rather than adding a second
+-- blob. That column was already on INVESTIGATION (SINGLE_TABLE inheritance, so it is
+-- physically present on every ExpressionExperiment row, always NULL today) but was
+-- scoped to preboarding, carried series-level fields only, and was dropped on
+-- preboarded -> EE promotion. One column, one schema, and promotion becomes "keep what
+-- you had, enrich at import".
+--
+-- Gemma stores the blob opaquely — it never parses or queries it — so the JSON schema
+-- is a contract with the agents repo and can evolve without a further migration. Same
+-- arrangement as CHARACTERISTIC.SUPPORTING_EVIDENCE (V22). The schema is documented in
+-- handoff CAB_SOURCE_METADATA_BLOB_2026_08_08.md; the payload carries its own
+-- schemaVersion.
+--
+-- The schema version is a COLUMN, not only a key inside the payload. The V22 analogy
+-- only goes so far: FindingEvidence carries no version and is additive-only, which is
+-- precisely why it evolves without migrations. This payload is versioned and Gemma is a
+-- version-aware writer of it, so v0 and v1 rows will coexist in the column. Keeping the
+-- version queryable makes "which rows are still v0?" a WHERE clause instead of a
+-- full-table JSON parse, and makes a batched backfill ordinary SQL. It cannot be
+-- retrofitted cheaply once the column is populated. The payload carries its own
+-- schemaVersion too, so a blob that travels outside the database stays self-describing.
+--
+-- CHANGE COLUMN rather than RENAME COLUMN: the latter needs MySQL 8.0 and production is
+-- still on the 5.7 dialect. The rename preserves existing values, so preboarded rows
+-- keep the payload the scrape wrote — those are the v0 rows, hence the NULL version.
+ALTER TABLE INVESTIGATION
+    CHANGE COLUMN PREBOARDED_IDENTIFYING_METADATA SOURCE_METADATA LONGTEXT NULL,
+    ADD COLUMN SOURCE_METADATA_SCHEMA_VERSION SMALLINT NULL;
