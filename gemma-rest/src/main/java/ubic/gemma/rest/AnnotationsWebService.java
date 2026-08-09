@@ -1264,6 +1264,12 @@ public class AnnotationsWebService {
                         // proposing mk-8353 for MK-8722, but "it is not mk-8353" does.
                         String uri = h.getValueUri();
                         MatchAttribution m = uri != null ? candidateMatches.get( uri ) : null;
+                        if ( m == null ) {
+                            // Same label-level fallback as the positive rows: "why was this
+                            // returned at all" is the useful half of a ruled-out entry, and a
+                            // list of nulls explains nothing to whoever reviews the run.
+                            m = computeLabelAttribution( h.getValue(), joinedRelevanceQuery );
+                        }
                         rejected.add( new RuledOutTermValueObject( h.getValue(), uri,
                                 m != null ? m.via.token : null ) );
                     }
@@ -1459,6 +1465,15 @@ public class AnnotationsWebService {
             String definition = isTop ? defByUri.get( uri ) : null;
             List<OntologyTermSimpleValueObject> parents = isTop ? parentsByUri.get( uri ) : null;
             MatchAttribution match = isTop ? matchByUri.get( uri ) : null;
+            if ( match == null && isTop ) {
+                // Attribution was attempted and produced nothing — the URI resolved to no loaded
+                // term (a flat lexical catalogue, an NCBITaxon row, an ontology still warming), or
+                // the hit came via a Lucene field we don't probe. The row's own label is on hand
+                // and needs no ontology, so a label-level verdict is still available and is often
+                // decisive: an NCBITaxon row whose label EQUALS the query was reporting null,
+                // which a client filtering on equality tiers reads as "weak" and discards.
+                match = computeLabelAttribution( vo.getValue(), joinedQuery );
+            }
             String matchedVia = match != null ? match.via.token : null;
             String matchedText = match != null ? match.text : null;
             Map<String, Integer> priorCategories = uri != null ? priorCategoriesByUri.get( uri ) : null;
@@ -2260,6 +2275,43 @@ public class AnnotationsWebService {
      * via a Lucene field we don't probe (definition, obo_id), or in the rare case where
      * the upstream filter was bypassed (single-content-token queries).</p>
      */
+    /**
+     * Attribution derived from a hit's own label alone, with no ontology lookup.
+     *
+     * <p>Used when {@link #computeMatchAttribution} could not run or returned nothing — the URI
+     * belongs to a source with no loaded Jena model (flat lexical catalogues, NCBITaxon rows), or
+     * the owning ontology is still initializing. Those rows previously reported {@code matchedVia:
+     * null}, which a client filtering on equality tiers reads as "weak" and drops, even when the
+     * label was exactly the query.
+     *
+     * <p>Only label-level tiers are reachable here: without the term we cannot see its synonyms, so
+     * this NEVER claims a synonym tier. A synonym-exact hit whose ontology is unloaded stays
+     * unattributed rather than being mislabelled as a weaker label match.
+     */
+    @Nullable
+    static MatchAttribution computeLabelAttribution( @Nullable String label, String originalQuery ) {
+        if ( label == null || StringUtils.isBlank( originalQuery ) ) {
+            return null;
+        }
+        String normalisedQuery = normaliseForEquality( originalQuery );
+        String normalisedLabel = normaliseForEquality( label );
+        if ( normalisedQuery.isEmpty() || normalisedLabel.isEmpty() ) {
+            return null;
+        }
+        if ( normalisedLabel.equals( normalisedQuery )
+                || canonicaliseForExactMatch( label ).equals( canonicaliseForExactMatch( originalQuery.trim() ) ) ) {
+            return new MatchAttribution( MatchedVia.PREFERRED_LABEL, label );
+        }
+        if ( normalisedLabel.startsWith( normalisedQuery ) || normalisedQuery.startsWith( normalisedLabel ) ) {
+            return new MatchAttribution( MatchedVia.LABEL_PREFIX, label );
+        }
+        List<String> contentTokens = contentTokens( originalQuery );
+        if ( !contentTokens.isEmpty() && labelCoversAllTokens( normalisedLabel, contentTokens ) ) {
+            return new MatchAttribution( MatchedVia.LABEL_TOKENS, label );
+        }
+        return null;
+    }
+
     @Nullable
     static MatchAttribution computeMatchAttribution( OntologyTerm term, String originalQuery ) {
         String normalisedQuery = normaliseForEquality( originalQuery );
@@ -2558,12 +2610,20 @@ public class AnnotationsWebService {
          */
         @Nullable List<OntologyTermSimpleValueObject> parents;
         /**
-         * Which Lucene field most likely produced this hit. One of {@code preferred_label} (default),
-         * {@code exact_synonym}, {@code narrow_synonym}, {@code related_synonym}, {@code broad_synonym},
-         * {@code alt_label}. Back-computed by replaying the query tokens against the term's label
-         * and indexed synonyms — see {@code computeMatchAttribution}. Null indicates "not enriched"
-         * (lazy-load sentinel, same semantics as {@link #definition}). Populated for the top-25
-         * search hits only.
+         * Which Lucene field most likely produced this hit: {@code preferred_label},
+         * {@code exact_synonym}, {@code narrow_synonym}, {@code related_synonym},
+         * {@code broad_synonym}, {@code alt_label} (all equality tiers), or {@code label_prefix},
+         * {@code label_tokens}, {@code synonym_tokens} (neighbourhood tiers). Back-computed by
+         * replaying the query against the term's label and indexed synonyms — see
+         * {@code computeMatchAttribution}.
+         *
+         * <p>Populated for the top-25 hits only. {@code null} there means UNATTRIBUTABLE, not
+         * "weak": the hit came via a field we do not probe (definition, obo_id) or a pure relevance
+         * rank. Label-level tiers are still filled in from the row's own label when the term itself
+         * could not be resolved, so a row whose label equals the query never reports null; but a
+         * SYNONYM-exact hit whose owning ontology is unloaded does, because without the term its
+         * synonyms are invisible. A client cannot therefore implement "equality tiers only" from
+         * this field alone — treat {@code null} as unknown and fall back to label equality.
          */
         @Nullable String matchedVia;
         /**

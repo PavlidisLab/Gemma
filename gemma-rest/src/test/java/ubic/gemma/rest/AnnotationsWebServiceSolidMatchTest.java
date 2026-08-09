@@ -149,6 +149,51 @@ class AnnotationsWebServiceSolidMatchTest {
         assertThat( AnnotationsWebService.isExactAttribution( m != null ? m.via : null ) ).isFalse();
     }
 
+    // ---- label-only attribution (no ontology available) -----------------------------------
+
+    @Test
+    void labelEqualToQueryIsAttributedWithoutTheTerm() {
+        // The NCBITaxon_1773 case: label exactly equals the query but the URI resolves to no
+        // loaded term, so attribution used to be null and clients read that as "weak".
+        AnnotationsWebService.MatchAttribution m = AnnotationsWebService.computeLabelAttribution(
+                "Mycobacterium tuberculosis", "Mycobacterium tuberculosis" );
+        assertThat( m ).isNotNull();
+        assertThat( m.via ).isEqualTo( AnnotationsWebService.MatchedVia.PREFERRED_LABEL );
+        assertThat( AnnotationsWebService.isExactAttribution( m.via ) ).isTrue();
+    }
+
+    @Test
+    void labelOnlyAttributionUsesTheSameCanonicalEquality() {
+        AnnotationsWebService.MatchAttribution m =
+                AnnotationsWebService.computeLabelAttribution( "NCI-H358 cell", "NCIH358" );
+        assertThat( m ).isNotNull();
+        assertThat( m.via ).isEqualTo( AnnotationsWebService.MatchedVia.PREFERRED_LABEL );
+    }
+
+    @Test
+    void labelOnlyAttributionReportsWeakerTiersHonestly() {
+        assertThat( AnnotationsWebService.computeLabelAttribution( "aspirin-induced asthma", "aspirin" ).via )
+                .isEqualTo( AnnotationsWebService.MatchedVia.LABEL_PREFIX );
+        // No relationship at all stays null rather than being invented.
+        assertThat( AnnotationsWebService.computeLabelAttribution( "menkes disease", "MK-8722" ) ).isNull();
+        assertThat( AnnotationsWebService.computeLabelAttribution( null, "aspirin" ) ).isNull();
+        assertThat( AnnotationsWebService.computeLabelAttribution( "aspirin", "  " ) ).isNull();
+    }
+
+    @Test
+    void labelOnlyAttributionNeverClaimsASynonymTier() {
+        // Without the term we cannot see synonyms; claiming one would be a fabricated provenance.
+        for ( String label : new String[] { "emtricitabine", "acetylsalicylic acid", "paracetamol" } ) {
+            AnnotationsWebService.MatchAttribution m =
+                    AnnotationsWebService.computeLabelAttribution( label, "FTC" );
+            if ( m != null ) {
+                assertThat( m.via ).isIn( AnnotationsWebService.MatchedVia.PREFERRED_LABEL,
+                        AnnotationsWebService.MatchedVia.LABEL_PREFIX,
+                        AnnotationsWebService.MatchedVia.LABEL_TOKENS );
+            }
+        }
+    }
+
     private static OntologyTerm term( String label ) {
         OntologyTerm t = mock( OntologyTerm.class );
         when( t.getLabel() ).thenReturn( label );
