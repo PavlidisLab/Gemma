@@ -303,17 +303,29 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             }
         }
 
-        // Supplementary sources (the flat lexical catalogues) are searched apart from the conventional
+        // Supplementary sources (the flat lexical catalogues) are ranked apart from the conventional
         // ontologies because their scores are not comparable: every source scores against its own Lucene
         // index, and the lexical index applies a large exact-name boost, so merging by score would let a
         // catalogue hit outrank every ontology term. They are appended below instead of merged.
-        List<ubic.gemma.core.ontology.providers.OntologyService> peerServices = new ArrayList<>( ontologyServices.size() );
-        List<ubic.gemma.core.ontology.providers.OntologyService> supplementaryServices = new ArrayList<>();
-        for ( ubic.gemma.core.ontology.providers.OntologyService service : ontologyServices ) {
-            ( service.isSupplementary() ? supplementaryServices : peerServices ).add( service );
-        }
+        //
+        // Both groups are searched in ONE fan-out, tagging each hit with its source tier, rather than in
+        // two. Running them as two sequential searchInThreads calls costs a second barrier on every
+        // query — the lexical fan-out stops overlapping the conventional one — for no benefit, since the
+        // split only matters when the results are ranked.
+        List<SourcedTerm> allHits = searchInThreads( ontology -> {
+            boolean supplementary = ontology.isSupplementary();
+            Collection<OntologySearchResult<OntologyTerm>> hits = ontologyCache.findTerm( ontology, search, maxResults );
+            List<SourcedTerm> tagged = new ArrayList<>( hits.size() );
+            for ( OntologySearchResult<OntologyTerm> hit : hits ) {
+                tagged.add( new SourcedTerm( hit, supplementary ) );
+            }
+            return tagged;
+        }, search, 5000 );
 
-        results = searchInThreads( ontology -> ontologyCache.findTerm( ontology, search, maxResults ), peerServices, search, 5000 );
+        Collection<OntologySearchResult<OntologyTerm>> supplementaryResults = new HashSet<>();
+        for ( SourcedTerm hit : allHits ) {
+            ( hit.supplementary ? supplementaryResults : results ).add( hit.result );
+        }
 
         // GO is by far the largest index and the slowest to search, and it is the fallback of last
         // resort for term search — only consult it when the other ontologies came up empty. Running
@@ -328,10 +340,6 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 throw convertBaseCodeOntologySearchExceptionToSearchException( e, search );
             }
         }
-
-        Collection<OntologySearchResult<OntologyTerm>> supplementaryResults = supplementaryServices.isEmpty()
-                ? Collections.emptyList()
-                : searchInThreads( ontology -> ontologyCache.findTerm( ontology, search, maxResults ), supplementaryServices, search, 5000 );
 
         LinkedHashSet<OntologySearchResult<OntologyTerm>> ranked = results.stream()
                 .sorted( Comparator.comparingDouble( osr -> -osr.getScore() ) )
@@ -1193,6 +1201,20 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     @FunctionalInterface
     private interface CallableWithOntologyService<T> {
         T call( ubic.gemma.core.ontology.providers.OntologyService service ) throws Exception;
+    }
+
+    /**
+     * A hit plus the tier of the source that produced it, so one parallel fan-out can serve both
+     * groups and the split is applied when ranking rather than by searching twice.
+     */
+    private static final class SourcedTerm {
+        final OntologySearchResult<OntologyTerm> result;
+        final boolean supplementary;
+
+        SourcedTerm( OntologySearchResult<OntologyTerm> result, boolean supplementary ) {
+            this.result = result;
+            this.supplementary = supplementary;
+        }
     }
 
     private <T> List<T> combineInThreads( CallableWithOntologyService<Collection<T>> work, String query, long timeoutMs ) throws TimeoutException {
