@@ -22,6 +22,7 @@ import org.hibernate.event.spi.EventType;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 
 /**
  * Renovations Phase 3: register {@link AclEventListener} with Hibernate's
@@ -40,7 +41,21 @@ import org.springframework.context.annotation.Configuration;
  * rather than a duplicate create. Once we've verified the listener fully covers the advice's
  * responsibilities, the AOP wiring in {@code applicationContext-security.xml} can be removed.
  */
+/**
+ * {@code @Lazy(false)} is required, not decorative. This configuration exists purely for the side
+ * effect in {@link #afterPropertiesSet()}; no other bean injects it. In CLI contexts
+ * {@link ubic.gemma.core.context.LazyInitByDefaultPostProcessor} marks every non-infrastructure
+ * bean definition lazy-init, so without this annotation the bean is defined but never
+ * instantiated, and the listener below is never registered — silently, since nothing fails.
+ * <p>
+ * That is not hypothetical: it is what happened between the AOP-advice cutover (commit
+ * {@code 21e4fc412e}, 2026-05-18) and 2026-08-08. Every experiment created by a CLI in that window
+ * got no ACL at all, and every experiment deleted by a CLI left its entire ACL tree behind. The
+ * post-processor skips any definition annotated {@code @Lazy} regardless of its value, so this
+ * annotation both keeps the bean eager and opts it out of the sweep.
+ */
 @Configuration
+@Lazy(false)
 public class AclEventListenerConfig implements InitializingBean {
 
     private static final Log log = LogFactory.getLog( AclEventListenerConfig.class );

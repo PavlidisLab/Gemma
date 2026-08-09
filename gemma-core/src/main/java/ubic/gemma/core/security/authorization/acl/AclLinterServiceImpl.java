@@ -257,6 +257,24 @@ public class AclLinterServiceImpl implements AclLinterService {
     }
 
     /**
+     * Attach the ACL identity of {@code identifier} to {@code parentAoi}.
+     * <p>
+     * This MUST go through {@link AclService#updateAcl(MutableAcl)} rather than
+     * {@link AclObjectIdentity#setParentObject(AclObjectIdentity)}. {@code AclObjectIdentity} is
+     * annotated {@code @Immutable}, so Hibernate silently discards the dirty state and the fix never
+     * reaches the database — no exception, no UPDATE. The same trap is documented on
+     * {@link #lintSecuredNotChildWithParent}, which was converted earlier; the child-parent linters
+     * were missed, and on 2026-08-06 a production repair run reported 548 successful parent
+     * assignments while writing none of them. Routing through {@code JdbcMutableAclService} makes the
+     * write land and evicts the ACL cache.
+     */
+    private void setParentAcl( Class<? extends Securable> clazz, Long identifier, AclObjectIdentity parentAoi ) {
+        MutableAcl acl = ( MutableAcl ) aclService.readAclById( new AclObjectIdentity( clazz, identifier ) );
+        acl.setParent( aclService.readAclById( parentAoi ) );
+        aclService.updateAcl( acl );
+    }
+
+    /**
      * Lint for secured children that lack a parent ACL identity.
      */
     private void lintSecuredChildWithoutParent( Class<? extends SecuredChild<?>> clazz, AclLinterConfig config, Collection<LintResult> results ) {
@@ -284,7 +302,7 @@ public class AclLinterServiceImpl implements AclLinterService {
                 }
                 AclObjectIdentity parentAoi = ( AclObjectIdentity ) parentIdentityRetrievalStrategy.getParentIdentity( sc );
                 if ( parentAoi != null ) {
-                    aoi.setParentObject( parentAoi );
+                    setParentAcl( clazz, aoi.getIdentifier(), parentAoi );
                     String fixMessage = "Parent ACL identity was set to " + parentAoi + ".";
                     log.info( formatEntity( clazz, aoi ) + ": " + fixMessage );
                     results.add( new LintResult( clazz, aoi.getIdentifier(), fixMessage, true ) );
@@ -321,7 +339,7 @@ public class AclLinterServiceImpl implements AclLinterService {
             }
             AclObjectIdentity parentAoi = ( AclObjectIdentity ) parentIdentityRetrievalStrategy.getParentIdentity( sc );
             if ( parentAoi != null ) {
-                aoi.setParentObject( parentAoi );
+                setParentAcl( clazz, aoi.getIdentifier(), parentAoi );
                 String fixMessage = "Parent ACL identity was set to " + parentAoi + ".";
                 log.info( formatEntity( clazz, aoi ) + ": " + fixMessage );
                 results.add( new LintResult( clazz, aoi.getIdentifier(), fixMessage, true ) );
@@ -364,7 +382,7 @@ public class AclLinterServiceImpl implements AclLinterService {
                 }
                 AclObjectIdentity parentAoi = ( AclObjectIdentity ) parentIdentityRetrievalStrategy.getParentIdentity( sc );
                 if ( parentAoi != null ) {
-                    aoi.setParentObject( parentAoi );
+                    setParentAcl( clazz, aoi.getIdentifier(), parentAoi );
                     String fixMessage = "Parent ACL identity was set to " + parentAoi + ".";
                     log.info( formatEntity( clazz, aoi ) + ": " + fixMessage );
                     results.add( new LintResult( clazz, aoi.getIdentifier(), fixMessage, true ) );
@@ -405,7 +423,7 @@ public class AclLinterServiceImpl implements AclLinterService {
             }
             AclObjectIdentity parentAoi = ( AclObjectIdentity ) parentIdentityRetrievalStrategy.getParentIdentity( sc );
             if ( parentAoi != null ) {
-                aoi.setParentObject( parentAoi );
+                setParentAcl( clazz, aoi.getIdentifier(), parentAoi );
                 String fixMessage = "Parent ACL identity was set to " + parentAoi + ".";
                 log.info( formatEntity( clazz, aoi ) + ": " + fixMessage );
                 results.add( new LintResult( clazz, aoi.getIdentifier(), fixMessage, true ) );

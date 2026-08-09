@@ -6,6 +6,7 @@ import org.assertj.core.api.InstanceOfAssertFactories;
 import org.hibernate.CacheMode;
 import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
+import org.hibernate.stat.Statistics;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -79,6 +80,9 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest5 {
 
     @Autowired
     private AclService aclService;
+
+    @Autowired
+    private SingleCellDimensionExperimentDao singleCellDimensionExperimentDao;
 
     private ExpressionExperiment ee;
 
@@ -694,6 +698,105 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest5 {
         sessionFactory.getCurrentSession().flush();
         ExpressionExperimentValueObject eevo = expressionExperimentDao.loadValueObject( ee );
         assertNotNull( eevo );
+    }
+
+    /**
+     * Removing an experiment whose single-cell vectors were never loaded must go through the
+     * projection-query branch of {@code removeAllSingleCellDataVectors} rather than walking the lazy
+     * collection. Walking it selects every vector's DATA + DATA_INDICES blob: on GSE277430 (25,050
+     * vectors over 333,570 cells) that exhausted a 30 GB heap, and the resulting OutOfMemoryError
+     * desynced the JDBC connection so the failure surfaced as an ArrayIndexOutOfBoundsException thrown
+     * during rollback, with the real cause discarded as "Application exception overridden by rollback
+     * exception".
+     * <p>
+     * Every other test in this area builds its fixture in-session, so the collection is already
+     * initialized and only the other branch runs. This one reaches the branch that runs in production
+     * and therefore also validates that its HQL parses.
+     */
+    @Test
+    @WithMockUser
+    public void removeWithUninitializedSingleCellDataVectors() {
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+        ArrayDesign ad = new ArrayDesign();
+        ad.setPrimaryTaxon( taxon );
+        sessionFactory.getCurrentSession().persist( ad );
+        CompositeSequence cs = new CompositeSequence();
+        cs.setArrayDesign( ad );
+        sessionFactory.getCurrentSession().persist( cs );
+        BioMaterial bm = new BioMaterial();
+        bm.setSourceTaxon( taxon );
+        sessionFactory.getCurrentSession().persist( bm );
+        BioAssay ba = new BioAssay();
+        ba.setArrayDesignUsed( ad );
+        ba.setSampleUsed( bm );
+        bm.getBioAssaysUsedIn().add( ba );
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.getBioAssays().add( ba );
+        SingleCellDimension scd = new SingleCellDimension();
+        scd.setCellIds( Arrays.asList( "A", "B", "C" ) );
+        scd.getBioAssays().add( ba );
+        scd.setBioAssaysOffset( new int[] { 0 } );
+        sessionFactory.getCurrentSession().persist( scd );
+        QuantitationType qt = new QuantitationType();
+        qt.setName( "counts" );
+        qt.setGeneralType( GeneralType.QUANTITATIVE );
+        qt.setType( StandardQuantitationType.COUNT );
+        qt.setRepresentation( PrimitiveType.DOUBLE );
+        qt.setScale( ScaleType.COUNT );
+        qt.setIsSingleCellPreferred( true );
+        ee.getQuantitationTypes().add( qt );
+        SingleCellExpressionDataVector vector = new SingleCellExpressionDataVector();
+        vector.setExpressionExperiment( ee );
+        vector.setDesignElement( cs );
+        vector.setQuantitationType( qt );
+        vector.setSingleCellDimension( scd );
+        vector.setDataAsDoubles( new double[] { 1.0, 2.0, 1.0 } );
+        vector.setDataIndices( new int[] { 0, 1, 2 } );
+        ee.getSingleCellExpressionDataVectors().add( vector );
+        sessionFactory.getCurrentSession().persist( ee );
+        // persist() alone does not maintain the SINGLE_CELL_DIMENSION_EXPERIMENT link table that
+        // remove() consults via getSingleCellDimensions(ee); without the row the dimension is never
+        // scheduled for deletion and super.remove(ee) trips the BIO_ASSAYS2SINGLE_CELL_DIMENSIONS FK.
+        // Production has exactly this row (GSE277430 has one).
+        singleCellDimensionExperimentDao.record( ee, qt, scd );
+
+        Long eeId = ee.getId();
+        Long qtId = qt.getId();
+        Long scdId = scd.getId();
+        // clear the whole session rather than reload()'s targeted evict: evicting the experiment
+        // cascades to its BioAssays, and the still-managed dimension would keep referencing those now
+        // detached instances, so remove() hits NonUniqueObjectException against the freshly loaded ones.
+        flushAndClearSession();
+        ExpressionExperiment reloaded = expressionExperimentDao.load( eeId );
+        assertNotNull( reloaded );
+        assertFalse( Hibernate.isInitialized( reloaded.getSingleCellExpressionDataVectors() ),
+                "The reloaded experiment must have a lazy single-cell vector collection, otherwise this test "
+                        + "exercises the same branch as every other test here." );
+
+        // Statistics are the only discriminating check here: both the fixed and the broken version end
+        // up with an empty collection (the broken one loads it, then clear()s it), but only the broken
+        // one loads vector ENTITIES. The collection does get initialized once at the very end, by
+        // super.remove(ee)'s cascade walk — by then the bulk delete has run, so that fetch selects zero
+        // rows and pulls no blobs.
+        Statistics stats = sessionFactory.getStatistics();
+        boolean statsWereEnabled = stats.isStatisticsEnabled();
+        stats.setStatisticsEnabled( true );
+        stats.clear();
+        try {
+            expressionExperimentDao.remove( reloaded );
+            assertEquals( 0, stats.getEntityStatistics( SingleCellExpressionDataVector.class.getName() ).getLoadCount(),
+                    "remove() must not load any single-cell vector: each one carries DATA + DATA_INDICES, "
+                            + "and loading all 25,050 of GSE277430's exhausted a 30 GB heap." );
+        } finally {
+            stats.setStatisticsEnabled( statsWereEnabled );
+        }
+        assertThat( reloaded.getSingleCellExpressionDataVectors() ).isEmpty();
+        sessionFactory.getCurrentSession().flush();
+
+        assertNull( sessionFactory.getCurrentSession().get( ExpressionExperiment.class, eeId ) );
+        assertNull( sessionFactory.getCurrentSession().get( QuantitationType.class, qtId ) );
+        assertNull( sessionFactory.getCurrentSession().get( SingleCellDimension.class, scdId ) );
     }
 
     @Test

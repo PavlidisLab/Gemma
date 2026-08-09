@@ -1,7 +1,7 @@
 # docs/ index
 
 Working design docs, recces, audits, plans, and session notes for Gemma, sorted into subfolders (2026-07-05 cleanup). `README.md` and `CLAUDE.md` stay at the repo root.
-Total: 147 docs.
+Total: 148 docs.
 
 
 ## Pipeline / compute / job-management (Nextflow) — `docs/pipeline-compute/` (1)
@@ -81,12 +81,13 @@ Total: 147 docs.
 - [`STATIC_ANALYSIS_AUDIT.md`](audit/STATIC_ANALYSIS_AUDIT.md) — Static Analysis Audit — Phase 3 Spring 6+ Infrastructure
 - [`VALIDATION_AUDIT.md`](audit/VALIDATION_AUDIT.md) — Jakarta Validation Audit (Bean Validation 3.0 / JSR-380)
 
-## Plans & roadmaps — `docs/plans/` (16)
+## Plans & roadmaps — `docs/plans/` (17)
 
 - [`AFTER_INVOCATION_PHASE_C_PLAN.md`](plans/AFTER_INVOCATION_PHASE_C_PLAN.md) — AfterInvocation Phase C: @EnableMethodSecurity migration plan
 - [`BRANCH_MERGE_PLAN.md`](plans/BRANCH_MERGE_PLAN.md) — Phase 3 Branch Merge Plan
 - [`CURSOR_PAGINATION_STEP1_PLAN.md`](plans/CURSOR_PAGINATION_STEP1_PLAN.md) — Cursor Pagination — Step 1 Plan + Status
 - [`EE_SERVICE_DECOMPOSITION_ROADMAP.md`](plans/EE_SERVICE_DECOMPOSITION_ROADMAP.md) — `ExpressionExperimentService` Decomposition Roadmap
+- [`EXPERIMENT_DELETION_REMEDIATION_PLAN.md`](plans/EXPERIMENT_DELETION_REMEDIATION_PLAN.md) — Experiment deletion under dual-version operation — incident summary + remediation plan (2026-08-04)
 - [`EXPRESSIONPERSISTER_MIGRATION_PLAN.md`](plans/EXPRESSIONPERSISTER_MIGRATION_PLAN.md) — ExpressionPersister retirement: migration plan (risk-5 recce)
 - [`GEMMA_REST_STANDALONE_ROADMAP.md`](plans/GEMMA_REST_STANDALONE_ROADMAP.md) — gemma-rest standalone packaging — roadmap
 - [`GEMMA_WEB_RETIREMENT_PLAN.md`](plans/GEMMA_WEB_RETIREMENT_PLAN.md) — gemma-web retirement plan
