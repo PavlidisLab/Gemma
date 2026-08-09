@@ -53,9 +53,15 @@ public class PreboardedExperiment extends Investigation {
      * loading (title, summary, submitter, pubmed id, etc.). Stored as LONGTEXT
      * — the structured proposal lives separately as an {@code AnnotationSet}
      * row.
+     * <p>
+     * The column is {@code SOURCE_METADATA} (mysql V24 / h2 V25), generalized from
+     * the original {@code PREBOARDED_IDENTIFYING_METADATA} because the same upstream
+     * payload is wanted for imported experiments and not only preboarded ones. The
+     * Java property still carries the older name; renaming it reaches the scrape and
+     * preboarded-service call sites and belongs with the rest of that work.
      */
     @Lob
-    @Column(name = "PREBOARDED_IDENTIFYING_METADATA", columnDefinition = "LONGTEXT")
+    @Column(name = "SOURCE_METADATA", columnDefinition = "LONGTEXT")
     private String identifyingMetadata;
     /**
      * JSON-as-string listing the matcher names that flagged this preboarded
