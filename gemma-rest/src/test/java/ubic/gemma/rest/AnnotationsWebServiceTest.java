@@ -69,6 +69,7 @@ import java.util.concurrent.TimeoutException;
 import static org.apache.commons.lang3.concurrent.ConcurrentUtils.constantFuture;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.InstanceOfAssertFactories.list;
+import static org.assertj.core.api.InstanceOfAssertFactories.map;
 import static org.mockito.Mockito.*;
 import static ubic.gemma.rest.util.Assertions.assertThat;
 
@@ -675,6 +676,69 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
                         .containsEntry( "value", "diabetes" )
                         .containsEntry( "valueUri", "http://example.com/diabetes" )
                         .containsEntry( "usageCount", 2 ) );
+    }
+
+    /**
+     * A designation query that retrieves only near-matches must report WHICH terms it ruled out,
+     * not merely that nothing matched. An empty {@code data} array is indistinguishable from "the
+     * ontology wasn't loaded" or "this call never ran", and on its own it does not stop a
+     * downstream stage from proposing one of these very terms from its own index.
+     */
+    @Test
+    public void testSuppressedDesignationReportsWhatItRuledOut() throws SearchException, TimeoutException {
+        // The MK-8722 case: everything that comes back is a different compound.
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "MK-8722" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Arrays.asList(
+                        new CharacteristicValueObject( "mk-8353", "http://purl.obolibrary.org/obo/CHEBI_167664", "treatment", null ),
+                        new CharacteristicValueObject( "ganoderic acid mk", "http://purl.obolibrary.org/obo/CHEBI_176105", "treatment", null ) ) );
+
+        assertThat( target( "/annotations/search" )
+                .queryParam( "query", "MK-8722" )
+                .queryParam( "suppress_near_matches", "true" )
+                .queryParam( "includeGenes", "false" )
+                .request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .satisfies( body -> {
+                    // Nothing we stand behind — and the ruled-out terms are NOT smuggled into data,
+                    // so a client reading data[0] can never pick up a term we just rejected.
+                    assertThat( body ).extracting( "data", list( Map.class ) ).isEmpty();
+                    assertThat( body ).extracting( "negativeEvidence", map( String.class, Object.class ) )
+                            .containsEntry( "query", "MK-8722" )
+                            .containsEntry( "solidMatch", false )
+                            .containsEntry( "ruledOutTruncated", false );
+                    //noinspection unchecked
+                    List<Map<String, Object>> ruledOut = (List<Map<String, Object>>)
+                            ( (Map<String, Object>) ( (Map<String, Object>) body ).get( "negativeEvidence" ) ).get( "ruledOut" );
+                    assertThat( ruledOut ).hasSize( 2 );
+                    assertThat( ruledOut ).extracting( r -> r.get( "valueUri" ) )
+                            .containsExactlyInAnyOrder( "http://purl.obolibrary.org/obo/CHEBI_167664",
+                                    "http://purl.obolibrary.org/obo/CHEBI_176105" );
+                } );
+    }
+
+    /**
+     * The confident negative must not be claimed when identity matching never ran — a descriptive
+     * query keeps its near-matches, so absence of a match there says nothing.
+     */
+    @Test
+    public void testNegativeEvidenceAbsentForDescriptiveQuery() throws SearchException, TimeoutException {
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "high fat diet" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Collections.singletonList(
+                        new CharacteristicValueObject( "high fat diet regimen", "http://example.com/hfd", "treatment", null ) ) );
+
+        assertThat( target( "/annotations/search" )
+                .queryParam( "query", "high fat diet" )
+                .queryParam( "suppress_near_matches", "true" )
+                .queryParam( "includeGenes", "false" )
+                .request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .satisfies( body -> {
+                    // The near-match survives, and no confident negative is asserted.
+                    assertThat( body ).extracting( "data", list( Map.class ) ).hasSize( 1 );
+                    assertThat( ( (Map<String, Object>) body ).get( "negativeEvidence" ) ).isNull();
+                } );
     }
 
     @Test

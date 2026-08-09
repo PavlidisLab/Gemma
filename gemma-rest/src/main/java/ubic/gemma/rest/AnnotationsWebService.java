@@ -68,6 +68,7 @@ import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.ResponseErrorObject;
 import ubic.gemma.rest.util.args.*;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.lang.Nullable;
@@ -501,7 +502,7 @@ public class AnnotationsWebService {
             @ApiResponse(responseCode = "400", description = "The search query is empty or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
             @ApiResponse(responseCode = "503", description = FIND_CHARACTERISTICS_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
     })
-    public ResponseDataObject<List<AnnotationSearchResultValueObject>> searchAnnotations(
+    public AnnotationSearchResponseDataObject searchAnnotations(
             @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE, description = SEARCH_QUERY_DESCRIPTION) @QueryParam("query") @DefaultValue("") StringArrayArg query,
             @Parameter(description = "Ranking strategy to apply on top of the raw Lucene order. " +
                     "`lucene` (default) preserves today's behaviour. `usage` blends rank with per-URI " +
@@ -563,7 +564,16 @@ public class AnnotationsWebService {
                     "this flag exists to prevent. Off by default — typeahead needs prefix " +
                     "matching, and a curator mid-way through typing `NCI-H3` must still see " +
                     "candidates. Resolver-style callers that hold a complete name should pass " +
-                    "`true`.")
+                    "`true`.\n\n" +
+                    "When identity matching runs, the response carries a `negativeEvidence` " +
+                    "object beside `data`. `solidMatch: false` is a CONFIDENT negative — we " +
+                    "searched and nothing names this string — which an empty `data` array alone " +
+                    "cannot tell you apart from \"the ontology wasn't loaded\" or \"this call " +
+                    "never ran\". `ruledOut` lists the terms that came back and are NOT it, " +
+                    "because knowing there is no match does not stop a downstream stage from " +
+                    "proposing `mk-8353` for `MK-8722`, whereas knowing it is not `mk-8353` " +
+                    "does. The ruled-out terms are deliberately kept OUT of `data`, so a client " +
+                    "that ignores the new field can never pick one up by reading `data[0]`.")
             @QueryParam("suppress_near_matches") @DefaultValue("false") boolean suppressNearMatches,
             @Parameter(description = "Optional taxon hint to scope gene fan-out. Accepts the same " +
                     "TaxonArg forms as elsewhere (common name `mouse`, scientific name `Mus musculus`, " +
@@ -614,9 +624,10 @@ public class AnnotationsWebService {
         // launch the ontology fan-out. Null taxon = no constraint (legacy behaviour).
         Taxon taxon = taxonArg != null ? taxonArgService.getEntity( taxonArg ) : null;
         try {
-            return respond( searchOne( query.getValue(), strategy, limit, prefixes, upstream,
+            SearchOutcome outcome = searchOne( query.getValue(), strategy, limit, prefixes, upstream,
                     exactLabel, category, suppressNearMatches, taxon, includeGenes, includeGeneCount,
-                    geneCountMaxTerms, includeExampleUsage ) );
+                    geneCountMaxTerms, includeExampleUsage );
+            return new AnnotationSearchResponseDataObject( outcome.results, outcome.negativeEvidence );
         } catch ( SearchTimeoutException e ) {
             throw new ServiceUnavailableException( e.getMessage(), DateUtils.addSeconds( new Date(), 30 ), e.getCause() );
         } catch ( ParseSearchException e ) {
@@ -637,7 +648,7 @@ public class AnnotationsWebService {
      *                    verbatim, so a label containing a comma like "CD4-positive, alpha-beta T cell"
      *                    stays one query rather than being unioned across two).
      */
-    private List<AnnotationSearchResultValueObject> searchOne( List<String> queryValues,
+    private SearchOutcome searchOne( List<String> queryValues,
             AnnotationSearchRankingStrategy strategy, int limit, List<String> prefixes, boolean upstream,
             boolean exactLabel, String category, boolean suppressNearMatches, @Nullable Taxon taxon,
             boolean includeGenes, boolean includeGeneCount, int geneCountMaxTerms,
@@ -656,33 +667,39 @@ public class AnnotationsWebService {
         org.springframework.cache.Cache searchCache = searchResponseCache();
         if ( searchCache != null ) {
             org.springframework.cache.Cache.ValueWrapper hit = searchCache.get( cacheKey );
-            if ( hit != null && hit.get() instanceof List ) {
-                //noinspection unchecked
-                List<AnnotationSearchResultValueObject> cached =
-                        (List<AnnotationSearchResultValueObject>) hit.get();
+            if ( hit != null && hit.get() instanceof SearchOutcome ) {
+                SearchOutcome cached = ( SearchOutcome ) hit.get();
                 log.debug( "annotation-search cache HIT key={}", cacheKey );
-                return new ArrayList<>( cached );
+                return new SearchOutcome( new ArrayList<>( cached.results ), cached.negativeEvidence );
             }
         }
-        List<AnnotationSearchResultValueObject> result = new ArrayList<>( this.getTerms( queryValues, strategy, limit, prefixes, upstream, exactLabel, category, suppressNearMatches, taxon, includeGenes, FIND_CHARACTERISTICS_TIMEOUT_MS ) );
+        SearchOutcome outcome = this.getTerms( queryValues, strategy, limit, prefixes, upstream, exactLabel, category, suppressNearMatches, taxon, includeGenes, FIND_CHARACTERISTICS_TIMEOUT_MS );
+        List<AnnotationSearchResultValueObject> result = new ArrayList<>( outcome.results );
         if ( includeGeneCount && !result.isEmpty() ) {
             result = attachGeneCounts( result, geneCountMaxTerms );
         }
         if ( includeExampleUsage && !result.isEmpty() ) {
             attachExampleUsage( result );
         }
+        SearchOutcome toReturn = new SearchOutcome( result, outcome.negativeEvidence );
         // Cache only non-empty results. An empty hit list is almost always either (a) genuinely
         // no match, where re-running is cheap, or (b) a transient gap (ontologies still warming
         // after a restart, basecode Lucene index temporarily empty, etc.) — caching the empty
         // would pin the typeahead at "no results" until either an explicit cache flush or a
         // restart. Both classes lose nothing by recomputing.
+        //
+        // A suppressed-to-empty designation result is deliberately NOT cached either, even though
+        // its negative evidence is the most useful thing we produce. A confident "nothing names
+        // this" computed while CHEBI was mid-reload would be WRONG, and caching it would pin that
+        // wrong negative until an explicit flush — licensing a resolver to abstain on terms that
+        // do exist. Recomputing an empty is cheap; a stale confident negative is not.
         if ( !result.isEmpty() && searchCache != null ) {
-            searchCache.put( cacheKey, Collections.unmodifiableList( new ArrayList<>( result ) ) );
+            searchCache.put( cacheKey, toReturn );
             log.debug( "annotation-search cache MISS key={} stored {} hits", cacheKey, result.size() );
         } else if ( result.isEmpty() ) {
             log.debug( "annotation-search cache MISS key={} empty result — not cached", cacheKey );
         }
-        return result;
+        return toReturn;
     }
 
     /** Default number of hits returned by {@code /annotations/search}; sized for typeahead UX. */
@@ -820,10 +837,11 @@ public class AnnotationsWebService {
         }
         try {
             // Single literal label — NOT wrapped in StringArrayArg, so an embedded comma stays one query.
-            List<AnnotationSearchResultValueObject> results = searchOne( Collections.singletonList( q ),
+            SearchOutcome outcome = searchOne( Collections.singletonList( q ),
                     strategy, limit, prefixes, false, exactLabel, category, suppressNearMatches, taxon,
                     includeGenes, includeGeneCount, geneCountMaxTerms, false );
-            return new AnnotationSearchBatchResultValueObject( q, category, results, null );
+            return new AnnotationSearchBatchResultValueObject( q, category, outcome.results, null,
+                    outcome.negativeEvidence );
         } catch ( SearchException | RuntimeException e ) {
             log.debug( "batch annotation-search item '{}' failed: {}", q, e.toString() );
             return new AnnotationSearchBatchResultValueObject( q, category, Collections.emptyList(), e.getMessage() );
@@ -1065,7 +1083,7 @@ public class AnnotationsWebService {
      * @param arg the array arg containing all the strings to search for.
      * @return a collection of characteristics matching the input query.
      */
-    private LinkedHashSet<AnnotationSearchResultValueObject> getTerms( List<String> queryValues,
+    private SearchOutcome getTerms( List<String> queryValues,
             AnnotationSearchRankingStrategy strategy, int limit, List<String> prefixes, boolean upstream,
             boolean exactLabel, String category, boolean suppressNearMatches, @Nullable Taxon taxon,
             boolean includeGenes, long timeoutMs ) throws SearchException {
@@ -1248,6 +1266,7 @@ public class AnnotationsWebService {
         // asking us.
         String designationProbe = queryValues.size() == 1 ? queryValues.get( 0 ) : joinedRelevanceQuery;
         boolean suppress = suppressNearMatches && isDesignationQuery( designationProbe );
+        NegativeEvidenceValueObject negativeEvidence = null;
         // An explicit prefixes allow-list is the caller overriding namespace choice outright; do
         // not layer a category preference on top of it.
         List<String> preferredPrefixes = prefixes.isEmpty()
@@ -1279,15 +1298,27 @@ public class AnnotationsWebService {
             };
             if ( suppress ) {
                 List<CharacteristicValueObject> kept = new ArrayList<>( rawHits.size() );
+                List<RuledOutTermValueObject> rejected = new ArrayList<>();
                 for ( CharacteristicValueObject h : rawHits ) {
                     if ( solid.test( h ) ) {
                         kept.add( h );
+                    } else if ( rejected.size() < RULED_OUT_MAX ) {
+                        // Keep WHAT was rejected, not just how many. The caller's next stage will
+                        // meet these strings again from its own index; "no match" does not stop it
+                        // proposing mk-8353 for MK-8722, but "it is not mk-8353" does.
+                        String uri = h.getValueUri();
+                        MatchAttribution m = uri != null ? candidateMatches.get( uri ) : null;
+                        rejected.add( new RuledOutTermValueObject( h.getValue(), uri,
+                                m != null ? m.via.token : null ) );
                     }
                 }
-                if ( kept.size() < rawHits.size() ) {
+                int droppedTotal = rawHits.size() - kept.size();
+                if ( droppedTotal > 0 ) {
                     log.debug( "annotation-search: near-match suppression dropped {} of {} candidates for designation query '{}'",
-                            rawHits.size() - kept.size(), rawHits.size(), joinedRelevanceQuery );
+                            droppedTotal, rawHits.size(), joinedRelevanceQuery );
                 }
+                negativeEvidence = new NegativeEvidenceValueObject( joinedRelevanceQuery, !kept.isEmpty(),
+                        rejected, droppedTotal > rejected.size() );
                 rawHits = kept;
             }
             if ( !preferredPrefixes.isEmpty() ) {
@@ -1490,12 +1521,12 @@ public class AnnotationsWebService {
                     if ( n++ >= limit ) break;
                     trimmedSet.add( e );
                 }
-                return trimmedSet;
+                return new SearchOutcome( new ArrayList<>( trimmedSet ), negativeEvidence );
             }
-            return merged;
+            return new SearchOutcome( new ArrayList<>( merged ), negativeEvidence );
         }
         }
-        return vos;
+        return new SearchOutcome( new ArrayList<>( vos ), negativeEvidence );
     }
 
     /**
@@ -1899,6 +1930,13 @@ public class AnnotationsWebService {
      * designation query and would not have been suppressed anyway.</p>
      */
     static final int CANDIDATE_ATTRIBUTION_CAP = 200;
+
+    /**
+     * Cap on the ruled-out terms reported back. Bounds the payload on a query that retrieves a
+     * large near-match neighbourhood; when it bites, {@code ruledOutTruncated} says so, so the
+     * caller knows it holds a sample rather than the complete exclusion set.
+     */
+    static final int RULED_OUT_MAX = 25;
 
     /**
      * Resolve match attribution for a bounded slice of the candidate set, in parallel.
@@ -3027,6 +3065,143 @@ public class AnnotationsWebService {
      * {@code error} to a non-null message when that single item failed (the rest of the batch is
      * unaffected).
      */
+    /**
+     * {@code GET /annotations/search} envelope: the standard {@code data} array plus, when
+     * identity matching ran, the {@link NegativeEvidenceValueObject} beside it.
+     *
+     * <p>The ruled-out terms deliberately do NOT go into {@code data}. A client that reads
+     * {@code data[0]} without understanding a new field would otherwise pick up a term the server
+     * just determined is wrong — turning a safety feature into the exact fabrication it exists to
+     * prevent. {@code data} keeps its meaning: rows we stand behind.
+     */
+    public static class AnnotationSearchResponseDataObject extends ResponseDataObject<List<AnnotationSearchResultValueObject>> {
+
+        @Nullable
+        private final NegativeEvidenceValueObject negativeEvidence;
+
+        public AnnotationSearchResponseDataObject( List<AnnotationSearchResultValueObject> payload,
+                @Nullable NegativeEvidenceValueObject negativeEvidence ) {
+            super( payload );
+            this.negativeEvidence = negativeEvidence;
+        }
+
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        @Nullable
+        public NegativeEvidenceValueObject getNegativeEvidence() {
+            return negativeEvidence;
+        }
+    }
+
+    /**
+     * What identity matching ruled OUT for a designation query, and whether anything survived.
+     *
+     * <p>Present only when identity matching actually ran — i.e. the caller asked for
+     * {@code suppress_near_matches} AND the query was designation-shaped. Its presence is
+     * therefore the signal a resolver needs and cannot otherwise get: an empty {@code data} array
+     * on its own is indistinguishable from "nothing matched", "the ontology wasn't loaded", or
+     * "this call never happened", and only the first of those licenses abstaining.
+     *
+     * <p>{@code solidMatch: false} says the negative is confident. {@code ruledOut} says which
+     * terms the negative is about — because "there is no match" does not stop a later stage from
+     * proposing {@code mk-8353} for {@code MK-8722} on its own; "it is not mk-8353, and here is
+     * the rest of what it is not" does. Free text is a valid annotation; a wrong CHEBI id is a
+     * fabricated fact, and the whole point of this block is to make the first choice available.
+     */
+    public static class NegativeEvidenceValueObject {
+        private final String query;
+        private final boolean solidMatch;
+        private final List<RuledOutTermValueObject> ruledOut;
+        private final boolean ruledOutTruncated;
+
+        public NegativeEvidenceValueObject( String query, boolean solidMatch,
+                List<RuledOutTermValueObject> ruledOut, boolean ruledOutTruncated ) {
+            this.query = query;
+            this.solidMatch = solidMatch;
+            this.ruledOut = ruledOut;
+            this.ruledOutTruncated = ruledOutTruncated;
+        }
+
+        /** The designation that was identity-matched. */
+        public String getQuery() {
+            return query;
+        }
+
+        /**
+         * Whether any term matched the query outright (preferred label or declared synonym).
+         * {@code false} is a CONFIDENT negative: we searched and nothing names this string.
+         */
+        public boolean isSolidMatch() {
+            return solidMatch;
+        }
+
+        /** Terms that came back for the query and are NOT it. Ordered by relevance, best first. */
+        public List<RuledOutTermValueObject> getRuledOut() {
+            return ruledOut;
+        }
+
+        /**
+         * Whether {@link #getRuledOut()} was capped. When true the list is a sample, so it may be
+         * used as an exclusion list but not as an exhaustive one.
+         */
+        public boolean isRuledOutTruncated() {
+            return ruledOutTruncated;
+        }
+    }
+
+    /** One term that was retrieved for the query and rejected as not naming it. */
+    public static class RuledOutTermValueObject {
+        @Nullable
+        private final String value;
+        @Nullable
+        private final String valueUri;
+        @Nullable
+        private final String matchedVia;
+
+        public RuledOutTermValueObject( @Nullable String value, @Nullable String valueUri, @Nullable String matchedVia ) {
+            this.value = value;
+            this.valueUri = valueUri;
+            this.matchedVia = matchedVia;
+        }
+
+        @Nullable
+        public String getValue() {
+            return value;
+        }
+
+        @Nullable
+        public String getValueUri() {
+            return valueUri;
+        }
+
+        /**
+         * Why it came back at all — {@code label_prefix}, {@code label_tokens}, … Never one of the
+         * equality tiers; those are exactly the rows that were kept. {@code null} when the term
+         * could not be attributed (see the {@code matchedVia} notes on the search endpoint).
+         */
+        @Nullable
+        public String getMatchedVia() {
+            return matchedVia;
+        }
+    }
+
+    /**
+     * Internal carrier for a single search: the rows the caller gets plus the negative evidence
+     * that goes beside them. Kept together so the response cache stores BOTH — caching the rows
+     * alone would silently strip the negative evidence from every cache hit, which is the failure
+     * mode where a resolver abstains on a cold call and fabricates on a warm one.
+     */
+    private static final class SearchOutcome {
+        final List<AnnotationSearchResultValueObject> results;
+        @Nullable
+        final NegativeEvidenceValueObject negativeEvidence;
+
+        SearchOutcome( List<AnnotationSearchResultValueObject> results,
+                @Nullable NegativeEvidenceValueObject negativeEvidence ) {
+            this.results = results;
+            this.negativeEvidence = negativeEvidence;
+        }
+    }
+
     public static class AnnotationSearchBatchResultValueObject {
         @Nullable
         private final String query;
@@ -3035,13 +3210,29 @@ public class AnnotationsWebService {
         private final List<AnnotationSearchResultValueObject> results;
         @Nullable
         private final String error;
+        @Nullable
+        private final NegativeEvidenceValueObject negativeEvidence;
 
         public AnnotationSearchBatchResultValueObject( @Nullable String query, @Nullable String category,
                 List<AnnotationSearchResultValueObject> results, @Nullable String error ) {
+            this( query, category, results, error, null );
+        }
+
+        public AnnotationSearchBatchResultValueObject( @Nullable String query, @Nullable String category,
+                List<AnnotationSearchResultValueObject> results, @Nullable String error,
+                @Nullable NegativeEvidenceValueObject negativeEvidence ) {
             this.query = query;
             this.category = category;
             this.results = results;
             this.error = error;
+            this.negativeEvidence = negativeEvidence;
+        }
+
+        /** @see NegativeEvidenceValueObject — present only when identity matching ran for this item. */
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        @Nullable
+        public NegativeEvidenceValueObject getNegativeEvidence() {
+            return negativeEvidence;
         }
 
         @Nullable
