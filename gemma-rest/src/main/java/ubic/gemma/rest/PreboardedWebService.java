@@ -315,7 +315,10 @@ public class PreboardedWebService {
         r.preboardedId = skel.getId();
         r.accession = skel.getAccession();
         r.source = skel.getSource();
-        r.identifyingMetadata = skel.getIdentifyingMetadata();
+        // The payload moved up to Investigation.sourceMetadata (it is wanted for imported
+        // experiments too, not only preboarded ones). The RESPONSE field keeps its name: it is on
+        // the wire and renaming it would break clients.
+        r.identifyingMetadata = skel.getSourceMetadata();
         WorkflowState ws = skel.getWorkflowState();
         r.state = ws != null ? ws.name() : null;
         r.enteredCurrentStateAt = skel.getWorkflowStateEnteredAt();

@@ -63,7 +63,7 @@ public class PreboardedExperimentMappingTest extends BaseDatabaseTest5 {
         pb.setName( "GSE12345 (preboarded)" );
         pb.setAccession( "GSE12345" );
         pb.setSource( "GEO" );
-        pb.setIdentifyingMetadata( "{\"title\":\"test\",\"pubmed\":\"1\"}" );
+        pb.setSourceMetadata( "{\"title\":\"test\",\"pubmed\":\"1\"}" );
 
         Session session = sessionFactory.getCurrentSession();
         session.persist( pb );
@@ -85,6 +85,6 @@ public class PreboardedExperimentMappingTest extends BaseDatabaseTest5 {
         PreboardedExperiment rt = ( PreboardedExperiment ) reloaded;
         assertThat( rt.getAccession() ).isEqualTo( "GSE12345" );
         assertThat( rt.getSource() ).isEqualTo( "GEO" );
-        assertThat( rt.getIdentifyingMetadata() ).isEqualTo( "{\"title\":\"test\",\"pubmed\":\"1\"}" );
+        assertThat( rt.getSourceMetadata() ).isEqualTo( "{\"title\":\"test\",\"pubmed\":\"1\"}" );
     }
 }

@@ -29,6 +29,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.Index;
 import jakarta.persistence.Inheritance;
+import jakarta.persistence.Lob;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
@@ -107,6 +108,54 @@ public abstract class Investigation extends AbstractAuditable implements Securab
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "WORKFLOW_STATE_ENTERED_AT", columnDefinition = "DATETIME")
     private Date workflowStateEnteredAt;
+
+    /**
+     * Verbatim upstream metadata for this investigation, as a JSON document — for a GEO experiment,
+     * the series and per-sample fields as the submitter wrote them.
+     * <p>
+     * This is an immutable cache of what the source said, not curation: it is rebuildable from GEO and
+     * carries no judgement of ours. Our own (mutable, unrebuildable) curation belongs on
+     * {@code AnnotationSet} instead.
+     * <p>
+     * It lives on {@code Investigation} rather than on {@code PreboardedExperiment} because the same
+     * payload is wanted for imported experiments, not only preboarded ones — the agent needs the raw
+     * per-sample view to tell "the submitter copy-pasted this column" from "this column is a real
+     * factor", which the converter's flattened {@code BioMaterial.characteristics} cannot answer.
+     * <p>
+     * Opaque to Gemma: the schema is owned by the agents repo and versioned by
+     * {@link #sourceMetadataSchemaVersion}, the same arrangement as
+     * {@code Characteristic.SUPPORTING_EVIDENCE}. Keys are camelCase, normalized once at ingestion on
+     * the consuming side.
+     */
+    @Lob
+    @Column(name = "SOURCE_METADATA", columnDefinition = "LONGTEXT")
+    private String sourceMetadata;
+
+    /**
+     * Schema version of {@link #sourceMetadata}, or null when no payload is stored.
+     * <p>
+     * Versioned rather than additive-only because the payload's shape is expected to change and old
+     * rows must stay readable — a consumer has to be able to ask which era a row is from. Schema v1 was
+     * agreed with CAB on 2026-08-09.
+     */
+    @Column(name = "SOURCE_METADATA_SCHEMA_VERSION", columnDefinition = "SMALLINT")
+    private Integer sourceMetadataSchemaVersion;
+
+    public String getSourceMetadata() {
+        return sourceMetadata;
+    }
+
+    public void setSourceMetadata( String sourceMetadata ) {
+        this.sourceMetadata = sourceMetadata;
+    }
+
+    public Integer getSourceMetadataSchemaVersion() {
+        return sourceMetadataSchemaVersion;
+    }
+
+    public void setSourceMetadataSchemaVersion( Integer sourceMetadataSchemaVersion ) {
+        this.sourceMetadataSchemaVersion = sourceMetadataSchemaVersion;
+    }
 
     /**
      * @return Annotations that describe the experiment as a whole, for example "tumor" or "brain".

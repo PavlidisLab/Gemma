@@ -81,7 +81,7 @@ public class PreboardedExperimentServiceTest {
 
         assertThat( result.getAccession() ).isEqualTo( "GSE1" );
         assertThat( result.getSource() ).isEqualTo( "GEO" );
-        assertThat( result.getIdentifyingMetadata() ).contains( "title" );
+        assertThat( result.getSourceMetadata() ).contains( "title" );
         assertThat( result.getWorkflowState() ).isEqualTo( WorkflowState.Preboarded );
         verify( session ).persist( result );
         verify( preboardedAuditService ).recordPreboardedCreated( eq( result ), eq( "GSE1" ) );

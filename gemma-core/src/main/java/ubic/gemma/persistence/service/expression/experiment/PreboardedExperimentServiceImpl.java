@@ -85,7 +85,7 @@ public class PreboardedExperimentServiceImpl implements PreboardedExperimentServ
         if ( source != null && !source.isEmpty() ) {
             skel.setSource( source );
         }
-        skel.setIdentifyingMetadata( identifyingMetadata );
+        skel.setSourceMetadata( identifyingMetadata );
         skel.setName( "Preboarded:" + accession );
         skel.setWorkflowState( WorkflowState.Preboarded );
         skel.setWorkflowStateEnteredAt( new Date() );

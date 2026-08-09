@@ -445,8 +445,15 @@ public class GeoScrapeServiceImpl implements GeoScrapeService {
 
     /**
      * Serialize the curator-relevant fields of a {@link GeoRecord} into a
-     * compact JSON object suitable for the
-     * {@code PreboardedExperiment.identifyingMetadata} column.
+     * compact JSON object suitable for the {@code Investigation.sourceMetadata}
+     * column (formerly {@code PreboardedExperiment.identifyingMetadata}).
+     *
+     * <p>This is the SCRAPE-path payload, built from the A2 MINiML scrape's
+     * {@link GeoRecord}, and it is NOT the schema-v1 document agreed with CAB —
+     * that one is built at import from the parsed {@code GeoSeries} /
+     * {@code GeoSample} objects and carries the per-sample view. Rows written
+     * here therefore leave {@code sourceMetadataSchemaVersion} null, which is
+     * how a consumer tells the two eras apart.</p>
      *
      * <p>Null / empty fields are omitted (Jackson is configured to write
      * dates as ISO-8601 strings). Returns {@code null} if the record
