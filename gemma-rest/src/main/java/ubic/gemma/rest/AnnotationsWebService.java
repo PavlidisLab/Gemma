@@ -412,6 +412,36 @@ public class AnnotationsWebService {
     }
 
     /**
+     * Preferred ontology namespaces for a caller-supplied {@code category}, or an empty list when
+     * the category is blank, unrecognised, or configured with no preference.
+     *
+     * <p>Accepts either the canonical category label ({@code treatment}, {@code organism part}) or
+     * the category term's URI. The URI form is resolved against the in-memory category-term list;
+     * a lookup failure yields no preference rather than an error, since the preference is an
+     * ordering hint and a search that ignores it is still correct.</p>
+     */
+    private List<String> resolveCategoryPreferredPrefixes( @Nullable String category ) {
+        if ( category == null || category.trim().isEmpty() ) {
+            return Collections.emptyList();
+        }
+        String c = category.trim();
+        if ( c.startsWith( "http://" ) || c.startsWith( "https://" ) ) {
+            try {
+                for ( OntologyTerm t : ontologyService.getCategoryTerms() ) {
+                    if ( c.equals( t.getUri() ) && t.getLabel() != null ) {
+                        c = t.getLabel();
+                        break;
+                    }
+                }
+            } catch ( RuntimeException e ) {
+                log.debug( "could not resolve category URI {} to a label", c, e );
+                return Collections.emptyList();
+            }
+        }
+        return resolveCategoryPrefixes().getOrDefault( categoryKey( c ), Collections.emptyList() );
+    }
+
+    /**
      * List the ontology predicates allowed for use in statements.
      */
     @GET
@@ -506,14 +536,35 @@ public class AnnotationsWebService {
             @QueryParam("exact_label") @DefaultValue("false") boolean exactLabel,
             @Parameter(description = "Hint from the calling widget about what kind of annotation " +
                     "is being edited. Accepts a canonical category label (e.g. `genotype`, " +
-                    "`organism part`) or the matching EFO URI. The response shape does not vary " +
-                    "by category today: gene-symbol matches (value=symbol, valueUri=NCBI Gene " +
-                    "URI, category=`gene`) are merged in unconditionally so STAT5B finds the gene " +
-                    "whether the picker is on Genotype, Treatment, or a generic characteristic. " +
-                    "Future ranking strategies will use the category to boost relevant ontology " +
-                    "URIs (e.g. UBERON when category=organism part). The parameter keys the " +
-                    "response cache so any future per-category divergence stays correct.")
+                    "`organism part`) or the matching EFO URI. Gene-symbol matches (value=symbol, " +
+                    "valueUri=NCBI Gene URI, category=`gene`) are merged in unconditionally so " +
+                    "STAT5B finds the gene whether the picker is on Genotype, Treatment, or a " +
+                    "generic characteristic. When supplied WITHOUT an explicit `prefixes` " +
+                    "allow-list, the category's preferred ontology namespaces (configured by " +
+                    "`annotation.category.prefixes`, and readable per-category from " +
+                    "`/annotations/categories`) promote *exactly-matching* hits in those " +
+                    "namespaces to the front — so `FTC` under `treatment` leads with " +
+                    "emtricitabine (CHEBI) rather than the identically-labelled MGI gene. " +
+                    "Promotion never filters and never applies to near-matches; see " +
+                    "`suppress_near_matches` for the filtering counterpart. The parameter keys " +
+                    "the response cache.")
             @QueryParam("category") @DefaultValue("") String category,
+            @Parameter(description = "When `true`, drop near-matches for *designation-shaped* " +
+                    "queries — a single token carrying both letters and digits, which is the " +
+                    "shape of a compound code (`MK-2206`, `GSK2879552`), a cell-line " +
+                    "designation (`NCI-H358`), or a mouse strain (`C57BL/6J`). For those, a hit " +
+                    "that merely shares a prefix or some tokens is never the same entity — " +
+                    "`MK-8353` is a different compound from `MK-2206` — so only hits matching " +
+                    "the query exactly on the preferred label or a declared synonym are kept " +
+                    "(compared hyphen- and `cell`-suffix-insensitively, so `MK2206` still finds " +
+                    "`MK-2206`). Descriptive queries (`diamide`, `high fat diet`) are left " +
+                    "alone: there a near-match is often the right term, and returning nothing " +
+                    "just pushes the caller onto a fuzzy fallback, which is the failure mode " +
+                    "this flag exists to prevent. Off by default — typeahead needs prefix " +
+                    "matching, and a curator mid-way through typing `NCI-H3` must still see " +
+                    "candidates. Resolver-style callers that hold a complete name should pass " +
+                    "`true`.")
+            @QueryParam("suppress_near_matches") @DefaultValue("false") boolean suppressNearMatches,
             @Parameter(description = "Optional taxon hint to scope gene fan-out. Accepts the same " +
                     "TaxonArg forms as elsewhere (common name `mouse`, scientific name `Mus musculus`, " +
                     "NCBI taxonomy id `10090`, or numeric Gemma taxon id). When supplied, gene " +
@@ -564,7 +615,8 @@ public class AnnotationsWebService {
         Taxon taxon = taxonArg != null ? taxonArgService.getEntity( taxonArg ) : null;
         try {
             return respond( searchOne( query.getValue(), strategy, limit, prefixes, upstream,
-                    exactLabel, category, taxon, includeGenes, includeGeneCount, geneCountMaxTerms, includeExampleUsage ) );
+                    exactLabel, category, suppressNearMatches, taxon, includeGenes, includeGeneCount,
+                    geneCountMaxTerms, includeExampleUsage ) );
         } catch ( SearchTimeoutException e ) {
             throw new ServiceUnavailableException( e.getMessage(), DateUtils.addSeconds( new Date(), 30 ), e.getCause() );
         } catch ( ParseSearchException e ) {
@@ -587,8 +639,9 @@ public class AnnotationsWebService {
      */
     private List<AnnotationSearchResultValueObject> searchOne( List<String> queryValues,
             AnnotationSearchRankingStrategy strategy, int limit, List<String> prefixes, boolean upstream,
-            boolean exactLabel, String category, @Nullable Taxon taxon, boolean includeGenes,
-            boolean includeGeneCount, int geneCountMaxTerms, boolean includeExampleUsage ) throws SearchException {
+            boolean exactLabel, String category, boolean suppressNearMatches, @Nullable Taxon taxon,
+            boolean includeGenes, boolean includeGeneCount, int geneCountMaxTerms,
+            boolean includeExampleUsage ) throws SearchException {
         // Cache key includes includeGeneCount + geneCountMaxTerms so a "with counts" call doesn't
         // hit a cached "without counts" payload. Taxon affects gene fan-out, so it keys too; and
         // includeGenes=false is a different response shape, so it gets its own "|ng" suffix.
@@ -596,7 +649,10 @@ public class AnnotationsWebService {
         String cacheKey = buildSearchCacheKey( queryValues, strategy.getName(), limit, prefixes, upstream, exactLabel, category, taxon )
                 + ( includeGeneCount ? "|gc=" + geneCountMaxTerms : "" )
                 + ( includeGenes ? "" : "|ng" )
-                + ( includeExampleUsage ? "|eu" : "" );
+                + ( includeExampleUsage ? "|eu" : "" )
+                // Near-match suppression removes rows, so a suppressed response must never be
+                // served to a caller that did not ask for it (nor the reverse).
+                + ( suppressNearMatches ? "|snm" : "" );
         org.springframework.cache.Cache searchCache = searchResponseCache();
         if ( searchCache != null ) {
             org.springframework.cache.Cache.ValueWrapper hit = searchCache.get( cacheKey );
@@ -608,7 +664,7 @@ public class AnnotationsWebService {
                 return new ArrayList<>( cached );
             }
         }
-        List<AnnotationSearchResultValueObject> result = new ArrayList<>( this.getTerms( queryValues, strategy, limit, prefixes, upstream, exactLabel, category, taxon, includeGenes, FIND_CHARACTERISTICS_TIMEOUT_MS ) );
+        List<AnnotationSearchResultValueObject> result = new ArrayList<>( this.getTerms( queryValues, strategy, limit, prefixes, upstream, exactLabel, category, suppressNearMatches, taxon, includeGenes, FIND_CHARACTERISTICS_TIMEOUT_MS ) );
         if ( includeGeneCount && !result.isEmpty() ) {
             result = attachGeneCounts( result, geneCountMaxTerms );
         }
@@ -664,8 +720,9 @@ public class AnnotationsWebService {
                     + "proposal pass would otherwise fire into a single call. Per-item work runs in parallel "
                     + "server-side (bounded to " + SEARCH_BATCH_PARALLELISM + " workers) and reuses the SAME "
                     + "response cache as GET /annotations/search, so repeated labels — within the batch or across "
-                    + "later calls — are free. The shared knobs (rank, limit, prefixes, exactLabel, taxon, "
-                    + "includeGenes, includeGeneCount, geneCountMaxTerms) apply to every item; only category is "
+                    + "later calls — are free. The shared knobs (rank, limit, prefixes, exactLabel, "
+                    + "suppressNearMatches, taxon, includeGenes, includeGeneCount, geneCountMaxTerms) apply to "
+                    + "every item; only category is "
                     + "per-item. A per-item failure is reported in that item's `error` field and does NOT fail the "
                     + "batch. At most " + SEARCH_BATCH_MAX_ITEMS + " items per request.",
             responses = {
@@ -694,6 +751,7 @@ public class AnnotationsWebService {
         AnnotationSearchRankingStrategy strategy = resolveRankingStrategy( body.getRank() );
         List<String> prefixes = parsePrefixes( body.getPrefixes() != null ? body.getPrefixes() : "" );
         boolean exactLabel = Boolean.TRUE.equals( body.getExactLabel() );
+        boolean suppressNearMatches = Boolean.TRUE.equals( body.getSuppressNearMatches() );
         boolean includeGenes = body.getIncludeGenes() == null || body.getIncludeGenes(); // default true
         boolean includeGeneCount = Boolean.TRUE.equals( body.getIncludeGeneCount() );
         Taxon taxon = body.getTaxon() != null && !body.getTaxon().trim().isEmpty()
@@ -715,7 +773,7 @@ public class AnnotationsWebService {
                 final int idx = i;
                 final AnnotationSearchBatchRequest.Item item = items.get( i );
                 tasks.add( pool.submit( () -> out.set( idx, runBatchItem( item, strategy, limit, prefixes,
-                        exactLabel, taxon, includeGenes, includeGeneCount, geneCountMaxTerms ) ) ) );
+                        exactLabel, suppressNearMatches, taxon, includeGenes, includeGeneCount, geneCountMaxTerms ) ) ) );
             }
             for ( java.util.concurrent.Future<?> f : tasks ) {
                 try {
@@ -753,7 +811,8 @@ public class AnnotationsWebService {
      */
     private AnnotationSearchBatchResultValueObject runBatchItem( @Nullable AnnotationSearchBatchRequest.Item item,
             AnnotationSearchRankingStrategy strategy, int limit, List<String> prefixes, boolean exactLabel,
-            @Nullable Taxon taxon, boolean includeGenes, boolean includeGeneCount, int geneCountMaxTerms ) {
+            boolean suppressNearMatches, @Nullable Taxon taxon, boolean includeGenes, boolean includeGeneCount,
+            int geneCountMaxTerms ) {
         String q = item != null ? item.getQuery() : null;
         String category = item != null && item.getCategory() != null ? item.getCategory() : "";
         if ( q == null || q.trim().isEmpty() ) {
@@ -762,8 +821,8 @@ public class AnnotationsWebService {
         try {
             // Single literal label — NOT wrapped in StringArrayArg, so an embedded comma stays one query.
             List<AnnotationSearchResultValueObject> results = searchOne( Collections.singletonList( q ),
-                    strategy, limit, prefixes, false, exactLabel, category, taxon, includeGenes,
-                    includeGeneCount, geneCountMaxTerms, false );
+                    strategy, limit, prefixes, false, exactLabel, category, suppressNearMatches, taxon,
+                    includeGenes, includeGeneCount, geneCountMaxTerms, false );
             return new AnnotationSearchBatchResultValueObject( q, category, results, null );
         } catch ( SearchException | RuntimeException e ) {
             log.debug( "batch annotation-search item '{}' failed: {}", q, e.toString() );
@@ -792,7 +851,7 @@ public class AnnotationsWebService {
     public ResponseDataObject<List<AnnotationSearchResultValueObject>> searchAnnotationsByPathQuery( // Params:
             @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE, description = SEARCH_QUERY_DESCRIPTION) @PathParam("query") @DefaultValue("") StringArrayArg query // Required
     ) {
-        return searchAnnotations( query, LuceneOrderRankingStrategy.NAME, SEARCH_DEFAULT_LIMIT, "", false, false, "", null, false, 50, true, false );
+        return searchAnnotations( query, LuceneOrderRankingStrategy.NAME, SEARCH_DEFAULT_LIMIT, "", false, false, "", false, null, false, 50, true, false );
     }
 
     /**
@@ -1008,7 +1067,8 @@ public class AnnotationsWebService {
      */
     private LinkedHashSet<AnnotationSearchResultValueObject> getTerms( List<String> queryValues,
             AnnotationSearchRankingStrategy strategy, int limit, List<String> prefixes, boolean upstream,
-            boolean exactLabel, String category, @Nullable Taxon taxon, boolean includeGenes, long timeoutMs ) throws SearchException {
+            boolean exactLabel, String category, boolean suppressNearMatches, @Nullable Taxon taxon,
+            boolean includeGenes, long timeoutMs ) throws SearchException {
         StopWatch timer = StopWatch.createStarted();
         long phaseStart = timer.getTime();
         List<CharacteristicValueObject> rawHits = new ArrayList<>();
@@ -1172,6 +1232,85 @@ public class AnnotationsWebService {
                 }
             }
             rawHits = kept;
+        }
+
+        // ---- Category preference + near-match suppression -------------------------------------
+        //
+        // Both need to know WHY each candidate matched, and both have to act before ranking and
+        // truncation, so the attribution that /annotations/search already reports per hit is
+        // resolved here for the candidate set rather than only for the surviving top-N.
+        //
+        // The two act differently on purpose. A hit in the wrong namespace gets DEMOTED, never
+        // dropped: the caller can see the URI and judge for itself, and dropping risks emptying a
+        // result set that held the right answer under an unexpected namespace. A near-match gets
+        // DROPPED, because it is invisible — "MK-8353" looks exactly like a legitimate answer to
+        // "MK-2206" unless you already know the compound, which is precisely what the caller was
+        // asking us.
+        String designationProbe = queryValues.size() == 1 ? queryValues.get( 0 ) : joinedRelevanceQuery;
+        boolean suppress = suppressNearMatches && isDesignationQuery( designationProbe );
+        // An explicit prefixes allow-list is the caller overriding namespace choice outright; do
+        // not layer a category preference on top of it.
+        List<String> preferredPrefixes = prefixes.isEmpty()
+                ? resolveCategoryPreferredPrefixes( category )
+                : Collections.emptyList();
+        if ( ( suppress || !preferredPrefixes.isEmpty() ) && !rawHits.isEmpty() ) {
+            if ( rawHits.size() > CANDIDATE_ATTRIBUTION_CAP ) {
+                // Never silently. A capped run can only under-promote / under-suppress (the tail
+                // is left exactly as the relevance tiers ordered it), but the operator should be
+                // able to see that the tail was not considered.
+                log.info( "annotation-search: {} candidates for query='{}' exceeds the {} attribution cap; "
+                                + "category promotion and near-match suppression consider the top {} only",
+                        rawHits.size(), joinedRelevanceQuery, CANDIDATE_ATTRIBUTION_CAP, CANDIDATE_ATTRIBUTION_CAP );
+            }
+            Map<String, MatchAttribution> candidateMatches = attributeCandidates( rawHits, joinedRelevanceQuery,
+                    CANDIDATE_ATTRIBUTION_CAP, Math.max( timeoutMs - timer.getTime(), 0 ) );
+            // A hit is "solid" when it names the query: attribution says equality against the
+            // preferred label or a declared synonym. The label fallback keeps the check working
+            // when the owning ontology is not loaded and no term could be resolved — the hit's own
+            // label is on the row already, so a label-exact match stays verifiable without Jena.
+            java.util.function.Predicate<CharacteristicValueObject> solid = h -> {
+                String uri = h.getValueUri();
+                MatchAttribution m = uri != null ? candidateMatches.get( uri ) : null;
+                if ( isExactAttribution( m != null ? m.via : null ) ) {
+                    return true;
+                }
+                return !relevanceQueryCanon.isEmpty()
+                        && canonicaliseForExactMatch( h.getValue() ).equals( relevanceQueryCanon );
+            };
+            if ( suppress ) {
+                List<CharacteristicValueObject> kept = new ArrayList<>( rawHits.size() );
+                for ( CharacteristicValueObject h : rawHits ) {
+                    if ( solid.test( h ) ) {
+                        kept.add( h );
+                    }
+                }
+                if ( kept.size() < rawHits.size() ) {
+                    log.debug( "annotation-search: near-match suppression dropped {} of {} candidates for designation query '{}'",
+                            rawHits.size() - kept.size(), rawHits.size(), joinedRelevanceQuery );
+                }
+                rawHits = kept;
+            }
+            if ( !preferredPrefixes.isEmpty() ) {
+                // Promote solid hits sitting in the category's preferred namespaces, in the
+                // configured namespace order. Near-matches are deliberately NOT promotable: a
+                // CHEBI term that merely contains the query would otherwise leapfrog an exact hit
+                // from another ontology, which trades one bad ranking for another.
+                java.util.function.ToIntFunction<CharacteristicValueObject> categoryRankFn = h -> {
+                    String uri = h.getValueUri();
+                    if ( uri == null || !solid.test( h ) ) {
+                        return preferredPrefixes.size();
+                    }
+                    for ( int i = 0; i < preferredPrefixes.size(); i++ ) {
+                        if ( uri.contains( preferredPrefixes.get( i ) ) ) {
+                            return i;
+                        }
+                    }
+                    return preferredPrefixes.size();
+                };
+                // Stable: everything not promoted keeps the relevance order computed above.
+                rawHits = new ArrayList<>( rawHits );
+                rawHits.sort( Comparator.<CharacteristicValueObject>comparingInt( categoryRankFn::applyAsInt ) );
+            }
         }
         long tFilters = timer.getTime() - phaseStart - tFindCharacteristics;
         phaseStart = timer.getTime();
@@ -1749,6 +1888,104 @@ public class AnnotationsWebService {
     }
 
     /**
+     * Cap on how many candidates get match attribution resolved at candidate stage (i.e. BEFORE
+     * ranking + truncation). Attribution costs one {@code getTerm} plus a handful of in-memory
+     * annotation reads per URI, so this is far cheaper than the enrichment fan-out — but it is
+     * still per-URI work over a set that can reach 1000.
+     *
+     * <p>200 is chosen to comfortably cover the regime the feature targets. Designation and
+     * abbreviation queries — the only ones that reach here — match few terms: the whole point of a
+     * coined identifier is that it is rare. A query broad enough to blow this cap is not a
+     * designation query and would not have been suppressed anyway.</p>
+     */
+    static final int CANDIDATE_ATTRIBUTION_CAP = 200;
+
+    /**
+     * Resolve match attribution for a bounded slice of the candidate set, in parallel.
+     *
+     * <p>The post-truncation {@link #enrichTopHits} pass computes the same attribution for the
+     * top-N, but that is too late for the two jobs that need it here: deciding which candidates
+     * are near-matches (they must go before they can be truncated around) and deciding which
+     * candidates a category preference may promote (a synonym-exact hit can sit hundreds of rows
+     * down the raw order — {@code FTC} finds emtricitabine only through a synonym, so it lands in
+     * the weakest relevance tier despite being the right answer).</p>
+     *
+     * <p>Failures degrade to "no attribution" for that URI rather than propagating: an unresolvable
+     * URI means the owning ontology is not loaded, which is an infrastructure state, and callers
+     * handle the absent entry explicitly.</p>
+     *
+     * @param hits candidates in their current order; only the first {@code cap} are attributed
+     * @return URI → attribution, omitting URIs that resolved to no term or matched no tier
+     */
+    private Map<String, MatchAttribution> attributeCandidates( List<CharacteristicValueObject> hits,
+            String originalQuery, int cap, long budgetMs ) {
+        List<String> uris = hits.stream()
+                .map( CharacteristicValueObject::getValueUri )
+                .filter( Objects::nonNull )
+                .distinct()
+                .limit( cap )
+                .collect( Collectors.toList() );
+        if ( uris.isEmpty() || budgetMs <= 0 ) {
+            return Collections.emptyMap();
+        }
+        Map<String, MatchAttribution> out = new java.util.concurrent.ConcurrentHashMap<>();
+        StopWatch local = StopWatch.createStarted();
+        int parallelism = Math.min( uris.size(), 8 );
+        if ( parallelism <= 1 ) {
+            attributeOne( uris.get( 0 ), originalQuery, out, budgetMs );
+            return out;
+        }
+        java.util.concurrent.ExecutorService pool = java.util.concurrent.Executors.newFixedThreadPool( parallelism );
+        try {
+            List<java.util.concurrent.Future<?>> tasks = new ArrayList<>( uris.size() );
+            for ( String uri : uris ) {
+                tasks.add( pool.submit( () -> {
+                    long remaining = Math.max( budgetMs - local.getTime(), 0 );
+                    if ( remaining > 0 ) {
+                        attributeOne( uri, originalQuery, out, remaining );
+                    }
+                } ) );
+            }
+            long deadline = System.currentTimeMillis() + budgetMs;
+            for ( java.util.concurrent.Future<?> f : tasks ) {
+                long left = deadline - System.currentTimeMillis();
+                if ( left <= 0 ) {
+                    f.cancel( true );
+                    continue;
+                }
+                try {
+                    f.get( left, TimeUnit.MILLISECONDS );
+                } catch ( java.util.concurrent.TimeoutException e ) {
+                    f.cancel( true );
+                } catch ( InterruptedException ie ) {
+                    Thread.currentThread().interrupt();
+                    break;
+                } catch ( java.util.concurrent.ExecutionException ee ) {
+                    log.debug( "candidate attribution task failed", ee.getCause() );
+                }
+            }
+        } finally {
+            pool.shutdownNow();
+        }
+        return out;
+    }
+
+    private void attributeOne( String uri, String originalQuery, Map<String, MatchAttribution> out, long remaining ) {
+        try {
+            OntologyTerm term = ontologyService.getTerm( uri, remaining, TimeUnit.MILLISECONDS );
+            if ( term == null ) {
+                return;
+            }
+            MatchAttribution attribution = computeMatchAttribution( term, originalQuery );
+            if ( attribution != null ) {
+                out.put( uri, attribution );
+            }
+        } catch ( TimeoutException e ) {
+            log.debug( "candidate attribution timed out for {}", uri );
+        }
+    }
+
+    /**
      * Enrich a single URI's definition + parents + match attribution. Each ontology call is
      * wrapped in a try so a per-URI failure (typeahead-friendly: silent) leaves the other URIs'
      * data intact. Concurrent invocations of this method by {@link #enrichTopHits} write into
@@ -1821,6 +2058,74 @@ public class AnnotationsWebService {
 
     /** OBO database cross-reference predicate — pointers into MESH / OMIM / UMLS / ICD / SNOMED / etc. */
     private static final String OBO_DB_XREF = "http://www.geneontology.org/formats/oboInOwl#hasDbXref";
+
+    /**
+     * Whether {@code query} has the shape of a designation — a coined identifier for one specific
+     * entity, rather than a description of one. Operationally: a single token carrying at least one
+     * letter AND at least one digit.
+     *
+     * <p>That shape covers the three families where a near-match is never the same thing: compound
+     * codes ({@code MK-2206}, {@code GSK2879552}), cell-line designations ({@code NCI-H358},
+     * {@code FTC-133}) and mouse strains ({@code C57BL/6J}). The digits carry the identity —
+     * {@code MK-8353} shares every letter with {@code MK-2206} and is a different molecule — so
+     * lexical neighbourhood says nothing at all about referential identity.</p>
+     *
+     * <p>Descriptive queries ({@code diamide}, {@code high fat diet}, {@code cortex}) deliberately
+     * fail this test. There a near-match frequently IS the intended term, and suppressing it would
+     * return nothing and push the caller onto a fuzzy fallback — which is where fabricated
+     * groundings come from in the first place. Suppression has to be narrower than "be strict",
+     * or it manufactures the very failure it exists to prevent.</p>
+     */
+    static boolean isDesignationQuery( @Nullable String query ) {
+        if ( query == null ) {
+            return false;
+        }
+        String q = query.trim();
+        if ( q.length() < 2 ) {
+            return false;
+        }
+        boolean hasLetter = false, hasDigit = false;
+        for ( int i = 0; i < q.length(); i++ ) {
+            char c = q.charAt( i );
+            if ( Character.isWhitespace( c ) ) {
+                return false;   // multi-token ⇒ descriptive, not a designation
+            }
+            if ( Character.isLetter( c ) ) {
+                hasLetter = true;
+            } else if ( Character.isDigit( c ) ) {
+                hasDigit = true;
+            }
+        }
+        return hasLetter && hasDigit;
+    }
+
+    /**
+     * Whether an attribution represents string EQUALITY against one of the term's own names — its
+     * preferred label or a declared synonym — as opposed to a prefix / token-overlap neighbourhood
+     * match.
+     *
+     * <p>This is the line between "this row names the thing you asked for" and "this row is
+     * lexically nearby". Only the former survives {@code suppress_near_matches}, and only the
+     * former is eligible for category promotion. Every synonym scope counts: a narrow or related
+     * synonym that equals the query still names the entity — scope is about ontological breadth,
+     * not about how confident the match is.</p>
+     */
+    static boolean isExactAttribution( @Nullable MatchedVia via ) {
+        if ( via == null ) {
+            return false;
+        }
+        switch ( via ) {
+            case PREFERRED_LABEL:
+            case EXACT_SYNONYM:
+            case NARROW_SYNONYM:
+            case RELATED_SYNONYM:
+            case BROAD_SYNONYM:
+            case ALT_LABEL:
+                return true;
+            default:
+                return false;
+        }
+    }
 
     /**
      * Collect the class-level database cross-references ({@code oboInOwl#hasDbXref}) declared on an
@@ -1911,15 +2216,26 @@ public class AnnotationsWebService {
      * the upstream filter was bypassed (single-content-token queries).</p>
      */
     @Nullable
-    private static MatchAttribution computeMatchAttribution( OntologyTerm term, String originalQuery ) {
+    static MatchAttribution computeMatchAttribution( OntologyTerm term, String originalQuery ) {
         String normalisedQuery = normaliseForEquality( originalQuery );
         if ( normalisedQuery.isEmpty() ) {
             return null;
         }
+        // Canonical form additionally drops hyphens and a trailing " cell" / " cell line", so
+        // MK2206 ↔ MK-2206 and A549 ↔ "A549 cell" compare equal. This is the SAME equivalence the
+        // candidate-stage relevance tiers already use (see canonicaliseForExactMatch); without it
+        // here, attribution disagrees with the tier sort — a hit the tier sort called an exact
+        // label match reports as label_prefix, and near-match suppression then discards the one
+        // row the caller wanted. Designations are exactly where punctuation varies most.
+        String canonicalQuery = canonicaliseForExactMatch( originalQuery.trim() );
         String label = term.getLabel();
         String normalisedLabel = label != null ? normaliseForEquality( label ) : "";
         // Tier 1: exact equality on preferred label.
         if ( !normalisedLabel.isEmpty() && normalisedLabel.equals( normalisedQuery ) ) {
+            return new MatchAttribution( MatchedVia.PREFERRED_LABEL, label );
+        }
+        if ( label != null && !canonicalQuery.isEmpty()
+                && canonicaliseForExactMatch( label ).equals( canonicalQuery ) ) {
             return new MatchAttribution( MatchedVia.PREFERRED_LABEL, label );
         }
         // Tier 2: exact equality on a synonym. Walk in strength order.
@@ -1938,7 +2254,12 @@ public class AnnotationsWebService {
             }
             for ( AnnotationProperty ap : annots ) {
                 String text = ap.getContents();
-                if ( text != null && normaliseForEquality( text ).equals( normalisedQuery ) ) {
+                if ( text == null ) {
+                    continue;
+                }
+                if ( normaliseForEquality( text ).equals( normalisedQuery )
+                        || ( !canonicalQuery.isEmpty()
+                        && canonicaliseForExactMatch( text ).equals( canonicalQuery ) ) ) {
                     return new MatchAttribution( MatchedVia.fromToken( probe[1] ), text );
                 }
             }
@@ -2571,6 +2892,8 @@ public class AnnotationsWebService {
         @Nullable
         private Boolean exactLabel;
         @Nullable
+        private Boolean suppressNearMatches;
+        @Nullable
         private Boolean includeGenes;
         @Nullable
         private Boolean includeGeneCount;
@@ -2648,6 +2971,16 @@ public class AnnotationsWebService {
 
         public void setExactLabel( @Nullable Boolean exactLabel ) {
             this.exactLabel = exactLabel;
+        }
+
+        /** @see AnnotationsWebService#searchAnnotations the {@code suppress_near_matches} query parameter */
+        @Nullable
+        public Boolean getSuppressNearMatches() {
+            return suppressNearMatches;
+        }
+
+        public void setSuppressNearMatches( @Nullable Boolean suppressNearMatches ) {
+            this.suppressNearMatches = suppressNearMatches;
         }
 
         @Nullable
