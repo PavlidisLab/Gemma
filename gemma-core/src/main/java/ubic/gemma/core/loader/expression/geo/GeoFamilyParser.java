@@ -1390,9 +1390,13 @@ public class GeoFamilyParser implements Parser<GeoParseResult> {
                 GeoFamilyParser.log.warn( "Unexpected sample relation format: " + line );
             }
         } else if ( this.startsWithIgnoreCase( line, "!Sample_instrument_model" ) ) {
-            // e.g. Illumina HiSeq 2000
+            // e.g. Illumina HiSeq 2000. Kept verbatim for the source-metadata payload; Gemma's own
+            // conversion does not use it.
+            this.sampleSet( currentSampleAccession, GeoSample::setInstrumentModel, value );
         } else if ( this.startsWithIgnoreCase( line, "!Sample_library_selection" ) ) {
-            // e.g. 'cDNA', 'other'
+            // e.g. 'cDNA', 'other'. Verbatim, for the same reason — unlike library_source and
+            // library_strategy below, which are normalized into enums for conversion.
+            this.sampleSet( currentSampleAccession, GeoSample::setLibrarySelection, value );
         } else if ( this.startsWithIgnoreCase( line, "!Sample_library_source" ) ) {
             // see http://www.ncbi.nlm.nih.gov/geo/info/soft-seq.html
             // e.g. 'transcriptomic' - if not skip? GENOMIC, OTHER
