@@ -22,8 +22,11 @@ class OntologyServiceResolverTest {
     private final OntologyService tgemo = ontology( GemmaOntologyService.class, "gemmaOntology", null );
     private final OntologyService pato = ontology( PatoOntologyService.class, "patoOntology", "PATO - the Phenotype And Trait Ontology" );
     private final OntologyService tdb = ontology( TdbOntologyService.class, "unified", null );
+    // EFO caches under experimentalFactorOntology, not efOntology — the property suffix and the cache
+    // name differ for this one, and keying the abbreviation on the wrong one silently loses "EFO".
+    private final OntologyService efo = ontology( ExperimentalFactorOntologyService.class, "experimentalFactorOntology", null );
 
-    private final List<OntologyService> ontologies = Arrays.asList( clo, hpo, tgemo, pato, tdb );
+    private final List<OntologyService> ontologies = Arrays.asList( clo, hpo, tgemo, pato, tdb, efo );
 
     @Test
     void resolvesByAbbreviation() {
@@ -33,6 +36,7 @@ class OntologyServiceResolverTest {
         assertThat( OntologyServiceResolver.resolve( ontologies, "HP" ) ).contains( hpo );
         assertThat( OntologyServiceResolver.resolve( ontologies, "TGEMO" ) ).contains( tgemo );
         assertThat( OntologyServiceResolver.resolve( ontologies, "TDB" ) ).contains( tdb );
+        assertThat( OntologyServiceResolver.resolve( ontologies, "EFO" ) ).contains( efo );
     }
 
     @Test

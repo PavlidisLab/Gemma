@@ -45,7 +45,10 @@ public class OntologyServiceResolver {
     static {
         Map<String, List<String>> m = new HashMap<>();
         m.put( "gemmaOntology", Collections.singletonList( "TGEMO" ) );
-        m.put( "efOntology", Collections.singletonList( "EFO" ) );
+        // NB the key is the cache name, which is not always the property suffix: EFO is configured under
+        // url.efOntology but caches as experimentalFactorOntology. GET /admin/ontologies lists the
+        // identifier each service actually reports — check there when adding a row.
+        m.put( "experimentalFactorOntology", Collections.singletonList( "EFO" ) );
         m.put( "geneOntology", Collections.singletonList( "GO" ) );
         m.put( "cellTypeOntology", Collections.singletonList( "CL" ) );
         m.put( "cellLineOntology", Collections.singletonList( "CLO" ) );
