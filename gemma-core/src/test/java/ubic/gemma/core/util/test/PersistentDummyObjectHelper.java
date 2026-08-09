@@ -639,10 +639,7 @@ public class PersistentDummyObjectHelper {
 
     public BibliographicReference getTestPersistentBibliographicReference( String accession ) {
         BibliographicReference br = BibliographicReference.Factory.newInstance();
-        if ( pubmed == null ) {
-            pubmed = externalDatabaseService.findByName( ExternalDatabases.PUBMED );
-        }
-        br.setPubAccession( this.getTestPersistentDatabaseEntry( accession, pubmed ) );
+        br.setPubAccession( this.getTestPersistentDatabaseEntry( accession, pubmed() ) );
         return bibliographicReferenceService.findOrCreate( br );
     }
 
@@ -765,6 +762,39 @@ public class PersistentDummyObjectHelper {
      * @param accession accession
      * @return db entry
      */
+    /**
+     * Resolve the seeded GEO {@link ExternalDatabase}, caching it.
+     * <p>
+     * Use this rather than reading the {@code geo} field directly. The field is initialized lazily by
+     * whichever fixture method happens to run first, so reading it bare yields {@code null} until then —
+     * and a {@code null} database silently makes
+     * {@link #getTestPersistentDatabaseEntry(String, ExternalDatabase)} invent a randomly-named
+     * {@code _testdb} instead, which is only noticed by a test that looks the entry up by database name.
+     */
+    private ExternalDatabase geo() {
+        if ( geo == null ) {
+            geo = externalDatabaseService.findByName( ExternalDatabases.GEO );
+            if ( geo == null ) {
+                throw new IllegalStateException( "No '" + ExternalDatabases.GEO + "' external database in the test database; check the seed data." );
+            }
+        }
+        return geo;
+    }
+
+    /**
+     * Resolve the seeded PubMed {@link ExternalDatabase}, caching it. See {@link #geo()} for why the field
+     * must not be read directly.
+     */
+    private ExternalDatabase pubmed() {
+        if ( pubmed == null ) {
+            pubmed = externalDatabaseService.findByName( ExternalDatabases.PUBMED );
+            if ( pubmed == null ) {
+                throw new IllegalStateException( "No '" + ExternalDatabases.PUBMED + "' external database in the test database; check the seed data." );
+            }
+        }
+        return pubmed;
+    }
+
     public DatabaseEntry getTestPersistentDatabaseEntry( String accession, ExternalDatabase ed ) {
         DatabaseEntry result = DatabaseEntry.Factory.newInstance();
 
@@ -794,9 +824,9 @@ public class PersistentDummyObjectHelper {
     public DatabaseEntry getTestPersistentDatabaseEntry( String accession, String databaseName ) {
         switch ( databaseName ) {
             case ExternalDatabases.GEO:
-                return this.getTestPersistentDatabaseEntry( accession, geo );
+                return this.getTestPersistentDatabaseEntry( accession, geo() );
             case ExternalDatabases.PUBMED:
-                return this.getTestPersistentDatabaseEntry( accession, pubmed );
+                return this.getTestPersistentDatabaseEntry( accession, pubmed() );
             default:
                 ExternalDatabase edp = ExternalDatabase.Factory.newInstance();
                 edp.setName( databaseName );
