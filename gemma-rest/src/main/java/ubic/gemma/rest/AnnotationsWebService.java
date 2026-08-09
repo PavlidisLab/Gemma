@@ -186,6 +186,30 @@ public class AnnotationsWebService {
     private String categoryPrefixesRaw;
 
     /**
+     * Raw {@code annotation.category.excludedPrefixes} — same {@code key:prefix,...;key:...} shape
+     * as the preference table, but a DENY list rather than an ordering hint.
+     *
+     * <p>Deliberately a separate property, not the inverse of the preference. The two make
+     * different claims: a preference says a namespace is usually right, which is cheap to be wrong
+     * about and so only reorders; an exclusion says a namespace is CATEGORICALLY impossible for the
+     * position -- a chemical cannot be a genotype -- which is what justifies removing a row.
+     *
+     * <p>Measured evidence for keeping them separate (agents' 500-experiment run): across
+     * categories that have a preference, 100 of 634 committed answers (16%) were out-of-namespace
+     * and overwhelmingly CORRECT -- a treatment legitimately is an organism (`Mycobacterium
+     * tuberculosis`), a role (`reference substance role`), a procedure (PBS) or an injury
+     * (`traumatic brain injury`). Inverting the preference into a filter would have destroyed
+     * those 100 to catch about 2. So `treatment` earns almost no exclusions despite having the
+     * strongest preference, while `genotype` earns real ones: 10 measured cases answered a gene
+     * symbol with the disease it causes (`RB1` -> retinoblastoma).
+     */
+    @org.springframework.beans.factory.annotation.Value("${annotation.category.excludedPrefixes:}")
+    private String categoryExcludedPrefixesRaw;
+
+    @Nullable
+    private volatile Map<String, List<String>> categoryExcludedPrefixesByKey;
+
+    /**
      * Parsed map from camelCase category key to ordered prefix list. Lazy-init since
      * {@code @Value} fields aren't populated when the constructor runs. Empty list under any
      * key means "no preference" (client picks). Absent key means "no entry configured".
@@ -369,9 +393,16 @@ public class AnnotationsWebService {
     Map<String, List<String>> resolveCategoryPrefixes() {
         Map<String, List<String>> cached = categoryPrefixesByKey;
         if ( cached != null ) return cached;
+        cached = parseCategoryPrefixProperty( categoryPrefixesRaw );
+        categoryPrefixesByKey = cached;
+        return cached;
+    }
+
+    /** Parse a {@code key:prefix,prefix;key:...} property into an ordered per-key prefix list. */
+    static Map<String, List<String>> parseCategoryPrefixProperty( @Nullable String raw ) {
         Map<String, List<String>> out = new LinkedHashMap<>();
-        if ( categoryPrefixesRaw != null && !categoryPrefixesRaw.trim().isEmpty() ) {
-            for ( String entry : categoryPrefixesRaw.split( ";" ) ) {
+        if ( raw != null && !raw.trim().isEmpty() ) {
+            for ( String entry : raw.split( ";" ) ) {
                 String e = entry.trim();
                 if ( e.isEmpty() ) continue;
                 int colon = e.indexOf( ':' );
@@ -386,7 +417,6 @@ public class AnnotationsWebService {
                 out.put( key, prefixes );
             }
         }
-        categoryPrefixesByKey = out;
         return out;
     }
 
@@ -397,7 +427,19 @@ public class AnnotationsWebService {
      */
     static String categoryKey( String label ) {
         if ( label == null || label.isEmpty() ) return "";
-        String[] parts = label.toLowerCase( Locale.ROOT ).split( "[^a-z0-9]+" );
+        String lower = label.toLowerCase( Locale.ROOT );
+        // An ontology that obsoletes a term renames its label rather than removing it: EFO
+        // obsoleted its own `disease` in favour of MONDO's and the term now reads
+        // `obsolete_disease`. Gemma still files ~15k annotations under the old URI, so the
+        // category is very much alive while its label no longer matches anything configured --
+        // `category=disease` worked, the URI form silently did not, and /annotations/categories
+        // advertised no preference at all, which is how a client concludes none exists.
+        // Stripping the marker keeps the two spellings on one key until the data migration
+        // happens; see the disease-category note in project memory.
+        if ( lower.startsWith( "obsolete_" ) ) {
+            lower = lower.substring( "obsolete_".length() );
+        }
+        String[] parts = lower.split( "[^a-z0-9]+" );
         StringBuilder sb = new StringBuilder();
         for ( int i = 0; i < parts.length; i++ ) {
             String p = parts[i];
@@ -425,21 +467,45 @@ public class AnnotationsWebService {
         if ( category == null || category.trim().isEmpty() ) {
             return Collections.emptyList();
         }
+        return resolveCategoryPrefixes().getOrDefault(
+                categoryKey( resolveCategoryLabel( category ) ), Collections.emptyList() );
+    }
+
+    /**
+     * Normalize a caller-supplied category to its label. A URI is looked up in the in-memory
+     * category-term list; anything else is already a label. A failed lookup returns the input, so
+     * the caller simply finds no preference rather than erroring.
+     */
+    private String resolveCategoryLabel( String category ) {
         String c = category.trim();
         if ( c.startsWith( "http://" ) || c.startsWith( "https://" ) ) {
             try {
                 for ( OntologyTerm t : ontologyService.getCategoryTerms() ) {
                     if ( c.equals( t.getUri() ) && t.getLabel() != null ) {
-                        c = t.getLabel();
-                        break;
+                        return t.getLabel();
                     }
                 }
             } catch ( RuntimeException e ) {
                 log.debug( "could not resolve category URI {} to a label", c, e );
-                return Collections.emptyList();
             }
         }
-        return resolveCategoryPrefixes().getOrDefault( categoryKey( c ), Collections.emptyList() );
+        return c;
+    }
+
+    /**
+     * Namespaces that are categorically impossible for a caller-supplied {@code category}.
+     * Empty when nothing is configured, which is the default for every category.
+     */
+    private List<String> resolveCategoryExcludedPrefixes( @Nullable String category ) {
+        if ( category == null || category.trim().isEmpty() ) {
+            return Collections.emptyList();
+        }
+        Map<String, List<String>> cached = categoryExcludedPrefixesByKey;
+        if ( cached == null ) {
+            cached = parseCategoryPrefixProperty( categoryExcludedPrefixesRaw );
+            categoryExcludedPrefixesByKey = cached;
+        }
+        return cached.getOrDefault( categoryKey( resolveCategoryLabel( category ) ), Collections.emptyList() );
     }
 
     /**
@@ -1221,12 +1287,19 @@ public class AnnotationsWebService {
         String designationProbe = queryValues.size() == 1 ? queryValues.get( 0 ) : joinedRelevanceQuery;
         boolean suppress = suppressNearMatches && isDesignationQuery( designationProbe );
         NegativeEvidenceValueObject negativeEvidence = null;
+        List<RuledOutTermValueObject> ruledOut = new ArrayList<>();
+        boolean nearMissTruncated = false;
+        boolean excludedAny = false;
         // An explicit prefixes allow-list is the caller overriding namespace choice outright; do
         // not layer a category preference on top of it.
         List<String> preferredPrefixes = prefixes.isEmpty()
                 ? resolveCategoryPreferredPrefixes( category )
                 : Collections.emptyList();
-        if ( suppress || !preferredPrefixes.isEmpty() ) {
+        // Exclusions are honoured even when the caller supplied an explicit prefixes allow-list:
+        // that list expresses which namespaces the caller WANTS, not which are possible for the
+        // position, and an impossible one stays impossible either way.
+        List<String> excludedPrefixes = resolveCategoryExcludedPrefixes( category );
+        if ( suppress || !preferredPrefixes.isEmpty() || !excludedPrefixes.isEmpty() ) {
             if ( rawHits.size() > CANDIDATE_ATTRIBUTION_CAP ) {
                 // Never silently. A capped run can only under-promote / under-suppress (the tail
                 // is left exactly as the relevance tiers ordered it), but the operator should be
@@ -1235,10 +1308,15 @@ public class AnnotationsWebService {
                                 + "category promotion and near-match suppression consider the top {} only",
                         rawHits.size(), joinedRelevanceQuery, CANDIDATE_ATTRIBUTION_CAP, CANDIDATE_ATTRIBUTION_CAP );
             }
-            Map<String, MatchAttribution> candidateMatches = rawHits.isEmpty()
-                    ? Collections.emptyMap()
-                    : attributeCandidates( rawHits, joinedRelevanceQuery,
-                            CANDIDATE_ATTRIBUTION_CAP, Math.max( timeoutMs - timer.getTime(), 0 ) );
+            // Attribution is only needed to decide what NAMES the query -- suppression and
+            // promotion both turn on that. Exclusion turns on the URI alone, so a category that
+            // configures only exclusions must not pay for up to 200 per-URI term lookups; the
+            // ruled-out rows fall back to label-level attribution, which is free.
+            Map<String, MatchAttribution> candidateMatches =
+                    ( rawHits.isEmpty() || !( suppress || !preferredPrefixes.isEmpty() ) )
+                            ? Collections.emptyMap()
+                            : attributeCandidates( rawHits, joinedRelevanceQuery,
+                                    CANDIDATE_ATTRIBUTION_CAP, Math.max( timeoutMs - timer.getTime(), 0 ) );
             // A hit is "solid" when it names the query: attribution says equality against the
             // preferred label or a declared synonym. The label fallback keeps the check working
             // when the owning ontology is not loaded and no term could be resolved — the hit's own
@@ -1271,7 +1349,8 @@ public class AnnotationsWebService {
                             m = computeLabelAttribution( h.getValue(), joinedRelevanceQuery );
                         }
                         rejected.add( new RuledOutTermValueObject( h.getValue(), uri,
-                                m != null ? m.via.token : null ) );
+                                m != null ? m.via.token : null,
+                                RuledOutTermValueObject.REASON_NEAR_MATCH ) );
                     }
                 }
                 int droppedTotal = rawHits.size() - kept.size();
@@ -1279,9 +1358,51 @@ public class AnnotationsWebService {
                     log.debug( "annotation-search: near-match suppression dropped {} of {} candidates for designation query '{}'",
                             droppedTotal, rawHits.size(), joinedRelevanceQuery );
                 }
-                negativeEvidence = new NegativeEvidenceValueObject( joinedRelevanceQuery, !kept.isEmpty(),
-                        rejected, droppedTotal > rejected.size() );
+                nearMissTruncated = droppedTotal > rejected.size();
+                ruledOut.addAll( rejected );
                 rawHits = kept;
+            }
+            if ( !excludedPrefixes.isEmpty() && !rawHits.isEmpty() ) {
+                // A namespace that is impossible for this category. Unlike a near-match these rows
+                // usually DO name the query -- they are the right concept filed under the wrong
+                // kind of thing (a gene symbol answered with the disease it causes), so they are
+                // reported rather than deleted: if a rule ever over-fires it shows up in ruledOut
+                // instead of vanishing, and an out-of-category hit is itself a signal that the
+                // FACTOR may be mis-categorised.
+                List<CharacteristicValueObject> keptInCategory = new ArrayList<>( rawHits.size() );
+                for ( CharacteristicValueObject h : rawHits ) {
+                    String uri = h.getValueUri();
+                    boolean impossible = false;
+                    if ( uri != null ) {
+                        for ( String bad : excludedPrefixes ) {
+                            if ( uri.contains( bad ) ) {
+                                impossible = true;
+                                break;
+                            }
+                        }
+                    }
+                    if ( !impossible ) {
+                        keptInCategory.add( h );
+                    } else if ( ruledOut.size() < RULED_OUT_MAX ) {
+                        MatchAttribution m = candidateMatches.get( uri );
+                        if ( m == null ) {
+                            m = computeLabelAttribution( h.getValue(), joinedRelevanceQuery );
+                        }
+                        ruledOut.add( new RuledOutTermValueObject( h.getValue(), uri,
+                                m != null ? m.via.token : null,
+                                RuledOutTermValueObject.REASON_OUT_OF_CATEGORY ) );
+                    }
+                }
+                if ( keptInCategory.size() < rawHits.size() ) {
+                    log.debug( "annotation-search: category '{}' excluded {} of {} hits by namespace",
+                            category, rawHits.size() - keptInCategory.size(), rawHits.size() );
+                    excludedAny = true;
+                }
+                rawHits = keptInCategory;
+            }
+            if ( suppress || excludedAny ) {
+                negativeEvidence = new NegativeEvidenceValueObject( joinedRelevanceQuery,
+                        !rawHits.isEmpty(), ruledOut, nearMissTruncated );
             }
             if ( !preferredPrefixes.isEmpty() ) {
                 // Promote solid hits sitting in the category's preferred namespaces, in the
@@ -3217,17 +3338,35 @@ public class AnnotationsWebService {
 
     /** One term that was retrieved for the query and rejected as not naming it. */
     public static class RuledOutTermValueObject {
+        /** Lexically near the query but not naming it — a different entity. */
+        public static final String REASON_NEAR_MATCH = "near_match";
+        /** Names the query, but sits in a namespace that is impossible for the stated category. */
+        public static final String REASON_OUT_OF_CATEGORY = "out_of_category";
+
         @Nullable
         private final String value;
         @Nullable
         private final String valueUri;
         @Nullable
         private final String matchedVia;
+        private final String reason;
 
-        public RuledOutTermValueObject( @Nullable String value, @Nullable String valueUri, @Nullable String matchedVia ) {
+        public RuledOutTermValueObject( @Nullable String value, @Nullable String valueUri,
+                @Nullable String matchedVia, String reason ) {
             this.value = value;
             this.valueUri = valueUri;
             this.matchedVia = matchedVia;
+            this.reason = reason;
+        }
+
+        /**
+         * Why this term is not the answer: {@code near_match} (lexically close, different entity)
+         * or {@code out_of_category} (right name, impossible namespace for the category). The two
+         * warrant different downstream handling — an out-of-category hit may indicate the FACTOR is
+         * mis-categorised rather than the term being wrong.
+         */
+        public String getReason() {
+            return reason;
         }
 
         @Nullable

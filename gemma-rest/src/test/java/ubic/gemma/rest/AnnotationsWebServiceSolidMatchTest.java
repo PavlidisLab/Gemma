@@ -194,6 +194,38 @@ class AnnotationsWebServiceSolidMatchTest {
         }
     }
 
+    // ---- category keying + prefix tables ---------------------------------------------------
+
+    @Test
+    void obsoletedCategoryLabelsKeyToTheLiveCategory() {
+        // EFO obsoleted its own `disease` in favour of MONDO's and relabelled the term
+        // `obsolete_disease`. ~15k Gemma annotations still sit on that URI, so the category is
+        // alive while its label stopped matching anything configured: category=disease worked,
+        // the URI form silently did not, and /annotations/categories advertised no preference.
+        assertThat( AnnotationsWebService.categoryKey( "obsolete_disease" ) ).isEqualTo( "disease" );
+        assertThat( AnnotationsWebService.categoryKey( "disease" ) ).isEqualTo( "disease" );
+        assertThat( AnnotationsWebService.categoryKey( "organism part" ) ).isEqualTo( "organismPart" );
+        assertThat( AnnotationsWebService.categoryKey( "developmental stage" ) ).isEqualTo( "developmentalStage" );
+        // "obsolete" as a word of its own is not a marker prefix
+        assertThat( AnnotationsWebService.categoryKey( "obsolete" ) ).isEqualTo( "obsolete" );
+    }
+
+    @Test
+    void prefixPropertyParsesIntoOrderedPerCategoryLists() {
+        var parsed = AnnotationsWebService.parseCategoryPrefixProperty(
+                "genotype:TGEMO_,GENO_,EFO_; organismPart:UBERON_,EMAPA_,EFO_ ;;bad_entry" );
+        assertThat( parsed.get( "genotype" ) ).containsExactly( "TGEMO_", "GENO_", "EFO_" );
+        // order is the preference order and must survive parsing
+        assertThat( parsed.get( "organismPart" ) ).containsExactly( "UBERON_", "EMAPA_", "EFO_" );
+        assertThat( parsed ).doesNotContainKey( "bad_entry" );
+    }
+
+    @Test
+    void emptyPrefixPropertyYieldsNoPreferences() {
+        assertThat( AnnotationsWebService.parseCategoryPrefixProperty( null ) ).isEmpty();
+        assertThat( AnnotationsWebService.parseCategoryPrefixProperty( "  " ) ).isEmpty();
+    }
+
     private static OntologyTerm term( String label ) {
         OntologyTerm t = mock( OntologyTerm.class );
         when( t.getLabel() ).thenReturn( label );
