@@ -54,6 +54,8 @@ public class OntologyLoader {
     private static final Logger log = LoggerFactory.getLogger( OntologyLoader.class );
 
     private static final String OLD_CACHE_SUFFIX = ".old";
+    /** Sidecar recording which source URL the on-disk index was built from. @see #hasSourceChanged */
+    private static final String SOURCE_MARKER_SUFFIX = ".source";
     private static final String TMP_CACHE_SUFFIX = ".tmp";
 
     /**
@@ -277,6 +279,73 @@ public class OntologyLoader {
             log.error( "Failed to compare current and previous cached ontologies, will report as not changed.", e );
             return false;
         }
+    }
+
+    /**
+     * Whether the ontology's configured source differs from the one its on-disk index was built
+     * from.
+     *
+     * <p>{@link #hasChanged(String)} compares the cached download to the previous copy of ITSELF,
+     * which detects a new upstream release at the same URL. It cannot detect the URL being pointed
+     * somewhere else, because the index is keyed by cacheName (the ontology) and survives the
+     * swap intact. That gap shipped a live outage on 2026-08-09: CHEBI moved from
+     * {@code chebi_lite.owl} to {@code chebi.owl} to recover synonyms, the Jena model picked them
+     * up, and search kept answering from the synonym-less index across restarts — so
+     * {@code /annotations/term} showed a term's synonyms while {@code /annotations/search} could
+     * not find it by any of them, which reads like a ranking bug and is not one.
+     *
+     * <p>A missing marker reports NOT changed. Every existing deployment lacks one, and treating
+     * absence as a mismatch would reindex every ontology on the next boot — an expensive answer to
+     * a question we cannot actually answer for indexes built before this existed. The marker is
+     * written after each successful index, so the protection starts one load later.
+     *
+     * @param cacheName the ontology's cache name; blank disables the check
+     * @param url       the source URL currently configured
+     */
+    static boolean hasSourceChanged( String cacheName, @Nullable String url ) {
+        if ( StringUtils.isBlank( cacheName ) || StringUtils.isBlank( url ) ) {
+            return false;
+        }
+        File marker = getSourceMarkerPath( cacheName );
+        if ( !marker.isFile() ) {
+            return false;
+        }
+        try {
+            String recorded = FileUtils.readFileToString( marker, StandardCharsets.UTF_8 ).trim();
+            if ( recorded.isEmpty() || recorded.equals( url.trim() ) ) {
+                return false;
+            }
+            log.info( "Source for {} changed from {} to {}; the existing index was built from the former and will be rebuilt.",
+                    cacheName, recorded, url );
+            return true;
+        } catch ( IOException e ) {
+            // Reporting "unchanged" here would silently reinstate the very bug this guards, so
+            // prefer the expensive-but-correct answer.
+            log.warn( "Could not read the source marker for {}; assuming the source changed and reindexing.", cacheName, e );
+            return true;
+        }
+    }
+
+    /**
+     * Record the source URL an ontology's index was just built from, for {@link #hasSourceChanged}.
+     * Failure is logged and swallowed: a missing marker costs a later reindex, whereas failing the
+     * load would take the ontology down over bookkeeping.
+     */
+    static void recordSource( String cacheName, @Nullable String url ) {
+        if ( StringUtils.isBlank( cacheName ) || StringUtils.isBlank( url ) ) {
+            return;
+        }
+        File marker = getSourceMarkerPath( cacheName );
+        try {
+            FileUtils.forceMkdirParent( marker );
+            FileUtils.writeStringToFile( marker, url.trim(), StandardCharsets.UTF_8 );
+        } catch ( IOException e ) {
+            log.warn( "Could not record the source marker for {}; a future source change may not trigger a reindex.", cacheName, e );
+        }
+    }
+
+    static File getSourceMarkerPath( String name ) {
+        return new File( getDiskCachePath( name ).getAbsolutePath() + SOURCE_MARKER_SUFFIX );
     }
 
     static void deleteOldCache( String cacheName ) throws IOException {

@@ -398,11 +398,17 @@ public abstract class AbstractOntologyService implements OntologyService {
         if ( searchEnabled && cacheName != null ) {
             //Checks if the current ontology has changed since it was last loaded.
             boolean changed = OntologyLoader.hasChanged( cacheName );
+            // ...and whether it is now being loaded from a DIFFERENT source than the index was
+            // built from. hasChanged only compares the cached download against the previous copy
+            // of itself, so re-pointing the URL leaves a stale index looking perfectly valid --
+            // the index is keyed by cacheName, not by source. See OntologyLoader#hasSourceChanged
+            // for the outage that motivated this.
+            boolean sourceChanged = OntologyLoader.hasSourceChanged( cacheName, ontologyUrl );
             boolean indexExists = OntologyIndexer.getSubjectIndex( cacheName, excludedWordsFromStemming ) != null;
             boolean forceReindexing = forceLoad && forceIndexing;
             // indexing is slow, don't do it if we don't have to.
             try {
-                index = OntologyIndexer.indexOntology( cacheName, model, excludedWordsFromStemming, forceReindexing || changed || !indexExists );
+                index = OntologyIndexer.indexOntology( cacheName, model, excludedWordsFromStemming, forceReindexing || changed || sourceChanged || !indexExists );
             } catch ( Exception e ) {
                 if ( isCausedByInterrupt( e ) ) {
                     return;
@@ -410,6 +416,9 @@ public abstract class AbstractOntologyService implements OntologyService {
                     throw new RuntimeException( String.format( "Failed to generate index for %s.", this ), e );
                 }
             }
+            // Only after the index is in hand, so a failed or interrupted indexing run does not
+            // leave a marker claiming this source has been indexed when it has not.
+            OntologyLoader.recordSource( cacheName, ontologyUrl );
         } else {
             index = null;
         }
