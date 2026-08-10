@@ -88,7 +88,12 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
 
         @Bean
         public static TestPropertyPlaceholderConfigurer placeholderConfigurer() {
-            return new TestPropertyPlaceholderConfigurer( "gemma.hosturl=http://localhost:8080" );
+            // The category preference / exclusion tables are @Value-injected, so without them here
+            // neither promotion nor exclusion can be exercised at all and both would ship on live
+            // verification only.
+            return new TestPropertyPlaceholderConfigurer( "gemma.hosturl=http://localhost:8080",
+                    "annotation.category.prefixes=treatment:CHEBI_,EFO_;genotype:TGEMO_,GENO_,EFO_",
+                    "annotation.category.excludedPrefixes=genotype:MONDO_" );
         }
 
         @Bean
@@ -135,8 +140,14 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         public AnnotationsWebService annotationsWebService( OntologyService ontologyService, SearchService searchService,
                 CharacteristicService characteristicService, ExpressionExperimentService expressionExperimentService,
                 DatasetArgService datasetRestService, TaxonArgService taxonArgService, GeneService geneService ) {
+            // Register the real strategies rather than passing null: with null the service falls
+            // back to lucene alone, so ?rank= is untestable and the interaction between a strategy
+            // and the category promotion cannot be pinned.
+            java.util.Map<String, ubic.gemma.rest.ranking.AnnotationSearchRankingStrategy> strategies = new HashMap<>();
+            strategies.put( "lucene", new ubic.gemma.rest.ranking.LuceneOrderRankingStrategy() );
+            strategies.put( "composite", new ubic.gemma.rest.ranking.CompositeRankingStrategy( 0.5, 0.3, 0.2 ) );
             return new AnnotationsWebService( ontologyService, searchService, characteristicService,
-                    expressionExperimentService, datasetRestService, taxonArgService, geneService, null );
+                    expressionExperimentService, datasetRestService, taxonArgService, geneService, strategies );
         }
 
         @Bean
@@ -765,6 +776,81 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
                     // The near-match survives, and no confident negative is asserted.
                     assertThat( body ).extracting( "data", list( Map.class ) ).hasSize( 1 );
                     assertThat( ( (Map<String, Object>) body ).get( "negativeEvidence" ) ).isNull();
+                } );
+    }
+
+    /**
+     * A ranking strategy must not be able to discard the category promotion. `composite` weights
+     * label coverage heavily, so for `FTC` it ranked the MGI gene (whose label IS the query) above
+     * the CHEBI compound that only matches via a synonym — silently undoing the preference the
+     * caller asked for. The category is a constraint; the strategy is a relevance heuristic.
+     */
+    @Test
+    public void testCategoryPromotionSurvivesTheRankingStrategy() throws Exception {
+        CharacteristicValueObject gene = new CharacteristicValueObject( "ftc",
+                "https://www.informatics.jax.org/strain/MGI:2667754", "genotype", null );
+        CharacteristicValueObject chem = new CharacteristicValueObject( "emtricitabine",
+                "http://purl.obolibrary.org/obo/CHEBI_31536", "treatment", null );
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "FTC" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Arrays.asList( gene, chem ) );
+        // emtricitabine is reachable from "FTC" only through a synonym, so it is solid but scores
+        // poorly on label coverage — exactly the shape composite mis-ranks.
+        OntologyTerm emtricitabine = mock( OntologyTerm.class );
+        when( emtricitabine.getLabel() ).thenReturn( "emtricitabine" );
+        when( emtricitabine.getAnnotations( anyString() ) ).thenReturn( Collections.emptyList() );
+        AnnotationProperty syn = mock( AnnotationProperty.class );
+        when( syn.getContents() ).thenReturn( "FTC" );
+        when( emtricitabine.getAnnotations( "http://www.geneontology.org/formats/oboInOwl#hasExactSynonym" ) )
+                .thenReturn( Collections.singletonList( syn ) );
+        when( ontologyService.getTerm( eq( "http://purl.obolibrary.org/obo/CHEBI_31536" ), anyLong(), any() ) )
+                .thenReturn( emtricitabine );
+
+        assertThat( target( "/annotations/search" )
+                .queryParam( "query", "FTC" )
+                .queryParam( "category", "treatment" )
+                .queryParam( "rank", "composite" )
+                .queryParam( "includeGenes", "false" )
+                .request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .first()
+                .satisfies( top -> assertThat( top )
+                        .containsEntry( "valueUri", "http://purl.obolibrary.org/obo/CHEBI_31536" ) );
+    }
+
+    /**
+     * An excluded namespace leaves {@code data} but is REPORTED, not deleted — a gene symbol
+     * answered with the disease it causes is the measured failure, and an over-firing rule has to
+     * be visible rather than silent.
+     */
+    @Test
+    public void testCategoryExclusionRemovesAndReportsOutOfCategoryHits() throws Exception {
+        CharacteristicValueObject disease = new CharacteristicValueObject( "retinoblastoma",
+                "http://purl.obolibrary.org/obo/MONDO_0008380", "disease", null );
+        CharacteristicValueObject genotype = new CharacteristicValueObject( "RB1",
+                "http://gemma.msl.ubc.ca/ont/TGEMO_00166", "genotype", null );
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "RB1" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Arrays.asList( disease, genotype ) );
+
+        assertThat( target( "/annotations/search" )
+                .queryParam( "query", "RB1" )
+                .queryParam( "category", "genotype" )
+                .queryParam( "includeGenes", "false" )
+                .request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .satisfies( body -> {
+                    assertThat( body ).extracting( "data", list( Map.class ) )
+                            .allSatisfy( row -> assertThat( ( String ) ( ( Map<?, ?> ) row ).get( "valueUri" ) )
+                                    .doesNotContain( "MONDO_" ) );
+                    //noinspection unchecked
+                    List<Map<String, Object>> ruled = (List<Map<String, Object>>)
+                            ( (Map<String, Object>) ( (Map<String, Object>) body ).get( "negativeEvidence" ) ).get( "ruledOut" );
+                    assertThat( ruled ).anySatisfy( r -> {
+                        assertThat( r.get( "valueUri" ) ).isEqualTo( "http://purl.obolibrary.org/obo/MONDO_0008380" );
+                        assertThat( r.get( "reason" ) ).isEqualTo( "out_of_category" );
+                    } );
                 } );
     }
 

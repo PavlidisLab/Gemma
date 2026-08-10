@@ -1287,6 +1287,13 @@ public class AnnotationsWebService {
         String designationProbe = queryValues.size() == 1 ? queryValues.get( 0 ) : joinedRelevanceQuery;
         boolean suppress = suppressNearMatches && isDesignationQuery( designationProbe );
         NegativeEvidenceValueObject negativeEvidence = null;
+        // Hoisted so the promotion can be RE-APPLIED after the ranking strategy runs. A strategy
+        // reorders the whole list and has no idea a category was declared, so composite -- which
+        // weights label coverage heavily -- put the MGI gene `ftc` first for category=treatment,
+        // silently discarding the promotion. The category is a constraint the caller stated; the
+        // strategy is a relevance heuristic, so the constraint outranks it and the strategy orders
+        // WITHIN each promotion tier.
+        java.util.function.ToIntFunction<CharacteristicValueObject> categoryRankFn = null;
         List<RuledOutTermValueObject> ruledOut = new ArrayList<>();
         boolean nearMissTruncated = false;
         boolean excludedAny = false;
@@ -1409,7 +1416,7 @@ public class AnnotationsWebService {
                 // configured namespace order. Near-matches are deliberately NOT promotable: a
                 // CHEBI term that merely contains the query would otherwise leapfrog an exact hit
                 // from another ontology, which trades one bad ranking for another.
-                java.util.function.ToIntFunction<CharacteristicValueObject> categoryRankFn = h -> {
+                categoryRankFn = h -> {
                     String uri = h.getValueUri();
                     if ( uri == null || !solid.test( h ) ) {
                         return preferredPrefixes.size();
@@ -1501,6 +1508,13 @@ public class AnnotationsWebService {
         // so the tokeniser sees the union.
         String joinedQuery = String.join( " ", queryValues );
         List<CharacteristicValueObject> ranked = strategy.rank( joinedQuery, rawHits, countsByUri );
+        if ( categoryRankFn != null ) {
+            // Stable, so the strategy's ordering survives inside each tier. Idempotent for the
+            // default lucene strategy, whose input was already in this order.
+            final java.util.function.ToIntFunction<CharacteristicValueObject> promote = categoryRankFn;
+            ranked = new ArrayList<>( ranked );
+            ranked.sort( Comparator.<CharacteristicValueObject>comparingInt( promote::applyAsInt ) );
+        }
 
         // Truncate to the requested limit BEFORE enrichment, so per-URI definition + parents
         // lookups only fire for hits the client will actually see.
