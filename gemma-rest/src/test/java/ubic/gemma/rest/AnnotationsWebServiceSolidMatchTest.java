@@ -1,6 +1,7 @@
 package ubic.gemma.rest;
 
 import org.junit.jupiter.api.Test;
+import ubic.gemma.core.ontology.lexical.LexicalOntologyTerm;
 import ubic.gemma.core.ontology.model.AnnotationProperty;
 import ubic.gemma.core.ontology.model.OntologyTerm;
 
@@ -192,6 +193,41 @@ class AnnotationsWebServiceSolidMatchTest {
                         AnnotationsWebService.MatchedVia.LABEL_TOKENS );
             }
         }
+    }
+
+    // ---- flat lexical terms (Cellosaurus / MGI) --------------------------------------------
+
+    /**
+     * A term from a flat vocabulary has to survive attribution. It reaches here for real: {@code
+     * getTerm} fans out over the lexical services too, so a CVCL hit on {@code /annotations/search}
+     * is enriched exactly like an EFO one.
+     *
+     * <p>Uses the production class rather than {@link #term(String)}, deliberately. The mock stubs
+     * {@code getAnnotations(uri)} to empty, so it agrees with every implementation and can never
+     * detect one that throws — which is how {@code UnsupportedOperationException: Use a
+     * OntologyTermImpl} shipped to CAB on 2026-08-10 with the suite green.</p>
+     */
+    @Test
+    void aFlatLexicalTermIsAttributedFromItsLabelInsteadOfThrowing() {
+        OntologyTerm cvcl = new LexicalOntologyTerm( "https://www.cellosaurus.org/CVCL_1108", "Cal-33" );
+        AnnotationsWebService.MatchAttribution m =
+                AnnotationsWebService.computeMatchAttribution( cvcl, "Cal33" );
+        assertThat( m ).isNotNull();
+        // Canonical equality drops the hyphen, so the designation matches its own label.
+        assertThat( m.via ).isEqualTo( AnnotationsWebService.MatchedVia.PREFERRED_LABEL );
+        assertThat( AnnotationsWebService.isExactAttribution( m.via ) ).isTrue();
+    }
+
+    @Test
+    void aFlatLexicalTermAnswersEveryPredicateProbeTheRestLayerMakes() {
+        // The three probe surfaces: definition (IAO_0000115), the six synonym predicates, and
+        // hasDbXref. All go through the single-URI overloads, which is what was missing.
+        OntologyTerm cvcl = new LexicalOntologyTerm( "https://www.cellosaurus.org/CVCL_0330", "BV-2" );
+        assertThat( cvcl.getAnnotation( "http://purl.obolibrary.org/obo/IAO_0000115" ) ).isNull();
+        assertThat( cvcl.getAnnotations( OBO_EXACT_SYNONYM ) ).isEmpty();
+        assertThat( cvcl.getAnnotations( "http://www.geneontology.org/formats/oboInOwl#hasDbXref" ) ).isEmpty();
+        // A non-matching query stays honestly unattributed rather than blowing up.
+        assertThat( AnnotationsWebService.computeMatchAttribution( cvcl, "HT22" ) ).isNull();
     }
 
     // ---- category keying + prefix tables ---------------------------------------------------

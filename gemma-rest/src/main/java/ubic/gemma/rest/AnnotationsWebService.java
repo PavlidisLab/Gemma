@@ -2289,6 +2289,11 @@ public class AnnotationsWebService {
             }
         } catch ( TimeoutException e ) {
             log.debug( "candidate attribution timed out for {}", uri );
+        } catch ( RuntimeException e ) {
+            // Same outcome the parallel fan-out already gives this: no attribution for this URI,
+            // the rest of the candidate set unaffected. See enrichOne for why the two paths have
+            // to agree.
+            log.warn( "candidate attribution failed for {}; continuing without it", uri, e );
         }
     }
 
@@ -2314,6 +2319,8 @@ public class AnnotationsWebService {
             }
         } catch ( TimeoutException e ) {
             log.debug( "definition lookup timed out for {}", uri );
+        } catch ( RuntimeException e ) {
+            log.warn( "definition lookup failed for {}; continuing without it", uri, e );
         }
         try {
             OntologyTerm term = ontologyService.getTerm( uri, remaining, TimeUnit.MILLISECONDS );
@@ -2348,6 +2355,18 @@ public class AnnotationsWebService {
             synchronized ( parentsByUri ) { parentsByUri.put( uri, parentVos ); }
         } catch ( TimeoutException e ) {
             log.debug( "term/parents lookup timed out for {}", uri );
+        } catch ( RuntimeException e ) {
+            // Enrichment is decoration: definition, parents and matchedVia all have a documented
+            // null sentinel, and the caller lazy-loads via /annotations/term. One URI that cannot
+            // be read must not cost the caller the whole result set.
+            //
+            // The parallel fan-out below already swallows this (its ExecutionException catch), so
+            // without this clause the outcome depended on how many URIs survived filtering: the
+            // parallelism<=1 shortcut runs enrichOne on the request thread, so exact_label /
+            // suppress_near_matches narrowing the hits to a single row turned a logged failure
+            // into a 500. That is how an UnsupportedOperationException on a Cellosaurus term
+            // reached the wire (2026-08-10).
+            log.warn( "enrichment failed for {}; continuing with null enrichment fields", uri, e );
         }
     }
 
