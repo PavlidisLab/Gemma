@@ -149,7 +149,19 @@ public class AnnotationsWebService {
     private org.springframework.cache.CacheManager cacheManager;
     private volatile org.springframework.cache.Cache searchResponseCache;
 
+    private static final String PRIOR_CURATION_CACHE_NAME = "AnnotationsPriorCurationCache";
+
     private volatile org.springframework.cache.Cache stringPriorCache;
+    private volatile org.springframework.cache.Cache priorCurationCache;
+
+    private org.springframework.cache.Cache priorCurationCache() {
+        org.springframework.cache.Cache c = priorCurationCache;
+        if ( c == null && cacheManager != null ) {
+            c = cacheManager.getCache( PRIOR_CURATION_CACHE_NAME );
+            priorCurationCache = c;
+        }
+        return c;
+    }
 
     private org.springframework.cache.Cache searchResponseCache() {
         org.springframework.cache.Cache c = searchResponseCache;
@@ -569,7 +581,7 @@ public class AnnotationsWebService {
             return terms.stream()
                     .map( t -> new AnnotationSearchResultValueObject( t.getLabel(), t.getUri(), null, null,
                             t.getUri() != null ? countsByUri.getOrDefault( t.getUri(), 0 ) : null,
-                            null, null, null, null, null, null, null, null, null, null ) )
+                            null, null, null, null, null, null, null, null, null, null, null ) )
                     .collect( Collectors.toList() );
         } catch ( TimeoutException e ) {
             throw new ServiceUnavailableException( DateUtils.addSeconds( new Date(), 30 ), e );
@@ -699,7 +711,31 @@ public class AnnotationsWebService {
                     + "term in context in a picker. One batched, ACL-filtered lookup for the result page; default "
                     + "false so the common typeahead path pays nothing. Gate rendering client-side (e.g. only for "
                     + "low `usageCount`).")
-            @QueryParam("includeExampleUsage") @DefaultValue("false") boolean includeExampleUsage
+            @QueryParam("includeExampleUsage") @DefaultValue("false") boolean includeExampleUsage,
+            @Parameter(description = "Experiments to leave out of every corpus tally — the usage "
+                    + "counts behind `rank=usage`, the per-string prior behind `rank=commonality`, "
+                    + "and `priorCuration`. Accepts dataset ids or short names (`GSE12345`), comma "
+                    + "separated.\n\n"
+                    + "This exists for leave-one-out evaluation. A tally over the whole corpus "
+                    + "includes the very experiments a held-out gold set was drawn from, so it is "
+                    + "partly counting the answer key and cannot score a resolver. Exclude those "
+                    + "experiments and the count becomes independent evidence. Unknown identifiers "
+                    + "are a 400 rather than being ignored, because a silently mis-spelled "
+                    + "exclusion yields a contaminated number that still looks clean.")
+            @QueryParam("excludeExperiments") @Nullable String excludeExperiments,
+            @Parameter(description = "When `true`, add a `priorCuration` section listing the terms "
+                    + "prior curators actually chose when they met this string, most used first, "
+                    + "each with the number of distinct experiments and an `agreement` share.\n\n"
+                    + "This answers a question lexical search cannot: `vehicle`, `untreated` and "
+                    + "`sham` are curated as `reference substance role` / `reference subject role`, "
+                    + "terms sharing no word with the string, so no ranking of a label search will "
+                    + "ever surface them. Kept out of `data` precisely because these terms did not "
+                    + "come from the ontology search.\n\n"
+                    + "These are counts of what curators did, not of what is correct — a string "
+                    + "mis-tagged for years returns with a large count. Read `agreement` alongside: "
+                    + "a settled convention scores near 1.0, a contested one visibly does not. "
+                    + "Costs a scan of the annotation corpus, so it is off by default and cached.")
+            @QueryParam("includePriorCuration") @DefaultValue("false") boolean includePriorCuration
     ) {
         if ( query == null || query.getValue().isEmpty() ) {
             throw new BadRequestException( "Search query cannot be empty." );
@@ -719,11 +755,14 @@ public class AnnotationsWebService {
         // Resolve the optional taxon hint up-front so a bad value 400s before we hit the cache or
         // launch the ontology fan-out. Null taxon = no constraint (legacy behaviour).
         Taxon taxon = taxonArg != null ? taxonArgService.getEntity( taxonArg ) : null;
+        CorpusTallyOptions corpusOptions = new CorpusTallyOptions(
+                resolveExcludedExperimentIds( excludeExperiments ), includePriorCuration );
         try {
             SearchOutcome outcome = searchOne( query.getValue(), strategy, limit, prefixes, upstream,
                     exactLabel, category, suppressNearMatches, taxon, includeGenes, includeGeneCount,
-                    geneCountMaxTerms, includeExampleUsage );
-            return new AnnotationSearchResponseDataObject( outcome.results, outcome.negativeEvidence );
+                    geneCountMaxTerms, includeExampleUsage, corpusOptions );
+            return new AnnotationSearchResponseDataObject( outcome.results, outcome.negativeEvidence,
+                    outcome.priorCuration );
         } catch ( SearchTimeoutException e ) {
             throw new ServiceUnavailableException( e.getMessage(), DateUtils.addSeconds( new Date(), 30 ), e.getCause() );
         } catch ( ParseSearchException e ) {
@@ -748,7 +787,7 @@ public class AnnotationsWebService {
             AnnotationSearchRankingStrategy strategy, int limit, List<String> prefixes, boolean upstream,
             boolean exactLabel, String category, boolean suppressNearMatches, @Nullable Taxon taxon,
             boolean includeGenes, boolean includeGeneCount, int geneCountMaxTerms,
-            boolean includeExampleUsage ) throws SearchException {
+            boolean includeExampleUsage, CorpusTallyOptions corpusOptions ) throws SearchException {
         // Cache key includes includeGeneCount + geneCountMaxTerms so a "with counts" call doesn't
         // hit a cached "without counts" payload. Taxon affects gene fan-out, so it keys too; and
         // includeGenes=false is a different response shape, so it gets its own "|ng" suffix.
@@ -759,17 +798,21 @@ public class AnnotationsWebService {
                 + ( includeExampleUsage ? "|eu" : "" )
                 // Near-match suppression removes rows, so a suppressed response must never be
                 // served to a caller that did not ask for it (nor the reverse).
-                + ( suppressNearMatches ? "|snm" : "" );
+                + ( suppressNearMatches ? "|snm" : "" )
+                // Excluded experiments change every corpus tally, and prior-curation adds a
+                // section; both must key or a hold-out run and a normal one would share entries.
+                + corpusOptions.cacheKeySuffix();
         org.springframework.cache.Cache searchCache = searchResponseCache();
         if ( searchCache != null ) {
             org.springframework.cache.Cache.ValueWrapper hit = searchCache.get( cacheKey );
             if ( hit != null && hit.get() instanceof SearchOutcome ) {
                 SearchOutcome cached = ( SearchOutcome ) hit.get();
                 log.debug( "annotation-search cache HIT key={}", cacheKey );
-                return new SearchOutcome( new ArrayList<>( cached.results ), cached.negativeEvidence );
+                return new SearchOutcome( new ArrayList<>( cached.results ), cached.negativeEvidence,
+                        cached.priorCuration );
             }
         }
-        SearchOutcome outcome = this.getTerms( queryValues, strategy, limit, prefixes, upstream, exactLabel, category, suppressNearMatches, taxon, includeGenes, FIND_CHARACTERISTICS_TIMEOUT_MS );
+        SearchOutcome outcome = this.getTerms( queryValues, strategy, limit, prefixes, upstream, exactLabel, category, suppressNearMatches, taxon, includeGenes, FIND_CHARACTERISTICS_TIMEOUT_MS, corpusOptions );
         List<AnnotationSearchResultValueObject> result = new ArrayList<>( outcome.results );
         if ( includeGeneCount && !result.isEmpty() ) {
             result = attachGeneCounts( result, geneCountMaxTerms );
@@ -777,7 +820,13 @@ public class AnnotationsWebService {
         if ( includeExampleUsage && !result.isEmpty() ) {
             attachExampleUsage( result );
         }
-        SearchOutcome toReturn = new SearchOutcome( result, outcome.negativeEvidence );
+        // Computed here rather than inside getTerms: it depends only on the query string, not on
+        // anything the search found, and it must still be reported when the search found nothing —
+        // which is exactly the case it is most useful in.
+        List<PriorCurationValueObject> priorCuration = corpusOptions.includePriorCuration
+                ? getPriorCuration( String.join( " ", queryValues ), corpusOptions.excludedExperimentIds )
+                : null;
+        SearchOutcome toReturn = new SearchOutcome( result, outcome.negativeEvidence, priorCuration );
         // Cache only non-empty results. An empty hit list is almost always either (a) genuinely
         // no match, where re-running is cheap, or (b) a transient gap (ontologies still warming
         // after a restart, basecode Lucene index temporarily empty, etc.) — caching the empty
@@ -935,7 +984,7 @@ public class AnnotationsWebService {
             // Single literal label — NOT wrapped in StringArrayArg, so an embedded comma stays one query.
             SearchOutcome outcome = searchOne( Collections.singletonList( q ),
                     strategy, limit, prefixes, false, exactLabel, category, suppressNearMatches, taxon,
-                    includeGenes, includeGeneCount, geneCountMaxTerms, false );
+                    includeGenes, includeGeneCount, geneCountMaxTerms, false, CorpusTallyOptions.NONE );
             return new AnnotationSearchBatchResultValueObject( q, category, outcome.results, null,
                     outcome.negativeEvidence );
         } catch ( SearchException | RuntimeException e ) {
@@ -965,7 +1014,7 @@ public class AnnotationsWebService {
     public ResponseDataObject<List<AnnotationSearchResultValueObject>> searchAnnotationsByPathQuery( // Params:
             @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE, description = SEARCH_QUERY_DESCRIPTION) @PathParam("query") @DefaultValue("") StringArrayArg query // Required
     ) {
-        return searchAnnotations( query, LuceneOrderRankingStrategy.NAME, SEARCH_DEFAULT_LIMIT, "", false, false, "", false, null, false, 50, true, false );
+        return searchAnnotations( query, LuceneOrderRankingStrategy.NAME, SEARCH_DEFAULT_LIMIT, "", false, false, "", false, null, false, 50, true, false, null, false );
     }
 
     /**
@@ -1182,7 +1231,7 @@ public class AnnotationsWebService {
     private SearchOutcome getTerms( List<String> queryValues,
             AnnotationSearchRankingStrategy strategy, int limit, List<String> prefixes, boolean upstream,
             boolean exactLabel, String category, boolean suppressNearMatches, @Nullable Taxon taxon,
-            boolean includeGenes, long timeoutMs ) throws SearchException {
+            boolean includeGenes, long timeoutMs, CorpusTallyOptions corpusOptions ) throws SearchException {
         StopWatch timer = StopWatch.createStarted();
         long phaseStart = timer.getTime();
         List<CharacteristicValueObject> rawHits = new ArrayList<>();
@@ -1527,7 +1576,7 @@ public class AnnotationsWebService {
                     .map( CharacteristicValueObject::getValueUri )
                     .filter( Objects::nonNull )
                     .collect( Collectors.toSet() );
-            countsByUri = getDistinctEeCountsByUri( uris );
+            countsByUri = getDistinctEeCountsByUri( uris, corpusOptions.excludedExperimentIds );
         } else {
             countsByUri = Collections.emptyMap();
         }
@@ -1550,7 +1599,7 @@ public class AnnotationsWebService {
                     .map( CharacteristicValueObject::getValueUri )
                     .filter( Objects::nonNull )
                     .collect( Collectors.toSet() );
-            stringPriorByUri = getStringPriorByUri( joinedQuery, priorUris );
+            stringPriorByUri = getStringPriorByUri( joinedQuery, priorUris, corpusOptions.excludedExperimentIds );
             tStringPrior = timer.getTime() - priorStart;
         }
         List<CharacteristicValueObject> ranked = strategy.rank( joinedQuery, rawHits, countsByUri, stringPriorByUri );
@@ -1580,7 +1629,7 @@ public class AnnotationsWebService {
                     .filter( Objects::nonNull )
                     .collect( Collectors.toSet() );
             if ( !topUrisForCount.isEmpty() ) {
-                countsByUri = getDistinctEeCountsByUri( topUrisForCount );
+                countsByUri = getDistinctEeCountsByUri( topUrisForCount, corpusOptions.excludedExperimentIds );
             }
         }
         long tTopCounts = timer.getTime() - phaseStart;
@@ -1662,7 +1711,7 @@ public class AnnotationsWebService {
             Map<String, Integer> priorCategories = uri != null ? priorCategoriesByUri.get( uri ) : null;
             vos.add( new AnnotationSearchResultValueObject( vo.getValue(), vo.getValueUri(), vo.getCategory(),
                     vo.getCategoryUri(), count, definition, parents, matchedVia, matchedText, null, priorCategories,
-                    null, null, null, null ) );
+                    null, null, null, null, priorCountFor( vo.getValueUri(), stringPriorByUri ) ) );
         }
         // Always merge gene hits in, regardless of category — the typeahead surface should
         // surface STAT5B whether the curator is in a Genotype factor, a Treatment factor, or a
@@ -1835,7 +1884,7 @@ public class AnnotationsWebService {
             String taxonScientificName = taxon != null ? taxon.getScientificName() : null;
             out.add( new AnnotationSearchResultValueObject( label, uri, "gene", null,
                     0, null, null, matchedViaToken, label, null, null,
-                    taxonId, taxonCommonName, taxonScientificName, null ) );
+                    taxonId, taxonCommonName, taxonScientificName, null, null ) );
         }
     }
 
@@ -1926,7 +1975,8 @@ public class AnnotationsWebService {
                         r.getValue(), r.getValueUri(), r.getCategory(), r.getCategoryUri(),
                         r.getUsageCount(), r.getDefinition(), r.getParents(),
                         r.getMatchedVia(), r.getMatchedText(), c, r.getPriorCategories(),
-                        r.getTaxonId(), r.getTaxonCommonName(), r.getTaxonScientificName(), r.getExampleUsage() ) );
+                        r.getTaxonId(), r.getTaxonCommonName(), r.getTaxonScientificName(), r.getExampleUsage(),
+                        r.getPriorCurationCount() ) );
             }
         }
         return out;
@@ -1971,8 +2021,22 @@ public class AnnotationsWebService {
                     r.getUsageCount(), r.getDefinition(), r.getParents(),
                     r.getMatchedVia(), r.getMatchedText(), r.getGeneCount(), r.getPriorCategories(),
                     r.getTaxonId(), r.getTaxonCommonName(), r.getTaxonScientificName(),
-                    toExampleUsageVo( ex ) ) );
+                    toExampleUsageVo( ex ), r.getPriorCurationCount() ) );
         }
+    }
+
+    /**
+     * The prior for one hit, or null when no prior was computed for this request. Deliberately
+     * distinguishes "not asked for" (null) from "asked for, and nobody has ever written this string
+     * for this term" (0) — the second is a real negative and the caller should be able to see it.
+     */
+    @Nullable
+    private static Long priorCountFor( @Nullable String uri, Map<String, Integer> stringPriorByUri ) {
+        if ( uri == null || stringPriorByUri.isEmpty() ) {
+            return null;
+        }
+        Integer n = stringPriorByUri.get( uri );
+        return n != null ? n.longValue() : 0L;
     }
 
     private static ExampleUsageValueObject toExampleUsageVo( CharacteristicDao.UsageExample ex ) {
@@ -2754,6 +2818,16 @@ public class AnnotationsWebService {
      * Count the number of distinct expression experiments that reference each of the given annotation URIs.
      */
     private Map<String, Integer> getDistinctEeCountsByUri( Set<String> uris ) {
+        return getDistinctEeCountsByUri( uris, Collections.emptySet() );
+    }
+
+    /**
+     * @param excludedExperimentIds experiments to leave out of the tally, for leave-one-out
+     *                              evaluation. Filtered here rather than in the query: the lookup
+     *                              already returns the experiments themselves, so dropping them
+     *                              costs a set membership test and needs no second query shape.
+     */
+    private Map<String, Integer> getDistinctEeCountsByUri( Set<String> uris, Set<Long> excludedExperimentIds ) {
         if ( uris.isEmpty() ) {
             return Collections.emptyMap();
         }
@@ -2764,6 +2838,9 @@ public class AnnotationsWebService {
             for ( Map.Entry<String, Set<ExpressionExperiment>> entry : perClass.entrySet() ) {
                 Set<Long> bucket = distinctIdsByUri.computeIfAbsent( entry.getKey(), k -> new HashSet<>() );
                 for ( ExpressionExperiment ee : entry.getValue() ) {
+                    if ( excludedExperimentIds.contains( ee.getId() ) ) {
+                        continue;
+                    }
                     bucket.add( ee.getId() );
                 }
             }
@@ -2784,7 +2861,100 @@ public class AnnotationsWebService {
      * being annotated for the first time — and recomputing it on every keystroke would make the
      * uninformative queries the expensive ones.
      */
-    private Map<String, Integer> getStringPriorByUri( String query, Set<String> uris ) {
+    /**
+     * Resolve the {@code excludeExperiments} parameter to experiment ids. Accepts numeric ids and
+     * short names (e.g. {@code GSE12345}), comma separated.
+     * <p>
+     * An unresolvable identifier is a 400 rather than a silent skip. The whole purpose of the
+     * parameter is to make a count independent of a hold-out set, and a typo that quietly excluded
+     * nothing would return a contaminated number indistinguishable from a clean one — the failure
+     * would surface as an evaluation result that is subtly too good, which is the worst way to find
+     * out.
+     */
+    private Set<Long> resolveExcludedExperimentIds( @Nullable String excludeExperiments ) {
+        if ( StringUtils.isBlank( excludeExperiments ) ) {
+            return Collections.emptySet();
+        }
+        Set<Long> ids = new HashSet<>();
+        List<String> unresolved = new ArrayList<>();
+        for ( String token : excludeExperiments.split( "," ) ) {
+            String t = token.trim();
+            if ( t.isEmpty() ) {
+                continue;
+            }
+            ExpressionExperiment ee = null;
+            try {
+                ee = expressionExperimentService.load( Long.parseLong( t ) );
+            } catch ( NumberFormatException e ) {
+                // not an id; fall through to short-name lookup
+            }
+            if ( ee == null ) {
+                ee = expressionExperimentService.findByShortName( t );
+            }
+            if ( ee != null ) {
+                ids.add( ee.getId() );
+            } else {
+                unresolved.add( t );
+            }
+        }
+        if ( !unresolved.isEmpty() ) {
+            throw new BadRequestException( "Could not resolve these entries of 'excludeExperiments' to a dataset: "
+                    + String.join( ", ", unresolved )
+                    + ". Use a dataset id or short name; an unrecognised entry is rejected rather than ignored so a "
+                    + "hold-out is never silently incomplete." );
+        }
+        return ids;
+    }
+
+    /**
+     * What prior curators chose for this string, most used first. Cached under
+     * {@link #PRIOR_CURATION_CACHE_NAME}, keyed by the normalized string plus any exclusion set —
+     * unlike the candidate-restricted prior, the result depends on nothing else, so a cached entry
+     * is always complete and reusable across every query shape.
+     */
+    private List<PriorCurationValueObject> getPriorCuration( String query, Set<Long> excludedExperimentIds ) {
+        if ( StringUtils.isBlank( query ) ) {
+            return Collections.emptyList();
+        }
+        String normalized = query.trim().toLowerCase( Locale.ROOT );
+        org.springframework.cache.Cache cache = priorCurationCache();
+        String key = null;
+        if ( cache != null ) {
+            long digest = 0;
+            for ( Long id : excludedExperimentIds ) {
+                digest ^= id;
+            }
+            key = normalized + '\u0002' + excludedExperimentIds.size() + '\u0002' + digest;
+            org.springframework.cache.Cache.ValueWrapper hit = cache.get( key );
+            if ( hit != null ) {
+                //noinspection unchecked
+                List<PriorCurationValueObject> cached = ( List<PriorCurationValueObject> ) hit.get();
+                if ( cached != null ) {
+                    return cached;
+                }
+            }
+        }
+        List<CharacteristicDao.PriorCurationUsage> raw = characteristicService
+                .findPriorCurationByOriginalValue( normalized, PRIOR_CURATION_MAX_TERMS, excludedExperimentIds );
+        List<PriorCurationValueObject> out = new ArrayList<>( raw.size() );
+        for ( CharacteristicDao.PriorCurationUsage u : raw ) {
+            out.add( new PriorCurationValueObject( u.valueUri, u.value, u.experimentCount, u.agreement ) );
+        }
+        List<PriorCurationValueObject> result = Collections.unmodifiableList( out );
+        if ( cache != null ) {
+            cache.put( key, result );
+        }
+        return result;
+    }
+
+    /**
+     * Cap on terms reported per string. The tail is long only for generic words (`control` reaches
+     * 24 distinct terms, nearly all with a count of 1) and those entries carry no signal.
+     */
+    private static final int PRIOR_CURATION_MAX_TERMS = 10;
+
+    private Map<String, Integer> getStringPriorByUri( String query, Set<String> uris,
+            Set<Long> excludedExperimentIds ) {
         if ( uris.isEmpty() || StringUtils.isBlank( query ) ) {
             return Collections.emptyMap();
         }
@@ -2798,7 +2968,11 @@ public class AnnotationsWebService {
             for ( String u : uris ) {
                 digest ^= u.hashCode();
             }
-            key = normalized + '' + uris.size() + '' + digest;
+            long exDigest = 0;
+            for ( Long id : excludedExperimentIds ) {
+                exDigest ^= id;
+            }
+            key = normalized + '' + uris.size() + '' + digest + '' + exDigest;
             org.springframework.cache.Cache.ValueWrapper hit = cache.get( key );
             if ( hit != null ) {
                 //noinspection unchecked
@@ -2808,7 +2982,8 @@ public class AnnotationsWebService {
                 }
             }
         }
-        Map<String, Long> raw = characteristicService.findEeCountsByUriForOriginalValue( uris, normalized );
+        Map<String, Long> raw = characteristicService.findEeCountsByUriForOriginalValue( uris, normalized,
+                excludedExperimentIds );
         Map<String, Integer> prior = new HashMap<>( raw.size() );
         raw.forEach( ( k, v ) -> prior.put( k, v.intValue() ) );
         Map<String, Integer> result = Collections.unmodifiableMap( prior );
@@ -2897,6 +3072,26 @@ public class AnnotationsWebService {
          * term has no accessible usage. Gate rendering client-side (e.g. only for low {@code usageCount}).
          */
         @Nullable ExampleUsageValueObject exampleUsage;
+        /**
+         * Distinct experiments on which a prior curator annotated this term after being given the
+         * query string itself — the evidence {@code ?rank=commonality} orders by.
+         *
+         * <p>Surfaced so the ordering can be audited rather than trusted. A hit promoted on
+         * {@code n=1} and one promoted on {@code n=508} are the same position in the list and very
+         * different claims, and only this field tells them apart. The ranker orders and never
+         * filters, so a consumer that disagrees with the corpus can always recover the term it
+         * wanted; that recovery is only possible if the strength of the evidence is visible.</p>
+         *
+         * <p>Populated when the per-string prior was computed for the request (i.e. under
+         * {@code rank=commonality}); null otherwise, and null rather than 0 on rows the prior did
+         * not cover. {@code 0} means the string has been written in the corpus but never for this
+         * term — a real and useful negative.</p>
+         *
+         * <p>⚠️ Curation history, so it carries curation's mistakes. See
+         * {@link PriorCurationValueObject} for the fuller warning and for the {@code agreement}
+         * figure that shows whether curators were actually consistent.</p>
+         */
+        @Nullable Long priorCurationCount;
     }
 
     /**
@@ -3374,16 +3569,113 @@ public class AnnotationsWebService {
         @Nullable
         private final NegativeEvidenceValueObject negativeEvidence;
 
+        @Nullable
+        private final List<PriorCurationValueObject> priorCuration;
+
         public AnnotationSearchResponseDataObject( List<AnnotationSearchResultValueObject> payload,
                 @Nullable NegativeEvidenceValueObject negativeEvidence ) {
+            this( payload, negativeEvidence, null );
+        }
+
+        public AnnotationSearchResponseDataObject( List<AnnotationSearchResultValueObject> payload,
+                @Nullable NegativeEvidenceValueObject negativeEvidence,
+                @Nullable List<PriorCurationValueObject> priorCuration ) {
             super( payload );
             this.negativeEvidence = negativeEvidence;
+            this.priorCuration = priorCuration;
         }
 
         @JsonInclude(JsonInclude.Include.NON_NULL)
         @Nullable
         public NegativeEvidenceValueObject getNegativeEvidence() {
             return negativeEvidence;
+        }
+
+        /**
+         * What prior curators chose when they met this string, most used first. Present only when
+         * the caller asked for it.
+         *
+         * @see PriorCurationValueObject
+         */
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        @Nullable
+        public List<PriorCurationValueObject> getPriorCuration() {
+            return priorCuration;
+        }
+    }
+
+    /**
+     * A term prior curators chose for the query string, with the number of distinct experiments
+     * they chose it on.
+     *
+     * <p>Deliberately NOT in {@code data}, for the same reason {@code ruledOut} is not: these terms
+     * did not come from the ontology search at all. They are drawn from what curators have
+     * recorded, which answers a question lexical search cannot. {@code vehicle}, {@code untreated}
+     * and {@code sham} are annotated with {@code reference substance role} and
+     * {@code reference subject role} — terms sharing no word with the string, so no label or
+     * synonym search returns them under any ranking. Likewise {@code EAE} matches
+     * {@code episodic angioedema with eosinophilia} lexically and means
+     * {@code experimental autoimmune encephalomyelitis}, which is what the corpus records.</p>
+     *
+     * <p>A client reading {@code data[0]} without knowing this field must not silently pick up a
+     * term that was never returned by the search, which is why it lives in its own section.</p>
+     *
+     * <p>⚠️ These are counts of what curators did, not of what is right. A string mis-tagged for
+     * years arrives with a large and confident-looking count. Read an entry as evidence with a
+     * denominator attached.</p>
+     */
+    public static class PriorCurationValueObject {
+        private final String valueUri;
+        @Nullable
+        private final String value;
+        private final long experimentCount;
+        private final double agreement;
+
+        public PriorCurationValueObject( String valueUri, @Nullable String value, long experimentCount,
+                double agreement ) {
+            this.valueUri = valueUri;
+            this.value = value;
+            this.experimentCount = experimentCount;
+            this.agreement = agreement;
+        }
+
+        /**
+         * This term's share of every annotation made from this string, in {@code [0, 1]}.
+         *
+         * <p>Read this before the count. The count says how much evidence there is; agreement says
+         * whether curators agreed, and the two come apart. {@code wild type} resolves to
+         * {@code wild type genotype} with agreement ≈ 1.0 — settled convention. {@code sham} splits
+         * 187/28 between {@code reference subject role} and {@code reference substance role} —
+         * still a large count, but a contested one, and a consumer should not treat the two the
+         * same way.</p>
+         *
+         * <p>This is the field that makes the section safe to use. A convention that was
+         * consistently wrong is indistinguishable from one that was consistently right, but a
+         * convention that was never settled is visible here, and that is the case where a
+         * downstream stage should stop and reason rather than adopt.</p>
+         */
+        public double getAgreement() {
+            return agreement;
+        }
+
+        /** The term prior curators chose. */
+        public String getValueUri() {
+            return valueUri;
+        }
+
+        /**
+         * The label stored alongside the term in the corpus. Read from curation records rather
+         * than resolved from the ontology, so it stays populated for ontologies that are not
+         * loaded.
+         */
+        @Nullable
+        public String getValue() {
+            return value;
+        }
+
+        /** Distinct experiments on which this string was annotated with this term. */
+        public long getExperimentCount() {
+            return experimentCount;
         }
     }
 
@@ -3507,11 +3799,62 @@ public class AnnotationsWebService {
         final List<AnnotationSearchResultValueObject> results;
         @Nullable
         final NegativeEvidenceValueObject negativeEvidence;
+        @Nullable
+        final List<PriorCurationValueObject> priorCuration;
 
         SearchOutcome( List<AnnotationSearchResultValueObject> results,
                 @Nullable NegativeEvidenceValueObject negativeEvidence ) {
+            this( results, negativeEvidence, null );
+        }
+
+        SearchOutcome( List<AnnotationSearchResultValueObject> results,
+                @Nullable NegativeEvidenceValueObject negativeEvidence,
+                @Nullable List<PriorCurationValueObject> priorCuration ) {
             this.results = results;
             this.negativeEvidence = negativeEvidence;
+            this.priorCuration = priorCuration;
+        }
+    }
+
+    /**
+     * The two knobs that govern how the corpus is consulted for a search: which experiments to
+     * leave out of every tally, and whether to report what prior curators chose.
+     *
+     * <p>Grouped rather than passed as two more scalars because both travel the whole way down the
+     * call chain, both have to appear in the response-cache key, and neither means anything without
+     * the other in mind — they are the "what does curation history say, and whose history counts"
+     * pair.</p>
+     */
+    private static final class CorpusTallyOptions {
+        static final CorpusTallyOptions NONE = new CorpusTallyOptions( Collections.emptySet(), false );
+
+        final Set<Long> excludedExperimentIds;
+        final boolean includePriorCuration;
+
+        CorpusTallyOptions( Set<Long> excludedExperimentIds, boolean includePriorCuration ) {
+            this.excludedExperimentIds = excludedExperimentIds;
+            this.includePriorCuration = includePriorCuration;
+        }
+
+        /**
+         * Cache-key fragment. The exclusion set MUST key, or a leave-one-out evaluation query would
+         * poison the shared cache with counts that are wrong for every other caller — and would
+         * itself be served whatever full-corpus entry happened to be warm, quietly defeating the
+         * hold-out. Order-independent, since the set's iteration order is not stable.
+         */
+        String cacheKeySuffix() {
+            StringBuilder sb = new StringBuilder();
+            if ( !excludedExperimentIds.isEmpty() ) {
+                long digest = 0;
+                for ( Long id : excludedExperimentIds ) {
+                    digest ^= id;
+                }
+                sb.append( "|xx=" ).append( excludedExperimentIds.size() ).append( '.' ).append( digest );
+            }
+            if ( includePriorCuration ) {
+                sb.append( "|pc" );
+            }
+            return sb.toString();
         }
     }
 

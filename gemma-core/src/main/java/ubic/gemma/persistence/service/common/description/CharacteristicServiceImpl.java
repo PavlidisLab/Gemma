@@ -126,6 +126,16 @@ public class CharacteristicServiceImpl extends AbstractFilteringVoEnabledService
     }
 
     @Override
+    public Map<String, Long> findEeCountsByUriForOriginalValue( Collection<String> uris, String originalValue, Collection<Long> excludedExperimentIds ) {
+        return readService.findEeCountsByUriForOriginalValue( uris, originalValue, excludedExperimentIds );
+    }
+
+    @Override
+    public List<CharacteristicDao.PriorCurationUsage> findPriorCurationByOriginalValue( String originalValue, int maxResults, Collection<Long> excludedExperimentIds ) {
+        return readService.findPriorCurationByOriginalValue( originalValue, maxResults, excludedExperimentIds );
+    }
+
+    @Override
     public Map<String, String> findValueGroupedByValueUri( @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, boolean includePredicates, boolean includeObjects, int maxResults ) {
         return readService.findValueGroupedByValueUri( parentClasses, includeNoParents, includePredicates, includeObjects, maxResults );
     }

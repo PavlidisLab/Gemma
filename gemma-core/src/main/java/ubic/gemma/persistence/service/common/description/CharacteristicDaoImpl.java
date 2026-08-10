@@ -607,6 +607,12 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
 
     @Override
     public Map<String, Long> findEeCountsByUriForOriginalValue( Collection<String> uris, String originalValue ) {
+        return findEeCountsByUriForOriginalValue( uris, originalValue, Collections.emptySet() );
+    }
+
+    @Override
+    public Map<String, Long> findEeCountsByUriForOriginalValue( Collection<String> uris, String originalValue,
+            Collection<Long> excludedExperimentIds ) {
         String wanted = originalValue != null ? originalValue.trim().toLowerCase( Locale.ROOT ) : "";
         if ( uris.isEmpty() || wanted.isEmpty() ) {
             return Collections.emptyMap();
@@ -631,10 +637,12 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
         // lower() on both sides rather than leaning on MySQL's case-insensitive collation, so the
         // H2 test path agrees with production. It costs nothing here: there is no index on
         // ORIGINAL_VALUE to forfeit, and the indexed VALUE_URI IN-clause is what bounds the scan.
+        boolean excluding = excludedExperimentIds != null && !excludedExperimentIds.isEmpty();
         Query q = this.getSessionFactory().getCurrentSession()
                 .createNativeQuery( "select VALUE_URI as V, count(distinct EXPRESSION_EXPERIMENT_FK) as N "
                         + "from EXPRESSION_EXPERIMENT2CHARACTERISTIC "
                         + "where VALUE_URI in :uris and ORIGINAL_VALUE is not null "
+                        + ( excluding ? "and EXPRESSION_EXPERIMENT_FK not in :excludedEeIds " : "" )
                         + "and (lower(ORIGINAL_VALUE) = :wanted "
                         + "or lower(ORIGINAL_VALUE) like :prefixed escape '" + LIKE_ESCAPE + "') "
                         + "group by VALUE_URI" )
@@ -646,11 +654,81 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
                 .addSynchronizedEntityClass( ExpressionExperiment.class )
                 .addSynchronizedEntityClass( Characteristic.class )
                 .setCacheable( true );
+        if ( excluding ) {
+            q.setParameterList( "excludedEeIds", excludedExperimentIds );
+        }
         Map<String, Long> out = new HashMap<>();
         QueryUtils.<String, Object[]>streamByBatch( q, "uris", uris, 2048 )
                 // A URI can only appear once per batch, but a URI set larger than the batch size is
                 // split across queries, so merge rather than overwrite.
                 .forEach( row -> out.merge( ( String ) row[0], ( Long ) row[1], Long::sum ) );
+        return out;
+    }
+
+    @Override
+    public List<PriorCurationUsage> findPriorCurationByOriginalValue( String originalValue, int maxResults ) {
+        return findPriorCurationByOriginalValue( originalValue, maxResults, Collections.emptySet() );
+    }
+
+    @Override
+    public List<PriorCurationUsage> findPriorCurationByOriginalValue( String originalValue, int maxResults,
+            Collection<Long> excludedExperimentIds ) {
+        String wanted = originalValue != null ? originalValue.trim().toLowerCase( Locale.ROOT ) : "";
+        if ( wanted.isEmpty() || wanted.chars().noneMatch( Character::isLetter ) ) {
+            return Collections.emptyList();
+        }
+        // No VALUE_URI restriction here, unlike the sibling method — the whole point is to find
+        // terms the caller does NOT already have in hand. That costs a scan of EE2C rather than an
+        // index range (~1s against production's 2.5M rows), which is why this is opt-in at the web
+        // layer and cached on the string alone. The result depends on nothing but the string, so
+        // unlike the candidate-restricted tally a cached entry is always complete.
+        //
+        // The label comes off EE2C rather than from resolving the term, which keeps the result
+        // readable for ontologies that are not loaded — including the flat lexical catalogues.
+        // MIN picks it: the stored VALUE for a given URI is the ontology label and barely varies,
+        // and MIN is both deterministic and portable, where a most-frequent pick would need
+        // MySQL-only aggregation and break the H2 test path.
+        boolean excluding = excludedExperimentIds != null && !excludedExperimentIds.isEmpty();
+        Query q = this.getSessionFactory().getCurrentSession()
+                .createNativeQuery( "select VALUE_URI as V, min(`VALUE`) as L, "
+                        + "count(distinct EXPRESSION_EXPERIMENT_FK) as N "
+                        + "from EXPRESSION_EXPERIMENT2CHARACTERISTIC "
+                        + "where VALUE_URI is not null and ORIGINAL_VALUE is not null "
+                        + ( excluding ? "and EXPRESSION_EXPERIMENT_FK not in :excludedEeIds " : "" )
+                        + "and (lower(ORIGINAL_VALUE) = :wanted "
+                        + "or lower(ORIGINAL_VALUE) like :prefixed escape '" + LIKE_ESCAPE + "') "
+                        + "group by VALUE_URI order by N desc" )
+                .addScalar( "V", StandardBasicTypes.STRING )
+                .addScalar( "L", StandardBasicTypes.STRING )
+                .addScalar( "N", StandardBasicTypes.LONG )
+                .setParameter( "wanted", wanted )
+                .setParameter( "prefixed", "%: " + escapeForLike( wanted ) )
+                .addSynchronizedQuerySpace( EE2C_QUERY_SPACE )
+                .addSynchronizedEntityClass( ExpressionExperiment.class )
+                .addSynchronizedEntityClass( Characteristic.class )
+                .setCacheable( true );
+        if ( excluding ) {
+            q.setParameterList( "excludedEeIds", excludedExperimentIds );
+        }
+        // Deliberately NOT capped in SQL: the cap is applied below, after the total is known, so
+        // that `agreement` is a share of everything curators did with this string rather than of
+        // the handful of rows that survived truncation. A string maps to few distinct terms in
+        // practice (`dmso` 2, the worst offender `control` 24), so reading them all is cheap.
+        //noinspection unchecked
+        List<Object[]> rows = q.list();
+        long total = 0;
+        for ( Object[] row : rows ) {
+            total += ( Long ) row[2];
+        }
+        List<PriorCurationUsage> out = new ArrayList<>( rows.size() );
+        for ( Object[] row : rows ) {
+            if ( maxResults > 0 && out.size() >= maxResults ) {
+                break;
+            }
+            long n = ( Long ) row[2];
+            out.add( new PriorCurationUsage( ( String ) row[0], ( String ) row[1], n,
+                    total > 0 ? ( double ) n / total : 0.0 ) );
+        }
         return out;
     }
 

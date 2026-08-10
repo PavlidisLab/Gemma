@@ -149,6 +149,13 @@ public class EhcacheConfig {
         // above. 6h TTL because the underlying tally is corpus curation history: it moves when
         // curators retag experiments, which is slow, and a stale count only nudges an ordering.
         APP_CACHES.put( "AnnotationsStringPriorCache", new CacheSpec( 20000, Duration.ofHours( 6 ) ) );
+
+        // What prior curators chose for a given value string, behind ?includePriorCuration. Costs a
+        // scan of the annotation corpus rather than an index range, so caching matters more here
+        // than for the sibling above; the result depends only on the string (plus any leave-one-out
+        // exclusion), so entries are complete and shared across every query shape. Same 6h TTL —
+        // it is the same curation history, moving at the same speed.
+        APP_CACHES.put( "AnnotationsPriorCurationCache", new CacheSpec( 20000, Duration.ofHours( 6 ) ) );
     }
 
     static {

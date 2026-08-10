@@ -121,6 +121,16 @@ public interface CharacteristicReadService {
     Map<String, Long> findEeCountsByUriForOriginalValue( Collection<String> uris, String originalValue );
 
     /**
+     * @see CharacteristicDao#findEeCountsByUriForOriginalValue(Collection, String, Collection)
+     */
+    Map<String, Long> findEeCountsByUriForOriginalValue( Collection<String> uris, String originalValue, Collection<Long> excludedExperimentIds );
+
+    /**
+     * @see CharacteristicDao#findPriorCurationByOriginalValue(String, int, Collection)
+     */
+    List<CharacteristicDao.PriorCurationUsage> findPriorCurationByOriginalValue( String originalValue, int maxResults, Collection<Long> excludedExperimentIds );
+
+    /**
      * @see CharacteristicDao#findValueGroupedByValueUri(Collection, boolean, boolean, boolean, int)
      */
     Map<String, String> findValueGroupedByValueUri( @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, boolean includePredicates, boolean includeObjects, int maxResults );

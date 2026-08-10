@@ -369,6 +369,68 @@ public class CharacteristicDaoTest extends BaseDatabaseTest5 {
                 .isEmpty();
     }
 
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testFindPriorCurationByOriginalValue() {
+        String role = "http://purl.obolibrary.org/obo/OBI_0000220";
+        String substanceRole = "http://purl.obolibrary.org/obo/OBI_0000025";
+
+        // `sham` is the contested case: curators sent it to two different terms. Neither shares a
+        // word with the string, so no lexical search would ever return either one.
+        createExperimentWithOriginalValue( role, "reference subject role", "sham" );
+        createExperimentWithOriginalValue( role, "reference subject role", "treatment: Sham" );
+        createExperimentWithOriginalValue( role, "reference subject role", "sham" );
+        createExperimentWithOriginalValue( substanceRole, "reference substance role", "sham" );
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
+        sessionFactory.getCurrentSession().flush();
+
+        List<CharacteristicDao.PriorCurationUsage> usages =
+                characteristicDao.findPriorCurationByOriginalValue( "sham", -1 );
+
+        assertThat( usages ).as( "most used first" ).hasSize( 2 );
+        assertThat( usages.get( 0 ).valueUri ).isEqualTo( role );
+        assertThat( usages.get( 0 ).experimentCount ).isEqualTo( 3L );
+        assertThat( usages.get( 0 ).value ).isEqualTo( "reference subject role" );
+        assertThat( usages.get( 0 ).agreement )
+                .as( "3 of 4 — visibly contested, which is the point of the field" )
+                .isEqualTo( 0.75, org.assertj.core.data.Offset.offset( 0.001 ) );
+        assertThat( usages.get( 1 ).valueUri ).isEqualTo( substanceRole );
+        assertThat( usages.get( 1 ).experimentCount ).isEqualTo( 1L );
+
+        // A quantity is refused here for the same reason as in the tally.
+        assertThat( characteristicDao.findPriorCurationByOriginalValue( "24", -1 ) ).isEmpty();
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testPriorCurationHonoursLeaveOneOut() {
+        String uri = "http://purl.obolibrary.org/obo/OBI_0000220";
+        createExperimentWithOriginalValue( uri, "reference subject role", "sham" );
+        createExperimentWithOriginalValue( uri, "reference subject role", "sham" );
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
+        sessionFactory.getCurrentSession().flush();
+
+        List<Long> allIds = ( List<Long> ) sessionFactory.getCurrentSession()
+                .createQuery( "select e.id from ExpressionExperiment e" ).list();
+        assertThat( allIds ).hasSizeGreaterThanOrEqualTo( 2 );
+
+        // Excluding one of the two experiments must reduce the count. Without this a gold set drawn
+        // from the corpus is partly tallying its own answer key.
+        assertThat( characteristicDao.findPriorCurationByOriginalValue( "sham", -1, Collections.emptySet() ) )
+                .singleElement()
+                .satisfies( u -> assertThat( u.experimentCount ).isEqualTo( 2L ) );
+        assertThat( characteristicDao.findPriorCurationByOriginalValue( "sham", -1,
+                Collections.singleton( allIds.get( 0 ) ) ) )
+                .singleElement()
+                .satisfies( u -> assertThat( u.experimentCount ).isEqualTo( 1L ) );
+        // Excluding every experiment leaves no evidence at all, rather than a stale full-corpus count.
+        assertThat( characteristicDao.findPriorCurationByOriginalValue( "sham", -1, new HashSet<>( allIds ) ) )
+                .isEmpty();
+        assertThat( characteristicDao.findEeCountsByUriForOriginalValue( Collections.singleton( uri ), "sham",
+                new HashSet<>( allIds ) ) )
+                .isEmpty();
+    }
+
     /**
      * Persist one experiment carrying a single characteristic whose ORIGINAL_VALUE is what the
      * submitter wrote, so the EE2C tally has something to count.

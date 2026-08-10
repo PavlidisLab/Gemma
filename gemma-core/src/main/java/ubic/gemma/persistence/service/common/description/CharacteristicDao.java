@@ -223,6 +223,84 @@ public interface CharacteristicDao
     Map<String, Long> findEeCountsByUriForOriginalValue( Collection<String> uris, String originalValue );
 
     /**
+     * As {@link #findEeCountsByUriForOriginalValue(Collection, String)}, ignoring the given
+     * experiments.
+     * <p>
+     * This exists for leave-one-out evaluation. A tally taken over the whole corpus includes the
+     * very experiments a held-out gold set was drawn from, so it is partly counting the answer key
+     * and cannot be used to score a resolver. Excluding those experiments makes the count
+     * independent evidence about the string.
+     *
+     * @param excludedExperimentIds experiments to leave out of the tally; empty for the corpus-wide
+     *                              count
+     */
+    Map<String, Long> findEeCountsByUriForOriginalValue( Collection<String> uris, String originalValue,
+            Collection<Long> excludedExperimentIds );
+
+    /**
+     * For a value string, return the terms prior curators actually chose when they met it, most
+     * used first.
+     * <p>
+     * This is a retrieval question, not a ranking one, and it is not answerable lexically. Curators
+     * annotate {@code vehicle}, {@code untreated} and {@code sham} with
+     * {@code reference substance role} / {@code reference subject role} — terms that share no word
+     * with the string, so no label or synonym search will ever return them however it is ranked.
+     * The corpus is the only place that mapping is written down. Likewise {@code EAE} resolves
+     * lexically to {@code episodic angioedema with eosinophilia} and in the corpus to
+     * {@code experimental autoimmune encephalomyelitis}, which is what it means.
+     * <p>
+     * Matching follows {@link #findEeCountsByUriForOriginalValue(Collection, String)}: case
+     * insensitive, tolerant of GEO's field prefix, exact on the remainder, and refused outright
+     * for values with no letters in them. The label reported for each URI is the one most often
+     * stored beside it, so the result stays readable without loading the owning ontology.
+     * <p>
+     * ⚠️ These counts are curation history, which means they carry its mistakes: a string
+     * mis-tagged for years comes back with a large and authoritative-looking count. Treat an entry
+     * as evidence with a denominator, never as a verdict.
+     *
+     * @param maxResults cap on the number of distinct terms returned, or -1 for no cap
+     */
+    List<PriorCurationUsage> findPriorCurationByOriginalValue( String originalValue, int maxResults );
+
+    /**
+     * As {@link #findPriorCurationByOriginalValue(String, int)}, ignoring the given experiments.
+     *
+     * @see #findEeCountsByUriForOriginalValue(Collection, String, Collection) for why leaving
+     *      experiments out matters
+     */
+    List<PriorCurationUsage> findPriorCurationByOriginalValue( String originalValue, int maxResults,
+            Collection<Long> excludedExperimentIds );
+
+    /**
+     * A term prior curators chose for some value string, and how many distinct experiments they
+     * chose it on.
+     */
+    class PriorCurationUsage {
+        public final String valueUri;
+        @Nullable
+        public final String value;
+        public final long experimentCount;
+        /**
+         * This term's share of every annotation made from this string, in {@code [0, 1]}.
+         * <p>
+         * The count alone cannot be read safely, because it does not say whether curators agreed.
+         * {@code wild type} goes to {@code wild type genotype} 1421 times against 2 for anything
+         * else — settled convention. {@code sham} goes to {@code reference subject role} 187 times
+         * and to {@code reference substance role} 28 — the same corpus, genuinely contested, and a
+         * consumer should treat the two very differently. Computed over all terms for the string,
+         * before any truncation, so it does not drift with the result cap.
+         */
+        public final double agreement;
+
+        public PriorCurationUsage( String valueUri, @Nullable String value, long experimentCount, double agreement ) {
+            this.valueUri = valueUri;
+            this.value = value;
+            this.experimentCount = experimentCount;
+            this.agreement = agreement;
+        }
+    }
+
+    /**
      * Find characteristics {@link Characteristic#getValue()} grouped by {@link Characteristic#getValueUri()}.
      * <p>
      * The results are grouped by value URIs, so free-text terms will not be returned. If you need a way to get both
