@@ -5149,9 +5149,15 @@ public class DatasetsWebService {
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<Set<AnnotationValueObject>> getDatasetAnnotations( // Params:
-            @PathParam("dataset") DatasetArg<?> datasetArg // Required
+            @PathParam("dataset") DatasetArg<?> datasetArg, // Required
+            @Parameter(description = "Also return tags that carry no ontology mapping. Off by "
+                    + "default, which suits display: an unmapped string cannot be searched or "
+                    + "reasoned over. Turn it on for curation read-back — a free-text tag is "
+                    + "persisted like any other, so a caller that has just written one otherwise "
+                    + "reads back nothing and cannot tell a rejected write from a filtered read.")
+            @QueryParam("includeFreeText") @DefaultValue("false") Boolean includeFreeText
     ) {
-        return respond( datasetArgService.getAnnotations( datasetArg ) );
+        return respond( datasetArgService.getAnnotations( datasetArg, Boolean.TRUE.equals( includeFreeText ) ) );
     }
 
     /**
@@ -5382,7 +5388,11 @@ public class DatasetsWebService {
             desired.add( tagToCharacteristic( tag ) );
         }
         expressionExperimentService.updateAnnotations( ee, desired );
-        return respond( expressionExperimentService.getAnnotations( ee ) );
+        // Echo unmapped tags too. This endpoint accepts a tag with nothing but a category and a
+        // value — no URIs required — so filtering them out of its own response meant it could
+        // confirm a write by returning a list that did not contain what was just written, which
+        // reads as a silent rejection. What the caller gets back is now what it sent.
+        return respond( expressionExperimentService.getAnnotations( ee, true ) );
     }
 
     /**

@@ -255,7 +255,22 @@ public interface ExpressionExperimentReadService {
 
     Set<AnnotationValueObject> getAnnotations( ExpressionExperiment expressionExperiment );
 
+    /**
+     * @param includeFreeText also return annotations that carry no ontology mapping — no category
+     *                        URI, no value URI, or neither. These are persisted like any other tag
+     *                        but are excluded by default, which is correct for the tag cloud and
+     *                        wrong for curation read-back: a caller that has just committed a
+     *                        free-text tag would otherwise read back nothing and be unable to tell
+     *                        a rejected write from a filtered read.
+     */
+    Set<AnnotationValueObject> getAnnotations( ExpressionExperiment expressionExperiment, boolean includeFreeText );
+
     Set<AnnotationValueObject> getAnnotations( ExpressionExperimentSubSet ee );
+
+    /**
+     * @see #getAnnotations(ExpressionExperiment, boolean)
+     */
+    Set<AnnotationValueObject> getAnnotations( ExpressionExperimentSubSet ee, boolean includeFreeText );
 
     Filters getEnhancedFilters( Filters f, @Nullable Collection<OntologyTerm> mentionedTerms, @Nullable Collection<OntologyTerm> inferredTerms, long timeout, TimeUnit timeUnit ) throws TimeoutException;
 

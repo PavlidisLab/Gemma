@@ -908,7 +908,17 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
                 .hasStatus( Response.Status.OK )
                 .hasHeaderWithValue( "Cache-Control", "max-age=1200" );
         verify( expressionExperimentService ).load( 1L );
-        verify( expressionExperimentService ).getAnnotations( ee );
+        // The display read stays filtered unless the caller asks otherwise.
+        verify( expressionExperimentService ).getAnnotations( ee, false );
+    }
+
+    @Test
+    public void testGetDatasetAnnotationsIncludingFreeText() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        assertThat( target( "/datasets/1/annotations" ).queryParam( "includeFreeText", "true" ).request().get() )
+                .hasStatus( Response.Status.OK );
+        verify( expressionExperimentService ).getAnnotations( ee, true );
     }
 
     @Test
@@ -916,7 +926,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
     public void testUpdateDatasetAnnotations() {
         ee.setId( 1L );
         when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
-        when( expressionExperimentService.getAnnotations( ee ) ).thenReturn( Collections.emptySet() );
+        when( expressionExperimentService.getAnnotations( ee, true ) ).thenReturn( Collections.emptySet() );
         String body = "{\"annotations\":[{\"category\":\"organism part\",\"categoryUri\":\"http://purl.obolibrary.org/obo/UBERON_0000479\","
                 + "\"value\":\"liver\",\"valueUri\":\"http://purl.obolibrary.org/obo/UBERON_0002107\"}]}";
         assertThat( target( "/datasets/1/annotations" ).request().put( Entity.json( body ) ) )
@@ -930,7 +940,9 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         assertThat( c.getCategory() ).isEqualTo( "organism part" );
         assertThat( c.getValue() ).isEqualTo( "liver" );
         assertThat( c.getValueUri() ).isEqualTo( "http://purl.obolibrary.org/obo/UBERON_0002107" );
-        verify( expressionExperimentService ).getAnnotations( ee );
+        // The write echoes unmapped tags too — it accepts them, so it must not answer with a list
+        // that silently omits what was just written.
+        verify( expressionExperimentService ).getAnnotations( ee, true );
     }
 
     @Test
@@ -938,7 +950,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
     public void testUpdateDatasetAnnotationsAcceptsEmptyListAsClear() {
         ee.setId( 1L );
         when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
-        when( expressionExperimentService.getAnnotations( ee ) ).thenReturn( Collections.emptySet() );
+        when( expressionExperimentService.getAnnotations( ee, true ) ).thenReturn( Collections.emptySet() );
         assertThat( target( "/datasets/1/annotations" ).request().put( Entity.json( "{\"annotations\":[]}" ) ) )
                 .hasStatus( Response.Status.OK );
         verify( expressionExperimentService ).updateAnnotations( eq( ee ), argThat( Collection::isEmpty ) );
@@ -986,7 +998,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         // through as-is (the wire shape mirrors AnnotationValueObject's read-side fields).
         ee.setId( 1L );
         when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
-        when( expressionExperimentService.getAnnotations( ee ) ).thenReturn( Collections.emptySet() );
+        when( expressionExperimentService.getAnnotations( ee, true ) ).thenReturn( Collections.emptySet() );
         String body = "{\"annotations\":[{"
                 + "\"category\":\"genotype\","
                 + "\"categoryUri\":\"http://www.ebi.ac.uk/efo/EFO_0000513\","
@@ -1027,7 +1039,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         // Statement instance.
         ee.setId( 1L );
         when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
-        when( expressionExperimentService.getAnnotations( ee ) ).thenReturn( Collections.emptySet() );
+        when( expressionExperimentService.getAnnotations( ee, true ) ).thenReturn( Collections.emptySet() );
         String body = "{\"annotations\":[{"
                 + "\"category\":\"treatment\",\"categoryUri\":\"http://www.ebi.ac.uk/efo/EFO_0000727\","
                 + "\"value\":\"high fat diet\",\"valueUri\":null,"
@@ -1055,7 +1067,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         // round-trips unchanged after the statement-aware widening.
         ee.setId( 1L );
         when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
-        when( expressionExperimentService.getAnnotations( ee ) ).thenReturn( Collections.emptySet() );
+        when( expressionExperimentService.getAnnotations( ee, true ) ).thenReturn( Collections.emptySet() );
         String body = "{\"annotations\":[{\"category\":\"organism part\",\"value\":\"liver\","
                 + "\"valueUri\":\"http://purl.obolibrary.org/obo/UBERON_0002107\"}]}";
         assertThat( target( "/datasets/1/annotations" ).request().put( Entity.json( body ) ) )
@@ -1076,7 +1088,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         // verbatim, it is not parsed or restructured.
         ee.setId( 1L );
         when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
-        when( expressionExperimentService.getAnnotations( ee ) ).thenReturn( Collections.emptySet() );
+        when( expressionExperimentService.getAnnotations( ee, true ) ).thenReturn( Collections.emptySet() );
         String body = "{\"annotations\":[{\"category\":\"strain\",\"value\":\"C57BL/6J\","
                 + "\"supportingEvidence\":[{\"quote\":\"strain: C57BL/6J\",\"source\":\"characteristic\","
                 + "\"location\":\"strain (all 24 samples)\"}]}]}";
@@ -1098,7 +1110,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         // set-replace update doesn't clobber evidence already on a matched tag.
         ee.setId( 1L );
         when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
-        when( expressionExperimentService.getAnnotations( ee ) ).thenReturn( Collections.emptySet() );
+        when( expressionExperimentService.getAnnotations( ee, true ) ).thenReturn( Collections.emptySet() );
         String body = "{\"annotations\":[{\"category\":\"organism part\",\"value\":\"liver\"}]}";
         assertThat( target( "/datasets/1/annotations" ).request().put( Entity.json( body ) ) )
                 .hasStatus( Response.Status.OK );

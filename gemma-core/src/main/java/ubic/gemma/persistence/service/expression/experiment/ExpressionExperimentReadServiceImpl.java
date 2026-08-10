@@ -713,16 +713,22 @@ public class ExpressionExperimentReadServiceImpl implements ExpressionExperiment
     @Override
     @Transactional(readOnly = true)
     public Set<AnnotationValueObject> getAnnotations( ExpressionExperiment expressionExperiment ) {
+        return getAnnotations( expressionExperiment, false );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Set<AnnotationValueObject> getAnnotations( ExpressionExperiment expressionExperiment, boolean includeFreeText ) {
         Set<AnnotationValueObject> annotations = new LinkedHashSet<>();
         Set<String> seenTerms = new HashSet<>();
 
         expressionExperimentDao.getExperimentAnnotations( expressionExperiment, false ).stream()
-                .filter( this::filterExperimentAnnotations )
+                .filter( c -> filterExperimentAnnotations( c, includeFreeText ) )
                 .map( c -> new AnnotationValueObject( c, ExpressionExperiment.class ) )
                 .forEach( c -> addIfNovel( annotations, c, seenTerms ) );
 
         expressionExperimentDao.getExperimentSubSetAnnotations( expressionExperiment ).stream()
-                .filter( this::filterSubSetAnnotations )
+                .filter( c -> filterSubSetAnnotations( c, includeFreeText ) )
                 .map( c -> new AnnotationValueObject( c, ExpressionExperimentSubSet.class ) )
                 .forEach( c -> addIfNovel( annotations, c, seenTerms ) );
 
@@ -733,14 +739,14 @@ public class ExpressionExperimentReadServiceImpl implements ExpressionExperiment
         };
         for ( Object[] row : expressionExperimentDao.getFactorValueAnnotationsWithParents( expressionExperiment ) ) {
             Statement c = ( Statement ) row[0];
-            if ( !filterFactorValueAnnotation( c ) ) {
+            if ( !filterFactorValueAnnotation( c, includeFreeText ) ) {
                 continue;
             }
             addIfNovel( annotations, factorValueAnnotationVo( c, ignoredPredicates, ( FactorValue ) row[1], ( ExperimentalFactor ) row[2] ), seenTerms );
         }
 
         expressionExperimentDao.getBioMaterialAnnotations( expressionExperiment, false ).stream()
-                .filter( this::filterBioMaterialAnnotation )
+                .filter( c -> filterBioMaterialAnnotation( c, includeFreeText ) )
                 .map( c -> new AnnotationValueObject( c, BioMaterial.class ) )
                 .forEach( c -> addIfNovel( annotations, c, seenTerms ) );
 
@@ -750,18 +756,24 @@ public class ExpressionExperimentReadServiceImpl implements ExpressionExperiment
     @Override
     @Transactional(readOnly = true)
     public Set<AnnotationValueObject> getAnnotations( ExpressionExperimentSubSet ee ) {
+        return getAnnotations( ee, false );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Set<AnnotationValueObject> getAnnotations( ExpressionExperimentSubSet ee, boolean includeFreeText ) {
         Set<AnnotationValueObject> annotations = new HashSet<>();
         Set<String> seenTerms = new HashSet<>();
 
         // inherited from the EE
         expressionExperimentDao.getExperimentAnnotations( ee.getSourceExperiment(), false ).stream()
-                .filter( this::filterExperimentAnnotations )
+                .filter( c -> filterExperimentAnnotations( c, includeFreeText ) )
                 .map( c -> new AnnotationValueObject( c, ExpressionExperiment.class ) )
                 .forEach( c -> addIfNovel( annotations, c, seenTerms ) );
 
         // specifically for the subset
         ee.getCharacteristics().stream()
-                .filter( this::filterSubSetAnnotations )
+                .filter( c -> filterSubSetAnnotations( c, includeFreeText ) )
                 .map( c -> new AnnotationValueObject( c, ExpressionExperimentSubSet.class ) )
                 .forEach( c -> addIfNovel( annotations, c, seenTerms ) );
 
@@ -772,14 +784,14 @@ public class ExpressionExperimentReadServiceImpl implements ExpressionExperiment
         };
         for ( Object[] row : expressionExperimentDao.getFactorValueAnnotationsWithParents( ee ) ) {
             Statement c = ( Statement ) row[0];
-            if ( !filterFactorValueAnnotation( c ) ) {
+            if ( !filterFactorValueAnnotation( c, includeFreeText ) ) {
                 continue;
             }
             addIfNovel( annotations, factorValueAnnotationVo( c, ignoredPredicates, ( FactorValue ) row[1], ( ExperimentalFactor ) row[2] ), seenTerms );
         }
 
         expressionExperimentDao.getBioMaterialAnnotations( ee ).stream()
-                .filter( this::filterBioMaterialAnnotation )
+                .filter( c -> filterBioMaterialAnnotation( c, includeFreeText ) )
                 .map( c -> new AnnotationValueObject( c, BioMaterial.class ) )
                 .forEach( c -> addIfNovel( annotations, c, seenTerms ) );
 
@@ -822,12 +834,12 @@ public class ExpressionExperimentReadServiceImpl implements ExpressionExperiment
         }
     }
 
-    private boolean filterExperimentAnnotations( Characteristic c ) {
-        return filterAnnotation( c );
+    private boolean filterExperimentAnnotations( Characteristic c, boolean includeFreeText ) {
+        return filterAnnotation( c, includeFreeText );
     }
 
-    private boolean filterSubSetAnnotations( Characteristic c ) {
-        return filterAnnotation( c );
+    private boolean filterSubSetAnnotations( Characteristic c, boolean includeFreeText ) {
+        return filterAnnotation( c, includeFreeText );
     }
 
     /**
@@ -839,8 +851,8 @@ public class ExpressionExperimentReadServiceImpl implements ExpressionExperiment
      * mixed M/F EE look identical at the API boundary. Consumers that want the
      * non-baseline subset can filter client-side.
      */
-    private boolean filterFactorValueAnnotation( Statement c ) {
-        return filterAnnotation( c )
+    private boolean filterFactorValueAnnotation( Statement c, boolean includeFreeText ) {
+        return filterAnnotation( c, includeFreeText )
                 && !hasCategory( c, Categories.BLOCK )
                 // ignore timepoints
                 && !"http://www.ebi.ac.uk/efo/EFO_0000724".equals( c.getCategoryUri() )
@@ -855,21 +867,34 @@ public class ExpressionExperimentReadServiceImpl implements ExpressionExperiment
      * Baseline BM characteristics are intentionally NOT excluded — see the note on
      * {@link #filterFactorValueAnnotation}. Same uniformity-visibility argument.
      */
-    private boolean filterBioMaterialAnnotation( Characteristic c ) {
-        return filterAnnotation( c )
+    private boolean filterBioMaterialAnnotation( Characteristic c, boolean includeFreeText ) {
+        return filterAnnotation( c, includeFreeText )
                 && !"MaterialType".equalsIgnoreCase( c.getCategory() )
                 && !"molecular entity".equalsIgnoreCase( c.getCategory() )
                 && !"LabelCompound".equalsIgnoreCase( c.getCategory() );
     }
 
-    private boolean filterAnnotation( Characteristic characteristic ) {
-        return filterAnnotation( characteristic.getCategoryUri(), characteristic.getCategory(), characteristic.getValueUri(), characteristic.getValue() );
+    private boolean filterAnnotation( Characteristic characteristic, boolean includeFreeText ) {
+        return filterAnnotation( characteristic.getCategoryUri(), characteristic.getCategory(), characteristic.getValueUri(), characteristic.getValue(), includeFreeText );
     }
 
     /**
      * Minimal requirements for an annotation to be included as an experiment tag.
+     *
+     * @param includeFreeText keep annotations that carry no ontology mapping. The default
+     *                        ({@code false}) is right for the public tag cloud, where an unmapped
+     *                        string is noise that cannot be searched or reasoned over. It is wrong
+     *                        for curation read-back: a curator or agent that has just written a
+     *                        free-text tag gets an empty result and cannot tell a dropped write
+     *                        from a filtered read. See the note on
+     *                        {@link ExpressionExperimentReadService#getAnnotations(ExpressionExperiment, boolean)}.
      */
-    private boolean filterAnnotation( @Nullable String categoryUri, @Nullable String category, @Nullable String valueUri, String value ) {
+    private boolean filterAnnotation( @Nullable String categoryUri, @Nullable String category, @Nullable String valueUri, String value, boolean includeFreeText ) {
+        if ( includeFreeText ) {
+            // Everything a curator actually wrote, mapped or not. A tag with no value at all is
+            // still nothing to report.
+            return StringUtils.isNotBlank( value );
+        }
         // ignore uncategorized terms
         return category != null
                 // ignore free-text categories

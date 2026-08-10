@@ -31,6 +31,7 @@ import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabases;
@@ -681,6 +682,39 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
         ees.remove( ee1 ); // prevent removal in teardown
         eeSet = expressionExperimentSetService.load( eeSet.getId() );
         assertNull( eeSet );
+    }
+
+    @Test
+    public void testGetAnnotationsIncludeFreeText() {
+        ExpressionExperiment ee = createExpressionExperiment();
+
+        // A mapped tag and a free-text one, committed exactly as the curation-commit path accepts
+        // them: the second carries a category and a value but no URIs.
+        Characteristic mapped = Characteristic.Factory.newInstance();
+        mapped.setCategory( "treatment" );
+        mapped.setCategoryUri( "http://www.ebi.ac.uk/efo/EFO_0000727" );
+        mapped.setValue( "dimethyl sulfoxide" );
+        mapped.setValueUri( "http://purl.obolibrary.org/obo/CHEBI_28262" );
+
+        Characteristic freeText = Characteristic.Factory.newInstance();
+        freeText.setCategory( "treatment" );
+        freeText.setCategoryUri( "http://www.ebi.ac.uk/efo/EFO_0000727" );
+        freeText.setValue( "HDP-101" );
+
+        ee.getCharacteristics().add( mapped );
+        ee.getCharacteristics().add( freeText );
+        expressionExperimentService.update( ee );
+
+        assertThat( expressionExperimentService.getAnnotations( ee ) )
+                .as( "the default read stays as it was — an unmapped tag is not shown" )
+                .extracting( AnnotationValueObject::getTermName )
+                .contains( "dimethyl sulfoxide" )
+                .doesNotContain( "HDP-101" );
+
+        assertThat( expressionExperimentService.getAnnotations( ee, true ) )
+                .as( "curation read-back must show what was actually written" )
+                .extracting( AnnotationValueObject::getTermName )
+                .contains( "dimethyl sulfoxide", "HDP-101" );
     }
 
     private ExpressionExperiment createExpressionExperiment() {

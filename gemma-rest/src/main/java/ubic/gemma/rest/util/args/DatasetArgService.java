@@ -284,8 +284,16 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
      * @return a collection of Annotations value objects that represent the experiments annotations.
      */
     public Set<AnnotationValueObject> getAnnotations( DatasetArg<?> arg ) {
+        return getAnnotations( arg, false );
+    }
+
+    /**
+     * @param includeFreeText also return tags with no ontology mapping
+     * @return a collection of Annotations value objects that represent the experiments annotations.
+     */
+    public Set<AnnotationValueObject> getAnnotations( DatasetArg<?> arg, boolean includeFreeText ) {
         ExpressionExperiment ee = this.getEntity( arg );
-        return service.getAnnotations( ee );
+        return service.getAnnotations( ee, includeFreeText );
     }
 
     /**

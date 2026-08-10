@@ -1495,8 +1495,18 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
+    public Set<AnnotationValueObject> getAnnotations( ExpressionExperiment expressionExperiment, boolean includeFreeText ) {
+        return readService.getAnnotations( expressionExperiment, includeFreeText );
+    }
+
+    @Override
     public Set<AnnotationValueObject> getAnnotations( ExpressionExperimentSubSet ee ) {
         return readService.getAnnotations( ee );
+    }
+
+    @Override
+    public Set<AnnotationValueObject> getAnnotations( ExpressionExperimentSubSet ee, boolean includeFreeText ) {
+        return readService.getAnnotations( ee, includeFreeText );
     }
 
     @Override

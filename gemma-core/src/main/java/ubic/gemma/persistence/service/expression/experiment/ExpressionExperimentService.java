@@ -544,6 +544,14 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     Set<AnnotationValueObject> getAnnotations( ExpressionExperiment ee );
 
     /**
+     * Retrieve annotations for a given experiment, optionally including unmapped ones.
+     *
+     * @see ExpressionExperimentReadService#getAnnotations(ExpressionExperiment, boolean)
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Set<AnnotationValueObject> getAnnotations( ExpressionExperiment ee, boolean includeFreeText );
+
+    /**
      * Retrieve annotations for a given experiment subset.
      * <p>
      * The following are included:
@@ -556,6 +564,14 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Set<AnnotationValueObject> getAnnotations( ExpressionExperimentSubSet ee );
+
+    /**
+     * Retrieve annotations for a given experiment subset, optionally including unmapped ones.
+     *
+     * @see ExpressionExperimentReadService#getAnnotations(ExpressionExperiment, boolean)
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Set<AnnotationValueObject> getAnnotations( ExpressionExperimentSubSet ee, boolean includeFreeText );
 
     /**
      * Build a full structured representation of an experiment's {@link ExperimentalDesign}: factors,

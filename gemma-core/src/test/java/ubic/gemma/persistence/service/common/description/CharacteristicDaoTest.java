@@ -313,6 +313,80 @@ public class CharacteristicDaoTest extends BaseDatabaseTest5 {
     }
 
     @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testFindEeCountsByUriForOriginalValue() {
+        String compound = "http://purl.obolibrary.org/obo/CHEBI_28262";
+        String role = "http://purl.obolibrary.org/obo/OBI_0000025";
+
+        // Two experiments whose submitters wrote "DMSO" meaning the compound — one bare, one
+        // carrying GEO's field prefix — and one that wrote it meaning the role.
+        createExperimentWithOriginalValue( compound, "dimethyl sulfoxide", "DMSO" );
+        createExperimentWithOriginalValue( compound, "dimethyl sulfoxide", "treatment: DMSO" );
+        createExperimentWithOriginalValue( role, "reference substance role", "dmso" );
+        // Not the same string: whoever wrote this wrote a concentration, not a name.
+        createExperimentWithOriginalValue( compound, "dimethyl sulfoxide", "0.3% DMSO" );
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
+        sessionFactory.getCurrentSession().flush();
+
+        Set<String> candidates = new HashSet<>( Arrays.asList( compound, role ) );
+        Map<String, Long> counts = characteristicDao.findEeCountsByUriForOriginalValue( candidates, "DMSO" );
+
+        assertThat( counts )
+                .as( "the GEO field prefix must not hide the string, and the trailing-content row must not count" )
+                .containsEntry( compound, 2L )
+                .containsEntry( role, 1L );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testFindEeCountsByUriForOriginalValueRefusesQuantities() {
+        String uri = "http://example.com/dose";
+        createExperimentWithOriginalValue( uri, "some term", "24" );
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
+        sessionFactory.getCurrentSession().flush();
+
+        // A value with no letters is a dose, a timepoint or a replicate number pooled across
+        // unrelated experiments, so it must not be counted as evidence for any term.
+        assertThat( characteristicDao.findEeCountsByUriForOriginalValue( Collections.singleton( uri ), "24" ) )
+                .isEmpty();
+        assertThat( characteristicDao.findEeCountsByUriForOriginalValue( Collections.singleton( uri ), "0.3" ) )
+                .isEmpty();
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testFindEeCountsByUriForOriginalValueTreatsWildcardsLiterally() {
+        String uri = "http://example.com/tnf";
+        createExperimentWithOriginalValue( uri, "TNF alpha", "TNF_alpha" );
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
+        sessionFactory.getCurrentSession().flush();
+
+        Set<String> candidates = Collections.singleton( uri );
+        assertThat( characteristicDao.findEeCountsByUriForOriginalValue( candidates, "TNF_alpha" ) )
+                .containsEntry( uri, 1L );
+        // The underscore is a LIKE wildcard; unescaped it would match any character in its place.
+        assertThat( characteristicDao.findEeCountsByUriForOriginalValue( candidates, "TNFXalpha" ) )
+                .isEmpty();
+    }
+
+    /**
+     * Persist one experiment carrying a single characteristic whose ORIGINAL_VALUE is what the
+     * submitter wrote, so the EE2C tally has something to count.
+     */
+    private void createExperimentWithOriginalValue( @Nullable String valueUri, String value, String originalValue ) {
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+        ExpressionExperiment ee = new ExpressionExperiment();
+        Characteristic c = createCharacteristic( valueUri, value );
+        c.setOriginalValue( originalValue );
+        ee.setTaxon( taxon );
+        ee.getCharacteristics().add( c );
+        sessionFactory.getCurrentSession().persist( ee );
+        sessionFactory.getCurrentSession().flush();
+        aclService.createAcl( new AclObjectIdentity( ExpressionExperiment.class, ee.getId() ) );
+    }
+
+    @Test
     public void testDiscriminator() {
         Characteristic c = createCharacteristic( "test", "test" );
         sessionFactory.getCurrentSession().persist( c );
