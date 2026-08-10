@@ -18,6 +18,12 @@ import java.util.Collections;
  * empty collections instead — defensive against any consumer that walks a returned term (the search
  * fan-out expands via the service-level {@code getParents}/{@code getChildren}, but a returned term can
  * still be inspected directly).
+ * <p>
+ * The predicate-targeted overloads {@code getAnnotations(uri)} / {@code getAnnotation(uri)} matter as much
+ * as the collection-wide ones: those are what the REST layer actually calls. {@code OntologyService
+ * .getDefinition} probes {@code IAO_0000115} and {@code /annotations/search}'s match attribution probes the
+ * six OBO/IAO synonym predicates, all through the single-URI overload. Leaving those inherited made every
+ * Cellosaurus / MGI hit throw on enrichment.
  */
 public class LexicalOntologyTerm extends OntologyTermSimple {
 
@@ -48,6 +54,17 @@ public class LexicalOntologyTerm extends OntologyTermSimple {
     @Override
     public Collection<AnnotationProperty> getAnnotations() {
         return Collections.emptySet();
+    }
+
+    @Override
+    public Collection<AnnotationProperty> getAnnotations( String propertyUri ) {
+        return Collections.emptySet();
+    }
+
+    @Nullable
+    @Override
+    public AnnotationProperty getAnnotation( String propertyUri ) {
+        return null;
     }
 
     @Override
