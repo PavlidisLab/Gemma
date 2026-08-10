@@ -606,6 +606,73 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     }
 
     @Override
+    public Map<String, Long> findEeCountsByUriForOriginalValue( Collection<String> uris, String originalValue ) {
+        String wanted = originalValue != null ? originalValue.trim().toLowerCase( Locale.ROOT ) : "";
+        if ( uris.isEmpty() || wanted.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+        // A value with no letters in it is a quantity, not a name — a dose, a timepoint, a
+        // concentration, a replicate number. `24` appears as an original value across unrelated
+        // experiments meaning 24 hours, 24 degrees and 24 samples, so a count of it says nothing
+        // about which term anyone meant and would hand whichever candidate happened to collect
+        // those rows a decisive-looking score. Refuse to form a prior from one.
+        if ( wanted.chars().noneMatch( Character::isLetter ) ) {
+            return Collections.emptyMap();
+        }
+        // GEO ships the submitter's string with the characteristic field it came from glued on the
+        // front — `treatment: DMSO`, `agent: DMSO`, `vehicle: DMSO` — and on the production corpus
+        // that prefixed form is by far the COMMON one (439 of DMSO's 508 experiments; the bare
+        // string accounts for 24). Counting only the bare string would miss most of the evidence,
+        // so the suffix pattern picks up any `<field>: <value>` framing. Trailing content is
+        // deliberately not matched: whoever wrote `0.3% DMSO` or `DMSO for 24h` wrote a different
+        // string, and folding those in would credit this string with annotations nobody spelled
+        // this way.
+        //
+        // lower() on both sides rather than leaning on MySQL's case-insensitive collation, so the
+        // H2 test path agrees with production. It costs nothing here: there is no index on
+        // ORIGINAL_VALUE to forfeit, and the indexed VALUE_URI IN-clause is what bounds the scan.
+        Query q = this.getSessionFactory().getCurrentSession()
+                .createNativeQuery( "select VALUE_URI as V, count(distinct EXPRESSION_EXPERIMENT_FK) as N "
+                        + "from EXPRESSION_EXPERIMENT2CHARACTERISTIC "
+                        + "where VALUE_URI in :uris and ORIGINAL_VALUE is not null "
+                        + "and (lower(ORIGINAL_VALUE) = :wanted "
+                        + "or lower(ORIGINAL_VALUE) like :prefixed escape '" + LIKE_ESCAPE + "') "
+                        + "group by VALUE_URI" )
+                .addScalar( "V", StandardBasicTypes.STRING )
+                .addScalar( "N", StandardBasicTypes.LONG )
+                .setParameter( "wanted", wanted )
+                .setParameter( "prefixed", "%: " + escapeForLike( wanted ) )
+                .addSynchronizedQuerySpace( EE2C_QUERY_SPACE )
+                .addSynchronizedEntityClass( ExpressionExperiment.class )
+                .addSynchronizedEntityClass( Characteristic.class )
+                .setCacheable( true );
+        Map<String, Long> out = new HashMap<>();
+        QueryUtils.<String, Object[]>streamByBatch( q, "uris", uris, 2048 )
+                // A URI can only appear once per batch, but a URI set larger than the batch size is
+                // split across queries, so merge rather than overwrite.
+                .forEach( row -> out.merge( ( String ) row[0], ( Long ) row[1], Long::sum ) );
+        return out;
+    }
+
+    /**
+     * Escape character for {@code LIKE} patterns built from caller-supplied text. Backslash is
+     * avoided because it is also MySQL's string-literal escape, which makes the doubling rules
+     * ambiguous to read and easy to get wrong.
+     */
+    private static final String LIKE_ESCAPE = "!";
+
+    /**
+     * Neutralise {@code LIKE} wildcards in caller-supplied text. Without this, a query string
+     * containing {@code _} (common in annotation values — {@code TNF_alpha}) would match any
+     * single character, and one containing {@code %} would match anything at all.
+     */
+    private static String escapeForLike( String s ) {
+        return s.replace( LIKE_ESCAPE, LIKE_ESCAPE + LIKE_ESCAPE )
+                .replace( "%", LIKE_ESCAPE + "%" )
+                .replace( "_", LIKE_ESCAPE + "_" );
+    }
+
+    @Override
     public Map<String, Long> countByValueUriGroupedByNormalizedValue( Collection<String> uris, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents ) {
         if ( uris.isEmpty() ) {
             return Collections.emptyMap();

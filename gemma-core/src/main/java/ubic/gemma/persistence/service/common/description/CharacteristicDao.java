@@ -201,6 +201,28 @@ public interface CharacteristicDao
     Map<String, Map<String, Long>> findEeCountsByUriGroupedByCategory( Collection<String> uris );
 
     /**
+     * For each supplied value URI, count the distinct experiments on which a prior curator wrote
+     * {@code originalValue} as the submitter-facing string for that URI.
+     * <p>
+     * This answers a different question from the usage count. A usage count is about the TERM —
+     * "which compound is meant" — whereas this is about the STRING: of everyone who actually
+     * wrote the words you are searching for, how many meant each candidate? On the production
+     * corpus {@code "dmso"} resolves to {@code {CHEBI_28262 → 508, OBI_0000025 → 16}}, which
+     * separates the compound from the role even though both are legitimate hits.
+     * <p>
+     * Matching is case-insensitive and tolerates GEO's field prefix, so {@code "treatment: DMSO"}
+     * and {@code "agent: DMSO"} both count towards {@code "dmso"}. Strings that merely CONTAIN the
+     * value do not count — {@code "0.3% DMSO"} is a different string, and treating it as this one
+     * would inflate the evidence with annotations nobody wrote this way.
+     * <p>
+     * Sourced from the denormalised {@code EE2C} view and counted per distinct experiment, so a
+     * 500-sample study cannot weight the tally 500× on one submitter's naming choice. Rows with a
+     * {@code null} original value are excluded: they record that the value was never edited, not
+     * that anybody chose to write it.
+     */
+    Map<String, Long> findEeCountsByUriForOriginalValue( Collection<String> uris, String originalValue );
+
+    /**
      * Find characteristics {@link Characteristic#getValue()} grouped by {@link Characteristic#getValueUri()}.
      * <p>
      * The results are grouped by value URIs, so free-text terms will not be returned. If you need a way to get both

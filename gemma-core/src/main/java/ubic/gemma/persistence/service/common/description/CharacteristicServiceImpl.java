@@ -121,6 +121,11 @@ public class CharacteristicServiceImpl extends AbstractFilteringVoEnabledService
     }
 
     @Override
+    public Map<String, Long> findEeCountsByUriForOriginalValue( Collection<String> uris, String originalValue ) {
+        return readService.findEeCountsByUriForOriginalValue( uris, originalValue );
+    }
+
+    @Override
     public Map<String, String> findValueGroupedByValueUri( @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, boolean includePredicates, boolean includeObjects, int maxResults ) {
         return readService.findValueGroupedByValueUri( parentClasses, includeNoParents, includePredicates, includeObjects, maxResults );
     }

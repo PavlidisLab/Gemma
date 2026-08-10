@@ -121,6 +121,19 @@ public class AnnotationsWebService {
      */
     private static final String SEARCH_CACHE_NAME = "AnnotationsSearchResponseCache";
 
+    /**
+     * Spring-registered cache for the per-string corpus prior consumed by {@code ?rank=commonality}.
+     * Keyed by the normalized query string plus a digest of the candidate URI set, since the tally
+     * is computed over exactly those URIs. Sits below {@link #SEARCH_CACHE_NAME}: the response
+     * cache absorbs an identical repeat call, this one absorbs the same query arriving under
+     * different knobs (suppression, exact-label, prefixes), which produce different response-cache
+     * keys but the same underlying corpus question.
+     * <p>
+     * Configured in {@code EhcacheConfig#APP_CACHES}, so it is listed and flushable through the
+     * unified {@code /admin/caches} surface.
+     */
+    private static final String STRING_PRIOR_CACHE_NAME = "AnnotationsStringPriorCache";
+
     private OntologyService ontologyService;
     private SearchService searchService;
     private CharacteristicService characteristicService;
@@ -136,11 +149,22 @@ public class AnnotationsWebService {
     private org.springframework.cache.CacheManager cacheManager;
     private volatile org.springframework.cache.Cache searchResponseCache;
 
+    private volatile org.springframework.cache.Cache stringPriorCache;
+
     private org.springframework.cache.Cache searchResponseCache() {
         org.springframework.cache.Cache c = searchResponseCache;
         if ( c == null && cacheManager != null ) {
             c = cacheManager.getCache( SEARCH_CACHE_NAME );
             searchResponseCache = c;
+        }
+        return c;
+    }
+
+    private org.springframework.cache.Cache stringPriorCache() {
+        org.springframework.cache.Cache c = stringPriorCache;
+        if ( c == null && cacheManager != null ) {
+            c = cacheManager.getCache( STRING_PRIOR_CACHE_NAME );
+            stringPriorCache = c;
         }
         return c;
     }
@@ -574,7 +598,13 @@ public class AnnotationsWebService {
                     "`lucene` (default) preserves today's behaviour. `usage` blends rank with per-URI " +
                     "experiment usage count. `coverage` sorts by fraction of query tokens present in " +
                     "the hit's label. `composite` combines coverage, usage, and rank into a single " +
-                    "weighted score.")
+                    "weighted score. `commonality` orders by how many experiments were annotated " +
+                    "with each candidate by someone who wrote this exact query string, which " +
+                    "separates candidates that `usage` cannot: a search for `dmso` finds 508 " +
+                    "experiments meant the compound and 16 meant `reference substance role`, " +
+                    "though both terms are well used. Purely numeric queries form no prior. Use " +
+                    "`usage` instead when the question is which term is meant rather than which " +
+                    "name is written.")
             @QueryParam("rank") @DefaultValue(LuceneOrderRankingStrategy.NAME) String rank,
             @Parameter(description = "Maximum number of hits to return. Defaults to 20 (typeahead UX). " +
                     "Hard upper bound is 100; values outside [1, 100] yield HTTP 400. The truncation is " +
@@ -1507,7 +1537,23 @@ public class AnnotationsWebService {
         // multi-term StringArrayArg inputs (typically comma-joined keywords), pass them space-joined
         // so the tokeniser sees the union.
         String joinedQuery = String.join( " ", queryValues );
-        List<CharacteristicValueObject> ranked = strategy.rank( joinedQuery, rawHits, countsByUri );
+        // Same gating as the usage counts above: the per-string prior costs a query, so only the
+        // strategies that consult it pay for one. Restricted to the surviving candidate URIs,
+        // which is what keeps it cheap — the indexed VALUE_URI IN-clause bounds the scan to those
+        // rows (~70ms for a 50-URI candidate set against the production corpus, versus ~1s for the
+        // same tally computed across the whole of EE2C).
+        Map<String, Integer> stringPriorByUri = Collections.emptyMap();
+        long tStringPrior = 0;
+        if ( strategy.requiresStringPrior() ) {
+            long priorStart = timer.getTime();
+            Set<String> priorUris = rawHits.stream()
+                    .map( CharacteristicValueObject::getValueUri )
+                    .filter( Objects::nonNull )
+                    .collect( Collectors.toSet() );
+            stringPriorByUri = getStringPriorByUri( joinedQuery, priorUris );
+            tStringPrior = timer.getTime() - priorStart;
+        }
+        List<CharacteristicValueObject> ranked = strategy.rank( joinedQuery, rawHits, countsByUri, stringPriorByUri );
         if ( categoryRankFn != null ) {
             // Stable, so the strategy's ordering survives inside each tier. Idempotent for the
             // default lucene strategy, whose input was already in this order.
@@ -1521,7 +1567,9 @@ public class AnnotationsWebService {
         if ( ranked.size() > limit ) {
             ranked = new ArrayList<>( ranked.subList( 0, limit ) );
         }
-        long tRank = timer.getTime() - phaseStart;
+        // Net of the prior fetch, which is reported on its own so the two stay comparable to the
+        // other phases rather than one silently containing the other.
+        long tRank = timer.getTime() - phaseStart - tStringPrior;
         phaseStart = timer.getTime();
         // Top-N usage counts for the response payload (display). When the ranking strategy
         // didn't need counts, this is the only count query that fires — a much narrower
@@ -1587,9 +1635,9 @@ public class AnnotationsWebService {
         long tEnrich = timer.getTime() - phaseStart;
         if ( timer.getTime() > 1000 ) {
             log.info( String.format(
-                    "annotation-search: query='%s' raw=%d top=%d total=%dms (find=%dms filter=%dms counts=%dms rank=%dms topCounts=%dms priorCats=%dms enrich=%dms)",
+                    "annotation-search: query='%s' raw=%d top=%d total=%dms (find=%dms filter=%dms counts=%dms stringPrior=%dms rank=%dms topCounts=%dms priorCats=%dms enrich=%dms)",
                     queryValues, rawCount, topUris.size(), timer.getTime(),
-                    tFindCharacteristics, tFilters, tCounts, tRank, tTopCounts, tPriorCategories, tEnrich ) );
+                    tFindCharacteristics, tFilters, tCounts, tStringPrior, tRank, tTopCounts, tPriorCategories, tEnrich ) );
         }
 
         LinkedHashSet<AnnotationSearchResultValueObject> vos = new LinkedHashSet<>();
@@ -2723,6 +2771,51 @@ public class AnnotationsWebService {
         Map<String, Integer> counts = new HashMap<>( distinctIdsByUri.size() );
         distinctIdsByUri.forEach( ( k, v ) -> counts.put( k, v.size() ) );
         return counts;
+    }
+
+    /**
+     * Per-candidate count of distinct experiments annotated with that URI by someone who wrote the
+     * query string itself. Cached under {@link #STRING_PRIOR_CACHE_NAME}, keyed by the normalized
+     * string plus a digest of the candidate URI set — the tally is computed over exactly those
+     * URIs, so a key that ignored them would serve a partial answer to a wider question.
+     * <p>
+     * An empty result is cached like any other. It is a real finding — nobody in the corpus has
+     * written this string for any of these candidates, which is the common case for a compound
+     * being annotated for the first time — and recomputing it on every keystroke would make the
+     * uninformative queries the expensive ones.
+     */
+    private Map<String, Integer> getStringPriorByUri( String query, Set<String> uris ) {
+        if ( uris.isEmpty() || StringUtils.isBlank( query ) ) {
+            return Collections.emptyMap();
+        }
+        String normalized = query.trim().toLowerCase( Locale.ROOT );
+        org.springframework.cache.Cache cache = stringPriorCache();
+        String key = null;
+        if ( cache != null ) {
+            // Order-independent digest: the candidate set is a Set, so its iteration order is not
+            // stable across calls and hashing it directly would miss cache hits on identical sets.
+            int digest = 0;
+            for ( String u : uris ) {
+                digest ^= u.hashCode();
+            }
+            key = normalized + '' + uris.size() + '' + digest;
+            org.springframework.cache.Cache.ValueWrapper hit = cache.get( key );
+            if ( hit != null ) {
+                //noinspection unchecked
+                Map<String, Integer> cached = ( Map<String, Integer> ) hit.get();
+                if ( cached != null ) {
+                    return cached;
+                }
+            }
+        }
+        Map<String, Long> raw = characteristicService.findEeCountsByUriForOriginalValue( uris, normalized );
+        Map<String, Integer> prior = new HashMap<>( raw.size() );
+        raw.forEach( ( k, v ) -> prior.put( k, v.intValue() ) );
+        Map<String, Integer> result = Collections.unmodifiableMap( prior );
+        if ( cache != null ) {
+            cache.put( key, result );
+        }
+        return result;
     }
 
     @Value

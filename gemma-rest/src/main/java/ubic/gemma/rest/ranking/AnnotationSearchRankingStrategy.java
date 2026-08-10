@@ -50,6 +50,27 @@ public interface AnnotationSearchRankingStrategy {
             Map<String, Integer> usageCountsByUri );
 
     /**
+     * Re-order {@code rawHits} with the per-string corpus prior available in addition to the usage
+     * counts.
+     * <p>
+     * Callers should invoke this overload; it defaults to the three-argument {@link #rank} so a
+     * strategy that has no use for the prior needs no changes. Only strategies that return
+     * {@code true} from {@link #requiresStringPrior()} receive a populated map.
+     *
+     * @param stringPriorByUri per-URI count of distinct experiments on which a prior curator wrote
+     *                         the query string itself as the annotation's original value; may be
+     *                         empty. Distinct from {@code usageCountsByUri}, which counts every use
+     *                         of the URI regardless of what was written.
+     */
+    default List<CharacteristicValueObject> rank(
+            String originalQuery,
+            List<CharacteristicValueObject> rawHits,
+            Map<String, Integer> usageCountsByUri,
+            Map<String, Integer> stringPriorByUri ) {
+        return rank( originalQuery, rawHits, usageCountsByUri );
+    }
+
+    /**
      * Short stable name used as the value of the {@code ?rank=} query parameter and as the bean
      * name in the strategy registry. Lowercase, single word.
      */
@@ -64,6 +85,19 @@ public interface AnnotationSearchRankingStrategy {
      * characteristic-by-uri index) into a much cheaper top-N query.
      */
     default boolean requiresUsageCounts() {
+        return false;
+    }
+
+    /**
+     * Whether this strategy reads the {@code stringPriorByUri} map during {@link #rank}.
+     * Default {@code false}; {@link CommonalityRankingStrategy} overrides to {@code true}.
+     * <p>
+     * Kept separate from {@link #requiresUsageCounts()} rather than folded into one "needs corpus
+     * stats" flag because the two queries have different costs and answer different questions: a
+     * strategy that wants the per-string prior should not be made to pay for the usage scan, or
+     * the other way round.
+     */
+    default boolean requiresStringPrior() {
         return false;
     }
 }

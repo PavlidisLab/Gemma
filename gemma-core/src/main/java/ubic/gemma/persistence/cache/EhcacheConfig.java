@@ -141,6 +141,14 @@ public class EhcacheConfig {
         // repeated keystrokes of one editing session, short enough that ontology refreshes
         // become visible without an explicit evict.
         APP_CACHES.put( "AnnotationsSearchResponseCache", new CacheSpec( 500, Duration.ofMinutes( 30 ) ) );
+
+        // Per-string corpus prior for ?rank=commonality: how many distinct experiments were
+        // annotated with a given URI by someone who wrote the query string itself. Keyed by the
+        // normalized string plus a digest of the candidate URI set, and holding only a small
+        // map of counts, so entries are cheap — hence a much higher cap than the response cache
+        // above. 6h TTL because the underlying tally is corpus curation history: it moves when
+        // curators retag experiments, which is slow, and a stale count only nudges an ordering.
+        APP_CACHES.put( "AnnotationsStringPriorCache", new CacheSpec( 20000, Duration.ofHours( 6 ) ) );
     }
 
     static {
