@@ -46,8 +46,28 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
     private String value;
     private String valueUri;
 
-    @GemmaWebOnly
-    private String originalValue = null; // what we originally got from GEO for biomaterial characteristics in particular. May be missing for some.
+    /**
+     * The submitter's own wording, as it arrived — before curation replaced {@link #value} with an
+     * ontology label, and before a compound field was split.
+     * <p>
+     * Once {@code value} has been grounded the original is not recoverable from anything else on the
+     * wire: {@code organism part: "hypothalamus"} does not say the submitter wrote {@code tissue:
+     * "Hypothalamus"}. That makes two questions unanswerable without it — "is this the right
+     * resolution of what they actually wrote?" and "what literal should a curator revisit when no
+     * term covers it?" (a mouse cohort aged {@code "2-3 months"} straddles two stages; the span is
+     * real and only the literal carries it). Curators were preserving such strings by hand in
+     * free-text tags because nothing surfaced this field.
+     * <p>
+     * <b>Null means "not recorded", NEVER "same as value".</b> It is populated at GEO import and
+     * backfilled from the pre-edit value when a curator grounds a tag, so it is absent for rows
+     * written through the curation API and for anything that never had a distinct original. A
+     * consumer that reads null as "unchanged" turns an unknown into a confirmed no-op.
+     * <p>
+     * Serialized only when present. Was withheld from REST under {@code @GemmaWebOnly} until the
+     * field's only consumer, Gemma Web, was retired.
+     */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String originalValue = null;
 
     /**
      * A unique ontology identifier (i.e. IRI) for this characteristic.
