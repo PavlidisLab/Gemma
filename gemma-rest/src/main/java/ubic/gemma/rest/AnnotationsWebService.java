@@ -2486,10 +2486,26 @@ public class AnnotationsWebService {
      * match.
      *
      * <p>This is the line between "this row names the thing you asked for" and "this row is
-     * lexically nearby". Only the former survives {@code suppress_near_matches}, and only the
-     * former is eligible for category promotion. Every synonym scope counts: a narrow or related
-     * synonym that equals the query still names the entity — scope is about ontological breadth,
-     * not about how confident the match is.</p>
+     * lexically nearby". Only the former survives {@code suppress_near_matches}, is eligible for
+     * category promotion, and earns the exact relevance tier.</p>
+     *
+     * <p><b>Scope matters, and RELATED and BROAD fall outside.</b> This used to admit every synonym
+     * scope on the reasoning that a synonym equalling the query still names the entity. It does
+     * not: OBO's related and broad scopes are the ones an ontology uses for a term in the
+     * neighbourhood rather than a name for the thing itself, and they are almost always the wrong
+     * answer for a caller that asked by name. The case that showed it: a query of {@code H1}
+     * reaches {@code h1 horizontal cell} (CL_0004217) through a RELATED synonym, and on the old
+     * line that retinal interneuron took the exact tier alongside {@code H1-hESC} — the stem cell
+     * line actually being asked for. CAB, consuming {@code matchedVia} with no model in the loop
+     * to adjudicate, had already drawn the line here client-side and re-sorted around us.</p>
+     *
+     * <p>NARROW stays: a narrower term that carries the query as one of its names is a more
+     * specific answer, not a different one. ALT_LABEL stays because it is a label, not a
+     * neighbourhood claim.</p>
+     *
+     * <p>This also tightens {@code suppress_near_matches}, deliberately: a hit reachable only
+     * through a related or broad synonym is now DROPPED rather than kept, and reported under
+     * {@code negativeEvidence.ruledOut} so the caller can see what went and why.</p>
      */
     static boolean isExactAttribution( @Nullable MatchedVia via ) {
         if ( via == null ) {
@@ -2499,8 +2515,6 @@ public class AnnotationsWebService {
             case PREFERRED_LABEL:
             case EXACT_SYNONYM:
             case NARROW_SYNONYM:
-            case RELATED_SYNONYM:
-            case BROAD_SYNONYM:
             case ALT_LABEL:
                 return true;
             default:

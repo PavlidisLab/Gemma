@@ -76,10 +76,22 @@ class AnnotationsWebServiceSolidMatchTest {
     void equalityTiersAreExact() {
         assertThat( AnnotationsWebService.isExactAttribution( AnnotationsWebService.MatchedVia.PREFERRED_LABEL ) ).isTrue();
         assertThat( AnnotationsWebService.isExactAttribution( AnnotationsWebService.MatchedVia.EXACT_SYNONYM ) ).isTrue();
+        // A narrower term carrying the query as one of its names is a more specific answer, not a
+        // different one; an alternative label is a label rather than a neighbourhood claim.
         assertThat( AnnotationsWebService.isExactAttribution( AnnotationsWebService.MatchedVia.NARROW_SYNONYM ) ).isTrue();
-        assertThat( AnnotationsWebService.isExactAttribution( AnnotationsWebService.MatchedVia.RELATED_SYNONYM ) ).isTrue();
-        assertThat( AnnotationsWebService.isExactAttribution( AnnotationsWebService.MatchedVia.BROAD_SYNONYM ) ).isTrue();
         assertThat( AnnotationsWebService.isExactAttribution( AnnotationsWebService.MatchedVia.ALT_LABEL ) ).isTrue();
+    }
+
+    /**
+     * RELATED and BROAD are the scopes an ontology uses for a term in the neighbourhood rather than
+     * a name for the thing itself, and they are almost always the wrong answer for a caller that
+     * asked by name. A query of `H1` reaches `h1 horizontal cell` (CL_0004217) through a RELATED
+     * synonym; admitting that scope put a retinal interneuron in the exact tier beside `H1-hESC`.
+     */
+    @Test
+    void relatedAndBroadSynonymsAreNotEquality() {
+        assertThat( AnnotationsWebService.isExactAttribution( AnnotationsWebService.MatchedVia.RELATED_SYNONYM ) ).isFalse();
+        assertThat( AnnotationsWebService.isExactAttribution( AnnotationsWebService.MatchedVia.BROAD_SYNONYM ) ).isFalse();
     }
 
     @Test
