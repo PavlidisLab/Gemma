@@ -12,7 +12,7 @@ Total: 148 docs.
 
   <sub>archived sources (`pipeline-compute/archive/`): EXTERNAL_PIPELINE_HANDOFF_RECCE.md, PIPELINES_AND_SCHEDULER_RECCE.md, PIPELINE_COMPUTE_TEST_AND_CONTROL_RECCE.md, WORKFLOW_AND_COMPUTE_ARCHITECTURE.md</sub>
 
-## Recces — `docs/recce/` (33)
+## Recces — `docs/recce/` (34)
 
 - [`ACTUATOR_RECCE.md`](recce/ACTUATOR_RECCE.md) — Actuator-style observability endpoints — Phase 3 recce
 - [`AGENT_WRITEBACK_RECCE.md`](recce/AGENT_WRITEBACK_RECCE.md) — Agent writeback — Gemma-side reconnaissance
@@ -30,6 +30,7 @@ Total: 148 docs.
 - [`CURSOR_PAGINATION_RECCE.md`](recce/CURSOR_PAGINATION_RECCE.md) — Cursor-Based Pagination — Reconnaissance
 - [`DEA_FINDBYGENE_COLDCACHE_RECCE.md`](recce/DEA_FINDBYGENE_COLDCACHE_RECCE.md) — DEA findByGene cold-cache — fix recce
 - [`GEMMA_REST_STANDALONE_RECCE.md`](recce/GEMMA_REST_STANDALONE_RECCE.md) — gemma-rest standalone packaging — RECCE
+- [`GEMMA_WEB_ONLY_AUDIT.md`](recce/GEMMA_WEB_ONLY_AUDIT.md) — what `@GemmaWebOnly` is really hiding: all 79 sites bucketed, and why a bulk removal is a security question
 - [`GENE_PAGE_REWORK_RECCE.md`](recce/GENE_PAGE_REWORK_RECCE.md) — Gene page rework — call-surface recce
 - [`GSEC_PHASE_C_RECCE.md`](recce/GSEC_PHASE_C_RECCE.md) — gsec Phase C recce — drop `GsecAclServiceAdapter`
 - [`HEATMAP_REWRITE_RECCE.md`](recce/HEATMAP_REWRITE_RECCE.md) — Heatmap data generation — client-side rewrite recce
