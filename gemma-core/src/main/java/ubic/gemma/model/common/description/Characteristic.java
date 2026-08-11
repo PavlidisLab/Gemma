@@ -179,7 +179,30 @@ public class Characteristic extends AbstractDescribable implements Comparable<Ch
     }
 
     public void setCategory( @Nullable String category ) {
-        this.category = category;
+        this.category = normalizeTermText( category );
+    }
+
+    /**
+     * Collapse whitespace on a free-text term field: strip the ends, and reduce internal runs to a
+     * single space. Null survives as null.
+     * <p>
+     * These fields carry third-party text — GEO submitters write {@code "cancer cell line "} and
+     * {@code "high  fat  diet"}, and 12,861 of the 13,179 double-spaced values in production had the
+     * run in the submitter's own {@code originalValue}, so the input reproduces them on every
+     * import. The cost is not cosmetic: MySQL's PAD SPACE collation hides a TRAILING space from
+     * {@code =} but gives internal runs no such cover, so two spellings of one value split under
+     * {@code GROUP BY}, joins, and every exact-label comparison. Normalizing at the setter is the
+     * one point every writer passes through — the GEO converter's seventeen call sites, the
+     * curation API, agent writes and the CLI — and {@link #getOriginalValue()} still holds the
+     * submitter's string verbatim, so nothing is lost.
+     * <p>
+     * Safe against Hibernate: the mapping annotates the FIELDS, so hydration assigns them directly
+     * and never calls a setter. A loaded entity is therefore not silently rewritten (and not marked
+     * dirty) by this.
+     */
+    @Nullable
+    protected static String normalizeTermText( @Nullable String s ) {
+        return StringUtils.normalizeSpace( s );
     }
 
     /**
@@ -234,7 +257,7 @@ public class Characteristic extends AbstractDescribable implements Comparable<Ch
     }
 
     public void setValue( String value ) {
-        this.value = value;
+        this.value = normalizeTermText( value );
     }
 
     /**

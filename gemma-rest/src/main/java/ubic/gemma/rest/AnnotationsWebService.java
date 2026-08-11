@@ -2779,6 +2779,15 @@ public class AnnotationsWebService {
      *       both canonicalise to {@code "ncih358"} → tier-0 match.</li>
      * </ul>
      *
+     * <p>Whitespace runs are collapsed first. Stored terms carry the submitter's spacing —
+     * production holds 13,179 characteristic values with an internal double space, 12,861 of them
+     * present in the submitter's own {@code originalValue} — and every caller of this method is
+     * deciding an EQUALITY, so {@code "high  fat diet"} would otherwise miss {@code "high fat
+     * diet"} in the relevance tiers, the near-match {@code solid} test, {@code exact_label} and
+     * match attribution alike. Writers normalize at {@code Characteristic#setValue}, but a search
+     * hit can come from a row written before that or from an index built earlier, so the
+     * comparison guards itself rather than trusting its input.</p>
+     *
      * <p>Strictly subsumes raw equality: when neither side needs normalisation the canonical
      * forms equal the raw forms, so existing matches are preserved. Multi-word labels with
      * intra-word punctuation (apostrophes, slashes, etc.) are NOT normalised here — those
@@ -2786,7 +2795,7 @@ public class AnnotationsWebService {
      */
     static String canonicaliseForExactMatch( @Nullable String s ) {
         if ( s == null ) return "";
-        return stripCellSuffix( s.toLowerCase( Locale.ROOT ) ).replace( "-", "" );
+        return stripCellSuffix( StringUtils.normalizeSpace( s ).toLowerCase( Locale.ROOT ) ).replace( "-", "" );
     }
 
     /**

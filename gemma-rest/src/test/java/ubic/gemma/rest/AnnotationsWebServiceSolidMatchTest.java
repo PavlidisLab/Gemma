@@ -248,6 +248,26 @@ class AnnotationsWebServiceSolidMatchTest {
         assertThat( AnnotationsWebService.categoryKey( "obsolete" ) ).isEqualTo( "obsolete" );
     }
 
+    /**
+     * Every caller of canonicaliseForExactMatch is deciding an equality — the relevance tiers, the
+     * near-match solid test, exact_label, and match attribution. Stored terms carry the submitter's
+     * spacing (13,179 production values hold an internal double space), so the comparison must
+     * collapse runs or a search for the clean spelling misses the stored one and vice versa.
+     */
+    @Test
+    void exactMatchIgnoresInternalWhitespaceRuns() {
+        assertThat( AnnotationsWebService.canonicaliseForExactMatch( "high  fat  diet" ) )
+                .isEqualTo( AnnotationsWebService.canonicaliseForExactMatch( "high fat diet" ) );
+        assertThat( AnnotationsWebService.canonicaliseForExactMatch( " cancer cell line " ) )
+                .isEqualTo( AnnotationsWebService.canonicaliseForExactMatch( "cancer cell line" ) );
+        // The hyphen and cell-suffix rules it already carried must still hold.
+        assertThat( AnnotationsWebService.canonicaliseForExactMatch( "MEC-2  cell" ) )
+                .isEqualTo( AnnotationsWebService.canonicaliseForExactMatch( "mec2" ) );
+        // Distinct terms must not collapse into each other.
+        assertThat( AnnotationsWebService.canonicaliseForExactMatch( "high fat diet" ) )
+                .isNotEqualTo( AnnotationsWebService.canonicaliseForExactMatch( "low fat diet" ) );
+    }
+
     @Test
     void everySpellingOfACategoryFoldsOntoOneKey() {
         // The trap this closes: `category=cellLine` — the spelling a client copies straight out of
