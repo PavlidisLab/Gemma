@@ -216,7 +216,16 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     public Collection<CharacteristicValueObject> findExperimentsCharacteristicTags( String searchQuery, int maxResults,
             boolean useNeuroCartaOntology, boolean forceGeneOntology, long timeout, TimeUnit timeUnit ) throws SearchException {
 
-        if ( searchQuery.trim().length() < 3 ) {
+        // Two characters is a real term name -- H1, H7 and H9 are among the most-used human
+        // embryonic stem cell lines, and EFO_0003042 (H1-hESC, 18 uses in the corpus) carries `H1`
+        // as an exact synonym. The floor sat at 3 and returned an empty set with no log line, so
+        // every such query looked like an ontology-coverage gap rather than a guard: CAB filed
+        // H1/H7 as "in the source index but not served" on 2026-08-11, and bare H9 failed
+        // identically, which is what showed the variable was length rather than coverage.
+        //
+        // One character stays out. That is where the candidate set stops being a name and becomes
+        // a scan of the index, and no designation we annotate is one character.
+        if ( searchQuery.trim().length() < 2 ) {
             return new HashSet<>();
         }
 

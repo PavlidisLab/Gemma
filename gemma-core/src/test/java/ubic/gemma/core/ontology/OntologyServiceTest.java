@@ -152,7 +152,11 @@ public class OntologyServiceTest extends BaseTest5 {
 
     @AfterEach
     public void tearDown() {
-        reset( chebiOntologyService, obiService, cellosaurusOntologyService, searchService );
+        // characteristicReadService belongs here too: it was the one collaborator left holding
+        // invocations across tests, so a `never()` verification against it reported the PREVIOUS
+        // test's call and failed on test order rather than on behaviour.
+        reset( chebiOntologyService, obiService, cellosaurusOntologyService, searchService,
+                characteristicReadService );
     }
 
     /**
@@ -244,6 +248,37 @@ public class OntologyServiceTest extends BaseTest5 {
         assertTrue( settings.isFillResults() );
         verify( chebiOntologyService ).isOntologyLoaded();
         verify( chebiOntologyService ).findTerm( "9-chloro-5-phenyl-3-prop-2-enyl-1,2,4,5-tetrahydro-3-benzazepine-7,8-diol", 5000 );
+    }
+
+    /**
+     * A two-character query is a real term name — H1, H7 and H9 are among the most-used human
+     * embryonic stem cell lines, and EFO_0003042 (H1-hESC) carries `H1` as an exact synonym. The
+     * floor used to sit at three and return an empty set with no log line, so those queries were
+     * indistinguishable from an ontology that had not been loaded.
+     */
+    @Test
+    public void testTwoCharacterQueryReachesTheOntologies() throws Exception {
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( characteristicReadService.findByValueLike( any(), any(), any(), anyBoolean(), anyInt() ) )
+                .thenReturn( Collections.emptyList() );
+
+        ontologyService.findExperimentsCharacteristicTags( "H1", 100, false, false, 5000, TimeUnit.MILLISECONDS );
+
+        verify( chebiOntologyService ).findTerm( "H1", 100 );
+    }
+
+    /**
+     * One character stays out: that is where the candidate set stops being a name and becomes a
+     * scan of the index, and nothing we annotate is designated by a single character.
+     */
+    @Test
+    public void testSingleCharacterQueryIsStillRefused() throws Exception {
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+
+        assertTrue( ontologyService.findExperimentsCharacteristicTags( "H", 100, false, false, 5000, TimeUnit.MILLISECONDS ).isEmpty() );
+
+        verify( chebiOntologyService, never() ).findTerm( anyString(), anyInt() );
+        verify( characteristicReadService, never() ).findByValueLike( any(), any(), any(), anyBoolean(), anyInt() );
     }
 
     @Test
