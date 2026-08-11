@@ -202,7 +202,18 @@ public class Characteristic extends AbstractDescribable implements Comparable<Ch
      */
     @Nullable
     protected static String normalizeTermText( @Nullable String s ) {
-        return StringUtils.normalizeSpace( s );
+        if ( s == null ) {
+            return null;
+        }
+        // The no-break spaces have to go first, for two separate reasons. Java does not classify
+        // U+202F or U+2007 as whitespace at all, so normalizeSpace leaves them untouched; and
+        // while it does map U+00A0 to a plain space, it does so WITHOUT re-collapsing, so
+        // "x  y" comes back as "x  y" -- a normalizer emitting the very double space it
+        // exists to remove. Mapping them to a plain space up front lets the single collapse below
+        // see them as the whitespace they are. Production carries 2,392 values with U+00A0 and 5
+        // with U+202F.
+        String t = s.replace( '\u00A0', ' ' ).replace( '\u202F', ' ' ).replace( '\u2007', ' ' );
+        return StringUtils.normalizeSpace( t );
     }
 
     /**

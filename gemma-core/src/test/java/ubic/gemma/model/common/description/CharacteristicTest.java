@@ -94,6 +94,36 @@ public class CharacteristicTest {
         assertThat( s.getSecondObject() ).isEqualTo( "two weeks" );
     }
 
+    /**
+     * The no-break spaces are the ones a normalizer quietly misses. Java does not classify
+     * U+202F or U+2007 as whitespace, so StringUtils.normalizeSpace leaves them alone; and
+     * although it maps U+00A0 to a plain space it does not re-collapse afterwards, so a run of
+     * them comes back as a run of ORDINARY double spaces -- the normalizer emitting the exact
+     * defect it exists to remove. Production carries 2,392 values with U+00A0 and 5 with U+202F.
+     */
+    @Test
+    public void noBreakSpacesAreNormalizedToo() {
+        Characteristic c = Characteristic.Factory.newInstance();
+
+        c.setValue( "high\u00A0fat diet" );
+        assertThat( c.getValue() ).isEqualTo( "high fat diet" );
+
+        c.setValue( "high\u202Ffat diet" );
+        assertThat( c.getValue() ).isEqualTo( "high fat diet" );
+
+        // The re-collapse case: two NBSPs must not become two spaces.
+        c.setValue( "high\u00A0\u00A0fat diet" );
+        assertThat( c.getValue() ).isEqualTo( "high fat diet" );
+
+        // NBSP beside an ordinary space, the other way the run appears.
+        c.setValue( "high\u00A0 fat diet" );
+        assertThat( c.getValue() ).isEqualTo( "high fat diet" );
+
+        // A trailing NBSP is edge whitespace like any other.
+        c.setValue( "high fat diet\u00A0" );
+        assertThat( c.getValue() ).isEqualTo( "high fat diet" );
+    }
+
     /** Null must survive as null: "no value" stays distinct from "blank". */
     @Test
     public void nullTermTextStaysNull() {
