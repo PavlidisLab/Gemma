@@ -785,6 +785,50 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
      * the CHEBI compound that only matches via a synonym — silently undoing the preference the
      * caller asked for. The category is a constraint; the strategy is a relevance heuristic.
      */
+    /**
+     * Reported by CAB 2026-08-11: `H1` is a declared exact synonym of EFO_0003042 ("H1-hESC", 18
+     * corpus uses), but the relevance tiers read the hit's LABEL only, so on "h1-hesc" it scored
+     * as a prefix match and came back at rank 7 -- behind two CHEBI histamine-receptor ligands
+     * with no corpus use at all. A caller cannot act on that: the row it wants is
+     * indistinguishable from the noise it has to filter. An exact synonym is an exact match, and
+     * now earns the exact tier.
+     */
+    @Test
+    public void testExactSynonymEarnsTheExactTier() throws Exception {
+        CharacteristicValueObject ligand = new CharacteristicValueObject( "h1-receptor antagonist",
+                "http://purl.obolibrary.org/obo/CHEBI_37955", "treatment", null );
+        CharacteristicValueObject hesc = new CharacteristicValueObject( "h1-hesc",
+                "http://www.ebi.ac.uk/efo/EFO_0003042", "cell line", null );
+        // Order from the ontology puts the ligand first; on labels alone both are mere prefix
+        // matches for "H1" and the ligand keeps that lead.
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "H1" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Arrays.asList( ligand, hesc ) );
+
+        OntologyTerm h1hesc = mock( OntologyTerm.class );
+        when( h1hesc.getLabel() ).thenReturn( "H1-hESC" );
+        when( h1hesc.getAnnotations( anyString() ) ).thenReturn( Collections.emptyList() );
+        AnnotationProperty syn = mock( AnnotationProperty.class );
+        when( syn.getContents() ).thenReturn( "H1" );
+        when( h1hesc.getAnnotations( "http://www.geneontology.org/formats/oboInOwl#hasExactSynonym" ) )
+                .thenReturn( Collections.singletonList( syn ) );
+        when( ontologyService.getTerm( eq( "http://www.ebi.ac.uk/efo/EFO_0003042" ), anyLong(), any() ) )
+                .thenReturn( h1hesc );
+
+        assertThat( target( "/annotations/search" )
+                .queryParam( "query", "H1" )
+                .queryParam( "includeGenes", "false" )
+                .request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .first()
+                .satisfies( top -> {
+                    assertThat( top ).containsEntry( "valueUri", "http://www.ebi.ac.uk/efo/EFO_0003042" );
+                    // and the caller is told WHY, which is the half it acts on
+                    assertThat( top ).containsEntry( "matchedVia", "exact_synonym" );
+                } );
+    }
+
     @Test
     public void testCategoryPromotionSurvivesTheRankingStrategy() throws Exception {
         CharacteristicValueObject gene = new CharacteristicValueObject( "ftc",

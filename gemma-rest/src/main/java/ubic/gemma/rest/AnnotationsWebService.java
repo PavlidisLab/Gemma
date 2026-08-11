@@ -1353,6 +1353,42 @@ public class AnnotationsWebService {
                 .thenComparingInt( cellLinePreferenceFn::applyAsInt )
                 .thenComparing( CharacteristicValueObject::getValueUri, Comparator.nullsLast( Comparator.naturalOrder() ) )
                 .thenComparing( CharacteristicValueObject::getValue, Comparator.nullsLast( Comparator.naturalOrder() ) ) );
+
+        // ---- An exact SYNONYM is an exact match ----------------------------------------------
+        //
+        // Everything above reads the hit's own label, so a term whose exact synonym IS the query
+        // sinks to whatever tier its label happens to earn. `H1` is a declared exact synonym of
+        // EFO_0003042 ("H1-hESC", 18 uses); on its label alone it is a mere prefix match, so it
+        // came back at rank 7 behind two CHEBI histamine-receptor ligands with no corpus use at
+        // all. A caller cannot act on that: the row it wants is indistinguishable from noise it
+        // has to filter, and "the term is not in Gemma" and "the term is at rank 7" look the same
+        // from the top of the list.
+        //
+        // Attribution already knows about synonyms -- it is what fills `matchedVia` -- so it is
+        // resolved here, for the ordered candidate window, and an exact attribution earns the
+        // exact tier. Hoisted above its old home in the suppression block so both uses share one
+        // resolution; measured on frink 2026-08-11, attribution against a warm ontology cache is
+        // inside the noise of the search itself (designation queries: 37-83ms either way), which
+        // is what makes it affordable for every query rather than only the suppressing ones.
+        //
+        // The sort is stable and the key is binary, so this only LIFTS synonym-exact hits into
+        // the exact tier: a genuine label-exact match keeps its place ahead of them, and the
+        // ordering settled above survives inside each tier.
+        Map<String, MatchAttribution> candidateMatches = rawHits.isEmpty()
+                ? Collections.emptyMap()
+                : attributeCandidates( rawHits, joinedRelevanceQuery,
+                        CANDIDATE_ATTRIBUTION_CAP, Math.max( timeoutMs - timer.getTime(), 0 ) );
+        if ( !candidateMatches.isEmpty() ) {
+            java.util.function.ToIntFunction<CharacteristicValueObject> synonymExactFn = h -> {
+                if ( tierFn.applyAsInt( h ) == 0 ) {
+                    return 0; // already exact on its label
+                }
+                String uri = h.getValueUri();
+                MatchAttribution m = uri != null ? candidateMatches.get( uri ) : null;
+                return isExactAttribution( m != null ? m.via : null ) ? 0 : 1;
+            };
+            rawHits.sort( Comparator.comparingInt( synonymExactFn::applyAsInt ) );
+        }
         // Runs BEFORE the exact_label and prefixes filters on purpose. Those narrow the
         // POSITIVE list; this produces the VERDICT, and the two answer different questions.
         // With this after exact_label, a caller passing both got an empty data array and no
@@ -1405,11 +1441,11 @@ public class AnnotationsWebService {
             // promotion both turn on that. Exclusion turns on the URI alone, so a category that
             // configures only exclusions must not pay for up to 200 per-URI term lookups; the
             // ruled-out rows fall back to label-level attribution, which is free.
-            Map<String, MatchAttribution> candidateMatches =
-                    ( rawHits.isEmpty() || !( suppress || !preferredPrefixes.isEmpty() ) )
-                            ? Collections.emptyMap()
-                            : attributeCandidates( rawHits, joinedRelevanceQuery,
-                                    CANDIDATE_ATTRIBUTION_CAP, Math.max( timeoutMs - timer.getTime(), 0 ) );
+            // Resolved once, above, for the synonym-exact tier; suppression and promotion read the
+            // same map. It used to be computed here and only when one of them was active, so that
+            // a category configuring nothing but exclusions did not pay for the lookups; that
+            // saving is gone now that every query needs the attribution anyway, and the
+            // measurement says it was not buying much.
             // A hit is "solid" when it names the query: attribution says equality against the
             // preferred label or a declared synonym. The label fallback keeps the check working
             // when the owning ontology is not loaded and no term could be resolved — the hit's own
