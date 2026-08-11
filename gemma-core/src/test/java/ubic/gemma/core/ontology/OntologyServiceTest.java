@@ -284,37 +284,41 @@ public class OntologyServiceTest extends BaseTest5 {
     }
 
     /**
-     * The candidate buckets are filled in the order results arrive from the completion service —
-     * ontology completion order, which differs run to run. Invisible while everything fits; the
-     * moment the total exceeds maxResults it decides who survives, and `H1 cell line` on frink
-     * returned EFO_0003042 at rank 1 on five calls out of six and absent from a hundred rows on
-     * the sixth. The cut must depend on the candidates, not on thread scheduling.
+     * The cap has to keep the BEST candidates, not merely the same ones every time.
+     *
+     * <p>`H1 cell line` overflows the candidate cap with chemicals whose labels contain the
+     * substring, and EFO_0003042 -- the stem cell line actually being asked for -- is a poor match
+     * on its LABEL and a strong one on its declared synonym. Cutting alphabetically, or in whatever
+     * order a HashSet iterated, buried it: the term was absent from a hundred rows while scoring
+     * far above everything that displaced it. Relevance has to survive as far as the cut, so the
+     * search score is carried out of the ontology fan-out instead of being dropped at the value
+     * object.</p>
      */
     @Test
-    public void testCandidateCutIsDeterministicWhenOverTheCap() throws Exception {
+    public void testTheCapKeepsTheBestCandidatesNotTheAlphabeticalOnes() throws Exception {
         when( characteristicReadService.findByValueLike( any(), any(), any(), anyBoolean(), anyInt() ) )
                 .thenReturn( Collections.emptyList() );
         when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
-        // Ten equally-irrelevant candidates, handed over in an order unrelated to their URIs.
-        List<OntologySearchResult<OntologyTerm>> shuffled = new ArrayList<>();
-        for ( int i : new int[] { 7, 2, 9, 4, 1, 8, 3, 6, 5, 0 } ) {
-            shuffled.add( new OntologySearchResult<>( new OntologyTermSimple(
-                    String.format( "http://purl.obolibrary.org/obo/TEST_%04d", i ), "zzz term " + i ), 1.0 ) );
+        // Nine weak matches whose URIs sort FIRST, and the strong one whose URI sorts last.
+        List<OntologySearchResult<OntologyTerm>> hits = new ArrayList<>();
+        for ( int i = 0; i < 9; i++ ) {
+            hits.add( new OntologySearchResult<>( new OntologyTermSimple(
+                    String.format( "http://purl.obolibrary.org/obo/AAA_%04d", i ), "zzz weak " + i ), 0.5 ) );
         }
-        when( chebiOntologyService.findTerm( eq( "zzz" ), anyInt() ) ).thenReturn( shuffled );
+        OntologyTermSimple best = new OntologyTermSimple( "http://purl.obolibrary.org/obo/ZZZ_9999", "zzz best" );
+        hits.add( new OntologySearchResult<>( best, 42.0 ) );
+        when( chebiOntologyService.findTerm( eq( "zzz" ), anyInt() ) ).thenReturn( hits );
 
-        List<CharacteristicValueObject> first = new ArrayList<>(
-                ontologyService.findExperimentsCharacteristicTags( "zzz", 4, false, false, 5000, TimeUnit.MILLISECONDS ) );
+        List<CharacteristicValueObject> capped = new ArrayList<>(
+                ontologyService.findExperimentsCharacteristicTags( "zzz", 3, false, false, 5000, TimeUnit.MILLISECONDS ) );
+
+        assertEquals( 3, capped.size() );
+        // The high scorer survives a cap of three despite sorting last alphabetically.
+        assertEquals( "http://purl.obolibrary.org/obo/ZZZ_9999", capped.get( 0 ).getValueUri() );
+        // ...and the cut is still reproducible.
         List<CharacteristicValueObject> again = new ArrayList<>(
-                ontologyService.findExperimentsCharacteristicTags( "zzz", 4, false, false, 5000, TimeUnit.MILLISECONDS ) );
-
-        assertEquals( 4, first.size() );
-        // Which four survive is decided by the candidates themselves, not by arrival order.
-        assertEquals(
-                Arrays.asList( "http://purl.obolibrary.org/obo/TEST_0000", "http://purl.obolibrary.org/obo/TEST_0001",
-                        "http://purl.obolibrary.org/obo/TEST_0002", "http://purl.obolibrary.org/obo/TEST_0003" ),
-                first.stream().map( CharacteristicValueObject::getValueUri ).collect( Collectors.toList() ) );
-        assertEquals( first.stream().map( CharacteristicValueObject::getValueUri ).collect( Collectors.toList() ),
+                ontologyService.findExperimentsCharacteristicTags( "zzz", 3, false, false, 5000, TimeUnit.MILLISECONDS ) );
+        assertEquals( capped.stream().map( CharacteristicValueObject::getValueUri ).collect( Collectors.toList() ),
                 again.stream().map( CharacteristicValueObject::getValueUri ).collect( Collectors.toList() ) );
     }
 

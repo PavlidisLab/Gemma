@@ -263,37 +263,39 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         Collection<CharacteristicValueObject> characteristicsSubstring = new ArrayList<>();
         Collection<CharacteristicValueObject> characteristicsNoRuleFound = new ArrayList<>();
 
-        // from the database with a uri
-        this.putCharacteristicsIntoSpecificList( searchQuery, characteristicFromDatabaseWithValueUri.values(),
+        // from the database with a uri -- values() of a HashMap, so ordered here or not at all
+        List<CharacteristicValueObject> dbWithUri = new ArrayList<>( characteristicFromDatabaseWithValueUri.values() );
+        dbWithUri.sort( Comparator.comparing( CharacteristicValueObject::getValueUri, Comparator.nullsLast( Comparator.naturalOrder() ) ) );
+        this.putCharacteristicsIntoSpecificList( searchQuery, dbWithUri,
                 characteristicsWithExactMatch, characteristicsStartWithQuery, characteristicsSubstring,
                 characteristicsNoRuleFound );
         // from the ontology
         this.putCharacteristicsIntoSpecificList( searchQuery, characteristicsFromOntology,
                 characteristicsWithExactMatch, characteristicsStartWithQuery, characteristicsSubstring,
                 characteristicsNoRuleFound );
-        // from the database with no uri
-        this.putCharacteristicsIntoSpecificList( searchQuery, characteristicFromDatabaseFreeText,
+        // from the database with no uri -- a HashSet, same reasoning as above
+        List<CharacteristicValueObject> dbFreeText = new ArrayList<>( characteristicFromDatabaseFreeText );
+        dbFreeText.sort( Comparator.comparing( CharacteristicValueObject::getValue, Comparator.nullsLast( Comparator.naturalOrder() ) ) );
+        this.putCharacteristicsIntoSpecificList( searchQuery, dbFreeText,
                 characteristicsWithExactMatch, characteristicsStartWithQuery, characteristicsSubstring,
                 characteristicsNoRuleFound );
 
-        // Each bucket is filled in the order results arrive from combineInThreads, which reads an
-        // ExecutorCompletionService — i.e. in ONTOLOGY COMPLETION ORDER, which differs run to run.
-        // That is invisible while everything fits and decides who lives the moment the total
-        // exceeds maxResults: `H1 cell line` returned EFO_0003042 at rank 1 on five calls out of
-        // six and absent from a hundred rows on the sixth, purely on which ontology thread
-        // happened to finish first. Ordering each bucket by URI (then label) before the cut is the
-        // same tiebreak the REST relevance tiers already apply, so the same candidates reach
-        // ranking every time.
-        Comparator<CharacteristicValueObject> stableOrder = Comparator
-                .comparing( CharacteristicValueObject::getValueUri, Comparator.nullsLast( Comparator.naturalOrder() ) )
-                .thenComparing( CharacteristicValueObject::getValue, Comparator.nullsLast( Comparator.naturalOrder() ) );
+        // Within a bucket the order is the order the three sources were added — database-with-URI,
+        // then ontology, then database free-text — and each source is now internally ordered before
+        // it gets here: the ontology block by search score (best first), the database collections
+        // below by URI, since a HashMap's values and a HashSet iterate in an order nobody chose.
+        //
+        // Deliberately NOT re-sorted by URI here. An earlier pass did exactly that to kill the
+        // nondeterminism and it worked, but it also threw away relevance at the one point that
+        // decides who survives the cap: EFO_0003042 is a poor match for `H1 cell line` on its LABEL
+        // and a strong one on its declared synonym, so alphabetical order buried it under chemicals
+        // that merely contain the substring. Stable and wrong is worse than flaky and wrong -- the
+        // flake at least announces itself.
         List<CharacteristicValueObject> allCharacteristicsFound = new ArrayList<>();
-        for ( Collection<CharacteristicValueObject> bucket : Arrays.asList( characteristicsWithExactMatch,
-                characteristicsStartWithQuery, characteristicsSubstring, characteristicsNoRuleFound ) ) {
-            List<CharacteristicValueObject> ordered = new ArrayList<>( bucket );
-            ordered.sort( stableOrder );
-            allCharacteristicsFound.addAll( ordered );
-        }
+        allCharacteristicsFound.addAll( characteristicsWithExactMatch );
+        allCharacteristicsFound.addAll( characteristicsStartWithQuery );
+        allCharacteristicsFound.addAll( characteristicsSubstring );
+        allCharacteristicsFound.addAll( characteristicsNoRuleFound );
 
         // Never silently: a truncated tail is indistinguishable from "the ontology does not have
         // it", which is the reading that sent us looking for a missing term rather than a dropped
@@ -961,6 +963,20 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     /**
      * given a collection of characteristics add them to the correct List
      */
+    /**
+     * A candidate plus the search score that produced it, so relevance survives the trip from the
+     * ontology index to the point where the candidate set is capped.
+     */
+    private static final class ScoredCandidate {
+        private final CharacteristicValueObject vo;
+        private final double score;
+
+        private ScoredCandidate( CharacteristicValueObject vo, double score ) {
+            this.vo = vo;
+            this.score = score;
+        }
+    }
+
     private Collection<CharacteristicValueObject> findCharacteristicsFromOntology( String searchQuery, int maxResults,
             boolean useNeuroCartaOntology, boolean forceGeneOntology,
             Map<String, CharacteristicValueObject> characteristicFromDatabaseWithValueUri, long timeoutMs ) throws SearchException {
@@ -976,9 +992,14 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             ontologyServicesToUse = this.ontologyServices;
         }
 
-        Collection<CharacteristicValueObject> fromOntologies = searchInThreads( ontologyService -> {
+        // The search score is carried out of the fan-out rather than discarded at the VO boundary,
+        // because the cap downstream has to choose WHICH candidates to keep. Lucene already knows
+        // that a term matching `h1` as a declared synonym is a far better answer than a chemical
+        // whose label merely contains the substring; throwing that away left the cut to break ties
+        // on whatever order a HashSet iterated in.
+        List<ScoredCandidate> scored = searchInThreads( ontologyService -> {
             Collection<OntologySearchResult<OntologyTerm>> ontologyTerms = ontologyCache.findTerm( ontologyService, searchQuery, maxResults );
-            Collection<CharacteristicValueObject> characteristicsFromOntology = new HashSet<>();
+            Collection<ScoredCandidate> characteristicsFromOntology = new ArrayList<>();
             for ( OntologySearchResult<OntologyTerm> ontologyTerm : ontologyTerms ) {
                 // if the ontology term wasnt already found in the database
                 if ( characteristicFromDatabaseWithValueUri.get( ontologyTerm.getResult().getUri() ) == null ) {
@@ -987,11 +1008,20 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                         continue;
                     }
                     CharacteristicValueObject phenotype = new CharacteristicValueObject( ontologyTerm.getResult().getLabel().toLowerCase(), ontologyTerm.getResult().getUri() );
-                    characteristicsFromOntology.add( phenotype );
+                    characteristicsFromOntology.add( new ScoredCandidate( phenotype, ontologyTerm.getScore() ) );
                 }
             }
             return characteristicsFromOntology;
         }, ontologyServicesToUse, "terms matching " + searchQuery, timeoutMs );
+
+        // Best first, across every ontology, before anything downstream cuts. URI breaks ties so
+        // the order is total: equal scores are common and must not fall back on arrival order.
+        Collection<CharacteristicValueObject> fromOntologies = scored.stream()
+                .sorted( Comparator.comparingDouble( ( ScoredCandidate sc ) -> -sc.score )
+                        .thenComparing( sc -> sc.vo.getValueUri(), Comparator.nullsLast( Comparator.naturalOrder() ) ) )
+                .map( sc -> sc.vo )
+                .distinct()
+                .collect( Collectors.toList() );
 
         // GeneOntologyServiceImpl isn't part of the autowired ontologyServices list (it's a
         // delegating-bean wrapper around basecode's GO service); the sibling findTerms() method
