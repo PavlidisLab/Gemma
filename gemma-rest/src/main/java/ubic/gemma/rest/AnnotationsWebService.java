@@ -1697,13 +1697,25 @@ public class AnnotationsWebService {
             String definition = isTop ? defByUri.get( uri ) : null;
             List<OntologyTermSimpleValueObject> parents = isTop ? parentsByUri.get( uri ) : null;
             MatchAttribution match = isTop ? matchByUri.get( uri ) : null;
-            if ( match == null && isTop ) {
-                // Attribution was attempted and produced nothing — the URI resolved to no loaded
-                // term (a flat lexical catalogue, an NCBITaxon row, an ontology still warming), or
-                // the hit came via a Lucene field we don't probe. The row's own label is on hand
-                // and needs no ontology, so a label-level verdict is still available and is often
-                // decisive: an NCBITaxon row whose label EQUALS the query was reporting null,
-                // which a client filtering on equality tiers reads as "weak" and discards.
+            if ( match == null ) {
+                // Term-level attribution was unavailable or produced nothing — the URI resolved to
+                // no loaded term (a flat lexical catalogue, an NCBITaxon row, an ontology still
+                // warming), the hit came via a Lucene field we don't probe, or the row was never a
+                // candidate for term lookup at all (no URI, or outside the enriched top-N).
+                //
+                // Deliberately NOT gated on the row being enriched. This verdict is derived from
+                // the row's own label against the query — no ontology, no URI, pure string work —
+                // so every row can have one, and a row that cannot have one is saying something
+                // real about relevance rather than about which enrichment slice it landed in. A
+                // client filtering on equality tiers reads null as "weak" and discards; that was
+                // silently demoting two populations that deserve better: an NCBITaxon row whose
+                // label EQUALS the query, and a curator's free-text tag (null valueUri), which is
+                // never enriched because enrichment keys on URI.
+                //
+                // matchedVia answers "why is this row here", NOT "is this row grounded" —
+                // valueUri already answers the second, precisely. Callers key adoption on
+                // valueUri (CAB confirmed, 2026-08-10); overloading the relevance field to also
+                // encode groundedness is what made the null ambiguous in the first place.
                 match = computeLabelAttribution( vo.getValue(), joinedQuery );
             }
             String matchedVia = match != null ? match.via.token : null;

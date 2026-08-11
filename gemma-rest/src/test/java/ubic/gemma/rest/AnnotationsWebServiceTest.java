@@ -1828,9 +1828,16 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
     }
 
     @Test
-    public void testSearchAnnotationsLeavesMatchAttributionNullForPostTopN() throws SearchException, TimeoutException {
-        // Hits beyond the 25-deep enrichment window must carry matchedVia=null / matchedText=null
-        // (lazy-load sentinel), even when the limit allows them through.
+    public void testSearchAnnotationsLeavesEnrichmentNullForPostTopN() throws SearchException, TimeoutException {
+        // Hits beyond the 25-deep enrichment window carry the lazy-load sentinel on the fields
+        // that need an ontology lookup — definition and parents — even when the limit lets them
+        // through.
+        //
+        // matchedVia is NOT one of those any more: label-level attribution is pure string work on
+        // the row itself, so it is computed for every row regardless of the enrichment window (see
+        // the free-text test below). The tail is null here because these rows are labelled
+        // "term-N" and the query is "diabetes" — no label relationship — NOT because they missed
+        // enrichment. Change the fixture labels and the tail would legitimately be attributed.
         List<CharacteristicValueObject> raw = new ArrayList<>();
         for ( int i = 0; i < 30; i++ ) {
             // Zero-padded suffix so URI lex sort matches numeric order — the endpoint
@@ -1873,15 +1880,52 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
                                 .as( "top-25 hit %d should carry matchedVia", i )
                                 .isEqualTo( "preferred_label" );
                     }
-                    // 25..29: nulls.
+                    // 25..29: the ontology-backed fields stay on the lazy-load sentinel.
                     for ( int i = 25; i < 30; i++ ) {
                         Map<?, ?> hit = ( Map<?, ?> ) hits.get( i );
+                        assertThat( hit.get( "definition" ) )
+                                .as( "post-top-25 hit %d should carry null definition", i ).isNull();
+                        assertThat( hit.get( "parents" ) )
+                                .as( "post-top-25 hit %d should carry null parents", i ).isNull();
+                        // Null for want of any label relationship, not for want of enrichment.
                         assertThat( hit.get( "matchedVia" ) )
-                                .as( "post-top-25 hit %d should carry null matchedVia", i ).isNull();
+                                .as( "post-top-25 hit %d has no label relationship to the query", i ).isNull();
                         assertThat( hit.get( "matchedText" ) )
                                 .as( "post-top-25 hit %d should carry null matchedText", i ).isNull();
                     }
                 } );
+    }
+
+    @Test
+    public void testSearchAnnotationsAttributesAFreeTextRowFromItsOwnLabel() throws SearchException, TimeoutException {
+        // A curator's ungrounded tag: valueUri null, because the string was typed under a category
+        // without being bound to a term. Enrichment keys on URI, so such a row can never be
+        // enriched — and attribution used to be gated on having been enriched, so it reported
+        // matchedVia=null however exactly its label matched. A client filtering on equality tiers
+        // reads null as "weak" and discards, which silently demoted the row.
+        //
+        // Label-level attribution needs no ontology and no URI. The row says its own label IS the
+        // query, and that is worth reporting. It stays ungrounded either way: valueUri is null on
+        // the wire, which is the field that answers "can I adopt this" (CAB confirmed their
+        // adoption gate reads valueUri, never matchedVia — handoff 2026-08-10).
+        CharacteristicValueObject freeText = new CharacteristicValueObject(
+                "N2a", null, "cell line", "http://purl.obolibrary.org/obo/CLO_0000031" );
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "N2a" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Collections.singletonList( freeText ) );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/annotations/search" ).queryParam( "query", "N2a" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 1 )
+                .first()
+                .satisfies( a -> assertThat( a )
+                        .containsEntry( "matchedVia", "preferred_label" )
+                        .containsEntry( "matchedText", "N2a" )
+                        // Still ungrounded, and still says so on the field that means that.
+                        .containsEntry( "valueUri", null ) );
     }
 
     @Test
