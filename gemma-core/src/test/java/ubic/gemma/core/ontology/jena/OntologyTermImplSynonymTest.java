@@ -99,6 +99,45 @@ class OntologyTermImplSynonymTest {
                 .containsExactlyInAnyOrder( "behavioral stress", "psychological stress" );
     }
 
+    /**
+     * EFO shipped {@code "cancer cell line "} with a trailing space on EFO_0001639, and that one
+     * character dropped a 50-use term below a zero-use exact-label duplicate in
+     * {@code /annotations/search}: the relevance tiers decide "exact label" with an equals(), so a
+     * label that differs from its own clean form scores as a weaker match than a worse term. The
+     * space is gone upstream but survives in any Lucene index built before the fix. Labels are
+     * third-party text; normalize where they enter Gemma rather than at each comparison.
+     */
+    @Test
+    void labelWhitespaceIsNormalizedAtTheModelBoundary() {
+        OntModel model = ModelFactory.createOntologyModel( OntModelSpec.OWL_MEM );
+        String fragment = TGEMO_FRAGMENT.replace(
+                "<rdfs:label xml:lang=\"en\">behavioural stress</rdfs:label>",
+                "<rdfs:label xml:lang=\"en\">  behavioural   stress </rdfs:label>" );
+        model.read( new ByteArrayInputStream( fragment.getBytes( StandardCharsets.UTF_8 ) ), null );
+        OntClass cls = model.getOntClass( "http://gemma.msl.ubc.ca/ont/TGEMO_00210" );
+        OntologyTerm term = new OntologyTermImpl( cls, Collections.emptySet() );
+
+        // leading/trailing stripped AND the internal run collapsed -- both shapes occur in the
+        // wild, and both break an equals()-based exact-label comparison identically.
+        assertThat( term.getLabel() ).isEqualTo( "behavioural stress" );
+    }
+
+    @Test
+    void aLabelThatIsOnlyWhitespaceDoesNotBecomeAnEmptyName() {
+        // "no label" and "blank label" must stay distinguishable: getTerm() drops terms whose label
+        // is null, and turning whitespace into "" would smuggle an unnamed term onto the wire with
+        // an empty name instead.
+        OntModel model = ModelFactory.createOntologyModel( OntModelSpec.OWL_MEM );
+        String fragment = TGEMO_FRAGMENT.replace(
+                "<rdfs:label xml:lang=\"en\">behavioural stress</rdfs:label>",
+                "<rdfs:label xml:lang=\"en\">   </rdfs:label>" );
+        model.read( new ByteArrayInputStream( fragment.getBytes( StandardCharsets.UTF_8 ) ), null );
+        OntClass cls = model.getOntClass( "http://gemma.msl.ubc.ca/ont/TGEMO_00210" );
+        OntologyTerm term = new OntologyTermImpl( cls, Collections.emptySet() );
+
+        assertThat( term.getLabel() ).isEmpty();
+    }
+
     @Test
     void getAnnotationsReturnsHasDbXrefValues() {
         // /annotations/term surfaces class-level oboInOwl:hasDbXref values as the term's dbXrefs. They

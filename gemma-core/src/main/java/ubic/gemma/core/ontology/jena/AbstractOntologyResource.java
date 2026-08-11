@@ -18,6 +18,7 @@
  */
 package ubic.gemma.core.ontology.jena;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.jena.ontology.OntResource;
 import org.apache.jena.vocabulary.OWL2;
 import org.slf4j.Logger;
@@ -53,6 +54,18 @@ abstract class AbstractOntologyResource implements OntologyResource {
         return res.getLocalName();
     }
 
+    /**
+     * The term's label, with surrounding whitespace stripped and internal runs collapsed to single
+     * spaces.
+     * <p>
+     * Ontology labels are third-party text and arrive with stray whitespace: EFO shipped
+     * {@code "cancer cell line "} with a trailing space for long enough that it is still in
+     * Gemma's Lucene index, and a label that differs from its own clean form by one character
+     * silently loses every exact-label comparison downstream — which cost EFO_0001639 (50 uses)
+     * the top of {@code /annotations/search} to a zero-usage duplicate. Normalizing here, where
+     * the label enters Gemma, is the one place that covers the search index, the relevance tiers,
+     * match attribution and every consumer of the model at once.
+     */
     @Override
     public String getLabel() {
         if ( _label != null || _isLabelNull ) {
@@ -62,6 +75,9 @@ abstract class AbstractOntologyResource implements OntologyResource {
         if ( label == null ) {
             label = res.getLabel( null );
         }
+        // normalizeSpace also strips, and collapses the internal double-spaces that the same
+        // sources produce; null survives as null so "no label" stays distinguishable from "blank".
+        label = StringUtils.normalizeSpace( label );
         _label = label;
         _isLabelNull = label == null;
         return label;
