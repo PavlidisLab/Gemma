@@ -27,6 +27,7 @@ import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
@@ -42,6 +43,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import java.util.concurrent.TimeoutException;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -279,6 +281,41 @@ public class OntologyServiceTest extends BaseTest5 {
 
         verify( chebiOntologyService, never() ).findTerm( anyString(), anyInt() );
         verify( characteristicReadService, never() ).findByValueLike( any(), any(), any(), anyBoolean(), anyInt() );
+    }
+
+    /**
+     * The candidate buckets are filled in the order results arrive from the completion service —
+     * ontology completion order, which differs run to run. Invisible while everything fits; the
+     * moment the total exceeds maxResults it decides who survives, and `H1 cell line` on frink
+     * returned EFO_0003042 at rank 1 on five calls out of six and absent from a hundred rows on
+     * the sixth. The cut must depend on the candidates, not on thread scheduling.
+     */
+    @Test
+    public void testCandidateCutIsDeterministicWhenOverTheCap() throws Exception {
+        when( characteristicReadService.findByValueLike( any(), any(), any(), anyBoolean(), anyInt() ) )
+                .thenReturn( Collections.emptyList() );
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        // Ten equally-irrelevant candidates, handed over in an order unrelated to their URIs.
+        List<OntologySearchResult<OntologyTerm>> shuffled = new ArrayList<>();
+        for ( int i : new int[] { 7, 2, 9, 4, 1, 8, 3, 6, 5, 0 } ) {
+            shuffled.add( new OntologySearchResult<>( new OntologyTermSimple(
+                    String.format( "http://purl.obolibrary.org/obo/TEST_%04d", i ), "zzz term " + i ), 1.0 ) );
+        }
+        when( chebiOntologyService.findTerm( eq( "zzz" ), anyInt() ) ).thenReturn( shuffled );
+
+        List<CharacteristicValueObject> first = new ArrayList<>(
+                ontologyService.findExperimentsCharacteristicTags( "zzz", 4, false, false, 5000, TimeUnit.MILLISECONDS ) );
+        List<CharacteristicValueObject> again = new ArrayList<>(
+                ontologyService.findExperimentsCharacteristicTags( "zzz", 4, false, false, 5000, TimeUnit.MILLISECONDS ) );
+
+        assertEquals( 4, first.size() );
+        // Which four survive is decided by the candidates themselves, not by arrival order.
+        assertEquals(
+                Arrays.asList( "http://purl.obolibrary.org/obo/TEST_0000", "http://purl.obolibrary.org/obo/TEST_0001",
+                        "http://purl.obolibrary.org/obo/TEST_0002", "http://purl.obolibrary.org/obo/TEST_0003" ),
+                first.stream().map( CharacteristicValueObject::getValueUri ).collect( Collectors.toList() ) );
+        assertEquals( first.stream().map( CharacteristicValueObject::getValueUri ).collect( Collectors.toList() ),
+                again.stream().map( CharacteristicValueObject::getValueUri ).collect( Collectors.toList() ) );
     }
 
     @Test

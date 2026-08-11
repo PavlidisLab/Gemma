@@ -276,14 +276,32 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 characteristicsWithExactMatch, characteristicsStartWithQuery, characteristicsSubstring,
                 characteristicsNoRuleFound );
 
+        // Each bucket is filled in the order results arrive from combineInThreads, which reads an
+        // ExecutorCompletionService — i.e. in ONTOLOGY COMPLETION ORDER, which differs run to run.
+        // That is invisible while everything fits and decides who lives the moment the total
+        // exceeds maxResults: `H1 cell line` returned EFO_0003042 at rank 1 on five calls out of
+        // six and absent from a hundred rows on the sixth, purely on which ontology thread
+        // happened to finish first. Ordering each bucket by URI (then label) before the cut is the
+        // same tiebreak the REST relevance tiers already apply, so the same candidates reach
+        // ranking every time.
+        Comparator<CharacteristicValueObject> stableOrder = Comparator
+                .comparing( CharacteristicValueObject::getValueUri, Comparator.nullsLast( Comparator.naturalOrder() ) )
+                .thenComparing( CharacteristicValueObject::getValue, Comparator.nullsLast( Comparator.naturalOrder() ) );
         List<CharacteristicValueObject> allCharacteristicsFound = new ArrayList<>();
-        allCharacteristicsFound.addAll( characteristicsWithExactMatch );
-        allCharacteristicsFound.addAll( characteristicsStartWithQuery );
-        allCharacteristicsFound.addAll( characteristicsSubstring );
-        allCharacteristicsFound.addAll( characteristicsNoRuleFound );
+        for ( Collection<CharacteristicValueObject> bucket : Arrays.asList( characteristicsWithExactMatch,
+                characteristicsStartWithQuery, characteristicsSubstring, characteristicsNoRuleFound ) ) {
+            List<CharacteristicValueObject> ordered = new ArrayList<>( bucket );
+            ordered.sort( stableOrder );
+            allCharacteristicsFound.addAll( ordered );
+        }
 
-        // limit the size of the returned phenotypes to 100 terms
+        // Never silently: a truncated tail is indistinguishable from "the ontology does not have
+        // it", which is the reading that sent us looking for a missing term rather than a dropped
+        // one.
         if ( allCharacteristicsFound.size() > maxResults ) {
+            log.warn( String.format( "Candidate set for '%s' is %d terms, over the %d cap; dropping %d."
+                            + " The cut is relevance-bucketed and stable, but a term below it cannot be ranked or promoted.",
+                    searchQuery, allCharacteristicsFound.size(), maxResults, allCharacteristicsFound.size() - maxResults ) );
             return allCharacteristicsFound.subList( 0, maxResults );
         }
 
