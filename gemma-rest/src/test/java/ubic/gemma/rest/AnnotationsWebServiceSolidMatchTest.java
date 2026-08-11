@@ -8,6 +8,8 @@ import ubic.gemma.core.ontology.model.OntologyTerm;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -240,10 +242,37 @@ class AnnotationsWebServiceSolidMatchTest {
         // the URI form silently did not, and /annotations/categories advertised no preference.
         assertThat( AnnotationsWebService.categoryKey( "obsolete_disease" ) ).isEqualTo( "disease" );
         assertThat( AnnotationsWebService.categoryKey( "disease" ) ).isEqualTo( "disease" );
-        assertThat( AnnotationsWebService.categoryKey( "organism part" ) ).isEqualTo( "organismPart" );
-        assertThat( AnnotationsWebService.categoryKey( "developmental stage" ) ).isEqualTo( "developmentalStage" );
+        assertThat( AnnotationsWebService.categoryKey( "organism part" ) ).isEqualTo( "organismpart" );
+        assertThat( AnnotationsWebService.categoryKey( "developmental stage" ) ).isEqualTo( "developmentalstage" );
         // "obsolete" as a word of its own is not a marker prefix
         assertThat( AnnotationsWebService.categoryKey( "obsolete" ) ).isEqualTo( "obsolete" );
+    }
+
+    @Test
+    void everySpellingOfACategoryFoldsOntoOneKey() {
+        // The trap this closes: `category=cellLine` — the spelling a client copies straight out of
+        // annotation.category.prefixes — used to lowercase to "cellline" and match the "cellLine"
+        // config key. An unrecognised category is a silent no-op, so the caller got no promotion
+        // and no signal, while `category=cell line` worked. Asserted as a set collapsing to size 1
+        // rather than against a literal, so the property survives a change of fold.
+        assertThat( Stream.of( "cell line", "cellLine", "Cell Line", "CELL LINE", " cell_line ", "cell-line" )
+                .map( AnnotationsWebService::categoryKey )
+                .collect( Collectors.toSet() ) )
+                .hasSize( 1 );
+        // Distinct categories must not collide under the looser fold.
+        assertThat( AnnotationsWebService.categoryKey( "cell line" ) )
+                .isNotEqualTo( AnnotationsWebService.categoryKey( "cell type" ) );
+    }
+
+    @Test
+    void configKeysAndCallerSpellingsMeetOnTheSameKey() {
+        // Both sides run through categoryKey, so the property can be written in whichever spelling
+        // reads best and still answer every spelling a caller sends.
+        var parsed = AnnotationsWebService.parseCategoryPrefixProperty( "cellLine:CLO_,EFO_,CVCL_" );
+        assertThat( parsed.get( AnnotationsWebService.categoryKey( "cell line" ) ) )
+                .containsExactly( "CLO_", "EFO_", "CVCL_" );
+        assertThat( parsed.get( AnnotationsWebService.categoryKey( "cellLine" ) ) )
+                .containsExactly( "CLO_", "EFO_", "CVCL_" );
     }
 
     @Test
@@ -251,8 +280,9 @@ class AnnotationsWebServiceSolidMatchTest {
         var parsed = AnnotationsWebService.parseCategoryPrefixProperty(
                 "genotype:TGEMO_,GENO_,EFO_; organismPart:UBERON_,EMAPA_,EFO_ ;;bad_entry" );
         assertThat( parsed.get( "genotype" ) ).containsExactly( "TGEMO_", "GENO_", "EFO_" );
-        // order is the preference order and must survive parsing
-        assertThat( parsed.get( "organismPart" ) ).containsExactly( "UBERON_", "EMAPA_", "EFO_" );
+        // order is the preference order and must survive parsing; the key is folded on the way in,
+        // so the camelCase spelling in the property lands under the canonical key
+        assertThat( parsed.get( "organismpart" ) ).containsExactly( "UBERON_", "EMAPA_", "EFO_" );
         assertThat( parsed ).doesNotContainKey( "bad_entry" );
     }
 

@@ -434,7 +434,13 @@ public class AnnotationsWebService {
         return cached;
     }
 
-    /** Parse a {@code key:prefix,prefix;key:...} property into an ordered per-key prefix list. */
+    /**
+     * Parse a {@code key:prefix,prefix;key:...} property into an ordered per-key prefix list.
+     * <p>
+     * Config keys go through {@link #categoryKey} exactly as caller-supplied categories do, so the
+     * property may be written in whichever spelling reads best ({@code cellLine}, {@code cell line},
+     * {@code cell_line}) and still meets every spelling a caller sends.
+     */
     static Map<String, List<String>> parseCategoryPrefixProperty( @Nullable String raw ) {
         Map<String, List<String>> out = new LinkedHashMap<>();
         if ( raw != null && !raw.trim().isEmpty() ) {
@@ -443,7 +449,7 @@ public class AnnotationsWebService {
                 if ( e.isEmpty() ) continue;
                 int colon = e.indexOf( ':' );
                 if ( colon <= 0 ) continue;
-                String key = e.substring( 0, colon ).trim();
+                String key = categoryKey( e.substring( 0, colon ).trim() );
                 String prefixList = e.substring( colon + 1 );
                 List<String> prefixes = new ArrayList<>();
                 for ( String p : prefixList.split( "," ) ) {
@@ -457,9 +463,19 @@ public class AnnotationsWebService {
     }
 
     /**
-     * Map an ontology category label (e.g. {@code "cell type"}) to its property-key form
-     * ({@code "cellType"}) — lowercase, split on non-alphanumerics, camelCase. Categories
-     * outside the configured set fall through to an empty preference list.
+     * Fold an ontology category label, a property key, or whatever a caller put in {@code category}
+     * onto one canonical lookup key: lowercase with every non-alphanumeric dropped, so
+     * {@code "cell line"}, {@code "cellLine"}, {@code "Cell Line"} and {@code "cell_line"} all meet
+     * at {@code "cellline"}. Categories outside the configured set fall through to an empty
+     * preference list.
+     * <p>
+     * The fold is deliberately lossier than the camelCase form it replaced. That form round-tripped
+     * a label ({@code "cell line"} → {@code "cellLine"}) but not the key a client would most
+     * naturally copy out of the config or the docs: {@code "cellLine"} lowercased to
+     * {@code "cellline"}, which matched nothing, and an unrecognised category is a silent no-op
+     * rather than an error — so {@code category=cellLine} quietly bought no promotion at all. Since
+     * the value is only ever a map key, there is nothing to be gained by preserving word
+     * boundaries and a real trap in requiring the caller to guess them.
      */
     static String categoryKey( String label ) {
         if ( label == null || label.isEmpty() ) return "";
@@ -475,19 +491,7 @@ public class AnnotationsWebService {
         if ( lower.startsWith( "obsolete_" ) ) {
             lower = lower.substring( "obsolete_".length() );
         }
-        String[] parts = lower.split( "[^a-z0-9]+" );
-        StringBuilder sb = new StringBuilder();
-        for ( int i = 0; i < parts.length; i++ ) {
-            String p = parts[i];
-            if ( p.isEmpty() ) continue;
-            if ( sb.length() == 0 ) {
-                sb.append( p );
-            } else {
-                sb.append( Character.toUpperCase( p.charAt( 0 ) ) );
-                if ( p.length() > 1 ) sb.append( p.substring( 1 ) );
-            }
-        }
-        return sb.toString();
+        return lower.replaceAll( "[^a-z0-9]", "" );
     }
 
     /**
@@ -644,8 +648,11 @@ public class AnnotationsWebService {
                     "behaviour). See handoffs/HANDOFF_2026-05-25_EXACT_LABEL_PARAM.md.")
             @QueryParam("exact_label") @DefaultValue("false") boolean exactLabel,
             @Parameter(description = "Hint from the calling widget about what kind of annotation " +
-                    "is being edited. Accepts a canonical category label (e.g. `genotype`, " +
-                    "`organism part`) or the matching EFO URI. Gene-symbol matches (value=symbol, " +
+                    "is being edited. Accepts the category label (e.g. `genotype`, `organism " +
+                    "part`), the matching EFO URI, or any spelling that differs only in case and " +
+                    "separators — `cell line`, `cellLine`, `Cell Line` and `cell_line` are one " +
+                    "category. An unrecognised value is ignored (no promotion), never an error. " +
+                    "Gene-symbol matches (value=symbol, " +
                     "valueUri=NCBI Gene URI, category=`gene`) are merged in unconditionally so " +
                     "STAT5B finds the gene whether the picker is on Genotype, Treatment, or a " +
                     "generic characteristic. When supplied WITHOUT an explicit `prefixes` " +
