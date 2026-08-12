@@ -329,10 +329,11 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
             goMappings = gene2GOAssociationService.findByGenes( genes );
         }
 
+        Set<String> unresolvedUris = new HashSet<>();
         for ( Gene gene : genes ) {
             Collection<OntologyTerm> ontologyTerms = new ArrayList<>();
             if ( useGO ) {
-                ontologyTerms = this.getGoTerms( goMappings.get( gene ), OutputType.SHORT );
+                ontologyTerms = this.getGoTerms( goMappings.get( gene ), OutputType.SHORT, unresolvedUris );
             }
 
             Integer ncbiId = gene.getNcbiGeneId();
@@ -369,6 +370,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
         Set<String> geneIds = new LinkedHashSet<>();
         Set<String> ncbiIds = new LinkedHashSet<>();
         Set<String> ensembleIds = new LinkedHashSet<>();
+        Set<String> unresolvedUris = new HashSet<>();
 
         Map<Gene, Collection<Characteristic>> goMappings = this.getGOMappings( genesWithSpecificity );
 
@@ -396,7 +398,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
                 Gene g = b2g.getGeneProduct().getGene();
 
                 if ( useGO ) {
-                    goTerms = this.getGoTerms( goMappings.get( g ), ty );
+                    goTerms = this.getGoTerms( goMappings.get( g ), ty, unresolvedUris );
                 }
                 String gemmaId = g.getId() == null ? "" : g.getId().toString();
                 String ncbiId = g.getNcbiGeneId() == null ? "" : g.getNcbiGeneId().toString();
@@ -435,7 +437,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
                 }
 
                 if ( useGO )
-                    goTerms.addAll( this.getGoTerms( goMappings.get( g ), ty ) );
+                    goTerms.addAll( this.getGoTerms( goMappings.get( g ), ty, unresolvedUris ) );
             }
 
             String geneString = StringUtils.join( genes, "|" );
@@ -483,7 +485,12 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
      *            only.
      * @return the goTerms for a given gene, as configured
      */
-    private Collection<OntologyTerm> getGoTerms( Collection<Characteristic> ontologyTerms, OutputType ty ) {
+    /**
+     * @param unresolvedUris collects the URIs the loaded GO could not resolve, so each one is reported once per
+     *                       file rather than once per element.
+     */
+    private Collection<OntologyTerm> getGoTerms( Collection<Characteristic> ontologyTerms, OutputType ty,
+            Set<String> unresolvedUris ) {
 
         Collection<OntologyTerm> results = new HashSet<>();
         if ( ontologyTerms == null || ontologyTerms.isEmpty() )
@@ -491,7 +498,21 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
 
         for ( Characteristic vc : ontologyTerms ) {
             if ( vc.getValueUri() != null ) {
-                results.add( goService.getTerm( vc.getValueUri() ) );
+                OntologyTerm term = goService.getTerm( vc.getValueUri() );
+                if ( term == null ) {
+                    // the association points at a term the loaded GO doesn't have (obsoleted, merged into an
+                    // alt_id, or simply not a GO URI). A null here reaches getAllParents() and
+                    // writeAnnotationLine(), both of which dereference every element, so drop it. Warn rather
+                    // than skip quietly: a GENE2GO row that stopped resolving means the gene lost that
+                    // annotation, and nothing else in the pipeline would say so.
+                    if ( unresolvedUris.add( vc.getValueUri() ) ) {
+                        ArrayDesignAnnotationServiceImpl.log.warn( "The loaded GO has no term for "
+                                + vc.getValueUri() + "; it will be omitted from the annotations"
+                                + " (further occurrences of this URI are not reported)" );
+                    }
+                    continue;
+                }
+                results.add( term );
             }
         }
 
