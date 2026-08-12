@@ -83,6 +83,30 @@ public interface GeoScrapeService {
         private Collection<String> criteria;
         /** If true, evaluate matches but do not persist any PreboardedExperiment rows. */
         private boolean dryRun;
+        /**
+         * GEO series accession to resume from, e.g. {@code "GSE342847"} — the last record the
+         * caller processed. Its release date becomes the upper bound of the window, so the scan
+         * picks up where the previous batch stopped and walks backwards from there.
+         * <p>
+         * An accession, not an offset, on purpose: GEO returns newest-first, so a numeric offset
+         * shifts every time a new series is published and a client paging by offset would skip
+         * records. Matching on the accession's date is stable under new publications. Records
+         * released the same day reappear — the overlap is intentional and cheaper than a gap.
+         * <p>
+         * An explicit {@link #until} wins over this. Unresolvable accessions are rejected rather
+         * than ignored, since silently dropping the cursor rescans from the top.
+         */
+        @Nullable
+        private String startAt;
+
+        @Nullable
+        public String getStartAt() {
+            return startAt;
+        }
+
+        public void setStartAt( @Nullable String startAt ) {
+            this.startAt = startAt;
+        }
 
         @Nullable
         public Date getSince() {

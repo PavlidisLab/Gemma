@@ -43,6 +43,9 @@ public class GeoScrapeTaskCommand extends TaskCommand {
     @Nullable
     private Collection<String> criteria;
     private boolean dryRun;
+    /** GEO accession to resume from; see {@code ScrapeRequest.startAt}. */
+    @Nullable
+    private String startAt;
 
     public GeoScrapeTaskCommand() {
         super();

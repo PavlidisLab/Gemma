@@ -1488,8 +1488,16 @@ public class AdminWebService {
             req.setUntil( body.until );
             req.setMaxRecords( body.maxRecords );
             req.setCriteria( body.criteria );
+            req.setStartAt( body.startAt );
             req.setDryRun( true );
-            List<GeoScrapeDryRunCandidate> candidates = geoScrapeService.scrapeDryRun( req );
+            List<GeoScrapeDryRunCandidate> candidates;
+            try {
+                candidates = geoScrapeService.scrapeDryRun( req );
+            } catch ( IllegalArgumentException e ) {
+                // Unresolvable `startAt`. No global IllegalArgumentException mapper exists, so wrap
+                // here or the caller gets a 500 for what is a bad request.
+                throw new BadRequestException( e.getMessage(), e );
+            }
             return Response.ok( respond( candidates ) ).build();
         }
         GeoScrapeTaskCommand cmd = new GeoScrapeTaskCommand();
@@ -1498,6 +1506,7 @@ public class AdminWebService {
             cmd.setUntil( body.until );
             cmd.setMaxRecords( body.maxRecords );
             cmd.setCriteria( body.criteria );
+            cmd.setStartAt( body.startAt );
             cmd.setDryRun( false );
         }
         String jobId = taskRunningService.submitTaskCommand( cmd );
@@ -2514,6 +2523,21 @@ public class AdminWebService {
         /** If true, evaluate matches but do not persist any PreboardedExperiment rows. */
         @Nullable
         public Boolean dryRun;
+        /**
+         * GEO series accession to resume from, e.g. {@code "GSE342847"} — the last record you
+         * processed. Its release date becomes the upper bound of the window, so the scan picks up
+         * where the previous batch stopped and walks backwards. This is the cursor to use for
+         * batching; `maxRecords` is a head cap and cannot advance.
+         * <p>
+         * An accession rather than an offset because GEO returns newest-first: a numeric offset
+         * shifts whenever a new series is published, so an offset-paging client silently skips
+         * records. Series released the same day reappear — that overlap is intentional.
+         * <p>
+         * An explicit `until` wins over this. An accession that cannot be resolved is a 400, not a
+         * silent fallback, because ignoring the cursor rescans from the newest record.
+         */
+        @Nullable
+        public String startAt;
     }
 
     public static class GeoScrapeSubmitResponse {

@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
+import ubic.gemma.core.loader.expression.geo.service.GeoRecordType;
 import ubic.gemma.core.loader.expression.geo.service.GeoQuery;
 import ubic.gemma.core.loader.expression.geo.service.GeoRetrieveConfig;
 import ubic.gemma.core.security.authentication.UserManager;
@@ -39,6 +40,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
@@ -290,6 +292,70 @@ public class GeoScrapeServiceImplTest {
         ArgumentCaptor<java.util.Date> sinceCap = ArgumentCaptor.forClass( java.util.Date.class );
         verify( geoBrowser ).searchGeoRecords( any(), any(), any(), any(), any(), any(), sinceCap.capture(), any() );
         assertThat( sinceCap.getValue() ).isEqualTo( explicit );
+    }
+
+    @Test
+    public void scrape_startAt_resolvesAccessionToTheWindowUpperBound() throws Exception {
+        // The batching cursor: "here is the last GSE we processed, carry on from there". One
+        // lookup converts it to a date and the existing query window does the rest -- no paging
+        // forward through records we intend to discard, which would pay the Entrez rate gate.
+        wireSlice( Collections.emptyList() );
+        wirePreboardedCreate();
+
+        java.util.Date released = new java.util.GregorianCalendar( 2026, java.util.Calendar.MAY, 20 ).getTime();
+        GeoRecord cursor = new GeoRecord();
+        cursor.setGeoAccession( "GSE342847" );
+        cursor.setReleaseDate( released );
+        when( geoBrowser.getGeoRecord( GeoRecordType.SERIES, "GSE342847" ) ).thenReturn( cursor );
+
+        GeoScrapeService.ScrapeRequest req = new GeoScrapeService.ScrapeRequest();
+        req.setStartAt( "GSE342847" );
+        req.setMaxRecords( 10 );
+
+        svc.scrape( req );
+
+        ArgumentCaptor<java.util.Date> untilCap = ArgumentCaptor.forClass( java.util.Date.class );
+        verify( geoBrowser ).searchGeoRecords( any(), any(), any(), any(), any(), any(), any(), untilCap.capture() );
+        assertThat( untilCap.getValue() )
+                .as( "startAt's release date becomes the upper bound of the scan window" )
+                .isEqualTo( released );
+    }
+
+    @Test
+    public void scrape_explicitUntil_beatsStartAt() throws Exception {
+        wireSlice( Collections.emptyList() );
+        wirePreboardedCreate();
+
+        java.util.Date explicitUntil = new java.util.GregorianCalendar( 2026, java.util.Calendar.JULY, 4 ).getTime();
+        GeoScrapeService.ScrapeRequest req = new GeoScrapeService.ScrapeRequest();
+        req.setStartAt( "GSE342847" );
+        req.setUntil( explicitUntil );
+        req.setMaxRecords( 10 );
+
+        svc.scrape( req );
+
+        ArgumentCaptor<java.util.Date> untilCap = ArgumentCaptor.forClass( java.util.Date.class );
+        verify( geoBrowser ).searchGeoRecords( any(), any(), any(), any(), any(), any(), any(), untilCap.capture() );
+        assertThat( untilCap.getValue() ).isEqualTo( explicitUntil );
+        // and we must not have spent an Entrez call resolving a cursor we were never going to use
+        verify( geoBrowser, never() ).getGeoRecord( any(), any() );
+    }
+
+    @Test
+    public void scrape_unresolvableStartAt_failsInsteadOfRescanningFromTheTop() throws Exception {
+        // Silently dropping a bad cursor would scan from the newest record and redo the whole
+        // backlog -- the precise duplicate work the cursor exists to avoid. Fail loudly, and
+        // before any IN_PROGRESS watermark is persisted.
+        when( geoBrowser.getGeoRecord( GeoRecordType.SERIES, "GSE000nope" ) ).thenReturn( null );
+
+        GeoScrapeService.ScrapeRequest req = new GeoScrapeService.ScrapeRequest();
+        req.setStartAt( "GSE000nope" );
+        req.setMaxRecords( 10 );
+
+        assertThatThrownBy( () -> svc.scrape( req ) )
+                .isInstanceOf( IllegalArgumentException.class )
+                .hasMessageContaining( "GSE000nope" );
+        verify( svc, never() ).persistWatermark( any( GeoScrapeWatermark.class ) );
     }
 
     @Test

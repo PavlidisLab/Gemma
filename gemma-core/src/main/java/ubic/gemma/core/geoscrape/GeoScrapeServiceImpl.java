@@ -14,6 +14,7 @@ package ubic.gemma.core.geoscrape;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.SessionFactory;
@@ -154,6 +155,40 @@ public class GeoScrapeServiceImpl implements GeoScrapeService {
         this.pageSize = pageSize;
     }
 
+    /**
+     * Resolve {@code startAt} (a GEO series accession the caller last processed) to the upper bound
+     * of the scan window, by looking the record up and taking its release date.
+     * <p>
+     * One Entrez call, versus paging forward until the accession turns up — which would pay the
+     * per-page rate gate for records we intend to discard. An explicit {@code until} wins.
+     *
+     * @return the effective upper bound, or {@code req.getUntil()} when no cursor was supplied
+     * @throws IllegalArgumentException if the accession cannot be resolved or carries no release
+     *                                  date. Deliberately fatal: ignoring a bad cursor would
+     *                                  silently rescan from the newest record, which is the exact
+     *                                  duplicate-work the cursor exists to prevent.
+     */
+    @Nullable
+    Date resolveUntil( ScrapeRequest req ) {
+        if ( req.getUntil() != null || StringUtils.isBlank( req.getStartAt() ) ) {
+            return req.getUntil();
+        }
+        String accession = req.getStartAt().trim();
+        GeoRecord record;
+        try {
+            record = resolveGeoBrowser().getGeoRecord( GeoRecordType.SERIES, accession );
+        } catch ( IOException e ) {
+            throw new IllegalArgumentException( "Could not resolve startAt accession '" + accession
+                    + "' against GEO: " + e.getMessage(), e );
+        }
+        if ( record == null || record.getReleaseDate() == null ) {
+            throw new IllegalArgumentException( "startAt accession '" + accession
+                    + "' did not resolve to a GEO series with a release date." );
+        }
+        log.info( "Resuming GEO scrape at " + accession + " (released " + record.getReleaseDate() + ")." );
+        return record.getReleaseDate();
+    }
+
     @Override
     public GeoScrapeWatermark scrape( ScrapeRequest req ) {
         if ( req == null ) req = new ScrapeRequest();
@@ -165,6 +200,9 @@ public class GeoScrapeServiceImpl implements GeoScrapeService {
             GeoScrapeWatermark prev = getLastCompletedWatermark();
             scanFrom = prev != null ? prev.getScanTo() : null;
         }
+        // Resolved before the watermark is persisted: a bad startAt must fail the request outright
+        // rather than leave an orphaned IN_PROGRESS row behind.
+        Date effectiveUntil = resolveUntil( req );
         Date scanTo = new Date();
 
         GeoScrapeWatermark wm = new GeoScrapeWatermark();
@@ -191,7 +229,7 @@ public class GeoScrapeServiceImpl implements GeoScrapeService {
                     GeoRecordType.SERIES, null, null,
                     ALLOWED_TAXA, null,
                     EXPRESSION_PROFILING_TYPES,
-                    scanFrom, req.getUntil() );
+                    scanFrom, effectiveUntil );
             int pageStart = 0;
             int effectivePage = Math.max( 1, pageSize );
             while ( scanned < maxRecords ) {
@@ -284,7 +322,7 @@ public class GeoScrapeServiceImpl implements GeoScrapeService {
                     GeoRecordType.SERIES, null, null,
                     ALLOWED_TAXA, null,
                     EXPRESSION_PROFILING_TYPES,
-                    req.getSince(), req.getUntil() );
+                    req.getSince(), resolveUntil( req ) );
             int pageStart = 0;
             int effectivePage = Math.max( 1, pageSize );
             while ( scanned < maxRecords ) {
