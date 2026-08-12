@@ -238,6 +238,61 @@ public class GeoScrapeServiceImplTest {
     }
 
     @Test
+    public void scrape_omittedSince_resumesFromLastCompletedWatermark() throws Exception {
+        // The documented contract for a null `since` is "resume from the last successful scrape's
+        // scanTo". That resume point was computed and written into the new watermark but never
+        // handed to the GeoBrowser -- the query got req.getSince() (null), so every run re-scanned
+        // the whole window while the watermark claimed a narrower range. The default setUp stubs
+        // getLastCompletedWatermark() to null, which is why no existing test could see it.
+        wireSlice( Collections.emptyList() );
+        wirePreboardedCreate();
+
+        java.util.Date previousScanTo = new java.util.GregorianCalendar( 2026, java.util.Calendar.MARCH, 3 ).getTime();
+        GeoScrapeWatermark prev = new GeoScrapeWatermark();
+        prev.setScanTo( previousScanTo );
+        prev.setStatus( GeoScrapeWatermark.Status.COMPLETED );
+        doReturn( prev ).when( svc ).getLastCompletedWatermark();
+
+        GeoScrapeService.ScrapeRequest req = new GeoScrapeService.ScrapeRequest();
+        req.setMaxRecords( 10 );
+        // `since` deliberately left null -- this is the resume path.
+
+        GeoScrapeWatermark wm = svc.scrape( req );
+
+        ArgumentCaptor<java.util.Date> sinceCap = ArgumentCaptor.forClass( java.util.Date.class );
+        verify( geoBrowser ).searchGeoRecords( any(), any(), any(), any(), any(), any(), sinceCap.capture(), any() );
+        assertThat( sinceCap.getValue() )
+                .as( "an omitted `since` must query from the previous scrape's scanTo" )
+                .isEqualTo( previousScanTo );
+        // and the watermark must record the same point it actually queried from
+        assertThat( wm.getScanFrom() ).isEqualTo( previousScanTo );
+    }
+
+    @Test
+    public void scrape_explicitSince_overridesTheWatermark() throws Exception {
+        // Control for the test above: an explicit `since` must win, so the resume fix cannot
+        // quietly start ignoring the caller.
+        wireSlice( Collections.emptyList() );
+        wirePreboardedCreate();
+
+        GeoScrapeWatermark prev = new GeoScrapeWatermark();
+        prev.setScanTo( new java.util.GregorianCalendar( 2026, java.util.Calendar.MARCH, 3 ).getTime() );
+        prev.setStatus( GeoScrapeWatermark.Status.COMPLETED );
+        doReturn( prev ).when( svc ).getLastCompletedWatermark();
+
+        java.util.Date explicit = new java.util.GregorianCalendar( 2026, java.util.Calendar.JUNE, 1 ).getTime();
+        GeoScrapeService.ScrapeRequest req = new GeoScrapeService.ScrapeRequest();
+        req.setSince( explicit );
+        req.setMaxRecords( 10 );
+
+        svc.scrape( req );
+
+        ArgumentCaptor<java.util.Date> sinceCap = ArgumentCaptor.forClass( java.util.Date.class );
+        verify( geoBrowser ).searchGeoRecords( any(), any(), any(), any(), any(), any(), sinceCap.capture(), any() );
+        assertThat( sinceCap.getValue() ).isEqualTo( explicit );
+    }
+
+    @Test
     public void scrape_zeroMatches_doesNotOpenTicket() throws Exception {
         // Record with no brain / TF signal — neither matcher fires.
         GeoRecord r = rec( "GSE0009", "Pancreatic islet bulk expression", "Homo sapiens" );

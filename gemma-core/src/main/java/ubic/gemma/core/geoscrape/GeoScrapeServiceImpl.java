@@ -182,11 +182,16 @@ public class GeoScrapeServiceImpl implements GeoScrapeService {
             matchedByCriterion.put( m.name(), 0 );
         }
         try {
+            // scanFrom, NOT req.getSince(): when the caller omits `since` the resume point is the
+            // previous completed scrape's scanTo (computed above). Passing req.getSince() here meant
+            // an omitted `since` scanned the whole window every run while the watermark recorded a
+            // scanFrom it had never actually applied -- so the watermark under-reported the range and
+            // "resume from the last scrape" silently did not.
             GeoQuery query = resolveGeoBrowser().searchGeoRecords(
                     GeoRecordType.SERIES, null, null,
                     ALLOWED_TAXA, null,
                     EXPRESSION_PROFILING_TYPES,
-                    req.getSince(), req.getUntil() );
+                    scanFrom, req.getUntil() );
             int pageStart = 0;
             int effectivePage = Math.max( 1, pageSize );
             while ( scanned < maxRecords ) {
