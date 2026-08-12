@@ -4173,6 +4173,20 @@ public class AnnotationsWebService {
         private String secondObject;
         @Nullable
         private String secondObjectUri;
+        /**
+         * Verbatim provenance backing the tag — a JSON array of {@code {quote, source, location, ...}}
+         * items (the agents-side {@code FindingEvidence} shape). Stored opaquely and round-tripped on the
+         * read VO's {@code supportingEvidence}; Gemma neither parses nor queries it, so the agents repo
+         * owns the schema. Mirrors {@code DatasetsWebService.AnnotationTagInput.supportingEvidence} so an
+         * agent can carry evidence on whichever write path it needs — this one emits per-row
+         * {@code TagAddedEvent}/{@code TagRemovedEvent} audit rows, the other is an idempotent
+         * set-replace.
+         * <p>
+         * Both endpoints taking this DTO construct a fresh {@link Characteristic}, so there is no
+         * prior evidence to preserve: null or omitted simply persists null.
+         */
+        @Nullable
+        private com.fasterxml.jackson.databind.JsonNode supportingEvidence;
 
         @Nullable
         public String getCategory() {
@@ -4289,6 +4303,15 @@ public class AnnotationsWebService {
 
         public void setSecondObjectUri( @Nullable String secondObjectUri ) {
             this.secondObjectUri = secondObjectUri;
+        }
+
+        @Nullable
+        public com.fasterxml.jackson.databind.JsonNode getSupportingEvidence() {
+            return supportingEvidence;
+        }
+
+        public void setSupportingEvidence( @Nullable com.fasterxml.jackson.databind.JsonNode supportingEvidence ) {
+            this.supportingEvidence = supportingEvidence;
         }
 
         /**
@@ -4633,6 +4656,10 @@ public class AnnotationsWebService {
                         + "Expected one of the GOEvidenceCode enum values (IEA, IDA, IC, ...).", e );
             }
         }
+        // Applies to both branches: Statement extends Characteristic, so the three provenance slots
+        // (supportingEvidence, evidenceCode, originalValue) are inherited. Serialized through the same
+        // helper the set-replace path uses so "empty array" collapses to null identically on both.
+        c.setSupportingEvidence( DatasetsWebService.serializeEvidence( dto.getSupportingEvidence() ) );
         return c;
     }
 

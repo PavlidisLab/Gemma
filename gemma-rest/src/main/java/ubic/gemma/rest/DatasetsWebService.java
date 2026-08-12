@@ -5443,9 +5443,13 @@ public class DatasetsWebService {
      * Serialize the wire's supporting-evidence tree to the opaque JSON string Gemma stores. Null/empty
      * (including a JSON {@code null}) maps to a stored {@code null}, so a tag arriving without evidence
      * doesn't clobber any evidence already on a matched tag (see {@code updateAnnotations}).
+     * <p>
+     * Package-private rather than private because {@code AnnotationsWebService.annotationDtoToCharacteristic}
+     * maps the same field off {@code AnnotationDto}. One definition, so the empty-array-collapses-to-null
+     * rule cannot drift between the two write paths.
      */
     @Nullable
-    private static String serializeEvidence( @Nullable com.fasterxml.jackson.databind.JsonNode evidence ) {
+    static String serializeEvidence( @Nullable com.fasterxml.jackson.databind.JsonNode evidence ) {
         if ( evidence == null || evidence.isNull() || evidence.isEmpty() ) {
             return null;
         }

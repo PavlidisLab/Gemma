@@ -4,6 +4,7 @@ import io.swagger.v3.oas.models.OpenAPI;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -2185,5 +2186,97 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
                     assertThat( ( ( Map<?, ?> ) hits.get( 0 ) ).get( "valueUri" ) ).isEqualTo( "http://purl.obolibrary.org/obo/MONDO_0008903" );
                     assertThat( ( ( Map<?, ?> ) hits.get( 1 ) ).get( "valueUri" ) ).isEqualTo( "http://www.ebi.ac.uk/efo/EFO_0001071" );
                 } );
+    }
+
+    /*
+     * supportingEvidence on AnnotationDto -- the agent-writeback path.
+     *
+     * PUT /datasets/{id}/annotations could already carry evidence but emits a single aggregate event;
+     * these two endpoints emit per-row Tag{Added,Removed}Event, which is what agent writeback needs.
+     * Before this, the choice was attribution or evidence. See
+     * handoffs/CAB_ASK_2026_08_12_CARRY_SUPPORTING_EVIDENCE_ON_ANNOTATION_DTO.md.
+     */
+
+    private static final String EVIDENCE_JSON =
+            "[{\"quote\":\"Male C57BL/6J mice (8 weeks) were used throughout.\","
+                    + "\"source\":\"paper\",\"location\":\"Methods, para 1\"}]";
+
+    @Test
+    @WithMockUser
+    public void testAddDatasetAnnotationCarriesSupportingEvidence() {
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.addAnnotation( eq( ee ), any() ) )
+                .thenAnswer( a -> a.getArgument( 1 ) );
+        String body = "{\"category\":\"strain\",\"value\":\"C57BL/6J\","
+                + "\"valueUri\":\"http://www.ebi.ac.uk/efo/EFO_0004472\",\"evidenceCode\":\"IC\","
+                + "\"supportingEvidence\":" + EVIDENCE_JSON + "}";
+        assertThat( target( "/annotations/datasets/1/annotations" ).request().post( Entity.json( body ) ) )
+                .hasStatus( Response.Status.CREATED );
+        ArgumentCaptor<Characteristic> captor = ArgumentCaptor.forClass( Characteristic.class );
+        verify( expressionExperimentService ).addAnnotation( eq( ee ), captor.capture() );
+        assertThat( captor.getValue().getSupportingEvidence() )
+                .contains( "\"quote\":\"Male C57BL/6J mice (8 weeks) were used throughout.\"" )
+                .contains( "\"source\":\"paper\"" )
+                .contains( "\"location\":\"Methods, para 1\"" );
+    }
+
+    @Test
+    @WithMockUser
+    public void testAddDatasetAnnotationWithoutEvidenceLeavesSupportingEvidenceNull() {
+        // Must be null, not "" or "[]" -- a blank would be indistinguishable from evidence that
+        // serialized to nothing, and the read VO would start advertising empty provenance.
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.addAnnotation( eq( ee ), any() ) )
+                .thenAnswer( a -> a.getArgument( 1 ) );
+        String body = "{\"category\":\"organism part\",\"value\":\"liver\"}";
+        assertThat( target( "/annotations/datasets/1/annotations" ).request().post( Entity.json( body ) ) )
+                .hasStatus( Response.Status.CREATED );
+        ArgumentCaptor<Characteristic> captor = ArgumentCaptor.forClass( Characteristic.class );
+        verify( expressionExperimentService ).addAnnotation( eq( ee ), captor.capture() );
+        assertThat( captor.getValue().getSupportingEvidence() ).isNull();
+    }
+
+    @Test
+    @WithMockUser
+    public void testAddDatasetAnnotationCarriesSupportingEvidenceOnAStatement() {
+        // Statement extends Characteristic, so the provenance slots are inherited -- but the mapper
+        // builds Statement and Characteristic on separate branches, so the Statement branch needs
+        // its own guard or it can silently lose the field.
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.addAnnotation( eq( ee ), any() ) )
+                .thenAnswer( a -> a.getArgument( 1 ) );
+        String body = "{\"category\":\"treatment\",\"value\":\"HFD\","
+                + "\"predicate\":\"has dose\",\"object\":\"10mg\","
+                + "\"supportingEvidence\":" + EVIDENCE_JSON + "}";
+        assertThat( target( "/annotations/datasets/1/annotations" ).request().post( Entity.json( body ) ) )
+                .hasStatus( Response.Status.CREATED );
+        ArgumentCaptor<Characteristic> captor = ArgumentCaptor.forClass( Characteristic.class );
+        verify( expressionExperimentService ).addAnnotation( eq( ee ), captor.capture() );
+        assertThat( captor.getValue() ).isInstanceOf( Statement.class );
+        assertThat( captor.getValue().getSupportingEvidence() ).contains( "\"source\":\"paper\"" );
+    }
+
+    @Test
+    @WithMockUser
+    public void testReplaceDatasetAnnotationsCarriesSupportingEvidence() {
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setId( 1L );
+        ee.setCharacteristics( new HashSet<>() );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.addAnnotation( eq( ee ), any() ) )
+                .thenAnswer( a -> a.getArgument( 1 ) );
+        String body = "{\"annotations\":[{\"category\":\"strain\",\"value\":\"C57BL/6J\","
+                + "\"supportingEvidence\":" + EVIDENCE_JSON + "}]}";
+        assertThat( target( "/annotations/datasets/1/annotations" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+        ArgumentCaptor<Characteristic> captor = ArgumentCaptor.forClass( Characteristic.class );
+        verify( expressionExperimentService ).addAnnotation( eq( ee ), captor.capture() );
+        assertThat( captor.getValue().getSupportingEvidence() ).contains( "\"source\":\"paper\"" );
     }
 }
