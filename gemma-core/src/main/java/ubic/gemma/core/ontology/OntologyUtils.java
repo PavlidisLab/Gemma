@@ -38,6 +38,15 @@ public class OntologyUtils {
     public static final String BASE_GEMMA_ONTOLOGY_URI = "http://gemma.msl.ubc.ca/ont/";
 
     /**
+     * The OBO definition annotation property, which UBERON, HP, MP and MONDO all use.
+     * <p>
+     * Not universal: CLO writes its descriptions into {@code rdfs:comment} instead, which is why
+     * {@link OntologyService#getDefinition(String, long, java.util.concurrent.TimeUnit)} falls back to the
+     * comment rather than treating the absence of this property as the absence of a description.
+     */
+    public static final String DEFINITION_URI = BASE_PURL_URI + "IAO_0000115";
+
+    /**
      * Base URI used by EFO.
      */
     public static final String BASE_EFO_URI = "http://www.ebi.ac.uk/efo/";

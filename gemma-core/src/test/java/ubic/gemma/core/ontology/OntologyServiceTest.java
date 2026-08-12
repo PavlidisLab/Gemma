@@ -25,6 +25,7 @@ import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.ontology.model.AnnotationProperty;
 import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
@@ -333,5 +334,63 @@ public class OntologyServiceTest extends BaseTest5 {
         when( obiService.isOntologyLoaded() ).thenReturn( true );
         when( obiService.getTerm( "http://test" ) ).thenReturn( new OntologyTermSimple( "http://test", "this is a test term" ) );
         assertNotNull( ontologyService.getTerm( "http://test", 5000, TimeUnit.MILLISECONDS ) );
+    }
+
+    /**
+     * CLO does not use the OBO definition property. It writes what it knows about a cell line into
+     * {@code rdfs:comment} — {@code CLO_0008127} (NCI-H929) carries "disease: plasmacytoma;   myeloma" and no
+     * OBO definition at all — so probing only {@code IAO_0000115} returned null for exactly the terms whose
+     * description is the point. That disease is a property of the line, and nobody should have to curate it
+     * onto an experiment when an ontology already loaded here asserts it.
+     */
+    @Test
+    public void testDefinitionFallsBackToCommentWhenTheOntologyUsesOne() throws TimeoutException {
+        String uri = "http://purl.obolibrary.org/obo/CLO_0008127";
+        OntologyTerm term = mock();
+        when( term.getLabel() ).thenReturn( "NCI-H929 cell" );
+        when( term.getAnnotation( OntologyUtils.DEFINITION_URI ) ).thenReturn( null );
+        when( term.getComment() ).thenReturn( "disease: plasmacytoma;   myeloma" );
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( chebiOntologyService.getTerm( uri ) ).thenReturn( term );
+
+        assertEquals( "disease: plasmacytoma;   myeloma",
+                ontologyService.getDefinition( uri, 5000, TimeUnit.MILLISECONDS ) );
+    }
+
+    /**
+     * The fallback is a fallback: an ontology that states a definition properly still wins, so a MONDO or
+     * UBERON term never reports an editorial comment as its definition.
+     */
+    @Test
+    public void testOboDefinitionWinsOverComment() throws TimeoutException {
+        String uri = "http://purl.obolibrary.org/obo/MONDO_0004975";
+        AnnotationProperty definition = mock();
+        when( definition.getContents() ).thenReturn( "A progressive form of dementia." );
+        OntologyTerm term = mock();
+        when( term.getLabel() ).thenReturn( "Alzheimer disease" );
+        when( term.getAnnotation( OntologyUtils.DEFINITION_URI ) ).thenReturn( definition );
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( chebiOntologyService.getTerm( uri ) ).thenReturn( term );
+
+        assertEquals( "A progressive form of dementia.",
+                ontologyService.getDefinition( uri, 5000, TimeUnit.MILLISECONDS ) );
+        verify( term, never() ).getComment();
+    }
+
+    /**
+     * A term with neither still reports nothing, rather than an empty string a caller would render as a
+     * definition that exists and is blank.
+     */
+    @Test
+    public void testDefinitionIsNullWhenTheTermDescribesItselfNowhere() throws TimeoutException {
+        String uri = "http://purl.obolibrary.org/obo/CLO_0000019";
+        OntologyTerm term = mock();
+        when( term.getLabel() ).thenReturn( "immortal cell line cell" );
+        when( term.getAnnotation( OntologyUtils.DEFINITION_URI ) ).thenReturn( null );
+        when( term.getComment() ).thenReturn( "   " );
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( chebiOntologyService.getTerm( uri ) ).thenReturn( term );
+
+        assertNull( ontologyService.getDefinition( uri, 5000, TimeUnit.MILLISECONDS ) );
     }
 }
