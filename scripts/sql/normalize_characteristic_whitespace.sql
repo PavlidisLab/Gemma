@@ -216,13 +216,23 @@ DROP TEMPORARY TABLE IF EXISTS _ws_scope;
 --     this script touches is invisible to the scheduled job permanently. Only a manual
 --     run with :since null picks them up.
 --
---     Two caveats. The select groups by (EE, COALESCE(CATEGORY_URI,CATEGORY),
---     COALESCE(VALUE_URI,VALUE)), so collapsing whitespace merges two groups into one
---     for free-text rows -- the upsert writes the winner and never deletes the loser,
---     leaving a duplicate EE2C row. `--truncate` is the clean answer in principle, but
---     it binds a Class<?> against the varchar LEVEL column and no-ops entirely when no
---     --level is given, and has zero test coverage. Verify it before trusting it.
---     The CLI calls /datasets/annotations/refresh itself on success.
+--     🛑 THE CLI IS NOT SUFFICIENT ON ITS OWN -- CONFIRMED ON PROD 2026-08-12. After a
+--     full run reporting 2,556,578 entries updated, 1,008 EE2C rows still disagreed with
+--     their CHARACTERISTIC row, 146 of them carrying exactly the pre-cleanup spelling.
+--     The select groups by (EE, COALESCE(CATEGORY_URI,CATEGORY), COALESCE(VALUE_URI,VALUE)),
+--     so each group emits ONE characteristic id; the others keep an EE2C row the upsert
+--     never touches and cannot delete. Collapsing whitespace merges groups, which is
+--     precisely how a cleanup mints new orphans. Follow up with:
+--
+--         scripts/sql/resync_ee2c_from_characteristic.sql
+--
+--     `--truncate` would clear them in principle but is not usable: it binds a Class<?>
+--     against the varchar LEVEL column, no-ops when no --level is given, and has zero test
+--     coverage. Verify it before trusting it.
+--
+--     The CLI does call /datasets/annotations/refresh itself -- but against `gemma.hosturl`,
+--     which defaults to https://gemma.msl.ubc.ca, so on a Gemma 2.0 box it refreshes the
+--     WRONG instance and still logs success (it discards the response). Set GEMMA_HOSTURL.
 --   * The Hibernate Search index still holds the old strings. Reindex the affected entities
 --     (or accept that search rows lag until the next reindex).
 --   * Collapsing can leave a sample holding two now-identical characteristics where it
