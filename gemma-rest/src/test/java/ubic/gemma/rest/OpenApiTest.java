@@ -6,6 +6,7 @@ import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.PathItem;
 import io.swagger.v3.oas.models.media.Schema;
+import io.swagger.v3.oas.models.parameters.Parameter;
 import io.swagger.v3.oas.models.responses.ApiResponse;
 import lombok.Data;
 import org.apache.commons.io.IOUtils;
@@ -41,7 +42,9 @@ import ubic.gemma.rest.util.args.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Future;
 
@@ -365,5 +368,63 @@ public class OpenApiTest extends BaseTest5 implements InitializingBean {
                 .get( "text/tab-separated-values; charset=UTF-8; q=0.9" )
                 .getExample() )
                 .isEqualTo( IOUtils.resourceToString( "/restapidocs/examples/result-set.tsv", StandardCharsets.UTF_8 ) );
+    }
+
+    /**
+     * The wire speaks one language, and it is camelCase.
+     *
+     * <p>Every property name in every published schema, and every query parameter, must be
+     * camelCase. This is the guard for {@code c4d2d4ceb9} / {@code 8b2c8b09ff}, which collapsed
+     * the two conventions the API used to serve at once. It exists because the first sweep
+     * grepped {@code gemma-rest} and missed {@code GeoScrapeDryRunCandidate} — a response class
+     * that lives in gemma-core but is serialized by a gemma-rest resource. A half-done rename is
+     * worse than either end state, and the half left undone was the response a downstream
+     * screening script consumed. Reading the spec instead of the source catches that class of
+     * miss regardless of which module the class lives in.</p>
+     *
+     * <p>Enum VALUES are deliberately not checked: {@code expression_experiment},
+     * {@code gemma_intake} and friends are data, not keys, and renaming them would stop matching
+     * what is stored. This walks property names and parameter names only.</p>
+     */
+    @Test
+    public void testWireNamesAreCamelCaseEverywhere() {
+        List<String> offenders = new ArrayList<>();
+        int inspected = 0;
+
+        Map<String, Schema> schemas = spec.getComponents().getSchemas();
+        for ( Map.Entry<String, Schema> e : schemas.entrySet() ) {
+            Map<String, Schema> props = e.getValue().getProperties();
+            if ( props == null ) continue;
+            for ( String prop : props.keySet() ) {
+                inspected++;
+                if ( prop.indexOf( '_' ) >= 0 ) {
+                    offenders.add( "schema " + e.getKey() + "." + prop );
+                }
+            }
+        }
+
+        for ( Map.Entry<String, PathItem> e : spec.getPaths().entrySet() ) {
+            for ( Operation op : e.getValue().readOperations() ) {
+                if ( op.getParameters() == null ) continue;
+                for ( Parameter param : op.getParameters() ) {
+                    String name = param.getName();
+                    if ( name == null ) continue;
+                    inspected++;
+                    if ( name.indexOf( '_' ) >= 0 ) {
+                        offenders.add( "parameter " + e.getKey() + " ?" + name );
+                    }
+                }
+            }
+        }
+
+        // Guard against the guard going vacuous: if the spec ever stops exposing property and
+        // parameter names, this test would pass by inspecting nothing.
+        assertThat( inspected )
+                .withFailMessage( "expected the spec to expose many wire names; inspected only %d", inspected )
+                .isGreaterThan( 200 );
+
+        assertThat( offenders )
+                .withFailMessage( "snake_case on the wire (the API serves camelCase only): %s", offenders )
+                .isEmpty();
     }
 }

@@ -646,7 +646,12 @@ public class AnnotationsWebService {
                     "`limit` still applies when an exact match has multiple alternate-URI rows. " +
                     "Empty result is `200` with `data: []`. Default `false` (current substring " +
                     "behaviour). See handoffs/HANDOFF_2026-05-25_EXACT_LABEL_PARAM.md.")
-            @QueryParam("exact_label") @DefaultValue("false") boolean exactLabel,
+            @QueryParam("exactLabel") @DefaultValue("false") boolean exactLabel,
+            // Legacy spelling. The curation agents send exact_label=true on every resolver call,
+            // and an unrecognized query param does not fail — it silently falls back to the
+            // substring behaviour, which is the quiet break this coalesce prevents.
+            @Parameter(hidden = true)
+            @QueryParam("exact_label") @DefaultValue("false") boolean exactLabelLegacy,
             @Parameter(description = "Hint from the calling widget about what kind of annotation " +
                     "is being edited. Accepts the category label (e.g. `genotype`, `organism " +
                     "part`), the matching EFO URI, or any spelling that differs only in case and " +
@@ -689,7 +694,11 @@ public class AnnotationsWebService {
                     "proposing `mk-8353` for `MK-8722`, whereas knowing it is not `mk-8353` " +
                     "does. The ruled-out terms are deliberately kept OUT of `data`, so a client " +
                     "that ignores the new field can never pick one up by reading `data[0]`.")
-            @QueryParam("suppress_near_matches") @DefaultValue("false") boolean suppressNearMatches,
+            @QueryParam("suppressNearMatches") @DefaultValue("false") boolean suppressNearMatches,
+            // Legacy spelling; see the exact_label note above. Same quiet-failure shape: without
+            // this, a resolver asking for identity matching would silently get typeahead.
+            @Parameter(hidden = true)
+            @QueryParam("suppress_near_matches") @DefaultValue("false") boolean suppressNearMatchesLegacy,
             @Parameter(description = "Optional taxon hint to scope gene fan-out. Accepts the same " +
                     "TaxonArg forms as elsewhere (common name `mouse`, scientific name `Mus musculus`, " +
                     "NCBI taxonomy id `10090`, or numeric Gemma taxon id). When supplied, gene " +
@@ -744,6 +753,9 @@ public class AnnotationsWebService {
                     + "Costs a scan of the annotation corpus, so it is off by default and cached.")
             @QueryParam("includePriorCuration") @DefaultValue("false") boolean includePriorCuration
     ) {
+        // Accept either spelling of the two renamed flags; see the hidden legacy params above.
+        exactLabel = exactLabel || exactLabelLegacy;
+        suppressNearMatches = suppressNearMatches || suppressNearMatchesLegacy;
         if ( query == null || query.getValue().isEmpty() ) {
             throw new BadRequestException( "Search query cannot be empty." );
         }
@@ -1021,7 +1033,10 @@ public class AnnotationsWebService {
     public ResponseDataObject<List<AnnotationSearchResultValueObject>> searchAnnotationsByPathQuery( // Params:
             @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE, description = SEARCH_QUERY_DESCRIPTION) @PathParam("query") @DefaultValue("") StringArrayArg query // Required
     ) {
-        return searchAnnotations( query, LuceneOrderRankingStrategy.NAME, SEARCH_DEFAULT_LIMIT, "", false, false, "", false, null, false, 50, true, false, null, false );
+        // The two `false`s after exactLabel and suppressNearMatches are their legacy-spelling
+        // twins; this internal caller never supplies either flag.
+        return searchAnnotations( query, LuceneOrderRankingStrategy.NAME, SEARCH_DEFAULT_LIMIT, "", false,
+                false, false, "", false, false, null, false, 50, true, false, null, false );
     }
 
     /**
