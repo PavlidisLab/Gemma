@@ -65,6 +65,17 @@ CLO defines these object properties (listed from CLO's property set):
 handoff said "would be the one to discuss" if the relation were ever materialized
 already exists, in an ontology we already load.
 
+**Two shapes, and only one of them is easy.** `CLO_0000015` and `CLO_0000179` are
+flat `someValuesFrom` restrictions — a property and a target, which is exactly
+what `getRestrictions()` returns. But `RO_0001000 derives from` on the same MCF7
+class is a nested intersection that reads, unwound: an epithelial cell
+(`CL_0000066`) `part_of` breast (`UBERON_0000310`) `part_of` a human
+(`NCBITaxon_9606`) who has `DOID_3008`. Cell type, organism part, species and the
+donor's disease are all in that one axiom — four of the annotations we want, in
+the structure that is hardest to read. `getRestrictions()` surfaces the top level
+of it and no more. Take the flat relations first and treat the nested chain as its
+own piece of work; do not scope them together.
+
 **Coverage is uneven, and this is the main limit.** Sampled, not counted:
 
 * `CLO_0007606` (MCF7) carries a real restriction — `{property: CLO_0000015,
@@ -87,39 +98,55 @@ thing to do in stage 2 below.
 ## 3. The blocker, and why it is already solved
 
 CLO points at **DOID**. Cellosaurus points at **NCIt**. Gemma annotates in
-**MONDO**. And Gemma does not load DOID — `/annotations/term?uri=…DOID_3459`
-returns 404 on frink today.
+**MONDO**, which is the vocabulary these are being consolidated into — MONDO
+supersedes DOID for our purposes, and Gemma does not load DOID at all
+(`/annotations/term?uri=…DOID_3459` returns 404 on frink today).
 
-This is exactly the wall CAB hit: they compare disease strings by normalized
-label, which cost them two tokenisation bugs in one day (`B-cell` destroyed by
-treating `cell` as a stopword; `lymphoma.` ≠ `lymphoma`).
+**So DOID is an identifier space to translate OUT of on read, never one to adopt,
+resolve against, or store.** A DOID that reaches a Gemma annotation, a stored
+inference or an API response is a bug. This is what makes the index below the
+first piece of work rather than an optimization: without it, the only thing CLO's
+disease assertions can be compared against is a label, which is exactly the wall
+CAB hit — normalized-label matching cost them two tokenisation bugs in one day
+(`B-cell` destroyed by treating `cell` as a stopword; `lymphoma.` ≠ `lymphoma`).
 
-It does not need a new ontology. **MONDO already carries the cross-references, and
-Gemma already serves them.** From frink today:
+It needs no new ontology. **MONDO carries the cross-references and Gemma already
+serves them.** Verified end to end on 2026-08-12, both sides from data already
+loaded here:
 
-```
-MONDO_0004975 (Alzheimer disease) dbXrefs:
-  DOID:10652, NCIT:C2866, Orphanet:238616, UMLS:C0002395, MESH:D000544, HP:0002511, …
-```
+| source | assertion |
+|---|---|
+| CLO (OLS) | `CLO_0007606` MCF7 cell — `CLO_0000015 derives from patient having disease` → `DOID_3458`; `CLO_0000179 is disease model for` → `DOID_299`, `DOID_3458` |
+| Gemma's MONDO (frink) | `MONDO_0004988` breast adenocarcinoma — `dbXrefs` contains `DOID:3458` |
+| Gemma's MONDO (frink) | `MONDO_0004970` adenocarcinoma — `dbXrefs` contains `DOID:299` |
 
-Invert that and `DOID:10652` → `MONDO_0004975` is an exact join. One index over a
-model already in memory turns every foreign disease identifier in CLO, Cellosaurus
-and MGI into the vocabulary Gemma searches in. It also retires the label-matching
-in the offline genotype/disease-model builder, whose 17% MGI agreement figure is
-reported as a floor *precisely because* no DOID↔MONDO map was available.
+Invert the xrefs and `DOID:3458` → `MONDO_0004988` is an exact join, in process,
+against a model already in memory. The same index carries `NCIT:` for Cellosaurus
+and retires the label-matching in the offline genotype/disease-model builder, whose
+17% MGI agreement figure is reported as a floor *precisely because* no DOID↔MONDO
+map was available.
 
-Caveats worth designing for: xref CURIEs vary in prefix case (`DOID:` vs `NCIT:`
-vs `NCIt:`) so normalization is needed; xrefs are many-to-one in both directions
-and MONDO marks some as narrow/broad rather than exact, so an inverted index must
-either keep the qualifier or accept that a small fraction of joins are
-approximate. Reporting which it was beats silently picking one.
+Caveats worth designing for:
+
+* **The REST `dbXrefs` list is flat, and MONDO's xrefs are not.** MONDO qualifies
+  many cross-references (exact / narrow / broad, plus a source) as axiom
+  annotations, and the string list served today drops that. Build the index from
+  the Jena model where the qualifier is still there, and keep it: a narrow xref
+  resolved as though it were exact is a wrong disease reported with full
+  confidence. Serving the qualifier through the API is a second, smaller change.
+* Xref CURIEs vary in prefix case (`DOID:` / `NCIT:` / `NCIt:`), so normalize.
+* The mapping is many-to-many in both directions.
+* **Coverage is unmeasured.** One verified pair is not a rate. Counting how many
+  distinct DOIDs referenced by CLO resolve to a MONDO term belongs in stage 1.
 
 ## 4. Staged plan
 
 **S1 — invert the xrefs.** A reverse index from foreign CURIE to MONDO term, built
-once per ontology load and invalidated with it. Small, self-contained, independently
-useful, and every later stage depends on it. Expose it as a service method plus a
-lookup on `/annotations/term` so callers stop label-matching.
+from the Jena model once per ontology load and invalidated with it, keeping the
+exact/narrow/broad qualifier. Small, self-contained, independently useful, and
+every later stage depends on it. Expose it as a service method plus a lookup on
+`/annotations/term` so callers stop label-matching. Report DOID and NCIt coverage
+into this document while building it.
 
 **S2 — read restrictions and count coverage.** Call `getRestrictions()`, filter to
 a configured property allow-list, resolve foreign targets through S1, and surface
@@ -168,8 +195,11 @@ disease-model endpoint should prefer it and say which it used. That is a change 
 ## 6. Not recommended
 
 * Adding CLO's disease property to `additionalPropertyUris` (§1).
-* Loading DOID to resolve CLO's targets — S1 answers it from MONDO, which is
-  already loaded, and adds no download, no memory and no refresh schedule.
+* **Loading DOID to resolve CLO's targets.** MONDO is what DOID is being
+  consolidated into and what Gemma annotates in; adding DOID would mean carrying a
+  superseded vocabulary, its download, its memory and its refresh schedule, in
+  order to answer a question S1 answers from a model already in memory. Translate
+  out of DOID on read; never store one.
 * Parsing the `disease: a;   b` comment string into structured terms. It is CLO's
   own convention, irregularly spaced, and unreliable as a key; serve it as prose
   (PR #1686) and get structure from restrictions and Cellosaurus instead.
