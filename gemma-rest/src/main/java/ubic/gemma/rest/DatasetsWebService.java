@@ -2221,10 +2221,10 @@ public class DatasetsWebService {
     }
 
     // ─────────────────────────── Composite curation commit ───────────────────────────
-    // All-or-none commit of a curator's whole draft. Phase 1 applies the basics + publications
-    // sections (see CurationCommitRequest); design / tags / sampleCharacteristics / curationDetails
-    // are accepted on the wire but rejected with 400 until their phases land, so a caller can't
-    // believe an unsupported section was applied. Envelope source of truth: CAB's curation_commit.py.
+    // All-or-none commit of a curator's whole draft. All six sections now apply: basics, publications,
+    // design, tags, sampleCharacteristics, and curationDetails (curationNote only — troubled /
+    // needsAttention stay on the ticket endpoints and 400 here).
+    // Envelope source of truth: CAB's curation_commit.py.
 
     @PUT
     @Path("/{dataset}/curation")
@@ -2481,8 +2481,9 @@ public class DatasetsWebService {
 
     /**
      * The whole desired curation state for one dataset (CAB's {@code CurationDocument}). Any section left
-     * null is untouched. Phase 1 applies {@code basics} and {@code publications}; the rest are kept on the
-     * wire (as raw nodes) so a caller sees a 400 rather than a silent drop when they send an unsupported one.
+     * null is untouched. All six sections apply: {@code basics}, {@code publications}, {@code design},
+     * {@code tags}, {@code sampleCharacteristics}, and {@code curationDetails} (note only — troubled /
+     * needsAttention are 400 here and go through the ticket endpoints).
      */
     public static class CurationDocument {
         @Nullable

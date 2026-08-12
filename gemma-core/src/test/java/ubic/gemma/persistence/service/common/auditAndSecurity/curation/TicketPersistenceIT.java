@@ -12,6 +12,7 @@
 package ubic.gemma.persistence.service.common.auditAndSecurity.curation;
 
 import org.hibernate.SessionFactory;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -19,7 +20,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.transaction.support.TransactionTemplate;
 import ubic.gemma.core.util.test.BaseIntegrationTest5;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
@@ -45,10 +48,12 @@ import javax.sql.DataSource;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -108,6 +113,13 @@ public class TicketPersistenceIT extends BaseIntegrationTest5 {
 
     @BeforeEach
     public void seedReporter() {
+        // @Nested classes inherit this @BeforeEach. ListPathDetachedRegression deliberately runs
+        // with the test-managed transaction suspended (@Transactional(NOT_SUPPORTED)), where a bare
+        // DAO write fails with "could not obtain transaction-synchronized Session" — it seeds its
+        // own committed fixture instead and never reads this field.
+        if ( !TransactionSynchronizationManager.isActualTransactionActive() ) {
+            return;
+        }
         Contact c = new Contact();
         c.setName( "ticket-it-reporter-" + UUID.randomUUID() );
         reporter = contactDao.create( c );
@@ -555,6 +567,101 @@ public class TicketPersistenceIT extends BaseIntegrationTest5 {
             // The COMMENTED event payload is the JSON-encoded form of "Looks fine to me"
             assertTrue( vo.getEvents().stream().anyMatch( e -> e.getType() == TicketEventType.COMMENTED ),
                     "COMMENTED event should be on the log" );
+        }
+
+    }
+
+    /**
+     * The LIST paths hand entities back to the web layer, which projects them to VOs AFTER the
+     * service transaction closes — the same boundary {@code loadValueObject} was fixed for, but
+     * {@code findTickets} / {@code findOpenForTarget} were left behind. On frink that surfaced as a
+     * 500 on an unfiltered {@code GET /tickets}: "Could not initialize proxy [Contact#1] - no
+     * session". The reporter is a LAZY {@code @ManyToOne}, so the list only survived while every
+     * row on the page happened to have no reporter and no assignee.
+     *
+     * <p>🛑 This class must NOT inherit the outer class's {@code @Transactional} — that is the whole
+     * point. A test-managed transaction keeps one session open for the entire method, so entities
+     * never actually detach and the projection succeeds whether or not the service initialized
+     * anything. {@code @Nested} inherits the enclosing class's annotations, and a
+     * {@link TransactionTemplate} inside an ambient transaction merely JOINS it (PROPAGATION_REQUIRED)
+     * rather than committing — which is why {@link DetachedEntityRegression} above does not, in fact,
+     * reproduce a detached entity. {@code NOT_SUPPORTED} suspends the ambient transaction so the
+     * service call opens and CLOSES its own, exactly like a JAX-RS request. Rows committed here are
+     * therefore real, so they are torn down explicitly in {@link #cleanup()}.</p>
+     */
+    @Nested
+    @DisplayName("List-path lazy-init regression (genuinely detached: no ambient test transaction)")
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    class ListPathDetachedRegression {
+
+        @Autowired
+        private PlatformTransactionManager txManager;
+
+        private Long ticketId;
+        private Long reporterId;
+
+        @BeforeEach
+        public void seedCommitted() {
+            new TransactionTemplate( txManager ).execute( status -> {
+                Contact c = new Contact();
+                c.setName( "list-detach-reporter-" + UUID.randomUUID() );
+                Contact savedReporter = contactDao.create( c );
+                reporterId = savedReporter.getId();
+                TicketTarget target = TicketTarget.Factory.newInstance(
+                        TicketTargetType.EXPRESSION_EXPERIMENT, 1L );
+                Ticket created = ticketService.openTicket( savedReporter, TicketType.CURATION,
+                        "list-vo-after-detach-" + UUID.randomUUID(), Collections.singleton( target ) );
+                ticketId = created.getId();
+                return null;
+            } );
+        }
+
+        @AfterEach
+        public void cleanup() {
+            new TransactionTemplate( txManager ).execute( status -> {
+                if ( ticketId != null ) {
+                    Ticket t = ticketDao.load( ticketId );
+                    if ( t != null ) ticketDao.remove( t );
+                }
+                if ( reporterId != null ) {
+                    Contact c = contactDao.load( reporterId );
+                    if ( c != null ) contactDao.remove( c );
+                }
+                return null;
+            } );
+        }
+
+        /**
+         * Project exactly the way {@code TicketsWebService} does — outside any transaction.
+         */
+        private void assertProjectable( List<Ticket> tickets ) {
+            assertFalse( tickets.isEmpty(), "the committed ticket should be listed" );
+            boolean sawSeeded = false;
+            for ( Ticket t : tickets ) {
+                TicketValueObject vo = TicketValueObject.from( t );
+                assertNotNull( vo.getTargets(), "targets must be initialized" );
+                if ( ticketId.equals( t.getId() ) ) {
+                    sawSeeded = true;
+                    assertEquals( reporterId, vo.getReporterId(), "reporter must be initialized" );
+                    assertNotNull( vo.getReporterName(), "reporter name must be initialized" );
+                    assertFalse( vo.getTargets().isEmpty(), "targets must be initialized" );
+                }
+            }
+            assertTrue( sawSeeded, "the seeded ticket should be among the listed tickets" );
+        }
+
+        @Test
+        @DisplayName("findTickets: VO projection after the service txn closes initializes reporter + targets")
+        public void findTickets_projectedAfterDetach_works() {
+            assertProjectable( ticketService.findTickets(
+                    false, null, null, null, null, null, null, 0, 100 ) );
+        }
+
+        @Test
+        @DisplayName("findOpenForTarget: VO projection after the service txn closes initializes reporter + targets")
+        public void findOpenForTarget_projectedAfterDetach_works() {
+            assertProjectable( ticketService.findOpenForTarget(
+                    TicketTargetType.EXPRESSION_EXPERIMENT, 1L ) );
         }
     }
 

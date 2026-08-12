@@ -241,10 +241,21 @@ public class TicketServiceImpl extends AbstractService<Ticket> implements Ticket
     public TicketValueObject loadValueObject( Long id, boolean includeEvents ) {
         Ticket t = ticketDao.load( id );
         if ( t == null ) return null;
-        // Force lazy init while the session is still open. Without this, the JAX-RS handler's
-        // VO projection runs after the @Transactional ends and raises LazyInitializationException
-        // ("no Session") on every lazy field — reporter (LAZY @ManyToOne), assignee, targets,
-        // events, plus each event's actor.
+        initializeForProjection( t, includeEvents );
+        return TicketValueObject.from( t, includeEvents );
+    }
+
+    /**
+     * Force lazy init while the session is still open. Without this, the JAX-RS handler's
+     * VO projection runs after the {@code @Transactional} ends and raises LazyInitializationException
+     * ("no Session") on every lazy field — reporter (LAZY @ManyToOne), assignee, targets,
+     * events, plus each event's actor.
+     * <p>
+     * Every read method below that hands entities back to the web layer runs this, because the
+     * web layer's only use for them is {@link TicketValueObject#from}, which touches all of it.
+     * The list paths pass {@code includeEvents=false}: list VOs deliberately omit the event log.
+     */
+    private void initializeForProjection( Ticket t, boolean includeEvents ) {
         if ( t.getReporter() != null ) Hibernate.initialize( t.getReporter() );
         if ( t.getAssignee() != null ) Hibernate.initialize( t.getAssignee() );
         Hibernate.initialize( t.getTargets() );
@@ -254,7 +265,13 @@ public class TicketServiceImpl extends AbstractService<Ticket> implements Ticket
                 if ( e.getActor() != null ) Hibernate.initialize( e.getActor() );
             }
         }
-        return TicketValueObject.from( t, includeEvents );
+    }
+
+    private <T extends List<Ticket>> T initializeForProjection( T tickets ) {
+        for ( Ticket t : tickets ) {
+            initializeForProjection( t, false );
+        }
+        return tickets;
     }
 
     @Override
@@ -262,20 +279,20 @@ public class TicketServiceImpl extends AbstractService<Ticket> implements Ticket
     public List<Ticket> findOpenForTarget( TicketTargetType targetType, Long targetId ) {
         Assert.notNull( targetType, "TargetType cannot be null." );
         Assert.notNull( targetId, "TargetId cannot be null." );
-        return ticketDao.findOpenForTarget( targetType, targetId );
+        return initializeForProjection( ticketDao.findOpenForTarget( targetType, targetId ) );
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Ticket> findAssignedTo( Contact assignee ) {
         Assert.notNull( assignee, "Assignee cannot be null." );
-        return ticketDao.findAssignedTo( assignee );
+        return initializeForProjection( ticketDao.findAssignedTo( assignee ) );
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Ticket> findTickets( boolean openOnly, @Nullable Long assigneeId, @Nullable TicketPriority priority, int offset, int limit ) {
-        return ticketDao.findTickets( openOnly, assigneeId, priority, offset, limit );
+        return initializeForProjection( ticketDao.findTickets( openOnly, assigneeId, priority, offset, limit ) );
     }
 
     @Override
@@ -283,7 +300,7 @@ public class TicketServiceImpl extends AbstractService<Ticket> implements Ticket
     public List<Ticket> findTickets( boolean openOnly, @Nullable Long assigneeId, @Nullable TicketPriority priority,
             @Nullable TicketType type, @Nullable TicketState state, @Nullable TicketTargetType targetType,
             @Nullable Date updatedSince, int offset, int limit ) {
-        return ticketDao.findTickets( openOnly, assigneeId, priority, type, state, targetType, updatedSince, offset, limit );
+        return initializeForProjection( ticketDao.findTickets( openOnly, assigneeId, priority, type, state, targetType, updatedSince, offset, limit ) );
     }
 
     @Override
@@ -304,7 +321,7 @@ public class TicketServiceImpl extends AbstractService<Ticket> implements Ticket
     @Transactional(readOnly = true)
     public CursorPage<Ticket> findTicketsByCursor( boolean openOnly, @Nullable Long assigneeId,
             @Nullable TicketPriority priority, @Nullable Cursor cursor, int limit ) {
-        return ticketDao.findTicketsByCursor( openOnly, assigneeId, priority, cursor, limit );
+        return initializeForProjection( ticketDao.findTicketsByCursor( openOnly, assigneeId, priority, cursor, limit ) );
     }
 
     @Override
@@ -313,7 +330,7 @@ public class TicketServiceImpl extends AbstractService<Ticket> implements Ticket
             @Nullable TicketPriority priority, @Nullable TicketType type, @Nullable TicketState state,
             @Nullable TicketTargetType targetType, @Nullable Date updatedSince,
             @Nullable Cursor cursor, int limit ) {
-        return ticketDao.findTicketsByCursor( openOnly, assigneeId, priority, type, state, targetType, updatedSince, cursor, limit );
+        return initializeForProjection( ticketDao.findTicketsByCursor( openOnly, assigneeId, priority, type, state, targetType, updatedSince, cursor, limit ) );
     }
 
     @Override
@@ -322,7 +339,7 @@ public class TicketServiceImpl extends AbstractService<Ticket> implements Ticket
             @Nullable Cursor cursor, int limit ) {
         Assert.notNull( targetType, "TargetType cannot be null." );
         Assert.notNull( targetId, "TargetId cannot be null." );
-        return ticketDao.findOpenForTargetByCursor( targetType, targetId, cursor, limit );
+        return initializeForProjection( ticketDao.findOpenForTargetByCursor( targetType, targetId, cursor, limit ) );
     }
 
     @Override
