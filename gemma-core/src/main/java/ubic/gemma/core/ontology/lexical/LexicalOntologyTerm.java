@@ -32,7 +32,7 @@ public class LexicalOntologyTerm extends OntologyTermSimple {
      * same role, so exposing it here means {@code OntologyService.getDefinition} — and therefore the
      * existing /annotations/search enrichment — surfaces it with no special-casing for lexical sources.
      */
-    private static final String DEFINITION_URI = "http://purl.obolibrary.org/obo/IAO_0000115";
+    private static final String DEFINITION_URI = ubic.gemma.core.ontology.OntologyUtils.DEFINITION_URI;
 
     private final LexicalTermMetadata metadata;
 

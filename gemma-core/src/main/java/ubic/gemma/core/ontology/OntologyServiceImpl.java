@@ -573,14 +573,22 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     @Override
     public String getDefinition( String uri, long timeout, TimeUnit timeUnit ) throws TimeoutException {
         OntologyTerm ot = this.getTerm( uri, timeout, timeUnit );
-        if ( ot != null ) {
-            // FIXME: not clear this will work with all ontologies. UBERON, HP, MP, MONDO does it this way.
-            AnnotationProperty annot = ot.getAnnotation( "http://purl.obolibrary.org/obo/IAO_0000115" );
-            if ( annot != null ) {
-                return annot.getContents();
-            }
+        if ( ot == null ) {
+            return null;
         }
-        return null;
+        // UBERON, HP, MP and MONDO all use the OBO definition property.
+        AnnotationProperty annot = ot.getAnnotation( OntologyUtils.DEFINITION_URI );
+        if ( annot != null && StringUtils.isNotBlank( annot.getContents() ) ) {
+            return annot.getContents();
+        }
+        // CLO does not. It writes what it knows about a cell line into rdfs:comment instead —
+        // CLO_0008127 (NCI-H929) carries "disease: plasmacytoma;   myeloma" and no OBO definition at all —
+        // so reading only the OBO property returned null for the very terms whose description is the point.
+        // That disease is a property of the line, knowable without anyone curating it onto an experiment,
+        // and it was sitting in an ontology already loaded here. OLS resolves the same fallback, and reports
+        // the result as the term's definition, so this agrees with what a caller sees there.
+        String comment = ot.getComment();
+        return StringUtils.isNotBlank( comment ) ? comment : null;
     }
 
     @Override
