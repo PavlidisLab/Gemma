@@ -1,0 +1,11 @@
+{
+  "artifact": "genotype_disease_model.tsv",
+  "n_experiments_scanned": 23477,
+  "n_experiments_with_both": 2509,
+  "n_pairs": 4731,
+  "n_distinct_genes": 1622,
+  "n_distinct_diseases": 938,
+  "escrow_set_aside": 2353,
+  "sha256": "7597ad449dd5c440087a85c2ba008d119535a6c5b32a74ae33d1c2ed4a8ba83f",
+  "built_at_utc": "2026-08-12T17:14:51.005083+00:00"
+}

@@ -1,0 +1,19 @@
+{
+  "artifact": "MGI_DO.rpt",
+  "role": "External cross-check for the genotype->disease-model table: MGI's Disease Ontology annotations, gene -> DO disease.",
+  "source_url": "https://www.informatics.jax.org/downloads/reports/MGI_DO.rpt",
+  "fetched_at_utc": "2026-08-12T17:06:59.293877+00:00",
+  "n_rows": 19832,
+  "sha256": "36ab46c14511b6f543a35456a7b32d8ea16bdd755cfce1ca65ec15076083b992",
+  "columns": [
+    "DO Disease ID",
+    "DO Disease Name",
+    "OMIM IDs",
+    "Common Organism Name",
+    "NCBI Taxon ID",
+    "Symbol",
+    "EntrezGene ID",
+    "Mouse MGI ID"
+  ],
+  "limits": "GENE-level, unranked, many-to-many. Cannot express allele direction (Myc overexpression vs knockdown) or strain-shaped genotypes (APP/PS1, 5xFAD). Joined to our table by gene symbol; disease names are matched by NORMALIZED LABEL because DO and MONDO share no identifier available locally \u2014 MONDO's DOID xrefs would be the rigorous path."
+}
