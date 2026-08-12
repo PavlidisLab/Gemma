@@ -108,8 +108,8 @@ public class PreboardedWebServiceTest {
         assertThat( resp.getStatus() ).isEqualTo( 409 );
         @SuppressWarnings("unchecked")
         Map<String, Object> body = ( Map<String, Object> ) resp.getEntity();
-        assertThat( body ).containsEntry( "existing_id", 9876L )
-                .containsEntry( "existing_type", "preboarded" )
+        assertThat( body ).containsEntry( "existingId", 9876L )
+                .containsEntry( "existingType", "preboarded" )
                 .containsEntry( "accession", "GSE12345" );
     }
 
@@ -124,7 +124,7 @@ public class PreboardedWebServiceTest {
         assertThat( resp.getStatus() ).isEqualTo( 409 );
         @SuppressWarnings("unchecked")
         Map<String, Object> body = ( Map<String, Object> ) resp.getEntity();
-        assertThat( body ).containsEntry( "existing_type", "expression_experiment" );
+        assertThat( body ).containsEntry( "existingType", "expression_experiment" );
     }
 
     @Test
@@ -180,7 +180,7 @@ public class PreboardedWebServiceTest {
         @SuppressWarnings("unchecked")
         Map<String, Object> body = ( Map<String, Object> ) resp.getEntity();
         assertThat( body ).containsEntry( "state", "Preboarded" );
-        assertThat( ( String ) body.get( "redirect_to" ) ).contains( "/workflow/queue" );
+        assertThat( ( String ) body.get( "redirectTo" ) ).contains( "/workflow/queue" );
     }
 
     @Test

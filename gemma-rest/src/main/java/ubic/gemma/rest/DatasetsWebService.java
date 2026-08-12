@@ -1656,7 +1656,7 @@ public class DatasetsWebService {
     /**
      * Groups that have ANY permission (read or admin) on the given dataset
      * (gap §3c of {@code GEMMA_UI_ENDPOINT_GAP.md}). When
-     * {@code include_summaries=true}, each entry includes the group's
+     * {@code includeSummaries=true}, each entry includes the group's
      * lightweight summary (name, description, memberCount); otherwise only
      * the group names are returned.
      */
@@ -1673,8 +1673,13 @@ public class DatasetsWebService {
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<?> getDatasetGroups(
             @PathParam("dataset") DatasetArg<?> datasetArg,
-            @QueryParam("include_summaries") @DefaultValue("false") boolean includeSummaries
+            @QueryParam("includeSummaries") @DefaultValue("false") boolean includeSummaries,
+            // Legacy spelling, accepted so a stale caller gets the behaviour it asked for rather
+            // than silently falling back to the default. Remove once no client sends it.
+            @Parameter(hidden = true)
+            @QueryParam("include_summaries") @DefaultValue("false") boolean includeSummariesLegacy
     ) {
+        includeSummaries = includeSummaries || includeSummariesLegacy;
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         Set<String> groupNames = new LinkedHashSet<>();
         groupNames.addAll( securityService.getGroupsReadableBy( ee ) );
@@ -1827,7 +1832,7 @@ public class DatasetsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
     @Operation(summary = "Attach an AnnotationSet to a dataset.",
-            description = "Idempotent on `(role, run_id)`: a retry returns the existing row as 200 OK "
+            description = "Idempotent on `(role, runId)`: a retry returns the existing row as 200 OK "
                     + "rather than 201 Created. Body's `role` selects PROPOSAL / DRAFT / SNAPSHOT.")
     public Response submitDatasetAnnotationSet(
             @PathParam("dataset") DatasetArg<?> datasetArg,
@@ -1852,8 +1857,8 @@ public class DatasetsWebService {
             @QueryParam("source") @Nullable String source,
             @Parameter(description = "Filter by createdBy (username or agent run identifier).")
             @QueryParam("createdBy") @Nullable String createdBy,
-            @Parameter(description = "Response shape: `full` (default; carries payload_json) "
-                    + "or `meta` (thin projection, payload_size only).")
+            @Parameter(description = "Response shape: `full` (default; carries payloadJson) "
+                    + "or `meta` (thin projection, payloadSize only).")
             @QueryParam("shape") @Nullable String shape
     ) {
         return annotationSetsWebService.listAnnotationSets( datasetArg, role, source, createdBy, shape );
@@ -2015,7 +2020,7 @@ public class DatasetsWebService {
      * Request body for {@link #renameDatasetShortName}.
      */
     public static class RenameDatasetRequest {
-        @com.fasterxml.jackson.annotation.JsonProperty("short_name")
+        @com.fasterxml.jackson.annotation.JsonProperty("shortName")
         @Nullable
         private String shortName;
 
@@ -2033,9 +2038,9 @@ public class DatasetsWebService {
      * Response body for {@link #renameDatasetShortName}.
      */
     public static class RenameDatasetResponse {
-        @com.fasterxml.jackson.annotation.JsonProperty("experiment_id")
+        @com.fasterxml.jackson.annotation.JsonProperty("experimentId")
         private final Long experimentId;
-        @com.fasterxml.jackson.annotation.JsonProperty("short_name")
+        @com.fasterxml.jackson.annotation.JsonProperty("shortName")
         private final String shortName;
 
         public RenameDatasetResponse( Long experimentId, String shortName ) {
@@ -2070,36 +2075,36 @@ public class DatasetsWebService {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasAuthority('GROUP_ADMIN')")
-    @Operation(summary = "Rename the short_name of a dataset",
-            description = "Updates the curator-facing short_name identifier on an ExpressionExperiment. "
+    @Operation(summary = "Rename the shortName of a dataset",
+            description = "Updates the curator-facing shortName identifier on an ExpressionExperiment. "
                     + "Returns 400 on blank/too-long/illegal-character names, 404 on unknown dataset, "
-                    + "409 when the requested short_name is already in use (DB unique constraint).",
+                    + "409 when the requested shortName is already in use (DB unique constraint).",
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
             responses = {
                     @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
-                    @ApiResponse(responseCode = "400", description = "Invalid short_name (blank, too long, or contains forbidden characters).",
+                    @ApiResponse(responseCode = "400", description = "Invalid shortName (blank, too long, or contains forbidden characters).",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
-                    @ApiResponse(responseCode = "409", description = "The requested short_name is already in use.",
+                    @ApiResponse(responseCode = "409", description = "The requested shortName is already in use.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<RenameDatasetResponse> renameDatasetShortName(
             @PathParam("dataset") DatasetArg<?> datasetArg,
             @Nullable RenameDatasetRequest body
     ) {
         if ( body == null || body.getShortName() == null ) {
-            throw new BadRequestException( "A request body with 'short_name' is required." );
+            throw new BadRequestException( "A request body with 'shortName' is required." );
         }
         String trimmed = body.getShortName().trim();
         if ( trimmed.isEmpty() ) {
-            throw new BadRequestException( "short_name must not be blank." );
+            throw new BadRequestException( "shortName must not be blank." );
         }
         if ( trimmed.length() > SHORT_NAME_MAX_LENGTH ) {
-            throw new BadRequestException( "short_name exceeds " + SHORT_NAME_MAX_LENGTH + " characters." );
+            throw new BadRequestException( "shortName exceeds " + SHORT_NAME_MAX_LENGTH + " characters." );
         }
         if ( !SHORT_NAME_ALLOWED.matcher( trimmed ).matches() ) {
-            throw new BadRequestException( "short_name may only contain letters, digits, '.', '_', and '-'." );
+            throw new BadRequestException( "shortName may only contain letters, digits, '.', '_', and '-'." );
         }
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         String previous = ee.getShortName();
@@ -2111,14 +2116,14 @@ public class DatasetsWebService {
         // existsByShortName check turns that into a 409 instead of a 500 on DataIntegrityViolation.
         if ( expressionExperimentService.existsByShortName( trimmed ) ) {
             throw new jakarta.ws.rs.ClientErrorException(
-                    "short_name '" + trimmed + "' is already in use.",
+                    "shortName '" + trimmed + "' is already in use.",
                     jakarta.ws.rs.core.Response.Status.CONFLICT );
         }
         ee.setShortName( trimmed );
         expressionExperimentService.update( ee );
         //noinspection deprecation
         auditTrailService.addUpdateEvent( ee, DatasetShortNameChangedEvent.class,
-                "Renamed short_name: '" + previous + "' -> '" + trimmed + "'" );
+                "Renamed shortName: '" + previous + "' -> '" + trimmed + "'" );
         return respond( new RenameDatasetResponse( ee.getId(), ee.getShortName() ) );
     }
 
@@ -2129,7 +2134,7 @@ public class DatasetsWebService {
     @Operation(summary = "Update the name and/or description of a dataset",
             description = "Partial update of the curator-editable basics of an ExpressionExperiment: `name` "
                     + "(the human-readable title) and `description`. A field omitted or null is left "
-                    + "unchanged; a provided `name` must be non-blank. The `short_name` (identity) has its own "
+                    + "unchanged; a provided `name` must be non-blank. The `shortName` (identity) has its own "
                     + "admin-only route (`PUT /{dataset}/short-name`). Requires `ACL_SECURABLE_EDIT` on the "
                     + "dataset. Closes the name/description half of the retired gemma-web `updateBasics`.",
             security = { @SecurityRequirement(name = "basicAuth"), @SecurityRequirement(name = "cookieAuth") },
@@ -2196,7 +2201,7 @@ public class DatasetsWebService {
      * Response body for {@link #updateDatasetBasics} — the persisted name and description after the update.
      */
     public static class DatasetBasicsResponse {
-        @com.fasterxml.jackson.annotation.JsonProperty("experiment_id")
+        @com.fasterxml.jackson.annotation.JsonProperty("experimentId")
         private final Long experimentId;
         private final String name;
         private final String description;
@@ -3720,7 +3725,7 @@ public class DatasetsWebService {
 
     /**
      * Request body for {@link #getDatasetPipelineStatusBulk}. Field is named on the wire as
-     * {@code dataset_ids} (snake_case) to match the curation-UI's workflow list view client
+     * {@code datasetIds} (snake_case) to match the curation-UI's workflow list view client
      * (see {@code apps/curation/src/api/workflow.ts::usePipelineStatusBulk}).
      */
     public static class PipelineStatusBulkRequest {
@@ -3728,12 +3733,12 @@ public class DatasetsWebService {
         private List<Long> datasetIds;
 
         @Nullable
-        @com.fasterxml.jackson.annotation.JsonProperty("dataset_ids")
+        @com.fasterxml.jackson.annotation.JsonProperty("datasetIds")
         public List<Long> getDatasetIds() {
             return datasetIds;
         }
 
-        @com.fasterxml.jackson.annotation.JsonProperty("dataset_ids")
+        @com.fasterxml.jackson.annotation.JsonProperty("datasetIds")
         public void setDatasetIds( @Nullable List<Long> datasetIds ) {
             this.datasetIds = datasetIds;
         }
@@ -3764,7 +3769,7 @@ public class DatasetsWebService {
             @Nullable PipelineStatusBulkRequest body
     ) {
         if ( body == null || body.getDatasetIds() == null || body.getDatasetIds().isEmpty() ) {
-            throw new BadRequestException( "A request body with non-empty 'dataset_ids' is required." );
+            throw new BadRequestException( "A request body with non-empty 'datasetIds' is required." );
         }
         // Deduplicate but preserve caller-supplied order on the way out (for predictable client iteration).
         List<Long> requestedIds = new ArrayList<>( new LinkedHashSet<>( body.getDatasetIds() ) );
@@ -4435,7 +4440,7 @@ public class DatasetsWebService {
             target = arrayDesignService.findByShortName( body.getTargetArrayDesignName() );
             if ( target == null ) {
                 throw new BadRequestException(
-                        "No ArrayDesign with short_name '" + body.getTargetArrayDesignName() + "' exists." );
+                        "No ArrayDesign with shortName '" + body.getTargetArrayDesignName() + "' exists." );
             }
         }
         ExpressionExperimentPlatformSwitchTaskCommand cmd = new ExpressionExperimentPlatformSwitchTaskCommand( ee, target );
@@ -5682,7 +5687,7 @@ public class DatasetsWebService {
 
     /**
      * Request body for {@link #patchDatasetQuantitationType}. Currently understands the
-     * {@code is_preferred} (or {@code isPreferred}) field; future patchable fields can be added here.
+     * {@code isPreferred} (or {@code isPreferred}) field; future patchable fields can be added here.
      */
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class QuantitationTypePatchRequest {
@@ -5702,7 +5707,7 @@ public class DatasetsWebService {
 
     /**
      * Body-driven PATCH dispatcher for a quantitation type. Curation-UI calls
-     * {@code PATCH /datasets/{id}/quantitationTypes/{qtId}} with {@code {"is_preferred": true}} instead of
+     * {@code PATCH /datasets/{id}/quantitationTypes/{qtId}} with {@code {"isPreferred": true}} instead of
      * routing through the {@code /preferred} suffix; this handler dispatches based on which fields are present.
      */
     @PATCH
@@ -5710,8 +5715,8 @@ public class DatasetsWebService {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasAuthority('GROUP_ADMIN')")
-    @Operation(summary = "Patch a quantitation type (currently dispatches on `is_preferred`)",
-            description = "Curation-UI compatibility shim for body-driven patches. Body: `{\"is_preferred\": true|false}` "
+    @Operation(summary = "Patch a quantitation type (currently dispatches on `isPreferred`)",
+            description = "Curation-UI compatibility shim for body-driven patches. Body: `{\"isPreferred\": true|false}` "
                     + "delegates to the canonical `/preferred` handler. Other patchable fields can be added later.",
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
@@ -5727,7 +5732,7 @@ public class DatasetsWebService {
             @Nullable QuantitationTypePatchRequest body
     ) {
         if ( body == null || body.getPreferred() == null ) {
-            throw new BadRequestException( "PATCH body must include at least one supported field (currently: `is_preferred`)." );
+            throw new BadRequestException( "PATCH body must include at least one supported field (currently: `isPreferred`)." );
         }
         QuantitationTypePreferredRequest preferredBody = new QuantitationTypePreferredRequest();
         preferredBody.setPreferred( body.getPreferred() );

@@ -247,14 +247,14 @@ public class OpenApiTest extends BaseTest5 implements InitializingBean {
                             continue;
                         }
                         // POST /preboarded/{id}/promote 409 intentionally returns a richer body
-                        // (error, preboarded_id) so callers can act on the already-promoted state.
+                        // (error, preboardedId) so callers can act on the already-promoted state.
                         if ( method == PathItem.HttpMethod.POST
                                 && "/preboarded/{id}/promote".equals( path )
                                 && "409".equals( code ) ) {
                             continue;
                         }
                         // PUT /datasets/{id}/workflow 409 intentionally returns a richer body
-                        // (error, current_state, target_state, allowed_next_states) so the UI can
+                        // (error, currentState, targetState, allowedNextStates) so the UI can
                         // re-render the transition picker without a second round-trip.
                         if ( method == PathItem.HttpMethod.PUT
                                 && "/datasets/{id}/workflow".equals( path )
