@@ -202,8 +202,27 @@ DROP TEMPORARY TABLE IF EXISTS _ws_scope;
 --   * EXPRESSION_EXPERIMENT2CHARACTERISTIC carries its own copy of VALUE / CATEGORY /
 --     OBJECT / SECOND_OBJECT for every experiment-level and sample-level characteristic.
 --     Raw SQL does not keep it in step, so search and the dataset filters read the OLD
---     strings until it is updated in lockstep (join EE2C.ID = CHARACTERISTIC.ID) or the
---     rows are rebuilt. Decide which before committing -- this script does not do it.
+--     strings until it is rebuilt. Do NOT hand-write a lockstep UPDATE -- run the CLI:
+--
+--         ./gemma-cli updateEe2c
+--
+--     TableMaintenanceUtil's insert is an ON DUPLICATE KEY UPDATE over exactly these
+--     columns, so a full re-run rewrites them from CHARACTERISTIC. Pass no -s/--since.
+--
+--     🛑 WAITING FOR THE NIGHTLY JOB DOES NOT WORK. Ee2cUpdateJob passes its previous
+--     fire time as :since, and the predicate is
+--         (CD.LAST_UPDATED is null or :since is null or CD.LAST_UPDATED >= :since)
+--     -- CURATION_DETAILS.LAST_UPDATED, which a raw SQL UPDATE never bumps. Every row
+--     this script touches is invisible to the scheduled job permanently. Only a manual
+--     run with :since null picks them up.
+--
+--     Two caveats. The select groups by (EE, COALESCE(CATEGORY_URI,CATEGORY),
+--     COALESCE(VALUE_URI,VALUE)), so collapsing whitespace merges two groups into one
+--     for free-text rows -- the upsert writes the winner and never deletes the loser,
+--     leaving a duplicate EE2C row. `--truncate` is the clean answer in principle, but
+--     it binds a Class<?> against the varchar LEVEL column and no-ops entirely when no
+--     --level is given, and has zero test coverage. Verify it before trusting it.
+--     The CLI calls /datasets/annotations/refresh itself on success.
 --   * The Hibernate Search index still holds the old strings. Reindex the affected entities
 --     (or accept that search rows lag until the next reindex).
 --   * Collapsing can leave a sample holding two now-identical characteristics where it
