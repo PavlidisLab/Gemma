@@ -42,6 +42,8 @@ import ubic.gemma.core.search.*;
 import ubic.gemma.core.security.concurrent.DelegatingSecurityContextExecutorService;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.core.ontology.lexical.LexicalOntologyTerm;
+import ubic.gemma.core.ontology.lexical.LexicalTermMetadata;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicUtils;
@@ -392,7 +394,7 @@ public class AnnotationsWebService {
             String ontologyVersion = term.getUri() != null
                     ? ontologyService.getVersion( term.getUri(), Math.max( 30000 - timer.getTime(), 0 ), TimeUnit.MILLISECONDS )
                     : null;
-            return respond( new OntologyTermValueObject( term.getUri(), term.getLabel(), definition, term.isObsolete(), usageCount, parentVos, synonyms, alternativeIds, dbXrefs, ontologyVersion ) );
+            return respond( new OntologyTermValueObject( term.getUri(), term.getLabel(), definition, term.isObsolete(), usageCount, parentVos, synonyms, alternativeIds, dbXrefs, ontologyVersion, sourceMetadataOf( term ) ) );
         } catch ( TimeoutException e ) {
             throw new ServiceUnavailableException( DateUtils.addSeconds( new Date(), 30 ), e );
         }
@@ -585,7 +587,8 @@ public class AnnotationsWebService {
             return terms.stream()
                     .map( t -> new AnnotationSearchResultValueObject( t.getLabel(), t.getUri(), null, null,
                             t.getUri() != null ? countsByUri.getOrDefault( t.getUri(), 0 ) : null,
-                            null, null, null, null, null, null, null, null, null, null, null ) )
+                            null, null, null, null, null, null, null, null, null, null, null,
+                            sourceMetadataOf( t ) ) )
                     .collect( Collectors.toList() );
         } catch ( TimeoutException e ) {
             throw new ServiceUnavailableException( DateUtils.addSeconds( new Date(), 30 ), e );
@@ -1729,9 +1732,12 @@ public class AnnotationsWebService {
         Map<String, String> defByUri = new HashMap<>();
         Map<String, List<OntologyTermSimpleValueObject>> parentsByUri = new HashMap<>();
         Map<String, MatchAttribution> matchByUri = new HashMap<>();
+        // Cell-line / strain metadata for hits that came from a flat lexical source. Same enrichment
+        // pass and same top-N budget as definitions — it is read off the term that pass already resolves.
+        Map<String, LexicalTermMetadataValueObject> sourceMetadataByUri = new HashMap<>();
         if ( !topUris.isEmpty() ) {
             try {
-                enrichTopHits( topUris, defByUri, parentsByUri, matchByUri, joinedQuery,
+                enrichTopHits( topUris, defByUri, parentsByUri, matchByUri, sourceMetadataByUri, joinedQuery,
                         Math.max( timeoutMs - timer.getTime(), 0 ) );
             } catch ( TimeoutException e ) {
                 // Budget exhausted mid-enrichment; surface whatever did resolve and leave the rest null.
@@ -1781,7 +1787,8 @@ public class AnnotationsWebService {
             Map<String, Integer> priorCategories = uri != null ? priorCategoriesByUri.get( uri ) : null;
             vos.add( new AnnotationSearchResultValueObject( vo.getValue(), vo.getValueUri(), vo.getCategory(),
                     vo.getCategoryUri(), count, definition, parents, matchedVia, matchedText, null, priorCategories,
-                    null, null, null, null, priorCountFor( vo.getValueUri(), stringPriorByUri ) ) );
+                    null, null, null, null, priorCountFor( vo.getValueUri(), stringPriorByUri ),
+                    sourceMetadataByUri.get( vo.getValueUri() ) ) );
         }
         // Always merge gene hits in, regardless of category — the typeahead surface should
         // surface STAT5B whether the curator is in a Genotype factor, a Treatment factor, or a
@@ -1954,7 +1961,7 @@ public class AnnotationsWebService {
             String taxonScientificName = taxon != null ? taxon.getScientificName() : null;
             out.add( new AnnotationSearchResultValueObject( label, uri, "gene", null,
                     0, null, null, matchedViaToken, label, null, null,
-                    taxonId, taxonCommonName, taxonScientificName, null, null ) );
+                    taxonId, taxonCommonName, taxonScientificName, null, null, null ) );
         }
     }
 
@@ -2046,7 +2053,7 @@ public class AnnotationsWebService {
                         r.getUsageCount(), r.getDefinition(), r.getParents(),
                         r.getMatchedVia(), r.getMatchedText(), c, r.getPriorCategories(),
                         r.getTaxonId(), r.getTaxonCommonName(), r.getTaxonScientificName(), r.getExampleUsage(),
-                        r.getPriorCurationCount() ) );
+                        r.getPriorCurationCount(), r.getSourceMetadata() ) );
             }
         }
         return out;
@@ -2091,7 +2098,7 @@ public class AnnotationsWebService {
                     r.getUsageCount(), r.getDefinition(), r.getParents(),
                     r.getMatchedVia(), r.getMatchedText(), r.getGeneCount(), r.getPriorCategories(),
                     r.getTaxonId(), r.getTaxonCommonName(), r.getTaxonScientificName(),
-                    toExampleUsageVo( ex ), r.getPriorCurationCount() ) );
+                    toExampleUsageVo( ex ), r.getPriorCurationCount(), r.getSourceMetadata() ) );
         }
     }
 
@@ -2208,6 +2215,7 @@ public class AnnotationsWebService {
             Map<String, String> defByUri,
             Map<String, List<OntologyTermSimpleValueObject>> parentsByUri,
             Map<String, MatchAttribution> matchByUri,
+            Map<String, LexicalTermMetadataValueObject> sourceMetaByUri,
             String originalQuery,
             long budgetMs ) throws TimeoutException {
         StopWatch local = StopWatch.createStarted();
@@ -2218,7 +2226,7 @@ public class AnnotationsWebService {
         // locks under burst load.
         int parallelism = Math.min( topUris.size(), 8 );
         if ( parallelism <= 1 ) {
-            enrichOne( topUris.iterator().next(), defByUri, parentsByUri, matchByUri,
+            enrichOne( topUris.iterator().next(), defByUri, parentsByUri, matchByUri, sourceMetaByUri,
                     originalQuery, Math.max( budgetMs - local.getTime(), 0 ) );
             return;
         }
@@ -2229,7 +2237,7 @@ public class AnnotationsWebService {
                 tasks.add( pool.submit( () -> {
                     long remaining = Math.max( budgetMs - local.getTime(), 0 );
                     if ( remaining <= 0 ) return;
-                    enrichOne( uri, defByUri, parentsByUri, matchByUri, originalQuery, remaining );
+                    enrichOne( uri, defByUri, parentsByUri, matchByUri, sourceMetaByUri, originalQuery, remaining );
                 } ) );
             }
             long deadline = System.currentTimeMillis() + budgetMs;
@@ -2379,6 +2387,7 @@ public class AnnotationsWebService {
             Map<String, String> defByUri,
             Map<String, List<OntologyTermSimpleValueObject>> parentsByUri,
             Map<String, MatchAttribution> matchByUri,
+            Map<String, LexicalTermMetadataValueObject> sourceMetaByUri,
             String originalQuery,
             long remaining ) {
         if ( remaining <= 0 ) return;
@@ -2405,6 +2414,10 @@ public class AnnotationsWebService {
                         + "Likely cause: owning ontology not loaded or still initializing.",
                         uri, originalQuery );
                 return;
+            }
+            LexicalTermMetadataValueObject meta = sourceMetadataOf( term );
+            if ( meta != null ) {
+                synchronized ( sourceMetaByUri ) { sourceMetaByUri.put( uri, meta ); }
             }
             MatchAttribution attribution = computeMatchAttribution( term, originalQuery );
             if ( attribution != null ) {
@@ -3105,6 +3118,27 @@ public class AnnotationsWebService {
         return result;
     }
 
+    /**
+     * Project the descriptive metadata of a flat lexical term (Cellosaurus / MGI) onto the wire, or null
+     * for terms from a real ontology, which carry none.
+     */
+    @Nullable
+    static LexicalTermMetadataValueObject sourceMetadataOf( @Nullable OntologyTerm term ) {
+        if ( !( term instanceof LexicalOntologyTerm ) ) {
+            return null;
+        }
+        LexicalTermMetadata m = ( ( LexicalOntologyTerm ) term ).getMetadata();
+        if ( m.isEmpty() ) {
+            return null;
+        }
+        List<TaxonValueObject> species = new ArrayList<>( m.species().size() );
+        for ( LexicalTermMetadata.Taxon tx : m.species() ) {
+            species.add( new TaxonValueObject( tx.ncbiTaxonId(), tx.label() ) );
+        }
+        return new LexicalTermMetadataValueObject( species, m.cellLineType(), m.sex(), m.strainType(),
+                m.problematic() );
+    }
+
     @Value
     public static class AnnotationSearchResultValueObject {
         String value;
@@ -3204,6 +3238,21 @@ public class AnnotationsWebService {
          * figure that shows whether curators were actually consistent.</p>
          */
         @Nullable Long priorCurationCount;
+        /**
+         * Descriptive metadata for hits that came from a flat lexical source (Cellosaurus cell lines, MGI
+         * mouse strains): species, cell-line type, donor sex, strain type, and any problematic-entry flag.
+         * Null for hits from a real ontology, which carry none of this.
+         *
+         * <p>A cell-line name on its own is not actionable — it does not say which organism the line came
+         * from, and it does not say the line is a known misidentified one. Both facts exist in the source
+         * and used to be dropped at parse time. This is descriptive metadata about the term, like
+         * {@link #definition}; it is NOT a value to annotate an experiment with.</p>
+         *
+         * <p>🛑 Gemma does not filter these vocabularies by species — see
+         * {@link LexicalTermMetadataValueObject}. Scoping is the caller's decision, made with
+         * {@code ncbiTaxonId} in hand.</p>
+         */
+        @Nullable LexicalTermMetadataValueObject sourceMetadata;
     }
 
     /**
@@ -3269,6 +3318,60 @@ public class AnnotationsWebService {
          * confusion when terms are added, merged, or obsoleted between releases.
          */
         @Nullable String ontologyVersion;
+        /**
+         * Descriptive metadata from a flat lexical source (Cellosaurus cell lines, MGI mouse strains) —
+         * species, cell-line type, donor sex, strain type, and any problematic-entry flag. Null for terms
+         * from a real ontology, which carry none of this.
+         * <p>
+         * A cell-line NAME alone is not enough to act on: it does not say which organism it came from, and
+         * it does not say that the line is a known misidentified one. This carries those facts so the
+         * caller can decide. It is descriptive metadata about the term, in the same spirit as
+         * {@link #definition} — NOT something to annotate an experiment with.
+         */
+        @Nullable LexicalTermMetadataValueObject sourceMetadata;
+    }
+
+    /**
+     * Wire shape for {@link ubic.gemma.core.ontology.lexical.LexicalTermMetadata}.
+     * <p>
+     * 🛑 Gemma does NOT filter these vocabularies by species — every cell line is searchable whatever
+     * organism it came from. Restricting the catalogue to the taxa Gemma currently supports was considered
+     * and rejected, because a baked-in scope silently drops hits the day the project widens and the
+     * failure looks like a broken resolver rather than a policy. Any species scoping belongs to the
+     * CALLER, which is why {@code ncbiTaxonId} is reported and not just a name.
+     */
+    @Value
+    public static class LexicalTermMetadataValueObject {
+        /**
+         * Every organism the entry derives from, in source order. A LIST because hybridomas and hybrid
+         * cell lines genuinely derive from more than one — collapsing them to a single taxon would invent
+         * a fact. Empty when the source does not say.
+         */
+        List<TaxonValueObject> species;
+        /** Cellosaurus cell-line category, e.g. {@code Cancer cell line}, {@code Hybridoma}. */
+        @Nullable String cellLineType;
+        /** Donor sex where stated. Held apart from {@code cellLineType} even though Cellosaurus packs both into one field. */
+        @Nullable String sex;
+        /** MGI strain category, e.g. {@code inbred strain}, {@code congenic}. */
+        @Nullable String strainType;
+        /**
+         * Non-null iff the source flags this entry as problematic, carrying the reason — most often
+         * {@code Misidentified/contaminated}. Advisory: something a curator should see before picking the
+         * term, not a value to tag an experiment with.
+         */
+        @Nullable String problematic;
+    }
+
+    /** An organism an entry derives from. */
+    @Value
+    public static class TaxonValueObject {
+        /**
+         * NCBI taxonomy id. The reason this is not just a label: <i>Rattus norvegicus</i> (10116) and
+         * <i>Rattus rattus</i> (10117) both read as "rat", so a name alone cannot separate them.
+         */
+        int ncbiTaxonId;
+        /** The source's own rendering, e.g. {@code Homo sapiens (Human)}. */
+        @Nullable String label;
     }
 
     @Value

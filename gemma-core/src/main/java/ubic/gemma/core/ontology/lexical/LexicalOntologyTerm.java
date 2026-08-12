@@ -27,8 +27,31 @@ import java.util.Collections;
  */
 public class LexicalOntologyTerm extends OntologyTermSimple {
 
+    /**
+     * OBO/IAO definition predicate. Cellosaurus has no definition field, but its {@code comment:} plays the
+     * same role, so exposing it here means {@code OntologyService.getDefinition} — and therefore the
+     * existing /annotations/search enrichment — surfaces it with no special-casing for lexical sources.
+     */
+    private static final String DEFINITION_URI = "http://purl.obolibrary.org/obo/IAO_0000115";
+
+    private final LexicalTermMetadata metadata;
+
     public LexicalOntologyTerm( String uri, @Nullable String label ) {
+        this( uri, label, LexicalTermMetadata.EMPTY );
+    }
+
+    public LexicalOntologyTerm( String uri, @Nullable String label, @Nullable LexicalTermMetadata metadata ) {
         super( uri, label );
+        this.metadata = metadata == null ? LexicalTermMetadata.EMPTY : metadata;
+    }
+
+    /**
+     * Descriptive metadata from the source vocabulary — species, cell-line type, donor sex, strain type,
+     * and any problematic-entry flag. Never null; {@link LexicalTermMetadata#EMPTY} when the source says
+     * nothing.
+     */
+    public LexicalTermMetadata getMetadata() {
+        return metadata;
     }
 
     @Override
@@ -58,12 +81,16 @@ public class LexicalOntologyTerm extends OntologyTermSimple {
 
     @Override
     public Collection<AnnotationProperty> getAnnotations( String propertyUri ) {
-        return Collections.emptySet();
+        AnnotationProperty p = getAnnotation( propertyUri );
+        return p != null ? Collections.singleton( p ) : Collections.emptySet();
     }
 
     @Nullable
     @Override
     public AnnotationProperty getAnnotation( String propertyUri ) {
+        if ( DEFINITION_URI.equals( propertyUri ) && metadata.comment() != null ) {
+            return new LexicalAnnotationProperty( DEFINITION_URI, metadata.comment() );
+        }
         return null;
     }
 
