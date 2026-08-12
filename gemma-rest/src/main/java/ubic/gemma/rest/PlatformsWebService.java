@@ -505,7 +505,7 @@ public class PlatformsWebService {
                 + ArrayDesignAnnotationService.STANDARD_FILE_SUFFIX
                 + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX;
         java.nio.file.Path file = annotationFileService.getAnnotDataDir().resolve( fileName );
-        if ( !force || !Files.exists( file ) ) {
+        if ( force || !Files.exists( file ) ) {
             try {
                 // generate it. This will cause a delay, and potentially a time-out, but better than a 404
                 // To speed things up, we don't delete other files
