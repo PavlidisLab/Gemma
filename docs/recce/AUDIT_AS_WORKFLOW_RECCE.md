@@ -1,5 +1,12 @@
 # Audit-system as workflow / ticket tracker — Phase 3 recce
 
+> **Follow-on (2026-08-11):** Option B and Decisions 1–7 below shipped as the
+> ticket layer (mysql `V3`, `V19`). The next question — whether the eight-value
+> `WorkflowState` can express the curation/analysis fork, and where the
+> machine-QC verdict is stored now that `V21` dropped `AGENT_PROPOSAL` — is
+> taken up in [`WORKFLOW_STATE_TRACKS_RECCE.md`](WORKFLOW_STATE_TRACKS_RECCE.md).
+> Nothing below is superseded.
+
 **Filed:** 2026-05-19. Companion to the in-flight `AUDIT_SYSTEM_AUDIT.md`
 (parallel recce on current-state + `@Audited(EventType.class)` migration
 scope) and to `AGENT_WRITEBACK_RECCE.md` (the writeback side of the same
