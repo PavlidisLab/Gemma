@@ -21,6 +21,11 @@ public final class Categories {
     public static final Category ORGANISM_PART = new Category( "organism part", "http://www.ebi.ac.uk/efo/EFO_0000635" );
     public static final Category DEVELOPMENT_STAGE = new Category( "development stage", "http://www.ebi.ac.uk/efo/EFO_0000399" );
     public static final Category DISEASE = new Category( "disease", "http://www.ebi.ac.uk/efo/EFO_0000408" );
+    /**
+     * Gemma's own category (see {@code EFO.factor.categories.txt}) for "this experiment is a model of a
+     * disease", as distinct from {@link #DISEASE}, which says the subject has it.
+     */
+    public static final Category DISEASE_MODEL = new Category( "disease model", "http://gemma.msl.ubc.ca/ont/TGEMO_00101" );
 
     /**
      * Represent a mask for a set of data.

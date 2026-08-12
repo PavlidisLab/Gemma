@@ -118,6 +118,9 @@ public class CharacteristicDaoTest extends BaseDatabaseTest5 {
     @Autowired
     private MutableAclService aclService;
 
+    /** Taxa are unique on COMMON_NAME, so the disease-model tests share one per name. */
+    private final Map<String, Taxon> taxa = new HashMap<>();
+
     /* fixtures */
     private Collection<Characteristic> characteristics;
 
@@ -611,6 +614,207 @@ public class CharacteristicDaoTest extends BaseDatabaseTest5 {
         sessionFactory.getCurrentSession().persist( c );
         assertThat( characteristicDao.findValueGroupedByValueUri( null, true, true, true, -1 ) )
                 .containsEntry( "test", "test" );
+    }
+
+    /**
+     * The inference the whole thing exists for: a study annotated with a genotype AND a disease attests that
+     * the genotype stands for the disease, so a later disease query can reach studies carrying only the
+     * genotype.
+     */
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testFindDiseaseModelInferences() {
+        String rett = "http://purl.obolibrary.org/obo/MONDO_0010726";
+        String mecp2 = "http://purl.org/commons/record/ncbi_gene/17257";
+        createExperimentWithGenotypeAndDisease( "mouse", mecp2, "Homozygous negative Mecp2", rett, "Rett syndrome" );
+        createExperimentWithGenotypeAndDisease( "mouse", mecp2, "Homozygous negative Mecp2", rett, "Rett syndrome" );
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
+        sessionFactory.getCurrentSession().flush();
+
+        List<CharacteristicDao.DiseaseModelInference> inferences = characteristicDao.findDiseaseModelInferences(
+                Collections.singleton( rett ), Collections.emptySet(), Collections.emptySet(),
+                Collections.singleton( "genotype" ), Collections.emptySet(), 1, 10 );
+
+        assertThat( inferences ).singleElement().satisfies( i -> {
+            assertThat( i.value ).isEqualTo( "Homozygous negative Mecp2" );
+            assertThat( i.valueUri ).isEqualTo( mecp2 );
+            assertThat( i.diseaseValueUri ).isEqualTo( rett );
+            assertThat( i.numberOfExperiments ).isEqualTo( 2 );
+            assertThat( i.numberOfExperimentsWithValue ).isEqualTo( 2 );
+            assertThat( i.numberOfDiseasesAttested ).isEqualTo( 1 );
+            assertThat( i.getSpecificity() ).isEqualTo( 1.0 );
+            // a whole-experiment tag, not a factor value
+            assertThat( i.numberOfExperimentsAsExperimentTag ).isEqualTo( 2 );
+            assertThat( i.numberOfExperimentsAsFactorValue ).isZero();
+        } );
+    }
+
+    /**
+     * Asked from the model side — what an experiment page asks about its own genotype.
+     */
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testFindDiseaseModelInferencesFromTheModelSide() {
+        String alzheimer = "http://purl.obolibrary.org/obo/MONDO_0004975";
+        // the strain-shaped genotypes have no URI at all, which is exactly why the value can seed the query
+        createExperimentWithGenotypeAndDisease( "mouse", null, "APP/PS1", alzheimer, "Alzheimer disease" );
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
+        sessionFactory.getCurrentSession().flush();
+
+        assertThat( characteristicDao.findDiseaseModelInferences( Collections.emptySet(), Collections.emptySet(),
+                Collections.singleton( "APP/PS1" ), Collections.singleton( "genotype" ), Collections.emptySet(), 1, 10 ) )
+                .singleElement()
+                .satisfies( i -> {
+                    assertThat( i.value ).isEqualTo( "APP/PS1" );
+                    assertThat( i.valueUri ).isNull();
+                    assertThat( i.diseaseValue ).isEqualTo( "Alzheimer disease" );
+                } );
+    }
+
+    /**
+     * 🛑 The property the whole ranking turns on. A background strain co-occurs with every disease in the
+     * corpus and models none of them — the obesity is diet-induced, the stroke surgical — so it must not
+     * outrank a real model just by appearing more often. Support alone would put it on top.
+     */
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testBackgroundStrainDoesNotOutrankAModel() {
+        String obesity = "http://purl.obolibrary.org/obo/MONDO_0011122";
+        String stroke = "http://purl.obolibrary.org/obo/MONDO_0005098";
+        String lep = "http://purl.org/commons/record/ncbi_gene/16846";
+        // the strain appears against obesity three times, and against another disease twice more
+        for ( int i = 0; i < 3; i++ ) {
+            createExperimentWithGenotypeAndDisease( "mouse", null, "C57BL/6J", obesity, "obesity" );
+        }
+        for ( int i = 0; i < 2; i++ ) {
+            createExperimentWithGenotypeAndDisease( "mouse", null, "C57BL/6J", stroke, "ischemic stroke" );
+        }
+        // the model appears against obesity twice, and nowhere else
+        for ( int i = 0; i < 2; i++ ) {
+            createExperimentWithGenotypeAndDisease( "mouse", lep, "Homozygous negative Lep", obesity, "obesity" );
+        }
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
+        sessionFactory.getCurrentSession().flush();
+
+        List<CharacteristicDao.DiseaseModelInference> inferences = characteristicDao.findDiseaseModelInferences(
+                Collections.singleton( obesity ), Collections.emptySet(), Collections.emptySet(),
+                Collections.singleton( "genotype" ), Collections.emptySet(), 1, 10 );
+
+        assertThat( inferences ).hasSize( 2 );
+        assertThat( inferences.get( 0 ).value )
+                .as( "the specific model outranks the strain despite less support" )
+                .isEqualTo( "Homozygous negative Lep" );
+        assertThat( inferences.get( 0 ).numberOfExperiments ).isEqualTo( 2 );
+        assertThat( inferences.get( 0 ).getSpecificity() ).isEqualTo( 1.0 );
+        assertThat( inferences.get( 1 ).value ).isEqualTo( "C57BL/6J" );
+        assertThat( inferences.get( 1 ).numberOfExperiments ).isEqualTo( 3 );
+        assertThat( inferences.get( 1 ).numberOfExperimentsWithValue ).isEqualTo( 5 );
+        assertThat( inferences.get( 1 ).numberOfDiseasesAttested ).isEqualTo( 2 );
+        assertThat( inferences.get( 1 ).getSpecificity() ).isEqualTo( 0.6 );
+    }
+
+    /**
+     * A human carrying a variant HAS the disease; a mouse carrying the null MODELS it. Same derivation, two
+     * different claims, and the taxon is what decides.
+     */
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testInferredCategoryFollowsTheTaxon() {
+        String parkinson = "http://purl.obolibrary.org/obo/MONDO_0005180";
+        String lrrk2 = "http://purl.org/commons/record/ncbi_gene/120892";
+        createExperimentWithGenotypeAndDisease( "human", lrrk2, "G2019S/? LRRK2", parkinson, "Parkinson disease" );
+        createExperimentWithGenotypeAndDisease( "mouse", lrrk2, "G2019S/? LRRK2", parkinson, "Parkinson disease" );
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
+        sessionFactory.getCurrentSession().flush();
+
+        List<CharacteristicDao.DiseaseModelInference> inferences = characteristicDao.findDiseaseModelInferences(
+                Collections.singleton( parkinson ), Collections.emptySet(), Collections.emptySet(),
+                Collections.singleton( "genotype" ), Collections.emptySet(), 1, 10 );
+
+        // one row per taxon: the taxon is part of the grain because it changes what the inference says
+        assertThat( inferences ).hasSize( 2 );
+        assertThat( inferences )
+                .filteredOn( i -> "human".equals( i.taxonCommonName ) )
+                .singleElement()
+                .satisfies( i -> assertThat( i.getInferredCategory() ).isEqualTo( Categories.DISEASE ) );
+        assertThat( inferences )
+                .filteredOn( i -> "mouse".equals( i.taxonCommonName ) )
+                .singleElement()
+                .satisfies( i -> assertThat( i.getInferredCategory() ).isEqualTo( Categories.DISEASE_MODEL ) );
+    }
+
+    /**
+     * A control arm models nothing, whichever way it was written.
+     */
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testWildTypeIsNotAModel() {
+        String rett = "http://purl.obolibrary.org/obo/MONDO_0010726";
+        createExperimentWithGenotypeAndDisease( "mouse", null, "wild type genotype", rett, "Rett syndrome" );
+        createExperimentWithGenotypeAndDisease( "mouse", "http://www.ebi.ac.uk/efo/EFO_0005168", "WT", rett, "Rett syndrome" );
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
+        sessionFactory.getCurrentSession().flush();
+
+        assertThat( characteristicDao.findDiseaseModelInferences( Collections.singleton( rett ),
+                Collections.emptySet(), Collections.emptySet(), Collections.singleton( "genotype" ),
+                Collections.emptySet(), 1, 10 ) ).isEmpty();
+    }
+
+    /**
+     * Holding the dataset out is what makes "this tag is inferable, so it could be dropped" an honest claim
+     * instead of a restatement of the tag being tested. With the only attesting dataset excluded, nothing is
+     * left to infer from.
+     */
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testExcludedExperimentsDoNotAttest() {
+        String rett = "http://purl.obolibrary.org/obo/MONDO_0010726";
+        String mecp2 = "http://purl.org/commons/record/ncbi_gene/17257";
+        Long onlyWitness = createExperimentWithGenotypeAndDisease( "mouse", mecp2, "Homozygous negative Mecp2", rett, "Rett syndrome" );
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
+        sessionFactory.getCurrentSession().flush();
+
+        assertThat( characteristicDao.findDiseaseModelInferences( Collections.singleton( rett ),
+                Collections.emptySet(), Collections.emptySet(), Collections.singleton( "genotype" ),
+                Collections.emptySet(), 1, 10 ) ).hasSize( 1 );
+        assertThat( characteristicDao.findDiseaseModelInferences( Collections.singleton( rett ),
+                Collections.emptySet(), Collections.emptySet(), Collections.singleton( "genotype" ),
+                Collections.singleton( onlyWitness ), 1, 10 ) )
+                .as( "the dataset carrying the tag cannot be its own evidence" )
+                .isEmpty();
+    }
+
+    /**
+     * Neither side constrained is a request to enumerate the corpus, and is refused.
+     */
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testUnconstrainedInferenceReturnsNothing() {
+        assertThat( characteristicDao.findDiseaseModelInferences( Collections.emptySet(), Collections.emptySet(),
+                Collections.emptySet(), Collections.singleton( "genotype" ), Collections.emptySet(), 1, 10 ) )
+                .isEmpty();
+    }
+
+    /**
+     * @return the id of the created experiment
+     */
+    private Long createExperimentWithGenotypeAndDisease( String taxonCommonName, @Nullable String genotypeUri,
+            String genotypeValue, String diseaseUri, String diseaseValue ) {
+        Taxon taxon = taxa.computeIfAbsent( taxonCommonName, name -> {
+            Taxon t = new Taxon();
+            t.setCommonName( name );
+            t.setNcbiId( "human".equals( name ) ? 9606 : 10090 );
+            sessionFactory.getCurrentSession().persist( t );
+            return t;
+        } );
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setTaxon( taxon );
+        ee.getCharacteristics().add( createCharacteristic( Categories.GENOTYPE, genotypeUri, genotypeValue ) );
+        ee.getCharacteristics().add( createCharacteristic( Categories.DISEASE, diseaseUri, diseaseValue ) );
+        sessionFactory.getCurrentSession().persist( ee );
+        sessionFactory.getCurrentSession().flush();
+        aclService.createAcl( new AclObjectIdentity( ExpressionExperiment.class, ee.getId() ) );
+        return ee.getId();
     }
 
     private Characteristic createCharacteristic( @Nullable String valueUri, String value ) {

@@ -94,6 +94,15 @@ public interface CharacteristicReadService {
     Map<String, CharacteristicDao.UsageExample> findRepresentativeUsageByValueUris( Collection<String> valueUris );
 
     /**
+     * Infer which annotation values stand for the given diseases, from curation the corpus already carries.
+     *
+     * @see CharacteristicDao#findDiseaseModelInferences(Collection, Collection, Collection, Collection, Collection, int, int)
+     */
+    List<CharacteristicDao.DiseaseModelInference> findDiseaseModelInferences( Collection<String> diseaseValueUris,
+            Collection<String> modelValueUris, Collection<String> modelValues, Collection<String> modelCategories,
+            Collection<Long> excludedExperimentIds, int minimumSupport, int maxResults );
+
+    /**
      * Returns a collection of characteristics that have a value starting with the given string.
      */
     Collection<Characteristic> findByValueStartingWith( String search, @Nullable String category, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, int maxResults );

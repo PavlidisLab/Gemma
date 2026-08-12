@@ -91,6 +91,20 @@ public interface CharacteristicService extends BaseService<Characteristic>, Filt
     Map<String, CharacteristicDao.UsageExample> findRepresentativeUsageByValueUris( Collection<String> valueUris );
 
     /**
+     * Infer which annotation values stand for the given diseases — the genotypes (or exposures, or any other
+     * category asked for) that curated experiments attest as models of them, so a user picking a disease can
+     * still be shown the studies that annotate only the model.
+     * <p>
+     * Derived on demand from annotations already in the corpus; writes nothing, and every row carries the
+     * experiment count and an example dataset that produced it.
+     *
+     * @see CharacteristicDao#findDiseaseModelInferences(Collection, Collection, Collection, Collection, Collection, int, int)
+     */
+    List<CharacteristicDao.DiseaseModelInference> findDiseaseModelInferences( Collection<String> diseaseValueUris,
+            Collection<String> modelValueUris, Collection<String> modelValues, Collection<String> modelCategories,
+            Collection<Long> excludedExperimentIds, int minimumSupport, int maxResults );
+
+    /**
      * Returns a collection of characteristics that have a value starting with the given string.
      * <p>
      * The value is usually a human-readable form of the termURI. SQL {@code LIKE} patterns are escaped. Use

@@ -167,6 +167,37 @@ def annotation_cases() -> list[Case]:
     return out
 
 
+def disease_model_cases() -> list[Case]:
+    """`/annotations/diseaseModels` — the disease checkboxes in the browser reach
+    through to this, and the experiment page calls it per dataset, so it sits on
+    two interactive paths and has to stay well under the 100 ms "don't bother
+    caching" line. Both directions and both shapes of input are probed:
+
+    * a well-attested disease (Alzheimer) vs a broad one (cancer, whose sub-term
+      inference fans out furthest),
+    * the model side seeded by a URI-less value, which is the experiment-page call,
+    * a background strain, whose specificity denominator is the widest scan the
+      query can be asked to do.
+    """
+    alzheimer = "http%3A%2F%2Fpurl.obolibrary.org%2Fobo%2FMONDO_0004975"
+    cancer = "http%3A%2F%2Fpurl.obolibrary.org%2Fobo%2FMONDO_0004992"
+    parkinson = "http%3A%2F%2Fpurl.obolibrary.org%2Fobo%2FMONDO_0005180"
+    return [
+        Case("disease-models", "alzheimer (genotype,strain)",
+             f"/rest/v2/annotations/diseaseModels?uri={alzheimer}"),
+        Case("disease-models", "alzheimer no sub-terms",
+             f"/rest/v2/annotations/diseaseModels?uri={alzheimer}&inferSubTerms=false"),
+        Case("disease-models", "cancer (broad sub-tree)",
+             f"/rest/v2/annotations/diseaseModels?uri={cancer}"),
+        Case("disease-models", "parkinson + treatment",
+             f"/rest/v2/annotations/diseaseModels?uri={parkinson}&category=genotype,strain,treatment"),
+        Case("disease-models", "reverse: APP/PS1",
+             "/rest/v2/annotations/diseaseModels?value=APP%2FPS1&category="),
+        Case("disease-models", "reverse: background strain",
+             "/rest/v2/annotations/diseaseModels?value=C57BL%2F6J&category="),
+    ]
+
+
 def goterm_cases() -> list[Case]:
     # Mix of narrow and broad GO subtrees; uses the GO:N short form (URL-safe
     # in path; the full URI is rejected by Tomcat's allowEncodedSlash=false).
@@ -215,6 +246,7 @@ def all_cases(only: set[str] | None) -> list[Case]:
     matrix = {
         "genes":       gene_cases,
         "annotations": annotation_cases,
+        "disease-models": disease_model_cases,
         "goterms":     goterm_cases,
         "datasets":    dataset_cases,
         "diffex":      diffex_cases,

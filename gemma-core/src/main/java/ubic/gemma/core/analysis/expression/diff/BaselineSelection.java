@@ -101,6 +101,28 @@ public class BaselineSelection {
     );
 
     /**
+     * The values recognised as baseline, for callers holding a bare value rather than an entity.
+     * <p>
+     * The co-annotation query reads the denormalised {@code EE2C} view and has to drop control arms in SQL
+     * — a wild-type arm is not a model of the disease its experiment is about — so it needs the same
+     * recognition this class applies when picking a DEA baseline rather than a second list beside it.
+     *
+     * @see #getControlGroupUris()
+     */
+    public static Set<String> getControlGroupTerms() {
+        return controlGroupTerms;
+    }
+
+    /**
+     * The URIs recognised as baseline.
+     *
+     * @see #getControlGroupTerms()
+     */
+    public static Set<String> getControlGroupUris() {
+        return controlGroupUris;
+    }
+
+    /**
      * Create an immutable, case-insensitive set.
      */
     private static Set<String> createTermSet( String... terms ) {

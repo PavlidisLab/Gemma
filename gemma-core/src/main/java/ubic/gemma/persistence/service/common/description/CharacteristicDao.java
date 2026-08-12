@@ -20,6 +20,8 @@ package ubic.gemma.persistence.service.common.description;
 
 import ubic.gemma.model.annotations.MayBeUninitialized;
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.description.Categories;
+import ubic.gemma.model.common.description.Category;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicUtils;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
@@ -41,6 +43,14 @@ import java.util.Set;
  */
 public interface CharacteristicDao
         extends BrowsingDao<Characteristic>, FilteringVoEnabledDao<Characteristic, CharacteristicValueObject> {
+
+    /**
+     * NCBI taxonomy id for human, which decides whether a disease inference reads as
+     * {@code disease} or {@code disease model}.
+     *
+     * @see DiseaseModelInference#getInferredCategory()
+     */
+    int HUMAN_NCBI_TAXON_ID = 9606;
 
     /**
      * Browse through the characteristics, excluding GO annotations.
@@ -164,6 +174,178 @@ public interface CharacteristicDao
      * on the indexed {@code VALUE_URI} column.
      */
     Map<String, UsageExample> findRepresentativeUsageByValueUris( Collection<String> valueUris );
+
+    /**
+     * An annotation value inferred to stand for a disease, recovered from curation Gemma already holds.
+     * <p>
+     * Curation policy records a mutant/wild-type contrast as a {@code genotype} factor, not a
+     * {@code disease model} one — the mutation is what varies across samples, and that is what a factor is
+     * for. The disease then lives nowhere on studies that annotate only the genotype, and a user picking
+     * "autism" in the disease selector stops finding the {@code Chd8} mutant studies. The relation is
+     * recoverable rather than lost: an experiment annotated BOTH {@code genotype = Homozygous negative
+     * Mecp2} and {@code disease = Rett syndrome} attests that the genotype stands for the disease, and 16
+     * such experiments attest it 16 times over. Nothing here asserts anything — the inference is only as
+     * good as the curation behind it, which is why {@link #numberOfExperiments} and
+     * {@link #exampleExperimentId} travel with every row and no annotation is ever written.
+     * <p>
+     * <b>What the inferred annotation would say depends on the taxon</b>, which is why {@link #taxonId} is
+     * part of the grain. A mouse carrying the {@code Mecp2} null is a MODEL of Rett syndrome; a human
+     * iPSC line carrying {@code LRRK2 G2019S} is not modelling Parkinson disease, it HAS it. So the same
+     * derivation yields {@code disease model = D} for a non-human experiment and {@code disease = D} for a
+     * human one — see {@link #getInferredCategory()}.
+     * <p>
+     * The key is the whole annotation VALUE, not a gene or any parse of one: {@code Myc} overexpression and
+     * {@code Myc} knockdown accompany different diseases, and {@code APP/PS1}, {@code 5xFAD} or
+     * {@code trisomy 21} name no gene at all. {@link #valueUri} is null for values never grounded in an
+     * ontology, so both it and {@link #value} are carried and either can drive a query.
+     * <p>
+     * 🛑 <b>Support alone is the wrong rank, and confidently so.</b> {@code C57BL/6J} co-occurs with every
+     * disease in the corpus and models none of them; the disease in those experiments is induced by diet,
+     * by surgery, by noise, or belongs to the cell line rather than to the strain. What separates
+     * {@code Mecp2} null (attested against Rett syndrome and little else) from {@code C57BL/6J} (attested
+     * against hundreds of diseases) is not how often the pair appears but what FRACTION of the value's
+     * experiments it accounts for — see {@link #getSpecificity()}, which is why
+     * {@link #numberOfExperimentsWithValue} and {@link #numberOfDiseasesAttested} are part of every row and
+     * not an optional extra. A ranking on raw count puts the strains on top.
+     */
+    class DiseaseModelInference {
+        @Nullable
+        public final String value, valueUri, category, categoryUri;
+        /**
+         * The disease term this value was inferred to stand for — one of the URIs passed in, so a caller
+         * that expanded a term to its sub-classes can still say which one did the matching.
+         */
+        public final String diseaseValueUri;
+        @Nullable
+        public final String diseaseValue;
+        @Nullable
+        public final Long taxonId;
+        @Nullable
+        public final String taxonCommonName;
+        @Nullable
+        public final Integer taxonNcbiId;
+        /**
+         * Distinct accessible experiments attesting the inference. The confidence weight.
+         */
+        public final long numberOfExperiments;
+        /**
+         * The same count split by where the annotation sits, since a factor value (the property varies
+         * across samples) and an experiment tag (it holds of the whole experiment) are different evidence.
+         */
+        public final long numberOfExperimentsAsFactorValue, numberOfExperimentsAsExperimentTag, numberOfExperimentsAsSampleCharacteristic;
+        /**
+         * One accessible experiment attesting it, so a client can link straight to the evidence.
+         */
+        public final long exampleExperimentId;
+        /**
+         * Every experiment carrying this value in this category, whatever disease it was about — the
+         * denominator that tells {@code Mecp2} null apart from {@code C57BL/6J}.
+         */
+        public final long numberOfExperimentsWithValue;
+        /**
+         * Distinct diseases this value has been attested against anywhere in the corpus. One or two is a
+         * model; hundreds is a background strain, or a drug tested against everything.
+         */
+        public final long numberOfDiseasesAttested;
+
+        public DiseaseModelInference( @Nullable String value, @Nullable String valueUri, @Nullable String category,
+                @Nullable String categoryUri, String diseaseValueUri, @Nullable String diseaseValue,
+                @Nullable Long taxonId, @Nullable String taxonCommonName, @Nullable Integer taxonNcbiId,
+                long numberOfExperiments, long numberOfExperimentsAsFactorValue, long numberOfExperimentsAsExperimentTag,
+                long numberOfExperimentsAsSampleCharacteristic, long exampleExperimentId,
+                long numberOfExperimentsWithValue, long numberOfDiseasesAttested ) {
+            this.value = value;
+            this.valueUri = valueUri;
+            this.category = category;
+            this.categoryUri = categoryUri;
+            this.diseaseValueUri = diseaseValueUri;
+            this.diseaseValue = diseaseValue;
+            this.taxonId = taxonId;
+            this.taxonCommonName = taxonCommonName;
+            this.taxonNcbiId = taxonNcbiId;
+            this.numberOfExperiments = numberOfExperiments;
+            this.numberOfExperimentsAsFactorValue = numberOfExperimentsAsFactorValue;
+            this.numberOfExperimentsAsExperimentTag = numberOfExperimentsAsExperimentTag;
+            this.numberOfExperimentsAsSampleCharacteristic = numberOfExperimentsAsSampleCharacteristic;
+            this.exampleExperimentId = exampleExperimentId;
+            this.numberOfExperimentsWithValue = numberOfExperimentsWithValue;
+            this.numberOfDiseasesAttested = numberOfDiseasesAttested;
+        }
+
+        /**
+         * The category the inferred annotation would carry: {@code disease} when the experiment is human —
+         * the subject has the disease — and {@code disease model} otherwise.
+         * <p>
+         * Taxon-unknown experiments (a null {@code TAXON_FK}) fall to {@code disease model}, the weaker of
+         * the two claims.
+         */
+        public Category getInferredCategory() {
+            return taxonNcbiId != null && taxonNcbiId == HUMAN_NCBI_TAXON_ID
+                    ? Categories.DISEASE
+                    : Categories.DISEASE_MODEL;
+        }
+
+        /**
+         * The fraction of this value's experiments that are about this disease, in {@code [0, 1]}.
+         * <p>
+         * This is what makes the inference safe to act on. {@code Abca4} null is annotated retinal
+         * degeneration nearly every time it appears — a high fraction, and the disease-model tag on such a
+         * study is recoverable without it. {@code C57BL/6J} appears against obesity in a handful of the many
+         * hundreds of experiments that use the strain, and obesity there is diet-induced: a low fraction,
+         * and the tag has to stay because nothing else carries the disease.
+         */
+        public double getSpecificity() {
+            return numberOfExperimentsWithValue > 0 ? ( double ) numberOfExperiments / numberOfExperimentsWithValue : 0;
+        }
+
+        /**
+         * Rank key: support weighted by specificity, so a pair needs BOTH to come out on top. Equivalent to
+         * {@code support² / experiments-with-value}.
+         */
+        public double getScore() {
+            return numberOfExperiments * getSpecificity();
+        }
+    }
+
+    /**
+     * Infer which annotation values stand for which diseases, from curation the corpus already carries.
+     * <p>
+     * Seed EITHER side. Constrain the disease side ({@code diseaseValueUris}) to ask "what models Alzheimer
+     * disease?"; constrain the model side ({@code modelValueUris} / {@code modelValues}) to ask "what does
+     * this genotype model?", which is the question an experiment page asks about its own annotations and the
+     * question behind dropping a {@code disease model} tag as redundant. Constrain both to test one specific
+     * inference. At least one constraint is required — this does not enumerate the corpus.
+     * <p>
+     * The disease side is always identified by CATEGORY ({@code disease} or {@code disease model}), never by
+     * which side was seeded, so a row means the same thing whichever way it was asked.
+     * <p>
+     * ACL-restricted, like {@link #findRepresentativeUsageByValueUris(Collection)}: the result names
+     * specific datasets, so a private dataset must not contribute a count or an example.
+     * <p>
+     * Baseline values are dropped — a control arm models nothing — using the same recognition
+     * {@code BaselineSelection} applies when picking a DEA baseline.
+     *
+     * @param diseaseValueUris       diseases of interest, or empty for any; pass a term together with its
+     *                               inferred sub-terms to have those count as well
+     * @param modelValueUris         restrict the model side to these value URIs, or empty for any
+     * @param modelValues            restrict the model side to these literal values, for the many genotypes
+     *                               and strains that were never grounded in an ontology ({@code APP/PS1},
+     *                               {@code Tp53/Rb1 DKO}). OR'd with {@code modelValueUris}
+     * @param modelCategories        categories the model side must be under, as labels ({@code genotype},
+     *                               {@code strain}) or category URIs; empty means any category. This is what
+     *                               generalises the derivation past genotypes — an exposure can model a
+     *                               disease too, though most exposures are interventions and will show it in
+     *                               their specificity
+     * @param excludedExperimentIds  experiments that must not contribute evidence. Holding out the dataset
+     *                               being examined is what makes "this tag is inferable, so it can be
+     *                               dropped" an honest claim rather than a restatement of the tag
+     * @param minimumSupport         drop inferences attested by fewer than this many experiments
+     * @param maxResults             cap on returned rows, or -1 for no cap. Applied after ranking by
+     *                               {@link DiseaseModelInference#getScore()}
+     */
+    List<DiseaseModelInference> findDiseaseModelInferences( Collection<String> diseaseValueUris,
+            Collection<String> modelValueUris, Collection<String> modelValues, Collection<String> modelCategories,
+            Collection<Long> excludedExperimentIds, int minimumSupport, int maxResults );
 
     /**
      * Find characteristics by URI.

@@ -60,6 +60,8 @@ import ubic.gemma.persistence.service.common.description.CharacteristicDao;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSearchService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.util.Filter;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
@@ -345,6 +347,198 @@ public class AnnotationsWebService {
             @Parameter(description = "Term URI") @QueryParam("uri") String termUri,
             @Parameter(description = "Only include direct parents.") @QueryParam("direct") @DefaultValue("false") boolean direct ) {
         return respond(getAnnotationsParentsOrChildren( termUri, direct, false ) );
+    }
+
+    /**
+     * Infer which annotations stand for a disease, so a disease query reaches the studies that annotate only
+     * the model, and an experiment page can say what its own genotype is a model of.
+     */
+    @GET
+    @Path("/diseaseModels")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Infer which annotations model a disease",
+            description = "Curation records a mutant/wild-type contrast as a `genotype` factor, not a "
+                    + "`disease model` one, so a study of `Chd8` mutants carries no disease annotation and a "
+                    + "user ticking \"autism\" in the disease selector never sees it. This recovers the relation "
+                    + "instead of asking anyone to curate it again: experiments annotated BOTH with a disease "
+                    + "AND with a value in one of the requested categories attest that the value stands for the "
+                    + "disease. Nothing is asserted and no annotation is written — every result carries its "
+                    + "supporting experiment count, its evidence split, an example dataset, and a ready-made "
+                    + "`filter` a client can hand straight to `GET /datasets`.\n\n"
+                    + "**Ask it either way round.** Give `uri` for \"what models this disease?\" (the disease "
+                    + "selector reaching through to genotypes). Give `value` or `valueUri` for \"what does this "
+                    + "genotype model?\" (an experiment page captioning its own annotations). Give both to test "
+                    + "one specific inference.\n\n"
+                    + "**Support alone is not evidence.** `C57BL/6J` co-occurs with every disease in the corpus "
+                    + "and models none of them — the obesity is diet-induced, the stroke surgical, the lymphoma "
+                    + "belongs to the cell line. What separates a model from a background strain is the FRACTION "
+                    + "of the value's experiments the disease accounts for, so results are ranked by "
+                    + "`numberOfExperiments × specificity` and every row reports `specificity`, "
+                    + "`numberOfExperimentsWithValue` and `numberOfDiseasesAttested` so a client can set its own "
+                    + "bar. `minSpecificity` applies one server-side.\n\n"
+                    + "**What the inference SAYS depends on the taxon.** A mouse carrying the `Mecp2` null is a "
+                    + "**model of** Rett syndrome (`disease model`); a human line carrying `LRRK2 G2019S` simply "
+                    + "**has** Parkinson disease (`disease`). Rows are split by taxon and report which.\n\n"
+                    + "`category` generalises the derivation past genotypes — a strain or an exposure can stand "
+                    + "for a disease on the same evidence, and be judged by the same specificity.\n\n"
+                    + "`excludeDatasets` holds datasets out of the evidence. Excluding the dataset you are "
+                    + "looking at is what makes \"this `disease model` tag is inferable, so it could be dropped\" "
+                    + "an honest claim rather than a restatement of the tag being tested.",
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "400", description = "Neither side of the relation was constrained, or a numeric parameter is out of range.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "503", description = "Ontology inference timed out.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+            })
+    public ResponseDataObject<DiseaseModelInferenceValueObject> getDiseaseModels(
+            @Parameter(description = "URI of the disease term. Omit to ask the question from the model side.")
+            @QueryParam("uri") String termUri,
+            @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE,
+                    description = "Restrict the model side to these literal annotation values, e.g. `APP/PS1`. "
+                            + "Most strain- and construct-shaped genotypes were never grounded in an ontology, "
+                            + "so this is the usual way to ask the reverse question.")
+            @QueryParam("value") @DefaultValue("") StringArrayArg modelValues,
+            @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE,
+                    description = "Restrict the model side to these value URIs. OR'd with `value`.")
+            @QueryParam("valueUri") @DefaultValue("") StringArrayArg modelValueUris,
+            @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE,
+                    description = "Categories the model side must be under, as labels (`genotype`) or category "
+                            + "URIs. Defaults to `genotype,strain`; add `treatment` to include exposures, or "
+                            + "pass an empty value to accept any category.")
+            @QueryParam("category") @DefaultValue("genotype,strain") StringArrayArg categories,
+            @Parameter(description = "Also count experiments annotated with a sub-class of the given disease "
+                    + "term, as inference does elsewhere in the API. The sub-terms folded in are echoed back in "
+                    + "`inferredTerms`. Ignored when `uri` is omitted.")
+            @QueryParam("inferSubTerms") @DefaultValue("true") boolean inferSubTerms,
+            @Parameter(description = "Drop inferences attested by fewer experiments than this.")
+            @QueryParam("minSupport") @DefaultValue("1") int minSupport,
+            @Parameter(description = "Drop inferences whose specificity is below this, in [0, 1]. The default "
+                    + "of 0 admits everything, including the background strains — no threshold has been tuned "
+                    + "against curator judgement yet, and the shape of the distribution is worth seeing in the "
+                    + "UI before one is fixed here.")
+            @QueryParam("minSpecificity") @DefaultValue("0") double minSpecificity,
+            @Parameter(schema = @Schema(implementation = DatasetArrayArg.class), explode = Explode.FALSE,
+                    description = "Datasets held out of the evidence, by id or short name.")
+            @QueryParam("excludeDatasets") DatasetArrayArg excludeDatasets,
+            @Parameter(description = "Maximum number of inferences to return.")
+            @QueryParam("limit") @DefaultValue("50") int limit ) {
+        List<String> seedValues = nonBlank( modelValues );
+        List<String> seedValueUris = nonBlank( modelValueUris );
+        if ( StringUtils.isBlank( termUri ) && seedValues.isEmpty() && seedValueUris.isEmpty() ) {
+            throw new BadRequestException( "Constrain at least one side: pass 'uri' for what models a disease, "
+                    + "or 'value'/'valueUri' for what a genotype models." );
+        }
+        if ( limit < 1 || limit > 500 ) {
+            throw new BadRequestException( "The 'limit' parameter must be within [1, 500]." );
+        }
+        if ( minSpecificity < 0 || minSpecificity > 1 ) {
+            throw new BadRequestException( "The 'minSpecificity' parameter must be within [0, 1]." );
+        }
+        StopWatch timer = StopWatch.createStarted();
+        List<String> requestedCategories = nonBlank( categories );
+
+        // The disease the user picked plus, unless they opted out, everything below it: a query for "autism
+        // spectrum disorder" should reach a study annotated with one of its subtypes.
+        Set<String> diseaseUris = new LinkedHashSet<>();
+        List<CharacteristicValueObject> inferredTerms = new ArrayList<>();
+        String termLabel = null;
+        if ( StringUtils.isNotBlank( termUri ) ) {
+            diseaseUris.add( termUri );
+            try {
+                OntologyTerm term = ontologyService.getTerm( termUri, Math.max( 30000 - timer.getTime(), 0 ), TimeUnit.MILLISECONDS );
+                if ( term != null ) {
+                    termLabel = term.getLabel();
+                    if ( inferSubTerms ) {
+                        for ( OntologyTerm child : ontologyService.getChildren( Collections.singleton( term ), false, true,
+                                Math.max( 30000 - timer.getTime(), 0 ), TimeUnit.MILLISECONDS ) ) {
+                            if ( child.getUri() != null && diseaseUris.add( child.getUri() ) ) {
+                                inferredTerms.add( new CharacteristicValueObject( child.getLabel(), child.getUri() ) );
+                            }
+                        }
+                    }
+                }
+            } catch ( TimeoutException e ) {
+                throw new ServiceUnavailableException( DateUtils.addSeconds( new Date(), 30 ), e );
+            }
+        }
+
+        Collection<Long> excludedIds = excludeDatasets != null
+                ? IdentifiableUtils.getIds( datasetArgService.getEntities( excludeDatasets ) )
+                : Collections.emptyList();
+
+        List<CharacteristicDao.DiseaseModelInference> inferences = characteristicService.findDiseaseModelInferences(
+                diseaseUris, seedValueUris, seedValues, requestedCategories, excludedIds, minSupport, limit );
+
+        List<InferredDiseaseModelValueObject> models = new ArrayList<>( inferences.size() );
+        for ( CharacteristicDao.DiseaseModelInference i : inferences ) {
+            if ( i.getSpecificity() < minSpecificity ) {
+                continue;
+            }
+            if ( termLabel == null && termUri != null && termUri.equalsIgnoreCase( i.diseaseValueUri ) ) {
+                // the term is not in a loaded ontology (Gemma's own TGEMO terms, retired URIs); the corpus
+                // still knows what curators called it
+                termLabel = i.diseaseValue;
+            }
+            models.add( new InferredDiseaseModelValueObject(
+                    i.value, i.valueUri, i.category, i.categoryUri,
+                    i.getInferredCategory().getCategory(), i.getInferredCategory().getCategoryUri(),
+                    new CharacteristicValueObject( i.diseaseValue, i.diseaseValueUri ),
+                    i.taxonId, i.taxonCommonName,
+                    i.numberOfExperiments, i.numberOfExperimentsWithValue, i.numberOfDiseasesAttested,
+                    i.getSpecificity(),
+                    new DiseaseModelEvidenceValueObject( i.numberOfExperimentsAsFactorValue,
+                            i.numberOfExperimentsAsExperimentTag, i.numberOfExperimentsAsSampleCharacteristic ),
+                    i.exampleExperimentId,
+                    // the datasets this inference was READ FROM: both annotations on the same dataset
+                    annotationFilter( i.valueUri != null ? Collections.singleton( i.valueUri ) : Collections.emptySet(),
+                            i.valueUri != null || i.value == null ? Collections.emptySet() : Collections.singleton( i.value ) )
+                            .and( annotationFilter( Collections.singleton( i.diseaseValueUri ), Collections.emptySet() ) )
+                            .toOriginalString() ) );
+        }
+
+        // one filter that widens the user's disease question to everything inferred to stand for it
+        Set<String> expandedUris = new LinkedHashSet<>( diseaseUris );
+        Set<String> expandedValues = new LinkedHashSet<>();
+        for ( InferredDiseaseModelValueObject m : models ) {
+            if ( m.getValueUri() != null ) {
+                expandedUris.add( m.getValueUri() );
+            } else if ( m.getValue() != null ) {
+                expandedValues.add( m.getValue() );
+            }
+        }
+
+        return respond( new DiseaseModelInferenceValueObject(
+                StringUtils.isNotBlank( termUri ) ? new CharacteristicValueObject( termLabel, termUri ) : null,
+                inferredTerms, requestedCategories, minSupport, minSpecificity, models,
+                annotationFilter( expandedUris, expandedValues ).toOriginalString() ) );
+    }
+
+    private static List<String> nonBlank( StringArrayArg arg ) {
+        return arg.getValue().stream()
+                .map( StringUtils::trimToNull )
+                .filter( Objects::nonNull )
+                .collect( Collectors.toList() );
+    }
+
+    /**
+     * Build a {@code /datasets}-ready filter over dataset annotations.
+     * <p>
+     * URIs and free-text values go in one OR'd clause: a genotype like {@code APP/PS1} was never grounded in
+     * an ontology, so a URI-only filter would drop exactly the strain-shaped values the inference is most
+     * useful for. The free-text leg matches the value under ANY category, since {@code allCharacteristics}
+     * carries no category constraint here — safe for a distinctive construct name, worth watching for a
+     * short one.
+     */
+    private static Filters annotationFilter( Collection<String> valueUris, Collection<String> values ) {
+        List<Filter> subClauses = new ArrayList<>( 2 );
+        if ( !valueUris.isEmpty() ) {
+            subClauses.add( Filter.by( null, "allCharacteristics.valueUri", String.class, Filter.Operator.in,
+                    new ArrayList<>( valueUris ), "allCharacteristics.valueUri" ) );
+        }
+        if ( !values.isEmpty() ) {
+            subClauses.add( Filter.by( null, "allCharacteristics.value", String.class, Filter.Operator.in,
+                    new ArrayList<>( values ), "allCharacteristics.value" ) );
+        }
+        return subClauses.isEmpty() ? Filters.empty() : Filters.by( subClauses.toArray( new Filter[0] ) );
     }
 
     /**
@@ -3394,6 +3588,98 @@ public class AnnotationsWebService {
          * {@code related_synonym}.
          */
         String type;
+    }
+
+    /**
+     * Wire shape for {@code GET /annotations/diseaseModels} — the disease that was asked about, what the
+     * question was widened to, and what the corpus attests as standing for it.
+     */
+    @Value
+    public static class DiseaseModelInferenceValueObject {
+        /**
+         * The disease term the client asked about, or null when the question was asked from the model side.
+         * Its label is null when no loaded ontology knows the URI and no curated row supplied one.
+         */
+        @Nullable
+        CharacteristicValueObject term;
+        /** Sub-classes of {@code term} folded into the question, empty when {@code inferSubTerms=false}. */
+        List<CharacteristicValueObject> inferredTerms;
+        /** Categories the inference was restricted to, as requested. */
+        List<String> categories;
+        int minimumSupport;
+        double minimumSpecificity;
+        /** Ranked by supporting experiment count, most-attested first. */
+        List<InferredDiseaseModelValueObject> models;
+        /**
+         * The disease question widened by everything inferred: hand it to {@code GET /datasets?filter=} to
+         * get directly-annotated and inferred hits together. A client that wants the two result classes
+         * rendered apart should instead run its own filter against {@code term}, and the per-model filters
+         * for the rest — the API deliberately does not merge them behind the client's back.
+         */
+        String filter;
+    }
+
+    /**
+     * One inferred (value → disease) relation, with the evidence that produced it.
+     */
+    @Value
+    public static class InferredDiseaseModelValueObject {
+        /** The annotation value inferred to stand for the disease, e.g. a genotype. */
+        String value;
+        /** Null for values never grounded in an ontology, e.g. {@code APP/PS1}. */
+        @Nullable
+        String valueUri;
+        @Nullable
+        String category;
+        @Nullable
+        String categoryUri;
+        /**
+         * What the inferred annotation would say: {@code disease model} normally, {@code disease} when the
+         * experiments are human — a human line carrying a variant has the disease rather than modelling it.
+         */
+        String inferredCategory;
+        @Nullable
+        String inferredCategoryUri;
+        /** The disease this was inferred for — a sub-term of the requested one when inference was on. */
+        CharacteristicValueObject modelOf;
+        @Nullable
+        Long taxonId;
+        @Nullable
+        String taxonCommonName;
+        /** Datasets attesting this inference. */
+        long numberOfExperiments;
+        /**
+         * Datasets carrying this value at all, whatever disease they were about — the denominator that tells
+         * a model apart from a background strain.
+         */
+        long numberOfExperimentsWithValue;
+        /**
+         * Distinct diseases this value has been attested against anywhere. One or two is a model; hundreds
+         * is a strain everyone uses, or a drug tested against everything.
+         */
+        long numberOfDiseasesAttested;
+        /**
+         * {@code numberOfExperiments / numberOfExperimentsWithValue}, in [0, 1]. The rank is this times the
+         * support, so a pair needs both to come out on top. Treat a low value as "the disease came from
+         * somewhere else in this experiment" — the diet, the surgery, the cell line.
+         */
+        double specificity;
+        DiseaseModelEvidenceValueObject evidence;
+        /** One dataset attesting it, for a link straight to the evidence. */
+        long exampleDatasetId;
+        /** {@code GET /datasets?filter=} that returns exactly the datasets this was read from. */
+        String filter;
+    }
+
+    /**
+     * Where the annotation sat, since a factor value and a whole-experiment tag are not the same claim: a
+     * genotype factor means the mutation varies across samples, a tag means it holds of every sample.
+     */
+    @Value
+    public static class DiseaseModelEvidenceValueObject {
+        long factorValue;
+        long experimentTag;
+        long sampleCharacteristic;
     }
 
     /**

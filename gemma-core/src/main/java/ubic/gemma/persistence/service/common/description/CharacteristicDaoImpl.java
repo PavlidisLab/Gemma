@@ -28,11 +28,13 @@ import org.hibernate.type.StandardBasicTypes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
+import ubic.gemma.core.analysis.expression.diff.BaselineSelection;
 import ubic.gemma.core.ontology.OntologyUtils;
 import ubic.gemma.model.annotations.MayBeUninitialized;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.Categories;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
@@ -72,6 +74,17 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
         @Nullable
         String discriminator;
     }
+
+    /**
+     * How many (value, disease) pairs the disease-model inference will consider before ranking.
+     * <p>
+     * The cut has to happen after specificity is known, so the pair query cannot be limited to what the
+     * caller asked for. A generic strain co-occurs with a few hundred diseases and a well-curated disease
+     * has a few hundred things curated alongside it, so this is a runaway guard rather than a working limit.
+     */
+    private static final int DISEASE_MODEL_CANDIDATE_LIMIT = 1000;
+
+    private static final long[] EMPTY_STATS = { 0, 0 };
 
     /**
      * List of all entities that own characteristics.
@@ -478,6 +491,258 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
                     r[13] != null ? ( Long ) r[13] : 0L ) );
         }
         return result;
+    }
+
+    @Override
+    public List<CharacteristicDao.DiseaseModelInference> findDiseaseModelInferences( Collection<String> diseaseValueUris,
+            Collection<String> modelValueUris, Collection<String> modelValues, Collection<String> modelCategories,
+            Collection<Long> excludedExperimentIds, int minimumSupport, int maxResults ) {
+        if ( diseaseValueUris.isEmpty() && modelValueUris.isEmpty() && modelValues.isEmpty() ) {
+            // refuse to enumerate the corpus; every caller knows one side of the relation
+            return Collections.emptyList();
+        }
+        // A self-join on EE2C is the whole derivation: D is a disease annotation, S is another annotation on
+        // the SAME experiment, and the number of distinct experiments joining them is the evidence. Both
+        // sides are indexed on the columns being joined (VALUE_URI, and the primary key's
+        // EXPRESSION_EXPERIMENT_FK), which is why this stays a query instead of a materialised table that
+        // would go stale the moment a curator touched anything.
+        // ACL goes on D: the result names datasets, so a private one must not contribute a count or example.
+        String aclOnDisease = EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "D.EXPRESSION_EXPERIMENT_FK", "D.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" );
+        StringBuilder where = new StringBuilder();
+        where.append( " where " ).append( diseaseCategoryConstraint( "D" ) )
+                .append( " and D.VALUE_URI is not null" )
+                .append( " and S.`VALUE` is not null" )
+                // the disease annotation is not a model of itself
+                .append( " and (S.VALUE_URI is null or S.VALUE_URI <> D.VALUE_URI)" )
+                // a control arm models nothing
+                .append( " and S.`VALUE` not in (:baselineValues)" )
+                .append( " and (S.VALUE_URI is null or S.VALUE_URI not in (:baselineUris))" );
+        if ( !diseaseValueUris.isEmpty() ) {
+            where.append( " and D.VALUE_URI in (:diseaseUris)" );
+        }
+        where.append( modelSideConstraint( modelValueUris, modelValues ) );
+        where.append( categoryConstraint( "S", modelCategories ) );
+        if ( !excludedExperimentIds.isEmpty() ) {
+            where.append( " and D.EXPRESSION_EXPERIMENT_FK not in (:excludedIds)" );
+        }
+        where.append( aclOnDisease );
+        NativeQuery<?> query = getSessionFactory().getCurrentSession().createNativeQuery(
+                        // VALUE and LEVEL are reserved words - backticked so both MySQL and H2 (MODE=MYSQL) parse.
+                        "select S.`VALUE` as V, S.VALUE_URI as VU, S.CATEGORY as C, S.CATEGORY_URI as CU, "
+                                + "D.VALUE_URI as DU, D.`VALUE` as DV, "
+                                + "X.ID as TID, X.COMMON_NAME as TCN, X.NCBI_ID as TNCBI, "
+                                + "count(distinct S.EXPRESSION_EXPERIMENT_FK) as N, "
+                                // the evidence split: a factor value (the property varies across samples) and a
+                                // whole-experiment tag are not the same claim, and the client renders them apart
+                                + "count(distinct case when S.`LEVEL` = :fvLevel then S.EXPRESSION_EXPERIMENT_FK end) as NFV, "
+                                + "count(distinct case when S.`LEVEL` = :eeLevel then S.EXPRESSION_EXPERIMENT_FK end) as NTAG, "
+                                + "count(distinct case when S.`LEVEL` = :bmLevel then S.EXPRESSION_EXPERIMENT_FK end) as NBM, "
+                                + "min(S.EXPRESSION_EXPERIMENT_FK) as EX "
+                                + "from EXPRESSION_EXPERIMENT2CHARACTERISTIC D "
+                                + "join EXPRESSION_EXPERIMENT2CHARACTERISTIC S on S.EXPRESSION_EXPERIMENT_FK = D.EXPRESSION_EXPERIMENT_FK "
+                                + "join INVESTIGATION I on I.ID = D.EXPRESSION_EXPERIMENT_FK "
+                                + "left join TAXON X on X.ID = I.TAXON_FK"
+                                + where
+                                // ONLY_FULL_GROUP_BY: every projected non-aggregate is grouped. Taxon is part of
+                                // the grain because it decides whether the inference reads "disease model" or,
+                                // for human, "disease".
+                                + " group by S.`VALUE`, S.VALUE_URI, S.CATEGORY, S.CATEGORY_URI, D.VALUE_URI, D.`VALUE`, X.ID, X.COMMON_NAME, X.NCBI_ID"
+                                + " having count(distinct S.EXPRESSION_EXPERIMENT_FK) >= :minimumSupport"
+                                + " order by N desc, V asc" )
+                .addScalar( "V", StandardBasicTypes.STRING )
+                .addScalar( "VU", StandardBasicTypes.STRING )
+                .addScalar( "C", StandardBasicTypes.STRING )
+                .addScalar( "CU", StandardBasicTypes.STRING )
+                .addScalar( "DU", StandardBasicTypes.STRING )
+                .addScalar( "DV", StandardBasicTypes.STRING )
+                .addScalar( "TID", StandardBasicTypes.LONG )
+                .addScalar( "TCN", StandardBasicTypes.STRING )
+                .addScalar( "TNCBI", StandardBasicTypes.INTEGER )
+                .addScalar( "N", StandardBasicTypes.LONG )
+                .addScalar( "NFV", StandardBasicTypes.LONG )
+                .addScalar( "NTAG", StandardBasicTypes.LONG )
+                .addScalar( "NBM", StandardBasicTypes.LONG )
+                .addScalar( "EX", StandardBasicTypes.LONG )
+                .addSynchronizedQuerySpace( EE2C_QUERY_SPACE )
+                .addSynchronizedEntityClass( ExpressionExperiment.class )
+                .addSynchronizedEntityClass( Characteristic.class );
+        bindDiseaseCategories( query );
+        query.setParameterList( "baselineValues", BaselineSelection.getControlGroupTerms() )
+                .setParameterList( "baselineUris", BaselineSelection.getControlGroupUris() )
+                .setParameter( "fvLevel", FactorValue.class )
+                .setParameter( "eeLevel", ExpressionExperiment.class )
+                .setParameter( "bmLevel", BioMaterial.class )
+                .setParameter( "minimumSupport", ( long ) Math.max( minimumSupport, 1 ) );
+        if ( !diseaseValueUris.isEmpty() ) {
+            query.setParameterList( "diseaseUris", optimizeParameterList( diseaseValueUris ) );
+        }
+        bindModelSide( query, modelValueUris, modelValues );
+        bindCategories( query, modelCategories );
+        if ( !excludedExperimentIds.isEmpty() ) {
+            query.setParameterList( "excludedIds", excludedExperimentIds );
+        }
+        EE2CAclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
+        query.setCacheable( true );
+        // ranking needs the specificity of every candidate, so the cut cannot be pushed into this query; the
+        // candidate set for one disease is bounded by how much has been curated alongside it
+        query.setMaxResults( DISEASE_MODEL_CANDIDATE_LIMIT );
+        //noinspection unchecked
+        List<Object[]> rows = ( List<Object[]> ) query.list();
+        if ( rows.isEmpty() ) {
+            return Collections.emptyList();
+        }
+
+        // Second pass: how often does each candidate value appear AT ALL, and against how many diseases?
+        // Without this, C57BL/6J - which co-occurs with every disease in the corpus and models none of them,
+        // the disease being induced by diet or surgery or belonging to the cell line - outranks every real
+        // model on raw count.
+        Set<String> candidateValues = rows.stream()
+                .map( r -> ( String ) r[0] )
+                .filter( Objects::nonNull )
+                .collect( Collectors.toCollection( LinkedHashSet::new ) );
+        Map<String, long[]> statsByValue = findValueDiseaseStats( candidateValues, modelCategories, excludedExperimentIds );
+
+        List<CharacteristicDao.DiseaseModelInference> result = new ArrayList<>( rows.size() );
+        for ( Object[] r : rows ) {
+            long[] stats = statsByValue.getOrDefault( statsKey( ( String ) r[0], ( String ) r[1] ), EMPTY_STATS );
+            result.add( new CharacteristicDao.DiseaseModelInference(
+                    ( String ) r[0], ( String ) r[1], ( String ) r[2], ( String ) r[3],
+                    ( String ) r[4], ( String ) r[5],
+                    ( Long ) r[6], ( String ) r[7], ( Integer ) r[8],
+                    r[9] != null ? ( Long ) r[9] : 0L,
+                    r[10] != null ? ( Long ) r[10] : 0L,
+                    r[11] != null ? ( Long ) r[11] : 0L,
+                    r[12] != null ? ( Long ) r[12] : 0L,
+                    r[13] != null ? ( Long ) r[13] : 0L,
+                    stats[0], stats[1] ) );
+        }
+        result.sort( Comparator.comparingDouble( CharacteristicDao.DiseaseModelInference::getScore ).reversed()
+                .thenComparing( Comparator.comparingLong( ( CharacteristicDao.DiseaseModelInference i ) -> i.numberOfExperiments ).reversed() )
+                .thenComparing( i -> StringUtils.defaultString( i.value ) ) );
+        return maxResults > 0 && result.size() > maxResults ? new ArrayList<>( result.subList( 0, maxResults ) ) : result;
+    }
+
+    /**
+     * For each candidate value: how many experiments carry it at all, and how many distinct diseases it has
+     * been attested against. The denominator behind {@link CharacteristicDao.DiseaseModelInference#getSpecificity()}.
+     * <p>
+     * Keyed on value + value URI so the same string grounded two different ways stays apart.
+     */
+    private Map<String, long[]> findValueDiseaseStats( Collection<String> values, Collection<String> modelCategories,
+            Collection<Long> excludedExperimentIds ) {
+        if ( values.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+        String acl = EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "S.EXPRESSION_EXPERIMENT_FK", "S.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" );
+        NativeQuery<?> query = getSessionFactory().getCurrentSession().createNativeQuery(
+                        "select S.`VALUE` as V, S.VALUE_URI as VU, "
+                                + "count(distinct S.EXPRESSION_EXPERIMENT_FK) as N_TOTAL, "
+                                + "count(distinct D.VALUE_URI) as N_DIS "
+                                + "from EXPRESSION_EXPERIMENT2CHARACTERISTIC S "
+                                + "left join EXPRESSION_EXPERIMENT2CHARACTERISTIC D "
+                                + "on D.EXPRESSION_EXPERIMENT_FK = S.EXPRESSION_EXPERIMENT_FK "
+                                + "and D.VALUE_URI is not null and " + diseaseCategoryConstraint( "D" ) + " "
+                                + "where S.`VALUE` in (:values)"
+                                + categoryConstraint( "S", modelCategories )
+                                + ( excludedExperimentIds.isEmpty() ? "" : " and S.EXPRESSION_EXPERIMENT_FK not in (:excludedIds)" )
+                                + acl
+                                + " group by S.`VALUE`, S.VALUE_URI" )
+                .addScalar( "V", StandardBasicTypes.STRING )
+                .addScalar( "VU", StandardBasicTypes.STRING )
+                .addScalar( "N_TOTAL", StandardBasicTypes.LONG )
+                .addScalar( "N_DIS", StandardBasicTypes.LONG )
+                .addSynchronizedQuerySpace( EE2C_QUERY_SPACE )
+                .addSynchronizedEntityClass( ExpressionExperiment.class )
+                .addSynchronizedEntityClass( Characteristic.class );
+        bindDiseaseCategories( query );
+        bindCategories( query, modelCategories );
+        if ( !excludedExperimentIds.isEmpty() ) {
+            query.setParameterList( "excludedIds", excludedExperimentIds );
+        }
+        EE2CAclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
+        query.setCacheable( true );
+        Map<String, long[]> out = new HashMap<>();
+        QueryUtils.<String, Object[]>streamByBatch( query, "values", values, 2048 )
+                .forEach( row -> out.put( statsKey( ( String ) row[0], ( String ) row[1] ),
+                        new long[] { row[2] != null ? ( Long ) row[2] : 0L, row[3] != null ? ( Long ) row[3] : 0L } ) );
+        return out;
+    }
+
+    private static String statsKey( @Nullable String value, @Nullable String valueUri ) {
+        return StringUtils.lowerCase( value ) + " " + StringUtils.lowerCase( valueUri );
+    }
+
+    /**
+     * Identify the disease side by category, so a row means the same thing whichever side was seeded.
+     * Both the label and the category URI are matched: production carries the obsolete {@code EFO_0000408}
+     * for disease and Gemma's own {@code TGEMO_00101} for disease model.
+     */
+    private static String diseaseCategoryConstraint( String alias ) {
+        return "(" + alias + ".CATEGORY in (:diseaseCategories) or " + alias + ".CATEGORY_URI in (:diseaseCategoryUris))";
+    }
+
+    private static void bindDiseaseCategories( NativeQuery<?> query ) {
+        query.setParameterList( "diseaseCategories", Arrays.asList( Categories.DISEASE.getCategory(), Categories.DISEASE_MODEL.getCategory() ) )
+                .setParameterList( "diseaseCategoryUris", Arrays.asList( Categories.DISEASE.getCategoryUri(), Categories.DISEASE_MODEL.getCategoryUri() ) );
+    }
+
+    /**
+     * Categories are given as labels or URIs, and both forms have to work: the browse UI knows
+     * {@code genotype}, a curation tool knows {@code EFO_0000513}.
+     */
+    private static String categoryConstraint( String alias, Collection<String> categories ) {
+        if ( categories.isEmpty() ) {
+            return "";
+        }
+        boolean hasUris = categories.stream().anyMatch( CharacteristicDaoImpl::isUri );
+        boolean hasLabels = categories.stream().anyMatch( c -> !isUri( c ) );
+        if ( hasUris && hasLabels ) {
+            return " and (" + alias + ".CATEGORY in (:categoryLabels) or " + alias + ".CATEGORY_URI in (:categoryUris))";
+        } else if ( hasUris ) {
+            return " and " + alias + ".CATEGORY_URI in (:categoryUris)";
+        } else {
+            return " and " + alias + ".CATEGORY in (:categoryLabels)";
+        }
+    }
+
+    private static void bindCategories( NativeQuery<?> query, Collection<String> categories ) {
+        List<String> uris = categories.stream().filter( CharacteristicDaoImpl::isUri ).collect( Collectors.toList() );
+        List<String> labels = categories.stream().filter( c -> !isUri( c ) ).collect( Collectors.toList() );
+        if ( !uris.isEmpty() ) {
+            query.setParameterList( "categoryUris", uris );
+        }
+        if ( !labels.isEmpty() ) {
+            query.setParameterList( "categoryLabels", labels );
+        }
+    }
+
+    /**
+     * The model side can be pinned by URI, by literal value, or by both - {@code APP/PS1} and
+     * {@code Tp53/Rb1 DKO} have no URI, and they are exactly the values worth asking about.
+     */
+    private static String modelSideConstraint( Collection<String> modelValueUris, Collection<String> modelValues ) {
+        if ( modelValueUris.isEmpty() && modelValues.isEmpty() ) {
+            return "";
+        } else if ( modelValues.isEmpty() ) {
+            return " and S.VALUE_URI in (:modelUris)";
+        } else if ( modelValueUris.isEmpty() ) {
+            return " and S.`VALUE` in (:modelValues)";
+        } else {
+            return " and (S.VALUE_URI in (:modelUris) or S.`VALUE` in (:modelValues))";
+        }
+    }
+
+    private static void bindModelSide( NativeQuery<?> query, Collection<String> modelValueUris, Collection<String> modelValues ) {
+        if ( !modelValueUris.isEmpty() ) {
+            query.setParameterList( "modelUris", optimizeParameterList( modelValueUris ) );
+        }
+        if ( !modelValues.isEmpty() ) {
+            query.setParameterList( "modelValues", modelValues );
+        }
+    }
+
+    private static boolean isUri( String s ) {
+        return s.startsWith( "http://" ) || s.startsWith( "https://" );
     }
 
     @Override

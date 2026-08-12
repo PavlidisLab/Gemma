@@ -96,6 +96,14 @@ public class CharacteristicServiceImpl extends AbstractFilteringVoEnabledService
     }
 
     @Override
+    public List<CharacteristicDao.DiseaseModelInference> findDiseaseModelInferences( Collection<String> diseaseValueUris,
+            Collection<String> modelValueUris, Collection<String> modelValues, Collection<String> modelCategories,
+            Collection<Long> excludedExperimentIds, int minimumSupport, int maxResults ) {
+        return readService.findDiseaseModelInferences( diseaseValueUris, modelValueUris, modelValues, modelCategories,
+                excludedExperimentIds, minimumSupport, maxResults );
+    }
+
+    @Override
     public Collection<Characteristic> findByValueStartingWith( String search, @Nullable String category, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, int maxResults ) {
         return readService.findByValueStartingWith( search, category, parentClasses, includeNoParents, maxResults );
     }
