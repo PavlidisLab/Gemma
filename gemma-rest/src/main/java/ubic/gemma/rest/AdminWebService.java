@@ -1460,7 +1460,14 @@ public class AdminWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasAuthority('GROUP_ADMIN')")
     @Operation(summary = "Submit a GEO scrape & preboard run (async, or sync dry-run)",
-            description = "Iterates recent GEO records, filters to human/mouse/rat expression profiling, evaluates the registered matchers (subset selectable via `criteria`: {brain, scbrain, tfperturb}). With dryRun=false (default) creates PreboardedExperiment rows and returns 202 + async task ID. With dryRun=true evaluates only and returns 200 + the candidate list inline (no watermark, no preboarded rows, no ticket).",
+            description = "Iterates recent GEO records, filters to human/mouse/rat expression profiling, evaluates the registered matchers (subset selectable via `criteria`: {brain, scbrain, tfperturb}). With dryRun=false (default) creates PreboardedExperiment rows and returns 202 + async task ID. With dryRun=true evaluates only and returns 200 + the candidate list inline (no watermark, no preboarded rows, no ticket). "
+                    + "DRY RUNS MUST BE KEPT SMALL: the sync branch is subject to the 60-second proxy timeout in front of this API, "
+                    + "and the scrape grows superlinearly because every Entrez call passes through a global rate gate "
+                    + "(333 ms between calls without an NCBI API key, 100 ms with one). Measured 2026-08-12 against live: "
+                    + "50 records 6s, 100 records 22s, 150 records 37s, 200 records 502 Proxy Error at 60s, and the 1000 default "
+                    + "cannot complete synchronously at all. Keep dryRun batches at or under ~100 records and walk a backlog by "
+                    + "moving the `since`/`until` window — NOT by repeating `maxRecords`, which always restarts from record 0. "
+                    + "dryRun=false is unaffected: it is already async and returns immediately.",
             security = {
                     @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
@@ -2486,7 +2493,19 @@ public class AdminWebService {
         /** Upper bound of the scrape window (publication date inclusive). Null means "today". */
         @Nullable
         public Date until;
-        /** Hard cap on number of GEO records examined. Null means use service default. */
+        /**
+         * Hard cap on number of GEO records examined, counted from the HEAD of the result set.
+         * Null means the service default (1000).
+         * <p>
+         * 🛑 This is a cap, NOT a page size — there is no cursor or offset on this request, and the
+         * scrape restarts at record 0 on every call. Two calls with maxRecords=50 return the same
+         * 50 records; a client looping on it re-scans the same head forever and never advances.
+         * Verified 2026-08-12 against live: the 25-record run's candidates are a strict prefix of
+         * the 50's, which prefix the 100's, which prefix the 150's.
+         * <p>
+         * To walk a backlog, window with {@link #since} / {@link #until} instead — those are the
+         * only parameters that move.
+         */
         @Nullable
         public Integer maxRecords;
         /** Subset of matcher names to apply (e.g. {@code ["brain","tfperturb"]}); null/empty = all available. */
