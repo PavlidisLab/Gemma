@@ -1490,15 +1490,22 @@ public class AdminWebService {
             req.setCriteria( body.criteria );
             req.setStartAt( body.startAt );
             req.setDryRun( true );
-            List<GeoScrapeDryRunCandidate> candidates;
+            GeoScrapeService.DryRunResult result;
             try {
-                candidates = geoScrapeService.scrapeDryRun( req );
+                result = geoScrapeService.scrapeDryRun( req );
             } catch ( IllegalArgumentException e ) {
                 // Unresolvable `startAt`. No global IllegalArgumentException mapper exists, so wrap
                 // here or the caller gets a 500 for what is a bad request.
                 throw new BadRequestException( e.getMessage(), e );
             }
-            return Response.ok( respond( candidates ) ).build();
+            // `data` stays the candidate array it has always been -- the scan cursor and the
+            // degraded-record list ride alongside it, so existing clients keep parsing unchanged.
+            GeoScrapeDryRunResponse dryRunResponse = new GeoScrapeDryRunResponse();
+            dryRunResponse.data = result.getCandidates();
+            dryRunResponse.lastScannedAccession = result.getLastScannedAccession();
+            dryRunResponse.lastScannedDate = result.getLastScannedDate();
+            dryRunResponse.incompleteRecords = result.getIncompleteRecords();
+            return Response.ok( dryRunResponse ).build();
         }
         GeoScrapeTaskCommand cmd = new GeoScrapeTaskCommand();
         if ( body != null ) {
@@ -2538,6 +2545,35 @@ public class AdminWebService {
          */
         @Nullable
         public String startAt;
+    }
+
+    /**
+     * Dry-run response. {@code data} is the candidate array unchanged; the rest is what a batching
+     * caller could not previously work out for itself.
+     */
+    public static class GeoScrapeDryRunResponse {
+        /** The candidates, in scan order. Unchanged shape. */
+        public List<GeoScrapeDryRunCandidate> data;
+        /**
+         * The last record the scan LOOKED at, matched or not — cursor on this rather than on the
+         * oldest candidate. `maxRecords` caps records SCANNED while the batch counts candidates
+         * RETURNED, so when a batch's matches sit near the head the next request re-scans the same
+         * span for nothing: 38 of 101 requests bought nothing on a measured 2026-06-01..08-12 walk,
+         * each a full synchronous scan against the 60-second proxy budget. Null if nothing was
+         * examined.
+         */
+        @Nullable
+        public String lastScannedAccession;
+        /** Release date of `lastScannedAccession`, so `until` can be stepped without a lookup. */
+        @Nullable
+        public Date lastScannedDate;
+        /**
+         * Accessions examined on degraded information — GEO served unusable MINiML, so the record
+         * was kept on its summary rather than failing the batch. Detail-dependent matchers may have
+         * under-matched on these, so a caller can report its list as incomplete and name them.
+         * Usually transient; worth retrying later. Empty when everything parsed.
+         */
+        public List<String> incompleteRecords;
     }
 
     public static class GeoScrapeSubmitResponse {

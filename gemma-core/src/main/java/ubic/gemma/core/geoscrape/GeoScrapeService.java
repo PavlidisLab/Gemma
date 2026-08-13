@@ -56,7 +56,66 @@ public interface GeoScrapeService {
      * @return the candidate list in scan order; {@code dryRun} on the
      *         request is ignored (treated as {@code true} by contract).
      */
-    List<GeoScrapeDryRunCandidate> scrapeDryRun( ScrapeRequest req );
+    DryRunResult scrapeDryRun( ScrapeRequest req );
+
+    /**
+     * Outcome of a dry run: the candidates, plus the two things a batching caller cannot work out
+     * from the candidate list alone.
+     */
+    class DryRunResult {
+        private final List<GeoScrapeDryRunCandidate> candidates;
+        @Nullable
+        private final String lastScannedAccession;
+        @Nullable
+        private final Date lastScannedDate;
+        private final List<String> incompleteRecords;
+
+        public DryRunResult( List<GeoScrapeDryRunCandidate> candidates, @Nullable String lastScannedAccession,
+                @Nullable Date lastScannedDate, List<String> incompleteRecords ) {
+            this.candidates = candidates;
+            this.lastScannedAccession = lastScannedAccession;
+            this.lastScannedDate = lastScannedDate;
+            this.incompleteRecords = incompleteRecords;
+        }
+
+        public List<GeoScrapeDryRunCandidate> getCandidates() {
+            return candidates;
+        }
+
+        /**
+         * The last record the scan actually LOOKED at, matched or not.
+         * <p>
+         * A caller can only cursor on the oldest candidate, but {@code maxRecords} caps records
+         * SCANNED and most scanned records match nothing — so when a batch's matches all sit near
+         * the head, the next request re-scans the same span and returns nothing new. Measured by
+         * the agents side over a 2026-06-01..2026-08-12 walk: 38 of 101 requests bought nothing,
+         * each one a full synchronous scan against the 60-second proxy budget. Cursoring on this
+         * instead of on the oldest candidate collapses those.
+         * <p>
+         * Null when the scan examined no records at all.
+         */
+        @Nullable
+        public String getLastScannedAccession() {
+            return lastScannedAccession;
+        }
+
+        /** Release date of {@link #getLastScannedAccession()}, so a caller can step `until` without a lookup. */
+        @Nullable
+        public Date getLastScannedDate() {
+            return lastScannedDate;
+        }
+
+        /**
+         * Accessions examined on degraded information: GEO served invalid MINiML, so the record was
+         * kept with whatever the summary gave rather than failing the batch. Matchers that depend on
+         * sample details may therefore have under-matched on these, so a caller can report its list
+         * as incomplete and name the records — and retry them later, since the condition is usually
+         * transient.
+         */
+        public List<String> getIncompleteRecords() {
+            return incompleteRecords;
+        }
+    }
 
     /**
      * @return the most recent {@link GeoScrapeWatermark} row, or {@code null}

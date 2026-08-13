@@ -395,6 +395,7 @@ public class GeoBrowserImpl implements GeoBrowser {
         } catch ( Exception e ) {
             if ( config.isIgnoreErrors() ) {
                 log.error( "Error while processing MINiML for " + record.getGeoAccession() + ", sample details will not be obtained.", e );
+                record.setDetailsIncomplete( true );
                 return;
             } else {
                 throw new RuntimeException( "Error while processing MINiML for " + record.getGeoAccession() + ".", e );
@@ -403,6 +404,7 @@ public class GeoBrowserImpl implements GeoBrowser {
 
         if ( document == null ) {
             log.warn( "Could not find any details for " + record );
+            record.setDetailsIncomplete( true );
             return;
         }
 

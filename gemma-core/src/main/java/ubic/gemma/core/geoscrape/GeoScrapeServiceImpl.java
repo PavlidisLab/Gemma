@@ -99,6 +99,25 @@ public class GeoScrapeServiceImpl implements GeoScrapeService {
 
     private static final int DEFAULT_MAX_RECORDS = 1000;
 
+    /**
+     * {@link GeoRetrieveConfig#DETAILED} plus {@code ignoreErrors}, so one unusable record does not
+     * void the whole scan.
+     * <p>
+     * GEO serves invalid MINiML for withdrawn / restricted / transiently-broken series and DETAILED
+     * throws on it, which killed entire batches: the agents side lost a walk that had already
+     * gathered 55 candidates to a single bad record sitting between scan positions 50 and 100
+     * (GSE304614, 2026-08-12). Such a record is now kept with whatever the eutils summary gave, and
+     * its accession reported, instead of the batch being discarded. Detail-dependent matchers may
+     * under-match on it — which is exactly why the caller is told which records they were.
+     */
+    private static final GeoRetrieveConfig DETAILED_TOLERANT = GeoRetrieveConfig.builder()
+            .subSeriesStatus( true )
+            .libraryStrategy( true )
+            .sampleDetails( true )
+            .meshHeadings( true )
+            .ignoreErrors( true )
+            .build();
+
     private final SessionFactory sessionFactory;
     private final PreboardedExperimentService preboardedExperimentService;
     private final List<GeoRecordMatcher> matchers;
@@ -244,7 +263,7 @@ public class GeoScrapeServiceImpl implements GeoScrapeService {
                 int remaining = maxRecords - scanned;
                 int thisPage = Math.min( effectivePage, remaining );
                 Slice<GeoRecord> slice = resolveGeoBrowser().retrieveGeoRecords( query, pageStart, thisPage,
-                        GeoRetrieveConfig.DETAILED );
+                        DETAILED_TOLERANT );
                 if ( slice == null || slice.isEmpty() ) {
                     break;
                 }
@@ -310,12 +329,17 @@ public class GeoScrapeServiceImpl implements GeoScrapeService {
     }
 
     @Override
-    public List<GeoScrapeDryRunCandidate> scrapeDryRun( ScrapeRequest req ) {
+    public DryRunResult scrapeDryRun( ScrapeRequest req ) {
         if ( req == null ) req = new ScrapeRequest();
         List<GeoRecordMatcher> active = selectActive( req.getCriteria() );
         int maxRecords = req.getMaxRecords() != null ? req.getMaxRecords() : DEFAULT_MAX_RECORDS;
 
         List<GeoScrapeDryRunCandidate> out = new ArrayList<>();
+        // Neither of these is recoverable from the candidate list, which is why a batching caller
+        // had to guess where to resume. See GeoScrapeService.DryRunResult.
+        String lastScannedAccession = null;
+        Date lastScannedDate = null;
+        List<String> incompleteRecords = new ArrayList<>();
         int scanned = 0;
         try {
             GeoQuery query = resolveGeoBrowser().searchGeoRecords(
@@ -332,12 +356,20 @@ public class GeoScrapeServiceImpl implements GeoScrapeService {
                 int remaining = maxRecords - scanned;
                 int thisPage = Math.min( effectivePage, remaining );
                 Slice<GeoRecord> slice = resolveGeoBrowser().retrieveGeoRecords( query, pageStart, thisPage,
-                        GeoRetrieveConfig.DETAILED );
+                        DETAILED_TOLERANT );
                 if ( slice == null || slice.isEmpty() ) {
                     break;
                 }
                 for ( GeoRecord r : slice ) {
                     scanned++;
+                    // Every record LOOKED at, matched or not -- that is the point of the cursor.
+                    if ( r.getGeoAccession() != null ) {
+                        lastScannedAccession = r.getGeoAccession();
+                        lastScannedDate = r.getReleaseDate();
+                    }
+                    if ( r.isDetailsIncomplete() && r.getGeoAccession() != null ) {
+                        incompleteRecords.add( r.getGeoAccession() );
+                    }
                     if ( !isAllowedTaxon( r ) ) continue;
                     if ( !isExpressionProfiling( r ) ) continue;
                     List<String> matchedNames = new ArrayList<>( active.size() );
@@ -366,7 +398,11 @@ public class GeoScrapeServiceImpl implements GeoScrapeService {
             log.warn( "GEO dry-run scrape failed: " + e.getMessage() );
             // Surface partial results; caller is interactive and can retry.
         }
-        return out;
+        if ( !incompleteRecords.isEmpty() ) {
+            log.warn( "GEO served unusable MINiML for " + incompleteRecords.size()
+                    + " record(s) in this scan; kept on summary data only: " + incompleteRecords );
+        }
+        return new DryRunResult( out, lastScannedAccession, lastScannedDate, incompleteRecords );
     }
 
     @Override

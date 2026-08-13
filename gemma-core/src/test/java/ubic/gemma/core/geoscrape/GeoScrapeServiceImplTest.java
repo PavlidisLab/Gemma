@@ -359,6 +359,64 @@ public class GeoScrapeServiceImplTest {
     }
 
     @Test
+    public void dryRun_reportsTheLastRecordScannedNotJustTheLastMatched() throws Exception {
+        // A caller can only cursor on the oldest CANDIDATE, but maxRecords caps records SCANNED and
+        // most scanned records match nothing. When the matches sit near the head, the next request
+        // re-scans the same span and returns nothing new -- 38 of 101 requests bought nothing on a
+        // measured walk, each a full synchronous scan against the 60 s proxy budget.
+        GeoRecord matched = rec( "GSE0001", "Brain cortex neuron study", "Homo sapiens" );
+        GeoRecord unmatched = rec( "GSE0002", "Pancreatic islet bulk expression", "Homo sapiens" );
+        unmatched.setReleaseDate( new java.util.GregorianCalendar( 2026, java.util.Calendar.APRIL, 2 ).getTime() );
+        wireSlice( Arrays.asList( matched, unmatched ) );
+
+        GeoScrapeService.ScrapeRequest req = new GeoScrapeService.ScrapeRequest();
+        req.setMaxRecords( 10 );
+        req.setDryRun( true );
+
+        GeoScrapeService.DryRunResult result = svc.scrapeDryRun( req );
+
+        assertThat( result.getLastScannedAccession() )
+                .as( "the cursor must be the last record LOOKED at, not the last one that matched" )
+                .isEqualTo( "GSE0002" );
+        assertThat( result.getCandidates() ).extracting( c -> c.accession ).containsExactly( "GSE0001" );
+    }
+
+    @Test
+    public void dryRun_namesRecordsGeoServedUnusableMinimlFor() throws Exception {
+        // GEO serves invalid MINiML for withdrawn / restricted series. Before this, DETAILED threw
+        // and one such record voided the entire batch -- the agents side lost a walk that had
+        // already gathered 55 candidates. Now the record is kept on summary data and named, so a
+        // caller can say its list is incomplete and retry later.
+        GeoRecord ok = rec( "GSE0001", "Brain cortex neuron study", "Homo sapiens" );
+        GeoRecord degraded = rec( "GSE304614", "Brain something restricted", "Homo sapiens" );
+        degraded.setDetailsIncomplete( true );
+        wireSlice( Arrays.asList( ok, degraded ) );
+
+        GeoScrapeService.ScrapeRequest req = new GeoScrapeService.ScrapeRequest();
+        req.setMaxRecords( 10 );
+        req.setDryRun( true );
+
+        GeoScrapeService.DryRunResult result = svc.scrapeDryRun( req );
+
+        assertThat( result.getIncompleteRecords() ).containsExactly( "GSE304614" );
+        assertThat( result.getCandidates() )
+                .as( "a degraded record must not void the batch -- the good candidates survive" )
+                .isNotEmpty();
+    }
+
+    @Test
+    public void dryRun_cleanScanReportsNoIncompleteRecords() throws Exception {
+        wireSlice( Arrays.asList( rec( "GSE0001", "Brain cortex neuron study", "Homo sapiens" ) ) );
+        GeoScrapeService.ScrapeRequest req = new GeoScrapeService.ScrapeRequest();
+        req.setMaxRecords( 10 );
+        req.setDryRun( true );
+
+        GeoScrapeService.DryRunResult result = svc.scrapeDryRun( req );
+
+        assertThat( result.getIncompleteRecords() ).isEmpty();
+    }
+
+    @Test
     public void scrape_zeroMatches_doesNotOpenTicket() throws Exception {
         // Record with no brain / TF signal — neither matcher fires.
         GeoRecord r = rec( "GSE0009", "Pancreatic islet bulk expression", "Homo sapiens" );

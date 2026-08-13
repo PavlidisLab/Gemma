@@ -966,7 +966,9 @@ public class AdminWebServiceTest {
         c.proposalCount = 0L;
         c.matchedCriteria = Arrays.asList( "brain" );
         when( geoScrapeService.scrapeDryRun( org.mockito.ArgumentMatchers.any() ) )
-                .thenReturn( Arrays.asList( c ) );
+                .thenReturn( new GeoScrapeService.DryRunResult( Arrays.asList( c ), "GSE99999",
+                        new java.util.GregorianCalendar( 2026, java.util.Calendar.AUGUST, 1 ).getTime(),
+                        Arrays.asList( "GSE304614" ) ) );
 
         AdminWebService.GeoScrapeRequest req = new AdminWebService.GeoScrapeRequest();
         req.maxRecords = 25;
@@ -976,14 +978,18 @@ public class AdminWebServiceTest {
         Response resp = webService.submitGeoScrape( req );
 
         assertThat( resp.getStatus() ).isEqualTo( 200 );
-        @SuppressWarnings("unchecked")
-        ResponseDataObject<List<GeoScrapeDryRunCandidate>> dataObj =
-                ( ResponseDataObject<List<GeoScrapeDryRunCandidate>> ) resp.getEntity();
-        assertThat( dataObj.getData() ).hasSize( 1 );
-        GeoScrapeDryRunCandidate got = dataObj.getData().get( 0 );
+        AdminWebService.GeoScrapeDryRunResponse dataObj =
+                ( AdminWebService.GeoScrapeDryRunResponse ) resp.getEntity();
+        // `data` must stay the candidate array it has always been -- existing clients parse it.
+        assertThat( dataObj.data ).hasSize( 1 );
+        GeoScrapeDryRunCandidate got = dataObj.data.get( 0 );
         assertThat( got.accession ).isEqualTo( "GSE12345" );
         assertThat( got.preboardedId ).isNull();
         assertThat( got.matchedCriteria ).containsExactly( "brain" );
+        // and the two new fields ride alongside it
+        assertThat( dataObj.lastScannedAccession ).isEqualTo( "GSE99999" );
+        assertThat( dataObj.lastScannedDate ).isNotNull();
+        assertThat( dataObj.incompleteRecords ).containsExactly( "GSE304614" );
 
         ArgumentCaptor<GeoScrapeService.ScrapeRequest> captor =
                 ArgumentCaptor.forClass( GeoScrapeService.ScrapeRequest.class );
