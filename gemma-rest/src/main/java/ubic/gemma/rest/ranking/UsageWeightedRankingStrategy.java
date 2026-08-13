@@ -25,9 +25,24 @@ import java.util.Map;
  * Blends Lucene rank with the per-URI usage count.
  *
  * <p>Usage is a <strong>confidence signal</strong>, not a popularity contest: that Gemma
- * uses a term at all (usage &gt; 0) is the load-bearing bit. Magnitude provides a small
- * additional boost but saturates quickly so a high-usage but loosely-related hit can't
- * stomp a strong lexical match with usage 0 or 1.</p>
+ * uses a term at all (usage &gt; 0) is the bit that decides. Magnitude provides a small
+ * additional boost but saturates quickly.</p>
+ *
+ * <p><strong>At saturation this stops being a blend and becomes a partition.</strong> The
+ * rank component is at most {@code rankWeight} (0.5, for the top hit) and decays as
+ * {@code 1/(1+i)}; {@code usagePresenceScore} reaches 1.0 once usage hits
+ * {@code usageSaturation} (10). So any hit with usage &ge; 10 scores
+ * {@code 0.5 + 0.5/(1+i) &gt; 0.5} while the best conceivable usage-0 hit — an exact label
+ * match at rank 0 — scores exactly 0.5. Used terms therefore sort above unused ones
+ * regardless of how well either matches the query, and inside each block the order is the
+ * original Lucene rank (URI string order for same-scoring MONDO hits), not usage magnitude.
+ * Measured on gemma2 2026-08-13: {@code query=malignant melanoma&rank=usage} leads with
+ * {@code gastric cancer} (u=37), {@code urinary bladder cancer} (u=22), {@code brain cancer}
+ * (u=57) — all genuine lexical hits on "malignant" from deep in the candidate pool — because
+ * every melanoma-specific MONDO term has usage 0. Callers that want lexical relevance to lead
+ * with usage as a secondary signal want {@link CompositeRankingStrategy} ({@code rank=composite}),
+ * where token coverage carries the larger weight. See
+ * {@code handoffs/UIB_TO_GEB_2026_08_13_WHAT_IS_RANK_USAGE_SUPPOSED_TO_DO.md}.</p>
  *
  * <p>Score: {@code rankWeight * (1 / (1 + originalRank)) + usageWeight * usagePresenceScore(usage)},
  * where {@code usagePresenceScore} returns {@code 0} when usage is 0 and a value in
