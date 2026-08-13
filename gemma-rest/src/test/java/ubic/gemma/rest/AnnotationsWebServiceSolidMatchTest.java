@@ -27,6 +27,7 @@ import static org.mockito.Mockito.when;
 class AnnotationsWebServiceSolidMatchTest {
 
     private static final String OBO_EXACT_SYNONYM = "http://www.geneontology.org/formats/oboInOwl#hasExactSynonym";
+    private static final String OBO_RELATED_SYNONYM = "http://www.geneontology.org/formats/oboInOwl#hasRelatedSynonym";
 
     // ---- designation shape ---------------------------------------------------------------
 
@@ -125,19 +126,51 @@ class AnnotationsWebServiceSolidMatchTest {
 
     @Test
     void abbreviationMatchesViaExactSynonym() {
-        // The FTC → emtricitabine case: the label shares nothing with the query, so this hit can
-        // only be recognised — and promoted over the identically-labelled MGI gene — through its
-        // synonym.
-        OntologyTerm t = term( "emtricitabine" );
+        // A term whose label shares nothing with the query can still be recognised — and promoted
+        // over an identically-labelled hit in another namespace — through an EXACT synonym.
+        OntologyTerm t = term( "a compound" );
         // Build the stub value BEFORE opening the when(...) — nesting mock creation inside
         // thenReturn(...) trips Mockito's UnfinishedStubbing check.
-        Collection<AnnotationProperty> synonyms = annotations( "FTC" );
+        Collection<AnnotationProperty> synonyms = annotations( "ABC" );
         when( t.getAnnotations( OBO_EXACT_SYNONYM ) ).thenReturn( synonyms );
-        AnnotationsWebService.MatchAttribution m = AnnotationsWebService.computeMatchAttribution( t, "FTC" );
+        AnnotationsWebService.MatchAttribution m = AnnotationsWebService.computeMatchAttribution( t, "ABC" );
         assertThat( m ).isNotNull();
         assertThat( m.via ).isEqualTo( AnnotationsWebService.MatchedVia.EXACT_SYNONYM );
-        assertThat( m.text ).isEqualTo( "FTC" );
+        assertThat( m.text ).isEqualTo( "ABC" );
         assertThat( AnnotationsWebService.isExactAttribution( m.via ) ).isTrue();
+    }
+
+    @Test
+    void theRealFtcShapeIsNotSolid() {
+        // This test used to BE the FTC case, and it encoded an ontology fact that is not true:
+        // it stubbed `FTC` as emtricitabine's hasExactSynonym. Measured on gemma2 2026-08-13,
+        // ChEBI files the abbreviation as a RELATED synonym, and on emtricitabine the string is
+        // `(-)-FTC`, not `FTC`. Both halves matter, and each one alone defeats promotion:
+        //
+        //   ferroptocide   related_synonym  "FTC"      -> exact string, non-exact scope
+        //   emtricitabine  related_synonym  "(-)-FTC"  -> non-exact scope AND non-equal string
+        //
+        // So neither ChEBI candidate passes `solid`, the only solid hit for `FTC` under
+        // category=treatment is the MGI gene (whose URI carries no preferred prefix), every hit
+        // lands in the same promotion tier and the stable sort is a no-op. The green version of
+        // this test is why the false claim survived in the `category` docs for months.
+        OntologyTerm ferroptocide = term( "ferroptocide" );
+        Collection<AnnotationProperty> related = annotations( "FTC" );
+        when( ferroptocide.getAnnotations( OBO_RELATED_SYNONYM ) ).thenReturn( related );
+        AnnotationsWebService.MatchAttribution m =
+                AnnotationsWebService.computeMatchAttribution( ferroptocide, "FTC" );
+        assertThat( m ).isNotNull();
+        assertThat( m.via ).isEqualTo( AnnotationsWebService.MatchedVia.RELATED_SYNONYM );
+        assertThat( AnnotationsWebService.isExactAttribution( m.via ) )
+                .withFailMessage( "a related synonym must not read as an exact match" )
+                .isFalse();
+
+        // And emtricitabine, the compound the corpus actually uses, is further away still: its
+        // matched string canonicalises to "()ftc" — canonicaliseForExactMatch strips hyphens but
+        // not parentheses — so relaxing the scope gate would promote ferroptocide (0 corpus uses)
+        // and STILL leave emtricitabine behind. Only corpus usage separates this pair.
+        assertThat( AnnotationsWebService.canonicaliseForExactMatch( "(-)-FTC" ) )
+                .isNotEqualTo( AnnotationsWebService.canonicaliseForExactMatch( "FTC" ) );
     }
 
     @Test

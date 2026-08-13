@@ -840,6 +840,13 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
                 .thenReturn( Arrays.asList( gene, chem ) );
         // emtricitabine is reachable from "FTC" only through a synonym, so it is solid but scores
         // poorly on label coverage — exactly the shape composite mis-ranks.
+        //
+        // 🛑 The synonym scope below is HYPOTHETICAL and the test says so on purpose. Live, ChEBI
+        // files `FTC` as a RELATED synonym (on ferroptocide) and emtricitabine's string is
+        // `(-)-FTC`, so no CHEBI candidate is promotable and this query does NOT behave this way
+        // against the real ontology — see AnnotationsWebServiceSolidMatchTest#theRealFtcShapeIsNotSolid.
+        // What is under test here is that promotion SURVIVES strategy.rank(), which needs some
+        // solid preferred-namespace hit to exist; it is not a claim about FTC.
         OntologyTerm emtricitabine = mock( OntologyTerm.class );
         when( emtricitabine.getLabel() ).thenReturn( "emtricitabine" );
         when( emtricitabine.getAnnotations( anyString() ) ).thenReturn( Collections.emptyList() );
