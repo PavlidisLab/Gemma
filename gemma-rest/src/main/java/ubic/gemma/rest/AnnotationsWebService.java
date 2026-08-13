@@ -677,8 +677,17 @@ public class AnnotationsWebService {
                     "allow-list, the category's preferred ontology namespaces (configured by " +
                     "`annotation.category.prefixes`, and readable per-category from " +
                     "`/annotations/categories`) promote *exactly-matching* hits in those " +
-                    "namespaces to the front — so `FTC` under `treatment` leads with " +
-                    "emtricitabine (CHEBI) rather than the identically-labelled MGI gene. " +
+                    "namespaces to the front. " +
+                    "\"Exactly-matching\" means the hit NAMES the query through its preferred " +
+                    "label, an OBO exact/narrow synonym, or an alt label — an OBO *related* " +
+                    "synonym does not qualify. That gate is why promotion cannot separate drug " +
+                    "abbreviations: ChEBI files most abbreviations as related synonyms (`FTC` on " +
+                    "both ferroptocide and emtricitabine, `DMSO` on dimethyl sulfoxide), so under " +
+                    "`category=treatment` no CHEBI candidate is promotable and `FTC` still leads " +
+                    "with the identically-named MGI gene. Loosening the gate would not fix it " +
+                    "either — it would promote ferroptocide, which the corpus never uses, ahead " +
+                    "of emtricitabine, whose matched string is `(-)-FTC` rather than `FTC`. Only " +
+                    "corpus usage separates that pair; pass `rank=usage`. " +
                     "Promotion never filters and never applies to near-matches; see " +
                     "`suppress_near_matches` for the filtering counterpart. The parameter keys " +
                     "the response cache.")
