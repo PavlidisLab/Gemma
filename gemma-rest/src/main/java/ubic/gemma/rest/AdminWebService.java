@@ -1489,6 +1489,7 @@ public class AdminWebService {
             req.setMaxRecords( body.maxRecords );
             req.setCriteria( body.criteria );
             req.setStartAt( body.startAt );
+            req.setSkip( body.skip );
             req.setDryRun( true );
             GeoScrapeService.DryRunResult result;
             try {
@@ -1505,6 +1506,7 @@ public class AdminWebService {
             dryRunResponse.lastScannedAccession = result.getLastScannedAccession();
             dryRunResponse.lastScannedDate = result.getLastScannedDate();
             dryRunResponse.incompleteRecords = result.getIncompleteRecords();
+            dryRunResponse.nextOffset = result.getNextOffset();
             return Response.ok( dryRunResponse ).build();
         }
         GeoScrapeTaskCommand cmd = new GeoScrapeTaskCommand();
@@ -1514,6 +1516,7 @@ public class AdminWebService {
             cmd.setMaxRecords( body.maxRecords );
             cmd.setCriteria( body.criteria );
             cmd.setStartAt( body.startAt );
+            cmd.setSkip( body.skip );
             cmd.setDryRun( false );
         }
         String jobId = taskRunningService.submitTaskCommand( cmd );
@@ -2545,6 +2548,15 @@ public class AdminWebService {
          */
         @Nullable
         public String startAt;
+        /**
+         * Records to skip at the start of the resolved window — record-level resumption.
+         * `startAt` resolves to a release DATE and GEO's filter is day-granular, so resuming at X
+         * re-scans X's whole day; when that day is wider than `maxRecords` the scan cannot advance
+         * and stepping past the day discards whatever it never reached. Pass the previous
+         * response's `nextOffset` here alongside the same `startAt` to continue at record level.
+         */
+        @Nullable
+        public Integer skip;
     }
 
     /**
@@ -2574,6 +2586,13 @@ public class AdminWebService {
          * Usually transient; worth retrying later. Empty when everything parsed.
          */
         public List<String> incompleteRecords;
+        /**
+         * Absolute offset into the resolved window where this scan stopped. Hand it back as `skip`
+         * with the same `startAt` to resume at record level instead of restarting that day. Null
+         * when nothing was scanned.
+         */
+        @Nullable
+        public Integer nextOffset;
     }
 
     public static class GeoScrapeSubmitResponse {

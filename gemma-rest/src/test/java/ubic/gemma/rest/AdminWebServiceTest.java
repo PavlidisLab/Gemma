@@ -968,7 +968,7 @@ public class AdminWebServiceTest {
         when( geoScrapeService.scrapeDryRun( org.mockito.ArgumentMatchers.any() ) )
                 .thenReturn( new GeoScrapeService.DryRunResult( Arrays.asList( c ), "GSE99999",
                         new java.util.GregorianCalendar( 2026, java.util.Calendar.AUGUST, 1 ).getTime(),
-                        Arrays.asList( "GSE304614" ) ) );
+                        Arrays.asList( "GSE304614" ), 142 ) );
 
         AdminWebService.GeoScrapeRequest req = new AdminWebService.GeoScrapeRequest();
         req.maxRecords = 25;
@@ -990,6 +990,9 @@ public class AdminWebServiceTest {
         assertThat( dataObj.lastScannedAccession ).isEqualTo( "GSE99999" );
         assertThat( dataObj.lastScannedDate ).isNotNull();
         assertThat( dataObj.incompleteRecords ).containsExactly( "GSE304614" );
+        assertThat( dataObj.nextOffset )
+                .as( "record-level resumption: handed straight back as `skip`" )
+                .isEqualTo( 142 );
 
         ArgumentCaptor<GeoScrapeService.ScrapeRequest> captor =
                 ArgumentCaptor.forClass( GeoScrapeService.ScrapeRequest.class );
@@ -998,6 +1001,7 @@ public class AdminWebServiceTest {
         assertThat( sr.getMaxRecords() ).isEqualTo( 25 );
         assertThat( sr.getCriteria() ).containsExactly( "brain" );
         assertThat( sr.isDryRun() ).isTrue();
+        assertThat( sr.getSkip() ).isNull();
         verify( taskRunningService, org.mockito.Mockito.never() )
                 .submitTaskCommand( org.mockito.ArgumentMatchers.any( GeoScrapeTaskCommand.class ) );
     }

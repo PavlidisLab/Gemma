@@ -46,6 +46,9 @@ public class GeoScrapeTaskCommand extends TaskCommand {
     /** GEO accession to resume from; see {@code ScrapeRequest.startAt}. */
     @Nullable
     private String startAt;
+    /** Records to skip at the start of the resolved window; see {@code ScrapeRequest.skip}. */
+    @Nullable
+    private Integer skip;
 
     public GeoScrapeTaskCommand() {
         super();

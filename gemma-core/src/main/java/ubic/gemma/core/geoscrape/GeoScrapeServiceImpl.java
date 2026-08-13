@@ -341,13 +341,17 @@ public class GeoScrapeServiceImpl implements GeoScrapeService {
         Date lastScannedDate = null;
         List<String> incompleteRecords = new ArrayList<>();
         int scanned = 0;
+        // Record-level resumption: begin this scan `skip` records into the resolved window rather
+        // than at its head. See ScrapeRequest.skip -- without it, a day wider than maxRecords can
+        // only be escaped by stepping past it, which loses whatever was never reached.
+        int skip = req.getSkip() != null && req.getSkip() > 0 ? req.getSkip() : 0;
         try {
             GeoQuery query = resolveGeoBrowser().searchGeoRecords(
                     GeoRecordType.SERIES, null, null,
                     ALLOWED_TAXA, null,
                     EXPRESSION_PROFILING_TYPES,
                     req.getSince(), resolveUntil( req ) );
-            int pageStart = 0;
+            int pageStart = skip;
             int effectivePage = Math.max( 1, pageSize );
             while ( scanned < maxRecords ) {
                 if ( Thread.interrupted() ) {
@@ -373,9 +377,18 @@ public class GeoScrapeServiceImpl implements GeoScrapeService {
                     if ( !isAllowedTaxon( r ) ) continue;
                     if ( !isExpressionProfiling( r ) ) continue;
                     List<String> matchedNames = new ArrayList<>( active.size() );
+                    // Keep the matcher's own reason. It has always been computed -- e.g.
+                    // "brain keyword: cortical" -- and thrown away here, leaving a caller unable to
+                    // audit a hit or notice a matcher drifting. Same shape as ignoreErrors: the
+                    // capability existed and was never wired out.
+                    Map<String, String> matchedWhy = new LinkedHashMap<>();
                     for ( GeoRecordMatcher m : active ) {
-                        if ( m.evaluate( r ).isMatched() ) {
+                        GeoRecordMatcher.MatchResult mr = m.evaluate( r );
+                        if ( mr.isMatched() ) {
                             matchedNames.add( m.name() );
+                            if ( mr.getReason() != null ) {
+                                matchedWhy.put( m.name(), mr.getReason() );
+                            }
                         }
                     }
                     if ( matchedNames.isEmpty() ) continue;
@@ -390,6 +403,7 @@ public class GeoScrapeServiceImpl implements GeoScrapeService {
                     c.latestProposal = null;
                     c.auditTrailUrl = null;
                     c.matchedCriteria = matchedNames;
+                    c.matchedEvidence = matchedWhy.isEmpty() ? null : matchedWhy;
                     out.add( c );
                 }
                 pageStart += thisPage;
@@ -402,7 +416,9 @@ public class GeoScrapeServiceImpl implements GeoScrapeService {
             log.warn( "GEO served unusable MINiML for " + incompleteRecords.size()
                     + " record(s) in this scan; kept on summary data only: " + incompleteRecords );
         }
-        return new DryRunResult( out, lastScannedAccession, lastScannedDate, incompleteRecords );
+        // Absolute offset, so the caller can hand it straight back as `skip`.
+        Integer nextOffset = scanned > 0 ? skip + scanned : null;
+        return new DryRunResult( out, lastScannedAccession, lastScannedDate, incompleteRecords, nextOffset );
     }
 
     @Override
@@ -561,6 +577,18 @@ public class GeoScrapeServiceImpl implements GeoScrapeService {
             fmt.setTimeZone( TimeZone.getTimeZone( "UTC" ) );
             payload.put( "releaseDate", fmt.format( r.getReleaseDate() ) );
         }
+        // Series relation. Already fetched -- DETAILED_TOLERANT requests subSeriesStatus -- and
+        // previously dropped here. Without it a caller cannot honour "drop series under 4 samples
+        // UNLESS the rest of the experiment is in a sibling subseries", so it drops half a study
+        // and keeps the other half: mutilated rather than cleanly excluded. Reported by bro
+        // 2026-08-12 with GSE342447 / GSE342451, the same study under two accessions.
+        if ( r.isSuperSeries() ) {
+            payload.put( "superSeries", true );
+        }
+        if ( r.isSubSeries() ) {
+            payload.put( "subSeries", true );
+        }
+        putIfNotBlank( payload, "subSeriesOf", r.getSubSeriesOf() );
         putIfNotBlank( payload, "libraryStrategy", r.getLibraryStrategy() );
         putIfNotBlank( payload, "librarySource", r.getLibrarySource() );
         putIfNotBlank( payload, "sampleDetails", r.getSampleDetails() );

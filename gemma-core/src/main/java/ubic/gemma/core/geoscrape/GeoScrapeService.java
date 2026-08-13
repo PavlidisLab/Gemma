@@ -69,13 +69,16 @@ public interface GeoScrapeService {
         @Nullable
         private final Date lastScannedDate;
         private final List<String> incompleteRecords;
+        @Nullable
+        private final Integer nextOffset;
 
         public DryRunResult( List<GeoScrapeDryRunCandidate> candidates, @Nullable String lastScannedAccession,
-                @Nullable Date lastScannedDate, List<String> incompleteRecords ) {
+                @Nullable Date lastScannedDate, List<String> incompleteRecords, @Nullable Integer nextOffset ) {
             this.candidates = candidates;
             this.lastScannedAccession = lastScannedAccession;
             this.lastScannedDate = lastScannedDate;
             this.incompleteRecords = incompleteRecords;
+            this.nextOffset = nextOffset;
         }
 
         public List<GeoScrapeDryRunCandidate> getCandidates() {
@@ -114,6 +117,16 @@ public interface GeoScrapeService {
          */
         public List<String> getIncompleteRecords() {
             return incompleteRecords;
+        }
+
+        /**
+         * Absolute offset into the resolved window where this scan stopped — feed straight back as
+         * {@code skip} alongside the same {@code startAt} to continue at record level rather than
+         * restarting that day. Null when nothing was scanned.
+         */
+        @Nullable
+        public Integer getNextOffset() {
+            return nextOffset;
         }
     }
 
@@ -157,6 +170,34 @@ public interface GeoScrapeService {
          */
         @Nullable
         private String startAt;
+
+        /**
+         * Records to skip at the START of the resolved window, for record-level resumption.
+         * <p>
+         * {@link #startAt} resolves an accession to its RELEASE DATE and GEO's date filter is
+         * day-granular, so resuming at X re-scans X's whole day. When that day holds more records
+         * than {@code maxRecords}, the scan returns the same last-scanned record every call and the
+         * walk spins; the only escape was stepping {@code until} back a day, which DISCARDS
+         * whatever the scan never reached in that day. Measured by the agents side 2026-08-12: the
+         * same window yielded 19 candidates at maxRecords=100 and 16 at maxRecords=10, a strict
+         * subset — three records lost purely to the day-step.
+         * <p>
+         * Pair this with {@code startAt} — "resume at GSE-X, skipping the first N of its day" —
+         * using the {@code nextOffset} the previous response returned. An offset alone would be
+         * unstable, since GEO returns newest-first and every new publication shifts it; anchored to
+         * the cursor's day it is stable, because the window is pinned by date first.
+         */
+        @Nullable
+        private Integer skip;
+
+        @Nullable
+        public Integer getSkip() {
+            return skip;
+        }
+
+        public void setSkip( @Nullable Integer skip ) {
+            this.skip = skip;
+        }
 
         @Nullable
         public String getStartAt() {

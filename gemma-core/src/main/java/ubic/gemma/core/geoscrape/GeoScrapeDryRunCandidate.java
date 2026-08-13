@@ -60,4 +60,15 @@ public class GeoScrapeDryRunCandidate {
 
     @JsonProperty("matchedCriteria")
     public List<String> matchedCriteria;
+    /**
+     * Why each criterion fired, keyed by matcher name — e.g.
+     * {@code {"brain": "brain keyword: cortical"}}.
+     * <p>
+     * The matchers have always produced this; it was discarded at the scrape boundary, so a
+     * caller could see WHICH matcher fired but never WHY. That makes a false positive
+     * unreviewable and a drifting matcher invisible. Null when no matcher supplied a reason.
+     */
+    @JsonProperty("matchedEvidence")
+    @Nullable
+    public java.util.Map<String, String> matchedEvidence;
 }

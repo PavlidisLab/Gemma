@@ -42,6 +42,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
@@ -414,6 +415,78 @@ public class GeoScrapeServiceImplTest {
         GeoScrapeService.DryRunResult result = svc.scrapeDryRun( req );
 
         assertThat( result.getIncompleteRecords() ).isEmpty();
+    }
+
+    @Test
+    public void dryRun_skipResumesAtRecordLevelNotAtTheStartOfTheDay() throws Exception {
+        // startAt resolves to a release DATE and GEO's filter is day-granular, so resuming at X
+        // re-scans X's whole day. When the day is wider than maxRecords the scan cannot advance,
+        // and the only escape -- stepping `until` past the day -- discards whatever was never
+        // reached. Measured by the agents side: 19 candidates at maxRecords=100 vs 16 at 10, a
+        // strict subset. `skip` is what makes the walk complete rather than merely non-wasteful.
+        wireSlice( Collections.emptyList() );
+        wirePreboardedCreate();
+
+        GeoScrapeService.ScrapeRequest req = new GeoScrapeService.ScrapeRequest();
+        req.setMaxRecords( 10 );
+        req.setSkip( 40 );
+        req.setDryRun( true );
+
+        svc.scrapeDryRun( req );
+
+        ArgumentCaptor<Integer> startCap = ArgumentCaptor.forClass( Integer.class );
+        verify( geoBrowser ).retrieveGeoRecords( any(), startCap.capture(), anyInt(), any() );
+        assertThat( startCap.getValue() )
+                .as( "paging must begin at the requested offset, not at the head of the day" )
+                .isEqualTo( 40 );
+    }
+
+    @Test
+    public void dryRun_reportsAnAbsoluteNextOffset() throws Exception {
+        // wireSlice() stubs the first page at offset 0; this scan starts at 40, so wire it there.
+        List<GeoRecord> recs = Arrays.asList(
+                rec( "GSE0001", "Brain cortex neuron study", "Homo sapiens" ),
+                rec( "GSE0002", "Another brain study", "Homo sapiens" ) );
+        when( geoBrowser.retrieveGeoRecords( any( GeoQuery.class ), eq( 40 ), any( Integer.class ),
+                any( GeoRetrieveConfig.class ) ) )
+                .thenReturn( new Slice<>( recs, null, 40, recs.size(), ( long ) recs.size() ) );
+        when( geoBrowser.retrieveGeoRecords( any( GeoQuery.class ), eq( 42 ), any( Integer.class ),
+                any( GeoRetrieveConfig.class ) ) )
+                .thenReturn( new Slice<>( new ArrayList<>(), null, 42, 0, ( long ) recs.size() ) );
+        wirePreboardedCreate();
+
+        GeoScrapeService.ScrapeRequest req = new GeoScrapeService.ScrapeRequest();
+        req.setMaxRecords( 10 );
+        req.setSkip( 40 );
+        req.setDryRun( true );
+
+        GeoScrapeService.DryRunResult result = svc.scrapeDryRun( req );
+
+        assertThat( result.getNextOffset() )
+                .as( "absolute, so the caller hands it straight back as skip: 40 + 2 scanned" )
+                .isEqualTo( 42 );
+    }
+
+    @Test
+    public void dryRun_emitsWhyEachCriterionFired() throws Exception {
+        // The matchers always computed a reason; it was dropped at this boundary, leaving a false
+        // positive unreviewable and a drifting matcher invisible.
+        wireSlice( Arrays.asList( rec( "GSE0001", "Brain cortex neuron study", "Homo sapiens" ) ) );
+        wirePreboardedCreate();
+
+        GeoScrapeService.ScrapeRequest req = new GeoScrapeService.ScrapeRequest();
+        req.setMaxRecords( 10 );
+        req.setDryRun( true );
+
+        GeoScrapeService.DryRunResult result = svc.scrapeDryRun( req );
+
+        assertThat( result.getCandidates() ).hasSize( 1 );
+        assertThat( result.getCandidates().get( 0 ).matchedEvidence )
+                .as( "which matcher fired is not enough -- a caller must see WHY" )
+                .isNotNull()
+                .containsKey( "brain" );
+        assertThat( result.getCandidates().get( 0 ).matchedEvidence.get( "brain" ) )
+                .contains( "keyword" );
     }
 
     @Test
