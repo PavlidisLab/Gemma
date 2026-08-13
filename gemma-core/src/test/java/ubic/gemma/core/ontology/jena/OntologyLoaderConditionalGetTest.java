@@ -48,6 +48,7 @@ class OntologyLoaderConditionalGetTest {
     /** Counts requests that actually transferred a body. */
     private final AtomicInteger bodyServed = new AtomicInteger();
     private final AtomicInteger requests = new AtomicInteger();
+    private final AtomicInteger heads = new AtomicInteger();
 
     @BeforeEach
     void startServer() throws IOException {
@@ -60,6 +61,16 @@ class OntologyLoaderConditionalGetTest {
 
     private void handle( HttpExchange ex ) throws IOException {
         requests.incrementAndGet();
+        byte[] full = OWL.getBytes( StandardCharsets.UTF_8 );
+        if ( "HEAD".equals( ex.getRequestMethod() ) ) {
+            heads.incrementAndGet();
+            ex.getResponseHeaders().add( "ETag", ETAG );
+            ex.getResponseHeaders().add( "Last-Modified", "Tue, 07 Jul 2026 16:57:44 GMT" );
+            ex.getResponseHeaders().add( "Content-Length", String.valueOf( full.length ) );
+            ex.sendResponseHeaders( 200, -1 );
+            ex.close();
+            return;
+        }
         String inm = ex.getRequestHeaders().getFirst( "If-None-Match" );
         if ( ETAG.equals( inm ) ) {
             ex.getResponseHeaders().add( "ETag", ETAG );
@@ -145,6 +156,47 @@ class OntologyLoaderConditionalGetTest {
 
         assertThat( bodyServed.get() )
                 .as( "a genuine upstream change must still be picked up" )
+                .isEqualTo( 2 );
+    }
+
+    @Test
+    void anExistingCacheWithNoValidatorIsAdoptedNotReDownloaded() throws Exception {
+        // The case that actually matters on frink: a complete 826 MB chebiOntology is already on
+        // the persistent volume, but no validator was ever recorded because this code did not
+        // exist. Downloading it again purely to learn its ETag would be absurd.
+        load();
+        assertThat( bodyServed.get() ).isEqualTo( 1 );
+
+        // Simulate the upgrade: cache present, validator absent.
+        //noinspection ResultOfMethodCallIgnored
+        OntologyLoader.getValidatorMarkerPath( CACHE_NAME ).delete();
+        assertThat( OntologyLoader.getValidatorMarkerPath( CACHE_NAME ) ).doesNotExist();
+        assertThat( OntologyLoader.getDiskCachePath( CACHE_NAME ) ).exists();
+
+        load();
+
+        assertThat( bodyServed.get() )
+                .as( "the cached bytes are already correct; adopting them must not transfer 826 MB" )
+                .isEqualTo( 1 );
+        assertThat( heads.get() ).as( "adoption is decided by a HEAD" ).isEqualTo( 1 );
+        assertThat( OntologyLoader.getValidatorMarkerPath( CACHE_NAME ) )
+                .as( "and the validator is recorded, so the next boot needs no HEAD at all" )
+                .exists();
+    }
+
+    @Test
+    void aCacheOfTheWrongSizeIsNotAdopted() throws Exception {
+        load();
+        //noinspection ResultOfMethodCallIgnored
+        OntologyLoader.getValidatorMarkerPath( CACHE_NAME ).delete();
+        // A truncated / partial download must NOT be adopted on the strength of its mere existence.
+        Files.write( OntologyLoader.getDiskCachePath( CACHE_NAME ).toPath(),
+                "<?xml version=\"1.0\"?>".getBytes( StandardCharsets.UTF_8 ) );
+
+        load();
+
+        assertThat( bodyServed.get() )
+                .as( "a size mismatch means the local copy is not the upstream one -- re-download" )
                 .isEqualTo( 2 );
     }
 

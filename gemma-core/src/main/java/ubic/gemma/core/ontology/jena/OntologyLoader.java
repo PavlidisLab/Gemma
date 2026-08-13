@@ -121,6 +121,13 @@ public class OntologyLoader {
             Validator validator = null;
             if ( cacheName != null && getDiskCachePath( cacheName ).isFile() ) {
                 validator = readValidator( cacheName );
+                if ( validator == null ) {
+                    // We have the bytes but no validator -- every deployment predating this, and
+                    // the one that matters: frink holds a complete 826 MB chebiOntology right now.
+                    // Downloading it again purely to learn its ETag would be absurd, so adopt the
+                    // copy on disk if the server agrees about its size.
+                    validator = adoptCachedCopy( url, cacheName );
+                }
             }
             urlc = openConnection( url, validator );
 
@@ -337,6 +344,85 @@ public class OntologyLoader {
         }
         log.debug( "Connecting to {}", url );
         urlc.connect(); // Will error here on bad URL
+        return urlc;
+    }
+
+    /**
+     * Bootstrap a validator for a cached file we already hold but never recorded one for.
+     *
+     * <p>Asks the server for the metadata only (HEAD) and compares {@code Content-Length} against
+     * the file on disk. On a match we record the server's current ETag / Last-Modified as
+     * describing our copy, which lets the very next request be conditional and answer 304 — so an
+     * existing cache is adopted without transferring it.
+     *
+     * <p>Size equality is strong evidence rather than proof: a different release of the same
+     * ontology at the same URL with a byte-identical length is conceivable. It is also
+     * self-limiting — the guess only ever applies to the single boot that has a cache and no
+     * validator, after which a real ETag is on file. A mismatched size, an absent
+     * {@code Content-Length}, or a server that rejects HEAD all fall through to the normal
+     * download.
+     *
+     * @return a validator describing the cached copy, or null to download as before
+     */
+    @Nullable
+    private static Validator adoptCachedCopy( String url, String cacheName ) {
+        File cached = getDiskCachePath( cacheName );
+        long localSize = cached.length();
+        if ( localSize <= 0 ) {
+            return null;
+        }
+        HttpURLConnection headConnection = null;
+        try {
+            URLConnection urlc = openConnectionForHead( url );
+            if ( !( urlc instanceof HttpURLConnection ) ) {
+                return null;
+            }
+            headConnection = ( HttpURLConnection ) urlc;
+            int code = headConnection.getResponseCode();
+            if ( code != HttpURLConnection.HTTP_OK ) {
+                log.debug( "HEAD for {} returned {}; will download instead of adopting the cache.", url, code );
+                return null;
+            }
+            long remoteSize = headConnection.getHeaderFieldLong( "Content-Length", -1L );
+            if ( remoteSize < 0 ) {
+                return null;
+            }
+            if ( remoteSize != localSize ) {
+                log.info( "Cached {} is {} bytes but upstream reports {}; re-downloading.",
+                        cacheName, localSize, remoteSize );
+                return null;
+            }
+            String etag = headConnection.getHeaderField( "ETag" );
+            String lastModified = headConnection.getHeaderField( "Last-Modified" );
+            Validator v = new Validator( etag, lastModified );
+            if ( !v.isUsable() ) {
+                // Same size but nothing to revalidate with next time; still worth skipping this
+                // download, but there is no validator to persist.
+                return null;
+            }
+            writeValidator( cacheName, etag, lastModified );
+            log.info( "Adopted the existing {} cache ({} bytes, matching upstream) instead of re-downloading it.",
+                    cacheName, localSize );
+            return v;
+        } catch ( IOException e ) {
+            log.debug( "Could not check {} with HEAD; will download.", url, e );
+            return null;
+        } finally {
+            if ( headConnection != null ) {
+                headConnection.disconnect();
+            }
+        }
+    }
+
+    /** HEAD variant of {@link #openConnectionInternal}: metadata only, no body. */
+    private static URLConnection openConnectionForHead( String url ) throws IOException {
+        URLConnection urlc = new URL( url ).openConnection();
+        urlc.setRequestProperty( "Accept", "application/rdf+xml" );
+        if ( urlc instanceof HttpURLConnection ) {
+            ( ( HttpURLConnection ) urlc ).setRequestMethod( "HEAD" );
+            ( ( HttpURLConnection ) urlc ).setInstanceFollowRedirects( true );
+        }
+        urlc.connect();
         return urlc;
     }
 
