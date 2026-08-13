@@ -56,6 +56,14 @@ public class OntologyLoader {
     private static final String OLD_CACHE_SUFFIX = ".old";
     /** Sidecar recording which source URL the on-disk index was built from. @see #hasSourceChanged */
     private static final String SOURCE_MARKER_SUFFIX = ".source";
+    /**
+     * Sidecar holding the HTTP validator (ETag / Last-Modified) of the cached download, so a
+     * re-init can ask the server "still this one?" instead of re-fetching. Deliberately NOT stored
+     * in {@link #SOURCE_MARKER_SUFFIX}, whose entire contents are compared verbatim against the
+     * configured URL by {@link #hasSourceChanged} — adding fields there would make every ontology
+     * look like it changed source and reindex the lot.
+     */
+    private static final String VALIDATOR_MARKER_SUFFIX = ".validator";
     private static final String TMP_CACHE_SUFFIX = ".tmp";
 
     /**
@@ -100,22 +108,51 @@ public class OntologyLoader {
 
     private static void readModelFromUrl( OntModel model, String url, @Nullable String cacheName ) throws IOException {
         boolean attemptToLoadFromDisk = false;
+        // Set when the server answered 304: the cached copy is current, so there is nothing to
+        // download and nothing to rotate. Distinct from attemptToLoadFromDisk, which means the
+        // fetch FAILED and we are falling back.
+        boolean cacheIsCurrent = false;
+        // Captured inside the try but consumed after it, once the download is safely in place.
+        String urlcEtag = null, urlcLastModified = null;
         URLConnection urlc = null;
         try {
-            urlc = openConnection( url );
-            try ( InputStream in = urlc.getInputStream() ) {
-                if ( cacheName != null ) {
-                    // write tmp to disk
-                    File tempFile = getTmpDiskCachePath( cacheName );
-                    FileUtils.createParentDirectories( tempFile );
-                    Files.copy( in, tempFile.toPath(), StandardCopyOption.REPLACE_EXISTING );
-                    // read from disk
-                    try ( InputStream is = Files.newInputStream( tempFile.toPath() ) ) {
-                        model.read( is, url );
+            // Only send conditional headers when there is actually a cached body to fall back on;
+            // a 304 with no cached file would leave us with nothing to read.
+            Validator validator = null;
+            if ( cacheName != null && getDiskCachePath( cacheName ).isFile() ) {
+                validator = readValidator( cacheName );
+            }
+            urlc = openConnection( url, validator );
+
+            if ( validator != null && urlc instanceof HttpURLConnection
+                    && ( ( HttpURLConnection ) urlc ).getResponseCode() == HttpURLConnection.HTTP_NOT_MODIFIED ) {
+                // Unchanged upstream. Read the copy we already have instead of pulling it again --
+                // for CHEBI that is 826 MB and roughly half an hour saved per boot.
+                cacheIsCurrent = true;
+                File cached = getDiskCachePath( cacheName );
+                StopWatch timer = StopWatch.createStarted();
+                try ( InputStream is = Files.newInputStream( cached.toPath() ) ) {
+                    model.read( is, url );
+                }
+                log.info( "{} is unchanged upstream (304); loaded the cached copy in {} ms instead of re-downloading.",
+                        cacheName, timer.getTime() );
+            } else {
+                urlcEtag = urlc.getHeaderField( "ETag" );
+                urlcLastModified = urlc.getHeaderField( "Last-Modified" );
+                try ( InputStream in = urlc.getInputStream() ) {
+                    if ( cacheName != null ) {
+                        // write tmp to disk
+                        File tempFile = getTmpDiskCachePath( cacheName );
+                        FileUtils.createParentDirectories( tempFile );
+                        Files.copy( in, tempFile.toPath(), StandardCopyOption.REPLACE_EXISTING );
+                        // read from disk
+                        try ( InputStream is = Files.newInputStream( tempFile.toPath() ) ) {
+                            model.read( is, url );
+                        }
+                    } else {
+                        // skip the cache and simply read the stream into the model
+                        model.read( in, url );
                     }
-                } else {
-                    // skip the cache and simply read the stream into the model
-                    model.read( in, url );
                 }
             }
         } catch ( ClosedByInterruptException e ) {
@@ -127,6 +164,22 @@ public class OntologyLoader {
             if ( urlc instanceof HttpURLConnection ) {
                 ( ( HttpURLConnection ) urlc ).disconnect();
             }
+        }
+
+        if ( cacheName != null && cacheIsCurrent ) {
+            // Nothing was downloaded, so leave the cache alone -- but mirror the disk-fallback path
+            // and sync `.old` to the current file, otherwise hasChanged() compares this boot's file
+            // against a stale predecessor and reports a change that did not happen, triggering a
+            // needless reindex.
+            File f = getDiskCachePath( cacheName );
+            File oldFile = getOldDiskCachePath( cacheName );
+            try {
+                FileUtils.createParentDirectories( oldFile );
+                Files.copy( f.toPath(), oldFile.toPath(), StandardCopyOption.REPLACE_EXISTING );
+            } catch ( IOException e ) {
+                log.warn( "Could not refresh the previous-copy marker for {}.", cacheName, e );
+            }
+            return;
         }
 
         if ( cacheName != null ) {
@@ -163,6 +216,12 @@ public class OntologyLoader {
                         FileUtils.createParentDirectories( f );
                     }
                     Files.move( tempFile.toPath(), f.toPath(), StandardCopyOption.REPLACE_EXISTING );
+                    // Record what we just stored so the next boot can ask "still this one?".
+                    // Written only after the file is in place, so a validator never describes a
+                    // copy that is not on disk.
+                    if ( urlcEtag != null || urlcLastModified != null ) {
+                        writeValidator( cacheName, urlcEtag, urlcLastModified );
+                    }
                 } catch ( IOException e ) {
                     log.error( "Failed to cache ontology {} to disk.", url, e );
                 }
@@ -232,34 +291,124 @@ public class OntologyLoader {
     }
 
     private static URLConnection openConnection( String url ) throws IOException {
-        URLConnection urlc = openConnectionInternal( url );
+        return openConnection( url, null );
+    }
+
+    /**
+     * @param validator previously-recorded ETag / Last-Modified for the cached copy, or null to
+     *                  fetch unconditionally. When supplied, the server may answer
+     *                  {@code 304 Not Modified} and send no body at all.
+     */
+    private static URLConnection openConnection( String url, @Nullable Validator validator ) throws IOException {
+        URLConnection urlc = openConnectionInternal( url, validator );
 
         // this happens if there is a change of protocol (http:// -> https://)
         if ( urlc instanceof HttpURLConnection ) {
             int code = ( ( HttpURLConnection ) urlc ).getResponseCode();
             String newUrl = urlc.getHeaderField( "Location" );
-            if ( code >= 300 && code < 400 ) {
+            if ( code >= 300 && code < 400 && code != HttpURLConnection.HTTP_NOT_MODIFIED ) {
                 if ( StringUtils.isBlank( newUrl ) ) {
                     throw new RuntimeException( String.format( "Redirect response for %s is lacking a 'Location' header.", url ) );
                 }
                 log.debug( "Redirect to {} from {}", newUrl, url );
-                urlc = openConnectionInternal( newUrl );
+                // Re-apply the conditional headers: the redirect target is the origin that holds
+                // the validator, so dropping them here would silently defeat the whole mechanism.
+                urlc = openConnectionInternal( newUrl, validator );
             }
         }
 
         return urlc;
     }
 
-    private static URLConnection openConnectionInternal( String url ) throws IOException {
+    private static URLConnection openConnectionInternal( String url, @Nullable Validator validator ) throws IOException {
         URLConnection urlc = new URL( url ).openConnection();
         // help ensure mis-configured web servers aren't causing trouble.
         urlc.setRequestProperty( "Accept", "application/rdf+xml" );
+        if ( validator != null ) {
+            if ( StringUtils.isNotBlank( validator.etag ) ) {
+                urlc.setRequestProperty( "If-None-Match", validator.etag );
+            }
+            if ( StringUtils.isNotBlank( validator.lastModified ) ) {
+                urlc.setRequestProperty( "If-Modified-Since", validator.lastModified );
+            }
+        }
         if ( urlc instanceof HttpURLConnection ) {
             ( ( HttpURLConnection ) urlc ).setInstanceFollowRedirects( true );
         }
         log.debug( "Connecting to {}", url );
         urlc.connect(); // Will error here on bad URL
         return urlc;
+    }
+
+    /** ETag / Last-Modified pair for a cached ontology download. */
+    private static final class Validator {
+        @Nullable
+        private final String etag;
+        @Nullable
+        private final String lastModified;
+
+        private Validator( @Nullable String etag, @Nullable String lastModified ) {
+            this.etag = etag;
+            this.lastModified = lastModified;
+        }
+
+        private boolean isUsable() {
+            return StringUtils.isNotBlank( etag ) || StringUtils.isNotBlank( lastModified );
+        }
+    }
+
+    /**
+     * Read the recorded validator for a cached ontology, or null when there is none (every
+     * deployment predating this, and any ontology whose server sends neither header).
+     */
+    @Nullable
+    private static Validator readValidator( String cacheName ) {
+        File marker = getValidatorMarkerPath( cacheName );
+        if ( !marker.isFile() ) {
+            return null;
+        }
+        try {
+            String etag = null, lastModified = null;
+            for ( String line : FileUtils.readLines( marker, StandardCharsets.UTF_8 ) ) {
+                int eq = line.indexOf( '=' );
+                if ( eq < 0 ) continue;
+                String key = line.substring( 0, eq ).trim();
+                String value = line.substring( eq + 1 ).trim();
+                if ( "etag".equals( key ) ) etag = value;
+                else if ( "lastModified".equals( key ) ) lastModified = value;
+            }
+            Validator v = new Validator( etag, lastModified );
+            return v.isUsable() ? v : null;
+        } catch ( IOException e ) {
+            // Unreadable validator just costs a full download, which is the old behaviour.
+            log.warn( "Could not read the cache validator for {}; will re-download.", cacheName, e );
+            return null;
+        }
+    }
+
+    /**
+     * Record the validator of the copy now on disk. Swallowed on failure for the same reason as
+     * {@link #recordSource}: losing the sidecar costs one extra download, failing the load costs
+     * the ontology.
+     */
+    private static void writeValidator( String cacheName, @Nullable String etag, @Nullable String lastModified ) {
+        if ( StringUtils.isBlank( etag ) && StringUtils.isBlank( lastModified ) ) {
+            return;
+        }
+        File marker = getValidatorMarkerPath( cacheName );
+        try {
+            StringBuilder sb = new StringBuilder();
+            if ( StringUtils.isNotBlank( etag ) ) sb.append( "etag=" ).append( etag.trim() ).append( '\n' );
+            if ( StringUtils.isNotBlank( lastModified ) ) sb.append( "lastModified=" ).append( lastModified.trim() ).append( '\n' );
+            FileUtils.forceMkdirParent( marker );
+            FileUtils.writeStringToFile( marker, sb.toString(), StandardCharsets.UTF_8 );
+        } catch ( IOException e ) {
+            log.warn( "Could not record the cache validator for {}; the next load will re-download.", cacheName, e );
+        }
+    }
+
+    static File getValidatorMarkerPath( String name ) {
+        return new File( getDiskCachePath( name ).getAbsolutePath() + VALIDATOR_MARKER_SUFFIX );
     }
 
     static boolean hasChanged( String cacheName ) {
