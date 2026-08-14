@@ -352,6 +352,21 @@ class AnnotationsWebServiceSolidMatchTest {
     }
 
     @Test
+    void shippedExclusionsParseIncludingAPrefixThatContainsAColon() {
+        // The MGI catalogue's URIs carry the accession as `MGI:2667754`, so the excluded prefix is
+        // `MGI:` -- a value containing the same character that separates key from value. Only the
+        // FIRST colon splits, which is what makes this expressible at all; a naive split(":")
+        // would silently yield the prefix "" and exclude every hit under `treatment`.
+        var parsed = AnnotationsWebService.parseCategoryPrefixProperty( "genotype:MONDO_;treatment:MGI:" );
+        assertThat( parsed.get( "genotype" ) ).containsExactly( "MONDO_" );
+        assertThat( parsed.get( "treatment" ) ).containsExactly( "MGI:" );
+        // The exclusion is applied with String.contains against the whole URI, so pin the shape it
+        // has to match and one it must not.
+        assertThat( "https://www.informatics.jax.org/strain/MGI:2667754" ).contains( "MGI:" );
+        assertThat( "http://purl.obolibrary.org/obo/CHEBI_31536" ).doesNotContain( "MGI:" );
+    }
+
+    @Test
     void emptyPrefixPropertyYieldsNoPreferences() {
         assertThat( AnnotationsWebService.parseCategoryPrefixProperty( null ) ).isEmpty();
         assertThat( AnnotationsWebService.parseCategoryPrefixProperty( "  " ) ).isEmpty();
