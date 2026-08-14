@@ -856,12 +856,56 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
                     // the tie, so the ontology term leads
                     assertThat( data.get( 0 ) ).containsEntry( "valueUri",
                             "http://purl.obolibrary.org/obo/CLO_0003402" );
-                    // ...but ONE tier, not banished: the catalogue row is still returned, right
-                    // behind it. These sources are backups for names the ontologies lack, so
-                    // burying them would defeat the reason they are loaded.
+                    // ...and still returned rather than banished. These sources are backups for
+                    // names the ontologies lack, so dropping them defeats the reason they load.
                     assertThat( data.get( 1 ) ).containsEntry( "valueUri",
                             "https://www.informatics.jax.org/strain/MGI:2667754" );
                 } );
+    }
+
+    @Test
+    public void testLexicalCatalogueHitAlsoSinksBelowANonExactOntologyHit() throws Exception {
+        // The half the two-candidate test above cannot see, pinned from live behaviour rather than
+        // from intent. The synonym-exact pass sorts on a BINARY key (exact / not exact), so adding
+        // the demotion to it carries a supplementary exact match across the bucket boundary: it
+        // ends up behind every non-exact conventional hit, not one tier down. Measured on gemma2
+        // 2026-08-13, `FTC` with no category put the MGI row at position 7, below CHEBI rows
+        // reached only through a related synonym.
+        //
+        // This is stronger than the comment at the sort site originally claimed and is kept on
+        // purpose -- it is what demotes the catalogue row below the ontology, and it costs nothing
+        // measurable (lucene on the 400-pair TUNE fold is identical to three decimals before and
+        // after). Guarded so that softening the demotion is a deliberate act with a red test, not
+        // a silent side effect of touching either sort.
+        CharacteristicValueObject catalogueExact = new CharacteristicValueObject( "ftc",
+                "https://www.informatics.jax.org/strain/MGI:2667754", null, null );
+        catalogueExact.setSupplementary( true );
+        CharacteristicValueObject ontologyBySynonym = new CharacteristicValueObject( "ferroptocide",
+                "http://purl.obolibrary.org/obo/CHEBI_173106", null, null );
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "FTC" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Arrays.asList( catalogueExact, ontologyBySynonym ) );
+        // ferroptocide names the query only through a RELATED synonym -- a weaker attribution than
+        // the catalogue row's preferred-label match, which is the point.
+        OntologyTerm ferroptocide = mock( OntologyTerm.class );
+        when( ferroptocide.getLabel() ).thenReturn( "ferroptocide" );
+        when( ferroptocide.getAnnotations( anyString() ) ).thenReturn( Collections.emptyList() );
+        AnnotationProperty related = mock( AnnotationProperty.class );
+        when( related.getContents() ).thenReturn( "FTC" );
+        when( ferroptocide.getAnnotations( "http://www.geneontology.org/formats/oboInOwl#hasRelatedSynonym" ) )
+                .thenReturn( Collections.singletonList( related ) );
+        when( ontologyService.getTerm( eq( "http://purl.obolibrary.org/obo/CHEBI_173106" ), anyLong(), any() ) )
+                .thenReturn( ferroptocide );
+
+        assertThat( target( "/annotations/search" )
+                .queryParam( "query", "FTC" )
+                .queryParam( "includeGenes", "false" )
+                .request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .satisfies( data -> assertThat( data.get( 0 ) )
+                        .as( "a weaker ontology match still precedes an exact catalogue name" )
+                        .containsEntry( "valueUri", "http://purl.obolibrary.org/obo/CHEBI_173106" ) );
     }
 
     @Test

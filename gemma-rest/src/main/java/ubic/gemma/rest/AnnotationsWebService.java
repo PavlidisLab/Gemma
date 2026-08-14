@@ -1392,11 +1392,25 @@ public class AnnotationsWebService {
         // category=treatment returned the MGI row `ftc` at position 0, ahead of every CLO and
         // CHEBI candidate, purely because its label equals the query.
         //
-        // Demotion by one tier rather than "below every conventional hit" (findTermsInexact's
-        // rule) is deliberate. These catalogues are BACKUPS: they carry cell lines and strains the
-        // ontologies lack, so a Cellosaurus-only exact match must still outrank a conventional
-        // substring match, or enabling the backup would bury the only row that answers the query.
-        // One tier keeps it below an equal-strength ontology match and above a weaker one.
+        // Demotion is by one tier rather than findTermsInexact's "below every conventional hit",
+        // the intent being that a Cellosaurus-only exact match still outranks a conventional
+        // SUBSTRING match — these catalogues are backups carrying cell lines and strains the
+        // ontologies lack, and burying them defeats the reason they are loaded.
+        //
+        // 🛑 Measured live 2026-08-13, that intent only holds where the synonym-exact pass below
+        // does not run. That pass collapses candidates into exact / not-exact, so +1 carries a
+        // supplementary exact match ACROSS the bucket boundary and it then loses the tiebreak to
+        // every non-exact conventional hit. `FTC` with no category: the MGI row lands at 7, below
+        // CHEBI related-synonym hits, not at 2 as one tier alone would put it. Effectively the
+        // demotion is one tier here and near-total once attribution runs — which is nearly always.
+        //
+        // Left as-is deliberately, because the stronger form is what fixes the case and it costs
+        // nothing measurable: on the 400-pair TUNE fold the lucene arm is IDENTICAL to three
+        // decimals in all nine cells before and after this change, and NO gold pair in that fold
+        // resolves to a CVCL_ or MGI: URI — curators commit ontology terms, not catalogue rows.
+        // If a catalogue-only name ever needs to lead, the fix is to apply the demotion as a
+        // tiebreak WITHIN each synonym-exact bucket instead of adding to the key, and that will
+        // re-break `FTC`. Do not change one without re-measuring the other.
         java.util.function.ToIntFunction<CharacteristicValueObject> sourceDemotionFn =
                 h -> h.isSupplementary() ? 1 : 0;
         rawHits.sort( Comparator
