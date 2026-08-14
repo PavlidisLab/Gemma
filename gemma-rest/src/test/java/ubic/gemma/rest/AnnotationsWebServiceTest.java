@@ -831,6 +831,40 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
     }
 
     @Test
+    public void testLexicalCatalogueHitIsWorthOneTierLessThanAnOntologyHit() throws Exception {
+        // The measured shape of the FTC failure, without the string: a flat lexical catalogue
+        // (MGI names) carries a row whose LABEL equals the query, so on label exactness alone it
+        // took position 0 ahead of every conventional-ontology candidate. gemma-core already ranks
+        // these sources below conventional ones; the tiers here used to see only exactness.
+        CharacteristicValueObject catalogueExact = new CharacteristicValueObject( "ftc",
+                "https://www.informatics.jax.org/strain/MGI:2667754", null, null );
+        catalogueExact.setSupplementary( true );
+        CharacteristicValueObject ontologyPrefix = new CharacteristicValueObject( "ftc-133 cell",
+                "http://purl.obolibrary.org/obo/CLO_0003402", null, null );
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "FTC" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Arrays.asList( catalogueExact, ontologyPrefix ) );
+
+        assertThat( target( "/annotations/search" )
+                .queryParam( "query", "FTC" )
+                .queryParam( "includeGenes", "false" )
+                .request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .satisfies( data -> {
+                    // demoted one tier: exact(0)+1 == prefix(1), and the conventional source wins
+                    // the tie, so the ontology term leads
+                    assertThat( data.get( 0 ) ).containsEntry( "valueUri",
+                            "http://purl.obolibrary.org/obo/CLO_0003402" );
+                    // ...but ONE tier, not banished: the catalogue row is still returned, right
+                    // behind it. These sources are backups for names the ontologies lack, so
+                    // burying them would defeat the reason they are loaded.
+                    assertThat( data.get( 1 ) ).containsEntry( "valueUri",
+                            "https://www.informatics.jax.org/strain/MGI:2667754" );
+                } );
+    }
+
+    @Test
     public void testCategoryPromotionSurvivesTheRankingStrategy() throws Exception {
         CharacteristicValueObject gene = new CharacteristicValueObject( "ftc",
                 "https://www.informatics.jax.org/strain/MGI:2667754", "genotype", null );

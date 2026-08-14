@@ -1006,6 +1006,12 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         // whose label merely contains the substring; throwing that away left the cut to break ties
         // on whatever order a HashSet iterated in.
         List<ScoredCandidate> scored = searchInThreads( ontologyService -> {
+            // Whether this source is a flat lexical catalogue rather than a conventional ontology.
+            // The sibling findTermsInexact() consumes the same flag to append these hits after the
+            // merged ontology results; this path merges by score, so it carries the flag onto the
+            // value object instead and lets the ranking layer decide. Dropping it here is what let
+            // an exact-name catalogue hit climb back over every ontology term downstream.
+            boolean supplementary = ontologyService.isSupplementary();
             Collection<OntologySearchResult<OntologyTerm>> ontologyTerms = ontologyCache.findTerm( ontologyService, searchQuery, maxResults );
             Collection<ScoredCandidate> characteristicsFromOntology = new ArrayList<>();
             for ( OntologySearchResult<OntologyTerm> ontologyTerm : ontologyTerms ) {
@@ -1016,6 +1022,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                         continue;
                     }
                     CharacteristicValueObject phenotype = new CharacteristicValueObject( ontologyTerm.getResult().getLabel().toLowerCase(), ontologyTerm.getResult().getUri() );
+                    phenotype.setSupplementary( supplementary );
                     characteristicsFromOntology.add( new ScoredCandidate( phenotype, ontologyTerm.getScore() ) );
                 }
             }

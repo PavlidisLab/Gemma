@@ -1383,8 +1383,25 @@ public class AnnotationsWebService {
             boolean canonicalMatch = lCanon.equals( relevanceQueryCanon ) || lCanon.startsWith( relevanceQueryCanon );
             return ( normalisationOccurred && canonicalMatch && uri.contains( "CLO_" ) ) ? 0 : 1;
         };
+        // A hit from a flat lexical catalogue (MGI names, Cellosaurus) is worth ONE TIER LESS than
+        // the same strength of match from a conventional ontology. gemma-core already makes this
+        // distinction -- OntologyServiceImpl appends supplementary sources after the merged
+        // ontology results, because a catalogue's exact-name boost is not on the same scale as a
+        // Jena index's score -- and the tiers here saw only label exactness, so a catalogue hit
+        // climbed straight back to the top. Measured on gemma2 2026-08-13: `FTC` under
+        // category=treatment returned the MGI row `ftc` at position 0, ahead of every CLO and
+        // CHEBI candidate, purely because its label equals the query.
+        //
+        // Demotion by one tier rather than "below every conventional hit" (findTermsInexact's
+        // rule) is deliberate. These catalogues are BACKUPS: they carry cell lines and strains the
+        // ontologies lack, so a Cellosaurus-only exact match must still outrank a conventional
+        // substring match, or enabling the backup would bury the only row that answers the query.
+        // One tier keeps it below an equal-strength ontology match and above a weaker one.
+        java.util.function.ToIntFunction<CharacteristicValueObject> sourceDemotionFn =
+                h -> h.isSupplementary() ? 1 : 0;
         rawHits.sort( Comparator
-                .<CharacteristicValueObject>comparingInt( tierFn::applyAsInt )
+                .<CharacteristicValueObject>comparingInt( h -> tierFn.applyAsInt( h ) + sourceDemotionFn.applyAsInt( h ) )
+                .thenComparingInt( sourceDemotionFn::applyAsInt )
                 .thenComparingInt( prefixRankFn::applyAsInt )
                 .thenComparingInt( cellLinePreferenceFn::applyAsInt )
                 .thenComparing( CharacteristicValueObject::getValueUri, Comparator.nullsLast( Comparator.naturalOrder() ) )
@@ -1423,7 +1440,12 @@ public class AnnotationsWebService {
                 MatchAttribution m = uri != null ? candidateMatches.get( uri ) : null;
                 return isExactAttribution( m != null ? m.via : null ) ? 0 : 1;
             };
-            rawHits.sort( Comparator.comparingInt( synonymExactFn::applyAsInt ) );
+            // Same one-tier demotion as the relevance sort above, for the same reason: without it
+            // this lift would hand a catalogue hit the exact tier and undo the demotion two sorts
+            // later, which is precisely how the distinction got lost the first time.
+            rawHits.sort( Comparator
+                    .<CharacteristicValueObject>comparingInt( h -> synonymExactFn.applyAsInt( h ) + sourceDemotionFn.applyAsInt( h ) )
+                    .thenComparingInt( sourceDemotionFn::applyAsInt ) );
         }
         // Runs BEFORE the exact_label and prefixes filters on purpose. Those narrow the
         // POSITIVE list; this produces the VERDICT, and the two answer different questions.
