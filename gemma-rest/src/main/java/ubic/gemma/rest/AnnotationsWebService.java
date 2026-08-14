@@ -65,6 +65,7 @@ import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.rest.ranking.AnnotationSearchRankingStrategy;
 import ubic.gemma.rest.ranking.LuceneOrderRankingStrategy;
+import ubic.gemma.rest.ranking.QueryTokens;
 import ubic.gemma.rest.util.QueriedAndFilteredAndPaginatedResponseDataObject;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.ResponseErrorObject;
@@ -1717,7 +1718,23 @@ public class AnnotationsWebService {
             stringPriorByUri = getStringPriorByUri( joinedQuery, priorUris, corpusOptions.excludedExperimentIds );
             tStringPrior = timer.getTime() - priorStart;
         }
-        List<CharacteristicValueObject> ranked = strategy.rank( joinedQuery, rawHits, countsByUri, stringPriorByUri );
+        // The string that actually matched, per URI. Already computed over the candidate set for
+        // promotion / suppression, so handing it to the ranker costs nothing — and without it a
+        // coverage-scoring strategy scores 0 for every synonym match, which is the population the
+        // synonym index exists to find.
+        Map<String, String> matchedTextByUri;
+        if ( candidateMatches.isEmpty() ) {
+            matchedTextByUri = Collections.emptyMap();
+        } else {
+            matchedTextByUri = new HashMap<>( candidateMatches.size() );
+            for ( Map.Entry<String, MatchAttribution> e : candidateMatches.entrySet() ) {
+                if ( e.getValue() != null && e.getValue().text != null ) {
+                    matchedTextByUri.put( e.getKey(), e.getValue().text );
+                }
+            }
+        }
+        List<CharacteristicValueObject> ranked = strategy.rank( joinedQuery, rawHits, countsByUri,
+                stringPriorByUri, matchedTextByUri );
         if ( categoryRankFn != null ) {
             // Stable, so the strategy's ordering survives inside each tier. Idempotent for the
             // default lucene strategy, whose input was already in this order.
@@ -2814,46 +2831,16 @@ public class AnnotationsWebService {
     }
 
     /**
-     * Conservative stop-word list. Tokens this short or this generic don't carry meaning
-     * for ontology lookup. Lucene's StandardAnalyzer already removes most; this set covers
-     * the cases where we tokenise client-side (the token-coverage filter) before the query
-     * has been through Lucene's analyzer.
-     */
-    private static final Set<String> SEARCH_STOP_WORDS = Set.of(
-            "a", "an", "and", "are", "as", "at", "be", "but", "by", "for", "if",
-            "in", "into", "is", "it", "of", "on", "or", "such", "that", "the",
-            "their", "then", "there", "these", "they", "this", "to", "was",
-            "will", "with"
-    );
-
-    /**
-     * Minimum length for a token to be considered "content". Single characters and
-     * digits-only short tokens drop out — they're either part numbers ({@code "2"} in
-     * {@code "uzh 2 cell"}) that survive Lucene's analyser but don't help filter
-     * candidates, or stop-words.
-     */
-    private static final int MIN_CONTENT_TOKEN_LENGTH = 2;
-
-    /**
-     * Tokenise an arbitrary user query into "content" tokens: lowercase, split on
-     * runs of non-alphanumeric characters, drop tokens shorter than
-     * {@link #MIN_CONTENT_TOKEN_LENGTH}, drop stop-words.
+     * Tokenise an arbitrary user query into "content" tokens.
      *
-     * <p>Returned in encounter order, deduplicated; empty list when the input is null /
-     * blank / all-stop-words. Callers should treat an empty list as "no token-coverage
-     * constraint applies — fall back to Lucene's order".</p>
+     * <p>The implementation moved to {@link QueryTokens} so the coverage rankers share it instead
+     * of each carrying a whitespace split with no stop-word strip. Kept as a local alias because
+     * six call sites in this class read better without the qualifier.</p>
+     *
+     * @see QueryTokens#contentTokens(String)
      */
     static List<String> contentTokens( @Nullable String query ) {
-        if ( query == null ) return Collections.emptyList();
-        String lower = query.toLowerCase( Locale.ROOT );
-        String[] parts = lower.split( "[^a-z0-9]+" );
-        LinkedHashSet<String> seen = new LinkedHashSet<>();
-        for ( String p : parts ) {
-            if ( p.length() < MIN_CONTENT_TOKEN_LENGTH ) continue;
-            if ( SEARCH_STOP_WORDS.contains( p ) ) continue;
-            seen.add( p );
-        }
-        return new ArrayList<>( seen );
+        return QueryTokens.contentTokens( query );
     }
 
     /**

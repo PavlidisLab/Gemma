@@ -71,6 +71,33 @@ public interface AnnotationSearchRankingStrategy {
     }
 
     /**
+     * Re-order {@code rawHits} with the per-URI matched text available in addition to the counts.
+     * <p>
+     * Callers should invoke this overload; it defaults to the four-argument {@link #rank} so a
+     * strategy with no use for the matched text needs no changes.
+     * <p>
+     * This exists because a coverage-scoring strategy that reads only {@code hit.getValue()} scores
+     * <strong>zero</strong> for a hit that matched through a synonym — its label shares nothing
+     * with the query, which is the entire reason the synonym exists. {@code dmso} finding
+     * <em>dimethyl sulfoxide</em> worked only by accident, both candidates scoring 0 coverage so
+     * usage broke the tie. The attribution pass already computes this string for the whole
+     * candidate set before truncation, so passing it costs nothing.
+     *
+     * @param matchedTextByUri per-URI text that actually matched the query — a preferred label, a
+     *                         declared synonym, or an alternate label — as reported by
+     *                         {@code matchedText}; may be empty, and may omit URIs whose
+     *                         attribution could not be resolved.
+     */
+    default List<CharacteristicValueObject> rank(
+            String originalQuery,
+            List<CharacteristicValueObject> rawHits,
+            Map<String, Integer> usageCountsByUri,
+            Map<String, Integer> stringPriorByUri,
+            Map<String, String> matchedTextByUri ) {
+        return rank( originalQuery, rawHits, usageCountsByUri, stringPriorByUri );
+    }
+
+    /**
      * Short stable name used as the value of the {@code ?rank=} query parameter and as the bean
      * name in the strategy registry. Lowercase, single word.
      */
