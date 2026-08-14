@@ -194,6 +194,42 @@ public class AnnotationSearchRankingStrategyTest {
                 .isNotEqualTo( usageOrder );
     }
 
+    @Test
+    public void usageWeighted_neverDisplacesTheTopLexicalHit() {
+        // The property the production defaults exist to hold, and the one whose absence produced
+        // `malignant melanoma` -> `gastric cancer`. The usage term tops out at usageWeight; the
+        // rank term is rankWeight for the hit at position 0. Keep usageWeight below rankWeight and
+        // no amount of corpus popularity can take position 0 from an exact lexical match; let them
+        // meet and the ranker quietly becomes "every used term above every unused one".
+        //
+        // Deliberately built with the PRODUCTION constructor (no weights passed) so this fails if
+        // someone retunes past the invariant rather than only if they change this test.
+        CharacteristicValueObject topLexical = new CharacteristicValueObject( "melanoma",
+                "http://example.org/TOP_LEXICAL", null, null );
+        CharacteristicValueObject wildlyPopular = new CharacteristicValueObject( "breast cancer",
+                "http://example.org/POPULAR", null, null );
+        List<CharacteristicValueObject> input = new ArrayList<>();
+        input.add( topLexical );
+        for ( int i = 0; i < 50; i++ ) {
+            input.add( new CharacteristicValueObject( "filler " + i,
+                    "http://example.org/FILLER_" + i, null, null ) );
+        }
+        input.add( wildlyPopular );
+        Map<String, Integer> counts = new HashMap<>();
+        counts.put( "http://example.org/TOP_LEXICAL", 0 );
+        counts.put( "http://example.org/POPULAR", 100000 );
+
+        List<CharacteristicValueObject> ranked =
+                new UsageWeightedRankingStrategy( 0.5, 0.3, 0.2, 100 ).rank( "melanoma", input, counts );
+
+        assertThat( indexOfUri( ranked, "http://example.org/TOP_LEXICAL" ) )
+                .as( "a usage-0 exact match at rank 0 must survive a usage-100000 hit 51 places below it" )
+                .isEqualTo( 0 );
+        assertThat( indexOfUri( ranked, "http://example.org/POPULAR" ) )
+                .as( "usage must still lift the popular hit above the unused filler it started behind" )
+                .isEqualTo( 1 );
+    }
+
     private static List<String> uriOrder( List<CharacteristicValueObject> list ) {
         List<String> out = new ArrayList<>( list.size() );
         for ( CharacteristicValueObject vo : list ) {

@@ -617,13 +617,12 @@ public class AnnotationsWebService {
                     "strategy REORDERS the same candidate set — none of them changes what is retrieved — " +
                     "and the `limit` truncation is applied after reordering, so a different `rank` can " +
                     "change which hits are visible. " +
-                    "`lucene` (default) preserves today's behaviour. `usage` sorts terms Gemma actually " +
-                    "uses ahead of unused ones: its usage component saturates at 10 experiments, past " +
-                    "which it outweighs the entire rank component, so any hit with usage >= 10 precedes " +
-                    "every usage-0 hit however well the latter matches the query. That disambiguates " +
-                    "duplicate labels (`liver`, `dmso`) but is the wrong ranking for a picker on a " +
-                    "specific query — `malignant melanoma` leads with `gastric cancer` because the " +
-                    "melanoma terms are all unused. `coverage` sorts by fraction of query tokens present " +
+                    "`lucene` (default) preserves today's behaviour. `usage` blends Lucene rank with " +
+                    "per-URI corpus usage, weighted so the usage term (max 0.3) can never outweigh a " +
+                    "rank-0 lexical match (0.5): popularity reorders everything below the best lexical " +
+                    "hit without displacing it. It disambiguates duplicate labels (`liver`, `dmso`) and " +
+                    "surfaces well-used terms the lexical order buried, which is its real contribution. " +
+                    "`coverage` sorts by fraction of query tokens present " +
                     "in the hit's label. `composite` combines coverage, usage, and rank into a single " +
                     "weighted score with coverage dominant — the picker-shaped choice, since lexical " +
                     "matches lead and usage only separates hits of comparable coverage. " +
