@@ -259,7 +259,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     @Override
     public boolean deleteDifferentialExpressionResultSetTsvFile( Long resultSetId ) {
         // Mirrors the filename produced by writeOrLocateDifferentialExpressionResultSetTsvFile.
-        return deleteAndLog( dataDir.resolve( "resultSets/resultSet_" + resultSetId + ".tsv" ) );
+        return deleteAndLog( dataDir.resolve( "resultSets/resultSet_" + resultSetId + ".tsv.gz" ) );
     }
 
     @Override
@@ -1047,16 +1047,20 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
     @Override
     public LockedPath writeOrLocateDifferentialExpressionResultSetTsvFile( Long resultSetId, boolean forceWrite ) throws IOException {
-        // Cache uncompressed so the endpoint's @GZIP encoder can re-compress on the fly, matching the JSON
-        // representation's content-encoding contract.
-        String filename = "resultSets/resultSet_" + resultSetId + ".tsv";
+        // Cache gzipped, and serve those bytes verbatim via sendfile + @GZIP(alreadyCompressed = true).
+        // The previous "cache uncompressed so the endpoint's @GZIP encoder re-compresses on the fly" plan could
+        // not work: the endpoint answers with sendfile(), which hands the file to Tomcat's connector and never
+        // writes to the JAX-RS entity stream, so Jersey's GZipEncoder never saw the payload. Clients got
+        // Content-Encoding: gzip over plain text and failed to inflate it. Compressing once at cache-build time
+        // is also the cheaper end state for an immutable file, and matches every sibling cache in this class.
+        String filename = "resultSets/resultSet_" + resultSetId + ".tsv.gz";
         try ( LockedPath f = this.getOutputFile( filename, false ) ) {
             // Result sets are immutable post-creation, so any existing cached file is fresh by definition.
             if ( !forceWrite && Files.exists( f.getPath() ) ) {
                 log.info( f + " exists, not regenerating" );
                 return f.steal();
             }
-            try ( LockedPath lockedPath = f.toExclusive(); Writer writer = new OutputStreamWriter( openFile( lockedPath.getPath() ), StandardCharsets.UTF_8 ) ) {
+            try ( LockedPath lockedPath = f.toExclusive(); Writer writer = openCompressedFile( lockedPath.getPath() ) ) {
                 log.info( "Creating result-set TSV cache: " + lockedPath.getPath() );
                 ExpressionAnalysisResultSet ears = expressionAnalysisResultSetService.loadWithResultsAndContrasts( resultSetId );
                 if ( ears == null ) {

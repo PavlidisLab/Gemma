@@ -420,8 +420,10 @@ public interface ExpressionDataFileService {
      * On a cache hit, returns the existing path with a shared lock (no DB hit). On a cache miss, materializes
      * the result set + contrasts + factor values + result-to-genes map via
      * {@code ExpressionAnalysisResultSetService}, writes the TSV via {@code ExpressionAnalysisResultSetFileService},
-     * stores it uncompressed under {@code <dataDir>/resultSets/resultSet_<id>.tsv}, and returns the locked path.
-     * The {@code /resultSets/{id}} REST endpoint re-compresses on the fly through its existing {@code @GZIP} encoder.
+     * stores it gzipped under {@code <dataDir>/resultSets/resultSet_<id>.tsv.gz}, and returns the locked path.
+     * The {@code /resultSets/{id}} REST endpoint sends those bytes verbatim via sendfile under
+     * {@code @GZIP(alreadyCompressed = true)} — it cannot compress on the fly, because sendfile bypasses the
+     * encoder's stream entirely.
      *
      * @param resultSetId  the result-set ID to materialize
      * @param forceWrite   ignore any existing cached file

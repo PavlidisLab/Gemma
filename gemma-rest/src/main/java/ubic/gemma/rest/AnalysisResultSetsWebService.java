@@ -88,6 +88,11 @@ import static ubic.gemma.rest.util.Responders.respond;
 public class AnalysisResultSetsWebService {
 
     public static final String TEXT_TAB_SEPARATED_VALUES_UTF8_Q9 = "text/tab-separated-values; charset=UTF-8; q=0.9";
+    /**
+     * Same media type without the quality parameter, for the {@link GZIP} media-type restriction — that is matched
+     * against the response's {@code Content-Type}, which carries no {@code q}.
+     */
+    private static final String TEXT_TAB_SEPARATED_VALUES_UTF8 = "text/tab-separated-values; charset=UTF-8";
     private static final MediaType TEXT_TAB_SEPARATED_VALUES_Q9_TYPE = withQuality( new MediaType( "text", "tab-separated-values", "UTF-8" ), 0.9 );
 
     @Autowired
@@ -180,7 +185,19 @@ public class AnalysisResultSetsWebService {
     /**
      * Retrieve a {@link AnalysisResultSet} given its identifier.
      */
-    @GZIP
+    // Two representations, two compression strategies — hence the repeated annotation.
+    //
+    // JSON is generated in-band, so Jersey's GZipEncoder compresses it on the fly (header set BEFORE the encoder
+    // runs, which is what triggers it).
+    //
+    // TSV is served straight off a pre-gzipped cache file through sendfile(), which hands the file to Tomcat's
+    // connector and never writes to the entity stream the encoder would have wrapped. Compressing on the fly is
+    // therefore impossible on that path: declaring plain @GZIP there stamped Content-Encoding: gzip onto a raw
+    // plain-text body, and clients that honour the header failed to inflate it (curl --compressed exited 61).
+    // alreadyCompressed = true appends the header AFTER the encoder instead, so nothing tries to wrap the stream
+    // and the already-gzipped bytes go out as-is.
+    @GZIP(mediaTypes = MediaType.APPLICATION_JSON)
+    @GZIP(mediaTypes = TEXT_TAB_SEPARATED_VALUES_UTF8, alreadyCompressed = true)
     @GET
     @Path("/{resultSet}")
     @Produces({ MediaType.APPLICATION_JSON, TEXT_TAB_SEPARATED_VALUES_UTF8_Q9 })
@@ -318,7 +335,9 @@ public class AnalysisResultSetsWebService {
      * Disk-cache + sendfile path for the TSV representation of a result set.
      * <p>
      * Result sets are immutable post-creation; the cached gzipped TSV under
-     * {@code <dataDir>/resultSets/resultSet_<id>.tsv.gz} stays valid forever. The cold-build path materializes the
+     * {@code <dataDir>/resultSets/resultSet_<id>.tsv.gz} stays valid forever. Its bytes are what goes on the wire —
+     * see the {@code @GZIP} declarations on {@link #getResultSet} for why it is cached pre-compressed. The
+     * cold-build path materializes the
      * full result set (50k results + thawed probe + contrasts + factor values + result-to-genes map = hundreds of
      * batched DB round-trips) once on first request; subsequent requests skip the DB entirely.
      */

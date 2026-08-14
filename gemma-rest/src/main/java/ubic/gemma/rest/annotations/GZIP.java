@@ -15,6 +15,7 @@ import java.lang.annotation.*;
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.METHOD })
+@Repeatable(GZIPs.class)
 public @interface GZIP {
 
     /**
