@@ -418,7 +418,13 @@ public class AnnotationsWebService {
                     List<String> prefs = label != null
                             ? prefixesByKey.getOrDefault( categoryKey( label ), Collections.emptyList() )
                             : Collections.emptyList();
-                    return new AnnotationCategoryValueObject( t.getUri(), label, prefs );
+                    // resolved, not read straight off the map, so the wildcard denial and any
+                    // per-category opt-out are already folded in -- a client sees what the server
+                    // will actually enforce, not the raw config.
+                    List<String> excluded = label != null
+                            ? resolveCategoryExcludedPrefixes( label )
+                            : Collections.emptyList();
+                    return new AnnotationCategoryValueObject( t.getUri(), label, prefs, excluded );
                 } )
                 .collect( Collectors.toList() );
         return respond( vos );
@@ -444,6 +450,13 @@ public class AnnotationsWebService {
      * property may be written in whichever spelling reads best ({@code cellLine}, {@code cell line},
      * {@code cell_line}) and still meets every spelling a caller sends.
      */
+    /**
+     * Exclusion-table key meaning "every category". Only meaningful in
+     * {@code annotation.category.excludedPrefixes}; a category opts back out by naming the prefix in
+     * its {@code annotation.category.prefixes} list.
+     */
+    static final String WILDCARD_KEY = "*";
+
     static Map<String, List<String>> parseCategoryPrefixProperty( @Nullable String raw ) {
         Map<String, List<String>> out = new LinkedHashMap<>();
         if ( raw != null && !raw.trim().isEmpty() ) {
@@ -452,7 +465,10 @@ public class AnnotationsWebService {
                 if ( e.isEmpty() ) continue;
                 int colon = e.indexOf( ':' );
                 if ( colon <= 0 ) continue;
-                String key = categoryKey( e.substring( 0, colon ).trim() );
+                String rawKey = e.substring( 0, colon ).trim();
+                // `*` is a key, not a category, so it must skip the fold -- categoryKey strips every
+                // non-alphanumeric and would collapse it to "".
+                String key = WILDCARD_KEY.equals( rawKey ) ? WILDCARD_KEY : categoryKey( rawKey );
                 String prefixList = e.substring( colon + 1 );
                 List<String> prefixes = new ArrayList<>();
                 for ( String p : prefixList.split( "," ) ) {
@@ -539,7 +555,7 @@ public class AnnotationsWebService {
      * Namespaces that are categorically impossible for a caller-supplied {@code category}.
      * Empty when nothing is configured, which is the default for every category.
      */
-    private List<String> resolveCategoryExcludedPrefixes( @Nullable String category ) {
+    List<String> resolveCategoryExcludedPrefixes( @Nullable String category ) {
         if ( category == null || category.trim().isEmpty() ) {
             return Collections.emptyList();
         }
@@ -548,7 +564,23 @@ public class AnnotationsWebService {
             cached = parseCategoryPrefixProperty( categoryExcludedPrefixesRaw );
             categoryExcludedPrefixesByKey = cached;
         }
-        return cached.getOrDefault( categoryKey( resolveCategoryLabel( category ) ), Collections.emptyList() );
+        String label = resolveCategoryLabel( category );
+        List<String> wildcard = cached.getOrDefault( WILDCARD_KEY, Collections.emptyList() );
+        List<String> specific = cached.getOrDefault( categoryKey( label ), Collections.emptyList() );
+        if ( wildcard.isEmpty() ) {
+            return specific;
+        }
+        // A category opts out of a wildcard denial by PREFERRING that namespace. Without this the
+        // only way to say "GO is impossible everywhere except biological process" would be to list
+        // every other category by hand, which silently fails open the day a category is added.
+        List<String> preferred = resolveCategoryPreferredPrefixes( label );
+        List<String> out = new ArrayList<>( specific );
+        for ( String p : wildcard ) {
+            if ( !preferred.contains( p ) && !out.contains( p ) ) {
+                out.add( p );
+            }
+        }
+        return out;
     }
 
     /**
@@ -3443,12 +3475,20 @@ public class AnnotationsWebService {
      * {@code annotation.category.prefixes}). Curation-ui passes the listed prefixes as
      * {@code ?prefixes=} on a downstream {@code /annotations/search} when the curator
      * scopes the search to this category. Empty list = no preference; client decides.
+     * <p>
+     * {@code excludedPrefixes} is the other half and a different KIND of statement: a preference
+     * only reorders, an exclusion says the namespace is categorically impossible and its hits leave
+     * {@code data} for {@code negativeEvidence.ruledOut}. It is published because consumers were
+     * hand-rolling their own category→namespace tables and getting them wrong — CAB hand-wrote one
+     * to audit gold and 20 of its 26 flags were the table's error, not the data's. A client that
+     * reads this cannot silently disagree with the server about what is possible.
      */
     @Value
     public static class AnnotationCategoryValueObject {
         String uri;
         String label;
         List<String> preferredPrefixes;
+        List<String> excludedPrefixes;
     }
 
     /**
