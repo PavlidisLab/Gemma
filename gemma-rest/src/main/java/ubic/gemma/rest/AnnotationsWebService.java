@@ -621,7 +621,7 @@ public class AnnotationsWebService {
                     .map( t -> new AnnotationSearchResultValueObject( t.getLabel(), t.getUri(), null, null,
                             t.getUri() != null ? countsByUri.getOrDefault( t.getUri(), 0 ) : null,
                             null, null, null, null, null, null, null, null, null, null, null,
-                            sourceMetadataOf( t ) ) )
+                            sourceMetadataOf( t ), taxonConstraintVo( t ) ) )
                     .collect( Collectors.toList() );
         } catch ( TimeoutException e ) {
             throw new ServiceUnavailableException( DateUtils.addSeconds( new Date(), 30 ), e );
@@ -1864,9 +1864,10 @@ public class AnnotationsWebService {
         // Cell-line / strain metadata for hits that came from a flat lexical source. Same enrichment
         // pass and same top-N budget as definitions — it is read off the term that pass already resolves.
         Map<String, LexicalTermMetadataValueObject> sourceMetadataByUri = new HashMap<>();
+        Map<String, OntologyTerm.TaxonConstraint> taxonByUri = new HashMap<>();
         if ( !topUris.isEmpty() ) {
             try {
-                enrichTopHits( topUris, defByUri, parentsByUri, matchByUri, sourceMetadataByUri, joinedQuery,
+                enrichTopHits( topUris, defByUri, parentsByUri, matchByUri, sourceMetadataByUri, taxonByUri, joinedQuery,
                         Math.max( timeoutMs - timer.getTime(), 0 ) );
             } catch ( TimeoutException e ) {
                 // Budget exhausted mid-enrichment; surface whatever did resolve and leave the rest null.
@@ -1917,7 +1918,8 @@ public class AnnotationsWebService {
             vos.add( new AnnotationSearchResultValueObject( vo.getValue(), vo.getValueUri(), vo.getCategory(),
                     vo.getCategoryUri(), count, definition, parents, matchedVia, matchedText, null, priorCategories,
                     null, null, null, null, priorCountFor( vo.getValueUri(), stringPriorByUri ),
-                    sourceMetadataByUri.get( vo.getValueUri() ) ) );
+                    sourceMetadataByUri.get( vo.getValueUri() ),
+                    toTaxonConstraintVo( uri != null ? taxonByUri.get( uri ) : null ) ) );
         }
         // Always merge gene hits in, regardless of category — the typeahead surface should
         // surface STAT5B whether the curator is in a Genotype factor, a Treatment factor, or a
@@ -2090,7 +2092,7 @@ public class AnnotationsWebService {
             String taxonScientificName = taxon != null ? taxon.getScientificName() : null;
             out.add( new AnnotationSearchResultValueObject( label, uri, "gene", null,
                     0, null, null, matchedViaToken, label, null, null,
-                    taxonId, taxonCommonName, taxonScientificName, null, null, null ) );
+                    taxonId, taxonCommonName, taxonScientificName, null, null, null, null ) );
         }
     }
 
@@ -2182,7 +2184,7 @@ public class AnnotationsWebService {
                         r.getUsageCount(), r.getDefinition(), r.getParents(),
                         r.getMatchedVia(), r.getMatchedText(), c, r.getPriorCategories(),
                         r.getTaxonId(), r.getTaxonCommonName(), r.getTaxonScientificName(), r.getExampleUsage(),
-                        r.getPriorCurationCount(), r.getSourceMetadata() ) );
+                        r.getPriorCurationCount(), r.getSourceMetadata(), r.getTaxonConstraint() ) );
             }
         }
         return out;
@@ -2227,7 +2229,8 @@ public class AnnotationsWebService {
                     r.getUsageCount(), r.getDefinition(), r.getParents(),
                     r.getMatchedVia(), r.getMatchedText(), r.getGeneCount(), r.getPriorCategories(),
                     r.getTaxonId(), r.getTaxonCommonName(), r.getTaxonScientificName(),
-                    toExampleUsageVo( ex ), r.getPriorCurationCount(), r.getSourceMetadata() ) );
+                    toExampleUsageVo( ex ), r.getPriorCurationCount(), r.getSourceMetadata(),
+                    r.getTaxonConstraint() ) );
         }
     }
 
@@ -2345,6 +2348,7 @@ public class AnnotationsWebService {
             Map<String, List<OntologyTermSimpleValueObject>> parentsByUri,
             Map<String, MatchAttribution> matchByUri,
             Map<String, LexicalTermMetadataValueObject> sourceMetaByUri,
+            Map<String, OntologyTerm.TaxonConstraint> taxonByUri,
             String originalQuery,
             long budgetMs ) throws TimeoutException {
         StopWatch local = StopWatch.createStarted();
@@ -2355,7 +2359,7 @@ public class AnnotationsWebService {
         // locks under burst load.
         int parallelism = Math.min( topUris.size(), 8 );
         if ( parallelism <= 1 ) {
-            enrichOne( topUris.iterator().next(), defByUri, parentsByUri, matchByUri, sourceMetaByUri,
+            enrichOne( topUris.iterator().next(), defByUri, parentsByUri, matchByUri, sourceMetaByUri, taxonByUri,
                     originalQuery, Math.max( budgetMs - local.getTime(), 0 ) );
             return;
         }
@@ -2366,7 +2370,7 @@ public class AnnotationsWebService {
                 tasks.add( pool.submit( () -> {
                     long remaining = Math.max( budgetMs - local.getTime(), 0 );
                     if ( remaining <= 0 ) return;
-                    enrichOne( uri, defByUri, parentsByUri, matchByUri, sourceMetaByUri, originalQuery, remaining );
+                    enrichOne( uri, defByUri, parentsByUri, matchByUri, sourceMetaByUri, taxonByUri, originalQuery, remaining );
                 } ) );
             }
             long deadline = System.currentTimeMillis() + budgetMs;
@@ -2517,6 +2521,7 @@ public class AnnotationsWebService {
             Map<String, List<OntologyTermSimpleValueObject>> parentsByUri,
             Map<String, MatchAttribution> matchByUri,
             Map<String, LexicalTermMetadataValueObject> sourceMetaByUri,
+            Map<String, OntologyTerm.TaxonConstraint> taxonByUri,
             String originalQuery,
             long remaining ) {
         if ( remaining <= 0 ) return;
@@ -2547,6 +2552,17 @@ public class AnnotationsWebService {
             LexicalTermMetadataValueObject meta = sourceMetadataOf( term );
             if ( meta != null ) {
                 synchronized ( sourceMetaByUri ) { sourceMetaByUri.put( uri, meta ); }
+            }
+            // Species constraint, read off the term this pass already resolved — no extra lookup and
+            // no extra fan-out, the same deal sourceMetadataOf gets. MONDO declares `in_taxon` on
+            // 3,201 terms and only 30 are human, so it is overwhelmingly a marker for "this term is
+            // NOT about your organism". Without it a client cannot tell MONDO:0700199
+            // `sheep lung adenocarcinoma` from a mouse disease: same namespace, same organ, and the
+            // category table cannot catch it because the namespace is right. See
+            // handoffs/CAB_TO_GEMBRO_2026_08_15_SPECIES_CONSTRAINT_AND_A_SECOND_SATURATION_CASE.md.
+            OntologyTerm.TaxonConstraint taxon = term.getTaxonConstraint();
+            if ( taxon != null ) {
+                synchronized ( taxonByUri ) { taxonByUri.put( uri, taxon ); }
             }
             MatchAttribution attribution = computeMatchAttribution( term, originalQuery );
             if ( attribution != null ) {
@@ -3221,6 +3237,22 @@ public class AnnotationsWebService {
      * Project the descriptive metadata of a flat lexical term (Cellosaurus / MGI) onto the wire, or null
      * for terms from a real ontology, which carry none.
      */
+    /**
+     * Read a term's {@code in_taxon} constraint straight off the term, for the paths that hold one
+     * (e.g. {@code /annotations/parents}). The enrichment path uses {@link #toTaxonConstraintVo}
+     * instead, because it has already resolved the term once and passes the result through a map.
+     */
+    @Nullable
+    static TaxonConstraintValueObject taxonConstraintVo( @Nullable OntologyTerm term ) {
+        return term != null ? toTaxonConstraintVo( term.getTaxonConstraint() ) : null;
+    }
+
+    @Nullable
+    static TaxonConstraintValueObject toTaxonConstraintVo( @Nullable OntologyTerm.TaxonConstraint c ) {
+        return c == null ? null
+                : new TaxonConstraintValueObject( c.getUri(), c.getNcbiTaxonId(), c.getLabel() );
+    }
+
     @Nullable
     static LexicalTermMetadataValueObject sourceMetadataOf( @Nullable OntologyTerm term ) {
         if ( !( term instanceof LexicalOntologyTerm ) ) {
@@ -3352,6 +3384,44 @@ public class AnnotationsWebService {
          * {@code ncbiTaxonId} in hand.</p>
          */
         @Nullable LexicalTermMetadataValueObject sourceMetadata;
+        /**
+         * The taxon this ONTOLOGY TERM is restricted to, when the ontology declares one — OBO's
+         * {@code in_taxon}. Null for the overwhelming majority of terms, which declare no constraint.
+         *
+         * <p>🛑 This is NOT {@link #taxonId} and the two must not be conflated. {@code taxonId} says
+         * "this hit IS a gene belonging to that species"; this says "this term only APPLIES to that
+         * species". Different claims about different things, which is why it is a separate field
+         * rather than a second meaning loaded onto an existing one.</p>
+         *
+         * <p>Why it matters: MONDO declares {@code in_taxon} on 3,201 terms and only 30 of them are
+         * human, so it is overwhelmingly a marker for "this term is not about your organism". Without
+         * it, {@code MONDO:0700199 sheep lung adenocarcinoma} is indistinguishable from a mouse
+         * disease — right namespace, right organ, wrong species — and the category→namespace table
+         * structurally cannot catch that class, because the namespace is correct. A tag of exactly
+         * that shape reached a C57BL/6 mouse experiment on 2026-08-15.</p>
+         *
+         * <p>Populated for the top-N enriched hits only, like {@link #definition}. Gemma does not act
+         * on it: whether a species mismatch is a reject or a repair is the caller's decision, and
+         * MONDO's {@code crossSpeciesExactMatch} often supplies the counterpart to repair TO.</p>
+         */
+        @Nullable TaxonConstraintValueObject taxonConstraint;
+    }
+
+    /**
+     * An ontology term's declared {@code in_taxon} value.
+     *
+     * <p>{@code ncbiTaxonId} is the field to key on. {@code label} is null whenever NCBITaxon is not
+     * loaded — Gemma does not load it — and the referencing ontology declared no label of its own, so
+     * a client keying on the name would silently stop matching the day that changes.</p>
+     */
+    @Value
+    public static class TaxonConstraintValueObject {
+        /** Full NCBITaxon URI, e.g. {@code http://purl.obolibrary.org/obo/NCBITaxon_9940}. */
+        String uri;
+        /** NCBI taxon id, e.g. 9940 for {@code Ovis aries}. Null only if the URI is not NCBITaxon-shaped. */
+        @Nullable Integer ncbiTaxonId;
+        /** Scientific name when the loaded model carries one, e.g. {@code Ovis aries}; often null. */
+        @Nullable String label;
     }
 
     /**
