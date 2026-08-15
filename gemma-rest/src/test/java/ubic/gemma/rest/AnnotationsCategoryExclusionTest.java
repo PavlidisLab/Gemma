@@ -6,7 +6,9 @@ import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
+import java.util.Locale;
 import java.util.Properties;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -156,6 +158,40 @@ class AnnotationsCategoryExclusionTest {
         assertThat( genotype ).isNotNull();
         assertThat( genotype.get( 0 ) ).isEqualTo( "ncbi_gene/" );
         assertThat( "http://purl.org/commons/record/ncbi_gene/22059" ).contains( genotype.get( 0 ) );
+    }
+
+    /**
+     * Namespaces Gemma can actually resolve — the ontologies it loads, plus the three sources that
+     * are not ontologies at all (Gemma's own TGEMO, NCBI gene records, and the flat lexical
+     * catalogues). Hard-coded on purpose rather than derived from {@code url.*}: MONDO, GO, PATO and
+     * TGEMO are configured through the {@code gemma.} facade rather than {@code basecode}, so a
+     * derivation would silently pass whatever it failed to see.
+     *
+     * <p>Update this together with {@code OntologyConfig} when an ontology is added or removed.</p>
+     */
+    private static final Set<String> RESOLVABLE = Set.of(
+            "GO_", "MONDO_", "CHEBI_", "CL_", "CLO_", "HP_", "MP_", "OBI_", "EMAPA_", "SO_",
+            "EFO_", "UBERON_", "PATO_", "TGEMO_", "NBO_", "GENO_", "UO_",
+            "ncbi_gene/", "CVCL_", "MGI:" );
+
+    /**
+     * Every namespace named in a preference row must be one Gemma can resolve. A preference for an
+     * unloadable namespace promotes rows the curator UI can neither render nor commit — the same
+     * defect as ranking a null-URI hit, one layer up.
+     *
+     * <p>Three were caught this way. {@code GENO_} sat in the genotype row while the ontology was
+     * unloaded, even though the corpus held 285 {@code GENO:0000135} annotations — fixed by loading
+     * GENO, since the annotations were real and only the resolver was missing. {@code DOID_} and
+     * {@code NCIT_} sat in the disease rows with neither a loader nor a single corpus hit, and were
+     * simply removed. CAB found the first of them from our published table, not from our code.</p>
+     */
+    @Test
+    void everyPreferredNamespaceIsResolvable() throws Exception {
+        for ( Map.Entry<String, List<String>> e : shipped( "annotation.category.prefixes" ).entrySet() ) {
+            assertThat( RESOLVABLE )
+                    .as( "category %s prefers %s", e.getKey(), e.getValue() )
+                    .containsAll( e.getValue() );
+        }
     }
 
     /** The shipped wildcard denial, and the one category that escapes it. */

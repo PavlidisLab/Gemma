@@ -1864,7 +1864,7 @@ public class AnnotationsWebService {
         // Cell-line / strain metadata for hits that came from a flat lexical source. Same enrichment
         // pass and same top-N budget as definitions — it is read off the term that pass already resolves.
         Map<String, LexicalTermMetadataValueObject> sourceMetadataByUri = new HashMap<>();
-        Map<String, OntologyTerm.TaxonConstraint> taxonByUri = new HashMap<>();
+        Map<String, TaxonConstraintValueObject> taxonByUri = new HashMap<>();
         if ( !topUris.isEmpty() ) {
             try {
                 enrichTopHits( topUris, defByUri, parentsByUri, matchByUri, sourceMetadataByUri, taxonByUri, joinedQuery,
@@ -1919,7 +1919,7 @@ public class AnnotationsWebService {
                     vo.getCategoryUri(), count, definition, parents, matchedVia, matchedText, null, priorCategories,
                     null, null, null, null, priorCountFor( vo.getValueUri(), stringPriorByUri ),
                     sourceMetadataByUri.get( vo.getValueUri() ),
-                    toTaxonConstraintVo( uri != null ? taxonByUri.get( uri ) : null ) ) );
+                    uri != null ? taxonByUri.get( uri ) : null ) );
         }
         // Always merge gene hits in, regardless of category — the typeahead surface should
         // surface STAT5B whether the curator is in a Genotype factor, a Treatment factor, or a
@@ -2348,7 +2348,7 @@ public class AnnotationsWebService {
             Map<String, List<OntologyTermSimpleValueObject>> parentsByUri,
             Map<String, MatchAttribution> matchByUri,
             Map<String, LexicalTermMetadataValueObject> sourceMetaByUri,
-            Map<String, OntologyTerm.TaxonConstraint> taxonByUri,
+            Map<String, TaxonConstraintValueObject> taxonByUri,
             String originalQuery,
             long budgetMs ) throws TimeoutException {
         StopWatch local = StopWatch.createStarted();
@@ -2521,7 +2521,7 @@ public class AnnotationsWebService {
             Map<String, List<OntologyTermSimpleValueObject>> parentsByUri,
             Map<String, MatchAttribution> matchByUri,
             Map<String, LexicalTermMetadataValueObject> sourceMetaByUri,
-            Map<String, OntologyTerm.TaxonConstraint> taxonByUri,
+            Map<String, TaxonConstraintValueObject> taxonByUri,
             String originalQuery,
             long remaining ) {
         if ( remaining <= 0 ) return;
@@ -2560,10 +2560,16 @@ public class AnnotationsWebService {
             // `sheep lung adenocarcinoma` from a mouse disease: same namespace, same organ, and the
             // category table cannot catch it because the namespace is right. See
             // handoffs/CAB_TO_GEMBRO_2026_08_15_SPECIES_CONSTRAINT_AND_A_SECOND_SATURATION_CASE.md.
+            // Recorded for EVERY enriched hit, declared or not: presence is the signal that we
+            // looked. A gate that cannot tell "no constraint declared" from "not checked" has to
+            // treat both as unknown, which makes the field useless outside the top-N.
             OntologyTerm.TaxonConstraint taxon = term.getTaxonConstraint();
-            if ( taxon != null ) {
-                synchronized ( taxonByUri ) { taxonByUri.put( uri, taxon ); }
-            }
+            List<String> xspecies = crossSpeciesExactMatchesOf( term );
+            TaxonConstraintValueObject taxonVo = taxon != null
+                    ? new TaxonConstraintValueObject( true, taxon.getUri(), taxon.getNcbiTaxonId(),
+                            taxon.getLabel(), xspecies )
+                    : new TaxonConstraintValueObject( false, null, null, null, xspecies );
+            synchronized ( taxonByUri ) { taxonByUri.put( uri, taxonVo ); }
             MatchAttribution attribution = computeMatchAttribution( term, originalQuery );
             if ( attribution != null ) {
                 synchronized ( matchByUri ) { matchByUri.put( uri, attribution ); }
@@ -3244,13 +3250,36 @@ public class AnnotationsWebService {
      */
     @Nullable
     static TaxonConstraintValueObject taxonConstraintVo( @Nullable OntologyTerm term ) {
-        return term != null ? toTaxonConstraintVo( term.getTaxonConstraint() ) : null;
+        if ( term == null ) {
+            return null;
+        }
+        OntologyTerm.TaxonConstraint c = term.getTaxonConstraint();
+        List<String> xspecies = crossSpeciesExactMatchesOf( term );
+        return c != null
+                ? new TaxonConstraintValueObject( true, c.getUri(), c.getNcbiTaxonId(), c.getLabel(), xspecies )
+                : new TaxonConstraintValueObject( false, null, null, null, xspecies );
     }
 
-    @Nullable
-    static TaxonConstraintValueObject toTaxonConstraintVo( @Nullable OntologyTerm.TaxonConstraint c ) {
-        return c == null ? null
-                : new TaxonConstraintValueObject( c.getUri(), c.getNcbiTaxonId(), c.getLabel() );
+    /**
+     * {@code semapv:crossSpeciesExactMatch} — the same disease in another species. MONDO writes it
+     * as {@code property_value: vocab:crossSpeciesExactMatch MONDO:0005061}, where {@code vocab:}
+     * expands to the SSSOM/semapv namespace.
+     */
+    private static final String CROSS_SPECIES_EXACT_MATCH =
+            "https://w3id.org/semapv/vocab/crossSpeciesExactMatch";
+
+    /** Empty, never null, so an enriched hit's empty list means "checked, none declared". */
+    static List<String> crossSpeciesExactMatchesOf( OntologyTerm term ) {
+        try {
+            return term.getAnnotations( CROSS_SPECIES_EXACT_MATCH ).stream()
+                    .map( AnnotationProperty::getContents )
+                    .filter( StringUtils::isNotBlank )
+                    .distinct()
+                    .collect( Collectors.toList() );
+        } catch ( RuntimeException e ) {
+            // Same contract as the rest of enrichment: decoration must not cost the caller the row.
+            return Collections.emptyList();
+        }
     }
 
     @Nullable
@@ -3408,20 +3437,50 @@ public class AnnotationsWebService {
     }
 
     /**
-     * An ontology term's declared {@code in_taxon} value.
+     * What the ontology says about this term's species applicability.
      *
-     * <p>{@code ncbiTaxonId} is the field to key on. {@code label} is null whenever NCBITaxon is not
-     * loaded — Gemma does not load it — and the referencing ontology declared no label of its own, so
-     * a client keying on the name would silently stop matching the day that changes.</p>
+     * <p>🛑 <b>Presence means "we looked."</b> The object is emitted for every enriched hit,
+     * including the overwhelming majority that declare no constraint — those carry
+     * {@code declared: false} and null taxon fields. A null {@code taxonConstraint} on the hit means
+     * only "not enriched" (outside the top-N), never "no constraint".</p>
+     *
+     * <p>That split exists because a species gate has to tell "MONDO says this is human-applicable,
+     * pass it" from "we did not check, so it could be the sheep term". One sentinel for both forces
+     * the safe reading to always be the second, which costs a
+     * {@code /annotations/term?uri=…} round trip per candidate and defeats the point of putting the
+     * field in the search response. Raised by CAB 2026-08-15, and it is the same defect as an absent
+     * value standing in for a failed one — absent evidence is not failed evidence.</p>
      */
     @Value
     public static class TaxonConstraintValueObject {
-        /** Full NCBITaxon URI, e.g. {@code http://purl.obolibrary.org/obo/NCBITaxon_9940}. */
-        String uri;
-        /** NCBI taxon id, e.g. 9940 for {@code Ovis aries}. Null only if the URI is not NCBITaxon-shaped. */
+        /**
+         * Whether the ontology declares an {@code in_taxon} constraint for this term. False means
+         * checked and none declared — a term with no species restriction, i.e. normally applicable.
+         */
+        boolean declared;
+        /** Full NCBITaxon URI, e.g. {@code http://purl.obolibrary.org/obo/NCBITaxon_9940}. Null when {@code declared} is false. */
+        @Nullable String uri;
+        /**
+         * NCBI taxon id, e.g. 9940 for {@code Ovis aries}. The field to key on: the label is absent
+         * whenever NCBITaxon is not loaded (Gemma does not load it) and the referencing ontology
+         * declared none of its own, so a client keying on the name stops matching the day that changes.
+         */
         @Nullable Integer ncbiTaxonId;
         /** Scientific name when the loaded model carries one, e.g. {@code Ovis aries}; often null. */
         @Nullable String label;
+        /**
+         * MONDO's {@code crossSpeciesExactMatch} targets — the same disease in another species,
+         * typically the human counterpart.
+         *
+         * <p>This is the difference between a species gate DROPPING a tag and REPAIRING it:
+         * {@code MONDO:0700199 sheep lung adenocarcinoma → MONDO:0005061 lung adenocarcinoma} is a
+         * defensible annotation, where a bare rejection leaves the experiment with no disease tag at
+         * all. MONDO carries 2,279 of these.</p>
+         *
+         * <p>Empty rather than null when the term declares none, since the object is only ever
+         * emitted for hits we actually inspected.</p>
+         */
+        List<String> crossSpeciesExactMatch;
     }
 
     /**

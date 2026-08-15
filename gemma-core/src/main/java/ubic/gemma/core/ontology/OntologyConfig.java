@@ -213,6 +213,11 @@ public class OntologyConfig {
         return createOntologyFactory( NeuroBehaviorOntologyService.class, "http://purl.obolibrary.org/obo/NBO_" );
     }
 
+    @Bean
+    public FactoryBean<GenotypeOntologyService> genotypeOntologyService() {
+        return createOntologyFactory( GenotypeOntologyService.class, "http://purl.obolibrary.org/obo/GENO_" );
+    }
+
     /**
      * Extra search strings for MONDO disease terms, not a vocabulary of its own — the URI prefix is
      * MONDO's, which also fences the table to MONDO URIs should the builder ever emit anything else.
