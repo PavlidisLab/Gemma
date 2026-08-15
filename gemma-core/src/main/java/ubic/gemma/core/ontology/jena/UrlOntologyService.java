@@ -36,7 +36,10 @@ public class UrlOntologyService extends AbstractOntologyService {
 
     @Override
     protected OntologyModel loadModel( boolean processImports, LanguageLevel languageLevel, InferenceMode inferenceMode ) throws IOException {
-        return new OntologyModelImpl( OntologyLoader.createMemoryModel( getOntologyUrl(), getOntologyUrl(), this.getCacheName(), processImports, this.getSpec( languageLevel, inferenceMode ) ) );
+        // A pinned cache is bypassed by an explicit refresh (forceLoad=true) and by nothing else,
+        // so "update when we want" stays available while a restart no longer updates anything.
+        boolean allowRemote = isForceLoadInProgress() || !OntologyLoader.isCachePinned();
+        return new OntologyModelImpl( OntologyLoader.createMemoryModel( getOntologyUrl(), getOntologyUrl(), this.getCacheName(), processImports, this.getSpec( languageLevel, inferenceMode ), allowRemote ) );
     }
 
     @Override

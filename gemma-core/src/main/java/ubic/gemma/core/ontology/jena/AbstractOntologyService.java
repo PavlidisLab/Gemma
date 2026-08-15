@@ -311,6 +311,18 @@ public abstract class AbstractOntologyService implements OntologyService {
         this.additionalPropertyUris = additionalPropertyUris;
     }
 
+    /** Whether the load currently running was asked for explicitly (admin refresh) rather than by startup. */
+    private volatile boolean forceLoadInProgress = false;
+
+    /**
+     * True when the in-flight load came from an explicit {@code forceLoad} request — the admin
+     * refresh endpoint — as opposed to startup. A subclass that fetches remotely consults this to
+     * decide whether a pinned cache may be bypassed; see {@link OntologyLoader#isCachePinned()}.
+     */
+    protected boolean isForceLoadInProgress() {
+        return forceLoadInProgress;
+    }
+
     public void initialize( boolean forceLoad, boolean forceIndexing ) {
         initialize( null, forceLoad, forceIndexing );
     }
@@ -320,6 +332,11 @@ public abstract class AbstractOntologyService implements OntologyService {
     }
 
     private synchronized void initialize( @Nullable InputStream stream, boolean forceLoad, boolean forceIndexing ) {
+        // Visible to loadModel() on this same thread, which is how a subclass learns whether the
+        // caller asked for a real re-fetch. Safe as a plain field because initialize() is
+        // synchronized, so exactly one load runs per service at a time; threading the flag through
+        // loadModel() instead would change an abstract signature and all five of its overriders.
+        this.forceLoadInProgress = forceLoad;
         if ( !forceLoad && state != null ) {
             log.warn( "{} is already loaded, and force=false, not restarting", this );
             return;
