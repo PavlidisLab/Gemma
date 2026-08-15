@@ -2,8 +2,11 @@ package ubic.gemma.rest;
 
 import org.junit.jupiter.api.Test;
 
+import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -110,5 +113,63 @@ class AnnotationsCategoryExclusionTest {
     void obsoleteLabelledDiseaseStillInheritsTheWildcard() throws Exception {
         assertThat( service( PREFIXES, EXCLUDED ).resolveCategoryExcludedPrefixes( "obsolete_disease" ) )
                 .contains( "GO_" );
+    }
+
+    // ---- the shipped tables -----------------------------------------------------------------
+
+    private static Map<String, List<String>> shipped( String key ) throws Exception {
+        Properties p = new Properties();
+        try ( InputStream is = AnnotationsWebService.class.getResourceAsStream( "/default.properties" ) ) {
+            assertThat( is ).as( "default.properties on the classpath" ).isNotNull();
+            p.load( is );
+        }
+        return AnnotationsWebService.parseCategoryPrefixProperty( p.getProperty( key ) );
+    }
+
+    /**
+     * Guards the gold-derived preference rows. These categories declared nothing before, and an
+     * absent category gets no promotion at all, so a silent drop here is invisible in behaviour
+     * until someone measures grounding again.
+     */
+    @Test
+    void shippedPreferencesCoverTheGoldDerivedCategories() throws Exception {
+        Map<String, List<String>> prefs = shipped( "annotation.category.prefixes" );
+        assertThat( prefs ).containsEntry( "assay", List.of( "OBI_" ) );
+        assertThat( prefs ).containsEntry( "biologicalsex", List.of( "PATO_" ) );
+        assertThat( prefs ).containsEntry( "strain", List.of( "EFO_", "TGEMO_" ) );
+        assertThat( prefs ).containsEntry( "studydesign", List.of( "TGEMO_", "OBI_" ) );
+        assertThat( prefs ).containsEntry( "diet", List.of( "EFO_" ) );
+        // NBO carries `fear conditioning`, which nothing else loaded has.
+        assertThat( prefs.get( "treatment" ) ).contains( "NBO_" );
+    }
+
+    /**
+     * The genotype row is the one that looks wrong and isn't. Matching is
+     * {@code uri.contains(token)} rather than startsWith, so a token need not be an OBO-style
+     * prefix — which is equally why {@code treatment:MGI:} matches
+     * {@code .../strain/MGI:3028467}. Gold's genotype values are ncbi_gene records 15 of 17, so
+     * dropping this token would leave the preference describing only the minority.
+     */
+    @Test
+    void genotypePrefersNonPrefixShapedGeneRecordsFirst() throws Exception {
+        List<String> genotype = shipped( "annotation.category.prefixes" ).get( "genotype" );
+        assertThat( genotype ).isNotNull();
+        assertThat( genotype.get( 0 ) ).isEqualTo( "ncbi_gene/" );
+        assertThat( "http://purl.org/commons/record/ncbi_gene/22059" ).contains( genotype.get( 0 ) );
+    }
+
+    /** The shipped wildcard denial, and the one category that escapes it. */
+    @Test
+    void shippedTablesDenyGoEverywhereExceptBiologicalProcess() throws Exception {
+        Properties p = new Properties();
+        try ( InputStream is = AnnotationsWebService.class.getResourceAsStream( "/default.properties" ) ) {
+            p.load( is );
+        }
+        AnnotationsWebService s = service( p.getProperty( "annotation.category.prefixes" ),
+                p.getProperty( "annotation.category.excludedPrefixes" ) );
+        assertThat( s.resolveCategoryExcludedPrefixes( "biological process" ) ).doesNotContain( "GO_" );
+        for ( String c : List.of( "treatment", "disease", "cell type", "assay", "organism part" ) ) {
+            assertThat( s.resolveCategoryExcludedPrefixes( c ) ).as( "category %s", c ).contains( "GO_" );
+        }
     }
 }
